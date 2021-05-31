@@ -3,9 +3,59 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31229.75
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "deploy", "deploy", "{B04053C5-CA17-41B1-BC52-8B5393090D45}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\main_caretogether.yml = .github\workflows\main_caretogether.yml
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CareTogether.Api", "src\CareTogether.Api\CareTogether.Api.csproj", "{67F0E369-C927-4278-A7D0-DDFBE029003F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{465BA74E-CEF3-4608-8809-8C7A2E979DAC}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "b2c", "b2c", "{7787CCCA-D8C1-4E53-8EBA-1A07B5DEA5AB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CustomPolicies", "CustomPolicies", "{E477275E-8530-49B4-ADBB-D61DD5E79BD6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dev", "Dev", "{7B8B0240-E608-4349-89AD-AB5E410BD273}"
+	ProjectSection(SolutionItems) = preProject
+		src\b2c\CustomPolicies\Dev\PasswordReset.xml = src\b2c\CustomPolicies\Dev\PasswordReset.xml
+		src\b2c\CustomPolicies\Dev\ProfileEdit.xml = src\b2c\CustomPolicies\Dev\ProfileEdit.xml
+		src\b2c\CustomPolicies\Dev\readme.md = src\b2c\CustomPolicies\Dev\readme.md
+		src\b2c\CustomPolicies\Dev\SignUpOrSignin.xml = src\b2c\CustomPolicies\Dev\SignUpOrSignin.xml
+		src\b2c\CustomPolicies\Dev\TrustFrameworkBase.xml = src\b2c\CustomPolicies\Dev\TrustFrameworkBase.xml
+		src\b2c\CustomPolicies\Dev\TrustFrameworkExtensions.xml = src\b2c\CustomPolicies\Dev\TrustFrameworkExtensions.xml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Prod", "Prod", "{2DC7B8F3-2B29-4EC9-BFFF-CC49C817469C}"
+	ProjectSection(SolutionItems) = preProject
+		src\b2c\CustomPolicies\Prod\PasswordReset.xml = src\b2c\CustomPolicies\Prod\PasswordReset.xml
+		src\b2c\CustomPolicies\Prod\ProfileEdit.xml = src\b2c\CustomPolicies\Prod\ProfileEdit.xml
+		src\b2c\CustomPolicies\Prod\readme.md = src\b2c\CustomPolicies\Prod\readme.md
+		src\b2c\CustomPolicies\Prod\SignUpOrSignin.xml = src\b2c\CustomPolicies\Prod\SignUpOrSignin.xml
+		src\b2c\CustomPolicies\Prod\TrustFrameworkBase.xml = src\b2c\CustomPolicies\Prod\TrustFrameworkBase.xml
+		src\b2c\CustomPolicies\Prod\TrustFrameworkExtensions.xml = src\b2c\CustomPolicies\Prod\TrustFrameworkExtensions.xml
+	EndProjectSection
+EndProject
 Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{67F0E369-C927-4278-A7D0-DDFBE029003F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67F0E369-C927-4278-A7D0-DDFBE029003F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67F0E369-C927-4278-A7D0-DDFBE029003F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67F0E369-C927-4278-A7D0-DDFBE029003F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{67F0E369-C927-4278-A7D0-DDFBE029003F} = {465BA74E-CEF3-4608-8809-8C7A2E979DAC}
+		{7787CCCA-D8C1-4E53-8EBA-1A07B5DEA5AB} = {465BA74E-CEF3-4608-8809-8C7A2E979DAC}
+		{E477275E-8530-49B4-ADBB-D61DD5E79BD6} = {7787CCCA-D8C1-4E53-8EBA-1A07B5DEA5AB}
+		{7B8B0240-E608-4349-89AD-AB5E410BD273} = {E477275E-8530-49B4-ADBB-D61DD5E79BD6}
+		{2DC7B8F3-2B29-4EC9-BFFF-CC49C817469C} = {E477275E-8530-49B4-ADBB-D61DD5E79BD6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E09CB79A-6E5B-4BAD-B356-64D949892A7E}
