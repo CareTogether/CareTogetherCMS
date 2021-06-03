@@ -1,12 +1,19 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { AppInsightsContext } from "@microsoft/applicationinsights-react-js";
+import { aiReact } from './Components/AppInsights';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { CssBaseline } from '@material-ui/core';
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <AppInsightsContext.Provider value={aiReact}>
+      <CssBaseline>
+        <App />
+      </CssBaseline>
+    </AppInsightsContext.Provider>
   </React.StrictMode>,
   document.getElementById('root')
 );
