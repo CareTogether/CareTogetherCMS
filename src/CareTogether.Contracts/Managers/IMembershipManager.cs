@@ -11,9 +11,9 @@ namespace CareTogether.Managers
     /// </summary>
     public interface IMembershipManager
     {
-        Task<Result<ContactInfo>> GetContactInfoAsync(AuthorizedUser user, Guid organizationId, Guid locationId, Guid personId);
+        Task<ManagerResult<ContactInfo>> GetContactInfoAsync(AuthorizedUser user, Guid organizationId, Guid locationId, Guid personId);
 
-        Task<Result<ContactInfo>> UpdateContactInfoAsync(AuthorizedUser user, Guid organizationId, Guid locationId, ContactCommand command);
+        Task<ManagerResult<ContactInfo>> UpdateContactInfoAsync(AuthorizedUser user, Guid organizationId, Guid locationId, ContactCommand command);
 
         IAsyncEnumerable<Person> QueryPeopleAsync(AuthorizedUser user, Guid organizationId, Guid locationId, string searchQuery);
     }

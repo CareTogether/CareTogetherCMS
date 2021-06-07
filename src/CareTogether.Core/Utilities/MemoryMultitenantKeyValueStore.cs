@@ -1,4 +1,6 @@
-﻿using System;
+﻿using OneOf;
+using OneOf.Types;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,8 +19,11 @@ namespace CareTogether.Utilities
         }
 
 
-        public Task<T> GetValueAsync(Guid organizationId, Guid locationId, Guid key) =>
-            Task.FromResult(values[(organizationId, locationId, key)]);
+        public Task<OneOf<T, NotFound>> GetValueAsync(Guid organizationId, Guid locationId, Guid key) =>
+            Task.FromResult<OneOf<T, NotFound>>(
+                values.TryGetValue((organizationId, locationId, key), out var value)
+                ? value
+                : new NotFound());
 
         public IQueryable<T> QueryValues(Guid organizationId, Guid locationId) =>
             values.Where(kvp => kvp.Key.organizationId == organizationId && kvp.Key.locationId == locationId)

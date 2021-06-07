@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
 
 namespace CareTogether.Managers
 {
@@ -11,6 +13,12 @@ namespace CareTogether.Managers
     public record ReferralInfo();
 
 
+    public sealed record PartneringFamilyProfile(Guid FamilyId, JObject FamilyIntakeFields,
+        Dictionary<Guid, JObject> AdultIntakeFields,
+        Dictionary<Guid, JObject> ChildIntakeFields);
+    //TODO: Where do we track *which forms belong to a referral*? That appears to require the referral ID being used as a lookup ID in the IFormsResource.
+
+
     //TODO: Workflow states can be reviewed to return **potential/allowed next steps/events**, to help drive UI behavior.
     /// <summary>
     /// The <see cref="IReferralManager"/> models the lifecycle of people's referrals to CareTogether organizations,
@@ -18,6 +26,21 @@ namespace CareTogether.Managers
     /// </summary>
     public interface IReferralManager
     {
+        /*
+         * 'request' is just a form (can be an unstructured PDF or semistructured JSON)
+         * that is required as part of a *workflow*. The actual contents are only kept for reference,
+         * and potentially future search/analytics capabilities.
+         */
+
+
+        // Validate ->
+        // Authorize (PolicyEvaluationEngine?) ->
+        // Execute (returning new state & optionally events) ->
+        // (optionally) Raise Domain Events ->
+        // Apply Permissions Filters (PolicyEvaluationEngine) ->
+        // Return New State
+
+
         //#region Referrals and Arrangements Workflows
 
         //internal IEnumerable<Referral> QueryReferrals()

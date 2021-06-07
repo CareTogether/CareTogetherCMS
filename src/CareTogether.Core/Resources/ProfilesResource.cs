@@ -1,5 +1,7 @@
 ﻿using CareTogether.Utilities;
+using OneOf.Types;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -8,15 +10,18 @@ namespace CareTogether.Resources
     public sealed class ProfilesResource : IProfilesResource
     {
         private readonly IMultitenantKeyValueStore<ContactInfo> contactStore;
+        private readonly IMultitenantKeyValueStore<List<Goal>> goalsStore;
 
 
-        public ProfilesResource(IMultitenantKeyValueStore<ContactInfo> contactStore)
+        public ProfilesResource(IMultitenantKeyValueStore<ContactInfo> contactStore,
+            IMultitenantKeyValueStore<List<Goal>> goalStore)
         {
             this.contactStore = contactStore;
+            this.goalsStore = goalStore;
         }
 
 
-        public async Task<ContactInfo> ExecuteContactCommandAsync(
+        public async Task<ResourceResult<ContactInfo>> ExecuteContactCommandAsync(
             Guid organizationId, Guid locationId, ContactCommand command)
         {
             // When constructing or mutating a record with multiple properties that all need to reference the same ID,
@@ -29,7 +34,10 @@ namespace CareTogether.Resources
                 contact = new ContactInfo(newId, null, null, null, null, null, null, null);
             else
             {
-                contact = await contactStore.GetValueAsync(organizationId, locationId, command.ContactId);
+                var contactResult = await contactStore.GetValueAsync(organizationId, locationId, command.PersonId);
+                if (contactResult.TryPickT1(out NotFound _, out contact))
+                    return ResourceResult.NotFound;
+                
                 contact = command switch
                 {
                     AddContactAddress c => contact with
@@ -81,6 +89,27 @@ namespace CareTogether.Resources
         {
             var source = contactStore.QueryValues(organizationId, locationId);
             return source;
+        }
+
+        public Task<ResourceResult<Goal>> ExecuteGoalCommandAsync(Guid organizationId, Guid locationId, GoalCommand command)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<ResourceResult<ContactInfo>> FindUserProfileAsync(Guid organizationId, Guid locationId, Guid personId)
+        {
+            var source = await contactStore.GetValueAsync(organizationId, locationId, personId);
+            return source.Match<ResourceResult<ContactInfo>>(
+                contact => contact,
+                notFound => notFound);
+        }
+
+        public async Task<List<Goal>> ListPersonGoalsAsync(Guid organizationId, Guid locationId, Guid personId)
+        {
+            var personGoals = await goalsStore.GetValueAsync(organizationId, locationId, personId);
+            return personGoals.Match(
+                goals => goals,
+                notFound => new List<Goal>());
         }
     }
 }

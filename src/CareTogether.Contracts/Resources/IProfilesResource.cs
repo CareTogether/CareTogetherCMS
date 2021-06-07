@@ -1,5 +1,4 @@
 ﻿using JsonPolymorph;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,47 +20,37 @@ namespace CareTogether.Resources
     public sealed record EmailAddress(Guid Id, string Address, EmailAddressType Type);
     public enum EmailAddressType { Personal, Work }
 
-    //TODO: Split this into 'RequestFields' (a 'Request' concept, linked to a ReferralId)
-    //      and non-referral-specific Goals!
-    // Update... 'request' is just a form (can be an unstructured PDF or semistructured JSON)
-    //      that is required as part of a *workflow*. The actual contents are only kept for reference,
-    //      and potentially future search/analytics capabilities.
-    //   ***This means that the Profile only needs to include the Goals!!
-    public sealed record PartneringFamilyProfile(Guid FamilyId,
-        JObject FamilyIntakeFields,
-        Dictionary<Guid, JObject> AdultIntakeFields,
-        Dictionary<Guid, JObject> ChildIntakeFields,
-        List<Goal> Goals);
+    [JsonHierarchyBase]
+    public abstract partial record ContactCommand(Guid PersonId);
+    public sealed record CreateContact(Guid PersonId,
+        string ContactMethodPreferenceNotes) : ContactCommand(PersonId);
+    public sealed record AddContactAddress(Guid PersonId,
+        string Line1, string Line2, string City, Guid StateId, string PostalCode, Guid CountryId,
+        bool IsCurrentAddress) : ContactCommand(PersonId);
+    public sealed record UpdateContactAddress(Guid PersonId, Address Address,
+        bool IsCurrentAddress) : ContactCommand(PersonId);
+    public sealed record AddContactPhoneNumber(Guid PersonId,
+        string Number, PhoneNumberType Type,
+        bool IsPreferredPhoneNumber) : ContactCommand(PersonId);
+    public sealed record UpdateContactPhoneNumber(Guid PersonId, PhoneNumber PhoneNumber,
+        bool IsPreferredPhoneNumber) : ContactCommand(PersonId);
+    public sealed record AddContactEmailAddress(Guid PersonId,
+        string Address, EmailAddressType Type,
+        bool IsPreferredEmailAddress) : ContactCommand(PersonId);
+    public sealed record UpdateContactEmailAddress(Guid PersonId, EmailAddress EmailAddress,
+        bool IsPreferredEmailAddress) : ContactCommand(PersonId);
+    public sealed record UpdateContactMethodPreferenceNotes(Guid PersonId,
+        string ContactMethodPreferenceNotes) : ContactCommand(PersonId);
+
     public sealed record Goal(Guid Id, Guid PersonId,
         string Description, DateTime CreatedDate, DateTime TargetDate, DateTime CompletedDate);
 
-    public sealed record VolunteerFamilyProfile(Guid FamilyId);
-
-
     [JsonHierarchyBase]
-    public abstract partial record ContactCommand(Guid ContactId);
-    public sealed record CreateContact(Guid PersonId,
-        string ContactMethodPreferenceNotes) : ContactCommand(PersonId);
-    public sealed record AddContactAddress(Guid ContactId,
-        string Line1, string Line2, string City, Guid StateId, string PostalCode, Guid CountryId,
-        bool IsCurrentAddress) : ContactCommand(ContactId);
-    public sealed record UpdateContactAddress(Guid ContactId, Address Address,
-        bool IsCurrentAddress) : ContactCommand(ContactId);
-    public sealed record AddContactPhoneNumber(Guid ContactId,
-        string Number, PhoneNumberType Type,
-        bool IsPreferredPhoneNumber) : ContactCommand(ContactId);
-    public sealed record UpdateContactPhoneNumber(Guid ContactId, PhoneNumber PhoneNumber,
-        bool IsPreferredPhoneNumber) : ContactCommand(ContactId);
-    public sealed record AddContactEmailAddress(Guid ContactId,
-        string Address, EmailAddressType Type,
-        bool IsPreferredEmailAddress) : ContactCommand(ContactId);
-    public sealed record UpdateContactEmailAddress(Guid ContactId, EmailAddress EmailAddress,
-        bool IsPreferredEmailAddress) : ContactCommand(ContactId);
-    public sealed record UpdateContactMethodPreferenceNotes(Guid ContactId,
-        string ContactMethodPreferenceNotes) : ContactCommand(ContactId);
-
-    [JsonHierarchyBase]
-    public abstract partial record PartneringFamilyProfileCommand(Guid FamilyId);
+    public abstract partial record GoalCommand(Guid PersonId);
+    public sealed record CreateGoal(Guid PersonId, string Description, DateTime TargetDate);
+    public sealed record ChangeGoalDescription(Guid PersonId, Guid GoalId, string Description);
+    public sealed record ChangeGoalTargetDate(Guid PersonId, Guid GoalId, DateTime TargetDate);
+    public sealed record MarkGoalCompleted(Guid PersonId, Guid GoalId);
 
     /// <summary>
     /// The <see cref="IProfilesResource"/> is responsible for all personal information in CareTogether.
@@ -70,16 +59,14 @@ namespace CareTogether.Resources
     /// </summary>
     public interface IProfilesResource
     {
-        Task<ContactInfo> ExecuteContactCommandAsync(Guid organizationId, Guid locationId, ContactCommand command);
+        Task<ResourceResult<ContactInfo>> ExecuteContactCommandAsync(Guid organizationId, Guid locationId, ContactCommand command);
 
-        //TODO: Include a 'not found' result option via OneOf<...> here!
-        Task<ContactInfo> FindUserProfileAsync(Guid organizationId, Guid locationId, Guid personId);
-
-        //public Task<PartneringFamilyProfile> ExecutePartneringFamilyProfileCommandAsync(
-        //    Guid organizationId, Guid locationId, PartneringFamilyProfileCommand command);
+        Task<ResourceResult<ContactInfo>> FindUserProfileAsync(Guid organizationId, Guid locationId, Guid personId);
 
         IQueryable<ContactInfo> QueryContacts(Guid organizationId, Guid locationId);
 
-        //public IQueryable<PartneringFamilyProfile> QueryPartneringFamilyProfiles(Guid organizationId, Guid locationId);
+        Task<ResourceResult<Goal>> ExecuteGoalCommandAsync(Guid organizationId, Guid locationId, GoalCommand command);
+
+        Task<List<Goal>> ListPersonGoalsAsync(Guid organizationId, Guid locationId, Guid personId);
     }
 }

@@ -18,24 +18,24 @@ namespace CareTogether.Managers
         }
 
 
-        public async Task<Result<ContactInfo>> GetContactInfoAsync(AuthorizedUser user, Guid organizationId, Guid locationId, Guid personId)
+        public async Task<ManagerResult<ContactInfo>> GetContactInfoAsync(AuthorizedUser user, Guid organizationId, Guid locationId, Guid personId)
         {
             //TODO: This is just a demo implementation of a business rule, not a true business rule.
             if (user.CanAccess(organizationId, locationId) &&
                 (user.PersonId == personId || user.IsInRole(Roles.OrganizationAdministrator)))
                 return await profilesResource.FindUserProfileAsync(organizationId, locationId, personId);
             else
-                return Result.NotAllowed;
+                return ManagerResult.NotAllowed;
         }
 
-        public async Task<Result<ContactInfo>> UpdateContactInfoAsync(AuthorizedUser user, Guid organizationId, Guid locationId, ContactCommand command)
+        public async Task<ManagerResult<ContactInfo>> UpdateContactInfoAsync(AuthorizedUser user, Guid organizationId, Guid locationId, ContactCommand command)
         {
             //TODO: This is just a demo implementation of a business rule, not a true business rule.
             if (user.CanAccess(organizationId, locationId) &&
-                ((command is not CreateContact && user.PersonId == command.ContactId) || user.IsInRole(Roles.OrganizationAdministrator)))
+                ((command is not CreateContact && user.PersonId == command.PersonId) || user.IsInRole(Roles.OrganizationAdministrator)))
                 return await profilesResource.ExecuteContactCommandAsync(organizationId, locationId, command);
             else
-                return Result.NotAllowed;
+                return ManagerResult.NotAllowed;
         }
 
         public async IAsyncEnumerable<Person> QueryPeopleAsync(AuthorizedUser user, Guid organizationId, Guid locationId, string searchQuery)
