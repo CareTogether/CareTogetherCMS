@@ -5,18 +5,19 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Resources
 {
-    public sealed class ContactsResource : IProfilesResource
+    public sealed class ProfilesResource : IProfilesResource
     {
         private readonly IMultitenantKeyValueStore<ContactInfo> contactStore;
 
 
-        public ContactsResource(IMultitenantKeyValueStore<ContactInfo> contactStore)
+        public ProfilesResource(IMultitenantKeyValueStore<ContactInfo> contactStore)
         {
             this.contactStore = contactStore;
         }
 
 
-        public async Task<ContactInfo> ExecuteContactCommandAsync(Guid organizationId, Guid locationId, ContactCommand command)
+        public async Task<ContactInfo> ExecuteContactCommandAsync(
+            Guid organizationId, Guid locationId, ContactCommand command)
         {
             // When constructing or mutating a record with multiple properties that all need to reference the same ID,
             // the ID needs to be created ahead of time. For convenience, we'll create a single new ID here and use it
@@ -71,7 +72,7 @@ namespace CareTogether.Resources
                 };
             }
 
-            await contactStore.UpsertValueAsync(organizationId, locationId, contact.Id, contact);
+            await contactStore.UpsertValueAsync(organizationId, locationId, contact.PersonId, contact);
 
             return contact;
         }

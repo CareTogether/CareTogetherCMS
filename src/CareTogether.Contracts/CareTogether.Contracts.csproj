@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="JsonPolymorph" Version="1.0.0" />
+    <PackageReference Include="OneOf" Version="3.0.186" />
   </ItemGroup>
   
 </Project>

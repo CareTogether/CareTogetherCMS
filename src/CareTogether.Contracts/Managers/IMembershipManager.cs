@@ -1,18 +1,20 @@
 ﻿using CareTogether.Resources;
-using JsonPolymorph;
 using System;
-using System.Linq;
-using System.Security.Claims;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace CareTogether.Managers
 {
+    /// <summary>
+    /// The <see cref="IMembershipManager"/> models the lifecycle of people's connection with CareTogether,
+    /// including user sign-up, profile management, and user deletion, as well as authorizing related queries.
+    /// </summary>
     public interface IMembershipManager
     {
-        //public IQueryable<Person> QueryPeople(Guid organizationId, Guid locationId);
+        Task<Result<ContactInfo>> GetContactInfoAsync(AuthorizedUser user, Guid organizationId, Guid locationId, Guid personId);
 
-        //public IQueryable<Family> QueryPartneringFamilies(ClaimsPrincipal principal);
+        Task<Result<ContactInfo>> UpdateContactInfoAsync(AuthorizedUser user, Guid organizationId, Guid locationId, ContactCommand command);
 
-        //public Task<Family> PerformPartneringFamilyOperationAsync(ClaimsPrincipal principal, PartneringFamilyOperation operation);
+        IAsyncEnumerable<Person> QueryPeopleAsync(AuthorizedUser user, Guid organizationId, Guid locationId, string searchQuery);
     }
 }

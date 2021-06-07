@@ -76,12 +76,16 @@ namespace CareTogether.Resources
     /// </summary>
     public interface ICommunitiesResource
     {
-        public IQueryable<Family> QueryFamilies(Guid organizationId, Guid locationId);
+        Task<Person> FindUserAsync(Guid organizationId, Guid locationId, Guid userId);
 
-        public IQueryable<Person> QueryPeople(Guid organizationId, Guid locationId);
+        IAsyncEnumerable<Person> FindPeopleByPartialName(Guid organizationId, Guid locationId, string searchQuery);
 
-        public Task<Family> ExecuteFamilyCommandAsync(Guid organizationId, Guid locationId, FamilyCommand command);
+        IQueryable<Family> QueryFamilies(Guid organizationId, Guid locationId);
 
-        public Task<Person> ExecutePersonCommandAsync(Guid organizationId, Guid locationId, PersonCommand command);
+        IQueryable<Person> QueryPeople(Guid organizationId, Guid locationId);
+
+        Task<Family> ExecuteFamilyCommandAsync(Guid organizationId, Guid locationId, FamilyCommand command);
+
+        Task<Person> ExecutePersonCommandAsync(Guid organizationId, Guid locationId, PersonCommand command);
     }
 }

@@ -12,6 +12,10 @@ namespace CareTogether.Managers
 
 
     //TODO: Workflow states can be reviewed to return **potential/allowed next steps/events**, to help drive UI behavior.
+    /// <summary>
+    /// The <see cref="IReferralManager"/> models the lifecycle of people's referrals to CareTogether organizations,
+    /// including various forms, arrangements, and policy changes, as well as authorizing related queries.
+    /// </summary>
     public interface IReferralManager
     {
         //#region Referrals and Arrangements Workflows

@@ -70,13 +70,16 @@ namespace CareTogether.Resources
     /// </summary>
     public interface IProfilesResource
     {
-        public Task<ContactInfo> ExecuteContactCommandAsync(Guid organizationId, Guid locationId, ContactCommand command);
+        Task<ContactInfo> ExecuteContactCommandAsync(Guid organizationId, Guid locationId, ContactCommand command);
 
-        public Task<PartneringFamilyProfile> ExecutePartneringFamilyProfileCommandAsync(
-            Guid organizationId, Guid locationId, PartneringFamilyProfileCommand command);
+        //TODO: Include a 'not found' result option via OneOf<...> here!
+        Task<ContactInfo> FindUserProfileAsync(Guid organizationId, Guid locationId, Guid personId);
 
-        public IQueryable<ContactInfo> QueryContacts(Guid organizationId, Guid locationId);
+        //public Task<PartneringFamilyProfile> ExecutePartneringFamilyProfileCommandAsync(
+        //    Guid organizationId, Guid locationId, PartneringFamilyProfileCommand command);
 
-        public IQueryable<PartneringFamilyProfile> QueryPartneringFamilyProfiles(Guid organizationId, Guid locationId);
+        IQueryable<ContactInfo> QueryContacts(Guid organizationId, Guid locationId);
+
+        //public IQueryable<PartneringFamilyProfile> QueryPartneringFamilyProfiles(Guid organizationId, Guid locationId);
     }
 }
