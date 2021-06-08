@@ -23,7 +23,7 @@ namespace CareTogether.Managers
             //TODO: This is just a demo implementation of a business rule, not a true business rule.
             if (user.CanAccess(organizationId, locationId) &&
                 (user.PersonId == personId || user.IsInRole(Roles.OrganizationAdministrator)))
-                return await profilesResource.FindUserProfileAsync(organizationId, locationId, personId);
+                return await profilesResource.FindUserContactInfoAsync(organizationId, locationId, personId);
             else
                 return ManagerResult.NotAllowed;
         }

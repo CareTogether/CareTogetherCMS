@@ -10,14 +10,14 @@ namespace CareTogether.Resources
     public sealed class ProfilesResource : IProfilesResource
     {
         private readonly IMultitenantKeyValueStore<ContactInfo> contactStore;
-        private readonly IMultitenantKeyValueStore<List<Goal>> goalsStore;
+        private readonly IMultitenantKeyValueStore<Dictionary<Guid, Goal>> goalsStore;
 
 
         public ProfilesResource(IMultitenantKeyValueStore<ContactInfo> contactStore,
-            IMultitenantKeyValueStore<List<Goal>> goalStore)
+            IMultitenantKeyValueStore<Dictionary<Guid, Goal>> goalsStore)
         {
             this.contactStore = contactStore;
-            this.goalsStore = goalStore;
+            this.goalsStore = goalsStore;
         }
 
 
@@ -85,18 +85,7 @@ namespace CareTogether.Resources
             return contact;
         }
 
-        public IQueryable<ContactInfo> QueryContacts(Guid organizationId, Guid locationId)
-        {
-            var source = contactStore.QueryValues(organizationId, locationId);
-            return source;
-        }
-
-        public Task<ResourceResult<Goal>> ExecuteGoalCommandAsync(Guid organizationId, Guid locationId, GoalCommand command)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<ResourceResult<ContactInfo>> FindUserProfileAsync(Guid organizationId, Guid locationId, Guid personId)
+        public async Task<ResourceResult<ContactInfo>> FindUserContactInfoAsync(Guid organizationId, Guid locationId, Guid personId)
         {
             var source = await contactStore.GetValueAsync(organizationId, locationId, personId);
             return source.Match<ResourceResult<ContactInfo>>(
@@ -104,11 +93,64 @@ namespace CareTogether.Resources
                 notFound => notFound);
         }
 
+        public async Task<ResourceResult<Goal>> ExecuteGoalCommandAsync(Guid organizationId, Guid locationId, GoalCommand command)
+        {
+            // When constructing or mutating a record with multiple properties that all need to reference the same ID,
+            // the ID needs to be created ahead of time. For convenience, we'll create a single new ID here and use it
+            // in situations where a new ID is needed. Currently all command implementations require at most one new ID.
+            var newId = Guid.NewGuid();
+
+            var goalsResult = await goalsStore.GetValueAsync(organizationId, locationId, command.PersonId);
+            if (goalsResult.TryPickT1(out NotFound _, out var goals))
+                goals = new Dictionary<Guid, Goal>();
+
+            Goal goal;
+            if (command is CreateGoal create)
+                goal = new Goal(newId, create.PersonId, create.Description,
+                    CreatedDate: DateTime.UtcNow, TargetDate: create.TargetDate, CompletedDate: null);
+            else
+            {
+                var goalId = command switch
+                {
+                    ChangeGoalDescription c => c.GoalId,
+                    ChangeGoalTargetDate c => c.GoalId,
+                    MarkGoalCompleted c => c.GoalId,
+                    _ => throw new NotImplementedException(
+                        $"The command type '{command.GetType().FullName}' has not been implemented.")
+                };
+                if (!goals.TryGetValue(goalId, out goal))
+                    return ResourceResult.NotFound;
+                goal = command switch
+                {
+                    ChangeGoalDescription c => goal with
+                    {
+                        Description = c.Description
+                    },
+                    ChangeGoalTargetDate c => goal with
+                    {
+                        TargetDate = c.TargetDate
+                    },
+                    MarkGoalCompleted c => goal with
+                    {
+                        CompletedDate = DateTime.UtcNow
+                    },
+                    _ => throw new NotImplementedException(
+                        $"The command type '{command.GetType().FullName}' has not been implemented." +
+                        " This exception should never be reached because of a prior check for the goal type.")
+                };
+            }
+            goals[goal.Id] = goal;
+
+            await goalsStore.UpsertValueAsync(organizationId, locationId, command.PersonId, goals);
+
+            return goal;
+        }
+
         public async Task<List<Goal>> ListPersonGoalsAsync(Guid organizationId, Guid locationId, Guid personId)
         {
             var personGoals = await goalsStore.GetValueAsync(organizationId, locationId, personId);
             return personGoals.Match(
-                goals => goals,
+                goals => goals.Values.ToList(),
                 notFound => new List<Goal>());
         }
     }

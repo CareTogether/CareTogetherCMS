@@ -1,7 +1,6 @@
 ﻿using JsonPolymorph;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace CareTogether.Resources
@@ -43,14 +42,18 @@ namespace CareTogether.Resources
         string ContactMethodPreferenceNotes) : ContactCommand(PersonId);
 
     public sealed record Goal(Guid Id, Guid PersonId,
-        string Description, DateTime CreatedDate, DateTime TargetDate, DateTime CompletedDate);
+        string Description, DateTime CreatedDate, DateTime? TargetDate, DateTime? CompletedDate);
 
     [JsonHierarchyBase]
     public abstract partial record GoalCommand(Guid PersonId);
-    public sealed record CreateGoal(Guid PersonId, string Description, DateTime TargetDate);
-    public sealed record ChangeGoalDescription(Guid PersonId, Guid GoalId, string Description);
-    public sealed record ChangeGoalTargetDate(Guid PersonId, Guid GoalId, DateTime TargetDate);
-    public sealed record MarkGoalCompleted(Guid PersonId, Guid GoalId);
+    public sealed record CreateGoal(Guid PersonId, string Description, DateTime? TargetDate)
+        : GoalCommand(PersonId);
+    public sealed record ChangeGoalDescription(Guid PersonId, Guid GoalId, string Description)
+        : GoalCommand(PersonId);
+    public sealed record ChangeGoalTargetDate(Guid PersonId, Guid GoalId, DateTime? TargetDate)
+        : GoalCommand(PersonId);
+    public sealed record MarkGoalCompleted(Guid PersonId, Guid GoalId)
+        : GoalCommand(PersonId);
 
     /// <summary>
     /// The <see cref="IProfilesResource"/> is responsible for all personal information in CareTogether.
@@ -61,9 +64,7 @@ namespace CareTogether.Resources
     {
         Task<ResourceResult<ContactInfo>> ExecuteContactCommandAsync(Guid organizationId, Guid locationId, ContactCommand command);
 
-        Task<ResourceResult<ContactInfo>> FindUserProfileAsync(Guid organizationId, Guid locationId, Guid personId);
-
-        IQueryable<ContactInfo> QueryContacts(Guid organizationId, Guid locationId);
+        Task<ResourceResult<ContactInfo>> FindUserContactInfoAsync(Guid organizationId, Guid locationId, Guid personId);
 
         Task<ResourceResult<Goal>> ExecuteGoalCommandAsync(Guid organizationId, Guid locationId, GoalCommand command);
 
