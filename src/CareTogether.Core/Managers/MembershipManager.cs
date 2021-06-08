@@ -43,7 +43,7 @@ namespace CareTogether.Managers
             //TODO: This is just a demo implementation of a business rule, not a true business rule.
             if (user.CanAccess(organizationId, locationId) &&
                 user.IsInRole(Roles.OrganizationAdministrator))
-                await foreach (var person in communitiesResource.FindPeopleByPartialName(organizationId, locationId, searchQuery))
+                await foreach (var person in communitiesResource.FindPeople(organizationId, locationId, searchQuery))
                     yield return person;
             else
                 yield break;

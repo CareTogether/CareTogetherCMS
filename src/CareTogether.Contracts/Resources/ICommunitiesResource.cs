@@ -1,29 +1,26 @@
 ﻿using JsonPolymorph;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace CareTogether.Resources
 {
     public sealed record Family(Guid Id,
-        List<FamilyAdult> Adults, List<FamilyChild> Children, FamilyType Type);
-    public enum FamilyType { PartneringFamily, VolunteerFamily }
-
-    [JsonHierarchyBase]
-    public partial record Person(Guid Id, Guid? UserId,
-        string FirstName, string LastName, Age Age);
-    public sealed record FamilyAdult(Guid Id, Guid? UserId,
-        string FirstName, string LastName, Age Age,
-        AdultFamilyRelationship RelationshipToFamily, string FamilyRelationshipNotes,
-        bool IsInHousehold, bool IsPrimaryFamilyContact, string SafetyRiskNotes)
-        : Person(Id, UserId, FirstName, LastName, Age);
-    public sealed record FamilyChild(Guid Id,
-        string FirstName, string LastName, Age Age,
-        ChildCustodialRelationship[] CustodialRelationships) :
-        Person(Id, Guid.Empty, FirstName, LastName, Age);
-    public enum AdultFamilyRelationship { Dad, Mom, Relative, Friend, DomesticWorker };
-    public sealed record ChildCustodialRelationship(Guid AdultId, CustodialRelationshipType Type);
+        VolunteerFamilyStatus? VolunteerFamilyStatus,
+        PartneringFamilyStatus? PartneringFamilyStatus,
+        List<(Person, FamilyAdultRelationshipInfo)> Adults,
+        List<Person> Children,
+        List<CustodialRelationship> CustodialRelationships);
+    public enum VolunteerFamilyStatus { Active, Inactive }
+    public enum PartneringFamilyStatus { Active, Inactive }
+    public sealed record Person(Guid Id, Guid? UserId,
+        string FirstName, string LastName, Age Age, DateTime CreatedUtc);
+    public sealed record FamilyAdultRelationshipInfo(
+        FamilyAdultRelationshipType RelationshipToFamily, string FamilyRelationshipNotes,
+        bool IsInHousehold, bool IsPrimaryFamilyContact, string SafetyRiskNotes);
+    public enum FamilyAdultRelationshipType { Dad, Mom, Relative, Friend, DomesticWorker };
+    public sealed record CustodialRelationship(
+        Guid ChildId, Guid PersonId, CustodialRelationshipType Type);
     public enum CustodialRelationshipType { ParentWithCustody, ParentWithCourtAppointedCustody, LegalGuardian }
 
     [JsonHierarchyBase]
@@ -33,20 +30,22 @@ namespace CareTogether.Resources
 
     [JsonHierarchyBase]
     public abstract partial record FamilyCommand(Guid FamilyId);
-    public sealed record CreateFamily(Guid[] AdultPersonIds, Guid[] ChildPersonIds,
-        ChildCustodialRelationship[] CustodialRelationships, FamilyType Type)
+    public sealed record CreateFamily(
+        VolunteerFamilyStatus? VolunteerFamilyStatus,
+        PartneringFamilyStatus? PartneringFamilyStatus,
+        List<(Guid, FamilyAdultRelationshipInfo)> Adults,
+        List<Guid> Children,
+        List<CustodialRelationship> CustodialRelationships)
         : FamilyCommand(Guid.Empty);
-    public sealed record AddAdultToFamily(Guid FamilyId, Guid[] AdultPersonId)
+    public sealed record AddAdultToFamily(Guid FamilyId, Guid AdultPersonId,
+        FamilyAdultRelationshipInfo RelationshipToFamily)
         : FamilyCommand(FamilyId);
-    public sealed record AddChildToFamily(Guid FamilyId, Guid[] ChildPersonId,
-        ChildCustodialRelationship[] CustodialRelationships)
+    public sealed record AddChildToFamily(Guid FamilyId, Guid ChildPersonId,
+        List<CustodialRelationship> CustodialRelationships)
         : FamilyCommand(FamilyId);
     public sealed record UpdateAdultRelationshipToFamily(Guid FamilyId, Guid AdultPersonId,
-        AdultFamilyRelationship RelationshipToFamily, string FamilyRelationshipNotes,
-        bool IsInHousehold, bool IsPrimaryFamilyContact)
+        FamilyAdultRelationshipInfo RelationshipToFamily)
         : FamilyCommand(FamilyId);
-    public sealed record UpdateAdultSafetyRiskNotes(Guid FamilyId, Guid AdultPersonId,
-        string SafetyRiskNotes) : FamilyCommand(FamilyId);
     public sealed record AddCustodialRelationship(Guid FamilyId,
         Guid ChildPersonId, Guid AdultPersonId, CustodialRelationshipType Type)
         : FamilyCommand(FamilyId);
@@ -54,7 +53,7 @@ namespace CareTogether.Resources
         Guid ChildPersonId, Guid AdultPersonId, CustodialRelationshipType Type)
         : FamilyCommand(FamilyId);
     public sealed record RemoveCustodialRelationship(Guid FamilyId,
-        Guid ChildPersonId, Guid AdultPersonId, CustodialRelationshipType Type)
+        Guid ChildPersonId, Guid AdultPersonId)
         : FamilyCommand(FamilyId);
 
     [JsonHierarchyBase]
@@ -65,8 +64,8 @@ namespace CareTogether.Resources
         : PersonCommand(PersonId);
     public sealed record UpdatePersonAge(Guid PersonId, Age Age)
         : PersonCommand(PersonId);
-    public sealed record UpdatePersonUserLink(Guid ContactId, Guid UserId)
-        : PersonCommand(ContactId);
+    public sealed record UpdatePersonUserLink(Guid PersonId, Guid? UserId)
+        : PersonCommand(PersonId);
 
     /// <summary>
     /// The <see cref="ICommunitiesResource"/> is responsible for the "social networking" aspects of CareTogether.
@@ -76,16 +75,18 @@ namespace CareTogether.Resources
     /// </summary>
     public interface ICommunitiesResource
     {
-        Task<Person> FindUserAsync(Guid organizationId, Guid locationId, Guid userId);
+        Task<ResourceResult<Person>> FindUserAsync(Guid organizationId, Guid locationId, Guid userId);
 
-        IAsyncEnumerable<Person> FindPeopleByPartialName(Guid organizationId, Guid locationId, string searchQuery);
+        IAsyncEnumerable<Person> FindPeople(Guid organizationId, Guid locationId, string partialName);
 
-        IQueryable<Family> QueryFamilies(Guid organizationId, Guid locationId);
+        IAsyncEnumerable<Family> FindVolunteerFamilies(Guid organizationId, Guid locationId,
+            VolunteerFamilyStatus status);
 
-        IQueryable<Person> QueryPeople(Guid organizationId, Guid locationId);
+        IAsyncEnumerable<Family> FindPartneringFamilies(Guid organizationId, Guid locationId,
+            PartneringFamilyStatus status);
 
-        Task<Family> ExecuteFamilyCommandAsync(Guid organizationId, Guid locationId, FamilyCommand command);
+        Task<ResourceResult<Family>> ExecuteFamilyCommandAsync(Guid organizationId, Guid locationId, FamilyCommand command);
 
-        Task<Person> ExecutePersonCommandAsync(Guid organizationId, Guid locationId, PersonCommand command);
+        Task<ResourceResult<Person>> ExecutePersonCommandAsync(Guid organizationId, Guid locationId, PersonCommand command);
     }
 }

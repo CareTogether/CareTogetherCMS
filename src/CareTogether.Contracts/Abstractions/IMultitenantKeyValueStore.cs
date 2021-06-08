@@ -4,7 +4,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace CareTogether.Utilities
+namespace CareTogether.Abstractions
 {
     public interface IMultitenantKeyValueStore<T>
     {
