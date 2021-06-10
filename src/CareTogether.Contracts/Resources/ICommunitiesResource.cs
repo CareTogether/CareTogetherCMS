@@ -25,7 +25,7 @@ namespace CareTogether.Resources
 
     [JsonHierarchyBase]
     public abstract partial record Age();
-    public sealed record AgeInYears(byte Years, DateTime AsOf) : Age;
+    public sealed record AgeInYears(int Years, DateTime AsOf) : Age;
     public sealed record ExactAge(DateTime DateOfBirth) : Age;
 
     [JsonHierarchyBase]
@@ -77,15 +77,15 @@ namespace CareTogether.Resources
     {
         Task<ResourceResult<Person>> FindUserAsync(Guid organizationId, Guid locationId, Guid userId);
 
-        IAsyncEnumerable<Person> FindPeople(Guid organizationId, Guid locationId, string partialName);
+        Task<List<Person>> FindPeopleAsync(Guid organizationId, Guid locationId, string partialFirstOrLastName);
 
-        IAsyncEnumerable<Family> FindVolunteerFamilies(Guid organizationId, Guid locationId,
-            VolunteerFamilyStatus status);
+        //IAsyncEnumerable<Family> FindVolunteerFamilies(Guid organizationId, Guid locationId,
+        //    VolunteerFamilyStatus status);
 
-        IAsyncEnumerable<Family> FindPartneringFamilies(Guid organizationId, Guid locationId,
-            PartneringFamilyStatus status);
+        //IAsyncEnumerable<Family> FindPartneringFamilies(Guid organizationId, Guid locationId,
+        //    PartneringFamilyStatus status);
 
-        Task<ResourceResult<Family>> ExecuteFamilyCommandAsync(Guid organizationId, Guid locationId, FamilyCommand command);
+        //Task<ResourceResult<Family>> ExecuteFamilyCommandAsync(Guid organizationId, Guid locationId, FamilyCommand command);
 
         Task<ResourceResult<Person>> ExecutePersonCommandAsync(Guid organizationId, Guid locationId, PersonCommand command);
     }

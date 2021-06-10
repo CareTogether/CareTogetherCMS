@@ -19,9 +19,11 @@ namespace CareTogether
         public async Task<AuthorizedUser> AuthorizeAsync(Guid organizationId, Guid locationId, ClaimsPrincipal principal)
         {
             //TODO: This should be provided before managers are called (by an authorization layer) so the logic can be uniformly extracted.
-            var personInfo = await communitiesResource.FindUserAsync(organizationId, locationId, principal.UserId());
+            var userResult = await communitiesResource.FindUserAsync(organizationId, locationId, principal.UserId());
 
-            return new AuthorizedUser(principal, principal.UserId(), personInfo);
+            return userResult.Match(
+                person => new AuthorizedUser(principal, principal.UserId(), person),
+                NotFound => throw new InvalidOperationException("No person with the requested user ID was found.")); //TODO: Use a ResourceResult instead?
         }
     }
 }

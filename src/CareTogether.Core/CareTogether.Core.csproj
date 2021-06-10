@@ -13,4 +13,9 @@
     <Folder Include="Engines\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="ExRam.Gremlinq.Providers.CosmosDb" Version="8.6.0" />
+    <PackageReference Include="System.Linq.Async" Version="5.0.0" />
+  </ItemGroup>
+
 </Project>

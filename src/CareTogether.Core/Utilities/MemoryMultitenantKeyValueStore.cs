@@ -1,4 +1,5 @@
-﻿using OneOf;
+﻿using CareTogether.Abstractions;
+using OneOf;
 using OneOf.Types;
 using System;
 using System.Collections.Generic;
