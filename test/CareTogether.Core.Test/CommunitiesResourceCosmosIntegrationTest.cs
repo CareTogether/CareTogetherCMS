@@ -90,6 +90,14 @@ namespace CareTogether.Core.Test
             var findResultAfterCreating = await dut.FindUserAsync(orgId, locId, userId);
             Assert.IsTrue(findResultAfterCreating.IsT1);
 
+            var findResultByLastNameSubstring = await dut.FindPeopleAsync(orgId, locId, partialFirstOrLastName: "urn");
+            Assert.AreEqual(1, findResultByLastNameSubstring.Count);
+            var foundResult2 = findResultByLastNameSubstring[0];
+            Assert.AreEqual(expectedUpdatedName, foundResult2);
+
+            var findResultWithoutMatch = await dut.FindPeopleAsync(orgId, locId, partialFirstOrLastName: "xyz");
+            Assert.AreEqual(0, findResultWithoutMatch.Count);
+
             var updateUserLink = new UpdatePersonUserLink(created.Id, userId);
             var updateUserLinkResult = await dut.ExecutePersonCommandAsync(orgId, locId, updateUserLink);
             var expectedUpdatedUserLink = expectedUpdatedName with { UserId = userId };
