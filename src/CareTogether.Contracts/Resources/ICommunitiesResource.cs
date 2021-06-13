@@ -1,6 +1,7 @@
 ﻿using JsonPolymorph;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading.Tasks;
 
 namespace CareTogether.Resources
@@ -14,7 +15,7 @@ namespace CareTogether.Resources
     public enum VolunteerFamilyStatus { Active, Inactive }
     public enum PartneringFamilyStatus { Active, Inactive }
     public sealed record Person(Guid Id, Guid? UserId,
-        string FirstName, string LastName, Age Age, DateTime CreatedUtc);
+        string FirstName, string LastName, Age Age);
     public sealed record FamilyAdultRelationshipInfo(
         FamilyAdultRelationshipType RelationshipToFamily, string FamilyRelationshipNotes,
         bool IsInHousehold, bool IsPrimaryFamilyContact, string SafetyRiskNotes);
@@ -46,10 +47,10 @@ namespace CareTogether.Resources
     public sealed record UpdateAdultRelationshipToFamily(Guid FamilyId, Guid AdultPersonId,
         FamilyAdultRelationshipInfo RelationshipToFamily)
         : FamilyCommand(FamilyId);
-    public sealed record AddCustodialRelationship(Guid FamilyId,
+    public sealed record AddCustodialRelationship(Guid FamilyId, //TODO: This should just take a CustodialRelationship
         Guid ChildPersonId, Guid AdultPersonId, CustodialRelationshipType Type)
         : FamilyCommand(FamilyId);
-    public sealed record UpdateCustodialRelationship(Guid FamilyId,
+    public sealed record UpdateCustodialRelationshipType(Guid FamilyId,
         Guid ChildPersonId, Guid AdultPersonId, CustodialRelationshipType Type)
         : FamilyCommand(FamilyId);
     public sealed record RemoveCustodialRelationship(Guid FamilyId,
@@ -57,7 +58,7 @@ namespace CareTogether.Resources
         : FamilyCommand(FamilyId);
 
     [JsonHierarchyBase]
-    public abstract partial record PersonCommand(Guid FamilyId);
+    public abstract partial record PersonCommand(Guid PersonId);
     public sealed record CreatePerson(Guid? UserId, string FirstName, string LastName, Age Age)
         : PersonCommand(Guid.Empty);
     public sealed record UpdatePersonName(Guid PersonId, string FirstName, string LastName)
@@ -77,15 +78,13 @@ namespace CareTogether.Resources
     {
         Task<ResourceResult<Person>> FindUserAsync(Guid organizationId, Guid locationId, Guid userId);
 
-        Task<List<Person>> FindPeopleAsync(Guid organizationId, Guid locationId, string partialFirstOrLastName);
+        Task<IImmutableList<Person>> FindPeopleAsync(Guid organizationId, Guid locationId, string partialFirstOrLastName);
 
-        //IAsyncEnumerable<Family> FindVolunteerFamilies(Guid organizationId, Guid locationId,
-        //    VolunteerFamilyStatus status);
+        Task<IImmutableList<Family>> ListVolunteerFamilies(Guid organizationId, Guid locationId);
 
-        //IAsyncEnumerable<Family> FindPartneringFamilies(Guid organizationId, Guid locationId,
-        //    PartneringFamilyStatus status);
+        Task<IImmutableList<Family>> ListPartneringFamilies(Guid organizationId, Guid locationId);
 
-        //Task<ResourceResult<Family>> ExecuteFamilyCommandAsync(Guid organizationId, Guid locationId, FamilyCommand command);
+        Task<ResourceResult<Family>> ExecuteFamilyCommandAsync(Guid organizationId, Guid locationId, FamilyCommand command);
 
         Task<ResourceResult<Person>> ExecutePersonCommandAsync(Guid organizationId, Guid locationId, PersonCommand command);
     }
