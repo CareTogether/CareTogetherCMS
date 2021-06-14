@@ -17,6 +17,8 @@ namespace CareTogether.Resources
 
     public interface IFormsResource
     {
+        //TODO: Where do we track *which forms belong to a referral*? That appears to require the referral ID being used as a lookup ID in the IFormsResource.
+
         public Guid CreateDraftNote(Guid arrangementId, NoteContents contents)
         {
             throw new NotImplementedException();

@@ -1,142 +1,96 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using CareTogether.Resources;
+using JsonPolymorph;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Threading.Tasks;
 
 namespace CareTogether.Managers
 {
-    public record Referral(Guid Id);
-    public enum ReferralCloseReason { NotAppropriate }; //TODO: This could be policy-driven eventually?
+    public record Referral(Guid Id, int PolicyVersion,
+        ReferralCloseReason? CloseReason,
+        Family PartneringFamily,
+        ImmutableList<ContactInfo> Contacts,
+        ImmutableList<FormUploadInfo> ReferralFormUploads,
+        ImmutableList<ActivityInfo> ReferralActivitiesPerformed,
+        ImmutableList<Arrangement> Arrangements);
 
-    public record Arrangement(Guid Id);
-    public enum ArrangementType { Hosting, Friending }; //TODO: This could be policy-driven eventually?
+    public record Arrangement(Guid Id, int PolicyVersion, string ArrangementType,
+        ImmutableList<FormUploadInfo> ArrangementFormUploads,
+        ImmutableList<ActivityInfo> ArrangementActivitiesPerformed,
+        ImmutableList<VolunteerAssignment> VolunteerAssignments);
 
-    public record ReferralInfo();
+    public sealed record FormUploadInfo(Guid UserId, DateTime TimestampUtc,
+        string FormName, string FormVersion, string UploadedFileName);
+    public sealed record ActivityInfo(Guid UserId, DateTime TimestampUtc,
+        string ActivityName);
 
+    [JsonHierarchyBase]
+    public abstract partial record VolunteerAssignment(string ArrangementFunction);
+    public sealed record IndividualVolunteerAssignment(Guid PersonId, string ArrangementFunction)
+        : VolunteerAssignment(ArrangementFunction);
+    public sealed record FamilyVolunteerAssignment(Guid FamilyId, string ArrangementFunction)
+        : VolunteerAssignment(ArrangementFunction);
 
-    public sealed record PartneringFamilyProfile(Guid FamilyId, JObject FamilyIntakeFields,
-        Dictionary<Guid, JObject> AdultIntakeFields,
-        Dictionary<Guid, JObject> ChildIntakeFields);
-    //TODO: Where do we track *which forms belong to a referral*? That appears to require the referral ID being used as a lookup ID in the IFormsResource.
+    public enum ReferralCloseReason { NotAppropriate, Resourced, NoCapacity, NoLongerNeeded, NeedMet };
 
+    [JsonHierarchyBase]
+    public abstract partial record ReferralCommand(Guid ReferralId, Guid UserId); //TODO: Include timestamp?
+    public sealed record CreateReferral(Guid ReferralId, Guid UserId, Guid FamilyId);
+    public sealed record PerformReferralActivity(Guid ReferralId, Guid UserId,
+        string ActivityName)
+        : ReferralCommand(ReferralId, UserId);
+    public sealed record UploadReferralForm(Guid ReferralId, Guid UserId,
+        string FormName, string FormVersion, string UploadedFileName)
+        : ReferralCommand(ReferralId, UserId);
 
-    //TODO: Workflow states can be reviewed to return **potential/allowed next steps/events**, to help drive UI behavior.
+    [JsonHierarchyBase]
+    public abstract partial record ArrangementCommand(Guid ReferralId, Guid ArrangementId, Guid UserId); //TODO: Include timestamp?
+    public sealed record CreateArrangement(Guid ReferralId, Guid ArrangementId, Guid UserId,
+        string ArrangementType)
+        : ArrangementCommand(ReferralId, ArrangementId, UserId);
+    public sealed record AssignIndividualVolunteer(Guid ReferralId, Guid ArrangementId, Guid UserId,
+        Guid PersonId, string ArrangementFunction)
+        : ArrangementCommand(ReferralId, ArrangementId, UserId);
+    public sealed record AssignVolunteerFamily(Guid ReferralId, Guid ArrangementId, Guid UserId,
+        Guid FamilyId, string ArrangementFunction)
+        : ArrangementCommand(ReferralId, ArrangementId, UserId);
+    public sealed record AssignPartneringFamilyChildren(Guid ReferralId, Guid ArrangementId, Guid UserId,
+        IImmutableList<Guid> ChildrenIds)
+        : ArrangementCommand(ReferralId, ArrangementId, UserId);
+    public sealed record UploadArrangementForm(Guid ReferralId, Guid ArrangementId, Guid UserId,
+        string FormName, string FormVersion, string UploadedFileName)
+        : ArrangementCommand(ReferralId, ArrangementId, UserId);
+    public sealed record PerformArrangementActivity(Guid ReferralId, Guid ArrangementId, Guid UserId,
+        string ActivityName)
+        : ArrangementCommand(ReferralId, ArrangementId, UserId);
+    public sealed record TrackChildrenLocationChange(Guid ReferralId, Guid ArrangementId, Guid UserId,
+        IImmutableList<Guid> ChildrenIds, Guid FamilyId, ChildrenLocationChangePlan Reason, string AdditionalExplanation);
+    public sealed record RecordDraftArrangementNote(Guid ReferralId, Guid ArrangementId, Guid UserId,
+        string DraftNote)
+        : ArrangementCommand(ReferralId, ArrangementId, UserId);
+    public sealed record EditDraftArrangementNote(Guid ReferralId, Guid ArrangementId, Guid UserId,
+        string RevisedDraftNote)
+        : ArrangementCommand(ReferralId, ArrangementId, UserId);
+    public sealed record ApproveDraftArrangementNote(Guid ReferralId, Guid ArrangementId, Guid UserId)
+        : ArrangementCommand(ReferralId, ArrangementId, UserId);
+    public sealed record RejectDraftArrangementNote(Guid ReferralId, Guid ArrangementId, Guid UserId,
+        string RejectionExplanation)
+        : ArrangementCommand(ReferralId, ArrangementId, UserId);
+
+    public enum ChildrenLocationChangePlan { OvernightHousing, DaytimeChildCare, ReturnToFamily }
+
     /// <summary>
     /// The <see cref="IReferralManager"/> models the lifecycle of people's referrals to CareTogether organizations,
     /// including various forms, arrangements, and policy changes, as well as authorizing related queries.
     /// </summary>
     public interface IReferralManager
     {
-        /*
-         * 'request' is just a form (can be an unstructured PDF or semistructured JSON)
-         * that is required as part of a *workflow*. The actual contents are only kept for reference,
-         * and potentially future search/analytics capabilities.
-         */
+        Task<IImmutableList<Referral>> ListReferralsAsync(Guid organizationId, Guid locationId);
 
+        Task<ResourceResult<Referral>> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId, ReferralCommand command);
 
-        // Validate ->
-        // Authorize (PolicyEvaluationEngine?) ->
-        // Execute (returning new state & optionally events) ->
-        // (optionally) Raise Domain Events ->
-        // Apply Permissions Filters (PolicyEvaluationEngine) ->
-        // Return New State
-
-
-        //#region Referrals and Arrangements Workflows
-
-        //internal IEnumerable<Referral> QueryReferrals()
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //internal Guid CreateReferral(Guid partneringFamilyId, ReferralInfo referralInfo)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //internal void UpdateReferral(Guid referralId, ReferralInfo referralInfo)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //internal void CloseReferral(Guid referralId, ReferralCloseReason referralCloseReason)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //internal IEnumerable<Arrangement> QueryArrangements()
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //internal Guid CreateArrangement(Guid referralId, ArrangementType arrangementType)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //internal void RecordArrangementSetupStep(Guid referralId, Guid arrangementId)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //internal void RecordArrangementMonitoringStep(Guid referralId, Guid arrangementId)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //internal void RecordArrangementCloseoutStep()
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //#endregion
-
-        //#region Arrangement Notes
-
-        //internal IEnumerable<Note> GetArrangementNotes(Guid arrangementId)
-        //{
-        //    var workflow = workflowsResourceAccess.GetWorkflowState(arrangementId);
-        //    workflow.ValidateUserAccess();
-        //    return notesResourceAccess.GetNotes(arrangementId);
-        //}
-
-        //internal Guid RecordArrangementNote(Guid arrangementId, NoteContents contents)
-        //{
-        //    var workflow = workflowsResourceAccess.GetWorkflowState(arrangementId);
-        //    workflow.ValidateUserAccess();
-        //    workflow.ValidateAction();
-        //    var noteId = notesResourceAccess.CreateDraftNote(arrangementId, contents);
-        //    return noteId;
-        //}
-
-        //internal void EditArrangementNote(Guid arrangementId, Guid noteId, NoteContents updatedContents)
-        //{
-        //    var workflow = workflowsResourceAccess.GetWorkflowState(arrangementId);
-        //    workflow.ValidateUserAccess();
-        //    var note = notesResourceAccess.GetNote(arrangementId, noteId);
-        //    workflow.ValidateAction(note);
-        //    notesResourceAccess.EditDraftNote(arrangementId, noteId, updatedContents);
-        //}
-
-        //internal void ApproveArrangementNote(Guid arrangementId, Guid noteId)
-        //{
-        //    var workflow = workflowsResourceAccess.GetWorkflowState(arrangementId);
-        //    workflow.ValidateUserAccess();
-        //    var note = notesResourceAccess.GetNote(arrangementId, noteId);
-        //    workflow.ValidateAction(note);
-        //    notesResourceAccess.ApproveDraftNote(arrangementId, noteId);
-        //    notificationsUtility.NotifyUser(new Notifications.NoteApproved(arrangementId, noteId));
-        //}
-
-        //internal void RejectArrangementNote(Guid arrangementId, Guid noteId, DraftNoteDenialReason reason)
-        //{
-        //    var workflow = workflowsResourceAccess.GetWorkflowState(arrangementId);
-        //    workflow.ValidateUserAccess();
-        //    var note = notesResourceAccess.GetNote(arrangementId, noteId);
-        //    workflow.ValidateAction(note);
-        //    notesResourceAccess.DenyDraftNote(arrangementId, noteId, reason);
-        //    notificationsUtility.NotifyUser(new Notifications.NoteRejected(arrangementId, noteId));
-        //}
-
-        //#endregion
+        Task<ResourceResult<Referral>> ExecuteArrangementCommand(Guid organizationId, Guid locationId, ArrangementCommand command);
     }
 }
