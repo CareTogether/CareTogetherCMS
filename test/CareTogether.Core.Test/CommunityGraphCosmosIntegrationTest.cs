@@ -65,7 +65,7 @@ namespace CareTogether.Core.Test
             var findResultBeforeCreating = await dut.FindUserAsync(orgId, locId, userId);
             Assert.IsTrue(findResultBeforeCreating.IsT1);
 
-            var createPerson = new CreatePerson(UserId: Guid.Empty, FirstName: "Firstly", LastName: "Lastly",
+            var createPerson = new CreatePerson(PersonId: Guid.Empty, UserId: Guid.Empty, FirstName: "Firstly", LastName: "Lastly",
                 Age: new AgeInYears(42, ageAsOfDate));
             var createResult = await dut.ExecutePersonCommandAsync(orgId, locId, createPerson);
             Assert.IsTrue(createResult.IsT0);

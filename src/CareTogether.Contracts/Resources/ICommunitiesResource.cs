@@ -31,13 +31,13 @@ namespace CareTogether.Resources
 
     [JsonHierarchyBase]
     public abstract partial record FamilyCommand(Guid FamilyId);
-    public sealed record CreateFamily(
+    public sealed record CreateFamily(Guid FamilyId,
         VolunteerFamilyStatus? VolunteerFamilyStatus,
         PartneringFamilyStatus? PartneringFamilyStatus,
         List<(Guid, FamilyAdultRelationshipInfo)> Adults,
         List<Guid> Children,
         List<CustodialRelationship> CustodialRelationships)
-        : FamilyCommand(Guid.Empty);
+        : FamilyCommand(FamilyId);
     public sealed record AddAdultToFamily(Guid FamilyId, Guid AdultPersonId,
         FamilyAdultRelationshipInfo RelationshipToFamily)
         : FamilyCommand(FamilyId);
@@ -56,11 +56,17 @@ namespace CareTogether.Resources
     public sealed record RemoveCustodialRelationship(Guid FamilyId,
         Guid ChildPersonId, Guid AdultPersonId)
         : FamilyCommand(FamilyId);
+    public sealed record UpdatePartneringFamilyStatus(Guid FamilyId,
+        PartneringFamilyStatus? PartneringFamilyStatus)
+        : FamilyCommand(FamilyId);
+    public sealed record UpdateVolunteerFamilyStatus(Guid FamilyId,
+        VolunteerFamilyStatus? VolunteerFamilyStatus)
+        : FamilyCommand(FamilyId);
 
     [JsonHierarchyBase]
     public abstract partial record PersonCommand(Guid PersonId);
-    public sealed record CreatePerson(Guid? UserId, string FirstName, string LastName, Age Age)
-        : PersonCommand(Guid.Empty);
+    public sealed record CreatePerson(Guid PersonId, Guid? UserId, string FirstName, string LastName, Age Age)
+        : PersonCommand(PersonId);
     public sealed record UpdatePersonName(Guid PersonId, string FirstName, string LastName)
         : PersonCommand(PersonId);
     public sealed record UpdatePersonAge(Guid PersonId, Age Age)
