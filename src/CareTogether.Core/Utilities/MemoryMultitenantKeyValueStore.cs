@@ -16,7 +16,9 @@ namespace CareTogether.Utilities
         public MemoryMultitenantKeyValueStore(
             IDictionary<(Guid organizationId, Guid locationId, Guid key), T> initialValues = null)
         {
-            values = new Dictionary<(Guid organizationId, Guid locationId, Guid key), T>(initialValues);
+            values = initialValues == null
+                ? new Dictionary<(Guid organizationId, Guid locationId, Guid key), T>()
+                : new Dictionary<(Guid organizationId, Guid locationId, Guid key), T>(initialValues);
         }
 
 
