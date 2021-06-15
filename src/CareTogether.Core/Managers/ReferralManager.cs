@@ -1,6 +1,7 @@
 ﻿using JsonPolymorph;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,6 +10,20 @@ namespace CareTogether.Managers
 {
     public sealed class ReferralManager : IReferralManager
     {
+        public Task<ResourceResult<Referral>> ExecuteArrangementCommand(Guid organizationId, Guid locationId, ArrangementCommand command)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<ResourceResult<Referral>> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId, ReferralCommand command)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IImmutableList<Referral>> ListReferralsAsync(Guid organizationId, Guid locationId)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     //[JsonHierarchyBase]
