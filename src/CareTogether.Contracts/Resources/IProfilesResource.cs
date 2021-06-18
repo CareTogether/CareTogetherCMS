@@ -1,6 +1,7 @@
 ﻿using JsonPolymorph;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading.Tasks;
 
 namespace CareTogether.Resources
@@ -65,6 +66,8 @@ namespace CareTogether.Resources
         Task<ResourceResult<ContactInfo>> ExecuteContactCommandAsync(Guid organizationId, Guid locationId, ContactCommand command);
 
         Task<ResourceResult<ContactInfo>> FindUserContactInfoAsync(Guid organizationId, Guid locationId, Guid personId);
+
+        Task<IImmutableDictionary<Guid, ContactInfo>> ListContactsAsync(Guid organizationId, Guid locationId);
 
         Task<ResourceResult<Goal>> ExecuteGoalCommandAsync(Guid organizationId, Guid locationId, GoalCommand command);
 

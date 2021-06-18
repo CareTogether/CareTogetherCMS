@@ -2,6 +2,7 @@
 using OneOf.Types;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -83,6 +84,13 @@ namespace CareTogether.Resources
             await contactStore.UpsertValueAsync(organizationId, locationId, contact.PersonId, contact);
 
             return contact;
+        }
+
+        public Task<IImmutableDictionary<Guid, ContactInfo>> ListContactsAsync(Guid organizationId, Guid locationId)
+        {
+            return Task.Run(() =>
+                (IImmutableDictionary<Guid, ContactInfo>)
+                contactStore.QueryValues(organizationId, locationId).ToImmutableDictionary(c => c.PersonId));
         }
 
         public async Task<ResourceResult<ContactInfo>> FindUserContactInfoAsync(Guid organizationId, Guid locationId, Guid personId)
