@@ -109,12 +109,15 @@ namespace CareTogether.Managers
     /// </summary>
     public interface IReferralManager
     {
-        Task<ImmutableList<Referral>> ListReferralsAsync(Guid organizationId, Guid locationId);
+        Task<IImmutableList<Referral>> ListReferralsAsync(Guid organizationId, Guid locationId);
 
-        Task<ResourceResult<Referral>> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId, ReferralCommand command);
+        Task<ManagerResult<Referral>> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId,
+            AuthorizedUser user, ReferralCommand command);
 
-        Task<ResourceResult<Referral>> ExecuteArrangementCommand(Guid organizationId, Guid locationId, ArrangementCommand command);
+        Task<ManagerResult<Referral>> ExecuteArrangementCommandAsync(Guid organizationId, Guid locationId,
+            AuthorizedUser user, ArrangementCommand command);
 
-        Task<ResourceResult<Referral>> ExecuteArrangementNoteCommand(Guid organizationId, Guid locationId, ArrangementNoteCommand);
+        Task<ManagerResult<Referral>> ExecuteArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
+            AuthorizedUser user, ArrangementNoteCommand command);
     }
 }

@@ -213,17 +213,99 @@ namespace CareTogether.Managers
                 return error;
         }
 
-        //public IImmutableList<Family> FindFamilies(Func<Family, bool> predicate) =>
-        //    families.Values
-        //        .Select(p => p.ToFamily(people))
-        //        .Where(predicate)
-        //        .ToImmutableList();
+        public async Task<OneOf<Success<(ArrangementNoteCommandExecuted Event, long SequenceNumber, Referral Referral, Action OnCommit)>, Error<string>>>
+            ExecuteArrangementNoteCommandAsync(ArrangementNoteCommand command)
+        {
+            if (!referrals.TryGetValue(command.ReferralId, out var referralEntry))
+                return new Error<string>("A referral with the specified ID does not exist.");
 
-        //public IImmutableList<Person> FindPeople(Func<Person, bool> predicate) =>
-        //    people.Values
-        //        .Select(p => p.ToPerson())
-        //        .Where(predicate)
-        //        .ToImmutableList();
+            //OneOf<ArrangementEntry, Error<string>> result = command switch
+            //{
+            //    //TODO: Validate policy version and enforce any other invariants
+            //    CreateArrangement c => new ArrangementEntry(c.ArrangementId, c.PolicyVersion, c.ArrangementType, ArrangementState.Setup,
+            //        ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty, ImmutableList<VolunteerAssignment>.Empty,
+            //        ImmutableList<PartneringFamilyChildAssignment>.Empty, ImmutableList<ChildrenLocationHistoryEntry>.Empty,
+            //        ImmutableList<Guid>.Empty, ImmutableList<Guid>.Empty),
+            //    _ => referralEntry.Arrangements.TryGetValue(command.ArrangementId, out var arrangementEntry)
+            //        ? command switch
+            //        {
+            //            //TODO: Enforce any business rules dynamically via the policy evaluation engine.
+            //            //      This involves returning "allowed actions" with the rendered Referral state
+            //            //      and failing any attempted actions that are not allowed.
+            //            AssignIndividualVolunteer c => arrangementEntry with
+            //            {
+            //                VolunteerAssignments = arrangementEntry.VolunteerAssignments.Add(
+            //                    new IndividualVolunteerAssignment(c.PersonId, c.ArrangementFunction))
+            //            },
+            //            AssignVolunteerFamily c => arrangementEntry with
+            //            {
+            //                VolunteerAssignments = arrangementEntry.VolunteerAssignments.Add(
+            //                    new FamilyVolunteerAssignment(c.FamilyId, c.ArrangementFunction))
+            //            },
+            //            AssignPartneringFamilyChildren c => arrangementEntry with
+            //            {
+            //                PartneringFamilyChildAssignments = arrangementEntry.PartneringFamilyChildAssignments.AddRange(
+            //                    c.ChildrenIds.Select(c => new PartneringFamilyChildAssignment(c)))
+            //            },
+            //            InitiateArrangement c => arrangementEntry with
+            //            {
+            //                State = ArrangementState.Open
+            //            },
+            //            UploadArrangementForm c => arrangementEntry with
+            //            {
+            //                ArrangementFormUploads = arrangementEntry.ArrangementFormUploads.Add(
+            //                    new FormUploadInfo(c.UserId, c.TimestampUtc, c.FormName, c.FormVersion, c.UploadedFileName))
+            //            },
+            //            PerformArrangementActivity c => arrangementEntry with
+            //            {
+            //                ArrangementActivitiesPerformed = arrangementEntry.ArrangementActivitiesPerformed.Add(
+            //                    new ActivityInfo(c.UserId, c.TimestampUtc, c.ActivityName))
+            //            },
+            //            TrackChildrenLocationChange c => arrangementEntry with
+            //            {
+            //                ChildrenLocationHistory = arrangementEntry.ChildrenLocationHistory.Add(
+            //                    new ChildrenLocationHistoryEntry(c.UserId, c.TimestampUtc,
+            //                        c.ChildrenIds, c.FamilyId, c.Plan, c.AdditionalExplanation))
+            //            },
+            //            _ => throw new NotImplementedException(
+            //                $"The command type '{command.GetType().FullName}' has not been implemented.")
+            //        }
+            //        : new Error<string>("An arrangement with the specified ID does not exist.")
+            //};
+
+            //if (result.TryPickT0(out var arrangementEntryToUpsert, out var error))
+            //{
+            //    var referralEntryToUpsert = referralEntry with
+            //    {
+            //        Arrangements = referralEntry.Arrangements.SetItem(command.ArrangementId, arrangementEntryToUpsert)
+            //    };
+            //    var families = await getFamiliesAsync();
+            //    var contacts = await getContactsAsync();
+            //    return new Success<(ArrangementCommandExecuted Event, long SequenceNumber, Referral Referral, Action OnCommit)>((
+            //        Event: new ArrangementCommandExecuted(command),
+            //        SequenceNumber: LastKnownSequenceNumber + 1,
+            //        Referral: referralEntryToUpsert.ToReferral(families, contacts),
+            //        OnCommit: () => referrals = referrals.SetItem(referralEntryToUpsert.Id, referralEntryToUpsert)));
+            //}
+            //else
+            //    return error;
+            throw new NotImplementedException();
+        }
+
+        public async Task<IImmutableList<Referral>> FindReferralsAsync(Func<Referral, bool> predicate)
+        {
+            var allReferrals = await Task.WhenAll(referrals.Values
+                .Select(async p => p.ToReferral(await getFamiliesAsync(), await getContactsAsync())));
+
+            return allReferrals
+                .Where(predicate)
+                .ToImmutableList();
+        }
+
+        public async Task<ResourceResult<Referral>> GetReferralAsync(Guid referralId) =>
+            referrals.TryGetValue(referralId, out var referralEntry)
+            ? referralEntry.ToReferral(await getFamiliesAsync(), await getContactsAsync())
+            : ResourceResult.NotFound;
 
 
         private async Task ReplayEventAsync(ReferralEvent domainEvent, long sequenceNumber)
