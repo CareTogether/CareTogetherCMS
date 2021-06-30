@@ -1,16 +1,17 @@
 ﻿using CareTogether.Resources;
 using System;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace CareTogether
 {
-    public sealed class AuthorizationLogic
+    public sealed class AuthorizationProvider
     {
         private readonly ICommunitiesResource communitiesResource;
 
 
-        public AuthorizationLogic(ICommunitiesResource communitiesResource)
+        public AuthorizationProvider(ICommunitiesResource communitiesResource)
         {
             this.communitiesResource = communitiesResource;
         }
@@ -22,7 +23,15 @@ namespace CareTogether
             var userResult = await communitiesResource.FindUserAsync(organizationId, locationId, principal.UserId());
 
             return userResult.Match(
-                person => new AuthorizedUser(principal, principal.UserId(), person),
+                person =>
+                {
+                    var augmentedPrincipal = principal.Identities.First();
+                    augmentedPrincipal.AddClaim(new Claim(Claims.OrganizationId, organizationId.ToString()));
+                    augmentedPrincipal.AddClaim(new Claim(Claims.LocationId, locationId.ToString()));
+                    //TODO: Pull role information from the communitiesResource!
+                    augmentedPrincipal.AddClaim(new Claim(augmentedPrincipal.RoleClaimType, Roles.OrganizationAdministrator));
+                    return new AuthorizedUser(principal, principal.UserId(), person);
+                },
                 NotFound => throw new InvalidOperationException("No person with the requested user ID was found.")); //TODO: Use a ResourceResult instead?
         }
     }

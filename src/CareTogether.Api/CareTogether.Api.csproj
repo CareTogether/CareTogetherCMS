@@ -9,4 +9,9 @@
     <PackageReference Include="Microsoft.Identity.Web" Version="1.11.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\CareTogether.Contracts\CareTogether.Contracts.csproj" />
+    <ProjectReference Include="..\CareTogether.Core\CareTogether.Core.csproj" />
+  </ItemGroup>
+
 </Project>
