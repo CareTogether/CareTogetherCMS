@@ -1,15 +1,8 @@
 import React from 'react';
-import { makeStyles } from '@material-ui/core/styles';
-import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
-import Paper from '@material-ui/core/Paper';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
-import Divider from '@material-ui/core/Divider';
-import InboxIcon from '@material-ui/icons/Inbox';
-import DraftsIcon from '@material-ui/icons/Drafts';
-import Typography from '@material-ui/core/Typography';
-import { Route, MemoryRouter } from 'react-router';
+import { useRouteMatch } from 'react-router';
 import { Link as RouterLink, LinkProps as RouterLinkProps } from 'react-router-dom';
 import { Omit } from '@material-ui/types';
 
@@ -24,6 +17,10 @@ interface ListItemLinkProps {
 function ListItemLink(props: ListItemLinkProps) {
   const { icon, primary, to } = props;
 
+  const match = useRouteMatch({
+    path: to
+  });
+
   const renderLink = React.useMemo(
     () =>
       React.forwardRef<any, Omit<RouterLinkProps, 'to'>>((itemProps, ref) => (
@@ -34,7 +31,7 @@ function ListItemLink(props: ListItemLinkProps) {
 
   return (
     <li>
-      <ListItem button component={renderLink}>
+      <ListItem button component={renderLink} selected={match !== null}>
         {icon ? <ListItemIcon>{icon}</ListItemIcon> : null}
         <ListItemText primary={primary} />
       </ListItem>

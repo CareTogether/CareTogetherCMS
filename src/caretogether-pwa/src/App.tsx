@@ -1,25 +1,17 @@
 import React from 'react';
 import clsx from 'clsx';
 import { fade, makeStyles } from '@material-ui/core/styles';
-import { Typography, InputBase, ListItem, ListItemIcon, ListItemText, ListSubheader, CssBaseline, AppBar, Toolbar, IconButton, Badge, Drawer, Divider, List, Container, Grid, Paper, Box } from '@material-ui/core';
-import AssignmentIcon from '@material-ui/icons/Assignment';
-import BarChartIcon from '@material-ui/icons/BarChart';
-import DashboardIcon from '@material-ui/icons/Dashboard';
+import { Typography, InputBase, CssBaseline, AppBar, Toolbar, IconButton, Badge, Drawer, Divider, List, Container, Grid, Paper } from '@material-ui/core';
+import AssignmentIndIcon from '@material-ui/icons/AssignmentInd';
+import PermPhoneMsgIcon from '@material-ui/icons/PermPhoneMsg';
+import EmojiPeopleIcon from '@material-ui/icons/EmojiPeople';
+import ContactPhoneIcon from '@material-ui/icons/ContactPhone';
+import GroupWorkIcon from '@material-ui/icons/GroupWork';
 import SearchIcon from '@material-ui/icons/Search';
-import DraftsIcon from '@material-ui/icons/Drafts';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
-import InboxIcon from '@material-ui/icons/Inbox';
-import LayersIcon from '@material-ui/icons/Layers';
 import MenuIcon from '@material-ui/icons/Menu';
 import NotificationsIcon from '@material-ui/icons/Notifications';
-import PeopleIcon from '@material-ui/icons/People';
-import ShoppingCartIcon from '@material-ui/icons/ShoppingCart';
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  Link
-} from "react-router-dom";
+import { Route, Switch, Redirect, BrowserRouter as Router } from "react-router-dom";
 import { ListItemLink } from './Components/ListItemLink';
 
 function Copyright() {
@@ -28,8 +20,8 @@ function Copyright() {
       {'Powered by '}
       <a color="inherit" href="https://caretogether.io/" target="_blank" rel="noopener">
         CareTogether CMS
-      </a>{' © '}
-      {new Date().getFullYear()}
+      </a><br />
+      {' © '} {new Date().getFullYear()}
     </Typography>
   );
 }
@@ -73,6 +65,7 @@ const useStyles = makeStyles((theme) => ({
       backgroundColor: fade(theme.palette.common.white, 0.25),
     },
     marginLeft: 0,
+    marginRight: theme.spacing(1),
     width: '100%',
     [theme.breakpoints.up('sm')]: {
       marginLeft: theme.spacing(1),
@@ -155,16 +148,17 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const mainListItems = (
-  <List aria-label="main mailbox folders">
-    <ListItemLink to="/inbox" primary="Inbox" icon={<InboxIcon />} />
-    <ListItemLink to="/drafts" primary="Drafts" icon={<DraftsIcon />} />
+  <List aria-label="main navigation">
+    <ListItemLink to="/arrangements" primary="Arrangements" icon={<AssignmentIndIcon />} />
+    <ListItemLink to="/referrals" primary="Referrals" icon={<PermPhoneMsgIcon />} />
+    <ListItemLink to="/volunteers" primary="Volunteers" icon={<EmojiPeopleIcon />} />
   </List>
 );
 
 const secondaryListItems = (
-  <List aria-label="secondary mailbox folders">
-    <ListItemLink to="/trash" primary="Trash" />
-    <ListItemLink to="/spam" primary="Spam" />
+  <List aria-label="secondary navigation">
+    <ListItemLink to="/contacts" primary="Contacts" icon={<ContactPhoneIcon />} />
+    <ListItemLink to="/communities" primary="Communities" icon={<GroupWorkIcon />} />
   </List>
 );
 
@@ -230,38 +224,46 @@ function App() {
             </IconButton>
           </div>
           <Divider />
-          <List>{mainListItems}</List>
+          {mainListItems}
           <Divider />
-          <List>{secondaryListItems}</List>
+          {secondaryListItems}
+          { open && <Copyright /> }
         </Drawer>
         <main className={classes.content}>
           <div className={classes.appBarSpacer} />
-          <Route>
-            {({ location }) => (
-              <Typography gutterBottom>Current route: {location.pathname}</Typography>
-            )}
-          </Route>
           <Container maxWidth="lg" className={classes.container}>
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={8} lg={9}>
-                <Paper className={fixedHeightPaper}>
-                  Area 1
-                </Paper>
-              </Grid>
-              <Grid item xs={12} md={4} lg={3}>
-                <Paper className={fixedHeightPaper}>
-                  Area 2
-                </Paper>
-              </Grid>
-              <Grid item xs={12}>
-                <Paper className={classes.paper}>
-                  Area 3
-                </Paper>
-              </Grid>
-            </Grid>
-            <Box pt={4}>
-              <Copyright />
-            </Box>
+            <Switch>
+              <Route path="/arrangements">
+                {/* <Grid container spacing={3}>
+                  <Grid item xs={12} md={8} lg={9}>
+                    <Paper className={fixedHeightPaper}>
+                      Area 1
+                    </Paper>
+                  </Grid>
+                  <Grid item xs={12} md={4} lg={3}>
+                    <Paper className={fixedHeightPaper}>
+                      Area 2
+                    </Paper>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Paper className={classes.paper}>
+                      Area 3
+                    </Paper>
+                  </Grid>
+                </Grid> */}
+              </Route>
+              <Route path="/referrals">
+              </Route>
+              <Route path="/volunteers">
+              </Route>
+              <Route path="/contacts">
+              </Route>
+              <Route path="/communities">
+              </Route>
+              <Route>
+                <Redirect to="/arrangements" />
+              </Route>
+            </Switch>
           </Container>
         </main>
       </Router>
