@@ -213,7 +213,8 @@ export interface IPerson {
 }
 
 export abstract class Age implements IAge {
-    type?: AgeType;
+
+    protected _discriminator: string;
 
     constructor(data?: IAge) {
         if (data) {
@@ -222,33 +223,107 @@ export abstract class Age implements IAge {
                     (<any>this)[property] = (<any>data)[property];
             }
         }
+        this._discriminator = "Age";
     }
 
     init(_data?: any) {
-        if (_data) {
-            this.type = _data["type"];
-        }
     }
 
     static fromJS(data: any): Age {
         data = typeof data === 'object' ? data : {};
+        if (data["discriminator"] === "AgeInYears") {
+            let result = new AgeInYears();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "ExactAge") {
+            let result = new ExactAge();
+            result.init(data);
+            return result;
+        }
         throw new Error("The abstract class 'Age' cannot be instantiated.");
     }
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["type"] = this.type;
+        data["discriminator"] = this._discriminator; 
         return data; 
     }
 }
 
 export interface IAge {
-    type?: AgeType;
 }
 
-export enum AgeType {
-    AgeInYears = 0,
-    ExactAge = 1,
+export class AgeInYears extends Age implements IAgeInYears {
+    years?: number;
+    asOf?: Date;
+
+    constructor(data?: IAgeInYears) {
+        super(data);
+        this._discriminator = "AgeInYears";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.years = _data["years"];
+            this.asOf = _data["asOf"] ? new Date(_data["asOf"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): AgeInYears {
+        data = typeof data === 'object' ? data : {};
+        let result = new AgeInYears();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["years"] = this.years;
+        data["asOf"] = this.asOf ? this.asOf.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IAgeInYears extends IAge {
+    years?: number;
+    asOf?: Date;
+}
+
+export class ExactAge extends Age implements IExactAge {
+    dateOfBirth?: Date;
+
+    constructor(data?: IExactAge) {
+        super(data);
+        this._discriminator = "ExactAge";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.dateOfBirth = _data["dateOfBirth"] ? new Date(_data["dateOfBirth"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ExactAge {
+        data = typeof data === 'object' ? data : {};
+        let result = new ExactAge();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["dateOfBirth"] = this.dateOfBirth ? this.dateOfBirth.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IExactAge extends IAge {
+    dateOfBirth?: Date;
 }
 
 export class PersonDetails implements IPersonDetails {

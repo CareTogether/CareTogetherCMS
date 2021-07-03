@@ -171,24 +171,60 @@
       },
       "Age": {
         "type": "object",
+        "discriminator": {
+          "propertyName": "discriminator",
+          "mapping": {
+            "AgeInYears": "#/components/schemas/AgeInYears",
+            "ExactAge": "#/components/schemas/ExactAge"
+          }
+        },
         "x-abstract": true,
         "additionalProperties": false,
+        "required": [
+          "discriminator"
+        ],
         "properties": {
-          "type": {
-            "$ref": "#/components/schemas/AgeType"
+          "discriminator": {
+            "type": "string"
           }
         }
       },
-      "AgeType": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "AgeInYears",
-          "ExactAge"
-        ],
-        "enum": [
-          0,
-          1
+      "AgeInYears": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Age"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "years": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "asOf": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "ExactAge": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Age"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "dateOfBirth": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
         ]
       },
       "PersonDetails": {

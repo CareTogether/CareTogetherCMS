@@ -51,7 +51,8 @@ namespace CareTogether.Api
             // Utility providers
             services.AddSingleton(new AuthorizationProvider(communitiesResource));
 
-            services.AddControllers();
+            // Use legacy Newtonsoft JSON to support JsonPolymorph & NSwag for polymorphic serialization
+            services.AddControllers().AddNewtonsoftJson();
 
             services.AddAuthorization(options =>
             {
@@ -88,11 +89,11 @@ namespace CareTogether.Api
                 app.UseDeveloperExceptionPage();
 
                 app.UseOpenApi();
-                app.UseSwaggerUi3();
+                // ReDoc supports discriminators/polymorphism so we use that instead of Swagger UI.
                 app.UseReDoc(config =>
                 {
                     config.Path = "/redoc";
-                    config.DocumentPath = "/swagger/v1/swagger.json";
+                    //config.DocumentPath = "/swagger/v1/swagger.json";
                 });
             }
             else
