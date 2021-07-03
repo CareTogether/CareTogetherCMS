@@ -7,11 +7,25 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Identity.Web" Version="1.14.0" />
+    <PackageReference Include="NSwag.AspNetCore" Version="13.11.3" />
+    <PackageReference Include="NSwag.MSBuild" Version="13.11.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\CareTogether.Contracts\CareTogether.Contracts.csproj" />
     <ProjectReference Include="..\CareTogether.Core\CareTogether.Core.csproj" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+  </PropertyGroup>
+
+  <Target Name="NSwag" AfterTargets="PostBuildEvent" Condition="'$(Configuration)' == 'Debug'">
+    <Exec Command="$(NSwagExe_Net50) aspnetcore2openapi /assembly:$(TargetPath) /output:$(SolutionDir)swagger.json" EnvironmentVariables="ASPNETCORE_ENVIRONMENT=Development" />
+    <Exec Command="$(NSwagExe_Net50) openapi2tsclient /input:$(SolutionDir)swagger.json /output:$(SolutionDir)GeneratedClient.ts" />
+  </Target>
 
 </Project>

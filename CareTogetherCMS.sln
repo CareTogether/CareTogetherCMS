@@ -40,9 +40,17 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CareTogether.Contracts", "s
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CareTogether.Core", "src\CareTogether.Core\CareTogether.Core.csproj", "{82B69D6F-DA25-452B-883D-71B9AE91DF23}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CareTogether.Core.Test", "test\CareTogether.Core.Test\CareTogether.Core.Test.csproj", "{B2CA1F10-216E-404E-A3C2-70423D5BCF5D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CareTogether.Core.Test", "test\CareTogether.Core.Test\CareTogether.Core.Test.csproj", "{B2CA1F10-216E-404E-A3C2-70423D5BCF5D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{42D43EAF-EE89-479A-B304-3B5DF56A3494}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{4911A81B-E06B-4090-9252-4359580C3C8E}"
+	ProjectSection(SolutionItems) = preProject
+		GeneratedClient.ts = GeneratedClient.ts
+		LICENSE = LICENSE
+		README.md = README.md
+		swagger.json = swagger.json
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,0 +1,364 @@
+{
+  "x-generator": "NSwag v13.11.3.0 (NJsonSchema v10.4.4.0 (Newtonsoft.Json v12.0.0.0))",
+  "openapi": "3.0.0",
+  "info": {
+    "title": "CareTogether CMS API",
+    "description": "API for the CareTogether Community Management System",
+    "contact": {
+      "name": "CareTogether CMS Team",
+      "url": "https://caretogether.io/"
+    },
+    "license": {
+      "name": "Use under AGPLv3",
+      "url": "https://www.gnu.org/licenses/agpl-3.0.en.html"
+    },
+    "version": "v1"
+  },
+  "paths": {
+    "/Claims": {
+      "get": {
+        "tags": [
+          "Claims"
+        ],
+        "operationId": "Claims_Get",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/{organizationId}/{locationId}/People": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "People_Get",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Person"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/{organizationId}/{locationId}/People/{personId}": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "People_GetContactInfo",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          },
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 3
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Person": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          },
+          "firstName": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastName": {
+            "type": "string",
+            "nullable": true
+          },
+          "age": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Age"
+              }
+            ]
+          }
+        }
+      },
+      "Age": {
+        "type": "object",
+        "x-abstract": true,
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/AgeType"
+          }
+        }
+      },
+      "AgeType": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "AgeInYears",
+          "ExactAge"
+        ],
+        "enum": [
+          0,
+          1
+        ]
+      },
+      "PersonDetails": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "person": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Person"
+              }
+            ]
+          },
+          "contactInfo": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ContactInfo"
+              }
+            ]
+          }
+        }
+      },
+      "ContactInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "personId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "addresses": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/Address"
+            }
+          },
+          "currentAddressId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          },
+          "phoneNumbers": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/PhoneNumber"
+            }
+          },
+          "preferredPhoneNumberId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          },
+          "emailAddresses": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/EmailAddress"
+            }
+          },
+          "preferredEmailAddressId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          },
+          "contactMethodPreferenceNotes": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "Address": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
+          "line1": {
+            "type": "string",
+            "nullable": true
+          },
+          "line2": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "stateId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "postalCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "countryId": {
+            "type": "string",
+            "format": "guid"
+          }
+        }
+      },
+      "PhoneNumber": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
+          "number": {
+            "type": "string",
+            "nullable": true
+          },
+          "type": {
+            "$ref": "#/components/schemas/PhoneNumberType"
+          }
+        }
+      },
+      "PhoneNumberType": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Mobile",
+          "Home",
+          "Work",
+          "Fax"
+        ],
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      "EmailAddress": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "type": {
+            "$ref": "#/components/schemas/EmailAddressType"
+          }
+        }
+      },
+      "EmailAddressType": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Personal",
+          "Work"
+        ],
+        "enum": [
+          0,
+          1
+        ]
+      }
+    }
+  }
+}

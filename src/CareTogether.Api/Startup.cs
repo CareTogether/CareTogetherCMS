@@ -58,6 +58,26 @@ namespace CareTogether.Api
                 // By default, all incoming requests will be authorized according to the default policy
                 options.FallbackPolicy = options.DefaultPolicy;
             });
+
+            services.AddOpenApiDocument(options =>
+            {
+                options.PostProcess = document =>
+                {
+                    document.Info.Version = "v1";
+                    document.Info.Title = "CareTogether CMS API";
+                    document.Info.Description = "API for the CareTogether Community Management System";
+                    document.Info.Contact = new NSwag.OpenApiContact
+                    {
+                        Name = "CareTogether CMS Team",
+                        Url = "https://caretogether.io/"
+                    };
+                    document.Info.License = new NSwag.OpenApiLicense
+                    {
+                        Name = "Use under AGPLv3",
+                        Url = "https://www.gnu.org/licenses/agpl-3.0.en.html"
+                    };
+                };
+            });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -66,6 +86,14 @@ namespace CareTogether.Api
             {
                 IdentityModelEventSource.ShowPII = true;
                 app.UseDeveloperExceptionPage();
+
+                app.UseOpenApi();
+                app.UseSwaggerUi3();
+                app.UseReDoc(config =>
+                {
+                    config.Path = "/redoc";
+                    config.DocumentPath = "/swagger/v1/swagger.json";
+                });
             }
             else
             {
