@@ -1,8 +1,10 @@
 ﻿using CareTogether.Managers;
+using CareTogether.Resources;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -28,7 +30,7 @@ namespace CareTogether.Api.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> Get(Guid organizationId, Guid locationId)
+        public async Task<ActionResult<IEnumerable<Person>>> Get(Guid organizationId, Guid locationId)
         {
             logger.LogInformation("User '{UserName}' was authenticated via '{AuthenticationType}'",
                 User.Identity.Name, User.Identity.AuthenticationType);
@@ -42,8 +44,10 @@ namespace CareTogether.Api.Controllers
                 return BadRequest(error);
         }
 
+        public sealed record PersonDetails(Person Person, ContactInfo ContactInfo);
+
         [HttpGet("{personId:guid}")]
-        public async Task<IActionResult> GetContactInfo(Guid organizationId, Guid locationId, Guid personId)
+        public async Task<ActionResult<PersonDetails>> GetContactInfo(Guid organizationId, Guid locationId, Guid personId)
         {
             logger.LogInformation("User '{UserName}' was authenticated via '{AuthenticationType}'",
                 User.Identity.Name, User.Identity.AuthenticationType);
@@ -58,11 +62,7 @@ namespace CareTogether.Api.Controllers
                 {
                     var contactInfoResult = await membershipManager.GetContactInfoAsync(authorizedUser, organizationId, locationId, personId);
                     if (contactInfoResult.TryPickT0(out var contactInfo, out var contactInfoError))
-                        return Ok(new
-                        {
-                            Person = person,
-                            ContactInfo = contactInfo
-                        });
+                        return Ok(new PersonDetails(person, contactInfo));
                     else
                         return BadRequest(contactInfoError);
                 }
