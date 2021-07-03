@@ -1,0 +1,240 @@
+﻿using CareTogether.Abstractions;
+using CareTogether.Engines;
+using CareTogether.Resources;
+using JsonPolymorph;
+using Nito.AsyncEx;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CareTogether.Managers
+{
+    public sealed class ReferralManager : IReferralManager
+    {
+        private readonly IMultitenantEventLog<ReferralEvent> eventLog;
+        private readonly ConcurrentDictionary<(Guid organizationId, Guid locationId), AsyncLazy<ReferralModel>> tenantModels = new();
+        private readonly IPolicyEvaluationEngine policyEvaluationEngine;
+        private readonly ICommunitiesResource communitiesResource;
+        private readonly IProfilesResource profilesResource;
+
+
+        public ReferralManager(IMultitenantEventLog<ReferralEvent> eventLog, IPolicyEvaluationEngine policyEvaluationEngine,
+            ICommunitiesResource communitiesResource, IProfilesResource profilesResource)
+        {
+            this.eventLog = eventLog;
+            this.policyEvaluationEngine = policyEvaluationEngine;
+            this.communitiesResource = communitiesResource;
+            this.profilesResource = profilesResource;
+        }
+
+
+        public async Task<ManagerResult<Referral>> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId,
+            AuthorizedUser user, ReferralCommand command)
+        {
+            var tenantModel = await GetTenantModelAsync(organizationId, locationId);
+
+            var getReferralResult = await tenantModel.GetReferralAsync(command.ReferralId);
+            if (getReferralResult.TryPickT0(out var referral, out var notFound))
+            {
+                var authorizationResult = await policyEvaluationEngine.AuthorizeReferralCommandAsync(
+                    organizationId, locationId, user, command, referral);
+                if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
+                {
+                    var commandResult = await tenantModel.ExecuteReferralCommandAsync(command);
+                    if (commandResult.TryPickT0(out var success, out var commandError))
+                    {
+                        await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
+                        success.Value.OnCommit();
+                        var disclosedReferral = await policyEvaluationEngine.DiscloseReferralAsync(user, success.Value.Referral);
+                        return disclosedReferral;
+                    }
+                    else
+                        return ManagerResult.NotAllowed; //TODO: Include reason from 'commandError'?
+                }
+                else
+                    return ManagerResult.NotAllowed; //TODO: Include reason from 'authorizationError'?
+            }
+            else
+                return notFound;
+        }
+
+        public async Task<ManagerResult<Referral>> ExecuteArrangementCommandAsync(Guid organizationId, Guid locationId,
+            AuthorizedUser user, ArrangementCommand command)
+        {
+            var tenantModel = await GetTenantModelAsync(organizationId, locationId);
+
+            var getReferralResult = await tenantModel.GetReferralAsync(command.ReferralId);
+            if (getReferralResult.TryPickT0(out var referral, out var notFound))
+            {
+                var authorizationResult = await policyEvaluationEngine.AuthorizeArrangementCommandAsync(
+                    organizationId, locationId, user, command, referral);
+                if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
+                {
+                    var commandResult = await tenantModel.ExecuteArrangementCommandAsync(command);
+                    if (commandResult.TryPickT0(out var success, out var commandError))
+                    {
+                        await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
+                        success.Value.OnCommit();
+                        var disclosedReferral = await policyEvaluationEngine.DiscloseReferralAsync(user, success.Value.Referral);
+                        return disclosedReferral;
+                    }
+                    else
+                        return ManagerResult.NotAllowed; //TODO: Include reason from 'commandError'?
+                }
+                else
+                    return ManagerResult.NotAllowed; //TODO: Include reason from 'authorizationError'?
+            }
+            else
+                return notFound;
+        }
+
+        public async Task<ManagerResult<Referral>> ExecuteArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
+            AuthorizedUser user, ArrangementNoteCommand command)
+        {
+            var tenantModel = await GetTenantModelAsync(organizationId, locationId);
+
+            var getReferralResult = await tenantModel.GetReferralAsync(command.ReferralId);
+            if (getReferralResult.TryPickT0(out var referral, out var notFound))
+            {
+                var authorizationResult = await policyEvaluationEngine.AuthorizeArrangementNoteCommandAsync(
+                    organizationId, locationId, user, command, referral);
+                if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
+                {
+                    var commandResult = await tenantModel.ExecuteArrangementNoteCommandAsync(command);
+                    if (commandResult.TryPickT0(out var success, out var commandError))
+                    {
+                        await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
+                        success.Value.OnCommit();
+                        var disclosedReferral = await policyEvaluationEngine.DiscloseReferralAsync(user, success.Value.Referral);
+                        return disclosedReferral;
+                    }
+                    else
+                        return ManagerResult.NotAllowed; //TODO: Include reason from 'commandError'?
+                }
+                else
+                    return ManagerResult.NotAllowed; //TODO: Include reason from 'authorizationError'?
+            }
+            else
+                return notFound;
+        }
+
+        public async Task<IImmutableList<Referral>> ListReferralsAsync(Guid organizationId, Guid locationId)
+        {
+            var tenantModel = await GetTenantModelAsync(organizationId, locationId);
+
+            var referrals = await tenantModel.FindReferralsAsync(_ => true);
+            return referrals;
+        }
+
+
+        private async Task<ReferralModel> GetTenantModelAsync(Guid organizationId, Guid locationId)
+        {
+            var lazyModel = tenantModels.GetOrAdd((organizationId, locationId), (_) => new AsyncLazy<ReferralModel>(() =>
+                ReferralModel.InitializeAsync(organizationId, locationId,
+                    eventLog.GetAllEventsAsync(organizationId, locationId),
+                    communitiesResource, profilesResource)));
+            return await lazyModel.Task;
+        }
+    }
+
+    //[JsonHierarchyBase]
+    //public abstract partial record ReferralEvent(Guid ReferralId, Guid UserId);
+    //// JSON form: person info, contact info, basic referral notes
+    //public sealed record RequestForHelpReceived(Guid ReferralId, Guid UserId)
+    //    : ReferralEvent(ReferralId, UserId);
+    //// Blob form (Cognito -> PDF), family info (manual entry for now), additional contact info (if applicable)
+    //public sealed record IntakeFormReceived(Guid ReferralId, Guid UserId)
+    //    : ReferralEvent(ReferralId, UserId);
+    //public sealed record ReferralClosed(Guid ReferralId, Guid UserId,
+    //    ReferralCloseReason CloseReason) : ReferralEvent(ReferralId, UserId);
+    //public sealed record ArrangementCreated(Guid ReferralId, Guid ArrangementId, Guid UserId)
+    //    : ReferralEvent(ReferralId, UserId);
+    //// Blob form (always)
+    //// Need the ability to update family info ongoing, separate from referral lifecycle
+    ////TODO: That also means community relationship deletion should perhaps be replaced with inactivation, with reasons given?
+    //public sealed record ArrangementSetupFormReceived(Guid ReferralId, Guid ArrangementId, Guid UserId)
+    //    : ReferralEvent(ReferralId, UserId);
+    //public sealed record ArrangementOpened(Guid ReferralId, Guid ArrangementId, Guid UserId)
+    //    : ReferralEvent(ReferralId, UserId);
+    //public sealed record ArrangementMonitoringActivityPerformed(Guid ReferralId, Guid ArrangementId, Guid UserId)
+    //    : ReferralEvent(ReferralId, UserId);
+    //public sealed record ArrangementNoteCreated(Guid ReferralId, Guid ArrangementId, Guid UserId)
+    //    : ReferralEvent(ReferralId, UserId);
+    //public sealed record ArrangementDischargeFormReceived(Guid ReferralId, Guid ArrangementId, Guid UserId)
+    //    : ReferralEvent(ReferralId, UserId);
+    //public sealed record ArrangementClosed(Guid ReferralId, Guid ArrangementId, Guid UserId)
+    //    : ReferralEvent(ReferralId, UserId);
+
+
+    //public sealed class Referral
+    //{
+
+
+    //    public static Referral SubmitRequestForHelp(RequestForHelp request)
+    //    {
+
+    //    }
+    //}
+
+
+    // Validate ->
+    // Authorize (PolicyEvaluationEngine?) ->
+    // Execute (returning new state & optionally events) ->
+    // (optionally) Raise Domain Events ->
+    // Apply Permissions Filters (PolicyEvaluationEngine) ->
+    // Return New State
+
+
+    //#region Arrangement Notes
+
+    //internal IEnumerable<Note> GetArrangementNotes(Guid arrangementId)
+    //{
+    //    var workflow = workflowsResourceAccess.GetWorkflowState(arrangementId);
+    //    workflow.ValidateUserAccess();
+    //    return notesResourceAccess.GetNotes(arrangementId);
+    //}
+
+    //internal Guid RecordArrangementNote(Guid arrangementId, NoteContents contents)
+    //{
+    //    var workflow = workflowsResourceAccess.GetWorkflowState(arrangementId);
+    //    workflow.ValidateUserAccess();
+    //    workflow.ValidateAction();
+    //    var noteId = notesResourceAccess.CreateDraftNote(arrangementId, contents);
+    //    return noteId;
+    //}
+
+    //internal void EditArrangementNote(Guid arrangementId, Guid noteId, NoteContents updatedContents)
+    //{
+    //    var workflow = workflowsResourceAccess.GetWorkflowState(arrangementId);
+    //    workflow.ValidateUserAccess();
+    //    var note = notesResourceAccess.GetNote(arrangementId, noteId);
+    //    workflow.ValidateAction(note);
+    //    notesResourceAccess.EditDraftNote(arrangementId, noteId, updatedContents);
+    //}
+
+    //internal void ApproveArrangementNote(Guid arrangementId, Guid noteId)
+    //{
+    //    var workflow = workflowsResourceAccess.GetWorkflowState(arrangementId);
+    //    workflow.ValidateUserAccess();
+    //    var note = notesResourceAccess.GetNote(arrangementId, noteId);
+    //    workflow.ValidateAction(note);
+    //    notesResourceAccess.ApproveDraftNote(arrangementId, noteId);
+    //    notificationsUtility.NotifyUser(new Notifications.NoteApproved(arrangementId, noteId));
+    //}
+
+    //internal void RejectArrangementNote(Guid arrangementId, Guid noteId, DraftNoteDenialReason reason)
+    //{
+    //    var workflow = workflowsResourceAccess.GetWorkflowState(arrangementId);
+    //    workflow.ValidateUserAccess();
+    //    var note = notesResourceAccess.GetNote(arrangementId, noteId);
+    //    workflow.ValidateAction(note);
+    //    notesResourceAccess.DenyDraftNote(arrangementId, noteId, reason);
+    //    notificationsUtility.NotifyUser(new Notifications.NoteRejected(arrangementId, noteId));
+    //}
+
+    //#endregion
+}

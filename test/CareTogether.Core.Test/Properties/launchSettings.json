@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "CareTogether.Core.Test": {
+      "commandName": "Project"
+    }
+  }
+}
