@@ -30,14 +30,18 @@ namespace CareTogether.Api.Controllers
 
 
         [HttpGet]
-        public async Task<IEnumerable<Person>> Get(Guid organizationId, Guid locationId)
+        public async Task<IActionResult> Get(Guid organizationId, Guid locationId)
         {
             logger.LogInformation("User '{UserName}' was authenticated via '{AuthenticationType}'",
                 User.Identity.Name, User.Identity.AuthenticationType);
 
             var authorizedUser = await authorizationProvider.AuthorizeAsync(organizationId, locationId, User);
 
-            return await membershipManager.QueryPeopleAsync(authorizedUser, organizationId, locationId, "").ToListAsync();
+            var result = await membershipManager.QueryPeopleAsync(authorizedUser, organizationId, locationId, "");
+            if (result.TryPickT0(out var people, out var error))
+                return Ok(people);
+            else
+                return BadRequest(error);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using CareTogether.Resources;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading.Tasks;
 
 namespace CareTogether.Managers
@@ -38,15 +39,17 @@ namespace CareTogether.Managers
                 return ManagerResult.NotAllowed;
         }
 
-        public async IAsyncEnumerable<Person> QueryPeopleAsync(AuthorizedUser user, Guid organizationId, Guid locationId, string searchQuery)
+        public async Task<ManagerResult<IImmutableList<Person>>> QueryPeopleAsync(AuthorizedUser user, Guid organizationId, Guid locationId, string searchQuery)
         {
             //TODO: This is just a demo implementation of a business rule, not a true business rule.
             if (user.CanAccess(organizationId, locationId) &&
                 user.IsInRole(Roles.OrganizationAdministrator))
-                foreach (var person in await communitiesResource.FindPeopleAsync(organizationId, locationId, searchQuery))
-                    yield return person; //TODO: Return a List<Person> instead?
+            {
+                var people = await communitiesResource.FindPeopleAsync(organizationId, locationId, searchQuery);
+                return people.ToImmutableList();
+            }
             else
-                yield break;
+                return ManagerResult.NotAllowed;
         }
     }
 }

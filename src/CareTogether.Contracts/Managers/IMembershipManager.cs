@@ -1,6 +1,7 @@
 ﻿using CareTogether.Resources;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading.Tasks;
 
 namespace CareTogether.Managers
@@ -15,6 +16,6 @@ namespace CareTogether.Managers
 
         Task<ManagerResult<ContactInfo>> UpdateContactInfoAsync(AuthorizedUser user, Guid organizationId, Guid locationId, ContactCommand command);
 
-        IAsyncEnumerable<Person> QueryPeopleAsync(AuthorizedUser user, Guid organizationId, Guid locationId, string searchQuery);
+        Task<ManagerResult<IImmutableList<Person>>> QueryPeopleAsync(AuthorizedUser user, Guid organizationId, Guid locationId, string searchQuery);
     }
 }
