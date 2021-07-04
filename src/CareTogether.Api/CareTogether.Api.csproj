@@ -26,7 +26,7 @@
 
   <Target Name="NSwag" AfterTargets="PostBuildEvent" Condition="'$(Configuration)' == 'Debug'">
     <Exec Command="$(NSwagExe_Net50) aspnetcore2openapi /assembly:$(TargetPath) /output:$(SolutionDir)swagger.json" EnvironmentVariables="ASPNETCORE_ENVIRONMENT=Development" />
-    <Exec Command="$(NSwagExe_Net50) openapi2tsclient /input:$(SolutionDir)swagger.json /output:$(SolutionDir)GeneratedClient.ts" />
+    <Exec Command="$(NSwagExe_Net50) openapi2tsclient /input:$(SolutionDir)swagger.json /output:$(SolutionDir)src\caretogether-pwa\src\GeneratedClient.ts" />
   </Target>
 
 </Project>
