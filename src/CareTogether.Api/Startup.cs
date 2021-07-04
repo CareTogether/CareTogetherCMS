@@ -90,21 +90,15 @@ namespace CareTogether.Api
 
                 app.UseOpenApi();
                 // ReDoc supports discriminators/polymorphism so we use that instead of Swagger UI.
-                app.UseReDoc(config =>
-                {
-                    config.Path = "/redoc";
-                    //config.DocumentPath = "/swagger/v1/swagger.json";
-                });
+                app.UseReDoc(config => { config.Path = "/redoc"; });
             }
             else
             {
                 app.UseExceptionHandler("/Error");
-                // Front Door is not cooperating with App Service Managed Certificates right now.
-                //app.UseHsts();
+                app.UseHsts();
             }
 
-            // Front Door is not cooperating with App Service Managed Certificates right now.
-            //app.UseHttpsRedirection();
+            app.UseHttpsRedirection();
 
             app.UseRouting();
             app.UseAuthentication();

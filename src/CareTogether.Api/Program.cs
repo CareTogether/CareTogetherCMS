@@ -14,6 +14,7 @@ namespace CareTogether.Api
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
+                    webBuilder.UseUrls("https://app.caretogether.io", "https://localhost:44359/");
                     webBuilder.UseStartup<Startup>();
                 });
     }
