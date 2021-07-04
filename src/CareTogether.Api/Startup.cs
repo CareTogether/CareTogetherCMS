@@ -99,10 +99,12 @@ namespace CareTogether.Api
             else
             {
                 app.UseExceptionHandler("/Error");
-                app.UseHsts();
+                // Front Door is not cooperating with App Service Managed Certificates right now.
+                //app.UseHsts();
             }
 
-            app.UseHttpsRedirection();
+            // Front Door is not cooperating with App Service Managed Certificates right now.
+            //app.UseHttpsRedirection();
 
             app.UseRouting();
             app.UseAuthentication();
