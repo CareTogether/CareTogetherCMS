@@ -17,11 +17,11 @@ namespace CareTogether.Api.Controllers
     {
         private readonly AuthorizationProvider authorizationProvider;
         private readonly IMembershipManager membershipManager;
-        private readonly ILogger<ClaimsController> logger;
+        private readonly ILogger<PeopleController> logger;
 
 
         public PeopleController(AuthorizationProvider authorizationProvider,
-            IMembershipManager membershipManager, ILogger<ClaimsController> logger)
+            IMembershipManager membershipManager, ILogger<PeopleController> logger)
         {
             this.authorizationProvider = authorizationProvider;
             this.membershipManager = membershipManager;
