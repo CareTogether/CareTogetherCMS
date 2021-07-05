@@ -34,10 +34,10 @@ class AuthenticatedHttp {
 function Contacts() {
   const classes = useStyles();
   const [people, setPeople] = useState<Person[]>([]);
-  const { instance, accounts, inProgress } = useMsal();
+  const { instance, accounts } = useMsal();
   const account = useAccount(accounts[0]) as AccountInfo;
 
-  const contacts = useEffect(() => {
+  useEffect(() => {
     (async () => {
       const authResponse = await instance.acquireTokenSilent({
         scopes: ["https://caretogetherb2cdev.onmicrosoft.com/cms/v1/Access"],
