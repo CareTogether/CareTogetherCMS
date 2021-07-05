@@ -1,8 +1,7 @@
-//using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using CareTogether.Managers;
 using CareTogether.Resources;
 using CareTogether.Utilities;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -27,10 +26,8 @@ namespace CareTogether.Api
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
-            //services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddMicrosoftIdentityWebApp(Configuration.GetSection("AzureAdB2C"));
-                //.AddMicrosoftIdentityWebApi(Configuration.GetSection("AzureAdB2C"));
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddMicrosoftIdentityWebApi(Configuration.GetSection("AzureAdB2C"));
 
             // Data store services
             var communityEventLog = new MemoryMultitenantEventLog<CommunityEvent>();
@@ -91,6 +88,15 @@ namespace CareTogether.Api
                 app.UseOpenApi();
                 // ReDoc supports discriminators/polymorphism so we use that instead of Swagger UI.
                 app.UseReDoc(config => { config.Path = "/redoc"; });
+
+                app.UseCors(policy =>
+                {
+                    policy
+                        .WithOrigins("http://localhost:3000")
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .AllowCredentials();
+                });
             }
             else
             {
