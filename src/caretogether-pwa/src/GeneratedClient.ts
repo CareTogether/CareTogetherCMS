@@ -160,6 +160,64 @@ export class PeopleClient {
     }
 }
 
+export class VolunteerFamiliesClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : <any>window;
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
+    }
+
+    get(organizationId: string, locationId: string): Promise<VolunteerFamily[]> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/VolunteerFamilies";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (locationId === undefined || locationId === null)
+            throw new Error("The parameter 'locationId' must be defined.");
+        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ = <RequestInit>{
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGet(_response);
+        });
+    }
+
+    protected processGet(response: Response): Promise<VolunteerFamily[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(VolunteerFamily.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<VolunteerFamily[]>(<any>null);
+    }
+}
+
 export class Person implements IPerson {
     id?: string;
     userId?: string | undefined;
@@ -612,6 +670,282 @@ export interface IEmailAddress {
 export enum EmailAddressType {
     Personal = 0,
     Work = 1,
+}
+
+export class VolunteerFamily implements IVolunteerFamily {
+    family?: Family | undefined;
+
+    constructor(data?: IVolunteerFamily) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.family = _data["family"] ? Family.fromJS(_data["family"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): VolunteerFamily {
+        data = typeof data === 'object' ? data : {};
+        let result = new VolunteerFamily();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["family"] = this.family ? this.family.toJSON() : <any>undefined;
+        return data; 
+    }
+}
+
+export interface IVolunteerFamily {
+    family?: Family | undefined;
+}
+
+export class Family implements IFamily {
+    id?: string;
+    volunteerFamilyStatus?: VolunteerFamilyStatus | undefined;
+    partneringFamilyStatus?: PartneringFamilyStatus | undefined;
+    adults?: ValueTupleOfPersonAndFamilyAdultRelationshipInfo[] | undefined;
+    children?: Person[] | undefined;
+    custodialRelationships?: CustodialRelationship[] | undefined;
+
+    constructor(data?: IFamily) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.volunteerFamilyStatus = _data["volunteerFamilyStatus"];
+            this.partneringFamilyStatus = _data["partneringFamilyStatus"];
+            if (Array.isArray(_data["adults"])) {
+                this.adults = [] as any;
+                for (let item of _data["adults"])
+                    this.adults!.push(ValueTupleOfPersonAndFamilyAdultRelationshipInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["children"])) {
+                this.children = [] as any;
+                for (let item of _data["children"])
+                    this.children!.push(Person.fromJS(item));
+            }
+            if (Array.isArray(_data["custodialRelationships"])) {
+                this.custodialRelationships = [] as any;
+                for (let item of _data["custodialRelationships"])
+                    this.custodialRelationships!.push(CustodialRelationship.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): Family {
+        data = typeof data === 'object' ? data : {};
+        let result = new Family();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["volunteerFamilyStatus"] = this.volunteerFamilyStatus;
+        data["partneringFamilyStatus"] = this.partneringFamilyStatus;
+        if (Array.isArray(this.adults)) {
+            data["adults"] = [];
+            for (let item of this.adults)
+                data["adults"].push(item.toJSON());
+        }
+        if (Array.isArray(this.children)) {
+            data["children"] = [];
+            for (let item of this.children)
+                data["children"].push(item.toJSON());
+        }
+        if (Array.isArray(this.custodialRelationships)) {
+            data["custodialRelationships"] = [];
+            for (let item of this.custodialRelationships)
+                data["custodialRelationships"].push(item.toJSON());
+        }
+        return data; 
+    }
+}
+
+export interface IFamily {
+    id?: string;
+    volunteerFamilyStatus?: VolunteerFamilyStatus | undefined;
+    partneringFamilyStatus?: PartneringFamilyStatus | undefined;
+    adults?: ValueTupleOfPersonAndFamilyAdultRelationshipInfo[] | undefined;
+    children?: Person[] | undefined;
+    custodialRelationships?: CustodialRelationship[] | undefined;
+}
+
+export enum VolunteerFamilyStatus {
+    Active = 0,
+    Inactive = 1,
+}
+
+export enum PartneringFamilyStatus {
+    Active = 0,
+    Inactive = 1,
+}
+
+export class ValueTupleOfPersonAndFamilyAdultRelationshipInfo implements IValueTupleOfPersonAndFamilyAdultRelationshipInfo {
+    item1?: Person;
+    item2?: FamilyAdultRelationshipInfo;
+
+    constructor(data?: IValueTupleOfPersonAndFamilyAdultRelationshipInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.item1 = _data["item1"] ? Person.fromJS(_data["item1"]) : <any>undefined;
+            this.item2 = _data["item2"] ? FamilyAdultRelationshipInfo.fromJS(_data["item2"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ValueTupleOfPersonAndFamilyAdultRelationshipInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new ValueTupleOfPersonAndFamilyAdultRelationshipInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["item1"] = this.item1 ? this.item1.toJSON() : <any>undefined;
+        data["item2"] = this.item2 ? this.item2.toJSON() : <any>undefined;
+        return data; 
+    }
+}
+
+export interface IValueTupleOfPersonAndFamilyAdultRelationshipInfo {
+    item1?: Person;
+    item2?: FamilyAdultRelationshipInfo;
+}
+
+export class FamilyAdultRelationshipInfo implements IFamilyAdultRelationshipInfo {
+    relationshipToFamily?: FamilyAdultRelationshipType;
+    familyRelationshipNotes?: string | undefined;
+    isInHousehold?: boolean;
+    isPrimaryFamilyContact?: boolean;
+    safetyRiskNotes?: string | undefined;
+
+    constructor(data?: IFamilyAdultRelationshipInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.relationshipToFamily = _data["relationshipToFamily"];
+            this.familyRelationshipNotes = _data["familyRelationshipNotes"];
+            this.isInHousehold = _data["isInHousehold"];
+            this.isPrimaryFamilyContact = _data["isPrimaryFamilyContact"];
+            this.safetyRiskNotes = _data["safetyRiskNotes"];
+        }
+    }
+
+    static fromJS(data: any): FamilyAdultRelationshipInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new FamilyAdultRelationshipInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["relationshipToFamily"] = this.relationshipToFamily;
+        data["familyRelationshipNotes"] = this.familyRelationshipNotes;
+        data["isInHousehold"] = this.isInHousehold;
+        data["isPrimaryFamilyContact"] = this.isPrimaryFamilyContact;
+        data["safetyRiskNotes"] = this.safetyRiskNotes;
+        return data; 
+    }
+}
+
+export interface IFamilyAdultRelationshipInfo {
+    relationshipToFamily?: FamilyAdultRelationshipType;
+    familyRelationshipNotes?: string | undefined;
+    isInHousehold?: boolean;
+    isPrimaryFamilyContact?: boolean;
+    safetyRiskNotes?: string | undefined;
+}
+
+export enum FamilyAdultRelationshipType {
+    Dad = 0,
+    Mom = 1,
+    Relative = 2,
+    Friend = 3,
+    DomesticWorker = 4,
+}
+
+export class CustodialRelationship implements ICustodialRelationship {
+    childId?: string;
+    personId?: string;
+    type?: CustodialRelationshipType;
+
+    constructor(data?: ICustodialRelationship) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.childId = _data["childId"];
+            this.personId = _data["personId"];
+            this.type = _data["type"];
+        }
+    }
+
+    static fromJS(data: any): CustodialRelationship {
+        data = typeof data === 'object' ? data : {};
+        let result = new CustodialRelationship();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["childId"] = this.childId;
+        data["personId"] = this.personId;
+        data["type"] = this.type;
+        return data; 
+    }
+}
+
+export interface ICustodialRelationship {
+    childId?: string;
+    personId?: string;
+    type?: CustodialRelationshipType;
+}
+
+export enum CustodialRelationshipType {
+    ParentWithCustody = 0,
+    ParentWithCourtAppointedCustody = 1,
+    LegalGuardian = 2,
 }
 
 export class ApiException extends Error {

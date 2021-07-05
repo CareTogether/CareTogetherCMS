@@ -134,6 +134,51 @@
           }
         }
       }
+    },
+    "/api/{organizationId}/{locationId}/VolunteerFamilies": {
+      "get": {
+        "tags": [
+          "VolunteerFamilies"
+        ],
+        "operationId": "VolunteerFamilies_Get",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/VolunteerFamily"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -393,6 +438,175 @@
         "enum": [
           0,
           1
+        ]
+      },
+      "VolunteerFamily": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "family": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Family"
+              }
+            ]
+          }
+        }
+      },
+      "Family": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
+          "volunteerFamilyStatus": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/VolunteerFamilyStatus"
+              }
+            ]
+          },
+          "partneringFamilyStatus": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/PartneringFamilyStatus"
+              }
+            ]
+          },
+          "adults": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/ValueTupleOfPersonAndFamilyAdultRelationshipInfo"
+            }
+          },
+          "children": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/Person"
+            }
+          },
+          "custodialRelationships": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/CustodialRelationship"
+            }
+          }
+        }
+      },
+      "VolunteerFamilyStatus": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Active",
+          "Inactive"
+        ],
+        "enum": [
+          0,
+          1
+        ]
+      },
+      "PartneringFamilyStatus": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Active",
+          "Inactive"
+        ],
+        "enum": [
+          0,
+          1
+        ]
+      },
+      "ValueTupleOfPersonAndFamilyAdultRelationshipInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "item1": {
+            "$ref": "#/components/schemas/Person"
+          },
+          "item2": {
+            "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
+          }
+        }
+      },
+      "FamilyAdultRelationshipInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "relationshipToFamily": {
+            "$ref": "#/components/schemas/FamilyAdultRelationshipType"
+          },
+          "familyRelationshipNotes": {
+            "type": "string",
+            "nullable": true
+          },
+          "isInHousehold": {
+            "type": "boolean"
+          },
+          "isPrimaryFamilyContact": {
+            "type": "boolean"
+          },
+          "safetyRiskNotes": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "FamilyAdultRelationshipType": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Dad",
+          "Mom",
+          "Relative",
+          "Friend",
+          "DomesticWorker"
+        ],
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      "CustodialRelationship": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "childId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "personId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CustodialRelationshipType"
+          }
+        }
+      },
+      "CustodialRelationshipType": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "ParentWithCustody",
+          "ParentWithCourtAppointedCustody",
+          "LegalGuardian"
+        ],
+        "enum": [
+          0,
+          1,
+          2
         ]
       }
     }
