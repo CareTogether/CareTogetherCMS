@@ -186,7 +186,7 @@
 
         <!-- Phone verification: If MFA is not required, the next three steps (#5-#7) should be removed.
              This step checks whether there's a phone number on record,  for the user. If found, then the user is challenged to verify it. -->
-        <OrchestrationStep Order="7" Type="ClaimsExchange">
+        <!--<OrchestrationStep Order="7" Type="ClaimsExchange">
           <Preconditions>
             <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
               <Value>isActiveMFASession</Value>
@@ -196,12 +196,12 @@
           <ClaimsExchanges>
             <ClaimsExchange Id="PhoneFactor-Verify" TechnicalProfileReferenceId="PhoneFactor-InputOrVerify" />
           </ClaimsExchanges>
-        </OrchestrationStep>
+        </OrchestrationStep>-->
 
         <!-- Save MFA phone number: The precondition verifies whether the user provided a new number in the 
              previous step. If so, then the phone number is stored in the directory for future authentication 
              requests. -->
-        <OrchestrationStep Order="8" Type="ClaimsExchange">
+        <!--<OrchestrationStep Order="8" Type="ClaimsExchange">
           <Preconditions>
             <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
               <Value>newPhoneNumberEntered</Value>
@@ -211,8 +211,8 @@
           <ClaimsExchanges>
             <ClaimsExchange Id="AADUserWriteWithObjectId" TechnicalProfileReferenceId="AAD-UserWritePhoneNumberUsingObjectId" />
           </ClaimsExchanges>
-        </OrchestrationStep>
-        <OrchestrationStep Order="9" Type="SendClaims" CpimIssuerTechnicalProfileReferenceId="JwtIssuer" />
+        </OrchestrationStep>-->
+        <OrchestrationStep Order="7" Type="SendClaims" CpimIssuerTechnicalProfileReferenceId="JwtIssuer" />
 
       </OrchestrationSteps>
       <ClientDefinition ReferenceId="DefaultWeb" />
