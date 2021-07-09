@@ -31,16 +31,16 @@ namespace CareTogether.Api
 
             // Data store services
             var communityEventLog = new MemoryMultitenantEventLog<CommunityEvent>();
-            var contactStore = new MemoryMultitenantKeyValueStore<ContactInfo>();
-            var goalsStore = new MemoryMultitenantKeyValueStore<Dictionary<Guid, Goal>>();
+            var contactsEventLog = new MemoryMultitenantEventLog<ContactCommandExecutedEvent>();
+            var goalsEventLog = new MemoryMultitenantEventLog<GoalCommandExecutedEvent>();
 
             // Initialize static test data for local development
             //TODO: Configure this based on the environment
-            TestDataProvider.PopulateTestDataAsync(communityEventLog, contactStore, goalsStore).Wait();
+            TestDataProvider.PopulateTestDataAsync(communityEventLog, contactsEventLog, goalsEventLog).Wait();
 
             // Resource services
             var communitiesResource = new CommunitiesResource(communityEventLog);
-            var profilesResource = new ProfilesResource(contactStore, goalsStore);
+            var profilesResource = new ProfilesResource(contactsEventLog, goalsEventLog);
 
             // Manager services
             services.AddSingleton<IMembershipManager>(new MembershipManager(communitiesResource, profilesResource));

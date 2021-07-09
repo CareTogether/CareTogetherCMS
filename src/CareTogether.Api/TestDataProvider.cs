@@ -20,9 +20,10 @@ namespace CareTogether.Api
 
         public static async Task PopulateTestDataAsync(
             IMultitenantEventLog<CommunityEvent> communityEventLog,
-            IMultitenantKeyValueStore<ContactInfo> contactStore, IMultitenantKeyValueStore<Dictionary<Guid, Goal>> goalsStore)
+            IMultitenantEventLog<ContactCommandExecutedEvent> contactsEventLog,
+            IMultitenantEventLog<GoalCommandExecutedEvent> goalsEventLog)
         {
-            foreach (var (domainEvent, index) in EventSequence<CommunityEvent>(
+            await communityEventLog.AppendEventsAsync(guid1, guid2,
                 new PersonCommandExecuted(new CreatePerson(Guid.Parse("2b87864a-63e3-4406-bcbc-c0068a13ac05"), Guid.Parse("2b87864a-63e3-4406-bcbc-c0068a13ac05"), "System", "Administrator", null)),
                 new PersonCommandExecuted(new CreatePerson(guid1, null, "John", "Doe", null)),
                 new PersonCommandExecuted(new CreatePerson(guid2, guid3, "Jane", "Smith", new AgeInYears(42, new DateTime(2021, 1, 1)))),
@@ -43,30 +44,52 @@ namespace CareTogether.Api
                 new FamilyCommandExecuted(new UpdateAdultRelationshipToFamily(guid5, guid1, new FamilyAdultRelationshipInfo(FamilyAdultRelationshipType.Dad, "ABC123", false, false, "XYZ"))),
                 new FamilyCommandExecuted(new RemoveCustodialRelationship(guid5, guid6, guid1)),
                 new FamilyCommandExecuted(new UpdateCustodialRelationshipType(guid5, guid6, guid2, CustodialRelationshipType.ParentWithCourtAppointedCustody)),
-                new FamilyCommandExecuted(new AddCustodialRelationship(guid5, guid6, guid1, CustodialRelationshipType.ParentWithCourtAppointedCustody))))
-            {
-                var result = await communityEventLog.AppendEventAsync(guid1, guid2, domainEvent, index);
-                if (result.IsT1)
-                    throw new InvalidOperationException(result.ToString());
-            }
+                new FamilyCommandExecuted(new AddCustodialRelationship(guid5, guid6, guid1, CustodialRelationshipType.ParentWithCourtAppointedCustody)));
 
-            await contactStore.UpsertValueAsync(guid1, guid2, guid1, new ContactInfo(guid1, new List<Address>
-            {
-                new Address(guid2, "123 Main St.", "Apt. A", "Smallville", guid3, "12345", guid4),
-                new Address(guid3, "456 Old Ave.", null, "Bigtown", guid4, "67890", guid4)
-            }, guid2, new List<PhoneNumber>
-            {
-                new PhoneNumber(guid2, "1235554567", PhoneNumberType.Mobile),
-                new PhoneNumber(guid3, "1235555555", PhoneNumberType.Home)
-            }, guid2, new List<EmailAddress>
-            {
-                new EmailAddress(guid2, "personal@example.com", EmailAddressType.Personal),
-                new EmailAddress(guid3, "work@example.com", EmailAddressType.Work)
-            }, guid2, "Cannot receive voicemails"));
+            await contactsEventLog.AppendEventsAsync(guid1, guid2,
+                new ContactCommandExecutedEvent(new CreateContact(guid1, "Amy has contact details for a callback")),
+                new ContactCommandExecutedEvent(new AddContactAddress(guid1,
+                    new Address(guid3, "456 Old Ave.", null, "Bigtown", guid4, "67890", guid4),
+                    true)),
+                new ContactCommandExecutedEvent(new AddContactPhoneNumber(guid1,
+                    new PhoneNumber(guid2, "1235554567", PhoneNumberType.Mobile),
+                    true)),
+                new ContactCommandExecutedEvent(new AddContactEmailAddress(guid1,
+                    new EmailAddress(guid2, "personal@example.com", EmailAddressType.Personal),
+                    true)),
+                new ContactCommandExecutedEvent(new AddContactAddress(guid1,
+                    new Address(guid2, "123 Main St.", "Apt. A", "Smallville", guid3, "12345", guid4),
+                    true)),
+                new ContactCommandExecutedEvent(new UpdateContactAddress(guid1,
+                    new Address(guid3, "456 Old Ave.", null, "Bigtown", guid4, "67890", guid4),
+                    false)),
+                new ContactCommandExecutedEvent(new AddContactPhoneNumber(guid1,
+                    new PhoneNumber(guid3, "1235555555", PhoneNumberType.Home),
+                    true)),
+                new ContactCommandExecutedEvent(new UpdateContactPhoneNumber(guid1,
+                    new PhoneNumber(guid2, "1235554567", PhoneNumberType.Mobile),
+                    false)),
+                new ContactCommandExecutedEvent(new AddContactEmailAddress(guid1,
+                    new EmailAddress(guid3, "work@example.com", EmailAddressType.Work),
+                    true)),
+                new ContactCommandExecutedEvent(new UpdateContactEmailAddress(guid1,
+                    new EmailAddress(guid2, "personal@example.com", EmailAddressType.Personal),
+                    false)),
+                new ContactCommandExecutedEvent(new UpdateContactMethodPreferenceNotes(guid1,
+                    "Cannot receive voicemails")));
         }
 
 
-        private static IEnumerable<(T, long)> EventSequence<T>(params T[] events) =>
-            events.Select((e, i) => (e, (long)i));
+        private static async Task AppendEventsAsync<T>(this IMultitenantEventLog<T> eventLog,
+            Guid organizationId, Guid locationId, params T[] events)
+        {
+            foreach (var (domainEvent, index) in events
+                .Select((e, i) => (e, (long)i)))
+            {
+                var result = await eventLog.AppendEventAsync(organizationId, locationId, domainEvent, index);
+                if (result.IsT1)
+                    throw new InvalidOperationException(result.ToString());
+            }
+        }
     }
 }

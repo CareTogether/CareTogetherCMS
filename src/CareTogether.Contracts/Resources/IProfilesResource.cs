@@ -24,18 +24,15 @@ namespace CareTogether.Resources
     public abstract partial record ContactCommand(Guid PersonId);
     public sealed record CreateContact(Guid PersonId,
         string ContactMethodPreferenceNotes) : ContactCommand(PersonId);
-    public sealed record AddContactAddress(Guid PersonId,
-        string Line1, string Line2, string City, Guid StateId, string PostalCode, Guid CountryId,
-        bool IsCurrentAddress) : ContactCommand(PersonId);
-    public sealed record UpdateContactAddress(Guid PersonId, Address Address,
-        bool IsCurrentAddress) : ContactCommand(PersonId);
-    public sealed record AddContactPhoneNumber(Guid PersonId,
-        string Number, PhoneNumberType Type,
+    public sealed record AddContactAddress(Guid PersonId, Address Address, bool IsCurrentAddress)
+        : ContactCommand(PersonId);
+    public sealed record UpdateContactAddress(Guid PersonId, Address Address, bool IsCurrentAddress)
+        : ContactCommand(PersonId); //TODO: Distinguish address correction from current address change
+    public sealed record AddContactPhoneNumber(Guid PersonId, PhoneNumber PhoneNumber,
         bool IsPreferredPhoneNumber) : ContactCommand(PersonId);
     public sealed record UpdateContactPhoneNumber(Guid PersonId, PhoneNumber PhoneNumber,
         bool IsPreferredPhoneNumber) : ContactCommand(PersonId);
-    public sealed record AddContactEmailAddress(Guid PersonId,
-        string Address, EmailAddressType Type,
+    public sealed record AddContactEmailAddress(Guid PersonId, EmailAddress EmailAddress,
         bool IsPreferredEmailAddress) : ContactCommand(PersonId);
     public sealed record UpdateContactEmailAddress(Guid PersonId, EmailAddress EmailAddress,
         bool IsPreferredEmailAddress) : ContactCommand(PersonId);
@@ -46,15 +43,15 @@ namespace CareTogether.Resources
         string Description, DateTime CreatedDate, DateTime? TargetDate, DateTime? CompletedDate);
 
     [JsonHierarchyBase]
-    public abstract partial record GoalCommand(Guid PersonId);
-    public sealed record CreateGoal(Guid PersonId, string Description, DateTime? TargetDate)
-        : GoalCommand(PersonId);
+    public abstract partial record GoalCommand(Guid PersonId, Guid GoalId);
+    public sealed record CreateGoal(Guid PersonId, Guid GoalId, string Description, DateTime CreatedDate,
+        DateTime? TargetDate) : GoalCommand(PersonId, GoalId);
     public sealed record ChangeGoalDescription(Guid PersonId, Guid GoalId, string Description)
-        : GoalCommand(PersonId);
+        : GoalCommand(PersonId, GoalId);
     public sealed record ChangeGoalTargetDate(Guid PersonId, Guid GoalId, DateTime? TargetDate)
-        : GoalCommand(PersonId);
-    public sealed record MarkGoalCompleted(Guid PersonId, Guid GoalId)
-        : GoalCommand(PersonId);
+        : GoalCommand(PersonId, GoalId);
+    public sealed record MarkGoalCompleted(Guid PersonId, Guid GoalId, DateTime CompletedDate)
+        : GoalCommand(PersonId, GoalId);
 
     /// <summary>
     /// The <see cref="IProfilesResource"/> is responsible for all personal information in CareTogether.
@@ -71,6 +68,6 @@ namespace CareTogether.Resources
 
         Task<ResourceResult<Goal>> ExecuteGoalCommandAsync(Guid organizationId, Guid locationId, GoalCommand command);
 
-        Task<List<Goal>> ListPersonGoalsAsync(Guid organizationId, Guid locationId, Guid personId);
+        Task<IImmutableList<Goal>> ListPersonGoalsAsync(Guid organizationId, Guid locationId, Guid personId);
     }
 }
