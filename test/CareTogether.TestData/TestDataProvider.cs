@@ -18,6 +18,8 @@ namespace CareTogether.TestData
         static readonly Guid guid5 = Guid.Parse("55555555-5555-5555-5555-555555555555");
         static readonly Guid guid6 = Guid.Parse("66666666-6666-6666-6666-666666666666");
 
+        static readonly Guid adminId = Guid.Parse("2b87864a-63e3-4406-bcbc-c0068a13ac05");
+
 
         public static async Task PopulateTestDataAsync(
             IMultitenantEventLog<CommunityEvent> communityEventLog,
@@ -26,7 +28,7 @@ namespace CareTogether.TestData
             IMultitenantEventLog<ReferralEvent> referralsEventLog)
         {
             await communityEventLog.AppendEventsAsync(guid1, guid2,
-                new PersonCommandExecuted(new CreatePerson(Guid.Parse("2b87864a-63e3-4406-bcbc-c0068a13ac05"), Guid.Parse("2b87864a-63e3-4406-bcbc-c0068a13ac05"), "System", "Administrator", null)),
+                new PersonCommandExecuted(new CreatePerson(adminId, adminId, "System", "Administrator", null)),
                 new PersonCommandExecuted(new CreatePerson(guid1, null, "John", "Doe", null)),
                 new PersonCommandExecuted(new CreatePerson(guid2, guid3, "Jane", "Smith", new AgeInYears(42, new DateTime(2021, 1, 1)))),
                 new PersonCommandExecuted(new UpdatePersonName(guid2, "Jane", "Doe")),
@@ -79,6 +81,16 @@ namespace CareTogether.TestData
                     false)),
                 new ContactCommandExecutedEvent(new UpdateContactMethodPreferenceNotes(guid1,
                     "Cannot receive voicemails")));
+
+            await referralsEventLog.AppendEventsAsync(guid1, guid2,
+                new ReferralCommandExecuted(new CreateReferral(guid1, adminId, new DateTime(2020, 3, 5, 4, 10, 0), guid5, "v1")),
+                new ReferralCommandExecuted(new UploadReferralForm(guid1, adminId, new DateTime(2020, 3, 5, 4, 15, 15), "Request for Help Form", "v1", "Jane Doe referral info.pdf")),
+                new ReferralCommandExecuted(new PerformReferralActivity(guid1, adminId, new DateTime(2020, 3, 6, 8, 45, 30), "Intake Coordinator Screening Call")),
+                new ArrangementCommandExecuted(new CreateArrangement(guid1, guid1, adminId, new DateTime(2020, 3, 11, 11, 12, 13), "v1", "Hosting")),
+                new ReferralCommandExecuted(new CloseReferral(guid1, adminId, new DateTime(2020, 10, 4, 12, 32, 55), ReferralCloseReason.NeedMet)),
+                new ReferralCommandExecuted(new CreateReferral(guid2, adminId, new DateTime(2021, 7, 10, 19, 30, 45), guid5, "v1")),
+                new ReferralCommandExecuted(new UploadReferralForm(guid2, adminId, new DateTime(2021, 7, 10, 19, 32, 0), "Request for Help Form", "v1", "Jane Doe second referral info.pdf")),
+                new ReferralCommandExecuted(new PerformReferralActivity(guid2, adminId, new DateTime(2021, 7, 10, 19, 32, 0), "Intake Coordinator Screening Call")));
         }
 
 
