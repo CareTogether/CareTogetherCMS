@@ -1,29 +1,15 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { PublicClientApplication, InteractionType } from "@azure/msal-browser";
+import { InteractionType } from "@azure/msal-browser";
 import { MsalProvider, useMsalAuthentication, useIsAuthenticated } from '@azure/msal-react';
 import { AppInsightsContext } from "@microsoft/applicationinsights-react-js";
 import { aiReact } from './Components/AppInsights';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { RecoilRoot } from 'recoil';
+import { globalMsalInstance } from './Auth';
 
-// MSAL configuration for single page application authorization. For guidance, see
-// https://docs.microsoft.com/en-us/azure/active-directory/develop/scenario-spa-app-configuration?tabs=react and
-// https://github.com/AzureAD/microsoft-authentication-library-for-js/tree/dev/lib/msal-react.
-const config = {
-  auth: {
-    clientId: 'c02dcc3a-2b74-4fef-b9ef-fc1c9e83454c',
-    authority: 'https://caretogetherb2cdev.b2clogin.com/caretogetherb2cdev.onmicrosoft.com/B2C_1A_SIGNUP_SIGNIN',
-    knownAuthorities: [ 'caretogetherb2cdev.b2clogin.com' ],
-    redirectUri: 'http://localhost:3000'
-  },
-  cache: {
-    cacheLocation: "localStorage" //TODO: Doing this for simplicity right now, we may want to switch back to "sessionStorage" for security.
-  }
-};
-const publicClientApplication = new PublicClientApplication(config);
-
-function SecureAppRoot() {
+function AuthWrapper() {
   // Force the user to sign in if not already authenticated, then render the app.
   // See https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-react/docs/hooks.md
   useMsalAuthentication(InteractionType.Redirect);
@@ -44,8 +30,10 @@ function SecureAppRoot() {
 ReactDOM.render(
   <React.StrictMode>
     <AppInsightsContext.Provider value={aiReact}>
-      <MsalProvider instance={publicClientApplication}>
-        <SecureAppRoot />
+      <MsalProvider instance={globalMsalInstance}>
+        <RecoilRoot>
+          <AuthWrapper />
+        </RecoilRoot>
       </MsalProvider>
     </AppInsightsContext.Provider>
   </React.StrictMode>,

@@ -227,26 +227,28 @@ function App() {
         <main className={classes.content}>
           <div className={classes.appBarSpacer} />
           <Container maxWidth="lg" className={classes.container}>
-            <Switch>
-              <Route path="/arrangements">
-                <Arrangements />
-              </Route>
-              <Route path="/referrals">
-                <Referrals />
-              </Route>
-              <Route path="/volunteers">
-                <Volunteers />
-              </Route>
-              <Route path="/contacts">
-                <Contacts />
-              </Route>
-              <Route path="/communities">
-                <Communities />
-              </Route>
-              <Route>
-                <Redirect to="/arrangements" />
-              </Route>
-            </Switch>
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <Switch>
+                <Route path="/arrangements">
+                  <Arrangements />
+                </Route>
+                <Route path="/referrals">
+                  <Referrals />
+                </Route>
+                <Route path="/volunteers">
+                  <Volunteers />
+                </Route>
+                <Route path="/contacts">
+                  <Contacts />
+                </Route>
+                <Route path="/communities">
+                  <Communities />
+                </Route>
+                <Route>
+                  <Redirect to="/arrangements" />
+                </Route>
+              </Switch>
+            </React.Suspense>
           </Container>
         </main>
       </Router>

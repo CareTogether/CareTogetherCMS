@@ -1,11 +1,10 @@
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import { Grid, Paper } from '@material-ui/core';
-import { useEffect, useState } from 'react';
-import { ExactAge, AgeInYears, PeopleClient, Person } from '../GeneratedClient';
-import { useAccount, useMsal } from '@azure/msal-react';
-import { AccountInfo } from '@azure/msal-browser';
+import { ExactAge, AgeInYears } from '../GeneratedClient';
 import { differenceInYears } from 'date-fns';
+import { useRecoilValue } from 'recoil';
+import { peopleData, useRefreshPeople } from '../Model/PeopleModel';
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -19,41 +18,17 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-class AuthenticatedHttp {
-  constructor(private accessToken: string) {}
-
-  fetch(url: RequestInfo, init?: RequestInit): Promise<Response> {
-    init && (init.headers = {
-      ...init.headers,
-      Authorization: `Bearer ${this.accessToken}`
-    });
-    return window.fetch(url, init);
-  }
-}
-
 function Contacts() {
   const classes = useStyles();
-  const [people, setPeople] = useState<Person[]>([]);
-  const { instance, accounts } = useMsal();
-  const account = useAccount(accounts[0]) as AccountInfo;
-
-  useEffect(() => {
-    (async () => {
-      const authResponse = await instance.acquireTokenSilent({
-        scopes: ["https://caretogetherb2cdev.onmicrosoft.com/cms/v1/Access"],
-        account: account
-      });
-      const peopleClient = new PeopleClient("https://localhost:44359", new AuthenticatedHttp(authResponse.accessToken));
-      const dataResponse = await peopleClient.get("11111111-1111-1111-1111-111111111111", "22222222-2222-2222-2222-222222222222");
-      setPeople(dataResponse);
-    })();
-  }, []);
+  const people = useRecoilValue(peopleData);
+  const refreshContacts = useRefreshPeople();
 
   return (
     <Grid container spacing={3}>
       <Grid item xs={12}>
         <Paper className={clsx(classes.paper, classes.fixedHeight)}>
-          Area 1
+          <button onClick={refreshContacts}>🔃 Refresh People</button>
+          <br />
           <table>
             <thead>
               <tr>
