@@ -57,9 +57,14 @@ namespace CareTogether.Api
             // Resource services
             var communitiesResource = new CommunitiesResource(communityEventLog);
             var profilesResource = new ProfilesResource(contactsEventLog, goalsEventLog);
+            var policiesResource = new PoliciesResource(); //TODO: Data store for policies
+
+            // Engine services
+            var policyEvaluationEngine = new PolicyEvaluationEngine(policiesResource);
 
             // Manager services
             services.AddSingleton<IMembershipManager>(new MembershipManager(communitiesResource, profilesResource));
+            services.AddSingleton<IReferralManager>(new ReferralManager(referralsEventLog, policyEvaluationEngine, communitiesResource, profilesResource));
 
             // Utility providers
             services.AddSingleton(new AuthorizationProvider(communitiesResource));

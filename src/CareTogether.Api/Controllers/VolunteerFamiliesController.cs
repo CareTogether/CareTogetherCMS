@@ -28,7 +28,7 @@ namespace CareTogether.Api.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<VolunteerFamily>>> Get(Guid organizationId, Guid locationId)
         {
-            //TODO: Extract authorization provider logic, create a base controller class that requests the dependency, and expose a protected property.
+            //TODO: Extract authorization provider logic into an authorization policy & claims provider.
             var authorizedUser = await authorizationProvider.AuthorizeAsync(organizationId, locationId, User);
 
             throw new NotImplementedException();

@@ -135,6 +135,159 @@
         }
       }
     },
+    "/api/{organizationId}/{locationId}/Referrals": {
+      "get": {
+        "tags": [
+          "Referrals"
+        ],
+        "operationId": "Referrals_ListAllReferrals",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Referral"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/{organizationId}/{locationId}/Referrals/referralCommand": {
+      "post": {
+        "tags": [
+          "Referrals"
+        ],
+        "operationId": "Referrals_SubmitReferralCommand",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReferralCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 3
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Referral"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/{organizationId}/{locationId}/Referrals/arrangementCommand": {
+      "post": {
+        "tags": [
+          "Referrals"
+        ],
+        "operationId": "Referrals_SubmitArrangementCommand",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArrangementCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 3
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Referral"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/{organizationId}/{locationId}/VolunteerFamilies": {
       "get": {
         "tags": [
@@ -440,19 +593,85 @@
           1
         ]
       },
-      "VolunteerFamily": {
+      "Referral": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "family": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
+          "policyVersion": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "closeReason": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReferralCloseReason"
+              }
+            ]
+          },
+          "partneringFamily": {
             "nullable": true,
             "oneOf": [
               {
                 "$ref": "#/components/schemas/Family"
               }
             ]
+          },
+          "contacts": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/ContactInfo"
+            }
+          },
+          "referralFormUploads": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/FormUploadInfo"
+            }
+          },
+          "referralActivitiesPerformed": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/ActivityInfo"
+            }
+          },
+          "arrangements": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/Arrangement"
+            }
           }
         }
+      },
+      "ReferralCloseReason": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "NotAppropriate",
+          "Resourced",
+          "NoCapacity",
+          "NoLongerNeeded",
+          "NeedMet"
+        ],
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
       },
       "Family": {
         "type": "object",
@@ -608,6 +827,647 @@
           1,
           2
         ]
+      },
+      "FormUploadInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "timestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "formName": {
+            "type": "string",
+            "nullable": true
+          },
+          "formVersion": {
+            "type": "string",
+            "nullable": true
+          },
+          "uploadedFileName": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "ActivityInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "timestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "activityName": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "Arrangement": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
+          "policyVersion": {
+            "type": "string",
+            "nullable": true
+          },
+          "arrangementType": {
+            "type": "string",
+            "nullable": true
+          },
+          "state": {
+            "$ref": "#/components/schemas/ArrangementState"
+          },
+          "arrangementFormUploads": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/FormUploadInfo"
+            }
+          },
+          "arrangementActivitiesPerformed": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/ActivityInfo"
+            }
+          },
+          "volunteerAssignments": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/VolunteerAssignment"
+            }
+          },
+          "partneringFamilyChildAssignments": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/PartneringFamilyChildAssignment"
+            }
+          },
+          "childrenLocationHistory": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/ChildrenLocationHistoryEntry"
+            }
+          },
+          "notes": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/Note"
+            }
+          }
+        }
+      },
+      "ArrangementState": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Setup",
+          "Open",
+          "Closed"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
+      "VolunteerAssignment": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "discriminator",
+          "mapping": {
+            "FamilyVolunteerAssignment": "#/components/schemas/FamilyVolunteerAssignment",
+            "IndividualVolunteerAssignment": "#/components/schemas/IndividualVolunteerAssignment"
+          }
+        },
+        "x-abstract": true,
+        "additionalProperties": false,
+        "required": [
+          "discriminator"
+        ],
+        "properties": {
+          "arrangementFunction": {
+            "type": "string",
+            "nullable": true
+          },
+          "discriminator": {
+            "type": "string"
+          }
+        }
+      },
+      "FamilyVolunteerAssignment": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerAssignment"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "familyId": {
+                "type": "string",
+                "format": "guid"
+              }
+            }
+          }
+        ]
+      },
+      "IndividualVolunteerAssignment": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerAssignment"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              }
+            }
+          }
+        ]
+      },
+      "PartneringFamilyChildAssignment": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "personId": {
+            "type": "string",
+            "format": "guid"
+          }
+        }
+      },
+      "ChildrenLocationHistoryEntry": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "timestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "childrenIds": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string",
+              "format": "guid"
+            }
+          },
+          "familyId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/ChildrenLocationPlan"
+          },
+          "additionalExplanation": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "ChildrenLocationPlan": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "OvernightHousing",
+          "DaytimeChildCare",
+          "ReturnToFamily"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
+      "Note": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
+          "authorId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "contents": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/NoteContents"
+              }
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/NoteStatus"
+          },
+          "denialReason": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/DraftNoteDenialReason"
+              }
+            ]
+          }
+        }
+      },
+      "NoteContents": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "contents": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "NoteStatus": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Draft",
+          "Denied",
+          "Approved"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
+      "DraftNoteDenialReason": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "ReferralCommand": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "discriminator",
+          "mapping": {
+            "CloseReferral": "#/components/schemas/CloseReferral",
+            "CreateReferral": "#/components/schemas/CreateReferral",
+            "PerformReferralActivity": "#/components/schemas/PerformReferralActivity",
+            "UploadReferralForm": "#/components/schemas/UploadReferralForm"
+          }
+        },
+        "x-abstract": true,
+        "additionalProperties": false,
+        "required": [
+          "discriminator"
+        ],
+        "properties": {
+          "referralId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "timestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "discriminator": {
+            "type": "string"
+          }
+        }
+      },
+      "CloseReferral": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "closeReason": {
+                "$ref": "#/components/schemas/ReferralCloseReason"
+              }
+            }
+          }
+        ]
+      },
+      "CreateReferral": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "familyId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "policyVersion": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "PerformReferralActivity": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "activityName": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "UploadReferralForm": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "formName": {
+                "type": "string",
+                "nullable": true
+              },
+              "formVersion": {
+                "type": "string",
+                "nullable": true
+              },
+              "uploadedFileName": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "ArrangementCommand": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "discriminator",
+          "mapping": {
+            "AssignIndividualVolunteer": "#/components/schemas/AssignIndividualVolunteer",
+            "AssignPartneringFamilyChildren": "#/components/schemas/AssignPartneringFamilyChildren",
+            "AssignVolunteerFamily": "#/components/schemas/AssignVolunteerFamily",
+            "CreateArrangement": "#/components/schemas/CreateArrangement",
+            "InitiateArrangement": "#/components/schemas/InitiateArrangement",
+            "PerformArrangementActivity": "#/components/schemas/PerformArrangementActivity",
+            "TrackChildrenLocationChange": "#/components/schemas/TrackChildrenLocationChange",
+            "UploadArrangementForm": "#/components/schemas/UploadArrangementForm"
+          }
+        },
+        "x-abstract": true,
+        "additionalProperties": false,
+        "required": [
+          "discriminator"
+        ],
+        "properties": {
+          "referralId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "arrangementId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "timestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "discriminator": {
+            "type": "string"
+          }
+        }
+      },
+      "AssignIndividualVolunteer": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "arrangementFunction": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "AssignPartneringFamilyChildren": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "childrenIds": {
+                "type": "array",
+                "nullable": true,
+                "items": {
+                  "type": "string",
+                  "format": "guid"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "AssignVolunteerFamily": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "familyId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "arrangementFunction": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "CreateArrangement": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "policyVersion": {
+                "type": "string",
+                "nullable": true
+              },
+              "arrangementType": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "InitiateArrangement": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false
+          }
+        ]
+      },
+      "PerformArrangementActivity": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "activityName": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "TrackChildrenLocationChange": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "childrenIds": {
+                "type": "array",
+                "nullable": true,
+                "items": {
+                  "type": "string",
+                  "format": "guid"
+                }
+              },
+              "familyId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "plan": {
+                "$ref": "#/components/schemas/ChildrenLocationPlan"
+              },
+              "additionalExplanation": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "UploadArrangementForm": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "formName": {
+                "type": "string",
+                "nullable": true
+              },
+              "formVersion": {
+                "type": "string",
+                "nullable": true
+              },
+              "uploadedFileName": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "VolunteerFamily": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "family": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Family"
+              }
+            ]
+          }
+        }
       }
     }
   }
