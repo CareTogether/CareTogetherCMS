@@ -1,11 +1,12 @@
 ﻿using CareTogether.Abstractions;
+using CareTogether.Managers;
 using CareTogether.Resources;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace CareTogether.Api
+namespace CareTogether.TestData
 {
     //TODO: Extract this to the tests project and only reference that project conditionally
     public static class TestDataProvider
@@ -21,7 +22,8 @@ namespace CareTogether.Api
         public static async Task PopulateTestDataAsync(
             IMultitenantEventLog<CommunityEvent> communityEventLog,
             IMultitenantEventLog<ContactCommandExecutedEvent> contactsEventLog,
-            IMultitenantEventLog<GoalCommandExecutedEvent> goalsEventLog)
+            IMultitenantEventLog<GoalCommandExecutedEvent> goalsEventLog,
+            IMultitenantEventLog<ReferralEvent> referralsEventLog)
         {
             await communityEventLog.AppendEventsAsync(guid1, guid2,
                 new PersonCommandExecuted(new CreatePerson(Guid.Parse("2b87864a-63e3-4406-bcbc-c0068a13ac05"), Guid.Parse("2b87864a-63e3-4406-bcbc-c0068a13ac05"), "System", "Administrator", null)),

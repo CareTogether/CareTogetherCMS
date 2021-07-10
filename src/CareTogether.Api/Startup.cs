@@ -11,15 +11,19 @@ using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Logging;
 using System;
 using System.Collections.Generic;
+using CareTogether.Engines;
+using CareTogether.Abstractions;
 
 namespace CareTogether.Api
 {
     public class Startup
     {
+        public IHostEnvironment HostEnvironment { get; }
         public IConfiguration Configuration { get; }
 
-        public Startup(IConfiguration configuration)
+        public Startup(IHostEnvironment hostEnvironment, IConfiguration configuration)
         {
+            HostEnvironment = hostEnvironment;
             Configuration = configuration;
         }
 
@@ -29,14 +33,26 @@ namespace CareTogether.Api
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddMicrosoftIdentityWebApi(Configuration.GetSection("AzureAdB2C"));
 
-            // Data store services
-            var communityEventLog = new MemoryMultitenantEventLog<CommunityEvent>();
-            var contactsEventLog = new MemoryMultitenantEventLog<ContactCommandExecutedEvent>();
-            var goalsEventLog = new MemoryMultitenantEventLog<GoalCommandExecutedEvent>();
+            // Data store services (use mock implementations for local development)
+            IMultitenantEventLog<CommunityEvent> communityEventLog;
+            IMultitenantEventLog<ContactCommandExecutedEvent> contactsEventLog;
+            IMultitenantEventLog<GoalCommandExecutedEvent> goalsEventLog;
+            IMultitenantEventLog<ReferralEvent> referralsEventLog;
+            if (HostEnvironment.IsDevelopment())
+            {
+                communityEventLog = new MemoryMultitenantEventLog<CommunityEvent>();
+                contactsEventLog = new MemoryMultitenantEventLog<ContactCommandExecutedEvent>();
+                goalsEventLog = new MemoryMultitenantEventLog<GoalCommandExecutedEvent>();
+                referralsEventLog = new MemoryMultitenantEventLog<ReferralEvent>();
 
-            // Initialize static test data for local development
-            //TODO: Configure this based on the environment
-            TestDataProvider.PopulateTestDataAsync(communityEventLog, contactsEventLog, goalsEventLog).Wait();
+#if DEBUG
+                // Populate test data for debugging. The test data project dependency (and this call) is not included in release builds.
+                CareTogether.TestData.TestDataProvider.PopulateTestDataAsync(
+                    communityEventLog, contactsEventLog, goalsEventLog, referralsEventLog).Wait();
+#endif
+            }
+            else
+                throw new NotImplementedException("Durable event logs for system testing have not been implemented yet.");
 
             // Resource services
             var communitiesResource = new CommunitiesResource(communityEventLog);
