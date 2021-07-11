@@ -37,19 +37,24 @@ namespace CareTogether.Managers
         {
             var tenantModel = await GetTenantModelAsync(organizationId, locationId);
 
-            var getReferralResult = await tenantModel.GetReferralAsync(command.ReferralId);
-            if (getReferralResult.TryPickT0(out var referral, out var notFound))
+            var getReferralResult = tenantModel.GetReferralEntry(command.ReferralId);
+            if (getReferralResult.TryPickT0(out var referralEntry, out var notFound))
             {
+                var families = communitiesResource.ListPartneringFamilies(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+                var contacts = profilesResource.ListContactsAsync(organizationId, locationId).Result;
+                var referral = ToReferral(referralEntry, families, contacts);
+
                 var authorizationResult = await policyEvaluationEngine.AuthorizeReferralCommandAsync(
                     organizationId, locationId, user, command, referral);
                 if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
                 {
-                    var commandResult = await tenantModel.ExecuteReferralCommandAsync(command);
+                    var commandResult = tenantModel.ExecuteReferralCommand(command);
                     if (commandResult.TryPickT0(out var success, out var commandError))
                     {
                         await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
                         success.Value.OnCommit();
-                        var disclosedReferral = await policyEvaluationEngine.DiscloseReferralAsync(user, success.Value.Referral);
+                        var disclosedReferral = await policyEvaluationEngine.DiscloseReferralAsync(user,
+                            ToReferral(success.Value.ReferralEntry, families, contacts));
                         return disclosedReferral;
                     }
                     else
@@ -67,19 +72,24 @@ namespace CareTogether.Managers
         {
             var tenantModel = await GetTenantModelAsync(organizationId, locationId);
 
-            var getReferralResult = await tenantModel.GetReferralAsync(command.ReferralId);
-            if (getReferralResult.TryPickT0(out var referral, out var notFound))
+            var getReferralResult = tenantModel.GetReferralEntry(command.ReferralId);
+            if (getReferralResult.TryPickT0(out var referralEntry, out var notFound))
             {
+                var families = communitiesResource.ListPartneringFamilies(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+                var contacts = profilesResource.ListContactsAsync(organizationId, locationId).Result;
+                var referral = ToReferral(referralEntry, families, contacts);
+
                 var authorizationResult = await policyEvaluationEngine.AuthorizeArrangementCommandAsync(
                     organizationId, locationId, user, command, referral);
                 if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
                 {
-                    var commandResult = await tenantModel.ExecuteArrangementCommandAsync(command);
+                    var commandResult = tenantModel.ExecuteArrangementCommand(command);
                     if (commandResult.TryPickT0(out var success, out var commandError))
                     {
                         await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
                         success.Value.OnCommit();
-                        var disclosedReferral = await policyEvaluationEngine.DiscloseReferralAsync(user, success.Value.Referral);
+                        var disclosedReferral = await policyEvaluationEngine.DiscloseReferralAsync(user,
+                            ToReferral(success.Value.ReferralEntry, families, contacts));
                         return disclosedReferral;
                     }
                     else
@@ -97,19 +107,24 @@ namespace CareTogether.Managers
         {
             var tenantModel = await GetTenantModelAsync(organizationId, locationId);
 
-            var getReferralResult = await tenantModel.GetReferralAsync(command.ReferralId);
-            if (getReferralResult.TryPickT0(out var referral, out var notFound))
+            var getReferralResult = tenantModel.GetReferralEntry(command.ReferralId);
+            if (getReferralResult.TryPickT0(out var referralEntry, out var notFound))
             {
+                var families = communitiesResource.ListPartneringFamilies(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+                var contacts = profilesResource.ListContactsAsync(organizationId, locationId).Result;
+                var referral = ToReferral(referralEntry, families, contacts);
+
                 var authorizationResult = await policyEvaluationEngine.AuthorizeArrangementNoteCommandAsync(
                     organizationId, locationId, user, command, referral);
                 if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
                 {
-                    var commandResult = await tenantModel.ExecuteArrangementNoteCommandAsync(command);
+                    var commandResult = tenantModel.ExecuteArrangementNoteCommand(command);
                     if (commandResult.TryPickT0(out var success, out var commandError))
                     {
                         await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
                         success.Value.OnCommit();
-                        var disclosedReferral = await policyEvaluationEngine.DiscloseReferralAsync(user, success.Value.Referral);
+                        var disclosedReferral = await policyEvaluationEngine.DiscloseReferralAsync(user,
+                            ToReferral(success.Value.ReferralEntry, families, contacts));
                         return disclosedReferral;
                     }
                     else
@@ -126,19 +141,39 @@ namespace CareTogether.Managers
         {
             var tenantModel = await GetTenantModelAsync(organizationId, locationId);
 
-            var referrals = await tenantModel.FindReferralsAsync(_ => true);
-            return referrals;
+            var families = communitiesResource.ListPartneringFamilies(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+            var contacts = profilesResource.ListContactsAsync(organizationId, locationId).Result;
+
+            var referrals = tenantModel.FindReferralEntries(_ => true);
+            return referrals.Select(r => ToReferral(r, families, contacts)).ToImmutableList();
         }
 
 
         private async Task<ReferralModel> GetTenantModelAsync(Guid organizationId, Guid locationId)
         {
             var lazyModel = tenantModels.GetOrAdd((organizationId, locationId), (_) => new AsyncLazy<ReferralModel>(() =>
-                ReferralModel.InitializeAsync(organizationId, locationId,
-                    eventLog.GetAllEventsAsync(organizationId, locationId),
-                    communitiesResource, profilesResource)));
+                ReferralModel.InitializeAsync(eventLog.GetAllEventsAsync(organizationId, locationId))));
             return await lazyModel.Task;
         }
+
+
+        private Referral ToReferral(ReferralEntry entry,
+            IImmutableDictionary<Guid, Family> families,
+            IImmutableDictionary<Guid, ContactInfo> contacts) =>
+            new(entry.Id, entry.PolicyVersion, entry.TimestampUtc, entry.CloseReason,
+                families[entry.PartneringFamilyId],
+                families[entry.PartneringFamilyId].Adults
+                    .Select(a => contacts.TryGetValue(a.Item1.Id, out var c) ? c : null)
+                    .Where(c => c != null)
+                    .ToImmutableList(),
+                entry.ReferralFormUploads, entry.ReferralActivitiesPerformed,
+                entry.Arrangements.Select(a => ToArrangement(a.Value)).ToImmutableList());
+
+        private Arrangement ToArrangement(ArrangementEntry entry) =>
+            new(entry.Id, entry.PolicyVersion, entry.ArrangementType, entry.State,
+                entry.ArrangementFormUploads, entry.ArrangementActivitiesPerformed, entry.VolunteerAssignments,
+                entry.PartneringFamilyChildAssignments, entry.ChildrenLocationHistory,
+                ImmutableList<Note>.Empty); //TODO: Look up note contents
     }
 
     //[JsonHierarchyBase]

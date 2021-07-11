@@ -16,80 +16,46 @@ namespace CareTogether.Managers
     public sealed record ArrangementCommandExecuted(ArrangementCommand Command) : ReferralEvent;
     public sealed record ArrangementNoteCommandExecuted(ArrangementNoteCommand Command) : ReferralEvent;
 
+    public record ReferralEntry(Guid Id, string PolicyVersion, DateTime TimestampUtc,
+        ReferralCloseReason? CloseReason,
+        Guid PartneringFamilyId,
+        ImmutableList<FormUploadInfo> ReferralFormUploads,
+        ImmutableList<ActivityInfo> ReferralActivitiesPerformed,
+        ImmutableDictionary<Guid, ArrangementEntry> Arrangements);
+
+    public record ArrangementEntry(Guid Id, string PolicyVersion, string ArrangementType,
+        ArrangementState State,
+        ImmutableList<FormUploadInfo> ArrangementFormUploads,
+        ImmutableList<ActivityInfo> ArrangementActivitiesPerformed,
+        ImmutableList<VolunteerAssignment> VolunteerAssignments,
+        ImmutableList<PartneringFamilyChildAssignment> PartneringFamilyChildAssignments,
+        ImmutableList<ChildrenLocationHistoryEntry> ChildrenLocationHistory,
+        ImmutableList<Guid> DraftNotes, ImmutableList<Guid> ApprovedNotes);
+
     public sealed class ReferralModel
     {
         //TODO: Implement thread safety using a reader writer lock (slim)?
 
-        internal record ReferralEntry(Guid Id, string PolicyVersion, DateTime TimestampUtc,
-            ReferralCloseReason? CloseReason,
-            Guid PartneringFamilyId,
-            ImmutableList<FormUploadInfo> ReferralFormUploads,
-            ImmutableList<ActivityInfo> ReferralActivitiesPerformed,
-            ImmutableDictionary<Guid, ArrangementEntry> Arrangements)
-        {
-            internal Referral ToReferral(
-                IImmutableDictionary<Guid, Family> families,
-                IImmutableDictionary<Guid, ContactInfo> contacts) =>
-                new(Id, PolicyVersion, TimestampUtc, CloseReason,
-                    families[PartneringFamilyId],
-                    families[PartneringFamilyId].Adults.Select(a => contacts[a.Item1.Id]).ToImmutableList(),
-                    ReferralFormUploads, ReferralActivitiesPerformed,
-                    Arrangements.Select(a => a.Value.ToArrangement()).ToImmutableList());
-        }
-
-        internal record ArrangementEntry(Guid Id, string PolicyVersion, string ArrangementType,
-            ArrangementState State,
-            ImmutableList<FormUploadInfo> ArrangementFormUploads,
-            ImmutableList<ActivityInfo> ArrangementActivitiesPerformed,
-            ImmutableList<VolunteerAssignment> VolunteerAssignments,
-            ImmutableList<PartneringFamilyChildAssignment> PartneringFamilyChildAssignments,
-            ImmutableList<ChildrenLocationHistoryEntry> ChildrenLocationHistory,
-            ImmutableList<Guid> DraftNotes, ImmutableList<Guid> ApprovedNotes)
-        {
-            internal Arrangement ToArrangement() =>
-                new(Id, PolicyVersion, ArrangementType, State,
-                    ArrangementFormUploads, ArrangementActivitiesPerformed, VolunteerAssignments,
-                    PartneringFamilyChildAssignments, ChildrenLocationHistory,
-                    ImmutableList<Note>.Empty); //TODO: Look up note contents
-        }
-
-
-        private readonly Func<Task<IImmutableDictionary<Guid, Family>>> getFamiliesAsync;
-        private readonly Func<Task<IImmutableDictionary<Guid, ContactInfo>>> getContactsAsync;
         private ImmutableDictionary<Guid, ReferralEntry> referrals = ImmutableDictionary<Guid, ReferralEntry>.Empty;
 
 
         public long LastKnownSequenceNumber { get; private set; } = -1;
 
 
-        private ReferralModel(
-            Func<Task<IImmutableDictionary<Guid, Family>>> getFamiliesAsync,
-            Func<Task<IImmutableDictionary<Guid, ContactInfo>>> getContactsAsync)
+        public static async Task<ReferralModel> InitializeAsync(
+            IAsyncEnumerable<(ReferralEvent DomainEvent, long SequenceNumber)> eventLog)
         {
-            this.getFamiliesAsync = getFamiliesAsync;
-            this.getContactsAsync = getContactsAsync;
-        }
-
-
-        public static async Task<ReferralModel> InitializeAsync(Guid organizationId, Guid locationId,
-            IAsyncEnumerable<(ReferralEvent DomainEvent, long SequenceNumber)> eventLog,
-            ICommunitiesResource communitiesResource, IProfilesResource profilesResource)
-        {
-            var model = new ReferralModel(
-                getFamiliesAsync: async () =>
-                    (await communitiesResource.ListPartneringFamilies(organizationId, locationId)).ToImmutableDictionary(f => f.Id),
-                getContactsAsync: async () =>
-                    (await profilesResource.ListContactsAsync(organizationId, locationId)));
+            var model = new ReferralModel();
 
             await foreach (var (domainEvent, sequenceNumber) in eventLog)
-                await model.ReplayEventAsync(domainEvent, sequenceNumber);
+                model.ReplayEvent(domainEvent, sequenceNumber);
 
             return model;
         }
 
 
-        public async Task<OneOf<Success<(ReferralCommandExecuted Event, long SequenceNumber, Referral Referral, Action OnCommit)>, Error<string>>>
-            ExecuteReferralCommandAsync(ReferralCommand command)
+        public OneOf<Success<(ReferralCommandExecuted Event, long SequenceNumber, ReferralEntry ReferralEntry, Action OnCommit)>, Error<string>>
+            ExecuteReferralCommand(ReferralCommand command)
         {
             OneOf<ReferralEntry, Error<string>> result = command switch
             {
@@ -123,20 +89,18 @@ namespace CareTogether.Managers
             };
             if (result.TryPickT0(out var referralEntryToUpsert, out var error))
             {
-                var families = await getFamiliesAsync();
-                var contacts = await getContactsAsync();
-                return new Success<(ReferralCommandExecuted Event, long SequenceNumber, Referral Referral, Action OnCommit)>((
+                return new Success<(ReferralCommandExecuted Event, long SequenceNumber, ReferralEntry ReferralEntry, Action OnCommit)>((
                     Event: new ReferralCommandExecuted(command),
                     SequenceNumber: LastKnownSequenceNumber + 1,
-                    Referral: referralEntryToUpsert.ToReferral(families, contacts),
+                    ReferralEntry: referralEntryToUpsert,
                     OnCommit: () => referrals = referrals.SetItem(referralEntryToUpsert.Id, referralEntryToUpsert)));
             }
             else
                 return result.AsT1;
         }
 
-        public async Task<OneOf<Success<(ArrangementCommandExecuted Event, long SequenceNumber, Referral Referral, Action OnCommit)>, Error<string>>>
-            ExecuteArrangementCommandAsync(ArrangementCommand command)
+        public OneOf<Success<(ArrangementCommandExecuted Event, long SequenceNumber, ReferralEntry ReferralEntry, Action OnCommit)>, Error<string>>
+            ExecuteArrangementCommand(ArrangementCommand command)
         {
             if (!referrals.TryGetValue(command.ReferralId, out var referralEntry))
                 return new Error<string>("A referral with the specified ID does not exist.");
@@ -201,20 +165,18 @@ namespace CareTogether.Managers
                 {
                     Arrangements = referralEntry.Arrangements.SetItem(command.ArrangementId, arrangementEntryToUpsert)
                 };
-                var families = await getFamiliesAsync();
-                var contacts = await getContactsAsync();
-                return new Success<(ArrangementCommandExecuted Event, long SequenceNumber, Referral Referral, Action OnCommit)>((
+                return new Success<(ArrangementCommandExecuted Event, long SequenceNumber, ReferralEntry ReferralEntry, Action OnCommit)>((
                     Event: new ArrangementCommandExecuted(command),
                     SequenceNumber: LastKnownSequenceNumber + 1,
-                    Referral: referralEntryToUpsert.ToReferral(families, contacts),
+                    ReferralEntry: referralEntryToUpsert,
                     OnCommit: () => referrals = referrals.SetItem(referralEntryToUpsert.Id, referralEntryToUpsert)));
             }
             else
                 return error;
         }
 
-        public async Task<OneOf<Success<(ArrangementNoteCommandExecuted Event, long SequenceNumber, Referral Referral, Action OnCommit)>, Error<string>>>
-            ExecuteArrangementNoteCommandAsync(ArrangementNoteCommand command)
+        public OneOf<Success<(ArrangementNoteCommandExecuted Event, long SequenceNumber, ReferralEntry ReferralEntry, Action OnCommit)>, Error<string>>
+            ExecuteArrangementNoteCommand(ArrangementNoteCommand command)
         {
             if (!referrals.TryGetValue(command.ReferralId, out var referralEntry))
                 return new Error<string>("A referral with the specified ID does not exist.");
@@ -292,32 +254,29 @@ namespace CareTogether.Managers
             throw new NotImplementedException();
         }
 
-        public async Task<IImmutableList<Referral>> FindReferralsAsync(Func<Referral, bool> predicate)
+        public IImmutableList<ReferralEntry> FindReferralEntries(Func<ReferralEntry, bool> predicate)
         {
-            var allReferrals = await Task.WhenAll(referrals.Values
-                .Select(async p => p.ToReferral(await getFamiliesAsync(), await getContactsAsync())));
-
-            return allReferrals
+            return referrals.Values
                 .Where(predicate)
                 .ToImmutableList();
         }
 
-        public async Task<ResourceResult<Referral>> GetReferralAsync(Guid referralId) =>
+        public ResourceResult<ReferralEntry> GetReferralEntry(Guid referralId) =>
             referrals.TryGetValue(referralId, out var referralEntry)
-            ? referralEntry.ToReferral(await getFamiliesAsync(), await getContactsAsync())
+            ? referralEntry
             : ResourceResult.NotFound;
 
 
-        private async Task ReplayEventAsync(ReferralEvent domainEvent, long sequenceNumber)
+        private void ReplayEvent(ReferralEvent domainEvent, long sequenceNumber)
         {
             if (domainEvent is ReferralCommandExecuted referralCommandExecuted)
             {
-                var (_, _, _, onCommit) = (await ExecuteReferralCommandAsync(referralCommandExecuted.Command)).AsT0.Value;
+                var (_, _, _, onCommit) = (ExecuteReferralCommand(referralCommandExecuted.Command)).AsT0.Value;
                 onCommit();
             }
             else if (domainEvent is ArrangementCommandExecuted arrangementCommandExecuted)
             {
-                var (_, _, _, onCommit) = (await ExecuteArrangementCommandAsync(arrangementCommandExecuted.Command)).AsT0.Value;
+                var (_, _, _, onCommit) = (ExecuteArrangementCommand(arrangementCommandExecuted.Command)).AsT0.Value;
                 onCommit();
             }
             else if (domainEvent is ArrangementNoteCommandExecuted arrangementNoteCommandExecuted)

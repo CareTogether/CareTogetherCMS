@@ -35,7 +35,7 @@ namespace CareTogether.TestData
                 new PersonCommandExecuted(new UpdatePersonAge(guid1, new ExactAge(new DateTime(1975, 1, 1)))),
                 new PersonCommandExecuted(new UpdatePersonAge(guid2, new ExactAge(new DateTime(1979, 7, 1)))),
                 new PersonCommandExecuted(new UpdatePersonUserLink(guid1, guid4)),
-                new FamilyCommandExecuted(new CreateFamily(guid5, VolunteerFamilyStatus.Active, null,
+                new FamilyCommandExecuted(new CreateFamily(guid5, null, PartneringFamilyStatus.Active,
                     new List<(Guid, FamilyAdultRelationshipInfo)> { (guid1, new FamilyAdultRelationshipInfo(FamilyAdultRelationshipType.Dad, "ABC", true, true, "Test")) },
                     null, null)),
                 new FamilyCommandExecuted(new AddAdultToFamily(guid5, guid2, new FamilyAdultRelationshipInfo(FamilyAdultRelationshipType.Mom, "DEF", true, true, null))),
