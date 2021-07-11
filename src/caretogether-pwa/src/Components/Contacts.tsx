@@ -26,7 +26,7 @@ function Contacts() {
   return (
     <Grid container spacing={3}>
       <Grid item xs={12}>
-        <Paper className={clsx(classes.paper, classes.fixedHeight)}>
+        <Paper className={clsx(classes.paper)}> {/* classes.fixedHeight */}
           <button onClick={refreshContacts}>🔃 Refresh People</button>
           <br />
           <table>

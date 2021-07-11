@@ -24,19 +24,20 @@ function Referrals() {
   return (
     <Grid container spacing={3}>
       <Grid item xs={12}>
-        <Paper className={clsx(classes.paper, classes.fixedHeight)}>
+        <Paper className={clsx(classes.paper)}>
           <button onClick={refreshReferrals}>🔃 Refresh Referrals</button>
           <br />
           <table>
             <thead>
               <tr>
+                {/* TODO: Render the family name as the name of the primary family contact */}
                 <th>Data as JSON for testing</th>
               </tr>
             </thead>
             <tbody>
               {referrals.map(referral => (
                 <tr key={referral.id}>
-                  <td>{JSON.stringify(referral)}</td>
+                  <td>{JSON.stringify(referral)}<br />================</td>
                 </tr>
               ))}
             </tbody>
