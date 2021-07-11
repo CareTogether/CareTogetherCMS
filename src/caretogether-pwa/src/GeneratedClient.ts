@@ -2229,6 +2229,7 @@ export interface IInitiateArrangement extends IArrangementCommand {
 }
 
 export class PerformArrangementActivity extends ArrangementCommand implements IPerformArrangementActivity {
+    completedByPersonId?: string;
     activityName?: string | undefined;
 
     constructor(data?: IPerformArrangementActivity) {
@@ -2239,6 +2240,7 @@ export class PerformArrangementActivity extends ArrangementCommand implements IP
     init(_data?: any) {
         super.init(_data);
         if (_data) {
+            this.completedByPersonId = _data["completedByPersonId"];
             this.activityName = _data["activityName"];
         }
     }
@@ -2252,6 +2254,7 @@ export class PerformArrangementActivity extends ArrangementCommand implements IP
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
+        data["completedByPersonId"] = this.completedByPersonId;
         data["activityName"] = this.activityName;
         super.toJSON(data);
         return data; 
@@ -2259,6 +2262,7 @@ export class PerformArrangementActivity extends ArrangementCommand implements IP
 }
 
 export interface IPerformArrangementActivity extends IArrangementCommand {
+    completedByPersonId?: string;
     activityName?: string | undefined;
 }
 

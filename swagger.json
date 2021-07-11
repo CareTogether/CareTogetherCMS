@@ -1390,6 +1390,10 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+              "completedByPersonId": {
+                "type": "string",
+                "format": "guid"
+              },
               "activityName": {
                 "type": "string",
                 "nullable": true

@@ -80,11 +80,12 @@ namespace CareTogether.Managers
         string FormName, string FormVersion, string UploadedFileName)
         : ArrangementCommand(ReferralId, ArrangementId, UserId, TimestampUtc);
     public sealed record PerformArrangementActivity(Guid ReferralId, Guid ArrangementId, Guid UserId, DateTime TimestampUtc,
-        string ActivityName)
+        Guid CompletedByPersonId, string ActivityName)
         : ArrangementCommand(ReferralId, ArrangementId, UserId, TimestampUtc);
     public sealed record TrackChildrenLocationChange(Guid ReferralId, Guid ArrangementId, Guid UserId, DateTime TimestampUtc,
         ImmutableList<Guid> ChildrenIds, Guid FamilyId, ChildrenLocationPlan Plan, string AdditionalExplanation)
         : ArrangementCommand(ReferralId, ArrangementId, UserId, TimestampUtc);
+    //TODO: EndArrangement?
 
     [JsonHierarchyBase]
     public abstract partial record ArrangementNoteCommand(Guid ReferralId, Guid ArrangementId, Guid UserId, DateTime TimestampUtc);
