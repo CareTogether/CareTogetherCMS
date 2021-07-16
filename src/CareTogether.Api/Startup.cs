@@ -38,20 +38,24 @@ namespace CareTogether.Api
             var blobServiceClient = new BlobServiceClient(Configuration["Persistence:BlobStorageConnectionString"]);
 
             // Data store services (use mock implementations for local development)
+            //TODO: Initialize durable event logs instead, once available, and regardless of host environment.
             IMultitenantEventLog<CommunityEvent> communityEventLog;
             IMultitenantEventLog<ContactCommandExecutedEvent> contactsEventLog;
             IMultitenantEventLog<GoalCommandExecutedEvent> goalsEventLog;
             IMultitenantEventLog<ReferralEvent> referralsEventLog;
             if (HostEnvironment.IsDevelopment())
             {
+                //TODO: Remove these once we have durable event logs.
                 communityEventLog = new MemoryMultitenantEventLog<CommunityEvent>();
                 contactsEventLog = new MemoryMultitenantEventLog<ContactCommandExecutedEvent>();
                 goalsEventLog = new MemoryMultitenantEventLog<GoalCommandExecutedEvent>();
                 referralsEventLog = new MemoryMultitenantEventLog<ReferralEvent>();
 
 #if DEBUG
-                // Populate test data for debugging. The test data project dependency (and this call) is not included in release builds.
-                CareTogether.TestData.TestDataProvider.PopulateTestDataAsync(
+                // Reset and populate test data for debugging. The test data project dependency (and this call) is not included in release builds.
+                // Note that this will not reset data (storage containers) for tenants other than the test tenant used by the TestData project.
+                TestData.TestStorageHelper.ResetTestTenantData(blobServiceClient);
+                TestData.TestDataProvider.PopulateTestDataAsync(
                     communityEventLog, contactsEventLog, goalsEventLog, referralsEventLog).Wait();
 #endif
             }
