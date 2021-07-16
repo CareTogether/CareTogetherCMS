@@ -16,9 +16,9 @@ Finally, to run locally you will need a set of environment configuration files. 
 2. Create a directory (outside of the Git-managed repo directory) for storing Azurite data and logs, e.g. `D:\AzuriteData`.
 3. Start Azurite from the command line, specifying a location for storing data outside of the Git-managed directory, e.g.:
 ```
-azurite --silent --location D:\AzuriteData
+azurite-blob --location D:\AzuriteData
 ```
-This will run Azurite with a default Blob service endpoint of `http://127.0.0.1:10000`.
+This will run Azurite with the default Blob service endpoint (we don't use the Queue or Table storage endpoints currently). Add a `--silent` parameter if you don't want to see individual requests logged to the terminal.
 4. Run the _CareTogether.Api_ project in the debugger. If using Visual Studio, you can open the _CareTogetherCMS.sln_ solution and hit F5 to start debugging.
 5. To run the _caretogether-pwa_ web application, run the following from the _caretogether-pwa_ directory:
 ```
