@@ -10,14 +10,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Setup .NET
+    - name: Check out source
+      uses: actions/checkout@v2
+    - name: Set up .NET
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 5.0.x
-    - name: Restore dependencies
+    - name: Set up Node.js
+      uses: actions/setup-node@v1
+      with:
+        node-version: '14'
+    - name: Install Azurite storage emulator
+      run: npm install -g azurite
+    - name: Start Azurite blob endpoint
+      shell: bash
+      run: azurite-blob &
+    - name: Restore .NET dependencies
       run: dotnet restore
-    - name: Build
+    - name: Build .NET solution
       run: dotnet build --no-restore
-    - name: Test
+    - name: Test .NET solution
       run: dotnet test --no-build --verbosity normal
