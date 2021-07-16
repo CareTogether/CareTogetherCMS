@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 
 namespace CareTogether.TestData
 {
-    //TODO: Extract this to the tests project and only reference that project conditionally
     public static class TestDataProvider
     {
         private static Guid Id(char x) => Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
