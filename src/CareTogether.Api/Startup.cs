@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using CareTogether.Engines;
 using CareTogether.Abstractions;
+using Azure.Storage.Blobs;
 
 namespace CareTogether.Api
 {
@@ -32,6 +33,9 @@ namespace CareTogether.Api
         {
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddMicrosoftIdentityWebApi(Configuration.GetSection("AzureAdB2C"));
+
+            // Shared blob storage client configured to authenticate according to the environment
+            var blobServiceClient = new BlobServiceClient(Configuration["Persistence:BlobStorageConnectionString"]);
 
             // Data store services (use mock implementations for local development)
             IMultitenantEventLog<CommunityEvent> communityEventLog;
