@@ -13,7 +13,7 @@ export const peopleData = selector({
   key: 'people',
   get: async ({get}) => {
     get(peopleRequestIDState); // Add request ID as a dependency to enable refresh
-    const peopleClient = new PeopleClient("https://localhost:44359", authenticatingFetch);
+    const peopleClient = new PeopleClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
     const dataResponse = await peopleClient.get("11111111-1111-1111-1111-111111111111", "22222222-2222-2222-2222-222222222222");
     return dataResponse;
   },

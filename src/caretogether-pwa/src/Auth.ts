@@ -5,13 +5,13 @@ import { PublicClientApplication, IPublicClientApplication } from "@azure/msal-b
 // https://github.com/AzureAD/microsoft-authentication-library-for-js/tree/dev/lib/msal-react.
 const config = {
   auth: {
-    clientId: 'c02dcc3a-2b74-4fef-b9ef-fc1c9e83454c',
-    authority: 'https://caretogetherb2cdev.b2clogin.com/caretogetherb2cdev.onmicrosoft.com/B2C_1A_SIGNUP_SIGNIN',
-    knownAuthorities: [ 'caretogetherb2cdev.b2clogin.com' ],
-    redirectUri: 'http://localhost:3000'
+    clientId: process.env.REACT_APP_AUTH_CLIENT_ID,
+    authority: process.env.REACT_APP_AUTH_AUTHORITY,
+    knownAuthorities: [ process.env.REACT_APP_AUTH_KNOWN_AUTHORITY ],
+    redirectUri: process.env.REACT_APP_AUTH_REDIRECT_URI
   },
   cache: {
-    cacheLocation: "localStorage" //TODO: Doing this for simplicity right now, we may want to switch back to "sessionStorage" for security.
+    cacheLocation: "localStorage"
   }
 };
 
@@ -24,7 +24,7 @@ const acquireAccessToken = async (msalInstance: IPublicClientApplication) => {
   const accounts = msalInstance.getAllAccounts();
 
   const request = {
-    scopes: ["https://caretogetherb2cdev.onmicrosoft.com/cms/v1/Access"],
+    scopes: [process.env.REACT_APP_AUTH_SCOPES],
     account: activeAccount || accounts[0]
   };
 
