@@ -5,6 +5,7 @@ VisualStudioVersion = 16.0.31229.75
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "deploy", "deploy", "{B04053C5-CA17-41B1-BC52-8B5393090D45}"
 	ProjectSection(SolutionItems) = preProject
+		.github\workflows\ci-pr-dotnet.yml = .github\workflows\ci-pr-dotnet.yml
 		.github\workflows\main_caretogether.yml = .github\workflows\main_caretogether.yml
 	EndProjectSection
 EndProject
@@ -51,7 +52,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		swagger.json = swagger.json
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CareTogether.TestData", "test\CareTogether.TestData\CareTogether.TestData.csproj", "{7DC7327F-6F01-4561-943D-D385FB5637E1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CareTogether.TestData", "test\CareTogether.TestData\CareTogether.TestData.csproj", "{7DC7327F-6F01-4561-943D-D385FB5637E1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
