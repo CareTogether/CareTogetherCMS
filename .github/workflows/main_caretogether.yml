@@ -22,8 +22,6 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: '5.0.x'
-#    - name: Release build
-#      run: dotnet build --configuration Release
     - name: Publish .NET API release build
       run: dotnet publish --configuration Release --output ${{env.GITHUB_WORKSPACE}}/publish/api
     - name: Upload API artifact for deployment job
@@ -52,7 +50,7 @@ jobs:
       run: npm install yarn
     - name: Build React app
       run: |
-        cd ${{env.GITHUB_WORKSPACE}}/src/caretogether-pwa
+        cd $GITHUB_WORKSPACE/src/caretogether-pwa
         yarn build
     - name: Upload PWA artifact for deployment job
       uses: actions/upload-artifact@v2
