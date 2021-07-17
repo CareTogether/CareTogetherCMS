@@ -5,6 +5,11 @@
     <UserSecretsId>aspnet-CareTogether.Api-0706AF60-30BE-4CB4-868D-366CBB379CA7</UserSecretsId>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configureation)' == 'Release'">
+    <PublishSingleFile>true</PublishSingleFile>
+    <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="5.0.7" />
     <PackageReference Include="Microsoft.Identity.Web" Version="1.14.0" />
