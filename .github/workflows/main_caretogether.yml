@@ -3,6 +3,10 @@
 
 name: CD - Production - .NET+React
 
+concurrency:
+  group: continuous_delivery
+  cancel-in-progress: true
+
 on:
   push:
     branches:
