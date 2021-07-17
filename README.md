@@ -2,6 +2,9 @@
 CareTogether is an open-source case management system (CMS) for nonprofits connecting families to caring communities.
 
 ![Production Build](https://github.com/CareTogether/CareTogetherCMS/actions/workflows/main_caretogether.yml/badge.svg)
+![License](https://badgen.net/github/license/CareTogether/CareTogetherCMS)
+![Alpha Release Project](https://badgen.net/github/milestones/CareTogether/CareTogetherCMS/1)
+![Open Help-Wanted Issues](https://badgen.net/github/label-issues/CareTogether/CareTogetherCMS/help%20wanted/open)
 
 ## Prerequisites
 You can build and run CareTogether on any operating system supported by Node.js and .NET Core, including Windows, MacOS, and supported Linux distros. CareTogether requires currently supported versions of Node.js and the .NET Core 5.0 SDK to be installed on your system.
