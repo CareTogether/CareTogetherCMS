@@ -1,4 +1,4 @@
-name: .NET
+name: CI - Pull Requests - .NET
 
 on:
   pull_request:
