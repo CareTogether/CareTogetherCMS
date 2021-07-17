@@ -18,17 +18,17 @@ jobs:
       uses: actions/checkout@master
 
     # Build .NET backend
-    - name: Set up .NET Core
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: '5.0.x'
-    - name: Publish .NET API release build
-      run: dotnet publish --configuration Release --output ${{env.GITHUB_WORKSPACE}}/publish/api
-    - name: Upload API artifact for deployment job
-      uses: actions/upload-artifact@v2
-      with:
-        name: api
-        path: ${{env.GITHUB_WORKSPACE}}/publish/api
+  # - name: Set up .NET Core
+  #   uses: actions/setup-dotnet@v1
+  #   with:
+  #     dotnet-version: '5.0.x'
+  # - name: Publish .NET API release build
+  #   run: dotnet publish --configuration Release --output publish/api
+  # - name: Upload API artifact for deployment job
+  #   uses: actions/upload-artifact@v2
+  #   with:
+  #     name: api
+  #     path: publish/api
 #   - name: Download API artifact from build job
 #     uses: actions/download-artifact@v2
 #     with:
@@ -39,7 +39,7 @@ jobs:
 #       app-name: caretogether
 #       slot-name: Production
 #       publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_F487B40891C940EAAA7EAF30B034F7AE }}
-#       package: ${{env.GITHUB_WORKSPACE}}/publish/api
+#       package: publish/api
 
     # Build React frontend
     - name: Set up Node.js
@@ -50,12 +50,12 @@ jobs:
       run: npm install yarn
     - name: Build React app
       run: yarn build
-      working-directory: ${{env.GITHUB_WORKSPACE}}/src/caretogether-pwa
+      working-directory: src/caretogether-pwa
     - name: Upload PWA artifact for deployment job
       uses: actions/upload-artifact@v2
       with:
         name: pwa
-        path: ${{env.GITHUB_WORKSPACE}}/src/caretogether-pwa/build
+        path: src/caretogether-pwa/build
 #   - name: Download PWA artifact from build job
 #     uses: actions/download-artifact@v2
 #     with:
