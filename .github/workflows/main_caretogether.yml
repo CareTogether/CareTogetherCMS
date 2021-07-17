@@ -14,7 +14,7 @@ jobs:
 
     steps:
     # Checkout the repo
-    - name: 'Checkout Github Action'
+    - name: Checkout source
       uses: actions/checkout@master
 
     # Build .NET backend
@@ -24,11 +24,11 @@ jobs:
         dotnet-version: '5.0.x'
     - name: Publish .NET API release build
       run: dotnet publish --configuration Release --self-contained false --output publish/api
-    - name: Upload API artifact for deployment job
-      uses: actions/upload-artifact@v2
-      with:
-        name: api
-        path: publish/api
+#   - name: Upload API artifact for deployment job
+#     uses: actions/upload-artifact@v2
+#     with:
+#       name: api
+#       path: publish/api
 
     # Build React frontend
     - name: Set up Node.js
@@ -43,35 +43,35 @@ jobs:
     - name: Build React app
       run: yarn build
       working-directory: src/caretogether-pwa
-    - name: Upload PWA artifact for deployment job
-      uses: actions/upload-artifact@v2
-      with:
-        name: pwa
-        path: src/caretogether-pwa/build
+#   - name: Upload PWA artifact for deployment job
+#     uses: actions/upload-artifact@v2
+#     with:
+#       name: pwa
+#       path: src/caretogether-pwa/build
     
     # Deploy .NET backend
 #   - name: Download API artifact from build job
 #     uses: actions/download-artifact@v2
 #     with:
 #       name: api
-#   - name: Deploy .NET API to Azure
-#     uses: azure/webapps-deploy@v2
-#     with:
-#       app-name: caretogether
-#       slot-name: Production
-#       publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_F487B40891C940EAAA7EAF30B034F7AE }}
-#       package: publish/api
+    - name: Deploy .NET API to Azure
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: caretogether-api
+        slot-name: Production
+        publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_CARETOGETHER_API }}
+        package: publish/api
     
     # Deploy React frontend
 #   - name: Download PWA artifact from build job
 #     uses: actions/download-artifact@v2
 #     with:
 #       name: pwa
-#   - name: 'Deploy to Azure Web App'
-#     uses: azure/webapps-deploy@v2
-#     id: deploy-to-webapp
-#     with:
-#       app-name: 'caretogether-pwa'
-#       slot-name: 'production'
-#       publish-profile: ${{ secrets.AzureAppService_PublishProfile_1234 }}
-#       package: .
+    - name: Deploy React PWA to Azure
+      uses: azure/webapps-deploy@v2
+      id: deploy-to-webapp
+      with:
+        app-name: 'caretogether-pwa'
+        slot-name: 'production'
+        publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_CARETOGETHER_PWA }}
+        package: src/caretogether-pwa/build
