@@ -21,7 +21,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\test\CareTogether.TestData\CareTogether.TestData.csproj" Condition="'$(Configuration)' == 'Debug'" />
+    <!--<ProjectReference Include="..\..\test\CareTogether.TestData\CareTogether.TestData.csproj" Condition="'$(Configuration)' == 'Debug'" />-->
+    <ProjectReference Include="..\..\test\CareTogether.TestData\CareTogether.TestData.csproj" />
     <ProjectReference Include="..\CareTogether.Contracts\CareTogether.Contracts.csproj" />
     <ProjectReference Include="..\CareTogether.Core\CareTogether.Core.csproj" />
   </ItemGroup>

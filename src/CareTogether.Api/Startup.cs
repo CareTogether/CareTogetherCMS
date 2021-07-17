@@ -43,24 +43,24 @@ namespace CareTogether.Api
             IMultitenantEventLog<ContactCommandExecutedEvent> contactsEventLog;
             IMultitenantEventLog<GoalCommandExecutedEvent> goalsEventLog;
             IMultitenantEventLog<ReferralEvent> referralsEventLog;
-            if (HostEnvironment.IsDevelopment())
-            {
+            //if (HostEnvironment.IsDevelopment())
+            //{
                 //TODO: Remove these once we have durable event logs.
                 communityEventLog = new MemoryMultitenantEventLog<CommunityEvent>();
                 contactsEventLog = new MemoryMultitenantEventLog<ContactCommandExecutedEvent>();
                 goalsEventLog = new MemoryMultitenantEventLog<GoalCommandExecutedEvent>();
                 referralsEventLog = new MemoryMultitenantEventLog<ReferralEvent>();
 
-#if DEBUG
+//#if DEBUG
                 // Reset and populate test data for debugging. The test data project dependency (and this call) is not included in release builds.
                 // Note that this will not reset data (storage containers) for tenants other than the test tenant used by the TestData project.
                 TestData.TestStorageHelper.ResetTestTenantData(blobServiceClient);
                 TestData.TestDataProvider.PopulateTestDataAsync(
                     communityEventLog, contactsEventLog, goalsEventLog, referralsEventLog).Wait();
-#endif
-            }
-            else
-                throw new NotImplementedException("Durable event logs for system testing have not been implemented yet.");
+//#endif
+            //}
+            //else
+            //    throw new NotImplementedException("Durable event logs for system testing have not been implemented yet.");
 
             // Resource services
             var communitiesResource = new CommunitiesResource(communityEventLog);
