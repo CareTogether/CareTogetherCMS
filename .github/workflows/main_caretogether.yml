@@ -50,8 +50,10 @@ jobs:
       run: npm install yarn
     - name: Build React app
       run: |
-        cd $GITHUB_WORKSPACE/src/caretogether-pwa
+        cd $CARETOGETHER_PWA_DIR
         yarn build
+      env:
+        CARETOGETHER_PWA_DIR: ${{env.GITHUB_WORKSPACE}}/src/caretogether-pwa
     - name: Upload PWA artifact for deployment job
       uses: actions/upload-artifact@v2
       with:
