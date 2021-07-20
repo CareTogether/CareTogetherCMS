@@ -39,18 +39,5 @@ namespace CareTogether
         public static bool CanAccess(this AuthorizedUser user, Guid organizationId, Guid locationId) =>
             user.Principal.HasClaim(Claims.OrganizationId, organizationId.ToString()) &&
             user.Principal.HasClaim(Claims.LocationId, locationId.ToString());
-
-        private static IDictionary<LogType, string> logTypeMap = new Dictionary<LogType, string>()
-        {
-            { LogType.COMMUNITY_EVENT, "communityEventLog" },
-            { LogType.CONTACT_COMMAND_EXECUTED_EVENT, "contactsEventLog" },
-            { LogType.GOAL_COMMAND_EXECUTED_EVENT, "goalsEventLog" },
-            { LogType.REFERRAL_EVENT, "referralsEventLog" },
-        };
-
-        public static string ConvertToString(this LogType logType)
-        {
-            return logTypeMap[logType];
-        }
     }
 }

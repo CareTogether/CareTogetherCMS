@@ -16,14 +16,15 @@ namespace CareTogether.Utilities
 {
     public class AppendBlobMultitenantEventLog<T>
     {
-        private LogType _logType;
-        private BlobServiceClient _blobServiceClient;
-        private ConcurrentDictionary<(Guid organizationId, Guid locationId), int> _tenantEventCounts;
+        private readonly LogType _logType;
+        private readonly BlobServiceClient _blobServiceClient;
+        private readonly ConcurrentDictionary<(Guid organizationId, Guid locationId), int> _tenantEventCounts;
 
         public AppendBlobMultitenantEventLog(BlobServiceClient blobServiceClient, LogType logType)
         {
             this._blobServiceClient = blobServiceClient;
-            this._logType = logType;        
+            this._logType = logType;
+            _tenantEventCounts = new ConcurrentDictionary<(Guid organizationId, Guid locationId), int>();
         }
 
         public async Task<OneOf<Success, Error>> AppendEventAsync(Guid organizationId, Guid locationId, T domainEvent, long expectedSequenceNumber)
@@ -32,30 +33,34 @@ namespace CareTogether.Utilities
 
             var numberOfTenantEvents = _tenantEventCounts[(organizationId, locationId)];
 
-            var currentBlobNum = (50000 / numberOfTenantEvents)+1;
+            var currentBlobNumber = (50000 / numberOfTenantEvents)+1;
 
-            var tenantBlob = tenantContainer.GetAppendBlobClient($"{locationId}/{_logType.ConvertToString()}/{currentBlobNum.ToString("D5")}.ndjson");
+            var logSegmentBlob = tenantContainer.GetAppendBlobClient($"{locationId}/{_logType.ToString()}/{currentBlobNumber.ToString("D5")}.ndjson");
 
-            if(!tenantBlob.Exists())
+            await logSegmentBlob.CreateIfNotExistsAsync();
+            await logSegmentBlob.SetHttpHeadersAsync(new BlobHttpHeaders() { ContentType = "application/x-ndjson" });
+
+            // excplicitly setting the StringEscapeHandling property so that it's immediately obvious how escaping is being handled, and so that
+            // it's easy to change the behavior if that becomes necessary in the future
+            var eventJson = JsonConvert.SerializeObject(domainEvent, Formatting.None, new JsonSerializerSettings() { StringEscapeHandling = StringEscapeHandling.Default });
+
+            var eventStream = new MemoryStream(Encoding.UTF8.GetBytes(eventJson));
+
+            // this ensures that we only append exactly where we expect to
+            var appendBlobConditions = new AppendBlobRequestConditions()
             {
-                await tenantBlob.CreateAsync();
-                await tenantBlob.SetHttpHeadersAsync(new BlobHttpHeaders() { ContentType = "application/x-ndjson" });
-            }
+                IfAppendPositionEqual = expectedSequenceNumber
+            };
 
-            var eventJson = JsonConvert.SerializeObject(domainEvent);
-
-            var cleanEventJson = eventJson.Replace("\n", "").Replace("\r", "");
-
-            var eventStream = new MemoryStream(Encoding.UTF8.GetBytes(cleanEventJson));
-
-            var appendReturn = (BlobAppendInfo) await tenantBlob.AppendBlockAsync(eventStream);
-            
-            if(appendReturn.BlobCommittedBlockCount == expectedSequenceNumber)
+            try
             {
+                await logSegmentBlob.AppendBlockAsync(eventStream, conditions: appendBlobConditions);
                 return new Success();
             }
-            else
+            catch (Exception e)
             {
+                Console.WriteLine($"Could not append to block {expectedSequenceNumber} in {locationId}/{_logType.ToString()}/{currentBlobNumber.ToString("D5")}.ndjson" +
+                    $" under tenant {organizationId} because the append position did not match the expected position.");
                 return new Error();
             }
         }
@@ -64,9 +69,11 @@ namespace CareTogether.Utilities
         {
             var tenantContainer = _blobServiceClient.GetBlobContainerClient(organizationId.ToString());
 
-            var tenantBlobs = tenantContainer.GetBlobs(BlobTraits.None, BlobStates.None, $"{locationId}/{_logType.ConvertToString()}");
+            var tenantBlobs = tenantContainer.GetBlobsAsync(BlobTraits.None, BlobStates.None, $"{locationId}/{_logType.ToString()}");
 
-            foreach (BlobItem blob in tenantBlobs)
+            long eventSequenceNumber = 0;
+
+            await foreach (BlobItem blob in tenantBlobs)
             {
                 var appendBlob = tenantContainer.GetAppendBlobClient(blob.Name);
    
@@ -77,20 +84,19 @@ namespace CareTogether.Utilities
                 using (StringReader reader = new StringReader(eventString))
                 {
                     string line;
-                    long lineNumber = 0;
 
                     while ((line = reader.ReadLine()) != null)
                     {
-                        lineNumber++;
+                        eventSequenceNumber++;
 
                         T item = JsonConvert.DeserializeObject<T>(line);
 
-                        yield return (item, lineNumber);
+                        yield return (item, eventSequenceNumber);
                     }
-
-                    _tenantEventCounts.AddOrUpdate((organizationId, locationId), 0, (OldKey, OldValue) => OldValue + ((int)lineNumber));
                 }
             }
+
+            _tenantEventCounts.TryAdd((organizationId, locationId), (int)eventSequenceNumber);
         }
     }
 }
