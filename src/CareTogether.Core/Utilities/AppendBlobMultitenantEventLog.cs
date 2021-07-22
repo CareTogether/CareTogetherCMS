@@ -31,9 +31,9 @@ namespace CareTogether.Utilities
         {
             var tenantContainer = _blobServiceClient.GetBlobContainerClient(organizationId.ToString());
 
-            var numberOfTenantEvents = _tenantEventCounts[(organizationId, locationId)];
+            var numberOfTenantEvents = _tenantEventCounts.GetOrAdd((organizationId, locationId), 0);
 
-            var currentBlobNumber = (50000 / numberOfTenantEvents)+1;
+            var currentBlobNumber = numberOfTenantEvents == 0 ? 0 : (50000 / numberOfTenantEvents)+1;
 
             var logSegmentBlob = tenantContainer.GetAppendBlobClient($"{locationId}/{_logType.ToString()}/{currentBlobNumber.ToString("D5")}.ndjson");
 
@@ -69,11 +69,9 @@ namespace CareTogether.Utilities
         {
             var tenantContainer = _blobServiceClient.GetBlobContainerClient(organizationId.ToString());
 
-            var tenantBlobs = tenantContainer.GetBlobsAsync(BlobTraits.None, BlobStates.None, $"{locationId}/{_logType.ToString()}");
-
             long eventSequenceNumber = 0;
 
-            await foreach (BlobItem blob in tenantBlobs)
+            await foreach (BlobItem blob in tenantContainer.GetBlobsAsync(BlobTraits.None, BlobStates.None, $"{locationId}/{_logType.ToString()}"))
             {
                 var appendBlob = tenantContainer.GetAppendBlobClient(blob.Name);
    
