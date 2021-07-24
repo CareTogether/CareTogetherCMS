@@ -6,15 +6,6 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Resources
 {
-    //TODO: Notes are just a particular case of Forms, and notes can just be modeled as simple forms.
-    //      Note approval logic would be handled in the ReferralManager.
-    //      Note display logic is a client concern.
-    public enum NoteStatus { Draft, Denied, Approved };
-    public record Note(Guid Id, Guid AuthorId, NoteContents Contents, NoteStatus Status, DraftNoteDenialReason DenialReason);
-    public record NoteContents(string Contents);
-    public record DraftNoteDenialReason(string Reason);
-
-
     public interface IFormsResource
     {
         //TODO: Where do we track *which forms belong to a referral*? That appears to require the referral ID being used as a lookup ID in the IFormsResource.

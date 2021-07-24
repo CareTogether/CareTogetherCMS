@@ -30,7 +30,10 @@ namespace CareTogether.Managers
         ImmutableList<VolunteerAssignment> VolunteerAssignments,
         ImmutableList<PartneringFamilyChildAssignment> PartneringFamilyChildAssignments,
         ImmutableList<ChildrenLocationHistoryEntry> ChildrenLocationHistory,
-        ImmutableList<Guid> DraftNotes, ImmutableList<Guid> ApprovedNotes);
+        ImmutableDictionary<Guid, NoteEntry> Notes);
+
+    public record NoteEntry(Guid Id, Guid AuthorId, DateTime LastEditTimestampUtc, NoteStatus Status,
+        string FinalizedNoteContents, Guid? ApproverId, DateTime? ApprovedTimestampUtc);
 
     public sealed class ReferralModel
     {
@@ -111,7 +114,7 @@ namespace CareTogether.Managers
                 CreateArrangement c => new ArrangementEntry(c.ArrangementId, c.PolicyVersion, c.ArrangementType, ArrangementState.Setup,
                     ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty, ImmutableList<VolunteerAssignment>.Empty,
                     ImmutableList<PartneringFamilyChildAssignment>.Empty, ImmutableList<ChildrenLocationHistoryEntry>.Empty,
-                    ImmutableList<Guid>.Empty, ImmutableList<Guid>.Empty),
+                    ImmutableDictionary<Guid, NoteEntry>.Empty),
                 _ => referralEntry.Arrangements.TryGetValue(command.ArrangementId, out var arrangementEntry)
                     ? command switch
                     {
@@ -180,6 +183,60 @@ namespace CareTogether.Managers
         {
             if (!referrals.TryGetValue(command.ReferralId, out var referralEntry))
                 return new Error<string>("A referral with the specified ID does not exist.");
+
+            if (!referralEntry.Arrangements.TryGetValue(command.ArrangementId, out var arrangementEntry))
+                return new Error<string>("An arrangement with the specified ID does not exist.");
+
+            OneOf<NoteEntry, Error<string>> result = command switch
+            {
+                //TODO: Validate policy version and enforce any other invariants
+                CreateDraftArrangementNote c => new NoteEntry(c.NoteId, c.UserId, c.TimestampUtc, NoteStatus.Draft, null, null, null),
+                DiscardDraftArrangementNote c => null,
+                _ => arrangementEntry.Notes.TryGetValue(command.NoteId, out var noteEntry)
+                    ? command switch
+                    {
+                        //TODO: Enforce any business rules dynamically via the policy evaluation engine.
+                        //      This involves returning "allowed actions" with the rendered Referral state
+                        //      and failing any attempted actions that are not allowed.
+                        //TODO: Invariants need to be enforced in the model - e.g., no edits or deletes to approved notes.
+                        EditDraftArrangementNote c => noteEntry with
+                        {
+                            LastEditTimestampUtc = c.TimestampUtc
+                        },
+                        ApproveArrangementNote c => noteEntry with
+                        {
+                            Status = NoteStatus.Approved,
+                            FinalizedNoteContents = c.FinalizedNoteContents,
+                            ApprovedTimestampUtc = c.TimestampUtc,
+                            ApproverId = c.UserId
+                        },
+                        _ => throw new NotImplementedException(
+                            $"The command type '{command.GetType().FullName}' has not been implemented.")
+                    }
+                    : new Error<string>("An arrangement with the specified ID does not exist.")
+            };
+
+            if (result.TryPickT0(out var noteEntryToUpsert, out var error))
+            {
+                var referralEntryToUpsert = referralEntry with
+                {
+                    Arrangements = referralEntry.Arrangements.SetItem(command.ArrangementId, arrangementEntry with
+                    {
+                        Notes = noteEntryToUpsert == null
+                            ? arrangementEntry.Notes.Remove(command.NoteId)
+                            : arrangementEntry.Notes.SetItem(command.NoteId, noteEntryToUpsert)
+                    })
+                };
+                //////
+                return new Success<(ArrangementCommandExecuted Event, long SequenceNumber, ReferralEntry ReferralEntry, Action OnCommit)>((
+                    Event: new ArrangementCommandExecuted(command),
+                    SequenceNumber: LastKnownSequenceNumber + 1,
+                    ReferralEntry: referralEntryToUpsert,
+                    OnCommit: () => referrals = referrals.SetItem(referralEntryToUpsert.Id, referralEntryToUpsert)));
+            }
+            else
+                return error;
+
 
             //OneOf<ArrangementEntry, Error<string>> result = command switch
             //{

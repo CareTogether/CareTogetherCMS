@@ -16,6 +16,8 @@ namespace CareTogether.Managers
         ImmutableList<ActivityInfo> ReferralActivitiesPerformed,
         ImmutableList<Arrangement> Arrangements);
 
+    public enum ReferralCloseReason { NotAppropriate, Resourced, NoCapacity, NoLongerNeeded, NeedMet };
+
     public record Arrangement(Guid Id, string PolicyVersion, string ArrangementType,
         ArrangementState State,
         ImmutableList<FormUploadInfo> ArrangementFormUploads,
@@ -43,7 +45,11 @@ namespace CareTogether.Managers
     public sealed record ChildrenLocationHistoryEntry(Guid UserId, DateTime TimestampUtc,
         ImmutableList<Guid> ChildrenIds, Guid FamilyId, ChildrenLocationPlan Plan, string AdditionalExplanation);
 
-    public enum ReferralCloseReason { NotAppropriate, Resourced, NoCapacity, NoLongerNeeded, NeedMet };
+    public enum ChildrenLocationPlan { OvernightHousing, DaytimeChildCare, ReturnToFamily }
+
+    public record Note(Guid Id, Guid AuthorId, DateTime TimestampUtc,
+        string Contents, NoteStatus Status);
+    public enum NoteStatus { Draft, Approved };
 
     [JsonHierarchyBase]
     public abstract partial record ReferralCommand(Guid ReferralId, Guid UserId, DateTime TimestampUtc);
@@ -88,21 +94,20 @@ namespace CareTogether.Managers
     //TODO: EndArrangement?
 
     [JsonHierarchyBase]
-    public abstract partial record ArrangementNoteCommand(Guid ReferralId, Guid ArrangementId, Guid UserId, DateTime TimestampUtc);
-    public sealed record RecordDraftArrangementNote(Guid ReferralId, Guid ArrangementId, Guid UserId, DateTime TimestampUtc,
-        Guid NoteId, string DraftNote)
-        : ArrangementNoteCommand(ReferralId, ArrangementId, UserId, TimestampUtc);
-    public sealed record EditDraftArrangementNote(Guid ReferralId, Guid ArrangementId, Guid UserId, DateTime TimestampUtc,
-        Guid NoteId, string RevisedDraftNote)
-        : ArrangementNoteCommand(ReferralId, ArrangementId, UserId, TimestampUtc);
-    public sealed record ApproveDraftArrangementNote(Guid ReferralId, Guid ArrangementId, Guid UserId, DateTime TimestampUtc,
-        Guid NoteId)
-        : ArrangementNoteCommand(ReferralId, ArrangementId, UserId, TimestampUtc);
-    public sealed record RejectDraftArrangementNote(Guid ReferralId, Guid ArrangementId, Guid UserId, DateTime TimestampUtc,
-        Guid NoteId, string RejectionExplanation)
-        : ArrangementNoteCommand(ReferralId, ArrangementId, UserId, TimestampUtc);
-
-    public enum ChildrenLocationPlan { OvernightHousing, DaytimeChildCare, ReturnToFamily }
+    public abstract partial record ArrangementNoteCommand(Guid ReferralId, Guid ArrangementId, Guid NoteId,
+        Guid UserId, DateTime TimestampUtc);
+    public sealed record CreateDraftArrangementNote(Guid ReferralId, Guid ArrangementId, Guid NoteId,
+        Guid UserId, DateTime TimestampUtc)
+        : ArrangementNoteCommand(ReferralId, ArrangementId, NoteId, UserId, TimestampUtc);
+    public sealed record EditDraftArrangementNote(Guid ReferralId, Guid ArrangementId, Guid NoteId,
+        Guid UserId, DateTime TimestampUtc)
+        : ArrangementNoteCommand(ReferralId, ArrangementId, NoteId, UserId, TimestampUtc);
+    public sealed record DiscardDraftArrangementNote(Guid ReferralId, Guid ArrangementId, Guid NoteId,
+        Guid UserId, DateTime TimestampUtc)
+        : ArrangementNoteCommand(ReferralId, ArrangementId, NoteId, UserId, TimestampUtc);
+    public sealed record ApproveArrangementNote(Guid ReferralId, Guid ArrangementId, Guid NoteId,
+        Guid UserId, DateTime TimestampUtc, string FinalizedNoteContents)
+        : ArrangementNoteCommand(ReferralId, ArrangementId, NoteId, UserId, TimestampUtc);
 
     /// <summary>
     /// The <see cref="IReferralManager"/> models the lifecycle of people's referrals to CareTogether organizations,
