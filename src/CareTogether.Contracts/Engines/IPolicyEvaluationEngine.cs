@@ -3,7 +3,6 @@ using CareTogether.Resources;
 using OneOf;
 using OneOf.Types;
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
@@ -40,7 +39,7 @@ namespace CareTogether.Engines
             Guid organizationId, Guid locationId, Family family,
             ImmutableList<FormUploadInfo> familyFormUploads,
             ImmutableList<ActivityInfo> familyActivitiesPerformed,
-            Dictionary<Guid,
+            ImmutableDictionary<Guid,
                 (ImmutableList<FormUploadInfo> FormUploads,
                     ImmutableList<ActivityInfo> ActivitiesPerformed)> IndividualInfo);
 

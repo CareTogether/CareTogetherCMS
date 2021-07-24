@@ -132,7 +132,7 @@ namespace CareTogether.Managers
             IImmutableDictionary<Guid, ContactInfo> contacts)
         {
             var family = families[entry.FamilyId];
-            var individualInfo = entry.IndividualEntries.ToDictionary(
+            var individualInfo = entry.IndividualEntries.ToImmutableDictionary(
                 x => x.Key,
                 x => (x.Value.ApprovalFormUploads, x.Value.ApprovalActivitiesPerformed));
             

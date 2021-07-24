@@ -65,7 +65,7 @@ namespace CareTogether.Engines
 
         public async Task<VolunteerFamilyApprovalStatus> CalculateVolunteerFamilyApprovalStatusAsync(Guid organizationId, Guid locationId,
             Family family, ImmutableList<FormUploadInfo> familyFormUploads, ImmutableList<ActivityInfo> familyActivitiesPerformed,
-            Dictionary<Guid, (ImmutableList<FormUploadInfo> FormUploads, ImmutableList<ActivityInfo> ActivitiesPerformed)> individualInfo)
+            ImmutableDictionary<Guid, (ImmutableList<FormUploadInfo> FormUploads, ImmutableList<ActivityInfo> ActivitiesPerformed)> individualInfo)
         {
             var policyResult = await policiesResource.GetEffectiveVolunteerPolicy(organizationId, locationId);
             if (!policyResult.TryPickT0(out var policy, out var error))
@@ -97,7 +97,7 @@ namespace CareTogether.Engines
             }).ToImmutableDictionary(x => x.Item1, x => x.Item2);
 
             var familyRoles = new Dictionary<string, RoleApprovalStatus>();
-            foreach (var (roleName, rolePolicy) in policy.VolunteerRoles)
+            foreach (var (roleName, rolePolicy) in policy.VolunteerFamilyRoles)
             {
                 var requirementsMet = rolePolicy.ApprovalRequirements.Select(requirement =>
                     requirement.ActionRequirement switch

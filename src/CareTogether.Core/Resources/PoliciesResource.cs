@@ -186,6 +186,9 @@ namespace CareTogether.Resources
                             VolunteerFamilyRequirementScope.AllAdultsInTheFamily),
                         new VolunteerFamilyApprovalRequirement("Home Screening Checklist",
                             new FormUploadRequirement("Home Screening Checklist", "v1", "Must be filled out by an approved home screener", new Uri("http://example.com/forms/hscheck")),
+                            VolunteerFamilyRequirementScope.OncePerFamily),
+                        new VolunteerFamilyApprovalRequirement("Host Family Interview",
+                            new ActivityRequirement("Host Family Interview"),
                             VolunteerFamilyRequirementScope.OncePerFamily)
                     }.ToImmutableList())
                 }.ToImmutableDictionary());
