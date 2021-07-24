@@ -6,9 +6,7 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Managers
 {
-    public sealed record VolunteerFamily(Family Family, VolunteerFamilyApproval VolunteerFamilyApproval);
-
-    public sealed record VolunteerFamilyApproval(
+    public sealed record VolunteerFamily(Family Family,
         ImmutableList<(string, VolunteerRoleApprovalStatus)> FamilyRoleApprovals,
         ImmutableDictionary<Guid, ImmutableList<(string, VolunteerRoleApprovalStatus)>> IndividualRoleApprovals);
 
