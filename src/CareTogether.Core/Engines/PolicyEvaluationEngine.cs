@@ -45,6 +45,22 @@ namespace CareTogether.Engines
             //throw new NotImplementedException();
         }
 
+        public async Task<OneOf<Yes, Error<string>>> AuthorizeVolunteerCommandAsync(
+            Guid organizationId, Guid locationId, AuthorizedUser user, VolunteerCommand command, VolunteerFamily volunteerFamily)
+        {
+            await Task.Yield();
+            return new Yes();
+            //throw new NotImplementedException();
+        }
+
+        public async Task<OneOf<Yes, Error<string>>> AuthorizeVolunteerFamilyCommandAsync(
+            Guid organizationId, Guid locationId, AuthorizedUser user, VolunteerFamilyCommand command, VolunteerFamily volunteerFamily)
+        {
+            await Task.Yield();
+            return new Yes();
+            //throw new NotImplementedException();
+        }
+
         public async Task<Arrangement> DiscloseArrangementAsync(AuthorizedUser user, Arrangement arrangement)
         {
             await Task.Yield();
@@ -77,6 +93,13 @@ namespace CareTogether.Engines
         {
             await Task.Yield();
             return referral;
+            //throw new NotImplementedException();
+        }
+
+        public async Task<VolunteerFamily> DiscloseVolunteerFamilyAsync(AuthorizedUser user, VolunteerFamily volunteerFamily)
+        {
+            await Task.Yield();
+            return volunteerFamily;
             //throw new NotImplementedException();
         }
     }

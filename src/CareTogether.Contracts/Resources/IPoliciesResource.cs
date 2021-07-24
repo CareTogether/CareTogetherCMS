@@ -5,29 +5,49 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Resources
 {
-    public sealed record ReferralPolicy(int Version,
-        IImmutableList<ActionRequirement> RequiredIntakeActions,
-        IImmutableList<ArrangementPolicy> ArrangementPolicies);
+    public sealed record ReferralPolicy(int Version, string VersionLabel,
+        ImmutableList<ActionRequirement> RequiredIntakeActions,
+        ImmutableList<ArrangementPolicy> ArrangementPolicies);
         //TODO: Include referral close reasons
 
     public sealed record ArrangementPolicy(string ArrangementType,
         ChildInvolvement ChildInvolvement,
-        IImmutableList<VolunteerFunction> VolunteerFunctions,
-        IImmutableList<ActionRequirement> RequiredSetupActions,
+        ImmutableList<VolunteerFunction> VolunteerFunctions,
+        ImmutableList<ActionRequirement> RequiredSetupActions,
         //TODO: Include draft note approval policy
-        IImmutableList<(ActionRequirement Action, RecurrencePolicy Recurrence)> RequiredMonitoringActions,
-        IImmutableList<ActionRequirement> RequiredCloseoutActions);
+        ImmutableList<(ActionRequirement Action, RecurrencePolicy Recurrence)> RequiredMonitoringActions,
+        ImmutableList<ActionRequirement> RequiredCloseoutActions);
     public enum ChildInvolvement { ChildHousing, DaytimeChildCareOnly, NoChildInvolvement };
 
     public enum FunctionRequirement { ZeroOrMore, ExactlyOne, OneOrMore };
     public sealed record VolunteerFunction(string ArrangementFunction, FunctionRequirement Requirement,
-        IImmutableList<string> EligibleIndividualVolunteerRoles, IImmutableList<string> EligibleVolunteerFamilyRoles);
+        ImmutableList<string> EligibleIndividualVolunteerRoles, ImmutableList<string> EligibleVolunteerFamilyRoles);
 
-    public sealed record RecurrencePolicy(IImmutableList<RecurrencePolicyStage> Stages);
+    public sealed record RecurrencePolicy(ImmutableList<RecurrencePolicyStage> Stages);
     public sealed record RecurrencePolicyStage(TimeSpan Delay, int? MaxOccurrences);
 
+
+    public sealed record VolunteerPolicy(int Version, string VersionLabel,
+        ImmutableDictionary<string, VolunteerRolePolicy> VolunteerRoles,
+        ImmutableDictionary<string, VolunteerFamilyRolePolicy> VolunteerFamilyRoles);
+
+    public sealed record VolunteerRolePolicy(string VolunteerRoleType,
+        ImmutableList<VolunteerApprovalRequirement> ApprovalRequirements);
+
+    public sealed record VolunteerFamilyRolePolicy(string VolunteerFamilyRoleType,
+        ImmutableList<VolunteerFamilyApprovalRequirement> ApprovalRequirements);
+
+    public sealed record VolunteerApprovalRequirement(string ShortDescription,
+        ActionRequirement ActionRequirement); //TODO: Add a 'condition' construct for requirements that only apply sometimes
+
+    public sealed record VolunteerFamilyApprovalRequirement(string ShortDescription,
+        ActionRequirement ActionRequirement, VolunteerFamilyRequirementScope Scope);
+
+    public enum VolunteerFamilyRequirementScope { OncePerFamily, AllAdultsInTheFamily };
+
+
     [JsonHierarchyBase]
-    public abstract partial record ActionRequirement(); //TODO: Include the arrangement function linked to the action
+    public abstract partial record ActionRequirement(); //TODO: Include the arrangement function (who can perform the action)
     public sealed record FormUploadRequirement(string FormName, string FormVersion, string Instructions, Uri TemplateLink)
         : ActionRequirement;
     public sealed record ActivityRequirement(string ActivityName)
@@ -42,6 +62,9 @@ namespace CareTogether.Resources
     public interface IPoliciesResource
     {
         Task<ResourceResult<ReferralPolicy>> GetEffectiveReferralPolicy(Guid organizationId, Guid locationId,
+            int? version = null);
+
+        Task<ResourceResult<VolunteerPolicy>> GetEffectiveVolunteerPolicy(Guid organizationId, Guid locationId,
             int? version = null);
     }
 }
