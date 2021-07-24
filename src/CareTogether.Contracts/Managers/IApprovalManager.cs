@@ -7,10 +7,17 @@ using System.Threading.Tasks;
 namespace CareTogether.Managers
 {
     public sealed record VolunteerFamily(Family Family,
-        ImmutableList<(string, VolunteerRoleApprovalStatus)> FamilyRoleApprovals,
-        ImmutableDictionary<Guid, ImmutableList<(string, VolunteerRoleApprovalStatus)>> IndividualRoleApprovals);
+        ImmutableList<FormUploadInfo> ApprovalFormUploads,
+        ImmutableList<ActivityInfo> ApprovalActivitiesPerformed,
+        ImmutableDictionary<string, RoleApprovalStatus> FamilyRoleApprovals,
+        ImmutableDictionary<Guid, Volunteer> IndividualVolunteers);
+    
+    public sealed record Volunteer(
+        ImmutableList<FormUploadInfo> ApprovalFormUploads,
+        ImmutableList<ActivityInfo> ApprovalActivitiesPerformed,
+        ImmutableDictionary<string, RoleApprovalStatus> IndividualRoleApprovals);
 
-    public enum VolunteerRoleApprovalStatus { Prospective, Approved, Denied, Expired };
+    public enum RoleApprovalStatus { Prospective, Approved };
 
 
     [JsonHierarchyBase]

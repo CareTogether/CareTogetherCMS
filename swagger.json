@@ -1076,34 +1076,16 @@
             "type": "string",
             "format": "guid"
           },
-          "contents": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/NoteContents"
-              }
-            ]
+          "timestampUtc": {
+            "type": "string",
+            "format": "date-time"
           },
-          "status": {
-            "$ref": "#/components/schemas/NoteStatus"
-          },
-          "denialReason": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/DraftNoteDenialReason"
-              }
-            ]
-          }
-        }
-      },
-      "NoteContents": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
           "contents": {
             "type": "string",
             "nullable": true
+          },
+          "status": {
+            "$ref": "#/components/schemas/NoteStatus"
           }
         }
       },
@@ -1112,24 +1094,12 @@
         "description": "",
         "x-enumNames": [
           "Draft",
-          "Denied",
           "Approved"
         ],
         "enum": [
           0,
-          1,
-          2
+          1
         ]
-      },
-      "DraftNoteDenialReason": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "reason": {
-            "type": "string",
-            "nullable": true
-          }
-        }
       },
       "ReferralCommand": {
         "type": "object",

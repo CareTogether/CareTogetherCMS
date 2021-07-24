@@ -4,6 +4,7 @@ using OneOf;
 using OneOf.Types;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -59,6 +60,63 @@ namespace CareTogether.Engines
             await Task.Yield();
             return new Yes();
             //throw new NotImplementedException();
+        }
+
+
+        public async Task<VolunteerFamilyApprovalStatus> CalculateVolunteerFamilyApprovalStatusAsync(Guid organizationId, Guid locationId,
+            Family family, ImmutableList<FormUploadInfo> familyFormUploads, ImmutableList<ActivityInfo> familyActivitiesPerformed,
+            Dictionary<Guid, (ImmutableList<FormUploadInfo> FormUploads, ImmutableList<ActivityInfo> ActivitiesPerformed)> individualInfo)
+        {
+            var policyResult = await policiesResource.GetEffectiveVolunteerPolicy(organizationId, locationId);
+            if (!policyResult.TryPickT0(out var policy, out var error))
+                throw new InvalidOperationException(error.ToString());
+
+            var individualVolunteerRoles = family.Adults.Select(x =>
+            {
+                var (person, familyRelationship) = x;
+                var (formUploads, activities) = individualInfo[person.Id];
+
+                var individualRoles = new Dictionary<string, RoleApprovalStatus>();
+                foreach (var (roleName, rolePolicy) in policy.VolunteerRoles)
+                {
+                    var requirementsMet = rolePolicy.ApprovalRequirements.Select(requirement =>
+                        requirement.ActionRequirement switch
+                        {
+                            FormUploadRequirement r => formUploads.Any(upload => upload.FormName == r.FormName),
+                            ActivityRequirement r => activities.Any(activity => activity.ActivityName == r.ActivityName),
+                            _ => throw new NotImplementedException(
+                                $"The action requirement type '{requirement.ActionRequirement.GetType().FullName}' has not been implemented.")
+                        }).ToList();
+
+                    if (requirementsMet.All(x => x))
+                        individualRoles[roleName] = RoleApprovalStatus.Approved;
+                    else if (requirementsMet.Any(x => x))
+                        individualRoles[roleName] = RoleApprovalStatus.Prospective;
+                }
+                return (person.Id, new VolunteerApprovalStatus(individualRoles.ToImmutableDictionary()));
+            }).ToImmutableDictionary(x => x.Item1, x => x.Item2);
+
+            var familyRoles = new Dictionary<string, RoleApprovalStatus>();
+            foreach (var (roleName, rolePolicy) in policy.VolunteerRoles)
+            {
+                var requirementsMet = rolePolicy.ApprovalRequirements.Select(requirement =>
+                    requirement.ActionRequirement switch
+                    {
+                        FormUploadRequirement r => familyFormUploads.Any(upload => upload.FormName == r.FormName),
+                        ActivityRequirement r => familyActivitiesPerformed.Any(activity => activity.ActivityName == r.ActivityName),
+                        _ => throw new NotImplementedException(
+                            $"The action requirement type '{requirement.ActionRequirement.GetType().FullName}' has not been implemented.")
+                    }).ToList();
+
+                if (requirementsMet.All(x => x))
+                    familyRoles[roleName] = RoleApprovalStatus.Approved;
+                else if (requirementsMet.Any(x => x))
+                    familyRoles[roleName] = RoleApprovalStatus.Prospective;
+            }
+
+            return new VolunteerFamilyApprovalStatus(
+                familyRoles.ToImmutableDictionary(),
+                individualVolunteerRoles);
         }
 
         public async Task<Arrangement> DiscloseArrangementAsync(AuthorizedUser user, Arrangement arrangement)

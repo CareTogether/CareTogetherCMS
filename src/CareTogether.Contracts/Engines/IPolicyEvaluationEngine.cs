@@ -4,12 +4,20 @@ using OneOf;
 using OneOf.Types;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace CareTogether.Engines
 {
+    public sealed record VolunteerFamilyApprovalStatus(
+        ImmutableDictionary<string, RoleApprovalStatus> FamilyRoleApprovals,
+        ImmutableDictionary<Guid, VolunteerApprovalStatus> IndividualVolunteers);
+
+    public sealed record VolunteerApprovalStatus(
+        ImmutableDictionary<string, RoleApprovalStatus> IndividualRoleApprovals);
+
     public interface IPolicyEvaluationEngine
     {
         Task<OneOf<Yes, Error<string>>> AuthorizeReferralCommandAsync(Guid organizationId, Guid locationId,
@@ -27,7 +35,14 @@ namespace CareTogether.Engines
         Task<OneOf<Yes, Error<string>>> AuthorizeVolunteerCommandAsync(Guid organizationId, Guid locationId,
             AuthorizedUser user, VolunteerCommand command, VolunteerFamily volunteerFamily);
 
-        //Task CalculateVolunteerApprovalStatusAsync(Guid VolunteerId);
+
+        Task<VolunteerFamilyApprovalStatus> CalculateVolunteerFamilyApprovalStatusAsync(
+            Guid organizationId, Guid locationId, Family family,
+            ImmutableList<FormUploadInfo> familyFormUploads,
+            ImmutableList<ActivityInfo> familyActivitiesPerformed,
+            Dictionary<Guid,
+                (ImmutableList<FormUploadInfo> FormUploads,
+                    ImmutableList<ActivityInfo> ActivitiesPerformed)> IndividualInfo);
 
 
         Task<Referral> DiscloseReferralAsync(AuthorizedUser user, Referral referral);

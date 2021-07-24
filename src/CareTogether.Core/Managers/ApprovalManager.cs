@@ -39,7 +39,9 @@ namespace CareTogether.Managers
             var contacts = profilesResource.ListContactsAsync(organizationId, locationId).Result;
 
             var volunteerFamilies = tenantModel.FindVolunteerFamilyEntries(_ => true);
-            return volunteerFamilies.Select(vf => ToVolunteerFamily(vf, families, contacts)).ToImmutableList();
+            var result = await volunteerFamilies.Select(vf => ToVolunteerFamilyAsync(
+                organizationId, locationId, vf, families, contacts)).WhenAll();
+            return result.ToImmutableList();
         }
 
         public async Task<ManagerResult<VolunteerFamily>> ExecuteVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
@@ -52,7 +54,8 @@ namespace CareTogether.Managers
             {
                 var families = communitiesResource.ListVolunteerFamilies(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
                 var contacts = profilesResource.ListContactsAsync(organizationId, locationId).Result;
-                var referral = ToVolunteerFamily(volunteerFamilyEntry, families, contacts);
+                var referral = await ToVolunteerFamilyAsync(
+                    organizationId, locationId, volunteerFamilyEntry, families, contacts);
 
                 var authorizationResult = await policyEvaluationEngine.AuthorizeVolunteerFamilyCommandAsync(
                     organizationId, locationId, user, command, referral);
@@ -64,7 +67,8 @@ namespace CareTogether.Managers
                         await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
                         success.Value.OnCommit();
                         var disclosedVolunteerFamily = await policyEvaluationEngine.DiscloseVolunteerFamilyAsync(user,
-                            ToVolunteerFamily(success.Value.VolunteerFamilyEntry, families, contacts));
+                            await ToVolunteerFamilyAsync(
+                                organizationId, locationId, success.Value.VolunteerFamilyEntry, families, contacts));
                         return disclosedVolunteerFamily;
                     }
                     else
@@ -87,7 +91,8 @@ namespace CareTogether.Managers
             {
                 var families = communitiesResource.ListVolunteerFamilies(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
                 var contacts = profilesResource.ListContactsAsync(organizationId, locationId).Result;
-                var referral = ToVolunteerFamily(volunteerFamilyEntry, families, contacts);
+                var referral = await ToVolunteerFamilyAsync(
+                    organizationId, locationId, volunteerFamilyEntry, families, contacts);
 
                 var authorizationResult = await policyEvaluationEngine.AuthorizeVolunteerCommandAsync(
                     organizationId, locationId, user, command, referral);
@@ -99,7 +104,8 @@ namespace CareTogether.Managers
                         await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
                         success.Value.OnCommit();
                         var disclosedVolunteerFamily = await policyEvaluationEngine.DiscloseVolunteerFamilyAsync(user,
-                            ToVolunteerFamily(success.Value.VolunteerFamilyEntry, families, contacts));
+                            await ToVolunteerFamilyAsync(
+                                organizationId, locationId, success.Value.VolunteerFamilyEntry, families, contacts));
                         return disclosedVolunteerFamily;
                     }
                     else
@@ -120,25 +126,32 @@ namespace CareTogether.Managers
             return await lazyModel.Task;
         }
 
-        private VolunteerFamily ToVolunteerFamily(VolunteerFamilyEntry entry,
+        private async Task<VolunteerFamily> ToVolunteerFamilyAsync(Guid organizationId, Guid locationId,
+            VolunteerFamilyEntry entry,
             IImmutableDictionary<Guid, Family> families,
-            IImmutableDictionary<Guid, ContactInfo> contacts) =>
-            new(families[entry.FamilyId],
-                ImmutableList < (string, VolunteerRoleApprovalStatus) >.Empty,//TODO: !!!
-                ImmutableDictionary < Guid, ImmutableList < (string, VolunteerRoleApprovalStatus) >>.Empty); //TODO: !!!
-                //entry.Id, entry.PolicyVersion, entry.TimestampUtc, entry.CloseReason,
-                //families[entry.PartneringFamilyId],
-                //families[entry.PartneringFamilyId].Adults
-                //    .Select(a => contacts.TryGetValue(a.Item1.Id, out var c) ? c : null)
-                //    .Where(c => c != null)
-                //    .ToImmutableList(),
-                //entry.ReferralFormUploads, entry.ReferralActivitiesPerformed,
-                //entry.Arrangements.Select(a => ToArrangement(a.Value)).ToImmutableList());
+            IImmutableDictionary<Guid, ContactInfo> contacts)
+        {
+            var family = families[entry.FamilyId];
+            var individualInfo = entry.IndividualEntries.ToDictionary(
+                x => x.Key,
+                x => (x.Value.ApprovalFormUploads, x.Value.ApprovalActivitiesPerformed));
+            
+            var volunteerFamilyApprovalStatus = await policyEvaluationEngine.CalculateVolunteerFamilyApprovalStatusAsync(
+                organizationId, locationId, family,
+                entry.ApprovalFormUploads, entry.ApprovalActivitiesPerformed,
+                individualInfo);
 
-        //private Arrangement ToArrangement(ArrangementEntry entry) =>
-        //    new(entry.Id, entry.PolicyVersion, entry.ArrangementType, entry.State,
-        //        entry.ArrangementFormUploads, entry.ArrangementActivitiesPerformed, entry.VolunteerAssignments,
-        //        entry.PartneringFamilyChildAssignments, entry.ChildrenLocationHistory,
-        //        ImmutableList<Note>.Empty); //TODO: Look up note contents
+            return new VolunteerFamily(family,
+                entry.ApprovalFormUploads, entry.ApprovalActivitiesPerformed,
+                volunteerFamilyApprovalStatus.FamilyRoleApprovals,
+                volunteerFamilyApprovalStatus.IndividualVolunteers.ToImmutableDictionary(
+                    x => x.Key,
+                    x =>
+                    {
+                        var individualInfo = entry.IndividualEntries[x.Key];
+                        return new Volunteer(individualInfo.ApprovalFormUploads, individualInfo.ApprovalActivitiesPerformed,
+                            x.Value.IndividualRoleApprovals);
+                    }));
+        }
     }
 }

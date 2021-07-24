@@ -38,7 +38,7 @@ namespace CareTogether.Resources
         ImmutableList<VolunteerFamilyApprovalRequirement> ApprovalRequirements);
 
     public sealed record VolunteerApprovalRequirement(string ShortDescription,
-        ActionRequirement ActionRequirement); //TODO: Add a 'condition' construct for requirements that only apply sometimes
+        ActionRequirement ActionRequirement);
 
     public sealed record VolunteerFamilyApprovalRequirement(string ShortDescription,
         ActionRequirement ActionRequirement, VolunteerFamilyRequirementScope Scope);
