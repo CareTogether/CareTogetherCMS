@@ -12,7 +12,7 @@ using Newtonsoft.Json;
 using OneOf;
 using OneOf.Types;
 using System.Linq;
-
+using System.Numerics;
 
 namespace CareTogether.Utilities
 {
@@ -20,22 +20,21 @@ namespace CareTogether.Utilities
     {
         private readonly LogType _logType;
         private readonly BlobServiceClient _blobServiceClient;
-        private readonly ConcurrentDictionary<(Guid organizationId, Guid locationId), int> _tenantEventCounts;
+        private BlobContainerClient _blobContainerClient;
+        private ConcurrentDictionary<Guid, BlobContainerClient> organizationBlobClients;
 
         public AppendBlobMultitenantEventLog(BlobServiceClient blobServiceClient, LogType logType)
         {
             this._blobServiceClient = blobServiceClient;
             this._logType = logType;
-            _tenantEventCounts = new ConcurrentDictionary<(Guid organizationId, Guid locationId), int>();
+            organizationBlobClients = new();
         }
 
         public async Task<OneOf<Success, Error>> AppendEventAsync(Guid organizationId, Guid locationId, T domainEvent, long expectedSequenceNumber)
         {
             var tenantContainer = await createContainerIfNotExists(organizationId);
 
-            var numberOfTenantEvents = _tenantEventCounts.GetOrAdd((organizationId, locationId), 0);
-
-            var currentBlobNumber = numberOfTenantEvents == 0 ? 1 : (numberOfTenantEvents / 50000)+1;
+            var currentBlobNumber = getBlobNumber(expectedSequenceNumber);
 
             var logSegmentBlob = tenantContainer.GetAppendBlobClient($"{locationId}/{_logType}/{currentBlobNumber:D5}.ndjson");
 
@@ -55,19 +54,9 @@ namespace CareTogether.Utilities
             {
                 var appendResult = await logSegmentBlob.AppendBlockAsync(eventStream);
 
-                if(appendResult.Value.BlobCommittedBlockCount == expectedSequenceNumber)
+                if(appendResult.Value.BlobCommittedBlockCount == getBlockNumber(expectedSequenceNumber))
                 {
-                    // if the append was successful then the number of tenant events needs to increment
-                    var updateSuccessful = _tenantEventCounts.TryUpdate((organizationId,locationId), numberOfTenantEvents+1, numberOfTenantEvents);
-
-                    if(updateSuccessful)
-                    {
-                        return new Success();
-                    } else
-                    {
-                        throw new Exception($"Tried to increment the number of tenant events but the current value for tenant {organizationId} and location {locationId} " +
-                            $"did not match the value we expected. This probably means another process updated the dictionary.");
-                    }
+                    return new Success();
                 } else
                 {
                     throw new Exception($"The append block number {appendResult.Value.BlobCommittedBlockCount} did not match the expected block number {expectedSequenceNumber}");
@@ -78,6 +67,27 @@ namespace CareTogether.Utilities
                 System.Diagnostics.Debug.WriteLine($"There was an issue appending to block {expectedSequenceNumber} in {locationId}/{_logType}/{currentBlobNumber:D5}.ndjson" +
                     $" under tenant {organizationId}: "+e.Message);
                 return new Error();
+            }
+        }
+
+        public long getBlobNumber(long sequenceNumber)
+        {
+            return (sequenceNumber / 50001) + 1;
+        }
+
+        public long getBlockNumber(long sequenceNumber)
+        {
+            BigInteger sequenceNumberInteger = new(sequenceNumber);
+
+            var result = (long)(sequenceNumberInteger % new BigInteger(50000));
+
+            if(result == 0)
+            {
+                return 50000;
+            }
+            else
+            {
+                return result;
             }
         }
 
@@ -109,22 +119,27 @@ namespace CareTogether.Utilities
                     }
                 }
             }
-
-            _tenantEventCounts.TryAdd((organizationId, locationId), (int)eventSequenceNumber);
         }
 
         private async Task<BlobContainerClient> createContainerIfNotExists(Guid organizationId)
         {
-            try
+            if (organizationBlobClients.ContainsKey(organizationId))
             {
-                await _blobServiceClient.CreateBlobContainerAsync(organizationId.ToString());
-            }
-            catch (Exception e)
+                return organizationBlobClients[organizationId];
+            } else
             {
-                System.Diagnostics.Debug.WriteLine($"Container name {organizationId} already exists, continuing...");
-            }
+                var blobClient = _blobServiceClient.GetBlobContainerClient(organizationId.ToString());
 
-            return _blobServiceClient.GetBlobContainerClient(organizationId.ToString());
+                if(!await blobClient.ExistsAsync())
+                {
+                    await blobClient.CreateAsync();
+                }
+
+                organizationBlobClients[organizationId] = blobClient;
+                return blobClient;
+            }
         }
+
+
     }
 }

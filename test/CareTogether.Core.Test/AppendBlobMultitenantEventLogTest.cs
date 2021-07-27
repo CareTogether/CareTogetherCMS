@@ -9,6 +9,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using CareTogether.Abstractions;
 using System.Collections.Generic;
 using System.Linq;
+using OneOf;
 
 namespace CareTogether.Core.Test
 {
@@ -27,9 +28,9 @@ namespace CareTogether.Core.Test
 
         static readonly PersonCommandExecuted personCommand = new PersonCommandExecuted(new CreatePerson(guid1, guid2, "Jane", "Smith", new AgeInYears(42, new DateTime(2021, 1, 1))));
 
-        IMultitenantEventLog<CommunityEvent> communityEventLog;
-        IMultitenantEventLog<ContactCommandExecutedEvent> contactsEventLog;
-        IMultitenantEventLog<ReferralEvent> referralsEventLog;
+        AppendBlobMultitenantEventLog<CommunityEvent> communityEventLog;
+        AppendBlobMultitenantEventLog<ContactCommandExecutedEvent> contactsEventLog;
+        AppendBlobMultitenantEventLog<ReferralEvent> referralsEventLog;
 
         [TestInitialize]
         public async Task TestInitialize()
@@ -88,6 +89,7 @@ namespace CareTogether.Core.Test
         public async Task AppendingAnEventToAnUninitializedTenantLogStoresItWithTheCorrectSequenceNumber()
         {
             ResetContainerByOrganizationId(testingClient, organizationId);
+            communityEventLog = new AppendBlobMultitenantEventLog<CommunityEvent>(testingClient, LogType.CommunityEventLog);
 
             var appendResult = await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 1);
             var getResult = await communityEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
@@ -100,6 +102,7 @@ namespace CareTogether.Core.Test
         public async Task AppendingAnEventToAnUninitializedTenantLogValidatesTheExpectedSequenceNumber()
         {
             ResetContainerByOrganizationId(testingClient, organizationId);
+            communityEventLog = new AppendBlobMultitenantEventLog<CommunityEvent>(testingClient, LogType.CommunityEventLog);
 
             var appendResult = await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 2);
             var getResult = await communityEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
@@ -111,6 +114,7 @@ namespace CareTogether.Core.Test
         public async Task AppendingMultipleEventsToAnUninitializedTenantLogStoresThemCorrectly()
         {
             ResetContainerByOrganizationId(testingClient, organizationId);
+            communityEventLog = new AppendBlobMultitenantEventLog<CommunityEvent>(testingClient, LogType.CommunityEventLog);
 
             var appendResult1 = await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 1);
             var appendResult2 = await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 2);
@@ -146,6 +150,7 @@ namespace CareTogether.Core.Test
         {
             ResetContainerByOrganizationId(testingClient, organizationId);
             ResetContainerByOrganizationId(testingClient, guid1);
+            communityEventLog = new AppendBlobMultitenantEventLog<CommunityEvent>(testingClient, LogType.CommunityEventLog);
 
             var appendResults = new[]
             {
@@ -166,6 +171,38 @@ namespace CareTogether.Core.Test
             Assert.AreEqual((personCommand, 1), getResult[0]);
             Assert.AreEqual((personCommand, 2), getResult[1]);
             Assert.AreEqual((personCommand, 3), getResult[2]);
+        }
+
+        [TestMethod]
+        public void BlobNumberCalculatedCorrectly()
+        {
+            var firstResult = communityEventLog.getBlobNumber(1);
+            var secondResult = communityEventLog.getBlobNumber(49999);
+            var thirdResult = communityEventLog.getBlobNumber(50000);
+            var fourthResult = communityEventLog.getBlobNumber(50001);
+            var fifthResult = communityEventLog.getBlobNumber(485919);
+
+            Assert.AreEqual(1, firstResult);
+            Assert.AreEqual(1, secondResult);
+            Assert.AreEqual(1, thirdResult);
+            Assert.AreEqual(2, fourthResult);
+            Assert.AreEqual(10, fifthResult);
+        }
+
+        [TestMethod]
+        public void BlockNumberCalculatedCorrectly()
+        {
+            var firstResult = communityEventLog.getBlockNumber(1);
+            var secondResult = communityEventLog.getBlockNumber(49999);
+            var thirdResult = communityEventLog.getBlockNumber(50000);
+            var fourthResult = communityEventLog.getBlockNumber(50001);
+            var fifthResult = communityEventLog.getBlockNumber(485919);
+
+            Assert.AreEqual(1, firstResult);
+            Assert.AreEqual(49999, secondResult);
+            Assert.AreEqual(50000, thirdResult);
+            Assert.AreEqual(1, fourthResult);
+            Assert.AreEqual(35919, fifthResult);
         }
 
         private static void ResetContainerByOrganizationId(BlobServiceClient blobServiceClient, Guid organizationId)
