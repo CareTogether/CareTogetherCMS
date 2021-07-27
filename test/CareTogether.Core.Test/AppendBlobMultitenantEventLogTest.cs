@@ -33,7 +33,7 @@ namespace CareTogether.Core.Test
         AppendBlobMultitenantEventLog<ReferralEvent> referralsEventLog;
 
         [TestInitialize]
-        public async Task TestInitialize()
+        public void TestInitialize()
         {
             testingClient = new BlobServiceClient("UseDevelopmentStorage=true");
 

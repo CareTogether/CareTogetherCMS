@@ -12,7 +12,6 @@ using Newtonsoft.Json;
 using OneOf;
 using OneOf.Types;
 using System.Linq;
-using System.Numerics;
 
 namespace CareTogether.Utilities
 {
@@ -20,14 +19,13 @@ namespace CareTogether.Utilities
     {
         private readonly LogType _logType;
         private readonly BlobServiceClient _blobServiceClient;
-        private BlobContainerClient _blobContainerClient;
-        private ConcurrentDictionary<Guid, BlobContainerClient> organizationBlobClients;
+        private ConcurrentDictionary<Guid, BlobContainerClient> organizationBlobContainerClients;
 
         public AppendBlobMultitenantEventLog(BlobServiceClient blobServiceClient, LogType logType)
         {
             this._blobServiceClient = blobServiceClient;
             this._logType = logType;
-            organizationBlobClients = new();
+            organizationBlobContainerClients = new();
         }
 
         public async Task<OneOf<Success, Error>> AppendEventAsync(Guid organizationId, Guid locationId, T domainEvent, long expectedSequenceNumber)
@@ -77,9 +75,7 @@ namespace CareTogether.Utilities
 
         public long getBlockNumber(long sequenceNumber)
         {
-            BigInteger sequenceNumberInteger = new(sequenceNumber);
-
-            var result = (long)(sequenceNumberInteger % new BigInteger(50000));
+            var result = sequenceNumber % 50000L;
 
             if(result == 0)
             {
@@ -123,9 +119,9 @@ namespace CareTogether.Utilities
 
         private async Task<BlobContainerClient> createContainerIfNotExists(Guid organizationId)
         {
-            if (organizationBlobClients.ContainsKey(organizationId))
+            if (organizationBlobContainerClients.ContainsKey(organizationId))
             {
-                return organizationBlobClients[organizationId];
+                return organizationBlobContainerClients[organizationId];
             } else
             {
                 var blobClient = _blobServiceClient.GetBlobContainerClient(organizationId.ToString());
@@ -135,7 +131,7 @@ namespace CareTogether.Utilities
                     await blobClient.CreateAsync();
                 }
 
-                organizationBlobClients[organizationId] = blobClient;
+                organizationBlobContainerClients[organizationId] = blobClient;
                 return blobClient;
             }
         }
