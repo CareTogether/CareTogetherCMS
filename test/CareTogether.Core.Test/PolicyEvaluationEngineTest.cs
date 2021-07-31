@@ -128,12 +128,49 @@ namespace CareTogether.Core.Test
                 }.ToImmutableList(),
                 new Dictionary<Guid, (ImmutableList<FormUploadInfo> FormUploads, ImmutableList<ActivityInfo> ActivitiesPerformed)>
                 {
-                    [guid1] = (ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty),
+                    [guid1] = (ImmutableList<FormUploadInfo>.Empty
+                        .Add(new FormUploadInfo(guid1, new DateTime(2021, 7, 14), "Background Check", "v1", "bg1.pdf")),
+                        ImmutableList<ActivityInfo>.Empty),
                     [guid2] = (ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty),
                     [guid3] = (ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty)
                 }.ToImmutableDictionary());
 
-            Assert.AreEqual(0, result.FamilyRoleApprovals.Count);
+            Assert.AreEqual(1, result.FamilyRoleApprovals.Count);
+            Assert.AreEqual(RoleApprovalStatus.Prospective, result.FamilyRoleApprovals["Host Family"]);
+            Assert.AreEqual(3, result.IndividualVolunteers.Count);
+            Assert.AreEqual(0, result.IndividualVolunteers[guid1].IndividualRoleApprovals.Count);
+            Assert.AreEqual(0, result.IndividualVolunteers[guid2].IndividualRoleApprovals.Count);
+            Assert.AreEqual(0, result.IndividualVolunteers[guid3].IndividualRoleApprovals.Count);
+        }
+
+        [TestMethod]
+        public async Task TestCalculateVolunteerFamilyApprovalStatusWithCompleteHostFamilyProgress()
+        {
+            var policiesResource = new PoliciesResource(); //TODO: Convert to use a mock object store for policy injection
+            var dut = new PolicyEvaluationEngine(policiesResource);
+
+            var result = await dut.CalculateVolunteerFamilyApprovalStatusAsync(guid1, guid2, volunteerFamily,
+                new List<FormUploadInfo>
+                {
+                    new FormUploadInfo(guid6, new DateTime(2021, 7, 1), "Host Family Application", "v1", "abc.pdf"),
+                    new FormUploadInfo(guid6, new DateTime(2021, 7, 10), "Home Screening Checklist", "v1", "def.pdf")
+                }.ToImmutableList(),
+                new List<ActivityInfo>
+                {
+                    new ActivityInfo(guid6, new DateTime(2021, 7, 10), "Host Family Interview")
+                }.ToImmutableList(),
+                new Dictionary<Guid, (ImmutableList<FormUploadInfo> FormUploads, ImmutableList<ActivityInfo> ActivitiesPerformed)>
+                {
+                    [guid1] = (ImmutableList<FormUploadInfo>.Empty
+                        .Add(new FormUploadInfo(guid6, new DateTime(2021, 7, 14), "Background Check", "v1", "bg1.pdf")), ImmutableList<ActivityInfo>.Empty),
+                    [guid2] = (ImmutableList<FormUploadInfo>.Empty
+                        .Add(new FormUploadInfo(guid6, new DateTime(2021, 7, 15), "Background Check", "v1", "bg1.pdf")), ImmutableList<ActivityInfo>.Empty),
+                    [guid3] = (ImmutableList<FormUploadInfo>.Empty
+                        .Add(new FormUploadInfo(guid6, new DateTime(2021, 7, 15), "Background Check", "v1", "bg1.pdf")), ImmutableList<ActivityInfo>.Empty)
+                }.ToImmutableDictionary());
+
+            Assert.AreEqual(1, result.FamilyRoleApprovals.Count);
+            Assert.AreEqual(RoleApprovalStatus.Approved, result.FamilyRoleApprovals["Host Family"]);
             Assert.AreEqual(3, result.IndividualVolunteers.Count);
             Assert.AreEqual(0, result.IndividualVolunteers[guid1].IndividualRoleApprovals.Count);
             Assert.AreEqual(0, result.IndividualVolunteers[guid2].IndividualRoleApprovals.Count);
