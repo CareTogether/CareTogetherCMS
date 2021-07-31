@@ -76,14 +76,14 @@ namespace CareTogether.Core.Test
             Assert.AreEqual(0, await result.CountAsync());
         }
 
-        [TestMethod]
-        public async Task GettingPreviouslyInitializedTenantLogReturnsSameSequence()
-        {
-            var result1 = communityEventLog.GetAllEventsAsync(organizationId, locationId);
-            var result2 = communityEventLog.GetAllEventsAsync(organizationId, locationId);
-            Assert.AreEqual(0, await result1.CountAsync());
-            Assert.AreEqual(0, await result2.CountAsync());
-        }
+        //[TestMethod]
+        //public async Task GettingPreviouslyInitializedTenantLogReturnsSameSequence()
+        //{
+        //    var result1 = communityEventLog.GetAllEventsAsync(organizationId, locationId);
+        //    var result2 = communityEventLog.GetAllEventsAsync(organizationId, locationId);
+        //    Assert.AreEqual(0, await result1.CountAsync());
+        //    Assert.AreEqual(0, await result2.CountAsync());
+        //}
 
         [TestMethod]
         public async Task AppendingAnEventToAnUninitializedTenantLogStoresItWithTheCorrectSequenceNumber()
@@ -110,40 +110,41 @@ namespace CareTogether.Core.Test
             Assert.AreEqual(1, getResult.Count);
         }
 
-        [TestMethod]
-        public async Task AppendingMultipleEventsToAnUninitializedTenantLogStoresThemCorrectly()
-        {
-            ResetContainerByOrganizationId(testingClient, organizationId);
-            communityEventLog = new AppendBlobMultitenantEventLog<CommunityEvent>(testingClient, LogType.CommunityEventLog);
+        // can't really test already initialized container since we can't guarantee test execution order
+        //[TestMethod]
+        //public async Task AppendingMultipleEventsToAnUninitializedTenantLogStoresThemCorrectly()
+        //{
+        //    ResetContainerByOrganizationId(testingClient, organizationId);
+        //    communityEventLog = new AppendBlobMultitenantEventLog<CommunityEvent>(testingClient, LogType.CommunityEventLog);
 
-            var appendResult1 = await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 1);
-            var appendResult2 = await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 2);
-            var appendResult3 = await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 3);
-            var getResult = await communityEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
-            Assert.IsTrue(appendResult1.IsT0);
-            Assert.IsTrue(appendResult2.IsT0);
-            Assert.IsTrue(appendResult3.IsT0);
-            Assert.AreEqual(3, getResult.Count);
-            Assert.AreEqual((personCommand, 1), getResult[0]);
-            Assert.AreEqual((personCommand, 2), getResult[1]);
-            Assert.AreEqual((personCommand, 3), getResult[2]);
-        }
+        //    var appendResult1 = await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 1);
+        //    var appendResult2 = await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 2);
+        //    var appendResult3 = await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 3);
+        //    var getResult = await communityEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
+        //    Assert.IsTrue(appendResult1.IsT0);
+        //    Assert.IsTrue(appendResult2.IsT0);
+        //    Assert.IsTrue(appendResult3.IsT0);
+        //    Assert.AreEqual(3, getResult.Count);
+        //    Assert.AreEqual((personCommand, 1), getResult[0]);
+        //    Assert.AreEqual((personCommand, 2), getResult[1]);
+        //    Assert.AreEqual((personCommand, 3), getResult[2]);
+        //}
 
-        [TestMethod]
-        public async Task AppendingMultipleEventsToAnInitializedTenantLogStoresThemCorrectly()
-        {
-            var appendResult1 = await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 4);
-            var appendResult2 = await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 5);
-            var appendResult3 = await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 6);
-            var getResult = await communityEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
-            Assert.IsTrue(appendResult1.IsT0);
-            Assert.IsTrue(appendResult2.IsT0);
-            Assert.IsTrue(appendResult3.IsT0);
-            Assert.AreEqual(6, getResult.Count);
-            Assert.AreEqual((personCommand, 4), getResult[3]);
-            Assert.AreEqual((personCommand, 5), getResult[4]);
-            Assert.AreEqual((personCommand, 6), getResult[5]);
-        }
+        //[TestMethod]
+        //public async Task AppendingMultipleEventsToAnInitializedTenantLogStoresThemCorrectly()
+        //{
+        //    var appendResult1 = await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 4);
+        //    var appendResult2 = await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 5);
+        //    var appendResult3 = await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 6);
+        //    var getResult = await communityEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
+        //    Assert.IsTrue(appendResult1.IsT0);
+        //    Assert.IsTrue(appendResult2.IsT0);
+        //    Assert.IsTrue(appendResult3.IsT0);
+        //    Assert.AreEqual(6, getResult.Count);
+        //    Assert.AreEqual((personCommand, 4), getResult[3]);
+        //    Assert.AreEqual((personCommand, 5), getResult[4]);
+        //    Assert.AreEqual((personCommand, 6), getResult[5]);
+        //}
 
         [TestMethod]
         public async Task AppendingMultipleEventsToMultipleTenantLogsMaintainsSeparation()
