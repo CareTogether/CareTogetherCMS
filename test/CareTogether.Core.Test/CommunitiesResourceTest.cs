@@ -138,6 +138,6 @@ namespace CareTogether.Core.Test
 
 
         private IEnumerable<(CommunityEvent, long)> EventSequence(params CommunityEvent[] events) =>
-            events.Select((e, i) => (e, (long)i));
+            events.Select((e, i) => (e, (long)i+1));
     }
 }

@@ -1,5 +1,5 @@
 # CareTogetherCMS
-CareTogether is an open-source case management system (CMS) for nonprofits connecting families to caring communities.
+CareTogether is an open-source case management system (CMS) for nonprofits connecting families to caring communities. [The wiki provides much more detail about the design of CareTogether.](https://github.com/CareTogether/CareTogetherCMS/wiki) If you prefer to jump straight into the code, keep reading!
 
 ![Production Build](https://github.com/CareTogether/CareTogetherCMS/actions/workflows/main_caretogether.yml/badge.svg)
 ![License](https://badgen.net/github/license/CareTogether/CareTogetherCMS)

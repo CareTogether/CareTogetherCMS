@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\CareTogether.Core\CareTogether.Core.csproj" />
+    <ProjectReference Include="..\CareTogether.TestData\CareTogether.TestData.csproj" />
   </ItemGroup>
 
 </Project>
