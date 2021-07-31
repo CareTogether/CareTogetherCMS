@@ -37,30 +37,22 @@ namespace CareTogether.Api
             // Shared blob storage client configured to authenticate according to the environment
             var blobServiceClient = new BlobServiceClient(Configuration["Persistence:BlobStorageConnectionString"]);
 
-            // Data store services (use mock implementations for local development)
-            //TODO: Initialize durable event logs instead, once available, and regardless of host environment.
-            IMultitenantEventLog<CommunityEvent> communityEventLog;
-            IMultitenantEventLog<ContactCommandExecutedEvent> contactsEventLog;
-            IMultitenantEventLog<GoalCommandExecutedEvent> goalsEventLog;
-            IMultitenantEventLog<ReferralEvent> referralsEventLog;
-            //if (HostEnvironment.IsDevelopment())
-            //{
-                //TODO: Remove these once we have durable event logs.
-                communityEventLog = new MemoryMultitenantEventLog<CommunityEvent>();
-                contactsEventLog = new MemoryMultitenantEventLog<ContactCommandExecutedEvent>();
-                goalsEventLog = new MemoryMultitenantEventLog<GoalCommandExecutedEvent>();
-                referralsEventLog = new MemoryMultitenantEventLog<ReferralEvent>();
+            // Data store services
+            var communityEventLog = new AppendBlobMultitenantEventLog<CommunityEvent>(blobServiceClient, LogType.CommunityEventLog);
+            var contactsEventLog = new AppendBlobMultitenantEventLog<ContactCommandExecutedEvent>(blobServiceClient, LogType.ContactsEventLog);
+            var goalsEventLog = new AppendBlobMultitenantEventLog<GoalCommandExecutedEvent>(blobServiceClient, LogType.GoalsEventLog);
+            var referralsEventLog = new AppendBlobMultitenantEventLog<ReferralEvent>(blobServiceClient, LogType.ReferralsEventLog);
 
-//#if DEBUG
+#if DEBUG
+            if (HostEnvironment.IsDevelopment())
+            {
                 // Reset and populate test data for debugging. The test data project dependency (and this call) is not included in release builds.
                 // Note that this will not reset data (storage containers) for tenants other than the test tenant used by the TestData project.
                 TestData.TestStorageHelper.ResetTestTenantData(blobServiceClient);
                 TestData.TestDataProvider.PopulateTestDataAsync(
                     communityEventLog, contactsEventLog, goalsEventLog, referralsEventLog).Wait();
-//#endif
-            //}
-            //else
-            //    throw new NotImplementedException("Durable event logs for system testing have not been implemented yet.");
+            }
+#endif
 
             // Resource services
             var communitiesResource = new CommunitiesResource(communityEventLog);
