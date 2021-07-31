@@ -80,17 +80,17 @@ namespace CareTogether.Engines
                 foreach (var (roleName, rolePolicy) in policy.VolunteerRoles)
                 {
                     var requirementsMet = rolePolicy.ApprovalRequirements.Select(requirement =>
-                        requirement.ActionRequirement switch
+                        (requirement.RequiredToBeProspective, RequirementMet: requirement.ActionRequirement switch
                         {
                             FormUploadRequirement r => formUploads.Any(upload => upload.FormName == r.FormName),
                             ActivityRequirement r => activities.Any(activity => activity.ActivityName == r.ActivityName),
                             _ => throw new NotImplementedException(
                                 $"The action requirement type '{requirement.ActionRequirement.GetType().FullName}' has not been implemented.")
-                        }).ToList();
+                        })).ToList();
 
-                    if (requirementsMet.All(x => x))
+                    if (requirementsMet.All(x => x.RequirementMet))
                         individualRoles[roleName] = RoleApprovalStatus.Approved;
-                    else if (requirementsMet.Any(x => x))
+                    else if (requirementsMet.Where(x => x.RequiredToBeProspective).All(x => x.RequirementMet))
                         individualRoles[roleName] = RoleApprovalStatus.Prospective;
                 }
                 return (person.Id, new VolunteerApprovalStatus(individualRoles.ToImmutableDictionary()));
@@ -100,17 +100,41 @@ namespace CareTogether.Engines
             foreach (var (roleName, rolePolicy) in policy.VolunteerFamilyRoles)
             {
                 var requirementsMet = rolePolicy.ApprovalRequirements.Select(requirement =>
-                    requirement.ActionRequirement switch
+                    (requirement.RequiredToBeProspective, RequirementMet: requirement.Scope switch
                     {
-                        FormUploadRequirement r => familyFormUploads.Any(upload => upload.FormName == r.FormName),
-                        ActivityRequirement r => familyActivitiesPerformed.Any(activity => activity.ActivityName == r.ActivityName),
+                        VolunteerFamilyRequirementScope.AllAdultsInTheFamily => requirement.ActionRequirement switch
+                        {
+                            FormUploadRequirement r => family.Adults.All(x =>
+                            {
+                                var (person, familyRelationship) = x;
+                                var (formUploads, activities) = individualInfo[person.Id];
+                                return formUploads.Any(upload => upload.FormName == r.FormName);
+                            }),
+                            ActivityRequirement r => family.Adults.All(x =>
+                            {
+                                var (person, familyRelationship) = x;
+                                var (formUploads, activities) = individualInfo[person.Id];
+                                return activities.Any(activity=> activity.ActivityName == r.ActivityName);
+                            }),
+                            _ => throw new NotImplementedException(
+                                $"The action requirement type '{requirement.ActionRequirement.GetType().FullName}' " +
+                                $"has not been implemented for scope '{nameof(VolunteerFamilyRequirementScope.AllAdultsInTheFamily)}'.")
+                        },
+                        VolunteerFamilyRequirementScope.OncePerFamily => requirement.ActionRequirement switch
+                        {
+                            FormUploadRequirement r => familyFormUploads.Any(upload => upload.FormName == r.FormName),
+                            ActivityRequirement r => familyActivitiesPerformed.Any(activity => activity.ActivityName == r.ActivityName),
+                            _ => throw new NotImplementedException(
+                                $"The action requirement type '{requirement.ActionRequirement.GetType().FullName}' " +
+                                $"has not been implemented for scope '{nameof(VolunteerFamilyRequirementScope.OncePerFamily)}'.")
+                        },
                         _ => throw new NotImplementedException(
-                            $"The action requirement type '{requirement.ActionRequirement.GetType().FullName}' has not been implemented.")
-                    }).ToList();
+                            $"The volunteer family requirement scope '{requirement.Scope}' has not been implemented.")
+                    })).ToList();
 
-                if (requirementsMet.All(x => x))
+                if (requirementsMet.All(x => x.RequirementMet))
                     familyRoles[roleName] = RoleApprovalStatus.Approved;
-                else if (requirementsMet.Any(x => x))
+                else if (requirementsMet.Where(x => x.RequiredToBeProspective).All(x => x.RequirementMet))
                     familyRoles[roleName] = RoleApprovalStatus.Prospective;
             }
 

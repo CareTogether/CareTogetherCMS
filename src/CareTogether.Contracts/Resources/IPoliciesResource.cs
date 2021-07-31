@@ -38,10 +38,10 @@ namespace CareTogether.Resources
         ImmutableList<VolunteerFamilyApprovalRequirement> ApprovalRequirements);
 
     public sealed record VolunteerApprovalRequirement(string ShortDescription,
-        ActionRequirement ActionRequirement);
+        bool RequiredToBeProspective, ActionRequirement ActionRequirement);
 
     public sealed record VolunteerFamilyApprovalRequirement(string ShortDescription,
-        ActionRequirement ActionRequirement, VolunteerFamilyRequirementScope Scope);
+        bool RequiredToBeProspective, ActionRequirement ActionRequirement, VolunteerFamilyRequirementScope Scope);
 
     public enum VolunteerFamilyRequirementScope { OncePerFamily, AllAdultsInTheFamily };
 

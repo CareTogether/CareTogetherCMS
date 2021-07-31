@@ -159,18 +159,18 @@ namespace CareTogether.Resources
                 {
                     ["Family Friend"] = new VolunteerRolePolicy("Family Friend", new List<VolunteerApprovalRequirement>
                     {
-                        new VolunteerApprovalRequirement("Family Friend Application",
+                        new VolunteerApprovalRequirement("Family Friend Application", true,
                             new FormUploadRequirement("Family Friend Application", "v1", null, new Uri("http://example.com/forms/app-ff"))),
-                        new VolunteerApprovalRequirement("Background Check",
+                        new VolunteerApprovalRequirement("Background Check", false,
                             new FormUploadRequirement("Background Check", "v1", "See approval guide for directions", new Uri("http://example.com/forms/app-ff")))
                     }.ToImmutableList()),
                     ["Family Coach"] = new VolunteerRolePolicy("Family Coach", new List<VolunteerApprovalRequirement>
                     {
-                        new VolunteerApprovalRequirement("Family Coach Application",
+                        new VolunteerApprovalRequirement("Family Coach Application", true,
                             new FormUploadRequirement("Family Coach Application", "v1", null, new Uri("http://example.com/forms/app-fc"))),
-                        new VolunteerApprovalRequirement("Background Check",
+                        new VolunteerApprovalRequirement("Background Check", false,
                             new FormUploadRequirement("Background Check", "v1", "See approval guide for directions", new Uri("http://example.com/forms/app-ff"))),
-                        new VolunteerApprovalRequirement("Interview with Family Coach Supervisor",
+                        new VolunteerApprovalRequirement("Interview with Family Coach Supervisor", false,
                             new ActivityRequirement("Interview with Family Coach Supervisor"))
                     }.ToImmutableList())
                 }.ToImmutableDictionary(),
@@ -178,16 +178,16 @@ namespace CareTogether.Resources
                 {
                     ["Host Family"] = new VolunteerFamilyRolePolicy("Host Family", new List<VolunteerFamilyApprovalRequirement>
                     {
-                        new VolunteerFamilyApprovalRequirement("Host Family Application",
+                        new VolunteerFamilyApprovalRequirement("Host Family Application", true,
                             new FormUploadRequirement("Host Family Application", "v1", null, new Uri("http://example.com/forms/app-hf")),
                             VolunteerFamilyRequirementScope.OncePerFamily),
-                        new VolunteerFamilyApprovalRequirement("Background Check",
+                        new VolunteerFamilyApprovalRequirement("Background Check", false,
                             new FormUploadRequirement("Background Check", "v1", "See approval guide for directions", new Uri("http://example.com/forms/app-ff")),
                             VolunteerFamilyRequirementScope.AllAdultsInTheFamily),
-                        new VolunteerFamilyApprovalRequirement("Home Screening Checklist",
+                        new VolunteerFamilyApprovalRequirement("Home Screening Checklist", false,
                             new FormUploadRequirement("Home Screening Checklist", "v1", "Must be filled out by an approved home screener", new Uri("http://example.com/forms/hscheck")),
                             VolunteerFamilyRequirementScope.OncePerFamily),
-                        new VolunteerFamilyApprovalRequirement("Host Family Interview",
+                        new VolunteerFamilyApprovalRequirement("Host Family Interview", false,
                             new ActivityRequirement("Host Family Interview"),
                             VolunteerFamilyRequirementScope.OncePerFamily)
                     }.ToImmutableList())
