@@ -17,7 +17,7 @@ namespace CareTogether.Resources
 
             await Task.Yield();
 
-            return new ReferralPolicy(version.Value,
+            return new ReferralPolicy(version.Value, "Local test policy",
                 new List<ActionRequirement>
                 {
                     new FormUploadRequirement("Request for Help Form", "v1",
@@ -142,6 +142,56 @@ namespace CareTogether.Resources
                         RequiredCloseoutActions: new List<ActionRequirement>
                         { }.ToImmutableList())
                 }.ToImmutableList());
+        }
+
+        public async Task<ResourceResult<VolunteerPolicy>> GetEffectiveVolunteerPolicy(Guid organizationId, Guid locationId,
+            int? version = null)
+        {
+            if (version == null)
+                version = 1;
+            else if (version != 1)
+                return ResourceResult.NotFound;
+
+            await Task.Yield();
+
+            return new VolunteerPolicy(version.Value, "Local test policy",
+                new Dictionary<string, VolunteerRolePolicy>
+                {
+                    ["Family Friend"] = new VolunteerRolePolicy("Family Friend", new List<VolunteerApprovalRequirement>
+                    {
+                        new VolunteerApprovalRequirement("Family Friend Application", true,
+                            new FormUploadRequirement("Family Friend Application", "v1", null, new Uri("http://example.com/forms/app-ff"))),
+                        new VolunteerApprovalRequirement("Background Check", false,
+                            new FormUploadRequirement("Background Check", "v1", "See approval guide for directions", new Uri("http://example.com/forms/app-ff")))
+                    }.ToImmutableList()),
+                    ["Family Coach"] = new VolunteerRolePolicy("Family Coach", new List<VolunteerApprovalRequirement>
+                    {
+                        new VolunteerApprovalRequirement("Family Coach Application", true,
+                            new FormUploadRequirement("Family Coach Application", "v1", null, new Uri("http://example.com/forms/app-fc"))),
+                        new VolunteerApprovalRequirement("Background Check", false,
+                            new FormUploadRequirement("Background Check", "v1", "See approval guide for directions", new Uri("http://example.com/forms/app-ff"))),
+                        new VolunteerApprovalRequirement("Interview with Family Coach Supervisor", false,
+                            new ActivityRequirement("Interview with Family Coach Supervisor"))
+                    }.ToImmutableList())
+                }.ToImmutableDictionary(),
+                new Dictionary<string, VolunteerFamilyRolePolicy>
+                {
+                    ["Host Family"] = new VolunteerFamilyRolePolicy("Host Family", new List<VolunteerFamilyApprovalRequirement>
+                    {
+                        new VolunteerFamilyApprovalRequirement("Host Family Application", true,
+                            new FormUploadRequirement("Host Family Application", "v1", null, new Uri("http://example.com/forms/app-hf")),
+                            VolunteerFamilyRequirementScope.OncePerFamily),
+                        new VolunteerFamilyApprovalRequirement("Background Check", false,
+                            new FormUploadRequirement("Background Check", "v1", "See approval guide for directions", new Uri("http://example.com/forms/app-ff")),
+                            VolunteerFamilyRequirementScope.AllAdultsInTheFamily),
+                        new VolunteerFamilyApprovalRequirement("Home Screening Checklist", false,
+                            new FormUploadRequirement("Home Screening Checklist", "v1", "Must be filled out by an approved home screener", new Uri("http://example.com/forms/hscheck")),
+                            VolunteerFamilyRequirementScope.OncePerFamily),
+                        new VolunteerFamilyApprovalRequirement("Host Family Interview", false,
+                            new ActivityRequirement("Host Family Interview"),
+                            VolunteerFamilyRequirementScope.OncePerFamily)
+                    }.ToImmutableList())
+                }.ToImmutableDictionary());
         }
     }
 }

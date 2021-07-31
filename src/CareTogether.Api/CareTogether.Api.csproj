@@ -11,20 +11,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="5.0.7" />
-    <PackageReference Include="Microsoft.Identity.Web" Version="1.14.0" />
-    <PackageReference Include="NSwag.AspNetCore" Version="13.11.3" />
-    <PackageReference Include="NSwag.MSBuild" Version="13.11.3">
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="5.0.8" />
+    <PackageReference Include="Microsoft.Identity.Web" Version="1.15.2" />
+    <PackageReference Include="NSwag.AspNetCore" Version="13.12.1" />
+    <PackageReference Include="NSwag.MSBuild" Version="13.12.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
-    <!--<ProjectReference Include="..\..\test\CareTogether.TestData\CareTogether.TestData.csproj" Condition="'$(Configuration)' == 'Debug'" />-->
-    <ProjectReference Include="..\..\test\CareTogether.TestData\CareTogether.TestData.csproj" />
     <ProjectReference Include="..\CareTogether.Contracts\CareTogether.Contracts.csproj" />
     <ProjectReference Include="..\CareTogether.Core\CareTogether.Core.csproj" />
+    <ProjectReference Include="..\..\test\CareTogether.TestData\CareTogether.TestData.csproj" Condition="'$(Configuration)' == 'Debug'" />
   </ItemGroup>
 
   <PropertyGroup>

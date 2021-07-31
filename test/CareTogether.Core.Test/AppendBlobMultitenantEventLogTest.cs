@@ -19,14 +19,15 @@ namespace CareTogether.Core.Test
         BlobServiceClient testingClient;
         private static Guid Id(char x) => Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
 
+        // 'organizationId' and 'locationId' must be seeded with 1 and 2, respectively, because
+        // PopulateTestDataAsync creates data in that organizationId and locationId only.
         static readonly Guid organizationId = Id('1');
-
-        // locationId must be seeded with 2 because PopulateTestDataAsync creates data in that locationId only
         static readonly Guid locationId = Id('2');
-        static readonly Guid guid1 = Id('3');
-        static readonly Guid guid2 = Id('4');
+        static readonly Guid guid3 = Id('3');
+        static readonly Guid guid4 = Id('4');
 
-        static readonly PersonCommandExecuted personCommand = new PersonCommandExecuted(new CreatePerson(guid1, guid2, "Jane", "Smith", new AgeInYears(42, new DateTime(2021, 1, 1))));
+        static readonly PersonCommandExecuted personCommand = new PersonCommandExecuted(
+            new CreatePerson(guid3, guid4, "Jane", "Smith", new AgeInYears(42, new DateTime(2021, 1, 1))));
 
         AppendBlobMultitenantEventLog<CommunityEvent> communityEventLog;
         AppendBlobMultitenantEventLog<ContactCommandExecutedEvent> contactsEventLog;
@@ -37,17 +38,25 @@ namespace CareTogether.Core.Test
         {
             testingClient = new BlobServiceClient("UseDevelopmentStorage=true");
 
+            testingClient.GetBlobContainerClient(organizationId.ToString()).DeleteIfExists();
+            testingClient.GetBlobContainerClient(guid3.ToString()).DeleteIfExists();
+
             communityEventLog = new AppendBlobMultitenantEventLog<CommunityEvent>(testingClient, LogType.CommunityEventLog);
             contactsEventLog = new AppendBlobMultitenantEventLog<ContactCommandExecutedEvent>(testingClient, LogType.ContactsEventLog);
             referralsEventLog = new AppendBlobMultitenantEventLog<ReferralEvent>(testingClient, LogType.ReferralsEventLog);
         }
 
+        [TestCleanup]
+        public void TestCleanup()
+        {
+            testingClient.GetBlobContainerClient(organizationId.ToString()).DeleteIfExists();
+            testingClient.GetBlobContainerClient(guid3.ToString()).DeleteIfExists();
+        }
+
         [TestMethod]
         public async Task ResultsFromContainerAfterTestDataPopulationMatchesExpected()
         {
-            ResetContainerByOrganizationId(testingClient, organizationId);
-
-            TestData.TestDataProvider.PopulateTestDataAsync(
+            TestDataProvider.PopulateTestDataAsync(
                     communityEventLog, contactsEventLog, null, referralsEventLog).Wait();
 
             var communityEvents = await communityEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
@@ -69,9 +78,6 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public async Task GettingUninitializedTenantLogReturnsEmptySequence()
         {
-            ResetContainerByOrganizationId(testingClient, organizationId);
-            communityEventLog = new AppendBlobMultitenantEventLog<CommunityEvent>(testingClient, LogType.CommunityEventLog);
-
             var result = communityEventLog.GetAllEventsAsync(organizationId, locationId);
             Assert.AreEqual(0, await result.CountAsync());
         }
@@ -88,9 +94,6 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public async Task AppendingAnEventToAnUninitializedTenantLogStoresItWithTheCorrectSequenceNumber()
         {
-            ResetContainerByOrganizationId(testingClient, organizationId);
-            communityEventLog = new AppendBlobMultitenantEventLog<CommunityEvent>(testingClient, LogType.CommunityEventLog);
-
             var appendResult = await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 1);
             var getResult = await communityEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
             Assert.IsTrue(appendResult.IsT0);
@@ -101,9 +104,6 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public async Task AppendingAnEventToAnUninitializedTenantLogValidatesTheExpectedSequenceNumber()
         {
-            ResetContainerByOrganizationId(testingClient, organizationId);
-            communityEventLog = new AppendBlobMultitenantEventLog<CommunityEvent>(testingClient, LogType.CommunityEventLog);
-
             var appendResult = await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 2);
             var getResult = await communityEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
             Assert.IsTrue(appendResult.IsT1);
@@ -114,9 +114,6 @@ namespace CareTogether.Core.Test
         //[TestMethod]
         //public async Task AppendingMultipleEventsToAnUninitializedTenantLogStoresThemCorrectly()
         //{
-        //    ResetContainerByOrganizationId(testingClient, organizationId);
-        //    communityEventLog = new AppendBlobMultitenantEventLog<CommunityEvent>(testingClient, LogType.CommunityEventLog);
-
         //    var appendResult1 = await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 1);
         //    var appendResult2 = await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 2);
         //    var appendResult3 = await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 3);
@@ -149,10 +146,6 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public async Task AppendingMultipleEventsToMultipleTenantLogsMaintainsSeparation()
         {
-            ResetContainerByOrganizationId(testingClient, organizationId);
-            ResetContainerByOrganizationId(testingClient, guid1);
-            communityEventLog = new AppendBlobMultitenantEventLog<CommunityEvent>(testingClient, LogType.CommunityEventLog);
-
             var appendResults = new[]
             {
                 await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 1),
@@ -161,9 +154,9 @@ namespace CareTogether.Core.Test
                 await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 4),
                 await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 5),
                 await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 6),
-                await communityEventLog.AppendEventAsync(guid1, guid2, personCommand, 1),
-                await communityEventLog.AppendEventAsync(guid1, guid2, personCommand, 2),
-                await communityEventLog.AppendEventAsync(guid1, guid2, personCommand, 3),
+                await communityEventLog.AppendEventAsync(guid3, guid4, personCommand, 1),
+                await communityEventLog.AppendEventAsync(guid3, guid4, personCommand, 2),
+                await communityEventLog.AppendEventAsync(guid3, guid4, personCommand, 3),
                 await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 7)
             };
             var getResult = await communityEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
@@ -204,12 +197,6 @@ namespace CareTogether.Core.Test
             Assert.AreEqual(50000, thirdResult);
             Assert.AreEqual(1, fourthResult);
             Assert.AreEqual(35919, fifthResult);
-        }
-
-        private static void ResetContainerByOrganizationId(BlobServiceClient blobServiceClient, Guid organizationId)
-        {
-            var tenantContainer = blobServiceClient.GetBlobContainerClient(organizationId.ToString());
-            var response = tenantContainer.DeleteIfExists();
         }
     }
 }
