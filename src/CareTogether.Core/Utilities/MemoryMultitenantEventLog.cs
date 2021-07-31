@@ -19,7 +19,7 @@ namespace CareTogether.Utilities
         {
             await Task.Yield();
             var tenantLog = tenantLogs.GetOrAdd((organizationId, locationId), new List<T>());
-            if (tenantLog.LongCount() != expectedSequenceNumber)
+            if (tenantLog.LongCount()+1 != expectedSequenceNumber)
                 return new Error();
 
             tenantLog.Add(domainEvent);
@@ -32,7 +32,7 @@ namespace CareTogether.Utilities
             await Task.Yield();
             var tenantLog = tenantLogs.GetOrAdd((organizationId, locationId), new List<T>());
             foreach (var result in tenantLog
-                .Select((value, index) => (DomainEvent: value, SequenceNumber: index)))
+                .Select((value, index) => (DomainEvent: value, SequenceNumber: index+1)))
                 yield return result;
         }
     }
