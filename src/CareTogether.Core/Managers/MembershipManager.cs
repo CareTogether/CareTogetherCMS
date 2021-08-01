@@ -37,6 +37,12 @@ namespace CareTogether.Managers
 
         public async Task<ManagerResult<ContactInfo>> UpdateContactInfoAsync(AuthorizedUser user, Guid organizationId, Guid locationId, ContactCommand command)
         {
+            command = command switch
+            {
+                CreateContact c => c with { PersonId = Guid.NewGuid() },
+                _ => command
+            };
+
             using (await tenantLocks.GetOrAdd((organizationId, locationId), new AsyncReaderWriterLock()).WriterLockAsync())
             {
                 //TODO: This is just a demo implementation of a business rule, not a true business rule.
@@ -61,6 +67,20 @@ namespace CareTogether.Managers
                 }
                 else
                     return ManagerResult.NotAllowed;
+            }
+        }
+
+        public async Task<ManagerResult<Family>> ExecuteFamilyCommandAsync(AuthorizedUser user, Guid organizationId, Guid locationId, FamilyCommand command)
+        {
+            command = command switch
+            {
+                CreateFamily c => c with { FamilyId = Guid.NewGuid() },
+                _ => command
+            };
+
+            using (await tenantLocks.GetOrAdd((organizationId, locationId), new AsyncReaderWriterLock()).WriterLockAsync())
+            {
+                return await communitiesResource.ExecuteFamilyCommandAsync(organizationId, locationId, command, user.UserId);
             }
         }
     }

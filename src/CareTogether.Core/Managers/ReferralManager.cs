@@ -36,6 +36,12 @@ namespace CareTogether.Managers
         public async Task<ManagerResult<Referral>> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId,
             AuthorizedUser user, ReferralCommand command)
         {
+            command = command switch
+            {
+                CreateReferral c => c with { ReferralId = Guid.NewGuid(), PolicyVersion = "v1" },
+                _ => command
+            };
+
             using (await tenantLocks.GetOrAdd((organizationId, locationId), new AsyncReaderWriterLock()).WriterLockAsync())
             {
                 var tenantModel = await GetTenantModelAsync(organizationId, locationId);
@@ -74,6 +80,12 @@ namespace CareTogether.Managers
         public async Task<ManagerResult<Referral>> ExecuteArrangementCommandAsync(Guid organizationId, Guid locationId,
             AuthorizedUser user, ArrangementCommand command)
         {
+            command = command switch
+            {
+                CreateArrangement c => c with { ArrangementId = Guid.NewGuid(), PolicyVersion = "v1" },
+                _ => command
+            };
+
             using (await tenantLocks.GetOrAdd((organizationId, locationId), new AsyncReaderWriterLock()).WriterLockAsync())
             {
                 var tenantModel = await GetTenantModelAsync(organizationId, locationId);
@@ -112,6 +124,12 @@ namespace CareTogether.Managers
         public async Task<ManagerResult<Referral>> ExecuteArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
             AuthorizedUser user, ArrangementNoteCommand command)
         {
+            command = command switch
+            {
+                CreateDraftArrangementNote c => c with { NoteId = Guid.NewGuid() },
+                _ => command
+            };
+
             using (await tenantLocks.GetOrAdd((organizationId, locationId), new AsyncReaderWriterLock()).WriterLockAsync())
             {
                 var tenantModel = await GetTenantModelAsync(organizationId, locationId);
