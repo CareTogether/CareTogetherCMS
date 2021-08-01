@@ -15,6 +15,7 @@ namespace CareTogether.Managers
     public sealed class ApprovalManager : IApprovalManager
     {
         private readonly IMultitenantEventLog<ApprovalEvent> eventLog;
+        private readonly ConcurrentDictionary<(Guid organizationId, Guid locationId), AsyncReaderWriterLock> tenantLocks = new();
         private readonly ConcurrentDictionary<(Guid organizationId, Guid locationId), AsyncLazy<ApprovalModel>> tenantModels = new();
         private readonly IPolicyEvaluationEngine policyEvaluationEngine;
         private readonly ICommunitiesResource communitiesResource;
@@ -33,89 +34,98 @@ namespace CareTogether.Managers
 
         public async Task<IImmutableList<VolunteerFamily>> ListVolunteerFamiliesAsync(AuthorizedUser user, Guid organizationId, Guid locationId)
         {
-            var tenantModel = await GetTenantModelAsync(organizationId, locationId);
+            using (await tenantLocks.GetOrAdd((organizationId, locationId), new AsyncReaderWriterLock()).ReaderLockAsync())
+            {
+                var tenantModel = await GetTenantModelAsync(organizationId, locationId);
 
-            var families = communitiesResource.ListPartneringFamilies(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
-            var contacts = profilesResource.ListContactsAsync(organizationId, locationId).Result;
+                var families = communitiesResource.ListPartneringFamilies(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+                var contacts = profilesResource.ListContactsAsync(organizationId, locationId).Result;
 
-            var volunteerFamilies = tenantModel.FindVolunteerFamilyEntries(_ => true);
-            var result = await volunteerFamilies.Select(vf => ToVolunteerFamilyAsync(
-                organizationId, locationId, vf, families, contacts)).WhenAll();
-            return result.ToImmutableList();
+                var volunteerFamilies = tenantModel.FindVolunteerFamilyEntries(_ => true);
+                var result = await volunteerFamilies.Select(vf => ToVolunteerFamilyAsync(
+                    organizationId, locationId, vf, families, contacts)).WhenAll();
+                return result.ToImmutableList();
+            }
         }
 
         public async Task<ManagerResult<VolunteerFamily>> ExecuteVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
             AuthorizedUser user, VolunteerFamilyCommand command)
         {
-            var tenantModel = await GetTenantModelAsync(organizationId, locationId);
-
-            var getVolunteerFamilyResult = tenantModel.GetVolunteerFamilyEntry(command.FamilyId);
-            if (getVolunteerFamilyResult.TryPickT0(out var volunteerFamilyEntry, out var notFound))
+            using (await tenantLocks.GetOrAdd((organizationId, locationId), new AsyncReaderWriterLock()).WriterLockAsync())
             {
-                var families = communitiesResource.ListVolunteerFamilies(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
-                var contacts = profilesResource.ListContactsAsync(organizationId, locationId).Result;
-                var referral = await ToVolunteerFamilyAsync(
-                    organizationId, locationId, volunteerFamilyEntry, families, contacts);
+                var tenantModel = await GetTenantModelAsync(organizationId, locationId);
 
-                var authorizationResult = await policyEvaluationEngine.AuthorizeVolunteerFamilyCommandAsync(
-                    organizationId, locationId, user, command, referral);
-                if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
+                var getVolunteerFamilyResult = tenantModel.GetVolunteerFamilyEntry(command.FamilyId);
+                if (getVolunteerFamilyResult.TryPickT0(out var volunteerFamilyEntry, out var notFound))
                 {
-                    var commandResult = tenantModel.ExecuteVolunteerFamilyCommand(command);
-                    if (commandResult.TryPickT0(out var success, out var commandError))
+                    var families = communitiesResource.ListVolunteerFamilies(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+                    var contacts = profilesResource.ListContactsAsync(organizationId, locationId).Result;
+                    var referral = await ToVolunteerFamilyAsync(
+                        organizationId, locationId, volunteerFamilyEntry, families, contacts);
+
+                    var authorizationResult = await policyEvaluationEngine.AuthorizeVolunteerFamilyCommandAsync(
+                        organizationId, locationId, user, command, referral);
+                    if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
                     {
-                        await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
-                        success.Value.OnCommit();
-                        var disclosedVolunteerFamily = await policyEvaluationEngine.DiscloseVolunteerFamilyAsync(user,
-                            await ToVolunteerFamilyAsync(
-                                organizationId, locationId, success.Value.VolunteerFamilyEntry, families, contacts));
-                        return disclosedVolunteerFamily;
+                        var commandResult = tenantModel.ExecuteVolunteerFamilyCommand(command);
+                        if (commandResult.TryPickT0(out var success, out var commandError))
+                        {
+                            await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
+                            success.Value.OnCommit();
+                            var disclosedVolunteerFamily = await policyEvaluationEngine.DiscloseVolunteerFamilyAsync(user,
+                                await ToVolunteerFamilyAsync(
+                                    organizationId, locationId, success.Value.VolunteerFamilyEntry, families, contacts));
+                            return disclosedVolunteerFamily;
+                        }
+                        else
+                            return ManagerResult.NotAllowed; //TODO: Include reason from 'commandError'?
                     }
                     else
-                        return ManagerResult.NotAllowed; //TODO: Include reason from 'commandError'?
+                        return ManagerResult.NotAllowed; //TODO: Include reason from 'authorizationError'?
                 }
                 else
-                    return ManagerResult.NotAllowed; //TODO: Include reason from 'authorizationError'?
+                    return notFound;
             }
-            else
-                return notFound;
         }
 
         public async Task<ManagerResult<VolunteerFamily>> ExecuteVolunteerCommandAsync(Guid organizationId, Guid locationId,
             AuthorizedUser user, VolunteerCommand command)
         {
-            var tenantModel = await GetTenantModelAsync(organizationId, locationId);
-
-            var getVolunteerFamilyResult = tenantModel.GetVolunteerFamilyEntry(command.FamilyId);
-            if (getVolunteerFamilyResult.TryPickT0(out var volunteerFamilyEntry, out var notFound))
+            using (await tenantLocks.GetOrAdd((organizationId, locationId), new AsyncReaderWriterLock()).WriterLockAsync())
             {
-                var families = communitiesResource.ListVolunteerFamilies(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
-                var contacts = profilesResource.ListContactsAsync(organizationId, locationId).Result;
-                var referral = await ToVolunteerFamilyAsync(
-                    organizationId, locationId, volunteerFamilyEntry, families, contacts);
+                var tenantModel = await GetTenantModelAsync(organizationId, locationId);
 
-                var authorizationResult = await policyEvaluationEngine.AuthorizeVolunteerCommandAsync(
-                    organizationId, locationId, user, command, referral);
-                if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
+                var getVolunteerFamilyResult = tenantModel.GetVolunteerFamilyEntry(command.FamilyId);
+                if (getVolunteerFamilyResult.TryPickT0(out var volunteerFamilyEntry, out var notFound))
                 {
-                    var commandResult = tenantModel.ExecuteVolunteerCommand(command);
-                    if (commandResult.TryPickT0(out var success, out var commandError))
+                    var families = communitiesResource.ListVolunteerFamilies(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+                    var contacts = profilesResource.ListContactsAsync(organizationId, locationId).Result;
+                    var referral = await ToVolunteerFamilyAsync(
+                        organizationId, locationId, volunteerFamilyEntry, families, contacts);
+
+                    var authorizationResult = await policyEvaluationEngine.AuthorizeVolunteerCommandAsync(
+                        organizationId, locationId, user, command, referral);
+                    if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
                     {
-                        await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
-                        success.Value.OnCommit();
-                        var disclosedVolunteerFamily = await policyEvaluationEngine.DiscloseVolunteerFamilyAsync(user,
-                            await ToVolunteerFamilyAsync(
-                                organizationId, locationId, success.Value.VolunteerFamilyEntry, families, contacts));
-                        return disclosedVolunteerFamily;
+                        var commandResult = tenantModel.ExecuteVolunteerCommand(command);
+                        if (commandResult.TryPickT0(out var success, out var commandError))
+                        {
+                            await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
+                            success.Value.OnCommit();
+                            var disclosedVolunteerFamily = await policyEvaluationEngine.DiscloseVolunteerFamilyAsync(user,
+                                await ToVolunteerFamilyAsync(
+                                    organizationId, locationId, success.Value.VolunteerFamilyEntry, families, contacts));
+                            return disclosedVolunteerFamily;
+                        }
+                        else
+                            return ManagerResult.NotAllowed; //TODO: Include reason from 'commandError'?
                     }
                     else
-                        return ManagerResult.NotAllowed; //TODO: Include reason from 'commandError'?
+                        return ManagerResult.NotAllowed; //TODO: Include reason from 'authorizationError'?
                 }
                 else
-                    return ManagerResult.NotAllowed; //TODO: Include reason from 'authorizationError'?
+                    return notFound;
             }
-            else
-                return notFound;
         }
 
 

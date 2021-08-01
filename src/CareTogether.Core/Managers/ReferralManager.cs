@@ -16,6 +16,7 @@ namespace CareTogether.Managers
     public sealed class ReferralManager : IReferralManager
     {
         private readonly IMultitenantEventLog<ReferralEvent> eventLog;
+        private readonly ConcurrentDictionary<(Guid organizationId, Guid locationId), AsyncReaderWriterLock> tenantLocks = new();
         private readonly ConcurrentDictionary<(Guid organizationId, Guid locationId), AsyncLazy<ReferralModel>> tenantModels = new();
         private readonly IPolicyEvaluationEngine policyEvaluationEngine;
         private readonly ICommunitiesResource communitiesResource;
@@ -35,117 +36,129 @@ namespace CareTogether.Managers
         public async Task<ManagerResult<Referral>> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId,
             AuthorizedUser user, ReferralCommand command)
         {
-            var tenantModel = await GetTenantModelAsync(organizationId, locationId);
-
-            var getReferralResult = tenantModel.GetReferralEntry(command.ReferralId);
-            if (getReferralResult.TryPickT0(out var referralEntry, out var notFound))
+            using (await tenantLocks.GetOrAdd((organizationId, locationId), new AsyncReaderWriterLock()).WriterLockAsync())
             {
-                var families = communitiesResource.ListPartneringFamilies(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
-                var contacts = profilesResource.ListContactsAsync(organizationId, locationId).Result;
-                var referral = ToReferral(referralEntry, families, contacts);
+                var tenantModel = await GetTenantModelAsync(organizationId, locationId);
 
-                var authorizationResult = await policyEvaluationEngine.AuthorizeReferralCommandAsync(
-                    organizationId, locationId, user, command, referral);
-                if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
+                var getReferralResult = tenantModel.GetReferralEntry(command.ReferralId);
+                if (getReferralResult.TryPickT0(out var referralEntry, out var notFound))
                 {
-                    var commandResult = tenantModel.ExecuteReferralCommand(command);
-                    if (commandResult.TryPickT0(out var success, out var commandError))
+                    var families = communitiesResource.ListPartneringFamilies(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+                    var contacts = profilesResource.ListContactsAsync(organizationId, locationId).Result;
+                    var referral = ToReferral(referralEntry, families, contacts);
+
+                    var authorizationResult = await policyEvaluationEngine.AuthorizeReferralCommandAsync(
+                        organizationId, locationId, user, command, referral);
+                    if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
                     {
-                        await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
-                        success.Value.OnCommit();
-                        var disclosedReferral = await policyEvaluationEngine.DiscloseReferralAsync(user,
-                            ToReferral(success.Value.ReferralEntry, families, contacts));
-                        return disclosedReferral;
+                        var commandResult = tenantModel.ExecuteReferralCommand(command);
+                        if (commandResult.TryPickT0(out var success, out var commandError))
+                        {
+                            await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
+                            success.Value.OnCommit();
+                            var disclosedReferral = await policyEvaluationEngine.DiscloseReferralAsync(user,
+                                ToReferral(success.Value.ReferralEntry, families, contacts));
+                            return disclosedReferral;
+                        }
+                        else
+                            return ManagerResult.NotAllowed; //TODO: Include reason from 'commandError'?
                     }
                     else
-                        return ManagerResult.NotAllowed; //TODO: Include reason from 'commandError'?
+                        return ManagerResult.NotAllowed; //TODO: Include reason from 'authorizationError'?
                 }
                 else
-                    return ManagerResult.NotAllowed; //TODO: Include reason from 'authorizationError'?
+                    return notFound;
             }
-            else
-                return notFound;
         }
 
         public async Task<ManagerResult<Referral>> ExecuteArrangementCommandAsync(Guid organizationId, Guid locationId,
             AuthorizedUser user, ArrangementCommand command)
         {
-            var tenantModel = await GetTenantModelAsync(organizationId, locationId);
-
-            var getReferralResult = tenantModel.GetReferralEntry(command.ReferralId);
-            if (getReferralResult.TryPickT0(out var referralEntry, out var notFound))
+            using (await tenantLocks.GetOrAdd((organizationId, locationId), new AsyncReaderWriterLock()).WriterLockAsync())
             {
-                var families = communitiesResource.ListPartneringFamilies(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
-                var contacts = profilesResource.ListContactsAsync(organizationId, locationId).Result;
-                var referral = ToReferral(referralEntry, families, contacts);
+                var tenantModel = await GetTenantModelAsync(organizationId, locationId);
 
-                var authorizationResult = await policyEvaluationEngine.AuthorizeArrangementCommandAsync(
-                    organizationId, locationId, user, command, referral);
-                if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
+                var getReferralResult = tenantModel.GetReferralEntry(command.ReferralId);
+                if (getReferralResult.TryPickT0(out var referralEntry, out var notFound))
                 {
-                    var commandResult = tenantModel.ExecuteArrangementCommand(command);
-                    if (commandResult.TryPickT0(out var success, out var commandError))
+                    var families = communitiesResource.ListPartneringFamilies(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+                    var contacts = profilesResource.ListContactsAsync(organizationId, locationId).Result;
+                    var referral = ToReferral(referralEntry, families, contacts);
+
+                    var authorizationResult = await policyEvaluationEngine.AuthorizeArrangementCommandAsync(
+                        organizationId, locationId, user, command, referral);
+                    if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
                     {
-                        await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
-                        success.Value.OnCommit();
-                        var disclosedReferral = await policyEvaluationEngine.DiscloseReferralAsync(user,
-                            ToReferral(success.Value.ReferralEntry, families, contacts));
-                        return disclosedReferral;
+                        var commandResult = tenantModel.ExecuteArrangementCommand(command);
+                        if (commandResult.TryPickT0(out var success, out var commandError))
+                        {
+                            await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
+                            success.Value.OnCommit();
+                            var disclosedReferral = await policyEvaluationEngine.DiscloseReferralAsync(user,
+                                ToReferral(success.Value.ReferralEntry, families, contacts));
+                            return disclosedReferral;
+                        }
+                        else
+                            return ManagerResult.NotAllowed; //TODO: Include reason from 'commandError'?
                     }
                     else
-                        return ManagerResult.NotAllowed; //TODO: Include reason from 'commandError'?
+                        return ManagerResult.NotAllowed; //TODO: Include reason from 'authorizationError'?
                 }
                 else
-                    return ManagerResult.NotAllowed; //TODO: Include reason from 'authorizationError'?
+                    return notFound;
             }
-            else
-                return notFound;
         }
 
         public async Task<ManagerResult<Referral>> ExecuteArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
             AuthorizedUser user, ArrangementNoteCommand command)
         {
-            var tenantModel = await GetTenantModelAsync(organizationId, locationId);
-
-            var getReferralResult = tenantModel.GetReferralEntry(command.ReferralId);
-            if (getReferralResult.TryPickT0(out var referralEntry, out var notFound))
+            using (await tenantLocks.GetOrAdd((organizationId, locationId), new AsyncReaderWriterLock()).WriterLockAsync())
             {
-                var families = communitiesResource.ListPartneringFamilies(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
-                var contacts = profilesResource.ListContactsAsync(organizationId, locationId).Result;
-                var referral = ToReferral(referralEntry, families, contacts);
+                var tenantModel = await GetTenantModelAsync(organizationId, locationId);
 
-                var authorizationResult = await policyEvaluationEngine.AuthorizeArrangementNoteCommandAsync(
-                    organizationId, locationId, user, command, referral);
-                if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
+                var getReferralResult = tenantModel.GetReferralEntry(command.ReferralId);
+                if (getReferralResult.TryPickT0(out var referralEntry, out var notFound))
                 {
-                    var commandResult = tenantModel.ExecuteArrangementNoteCommand(command);
-                    if (commandResult.TryPickT0(out var success, out var commandError))
+                    var families = communitiesResource.ListPartneringFamilies(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+                    var contacts = profilesResource.ListContactsAsync(organizationId, locationId).Result;
+                    var referral = ToReferral(referralEntry, families, contacts);
+
+                    var authorizationResult = await policyEvaluationEngine.AuthorizeArrangementNoteCommandAsync(
+                        organizationId, locationId, user, command, referral);
+                    if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
                     {
-                        await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
-                        success.Value.OnCommit();
-                        var disclosedReferral = await policyEvaluationEngine.DiscloseReferralAsync(user,
-                            ToReferral(success.Value.ReferralEntry, families, contacts));
-                        return disclosedReferral;
+                        var commandResult = tenantModel.ExecuteArrangementNoteCommand(command);
+                        if (commandResult.TryPickT0(out var success, out var commandError))
+                        {
+                            await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
+                            success.Value.OnCommit();
+                            var disclosedReferral = await policyEvaluationEngine.DiscloseReferralAsync(user,
+                                ToReferral(success.Value.ReferralEntry, families, contacts));
+                            return disclosedReferral;
+                        }
+                        else
+                            return ManagerResult.NotAllowed; //TODO: Include reason from 'commandError'?
                     }
                     else
-                        return ManagerResult.NotAllowed; //TODO: Include reason from 'commandError'?
+                        return ManagerResult.NotAllowed; //TODO: Include reason from 'authorizationError'?
                 }
                 else
-                    return ManagerResult.NotAllowed; //TODO: Include reason from 'authorizationError'?
+                    return notFound;
             }
-            else
-                return notFound;
         }
 
         public async Task<IImmutableList<Referral>> ListReferralsAsync(Guid organizationId, Guid locationId)
         {
-            var tenantModel = await GetTenantModelAsync(organizationId, locationId);
+            using (await tenantLocks.GetOrAdd((organizationId, locationId), new AsyncReaderWriterLock()).ReaderLockAsync())
+            {
+                var tenantModel = await GetTenantModelAsync(organizationId, locationId);
 
-            var families = communitiesResource.ListPartneringFamilies(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
-            var contacts = profilesResource.ListContactsAsync(organizationId, locationId).Result;
+                var families = communitiesResource.ListPartneringFamilies(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+                var contacts = profilesResource.ListContactsAsync(organizationId, locationId).Result;
 
-            var referrals = tenantModel.FindReferralEntries(_ => true);
-            return referrals.Select(r => ToReferral(r, families, contacts)).ToImmutableList();
+                var referrals = tenantModel.FindReferralEntries(_ => true);
+                return referrals.Select(r => ToReferral(r, families, contacts)).ToImmutableList();
+            }
         }
 
 
