@@ -27,8 +27,6 @@ namespace CareTogether.Managers
 
     public sealed class ApprovalModel
     {
-        //TODO: Implement thread safety using a reader writer lock (slim)?
-
         private ImmutableDictionary<Guid, VolunteerFamilyEntry> volunteerFamilies = ImmutableDictionary<Guid, VolunteerFamilyEntry>.Empty;
 
 

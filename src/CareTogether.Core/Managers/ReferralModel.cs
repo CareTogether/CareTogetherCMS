@@ -36,8 +36,6 @@ namespace CareTogether.Managers
 
     public sealed class ReferralModel
     {
-        //TODO: Implement thread safety using a reader writer lock (slim)?
-
         private ImmutableDictionary<Guid, ReferralEntry> referrals = ImmutableDictionary<Guid, ReferralEntry>.Empty;
 
 

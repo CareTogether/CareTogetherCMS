@@ -16,8 +16,6 @@ namespace CareTogether.Resources
 
     public sealed class CommunityModel
     {
-        //TODO: Implement thread safety using a reader writer lock (slim)?
-
         internal record FamilyEntry(Guid Id,
             PartneringFamilyStatus? PartneringFamilyStatus, VolunteerFamilyStatus? VolunteerFamilyStatus,
             ImmutableDictionary<Guid, FamilyAdultRelationshipInfo> AdultRelationships,
