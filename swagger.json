@@ -1122,14 +1122,6 @@
             "type": "string",
             "format": "guid"
           },
-          "userId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "timestampUtc": {
-            "type": "string",
-            "format": "date-time"
-          },
           "discriminator": {
             "type": "string"
           }
@@ -1242,14 +1234,6 @@
           "arrangementId": {
             "type": "string",
             "format": "guid"
-          },
-          "userId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "timestampUtc": {
-            "type": "string",
-            "format": "date-time"
           },
           "discriminator": {
             "type": "string"
@@ -1381,6 +1365,10 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+              "changedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
               "childrenIds": {
                 "type": "array",
                 "nullable": true,

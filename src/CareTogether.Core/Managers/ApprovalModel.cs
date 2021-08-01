@@ -64,12 +64,12 @@ namespace CareTogether.Managers
                 PerformVolunteerFamilyActivity c => volunteerFamilyEntry with
                 {
                     ApprovalActivitiesPerformed = volunteerFamilyEntry.ApprovalActivitiesPerformed.Add(
-                        new ActivityInfo(c.UserId, c.TimestampUtc, c.ActivityName))
+                        new ActivityInfo(userId, timestampUtc, c.ActivityName))
                 },
                 UploadVolunteerFamilyForm c => volunteerFamilyEntry with
                 {
                     ApprovalFormUploads = volunteerFamilyEntry.ApprovalFormUploads.Add(
-                        new FormUploadInfo(c.UserId, c.TimestampUtc, c.FormName, c.FormVersion, c.UploadedFileName))
+                        new FormUploadInfo(userId, timestampUtc, c.FormName, c.FormVersion, c.UploadedFileName))
                 },
                 DeactivateVolunteerFamily c => volunteerFamilyEntry with
                 {
@@ -119,12 +119,12 @@ namespace CareTogether.Managers
                 PerformVolunteerActivity c => volunteerEntry with
                 {
                     ApprovalActivitiesPerformed = volunteerEntry.ApprovalActivitiesPerformed.Add(
-                        new ActivityInfo(c.UserId, c.TimestampUtc, c.ActivityName))
+                        new ActivityInfo(userId, timestampUtc, c.ActivityName))
                 },
                 UploadVolunteerForm c => volunteerEntry with
                 {
                     ApprovalFormUploads = volunteerEntry.ApprovalFormUploads.Add(
-                        new FormUploadInfo(c.UserId, c.TimestampUtc, c.FormName, c.FormVersion, c.UploadedFileName))
+                        new FormUploadInfo(userId, timestampUtc, c.FormName, c.FormVersion, c.UploadedFileName))
                 },
                 DeactivateVolunteer c => volunteerEntry with
                 {

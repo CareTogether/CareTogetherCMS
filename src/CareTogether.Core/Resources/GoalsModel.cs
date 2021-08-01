@@ -37,7 +37,7 @@ namespace CareTogether.Resources
         {
             Goal goal;
             if (command is CreateGoal create)
-                goal = new Goal(create.GoalId, create.PersonId, create.Description, create.CreatedDate, create.TargetDate, null);
+                goal = new Goal(create.GoalId, create.PersonId, create.Description, timestampUtc, create.TargetDate, null);
             else
             {
                 if (!goals.TryGetValue((command.PersonId, command.GoalId), out goal))
@@ -55,7 +55,7 @@ namespace CareTogether.Resources
                     },
                     MarkGoalCompleted c => goal with
                     {
-                        CompletedDate = c.CompletedDate
+                        CompletedDate = c.CompletedUtc
                     },
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented.")

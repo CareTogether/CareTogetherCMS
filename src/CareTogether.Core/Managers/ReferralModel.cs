@@ -64,7 +64,7 @@ namespace CareTogether.Managers
             OneOf<ReferralEntry, Error<string>> result = command switch
             {
                 //TODO: Validate policy version and enforce any other invariants
-                CreateReferral c => new ReferralEntry(c.ReferralId, c.PolicyVersion, c.TimestampUtc, null, c.FamilyId,
+                CreateReferral c => new ReferralEntry(c.ReferralId, c.PolicyVersion, timestampUtc, null, c.FamilyId,
                     ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty, ImmutableDictionary<Guid, ArrangementEntry>.Empty),
                 _ => referrals.TryGetValue(command.ReferralId, out var referralEntry)
                     ? command switch
@@ -75,12 +75,12 @@ namespace CareTogether.Managers
                         PerformReferralActivity c => referralEntry with
                         {
                             ReferralActivitiesPerformed = referralEntry.ReferralActivitiesPerformed.Add(
-                                new ActivityInfo(c.UserId, c.TimestampUtc, c.ActivityName))
+                                new ActivityInfo(userId, timestampUtc, c.ActivityName))
                         },
                         UploadReferralForm c => referralEntry with
                         {
                             ReferralFormUploads = referralEntry.ReferralFormUploads.Add(
-                                new FormUploadInfo(c.UserId, c.TimestampUtc, c.FormName, c.FormVersion, c.UploadedFileName))
+                                new FormUploadInfo(userId, timestampUtc, c.FormName, c.FormVersion, c.UploadedFileName))
                         },
                         CloseReferral c => referralEntry with
                         {
@@ -144,17 +144,17 @@ namespace CareTogether.Managers
                         UploadArrangementForm c => arrangementEntry with
                         {
                             ArrangementFormUploads = arrangementEntry.ArrangementFormUploads.Add(
-                                new FormUploadInfo(c.UserId, c.TimestampUtc, c.FormName, c.FormVersion, c.UploadedFileName))
+                                new FormUploadInfo(userId, timestampUtc, c.FormName, c.FormVersion, c.UploadedFileName))
                         },
                         PerformArrangementActivity c => arrangementEntry with
                         {
                             ArrangementActivitiesPerformed = arrangementEntry.ArrangementActivitiesPerformed.Add(
-                                new ActivityInfo(c.UserId, c.TimestampUtc, c.ActivityName))
+                                new ActivityInfo(userId, timestampUtc, c.ActivityName))
                         },
                         TrackChildrenLocationChange c => arrangementEntry with
                         {
                             ChildrenLocationHistory = arrangementEntry.ChildrenLocationHistory.Add(
-                                new ChildrenLocationHistoryEntry(c.UserId, c.TimestampUtc,
+                                new ChildrenLocationHistoryEntry(userId, c.ChangedAtUtc,
                                     c.ChildrenIds, c.FamilyId, c.Plan, c.AdditionalExplanation))
                         },
                         _ => throw new NotImplementedException(
@@ -191,7 +191,7 @@ namespace CareTogether.Managers
             OneOf<NoteEntry, Error<string>> result = command switch
             {
                 //TODO: Validate policy version and enforce any other invariants
-                CreateDraftArrangementNote c => new NoteEntry(c.NoteId, c.UserId, c.TimestampUtc, NoteStatus.Draft, null, null, null),
+                CreateDraftArrangementNote c => new NoteEntry(c.NoteId, userId, timestampUtc, NoteStatus.Draft, null, null, null),
                 DiscardDraftArrangementNote c => null,
                 _ => arrangementEntry.Notes.TryGetValue(command.NoteId, out var noteEntry)
                     ? command switch
@@ -202,14 +202,14 @@ namespace CareTogether.Managers
                         //TODO: Invariants need to be enforced in the model - e.g., no edits or deletes to approved notes.
                         EditDraftArrangementNote c => noteEntry with
                         {
-                            LastEditTimestampUtc = c.TimestampUtc
+                            LastEditTimestampUtc = timestampUtc
                         },
                         ApproveArrangementNote c => noteEntry with
                         {
                             Status = NoteStatus.Approved,
                             FinalizedNoteContents = c.FinalizedNoteContents,
-                            ApprovedTimestampUtc = c.TimestampUtc,
-                            ApproverId = c.UserId
+                            ApprovedTimestampUtc = timestampUtc,
+                            ApproverId = userId
                         },
                         _ => throw new NotImplementedException(
                             $"The command type '{command.GetType().FullName}' has not been implemented.")

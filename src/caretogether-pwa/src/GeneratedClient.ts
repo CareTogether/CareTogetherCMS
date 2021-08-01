@@ -1669,8 +1669,6 @@ export enum NoteStatus {
 
 export abstract class ReferralCommand implements IReferralCommand {
     referralId?: string;
-    userId?: string;
-    timestampUtc?: Date;
 
     protected _discriminator: string;
 
@@ -1687,8 +1685,6 @@ export abstract class ReferralCommand implements IReferralCommand {
     init(_data?: any) {
         if (_data) {
             this.referralId = _data["referralId"];
-            this.userId = _data["userId"];
-            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
         }
     }
 
@@ -1721,16 +1717,12 @@ export abstract class ReferralCommand implements IReferralCommand {
         data = typeof data === 'object' ? data : {};
         data["discriminator"] = this._discriminator; 
         data["referralId"] = this.referralId;
-        data["userId"] = this.userId;
-        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
         return data; 
     }
 }
 
 export interface IReferralCommand {
     referralId?: string;
-    userId?: string;
-    timestampUtc?: Date;
 }
 
 export class CloseReferral extends ReferralCommand implements ICloseReferral {
@@ -1884,8 +1876,6 @@ export interface IUploadReferralForm extends IReferralCommand {
 export abstract class ArrangementCommand implements IArrangementCommand {
     referralId?: string;
     arrangementId?: string;
-    userId?: string;
-    timestampUtc?: Date;
 
     protected _discriminator: string;
 
@@ -1903,8 +1893,6 @@ export abstract class ArrangementCommand implements IArrangementCommand {
         if (_data) {
             this.referralId = _data["referralId"];
             this.arrangementId = _data["arrangementId"];
-            this.userId = _data["userId"];
-            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
         }
     }
 
@@ -1958,8 +1946,6 @@ export abstract class ArrangementCommand implements IArrangementCommand {
         data["discriminator"] = this._discriminator; 
         data["referralId"] = this.referralId;
         data["arrangementId"] = this.arrangementId;
-        data["userId"] = this.userId;
-        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
         return data; 
     }
 }
@@ -1967,8 +1953,6 @@ export abstract class ArrangementCommand implements IArrangementCommand {
 export interface IArrangementCommand {
     referralId?: string;
     arrangementId?: string;
-    userId?: string;
-    timestampUtc?: Date;
 }
 
 export class AssignIndividualVolunteer extends ArrangementCommand implements IAssignIndividualVolunteer {
@@ -2194,6 +2178,7 @@ export interface IPerformArrangementActivity extends IArrangementCommand {
 }
 
 export class TrackChildrenLocationChange extends ArrangementCommand implements ITrackChildrenLocationChange {
+    changedAtUtc?: Date;
     childrenIds?: string[] | undefined;
     familyId?: string;
     plan?: ChildrenLocationPlan;
@@ -2207,6 +2192,7 @@ export class TrackChildrenLocationChange extends ArrangementCommand implements I
     init(_data?: any) {
         super.init(_data);
         if (_data) {
+            this.changedAtUtc = _data["changedAtUtc"] ? new Date(_data["changedAtUtc"].toString()) : <any>undefined;
             if (Array.isArray(_data["childrenIds"])) {
                 this.childrenIds = [] as any;
                 for (let item of _data["childrenIds"])
@@ -2227,6 +2213,7 @@ export class TrackChildrenLocationChange extends ArrangementCommand implements I
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
+        data["changedAtUtc"] = this.changedAtUtc ? this.changedAtUtc.toISOString() : <any>undefined;
         if (Array.isArray(this.childrenIds)) {
             data["childrenIds"] = [];
             for (let item of this.childrenIds)
@@ -2241,6 +2228,7 @@ export class TrackChildrenLocationChange extends ArrangementCommand implements I
 }
 
 export interface ITrackChildrenLocationChange extends IArrangementCommand {
+    changedAtUtc?: Date;
     childrenIds?: string[] | undefined;
     familyId?: string;
     plan?: ChildrenLocationPlan;

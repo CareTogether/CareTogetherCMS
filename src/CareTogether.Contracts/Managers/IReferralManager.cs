@@ -52,62 +52,55 @@ namespace CareTogether.Managers
     public enum NoteStatus { Draft, Approved };
 
     [JsonHierarchyBase]
-    public abstract partial record ReferralCommand(Guid ReferralId, Guid UserId, DateTime TimestampUtc);
-    public sealed record CreateReferral(Guid ReferralId, Guid UserId, DateTime TimestampUtc,
-        Guid FamilyId, string PolicyVersion)
-        : ReferralCommand(ReferralId, UserId, TimestampUtc);
-    public sealed record PerformReferralActivity(Guid ReferralId, Guid UserId, DateTime TimestampUtc,
-        string ActivityName)
-        : ReferralCommand(ReferralId, UserId, TimestampUtc);
-    public sealed record UploadReferralForm(Guid ReferralId, Guid UserId, DateTime TimestampUtc,
+    public abstract partial record ReferralCommand(Guid ReferralId);
+    public sealed record CreateReferral(Guid ReferralId, Guid FamilyId, string PolicyVersion)
+        : ReferralCommand(ReferralId);
+    public sealed record PerformReferralActivity(Guid ReferralId, string ActivityName)
+        : ReferralCommand(ReferralId);
+    public sealed record UploadReferralForm(Guid ReferralId,
         string FormName, string FormVersion, string UploadedFileName)
-        : ReferralCommand(ReferralId, UserId, TimestampUtc);
-    public sealed record CloseReferral(Guid ReferralId, Guid UserId, DateTime TimestampUtc,
-        ReferralCloseReason CloseReason)
-        : ReferralCommand(ReferralId, UserId, TimestampUtc);
+        : ReferralCommand(ReferralId);
+    public sealed record CloseReferral(Guid ReferralId, ReferralCloseReason CloseReason)
+        : ReferralCommand(ReferralId);
 
     [JsonHierarchyBase]
-    public abstract partial record ArrangementCommand(Guid ReferralId, Guid ArrangementId, Guid UserId, DateTime TimestampUtc);
-    public sealed record CreateArrangement(Guid ReferralId, Guid ArrangementId, Guid UserId, DateTime TimestampUtc,
+    public abstract partial record ArrangementCommand(Guid ReferralId, Guid ArrangementId);
+    public sealed record CreateArrangement(Guid ReferralId, Guid ArrangementId,
         string PolicyVersion, string ArrangementType)
-        : ArrangementCommand(ReferralId, ArrangementId, UserId, TimestampUtc);
-    public sealed record AssignIndividualVolunteer(Guid ReferralId, Guid ArrangementId, Guid UserId, DateTime TimestampUtc,
+        : ArrangementCommand(ReferralId, ArrangementId);
+    public sealed record AssignIndividualVolunteer(Guid ReferralId, Guid ArrangementId,
         Guid PersonId, string ArrangementFunction)
-        : ArrangementCommand(ReferralId, ArrangementId, UserId, TimestampUtc);
-    public sealed record AssignVolunteerFamily(Guid ReferralId, Guid ArrangementId, Guid UserId, DateTime TimestampUtc,
+        : ArrangementCommand(ReferralId, ArrangementId);
+    public sealed record AssignVolunteerFamily(Guid ReferralId, Guid ArrangementId,
         Guid FamilyId, string ArrangementFunction)
-        : ArrangementCommand(ReferralId, ArrangementId, UserId, TimestampUtc);
-    public sealed record AssignPartneringFamilyChildren(Guid ReferralId, Guid ArrangementId, Guid UserId, DateTime TimestampUtc,
+        : ArrangementCommand(ReferralId, ArrangementId);
+    public sealed record AssignPartneringFamilyChildren(Guid ReferralId, Guid ArrangementId,
         ImmutableList<Guid> ChildrenIds)
-        : ArrangementCommand(ReferralId, ArrangementId, UserId, TimestampUtc);
-    public sealed record InitiateArrangement(Guid ReferralId, Guid ArrangementId, Guid UserId, DateTime TimestampUtc)
-        : ArrangementCommand(ReferralId, ArrangementId, UserId, TimestampUtc);
-    public sealed record UploadArrangementForm(Guid ReferralId, Guid ArrangementId, Guid UserId, DateTime TimestampUtc,
+        : ArrangementCommand(ReferralId, ArrangementId);
+    public sealed record InitiateArrangement(Guid ReferralId, Guid ArrangementId)
+        : ArrangementCommand(ReferralId, ArrangementId);
+    public sealed record UploadArrangementForm(Guid ReferralId, Guid ArrangementId,
         string FormName, string FormVersion, string UploadedFileName)
-        : ArrangementCommand(ReferralId, ArrangementId, UserId, TimestampUtc);
-    public sealed record PerformArrangementActivity(Guid ReferralId, Guid ArrangementId, Guid UserId, DateTime TimestampUtc,
+        : ArrangementCommand(ReferralId, ArrangementId);
+    public sealed record PerformArrangementActivity(Guid ReferralId, Guid ArrangementId,
         Guid CompletedByPersonId, string ActivityName)
-        : ArrangementCommand(ReferralId, ArrangementId, UserId, TimestampUtc);
-    public sealed record TrackChildrenLocationChange(Guid ReferralId, Guid ArrangementId, Guid UserId, DateTime TimestampUtc,
+        : ArrangementCommand(ReferralId, ArrangementId);
+    public sealed record TrackChildrenLocationChange(Guid ReferralId, Guid ArrangementId, DateTime ChangedAtUtc,
         ImmutableList<Guid> ChildrenIds, Guid FamilyId, ChildrenLocationPlan Plan, string AdditionalExplanation)
-        : ArrangementCommand(ReferralId, ArrangementId, UserId, TimestampUtc);
+        : ArrangementCommand(ReferralId, ArrangementId);
     //TODO: EndArrangement?
 
     [JsonHierarchyBase]
-    public abstract partial record ArrangementNoteCommand(Guid ReferralId, Guid ArrangementId, Guid NoteId,
-        Guid UserId, DateTime TimestampUtc);
-    public sealed record CreateDraftArrangementNote(Guid ReferralId, Guid ArrangementId, Guid NoteId,
-        Guid UserId, DateTime TimestampUtc)
-        : ArrangementNoteCommand(ReferralId, ArrangementId, NoteId, UserId, TimestampUtc);
-    public sealed record EditDraftArrangementNote(Guid ReferralId, Guid ArrangementId, Guid NoteId,
-        Guid UserId, DateTime TimestampUtc)
-        : ArrangementNoteCommand(ReferralId, ArrangementId, NoteId, UserId, TimestampUtc);
-    public sealed record DiscardDraftArrangementNote(Guid ReferralId, Guid ArrangementId, Guid NoteId,
-        Guid UserId, DateTime TimestampUtc)
-        : ArrangementNoteCommand(ReferralId, ArrangementId, NoteId, UserId, TimestampUtc);
+    public abstract partial record ArrangementNoteCommand(Guid ReferralId, Guid ArrangementId, Guid NoteId);
+    public sealed record CreateDraftArrangementNote(Guid ReferralId, Guid ArrangementId, Guid NoteId)
+        : ArrangementNoteCommand(ReferralId, ArrangementId, NoteId);
+    public sealed record EditDraftArrangementNote(Guid ReferralId, Guid ArrangementId, Guid NoteId)
+        : ArrangementNoteCommand(ReferralId, ArrangementId, NoteId);
+    public sealed record DiscardDraftArrangementNote(Guid ReferralId, Guid ArrangementId, Guid NoteId)
+        : ArrangementNoteCommand(ReferralId, ArrangementId, NoteId);
     public sealed record ApproveArrangementNote(Guid ReferralId, Guid ArrangementId, Guid NoteId,
-        Guid UserId, DateTime TimestampUtc, string FinalizedNoteContents)
-        : ArrangementNoteCommand(ReferralId, ArrangementId, NoteId, UserId, TimestampUtc);
+        string FinalizedNoteContents)
+        : ArrangementNoteCommand(ReferralId, ArrangementId, NoteId);
 
     /// <summary>
     /// The <see cref="IReferralManager"/> models the lifecycle of people's referrals to CareTogether organizations,

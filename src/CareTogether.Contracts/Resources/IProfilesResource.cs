@@ -44,13 +44,13 @@ namespace CareTogether.Resources
 
     [JsonHierarchyBase]
     public abstract partial record GoalCommand(Guid PersonId, Guid GoalId);
-    public sealed record CreateGoal(Guid PersonId, Guid GoalId, string Description, DateTime CreatedDate,
+    public sealed record CreateGoal(Guid PersonId, Guid GoalId, string Description,
         DateTime? TargetDate) : GoalCommand(PersonId, GoalId);
     public sealed record ChangeGoalDescription(Guid PersonId, Guid GoalId, string Description)
         : GoalCommand(PersonId, GoalId);
     public sealed record ChangeGoalTargetDate(Guid PersonId, Guid GoalId, DateTime? TargetDate)
         : GoalCommand(PersonId, GoalId);
-    public sealed record MarkGoalCompleted(Guid PersonId, Guid GoalId, DateTime CompletedDate)
+    public sealed record MarkGoalCompleted(Guid PersonId, Guid GoalId, DateTime CompletedUtc)
         : GoalCommand(PersonId, GoalId);
 
     /// <summary>
