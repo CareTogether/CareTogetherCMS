@@ -42,7 +42,7 @@ namespace CareTogether.Managers
                 //TODO: This is just a demo implementation of a business rule, not a true business rule.
                 if (user.CanAccess(organizationId, locationId) &&
                 ((command is not CreateContact && user.PersonId == command.PersonId) || user.IsInRole(Roles.OrganizationAdministrator)))
-                    return await profilesResource.ExecuteContactCommandAsync(organizationId, locationId, command);
+                    return await profilesResource.ExecuteContactCommandAsync(organizationId, locationId, command, user.UserId);
                 else
                     return ManagerResult.NotAllowed;
             }

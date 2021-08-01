@@ -67,7 +67,7 @@ namespace CareTogether.Managers
                         organizationId, locationId, user, command, referral);
                     if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
                     {
-                        var commandResult = tenantModel.ExecuteVolunteerFamilyCommand(command);
+                        var commandResult = tenantModel.ExecuteVolunteerFamilyCommand(command, user.UserId, DateTime.UtcNow);
                         if (commandResult.TryPickT0(out var success, out var commandError))
                         {
                             await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
@@ -107,7 +107,7 @@ namespace CareTogether.Managers
                         organizationId, locationId, user, command, referral);
                     if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
                     {
-                        var commandResult = tenantModel.ExecuteVolunteerCommand(command);
+                        var commandResult = tenantModel.ExecuteVolunteerCommand(command, user.UserId, DateTime.UtcNow);
                         if (commandResult.TryPickT0(out var success, out var commandError))
                         {
                             await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);

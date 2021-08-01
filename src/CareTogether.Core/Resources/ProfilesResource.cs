@@ -27,10 +27,10 @@ namespace CareTogether.Resources
 
 
         public async Task<ResourceResult<ContactInfo>> ExecuteContactCommandAsync(
-            Guid organizationId, Guid locationId, ContactCommand command)
+            Guid organizationId, Guid locationId, ContactCommand command, Guid userId)
         {
             var model = await GetTenantContactsModelAsync(organizationId, locationId);
-            var result = model.ExecuteContactCommand(command);
+            var result = model.ExecuteContactCommand(command, userId, DateTime.UtcNow);
             if (result.TryPickT0(out var success, out var _))
             {
                 await contactsEventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
@@ -58,10 +58,11 @@ namespace CareTogether.Resources
                 return ResourceResult.NotFound;
         }
 
-        public async Task<ResourceResult<Goal>> ExecuteGoalCommandAsync(Guid organizationId, Guid locationId, GoalCommand command)
+        public async Task<ResourceResult<Goal>> ExecuteGoalCommandAsync(Guid organizationId, Guid locationId, GoalCommand command,
+            Guid userId)
         {
             var model = await GetTenantGoalsModelAsync(organizationId, locationId);
-            var result = model.ExecuteGoalCommand(command);
+            var result = model.ExecuteGoalCommand(command, userId, DateTime.UtcNow);
             if (result.TryPickT0(out var success, out var _))
             {
                 await goalsEventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);

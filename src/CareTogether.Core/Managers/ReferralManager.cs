@@ -51,7 +51,7 @@ namespace CareTogether.Managers
                         organizationId, locationId, user, command, referral);
                     if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
                     {
-                        var commandResult = tenantModel.ExecuteReferralCommand(command);
+                        var commandResult = tenantModel.ExecuteReferralCommand(command, user.UserId, DateTime.UtcNow);
                         if (commandResult.TryPickT0(out var success, out var commandError))
                         {
                             await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
@@ -89,7 +89,7 @@ namespace CareTogether.Managers
                         organizationId, locationId, user, command, referral);
                     if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
                     {
-                        var commandResult = tenantModel.ExecuteArrangementCommand(command);
+                        var commandResult = tenantModel.ExecuteArrangementCommand(command, user.UserId, DateTime.UtcNow);
                         if (commandResult.TryPickT0(out var success, out var commandError))
                         {
                             await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
@@ -127,7 +127,7 @@ namespace CareTogether.Managers
                         organizationId, locationId, user, command, referral);
                     if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
                     {
-                        var commandResult = tenantModel.ExecuteArrangementNoteCommand(command);
+                        var commandResult = tenantModel.ExecuteArrangementNoteCommand(command, user.UserId, DateTime.UtcNow);
                         if (commandResult.TryPickT0(out var success, out var commandError))
                         {
                             await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);

@@ -90,8 +90,8 @@ namespace CareTogether.Resources
 
         Task<IImmutableList<Family>> ListPartneringFamilies(Guid organizationId, Guid locationId);
 
-        Task<ResourceResult<Family>> ExecuteFamilyCommandAsync(Guid organizationId, Guid locationId, FamilyCommand command);
+        Task<ResourceResult<Family>> ExecuteFamilyCommandAsync(Guid organizationId, Guid locationId, FamilyCommand command, Guid userId);
 
-        Task<ResourceResult<Person>> ExecutePersonCommandAsync(Guid organizationId, Guid locationId, PersonCommand command);
+        Task<ResourceResult<Person>> ExecutePersonCommandAsync(Guid organizationId, Guid locationId, PersonCommand command, Guid userId);
     }
 }

@@ -10,9 +10,12 @@ using System.Threading.Tasks;
 namespace CareTogether.Resources
 {
     [JsonHierarchyBase]
-    public abstract partial record CommunityEvent();
-    public sealed record FamilyCommandExecuted(FamilyCommand Command) : CommunityEvent;
-    public sealed record PersonCommandExecuted(PersonCommand Command) : CommunityEvent;
+    public abstract partial record CommunityEvent(Guid UserId, DateTime TimestampUtc)
+        : DomainEvent(UserId, TimestampUtc);
+    public sealed record FamilyCommandExecuted(Guid UserId, DateTime TimestampUtc,
+        FamilyCommand Command) : CommunityEvent(UserId, TimestampUtc);
+    public sealed record PersonCommandExecuted(Guid UserId, DateTime TimestampUtc,
+        PersonCommand Command) : CommunityEvent(UserId, TimestampUtc);
 
     public sealed class CommunityModel
     {
@@ -56,7 +59,7 @@ namespace CareTogether.Resources
 
 
         public OneOf<Success<(FamilyCommandExecuted Event, long SequenceNumber, Family Family, Action OnCommit)>, Error<string>>
-            ExecuteFamilyCommand(FamilyCommand command)
+            ExecuteFamilyCommand(FamilyCommand command, Guid userId, DateTime timestampUtc)
         {
             OneOf<FamilyEntry, Error<string>> result = command switch
             {
@@ -116,7 +119,7 @@ namespace CareTogether.Resources
             };
             if (result.TryPickT0(out var familyEntryToUpsert, out var error))
                 return new Success<(FamilyCommandExecuted Event, long SequenceNumber, Family Family, Action OnCommit)>((
-                    Event: new FamilyCommandExecuted(command),
+                    Event: new FamilyCommandExecuted(userId, timestampUtc, command),
                     SequenceNumber: LastKnownSequenceNumber + 1,
                     Family: familyEntryToUpsert.ToFamily(people),
                     OnCommit: () => families = families.SetItem(familyEntryToUpsert.Id, familyEntryToUpsert)));
@@ -125,7 +128,7 @@ namespace CareTogether.Resources
         }
 
         public OneOf<Success<(PersonCommandExecuted Event, long SequenceNumber, Person Person, Action OnCommit)>, Error<string>>
-            ExecutePersonCommand(PersonCommand command)
+            ExecutePersonCommand(PersonCommand command, Guid userId, DateTime timestampUtc)
         {
             OneOf<PersonEntry, Error<string>> result = command switch
             {
@@ -143,7 +146,7 @@ namespace CareTogether.Resources
             };
             if (result.TryPickT0(out var personEntryToUpsert, out var error))
                 return new Success<(PersonCommandExecuted Event, long SequenceNumber, Person Person, Action OnCommit)>((
-                    Event: new PersonCommandExecuted(command),
+                    Event: new PersonCommandExecuted(userId, timestampUtc, command),
                     SequenceNumber: LastKnownSequenceNumber + 1,
                     Person: personEntryToUpsert.ToPerson(),
                     OnCommit: () => people = people.SetItem(personEntryToUpsert.Id, personEntryToUpsert)));
@@ -168,12 +171,14 @@ namespace CareTogether.Resources
         {
             if (domainEvent is FamilyCommandExecuted familyCommandExecuted)
             {
-                var (_, _, _, onCommit) = ExecuteFamilyCommand(familyCommandExecuted.Command).AsT0.Value;
+                var (_, _, _, onCommit) = ExecuteFamilyCommand(familyCommandExecuted.Command,
+                    familyCommandExecuted.UserId, familyCommandExecuted.TimestampUtc).AsT0.Value;
                 onCommit();
             }
             else if (domainEvent is PersonCommandExecuted personCommandExecuted)
             {
-                var (_, _, _, onCommit) = ExecutePersonCommand(personCommandExecuted.Command).AsT0.Value;
+                var (_, _, _, onCommit) = ExecutePersonCommand(personCommandExecuted.Command,
+                    personCommandExecuted.UserId, personCommandExecuted.TimestampUtc).AsT0.Value;
                 onCommit();
             }
             else

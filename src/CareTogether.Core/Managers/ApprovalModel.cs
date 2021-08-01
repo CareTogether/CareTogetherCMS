@@ -10,9 +10,12 @@ using System.Threading.Tasks;
 namespace CareTogether.Managers
 {
     [JsonHierarchyBase]
-    public abstract partial record ApprovalEvent();
-    public sealed record VolunteerFamilyCommandExecuted(VolunteerFamilyCommand Command) : ApprovalEvent;
-    public sealed record VolunteerCommandExecuted(VolunteerCommand Command) : ApprovalEvent;
+    public abstract partial record ApprovalEvent(Guid UserId, DateTime TimestampUtc)
+        : DomainEvent(UserId, TimestampUtc);
+    public sealed record VolunteerFamilyCommandExecuted(Guid UserId, DateTime TimestampUtc,
+        VolunteerFamilyCommand Command) : ApprovalEvent(UserId, TimestampUtc);
+    public sealed record VolunteerCommandExecuted(Guid UserId, DateTime TimestampUtc,
+        VolunteerCommand Command) : ApprovalEvent(UserId, TimestampUtc);
 
     public record VolunteerFamilyEntry(Guid FamilyId,
         bool Active, string Note,
@@ -46,7 +49,7 @@ namespace CareTogether.Managers
 
 
         public OneOf<Success<(VolunteerFamilyCommandExecuted Event, long SequenceNumber, VolunteerFamilyEntry VolunteerFamilyEntry, Action OnCommit)>, Error<string>>
-            ExecuteVolunteerFamilyCommand(VolunteerFamilyCommand command)
+            ExecuteVolunteerFamilyCommand(VolunteerFamilyCommand command, Guid userId, DateTime timestampUtc)
         {
             VolunteerFamilyEntry volunteerFamilyEntry;
             if (!volunteerFamilies.TryGetValue(command.FamilyId, out volunteerFamilyEntry))
@@ -86,7 +89,7 @@ namespace CareTogether.Managers
             if (result.TryPickT0(out var volunteerFamilyEntryToUpsert, out var error))
             {
                 return new Success<(VolunteerFamilyCommandExecuted Event, long SequenceNumber, VolunteerFamilyEntry VolunteerFamilyEntry, Action OnCommit)>((
-                    Event: new VolunteerFamilyCommandExecuted(command),
+                    Event: new VolunteerFamilyCommandExecuted(userId, timestampUtc, command),
                     SequenceNumber: LastKnownSequenceNumber + 1,
                     VolunteerFamilyEntry: volunteerFamilyEntryToUpsert,
                     OnCommit: () => volunteerFamilies = volunteerFamilies.SetItem(volunteerFamilyEntryToUpsert.FamilyId, volunteerFamilyEntryToUpsert)));
@@ -96,7 +99,7 @@ namespace CareTogether.Managers
         }
 
         public OneOf<Success<(VolunteerCommandExecuted Event, long SequenceNumber, VolunteerFamilyEntry VolunteerFamilyEntry, Action OnCommit)>, Error<string>>
-            ExecuteVolunteerCommand(VolunteerCommand command)
+            ExecuteVolunteerCommand(VolunteerCommand command, Guid userId, DateTime timestampUtc)
         {
             VolunteerFamilyEntry volunteerFamilyEntry;
             if (!volunteerFamilies.TryGetValue(command.FamilyId, out volunteerFamilyEntry))
@@ -146,7 +149,7 @@ namespace CareTogether.Managers
                     IndividualEntries = volunteerFamilyEntry.IndividualEntries.SetItem(command.PersonId, volunteerEntryToUpsert)
                 };
                 return new Success<(VolunteerCommandExecuted Event, long SequenceNumber, VolunteerFamilyEntry VolunteerFamilyEntry, Action OnCommit)>((
-                    Event: new VolunteerCommandExecuted(command),
+                    Event: new VolunteerCommandExecuted(userId, timestampUtc, command),
                     SequenceNumber: LastKnownSequenceNumber + 1,
                     VolunteerFamilyEntry: volunteerFamilyEntryToUpsert,
                     OnCommit: () => volunteerFamilies = volunteerFamilies.SetItem(volunteerFamilyEntryToUpsert.FamilyId, volunteerFamilyEntryToUpsert)));
@@ -172,12 +175,14 @@ namespace CareTogether.Managers
         {
             if (domainEvent is VolunteerFamilyCommandExecuted volunteerFamilyCommandExecuted)
             {
-                var (_, _, _, onCommit) = (ExecuteVolunteerFamilyCommand(volunteerFamilyCommandExecuted.Command)).AsT0.Value;
+                var (_, _, _, onCommit) = (ExecuteVolunteerFamilyCommand(volunteerFamilyCommandExecuted.Command,
+                    volunteerFamilyCommandExecuted.UserId, volunteerFamilyCommandExecuted.TimestampUtc)).AsT0.Value;
                 onCommit();
             }
             else if (domainEvent is VolunteerCommandExecuted volunteerCommandExecuted)
             {
-                var (_, _, _, onCommit) = (ExecuteVolunteerCommand(volunteerCommandExecuted.Command)).AsT0.Value;
+                var (_, _, _, onCommit) = (ExecuteVolunteerCommand(volunteerCommandExecuted.Command,
+                    volunteerCommandExecuted.UserId, volunteerCommandExecuted.TimestampUtc)).AsT0.Value;
                 onCommit();
             }
             else

@@ -20,10 +20,11 @@ namespace CareTogether.Resources
         }
 
 
-        public async Task<ResourceResult<Family>> ExecuteFamilyCommandAsync(Guid organizationId, Guid locationId, FamilyCommand command)
+        public async Task<ResourceResult<Family>> ExecuteFamilyCommandAsync(Guid organizationId, Guid locationId, FamilyCommand command,
+            Guid userId)
         {
             var model = await GetTenantModelAsync(organizationId, locationId);
-            var result = model.ExecuteFamilyCommand(command);
+            var result = model.ExecuteFamilyCommand(command, userId, DateTime.UtcNow);
             if (result.TryPickT0(out var success, out var _))
             {
                 await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
@@ -34,10 +35,11 @@ namespace CareTogether.Resources
                 return ResourceResult.NotFound; //TODO: Something more specific involving 'error'?
         }
 
-        public async Task<ResourceResult<Person>> ExecutePersonCommandAsync(Guid organizationId, Guid locationId, PersonCommand command)
+        public async Task<ResourceResult<Person>> ExecutePersonCommandAsync(Guid organizationId, Guid locationId, PersonCommand command,
+            Guid userId)
         {
             var model = await GetTenantModelAsync(organizationId, locationId);
-            var result = model.ExecutePersonCommand(command);
+            var result = model.ExecutePersonCommand(command, userId, DateTime.UtcNow);
             if (result.TryPickT0(out var success, out var _))
             {
                 await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);

@@ -8,7 +8,8 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Resources
 {
-    public sealed record GoalCommandExecutedEvent(GoalCommand Command);
+    public sealed record GoalCommandExecutedEvent(Guid UserId, DateTime TimestampUtc,
+        GoalCommand Command) : DomainEvent(UserId, TimestampUtc);
 
     public sealed class GoalsModel
     {
@@ -32,7 +33,7 @@ namespace CareTogether.Resources
 
 
         public OneOf<Success<(GoalCommandExecutedEvent Event, long SequenceNumber, Goal Goal, Action OnCommit)>, Error<string>>
-            ExecuteGoalCommand(GoalCommand command)
+            ExecuteGoalCommand(GoalCommand command, Guid userId, DateTime timestampUtc)
         {
             Goal goal;
             if (command is CreateGoal create)
@@ -62,7 +63,7 @@ namespace CareTogether.Resources
             }
 
             return new Success<(GoalCommandExecutedEvent Event, long SequenceNumber, Goal Goal, Action OnCommit)>((
-                Event: new GoalCommandExecutedEvent(command),
+                Event: new GoalCommandExecutedEvent(userId, timestampUtc, command),
                 SequenceNumber: LastKnownSequenceNumber + 1,
                 Goal: goal,
                 OnCommit: () => { goals = goals.SetItem((goal.PersonId, goal.Id), goal); }
@@ -77,7 +78,8 @@ namespace CareTogether.Resources
 
         private void ReplayEvent(GoalCommandExecutedEvent domainEvent, long sequenceNumber)
         {
-            var (_, _, _, onCommit) = ExecuteGoalCommand(domainEvent.Command).AsT0.Value;
+            var (_, _, _, onCommit) = ExecuteGoalCommand(domainEvent.Command,
+                    domainEvent.UserId, domainEvent.TimestampUtc).AsT0.Value;
             onCommit();
             LastKnownSequenceNumber = sequenceNumber;
         }

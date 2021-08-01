@@ -8,7 +8,8 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Resources
 {
-    public sealed record ContactCommandExecutedEvent(ContactCommand Command);
+    public sealed record ContactCommandExecutedEvent(Guid UserId, DateTime TimestampUtc,
+        ContactCommand Command) : DomainEvent(UserId, TimestampUtc);
 
     public sealed class ContactsModel
     {
@@ -31,7 +32,7 @@ namespace CareTogether.Resources
 
 
         public OneOf<Success<(ContactCommandExecutedEvent Event, long SequenceNumber, ContactInfo Contact, Action OnCommit)>, Error<string>>
-            ExecuteContactCommand(ContactCommand command)
+            ExecuteContactCommand(ContactCommand command, Guid userId, DateTime timestampUtc)
         {
             ContactInfo contact;
             if (command is CreateContact create)
@@ -84,7 +85,7 @@ namespace CareTogether.Resources
             }
 
             return new Success<(ContactCommandExecutedEvent Event, long SequenceNumber, ContactInfo Contact, Action OnCommit)>((
-                Event: new ContactCommandExecutedEvent(command),
+                Event: new ContactCommandExecutedEvent(userId, timestampUtc, command),
                 SequenceNumber: LastKnownSequenceNumber + 1,
                 Contact: contact,
                 OnCommit: () => { contacts = contacts.SetItem(contact.PersonId, contact); }
@@ -99,7 +100,8 @@ namespace CareTogether.Resources
 
         private void ReplayEvent(ContactCommandExecutedEvent domainEvent, long sequenceNumber)
         {
-            var (_, _, _, onCommit) = ExecuteContactCommand(domainEvent.Command).AsT0.Value;
+            var (_, _, _, onCommit) = ExecuteContactCommand(domainEvent.Command,
+                    domainEvent.UserId, domainEvent.TimestampUtc).AsT0.Value;
             onCommit();
             LastKnownSequenceNumber = sequenceNumber;
         }

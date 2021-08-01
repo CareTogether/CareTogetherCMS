@@ -10,10 +10,14 @@ using System.Threading.Tasks;
 namespace CareTogether.Managers
 {
     [JsonHierarchyBase]
-    public abstract partial record ReferralEvent();
-    public sealed record ReferralCommandExecuted(ReferralCommand Command) : ReferralEvent;
-    public sealed record ArrangementCommandExecuted(ArrangementCommand Command) : ReferralEvent;
-    public sealed record ArrangementNoteCommandExecuted(ArrangementNoteCommand Command) : ReferralEvent;
+    public abstract partial record ReferralEvent(Guid UserId, DateTime TimestampUtc)
+        : DomainEvent(UserId, TimestampUtc);
+    public sealed record ReferralCommandExecuted(Guid UserId, DateTime TimestampUtc,
+        ReferralCommand Command) : ReferralEvent(UserId, TimestampUtc);
+    public sealed record ArrangementCommandExecuted(Guid UserId, DateTime TimestampUtc,
+        ArrangementCommand Command) : ReferralEvent(UserId, TimestampUtc);
+    public sealed record ArrangementNoteCommandExecuted(Guid UserId, DateTime TimestampUtc,
+        ArrangementNoteCommand Command) : ReferralEvent(UserId, TimestampUtc);
 
     public record ReferralEntry(Guid Id, string PolicyVersion, DateTime TimestampUtc,
         ReferralCloseReason? CloseReason,
@@ -55,7 +59,7 @@ namespace CareTogether.Managers
 
 
         public OneOf<Success<(ReferralCommandExecuted Event, long SequenceNumber, ReferralEntry ReferralEntry, Action OnCommit)>, Error<string>>
-            ExecuteReferralCommand(ReferralCommand command)
+            ExecuteReferralCommand(ReferralCommand command, Guid userId, DateTime timestampUtc)
         {
             OneOf<ReferralEntry, Error<string>> result = command switch
             {
@@ -90,7 +94,7 @@ namespace CareTogether.Managers
             if (result.TryPickT0(out var referralEntryToUpsert, out var error))
             {
                 return new Success<(ReferralCommandExecuted Event, long SequenceNumber, ReferralEntry ReferralEntry, Action OnCommit)>((
-                    Event: new ReferralCommandExecuted(command),
+                    Event: new ReferralCommandExecuted(userId, timestampUtc, command),
                     SequenceNumber: LastKnownSequenceNumber + 1,
                     ReferralEntry: referralEntryToUpsert,
                     OnCommit: () => referrals = referrals.SetItem(referralEntryToUpsert.Id, referralEntryToUpsert)));
@@ -100,7 +104,7 @@ namespace CareTogether.Managers
         }
 
         public OneOf<Success<(ArrangementCommandExecuted Event, long SequenceNumber, ReferralEntry ReferralEntry, Action OnCommit)>, Error<string>>
-            ExecuteArrangementCommand(ArrangementCommand command)
+            ExecuteArrangementCommand(ArrangementCommand command, Guid userId, DateTime timestampUtc)
         {
             if (!referrals.TryGetValue(command.ReferralId, out var referralEntry))
                 return new Error<string>("A referral with the specified ID does not exist.");
@@ -166,7 +170,7 @@ namespace CareTogether.Managers
                     Arrangements = referralEntry.Arrangements.SetItem(command.ArrangementId, arrangementEntryToUpsert)
                 };
                 return new Success<(ArrangementCommandExecuted Event, long SequenceNumber, ReferralEntry ReferralEntry, Action OnCommit)>((
-                    Event: new ArrangementCommandExecuted(command),
+                    Event: new ArrangementCommandExecuted(userId, timestampUtc, command),
                     SequenceNumber: LastKnownSequenceNumber + 1,
                     ReferralEntry: referralEntryToUpsert,
                     OnCommit: () => referrals = referrals.SetItem(referralEntryToUpsert.Id, referralEntryToUpsert)));
@@ -176,7 +180,7 @@ namespace CareTogether.Managers
         }
 
         public OneOf<Success<(ArrangementNoteCommandExecuted Event, long SequenceNumber, ReferralEntry ReferralEntry, Action OnCommit)>, Error<string>>
-            ExecuteArrangementNoteCommand(ArrangementNoteCommand command)
+            ExecuteArrangementNoteCommand(ArrangementNoteCommand command, Guid userId, DateTime timestampUtc)
         {
             if (!referrals.TryGetValue(command.ReferralId, out var referralEntry))
                 return new Error<string>("A referral with the specified ID does not exist.");
@@ -225,7 +229,7 @@ namespace CareTogether.Managers
                     })
                 };
                 return new Success<(ArrangementNoteCommandExecuted Event, long SequenceNumber, ReferralEntry ReferralEntry, Action OnCommit)>((
-                    Event: new ArrangementNoteCommandExecuted(command),
+                    Event: new ArrangementNoteCommandExecuted(userId, timestampUtc, command),
                     SequenceNumber: LastKnownSequenceNumber + 1,
                     ReferralEntry: referralEntryToUpsert,
                     OnCommit: () => referrals = referrals.SetItem(referralEntryToUpsert.Id, referralEntryToUpsert)));
@@ -253,17 +257,20 @@ namespace CareTogether.Managers
         {
             if (domainEvent is ReferralCommandExecuted referralCommandExecuted)
             {
-                var (_, _, _, onCommit) = ExecuteReferralCommand(referralCommandExecuted.Command).AsT0.Value;
+                var (_, _, _, onCommit) = ExecuteReferralCommand(referralCommandExecuted.Command,
+                    referralCommandExecuted.UserId, referralCommandExecuted.TimestampUtc).AsT0.Value;
                 onCommit();
             }
             else if (domainEvent is ArrangementCommandExecuted arrangementCommandExecuted)
             {
-                var (_, _, _, onCommit) = ExecuteArrangementCommand(arrangementCommandExecuted.Command).AsT0.Value;
+                var (_, _, _, onCommit) = ExecuteArrangementCommand(arrangementCommandExecuted.Command,
+                    arrangementCommandExecuted.UserId, arrangementCommandExecuted.TimestampUtc).AsT0.Value;
                 onCommit();
             }
             else if (domainEvent is ArrangementNoteCommandExecuted arrangementNoteCommandExecuted)
             {
-                var (_, _, _, onCommit) = ExecuteArrangementNoteCommand(arrangementNoteCommandExecuted.Command).AsT0.Value;
+                var (_, _, _, onCommit) = ExecuteArrangementNoteCommand(arrangementNoteCommandExecuted.Command,
+                    arrangementNoteCommandExecuted.UserId, arrangementNoteCommandExecuted.TimestampUtc).AsT0.Value;
                 onCommit();
             }
             else
