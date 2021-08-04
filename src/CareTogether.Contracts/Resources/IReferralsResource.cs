@@ -108,6 +108,8 @@ namespace CareTogether.Resources
     {
         Task<ImmutableList<ReferralEntry>> ListReferralsAsync(Guid organizationId, Guid locationId);
 
+        Task<ResourceResult<ReferralEntry>> GetReferralAsync(Guid organizationId, Guid locationId, Guid referralId);
+
         Task<ResourceResult<ReferralEntry>> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId,
             ReferralCommand command, Guid userId);
 

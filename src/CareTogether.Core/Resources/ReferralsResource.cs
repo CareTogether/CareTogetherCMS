@@ -83,5 +83,13 @@ namespace CareTogether.Resources
                 return lockedModel.Value.FindReferralEntries(_ => true);
             }
         }
+
+        public async Task<ResourceResult<ReferralEntry>> GetReferralAsync(Guid organizationId, Guid locationId, Guid referralId)
+        {
+            using (var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId)))
+            {
+                return lockedModel.Value.GetReferralEntry(referralId);
+            }
+        }
     }
 }

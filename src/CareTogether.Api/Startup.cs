@@ -67,7 +67,7 @@ namespace CareTogether.Api
             // Manager services
             services.AddSingleton<IMembershipManager>(new MembershipManager(communitiesResource, contactsResource));
             services.AddSingleton<IReferralManager>(new ReferralManager(policyEvaluationEngine, communitiesResource, referralsResource, contactsResource));
-            services.AddSingleton<IApprovalManager>(new ApprovalManager(approvalsEventLog, policyEvaluationEngine, communitiesResource, contactsResource));
+            services.AddSingleton<IApprovalManager>(new ApprovalManager(approvalsResource, policyEvaluationEngine, communitiesResource, contactsResource));
 
             // Utility providers
             services.AddSingleton(new AuthorizationProvider(communitiesResource));

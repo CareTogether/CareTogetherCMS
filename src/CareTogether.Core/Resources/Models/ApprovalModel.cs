@@ -154,9 +154,9 @@ namespace CareTogether.Resources.Models
                 .ToImmutableList();
         }
 
-        public ResourceResult<VolunteerFamilyEntry> GetVolunteerFamilyEntry(Guid referralId) =>
-            volunteerFamilies.TryGetValue(referralId, out var referralEntry)
-            ? referralEntry
+        public ResourceResult<VolunteerFamilyEntry> GetVolunteerFamilyEntry(Guid familyId) =>
+            volunteerFamilies.TryGetValue(familyId, out var familyEntry)
+            ? familyEntry
             : ResourceResult.NotFound;
 
 

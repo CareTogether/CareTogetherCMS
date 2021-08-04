@@ -54,6 +54,14 @@ namespace CareTogether.Resources
             }
         }
 
+        public async Task<ResourceResult<VolunteerFamilyEntry>> GetVolunteerFamilyAsync(Guid organizationId, Guid locationId, Guid familyId)
+        {
+            using (var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId)))
+            {
+                return lockedModel.Value.GetVolunteerFamilyEntry(familyId);
+            }
+        }
+
         public async Task<ImmutableList<VolunteerFamilyEntry>> ListVolunteerFamiliesAsync(Guid organizationId, Guid locationId)
         {
             using (var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId)))
