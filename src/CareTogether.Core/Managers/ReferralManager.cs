@@ -1,6 +1,7 @@
 ﻿using CareTogether.Abstractions;
 using CareTogether.Engines;
 using CareTogether.Resources;
+using CareTogether.Resources.Models;
 using JsonPolymorph;
 using Nito.AsyncEx;
 using System;

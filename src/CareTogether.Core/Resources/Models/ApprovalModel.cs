@@ -1,4 +1,5 @@
-﻿using JsonPolymorph;
+﻿using CareTogether.Managers;
+using JsonPolymorph;
 using OneOf;
 using OneOf.Types;
 using System;
@@ -7,7 +8,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace CareTogether.Managers
+namespace CareTogether.Resources.Models
 {
     [JsonHierarchyBase]
     public abstract partial record ApprovalEvent(Guid UserId, DateTime TimestampUtc)

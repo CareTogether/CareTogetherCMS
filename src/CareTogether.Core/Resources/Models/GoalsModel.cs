@@ -6,7 +6,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace CareTogether.Resources
+namespace CareTogether.Resources.Models
 {
     public sealed record GoalCommandExecutedEvent(Guid UserId, DateTime TimestampUtc,
         GoalCommand Command) : DomainEvent(UserId, TimestampUtc);
