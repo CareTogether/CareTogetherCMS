@@ -92,7 +92,7 @@ namespace CareTogether.Resources.Models
             ));
         }
 
-        public IImmutableList<ContactInfo> FindContacts(Func<ContactInfo, bool> predicate) =>
+        public ImmutableList<ContactInfo> FindContacts(Func<ContactInfo, bool> predicate) =>
             contacts.Values
                 .Where(predicate)
                 .ToImmutableList();

@@ -166,7 +166,7 @@ namespace CareTogether.Managers
             }
         }
 
-        public async Task<IImmutableList<Referral>> ListReferralsAsync(Guid organizationId, Guid locationId)
+        public async Task<ImmutableList<Referral>> ListReferralsAsync(Guid organizationId, Guid locationId)
         {
             using (await tenantLocks.GetOrAdd((organizationId, locationId), new AsyncReaderWriterLock()).ReaderLockAsync())
             {
@@ -190,8 +190,8 @@ namespace CareTogether.Managers
 
 
         private Referral ToReferral(ReferralEntry entry,
-            IImmutableDictionary<Guid, Family> families,
-            IImmutableDictionary<Guid, ContactInfo> contacts) =>
+            ImmutableDictionary<Guid, Family> families,
+            ImmutableDictionary<Guid, ContactInfo> contacts) =>
             new(entry.Id, entry.PolicyVersion, entry.TimestampUtc, entry.CloseReason,
                 families[entry.PartneringFamilyId],
                 families[entry.PartneringFamilyId].Adults

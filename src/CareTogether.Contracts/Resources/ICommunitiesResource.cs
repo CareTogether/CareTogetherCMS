@@ -84,11 +84,11 @@ namespace CareTogether.Resources
     {
         Task<ResourceResult<Person>> FindUserAsync(Guid organizationId, Guid locationId, Guid userId);
 
-        Task<IImmutableList<Person>> FindPeopleAsync(Guid organizationId, Guid locationId, string partialFirstOrLastName);
+        Task<ImmutableList<Person>> FindPeopleAsync(Guid organizationId, Guid locationId, string partialFirstOrLastName);
 
-        Task<IImmutableList<Family>> ListVolunteerFamilies(Guid organizationId, Guid locationId);
+        Task<ImmutableList<Family>> ListVolunteerFamilies(Guid organizationId, Guid locationId);
 
-        Task<IImmutableList<Family>> ListPartneringFamilies(Guid organizationId, Guid locationId);
+        Task<ImmutableList<Family>> ListPartneringFamilies(Guid organizationId, Guid locationId);
 
         Task<ResourceResult<Family>> ExecuteFamilyCommandAsync(Guid organizationId, Guid locationId, FamilyCommand command, Guid userId);
 

@@ -70,7 +70,7 @@ namespace CareTogether.Resources.Models
             ));
         }
 
-        public IImmutableList<Goal> FindGoals(Func<Goal, bool> predicate) =>
+        public ImmutableList<Goal> FindGoals(Func<Goal, bool> predicate) =>
             goals.Values
                 .Where(predicate)
                 .ToImmutableList();

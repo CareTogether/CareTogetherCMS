@@ -51,7 +51,7 @@ namespace CareTogether.Resources
                 return ResourceResult.NotFound; //TODO: Something more specific involving 'error'?
         }
 
-        public async Task<IImmutableList<Person>> FindPeopleAsync(Guid organizationId, Guid locationId, string partialFirstOrLastName)
+        public async Task<ImmutableList<Person>> FindPeopleAsync(Guid organizationId, Guid locationId, string partialFirstOrLastName)
         {
             var model = await GetTenantModelAsync(organizationId, locationId);
             return model.FindPeople(p =>
@@ -70,7 +70,7 @@ namespace CareTogether.Resources
                 return ResourceResult.NotFound;
         }
 
-        public async Task<IImmutableList<Family>> ListPartneringFamilies(Guid organizationId, Guid locationId)
+        public async Task<ImmutableList<Family>> ListPartneringFamilies(Guid organizationId, Guid locationId)
         {
             var model = await GetTenantModelAsync(organizationId, locationId);
             return model.FindFamilies(f =>
@@ -78,7 +78,7 @@ namespace CareTogether.Resources
                 f.PartneringFamilyStatus == PartneringFamilyStatus.Inactive);
         }
 
-        public async Task<IImmutableList<Family>> ListVolunteerFamilies(Guid organizationId, Guid locationId)
+        public async Task<ImmutableList<Family>> ListVolunteerFamilies(Guid organizationId, Guid locationId)
         {
             var model = await GetTenantModelAsync(organizationId, locationId);
             return model.FindFamilies(f =>

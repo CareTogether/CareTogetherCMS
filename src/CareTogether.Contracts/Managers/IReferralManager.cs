@@ -1,4 +1,4 @@
-﻿using CareTogether.Resources;
+using CareTogether.Resources;
 using JsonPolymorph;
 using Newtonsoft.Json.Linq;
 using System;
@@ -108,7 +108,7 @@ namespace CareTogether.Managers
     /// </summary>
     public interface IReferralManager
     {
-        Task<IImmutableList<Referral>> ListReferralsAsync(Guid organizationId, Guid locationId);
+        Task<ImmutableList<Referral>> ListReferralsAsync(Guid organizationId, Guid locationId);
 
         Task<ManagerResult<Referral>> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId,
             AuthorizedUser user, ReferralCommand command);

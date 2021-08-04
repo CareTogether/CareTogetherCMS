@@ -42,7 +42,7 @@ namespace CareTogether.Resources
                 return ResourceResult.NotFound; //TODO: Something more specific involving 'error'?
         }
 
-        public async Task<IImmutableDictionary<Guid, ContactInfo>> ListContactsAsync(Guid organizationId, Guid locationId)
+        public async Task<ImmutableDictionary<Guid, ContactInfo>> ListContactsAsync(Guid organizationId, Guid locationId)
         {
             var model = await GetTenantContactsModelAsync(organizationId, locationId);
             return model.FindContacts(c => true)
@@ -74,7 +74,7 @@ namespace CareTogether.Resources
                 return ResourceResult.NotFound; //TODO: Something more specific involving 'error'?
         }
 
-        public async Task<IImmutableList<Goal>> ListPersonGoalsAsync(Guid organizationId, Guid locationId, Guid personId)
+        public async Task<ImmutableList<Goal>> ListPersonGoalsAsync(Guid organizationId, Guid locationId, Guid personId)
         {
             var model = await GetTenantGoalsModelAsync(organizationId, locationId);
             return model.FindGoals(c => c.PersonId == personId);

@@ -33,7 +33,7 @@ namespace CareTogether.Managers
         }
 
 
-        public async Task<IImmutableList<VolunteerFamily>> ListVolunteerFamiliesAsync(AuthorizedUser user, Guid organizationId, Guid locationId)
+        public async Task<ImmutableList<VolunteerFamily>> ListVolunteerFamiliesAsync(AuthorizedUser user, Guid organizationId, Guid locationId)
         {
             using (await tenantLocks.GetOrAdd((organizationId, locationId), new AsyncReaderWriterLock()).ReaderLockAsync())
             {
@@ -139,8 +139,8 @@ namespace CareTogether.Managers
 
         private async Task<VolunteerFamily> ToVolunteerFamilyAsync(Guid organizationId, Guid locationId,
             VolunteerFamilyEntry entry,
-            IImmutableDictionary<Guid, Family> families,
-            IImmutableDictionary<Guid, ContactInfo> contacts)
+            ImmutableDictionary<Guid, Family> families,
+            ImmutableDictionary<Guid, ContactInfo> contacts)
         {
             var family = families[entry.FamilyId];
             var individualInfo = entry.IndividualEntries.ToImmutableDictionary(

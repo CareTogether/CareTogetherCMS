@@ -159,7 +159,7 @@ namespace CareTogether.Resources.Models
                 return error;
         }
 
-        public IImmutableList<VolunteerFamilyEntry> FindVolunteerFamilyEntries(Func<VolunteerFamilyEntry, bool> predicate)
+        public ImmutableList<VolunteerFamilyEntry> FindVolunteerFamilyEntries(Func<VolunteerFamilyEntry, bool> predicate)
         {
             return volunteerFamilies.Values
                 .Where(predicate)

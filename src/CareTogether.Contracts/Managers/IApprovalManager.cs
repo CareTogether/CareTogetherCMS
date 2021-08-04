@@ -1,4 +1,4 @@
-﻿using CareTogether.Resources;
+using CareTogether.Resources;
 using JsonPolymorph;
 using System;
 using System.Collections.Immutable;
@@ -56,7 +56,7 @@ namespace CareTogether.Managers
     /// </summary>
     public interface IApprovalManager
     {
-        Task<IImmutableList<VolunteerFamily>> ListVolunteerFamiliesAsync(
+        Task<ImmutableList<VolunteerFamily>> ListVolunteerFamiliesAsync(
             AuthorizedUser user, Guid organizationId, Guid locationId);
 
         Task<ManagerResult<VolunteerFamily>> ExecuteVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,

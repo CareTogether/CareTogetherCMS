@@ -241,7 +241,7 @@ namespace CareTogether.Resources.Models
                 return error;
         }
 
-        public IImmutableList<ReferralEntry> FindReferralEntries(Func<ReferralEntry, bool> predicate)
+        public ImmutableList<ReferralEntry> FindReferralEntries(Func<ReferralEntry, bool> predicate)
         {
             return referrals.Values
                 .Where(predicate)

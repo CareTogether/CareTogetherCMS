@@ -54,7 +54,7 @@ namespace CareTogether.Managers
             }
         }
 
-        public async Task<ManagerResult<IImmutableList<Person>>> QueryPeopleAsync(AuthorizedUser user, Guid organizationId, Guid locationId, string searchQuery)
+        public async Task<ManagerResult<ImmutableList<Person>>> QueryPeopleAsync(AuthorizedUser user, Guid organizationId, Guid locationId, string searchQuery)
         {
             using (await tenantLocks.GetOrAdd((organizationId, locationId), new AsyncReaderWriterLock()).ReaderLockAsync())
             {

@@ -64,10 +64,10 @@ namespace CareTogether.Resources
 
         Task<ResourceResult<ContactInfo>> FindUserContactInfoAsync(Guid organizationId, Guid locationId, Guid personId);
 
-        Task<IImmutableDictionary<Guid, ContactInfo>> ListContactsAsync(Guid organizationId, Guid locationId);
+        Task<ImmutableDictionary<Guid, ContactInfo>> ListContactsAsync(Guid organizationId, Guid locationId);
 
         Task<ResourceResult<Goal>> ExecuteGoalCommandAsync(Guid organizationId, Guid locationId, GoalCommand command, Guid userId);
 
-        Task<IImmutableList<Goal>> ListPersonGoalsAsync(Guid organizationId, Guid locationId, Guid personId);
+        Task<ImmutableList<Goal>> ListPersonGoalsAsync(Guid organizationId, Guid locationId, Guid personId);
     }
 }
