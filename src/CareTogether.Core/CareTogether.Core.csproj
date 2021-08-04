@@ -15,4 +15,8 @@
     <PackageReference Include="System.Linq.Async" Version="5.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Utilities\" />
+  </ItemGroup>
 </Project>

@@ -3,13 +3,13 @@ using System.Threading.Tasks;
 using Azure.Storage.Blobs;
 using CareTogether.Managers;
 using CareTogether.Resources;
-using CareTogether.Utilities;
 using CareTogether.TestData;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using CareTogether.Abstractions;
 using System.Collections.Generic;
 using System.Linq;
 using OneOf;
+using CareTogether.Resources.Models;
+using CareTogether.Resources.Storage;
 
 namespace CareTogether.Core.Test
 {

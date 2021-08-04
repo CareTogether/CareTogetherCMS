@@ -1,6 +1,7 @@
-﻿using CareTogether.Abstractions;
-using CareTogether.Managers;
+﻿using CareTogether.Managers;
 using CareTogether.Resources;
+using CareTogether.Resources.Models;
+using CareTogether.Resources.Storage;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;

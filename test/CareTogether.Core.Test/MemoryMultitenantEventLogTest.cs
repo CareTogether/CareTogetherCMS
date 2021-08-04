@@ -1,4 +1,4 @@
-using CareTogether.Utilities;
+using CareTogether.Resources.Storage;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Linq;

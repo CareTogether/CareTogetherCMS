@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using CareTogether.Managers;
 using CareTogether.Resources;
-using CareTogether.Utilities;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -12,8 +11,9 @@ using Microsoft.IdentityModel.Logging;
 using System;
 using System.Collections.Generic;
 using CareTogether.Engines;
-using CareTogether.Abstractions;
 using Azure.Storage.Blobs;
+using CareTogether.Resources.Storage;
+using CareTogether.Resources.Models;
 
 namespace CareTogether.Api
 {

@@ -1,5 +1,6 @@
 ﻿using CareTogether.Resources;
-using CareTogether.Utilities;
+using CareTogether.Resources.Models;
+using CareTogether.Resources.Storage;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
