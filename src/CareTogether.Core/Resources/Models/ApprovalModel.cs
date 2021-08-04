@@ -1,5 +1,4 @@
-﻿using CareTogether.Managers;
-using JsonPolymorph;
+﻿using JsonPolymorph;
 using OneOf;
 using OneOf.Types;
 using System;
