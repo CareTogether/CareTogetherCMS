@@ -39,35 +39,15 @@ namespace CareTogether.Resources
     public sealed record UpdateContactMethodPreferenceNotes(Guid PersonId,
         string ContactMethodPreferenceNotes) : ContactCommand(PersonId);
 
-    public sealed record Goal(Guid Id, Guid PersonId,
-        string Description, DateTime CreatedDate, DateTime? TargetDate, DateTime? CompletedDate);
-
-    [JsonHierarchyBase]
-    public abstract partial record GoalCommand(Guid PersonId, Guid GoalId);
-    public sealed record CreateGoal(Guid PersonId, Guid GoalId, string Description,
-        DateTime? TargetDate) : GoalCommand(PersonId, GoalId);
-    public sealed record ChangeGoalDescription(Guid PersonId, Guid GoalId, string Description)
-        : GoalCommand(PersonId, GoalId);
-    public sealed record ChangeGoalTargetDate(Guid PersonId, Guid GoalId, DateTime? TargetDate)
-        : GoalCommand(PersonId, GoalId);
-    public sealed record MarkGoalCompleted(Guid PersonId, Guid GoalId, DateTime CompletedUtc)
-        : GoalCommand(PersonId, GoalId);
-
     /// <summary>
-    /// The <see cref="IProfilesResource"/> is responsible for all personal information in CareTogether.
-    /// This includes generally-privileged information like names and contact information, as well as
-    /// more restricted information like intake forms, goals, and volunteer application forms.
+    /// The <see cref="IContactsResource"/> is responsible for all contact information in CareTogether.
     /// </summary>
-    public interface IProfilesResource
+    public interface IContactsResource
     {
         Task<ResourceResult<ContactInfo>> ExecuteContactCommandAsync(Guid organizationId, Guid locationId, ContactCommand command, Guid userId);
 
         Task<ResourceResult<ContactInfo>> FindUserContactInfoAsync(Guid organizationId, Guid locationId, Guid personId);
 
         Task<ImmutableDictionary<Guid, ContactInfo>> ListContactsAsync(Guid organizationId, Guid locationId);
-
-        Task<ResourceResult<Goal>> ExecuteGoalCommandAsync(Guid organizationId, Guid locationId, GoalCommand command, Guid userId);
-
-        Task<ImmutableList<Goal>> ListPersonGoalsAsync(Guid organizationId, Guid locationId, Guid personId);
     }
 }
