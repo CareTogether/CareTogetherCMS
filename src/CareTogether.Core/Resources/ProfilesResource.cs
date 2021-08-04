@@ -13,8 +13,8 @@ namespace CareTogether.Resources
     {
         private readonly IMultitenantEventLog<ContactCommandExecutedEvent> contactsEventLog;
         private readonly IMultitenantEventLog<GoalCommandExecutedEvent> goalsEventLog;
-        private readonly ConcurrentDictionary<(Guid organizationId, Guid locationId), AsyncLazy<ContactsModel>> tenantContactsModels = new();
-        private readonly ConcurrentDictionary<(Guid organizationId, Guid locationId), AsyncLazy<GoalsModel>> tenantGoalsModels = new();
+        private readonly ConcurrentLockingStore<(Guid organizationId, Guid locationId), ContactsModel> tenantContactsModels;
+        private readonly ConcurrentLockingStore<(Guid organizationId, Guid locationId), GoalsModel> tenantGoalsModels;
 
 
         public ProfilesResource(
@@ -23,6 +23,10 @@ namespace CareTogether.Resources
         {
             this.contactsEventLog = contactsEventLog;
             this.goalsEventLog = goalsEventLog;
+            tenantContactsModels = new ConcurrentLockingStore<(Guid organizationId, Guid locationId), ContactsModel>(key =>
+                ContactsModel.InitializeAsync(contactsEventLog.GetAllEventsAsync(key.organizationId, key.locationId)));
+            tenantGoalsModels = new ConcurrentLockingStore<(Guid organizationId, Guid locationId), GoalsModel>(key =>
+                GoalsModel.InitializeAsync(goalsEventLog.GetAllEventsAsync(key.organizationId, key.locationId)));
         }
 
 
@@ -30,69 +34,64 @@ namespace CareTogether.Resources
         public async Task<ResourceResult<ContactInfo>> ExecuteContactCommandAsync(
             Guid organizationId, Guid locationId, ContactCommand command, Guid userId)
         {
-            var model = await GetTenantContactsModelAsync(organizationId, locationId);
-            var result = model.ExecuteContactCommand(command, userId, DateTime.UtcNow);
-            if (result.TryPickT0(out var success, out var _))
+            using (var lockedModel = await tenantContactsModels.WriteLockItemAsync((organizationId, locationId)))
             {
-                await contactsEventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
-                success.Value.OnCommit();
-                return success.Value.Contact;
+                var result = lockedModel.Value.ExecuteContactCommand(command, userId, DateTime.UtcNow);
+                if (result.TryPickT0(out var success, out var _))
+                {
+                    await contactsEventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
+                    success.Value.OnCommit();
+                    return success.Value.Contact;
+                }
+                else
+                    return ResourceResult.NotFound; //TODO: Something more specific involving 'error'?
             }
-            else
-                return ResourceResult.NotFound; //TODO: Something more specific involving 'error'?
         }
 
         public async Task<ImmutableDictionary<Guid, ContactInfo>> ListContactsAsync(Guid organizationId, Guid locationId)
         {
-            var model = await GetTenantContactsModelAsync(organizationId, locationId);
-            return model.FindContacts(c => true)
-                .ToImmutableDictionary(c => c.PersonId);
+            using (var lockedModel = await tenantContactsModels.ReadLockItemAsync((organizationId, locationId)))
+            {
+                return lockedModel.Value.FindContacts(c => true)
+                    .ToImmutableDictionary(c => c.PersonId);
+            }
         }
 
         public async Task<ResourceResult<ContactInfo>> FindUserContactInfoAsync(Guid organizationId, Guid locationId, Guid personId)
         {
-            var model = await GetTenantContactsModelAsync(organizationId, locationId);
-            var result = model.FindContacts(c => c.PersonId == personId).SingleOrDefault();
-            if (result != null)
-                return result;
-            else
-                return ResourceResult.NotFound;
+            using (var lockedModel = await tenantContactsModels.ReadLockItemAsync((organizationId, locationId)))
+            {
+                var result = lockedModel.Value.FindContacts(c => c.PersonId == personId).SingleOrDefault();
+                if (result != null)
+                    return result;
+                else
+                    return ResourceResult.NotFound;
+            }
         }
 
         public async Task<ResourceResult<Goal>> ExecuteGoalCommandAsync(Guid organizationId, Guid locationId, GoalCommand command,
             Guid userId)
         {
-            var model = await GetTenantGoalsModelAsync(organizationId, locationId);
-            var result = model.ExecuteGoalCommand(command, userId, DateTime.UtcNow);
-            if (result.TryPickT0(out var success, out var _))
+            using (var lockedModel = await tenantGoalsModels.WriteLockItemAsync((organizationId, locationId)))
             {
-                await goalsEventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
-                success.Value.OnCommit();
-                return success.Value.Goal;
+                var result = lockedModel.Value.ExecuteGoalCommand(command, userId, DateTime.UtcNow);
+                if (result.TryPickT0(out var success, out var _))
+                {
+                    await goalsEventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
+                    success.Value.OnCommit();
+                    return success.Value.Goal;
+                }
+                else
+                    return ResourceResult.NotFound; //TODO: Something more specific involving 'error'?
             }
-            else
-                return ResourceResult.NotFound; //TODO: Something more specific involving 'error'?
         }
 
         public async Task<ImmutableList<Goal>> ListPersonGoalsAsync(Guid organizationId, Guid locationId, Guid personId)
         {
-            var model = await GetTenantGoalsModelAsync(organizationId, locationId);
-            return model.FindGoals(c => c.PersonId == personId);
-        }
-
-
-        private async Task<ContactsModel> GetTenantContactsModelAsync(Guid organizationId, Guid locationId)
-        {
-            var lazyModel = tenantContactsModels.GetOrAdd((organizationId, locationId), (_) => new AsyncLazy<ContactsModel>(() =>
-                ContactsModel.InitializeAsync(contactsEventLog.GetAllEventsAsync(organizationId, locationId))));
-            return await lazyModel.Task;
-        }
-
-        private async Task<GoalsModel> GetTenantGoalsModelAsync(Guid organizationId, Guid locationId)
-        {
-            var lazyModel = tenantGoalsModels.GetOrAdd((organizationId, locationId), (_) => new AsyncLazy<GoalsModel>(() =>
-                GoalsModel.InitializeAsync(goalsEventLog.GetAllEventsAsync(organizationId, locationId))));
-            return await lazyModel.Task;
+            using (var lockedModel = await tenantGoalsModels.ReadLockItemAsync((organizationId, locationId)))
+            {
+                return lockedModel.Value.FindGoals(c => c.PersonId == personId);
+            }
         }
     }
 }

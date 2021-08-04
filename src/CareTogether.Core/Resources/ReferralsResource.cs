@@ -12,25 +12,23 @@ namespace CareTogether.Resources
     public sealed class ReferralsResource : IReferralsResource
     {
         private readonly IMultitenantEventLog<ReferralEvent> eventLog;
-        private readonly ConcurrentDictionary<(Guid organizationId, Guid locationId), AsyncReaderWriterLock> tenantLocks = new();
-        private readonly ConcurrentDictionary<(Guid organizationId, Guid locationId), AsyncLazy<ReferralModel>> tenantModels = new();
+        private readonly ConcurrentLockingStore<(Guid organizationId, Guid locationId), ReferralModel> tenantModels;
 
 
         public ReferralsResource(IMultitenantEventLog<ReferralEvent> eventLog)
         {
             this.eventLog = eventLog;
+            tenantModels = new ConcurrentLockingStore<(Guid organizationId, Guid locationId), ReferralModel>(key =>
+                ReferralModel.InitializeAsync(eventLog.GetAllEventsAsync(key.organizationId, key.locationId)));
         }
 
 
         public async Task<ResourceResult<ReferralEntry>> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId,
             ReferralCommand command, Guid userId)
         {
-            //TODO: Consolidate into a single 'TenantModelWithWriterLock' or 'TenantModelWithReaderLock'?
-            using (await tenantLocks.GetOrAdd((organizationId, locationId), new AsyncReaderWriterLock()).WriterLockAsync())
+            using (var lockedModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
             {
-                var tenantModel = await GetTenantModelAsync(organizationId, locationId);
-
-                var result = tenantModel.ExecuteReferralCommand(command, userId, DateTime.UtcNow);
+                var result = lockedModel.Value.ExecuteReferralCommand(command, userId, DateTime.UtcNow);
                 if (result.TryPickT0(out var success, out var _))
                 {
                     await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
@@ -45,11 +43,9 @@ namespace CareTogether.Resources
         public async Task<ResourceResult<ReferralEntry>> ExecuteArrangementCommandAsync(Guid organizationId, Guid locationId,
             ArrangementCommand command, Guid userId)
         {
-            using (await tenantLocks.GetOrAdd((organizationId, locationId), new AsyncReaderWriterLock()).WriterLockAsync())
+            using (var lockedModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
             {
-                var tenantModel = await GetTenantModelAsync(organizationId, locationId);
-
-                var result = tenantModel.ExecuteArrangementCommand(command, userId, DateTime.UtcNow);
+                var result = lockedModel.Value.ExecuteArrangementCommand(command, userId, DateTime.UtcNow);
                 if (result.TryPickT0(out var success, out var _))
                 {
                     await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
@@ -66,11 +62,9 @@ namespace CareTogether.Resources
         {
             //TODO: Incorporate other notes handling (draft/permanent storage)
 
-            using (await tenantLocks.GetOrAdd((organizationId, locationId), new AsyncReaderWriterLock()).WriterLockAsync())
+            using (var lockedModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
             {
-                var tenantModel = await GetTenantModelAsync(organizationId, locationId);
-
-                var result = tenantModel.ExecuteArrangementNoteCommand(command, userId, DateTime.UtcNow);
+                var result = lockedModel.Value.ExecuteArrangementNoteCommand(command, userId, DateTime.UtcNow);
                 if (result.TryPickT0(out var success, out var _))
                 {
                     await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
@@ -84,20 +78,10 @@ namespace CareTogether.Resources
 
         public async Task<ImmutableList<ReferralEntry>> ListReferralsAsync(Guid organizationId, Guid locationId)
         {
-            using (await tenantLocks.GetOrAdd((organizationId, locationId), new AsyncReaderWriterLock()).ReaderLockAsync())
+            using (var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId)))
             {
-                var tenantModel = await GetTenantModelAsync(organizationId, locationId);
-
-                return tenantModel.FindReferralEntries(_ => true);
+                return lockedModel.Value.FindReferralEntries(_ => true);
             }
-        }
-
-
-        private async Task<ReferralModel> GetTenantModelAsync(Guid organizationId, Guid locationId)
-        {
-            var lazyModel = tenantModels.GetOrAdd((organizationId, locationId), (_) => new AsyncLazy<ReferralModel>(() =>
-                ReferralModel.InitializeAsync(eventLog.GetAllEventsAsync(organizationId, locationId))));
-            return await lazyModel.Task;
         }
     }
 }

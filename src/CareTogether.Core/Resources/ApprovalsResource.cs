@@ -1,10 +1,7 @@
 ﻿using CareTogether.Resources.Models;
 using CareTogether.Resources.Storage;
-using Nito.AsyncEx;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace CareTogether.Resources
@@ -12,25 +9,23 @@ namespace CareTogether.Resources
     public sealed class ApprovalsResource : IApprovalsResource
     {
         private readonly IMultitenantEventLog<ApprovalEvent> eventLog;
-        private readonly ConcurrentDictionary<(Guid organizationId, Guid locationId), AsyncReaderWriterLock> tenantLocks = new();
-        private readonly ConcurrentDictionary<(Guid organizationId, Guid locationId), AsyncLazy<ApprovalModel>> tenantModels = new();
-
+        private readonly ConcurrentLockingStore<(Guid organizationId, Guid locationId), ApprovalModel> tenantModels;
+        
 
         public ApprovalsResource(IMultitenantEventLog<ApprovalEvent> eventLog)
         {
             this.eventLog = eventLog;
+            tenantModels = new ConcurrentLockingStore<(Guid organizationId, Guid locationId), ApprovalModel>(key =>
+                ApprovalModel.InitializeAsync(eventLog.GetAllEventsAsync(key.organizationId, key.locationId)));
         }
 
 
         public async Task<ResourceResult<VolunteerFamilyEntry>> ExecuteVolunteerCommandAsync(Guid organizationId, Guid locationId,
             VolunteerCommand command, Guid userId)
         {
-            //TODO: Consolidate into a single 'TenantModelWithWriterLock' or 'TenantModelWithReaderLock'?
-            using (await tenantLocks.GetOrAdd((organizationId, locationId), new AsyncReaderWriterLock()).WriterLockAsync())
+            using (var lockedModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
             {
-                var tenantModel = await GetTenantModelAsync(organizationId, locationId);
-
-                var result = tenantModel.ExecuteVolunteerCommand(command, userId, DateTime.UtcNow);
+                var result = lockedModel.Value.ExecuteVolunteerCommand(command, userId, DateTime.UtcNow);
                 if (result.TryPickT0(out var success, out var _))
                 {
                     await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
@@ -45,12 +40,9 @@ namespace CareTogether.Resources
         public async Task<ResourceResult<VolunteerFamilyEntry>> ExecuteVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
             VolunteerFamilyCommand command, Guid userId)
         {
-            //TODO: Consolidate into a single 'TenantModelWithWriterLock' or 'TenantModelWithReaderLock'?
-            using (await tenantLocks.GetOrAdd((organizationId, locationId), new AsyncReaderWriterLock()).WriterLockAsync())
+            using (var lockedModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
             {
-                var tenantModel = await GetTenantModelAsync(organizationId, locationId);
-
-                var result = tenantModel.ExecuteVolunteerFamilyCommand(command, userId, DateTime.UtcNow);
+                var result = lockedModel.Value.ExecuteVolunteerFamilyCommand(command, userId, DateTime.UtcNow);
                 if (result.TryPickT0(out var success, out var _))
                 {
                     await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
@@ -64,20 +56,10 @@ namespace CareTogether.Resources
 
         public async Task<ImmutableList<VolunteerFamilyEntry>> ListVolunteerFamiliesAsync(Guid organizationId, Guid locationId)
         {
-            using (await tenantLocks.GetOrAdd((organizationId, locationId), new AsyncReaderWriterLock()).ReaderLockAsync())
+            using (var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId)))
             {
-                var tenantModel = await GetTenantModelAsync(organizationId, locationId);
-
-                return tenantModel.FindVolunteerFamilyEntries(_ => true);
+                return lockedModel.Value.FindVolunteerFamilyEntries(_ => true);
             }
-        }
-
-
-        private async Task<ApprovalModel> GetTenantModelAsync(Guid organizationId, Guid locationId)
-        {
-            var lazyModel = tenantModels.GetOrAdd((organizationId, locationId), (_) => new AsyncLazy<ApprovalModel>(() =>
-                ApprovalModel.InitializeAsync(eventLog.GetAllEventsAsync(organizationId, locationId))));
-            return await lazyModel.Task;
         }
     }
 }
