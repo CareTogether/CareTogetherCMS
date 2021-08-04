@@ -6,24 +6,26 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Resources
 {
-    public record Referral(Guid Id, string PolicyVersion,
-        DateTime CreatedUtc, ReferralCloseReason? CloseReason,
-        Family PartneringFamily,
-        ImmutableList<ContactInfo> Contacts,
+    public record ReferralEntry(Guid Id, string PolicyVersion, DateTime TimestampUtc,
+        ReferralCloseReason? CloseReason,
+        Guid PartneringFamilyId,
         ImmutableList<FormUploadInfo> ReferralFormUploads,
         ImmutableList<ActivityInfo> ReferralActivitiesPerformed,
-        ImmutableList<Arrangement> Arrangements);
+        ImmutableDictionary<Guid, ArrangementEntry> Arrangements);
 
-    public enum ReferralCloseReason { NotAppropriate, Resourced, NoCapacity, NoLongerNeeded, NeedMet };
-
-    public record Arrangement(Guid Id, string PolicyVersion, string ArrangementType,
+    public record ArrangementEntry(Guid Id, string PolicyVersion, string ArrangementType,
         ArrangementState State,
         ImmutableList<FormUploadInfo> ArrangementFormUploads,
         ImmutableList<ActivityInfo> ArrangementActivitiesPerformed,
         ImmutableList<VolunteerAssignment> VolunteerAssignments,
         ImmutableList<PartneringFamilyChildAssignment> PartneringFamilyChildAssignments,
         ImmutableList<ChildrenLocationHistoryEntry> ChildrenLocationHistory,
-        ImmutableList<Note> Notes);
+        ImmutableDictionary<Guid, NoteEntry> Notes);
+
+    public record NoteEntry(Guid Id, Guid AuthorId, DateTime LastEditTimestampUtc, NoteStatus Status,
+        string FinalizedNoteContents, Guid? ApproverId, DateTime? ApprovedTimestampUtc);
+
+    public enum ReferralCloseReason { NotAppropriate, Resourced, NoCapacity, NoLongerNeeded, NeedMet };
 
     public enum ArrangementState { Setup, Open, Closed };
 
@@ -45,8 +47,6 @@ namespace CareTogether.Resources
 
     public enum ChildrenLocationPlan { OvernightHousing, DaytimeChildCare, ReturnToFamily }
 
-    public record Note(Guid Id, Guid AuthorId, DateTime TimestampUtc,
-        string Contents, NoteStatus Status);
     public enum NoteStatus { Draft, Approved };
 
     [JsonHierarchyBase]
@@ -106,15 +106,15 @@ namespace CareTogether.Resources
     /// </summary>
     public interface IReferralsResource
     {
-        Task<ImmutableList<Referral>> ListReferralsAsync(Guid organizationId, Guid locationId);
+        Task<ImmutableList<ReferralEntry>> ListReferralsAsync(Guid organizationId, Guid locationId);
 
-        Task<ResourceResult<Referral>> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId,
+        Task<ResourceResult<ReferralEntry>> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId,
             ReferralCommand command, Guid userId);
 
-        Task<ResourceResult<Referral>> ExecuteArrangementCommandAsync(Guid organizationId, Guid locationId,
+        Task<ResourceResult<ReferralEntry>> ExecuteArrangementCommandAsync(Guid organizationId, Guid locationId,
             ArrangementCommand command, Guid userId);
 
-        Task<ResourceResult<Referral>> ExecuteArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
+        Task<ResourceResult<ReferralEntry>> ExecuteArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
             ArrangementNoteCommand command, Guid userId);
     }
 }

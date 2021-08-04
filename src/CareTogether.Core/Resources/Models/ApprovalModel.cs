@@ -18,17 +18,6 @@ namespace CareTogether.Resources.Models
     public sealed record VolunteerCommandExecuted(Guid UserId, DateTime TimestampUtc,
         VolunteerCommand Command) : ApprovalEvent(UserId, TimestampUtc);
 
-    public record VolunteerFamilyEntry(Guid FamilyId,
-        bool Active, string Note,
-        ImmutableList<FormUploadInfo> ApprovalFormUploads,
-        ImmutableList<ActivityInfo> ApprovalActivitiesPerformed,
-        ImmutableDictionary<Guid, VolunteerEntry> IndividualEntries);
-
-    public record VolunteerEntry(Guid PersonId,
-        bool Active, string Note,
-        ImmutableList<FormUploadInfo> ApprovalFormUploads,
-        ImmutableList<ActivityInfo> ApprovalActivitiesPerformed);
-
     public sealed class ApprovalModel
     {
         private ImmutableDictionary<Guid, VolunteerFamilyEntry> volunteerFamilies = ImmutableDictionary<Guid, VolunteerFamilyEntry>.Empty;

@@ -20,25 +20,6 @@ namespace CareTogether.Resources.Models
     public sealed record ArrangementNoteCommandExecuted(Guid UserId, DateTime TimestampUtc,
         ArrangementNoteCommand Command) : ReferralEvent(UserId, TimestampUtc);
 
-    public record ReferralEntry(Guid Id, string PolicyVersion, DateTime TimestampUtc,
-        ReferralCloseReason? CloseReason,
-        Guid PartneringFamilyId,
-        ImmutableList<FormUploadInfo> ReferralFormUploads,
-        ImmutableList<ActivityInfo> ReferralActivitiesPerformed,
-        ImmutableDictionary<Guid, ArrangementEntry> Arrangements);
-
-    public record ArrangementEntry(Guid Id, string PolicyVersion, string ArrangementType,
-        ArrangementState State,
-        ImmutableList<FormUploadInfo> ArrangementFormUploads,
-        ImmutableList<ActivityInfo> ArrangementActivitiesPerformed,
-        ImmutableList<VolunteerAssignment> VolunteerAssignments,
-        ImmutableList<PartneringFamilyChildAssignment> PartneringFamilyChildAssignments,
-        ImmutableList<ChildrenLocationHistoryEntry> ChildrenLocationHistory,
-        ImmutableDictionary<Guid, NoteEntry> Notes);
-
-    public record NoteEntry(Guid Id, Guid AuthorId, DateTime LastEditTimestampUtc, NoteStatus Status,
-        string FinalizedNoteContents, Guid? ApproverId, DateTime? ApprovedTimestampUtc);
-
     public sealed class ReferralModel
     {
         private ImmutableDictionary<Guid, ReferralEntry> referrals = ImmutableDictionary<Guid, ReferralEntry>.Empty;

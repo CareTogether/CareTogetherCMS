@@ -6,16 +6,16 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Resources
 {
-    public sealed record VolunteerFamily(Family Family,
+    public record VolunteerFamilyEntry(Guid FamilyId,
+        bool Active, string Note,
         ImmutableList<FormUploadInfo> ApprovalFormUploads,
         ImmutableList<ActivityInfo> ApprovalActivitiesPerformed,
-        ImmutableDictionary<string, RoleApprovalStatus> FamilyRoleApprovals,
-        ImmutableDictionary<Guid, Volunteer> IndividualVolunteers);
+        ImmutableDictionary<Guid, VolunteerEntry> IndividualEntries);
 
-    public sealed record Volunteer(
+    public record VolunteerEntry(Guid PersonId,
+        bool Active, string Note,
         ImmutableList<FormUploadInfo> ApprovalFormUploads,
-        ImmutableList<ActivityInfo> ApprovalActivitiesPerformed,
-        ImmutableDictionary<string, RoleApprovalStatus> IndividualRoleApprovals);
+        ImmutableList<ActivityInfo> ApprovalActivitiesPerformed);
 
     public enum RoleApprovalStatus { Prospective, Approved };
 
@@ -55,12 +55,12 @@ namespace CareTogether.Resources
     /// </summary>
     public interface IApprovalsResource
     {
-        Task<ImmutableList<VolunteerFamily>> ListVolunteerFamiliesAsync(Guid organizationId, Guid locationId);
+        Task<ImmutableList<VolunteerFamilyEntry>> ListVolunteerFamiliesAsync(Guid organizationId, Guid locationId);
 
-        Task<ResourceResult<Family>> ExecuteVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
+        Task<ResourceResult<VolunteerFamilyEntry>> ExecuteVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
             VolunteerFamilyCommand command, Guid userId);
 
-        Task<ResourceResult<Person>> ExecuteVolunteerCommandAsync(Guid organizationId, Guid locationId,
+        Task<ResourceResult<VolunteerFamilyEntry>> ExecuteVolunteerCommandAsync(Guid organizationId, Guid locationId,
             VolunteerCommand command, Guid userId);
     }
 }

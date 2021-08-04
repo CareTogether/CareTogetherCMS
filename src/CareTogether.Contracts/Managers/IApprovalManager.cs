@@ -6,6 +6,18 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Managers
 {
+    public sealed record VolunteerFamily(Family Family,
+        ImmutableList<FormUploadInfo> ApprovalFormUploads,
+        ImmutableList<ActivityInfo> ApprovalActivitiesPerformed,
+        ImmutableDictionary<string, RoleApprovalStatus> FamilyRoleApprovals,
+        ImmutableDictionary<Guid, Volunteer> IndividualVolunteers);
+
+    public sealed record Volunteer(
+        ImmutableList<FormUploadInfo> ApprovalFormUploads,
+        ImmutableList<ActivityInfo> ApprovalActivitiesPerformed,
+        ImmutableDictionary<string, RoleApprovalStatus> IndividualRoleApprovals);
+
+
     public interface IApprovalManager
     {
         Task<ImmutableList<VolunteerFamily>> ListVolunteerFamiliesAsync(
