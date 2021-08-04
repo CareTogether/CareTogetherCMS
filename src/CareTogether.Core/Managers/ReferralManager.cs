@@ -1,4 +1,4 @@
-﻿using CareTogether.Engines;
+using CareTogether.Engines;
 using CareTogether.Resources;
 using CareTogether.Resources.Models;
 using CareTogether.Resources.Storage;
@@ -16,21 +16,19 @@ namespace CareTogether.Managers
 {
     public sealed class ReferralManager : IReferralManager
     {
-        private readonly IMultitenantEventLog<ReferralEvent> eventLog;
-        private readonly ConcurrentDictionary<(Guid organizationId, Guid locationId), AsyncReaderWriterLock> tenantLocks = new();
-        private readonly ConcurrentDictionary<(Guid organizationId, Guid locationId), AsyncLazy<ReferralModel>> tenantModels = new();
         private readonly IPolicyEvaluationEngine policyEvaluationEngine;
         private readonly ICommunitiesResource communitiesResource;
-        private readonly IProfilesResource profilesResource;
+        private readonly IReferralsResource referralsResource;
+        private readonly IContactsResource contactsResource;
 
 
-        public ReferralManager(IMultitenantEventLog<ReferralEvent> eventLog, IPolicyEvaluationEngine policyEvaluationEngine,
-            ICommunitiesResource communitiesResource, IProfilesResource profilesResource)
+        public ReferralManager(IPolicyEvaluationEngine policyEvaluationEngine,
+            ICommunitiesResource communitiesResource, IReferralsResource referralsResource, IContactsResource contactsResource)
         {
-            this.eventLog = eventLog;
             this.policyEvaluationEngine = policyEvaluationEngine;
             this.communitiesResource = communitiesResource;
-            this.profilesResource = profilesResource;
+            this.referralsResource = referralsResource;
+            this.contactsResource = contactsResource;
         }
 
 

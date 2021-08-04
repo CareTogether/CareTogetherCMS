@@ -16,20 +16,19 @@ namespace CareTogether.Managers
     public sealed class ApprovalManager : IApprovalManager
     {
         private readonly IMultitenantEventLog<ApprovalEvent> eventLog;
-        private readonly ConcurrentDictionary<(Guid organizationId, Guid locationId), AsyncReaderWriterLock> tenantLocks = new();
         private readonly ConcurrentDictionary<(Guid organizationId, Guid locationId), AsyncLazy<ApprovalModel>> tenantModels = new();
         private readonly IPolicyEvaluationEngine policyEvaluationEngine;
         private readonly ICommunitiesResource communitiesResource;
-        private readonly IProfilesResource profilesResource;
+        private readonly IContactsResource contactsResource;
 
 
         public ApprovalManager(IMultitenantEventLog<ApprovalEvent> eventLog, IPolicyEvaluationEngine policyEvaluationEngine,
-            ICommunitiesResource communitiesResource, IProfilesResource profilesResource)
+            ICommunitiesResource communitiesResource, IContactsResource contactsResource)
         {
             this.eventLog = eventLog;
             this.policyEvaluationEngine = policyEvaluationEngine;
             this.communitiesResource = communitiesResource;
-            this.profilesResource = profilesResource;
+            this.contactsResource = contactsResource;
         }
 
 
@@ -40,7 +39,7 @@ namespace CareTogether.Managers
                 var tenantModel = await GetTenantModelAsync(organizationId, locationId);
 
                 var families = communitiesResource.ListPartneringFamilies(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
-                var contacts = profilesResource.ListContactsAsync(organizationId, locationId).Result;
+                var contacts = contactsResource.ListContactsAsync(organizationId, locationId).Result;
 
                 var volunteerFamilies = tenantModel.FindVolunteerFamilyEntries(_ => true);
                 var result = await volunteerFamilies.Select(vf => ToVolunteerFamilyAsync(
@@ -60,7 +59,7 @@ namespace CareTogether.Managers
                 if (getVolunteerFamilyResult.TryPickT0(out var volunteerFamilyEntry, out var notFound))
                 {
                     var families = communitiesResource.ListVolunteerFamilies(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
-                    var contacts = profilesResource.ListContactsAsync(organizationId, locationId).Result;
+                    var contacts = contactsResource.ListContactsAsync(organizationId, locationId).Result;
                     var referral = await ToVolunteerFamilyAsync(
                         organizationId, locationId, volunteerFamilyEntry, families, contacts);
 
@@ -100,7 +99,7 @@ namespace CareTogether.Managers
                 if (getVolunteerFamilyResult.TryPickT0(out var volunteerFamilyEntry, out var notFound))
                 {
                     var families = communitiesResource.ListVolunteerFamilies(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
-                    var contacts = profilesResource.ListContactsAsync(organizationId, locationId).Result;
+                    var contacts = contactsResource.ListContactsAsync(organizationId, locationId).Result;
                     var referral = await ToVolunteerFamilyAsync(
                         organizationId, locationId, volunteerFamilyEntry, families, contacts);
 

@@ -11,11 +11,11 @@ namespace CareTogether.Managers
     public sealed class MembershipManager : IMembershipManager
     {
         private readonly ICommunitiesResource communitiesResource;
-        private readonly IProfilesResource profilesResource;
+        private readonly IContactsResource profilesResource;
         private readonly ConcurrentDictionary<(Guid organizationId, Guid locationId), AsyncReaderWriterLock> tenantLocks = new();
 
 
-        public MembershipManager(ICommunitiesResource communitiesResource, IProfilesResource profilesResource)
+        public MembershipManager(ICommunitiesResource communitiesResource, IContactsResource profilesResource)
         {
             this.communitiesResource = communitiesResource;
             this.profilesResource = profilesResource;
