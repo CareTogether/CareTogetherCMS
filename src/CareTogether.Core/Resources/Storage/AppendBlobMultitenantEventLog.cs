@@ -10,7 +10,6 @@ using Azure.Storage.Blobs.Specialized;
 using Newtonsoft.Json;
 using OneOf;
 using OneOf.Types;
-using System.Linq;
 
 namespace CareTogether.Resources.Storage
 {

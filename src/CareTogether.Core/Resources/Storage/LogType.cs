@@ -1,5 +1,5 @@
 ﻿
-namespace CareTogether
+namespace CareTogether.Resources.Storage
 {
     public enum LogType
     {

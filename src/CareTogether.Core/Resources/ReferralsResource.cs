@@ -1,10 +1,7 @@
 ﻿using CareTogether.Resources.Models;
 using CareTogether.Resources.Storage;
-using Nito.AsyncEx;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace CareTogether.Resources
