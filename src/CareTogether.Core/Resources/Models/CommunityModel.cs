@@ -7,7 +7,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace CareTogether.Resources
+namespace CareTogether.Resources.Models
 {
     [JsonHierarchyBase]
     public abstract partial record CommunityEvent(Guid UserId, DateTime TimestampUtc)
@@ -25,7 +25,7 @@ namespace CareTogether.Resources
             ImmutableList<Guid> Children,
             ImmutableDictionary<(Guid ChildId, Guid AdultId), CustodialRelationshipType> CustodialRelationships)
         {
-            internal Family ToFamily(IImmutableDictionary<Guid, PersonEntry> people) =>
+            internal Family ToFamily(ImmutableDictionary<Guid, PersonEntry> people) =>
                 new(Id, VolunteerFamilyStatus, PartneringFamilyStatus,
                     AdultRelationships.Select(ar => (people[ar.Key].ToPerson(), ar.Value)).ToList(),
                     Children.Select(c => people[c].ToPerson()).ToList(),
@@ -154,13 +154,13 @@ namespace CareTogether.Resources
                 return result.AsT1;
         }
 
-        public IImmutableList<Family> FindFamilies(Func<Family, bool> predicate) =>
+        public ImmutableList<Family> FindFamilies(Func<Family, bool> predicate) =>
             families.Values
                 .Select(p => p.ToFamily(people))
                 .Where(predicate)
                 .ToImmutableList();
 
-        public IImmutableList<Person> FindPeople(Func<Person, bool> predicate) =>
+        public ImmutableList<Person> FindPeople(Func<Person, bool> predicate) =>
             people.Values
                 .Select(p => p.ToPerson())
                 .Where(predicate)

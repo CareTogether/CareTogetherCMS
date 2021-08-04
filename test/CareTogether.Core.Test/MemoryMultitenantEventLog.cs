@@ -1,4 +1,4 @@
-﻿using CareTogether.Abstractions;
+﻿using CareTogether.Resources.Storage;
 using OneOf;
 using OneOf.Types;
 using System;
@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace CareTogether.Utilities
+namespace CareTogether.Core.Test
 {
     public sealed class MemoryMultitenantEventLog<T> : IMultitenantEventLog<T>
     {

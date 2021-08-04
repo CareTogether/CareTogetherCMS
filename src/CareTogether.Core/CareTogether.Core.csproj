@@ -17,6 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="Newtonsoft.Json" />
+    <Folder Include="Utilities\" />
   </ItemGroup>
 </Project>

@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace CareTogether.Abstractions
+namespace CareTogether.Resources.Storage
 {
     public interface IMultitenantEventLog<T>
     {

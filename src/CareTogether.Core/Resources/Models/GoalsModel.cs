@@ -6,7 +6,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace CareTogether.Resources
+namespace CareTogether.Resources.Models
 {
     public sealed record GoalCommandExecutedEvent(Guid UserId, DateTime TimestampUtc,
         GoalCommand Command) : DomainEvent(UserId, TimestampUtc);
@@ -70,7 +70,7 @@ namespace CareTogether.Resources
             ));
         }
 
-        public IImmutableList<Goal> FindGoals(Func<Goal, bool> predicate) =>
+        public ImmutableList<Goal> FindGoals(Func<Goal, bool> predicate) =>
             goals.Values
                 .Where(predicate)
                 .ToImmutableList();

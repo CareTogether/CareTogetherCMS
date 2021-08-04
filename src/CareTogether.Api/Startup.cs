@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using CareTogether.Managers;
 using CareTogether.Resources;
-using CareTogether.Utilities;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -9,11 +8,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Logging;
-using System;
-using System.Collections.Generic;
 using CareTogether.Engines;
-using CareTogether.Abstractions;
 using Azure.Storage.Blobs;
+using CareTogether.Resources.Storage;
+using CareTogether.Resources.Models;
 
 namespace CareTogether.Api
 {
@@ -42,6 +40,7 @@ namespace CareTogether.Api
             var contactsEventLog = new AppendBlobMultitenantEventLog<ContactCommandExecutedEvent>(blobServiceClient, LogType.ContactsEventLog);
             var goalsEventLog = new AppendBlobMultitenantEventLog<GoalCommandExecutedEvent>(blobServiceClient, LogType.GoalsEventLog);
             var referralsEventLog = new AppendBlobMultitenantEventLog<ReferralEvent>(blobServiceClient, LogType.ReferralsEventLog);
+            var approvalsEventLog = new AppendBlobMultitenantEventLog<ApprovalEvent>(blobServiceClient, LogType.ApprovalsEventLog);
 
 #if DEBUG
             if (HostEnvironment.IsDevelopment())
@@ -55,16 +54,20 @@ namespace CareTogether.Api
 #endif
 
             // Resource services
+            var approvalsResource = new ApprovalsResource(approvalsEventLog);
             var communitiesResource = new CommunitiesResource(communityEventLog);
-            var profilesResource = new ProfilesResource(contactsEventLog, goalsEventLog);
+            var contactsResource = new ContactsResource(contactsEventLog);
+            var goalsResource = new GoalsResource(goalsEventLog);
             var policiesResource = new PoliciesResource(); //TODO: Data store for policies
+            var referralsResource = new ReferralsResource(referralsEventLog);
 
             // Engine services
             var policyEvaluationEngine = new PolicyEvaluationEngine(policiesResource);
 
             // Manager services
-            services.AddSingleton<IMembershipManager>(new MembershipManager(communitiesResource, profilesResource));
-            services.AddSingleton<IReferralManager>(new ReferralManager(referralsEventLog, policyEvaluationEngine, communitiesResource, profilesResource));
+            services.AddSingleton<IMembershipManager>(new MembershipManager(communitiesResource, contactsResource));
+            services.AddSingleton<IReferralManager>(new ReferralManager(policyEvaluationEngine, communitiesResource, referralsResource, contactsResource));
+            services.AddSingleton<IApprovalManager>(new ApprovalManager(approvalsResource, policyEvaluationEngine, communitiesResource, contactsResource));
 
             // Utility providers
             services.AddSingleton(new AuthorizationProvider(communitiesResource));

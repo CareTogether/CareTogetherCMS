@@ -6,7 +6,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace CareTogether.Resources
+namespace CareTogether.Resources.Models
 {
     public sealed record ContactCommandExecutedEvent(Guid UserId, DateTime TimestampUtc,
         ContactCommand Command) : DomainEvent(UserId, TimestampUtc);
@@ -92,7 +92,7 @@ namespace CareTogether.Resources
             ));
         }
 
-        public IImmutableList<ContactInfo> FindContacts(Func<ContactInfo, bool> predicate) =>
+        public ImmutableList<ContactInfo> FindContacts(Func<ContactInfo, bool> predicate) =>
             contacts.Values
                 .Where(predicate)
                 .ToImmutableList();

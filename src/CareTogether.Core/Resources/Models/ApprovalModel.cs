@@ -7,7 +7,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace CareTogether.Managers
+namespace CareTogether.Resources.Models
 {
     [JsonHierarchyBase]
     public abstract partial record ApprovalEvent(Guid UserId, DateTime TimestampUtc)
@@ -16,17 +16,6 @@ namespace CareTogether.Managers
         VolunteerFamilyCommand Command) : ApprovalEvent(UserId, TimestampUtc);
     public sealed record VolunteerCommandExecuted(Guid UserId, DateTime TimestampUtc,
         VolunteerCommand Command) : ApprovalEvent(UserId, TimestampUtc);
-
-    public record VolunteerFamilyEntry(Guid FamilyId,
-        bool Active, string Note,
-        ImmutableList<FormUploadInfo> ApprovalFormUploads,
-        ImmutableList<ActivityInfo> ApprovalActivitiesPerformed,
-        ImmutableDictionary<Guid, VolunteerEntry> IndividualEntries);
-
-    public record VolunteerEntry(Guid PersonId,
-        bool Active, string Note,
-        ImmutableList<FormUploadInfo> ApprovalFormUploads,
-        ImmutableList<ActivityInfo> ApprovalActivitiesPerformed);
 
     public sealed class ApprovalModel
     {
@@ -158,16 +147,16 @@ namespace CareTogether.Managers
                 return error;
         }
 
-        public IImmutableList<VolunteerFamilyEntry> FindVolunteerFamilyEntries(Func<VolunteerFamilyEntry, bool> predicate)
+        public ImmutableList<VolunteerFamilyEntry> FindVolunteerFamilyEntries(Func<VolunteerFamilyEntry, bool> predicate)
         {
             return volunteerFamilies.Values
                 .Where(predicate)
                 .ToImmutableList();
         }
 
-        public ResourceResult<VolunteerFamilyEntry> GetVolunteerFamilyEntry(Guid referralId) =>
-            volunteerFamilies.TryGetValue(referralId, out var referralEntry)
-            ? referralEntry
+        public ResourceResult<VolunteerFamilyEntry> GetVolunteerFamilyEntry(Guid familyId) =>
+            volunteerFamilies.TryGetValue(familyId, out var familyEntry)
+            ? familyEntry
             : ResourceResult.NotFound;
 
 

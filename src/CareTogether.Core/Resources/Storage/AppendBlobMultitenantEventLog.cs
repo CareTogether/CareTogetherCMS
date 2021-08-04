@@ -7,13 +7,12 @@ using System.Threading.Tasks;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs.Specialized;
-using CareTogether.Abstractions;
 using Newtonsoft.Json;
 using OneOf;
 using OneOf.Types;
 using System.Linq;
 
-namespace CareTogether.Utilities
+namespace CareTogether.Resources.Storage
 {
     public class AppendBlobMultitenantEventLog<T> : IMultitenantEventLog<T>
     {

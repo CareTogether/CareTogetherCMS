@@ -16,7 +16,7 @@ namespace CareTogether.Managers
 
         Task<ManagerResult<ContactInfo>> UpdateContactInfoAsync(AuthorizedUser user, Guid organizationId, Guid locationId, ContactCommand command);
 
-        Task<ManagerResult<IImmutableList<Person>>> QueryPeopleAsync(AuthorizedUser user, Guid organizationId, Guid locationId, string searchQuery);
+        Task<ManagerResult<ImmutableList<Person>>> QueryPeopleAsync(AuthorizedUser user, Guid organizationId, Guid locationId, string searchQuery);
 
         Task<ManagerResult<Family>> ExecuteFamilyCommandAsync(AuthorizedUser user, Guid organizationId, Guid locationId, FamilyCommand command);
     }

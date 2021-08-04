@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace CareTogether.Abstractions
+namespace CareTogether.Resources.Storage
 {
     public interface IFileStore
     {

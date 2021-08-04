@@ -7,7 +7,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace CareTogether.Managers
+namespace CareTogether.Resources.Models
 {
     [JsonHierarchyBase]
     public abstract partial record ReferralEvent(Guid UserId, DateTime TimestampUtc)
@@ -18,25 +18,6 @@ namespace CareTogether.Managers
         ArrangementCommand Command) : ReferralEvent(UserId, TimestampUtc);
     public sealed record ArrangementNoteCommandExecuted(Guid UserId, DateTime TimestampUtc,
         ArrangementNoteCommand Command) : ReferralEvent(UserId, TimestampUtc);
-
-    public record ReferralEntry(Guid Id, string PolicyVersion, DateTime TimestampUtc,
-        ReferralCloseReason? CloseReason,
-        Guid PartneringFamilyId,
-        ImmutableList<FormUploadInfo> ReferralFormUploads,
-        ImmutableList<ActivityInfo> ReferralActivitiesPerformed,
-        ImmutableDictionary<Guid, ArrangementEntry> Arrangements);
-
-    public record ArrangementEntry(Guid Id, string PolicyVersion, string ArrangementType,
-        ArrangementState State,
-        ImmutableList<FormUploadInfo> ArrangementFormUploads,
-        ImmutableList<ActivityInfo> ArrangementActivitiesPerformed,
-        ImmutableList<VolunteerAssignment> VolunteerAssignments,
-        ImmutableList<PartneringFamilyChildAssignment> PartneringFamilyChildAssignments,
-        ImmutableList<ChildrenLocationHistoryEntry> ChildrenLocationHistory,
-        ImmutableDictionary<Guid, NoteEntry> Notes);
-
-    public record NoteEntry(Guid Id, Guid AuthorId, DateTime LastEditTimestampUtc, NoteStatus Status,
-        string FinalizedNoteContents, Guid? ApproverId, DateTime? ApprovedTimestampUtc);
 
     public sealed class ReferralModel
     {
@@ -240,7 +221,7 @@ namespace CareTogether.Managers
                 return error;
         }
 
-        public IImmutableList<ReferralEntry> FindReferralEntries(Func<ReferralEntry, bool> predicate)
+        public ImmutableList<ReferralEntry> FindReferralEntries(Func<ReferralEntry, bool> predicate)
         {
             return referrals.Values
                 .Where(predicate)
