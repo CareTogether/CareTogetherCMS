@@ -9,12 +9,14 @@ namespace CareTogether.Resources
     public sealed class ReferralsResource : IReferralsResource
     {
         private readonly IMultitenantEventLog<ReferralEvent> eventLog;
+        private readonly IObjectStore<string> draftNotes;
         private readonly ConcurrentLockingStore<(Guid organizationId, Guid locationId), ReferralModel> tenantModels;
 
 
-        public ReferralsResource(IMultitenantEventLog<ReferralEvent> eventLog)
+        public ReferralsResource(IMultitenantEventLog<ReferralEvent> eventLog, IObjectStore<string> draftNotes)
         {
             this.eventLog = eventLog;
+            this.draftNotes = draftNotes;
             tenantModels = new ConcurrentLockingStore<(Guid organizationId, Guid locationId), ReferralModel>(key =>
                 ReferralModel.InitializeAsync(eventLog.GetAllEventsAsync(key.organizationId, key.locationId)));
         }
@@ -57,15 +59,45 @@ namespace CareTogether.Resources
         public async Task<ResourceResult<ReferralEntry>> ExecuteArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
             ArrangementNoteCommand command, Guid userId)
         {
-            //TODO: Incorporate other notes handling (draft/permanent storage)
-
             using (var lockedModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
             {
                 var result = lockedModel.Value.ExecuteArrangementNoteCommand(command, userId, DateTime.UtcNow);
                 if (result.TryPickT0(out var success, out var _))
                 {
-                    await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
+                    // We do not want to commit draft note contents to the immutable event log.
+                    // Only approved note contents should be committed, which means that draft note contents need to
+                    // be stored separately. In this case, we use a key-value store and delete drafts once they are
+                    // no longer needed (i.e., when the draft note is either discarded or approved).
+                    // As a result of using multiple backends, there is a potential for partial failure, which we
+                    // mitigate by focusing on preserving committed or to-be-committed data; drafts are less critical.
+
+                    var redactedEventToPersist = success.Value.Event with
+                    {
+                        Command = success.Value.Event.Command
+                            switch
+                        {
+                            CreateDraftArrangementNote e => e with { DraftNoteContents = null },
+                            EditDraftArrangementNote e => e with { DraftNoteContents = null },
+                            _ => success.Value.Event.Command
+                        }
+                    };
+                    await eventLog.AppendEventAsync(organizationId, locationId, redactedEventToPersist, success.Value.SequenceNumber);
                     success.Value.OnCommit();
+
+                    switch (success.Value.Event.Command)
+                    {
+                        case CreateDraftArrangementNote c:
+                            await draftNotes.UpsertAsync(organizationId, locationId, command.NoteId, c.DraftNoteContents);
+                            break;
+                        case EditDraftArrangementNote c:
+                            await draftNotes.UpsertAsync(organizationId, locationId, command.NoteId, c.DraftNoteContents);
+                            break;
+                        case DiscardDraftArrangementNote:
+                        case ApproveArrangementNote:
+                            await draftNotes.DeleteAsync(organizationId, locationId, command.NoteId);
+                            break;
+                    }
+
                     return success.Value.ReferralEntry;
                 }
                 else

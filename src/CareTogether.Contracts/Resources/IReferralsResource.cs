@@ -89,9 +89,11 @@ namespace CareTogether.Resources
 
     [JsonHierarchyBase]
     public abstract partial record ArrangementNoteCommand(Guid ReferralId, Guid ArrangementId, Guid NoteId);
-    public sealed record CreateDraftArrangementNote(Guid ReferralId, Guid ArrangementId, Guid NoteId)
+    public sealed record CreateDraftArrangementNote(Guid ReferralId, Guid ArrangementId, Guid NoteId,
+        string DraftNoteContents)
         : ArrangementNoteCommand(ReferralId, ArrangementId, NoteId);
-    public sealed record EditDraftArrangementNote(Guid ReferralId, Guid ArrangementId, Guid NoteId)
+    public sealed record EditDraftArrangementNote(Guid ReferralId, Guid ArrangementId, Guid NoteId,
+        string DraftNoteContents)
         : ArrangementNoteCommand(ReferralId, ArrangementId, NoteId);
     public sealed record DiscardDraftArrangementNote(Guid ReferralId, Guid ArrangementId, Guid NoteId)
         : ArrangementNoteCommand(ReferralId, ArrangementId, NoteId);

@@ -41,6 +41,7 @@ namespace CareTogether.Api
             var goalsEventLog = new AppendBlobMultitenantEventLog<GoalCommandExecutedEvent>(blobServiceClient, LogType.GoalsEventLog);
             var referralsEventLog = new AppendBlobMultitenantEventLog<ReferralEvent>(blobServiceClient, LogType.ReferralsEventLog);
             var approvalsEventLog = new AppendBlobMultitenantEventLog<ApprovalEvent>(blobServiceClient, LogType.ApprovalsEventLog);
+            var draftNotes = new JsonBlobObjectStore<string>(blobServiceClient, "draftNotes");
 
 #if DEBUG
             if (HostEnvironment.IsDevelopment())
@@ -59,7 +60,7 @@ namespace CareTogether.Api
             var contactsResource = new ContactsResource(contactsEventLog);
             var goalsResource = new GoalsResource(goalsEventLog);
             var policiesResource = new PoliciesResource(); //TODO: Data store for policies
-            var referralsResource = new ReferralsResource(referralsEventLog);
+            var referralsResource = new ReferralsResource(referralsEventLog, draftNotes);
 
             // Engine services
             var policyEvaluationEngine = new PolicyEvaluationEngine(policiesResource);
