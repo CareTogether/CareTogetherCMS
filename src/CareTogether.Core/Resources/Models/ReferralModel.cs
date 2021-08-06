@@ -45,8 +45,9 @@ namespace CareTogether.Resources.Models
             OneOf<ReferralEntry, Error<string>> result = command switch
             {
                 //TODO: Validate policy version and enforce any other invariants
-                CreateReferral c => new ReferralEntry(c.ReferralId, c.PolicyVersion, timestampUtc, null, c.FamilyId,
-                    ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty, ImmutableDictionary<Guid, ArrangementEntry>.Empty),
+                CreateReferral c => new ReferralEntry(c.ReferralId, c.PolicyVersion, CloseReason: null, c.FamilyId,
+                    ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty,
+                    ImmutableDictionary<Guid, ArrangementEntry>.Empty),
                 _ => referrals.TryGetValue(command.ReferralId, out var referralEntry)
                     ? command switch
                     {
@@ -56,7 +57,7 @@ namespace CareTogether.Resources.Models
                         PerformReferralActivity c => referralEntry with
                         {
                             ReferralActivitiesPerformed = referralEntry.ReferralActivitiesPerformed.Add(
-                                new ActivityInfo(userId, timestampUtc, c.ActivityName))
+                                new ActivityInfo(userId, timestampUtc, c.ActivityName, c.PerformedAtUtc, c.PerformedByPersonId))
                         },
                         UploadReferralForm c => referralEntry with
                         {
@@ -93,7 +94,8 @@ namespace CareTogether.Resources.Models
             OneOf<ArrangementEntry, Error<string>> result = command switch
             {
                 //TODO: Validate policy version and enforce any other invariants
-                CreateArrangement c => new ArrangementEntry(c.ArrangementId, c.PolicyVersion, c.ArrangementType, ArrangementState.Setup,
+                CreateArrangement c => new ArrangementEntry(c.ArrangementId, c.PolicyVersion, c.ArrangementType,
+                    ArrangementState.Setup, InitiatedAtUtc: null, EndedAtUtc: null,
                     ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty, ImmutableList<VolunteerAssignment>.Empty,
                     ImmutableList<PartneringFamilyChildAssignment>.Empty, ImmutableList<ChildrenLocationHistoryEntry>.Empty,
                     ImmutableDictionary<Guid, NoteEntry>.Empty),
@@ -120,7 +122,8 @@ namespace CareTogether.Resources.Models
                         },
                         InitiateArrangement c => arrangementEntry with
                         {
-                            State = ArrangementState.Open
+                            State = ArrangementState.Open,
+                            InitiatedAtUtc = c.InitiatedAtUtc
                         },
                         UploadArrangementForm c => arrangementEntry with
                         {
@@ -130,13 +133,18 @@ namespace CareTogether.Resources.Models
                         PerformArrangementActivity c => arrangementEntry with
                         {
                             ArrangementActivitiesPerformed = arrangementEntry.ArrangementActivitiesPerformed.Add(
-                                new ActivityInfo(userId, timestampUtc, c.ActivityName))
+                                new ActivityInfo(userId, timestampUtc, c.ActivityName, c.PerformedAtUtc, c.PerformedByPersonId))
                         },
                         TrackChildrenLocationChange c => arrangementEntry with
                         {
                             ChildrenLocationHistory = arrangementEntry.ChildrenLocationHistory.Add(
                                 new ChildrenLocationHistoryEntry(userId, c.ChangedAtUtc,
                                     c.ChildrenIds, c.FamilyId, c.Plan, c.AdditionalExplanation))
+                        },
+                        EndArrangement c => arrangementEntry with
+                        {
+                            State = ArrangementState.Closed,
+                            EndedAtUtc = c.EndedAtUtc
                         },
                         _ => throw new NotImplementedException(
                             $"The command type '{command.GetType().FullName}' has not been implemented.")

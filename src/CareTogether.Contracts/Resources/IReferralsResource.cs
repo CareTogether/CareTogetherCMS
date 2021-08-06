@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Resources
 {
-    public record ReferralEntry(Guid Id, string PolicyVersion, DateTime TimestampUtc,
+    public record ReferralEntry(Guid Id, string PolicyVersion,
         ReferralCloseReason? CloseReason,
         Guid PartneringFamilyId,
         ImmutableList<FormUploadInfo> ReferralFormUploads,
@@ -13,7 +13,7 @@ namespace CareTogether.Resources
         ImmutableDictionary<Guid, ArrangementEntry> Arrangements);
 
     public record ArrangementEntry(Guid Id, string PolicyVersion, string ArrangementType,
-        ArrangementState State,
+        ArrangementState State, DateTime? InitiatedAtUtc, DateTime? EndedAtUtc,
         ImmutableList<FormUploadInfo> ArrangementFormUploads,
         ImmutableList<ActivityInfo> ArrangementActivitiesPerformed,
         ImmutableList<VolunteerAssignment> VolunteerAssignments,
@@ -31,7 +31,7 @@ namespace CareTogether.Resources
     public sealed record FormUploadInfo(Guid UserId, DateTime TimestampUtc,
         string FormName, string FormVersion, string UploadedFileName);
     public sealed record ActivityInfo(Guid UserId, DateTime TimestampUtc,
-        string ActivityName);
+        string ActivityName, DateTime PerformedAtUtc, Guid PerformedByPersonId);
 
     [JsonHierarchyBase]
     public abstract partial record VolunteerAssignment(string ArrangementFunction);
@@ -52,7 +52,8 @@ namespace CareTogether.Resources
     public abstract partial record ReferralCommand(Guid ReferralId);
     public sealed record CreateReferral(Guid ReferralId, Guid FamilyId, string PolicyVersion)
         : ReferralCommand(ReferralId);
-    public sealed record PerformReferralActivity(Guid ReferralId, string ActivityName)
+    public sealed record PerformReferralActivity(Guid ReferralId, string ActivityName, DateTime PerformedAtUtc,
+        Guid PerformedByPersonId)
         : ReferralCommand(ReferralId);
     public sealed record UploadReferralForm(Guid ReferralId,
         string FormName, string FormVersion, string UploadedFileName)
@@ -74,18 +75,19 @@ namespace CareTogether.Resources
     public sealed record AssignPartneringFamilyChildren(Guid ReferralId, Guid ArrangementId,
         ImmutableList<Guid> ChildrenIds)
         : ArrangementCommand(ReferralId, ArrangementId);
-    public sealed record InitiateArrangement(Guid ReferralId, Guid ArrangementId)
+    public sealed record InitiateArrangement(Guid ReferralId, Guid ArrangementId, DateTime InitiatedAtUtc)
         : ArrangementCommand(ReferralId, ArrangementId);
     public sealed record UploadArrangementForm(Guid ReferralId, Guid ArrangementId,
         string FormName, string FormVersion, string UploadedFileName)
         : ArrangementCommand(ReferralId, ArrangementId);
-    public sealed record PerformArrangementActivity(Guid ReferralId, Guid ArrangementId,
-        Guid CompletedByPersonId, string ActivityName)
+    public sealed record PerformArrangementActivity(Guid ReferralId, Guid ArrangementId, DateTime PerformedAtUtc,
+        Guid PerformedByPersonId, string ActivityName)
         : ArrangementCommand(ReferralId, ArrangementId);
     public sealed record TrackChildrenLocationChange(Guid ReferralId, Guid ArrangementId, DateTime ChangedAtUtc,
         ImmutableList<Guid> ChildrenIds, Guid FamilyId, ChildrenLocationPlan Plan, string AdditionalExplanation)
         : ArrangementCommand(ReferralId, ArrangementId);
-    //TODO: EndArrangement?
+    public sealed record EndArrangement(Guid ReferralId, Guid ArrangementId, DateTime EndedAtUtc)
+        : ArrangementCommand(ReferralId, ArrangementId);
 
     [JsonHierarchyBase]
     public abstract partial record ArrangementNoteCommand(Guid ReferralId, Guid ArrangementId, Guid NoteId);
