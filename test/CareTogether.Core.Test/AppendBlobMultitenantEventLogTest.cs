@@ -57,7 +57,7 @@ namespace CareTogether.Core.Test
         public async Task ResultsFromContainerAfterTestDataPopulationMatchesExpected()
         {
             TestDataProvider.PopulateTestDataAsync(
-                    communityEventLog, contactsEventLog, goalsEventLog: null, referralsEventLog, draftNotes: null).Wait();
+                    communityEventLog, contactsEventLog, goalsEventLog: null, referralsEventLog, draftNotesStore: null, policiesStore: null).Wait();
 
             var communityEvents = await communityEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
 
