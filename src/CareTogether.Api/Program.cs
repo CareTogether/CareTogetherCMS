@@ -26,12 +26,12 @@ namespace CareTogether.Api
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder.UseUrls(
-                        //"https://app.caretogether.io",
-                        "http://caretogether-api.azurewebsites.net",
-                        //"https://caretogether-api.azurewebsites.net",
-                        //"https://localhost",
-                        "http://localhost");
+                    //webBuilder.UseUrls(
+                    //    //"https://app.caretogether.io",
+                    //    "http://caretogether-api.azurewebsites.net",
+                    //    //"https://caretogether-api.azurewebsites.net",
+                    //    //"https://localhost",
+                    //    "http://localhost");
                     webBuilder.UseStartup<Startup>();
                 });
     }
