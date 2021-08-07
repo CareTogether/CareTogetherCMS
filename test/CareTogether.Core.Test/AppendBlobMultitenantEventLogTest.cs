@@ -56,8 +56,9 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public async Task ResultsFromContainerAfterTestDataPopulationMatchesExpected()
         {
-            TestDataProvider.PopulateTestDataAsync(
-                    communityEventLog, contactsEventLog, goalsEventLog: null, referralsEventLog, draftNotesStore: null, policiesStore: null).Wait();
+            await TestDataProvider.PopulateCommunityEvents(communityEventLog);
+            await TestDataProvider.PopulateContactEvents(contactsEventLog);
+            await TestDataProvider.PopulateReferralEvents(referralsEventLog);
 
             var communityEvents = await communityEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
 
@@ -71,7 +72,7 @@ namespace CareTogether.Core.Test
 
             var referralEvents = await referralsEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
 
-            Assert.AreEqual(20, referralEvents.Count);
+            Assert.AreEqual(27, referralEvents.Count);
             Assert.AreEqual(typeof(ArrangementCommandExecuted), referralEvents[8].DomainEvent.GetType());
         }
 
