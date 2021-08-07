@@ -12,7 +12,7 @@ on:
     branches:
       - main
     paths:
-      - 'src/caretogether-pwa'
+      - 'src/caretogether-pwa/**'
 
 jobs:
   build:
