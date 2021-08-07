@@ -32,14 +32,14 @@ jobs:
     - run: |
         docker build . -t caretogether.azurecr.io/caretogether-api:${{ github.sha }} 
         docker push caretogether.azurecr.io/caretogether-api:${{ github.sha }}  
-
-    ## Build .NET backend
-    #- name: Set up .NET Core
-    #  uses: actions/setup-dotnet@v1
-    #  with:
-    #    dotnet-version: '5.0.x'
-    #- name: Publish .NET API release build
-    #  run: dotnet publish --configuration Release --runtime win10-x64 --self-contained --output publish/api
+    # Deploy .NET backend container
+    - name: Deploy .NET API to Azure
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: caretogether-api
+        slot-name: Production
+        publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_CARETOGETHER_API }}
+        images: 'caretogether.azurecr.io/caretogether-api:${{ github.sha }}'
 
     # Build React frontend
 #   - name: Set up Node.js
@@ -59,16 +59,6 @@ jobs:
 #   - name: Build React app
 #     run: yarn build
 #     working-directory: src/caretogether-pwa
-    
-    # Deploy .NET backend container
-    - name: Deploy .NET API to Azure
-      uses: azure/webapps-deploy@v2
-      with:
-        app-name: caretogether-api
-        slot-name: Production
-        publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_CARETOGETHER_API }}
-        images: 'caretogether.azurecr.io/caretogether-api:${{ github.sha }}'
-    
     # Deploy React frontend
 #   - name: Deploy React PWA to Azure
 #     uses: azure/webapps-deploy@v2
