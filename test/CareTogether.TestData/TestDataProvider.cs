@@ -111,24 +111,24 @@ namespace CareTogether.TestData
                     "Cannot receive voicemails")));
 
             await referralsEventLog.AppendEventsAsync(guid1, guid2,
-                new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 5, 4, 10, 0), new CreateReferral(guid1, guid1, "v1")),
+                new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 5, 4, 10, 0), new CreateReferral(guid1, guid1, "v1", new DateTime(2020, 3, 5, 4, 10, 0))),
                 new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 5, 4, 15, 15), new UploadReferralForm(guid1, "Request for Help Form", "v1", "Jane Doe referral info.pdf")),
-                new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 6, 8, 45, 30), new PerformReferralActivity(guid1, "Intake Coordinator Screening Call")),
+                new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 6, 8, 45, 30), new PerformReferralActivity(guid1, "Intake Coordinator Screening Call", new DateTime(2020, 3, 6, 8, 45, 30), adminId)),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 12, 13), new CreateArrangement(guid1, guid1, "v1", "Hosting")),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 13, 14), new AssignIndividualVolunteer(guid1, guid1, guid4, "Family Coach")),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 13, 55), new AssignVolunteerFamily(guid1, guid1, guid2, "Host Family")),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 12, 22, 21), new AssignVolunteerFamily(guid1, guid1, guid3, "Host Family Friend")),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 14, 32), new AssignPartneringFamilyChildren(guid1, guid1,
                     ImmutableList<Guid>.Empty.Add(guid3))),
-                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 12, 16, 55, 0), new InitiateArrangement(guid1, guid1)),
+                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 12, 16, 55, 0), new InitiateArrangement(guid1, guid1, new DateTime(2020, 3, 12, 16, 55, 0))),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 15, 8, 33, 34), new TrackChildrenLocationChange(guid1, guid1,
                     new DateTime(2020, 3, 15, 8, 33, 34), ImmutableList<Guid>.Empty.Add(guid3), guid3, ChildrenLocationPlan.DaytimeChildCare, "Babysitting")),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 15, 20, 40, 45), new TrackChildrenLocationChange(guid1, guid1,
                      new DateTime(2020, 3, 15, 20, 40, 45), ImmutableList<Guid>.Empty.Add(guid3), guid2, ChildrenLocationPlan.DaytimeChildCare, "Dropped off with host parents after ☕ and 🍰")),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 14, 10, 10, 10), new PerformArrangementActivity(guid1, guid1,
-                    guid4, "Family Coach Safety Visit")),
+                    "Family Coach Safety Visit", new DateTime(2020, 3, 14, 10, 10, 10), guid4)),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 21, 11, 11, 11), new PerformArrangementActivity(guid1, guid1,
-                    guid4, "Family Coach Supervision")),
+                    "Family Coach Supervision", new DateTime(2020, 3, 21, 11, 11, 11), adminId)),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 22, 16, 30, 35), new TrackChildrenLocationChange(guid1, guid1,
                     new DateTime(2020, 3, 22, 16, 30, 35), ImmutableList<Guid>.Empty.Add(guid3), guid1, ChildrenLocationPlan.OvernightHousing, "Weekend with parents, met at McDonald's near mom")),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 24, 8, 30, 35), new TrackChildrenLocationChange(guid1, guid1,
@@ -136,9 +136,10 @@ namespace CareTogether.TestData
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 30, 18, 18, 18), new TrackChildrenLocationChange(guid1, guid1,
                     new DateTime(2020, 3, 30, 18, 18, 18), ImmutableList<Guid>.Empty.Add(guid3), guid1, ChildrenLocationPlan.ReturnToFamily, "Mom met us and picked him up at DQ")),
                 new ReferralCommandExecuted(adminId, new DateTime(2020, 10, 4, 12, 32, 55), new CloseReferral(guid1, ReferralCloseReason.NeedMet)),
-                new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 30, 45), new CreateReferral(guid2, guid1, "v1")),
+                new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 30, 45), new CreateReferral(guid2, guid1, "v1", new DateTime(2021, 7, 10, 19, 30, 45))),
                 new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 32, 0), new UploadReferralForm(guid2, "Request for Help Form", "v1", "Jane Doe second referral info.pdf")),
-                new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 32, 0), new PerformReferralActivity(guid2, "Intake Coordinator Screening Call")));
+                new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 32, 0), new PerformReferralActivity(guid2, "Intake Coordinator Screening Call",
+                    new DateTime(2021, 7, 10, 19, 32, 0), adminId)));
         }
 
 

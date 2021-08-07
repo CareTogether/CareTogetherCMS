@@ -149,7 +149,7 @@ namespace CareTogether.Managers
         private Referral ToReferral(ReferralEntry entry,
             ImmutableDictionary<Guid, Family> families,
             ImmutableDictionary<Guid, ContactInfo> contacts) =>
-            new(entry.Id, entry.PolicyVersion, entry.TimestampUtc, entry.CloseReason,
+            new(entry.Id, entry.PolicyVersion, entry.CreatedUtc, entry.CloseReason,
                 families[entry.PartneringFamilyId],
                 families[entry.PartneringFamilyId].Adults
                     .Select(a => contacts.TryGetValue(a.Item1.Id, out var c) ? c : null)

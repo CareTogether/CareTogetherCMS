@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace CareTogether.Resources
 {
     public record ReferralEntry(Guid Id, string PolicyVersion,
-        ReferralCloseReason? CloseReason,
+        DateTime CreatedUtc, ReferralCloseReason? CloseReason,
         Guid PartneringFamilyId,
         ImmutableList<FormUploadInfo> ReferralFormUploads,
         ImmutableList<ActivityInfo> ReferralActivitiesPerformed,
@@ -50,7 +50,7 @@ namespace CareTogether.Resources
 
     [JsonHierarchyBase]
     public abstract partial record ReferralCommand(Guid ReferralId);
-    public sealed record CreateReferral(Guid ReferralId, Guid FamilyId, string PolicyVersion)
+    public sealed record CreateReferral(Guid ReferralId, Guid FamilyId, string PolicyVersion, DateTime OpenedAtUtc)
         : ReferralCommand(ReferralId);
     public sealed record PerformReferralActivity(Guid ReferralId, string ActivityName, DateTime PerformedAtUtc,
         Guid PerformedByPersonId)
@@ -80,8 +80,8 @@ namespace CareTogether.Resources
     public sealed record UploadArrangementForm(Guid ReferralId, Guid ArrangementId,
         string FormName, string FormVersion, string UploadedFileName)
         : ArrangementCommand(ReferralId, ArrangementId);
-    public sealed record PerformArrangementActivity(Guid ReferralId, Guid ArrangementId, DateTime PerformedAtUtc,
-        Guid PerformedByPersonId, string ActivityName)
+    public sealed record PerformArrangementActivity(Guid ReferralId, Guid ArrangementId,
+        string ActivityName, DateTime PerformedAtUtc, Guid PerformedByPersonId)
         : ArrangementCommand(ReferralId, ArrangementId);
     public sealed record TrackChildrenLocationChange(Guid ReferralId, Guid ArrangementId, DateTime ChangedAtUtc,
         ImmutableList<Guid> ChildrenIds, Guid FamilyId, ChildrenLocationPlan Plan, string AdditionalExplanation)

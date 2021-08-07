@@ -124,7 +124,7 @@ namespace CareTogether.Core.Test
                 }.ToImmutableList(),
                 new List<ActivityInfo>
                 {
-                    new ActivityInfo(guid6, new DateTime(2021, 7, 10), "Host Family Interview")
+                    new ActivityInfo(guid6, new DateTime(2021, 7, 10), "Host Family Interview", new DateTime(2021, 7, 10), guid1)
                 }.ToImmutableList(),
                 new Dictionary<Guid, (ImmutableList<FormUploadInfo> FormUploads, ImmutableList<ActivityInfo> ActivitiesPerformed)>
                 {
@@ -157,7 +157,7 @@ namespace CareTogether.Core.Test
                 }.ToImmutableList(),
                 new List<ActivityInfo>
                 {
-                    new ActivityInfo(guid6, new DateTime(2021, 7, 10), "Host Family Interview")
+                    new ActivityInfo(guid6, new DateTime(2021, 7, 10), "Host Family Interview", new DateTime(2021, 7, 10), guid1)
                 }.ToImmutableList(),
                 new Dictionary<Guid, (ImmutableList<FormUploadInfo> FormUploads, ImmutableList<ActivityInfo> ActivitiesPerformed)>
                 {

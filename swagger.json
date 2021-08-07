@@ -869,6 +869,14 @@
           "activityName": {
             "type": "string",
             "nullable": true
+          },
+          "performedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "performedByPersonId": {
+            "type": "string",
+            "format": "guid"
           }
         }
       },
@@ -1159,6 +1167,10 @@
               "policyVersion": {
                 "type": "string",
                 "nullable": true
+              },
+              "openedAtUtc": {
+                "type": "string",
+                "format": "date-time"
               }
             }
           }
@@ -1176,6 +1188,14 @@
               "activityName": {
                 "type": "string",
                 "nullable": true
+              },
+              "performedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "performedByPersonId": {
+                "type": "string",
+                "format": "guid"
               }
             }
           }
@@ -1215,6 +1235,7 @@
             "AssignPartneringFamilyChildren": "#/components/schemas/AssignPartneringFamilyChildren",
             "AssignVolunteerFamily": "#/components/schemas/AssignVolunteerFamily",
             "CreateArrangement": "#/components/schemas/CreateArrangement",
+            "EndArrangement": "#/components/schemas/EndArrangement",
             "InitiateArrangement": "#/components/schemas/InitiateArrangement",
             "PerformArrangementActivity": "#/components/schemas/PerformArrangementActivity",
             "TrackChildrenLocationChange": "#/components/schemas/TrackChildrenLocationChange",
@@ -1324,6 +1345,23 @@
           }
         ]
       },
+      "EndArrangement": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "endedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
       "InitiateArrangement": {
         "allOf": [
           {
@@ -1331,7 +1369,13 @@
           },
           {
             "type": "object",
-            "additionalProperties": false
+            "additionalProperties": false,
+            "properties": {
+              "initiatedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
           }
         ]
       },
@@ -1344,13 +1388,17 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
-              "completedByPersonId": {
-                "type": "string",
-                "format": "guid"
-              },
               "activityName": {
                 "type": "string",
                 "nullable": true
+              },
+              "performedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "performedByPersonId": {
+                "type": "string",
+                "format": "guid"
               }
             }
           }

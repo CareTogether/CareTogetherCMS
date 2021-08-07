@@ -45,7 +45,8 @@ namespace CareTogether.Resources.Models
             OneOf<ReferralEntry, Error<string>> result = command switch
             {
                 //TODO: Validate policy version and enforce any other invariants
-                CreateReferral c => new ReferralEntry(c.ReferralId, c.PolicyVersion, CloseReason: null, c.FamilyId,
+                CreateReferral c => new ReferralEntry(c.ReferralId, c.PolicyVersion,
+                    c.OpenedAtUtc, CloseReason: null, c.FamilyId,
                     ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty,
                     ImmutableDictionary<Guid, ArrangementEntry>.Empty),
                 _ => referrals.TryGetValue(command.ReferralId, out var referralEntry)
