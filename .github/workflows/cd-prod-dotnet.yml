@@ -17,6 +17,8 @@ on:
       - 'README.md'
       - 'LICENSE'
       - '.gitignore'
+      - '.github/workflows/cd-prod-react.yml'
+      - '.github/workflows/ci-pr-dotnet.yml'
 
 jobs:
   build:
