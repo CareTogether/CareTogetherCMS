@@ -5,7 +5,11 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Resources
 {
-    public sealed record ReferralPolicy(int Version, string VersionLabel,
+    public sealed record EffectiveLocationPolicy(int Version, string VersionLabel,
+        ReferralPolicy ReferralPolicy,
+        VolunteerPolicy VolunteerPolicy);
+
+    public sealed record ReferralPolicy(
         ImmutableList<ActionRequirement> RequiredIntakeActions,
         ImmutableList<ArrangementPolicy> ArrangementPolicies);
         //TODO: Include referral close reasons
@@ -27,7 +31,7 @@ namespace CareTogether.Resources
     public sealed record RecurrencePolicyStage(TimeSpan Delay, int? MaxOccurrences);
 
 
-    public sealed record VolunteerPolicy(int Version, string VersionLabel,
+    public sealed record VolunteerPolicy(
         ImmutableDictionary<string, VolunteerRolePolicy> VolunteerRoles,
         ImmutableDictionary<string, VolunteerFamilyRolePolicy> VolunteerFamilyRoles);
 

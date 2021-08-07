@@ -10,19 +10,19 @@ namespace CareTogether.Resources
     public sealed class ReferralsResource : IReferralsResource
     {
         private readonly IMultitenantEventLog<ReferralEvent> eventLog;
-        private readonly IObjectStore<string> draftNotes;
+        private readonly IObjectStore<string> draftNotesStore;
         private readonly ConcurrentLockingStore<(Guid organizationId, Guid locationId), ReferralModel> tenantModels;
 
 
-        public ReferralsResource(IMultitenantEventLog<ReferralEvent> eventLog, IObjectStore<string> draftNotes)
+        public ReferralsResource(IMultitenantEventLog<ReferralEvent> eventLog, IObjectStore<string> draftNotesStore)
         {
             this.eventLog = eventLog;
-            this.draftNotes = draftNotes;
+            this.draftNotesStore = draftNotesStore;
             tenantModels = new ConcurrentLockingStore<(Guid organizationId, Guid locationId), ReferralModel>(key =>
                 ReferralModel.InitializeAsync(eventLog.GetAllEventsAsync(key.organizationId, key.locationId),
                     async noteId =>
                     {
-                        var draftNoteResult = await draftNotes.GetAsync(key.organizationId, key.locationId, noteId.ToString());
+                        var draftNoteResult = await draftNotesStore.GetAsync(key.organizationId, key.locationId, noteId.ToString());
                         return draftNoteResult.TryPickT0(out var draftNote, out var _)
                             ? draftNote.Value
                             : null; //TODO: Log/return an error that the draft note could not be found!
@@ -95,14 +95,14 @@ namespace CareTogether.Resources
                     switch (success.Value.Event.Command)
                     {
                         case CreateDraftArrangementNote c:
-                            await draftNotes.UpsertAsync(organizationId, locationId, command.NoteId.ToString(), c.DraftNoteContents);
+                            await draftNotesStore.UpsertAsync(organizationId, locationId, command.NoteId.ToString(), c.DraftNoteContents);
                             break;
                         case EditDraftArrangementNote c:
-                            await draftNotes.UpsertAsync(organizationId, locationId, command.NoteId.ToString(), c.DraftNoteContents);
+                            await draftNotesStore.UpsertAsync(organizationId, locationId, command.NoteId.ToString(), c.DraftNoteContents);
                             break;
                         case DiscardDraftArrangementNote:
                         case ApproveArrangementNote:
-                            await draftNotes.DeleteAsync(organizationId, locationId, command.NoteId.ToString());
+                            await draftNotesStore.DeleteAsync(organizationId, locationId, command.NoteId.ToString());
                             break;
                     }
 

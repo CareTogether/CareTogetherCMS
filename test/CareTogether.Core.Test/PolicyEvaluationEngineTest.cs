@@ -1,6 +1,7 @@
 ﻿using CareTogether.Engines;
 using CareTogether.Managers;
 using CareTogether.Resources;
+using CareTogether.TestData;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -45,13 +46,20 @@ namespace CareTogether.Core.Test
                 new CustodialRelationship(guid5, guid2, CustodialRelationshipType.LegalGuardian)
             });
 
+        private PolicyEvaluationEngine dut;
+
+        [TestInitialize]
+        public async Task TestInitialize()
+        {
+            var policiesStore = new MemoryMultitenantObjectStore<EffectiveLocationPolicy>();
+            await TestDataProvider.PopulatePolicies(policiesStore);
+            var policiesResource = new PoliciesResource(policiesStore);
+            dut = new PolicyEvaluationEngine(policiesResource);
+        }
 
         [TestMethod]
         public async Task TestCalculateVolunteerFamilyApprovalStatusWithNoActions()
         {
-            var policiesResource = new PoliciesResource(); //TODO: Convert to use a mock object store for policy injection
-            var dut = new PolicyEvaluationEngine(policiesResource);
-
             var result = await dut.CalculateVolunteerFamilyApprovalStatusAsync(guid1, guid2, volunteerFamily,
                 new List<FormUploadInfo>
                 {
@@ -76,9 +84,6 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public async Task TestCalculateVolunteerFamilyApprovalStatusWithJustApplications()
         {
-            var policiesResource = new PoliciesResource(); //TODO: Convert to use a mock object store for policy injection
-            var dut = new PolicyEvaluationEngine(policiesResource);
-
             var result = await dut.CalculateVolunteerFamilyApprovalStatusAsync(guid1, guid2, volunteerFamily,
                 new List<FormUploadInfo>
                 {
@@ -113,9 +118,6 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public async Task TestCalculateVolunteerFamilyApprovalStatusWithPartialHostFamilyProgress()
         {
-            var policiesResource = new PoliciesResource(); //TODO: Convert to use a mock object store for policy injection
-            var dut = new PolicyEvaluationEngine(policiesResource);
-
             var result = await dut.CalculateVolunteerFamilyApprovalStatusAsync(guid1, guid2, volunteerFamily,
                 new List<FormUploadInfo>
                 {
@@ -146,9 +148,6 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public async Task TestCalculateVolunteerFamilyApprovalStatusWithCompleteHostFamilyProgress()
         {
-            var policiesResource = new PoliciesResource(); //TODO: Convert to use a mock object store for policy injection
-            var dut = new PolicyEvaluationEngine(policiesResource);
-
             var result = await dut.CalculateVolunteerFamilyApprovalStatusAsync(guid1, guid2, volunteerFamily,
                 new List<FormUploadInfo>
                 {
