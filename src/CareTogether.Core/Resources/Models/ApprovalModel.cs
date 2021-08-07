@@ -58,7 +58,8 @@ namespace CareTogether.Resources.Models
                 UploadVolunteerFamilyForm c => volunteerFamilyEntry with
                 {
                     ApprovalFormUploads = volunteerFamilyEntry.ApprovalFormUploads.Add(
-                        new FormUploadInfo(userId, timestampUtc, c.FormName, c.FormVersion, c.UploadedFileName))
+                        new FormUploadInfo(userId, timestampUtc, c.FormName, c.FormVersion,
+                            c.UploadedFileName, c.UploadedDocumentId))
                 },
                 DeactivateVolunteerFamily c => volunteerFamilyEntry with
                 {
@@ -113,7 +114,8 @@ namespace CareTogether.Resources.Models
                 UploadVolunteerForm c => volunteerEntry with
                 {
                     ApprovalFormUploads = volunteerEntry.ApprovalFormUploads.Add(
-                        new FormUploadInfo(userId, timestampUtc, c.FormName, c.FormVersion, c.UploadedFileName))
+                        new FormUploadInfo(userId, timestampUtc, c.FormName, c.FormVersion,
+                            c.UploadedFileName, c.UploadedDocumentId))
                 },
                 DeactivateVolunteer c => volunteerEntry with
                 {

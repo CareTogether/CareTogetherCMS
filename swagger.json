@@ -848,9 +848,13 @@
             "type": "string",
             "nullable": true
           },
-          "uploadedFileName": {
+          "originalFileName": {
             "type": "string",
             "nullable": true
+          },
+          "uploadedDocumentId": {
+            "type": "string",
+            "format": "guid"
           }
         }
       },
@@ -1221,6 +1225,10 @@
               "uploadedFileName": {
                 "type": "string",
                 "nullable": true
+              },
+              "uploadedDocumentId": {
+                "type": "string",
+                "format": "guid"
               }
             }
           }
@@ -1460,6 +1468,10 @@
               "uploadedFileName": {
                 "type": "string",
                 "nullable": true
+              },
+              "uploadedDocumentId": {
+                "type": "string",
+                "format": "guid"
               }
             }
           }

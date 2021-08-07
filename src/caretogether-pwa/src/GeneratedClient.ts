@@ -1171,7 +1171,8 @@ export class FormUploadInfo implements IFormUploadInfo {
     timestampUtc?: Date;
     formName?: string | undefined;
     formVersion?: string | undefined;
-    uploadedFileName?: string | undefined;
+    originalFileName?: string | undefined;
+    uploadedDocumentId?: string;
 
     constructor(data?: IFormUploadInfo) {
         if (data) {
@@ -1188,7 +1189,8 @@ export class FormUploadInfo implements IFormUploadInfo {
             this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
             this.formName = _data["formName"];
             this.formVersion = _data["formVersion"];
-            this.uploadedFileName = _data["uploadedFileName"];
+            this.originalFileName = _data["originalFileName"];
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
         }
     }
 
@@ -1205,7 +1207,8 @@ export class FormUploadInfo implements IFormUploadInfo {
         data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
         data["formName"] = this.formName;
         data["formVersion"] = this.formVersion;
-        data["uploadedFileName"] = this.uploadedFileName;
+        data["originalFileName"] = this.originalFileName;
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
         return data; 
     }
 }
@@ -1215,7 +1218,8 @@ export interface IFormUploadInfo {
     timestampUtc?: Date;
     formName?: string | undefined;
     formVersion?: string | undefined;
-    uploadedFileName?: string | undefined;
+    originalFileName?: string | undefined;
+    uploadedDocumentId?: string;
 }
 
 export class ActivityInfo implements IActivityInfo {
@@ -1855,6 +1859,7 @@ export class UploadReferralForm extends ReferralCommand implements IUploadReferr
     formName?: string | undefined;
     formVersion?: string | undefined;
     uploadedFileName?: string | undefined;
+    uploadedDocumentId?: string;
 
     constructor(data?: IUploadReferralForm) {
         super(data);
@@ -1867,6 +1872,7 @@ export class UploadReferralForm extends ReferralCommand implements IUploadReferr
             this.formName = _data["formName"];
             this.formVersion = _data["formVersion"];
             this.uploadedFileName = _data["uploadedFileName"];
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
         }
     }
 
@@ -1882,6 +1888,7 @@ export class UploadReferralForm extends ReferralCommand implements IUploadReferr
         data["formName"] = this.formName;
         data["formVersion"] = this.formVersion;
         data["uploadedFileName"] = this.uploadedFileName;
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
         super.toJSON(data);
         return data; 
     }
@@ -1891,6 +1898,7 @@ export interface IUploadReferralForm extends IReferralCommand {
     formName?: string | undefined;
     formVersion?: string | undefined;
     uploadedFileName?: string | undefined;
+    uploadedDocumentId?: string;
 }
 
 export abstract class ArrangementCommand implements IArrangementCommand {
@@ -2308,6 +2316,7 @@ export class UploadArrangementForm extends ArrangementCommand implements IUpload
     formName?: string | undefined;
     formVersion?: string | undefined;
     uploadedFileName?: string | undefined;
+    uploadedDocumentId?: string;
 
     constructor(data?: IUploadArrangementForm) {
         super(data);
@@ -2320,6 +2329,7 @@ export class UploadArrangementForm extends ArrangementCommand implements IUpload
             this.formName = _data["formName"];
             this.formVersion = _data["formVersion"];
             this.uploadedFileName = _data["uploadedFileName"];
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
         }
     }
 
@@ -2335,6 +2345,7 @@ export class UploadArrangementForm extends ArrangementCommand implements IUpload
         data["formName"] = this.formName;
         data["formVersion"] = this.formVersion;
         data["uploadedFileName"] = this.uploadedFileName;
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
         super.toJSON(data);
         return data; 
     }
@@ -2344,6 +2355,7 @@ export interface IUploadArrangementForm extends IArrangementCommand {
     formName?: string | undefined;
     formVersion?: string | undefined;
     uploadedFileName?: string | undefined;
+    uploadedDocumentId?: string;
 }
 
 export class VolunteerFamily implements IVolunteerFamily {

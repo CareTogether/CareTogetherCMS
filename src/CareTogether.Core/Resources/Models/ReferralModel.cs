@@ -90,7 +90,8 @@ namespace CareTogether.Resources.Models
                         UploadReferralForm c => referralEntry with
                         {
                             ReferralFormUploads = referralEntry.ReferralFormUploads.Add(
-                                new FormUploadInfo(userId, timestampUtc, c.FormName, c.FormVersion, c.UploadedFileName))
+                                new FormUploadInfo(userId, timestampUtc, c.FormName, c.FormVersion,
+                                    c.UploadedFileName, c.UploadedDocumentId))
                         },
                         CloseReferral c => referralEntry with
                         {
@@ -156,7 +157,8 @@ namespace CareTogether.Resources.Models
                         UploadArrangementForm c => arrangementEntry with
                         {
                             ArrangementFormUploads = arrangementEntry.ArrangementFormUploads.Add(
-                                new FormUploadInfo(userId, timestampUtc, c.FormName, c.FormVersion, c.UploadedFileName))
+                                new FormUploadInfo(userId, timestampUtc, c.FormName, c.FormVersion,
+                                    c.UploadedFileName, c.UploadedDocumentId))
                         },
                         PerformArrangementActivity c => arrangementEntry with
                         {
