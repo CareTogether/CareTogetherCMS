@@ -12,13 +12,13 @@ COPY ["src/CareTogether.Api/CareTogether.Api.csproj", "src/CareTogether.Api/"]
 COPY ["test/CareTogether.TestData/CareTogether.TestData.csproj", "test/CareTogether.TestData/"]
 COPY ["src/CareTogether.Core/CareTogether.Core.csproj", "src/CareTogether.Core/"]
 COPY ["src/CareTogether.Contracts/CareTogether.Contracts.csproj", "src/CareTogether.Contracts/"]
-RUN dotnet restore "src/CareTogether.Api/CareTogether.Api.csproj"
+RUN dotnet restore "src/CareTogether.Api/CareTogether.Api.csproj" -r linux-musl-x64
 COPY . .
 WORKDIR "/src/src/CareTogether.Api"
-RUN dotnet build "CareTogether.Api.csproj" -c Release -o /app/build
+RUN dotnet build "CareTogether.Api.csproj" -c Release -o /app/build -r linux-musl-x64 --no-restore
 
 FROM build AS publish
-RUN dotnet publish "CareTogether.Api.csproj" -c Release -o /app/publish
+RUN dotnet publish "CareTogether.Api.csproj" -c Release -o /app/publish -r linux-musl-x64 --self-contained false --no-restore
 
 FROM base AS final
 WORKDIR /app
