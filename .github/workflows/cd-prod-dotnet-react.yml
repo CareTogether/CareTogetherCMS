@@ -30,7 +30,7 @@ jobs:
         password: ${{ secrets.REGISTRY_PASSWORD }} 
     # Build and publish the .NET backend container via dockerfile 
     - run: |
-        docker build src/CareTogether.Api/Dockerfile -t caretogether.azurecr.io/caretogether-api:${{ github.sha }} 
+        docker build -f src/CareTogether.Api/Dockerfile -t caretogether.azurecr.io/caretogether-api:${{ github.sha }} .
         docker push caretogether.azurecr.io/caretogether-api:${{ github.sha }}  
     # Deploy .NET backend container
     - name: Deploy .NET API to Azure
