@@ -73,6 +73,7 @@ namespace CareTogether.Api
 
             // Utility providers
             services.AddSingleton(new AuthorizationProvider(communitiesResource));
+            services.AddSingleton<IFileStore>(new BlobFileStore(blobServiceClient, "Uploads"));
 
             // Use legacy Newtonsoft JSON to support JsonPolymorph & NSwag for polymorphic serialization
             services.AddControllers().AddNewtonsoftJson();

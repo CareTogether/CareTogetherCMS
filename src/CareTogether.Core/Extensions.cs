@@ -4,7 +4,7 @@ using System.Security.Claims;
 
 namespace CareTogether
 {
-    internal static class Extensions
+    public static class Extensions
     {
         public static List<T> With<T>(this List<T> list, T valueToAdd)
         {
