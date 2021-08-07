@@ -30,41 +30,27 @@ jobs:
         dotnet-version: '5.0.x'
     - name: Publish .NET API release build
       run: dotnet publish --configuration Release --self-contained false --output publish/api
-#   - name: Upload API artifact for deployment job
-#     uses: actions/upload-artifact@v2
-#     with:
-#       name: api
-#       path: publish/api
 
     # Build React frontend
-    - name: Set up Node.js
-      uses: actions/setup-node@v1
-      with:
-        node-version: '14.x'
-    - name: Cache NPM packages
-      uses: actions/cache@v2
-      with:
-        path: '**/node_modules'
-        key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
-    - name: Install Yarn
-      run: npm install -g yarn
-    - name: Install NPM packages
-      run: yarn install
-      working-directory: src/caretogether-pwa
-    - name: Build React app
-      run: yarn build
-      working-directory: src/caretogether-pwa
-#   - name: Upload PWA artifact for deployment job
-#     uses: actions/upload-artifact@v2
+#   - name: Set up Node.js
+#     uses: actions/setup-node@v1
 #     with:
-#       name: pwa
-#       path: src/caretogether-pwa/build
+#       node-version: '14.x'
+#   - name: Cache NPM packages
+#     uses: actions/cache@v2
+#     with:
+#       path: '**/node_modules'
+#       key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+#   - name: Install Yarn
+#     run: npm install -g yarn
+#   - name: Install NPM packages
+#     run: yarn install
+#     working-directory: src/caretogether-pwa
+#   - name: Build React app
+#     run: yarn build
+#     working-directory: src/caretogether-pwa
     
     # Deploy .NET backend
-#   - name: Download API artifact from build job
-#     uses: actions/download-artifact@v2
-#     with:
-#       name: api
     - name: Deploy .NET API to Azure
       uses: azure/webapps-deploy@v2
       with:
@@ -74,15 +60,11 @@ jobs:
         package: publish/api
     
     # Deploy React frontend
-#   - name: Download PWA artifact from build job
-#     uses: actions/download-artifact@v2
+#   - name: Deploy React PWA to Azure
+#     uses: azure/webapps-deploy@v2
+#     id: deploy-to-webapp
 #     with:
-#       name: pwa
-    - name: Deploy React PWA to Azure
-      uses: azure/webapps-deploy@v2
-      id: deploy-to-webapp
-      with:
-        app-name: 'caretogether-pwa'
-        slot-name: 'production'
-        publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_CARETOGETHER_PWA }}
-        package: src/caretogether-pwa/build
+#       app-name: 'caretogether-pwa'
+#       slot-name: 'production'
+#       publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_CARETOGETHER_PWA }}
+#       package: src/caretogether-pwa/build
