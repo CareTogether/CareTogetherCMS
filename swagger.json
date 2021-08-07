@@ -384,12 +384,66 @@
         }
       }
     },
+    "/api/{organizationId}/{locationId}/Referrals/arrangementNoteCommand": {
+      "post": {
+        "tags": [
+          "Referrals"
+        ],
+        "operationId": "Referrals_SubmitArrangementNoteCommand",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArrangementNoteCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 3
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Referral"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/{organizationId}/{locationId}/VolunteerFamilies": {
       "get": {
         "tags": [
           "VolunteerFamilies"
         ],
-        "operationId": "VolunteerFamilies_Get",
+        "operationId": "VolunteerFamilies_ListAllVolunteerFamilies",
         "parameters": [
           {
             "name": "organizationId",
@@ -422,6 +476,114 @@
                   "items": {
                     "$ref": "#/components/schemas/VolunteerFamily"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/{organizationId}/{locationId}/VolunteerFamilies/volunteerFamilyCommand": {
+      "post": {
+        "tags": [
+          "VolunteerFamilies"
+        ],
+        "operationId": "VolunteerFamilies_SubmitVolunteerFamilyCommand",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VolunteerFamilyCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 3
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VolunteerFamily"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/{organizationId}/{locationId}/VolunteerFamilies/volunteerCommand": {
+      "post": {
+        "tags": [
+          "VolunteerFamilies"
+        ],
+        "operationId": "VolunteerFamilies_SubmitVolunteerCommand",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VolunteerCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 3
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VolunteerFamily"
                 }
               }
             }
@@ -1573,6 +1735,102 @@
           }
         ]
       },
+      "ArrangementNoteCommand": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "discriminator",
+          "mapping": {
+            "ApproveArrangementNote": "#/components/schemas/ApproveArrangementNote",
+            "CreateDraftArrangementNote": "#/components/schemas/CreateDraftArrangementNote",
+            "DiscardDraftArrangementNote": "#/components/schemas/DiscardDraftArrangementNote",
+            "EditDraftArrangementNote": "#/components/schemas/EditDraftArrangementNote"
+          }
+        },
+        "x-abstract": true,
+        "additionalProperties": false,
+        "required": [
+          "discriminator"
+        ],
+        "properties": {
+          "referralId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "arrangementId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "noteId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "discriminator": {
+            "type": "string"
+          }
+        }
+      },
+      "ApproveArrangementNote": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementNoteCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "finalizedNoteContents": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "CreateDraftArrangementNote": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementNoteCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "draftNoteContents": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "DiscardDraftArrangementNote": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementNoteCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false
+          }
+        ]
+      },
+      "EditDraftArrangementNote": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementNoteCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "draftNoteContents": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
       "VolunteerFamily": {
         "type": "object",
         "additionalProperties": false,
@@ -1584,8 +1842,331 @@
                 "$ref": "#/components/schemas/Family"
               }
             ]
+          },
+          "approvalFormUploads": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/FormUploadInfo"
+            }
+          },
+          "approvalActivitiesPerformed": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/ActivityInfo"
+            }
+          },
+          "familyRoleApprovals": {
+            "type": "object",
+            "nullable": true,
+            "additionalProperties": {
+              "$ref": "#/components/schemas/RoleApprovalStatus"
+            }
+          },
+          "individualVolunteers": {
+            "type": "object",
+            "nullable": true,
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Volunteer"
+            }
           }
         }
+      },
+      "RoleApprovalStatus": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Prospective",
+          "Approved"
+        ],
+        "enum": [
+          0,
+          1
+        ]
+      },
+      "Volunteer": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "approvalFormUploads": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/FormUploadInfo"
+            }
+          },
+          "approvalActivitiesPerformed": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/ActivityInfo"
+            }
+          },
+          "individualRoleApprovals": {
+            "type": "object",
+            "nullable": true,
+            "additionalProperties": {
+              "$ref": "#/components/schemas/RoleApprovalStatus"
+            }
+          }
+        }
+      },
+      "VolunteerFamilyCommand": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "discriminator",
+          "mapping": {
+            "DeactivateVolunteerFamily": "#/components/schemas/DeactivateVolunteerFamily",
+            "PerformVolunteerFamilyActivity": "#/components/schemas/PerformVolunteerFamilyActivity",
+            "ReactivateVolunteerFamily": "#/components/schemas/ReactivateVolunteerFamily",
+            "SetVolunteerFamilyNote": "#/components/schemas/SetVolunteerFamilyNote",
+            "UploadVolunteerFamilyForm": "#/components/schemas/UploadVolunteerFamilyForm"
+          }
+        },
+        "x-abstract": true,
+        "additionalProperties": false,
+        "required": [
+          "discriminator"
+        ],
+        "properties": {
+          "familyId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "discriminator": {
+            "type": "string"
+          }
+        }
+      },
+      "DeactivateVolunteerFamily": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerFamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "reason": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "PerformVolunteerFamilyActivity": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerFamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "activityName": {
+                "type": "string",
+                "nullable": true
+              },
+              "performedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "performedByPersonId": {
+                "type": "string",
+                "format": "guid"
+              }
+            }
+          }
+        ]
+      },
+      "ReactivateVolunteerFamily": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerFamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false
+          }
+        ]
+      },
+      "SetVolunteerFamilyNote": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerFamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "note": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "UploadVolunteerFamilyForm": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerFamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "formName": {
+                "type": "string",
+                "nullable": true
+              },
+              "formVersion": {
+                "type": "string",
+                "nullable": true
+              },
+              "uploadedFileName": {
+                "type": "string",
+                "nullable": true
+              },
+              "uploadedDocumentId": {
+                "type": "string",
+                "format": "guid"
+              }
+            }
+          }
+        ]
+      },
+      "VolunteerCommand": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "discriminator",
+          "mapping": {
+            "DeactivateVolunteer": "#/components/schemas/DeactivateVolunteer",
+            "PerformVolunteerActivity": "#/components/schemas/PerformVolunteerActivity",
+            "ReactivateVolunteer": "#/components/schemas/ReactivateVolunteer",
+            "SetVolunteerNote": "#/components/schemas/SetVolunteerNote",
+            "UploadVolunteerForm": "#/components/schemas/UploadVolunteerForm"
+          }
+        },
+        "x-abstract": true,
+        "additionalProperties": false,
+        "required": [
+          "discriminator"
+        ],
+        "properties": {
+          "familyId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "personId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "discriminator": {
+            "type": "string"
+          }
+        }
+      },
+      "DeactivateVolunteer": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "reason": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "PerformVolunteerActivity": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "activityName": {
+                "type": "string",
+                "nullable": true
+              },
+              "performedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "performedByPersonId": {
+                "type": "string",
+                "format": "guid"
+              }
+            }
+          }
+        ]
+      },
+      "ReactivateVolunteer": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false
+          }
+        ]
+      },
+      "SetVolunteerNote": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "note": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "UploadVolunteerForm": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "formName": {
+                "type": "string",
+                "nullable": true
+              },
+              "formVersion": {
+                "type": "string",
+                "nullable": true
+              },
+              "uploadedFileName": {
+                "type": "string",
+                "nullable": true
+              },
+              "uploadedDocumentId": {
+                "type": "string",
+                "format": "guid"
+              }
+            }
+          }
+        ]
       }
     }
   }

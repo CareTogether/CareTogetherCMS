@@ -59,5 +59,19 @@ namespace CareTogether.Api.Controllers
                 notAllowed => BadRequest(),
                 notFound => NotFound());
         }
+
+        [HttpPost("arrangementNoteCommand")]
+        public async Task<ActionResult<Referral>> SubmitArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
+            [FromBody] ArrangementNoteCommand command)
+        {
+            var authorizedUser = await authorizationProvider.AuthorizeAsync(organizationId, locationId, User);
+
+            var result = await referralManager.ExecuteArrangementNoteCommandAsync(organizationId, locationId, authorizedUser, command);
+
+            return result.Match<ActionResult<Referral>>(
+                referral => referral,
+                notAllowed => BadRequest(),
+                notFound => NotFound());
+        }
     }
 }

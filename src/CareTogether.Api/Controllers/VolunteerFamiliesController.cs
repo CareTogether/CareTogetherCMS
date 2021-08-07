@@ -1,4 +1,5 @@
-﻿using CareTogether.Resources;
+﻿using CareTogether.Managers;
+using CareTogether.Resources;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -13,22 +14,51 @@ namespace CareTogether.Api.Controllers
     public class VolunteerFamiliesController : ControllerBase
     {
         private readonly AuthorizationProvider authorizationProvider;
+        private readonly IApprovalManager approvalManager;
 
-        public VolunteerFamiliesController(AuthorizationProvider authorizationProvider)
+        public VolunteerFamiliesController(AuthorizationProvider authorizationProvider, IApprovalManager approvalManager)
         {
             this.authorizationProvider = authorizationProvider;
+            this.approvalManager = approvalManager;
         }
 
 
-        public sealed record VolunteerFamily(Family Family /*TODO: Per-person & family-level volunteer records and policy evaluation results*/);
-
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<VolunteerFamily>>> Get(Guid organizationId, Guid locationId)
+        public async Task<ActionResult<IEnumerable<VolunteerFamily>>> ListAllVolunteerFamiliesAsync(Guid organizationId, Guid locationId)
         {
-            //TODO: Extract authorization provider logic into an authorization policy & claims provider.
             var authorizedUser = await authorizationProvider.AuthorizeAsync(organizationId, locationId, User);
 
-            throw new NotImplementedException();
+            var referrals = await approvalManager.ListVolunteerFamiliesAsync(authorizedUser, organizationId, locationId);
+
+            return Ok(referrals);
+        }
+
+        [HttpPost("volunteerFamilyCommand")]
+        public async Task<ActionResult<VolunteerFamily>> SubmitVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
+            [FromBody] VolunteerFamilyCommand command)
+        {
+            var authorizedUser = await authorizationProvider.AuthorizeAsync(organizationId, locationId, User);
+
+            var result = await approvalManager.ExecuteVolunteerFamilyCommandAsync(organizationId, locationId, authorizedUser, command);
+
+            return result.Match<ActionResult<VolunteerFamily>>(
+                volunteerFamily => volunteerFamily,
+                notAllowed => BadRequest(),
+                notFound => NotFound());
+        }
+
+        [HttpPost("volunteerCommand")]
+        public async Task<ActionResult<VolunteerFamily>> SubmitVolunteerCommandAsync(Guid organizationId, Guid locationId,
+            [FromBody] VolunteerCommand command)
+        {
+            var authorizedUser = await authorizationProvider.AuthorizeAsync(organizationId, locationId, User);
+
+            var result = await approvalManager.ExecuteVolunteerCommandAsync(organizationId, locationId, authorizedUser, command);
+
+            return result.Match<ActionResult<VolunteerFamily>>(
+                volunteerFamily => volunteerFamily,
+                notAllowed => BadRequest(),
+                notFound => NotFound());
         }
     }
 }
