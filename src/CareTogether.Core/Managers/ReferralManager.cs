@@ -162,6 +162,9 @@ namespace CareTogether.Managers
             new(entry.Id, entry.PolicyVersion, entry.ArrangementType, entry.State,
                 entry.ArrangementFormUploads, entry.ArrangementActivitiesPerformed, entry.VolunteerAssignments,
                 entry.PartneringFamilyChildAssignments, entry.ChildrenLocationHistory,
-                ImmutableList<Note>.Empty); //TODO: Look up note contents
+                entry.Notes.Values.Select(note =>
+                    new Note(note.Id, note.AuthorId, TimestampUtc: note.Status == NoteStatus.Approved
+                        ? note.ApprovedTimestampUtc.Value
+                        : note.LastEditTimestampUtc, note.Contents, note.Status)).ToImmutableList());
     }
 }
