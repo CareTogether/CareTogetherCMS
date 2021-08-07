@@ -27,10 +27,11 @@ namespace CareTogether.Api
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseUrls(
-                        "https://app.caretogether.io",
+                        //"https://app.caretogether.io",
                         "http://caretogether-api.azurewebsites.net",
-                        "https://caretogether-api.azurewebsites.net",
-                        "https://localhost:44359/");
+                        //"https://caretogether-api.azurewebsites.net",
+                        //"https://localhost",
+                        "http://localhost");
                     webBuilder.UseStartup<Startup>();
                 });
     }
