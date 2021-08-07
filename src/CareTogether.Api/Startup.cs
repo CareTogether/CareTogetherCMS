@@ -41,8 +41,8 @@ namespace CareTogether.Api
             var goalsEventLog = new AppendBlobMultitenantEventLog<GoalCommandExecutedEvent>(blobServiceClient, LogType.GoalsEventLog);
             var referralsEventLog = new AppendBlobMultitenantEventLog<ReferralEvent>(blobServiceClient, LogType.ReferralsEventLog);
             var approvalsEventLog = new AppendBlobMultitenantEventLog<ApprovalEvent>(blobServiceClient, LogType.ApprovalsEventLog);
-            var draftNotesStore = new JsonBlobObjectStore<string>(blobServiceClient, "draftNotes");
-            var policiesStore = new JsonBlobObjectStore<EffectiveLocationPolicy>(blobServiceClient, "locationPolicies");
+            var draftNotesStore = new JsonBlobObjectStore<string>(blobServiceClient, "DraftNotes");
+            var policiesStore = new JsonBlobObjectStore<EffectiveLocationPolicy>(blobServiceClient, "LocationPolicies");
 
 #if DEBUG
             if (HostEnvironment.IsDevelopment())
