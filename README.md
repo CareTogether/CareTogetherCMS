@@ -7,7 +7,7 @@ CareTogether is an open-source case management system (CMS) for nonprofits conne
 ![Open Help-Wanted Issues](https://badgen.net/github/label-issues/CareTogether/CareTogetherCMS/help%20wanted/open)
 
 ## Prerequisites
-You can build and run CareTogether on any operating system supported by Node.js and .NET Core, including Windows, MacOS, and supported Linux distros. CareTogether requires currently supported versions of Node.js and the .NET Core 5.0 SDK to be installed on your system.
+You can build and run CareTogether on any operating system supported by Node.js and .NET Core, including Windows, MacOS, and supported Linux distros. CareTogether requires currently supported versions of Node.js and the .NET Core 5.0 SDK to be installed on your system, and - depending on how you choose to run the API - you may want to install Docker Desktop as well (the API runs in an Alpine Linux container in Azure for production builds).
 
 You will also need to install [the Azurite emulator for Azure Storage](https://github.com/Azure/Azurite) and [the Yarn package manager](https://yarnpkg.com/getting-started/install):
 ```

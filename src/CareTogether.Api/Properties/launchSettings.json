@@ -11,7 +11,7 @@
   "profiles": {
     "IIS Express": {
       "commandName": "IISExpress",
-      "launchUrl": "api/11111111-1111-1111-1111-111111111111/22222222-2222-2222-2222-222222222222/people",
+      "launchUrl": "health",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
@@ -28,7 +28,7 @@
     },
     "Docker": {
       "commandName": "Docker",
-      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/api/11111111-1111-1111-1111-111111111111/22222222-2222-2222-2222-222222222222/people",
+      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/health",
       "publishAllPorts": true,
       "useSSL": true
     }
