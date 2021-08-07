@@ -50,7 +50,7 @@ namespace CareTogether.Api
                 // Note that this will not reset data (storage containers) for tenants other than the test tenant used by the TestData project.
                 TestData.TestStorageHelper.ResetTestTenantData(blobServiceClient);
                 TestData.TestDataProvider.PopulateTestDataAsync(
-                    communityEventLog, contactsEventLog, goalsEventLog, referralsEventLog).Wait();
+                    communityEventLog, contactsEventLog, goalsEventLog, referralsEventLog, draftNotes).Wait();
             }
 #endif
 

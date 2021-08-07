@@ -1,5 +1,4 @@
-﻿using CareTogether.Managers;
-using CareTogether.Resources;
+﻿using CareTogether.Resources;
 using CareTogether.Resources.Models;
 using CareTogether.Resources.Storage;
 using System;
@@ -30,7 +29,8 @@ namespace CareTogether.TestData
             IMultitenantEventLog<CommunityEvent> communityEventLog,
             IMultitenantEventLog<ContactCommandExecutedEvent> contactsEventLog,
             IMultitenantEventLog<GoalCommandExecutedEvent> goalsEventLog,
-            IMultitenantEventLog<ReferralEvent> referralsEventLog)
+            IMultitenantEventLog<ReferralEvent> referralsEventLog,
+            IObjectStore<string> draftNotes)
         {
             await communityEventLog.AppendEventsAsync(guid1, guid2,
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(adminId, adminId, "System", "Administrator", null)),
@@ -131,8 +131,15 @@ namespace CareTogether.TestData
                     "Family Coach Supervision", new DateTime(2020, 3, 21, 11, 11, 11), adminId)),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 22, 16, 30, 35), new TrackChildrenLocationChange(guid1, guid1,
                     new DateTime(2020, 3, 22, 16, 30, 35), ImmutableList<Guid>.Empty.Add(guid3), guid1, ChildrenLocationPlan.OvernightHousing, "Weekend with parents, met at McDonald's near mom")),
+                new ArrangementNoteCommandExecuted(guid4, new DateTime(2020, 3, 22, 18, 0, 0), new CreateDraftArrangementNote(guid1, guid1, guid1, null)),
+                new ArrangementNoteCommandExecuted(guid4, new DateTime(2020, 3, 22, 19, 30, 0), new EditDraftArrangementNote(guid1, guid1, guid1, null)),
+                new ArrangementNoteCommandExecuted(adminId, new DateTime(2020, 3, 22, 19, 45, 0), new ApproveArrangementNote(guid1, guid1, guid1, "Eric and Ben liked the Play Place and didn't want to go home.")),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 24, 8, 30, 35), new TrackChildrenLocationChange(guid1, guid1,
                     new DateTime(2020, 3, 24, 8, 30, 35), ImmutableList<Guid>.Empty.Add(guid3), guid2, ChildrenLocationPlan.OvernightHousing, "Mom dropped off on way to work")),
+                new ArrangementNoteCommandExecuted(guid4, new DateTime(2020, 3, 24, 8, 45, 0), new CreateDraftArrangementNote(guid1, guid1, guid2, null)),
+                new ArrangementNoteCommandExecuted(guid4, new DateTime(2020, 3, 24, 8, 50, 0), new DiscardDraftArrangementNote(guid1, guid1, guid2)),
+                new ArrangementNoteCommandExecuted(guid4, new DateTime(2020, 3, 24, 8, 55, 0), new CreateDraftArrangementNote(guid1, guid1, guid3, null)),
+                new ArrangementNoteCommandExecuted(guid4, new DateTime(2020, 3, 24, 8, 57, 0), new EditDraftArrangementNote(guid1, guid1, guid3, null)),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 30, 18, 18, 18), new TrackChildrenLocationChange(guid1, guid1,
                     new DateTime(2020, 3, 30, 18, 18, 18), ImmutableList<Guid>.Empty.Add(guid3), guid1, ChildrenLocationPlan.ReturnToFamily, "Mom met us and picked him up at DQ")),
                 new ReferralCommandExecuted(adminId, new DateTime(2020, 10, 4, 12, 32, 55), new CloseReferral(guid1, ReferralCloseReason.NeedMet)),
@@ -140,6 +147,8 @@ namespace CareTogether.TestData
                 new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 32, 0), new UploadReferralForm(guid2, "Request for Help Form", "v1", "Jane Doe second referral info.pdf")),
                 new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 32, 0), new PerformReferralActivity(guid2, "Intake Coordinator Screening Call",
                     new DateTime(2021, 7, 10, 19, 32, 0), adminId)));
+
+            await draftNotes.UpsertAsync(guid1, guid1, guid3, "Kids are doing better playing this morning. For some reason they're both really into \"lightsabers\" or something like that... 😅");
         }
 
 
