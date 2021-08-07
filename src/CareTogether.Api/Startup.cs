@@ -31,6 +31,8 @@ namespace CareTogether.Api
         {
             services.AddApplicationInsightsTelemetry();
 
+            services.AddHealthChecks();
+
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddMicrosoftIdentityWebApi(Configuration.GetSection("AzureAdB2C"));
 
@@ -141,6 +143,8 @@ namespace CareTogether.Api
 
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapHealthChecks("/health").AllowAnonymous();
+
                 endpoints.MapControllers();
             });
         }
