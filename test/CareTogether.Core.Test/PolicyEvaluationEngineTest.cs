@@ -1,12 +1,10 @@
 ﻿using CareTogether.Engines;
-using CareTogether.Managers;
 using CareTogether.Resources;
 using CareTogether.TestData;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace CareTogether.Core.Test

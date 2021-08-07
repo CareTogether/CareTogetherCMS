@@ -107,7 +107,7 @@ namespace CareTogether.Managers
                 CreateDraftArrangementNote c => c with { NoteId = Guid.NewGuid() },
                 _ => command
             };
-            
+
             var getReferralResult = await referralsResource.GetReferralAsync(organizationId, locationId, command.ReferralId);
             if (getReferralResult.TryPickT0(out var referralEntry, out var notFound))
             {

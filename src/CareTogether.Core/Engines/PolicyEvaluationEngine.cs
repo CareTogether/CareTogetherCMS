@@ -1,4 +1,4 @@
-﻿using CareTogether.Managers;
+using CareTogether.Managers;
 using CareTogether.Resources;
 using OneOf;
 using OneOf.Types;
@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace CareTogether.Engines
@@ -114,7 +113,7 @@ namespace CareTogether.Engines
                             {
                                 var (person, familyRelationship) = x;
                                 var (formUploads, activities) = individualInfo[person.Id];
-                                return activities.Any(activity=> activity.ActivityName == r.ActivityName);
+                                return activities.Any(activity => activity.ActivityName == r.ActivityName);
                             }),
                             _ => throw new NotImplementedException(
                                 $"The action requirement type '{requirement.ActionRequirement.GetType().FullName}' " +

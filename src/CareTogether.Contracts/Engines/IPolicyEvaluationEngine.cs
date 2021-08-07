@@ -4,8 +4,6 @@ using OneOf;
 using OneOf.Types;
 using System;
 using System.Collections.Immutable;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace CareTogether.Engines
@@ -22,7 +20,7 @@ namespace CareTogether.Engines
         Task<OneOf<Yes, Error<string>>> AuthorizeReferralCommandAsync(Guid organizationId, Guid locationId,
             AuthorizedUser user, ReferralCommand command, Referral referral);
 
-        Task<OneOf<Yes, Error<string>>> AuthorizeArrangementCommandAsync(Guid organizationId, Guid locationId, 
+        Task<OneOf<Yes, Error<string>>> AuthorizeArrangementCommandAsync(Guid organizationId, Guid locationId,
             AuthorizedUser user, ArrangementCommand command, Referral referral);
 
         Task<OneOf<Yes, Error<string>>> AuthorizeArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
@@ -47,7 +45,7 @@ namespace CareTogether.Engines
         Task<Referral> DiscloseReferralAsync(AuthorizedUser user, Referral referral);
 
         Task<Arrangement> DiscloseArrangementAsync(AuthorizedUser user, Arrangement arrangement);
-        
+
         Task<VolunteerFamily> DiscloseVolunteerFamilyAsync(AuthorizedUser user, VolunteerFamily volunteerFamily);
 
         Task<Family> DiscloseFamilyAsync(AuthorizedUser user, Family family);
