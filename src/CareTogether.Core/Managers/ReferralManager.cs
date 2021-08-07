@@ -149,7 +149,7 @@ namespace CareTogether.Managers
         private Referral ToReferral(ReferralEntry entry,
             ImmutableDictionary<Guid, Family> families,
             ImmutableDictionary<Guid, ContactInfo> contacts) =>
-            new(entry.Id, entry.PolicyVersion, entry.TimestampUtc, entry.CloseReason,
+            new(entry.Id, entry.PolicyVersion, entry.CreatedUtc, entry.CloseReason,
                 families[entry.PartneringFamilyId],
                 families[entry.PartneringFamilyId].Adults
                     .Select(a => contacts.TryGetValue(a.Item1.Id, out var c) ? c : null)
@@ -162,103 +162,9 @@ namespace CareTogether.Managers
             new(entry.Id, entry.PolicyVersion, entry.ArrangementType, entry.State,
                 entry.ArrangementFormUploads, entry.ArrangementActivitiesPerformed, entry.VolunteerAssignments,
                 entry.PartneringFamilyChildAssignments, entry.ChildrenLocationHistory,
-                ImmutableList<Note>.Empty); //TODO: Look up note contents
+                entry.Notes.Values.Select(note =>
+                    new Note(note.Id, note.AuthorId, TimestampUtc: note.Status == NoteStatus.Approved
+                        ? note.ApprovedTimestampUtc.Value
+                        : note.LastEditTimestampUtc, note.Contents, note.Status)).ToImmutableList());
     }
-
-    //[JsonHierarchyBase]
-    //public abstract partial record ReferralEvent(Guid ReferralId, Guid UserId);
-    //// JSON form: person info, contact info, basic referral notes
-    //public sealed record RequestForHelpReceived(Guid ReferralId, Guid UserId)
-    //    : ReferralEvent(ReferralId, UserId);
-    //// Blob form (Cognito -> PDF), family info (manual entry for now), additional contact info (if applicable)
-    //public sealed record IntakeFormReceived(Guid ReferralId, Guid UserId)
-    //    : ReferralEvent(ReferralId, UserId);
-    //public sealed record ReferralClosed(Guid ReferralId, Guid UserId,
-    //    ReferralCloseReason CloseReason) : ReferralEvent(ReferralId, UserId);
-    //public sealed record ArrangementCreated(Guid ReferralId, Guid ArrangementId, Guid UserId)
-    //    : ReferralEvent(ReferralId, UserId);
-    //// Blob form (always)
-    //// Need the ability to update family info ongoing, separate from referral lifecycle
-    ////TODO: That also means community relationship deletion should perhaps be replaced with inactivation, with reasons given?
-    //public sealed record ArrangementSetupFormReceived(Guid ReferralId, Guid ArrangementId, Guid UserId)
-    //    : ReferralEvent(ReferralId, UserId);
-    //public sealed record ArrangementOpened(Guid ReferralId, Guid ArrangementId, Guid UserId)
-    //    : ReferralEvent(ReferralId, UserId);
-    //public sealed record ArrangementMonitoringActivityPerformed(Guid ReferralId, Guid ArrangementId, Guid UserId)
-    //    : ReferralEvent(ReferralId, UserId);
-    //public sealed record ArrangementNoteCreated(Guid ReferralId, Guid ArrangementId, Guid UserId)
-    //    : ReferralEvent(ReferralId, UserId);
-    //public sealed record ArrangementDischargeFormReceived(Guid ReferralId, Guid ArrangementId, Guid UserId)
-    //    : ReferralEvent(ReferralId, UserId);
-    //public sealed record ArrangementClosed(Guid ReferralId, Guid ArrangementId, Guid UserId)
-    //    : ReferralEvent(ReferralId, UserId);
-
-
-    //public sealed class Referral
-    //{
-
-
-    //    public static Referral SubmitRequestForHelp(RequestForHelp request)
-    //    {
-
-    //    }
-    //}
-
-
-    // Validate ->
-    // Authorize (PolicyEvaluationEngine?) ->
-    // Execute (returning new state & optionally events) ->
-    // (optionally) Raise Domain Events ->
-    // Apply Permissions Filters (PolicyEvaluationEngine) ->
-    // Return New State
-
-
-    //#region Arrangement Notes
-
-    //internal IEnumerable<Note> GetArrangementNotes(Guid arrangementId)
-    //{
-    //    var workflow = workflowsResourceAccess.GetWorkflowState(arrangementId);
-    //    workflow.ValidateUserAccess();
-    //    return notesResourceAccess.GetNotes(arrangementId);
-    //}
-
-    //internal Guid RecordArrangementNote(Guid arrangementId, NoteContents contents)
-    //{
-    //    var workflow = workflowsResourceAccess.GetWorkflowState(arrangementId);
-    //    workflow.ValidateUserAccess();
-    //    workflow.ValidateAction();
-    //    var noteId = notesResourceAccess.CreateDraftNote(arrangementId, contents);
-    //    return noteId;
-    //}
-
-    //internal void EditArrangementNote(Guid arrangementId, Guid noteId, NoteContents updatedContents)
-    //{
-    //    var workflow = workflowsResourceAccess.GetWorkflowState(arrangementId);
-    //    workflow.ValidateUserAccess();
-    //    var note = notesResourceAccess.GetNote(arrangementId, noteId);
-    //    workflow.ValidateAction(note);
-    //    notesResourceAccess.EditDraftNote(arrangementId, noteId, updatedContents);
-    //}
-
-    //internal void ApproveArrangementNote(Guid arrangementId, Guid noteId)
-    //{
-    //    var workflow = workflowsResourceAccess.GetWorkflowState(arrangementId);
-    //    workflow.ValidateUserAccess();
-    //    var note = notesResourceAccess.GetNote(arrangementId, noteId);
-    //    workflow.ValidateAction(note);
-    //    notesResourceAccess.ApproveDraftNote(arrangementId, noteId);
-    //    notificationsUtility.NotifyUser(new Notifications.NoteApproved(arrangementId, noteId));
-    //}
-
-    //internal void RejectArrangementNote(Guid arrangementId, Guid noteId, DraftNoteDenialReason reason)
-    //{
-    //    var workflow = workflowsResourceAccess.GetWorkflowState(arrangementId);
-    //    workflow.ValidateUserAccess();
-    //    var note = notesResourceAccess.GetNote(arrangementId, noteId);
-    //    workflow.ValidateAction(note);
-    //    notesResourceAccess.DenyDraftNote(arrangementId, noteId, reason);
-    //    notificationsUtility.NotifyUser(new Notifications.NoteRejected(arrangementId, noteId));
-    //}
-
-    //#endregion
 }

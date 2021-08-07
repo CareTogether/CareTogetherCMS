@@ -1222,6 +1222,8 @@ export class ActivityInfo implements IActivityInfo {
     userId?: string;
     timestampUtc?: Date;
     activityName?: string | undefined;
+    performedAtUtc?: Date;
+    performedByPersonId?: string;
 
     constructor(data?: IActivityInfo) {
         if (data) {
@@ -1237,6 +1239,8 @@ export class ActivityInfo implements IActivityInfo {
             this.userId = _data["userId"];
             this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
             this.activityName = _data["activityName"];
+            this.performedAtUtc = _data["performedAtUtc"] ? new Date(_data["performedAtUtc"].toString()) : <any>undefined;
+            this.performedByPersonId = _data["performedByPersonId"];
         }
     }
 
@@ -1252,6 +1256,8 @@ export class ActivityInfo implements IActivityInfo {
         data["userId"] = this.userId;
         data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
         data["activityName"] = this.activityName;
+        data["performedAtUtc"] = this.performedAtUtc ? this.performedAtUtc.toISOString() : <any>undefined;
+        data["performedByPersonId"] = this.performedByPersonId;
         return data; 
     }
 }
@@ -1260,6 +1266,8 @@ export interface IActivityInfo {
     userId?: string;
     timestampUtc?: Date;
     activityName?: string | undefined;
+    performedAtUtc?: Date;
+    performedByPersonId?: string;
 }
 
 export class Arrangement implements IArrangement {
@@ -1762,6 +1770,7 @@ export interface ICloseReferral extends IReferralCommand {
 export class CreateReferral extends ReferralCommand implements ICreateReferral {
     familyId?: string;
     policyVersion?: string | undefined;
+    openedAtUtc?: Date;
 
     constructor(data?: ICreateReferral) {
         super(data);
@@ -1773,6 +1782,7 @@ export class CreateReferral extends ReferralCommand implements ICreateReferral {
         if (_data) {
             this.familyId = _data["familyId"];
             this.policyVersion = _data["policyVersion"];
+            this.openedAtUtc = _data["openedAtUtc"] ? new Date(_data["openedAtUtc"].toString()) : <any>undefined;
         }
     }
 
@@ -1787,6 +1797,7 @@ export class CreateReferral extends ReferralCommand implements ICreateReferral {
         data = typeof data === 'object' ? data : {};
         data["familyId"] = this.familyId;
         data["policyVersion"] = this.policyVersion;
+        data["openedAtUtc"] = this.openedAtUtc ? this.openedAtUtc.toISOString() : <any>undefined;
         super.toJSON(data);
         return data; 
     }
@@ -1795,10 +1806,13 @@ export class CreateReferral extends ReferralCommand implements ICreateReferral {
 export interface ICreateReferral extends IReferralCommand {
     familyId?: string;
     policyVersion?: string | undefined;
+    openedAtUtc?: Date;
 }
 
 export class PerformReferralActivity extends ReferralCommand implements IPerformReferralActivity {
     activityName?: string | undefined;
+    performedAtUtc?: Date;
+    performedByPersonId?: string;
 
     constructor(data?: IPerformReferralActivity) {
         super(data);
@@ -1809,6 +1823,8 @@ export class PerformReferralActivity extends ReferralCommand implements IPerform
         super.init(_data);
         if (_data) {
             this.activityName = _data["activityName"];
+            this.performedAtUtc = _data["performedAtUtc"] ? new Date(_data["performedAtUtc"].toString()) : <any>undefined;
+            this.performedByPersonId = _data["performedByPersonId"];
         }
     }
 
@@ -1822,6 +1838,8 @@ export class PerformReferralActivity extends ReferralCommand implements IPerform
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["activityName"] = this.activityName;
+        data["performedAtUtc"] = this.performedAtUtc ? this.performedAtUtc.toISOString() : <any>undefined;
+        data["performedByPersonId"] = this.performedByPersonId;
         super.toJSON(data);
         return data; 
     }
@@ -1829,6 +1847,8 @@ export class PerformReferralActivity extends ReferralCommand implements IPerform
 
 export interface IPerformReferralActivity extends IReferralCommand {
     activityName?: string | undefined;
+    performedAtUtc?: Date;
+    performedByPersonId?: string;
 }
 
 export class UploadReferralForm extends ReferralCommand implements IUploadReferralForm {
@@ -1915,6 +1935,11 @@ export abstract class ArrangementCommand implements IArrangementCommand {
         }
         if (data["discriminator"] === "CreateArrangement") {
             let result = new CreateArrangement();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "EndArrangement") {
+            let result = new EndArrangement();
             result.init(data);
             return result;
         }
@@ -2111,7 +2136,42 @@ export interface ICreateArrangement extends IArrangementCommand {
     arrangementType?: string | undefined;
 }
 
+export class EndArrangement extends ArrangementCommand implements IEndArrangement {
+    endedAtUtc?: Date;
+
+    constructor(data?: IEndArrangement) {
+        super(data);
+        this._discriminator = "EndArrangement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.endedAtUtc = _data["endedAtUtc"] ? new Date(_data["endedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): EndArrangement {
+        data = typeof data === 'object' ? data : {};
+        let result = new EndArrangement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["endedAtUtc"] = this.endedAtUtc ? this.endedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IEndArrangement extends IArrangementCommand {
+    endedAtUtc?: Date;
+}
+
 export class InitiateArrangement extends ArrangementCommand implements IInitiateArrangement {
+    initiatedAtUtc?: Date;
 
     constructor(data?: IInitiateArrangement) {
         super(data);
@@ -2120,6 +2180,9 @@ export class InitiateArrangement extends ArrangementCommand implements IInitiate
 
     init(_data?: any) {
         super.init(_data);
+        if (_data) {
+            this.initiatedAtUtc = _data["initiatedAtUtc"] ? new Date(_data["initiatedAtUtc"].toString()) : <any>undefined;
+        }
     }
 
     static fromJS(data: any): InitiateArrangement {
@@ -2131,17 +2194,20 @@ export class InitiateArrangement extends ArrangementCommand implements IInitiate
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
+        data["initiatedAtUtc"] = this.initiatedAtUtc ? this.initiatedAtUtc.toISOString() : <any>undefined;
         super.toJSON(data);
         return data; 
     }
 }
 
 export interface IInitiateArrangement extends IArrangementCommand {
+    initiatedAtUtc?: Date;
 }
 
 export class PerformArrangementActivity extends ArrangementCommand implements IPerformArrangementActivity {
-    completedByPersonId?: string;
     activityName?: string | undefined;
+    performedAtUtc?: Date;
+    performedByPersonId?: string;
 
     constructor(data?: IPerformArrangementActivity) {
         super(data);
@@ -2151,8 +2217,9 @@ export class PerformArrangementActivity extends ArrangementCommand implements IP
     init(_data?: any) {
         super.init(_data);
         if (_data) {
-            this.completedByPersonId = _data["completedByPersonId"];
             this.activityName = _data["activityName"];
+            this.performedAtUtc = _data["performedAtUtc"] ? new Date(_data["performedAtUtc"].toString()) : <any>undefined;
+            this.performedByPersonId = _data["performedByPersonId"];
         }
     }
 
@@ -2165,16 +2232,18 @@ export class PerformArrangementActivity extends ArrangementCommand implements IP
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["completedByPersonId"] = this.completedByPersonId;
         data["activityName"] = this.activityName;
+        data["performedAtUtc"] = this.performedAtUtc ? this.performedAtUtc.toISOString() : <any>undefined;
+        data["performedByPersonId"] = this.performedByPersonId;
         super.toJSON(data);
         return data; 
     }
 }
 
 export interface IPerformArrangementActivity extends IArrangementCommand {
-    completedByPersonId?: string;
     activityName?: string | undefined;
+    performedAtUtc?: Date;
+    performedByPersonId?: string;
 }
 
 export class TrackChildrenLocationChange extends ArrangementCommand implements ITrackChildrenLocationChange {

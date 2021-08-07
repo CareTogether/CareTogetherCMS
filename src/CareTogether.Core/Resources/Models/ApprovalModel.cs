@@ -53,7 +53,7 @@ namespace CareTogether.Resources.Models
                 PerformVolunteerFamilyActivity c => volunteerFamilyEntry with
                 {
                     ApprovalActivitiesPerformed = volunteerFamilyEntry.ApprovalActivitiesPerformed.Add(
-                        new ActivityInfo(userId, timestampUtc, c.ActivityName))
+                        new ActivityInfo(userId, timestampUtc, c.ActivityName, c.PerformedAtUtc, c.PerformedByPersonId))
                 },
                 UploadVolunteerFamilyForm c => volunteerFamilyEntry with
                 {
@@ -108,7 +108,7 @@ namespace CareTogether.Resources.Models
                 PerformVolunteerActivity c => volunteerEntry with
                 {
                     ApprovalActivitiesPerformed = volunteerEntry.ApprovalActivitiesPerformed.Add(
-                        new ActivityInfo(userId, timestampUtc, c.ActivityName))
+                        new ActivityInfo(userId, timestampUtc, c.ActivityName, c.PerformedAtUtc, c.PerformedByPersonId))
                 },
                 UploadVolunteerForm c => volunteerEntry with
                 {

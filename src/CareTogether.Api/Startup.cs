@@ -41,6 +41,7 @@ namespace CareTogether.Api
             var goalsEventLog = new AppendBlobMultitenantEventLog<GoalCommandExecutedEvent>(blobServiceClient, LogType.GoalsEventLog);
             var referralsEventLog = new AppendBlobMultitenantEventLog<ReferralEvent>(blobServiceClient, LogType.ReferralsEventLog);
             var approvalsEventLog = new AppendBlobMultitenantEventLog<ApprovalEvent>(blobServiceClient, LogType.ApprovalsEventLog);
+            var draftNotes = new JsonBlobObjectStore<string>(blobServiceClient, "draftNotes");
 
 #if DEBUG
             if (HostEnvironment.IsDevelopment())
@@ -49,7 +50,7 @@ namespace CareTogether.Api
                 // Note that this will not reset data (storage containers) for tenants other than the test tenant used by the TestData project.
                 TestData.TestStorageHelper.ResetTestTenantData(blobServiceClient);
                 TestData.TestDataProvider.PopulateTestDataAsync(
-                    communityEventLog, contactsEventLog, goalsEventLog, referralsEventLog).Wait();
+                    communityEventLog, contactsEventLog, goalsEventLog, referralsEventLog, draftNotes).Wait();
             }
 #endif
 
@@ -59,7 +60,7 @@ namespace CareTogether.Api
             var contactsResource = new ContactsResource(contactsEventLog);
             var goalsResource = new GoalsResource(goalsEventLog);
             var policiesResource = new PoliciesResource(); //TODO: Data store for policies
-            var referralsResource = new ReferralsResource(referralsEventLog);
+            var referralsResource = new ReferralsResource(referralsEventLog, draftNotes);
 
             // Engine services
             var policyEvaluationEngine = new PolicyEvaluationEngine(policiesResource);

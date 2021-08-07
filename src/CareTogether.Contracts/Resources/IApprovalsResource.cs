@@ -20,7 +20,8 @@ namespace CareTogether.Resources
 
     [JsonHierarchyBase]
     public abstract partial record VolunteerFamilyCommand(Guid FamilyId);
-    public sealed record PerformVolunteerFamilyActivity(Guid FamilyId, string ActivityName)
+    public sealed record PerformVolunteerFamilyActivity(Guid FamilyId, string ActivityName,
+        DateTime PerformedAtUtc, Guid PerformedByPersonId)
         : VolunteerFamilyCommand(FamilyId);
     public sealed record UploadVolunteerFamilyForm(Guid FamilyId,
         string FormName, string FormVersion, string UploadedFileName)
@@ -37,7 +38,7 @@ namespace CareTogether.Resources
     [JsonHierarchyBase]
     public abstract partial record VolunteerCommand(Guid FamilyId, Guid PersonId);
     public sealed record PerformVolunteerActivity(Guid FamilyId, Guid PersonId,
-        string ActivityName) : VolunteerCommand(FamilyId, PersonId);
+        string ActivityName, DateTime PerformedAtUtc, Guid PerformedByPersonId) : VolunteerCommand(FamilyId, PersonId);
     public sealed record UploadVolunteerForm(Guid FamilyId, Guid PersonId,
         string FormName, string FormVersion, string UploadedFileName)
         : VolunteerCommand(FamilyId, PersonId);
