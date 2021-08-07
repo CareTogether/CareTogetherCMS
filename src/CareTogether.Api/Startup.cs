@@ -48,16 +48,16 @@ namespace CareTogether.Api
             var draftNotesStore = new JsonBlobObjectStore<string>(blobServiceClient, "DraftNotes");
             var policiesStore = new JsonBlobObjectStore<EffectiveLocationPolicy>(blobServiceClient, "LocationPolicies");
 
-#if DEBUG
-            if (HostEnvironment.IsDevelopment())
-            {
+//#if DEBUG
+//            if (HostEnvironment.IsDevelopment())
+//            {
                 // Reset and populate test data for debugging. The test data project dependency (and this call) is not included in release builds.
                 // Note that this will not reset data (storage containers) for tenants other than the test tenant used by the TestData project.
                 TestData.TestStorageHelper.ResetTestTenantData(blobServiceClient);
                 TestData.TestDataProvider.PopulateTestDataAsync(
                     communityEventLog, contactsEventLog, goalsEventLog, referralsEventLog, draftNotesStore, policiesStore).Wait();
-            }
-#endif
+//            }
+//#endif
 
             // Resource services
             var approvalsResource = new ApprovalsResource(approvalsEventLog);
