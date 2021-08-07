@@ -1,10 +1,10 @@
 # Docs for the Azure Web Apps Deploy action: https://go.microsoft.com/fwlink/?linkid=2134798
 # More GitHub Actions for Azure: https://go.microsoft.com/fwlink/?linkid=2135048
 
-name: CD - Production - .NET+React
+name: CD - Production - .NET API
 
 concurrency:
-  group: continuous_delivery
+  group: continuous_delivery_api
   cancel-in-progress: true
 
 on:
@@ -12,7 +12,11 @@ on:
     branches:
       - main
     paths-ignore:
+      - 'src/caretogether-pwa/**'
+      - 'src/b2c/**'
       - 'README.md'
+      - 'LICENSE'
+      - '.gitignore'
 
 jobs:
   build:
@@ -40,31 +44,3 @@ jobs:
         slot-name: Production
         publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_CARETOGETHER_API }}
         images: 'caretogether.azurecr.io/caretogether-api:${{ github.sha }}'
-
-    # Build React frontend
-#   - name: Set up Node.js
-#     uses: actions/setup-node@v1
-#     with:
-#       node-version: '14.x'
-#   - name: Cache NPM packages
-#     uses: actions/cache@v2
-#     with:
-#       path: '**/node_modules'
-#       key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
-#   - name: Install Yarn
-#     run: npm install -g yarn
-#   - name: Install NPM packages
-#     run: yarn install
-#     working-directory: src/caretogether-pwa
-#   - name: Build React app
-#     run: yarn build
-#     working-directory: src/caretogether-pwa
-    # Deploy React frontend
-#   - name: Deploy React PWA to Azure
-#     uses: azure/webapps-deploy@v2
-#     id: deploy-to-webapp
-#     with:
-#       app-name: 'caretogether-pwa'
-#       slot-name: 'production'
-#       publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_CARETOGETHER_PWA }}
-#       package: src/caretogether-pwa/build
