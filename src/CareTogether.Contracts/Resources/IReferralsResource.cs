@@ -21,9 +21,6 @@ namespace CareTogether.Resources
         ImmutableList<ChildrenLocationHistoryEntry> ChildrenLocationHistory,
         ImmutableDictionary<Guid, NoteEntry> Notes);
 
-    public record NoteEntry(Guid Id, Guid AuthorId, DateTime LastEditTimestampUtc, NoteStatus Status,
-        string FinalizedNoteContents, Guid? ApproverId, DateTime? ApprovedTimestampUtc);
-
     public enum ReferralCloseReason { NotAppropriate, Resourced, NoCapacity, NoLongerNeeded, NeedMet };
 
     public enum ArrangementState { Setup, Open, Closed };
@@ -45,6 +42,9 @@ namespace CareTogether.Resources
         ImmutableList<Guid> ChildrenIds, Guid FamilyId, ChildrenLocationPlan Plan, string AdditionalExplanation);
 
     public enum ChildrenLocationPlan { OvernightHousing, DaytimeChildCare, ReturnToFamily }
+
+    public record NoteEntry(Guid Id, Guid AuthorId, DateTime LastEditTimestampUtc, NoteStatus Status,
+        string Contents, Guid? ApproverId, DateTime? ApprovedTimestampUtc);
 
     public enum NoteStatus { Draft, Approved };
 

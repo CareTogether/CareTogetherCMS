@@ -2,6 +2,7 @@
 using CareTogether.Resources.Storage;
 using System;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace CareTogether.Resources
@@ -18,7 +19,14 @@ namespace CareTogether.Resources
             this.eventLog = eventLog;
             this.draftNotes = draftNotes;
             tenantModels = new ConcurrentLockingStore<(Guid organizationId, Guid locationId), ReferralModel>(key =>
-                ReferralModel.InitializeAsync(eventLog.GetAllEventsAsync(key.organizationId, key.locationId)));
+                ReferralModel.InitializeAsync(eventLog.GetAllEventsAsync(key.organizationId, key.locationId),
+                    async noteId =>
+                    {
+                        var draftNoteResult = await draftNotes.GetAsync(key.organizationId, key.locationId, noteId);
+                        return draftNoteResult.TryPickT0(out var draftNote, out var _)
+                            ? draftNote.Value
+                            : null; //TODO: Log/return an error that the draft note could not be found!
+                    }));
         }
 
 

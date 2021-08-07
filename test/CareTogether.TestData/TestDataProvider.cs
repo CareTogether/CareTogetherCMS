@@ -148,7 +148,7 @@ namespace CareTogether.TestData
                 new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 32, 0), new PerformReferralActivity(guid2, "Intake Coordinator Screening Call",
                     new DateTime(2021, 7, 10, 19, 32, 0), adminId)));
 
-            await draftNotes.UpsertAsync(guid1, guid1, guid3, "Kids are doing better playing this morning. For some reason they're both really into \"lightsabers\" or something like that... 😅");
+            await draftNotes?.UpsertAsync(guid1, guid1, guid3, "Kids are doing better playing this morning. For some reason they're both really into \"lightsabers\" or something like that... 😅");
         }
 
 

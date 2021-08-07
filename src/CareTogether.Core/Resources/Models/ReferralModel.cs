@@ -1,4 +1,5 @@
 ﻿using JsonPolymorph;
+using Nito.AsyncEx;
 using OneOf;
 using OneOf.Types;
 using System;
@@ -28,12 +29,38 @@ namespace CareTogether.Resources.Models
 
 
         public static async Task<ReferralModel> InitializeAsync(
-            IAsyncEnumerable<(ReferralEvent DomainEvent, long SequenceNumber)> eventLog)
+            IAsyncEnumerable<(ReferralEvent DomainEvent, long SequenceNumber)> eventLog,
+            Func<Guid, Task<string>> loadDraftNoteAsync)
         {
             var model = new ReferralModel();
 
             await foreach (var (domainEvent, sequenceNumber) in eventLog)
                 model.ReplayEvent(domainEvent, sequenceNumber);
+
+            // Since draft note contents are not stored in the immutable log, note command replays will result in 'null'
+            // contents for any notes that have not been approved (approved note contents are stored in the log). So, we
+            // need to load the contents for any draft notes.
+            model.referrals = (await model.referrals.Select(async referral =>
+            {
+                return (referral.Key, referral.Value with
+                {
+                    Arrangements = (await referral.Value.Arrangements.Select(async arrangement =>
+                    {
+                        return (arrangement.Key, arrangement.Value with
+                        {
+                            Notes = (await arrangement.Value.Notes.Select(async note =>
+                            {
+                                return (note.Key, note.Value with
+                                {
+                                    Contents = note.Value.Status == NoteStatus.Approved
+                                        ? note.Value.Contents
+                                        : await loadDraftNoteAsync(note.Key)
+                                });
+                            }).WhenAll()).ToImmutableDictionary(note => note.Key, note => note.Item2)
+                        });
+                    }).WhenAll()).ToImmutableDictionary(arrangement => arrangement.Key, arrangement => arrangement.Item2)
+                });
+            }).WhenAll()).ToImmutableDictionary(referral => referral.Key, referral => referral.Item2);
 
             return model;
         }
@@ -181,7 +208,8 @@ namespace CareTogether.Resources.Models
             OneOf<NoteEntry, Error<string>> result = command switch
             {
                 //TODO: Validate policy version and enforce any other invariants
-                CreateDraftArrangementNote c => new NoteEntry(c.NoteId, userId, timestampUtc, NoteStatus.Draft, null, null, null),
+                CreateDraftArrangementNote c => new NoteEntry(c.NoteId, userId, timestampUtc, NoteStatus.Draft,
+                    c.DraftNoteContents, ApproverId: null, ApprovedTimestampUtc: null),
                 DiscardDraftArrangementNote c => null,
                 _ => arrangementEntry.Notes.TryGetValue(command.NoteId, out var noteEntry)
                     ? command switch
@@ -192,12 +220,13 @@ namespace CareTogether.Resources.Models
                         //TODO: Invariants need to be enforced in the model - e.g., no edits or deletes to approved notes.
                         EditDraftArrangementNote c => noteEntry with
                         {
+                            Contents = c.DraftNoteContents,
                             LastEditTimestampUtc = timestampUtc
                         },
                         ApproveArrangementNote c => noteEntry with
                         {
                             Status = NoteStatus.Approved,
-                            FinalizedNoteContents = c.FinalizedNoteContents,
+                            Contents = c.FinalizedNoteContents,
                             ApprovedTimestampUtc = timestampUtc,
                             ApproverId = userId
                         },
