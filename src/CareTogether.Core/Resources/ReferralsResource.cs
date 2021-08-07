@@ -22,7 +22,7 @@ namespace CareTogether.Resources
                 ReferralModel.InitializeAsync(eventLog.GetAllEventsAsync(key.organizationId, key.locationId),
                     async noteId =>
                     {
-                        var draftNoteResult = await draftNotes.GetAsync(key.organizationId, key.locationId, noteId);
+                        var draftNoteResult = await draftNotes.GetAsync(key.organizationId, key.locationId, noteId.ToString());
                         return draftNoteResult.TryPickT0(out var draftNote, out var _)
                             ? draftNote.Value
                             : null; //TODO: Log/return an error that the draft note could not be found!
@@ -95,14 +95,14 @@ namespace CareTogether.Resources
                     switch (success.Value.Event.Command)
                     {
                         case CreateDraftArrangementNote c:
-                            await draftNotes.UpsertAsync(organizationId, locationId, command.NoteId, c.DraftNoteContents);
+                            await draftNotes.UpsertAsync(organizationId, locationId, command.NoteId.ToString(), c.DraftNoteContents);
                             break;
                         case EditDraftArrangementNote c:
-                            await draftNotes.UpsertAsync(organizationId, locationId, command.NoteId, c.DraftNoteContents);
+                            await draftNotes.UpsertAsync(organizationId, locationId, command.NoteId.ToString(), c.DraftNoteContents);
                             break;
                         case DiscardDraftArrangementNote:
                         case ApproveArrangementNote:
-                            await draftNotes.DeleteAsync(organizationId, locationId, command.NoteId);
+                            await draftNotes.DeleteAsync(organizationId, locationId, command.NoteId.ToString());
                             break;
                     }
 

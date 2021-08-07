@@ -26,12 +26,12 @@ namespace CareTogether.Resources.Storage
         }
 
 
-        public async Task<OneOf<Success, Error>> DeleteAsync(Guid organizationId, Guid locationId, Guid objectId)
+        public async Task<OneOf<Success, Error>> DeleteAsync(Guid organizationId, Guid locationId, string objectId)
         {
             try
             {
-                var tenantContainer = await createContainerIfNotExists(organizationId);
-                var objectBlob = tenantContainer.GetBlockBlobClient($"{locationId}/{objectType}/{objectId:D}.json");
+                var tenantContainer = await CreateContainerIfNotExists(organizationId);
+                var objectBlob = tenantContainer.GetBlockBlobClient($"{locationId}/{objectType}/{objectId}.json");
 
                 await objectBlob.DeleteIfExistsAsync();
                 return new Success();
@@ -43,12 +43,12 @@ namespace CareTogether.Resources.Storage
             }
         }
 
-        public async Task<OneOf<Success<T>, Error>> GetAsync(Guid organizationId, Guid locationId, Guid objectId)
+        public async Task<OneOf<Success<T>, Error>> GetAsync(Guid organizationId, Guid locationId, string objectId)
         {
             try
             {
-                var tenantContainer = await createContainerIfNotExists(organizationId);
-                var objectBlob = tenantContainer.GetBlockBlobClient($"{locationId}/{objectType}/{objectId:D}.json");
+                var tenantContainer = await CreateContainerIfNotExists(organizationId);
+                var objectBlob = tenantContainer.GetBlockBlobClient($"{locationId}/{objectType}/{objectId}.json");
 
                 var objectStream = await objectBlob.DownloadStreamingAsync();
                 var objectText = new StreamReader(objectStream.Value.Content).ReadToEnd();
@@ -63,12 +63,12 @@ namespace CareTogether.Resources.Storage
             }
         }
 
-        public async Task<OneOf<Success, Error>> UpsertAsync(Guid organizationId, Guid locationId, Guid objectId, T value)
+        public async Task<OneOf<Success, Error>> UpsertAsync(Guid organizationId, Guid locationId, string objectId, T value)
         {
             try
             {
-                var tenantContainer = await createContainerIfNotExists(organizationId);
-                var objectBlob = tenantContainer.GetBlockBlobClient($"{locationId}/{objectType}/{objectId:D}.json");
+                var tenantContainer = await CreateContainerIfNotExists(organizationId);
+                var objectBlob = tenantContainer.GetBlockBlobClient($"{locationId}/{objectType}/{objectId}.json");
 
                 var objectText = JsonConvert.SerializeObject(value);
                 var objectStream = new MemoryStream(Encoding.UTF8.GetBytes(objectText));
@@ -85,7 +85,7 @@ namespace CareTogether.Resources.Storage
         }
 
 
-        private async Task<BlobContainerClient> createContainerIfNotExists(Guid organizationId)
+        private async Task<BlobContainerClient> CreateContainerIfNotExists(Guid organizationId)
         {
             if (organizationBlobContainerClients.ContainsKey(organizationId))
             {
