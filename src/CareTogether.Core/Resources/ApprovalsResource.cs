@@ -10,7 +10,7 @@ namespace CareTogether.Resources
     {
         private readonly IMultitenantEventLog<ApprovalEvent> eventLog;
         private readonly ConcurrentLockingStore<(Guid organizationId, Guid locationId), ApprovalModel> tenantModels;
-        
+
 
         public ApprovalsResource(IMultitenantEventLog<ApprovalEvent> eventLog)
         {

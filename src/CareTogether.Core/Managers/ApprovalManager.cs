@@ -111,7 +111,7 @@ namespace CareTogether.Managers
             var individualInfo = entry.IndividualEntries.ToImmutableDictionary(
                 x => x.Key,
                 x => (x.Value.ApprovalFormUploads, x.Value.ApprovalActivitiesPerformed));
-            
+
             var volunteerFamilyApprovalStatus = await policyEvaluationEngine.CalculateVolunteerFamilyApprovalStatusAsync(
                 organizationId, locationId, family,
                 entry.ApprovalFormUploads, entry.ApprovalActivitiesPerformed,

@@ -35,7 +35,7 @@ namespace CareTogether.Api.Controllers
 
         [HttpPost("referralCommand")]
         public async Task<ActionResult<Referral>> SubmitReferralCommandAsync(Guid organizationId, Guid locationId,
-            [FromBody]ReferralCommand command)
+            [FromBody] ReferralCommand command)
         {
             var authorizedUser = await authorizationProvider.AuthorizeAsync(organizationId, locationId, User);
 

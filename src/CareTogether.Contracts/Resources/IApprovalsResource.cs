@@ -24,7 +24,7 @@ namespace CareTogether.Resources
         DateTime PerformedAtUtc, Guid PerformedByPersonId)
         : VolunteerFamilyCommand(FamilyId);
     public sealed record UploadVolunteerFamilyForm(Guid FamilyId,
-        string FormName, string FormVersion, string UploadedFileName)
+        string FormName, string FormVersion, string UploadedFileName, Guid UploadedDocumentId)
         : VolunteerFamilyCommand(FamilyId);
     public sealed record DeactivateVolunteerFamily(Guid FamilyId,
         string Reason)
@@ -40,7 +40,7 @@ namespace CareTogether.Resources
     public sealed record PerformVolunteerActivity(Guid FamilyId, Guid PersonId,
         string ActivityName, DateTime PerformedAtUtc, Guid PerformedByPersonId) : VolunteerCommand(FamilyId, PersonId);
     public sealed record UploadVolunteerForm(Guid FamilyId, Guid PersonId,
-        string FormName, string FormVersion, string UploadedFileName)
+        string FormName, string FormVersion, string UploadedFileName, Guid UploadedDocumentId)
         : VolunteerCommand(FamilyId, PersonId);
     public sealed record DeactivateVolunteer(Guid FamilyId, Guid PersonId,
         string Reason) : VolunteerCommand(FamilyId, PersonId);

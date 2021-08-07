@@ -1,11 +1,8 @@
-﻿using CareTogether.Managers;
-using CareTogether.Resources;
+﻿using CareTogether.Resources;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace CareTogether.Api.Controllers

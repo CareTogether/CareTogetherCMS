@@ -1,15 +1,12 @@
-﻿using System;
-using System.Threading.Tasks;
-using Azure.Storage.Blobs;
-using CareTogether.Managers;
+﻿using Azure.Storage.Blobs;
 using CareTogether.Resources;
-using CareTogether.TestData;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Generic;
-using System.Linq;
-using OneOf;
 using CareTogether.Resources.Models;
 using CareTogether.Resources.Storage;
+using CareTogether.TestData;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace CareTogether.Core.Test
 {

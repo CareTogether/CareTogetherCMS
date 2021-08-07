@@ -16,7 +16,7 @@ namespace CareTogether.Resources.Storage
     {
         private readonly BlobServiceClient blobServiceClient;
         private readonly string objectType;
-        private ConcurrentDictionary<Guid, BlobContainerClient> organizationBlobContainerClients;
+        private readonly ConcurrentDictionary<Guid, BlobContainerClient> organizationBlobContainerClients;
 
         public JsonBlobObjectStore(BlobServiceClient blobServiceClient, string objectType)
         {
@@ -90,11 +90,12 @@ namespace CareTogether.Resources.Storage
             if (organizationBlobContainerClients.ContainsKey(organizationId))
             {
                 return organizationBlobContainerClients[organizationId];
-            } else
+            }
+            else
             {
                 var blobClient = blobServiceClient.GetBlobContainerClient(organizationId.ToString());
 
-                if(!await blobClient.ExistsAsync())
+                if (!await blobClient.ExistsAsync())
                 {
                     await blobClient.CreateAsync();
                 }

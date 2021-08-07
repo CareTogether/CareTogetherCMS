@@ -1,6 +1,5 @@
-﻿using CareTogether.Resources;
+using CareTogether.Resources;
 using CareTogether.Resources.Models;
-using CareTogether.Resources.Storage;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -119,7 +118,7 @@ namespace CareTogether.Core.Test
             var result1 = await dut.ExecutePersonCommandAsync(guid1, guid2, new UpdatePersonAge(guid6, null), guid0);
             var result2 = await dut.ExecutePersonCommandAsync(guid1, guid2, new UpdatePersonAge(guid5, null), guid0);
             var result3 = await dut.ExecutePersonCommandAsync(guid2, guid1, new UpdatePersonAge(guid6, null), guid0);
-            
+
             Assert.AreEqual(new Person(guid6, null, "Eric", "Doe", null), result1.AsT0);
             Assert.AreEqual(ResourceResult.NotFound, result2.AsT1);
             Assert.AreEqual(ResourceResult.NotFound, result3.AsT1);
@@ -141,6 +140,6 @@ namespace CareTogether.Core.Test
 
 
         private IEnumerable<(CommunityEvent, long)> EventSequence(params CommunityEvent[] events) =>
-            events.Select((e, i) => (e, (long)i+1));
+            events.Select((e, i) => (e, (long)i + 1));
     }
 }

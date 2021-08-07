@@ -1,4 +1,4 @@
-﻿using CareTogether.Resources.Storage;
+using CareTogether.Resources.Storage;
 using OneOf;
 using OneOf.Types;
 using System;
@@ -19,7 +19,7 @@ namespace CareTogether.Core.Test
         {
             await Task.Yield();
             var tenantLog = tenantLogs.GetOrAdd((organizationId, locationId), new List<T>());
-            if (tenantLog.LongCount()+1 != expectedSequenceNumber)
+            if (tenantLog.LongCount() + 1 != expectedSequenceNumber)
                 return new Error();
 
             tenantLog.Add(domainEvent);
@@ -32,7 +32,7 @@ namespace CareTogether.Core.Test
             await Task.Yield();
             var tenantLog = tenantLogs.GetOrAdd((organizationId, locationId), new List<T>());
             foreach (var result in tenantLog
-                .Select((value, index) => (DomainEvent: value, SequenceNumber: index+1)))
+                .Select((value, index) => (DomainEvent: value, SequenceNumber: index + 1)))
                 yield return result;
         }
     }
