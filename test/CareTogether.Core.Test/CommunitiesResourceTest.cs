@@ -35,7 +35,7 @@ namespace CareTogether.Core.Test
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonAge(guid1, new ExactAge(new DateTime(1975, 1, 1)))),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonAge(guid2, new ExactAge(new DateTime(1979, 7, 1)))),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonUserLink(guid1, guid4)),
-                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid5, VolunteerFamilyStatus.Active, null,
+                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid5,
                     new List<(Guid, FamilyAdultRelationshipInfo)> { (guid1, new FamilyAdultRelationshipInfo(FamilyAdultRelationshipType.Dad, "ABC", true, true, "Test")) },
                     null, null)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddAdultToFamily(guid5, guid2, new FamilyAdultRelationshipInfo(FamilyAdultRelationshipType.Mom, "DEF", true, true, null))),
@@ -61,17 +61,13 @@ namespace CareTogether.Core.Test
 
 
         [TestMethod]
-        public async Task TestFindPeople()
+        public async Task TestListPeople()
         {
             var dut = new CommunitiesResource(events);
 
-            var people1 = await dut.FindPeopleAsync(guid1, guid2, "J");
-            var people2 = await dut.FindPeopleAsync(guid1, guid2, "Doe");
-            var people3 = await dut.FindPeopleAsync(guid2, guid1, "J");
+            var people = await dut.ListPeopleAsync(guid1, guid2);
 
-            Assert.AreEqual(2, people1.Count);
-            Assert.AreEqual(3, people2.Count);
-            Assert.AreEqual(0, people3.Count);
+            Assert.AreEqual(3, people.Count);
         }
 
         [TestMethod]
@@ -87,24 +83,12 @@ namespace CareTogether.Core.Test
         }
 
         [TestMethod]
-        public async Task TestListPartneringFamilies()
+        public async Task TestListFamilies()
         {
             var dut = new CommunitiesResource(events);
 
-            var families1 = await dut.ListPartneringFamilies(guid1, guid2);
-            var families2 = await dut.ListPartneringFamilies(guid2, guid1);
-
-            Assert.AreEqual(0, families1.Count);
-            Assert.AreEqual(0, families2.Count);
-        }
-
-        [TestMethod]
-        public async Task TestListVolunteerFamilies()
-        {
-            var dut = new CommunitiesResource(events);
-
-            var families1 = await dut.ListVolunteerFamilies(guid1, guid2);
-            var families2 = await dut.ListVolunteerFamilies(guid2, guid1);
+            var families1 = await dut.ListFamiliesAsync(guid1, guid2);
+            var families2 = await dut.ListFamiliesAsync(guid2, guid1);
 
             Assert.AreEqual(1, families1.Count);
             Assert.AreEqual(0, families2.Count);
@@ -120,20 +104,6 @@ namespace CareTogether.Core.Test
             var result3 = await dut.ExecutePersonCommandAsync(guid2, guid1, new UpdatePersonAge(guid6, null), guid0);
 
             Assert.AreEqual(new Person(guid6, null, "Eric", "Doe", null), result1.AsT0);
-            Assert.AreEqual(ResourceResult.NotFound, result2.AsT1);
-            Assert.AreEqual(ResourceResult.NotFound, result3.AsT1);
-        }
-
-        [TestMethod]
-        public async Task TestExecuteFamilyCommand()
-        {
-            var dut = new CommunitiesResource(events);
-
-            var result1 = await dut.ExecuteFamilyCommandAsync(guid1, guid2, new UpdatePartneringFamilyStatus(guid5, PartneringFamilyStatus.Active), guid0);
-            var result2 = await dut.ExecuteFamilyCommandAsync(guid1, guid2, new UpdatePartneringFamilyStatus(guid6, PartneringFamilyStatus.Active), guid0);
-            var result3 = await dut.ExecuteFamilyCommandAsync(guid2, guid1, new UpdatePartneringFamilyStatus(guid5, PartneringFamilyStatus.Active), guid0);
-
-            Assert.AreEqual(PartneringFamilyStatus.Active, result1.AsT0.PartneringFamilyStatus);
             Assert.AreEqual(ResourceResult.NotFound, result2.AsT1);
             Assert.AreEqual(ResourceResult.NotFound, result3.AsT1);
         }

@@ -6,10 +6,12 @@ using System.Threading.Tasks;
 namespace CareTogether.Resources
 {
     public record VolunteerFamilyEntry(Guid FamilyId,
-        bool Active, string Note,
+        VolunteerFamilyStatus Status, string Note,
         ImmutableList<FormUploadInfo> ApprovalFormUploads,
         ImmutableList<ActivityInfo> ApprovalActivitiesPerformed,
         ImmutableDictionary<Guid, VolunteerEntry> IndividualEntries);
+
+    public enum VolunteerFamilyStatus { Active, Inactive }
 
     public record VolunteerEntry(Guid PersonId,
         bool Active, string Note,

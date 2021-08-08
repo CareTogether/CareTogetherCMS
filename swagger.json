@@ -939,22 +939,6 @@
             "type": "string",
             "format": "guid"
           },
-          "volunteerFamilyStatus": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/VolunteerFamilyStatus"
-              }
-            ]
-          },
-          "partneringFamilyStatus": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/PartneringFamilyStatus"
-              }
-            ]
-          },
           "adults": {
             "type": "array",
             "nullable": true,
@@ -977,30 +961,6 @@
             }
           }
         }
-      },
-      "VolunteerFamilyStatus": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "Active",
-          "Inactive"
-        ],
-        "enum": [
-          0,
-          1
-        ]
-      },
-      "PartneringFamilyStatus": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "Active",
-          "Inactive"
-        ],
-        "enum": [
-          0,
-          1
-        ]
       },
       "ValueTupleOfPersonAndFamilyAdultRelationshipInfo": {
         "type": "object",

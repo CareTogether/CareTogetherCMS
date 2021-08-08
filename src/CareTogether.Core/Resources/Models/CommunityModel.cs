@@ -20,13 +20,12 @@ namespace CareTogether.Resources.Models
     public sealed class CommunityModel
     {
         internal record FamilyEntry(Guid Id,
-            PartneringFamilyStatus? PartneringFamilyStatus, VolunteerFamilyStatus? VolunteerFamilyStatus,
             ImmutableDictionary<Guid, FamilyAdultRelationshipInfo> AdultRelationships,
             ImmutableList<Guid> Children,
             ImmutableDictionary<(Guid ChildId, Guid AdultId), CustodialRelationshipType> CustodialRelationships)
         {
             internal Family ToFamily(ImmutableDictionary<Guid, PersonEntry> people) =>
-                new(Id, VolunteerFamilyStatus, PartneringFamilyStatus,
+                new(Id,
                     AdultRelationships.Select(ar => (people[ar.Key].ToPerson(), ar.Value)).ToList(),
                     Children.Select(c => people[c].ToPerson()).ToList(),
                     CustodialRelationships.Select(cr => new CustodialRelationship(cr.Key.ChildId, cr.Key.AdultId, cr.Value)).ToList());
@@ -63,7 +62,7 @@ namespace CareTogether.Resources.Models
         {
             OneOf<FamilyEntry, Error<string>> result = command switch
             {
-                CreateFamily c => new FamilyEntry(c.FamilyId, c.PartneringFamilyStatus, c.VolunteerFamilyStatus,
+                CreateFamily c => new FamilyEntry(c.FamilyId,
                     AdultRelationships: ImmutableDictionary<Guid, FamilyAdultRelationshipInfo>.Empty.AddRange(
                         c.Adults?.Select(a => new KeyValuePair<Guid, FamilyAdultRelationshipInfo>(a.Item1, a.Item2))
                         ?? new List<KeyValuePair<Guid, FamilyAdultRelationshipInfo>>()),
@@ -110,8 +109,6 @@ namespace CareTogether.Resources.Models
                         {
                             CustodialRelationships = familyEntry.CustodialRelationships.Remove((c.ChildPersonId, c.AdultPersonId))
                         },
-                        UpdatePartneringFamilyStatus c => familyEntry with { PartneringFamilyStatus = c.PartneringFamilyStatus },
-                        UpdateVolunteerFamilyStatus c => familyEntry with { VolunteerFamilyStatus = c.VolunteerFamilyStatus },
                         _ => throw new NotImplementedException(
                             $"The command type '{command.GetType().FullName}' has not been implemented.")
                     }

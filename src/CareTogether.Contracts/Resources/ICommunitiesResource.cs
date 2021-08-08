@@ -7,13 +7,9 @@ using System.Threading.Tasks;
 namespace CareTogether.Resources
 {
     public sealed record Family(Guid Id,
-        VolunteerFamilyStatus? VolunteerFamilyStatus,
-        PartneringFamilyStatus? PartneringFamilyStatus,
         List<(Person, FamilyAdultRelationshipInfo)> Adults,
         List<Person> Children,
         List<CustodialRelationship> CustodialRelationships);
-    public enum VolunteerFamilyStatus { Active, Inactive }
-    public enum PartneringFamilyStatus { Active, Inactive }
     public sealed record Person(Guid Id, Guid? UserId,
         string FirstName, string LastName, Age Age);
     public sealed record FamilyAdultRelationshipInfo(
@@ -32,8 +28,6 @@ namespace CareTogether.Resources
     [JsonHierarchyBase]
     public abstract partial record FamilyCommand(Guid FamilyId);
     public sealed record CreateFamily(Guid FamilyId,
-        VolunteerFamilyStatus? VolunteerFamilyStatus,
-        PartneringFamilyStatus? PartneringFamilyStatus,
         List<(Guid, FamilyAdultRelationshipInfo)> Adults,
         List<Guid> Children,
         List<CustodialRelationship> CustodialRelationships)
@@ -55,12 +49,6 @@ namespace CareTogether.Resources
         : FamilyCommand(FamilyId);
     public sealed record RemoveCustodialRelationship(Guid FamilyId,
         Guid ChildPersonId, Guid AdultPersonId)
-        : FamilyCommand(FamilyId);
-    public sealed record UpdatePartneringFamilyStatus(Guid FamilyId,
-        PartneringFamilyStatus? PartneringFamilyStatus)
-        : FamilyCommand(FamilyId);
-    public sealed record UpdateVolunteerFamilyStatus(Guid FamilyId,
-        VolunteerFamilyStatus? VolunteerFamilyStatus)
         : FamilyCommand(FamilyId);
 
     [JsonHierarchyBase]
@@ -84,11 +72,11 @@ namespace CareTogether.Resources
     {
         Task<ResourceResult<Person>> FindUserAsync(Guid organizationId, Guid locationId, Guid userId);
 
-        Task<ImmutableList<Person>> FindPeopleAsync(Guid organizationId, Guid locationId, string partialFirstOrLastName);
+        Task<ImmutableList<Person>> ListPeopleAsync(Guid organizationId, Guid locationId);
 
-        Task<ImmutableList<Family>> ListVolunteerFamilies(Guid organizationId, Guid locationId);
+        Task<ResourceResult<Family>> FindFamilyAsync(Guid organizationId, Guid locationId, Guid familyId);
 
-        Task<ImmutableList<Family>> ListPartneringFamilies(Guid organizationId, Guid locationId);
+        Task<ImmutableList<Family>> ListFamiliesAsync(Guid organizationId, Guid locationId);
 
         Task<ResourceResult<Family>> ExecuteFamilyCommandAsync(Guid organizationId, Guid locationId, FamilyCommand command, Guid userId);
 

@@ -41,7 +41,7 @@ namespace CareTogether.Resources.Models
             ExecuteVolunteerFamilyCommand(VolunteerFamilyCommand command, Guid userId, DateTime timestampUtc)
         {
             if (!volunteerFamilies.TryGetValue(command.FamilyId, out var volunteerFamilyEntry))
-                volunteerFamilyEntry = new VolunteerFamilyEntry(command.FamilyId, true, null,
+                volunteerFamilyEntry = new VolunteerFamilyEntry(command.FamilyId, VolunteerFamilyStatus.Active, null,
                     ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty, ImmutableDictionary<Guid, VolunteerEntry>.Empty);
 
             OneOf<VolunteerFamilyEntry, Error<string>> result = command switch
@@ -62,11 +62,11 @@ namespace CareTogether.Resources.Models
                 },
                 DeactivateVolunteerFamily c => volunteerFamilyEntry with
                 {
-                    Active = false,
+                    Status = VolunteerFamilyStatus.Inactive,
                 },
                 ReactivateVolunteerFamily c => volunteerFamilyEntry with
                 {
-                    Active = true,
+                    Status = VolunteerFamilyStatus.Active,
                 },
                 SetVolunteerFamilyNote c => volunteerFamilyEntry with
                 {
@@ -91,7 +91,7 @@ namespace CareTogether.Resources.Models
             ExecuteVolunteerCommand(VolunteerCommand command, Guid userId, DateTime timestampUtc)
         {
             if (!volunteerFamilies.TryGetValue(command.FamilyId, out var volunteerFamilyEntry))
-                volunteerFamilyEntry = new VolunteerFamilyEntry(command.FamilyId, true, null,
+                volunteerFamilyEntry = new VolunteerFamilyEntry(command.FamilyId, VolunteerFamilyStatus.Active, null,
                     ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty, ImmutableDictionary<Guid, VolunteerEntry>.Empty);
 
             if (!volunteerFamilyEntry.IndividualEntries.TryGetValue(command.PersonId, out var volunteerEntry))

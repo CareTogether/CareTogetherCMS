@@ -37,7 +37,7 @@ namespace CareTogether.Managers
             var getReferralResult = await referralsResource.GetReferralAsync(organizationId, locationId, command.ReferralId);
             if (getReferralResult.TryPickT0(out var referralEntry, out var notFound))
             {
-                var families = communitiesResource.ListPartneringFamilies(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+                var families = communitiesResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
                 var contacts = contactsResource.ListContactsAsync(organizationId, locationId).Result;
                 var referral = ToReferral(referralEntry, families, contacts);
 
@@ -74,7 +74,7 @@ namespace CareTogether.Managers
             var getReferralResult = await referralsResource.GetReferralAsync(organizationId, locationId, command.ReferralId);
             if (getReferralResult.TryPickT0(out var referralEntry, out var notFound))
             {
-                var families = communitiesResource.ListPartneringFamilies(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+                var families = communitiesResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
                 var contacts = contactsResource.ListContactsAsync(organizationId, locationId).Result;
                 var referral = ToReferral(referralEntry, families, contacts);
 
@@ -111,7 +111,7 @@ namespace CareTogether.Managers
             var getReferralResult = await referralsResource.GetReferralAsync(organizationId, locationId, command.ReferralId);
             if (getReferralResult.TryPickT0(out var referralEntry, out var notFound))
             {
-                var families = communitiesResource.ListPartneringFamilies(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+                var families = communitiesResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
                 var contacts = contactsResource.ListContactsAsync(organizationId, locationId).Result;
                 var referral = ToReferral(referralEntry, families, contacts);
 
@@ -138,7 +138,7 @@ namespace CareTogether.Managers
 
         public async Task<ImmutableList<Referral>> ListReferralsAsync(Guid organizationId, Guid locationId)
         {
-            var families = communitiesResource.ListPartneringFamilies(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+            var families = communitiesResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
             var contacts = contactsResource.ListContactsAsync(organizationId, locationId).Result;
             var referrals = await referralsResource.ListReferralsAsync(organizationId, locationId);
 

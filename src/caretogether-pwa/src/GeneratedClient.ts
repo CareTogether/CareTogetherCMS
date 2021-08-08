@@ -1154,8 +1154,6 @@ export enum ReferralCloseReason {
 
 export class Family implements IFamily {
     id?: string;
-    volunteerFamilyStatus?: VolunteerFamilyStatus | undefined;
-    partneringFamilyStatus?: PartneringFamilyStatus | undefined;
     adults?: ValueTupleOfPersonAndFamilyAdultRelationshipInfo[] | undefined;
     children?: Person[] | undefined;
     custodialRelationships?: CustodialRelationship[] | undefined;
@@ -1172,8 +1170,6 @@ export class Family implements IFamily {
     init(_data?: any) {
         if (_data) {
             this.id = _data["id"];
-            this.volunteerFamilyStatus = _data["volunteerFamilyStatus"];
-            this.partneringFamilyStatus = _data["partneringFamilyStatus"];
             if (Array.isArray(_data["adults"])) {
                 this.adults = [] as any;
                 for (let item of _data["adults"])
@@ -1202,8 +1198,6 @@ export class Family implements IFamily {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
-        data["volunteerFamilyStatus"] = this.volunteerFamilyStatus;
-        data["partneringFamilyStatus"] = this.partneringFamilyStatus;
         if (Array.isArray(this.adults)) {
             data["adults"] = [];
             for (let item of this.adults)
@@ -1225,21 +1219,9 @@ export class Family implements IFamily {
 
 export interface IFamily {
     id?: string;
-    volunteerFamilyStatus?: VolunteerFamilyStatus | undefined;
-    partneringFamilyStatus?: PartneringFamilyStatus | undefined;
     adults?: ValueTupleOfPersonAndFamilyAdultRelationshipInfo[] | undefined;
     children?: Person[] | undefined;
     custodialRelationships?: CustodialRelationship[] | undefined;
-}
-
-export enum VolunteerFamilyStatus {
-    Active = 0,
-    Inactive = 1,
-}
-
-export enum PartneringFamilyStatus {
-    Active = 0,
-    Inactive = 1,
 }
 
 export class ValueTupleOfPersonAndFamilyAdultRelationshipInfo implements IValueTupleOfPersonAndFamilyAdultRelationshipInfo {

@@ -87,7 +87,7 @@ namespace CareTogether.Core.Test
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonAge(guid1, new ExactAge(new DateTime(1975, 1, 1)))),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonAge(guid2, new ExactAge(new DateTime(1979, 7, 1)))),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonUserLink(guid1, guid4)),
-                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid5, VolunteerFamilyStatus.Active, null,
+                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid5,
                     new List<(Guid, FamilyAdultRelationshipInfo)> { (guid1, new FamilyAdultRelationshipInfo(FamilyAdultRelationshipType.Dad, "ABC", true, true, "Test")) },
                     null, null)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddAdultToFamily(guid5, guid2, new FamilyAdultRelationshipInfo(FamilyAdultRelationshipType.Mom, "DEF", true, true, null))),
@@ -112,7 +112,7 @@ namespace CareTogether.Core.Test
             Assert.AreEqual(new Person(guid6, null, "Eric", "Doe", new AgeInYears(12, new DateTime(2021, 1, 1))), people.Single(p => p.Id == guid6));
             Assert.AreEqual(1, families.Count);
             var actualFamily = families[0];
-            var expectedFamily = new Family(guid5, VolunteerFamilyStatus.Active, null,
+            var expectedFamily = new Family(guid5,
                 new List<(Person, FamilyAdultRelationshipInfo)>
                 {
                     (new Person(guid1, guid4, "John", "Doe", new ExactAge(new DateTime(1975, 1, 1))),
@@ -130,8 +130,6 @@ namespace CareTogether.Core.Test
                     new CustodialRelationship(guid6, guid1, CustodialRelationshipType.ParentWithCourtAppointedCustody)
                 });
             Assert.AreEqual(expectedFamily.Id, actualFamily.Id);
-            Assert.AreEqual(expectedFamily.PartneringFamilyStatus, actualFamily.PartneringFamilyStatus);
-            Assert.AreEqual(expectedFamily.VolunteerFamilyStatus, actualFamily.VolunteerFamilyStatus);
             Assert.AreEqual(expectedFamily.Adults.Count, actualFamily.Adults.Count);
             Assert.AreEqual(expectedFamily.Adults[0], actualFamily.Adults[0]);
             Assert.AreEqual(expectedFamily.Adults[1], actualFamily.Adults[1]);

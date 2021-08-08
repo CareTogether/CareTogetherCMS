@@ -50,7 +50,7 @@ namespace CareTogether.Managers
             if (user.CanAccess(organizationId, locationId) &&
             user.IsInRole(Roles.OrganizationAdministrator))
             {
-                var people = await communitiesResource.FindPeopleAsync(organizationId, locationId, searchQuery);
+                var people = await communitiesResource.ListPeopleAsync(organizationId, locationId); //TODO: Actually query.
                 return people.ToImmutableList();
             }
             else

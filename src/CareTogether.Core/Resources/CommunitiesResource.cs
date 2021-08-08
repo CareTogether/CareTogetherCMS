@@ -55,12 +55,11 @@ namespace CareTogether.Resources
             }
         }
 
-        public async Task<ImmutableList<Person>> FindPeopleAsync(Guid organizationId, Guid locationId, string partialFirstOrLastName)
+        public async Task<ImmutableList<Person>> ListPeopleAsync(Guid organizationId, Guid locationId)
         {
             using (var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId)))
             {
-                return lockedModel.Value.FindPeople(p =>
-                    p.FirstName.Contains(partialFirstOrLastName) || p.LastName.Contains(partialFirstOrLastName));
+                return lockedModel.Value.FindPeople(p => true);
             }
         }
 
@@ -78,23 +77,23 @@ namespace CareTogether.Resources
             }
         }
 
-        public async Task<ImmutableList<Family>> ListPartneringFamilies(Guid organizationId, Guid locationId)
+        public async Task<ImmutableList<Family>> ListFamiliesAsync(Guid organizationId, Guid locationId)
         {
             using (var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId)))
             {
-                return lockedModel.Value.FindFamilies(f =>
-                    f.PartneringFamilyStatus == PartneringFamilyStatus.Active ||
-                    f.PartneringFamilyStatus == PartneringFamilyStatus.Inactive);
+                return lockedModel.Value.FindFamilies(f => true);
             }
         }
 
-        public async Task<ImmutableList<Family>> ListVolunteerFamilies(Guid organizationId, Guid locationId)
+        public async Task<ResourceResult<Family>> FindFamilyAsync(Guid organizationId, Guid locationId, Guid familyId)
         {
             using (var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId)))
             {
-                return lockedModel.Value.FindFamilies(f =>
-                    f.VolunteerFamilyStatus == VolunteerFamilyStatus.Active ||
-                    f.VolunteerFamilyStatus == VolunteerFamilyStatus.Inactive);
+                var result = lockedModel.Value.FindFamilies(f => f.Id == familyId);
+                if (result.Count == 1)
+                    return result.Single();
+                else
+                    return ResourceResult.NotFound;
             }
         }
     }
