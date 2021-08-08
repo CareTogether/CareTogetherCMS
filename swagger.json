@@ -1041,6 +1041,7 @@
         "type": "integer",
         "description": "",
         "x-enumNames": [
+          "Single",
           "Dad",
           "Mom",
           "Relative",
@@ -1052,7 +1053,8 @@
           1,
           2,
           3,
-          4
+          4,
+          5
         ]
       },
       "CustodialRelationship": {

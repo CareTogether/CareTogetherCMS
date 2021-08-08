@@ -19,7 +19,7 @@ namespace CareTogether.Core.Test
         static readonly Guid guid5 = Guid.Parse("55555555-5555-5555-5555-555555555555");
         static readonly Guid guid6 = Guid.Parse("66666666-6666-6666-6666-666666666666");
 
-        static readonly Family volunteerFamily = new Family(guid3,
+        static readonly Family volunteerFamily = new Family(guid4,
             VolunteerFamilyStatus.Active, PartneringFamilyStatus.Inactive,
             new List<(Person, FamilyAdultRelationshipInfo)>
             {

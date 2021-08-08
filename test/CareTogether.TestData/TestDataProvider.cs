@@ -30,20 +30,20 @@ namespace CareTogether.TestData
             IMultitenantEventLog<ContactCommandExecutedEvent> contactsEventLog,
             IMultitenantEventLog<GoalCommandExecutedEvent> goalsEventLog,
             IMultitenantEventLog<ReferralEvent> referralsEventLog,
+            IMultitenantEventLog<ApprovalEvent> approvalsEventLog,
             IObjectStore<string> draftNotesStore,
             IObjectStore<EffectiveLocationPolicy> policiesStore)
         {
             await PopulateCommunityEvents(communityEventLog);
             await PopulateContactEvents(contactsEventLog);
+            await PopulateGoalEvents(goalsEventLog);
             await PopulateReferralEvents(referralsEventLog);
-
-            await draftNotesStore.UpsertAsync(guid1, guid2, guid3.ToString(),
-                "Kids are doing better playing this morning. For some reason they're both really into \"lightsabers\" or something like that... 😅");
-
+            await PopulateApprovalEvents(approvalsEventLog);
+            await PopulateDraftNotes(draftNotesStore);
             await PopulatePolicies(policiesStore);
         }
 
-
+        
         public static async Task PopulateCommunityEvents(IMultitenantEventLog<CommunityEvent> communityEventLog)
         {
             await communityEventLog.AppendEventsAsync(guid1, guid2,
@@ -69,10 +69,13 @@ namespace CareTogether.TestData
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdateCustodialRelationshipType(guid1, guid3, guid2, CustodialRelationshipType.ParentWithCourtAppointedCustody)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddCustodialRelationship(guid1, guid3, guid1, CustodialRelationshipType.ParentWithCourtAppointedCustody)),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid4, null, "Emily", "Coachworthy", new ExactAge(new DateTime(1980, 3, 19)))),
+                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid4, VolunteerFamilyStatus.Active, null,
+                    new List<(Guid, FamilyAdultRelationshipInfo)> { (guid4, new FamilyAdultRelationshipInfo(FamilyAdultRelationshipType.Single, null, true, true, null)) },
+                    null, null)),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid5, null, "Han", "Solo", new AgeInYears(30, new DateTime(2021, 7, 1)))),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid6, null, "Leia", "Skywalker", new AgeInYears(28, new DateTime(2021, 7, 1)))),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid7, null, "Ben", "Solo", new AgeInYears(12, new DateTime(2021, 7, 1)))),
-                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid2, VolunteerFamilyStatus.Active, null,
+                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid2, VolunteerFamilyStatus.Active, PartneringFamilyStatus.Active,
                     new List<(Guid, FamilyAdultRelationshipInfo)>
                     {
                         (guid5, new FamilyAdultRelationshipInfo(FamilyAdultRelationshipType.Dad, null, true, true, "Smuggler")),
@@ -167,6 +170,42 @@ namespace CareTogether.TestData
                 new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 32, 0), new UploadReferralForm(guid2, "Request for Help Form", "v1", "Jane Doe second referral info.pdf", guid2)),
                 new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 32, 0), new PerformReferralActivity(guid2, "Intake Coordinator Screening Call",
                     new DateTime(2021, 7, 10, 19, 32, 0), adminId)));
+        }
+
+        public static async Task PopulateGoalEvents(IMultitenantEventLog<GoalCommandExecutedEvent> goalsEventLog)
+        {
+            await goalsEventLog.AppendEventsAsync(guid1, guid2,
+                new GoalCommandExecutedEvent(adminId, new DateTime(2021, 7, 11), new CreateGoal(guid2, guid1, "Get an apartment", new DateTime(2021, 8, 11))),
+                new GoalCommandExecutedEvent(adminId, new DateTime(2021, 7, 11), new CreateGoal(guid2, guid2, "Find a job", new DateTime(2021, 8, 11))),
+                new GoalCommandExecutedEvent(adminId, new DateTime(2021, 7, 11), new CreateGoal(guid2, guid2, "Get daytime childcare", new DateTime(2021, 8, 1))),
+                new GoalCommandExecutedEvent(adminId, new DateTime(2021, 7, 12), new ChangeGoalDescription(guid2, guid1, "Find stable housing")),
+                new GoalCommandExecutedEvent(adminId, new DateTime(2021, 8, 1), new ChangeGoalTargetDate(guid2, guid1, new DateTime(2021, 8, 31))),
+                new GoalCommandExecutedEvent(adminId, new DateTime(2021, 8, 30), new MarkGoalCompleted(guid2, guid1, new DateTime(2021, 8, 27))));
+        }
+
+        public static async Task PopulateApprovalEvents(IMultitenantEventLog<ApprovalEvent> approvalsEventLog)
+        {
+            await approvalsEventLog.AppendEventsAsync(guid1, guid2,
+                new VolunteerCommandExecuted(adminId, new DateTime(2021, 7, 1),
+                    new UploadVolunteerForm(guid4, guid4, "Family Coach Application", "v1", "abc.pdf", Guid.Empty)),
+                new VolunteerCommandExecuted(adminId, new DateTime(2021, 7, 10),
+                    new PerformVolunteerActivity(guid4, guid4, "Interview with Family Coach Supervisor", new DateTime(2021, 7, 9), guid1)),
+                new VolunteerCommandExecuted(adminId, new DateTime(2021, 7, 14),
+                    new UploadVolunteerForm(guid4, guid4, "Background Check", "v1", "def.pdf", Guid.Empty)),
+                new VolunteerFamilyCommandExecuted(adminId, new DateTime(2021, 7, 1),
+                    new UploadVolunteerFamilyForm(guid3, "Host Family Application", "v1", "abc.pdf", Guid.Empty)),
+                new VolunteerFamilyCommandExecuted(adminId, new DateTime(2021, 7, 15),
+                    new UploadVolunteerFamilyForm(guid3, "Home Screening Checklist", "v1", "def.pdf", Guid.Empty)),
+                new VolunteerCommandExecuted(adminId, new DateTime(2021, 7, 18),
+                    new UploadVolunteerForm(guid3, guid8, "Background Check", "v1", "bg8.jpg", Guid.Empty)),
+                new VolunteerCommandExecuted(adminId, new DateTime(2021, 7, 18),
+                    new UploadVolunteerForm(guid3, guid9, "Background Check", "v1", "bg9.jpg", Guid.Empty)));
+        }
+
+        public static async Task PopulateDraftNotes(IObjectStore<string> draftNotesStore)
+        {
+            await draftNotesStore.UpsertAsync(guid1, guid2, guid3.ToString(),
+                "Kids are doing better playing this morning. For some reason they're both really into \"lightsabers\" or something like that... 😅");
         }
 
         public static async Task PopulatePolicies(IObjectStore<EffectiveLocationPolicy> policiesStore)

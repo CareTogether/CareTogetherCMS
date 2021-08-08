@@ -1335,11 +1335,12 @@ export interface IFamilyAdultRelationshipInfo {
 }
 
 export enum FamilyAdultRelationshipType {
-    Dad = 0,
-    Mom = 1,
-    Relative = 2,
-    Friend = 3,
-    DomesticWorker = 4,
+    Single = 0,
+    Dad = 1,
+    Mom = 2,
+    Relative = 3,
+    Friend = 4,
+    DomesticWorker = 5,
 }
 
 export class CustodialRelationship implements ICustodialRelationship {

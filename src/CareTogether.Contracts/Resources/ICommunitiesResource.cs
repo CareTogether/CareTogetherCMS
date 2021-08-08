@@ -19,7 +19,7 @@ namespace CareTogether.Resources
     public sealed record FamilyAdultRelationshipInfo(
         FamilyAdultRelationshipType RelationshipToFamily, string FamilyRelationshipNotes,
         bool IsInHousehold, bool IsPrimaryFamilyContact, string SafetyRiskNotes);
-    public enum FamilyAdultRelationshipType { Dad, Mom, Relative, Friend, DomesticWorker };
+    public enum FamilyAdultRelationshipType { Single, Dad, Mom, Relative, Friend, DomesticWorker }
     public sealed record CustodialRelationship(
         Guid ChildId, Guid PersonId, CustodialRelationshipType Type);
     public enum CustodialRelationshipType { ParentWithCustody, ParentWithCourtAppointedCustody, LegalGuardian }
