@@ -40,12 +40,22 @@ const useStyles = makeStyles((theme) => ({
   toolbar: {
     paddingRight: 24, // keep right padding when drawer closed
   },
-  toolbarIcon: {
+  drawerHeader: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
     padding: '0 8px',
     ...theme.mixins.toolbar,
+  },
+  drawerHeaderOrganization: {
+    margin: '0',
+    paddingLeft: '8px',
+    fontSize: '18px'
+  },
+  drawerHeaderLocation: {
+    margin: '0',
+    paddingLeft: '8px',
+    fontSize: '14px'
   },
   appBar: {
     zIndex: theme.zIndex.drawer + 1,
@@ -145,7 +155,6 @@ const useStyles = makeStyles((theme) => ({
 
 const mainListItems = (
   <List aria-label="main navigation">
-    <ListItemLink to="/arrangements" primary="Arrangements" icon={<AssignmentIndIcon />} />
     <ListItemLink to="/referrals" primary="Referrals" icon={<PermPhoneMsgIcon />} />
     <ListItemLink to="/volunteers" primary="Volunteers" icon={<EmojiPeopleIcon />} />
   </List>
@@ -153,8 +162,6 @@ const mainListItems = (
 
 const secondaryListItems = (
   <List aria-label="secondary navigation">
-    <ListItemLink to="/contacts" primary="Contacts" icon={<ContactPhoneIcon />} />
-    <ListItemLink to="/communities" primary="Communities" icon={<GroupWorkIcon />} />
   </List>
 );
 
@@ -213,7 +220,11 @@ function App() {
           }}
           open={open}
         >
-          <div className={classes.toolbarIcon}>
+          <div className={classes.drawerHeader}>
+            <header>
+              <p className={classes.drawerHeaderOrganization}>CareTogether</p>
+              <p className={classes.drawerHeaderLocation}>Atlantis</p>
+            </header>
             <IconButton onClick={handleDrawerClose}>
               <ChevronLeftIcon />
             </IconButton>
