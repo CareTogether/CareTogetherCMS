@@ -28,7 +28,7 @@ namespace CareTogether.Managers
 
         public async Task<ImmutableList<VolunteerFamily>> ListVolunteerFamiliesAsync(AuthorizedUser user, Guid organizationId, Guid locationId)
         {
-            var families = (await communitiesResource.ListPartneringFamilies(organizationId, locationId)).ToImmutableDictionary(x => x.Id);
+            var families = (await communitiesResource.ListVolunteerFamilies(organizationId, locationId)).ToImmutableDictionary(x => x.Id);
             var contacts = await contactsResource.ListContactsAsync(organizationId, locationId);
             var volunteerFamilies = await approvalsResource.ListVolunteerFamiliesAsync(organizationId, locationId);
 
