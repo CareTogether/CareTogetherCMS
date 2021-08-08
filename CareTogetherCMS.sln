@@ -5,8 +5,10 @@ VisualStudioVersion = 16.0.31229.75
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "deploy", "deploy", "{B04053C5-CA17-41B1-BC52-8B5393090D45}"
 	ProjectSection(SolutionItems) = preProject
-		.github\workflows\cd-prod-dotnet-react.yml = .github\workflows\cd-prod-dotnet-react.yml
+		.github\workflows\cd-prod-dotnet.yml = .github\workflows\cd-prod-dotnet.yml
+		.github\workflows\cd-prod-react.yml = .github\workflows\cd-prod-react.yml
 		.github\workflows\ci-pr-dotnet.yml = .github\workflows\ci-pr-dotnet.yml
+		.github\workflows\ci-pr-react.yml = .github\workflows\ci-pr-react.yml
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CareTogether.Api", "src\CareTogether.Api\CareTogether.Api.csproj", "{67F0E369-C927-4278-A7D0-DDFBE029003F}"

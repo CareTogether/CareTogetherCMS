@@ -1,0 +1,36 @@
+name: CI - Pull Requests - React PWA
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'src/caretogether-pwa/**'
+      - '.github/workflows/ci-pr-react.yml'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+    # Checkout the repo
+    - name: Checkout source
+      uses: actions/checkout@master
+    # Build React frontend
+    - name: Set up Node.js
+      uses: actions/setup-node@v1
+      with:
+        node-version: '14.x'
+    - name: Cache NPM packages
+      uses: actions/cache@v2
+      with:
+        path: '**/node_modules'
+        key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+    - name: Install Yarn
+      run: npm install -g yarn
+    - name: Install NPM packages
+      run: yarn install
+      working-directory: src/caretogether-pwa
+    - name: Build React app
+      run: yarn build
+      working-directory: src/caretogether-pwa

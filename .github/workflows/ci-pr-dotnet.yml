@@ -1,8 +1,17 @@
-name: CI - Pull Requests - .NET
+name: CI - Pull Requests - .NET API
 
 on:
   pull_request:
     branches: [ main ]
+    paths-ignore:
+      - 'src/caretogether-pwa/**'
+      - 'src/b2c/**'
+      - 'README.md'
+      - 'LICENSE'
+      - '.gitignore'
+      - '.github/workflows/cd-prod-react.yml'
+      - '.github/workflows/cd-prod-dotnet.yml'
+      - '.github/workflows/ci-pr-react.yml'
 
 jobs:
   build:

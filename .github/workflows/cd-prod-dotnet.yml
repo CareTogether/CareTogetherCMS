@@ -19,6 +19,7 @@ on:
       - '.gitignore'
       - '.github/workflows/cd-prod-react.yml'
       - '.github/workflows/ci-pr-dotnet.yml'
+      - '.github/workflows/ci-pr-react.yml'
 
 jobs:
   build:
