@@ -40,7 +40,6 @@ function Volunteers() {
   const classes = useStyles();
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
   const policy = useRecoilValue(policyData);
-  //const refreshVolunteerFamilies = useRefreshVolunteerFamilies();
 
   const volunteerFamilyRoleNames =
     (policy.volunteerPolicy?.volunteerFamilyRoles &&
@@ -57,21 +56,14 @@ function Volunteers() {
         <TableContainer component={Paper}>
           <Table className={classes.table} size="small">
             <TableHead>
-              {/* <TableRow>
-                <TableCell align="center" colSpan={3}>
-                  Volunteer Families ({volunteerFamilies.length})
-                </TableCell>
-              </TableRow> */}
               <TableRow>
                 <TableCell>First Name</TableCell>
                 <TableCell>Last Name</TableCell>
                 <TableCell>Age</TableCell>
-                {/* NOTE: There are many other potential ways to arrange all of this information. */}
                 { volunteerFamilyRoleNames.map(roleName =>
                   (<TableCell key={roleName}>{roleName}</TableCell>))}
                 { volunteerRoleNames.map(roleName =>
                   (<TableCell key={roleName}>{roleName}</TableCell>))}
-                {/* Notes */}
               </TableRow>
             </TableHead>
             <TableBody>

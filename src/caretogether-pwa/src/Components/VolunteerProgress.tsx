@@ -31,13 +31,10 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-
 function VolunteerProgress() {
   const classes = useStyles();
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
   const policy = useRecoilValue(policyData);
-  //const refreshVolunteerFamilies = useRefreshVolunteerFamilies();
-
 
   const allFamilyRequirements =
     policy.volunteerPolicy?.volunteerFamilyRoles
@@ -124,11 +121,6 @@ function VolunteerProgress() {
         <TableContainer component={Paper}>
           <Table className={classes.table} size="small">
             <TableHead>
-              {/* <TableRow>
-                <TableCell align="center" colSpan={3}>
-                  Volunteer Families ({volunteerFamilies.length})
-                </TableCell>
-              </TableRow> */}
               <TableRow>
                 <TableCell>First Name</TableCell>
                 <TableCell>Last Name</TableCell>
@@ -140,7 +132,6 @@ function VolunteerProgress() {
                   (<TableCell key={requirement.formName}>{requirement.formName}</TableCell>))}
                 {individualActivityRequirements.map(requirement =>
                   (<TableCell key={requirement.activityName}>{requirement.activityName}</TableCell>))}
-                {/* Notes */}
               </TableRow>
             </TableHead>
             <TableBody>
