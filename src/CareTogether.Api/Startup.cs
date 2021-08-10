@@ -67,6 +67,9 @@ namespace CareTogether.Api
             var policiesResource = new PoliciesResource(policiesStore);
             var referralsResource = new ReferralsResource(referralsEventLog, draftNotesStore);
 
+            //TODO: If we want to be strict about conventions, this should have a manager intermediary for authz.
+            services.AddSingleton<IPoliciesResource>(policiesResource);
+
             // Engine services
             var policyEvaluationEngine = new PolicyEvaluationEngine(policiesResource);
 

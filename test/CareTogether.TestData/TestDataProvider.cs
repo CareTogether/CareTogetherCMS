@@ -199,7 +199,11 @@ namespace CareTogether.TestData
                 new VolunteerCommandExecuted(adminId, new DateTime(2021, 7, 18),
                     new UploadVolunteerForm(guid3, guid8, "Background Check", "v1", "bg8.jpg", Guid.Empty)),
                 new VolunteerCommandExecuted(adminId, new DateTime(2021, 7, 18),
-                    new UploadVolunteerForm(guid3, guid9, "Background Check", "v1", "bg9.jpg", Guid.Empty)));
+                    new UploadVolunteerForm(guid3, guid9, "Background Check", "v1", "bg9.jpg", Guid.Empty)),
+                new VolunteerCommandExecuted(adminId, new DateTime(2021, 8, 10),
+                    new UploadVolunteerForm(guid2, guid6, "Family Friend Application", "v1", "ffls.pdf", Guid.Empty)),
+                new VolunteerCommandExecuted(adminId, new DateTime(2021, 8, 11), //TODO: This is a workaround for a bug!
+                    new UploadVolunteerForm(guid2, guid5, "Family Friend Application", "v1", "ffhs.pdf", Guid.Empty)));
         }
 
         public static async Task PopulateDraftNotes(IObjectStore<string> draftNotesStore)

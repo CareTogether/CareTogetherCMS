@@ -59,6 +59,94 @@ export class ClaimsClient {
     }
 }
 
+export class ConfigurationClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : <any>window;
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
+    }
+
+    getOrganizationConfiguration(organizationId: string): Promise<OrganizationConfiguration> {
+        let url_ = this.baseUrl + "/api/{organizationId}/Configuration";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ = <RequestInit>{
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetOrganizationConfiguration(_response);
+        });
+    }
+
+    protected processGetOrganizationConfiguration(response: Response): Promise<OrganizationConfiguration> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = OrganizationConfiguration.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<OrganizationConfiguration>(<any>null);
+    }
+
+    getEffectiveLocationPolicy(organizationId: string, locationId: string): Promise<EffectiveLocationPolicy> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Configuration/policy";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (locationId === undefined || locationId === null)
+            throw new Error("The parameter 'locationId' must be defined.");
+        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ = <RequestInit>{
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetEffectiveLocationPolicy(_response);
+        });
+    }
+
+    protected processGetEffectiveLocationPolicy(response: Response): Promise<EffectiveLocationPolicy> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = EffectiveLocationPolicy.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<EffectiveLocationPolicy>(<any>null);
+    }
+}
+
 export class FilesClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
@@ -588,6 +676,865 @@ export class VolunteerFamiliesClient {
         }
         return Promise.resolve<VolunteerFamily>(<any>null);
     }
+}
+
+export class OrganizationConfiguration implements IOrganizationConfiguration {
+    organizationName?: string | undefined;
+    locations?: LocationConfiguration[] | undefined;
+
+    constructor(data?: IOrganizationConfiguration) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.organizationName = _data["organizationName"];
+            if (Array.isArray(_data["locations"])) {
+                this.locations = [] as any;
+                for (let item of _data["locations"])
+                    this.locations!.push(LocationConfiguration.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): OrganizationConfiguration {
+        data = typeof data === 'object' ? data : {};
+        let result = new OrganizationConfiguration();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["organizationName"] = this.organizationName;
+        if (Array.isArray(this.locations)) {
+            data["locations"] = [];
+            for (let item of this.locations)
+                data["locations"].push(item.toJSON());
+        }
+        return data; 
+    }
+}
+
+export interface IOrganizationConfiguration {
+    organizationName?: string | undefined;
+    locations?: LocationConfiguration[] | undefined;
+}
+
+export class LocationConfiguration implements ILocationConfiguration {
+    id?: string;
+    name?: string | undefined;
+
+    constructor(data?: ILocationConfiguration) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+        }
+    }
+
+    static fromJS(data: any): LocationConfiguration {
+        data = typeof data === 'object' ? data : {};
+        let result = new LocationConfiguration();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        return data; 
+    }
+}
+
+export interface ILocationConfiguration {
+    id?: string;
+    name?: string | undefined;
+}
+
+export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
+    version?: number;
+    versionLabel?: string | undefined;
+    referralPolicy?: ReferralPolicy | undefined;
+    volunteerPolicy?: VolunteerPolicy | undefined;
+
+    constructor(data?: IEffectiveLocationPolicy) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.version = _data["version"];
+            this.versionLabel = _data["versionLabel"];
+            this.referralPolicy = _data["referralPolicy"] ? ReferralPolicy.fromJS(_data["referralPolicy"]) : <any>undefined;
+            this.volunteerPolicy = _data["volunteerPolicy"] ? VolunteerPolicy.fromJS(_data["volunteerPolicy"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): EffectiveLocationPolicy {
+        data = typeof data === 'object' ? data : {};
+        let result = new EffectiveLocationPolicy();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["version"] = this.version;
+        data["versionLabel"] = this.versionLabel;
+        data["referralPolicy"] = this.referralPolicy ? this.referralPolicy.toJSON() : <any>undefined;
+        data["volunteerPolicy"] = this.volunteerPolicy ? this.volunteerPolicy.toJSON() : <any>undefined;
+        return data; 
+    }
+}
+
+export interface IEffectiveLocationPolicy {
+    version?: number;
+    versionLabel?: string | undefined;
+    referralPolicy?: ReferralPolicy | undefined;
+    volunteerPolicy?: VolunteerPolicy | undefined;
+}
+
+export class ReferralPolicy implements IReferralPolicy {
+    requiredIntakeActions?: ActionRequirement[] | undefined;
+    arrangementPolicies?: ArrangementPolicy[] | undefined;
+
+    constructor(data?: IReferralPolicy) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["requiredIntakeActions"])) {
+                this.requiredIntakeActions = [] as any;
+                for (let item of _data["requiredIntakeActions"])
+                    this.requiredIntakeActions!.push(ActionRequirement.fromJS(item));
+            }
+            if (Array.isArray(_data["arrangementPolicies"])) {
+                this.arrangementPolicies = [] as any;
+                for (let item of _data["arrangementPolicies"])
+                    this.arrangementPolicies!.push(ArrangementPolicy.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): ReferralPolicy {
+        data = typeof data === 'object' ? data : {};
+        let result = new ReferralPolicy();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.requiredIntakeActions)) {
+            data["requiredIntakeActions"] = [];
+            for (let item of this.requiredIntakeActions)
+                data["requiredIntakeActions"].push(item.toJSON());
+        }
+        if (Array.isArray(this.arrangementPolicies)) {
+            data["arrangementPolicies"] = [];
+            for (let item of this.arrangementPolicies)
+                data["arrangementPolicies"].push(item.toJSON());
+        }
+        return data; 
+    }
+}
+
+export interface IReferralPolicy {
+    requiredIntakeActions?: ActionRequirement[] | undefined;
+    arrangementPolicies?: ArrangementPolicy[] | undefined;
+}
+
+export abstract class ActionRequirement implements IActionRequirement {
+
+    protected _discriminator: string;
+
+    constructor(data?: IActionRequirement) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        this._discriminator = "ActionRequirement";
+    }
+
+    init(_data?: any) {
+    }
+
+    static fromJS(data: any): ActionRequirement {
+        data = typeof data === 'object' ? data : {};
+        if (data["discriminator"] === "ActivityRequirement") {
+            let result = new ActivityRequirement();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "FormUploadRequirement") {
+            let result = new FormUploadRequirement();
+            result.init(data);
+            return result;
+        }
+        throw new Error("The abstract class 'ActionRequirement' cannot be instantiated.");
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["discriminator"] = this._discriminator; 
+        return data; 
+    }
+}
+
+export interface IActionRequirement {
+}
+
+export class ActivityRequirement extends ActionRequirement implements IActivityRequirement {
+    activityName?: string | undefined;
+
+    constructor(data?: IActivityRequirement) {
+        super(data);
+        this._discriminator = "ActivityRequirement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.activityName = _data["activityName"];
+        }
+    }
+
+    static fromJS(data: any): ActivityRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new ActivityRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["activityName"] = this.activityName;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IActivityRequirement extends IActionRequirement {
+    activityName?: string | undefined;
+}
+
+export class FormUploadRequirement extends ActionRequirement implements IFormUploadRequirement {
+    formName?: string | undefined;
+    formVersion?: string | undefined;
+    instructions?: string | undefined;
+    templateLink?: string | undefined;
+
+    constructor(data?: IFormUploadRequirement) {
+        super(data);
+        this._discriminator = "FormUploadRequirement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.formName = _data["formName"];
+            this.formVersion = _data["formVersion"];
+            this.instructions = _data["instructions"];
+            this.templateLink = _data["templateLink"];
+        }
+    }
+
+    static fromJS(data: any): FormUploadRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new FormUploadRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["formName"] = this.formName;
+        data["formVersion"] = this.formVersion;
+        data["instructions"] = this.instructions;
+        data["templateLink"] = this.templateLink;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IFormUploadRequirement extends IActionRequirement {
+    formName?: string | undefined;
+    formVersion?: string | undefined;
+    instructions?: string | undefined;
+    templateLink?: string | undefined;
+}
+
+export class ArrangementPolicy implements IArrangementPolicy {
+    arrangementType?: string | undefined;
+    childInvolvement?: ChildInvolvement;
+    volunteerFunctions?: VolunteerFunction[] | undefined;
+    requiredSetupActions?: ActionRequirement[] | undefined;
+    requiredMonitoringActions?: ValueTupleOfActionRequirementAndRecurrencePolicy[] | undefined;
+    requiredCloseoutActions?: ActionRequirement[] | undefined;
+
+    constructor(data?: IArrangementPolicy) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.arrangementType = _data["arrangementType"];
+            this.childInvolvement = _data["childInvolvement"];
+            if (Array.isArray(_data["volunteerFunctions"])) {
+                this.volunteerFunctions = [] as any;
+                for (let item of _data["volunteerFunctions"])
+                    this.volunteerFunctions!.push(VolunteerFunction.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredSetupActions"])) {
+                this.requiredSetupActions = [] as any;
+                for (let item of _data["requiredSetupActions"])
+                    this.requiredSetupActions!.push(ActionRequirement.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredMonitoringActions"])) {
+                this.requiredMonitoringActions = [] as any;
+                for (let item of _data["requiredMonitoringActions"])
+                    this.requiredMonitoringActions!.push(ValueTupleOfActionRequirementAndRecurrencePolicy.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredCloseoutActions"])) {
+                this.requiredCloseoutActions = [] as any;
+                for (let item of _data["requiredCloseoutActions"])
+                    this.requiredCloseoutActions!.push(ActionRequirement.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): ArrangementPolicy {
+        data = typeof data === 'object' ? data : {};
+        let result = new ArrangementPolicy();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["arrangementType"] = this.arrangementType;
+        data["childInvolvement"] = this.childInvolvement;
+        if (Array.isArray(this.volunteerFunctions)) {
+            data["volunteerFunctions"] = [];
+            for (let item of this.volunteerFunctions)
+                data["volunteerFunctions"].push(item.toJSON());
+        }
+        if (Array.isArray(this.requiredSetupActions)) {
+            data["requiredSetupActions"] = [];
+            for (let item of this.requiredSetupActions)
+                data["requiredSetupActions"].push(item.toJSON());
+        }
+        if (Array.isArray(this.requiredMonitoringActions)) {
+            data["requiredMonitoringActions"] = [];
+            for (let item of this.requiredMonitoringActions)
+                data["requiredMonitoringActions"].push(item.toJSON());
+        }
+        if (Array.isArray(this.requiredCloseoutActions)) {
+            data["requiredCloseoutActions"] = [];
+            for (let item of this.requiredCloseoutActions)
+                data["requiredCloseoutActions"].push(item.toJSON());
+        }
+        return data; 
+    }
+}
+
+export interface IArrangementPolicy {
+    arrangementType?: string | undefined;
+    childInvolvement?: ChildInvolvement;
+    volunteerFunctions?: VolunteerFunction[] | undefined;
+    requiredSetupActions?: ActionRequirement[] | undefined;
+    requiredMonitoringActions?: ValueTupleOfActionRequirementAndRecurrencePolicy[] | undefined;
+    requiredCloseoutActions?: ActionRequirement[] | undefined;
+}
+
+export enum ChildInvolvement {
+    ChildHousing = 0,
+    DaytimeChildCareOnly = 1,
+    NoChildInvolvement = 2,
+}
+
+export class VolunteerFunction implements IVolunteerFunction {
+    arrangementFunction?: string | undefined;
+    requirement?: FunctionRequirement;
+    eligibleIndividualVolunteerRoles?: string[] | undefined;
+    eligibleVolunteerFamilyRoles?: string[] | undefined;
+
+    constructor(data?: IVolunteerFunction) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.arrangementFunction = _data["arrangementFunction"];
+            this.requirement = _data["requirement"];
+            if (Array.isArray(_data["eligibleIndividualVolunteerRoles"])) {
+                this.eligibleIndividualVolunteerRoles = [] as any;
+                for (let item of _data["eligibleIndividualVolunteerRoles"])
+                    this.eligibleIndividualVolunteerRoles!.push(item);
+            }
+            if (Array.isArray(_data["eligibleVolunteerFamilyRoles"])) {
+                this.eligibleVolunteerFamilyRoles = [] as any;
+                for (let item of _data["eligibleVolunteerFamilyRoles"])
+                    this.eligibleVolunteerFamilyRoles!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): VolunteerFunction {
+        data = typeof data === 'object' ? data : {};
+        let result = new VolunteerFunction();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["arrangementFunction"] = this.arrangementFunction;
+        data["requirement"] = this.requirement;
+        if (Array.isArray(this.eligibleIndividualVolunteerRoles)) {
+            data["eligibleIndividualVolunteerRoles"] = [];
+            for (let item of this.eligibleIndividualVolunteerRoles)
+                data["eligibleIndividualVolunteerRoles"].push(item);
+        }
+        if (Array.isArray(this.eligibleVolunteerFamilyRoles)) {
+            data["eligibleVolunteerFamilyRoles"] = [];
+            for (let item of this.eligibleVolunteerFamilyRoles)
+                data["eligibleVolunteerFamilyRoles"].push(item);
+        }
+        return data; 
+    }
+}
+
+export interface IVolunteerFunction {
+    arrangementFunction?: string | undefined;
+    requirement?: FunctionRequirement;
+    eligibleIndividualVolunteerRoles?: string[] | undefined;
+    eligibleVolunteerFamilyRoles?: string[] | undefined;
+}
+
+export enum FunctionRequirement {
+    ZeroOrMore = 0,
+    ExactlyOne = 1,
+    OneOrMore = 2,
+}
+
+export class ValueTupleOfActionRequirementAndRecurrencePolicy implements IValueTupleOfActionRequirementAndRecurrencePolicy {
+    item1?: ActionRequirement;
+    item2?: RecurrencePolicy;
+
+    constructor(data?: IValueTupleOfActionRequirementAndRecurrencePolicy) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.item1 = _data["item1"] ? ActionRequirement.fromJS(_data["item1"]) : <any>undefined;
+            this.item2 = _data["item2"] ? RecurrencePolicy.fromJS(_data["item2"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ValueTupleOfActionRequirementAndRecurrencePolicy {
+        data = typeof data === 'object' ? data : {};
+        let result = new ValueTupleOfActionRequirementAndRecurrencePolicy();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["item1"] = this.item1 ? this.item1.toJSON() : <any>undefined;
+        data["item2"] = this.item2 ? this.item2.toJSON() : <any>undefined;
+        return data; 
+    }
+}
+
+export interface IValueTupleOfActionRequirementAndRecurrencePolicy {
+    item1?: ActionRequirement;
+    item2?: RecurrencePolicy;
+}
+
+export class RecurrencePolicy implements IRecurrencePolicy {
+    stages?: RecurrencePolicyStage[] | undefined;
+
+    constructor(data?: IRecurrencePolicy) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["stages"])) {
+                this.stages = [] as any;
+                for (let item of _data["stages"])
+                    this.stages!.push(RecurrencePolicyStage.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): RecurrencePolicy {
+        data = typeof data === 'object' ? data : {};
+        let result = new RecurrencePolicy();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.stages)) {
+            data["stages"] = [];
+            for (let item of this.stages)
+                data["stages"].push(item.toJSON());
+        }
+        return data; 
+    }
+}
+
+export interface IRecurrencePolicy {
+    stages?: RecurrencePolicyStage[] | undefined;
+}
+
+export class RecurrencePolicyStage implements IRecurrencePolicyStage {
+    delay?: string;
+    maxOccurrences?: number | undefined;
+
+    constructor(data?: IRecurrencePolicyStage) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.delay = _data["delay"];
+            this.maxOccurrences = _data["maxOccurrences"];
+        }
+    }
+
+    static fromJS(data: any): RecurrencePolicyStage {
+        data = typeof data === 'object' ? data : {};
+        let result = new RecurrencePolicyStage();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["delay"] = this.delay;
+        data["maxOccurrences"] = this.maxOccurrences;
+        return data; 
+    }
+}
+
+export interface IRecurrencePolicyStage {
+    delay?: string;
+    maxOccurrences?: number | undefined;
+}
+
+export class VolunteerPolicy implements IVolunteerPolicy {
+    volunteerRoles?: { [key: string]: VolunteerRolePolicy; } | undefined;
+    volunteerFamilyRoles?: { [key: string]: VolunteerFamilyRolePolicy; } | undefined;
+
+    constructor(data?: IVolunteerPolicy) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (_data["volunteerRoles"]) {
+                this.volunteerRoles = {} as any;
+                for (let key in _data["volunteerRoles"]) {
+                    if (_data["volunteerRoles"].hasOwnProperty(key))
+                        (<any>this.volunteerRoles)![key] = _data["volunteerRoles"][key] ? VolunteerRolePolicy.fromJS(_data["volunteerRoles"][key]) : new VolunteerRolePolicy();
+                }
+            }
+            if (_data["volunteerFamilyRoles"]) {
+                this.volunteerFamilyRoles = {} as any;
+                for (let key in _data["volunteerFamilyRoles"]) {
+                    if (_data["volunteerFamilyRoles"].hasOwnProperty(key))
+                        (<any>this.volunteerFamilyRoles)![key] = _data["volunteerFamilyRoles"][key] ? VolunteerFamilyRolePolicy.fromJS(_data["volunteerFamilyRoles"][key]) : new VolunteerFamilyRolePolicy();
+                }
+            }
+        }
+    }
+
+    static fromJS(data: any): VolunteerPolicy {
+        data = typeof data === 'object' ? data : {};
+        let result = new VolunteerPolicy();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (this.volunteerRoles) {
+            data["volunteerRoles"] = {};
+            for (let key in this.volunteerRoles) {
+                if (this.volunteerRoles.hasOwnProperty(key))
+                    (<any>data["volunteerRoles"])[key] = this.volunteerRoles[key] ? this.volunteerRoles[key].toJSON() : <any>undefined;
+            }
+        }
+        if (this.volunteerFamilyRoles) {
+            data["volunteerFamilyRoles"] = {};
+            for (let key in this.volunteerFamilyRoles) {
+                if (this.volunteerFamilyRoles.hasOwnProperty(key))
+                    (<any>data["volunteerFamilyRoles"])[key] = this.volunteerFamilyRoles[key] ? this.volunteerFamilyRoles[key].toJSON() : <any>undefined;
+            }
+        }
+        return data; 
+    }
+}
+
+export interface IVolunteerPolicy {
+    volunteerRoles?: { [key: string]: VolunteerRolePolicy; } | undefined;
+    volunteerFamilyRoles?: { [key: string]: VolunteerFamilyRolePolicy; } | undefined;
+}
+
+export class VolunteerRolePolicy implements IVolunteerRolePolicy {
+    volunteerRoleType?: string | undefined;
+    approvalRequirements?: VolunteerApprovalRequirement[] | undefined;
+
+    constructor(data?: IVolunteerRolePolicy) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.volunteerRoleType = _data["volunteerRoleType"];
+            if (Array.isArray(_data["approvalRequirements"])) {
+                this.approvalRequirements = [] as any;
+                for (let item of _data["approvalRequirements"])
+                    this.approvalRequirements!.push(VolunteerApprovalRequirement.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): VolunteerRolePolicy {
+        data = typeof data === 'object' ? data : {};
+        let result = new VolunteerRolePolicy();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["volunteerRoleType"] = this.volunteerRoleType;
+        if (Array.isArray(this.approvalRequirements)) {
+            data["approvalRequirements"] = [];
+            for (let item of this.approvalRequirements)
+                data["approvalRequirements"].push(item.toJSON());
+        }
+        return data; 
+    }
+}
+
+export interface IVolunteerRolePolicy {
+    volunteerRoleType?: string | undefined;
+    approvalRequirements?: VolunteerApprovalRequirement[] | undefined;
+}
+
+export class VolunteerApprovalRequirement implements IVolunteerApprovalRequirement {
+    shortDescription?: string | undefined;
+    requiredToBeProspective?: boolean;
+    actionRequirement?: ActionRequirement | undefined;
+
+    constructor(data?: IVolunteerApprovalRequirement) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.shortDescription = _data["shortDescription"];
+            this.requiredToBeProspective = _data["requiredToBeProspective"];
+            this.actionRequirement = _data["actionRequirement"] ? ActionRequirement.fromJS(_data["actionRequirement"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): VolunteerApprovalRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new VolunteerApprovalRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["shortDescription"] = this.shortDescription;
+        data["requiredToBeProspective"] = this.requiredToBeProspective;
+        data["actionRequirement"] = this.actionRequirement ? this.actionRequirement.toJSON() : <any>undefined;
+        return data; 
+    }
+}
+
+export interface IVolunteerApprovalRequirement {
+    shortDescription?: string | undefined;
+    requiredToBeProspective?: boolean;
+    actionRequirement?: ActionRequirement | undefined;
+}
+
+export class VolunteerFamilyRolePolicy implements IVolunteerFamilyRolePolicy {
+    volunteerFamilyRoleType?: string | undefined;
+    approvalRequirements?: VolunteerFamilyApprovalRequirement[] | undefined;
+
+    constructor(data?: IVolunteerFamilyRolePolicy) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.volunteerFamilyRoleType = _data["volunteerFamilyRoleType"];
+            if (Array.isArray(_data["approvalRequirements"])) {
+                this.approvalRequirements = [] as any;
+                for (let item of _data["approvalRequirements"])
+                    this.approvalRequirements!.push(VolunteerFamilyApprovalRequirement.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): VolunteerFamilyRolePolicy {
+        data = typeof data === 'object' ? data : {};
+        let result = new VolunteerFamilyRolePolicy();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["volunteerFamilyRoleType"] = this.volunteerFamilyRoleType;
+        if (Array.isArray(this.approvalRequirements)) {
+            data["approvalRequirements"] = [];
+            for (let item of this.approvalRequirements)
+                data["approvalRequirements"].push(item.toJSON());
+        }
+        return data; 
+    }
+}
+
+export interface IVolunteerFamilyRolePolicy {
+    volunteerFamilyRoleType?: string | undefined;
+    approvalRequirements?: VolunteerFamilyApprovalRequirement[] | undefined;
+}
+
+export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyApprovalRequirement {
+    shortDescription?: string | undefined;
+    requiredToBeProspective?: boolean;
+    actionRequirement?: ActionRequirement | undefined;
+    scope?: VolunteerFamilyRequirementScope;
+
+    constructor(data?: IVolunteerFamilyApprovalRequirement) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.shortDescription = _data["shortDescription"];
+            this.requiredToBeProspective = _data["requiredToBeProspective"];
+            this.actionRequirement = _data["actionRequirement"] ? ActionRequirement.fromJS(_data["actionRequirement"]) : <any>undefined;
+            this.scope = _data["scope"];
+        }
+    }
+
+    static fromJS(data: any): VolunteerFamilyApprovalRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new VolunteerFamilyApprovalRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["shortDescription"] = this.shortDescription;
+        data["requiredToBeProspective"] = this.requiredToBeProspective;
+        data["actionRequirement"] = this.actionRequirement ? this.actionRequirement.toJSON() : <any>undefined;
+        data["scope"] = this.scope;
+        return data; 
+    }
+}
+
+export interface IVolunteerFamilyApprovalRequirement {
+    shortDescription?: string | undefined;
+    requiredToBeProspective?: boolean;
+    actionRequirement?: ActionRequirement | undefined;
+    scope?: VolunteerFamilyRequirementScope;
+}
+
+export enum VolunteerFamilyRequirementScope {
+    OncePerFamily = 0,
+    AllAdultsInTheFamily = 1,
 }
 
 export class Person implements IPerson {
