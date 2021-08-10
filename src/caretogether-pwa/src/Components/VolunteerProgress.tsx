@@ -134,6 +134,29 @@ function VolunteerProgress() {
     });
     const adults = volunteerFamily.family?.adults?.map(adult => {
       const individualProgress: Array<string | 'needed' | null> = [];
+      Object.entries(groupedIndividualRequirementRoles).forEach(([requirement, roleNames]) => {
+        const [Type, Name] = requirement.split('|');
+        const individualVolunteer = volunteerFamily.individualVolunteers?.[adult.item1!.id as string];
+        // If the individual is in progress or approved for any role that a requirement applies to,
+        // then record whether the individual has met that requirement or still needs to.
+        if (individualVolunteer && roleNames.filter(roleForRequirement =>
+          individualVolunteer.individualRoleApprovals?.[roleForRequirement] !== undefined).length > 0) {
+          if (Type === RequirementType.Document.toString()) {
+            const submissions = individualVolunteer.approvalFormUploads?.filter(x => x.formName === Name);
+            individualProgress.push(submissions && submissions.length > 0
+              ? format(submissions[0].timestampUtc as Date, 'M/d/yy')
+              : 'needed');
+              return;
+          } else if (Type === RequirementType.Activity.toString()) {
+            const submissions = individualVolunteer.approvalActivitiesPerformed?.filter(x => x.activityName === Name);
+            individualProgress.push(submissions && submissions.length > 0
+              ? format(submissions[0].timestampUtc as Date, 'M/d/yy')
+              : 'needed');
+              return;
+          }
+        }
+        individualProgress.push(null);
+      });
       return {
         adult: adult,
         progress: individualProgress
@@ -279,15 +302,8 @@ function VolunteerProgress() {
                       <TableCell>{adult.adult.item1.firstName}</TableCell>
                       <TableCell>{adult.adult.item1.lastName}</TableCell>
                       <TableCell colSpan={familyRequirementColumns.length} />
-                      {/* <TableCell colSpan={
-                        familyJointDocumentRequirements.length +
-                        familyJointActivityRequirements.length
-                      } />
-                      {individualDocumentRequirements.map(requirement =>
-                        (<TableCell key={requirement.formName}>...</TableCell>))}
-                        {individualActivityRequirements.map(requirement =>
-                        (<TableCell key={requirement.activityName}>***</TableCell>))} */}
-                      <TableCell colSpan={individualRequirementColumns.length} />
+                      {adult.progress.map((value, i) =>
+                        (<TableCell key={i}>{value}</TableCell>))}
                     </TableRow>
                   ))}
                 </React.Fragment>
