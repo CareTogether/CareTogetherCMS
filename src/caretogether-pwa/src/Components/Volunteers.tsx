@@ -6,6 +6,7 @@ import { differenceInYears } from 'date-fns';
 import { useRecoilValue } from 'recoil';
 import { volunteerFamiliesData, useRefreshVolunteerFamilies } from '../Model/VolunteerFamiliesModel';
 import { policyData } from '../Model/ConfigurationModel';
+import { RoleApprovalStatus } from '../GeneratedClient';
 import React from 'react';
 
 const useStyles = makeStyles((theme) => ({
@@ -32,6 +33,10 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
+function approvalStatus(value: number | undefined) {
+  return value !== undefined && RoleApprovalStatus[value] || null;
+}
+
 function Volunteers() {
   const classes = useStyles();
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
@@ -52,11 +57,11 @@ function Volunteers() {
         <TableContainer component={Paper}>
           <Table className={classes.table} size="small">
             <TableHead>
-              <TableRow>
+              {/* <TableRow>
                 <TableCell align="center" colSpan={3}>
                   Volunteer Families ({volunteerFamilies.length})
                 </TableCell>
-              </TableRow>
+              </TableRow> */}
               <TableRow>
                 <TableCell>First Name</TableCell>
                 <TableCell>Last Name</TableCell>
@@ -82,24 +87,28 @@ function Volunteers() {
                         [0]?.item1?.lastName + " Family"
                     }</TableCell>
                     { volunteerFamilyRoleNames.map(roleName =>
-                      (<TableCell key={roleName}>STATUS</TableCell>))}
+                      (<TableCell key={roleName}>{
+                        approvalStatus(volunteerFamily.familyRoleApprovals?.[roleName])
+                      }</TableCell>))}
                     <TableCell colSpan={volunteerRoleNames.length} />
                   </TableRow>
-                  {volunteerFamily.family?.adults?.map(adult => (
-                    <TableRow key={volunteerFamily.family?.id + ":" + adult.item1?.id}
+                  {volunteerFamily.family?.adults?.map(adult => adult.item1 && (
+                    <TableRow key={volunteerFamily.family?.id + ":" + adult.item1.id}
                       className={classes.adultRow}>
-                      <TableCell>{adult.item1?.firstName}</TableCell>
-                      <TableCell>{adult.item1?.lastName}</TableCell>
+                      <TableCell>{adult.item1.firstName}</TableCell>
+                      <TableCell>{adult.item1.lastName}</TableCell>
                       <TableCell align="right">
-                        { adult.item1?.age instanceof ExactAge
-                          ? adult.item1?.age.dateOfBirth && differenceInYears(new Date(), adult.item1?.age.dateOfBirth)
-                          : adult.item1?.age instanceof AgeInYears
-                          ? adult.item1?.age.years && adult.item1?.age.asOf && (adult.item1?.age.years + differenceInYears(new Date(), adult.item1?.age.asOf))
+                        { adult.item1.age instanceof ExactAge
+                          ? adult.item1.age.dateOfBirth && differenceInYears(new Date(), adult.item1.age.dateOfBirth)
+                          : adult.item1.age instanceof AgeInYears
+                          ? adult.item1.age.years && adult.item1?.age.asOf && (adult.item1.age.years + differenceInYears(new Date(), adult.item1.age.asOf))
                           : "⚠" }
                       </TableCell>
                       <TableCell colSpan={volunteerFamilyRoleNames.length} />
                       { volunteerRoleNames.map(roleName =>
-                        (<TableCell key={roleName}>STATUS</TableCell>))}
+                        (<TableCell key={roleName}>{
+                          approvalStatus(volunteerFamily.individualVolunteers?.[adult.item1?.id || '']?.individualRoleApprovals?.[roleName])
+                        }</TableCell>))}
                     </TableRow>
                   ))}
                 </React.Fragment>
