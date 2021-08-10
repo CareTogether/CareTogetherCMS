@@ -63,26 +63,34 @@ function Volunteers() {
   const allFamilyJointRequirements =
     allFamilyRequirements.filter(requirement =>
       requirement.scope === VolunteerFamilyRequirementScope.OncePerFamily);
-  const allFamilyJointDocumentRequirements = allFamilyRequirements
+  const familyJointDocumentRequirements = allFamilyJointRequirements
     .reduce((previous, requirement) =>
       requirement.actionRequirement instanceof FormUploadRequirement
       ? previous.concat(requirement.actionRequirement)
+      : previous, [] as FormUploadRequirement[])
+    .reduce((previous, requirement) =>
+      previous.filter(x => x.formName === requirement.formName).length === 0
+      ? previous.concat(requirement)
       : previous, [] as FormUploadRequirement[]);
-  const allFamilyJointActivityRequirements = allFamilyRequirements
+  const familyJointActivityRequirements = allFamilyJointRequirements
     .reduce((previous, requirement) =>
       requirement.actionRequirement instanceof ActivityRequirement
       ? previous.concat(requirement.actionRequirement)
+      : previous, [] as ActivityRequirement[])
+    .reduce((previous, requirement) =>
+      previous.filter(x => x.activityName === requirement.activityName).length === 0
+      ? previous.concat(requirement)
       : previous, [] as ActivityRequirement[]);
 
   const allFamilyPerAdultRequirements =
     allFamilyRequirements.filter(requirement =>
       requirement.scope === VolunteerFamilyRequirementScope.AllAdultsInTheFamily);
-  const allFamilyPerAdultDocumentRequirements = allFamilyRequirements
+  const allFamilyPerAdultDocumentRequirements = allFamilyPerAdultRequirements
     .reduce((previous, requirement) =>
       requirement.actionRequirement instanceof FormUploadRequirement
       ? previous.concat(requirement.actionRequirement)
       : previous, [] as FormUploadRequirement[]);
-  const allFamilyPerAdultActivityRequirements = allFamilyRequirements
+  const allFamilyPerAdultActivityRequirements = allFamilyPerAdultRequirements
     .reduce((previous, requirement) =>
       requirement.actionRequirement instanceof ActivityRequirement
       ? previous.concat(requirement.actionRequirement)
@@ -106,6 +114,19 @@ function Volunteers() {
       ? previous.concat(requirement.actionRequirement)
       : previous, [] as ActivityRequirement[]);
 
+  const individualDocumentRequirements =
+    allFamilyPerAdultDocumentRequirements.concat(allIndividualDocumentRequirements)
+    .reduce((previous, requirement) =>
+      previous.filter(x => x.formName === requirement.formName).length === 0
+      ? previous.concat(requirement)
+      : previous, [] as FormUploadRequirement[]);
+  const individualActivityRequirements =
+    allFamilyPerAdultActivityRequirements.concat(allIndividualActivityRequirements)
+    .reduce((previous, requirement) =>
+      previous.filter(x => x.activityName === requirement.activityName).length === 0
+      ? previous.concat(requirement)
+      : previous, [] as ActivityRequirement[]);
+  
   return (
     <Grid container spacing={3}>
       <Grid item xs={12}>
@@ -126,17 +147,13 @@ function Volunteers() {
                   (<TableCell key={roleName}>{roleName}</TableCell>))}
                 { volunteerRoleNames.map(roleName =>
                   (<TableCell key={roleName}>{roleName}</TableCell>))}
-                {allFamilyJointDocumentRequirements.map(requirement =>
+                {familyJointDocumentRequirements.map(requirement =>
                   (<TableCell key={requirement.formName}>{requirement.formName}</TableCell>))}
-                {allFamilyJointActivityRequirements.map(requirement =>
+                {familyJointActivityRequirements.map(requirement =>
                   (<TableCell key={requirement.activityName}>{requirement.activityName}</TableCell>))}
-                {allFamilyPerAdultDocumentRequirements.map(requirement =>
+                {individualDocumentRequirements.map(requirement =>
                   (<TableCell key={requirement.formName}>{requirement.formName}</TableCell>))}
-                {allFamilyPerAdultActivityRequirements.map(requirement =>
-                  (<TableCell key={requirement.activityName}>{requirement.activityName}</TableCell>))}
-                {allIndividualDocumentRequirements.map(requirement =>
-                  (<TableCell key={requirement.formName}>{requirement.formName}</TableCell>))}
-                {allIndividualActivityRequirements.map(requirement =>
+                {individualActivityRequirements.map(requirement =>
                   (<TableCell key={requirement.activityName}>{requirement.activityName}</TableCell>))}
                 {/* Notes */}
               </TableRow>
@@ -155,15 +172,16 @@ function Volunteers() {
                         approvalStatus(volunteerFamily.familyRoleApprovals?.[roleName])
                       }</TableCell>))}
                     <TableCell colSpan={volunteerRoleNames.length} />
-                    {allFamilyJointDocumentRequirements.map(requirement =>
-                      (<TableCell key={requirement.formName}>...</TableCell>))}
-                    {allFamilyJointActivityRequirements.map(requirement =>
+                    {familyJointDocumentRequirements.map(requirement =>
+                      (<TableCell key={requirement.formName}>{
+                        'TODO'
+                        /* TODO: Is this met? If not, is it missing for a role this family has? */
+                      }</TableCell>))}
+                    {familyJointActivityRequirements.map(requirement =>
                       (<TableCell key={requirement.activityName}>***</TableCell>))}
                     <TableCell colSpan={
-                      allFamilyPerAdultDocumentRequirements.length +
-                      allFamilyPerAdultActivityRequirements.length +
-                      allIndividualDocumentRequirements.length +
-                      allIndividualActivityRequirements.length
+                      individualDocumentRequirements.length +
+                      individualActivityRequirements.length
                     } />
                   </TableRow>
                   {volunteerFamily.family?.adults?.map(adult => adult.item1 && (
@@ -184,16 +202,12 @@ function Volunteers() {
                           approvalStatus(volunteerFamily.individualVolunteers?.[adult.item1?.id || '']?.individualRoleApprovals?.[roleName])
                         }</TableCell>))}
                       <TableCell colSpan={
-                        allFamilyJointDocumentRequirements.length +
-                        allFamilyJointActivityRequirements.length
+                        familyJointDocumentRequirements.length +
+                        familyJointActivityRequirements.length
                       } />
-                      {allFamilyPerAdultDocumentRequirements.map(requirement =>
+                      {individualDocumentRequirements.map(requirement =>
                         (<TableCell key={requirement.formName}>...</TableCell>))}
-                      {allFamilyPerAdultActivityRequirements.map(requirement =>
-                        (<TableCell key={requirement.activityName}>***</TableCell>))}
-                      {allIndividualDocumentRequirements.map(requirement =>
-                        (<TableCell key={requirement.formName}>...</TableCell>))}
-                      {allIndividualActivityRequirements.map(requirement =>
+                      {individualActivityRequirements.map(requirement =>
                         (<TableCell key={requirement.activityName}>***</TableCell>))}
                     </TableRow>
                   ))}
