@@ -1,13 +1,12 @@
 import { makeStyles } from '@material-ui/core/styles';
 import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow } from '@material-ui/core';
-import { FormUploadRequirement, VolunteerApprovalRequirement, VolunteerFamilyApprovalRequirement, ActivityRequirement } from '../GeneratedClient';
+import { FormUploadRequirement, ActivityRequirement } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
 import { policyData } from '../Model/ConfigurationModel';
 import { VolunteerFamilyRequirementScope } from '../GeneratedClient';
 import { format } from 'date-fns';
 import React from 'react';
-import { stringify } from 'querystring';
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -52,9 +51,14 @@ function VolunteerProgress() {
   */
 
   enum RequirementType { Document, Activity };
-  const allRequirementRoles: { Type: RequirementType, Name: string, Role: string }[] = [];
-  function append(type: RequirementType, name: string, roleName: string) {
-    allRequirementRoles.push({Type: type, Name: name, Role: roleName});
+  enum RequirementScope { Family, Individual };
+  const allFamilyRequirementRoles: { Type: RequirementType, Name: string, Role: string }[] = [];
+  const allIndividualRequirementRoles: { Type: RequirementType, Name: string, Role: string }[] = [];
+  function append(type: RequirementType, name: string, roleName: string, scope: RequirementScope) {
+    if (scope === RequirementScope.Family)
+      allFamilyRequirementRoles.push({Type: type, Name: name, Role: roleName});
+    else
+      allIndividualRequirementRoles.push({Type: type, Name: name, Role: roleName});
   }
 
   policy.volunteerPolicy?.volunteerFamilyRoles &&
@@ -63,9 +67,13 @@ function VolunteerProgress() {
       rolePolicy.approvalRequirements?.forEach(requirement => {
         if (requirement.requiredToBeProspective) return;
         if (requirement.actionRequirement instanceof FormUploadRequirement && requirement.actionRequirement.formName) {
-          append(RequirementType.Document, requirement.actionRequirement.formName, roleName);
+          append(RequirementType.Document, requirement.actionRequirement.formName, roleName,
+            requirement.scope === VolunteerFamilyRequirementScope.OncePerFamily
+            ? RequirementScope.Family : RequirementScope.Individual);
         } else if (requirement.actionRequirement instanceof ActivityRequirement && requirement.actionRequirement.activityName) {
-          append(RequirementType.Activity, requirement.actionRequirement.activityName, roleName);
+          append(RequirementType.Activity, requirement.actionRequirement.activityName, roleName,
+            requirement.scope === VolunteerFamilyRequirementScope.OncePerFamily
+            ? RequirementScope.Family : RequirementScope.Individual);
         }
       });
     });
@@ -76,9 +84,11 @@ function VolunteerProgress() {
       rolePolicy.approvalRequirements?.forEach(requirement => {
         if (requirement.requiredToBeProspective) return;
         if (requirement.actionRequirement instanceof FormUploadRequirement && requirement.actionRequirement.formName) {
-          append(RequirementType.Document, requirement.actionRequirement.formName, roleName);
+          append(RequirementType.Document, requirement.actionRequirement.formName, roleName,
+            RequirementScope.Individual);
         } else if (requirement.actionRequirement instanceof ActivityRequirement && requirement.actionRequirement.activityName) {
-          append(RequirementType.Activity, requirement.actionRequirement.activityName, roleName);
+          append(RequirementType.Activity, requirement.actionRequirement.activityName, roleName,
+            RequirementScope.Individual);
         }
       });
     });
@@ -93,11 +103,14 @@ function VolunteerProgress() {
       return previous;
     }, {} as Record<K, V[]>);
 
-  const requirementRoles = groupBy(allRequirementRoles, x => x.Type.toString()+'|'+x.Name, x => x.Role);
+  const groupedFamilyRequirementRoles = groupBy(allFamilyRequirementRoles,
+    x => x.Type.toString()+'|'+x.Name, x => x.Role);
+  const groupedIndividualRequirementRoles = groupBy(allIndividualRequirementRoles,
+    x => x.Type.toString()+'|'+x.Name, x => x.Role);
   
   const volunteerFamilyProgress = volunteerFamilies.map(volunteerFamily => {
-    const progress: Array<string | 'needed' | null> = [];
-    Object.entries(requirementRoles).forEach(([requirement, roleNames]) => {
+    const familyProgress: Array<string | 'needed' | null> = [];
+    Object.entries(groupedFamilyRequirementRoles).forEach(([requirement, roleNames]) => {
       const [Type, Name] = requirement.split('|');
       // If the family is in progress or approved for any role that a requirement applies to,
       // then record whether the family has met that requirement or still needs to.
@@ -105,30 +118,44 @@ function VolunteerProgress() {
         volunteerFamily?.familyRoleApprovals?.[roleForRequirement] !== undefined).length > 0) {
         if (Type === RequirementType.Document.toString()) {
           const submissions = volunteerFamily.approvalFormUploads?.filter(x => x.formName === Name);
-          progress.push(submissions && submissions.length > 0
+          familyProgress.push(submissions && submissions.length > 0
             ? format(submissions[0].timestampUtc as Date, 'M/d/yy')
             : 'needed');
             return;
         } else if (Type === RequirementType.Activity.toString()) {
           const submissions = volunteerFamily.approvalActivitiesPerformed?.filter(x => x.activityName === Name);
-          progress.push(submissions && submissions.length > 0
+          familyProgress.push(submissions && submissions.length > 0
             ? format(submissions[0].timestampUtc as Date, 'M/d/yy')
             : 'needed');
             return;
         }
       }
-      progress.push(null);
+      familyProgress.push(null);
     });
+    const adults = volunteerFamily.family?.adults?.map(adult => {
+      const individualProgress: Array<string | 'needed' | null> = [];
+      return {
+        adult: adult,
+        progress: individualProgress
+      };
+    }) || [];
     return {
       family: volunteerFamily,
-      progress: progress
+      progress: familyProgress,
+      adults: adults
     };
   });
 
-  const requirementColumns = [] as { Type: string, Name: string }[];
-  Object.entries(requirementRoles).forEach(([TypeAndName, roles]) => {
+  const familyRequirementColumns = [] as { Type: string, Name: string }[];
+  Object.entries(groupedFamilyRequirementRoles).forEach(([TypeAndName, roles]) => {
     const [Type, Name] = TypeAndName.split('|');
-    requirementColumns.push({Type: Type, Name: Name});
+    familyRequirementColumns.push({Type: Type, Name: Name});
+  })
+
+  const individualRequirementColumns = [] as { Type: string, Name: string }[];
+  Object.entries(groupedIndividualRequirementRoles).forEach(([TypeAndName, roles]) => {
+    const [Type, Name] = TypeAndName.split('|');
+    individualRequirementColumns.push({Type: Type, Name: Name});
   })
 
   // const allFamilyRequirements =
@@ -227,7 +254,9 @@ function VolunteerProgress() {
               <TableRow>
                 <TableCell>First Name</TableCell>
                 <TableCell>Last Name</TableCell>
-                {requirementColumns.map(({ Type, Name }) =>
+                {familyRequirementColumns.map(({ Type, Name }) =>
+                  (<TableCell key={Type.toString() + Name}>{Name}</TableCell>))}
+                {individualRequirementColumns.map(({ Type, Name }) =>
                   (<TableCell key={Type.toString() + Name}>{Name}</TableCell>))}
               </TableRow>
             </TableHead>
@@ -242,32 +271,25 @@ function VolunteerProgress() {
                     }</TableCell>
                     {volunteerFamilyProgress.progress.map((value, i) =>
                       (<TableCell key={i}>{value}</TableCell>))}
-                    {/* {familyJointDocumentRequirements.map(requirement =>
-                      (<TableCell key={requirement.formName}>{
-                        'TODO'
-                      }</TableCell>))}
-                    {familyJointActivityRequirements.map(requirement =>
-                      (<TableCell key={requirement.activityName}>***</TableCell>))}
-                    <TableCell colSpan={
-                      individualDocumentRequirements.length +
-                      individualActivityRequirements.length
-                    } /> */}
+                    <TableCell colSpan={individualRequirementColumns.length} />
                   </TableRow>
-                  {/* {volunteerFamily.family?.adults?.map(adult => adult.item1 && (
-                    <TableRow key={volunteerFamily.family?.id + ":" + adult.item1.id}
+                  {volunteerFamilyProgress.adults.map(adult => adult.adult.item1 && (
+                    <TableRow key={adult.adult.item1.id}
                       className={classes.adultRow}>
-                      <TableCell>{adult.item1.firstName}</TableCell>
-                      <TableCell>{adult.item1.lastName}</TableCell>
-                      <TableCell colSpan={
+                      <TableCell>{adult.adult.item1.firstName}</TableCell>
+                      <TableCell>{adult.adult.item1.lastName}</TableCell>
+                      <TableCell colSpan={familyRequirementColumns.length} />
+                      {/* <TableCell colSpan={
                         familyJointDocumentRequirements.length +
                         familyJointActivityRequirements.length
                       } />
                       {individualDocumentRequirements.map(requirement =>
                         (<TableCell key={requirement.formName}>...</TableCell>))}
-                      {individualActivityRequirements.map(requirement =>
-                        (<TableCell key={requirement.activityName}>***</TableCell>))}
+                        {individualActivityRequirements.map(requirement =>
+                        (<TableCell key={requirement.activityName}>***</TableCell>))} */}
+                      <TableCell colSpan={individualRequirementColumns.length} />
                     </TableRow>
-                  ))} */}
+                  ))}
                 </React.Fragment>
               ))}
             </TableBody>
