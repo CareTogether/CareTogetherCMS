@@ -23,13 +23,13 @@ const useStyles = makeStyles((theme) => ({
     minWidth: 700,
   },
   familyRow: {
-    backgroundColor: '#eee',
+    backgroundColor: '#eef'
   },
   adultRow: {
-
   },
   childRow: {
-
+    color: 'ddd',
+    fontStyle: 'italic'
   }
 }));
 
@@ -62,7 +62,8 @@ function VolunteerApplications() {
 
   const allFamilyJointRequirements =
     allFamilyRequirements.filter(requirement =>
-      requirement.scope === VolunteerFamilyRequirementScope.OncePerFamily);
+      requirement.scope === VolunteerFamilyRequirementScope.OncePerFamily &&
+      requirement.requiredToBeProspective);
   const familyJointDocumentRequirements = allFamilyJointRequirements
     .reduce((previous, requirement) =>
       requirement.actionRequirement instanceof FormUploadRequirement
@@ -84,7 +85,8 @@ function VolunteerApplications() {
 
   const allFamilyPerAdultRequirements =
     allFamilyRequirements.filter(requirement =>
-      requirement.scope === VolunteerFamilyRequirementScope.AllAdultsInTheFamily);
+      requirement.scope === VolunteerFamilyRequirementScope.AllAdultsInTheFamily &&
+      requirement.requiredToBeProspective);
   const allFamilyPerAdultDocumentRequirements = allFamilyPerAdultRequirements
     .reduce((previous, requirement) =>
       requirement.actionRequirement instanceof FormUploadRequirement
@@ -105,12 +107,14 @@ function VolunteerApplications() {
         : ([] as VolunteerApprovalRequirement[]);
   const allIndividualDocumentRequirements = allIndividualRequirements
     .reduce((previous, requirement) =>
-      requirement.actionRequirement instanceof FormUploadRequirement
+      requirement.actionRequirement instanceof FormUploadRequirement &&
+      requirement.requiredToBeProspective
       ? previous.concat(requirement.actionRequirement)
       : previous, [] as FormUploadRequirement[]);
   const allIndividualActivityRequirements = allIndividualRequirements
     .reduce((previous, requirement) =>
-      requirement.actionRequirement instanceof ActivityRequirement
+      requirement.actionRequirement instanceof ActivityRequirement &&
+      requirement.requiredToBeProspective
       ? previous.concat(requirement.actionRequirement)
       : previous, [] as ActivityRequirement[]);
 
@@ -141,12 +145,6 @@ function VolunteerApplications() {
               <TableRow>
                 <TableCell>First Name</TableCell>
                 <TableCell>Last Name</TableCell>
-                <TableCell>Age</TableCell>
-                {/* NOTE: There are many other potential ways to arrange all of this information. */}
-                { volunteerFamilyRoleNames.map(roleName =>
-                  (<TableCell key={roleName}>{roleName}</TableCell>))}
-                { volunteerRoleNames.map(roleName =>
-                  (<TableCell key={roleName}>{roleName}</TableCell>))}
                 {familyJointDocumentRequirements.map(requirement =>
                   (<TableCell key={requirement.formName}>{requirement.formName}</TableCell>))}
                 {familyJointActivityRequirements.map(requirement =>
@@ -162,16 +160,11 @@ function VolunteerApplications() {
               {volunteerFamilies.map((volunteerFamily) => (
                 <React.Fragment key={volunteerFamily.family?.id}>
                   <TableRow className={classes.familyRow}>
-                    <TableCell key="1" colSpan={3}>{
+                    <TableCell key="1" colSpan={2}>{
                       volunteerFamily.family?.adults
                         ?.filter(adult => adult.item2?.isPrimaryFamilyContact)
                         [0]?.item1?.lastName + " Family"
                     }</TableCell>
-                    { volunteerFamilyRoleNames.map(roleName =>
-                      (<TableCell key={roleName}>{
-                        approvalStatus(volunteerFamily.familyRoleApprovals?.[roleName])
-                      }</TableCell>))}
-                    <TableCell colSpan={volunteerRoleNames.length} />
                     {familyJointDocumentRequirements.map(requirement =>
                       (<TableCell key={requirement.formName}>{
                         'TODO'
@@ -189,18 +182,6 @@ function VolunteerApplications() {
                       className={classes.adultRow}>
                       <TableCell>{adult.item1.firstName}</TableCell>
                       <TableCell>{adult.item1.lastName}</TableCell>
-                      <TableCell align="right">
-                        { adult.item1.age instanceof ExactAge
-                          ? adult.item1.age.dateOfBirth && differenceInYears(new Date(), adult.item1.age.dateOfBirth)
-                          : adult.item1.age instanceof AgeInYears
-                          ? adult.item1.age.years && adult.item1?.age.asOf && (adult.item1.age.years + differenceInYears(new Date(), adult.item1.age.asOf))
-                          : "⚠" }
-                      </TableCell>
-                      <TableCell colSpan={volunteerFamilyRoleNames.length} />
-                      { volunteerRoleNames.map(roleName =>
-                        (<TableCell key={roleName}>{
-                          approvalStatus(volunteerFamily.individualVolunteers?.[adult.item1?.id || '']?.individualRoleApprovals?.[roleName])
-                        }</TableCell>))}
                       <TableCell colSpan={
                         familyJointDocumentRequirements.length +
                         familyJointActivityRequirements.length

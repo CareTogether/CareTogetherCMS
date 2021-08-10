@@ -23,13 +23,13 @@ const useStyles = makeStyles((theme) => ({
     minWidth: 700,
   },
   familyRow: {
-    backgroundColor: '#eee',
+    backgroundColor: '#eef'
   },
   adultRow: {
-
   },
   childRow: {
-
+    color: 'ddd',
+    fontStyle: 'italic'
   }
 }));
 
@@ -147,14 +147,6 @@ function Volunteers() {
                   (<TableCell key={roleName}>{roleName}</TableCell>))}
                 { volunteerRoleNames.map(roleName =>
                   (<TableCell key={roleName}>{roleName}</TableCell>))}
-                {familyJointDocumentRequirements.map(requirement =>
-                  (<TableCell key={requirement.formName}>{requirement.formName}</TableCell>))}
-                {familyJointActivityRequirements.map(requirement =>
-                  (<TableCell key={requirement.activityName}>{requirement.activityName}</TableCell>))}
-                {individualDocumentRequirements.map(requirement =>
-                  (<TableCell key={requirement.formName}>{requirement.formName}</TableCell>))}
-                {individualActivityRequirements.map(requirement =>
-                  (<TableCell key={requirement.activityName}>{requirement.activityName}</TableCell>))}
                 {/* Notes */}
               </TableRow>
             </TableHead>
@@ -172,17 +164,6 @@ function Volunteers() {
                         approvalStatus(volunteerFamily.familyRoleApprovals?.[roleName])
                       }</TableCell>))}
                     <TableCell colSpan={volunteerRoleNames.length} />
-                    {familyJointDocumentRequirements.map(requirement =>
-                      (<TableCell key={requirement.formName}>{
-                        'TODO'
-                        /* TODO: Is this met? If not, is it missing for a role this family has? */
-                      }</TableCell>))}
-                    {familyJointActivityRequirements.map(requirement =>
-                      (<TableCell key={requirement.activityName}>***</TableCell>))}
-                    <TableCell colSpan={
-                      individualDocumentRequirements.length +
-                      individualActivityRequirements.length
-                    } />
                   </TableRow>
                   {volunteerFamily.family?.adults?.map(adult => adult.item1 && (
                     <TableRow key={volunteerFamily.family?.id + ":" + adult.item1.id}
@@ -201,14 +182,23 @@ function Volunteers() {
                         (<TableCell key={roleName}>{
                           approvalStatus(volunteerFamily.individualVolunteers?.[adult.item1?.id || '']?.individualRoleApprovals?.[roleName])
                         }</TableCell>))}
+                    </TableRow>
+                  ))}
+                  {volunteerFamily.family?.children?.map(child => (
+                    <TableRow key={volunteerFamily.family?.id + ":" + child.id}
+                      className={classes.childRow}>
+                      <TableCell>{child.firstName}</TableCell>
+                      <TableCell>{child.lastName}</TableCell>
+                      <TableCell align="right">
+                        { child.age instanceof ExactAge
+                          ? child.age.dateOfBirth && differenceInYears(new Date(), child.age.dateOfBirth)
+                          : child.age instanceof AgeInYears
+                          ? child.age.years && child.age.asOf && (child.age.years + differenceInYears(new Date(), child.age.asOf))
+                          : "⚠" }
+                      </TableCell>
                       <TableCell colSpan={
-                        familyJointDocumentRequirements.length +
-                        familyJointActivityRequirements.length
-                      } />
-                      {individualDocumentRequirements.map(requirement =>
-                        (<TableCell key={requirement.formName}>...</TableCell>))}
-                      {individualActivityRequirements.map(requirement =>
-                        (<TableCell key={requirement.activityName}>***</TableCell>))}
+                        volunteerFamilyRoleNames.length +
+                        volunteerRoleNames.length } />
                     </TableRow>
                   ))}
                 </React.Fragment>
