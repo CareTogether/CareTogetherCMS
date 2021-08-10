@@ -8,11 +8,15 @@ import SearchIcon from '@material-ui/icons/Search';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import MenuIcon from '@material-ui/icons/Menu';
 import NotificationsIcon from '@material-ui/icons/Notifications';
+import AssignmentIcon from '@material-ui/icons/Assignment';
+import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
 import { Route, Switch, Redirect, BrowserRouter as Router } from "react-router-dom";
 import { ListItemLink } from './Components/ListItemLink';
 import { Arrangements } from './Components/Arrangements';
 import { Referrals } from './Components/Referrals';
 import { Volunteers } from './Components/Volunteers';
+import { VolunteerApplications } from './Components/VolunteerApplications';
+import { VolunteerProgress } from './Components/VolunteerProgress';
 import { Contacts } from './Components/Contacts';
 import { Communities } from './Components/Communities';
 
@@ -153,12 +157,14 @@ const useStyles = makeStyles((theme) => ({
 const mainListItems = (
   <List aria-label="main navigation">
     <ListItemLink to="/referrals" primary="Referrals" icon={<PermPhoneMsgIcon />} />
-    <ListItemLink to="/volunteers" primary="Volunteers" icon={<EmojiPeopleIcon />} />
   </List>
 );
 
 const secondaryListItems = (
   <List aria-label="secondary navigation">
+    <ListItemLink to="/volunteers" primary="Volunteers" icon={<EmojiPeopleIcon />} />
+    <ListItemLink to="/volunteerApplications" primary="Applications" icon={<AssignmentIcon />} />
+    <ListItemLink to="/volunteerProgress" primary="Progress" icon={<AssignmentTurnedInIcon />} />
   </List>
 );
 
@@ -230,6 +236,7 @@ function App() {
           {mainListItems}
           <Divider />
           {secondaryListItems}
+          <Divider />
           { open && <Copyright /> }
         </Drawer>
         <main className={classes.content}>
@@ -245,6 +252,12 @@ function App() {
                 </Route>
                 <Route path="/volunteers">
                   <Volunteers />
+                </Route>
+                <Route path="/volunteerApplications">
+                  <VolunteerApplications />
+                </Route>
+                <Route path="/volunteerProgress">
+                  <VolunteerProgress />
                 </Route>
                 <Route path="/contacts">
                   <Contacts />
