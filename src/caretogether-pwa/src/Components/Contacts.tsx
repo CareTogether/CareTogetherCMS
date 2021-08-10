@@ -1,10 +1,9 @@
-import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow } from '@material-ui/core';
 import { ExactAge, AgeInYears } from '../GeneratedClient';
 import { differenceInYears } from 'date-fns';
 import { useRecoilValue } from 'recoil';
-import { peopleData, useRefreshPeople } from '../Model/PeopleModel';
+import { peopleData } from '../Model/PeopleModel';
 
 const useStyles = makeStyles((theme) => ({
   paper: {

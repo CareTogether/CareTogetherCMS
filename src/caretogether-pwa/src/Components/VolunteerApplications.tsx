@@ -1,12 +1,10 @@
-import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow } from '@material-ui/core';
-import { ExactAge, AgeInYears, FormUploadRequirement, VolunteerApprovalRequirement, VolunteerFamilyApprovalRequirement, ActivityRequirement } from '../GeneratedClient';
-import { differenceInYears } from 'date-fns';
+import { FormUploadRequirement, VolunteerApprovalRequirement, VolunteerFamilyApprovalRequirement, ActivityRequirement } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
-import { volunteerFamiliesData, useRefreshVolunteerFamilies } from '../Model/VolunteerFamiliesModel';
+import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
 import { policyData } from '../Model/ConfigurationModel';
-import { RoleApprovalStatus, VolunteerFamilyRequirementScope } from '../GeneratedClient';
+import { VolunteerFamilyRequirementScope } from '../GeneratedClient';
 import React from 'react';
 
 const useStyles = makeStyles((theme) => ({
@@ -33,9 +31,6 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-function approvalStatus(value: number | undefined) {
-  return value !== undefined && RoleApprovalStatus[value] || "-";
-}
 
 function VolunteerApplications() {
   const classes = useStyles();
@@ -43,19 +38,11 @@ function VolunteerApplications() {
   const policy = useRecoilValue(policyData);
   //const refreshVolunteerFamilies = useRefreshVolunteerFamilies();
 
-  const volunteerFamilyRoleNames =
-    policy.volunteerPolicy?.volunteerFamilyRoles &&
-    Object.entries(policy.volunteerPolicy?.volunteerFamilyRoles).map(([key, value]) => key)
-    || [];
-  const volunteerRoleNames =
-    policy.volunteerPolicy?.volunteerRoles &&
-    Object.entries(policy.volunteerPolicy?.volunteerRoles).map(([key, value]) => key)
-    || [];
 
   const allFamilyRequirements =
     policy.volunteerPolicy?.volunteerFamilyRoles
     ? Object.entries(policy.volunteerPolicy.volunteerFamilyRoles)
-      .reduce((previous, [key, value]) =>
+      .reduce((previous, [, value]) =>
         previous.concat(value.approvalRequirements || []),
         [] as VolunteerFamilyApprovalRequirement[])
         : ([] as VolunteerFamilyApprovalRequirement[]);
@@ -101,7 +88,7 @@ function VolunteerApplications() {
   const allIndividualRequirements =
     policy.volunteerPolicy?.volunteerRoles
     ? Object.entries(policy.volunteerPolicy.volunteerRoles)
-      .reduce((previous, [key, value]) =>
+      .reduce((previous, [, value]) =>
         previous.concat(value.approvalRequirements || []),
         [] as VolunteerApprovalRequirement[])
         : ([] as VolunteerApprovalRequirement[]);

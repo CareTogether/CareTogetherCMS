@@ -1,12 +1,11 @@
-import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow } from '@material-ui/core';
-import { ExactAge, AgeInYears, FormUploadRequirement, VolunteerApprovalRequirement, VolunteerFamilyApprovalRequirement, ActivityRequirement } from '../GeneratedClient';
+import { ExactAge, AgeInYears } from '../GeneratedClient';
 import { differenceInYears } from 'date-fns';
 import { useRecoilValue } from 'recoil';
-import { volunteerFamiliesData, useRefreshVolunteerFamilies } from '../Model/VolunteerFamiliesModel';
+import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
 import { policyData } from '../Model/ConfigurationModel';
-import { RoleApprovalStatus, VolunteerFamilyRequirementScope } from '../GeneratedClient';
+import { RoleApprovalStatus } from '../GeneratedClient';
 import React from 'react';
 
 const useStyles = makeStyles((theme) => ({
@@ -34,7 +33,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function approvalStatus(value: number | undefined) {
-  return value !== undefined && RoleApprovalStatus[value] || "-";
+  return (value !== undefined && RoleApprovalStatus[value]) || "-";
 }
 
 function Volunteers() {
@@ -44,89 +43,14 @@ function Volunteers() {
   //const refreshVolunteerFamilies = useRefreshVolunteerFamilies();
 
   const volunteerFamilyRoleNames =
-    policy.volunteerPolicy?.volunteerFamilyRoles &&
-    Object.entries(policy.volunteerPolicy?.volunteerFamilyRoles).map(([key, value]) => key)
+    (policy.volunteerPolicy?.volunteerFamilyRoles &&
+    Object.entries(policy.volunteerPolicy?.volunteerFamilyRoles).map(([key]) => key))
     || [];
   const volunteerRoleNames =
-    policy.volunteerPolicy?.volunteerRoles &&
-    Object.entries(policy.volunteerPolicy?.volunteerRoles).map(([key, value]) => key)
+    (policy.volunteerPolicy?.volunteerRoles &&
+    Object.entries(policy.volunteerPolicy?.volunteerRoles).map(([key]) => key))
     || [];
 
-  const allFamilyRequirements =
-    policy.volunteerPolicy?.volunteerFamilyRoles
-    ? Object.entries(policy.volunteerPolicy.volunteerFamilyRoles)
-      .reduce((previous, [key, value]) =>
-        previous.concat(value.approvalRequirements || []),
-        [] as VolunteerFamilyApprovalRequirement[])
-        : ([] as VolunteerFamilyApprovalRequirement[]);
-
-  const allFamilyJointRequirements =
-    allFamilyRequirements.filter(requirement =>
-      requirement.scope === VolunteerFamilyRequirementScope.OncePerFamily);
-  const familyJointDocumentRequirements = allFamilyJointRequirements
-    .reduce((previous, requirement) =>
-      requirement.actionRequirement instanceof FormUploadRequirement
-      ? previous.concat(requirement.actionRequirement)
-      : previous, [] as FormUploadRequirement[])
-    .reduce((previous, requirement) =>
-      previous.filter(x => x.formName === requirement.formName).length === 0
-      ? previous.concat(requirement)
-      : previous, [] as FormUploadRequirement[]);
-  const familyJointActivityRequirements = allFamilyJointRequirements
-    .reduce((previous, requirement) =>
-      requirement.actionRequirement instanceof ActivityRequirement
-      ? previous.concat(requirement.actionRequirement)
-      : previous, [] as ActivityRequirement[])
-    .reduce((previous, requirement) =>
-      previous.filter(x => x.activityName === requirement.activityName).length === 0
-      ? previous.concat(requirement)
-      : previous, [] as ActivityRequirement[]);
-
-  const allFamilyPerAdultRequirements =
-    allFamilyRequirements.filter(requirement =>
-      requirement.scope === VolunteerFamilyRequirementScope.AllAdultsInTheFamily);
-  const allFamilyPerAdultDocumentRequirements = allFamilyPerAdultRequirements
-    .reduce((previous, requirement) =>
-      requirement.actionRequirement instanceof FormUploadRequirement
-      ? previous.concat(requirement.actionRequirement)
-      : previous, [] as FormUploadRequirement[]);
-  const allFamilyPerAdultActivityRequirements = allFamilyPerAdultRequirements
-    .reduce((previous, requirement) =>
-      requirement.actionRequirement instanceof ActivityRequirement
-      ? previous.concat(requirement.actionRequirement)
-      : previous, [] as ActivityRequirement[]);
-
-  const allIndividualRequirements =
-    policy.volunteerPolicy?.volunteerRoles
-    ? Object.entries(policy.volunteerPolicy.volunteerRoles)
-      .reduce((previous, [key, value]) =>
-        previous.concat(value.approvalRequirements || []),
-        [] as VolunteerApprovalRequirement[])
-        : ([] as VolunteerApprovalRequirement[]);
-  const allIndividualDocumentRequirements = allIndividualRequirements
-    .reduce((previous, requirement) =>
-      requirement.actionRequirement instanceof FormUploadRequirement
-      ? previous.concat(requirement.actionRequirement)
-      : previous, [] as FormUploadRequirement[]);
-  const allIndividualActivityRequirements = allIndividualRequirements
-    .reduce((previous, requirement) =>
-      requirement.actionRequirement instanceof ActivityRequirement
-      ? previous.concat(requirement.actionRequirement)
-      : previous, [] as ActivityRequirement[]);
-
-  const individualDocumentRequirements =
-    allFamilyPerAdultDocumentRequirements.concat(allIndividualDocumentRequirements)
-    .reduce((previous, requirement) =>
-      previous.filter(x => x.formName === requirement.formName).length === 0
-      ? previous.concat(requirement)
-      : previous, [] as FormUploadRequirement[]);
-  const individualActivityRequirements =
-    allFamilyPerAdultActivityRequirements.concat(allIndividualActivityRequirements)
-    .reduce((previous, requirement) =>
-      previous.filter(x => x.activityName === requirement.activityName).length === 0
-      ? previous.concat(requirement)
-      : previous, [] as ActivityRequirement[]);
-  
   return (
     <Grid container spacing={3}>
       <Grid item xs={12}>
