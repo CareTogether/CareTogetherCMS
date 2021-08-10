@@ -38,6 +38,80 @@
         }
       }
     },
+    "/api/{organizationId}/Configuration": {
+      "get": {
+        "tags": [
+          "Configuration"
+        ],
+        "operationId": "Configuration_GetOrganizationConfiguration",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationConfiguration"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/{organizationId}/{locationId}/Configuration/policy": {
+      "get": {
+        "tags": [
+          "Configuration"
+        ],
+        "operationId": "Configuration_GetEffectiveLocationPolicy",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EffectiveLocationPolicy"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/{organizationId}/{locationId}/Files/{documentId}": {
       "get": {
         "tags": [
@@ -594,6 +668,401 @@
   },
   "components": {
     "schemas": {
+      "OrganizationConfiguration": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "organizationName": {
+            "type": "string",
+            "nullable": true
+          },
+          "locations": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/LocationConfiguration"
+            }
+          }
+        }
+      },
+      "LocationConfiguration": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "EffectiveLocationPolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "versionLabel": {
+            "type": "string",
+            "nullable": true
+          },
+          "referralPolicy": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReferralPolicy"
+              }
+            ]
+          },
+          "volunteerPolicy": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/VolunteerPolicy"
+              }
+            ]
+          }
+        }
+      },
+      "ReferralPolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "requiredIntakeActions": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/ActionRequirement"
+            }
+          },
+          "arrangementPolicies": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/ArrangementPolicy"
+            }
+          }
+        }
+      },
+      "ActionRequirement": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "discriminator",
+          "mapping": {
+            "ActivityRequirement": "#/components/schemas/ActivityRequirement",
+            "FormUploadRequirement": "#/components/schemas/FormUploadRequirement"
+          }
+        },
+        "x-abstract": true,
+        "additionalProperties": false,
+        "required": [
+          "discriminator"
+        ],
+        "properties": {
+          "discriminator": {
+            "type": "string"
+          }
+        }
+      },
+      "ActivityRequirement": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ActionRequirement"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "activityName": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "FormUploadRequirement": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ActionRequirement"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "formName": {
+                "type": "string",
+                "nullable": true
+              },
+              "formVersion": {
+                "type": "string",
+                "nullable": true
+              },
+              "instructions": {
+                "type": "string",
+                "nullable": true
+              },
+              "templateLink": {
+                "type": "string",
+                "format": "uri",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "ArrangementPolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "arrangementType": {
+            "type": "string",
+            "nullable": true
+          },
+          "childInvolvement": {
+            "$ref": "#/components/schemas/ChildInvolvement"
+          },
+          "volunteerFunctions": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/VolunteerFunction"
+            }
+          },
+          "requiredSetupActions": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/ActionRequirement"
+            }
+          },
+          "requiredMonitoringActions": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/ValueTupleOfActionRequirementAndRecurrencePolicy"
+            }
+          },
+          "requiredCloseoutActions": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/ActionRequirement"
+            }
+          }
+        }
+      },
+      "ChildInvolvement": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "ChildHousing",
+          "DaytimeChildCareOnly",
+          "NoChildInvolvement"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
+      "VolunteerFunction": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "arrangementFunction": {
+            "type": "string",
+            "nullable": true
+          },
+          "requirement": {
+            "$ref": "#/components/schemas/FunctionRequirement"
+          },
+          "eligibleIndividualVolunteerRoles": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "eligibleVolunteerFamilyRoles": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "FunctionRequirement": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "ZeroOrMore",
+          "ExactlyOne",
+          "OneOrMore"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
+      "ValueTupleOfActionRequirementAndRecurrencePolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "item1": {
+            "$ref": "#/components/schemas/ActionRequirement"
+          },
+          "item2": {
+            "$ref": "#/components/schemas/RecurrencePolicy"
+          }
+        }
+      },
+      "RecurrencePolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "stages": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/RecurrencePolicyStage"
+            }
+          }
+        }
+      },
+      "RecurrencePolicyStage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "delay": {
+            "type": "string",
+            "format": "time-span"
+          },
+          "maxOccurrences": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        }
+      },
+      "VolunteerPolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "volunteerRoles": {
+            "type": "object",
+            "nullable": true,
+            "additionalProperties": {
+              "$ref": "#/components/schemas/VolunteerRolePolicy"
+            }
+          },
+          "volunteerFamilyRoles": {
+            "type": "object",
+            "nullable": true,
+            "additionalProperties": {
+              "$ref": "#/components/schemas/VolunteerFamilyRolePolicy"
+            }
+          }
+        }
+      },
+      "VolunteerRolePolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "volunteerRoleType": {
+            "type": "string",
+            "nullable": true
+          },
+          "approvalRequirements": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/VolunteerApprovalRequirement"
+            }
+          }
+        }
+      },
+      "VolunteerApprovalRequirement": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "shortDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "requiredToBeProspective": {
+            "type": "boolean"
+          },
+          "actionRequirement": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ActionRequirement"
+              }
+            ]
+          }
+        }
+      },
+      "VolunteerFamilyRolePolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "volunteerFamilyRoleType": {
+            "type": "string",
+            "nullable": true
+          },
+          "approvalRequirements": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/VolunteerFamilyApprovalRequirement"
+            }
+          }
+        }
+      },
+      "VolunteerFamilyApprovalRequirement": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "shortDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "requiredToBeProspective": {
+            "type": "boolean"
+          },
+          "actionRequirement": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ActionRequirement"
+              }
+            ]
+          },
+          "scope": {
+            "$ref": "#/components/schemas/VolunteerFamilyRequirementScope"
+          }
+        }
+      },
+      "VolunteerFamilyRequirementScope": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "OncePerFamily",
+          "AllAdultsInTheFamily"
+        ],
+        "enum": [
+          0,
+          1
+        ]
+      },
       "Person": {
         "type": "object",
         "additionalProperties": false,

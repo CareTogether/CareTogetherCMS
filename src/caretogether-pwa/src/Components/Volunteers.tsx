@@ -5,6 +5,7 @@ import { ExactAge, AgeInYears } from '../GeneratedClient';
 import { differenceInYears } from 'date-fns';
 import { useRecoilValue } from 'recoil';
 import { volunteerFamiliesData, useRefreshVolunteerFamilies } from '../Model/VolunteerFamiliesModel';
+import { policyData } from '../Model/ConfigurationModel';
 import React from 'react';
 
 const useStyles = makeStyles((theme) => ({
@@ -34,7 +35,16 @@ const useStyles = makeStyles((theme) => ({
 function Volunteers() {
   const classes = useStyles();
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
+  const policy = useRecoilValue(policyData);
   //const refreshVolunteerFamilies = useRefreshVolunteerFamilies();
+  const volunteerFamilyRoleNames =
+    policy.volunteerPolicy?.volunteerFamilyRoles &&
+    Object.entries(policy.volunteerPolicy?.volunteerFamilyRoles).map(([key, value]) => key)
+    || [];
+  const volunteerRoleNames =
+    policy.volunteerPolicy?.volunteerRoles &&
+    Object.entries(policy.volunteerPolicy?.volunteerRoles).map(([key, value]) => key)
+    || [];
 
   return (
     <Grid container spacing={3}>
@@ -51,6 +61,15 @@ function Volunteers() {
                 <TableCell>First Name</TableCell>
                 <TableCell>Last Name</TableCell>
                 <TableCell>Age</TableCell>
+                { volunteerFamilyRoleNames.map(roleName =>
+                  (<TableCell key={roleName}>{roleName}</TableCell>))}
+                { volunteerRoleNames.map(roleName =>
+                  (<TableCell key={roleName}>{roleName}</TableCell>))}
+                {/* Family form uploads */}
+                {/* Family activities performed */}
+                {/* Individual form uploads */}
+                {/* Individual activities performed */}
+                {/* Notes */}
               </TableRow>
             </TableHead>
             <TableBody>
@@ -62,6 +81,9 @@ function Volunteers() {
                         ?.filter(adult => adult.item2?.isPrimaryFamilyContact)
                         [0]?.item1?.lastName + " Family"
                     }</TableCell>
+                    { volunteerFamilyRoleNames.map(roleName =>
+                      (<TableCell key={roleName}>STATUS</TableCell>))}
+                    <TableCell colSpan={volunteerRoleNames.length} />
                   </TableRow>
                   {volunteerFamily.family?.adults?.map(adult => (
                     <TableRow key={volunteerFamily.family?.id + ":" + adult.item1?.id}
@@ -75,6 +97,9 @@ function Volunteers() {
                           ? adult.item1?.age.years && adult.item1?.age.asOf && (adult.item1?.age.years + differenceInYears(new Date(), adult.item1?.age.asOf))
                           : "⚠" }
                       </TableCell>
+                      <TableCell colSpan={volunteerFamilyRoleNames.length} />
+                      { volunteerRoleNames.map(roleName =>
+                        (<TableCell key={roleName}>STATUS</TableCell>))}
                     </TableRow>
                   ))}
                 </React.Fragment>

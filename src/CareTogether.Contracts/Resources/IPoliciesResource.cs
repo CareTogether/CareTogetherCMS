@@ -65,6 +65,8 @@ namespace CareTogether.Resources
     /// </summary>
     public interface IPoliciesResource
     {
+        Task<ResourceResult<EffectiveLocationPolicy>> GetCurrentPolicy(Guid organizationId, Guid locationId);
+
         Task<ResourceResult<ReferralPolicy>> GetEffectiveReferralPolicy(Guid organizationId, Guid locationId,
             int? version = null);
 
