@@ -1,6 +1,6 @@
 import { makeStyles } from '@material-ui/core/styles';
 import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Drawer } from '@material-ui/core';
-import { ExactAge, AgeInYears } from '../GeneratedClient';
+import { ExactAge, AgeInYears, VolunteerFamily } from '../GeneratedClient';
 import { differenceInYears } from 'date-fns';
 import { useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
@@ -50,7 +50,9 @@ function Volunteers() {
     Object.entries(policy.volunteerPolicy?.volunteerRoles).map(([key]) => key))
     || [];
 
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  // const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const [selectedVolunteerFamily, setSelectedVolunteerFamily] = useState<VolunteerFamily | null>(null);
 
   return (
     <Grid container spacing={3}>
@@ -71,7 +73,7 @@ function Volunteers() {
             <TableBody>
               {volunteerFamilies.map((volunteerFamily) => (
                 <React.Fragment key={volunteerFamily.family?.id}>
-                  <TableRow className={classes.familyRow}>
+                  <TableRow className={classes.familyRow} onClick={() => setSelectedVolunteerFamily(volunteerFamily)}>
                     <TableCell key="1" colSpan={3}>{
                       volunteerFamily.family?.adults
                         ?.filter(adult => adult.item2?.isPrimaryFamilyContact)
@@ -85,6 +87,7 @@ function Volunteers() {
                   </TableRow>
                   {volunteerFamily.family?.adults?.map(adult => adult.item1 && (
                     <TableRow key={volunteerFamily.family?.id + ":" + adult.item1.id}
+                      onClick={() => setSelectedVolunteerFamily(volunteerFamily)}
                       className={classes.adultRow}>
                       <TableCell>{adult.item1.firstName}</TableCell>
                       <TableCell>{adult.item1.lastName}</TableCell>
@@ -104,6 +107,7 @@ function Volunteers() {
                   ))}
                   {volunteerFamily.family?.children?.map(child => (
                     <TableRow key={volunteerFamily.family?.id + ":" + child.id}
+                      onClick={() => setSelectedVolunteerFamily(volunteerFamily)}
                       className={classes.childRow}>
                       <TableCell>{child.firstName}</TableCell>
                       <TableCell>{child.lastName}</TableCell>
@@ -124,7 +128,7 @@ function Volunteers() {
             </TableBody>
           </Table>
         </TableContainer>
-        <Drawer anchor={'right'} open={drawerOpen} onClose={() => setDrawerOpen(false)}>
+        <Drawer anchor={'right'} open={selectedVolunteerFamily !== null} onClose={() => setSelectedVolunteerFamily(null)}>
           Volunteer Family &amp; Individual Records
         </Drawer>
       </Grid>
