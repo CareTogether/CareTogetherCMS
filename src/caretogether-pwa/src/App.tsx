@@ -241,7 +241,7 @@ function App() {
         </Drawer>
         <main className={classes.content}>
           <div className={classes.appBarSpacer} />
-          <Container maxWidth="lg" className={classes.container}>
+          {/* <Container maxWidth="lg" className={classes.container}> */}
             <React.Suspense fallback={<div>Loading...</div>}>
               <Switch>
                 <Route path="/arrangements">
@@ -270,7 +270,7 @@ function App() {
                 </Route>
               </Switch>
             </React.Suspense>
-          </Container>
+          {/* </Container> */}
         </main>
       </Router>
     </div>
