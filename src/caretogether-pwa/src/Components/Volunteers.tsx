@@ -1,12 +1,12 @@
 import { makeStyles } from '@material-ui/core/styles';
-import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow } from '@material-ui/core';
+import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Drawer } from '@material-ui/core';
 import { ExactAge, AgeInYears } from '../GeneratedClient';
 import { differenceInYears } from 'date-fns';
 import { useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
 import { policyData } from '../Model/ConfigurationModel';
 import { RoleApprovalStatus } from '../GeneratedClient';
-import React from 'react';
+import React, { useState } from 'react';
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -49,6 +49,8 @@ function Volunteers() {
     (policy.volunteerPolicy?.volunteerRoles &&
     Object.entries(policy.volunteerPolicy?.volunteerRoles).map(([key]) => key))
     || [];
+
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
     <Grid container spacing={3}>
@@ -122,6 +124,9 @@ function Volunteers() {
             </TableBody>
           </Table>
         </TableContainer>
+        <Drawer anchor={'right'} open={drawerOpen} onClose={() => setDrawerOpen(false)}>
+          Volunteer Family &amp; Individual Records
+        </Drawer>
       </Grid>
     </Grid>
   );
