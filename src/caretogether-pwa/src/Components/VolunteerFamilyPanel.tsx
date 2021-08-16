@@ -57,6 +57,12 @@ export function VolunteerFamilyPanel({volunteerFamily}: VolunteerFamilyPanelProp
         ))}
       </Menu>
     </Toolbar>
+    <div className={classes.sectionChips}>
+      {Object.entries(volunteerFamily.familyRoleApprovals || {}).map(([role, approvalStatus]) => (
+        <Chip key={role} size="small" color={approvalStatus === RoleApprovalStatus.Approved ? "primary" : "secondary"}
+          label={RoleApprovalStatus[approvalStatus] + " " + role} />
+      ))}
+    </div>
     <ul>
       {volunteerFamily.approvalFormUploads?.map((upload, i) => (
         <li key={i}>{upload.formName} @ {upload.timestampUtc?.toDateString()}</li>
