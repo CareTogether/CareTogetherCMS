@@ -33,7 +33,6 @@ const useStyles = makeStyles((theme) => ({
     fontStyle: 'italic'
   },
   drawerPaper: {
-    width: 800
   }
 }));
 
