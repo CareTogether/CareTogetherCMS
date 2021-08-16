@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Container, Toolbar, Chip, Button, Menu, MenuItem, Divider, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Link } from '@material-ui/core';
-import { VolunteerFamily, FamilyAdultRelationshipType, CustodialRelationshipType, FormUploadRequirement, ActionRequirement, ActivityRequirement, Person } from '../GeneratedClient';
+import { VolunteerFamily, FamilyAdultRelationshipType, CustodialRelationshipType, FormUploadRequirement, ActionRequirement, ActivityRequirement, Person, FilesClient, VolunteerFamiliesClient, UploadVolunteerFamilyForm } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
-import { adultActivityTypesData, adultDocumentTypesData, familyActivityTypesData, familyDocumentTypesData } from '../Model/ConfigurationModel';
+import { adultActivityTypesData, adultDocumentTypesData, currentLocationState, currentOrganizationState, familyActivityTypesData, familyDocumentTypesData } from '../Model/ConfigurationModel';
 import { RoleApprovalStatus } from '../GeneratedClient';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
 import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
 import { AgeText } from './AgeText';
 import { DateTimePicker } from '@material-ui/pickers';
+import { BlobServiceClient, AnonymousCredential, BlockBlobClient } from '@azure/storage-blob';
+import { authenticatingFetch } from '../Auth';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -24,6 +26,9 @@ const useStyles = makeStyles((theme) => ({
   },
   button: {
     margin: theme.spacing(1),
+  },
+  fileInput: {
+    display: 'none'
   }
 }));
 
@@ -34,14 +39,43 @@ interface RecordFamilyStepDialogProps {
 }
 
 function RecordFamilyStepDialog({stepActionRequirement, volunteerFamily, onClose}: RecordFamilyStepDialogProps) {
+  const classes = useStyles();
+  const [formFile, setFormFile] = useState<File>();
   const [performedAtLocal, setPerformedAtLocal] = useState(new Date());
 
-  function recordUploadFormStep() {
-    //TODO: Actually do this :) and update the client-side model with the result.
-    onClose();
+  const organizationId = useRecoilValue(currentOrganizationState);
+  const locationId = useRecoilValue(currentLocationState);
+
+  async function recordUploadFormStep() {
+    if (!formFile) {
+      alert("No file was selected. Try again.");
+    } else {
+      const fileBuffer = await formFile.arrayBuffer();
+
+      const filesClient = new FilesClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+      const uploadInfo = await filesClient.generateUploadValetUrl(organizationId, locationId);
+
+      const blobClient = new BlockBlobClient(uploadInfo.valetUrl as string, new AnonymousCredential());
+      await blobClient.uploadData(fileBuffer);
+
+      const vfc = new VolunteerFamiliesClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+      const uploadCommand = new UploadVolunteerFamilyForm({
+        familyId: volunteerFamily.family?.id
+      });
+      uploadCommand.formName = (stepActionRequirement as FormUploadRequirement).formName;
+      uploadCommand.formVersion = (stepActionRequirement as FormUploadRequirement).formVersion;
+      uploadCommand.uploadedDocumentId = uploadInfo.documentId;
+      uploadCommand.uploadedFileName = formFile.name;
+      const updatedFamily = await vfc.submitVolunteerFamilyCommand(organizationId, locationId, uploadCommand);
+
+      //TODO: Update the client-side model with the result.
+      //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
+
+      onClose();
+    }
   }
 
-  function recordPerformActivityStep() {
+  async function recordPerformActivityStep() {
     //TODO: Actually do this :) and update the client-side model with the result.
     onClose();
   }
@@ -62,6 +96,16 @@ function RecordFamilyStepDialog({stepActionRequirement, volunteerFamily, onClose
                 </Link>
               </DialogContentText>
               <DialogContentText>{stepActionRequirement.instructions}</DialogContentText>
+              <input
+                accept="*/*"
+                // className={classes.fileInput}
+                multiple={false}
+                id="family-form-file"
+                type="file"
+                onChange={async (e) => {if (e.target.files && e.target.files.length > 0) {
+                  setFormFile(e.target.files[0]);
+                }}}
+              />
             </DialogContent>
             <DialogActions>
               <Button onClick={onClose} color="secondary">
@@ -70,6 +114,12 @@ function RecordFamilyStepDialog({stepActionRequirement, volunteerFamily, onClose
               <Button onClick={recordUploadFormStep} color="primary">
                 Upload
               </Button>
+              {/* <label htmlFor="family-form-file">
+                <Button variant="contained" color="primary"
+                  onClick={recordUploadFormStep}>
+                  Upload
+                </Button>
+              </label> */}
             </DialogActions>
           </>
         ) : (stepActionRequirement && stepActionRequirement instanceof ActivityRequirement)

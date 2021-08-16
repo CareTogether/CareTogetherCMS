@@ -199,8 +199,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "string",
-                  "format": "uri"
+                  "$ref": "#/components/schemas/DocumentUploadInfo"
                 }
               }
             }
@@ -1062,6 +1061,21 @@
           0,
           1
         ]
+      },
+      "DocumentUploadInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "documentId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "valetUrl": {
+            "type": "string",
+            "format": "uri",
+            "nullable": true
+          }
+        }
       },
       "Person": {
         "type": "object",

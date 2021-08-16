@@ -15,6 +15,9 @@ namespace CareTogether.Api.Controllers
         private readonly IFileStore fileStore;
 
 
+        public sealed record DocumentUploadInfo(Guid DocumentId, Uri ValetUrl);
+
+
         public FilesController(AuthorizationProvider authorizationProvider, IFileStore fileStore)
         {
             this.authorizationProvider = authorizationProvider;
@@ -39,7 +42,7 @@ namespace CareTogether.Api.Controllers
         }
 
         [HttpPost("upload")]
-        public async Task<ActionResult<Uri>> GenerateUploadValetUrl(Guid organizationId, Guid locationId)
+        public async Task<ActionResult<DocumentUploadInfo>> GenerateUploadValetUrl(Guid organizationId, Guid locationId)
         {
             var authorizedUser = await authorizationProvider.AuthorizeAsync(organizationId, locationId, User);
 
@@ -47,8 +50,9 @@ namespace CareTogether.Api.Controllers
                 authorizedUser.IsInRole(Roles.OrganizationAdministrator))
             {
                 //TODO: Authorize this via policy! Best to do this in the context of an associated referral or approval, instead of at this level.
-                var valetUrl = await fileStore.GetValetCreateUrlAsync(organizationId, locationId, Guid.NewGuid());
-                return Ok(valetUrl);
+                var documentId = Guid.NewGuid();
+                var valetUrl = await fileStore.GetValetCreateUrlAsync(organizationId, locationId, documentId);
+                return Ok(new DocumentUploadInfo(documentId, valetUrl));
             }
             else
                 return BadRequest();

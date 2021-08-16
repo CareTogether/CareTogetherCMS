@@ -2,12 +2,12 @@ import { atom, selector } from "recoil";
 import { ActivityRequirement, ConfigurationClient, FormUploadRequirement, VolunteerFamilyRequirementScope } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 
-const currentOrganizationState = atom({
+export const currentOrganizationState = atom({
   key: 'selectedOrganizationState',
   default: '11111111-1111-1111-1111-111111111111'
 });
 
-const currentLocationState = atom({
+export const currentLocationState = atom({
   key: 'selectedLocationState',
   default: '22222222-2222-2222-2222-222222222222'
 });
