@@ -3,7 +3,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import { Container, Toolbar, Chip, Button, Menu, MenuItem, Divider, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Link } from '@material-ui/core';
 import { VolunteerFamily, FamilyAdultRelationshipType, CustodialRelationshipType, FormUploadRequirement, ActionRequirement, ActivityRequirement, Person, FilesClient, VolunteerFamiliesClient, UploadVolunteerFamilyForm } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
-import { adultActivityTypesData, adultDocumentTypesData, currentLocationState, currentOrganizationState, familyActivityTypesData, familyDocumentTypesData } from '../Model/ConfigurationModel';
+import { adultActivityTypesData, adultDocumentTypesData, familyActivityTypesData, familyDocumentTypesData } from '../Model/ConfigurationModel';
 import { RoleApprovalStatus } from '../GeneratedClient';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
 import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
@@ -11,6 +11,7 @@ import { AgeText } from './AgeText';
 import { DateTimePicker } from '@material-ui/pickers';
 import { AnonymousCredential, BlockBlobClient } from '@azure/storage-blob';
 import { authenticatingFetch } from '../Auth';
+import { currentLocationState, currentOrganizationState } from '../Model/SessionModel';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {

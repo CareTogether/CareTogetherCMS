@@ -1,16 +1,7 @@
-import { atom, selector } from "recoil";
+import { selector } from "recoil";
 import { ActivityRequirement, ConfigurationClient, FormUploadRequirement, VolunteerFamilyRequirementScope } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
-
-export const currentOrganizationState = atom({
-  key: 'selectedOrganizationState',
-  default: '11111111-1111-1111-1111-111111111111'
-});
-
-export const currentLocationState = atom({
-  key: 'selectedLocationState',
-  default: '22222222-2222-2222-2222-222222222222'
-});
+import { currentLocationState, currentOrganizationState } from "./SessionModel";
 
 export const organizationConfigurationData = selector({
   key: 'organizationConfigurationData',
