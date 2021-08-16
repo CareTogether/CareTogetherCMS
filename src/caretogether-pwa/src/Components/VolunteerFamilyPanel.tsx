@@ -9,7 +9,7 @@ import AddCircleIcon from '@material-ui/icons/AddCircle';
 import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
 import { AgeText } from './AgeText';
 import { DateTimePicker } from '@material-ui/pickers';
-import { BlobServiceClient, AnonymousCredential, BlockBlobClient } from '@azure/storage-blob';
+import { AnonymousCredential, BlockBlobClient } from '@azure/storage-blob';
 import { authenticatingFetch } from '../Auth';
 
 const useStyles = makeStyles((theme) => ({
@@ -28,7 +28,6 @@ const useStyles = makeStyles((theme) => ({
     margin: theme.spacing(1),
   },
   fileInput: {
-    display: 'none'
   }
 }));
 
@@ -67,7 +66,7 @@ function RecordFamilyStepDialog({stepActionRequirement, volunteerFamily, onClose
       uploadCommand.uploadedDocumentId = uploadInfo.documentId;
       uploadCommand.uploadedFileName = formFile.name;
       const updatedFamily = await vfc.submitVolunteerFamilyCommand(organizationId, locationId, uploadCommand);
-
+      console.log(updatedFamily);
       //TODO: Update the client-side model with the result.
       //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
 
@@ -98,7 +97,7 @@ function RecordFamilyStepDialog({stepActionRequirement, volunteerFamily, onClose
               <DialogContentText>{stepActionRequirement.instructions}</DialogContentText>
               <input
                 accept="*/*"
-                // className={classes.fileInput}
+                className={classes.fileInput}
                 multiple={false}
                 id="family-form-file"
                 type="file"
@@ -114,12 +113,6 @@ function RecordFamilyStepDialog({stepActionRequirement, volunteerFamily, onClose
               <Button onClick={recordUploadFormStep} color="primary">
                 Upload
               </Button>
-              {/* <label htmlFor="family-form-file">
-                <Button variant="contained" color="primary"
-                  onClick={recordUploadFormStep}>
-                  Upload
-                </Button>
-              </label> */}
             </DialogActions>
           </>
         ) : (stepActionRequirement && stepActionRequirement instanceof ActivityRequirement)
