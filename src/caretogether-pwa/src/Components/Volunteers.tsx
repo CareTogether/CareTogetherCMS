@@ -132,7 +132,7 @@ function Volunteers() {
             </TableBody>
           </Table>
         </TableContainer>
-        <Drawer anchor={'right'} classes={{
+        <Drawer anchor="right" classes={{
             paper: clsx(classes.drawerPaper),
           }} open={selectedVolunteerFamily !== null} onClose={() => setSelectedVolunteerFamily(null)}>
           {(selectedVolunteerFamily && <VolunteerFamilyPanel volunteerFamily={selectedVolunteerFamily}/>) || null}
