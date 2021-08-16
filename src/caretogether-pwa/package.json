@@ -5,8 +5,10 @@
   "dependencies": {
     "@azure/msal-browser": "^2.15.0",
     "@azure/msal-react": "^1.0.1",
+    "@date-io/date-fns": "1.x",
     "@material-ui/core": "^4.11.4",
     "@material-ui/icons": "^4.11.2",
+    "@material-ui/pickers": "^3.3.10",
     "@microsoft/applicationinsights-react-js": "^3.1.2",
     "@microsoft/applicationinsights-web": "^2.6.2",
     "@testing-library/jest-dom": "^5.11.4",

@@ -8,6 +8,8 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { RecoilRoot } from 'recoil';
 import { globalMsalInstance } from './Auth';
+import { MuiPickersUtilsProvider } from '@material-ui/pickers';
+import DateFnsUtils from '@date-io/date-fns';
 
 function AuthWrapper() {
   // Force the user to sign in if not already authenticated, then render the app.
@@ -31,9 +33,11 @@ ReactDOM.render(
   <React.StrictMode>
     <AppInsightsContext.Provider value={aiReact}>
       <MsalProvider instance={globalMsalInstance}>
-        <RecoilRoot>
-          <AuthWrapper />
-        </RecoilRoot>
+        <MuiPickersUtilsProvider utils={DateFnsUtils}>
+          <RecoilRoot>
+            <AuthWrapper />
+          </RecoilRoot>
+        </MuiPickersUtilsProvider>
       </MsalProvider>
     </AppInsightsContext.Provider>
   </React.StrictMode>,

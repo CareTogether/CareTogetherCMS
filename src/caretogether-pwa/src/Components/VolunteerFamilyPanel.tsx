@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Container, Toolbar, Chip, Button, Menu, MenuItem, Divider } from '@material-ui/core';
-import { VolunteerFamily, FamilyAdultRelationshipType, CustodialRelationshipType } from '../GeneratedClient';
+import { Container, Toolbar, Chip, Button, Menu, MenuItem, Divider, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Link } from '@material-ui/core';
+import { VolunteerFamily, FamilyAdultRelationshipType, CustodialRelationshipType, FormUploadRequirement, ActionRequirement, ActivityRequirement, Person } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { adultActivityTypesData, adultDocumentTypesData, familyActivityTypesData, familyDocumentTypesData } from '../Model/ConfigurationModel';
 import { RoleApprovalStatus } from '../GeneratedClient';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
 import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
 import { AgeText } from './AgeText';
+import { DateTimePicker } from '@material-ui/pickers';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -26,6 +27,78 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
+interface RecordFamilyStepDialogProps {
+  stepActionRequirement: ActionRequirement | null,
+  volunteerFamily: VolunteerFamily,
+  onClose: () => void
+}
+
+function RecordFamilyStepDialog({stepActionRequirement, volunteerFamily, onClose}: RecordFamilyStepDialogProps) {
+  const [performedAtLocal, setPerformedAtLocal] = useState(new Date());
+
+  function recordUploadFormStep() {
+    //TODO: Actually do this :) and update the client-side model with the result.
+    onClose();
+  }
+
+  function recordPerformActivityStep() {
+    //TODO: Actually do this :) and update the client-side model with the result.
+    onClose();
+  }
+
+  return (
+    <Dialog open={Boolean(stepActionRequirement)} onClose={onClose} aria-labelledby="record-family-step-title">
+      {(stepActionRequirement && stepActionRequirement instanceof FormUploadRequirement)
+        ? (
+          <>
+            <DialogTitle id="record-family-step-title">Family Form: {stepActionRequirement.formName}</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                Do you want to upload this form for this family?
+              </DialogContentText>
+              <DialogContentText>
+                Template: <Link href={stepActionRequirement.templateLink} target="_blank" rel="noreferrer">
+                  {stepActionRequirement.formVersion} {stepActionRequirement.formName}
+                </Link>
+              </DialogContentText>
+              <DialogContentText>{stepActionRequirement.instructions}</DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={onClose} color="secondary">
+                Cancel
+              </Button>
+              <Button onClick={recordUploadFormStep} color="primary">
+                Upload
+              </Button>
+            </DialogActions>
+          </>
+        ) : (stepActionRequirement && stepActionRequirement instanceof ActivityRequirement)
+        ? (
+          <>
+            <DialogTitle id="record-family-step-title">Family Activity: {stepActionRequirement.activityName}</DialogTitle>
+            <DialogContent>
+              <DialogContentText>Do you want to record that this activity has been completed?</DialogContentText>
+              <DateTimePicker
+                label="When did this occur?"
+                value={performedAtLocal}
+                disableFuture
+                onChange={(date) => date && setPerformedAtLocal(date)}
+                showTodayButton />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={onClose} color="secondary">
+                Cancel
+              </Button>
+              <Button onClick={recordPerformActivityStep} color="primary">
+                Mark Complete
+              </Button>
+            </DialogActions>
+          </>
+        ) : null}
+    </Dialog>
+  );
+}
+
 interface VolunteerFamilyPanelProps {
   volunteerFamily: VolunteerFamily
 }
@@ -38,33 +111,45 @@ export function VolunteerFamilyPanel({volunteerFamily}: VolunteerFamilyPanelProp
   const adultDocumentTypes = useRecoilValue(adultDocumentTypesData);
   const adultActivityTypes = useRecoilValue(adultActivityTypesData);
 
-  const [familyAddMenuAnchor, setFamilyAddMenuAnchor] = useState<Element | null>(null);
-  const [adultAddMenuAnchor, setAdultAddMenuAnchor] = useState<Element | null>(null);
+  const [familyRecordMenuAnchor, setFamilyRecordMenuAnchor] = useState<Element | null>(null);
+  const [recordFamilyStepParameter, setRecordFamilyStepParameter] = useState<ActionRequirement | null>(null);
+  function selectRecordFamilyStep(requirement: FormUploadRequirement | ActivityRequirement) {
+    setFamilyRecordMenuAnchor(null);
+    setRecordFamilyStepParameter(requirement);
+  }
+  
+  const [adultRecordMenuAnchor, setAdultRecordMenuAnchor] = useState<Element | null>(null);
+  const [/*recordAdultStepParameter*/, setRecordAdultStepParameter] = useState<[ActionRequirement, Person] | null>(null);
+  function selectRecordAdultStep(requirement: FormUploadRequirement | ActivityRequirement, adult: Person) {
+    setAdultRecordMenuAnchor(null);
+    setRecordAdultStepParameter([requirement, adult]);
+  }
 
   return (
   <Container>
     <Toolbar variant="dense" disableGutters={true}>
       <h3 className={classes.sectionHeading}>Family</h3>
       &nbsp;
-      <Button aria-controls="family-add-menu" aria-haspopup="true"
+      <Button aria-controls="family-record-menu" aria-haspopup="true"
         variant="contained" color="default" size="small" className={classes.button}
         startIcon={<AssignmentTurnedInIcon />}
-        onClick={(event) => setFamilyAddMenuAnchor(event.currentTarget)}>
+        onClick={(event) => setFamilyRecordMenuAnchor(event.currentTarget)}>
         Record Step
       </Button>
-      <Menu id="family-add-menu"
-        anchorEl={familyAddMenuAnchor}
+      <Menu id="family-record-menu"
+        anchorEl={familyRecordMenuAnchor}
         keepMounted
-        open={Boolean(familyAddMenuAnchor)}
-        onClose={() => setFamilyAddMenuAnchor(null)}>
+        open={Boolean(familyRecordMenuAnchor)}
+        onClose={() => setFamilyRecordMenuAnchor(null)}>
         {familyDocumentTypes.map(documentType => (
-          <MenuItem key={documentType.formName}>{documentType.formName}</MenuItem>
+          <MenuItem key={documentType.formName} onClick={() => selectRecordFamilyStep(documentType)}>{documentType.formName}</MenuItem>
         ))}
         <Divider />
         {familyActivityTypes.map(activityType => (
-          <MenuItem key={activityType.activityName}>{activityType.activityName}</MenuItem>
+          <MenuItem key={activityType.activityName} onClick={() => selectRecordFamilyStep(activityType)}>{activityType.activityName}</MenuItem>
         ))}
       </Menu>
+      <RecordFamilyStepDialog volunteerFamily={volunteerFamily} stepActionRequirement={recordFamilyStepParameter} onClose={() => setRecordFamilyStepParameter(null)} />
     </Toolbar>
     <div className={classes.sectionChips}>
       {Object.entries(volunteerFamily.familyRoleApprovals || {}).map(([role, approvalStatus]) => (
@@ -94,23 +179,23 @@ export function VolunteerFamilyPanel({volunteerFamily}: VolunteerFamilyPanelProp
       <React.Fragment key={adult.item1.id}>
         <h4 className={classes.sectionHeading}>
           {adult.item1.firstName} {adult.item1.lastName} (<AgeText age={adult.item1.age} />)
-          <Button aria-controls="adult-add-menu" aria-haspopup="true"
+          <Button aria-controls="adult-record-menu" aria-haspopup="true"
             variant="contained" color="default" size="small" className={classes.button}
             startIcon={<AssignmentTurnedInIcon />}
-            onClick={(event) => setAdultAddMenuAnchor(event.currentTarget)}>
+            onClick={(event) => setAdultRecordMenuAnchor(event.currentTarget)}>
             Record Step
           </Button>
-          <Menu id="adult-add-menu"
-            anchorEl={adultAddMenuAnchor}
+          <Menu id="adult-record-menu"
+            anchorEl={adultRecordMenuAnchor}
             keepMounted
-            open={Boolean(adultAddMenuAnchor)}
-            onClose={() => setAdultAddMenuAnchor(null)}>
+            open={Boolean(adultRecordMenuAnchor)}
+            onClose={() => setAdultRecordMenuAnchor(null)}>
             {adultDocumentTypes.map(documentType => (
-              <MenuItem key={documentType.formName}>{documentType.formName}</MenuItem>
+              <MenuItem key={documentType.formName} onClick={() => adult.item1 && selectRecordAdultStep(documentType, adult.item1)}>{documentType.formName}</MenuItem>
             ))}
             <Divider />
             {adultActivityTypes.map(activityType => (
-              <MenuItem key={activityType.activityName}>{activityType.activityName}</MenuItem>
+              <MenuItem key={activityType.activityName} onClick={() => adult.item1 && selectRecordAdultStep(activityType, adult.item1)}>{activityType.activityName}</MenuItem>
             ))}
           </Menu>
         </h4>
