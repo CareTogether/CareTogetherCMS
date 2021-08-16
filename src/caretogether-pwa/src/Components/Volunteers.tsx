@@ -1,15 +1,14 @@
 import { makeStyles } from '@material-ui/core/styles';
-import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Drawer, Container, Toolbar, Chip, Button, Menu, MenuItem, Divider } from '@material-ui/core';
-import { ExactAge, AgeInYears, VolunteerFamily, FormUploadRequirement, ActivityRequirement, VolunteerFamilyRequirementScope, FamilyAdultRelationshipType, CustodialRelationshipType } from '../GeneratedClient';
+import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Drawer } from '@material-ui/core';
+import { ExactAge, AgeInYears, VolunteerFamily } from '../GeneratedClient';
 import { differenceInYears } from 'date-fns';
 import { useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
 import { policyData } from '../Model/ConfigurationModel';
 import { RoleApprovalStatus } from '../GeneratedClient';
-import AddCircleIcon from '@material-ui/icons/AddCircle';
 import React, { useState } from 'react';
 import clsx from 'clsx';
-import { AgeText } from './AgeText';
+import { VolunteerFamilyPanel } from './VolunteerFamilyPanel';
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -35,17 +34,6 @@ const useStyles = makeStyles((theme) => ({
   },
   drawerPaper: {
     width: 800
-  },
-  sectionHeading: {
-    marginTop: 0,
-    marginBottom: 0
-  },
-  sectionChips: {
-    marginTop: 0,
-    marginBottom: -10,
-    '& > *': {
-      margin: theme.spacing(0.5),
-    }
   }
 }));
 
@@ -55,6 +43,7 @@ function approvalStatus(value: number | undefined) {
 
 function Volunteers() {
   const classes = useStyles();
+
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
   const policy = useRecoilValue(policyData);
 
@@ -68,36 +57,6 @@ function Volunteers() {
     || [];
 
   const [selectedVolunteerFamily, setSelectedVolunteerFamily] = useState<VolunteerFamily | null>(null);
-
-  const [familyAddMenuAnchor, setFamilyAddMenuAnchor] = React.useState<Element | null>(null);
-
-  const familyDocumentTypes = (policy.volunteerPolicy?.volunteerFamilyRoles &&
-    Object.entries(policy.volunteerPolicy.volunteerFamilyRoles)
-      .reduce((previous, [, familyRolePolicy]) => {
-        const formUploads = familyRolePolicy.approvalRequirements
-          ?.filter(requirement => requirement.actionRequirement instanceof FormUploadRequirement && requirement.scope === VolunteerFamilyRequirementScope.OncePerFamily)
-          ?.map(requirement => requirement.actionRequirement as FormUploadRequirement) || [];
-        return previous.concat(formUploads);
-      }, [] as FormUploadRequirement[])
-      .reduce((previous, familyFormUploadRequirement) => {
-        return previous.filter(x => x.formName === familyFormUploadRequirement.formName).length > 0
-          ? previous
-          : previous.concat(familyFormUploadRequirement);
-      }, [] as FormUploadRequirement[])) || [];
-      
-  const familyActivityTypes = (policy.volunteerPolicy?.volunteerFamilyRoles &&
-  Object.entries(policy.volunteerPolicy.volunteerFamilyRoles)
-    .reduce((previous, [, familyRolePolicy]) => {
-      const activities = familyRolePolicy.approvalRequirements
-        ?.filter(requirement => requirement.actionRequirement instanceof ActivityRequirement && requirement.scope === VolunteerFamilyRequirementScope.OncePerFamily)
-        ?.map(requirement => requirement.actionRequirement as ActivityRequirement) || [];
-      return previous.concat(activities);
-    }, [] as ActivityRequirement[])
-    .reduce((previous, familyActivityRequirement) => {
-      return previous.filter(x => x.activityName === familyActivityRequirement.activityName).length > 0
-        ? previous
-        : previous.concat(familyActivityRequirement);
-    }, [] as ActivityRequirement[])) || [];
 
   return (
     <Grid container spacing={3}>
@@ -176,98 +135,7 @@ function Volunteers() {
         <Drawer anchor={'right'} classes={{
             paper: clsx(classes.drawerPaper),
           }} open={selectedVolunteerFamily !== null} onClose={() => setSelectedVolunteerFamily(null)}>
-          <Container>
-            <Toolbar variant="dense" disableGutters={true}>
-              <h3 className={classes.sectionHeading}>Family</h3>
-              &nbsp;
-              <Button aria-controls="family-add-menu" aria-haspopup="true"
-                onClick={(event) => setFamilyAddMenuAnchor(event.currentTarget)}>
-                <AddCircleIcon />
-              </Button>
-              <Menu id="family-add-menu"
-                anchorEl={familyAddMenuAnchor}
-                open={Boolean(familyAddMenuAnchor)}
-                onClose={() => setFamilyAddMenuAnchor(null)}>
-                {familyDocumentTypes.map(familyDocumentType => (
-                  <MenuItem key={familyDocumentType.formName}>{familyDocumentType.formName}</MenuItem>
-                ))}
-                <Divider />
-                {familyActivityTypes.map(familyActivityType => (
-                  <MenuItem key={familyActivityType.activityName}>{familyActivityType.activityName}</MenuItem>
-                ))}
-              </Menu>
-            </Toolbar>
-            <ul>
-              {selectedVolunteerFamily?.approvalFormUploads?.map((upload, i) => (
-                <li key={i}>{upload.formName} @ {upload.timestampUtc?.toDateString()}</li>
-              ))}
-              {selectedVolunteerFamily?.approvalActivitiesPerformed?.map((activity, i) => (
-                <li key={i}>{activity.activityName} @ {activity.timestampUtc?.toDateString()}</li>
-              ))}
-            </ul>
-            <Divider />
-            <Toolbar variant="dense" disableGutters={true}>
-              <h3 className={classes.sectionHeading}>Adults</h3>
-              &nbsp;
-              🏗
-            </Toolbar>
-            {selectedVolunteerFamily?.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item2 && (
-              <React.Fragment key={adult.item1.id}>
-                <h4 className={classes.sectionHeading}>
-                  {adult.item1.firstName} {adult.item1.lastName} (<AgeText age={adult.item1.age} />)
-                </h4>
-                <Container>
-                  <p className={classes.sectionChips}>
-                    {Object.entries(selectedVolunteerFamily.individualVolunteers?.[adult.item1.id].individualRoleApprovals || {}).map(([role, approvalStatus]) => (
-                      <Chip key={role} size="small" color={approvalStatus === RoleApprovalStatus.Approved ? "primary" : "secondary"}
-                        label={RoleApprovalStatus[approvalStatus] + " " + role} />
-                    ))}
-                    {(adult.item2.relationshipToFamily && <Chip size="small" label={FamilyAdultRelationshipType[adult.item2.relationshipToFamily]} />) || null}
-                    {adult.item2.isInHousehold && <Chip size="small" label="In Household" />}
-                    {adult.item2.isPrimaryFamilyContact && <Chip size="small" label="Primary Family Contact" />}
-                  </p>
-                  <dl>
-                    {adult.item2.safetyRiskNotes && <><dt><strong>⚠ Safety Risk</strong></dt><dd>{adult.item2.safetyRiskNotes}</dd></>}
-                    {adult.item2.familyRelationshipNotes && <><dt>📝 Family Relationship Notes</dt><dd>{adult.item2.familyRelationshipNotes}</dd></>}
-                  </dl>
-                  <ul>
-                    {selectedVolunteerFamily.individualVolunteers?.[adult.item1.id].approvalFormUploads?.map((upload, i) => (
-                      <li key={i}>{upload.formName} @ {upload.timestampUtc?.toDateString()}</li>
-                    ))}
-                    {selectedVolunteerFamily.individualVolunteers?.[adult.item1.id].approvalActivitiesPerformed?.map((activity, i) => (
-                      <li key={i}>{activity.activityName} @ {activity.timestampUtc?.toDateString()}</li>
-                    ))}
-                  </ul>
-                </Container>
-              </React.Fragment>
-            ))}
-            <Divider />
-            <Toolbar variant="dense" disableGutters={true}>
-              <h3 className={classes.sectionHeading}>Children</h3>
-              &nbsp;
-              🏗
-            </Toolbar>
-            {selectedVolunteerFamily?.family?.children?.map(child => (
-              <React.Fragment key={child.id}>
-                <h4 className={classes.sectionHeading}>{child.firstName} {child.lastName} (<AgeText age={child.age} />)</h4>
-                <Container>
-                  <ul>
-                    {selectedVolunteerFamily.family?.custodialRelationships?.filter(relationship => relationship.childId === child.id)?.map(relationship => (
-                      <li key={relationship.personId}>{selectedVolunteerFamily.family?.adults?.filter(x => x.item1?.id === relationship.personId)[0].item1?.firstName}:&nbsp;
-                        {relationship.type === CustodialRelationshipType.LegalGuardian
-                          ? "legal guardian"
-                          : relationship.type === CustodialRelationshipType.ParentWithCustody
-                          ? "parent (with joint custody)"
-                          : relationship.type === CustodialRelationshipType.ParentWithCourtAppointedCustody
-                          ? "parent with court-appointed sole custody"
-                          : null}
-                      </li>
-                    ))}
-                  </ul>
-                </Container>
-              </React.Fragment>
-            ))}
-          </Container>
+          {(selectedVolunteerFamily && <VolunteerFamilyPanel volunteerFamily={selectedVolunteerFamily}/>) || null}
         </Drawer>
       </Grid>
     </Grid>
