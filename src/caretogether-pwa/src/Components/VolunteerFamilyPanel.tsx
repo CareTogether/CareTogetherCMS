@@ -3,9 +3,10 @@ import { makeStyles } from '@material-ui/core/styles';
 import { Container, Toolbar, Chip, Button, Menu, MenuItem, Divider } from '@material-ui/core';
 import { VolunteerFamily, FamilyAdultRelationshipType, CustodialRelationshipType } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
-import { familyActivityTypesData, familyDocumentTypesData } from '../Model/ConfigurationModel';
+import { adultActivityTypesData, adultDocumentTypesData, familyActivityTypesData, familyDocumentTypesData } from '../Model/ConfigurationModel';
 import { RoleApprovalStatus } from '../GeneratedClient';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
+import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
 import { AgeText } from './AgeText';
 
 const useStyles = makeStyles((theme) => ({
@@ -19,6 +20,9 @@ const useStyles = makeStyles((theme) => ({
     '& > *': {
       margin: theme.spacing(0.5),
     }
+  },
+  button: {
+    margin: theme.spacing(1),
   }
 }));
 
@@ -31,8 +35,11 @@ export function VolunteerFamilyPanel({volunteerFamily}: VolunteerFamilyPanelProp
 
   const familyDocumentTypes = useRecoilValue(familyDocumentTypesData);
   const familyActivityTypes = useRecoilValue(familyActivityTypesData);
+  const adultDocumentTypes = useRecoilValue(adultDocumentTypesData);
+  const adultActivityTypes = useRecoilValue(adultActivityTypesData);
 
   const [familyAddMenuAnchor, setFamilyAddMenuAnchor] = useState<Element | null>(null);
+  const [adultAddMenuAnchor, setAdultAddMenuAnchor] = useState<Element | null>(null);
 
   return (
   <Container>
@@ -40,20 +47,22 @@ export function VolunteerFamilyPanel({volunteerFamily}: VolunteerFamilyPanelProp
       <h3 className={classes.sectionHeading}>Family</h3>
       &nbsp;
       <Button aria-controls="family-add-menu" aria-haspopup="true"
+        variant="contained" color="default" size="small" className={classes.button}
+        startIcon={<AssignmentTurnedInIcon />}
         onClick={(event) => setFamilyAddMenuAnchor(event.currentTarget)}>
-        <AddCircleIcon />
+        Record Step
       </Button>
       <Menu id="family-add-menu"
         anchorEl={familyAddMenuAnchor}
         keepMounted
         open={Boolean(familyAddMenuAnchor)}
         onClose={() => setFamilyAddMenuAnchor(null)}>
-        {familyDocumentTypes.map(familyDocumentType => (
-          <MenuItem key={familyDocumentType.formName}>{familyDocumentType.formName}</MenuItem>
+        {familyDocumentTypes.map(documentType => (
+          <MenuItem key={documentType.formName}>{documentType.formName}</MenuItem>
         ))}
         <Divider />
-        {familyActivityTypes.map(familyActivityType => (
-          <MenuItem key={familyActivityType.activityName}>{familyActivityType.activityName}</MenuItem>
+        {familyActivityTypes.map(activityType => (
+          <MenuItem key={activityType.activityName}>{activityType.activityName}</MenuItem>
         ))}
       </Menu>
     </Toolbar>
@@ -75,12 +84,35 @@ export function VolunteerFamilyPanel({volunteerFamily}: VolunteerFamilyPanelProp
     <Toolbar variant="dense" disableGutters={true}>
       <h3 className={classes.sectionHeading}>Adults</h3>
       &nbsp;
-      🏗
+      <Button
+        variant="contained" color="default" size="small" className={classes.button}
+        startIcon={<AddCircleIcon />}>
+        Add Adult
+      </Button>
     </Toolbar>
     {volunteerFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item2 && (
       <React.Fragment key={adult.item1.id}>
         <h4 className={classes.sectionHeading}>
           {adult.item1.firstName} {adult.item1.lastName} (<AgeText age={adult.item1.age} />)
+          <Button aria-controls="adult-add-menu" aria-haspopup="true"
+            variant="contained" color="default" size="small" className={classes.button}
+            startIcon={<AssignmentTurnedInIcon />}
+            onClick={(event) => setAdultAddMenuAnchor(event.currentTarget)}>
+            Record Step
+          </Button>
+          <Menu id="adult-add-menu"
+            anchorEl={adultAddMenuAnchor}
+            keepMounted
+            open={Boolean(adultAddMenuAnchor)}
+            onClose={() => setAdultAddMenuAnchor(null)}>
+            {adultDocumentTypes.map(documentType => (
+              <MenuItem key={documentType.formName}>{documentType.formName}</MenuItem>
+            ))}
+            <Divider />
+            {adultActivityTypes.map(activityType => (
+              <MenuItem key={activityType.activityName}>{activityType.activityName}</MenuItem>
+            ))}
+          </Menu>
         </h4>
         <Container>
           <div className={classes.sectionChips}>
@@ -111,7 +143,11 @@ export function VolunteerFamilyPanel({volunteerFamily}: VolunteerFamilyPanelProp
     <Toolbar variant="dense" disableGutters={true}>
       <h3 className={classes.sectionHeading}>Children</h3>
       &nbsp;
-      🏗
+      <Button
+        variant="contained" color="default" size="small" className={classes.button}
+        startIcon={<AddCircleIcon />}>
+        Add Child
+      </Button>
     </Toolbar>
     {volunteerFamily.family?.children?.map(child => (
       <React.Fragment key={child.id}>
