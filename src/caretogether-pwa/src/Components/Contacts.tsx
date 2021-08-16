@@ -1,9 +1,8 @@
 import { makeStyles } from '@material-ui/core/styles';
 import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow } from '@material-ui/core';
-import { ExactAge, AgeInYears } from '../GeneratedClient';
-import { differenceInYears } from 'date-fns';
 import { useRecoilValue } from 'recoil';
 import { peopleData } from '../Model/PeopleModel';
+import { AgeText } from './AgeText';
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -50,11 +49,7 @@ function Contacts() {
                   <TableCell>{person.lastName}</TableCell>
                   <TableCell align="right">{person.userId}</TableCell>
                   <TableCell align="right">
-                    { person.age instanceof ExactAge
-                      ? person.age.dateOfBirth && "📅" + differenceInYears(new Date(), person.age.dateOfBirth)
-                      : person.age instanceof AgeInYears
-                      ? person.age.years && person.age.asOf && (person.age.years + differenceInYears(new Date(), person.age.asOf))
-                      : "⚠" }
+                    <AgeText age={person.age} />
                   </TableCell>
                 </TableRow>
               ))}
