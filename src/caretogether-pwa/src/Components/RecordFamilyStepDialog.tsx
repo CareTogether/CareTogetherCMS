@@ -26,7 +26,7 @@ export function RecordFamilyStepDialog({stepActionRequirement, volunteerFamily, 
     if (!formFile) {
       alert("No file was selected. Try again.");
     } else {
-      await volunteerFamiliesModel.uploadForm(volunteerFamily.family?.id as string, [stepActionRequirement as FormUploadRequirement, formFile]);
+      await volunteerFamiliesModel.uploadForm(volunteerFamily.family?.id as string, stepActionRequirement as FormUploadRequirement, formFile);
       //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
       onClose();
     }

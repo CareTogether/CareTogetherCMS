@@ -9,10 +9,10 @@ export const volunteerFamiliesData = atom<VolunteerFamily[]>({
   default: []
 });
 
-function useVolunteerFamilyCommandCallback<T>(
-  callback: (organizationId: string, locationId: string, volunteerFamilyId: string, ...args: T[]) => Promise<VolunteerFamilyCommand>) {
+function useVolunteerFamilyCommandCallback<T extends unknown[]>(
+  callback: (organizationId: string, locationId: string, volunteerFamilyId: string, ...args: T) => Promise<VolunteerFamilyCommand>) {
   return useRecoilCallback(({snapshot, set}) => {
-    const asyncCallback = async (volunteerFamilyId: string, ...args: T[]) => {
+    const asyncCallback = async (volunteerFamilyId: string, ...args: T) => {
       const organizationId = await snapshot.getPromise(currentOrganizationState);
       const locationId = await snapshot.getPromise(currentLocationState);
 
@@ -33,7 +33,7 @@ function useVolunteerFamilyCommandCallback<T>(
 
 export function useVolunteerFamiliesModel() {
   const uploadForm = useVolunteerFamilyCommandCallback(
-    async (organizationId, locationId, volunteerFamilyId, [requirement, formFile]:[FormUploadRequirement, File]) => {
+    async (organizationId, locationId, volunteerFamilyId, requirement: FormUploadRequirement, formFile: File) => {
       const uploadedDocumentId = await uploadFileToTenant(organizationId, locationId, formFile);
 
       const uploadCommand = new UploadVolunteerFamilyForm({
