@@ -1,7 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
 import { fade, makeStyles } from '@material-ui/core/styles';
-import { Typography, InputBase, CssBaseline, AppBar, Toolbar, IconButton, Badge, Drawer, Divider, List, Container } from '@material-ui/core';
+import { Typography, InputBase, CssBaseline, AppBar, Toolbar, IconButton, Badge, Drawer, Divider, List } from '@material-ui/core';
 import PermPhoneMsgIcon from '@material-ui/icons/PermPhoneMsg';
 import EmojiPeopleIcon from '@material-ui/icons/EmojiPeople';
 import SearchIcon from '@material-ui/icons/Search';
