@@ -1,17 +1,15 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Container, Toolbar, Chip, Button, Menu, MenuItem, Divider, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Link } from '@material-ui/core';
-import { VolunteerFamily, FamilyAdultRelationshipType, CustodialRelationshipType, FormUploadRequirement, ActionRequirement, ActivityRequirement, Person, FilesClient, VolunteerFamiliesClient, UploadVolunteerFamilyForm } from '../GeneratedClient';
+import { Container, Toolbar, Chip, Button, Menu, MenuItem, Divider } from '@material-ui/core';
+import { VolunteerFamily, FamilyAdultRelationshipType, CustodialRelationshipType, FormUploadRequirement, ActionRequirement, ActivityRequirement, Person } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { adultActivityTypesData, adultDocumentTypesData, familyActivityTypesData, familyDocumentTypesData } from '../Model/ConfigurationModel';
 import { RoleApprovalStatus } from '../GeneratedClient';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
 import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
 import { AgeText } from './AgeText';
-import { DateTimePicker } from '@material-ui/pickers';
-import { AnonymousCredential, BlockBlobClient } from '@azure/storage-blob';
-import { authenticatingFetch } from '../Auth';
-import { currentLocationState, currentOrganizationState } from '../Model/SessionModel';
+import { RecordFamilyStepDialog } from './RecordFamilyStepDialog';
+import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -27,133 +25,23 @@ const useStyles = makeStyles((theme) => ({
   },
   button: {
     margin: theme.spacing(1),
-  },
-  fileInput: {
   }
 }));
 
-interface RecordFamilyStepDialogProps {
-  stepActionRequirement: ActionRequirement | null,
-  volunteerFamily: VolunteerFamily,
-  onClose: () => void
-}
-
-function RecordFamilyStepDialog({stepActionRequirement, volunteerFamily, onClose}: RecordFamilyStepDialogProps) {
-  const classes = useStyles();
-  const [formFile, setFormFile] = useState<File>();
-  const [performedAtLocal, setPerformedAtLocal] = useState(new Date());
-
-  const organizationId = useRecoilValue(currentOrganizationState);
-  const locationId = useRecoilValue(currentLocationState);
-
-  async function recordUploadFormStep() {
-    if (!formFile) {
-      alert("No file was selected. Try again.");
-    } else {
-      const fileBuffer = await formFile.arrayBuffer();
-
-      const filesClient = new FilesClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const uploadInfo = await filesClient.generateUploadValetUrl(organizationId, locationId);
-
-      const blobClient = new BlockBlobClient(uploadInfo.valetUrl as string, new AnonymousCredential());
-      await blobClient.uploadData(fileBuffer);
-
-      const vfc = new VolunteerFamiliesClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const uploadCommand = new UploadVolunteerFamilyForm({
-        familyId: volunteerFamily.family?.id
-      });
-      uploadCommand.formName = (stepActionRequirement as FormUploadRequirement).formName;
-      uploadCommand.formVersion = (stepActionRequirement as FormUploadRequirement).formVersion;
-      uploadCommand.uploadedDocumentId = uploadInfo.documentId;
-      uploadCommand.uploadedFileName = formFile.name;
-      const updatedFamily = await vfc.submitVolunteerFamilyCommand(organizationId, locationId, uploadCommand);
-      console.log(updatedFamily);
-      //TODO: Update the client-side model with the result.
-      //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
-
-      onClose();
-    }
-  }
-
-  async function recordPerformActivityStep() {
-    //TODO: Actually do this :) and update the client-side model with the result.
-    onClose();
-  }
-
-  return (
-    <Dialog open={Boolean(stepActionRequirement)} onClose={onClose} aria-labelledby="record-family-step-title">
-      {(stepActionRequirement && stepActionRequirement instanceof FormUploadRequirement)
-        ? (
-          <>
-            <DialogTitle id="record-family-step-title">Family Form: {stepActionRequirement.formName}</DialogTitle>
-            <DialogContent>
-              <DialogContentText>
-                Do you want to upload this form for this family?
-              </DialogContentText>
-              <DialogContentText>
-                Template: <Link href={stepActionRequirement.templateLink} target="_blank" rel="noreferrer">
-                  {stepActionRequirement.formVersion} {stepActionRequirement.formName}
-                </Link>
-              </DialogContentText>
-              <DialogContentText>{stepActionRequirement.instructions}</DialogContentText>
-              <input
-                accept="*/*"
-                className={classes.fileInput}
-                multiple={false}
-                id="family-form-file"
-                type="file"
-                onChange={async (e) => {if (e.target.files && e.target.files.length > 0) {
-                  setFormFile(e.target.files[0]);
-                }}}
-              />
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={onClose} color="secondary">
-                Cancel
-              </Button>
-              <Button onClick={recordUploadFormStep} color="primary">
-                Upload
-              </Button>
-            </DialogActions>
-          </>
-        ) : (stepActionRequirement && stepActionRequirement instanceof ActivityRequirement)
-        ? (
-          <>
-            <DialogTitle id="record-family-step-title">Family Activity: {stepActionRequirement.activityName}</DialogTitle>
-            <DialogContent>
-              <DialogContentText>Do you want to record that this activity has been completed?</DialogContentText>
-              <DateTimePicker
-                label="When did this occur?"
-                value={performedAtLocal}
-                disableFuture
-                onChange={(date) => date && setPerformedAtLocal(date)}
-                showTodayButton />
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={onClose} color="secondary">
-                Cancel
-              </Button>
-              <Button onClick={recordPerformActivityStep} color="primary">
-                Mark Complete
-              </Button>
-            </DialogActions>
-          </>
-        ) : null}
-    </Dialog>
-  );
-}
-
 interface VolunteerFamilyPanelProps {
-  volunteerFamily: VolunteerFamily
+  volunteerFamilyId: string
 }
 
-export function VolunteerFamilyPanel({volunteerFamily}: VolunteerFamilyPanelProps) {
+export function VolunteerFamilyPanel({volunteerFamilyId}: VolunteerFamilyPanelProps) {
   const classes = useStyles();
 
+  const volunteerFamilies = useRecoilValue(volunteerFamiliesData); // Add as a dependency, rather than passing the selected family state in as props, to enable refresh
   const familyDocumentTypes = useRecoilValue(familyDocumentTypesData);
   const familyActivityTypes = useRecoilValue(familyActivityTypesData);
   const adultDocumentTypes = useRecoilValue(adultDocumentTypesData);
   const adultActivityTypes = useRecoilValue(adultActivityTypesData);
+
+  const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as VolunteerFamily;
 
   const [familyRecordMenuAnchor, setFamilyRecordMenuAnchor] = useState<Element | null>(null);
   const [recordFamilyStepParameter, setRecordFamilyStepParameter] = useState<ActionRequirement | null>(null);

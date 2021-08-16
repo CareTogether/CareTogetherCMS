@@ -1,30 +1,41 @@
-import { atom, selector, useSetRecoilState } from "recoil";
-import { VolunteerFamiliesClient } from "../GeneratedClient";
+import { atom, RecoilState, Snapshot } from "recoil";
+import { FilesClient, FormUploadRequirement, UploadVolunteerFamilyForm, VolunteerFamiliesClient, VolunteerFamily } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
+import { AnonymousCredential, BlockBlobClient } from "@azure/storage-blob";
 
-// We're using the request ID pattern for query refresh:
-// https://recoiljs.org/docs/guides/asynchronous-data-queries#query-refresh
-const volunteerFamiliesRequestIDState = atom({
-  key: 'volunteerFamiliesRequestIDState',
-  default: 0
+export const volunteerFamiliesData = atom<VolunteerFamily[]>({
+  key: 'volunteerFamiliesData',
+  default: []
 });
 
-export const volunteerFamiliesData = selector({
-  key: 'volunteerFamilies',
-  get: async ({get}) => {
-    get(volunteerFamiliesRequestIDState); // Add request ID as a dependency to enable refresh
-    const organizationId = get(currentOrganizationState);
-    const locationId = get(currentLocationState);
-    const volunteerFamiliesClient = new VolunteerFamiliesClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-    const dataResponse = await volunteerFamiliesClient.listAllVolunteerFamilies(organizationId, locationId);
-    return dataResponse;
-  },
-});
+export async function uploadVolunteerFamilyForm(snapshot: Snapshot,
+  set: <T>(recoilVal: RecoilState<T>, valOrUpdater: T | ((currVal: T) => T)) => void,
+  volunteerFamilyId: string, requirement: FormUploadRequirement, formFile: File) {
+  const organizationId = await snapshot.getPromise(currentOrganizationState);
+  const locationId = await snapshot.getPromise(currentLocationState);
+  
+  const fileBuffer = await formFile.arrayBuffer();
 
-export function useRefreshVolunteerFamilies() {
-  const set = useSetRecoilState(volunteerFamiliesRequestIDState);
-  return () => {
-    set(requestID => requestID + 1);
-  };
+  const filesClient = new FilesClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+  const uploadInfo = await filesClient.generateUploadValetUrl(organizationId, locationId);
+
+  const blobClient = new BlockBlobClient(uploadInfo.valetUrl as string, new AnonymousCredential());
+  await blobClient.uploadData(fileBuffer);
+
+  const vfc = new VolunteerFamiliesClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+  const uploadCommand = new UploadVolunteerFamilyForm({
+    familyId: volunteerFamilyId
+  });
+  uploadCommand.formName = requirement.formName;
+  uploadCommand.formVersion = requirement.formVersion;
+  uploadCommand.uploadedDocumentId = uploadInfo.documentId;
+  uploadCommand.uploadedFileName = formFile.name;
+  const updatedFamily = await vfc.submitVolunteerFamilyCommand(organizationId, locationId, uploadCommand);
+
+  set(volunteerFamiliesData, current => {
+    return current.map(currentEntry => currentEntry.family?.id === volunteerFamilyId
+      ? updatedFamily
+      : currentEntry);
+  });
 }

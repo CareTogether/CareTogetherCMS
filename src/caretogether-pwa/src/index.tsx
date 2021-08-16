@@ -10,6 +10,7 @@ import { RecoilRoot } from 'recoil';
 import { globalMsalInstance } from './Auth';
 import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 import DateFnsUtils from '@date-io/date-fns';
+import { ModelLoader } from './Model/ModelLoader';
 
 function AuthWrapper() {
   // Force the user to sign in if not already authenticated, then render the app.
@@ -20,7 +21,9 @@ function AuthWrapper() {
   return (
     <>
       {isAuthenticated
-        ? <App />
+        ? <ModelLoader>
+            <App />
+          </ModelLoader>
         : <p>You are not signed in. You can try to refresh your page (F5) to reattempt signing in.</p>
       }
     </>
