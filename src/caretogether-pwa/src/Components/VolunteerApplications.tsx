@@ -1,11 +1,11 @@
 import { makeStyles } from '@material-ui/core/styles';
-import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow } from '@material-ui/core';
+import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Drawer } from '@material-ui/core';
 import { FormUploadRequirement, VolunteerApprovalRequirement, VolunteerFamilyApprovalRequirement, ActivityRequirement } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
 import { policyData } from '../Model/ConfigurationModel';
 import { VolunteerFamilyRequirementScope } from '../GeneratedClient';
-import React from 'react';
+import React, { useState } from 'react';
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -114,6 +114,8 @@ function VolunteerApplications() {
       previous.filter(x => x.activityName === requirement.activityName).length === 0
       ? previous.concat(requirement)
       : previous, [] as ActivityRequirement[]);
+
+  const [drawerOpen, setDrawerOpen] = useState(false);
   
   return (
     <Grid container spacing={3}>
@@ -175,6 +177,9 @@ function VolunteerApplications() {
             </TableBody>
           </Table>
         </TableContainer>
+        <Drawer anchor={'right'} open={drawerOpen} onClose={() => setDrawerOpen(false)}>
+          Volunteer Family &amp; Individual Records
+        </Drawer>
       </Grid>
     </Grid>
   );

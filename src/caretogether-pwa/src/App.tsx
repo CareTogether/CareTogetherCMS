@@ -1,7 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
 import { fade, makeStyles } from '@material-ui/core/styles';
-import { Typography, InputBase, CssBaseline, AppBar, Toolbar, IconButton, Badge, Drawer, Divider, List, Container } from '@material-ui/core';
+import { Typography, InputBase, CssBaseline, AppBar, Toolbar, IconButton, Badge, Drawer, Divider, List } from '@material-ui/core';
 import PermPhoneMsgIcon from '@material-ui/icons/PermPhoneMsg';
 import EmojiPeopleIcon from '@material-ui/icons/EmojiPeople';
 import SearchIcon from '@material-ui/icons/Search';
@@ -241,7 +241,7 @@ function App() {
         </Drawer>
         <main className={classes.content}>
           <div className={classes.appBarSpacer} />
-          <Container maxWidth="lg" className={classes.container}>
+          {/* <Container maxWidth="lg" className={classes.container}> */}
             <React.Suspense fallback={<div>Loading...</div>}>
               <Switch>
                 <Route path="/arrangements">
@@ -270,7 +270,7 @@ function App() {
                 </Route>
               </Switch>
             </React.Suspense>
-          </Container>
+          {/* </Container> */}
         </main>
       </Router>
     </div>

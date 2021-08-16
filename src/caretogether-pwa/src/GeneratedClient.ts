@@ -200,7 +200,7 @@ export class FilesClient {
         return Promise.resolve<string>(<any>null);
     }
 
-    generateUploadValetUrl(organizationId: string, locationId: string): Promise<string> {
+    generateUploadValetUrl(organizationId: string, locationId: string): Promise<DocumentUploadInfo> {
         let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Files/upload";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
@@ -222,14 +222,14 @@ export class FilesClient {
         });
     }
 
-    protected processGenerateUploadValetUrl(response: Response): Promise<string> {
+    protected processGenerateUploadValetUrl(response: Response): Promise<DocumentUploadInfo> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 !== undefined ? resultData200 : <any>null;
+            result200 = DocumentUploadInfo.fromJS(resultData200);
             return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -237,7 +237,7 @@ export class FilesClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<string>(<any>null);
+        return Promise.resolve<DocumentUploadInfo>(<any>null);
     }
 }
 
@@ -1535,6 +1535,46 @@ export interface IVolunteerFamilyApprovalRequirement {
 export enum VolunteerFamilyRequirementScope {
     OncePerFamily = 0,
     AllAdultsInTheFamily = 1,
+}
+
+export class DocumentUploadInfo implements IDocumentUploadInfo {
+    documentId?: string;
+    valetUrl?: string | undefined;
+
+    constructor(data?: IDocumentUploadInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.documentId = _data["documentId"];
+            this.valetUrl = _data["valetUrl"];
+        }
+    }
+
+    static fromJS(data: any): DocumentUploadInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new DocumentUploadInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["documentId"] = this.documentId;
+        data["valetUrl"] = this.valetUrl;
+        return data; 
+    }
+}
+
+export interface IDocumentUploadInfo {
+    documentId?: string;
+    valetUrl?: string | undefined;
 }
 
 export class Person implements IPerson {
