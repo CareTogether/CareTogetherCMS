@@ -2,9 +2,8 @@ import { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Link } from '@material-ui/core';
 import { VolunteerFamily, FormUploadRequirement, ActionRequirement, ActivityRequirement } from '../GeneratedClient';
-import { useRecoilCallback } from 'recoil';
 import { DateTimePicker } from '@material-ui/pickers';
-import { uploadVolunteerFamilyForm } from '../Model/VolunteerFamiliesModel';
+import { useVolunteerFamiliesModel } from '../Model/VolunteerFamiliesModel';
 
 const useStyles = makeStyles((theme) => ({
   fileInput: {
@@ -21,16 +20,17 @@ export function RecordFamilyStepDialog({stepActionRequirement, volunteerFamily, 
   const classes = useStyles();
   const [formFile, setFormFile] = useState<File>();
   const [performedAtLocal, setPerformedAtLocal] = useState(new Date());
+  const volunteerFamiliesModel = useVolunteerFamiliesModel();
 
-  const recordUploadFormStep = useRecoilCallback(({snapshot, set}) => async () => {
+  async function recordUploadFormStep() {
     if (!formFile) {
-        alert("No file was selected. Try again.");
-      } else {
-        await uploadVolunteerFamilyForm(snapshot, set, volunteerFamily.family?.id as string, stepActionRequirement as FormUploadRequirement, formFile);
-        //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
-        onClose();
-      }
-  });
+      alert("No file was selected. Try again.");
+    } else {
+      await volunteerFamiliesModel.uploadForm(volunteerFamily.family?.id as string, stepActionRequirement as FormUploadRequirement, formFile);
+      //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
+      onClose();
+    }
+  }
 
   async function recordPerformActivityStep() {
     //TODO: Actually do this :) and update the client-side model with the result.
