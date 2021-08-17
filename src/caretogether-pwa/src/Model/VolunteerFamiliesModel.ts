@@ -1,27 +1,122 @@
-import { atom, selector, useSetRecoilState } from "recoil";
-import { VolunteerFamiliesClient } from "../GeneratedClient";
+import { atom, useRecoilCallback } from "recoil";
+import { ActivityRequirement, FormUploadRequirement, PerformVolunteerActivity, PerformVolunteerFamilyActivity, UploadVolunteerFamilyForm, UploadVolunteerForm, VolunteerCommand, VolunteerFamiliesClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
+import { currentOrganizationState, currentLocationState } from "./SessionModel";
+import { uploadFileToTenant } from "./FilesModel";
 
-// We're using the request ID pattern for query refresh:
-// https://recoiljs.org/docs/guides/asynchronous-data-queries#query-refresh
-const volunteerFamiliesRequestIDState = atom({
-  key: 'volunteerFamiliesRequestIDState',
-  default: 0
+export const volunteerFamiliesData = atom<VolunteerFamily[]>({
+  key: 'volunteerFamiliesData',
+  default: []
 });
 
-export const volunteerFamiliesData = selector({
-  key: 'volunteerFamilies',
-  get: async ({get}) => {
-    get(volunteerFamiliesRequestIDState); // Add request ID as a dependency to enable refresh
-    const volunteerFamiliesClient = new VolunteerFamiliesClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-    const dataResponse = await volunteerFamiliesClient.listAllVolunteerFamilies("11111111-1111-1111-1111-111111111111", "22222222-2222-2222-2222-222222222222");
-    return dataResponse;
-  },
-});
+function useVolunteerFamilyCommandCallbackWithLocation<T extends unknown[]>(
+  callback: (organizationId: string, locationId: string, volunteerFamilyId: string, ...args: T) => Promise<VolunteerFamilyCommand>) {
+  return useRecoilCallback(({snapshot, set}) => {
+    const asyncCallback = async (volunteerFamilyId: string, ...args: T) => {
+      const organizationId = await snapshot.getPromise(currentOrganizationState);
+      const locationId = await snapshot.getPromise(currentLocationState);
 
-export function useRefreshVolunteerFamilies() {
-  const set = useSetRecoilState(volunteerFamiliesRequestIDState);
-  return () => {
-    set(requestID => requestID + 1);
+      const command = await callback(organizationId, locationId, volunteerFamilyId, ...args);
+
+      const client = new VolunteerFamiliesClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+      const updatedFamily = await client.submitVolunteerFamilyCommand(organizationId, locationId, command);
+
+      set(volunteerFamiliesData, current => {
+        return current.map(currentEntry => currentEntry.family?.id === volunteerFamilyId
+          ? updatedFamily
+          : currentEntry);
+      });
+    };
+    return asyncCallback;
+  })
+}
+
+function useVolunteerFamilyCommandCallback<T extends unknown[]>(
+  callback: (volunteerFamilyId: string, ...args: T) => Promise<VolunteerFamilyCommand>) {
+  return useVolunteerFamilyCommandCallbackWithLocation<T>(
+    (_organizationId, _locationId, volunteerFamilyId, ...args) => callback(volunteerFamilyId, ...args));
+}
+
+function useVolunteerCommandCallbackWithLocation<T extends unknown[]>(
+  callback: (organizationId: string, locationId: string, volunteerFamilyId: string, personId: string, ...args: T) => Promise<VolunteerCommand>) {
+  return useRecoilCallback(({snapshot, set}) => {
+    const asyncCallback = async (volunteerFamilyId: string, personId: string, ...args: T) => {
+      const organizationId = await snapshot.getPromise(currentOrganizationState);
+      const locationId = await snapshot.getPromise(currentLocationState);
+
+      const command = await callback(organizationId, locationId, volunteerFamilyId, personId, ...args);
+
+      const client = new VolunteerFamiliesClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+      const updatedFamily = await client.submitVolunteerCommand(organizationId, locationId, command);
+
+      set(volunteerFamiliesData, current => {
+        return current.map(currentEntry => currentEntry.family?.id === volunteerFamilyId
+          ? updatedFamily
+          : currentEntry);
+      });
+    };
+    return asyncCallback;
+  })
+}
+
+function useVolunteerCommandCallback<T extends unknown[]>(
+  callback: (volunteerFamilyId: string, personId: string, ...args: T) => Promise<VolunteerCommand>) {
+  return useVolunteerCommandCallbackWithLocation<T>(
+    (_organizationId, _locationId, volunteerFamilyId, personId, ...args) => callback(volunteerFamilyId, personId, ...args));
+}
+
+export function useVolunteerFamiliesModel() {
+  const uploadFormFamily = useVolunteerFamilyCommandCallbackWithLocation(
+    async (organizationId, locationId, volunteerFamilyId, requirement: FormUploadRequirement, formFile: File) => {
+      const uploadedDocumentId = await uploadFileToTenant(organizationId, locationId, formFile);
+
+      const command = new UploadVolunteerFamilyForm({
+        familyId: volunteerFamilyId
+      });
+      command.formName = requirement.formName;
+      command.formVersion = requirement.formVersion;
+      command.uploadedDocumentId = uploadedDocumentId;
+      command.uploadedFileName = formFile.name;
+      return command;
+    });
+  const performActivityFamily = useVolunteerFamilyCommandCallback(
+    async (volunteerFamilyId, requirement: ActivityRequirement, performedAtLocal: Date) => {
+      const command = new PerformVolunteerFamilyActivity({
+        familyId: volunteerFamilyId
+      });
+      command.activityName = requirement.activityName;
+      command.performedAtUtc = new Date(performedAtLocal.toUTCString());
+      return command;
+    });
+  const uploadFormPerson = useVolunteerCommandCallbackWithLocation(
+    async (organizationId, locationId, volunteerFamilyId, personId, requirement: FormUploadRequirement, formFile: File) => {
+      const uploadedDocumentId = await uploadFileToTenant(organizationId, locationId, formFile);
+
+      const command = new UploadVolunteerForm({
+        familyId: volunteerFamilyId,
+        personId: personId
+      });
+      command.formName = requirement.formName;
+      command.formVersion = requirement.formVersion;
+      command.uploadedDocumentId = uploadedDocumentId;
+      command.uploadedFileName = formFile.name;
+      return command;
+    });
+  const performActivityPerson = useVolunteerCommandCallback(
+    async (volunteerFamilyId, personId, requirement: ActivityRequirement, performedAtLocal: Date) => {
+      const command = new PerformVolunteerActivity({
+        familyId: volunteerFamilyId,
+        personId: personId
+      });
+      command.activityName = requirement.activityName;
+      command.performedAtUtc = new Date(performedAtLocal.toUTCString());
+      return command;
+    });
+  
+  return {
+    uploadFormFamily,
+    performActivityFamily,
+    uploadFormPerson,
+    performActivityPerson
   };
 }

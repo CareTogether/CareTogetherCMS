@@ -19,6 +19,8 @@ import { VolunteerApplications } from './Components/VolunteerApplications';
 import { VolunteerProgress } from './Components/VolunteerProgress';
 import { Contacts } from './Components/Contacts';
 import { Communities } from './Components/Communities';
+import { useRecoilValue } from 'recoil';
+import { locationNameData, organizationNameData } from './Model/ConfigurationModel';
 
 function Copyright() {
   return (
@@ -178,6 +180,9 @@ function App() {
     setOpen(false);
   };
 
+  const organizationName = useRecoilValue(organizationNameData);
+  const locationName = useRecoilValue(locationNameData);
+
   return (
     <div className={classes.root}>
       <CssBaseline />
@@ -225,8 +230,8 @@ function App() {
         >
           <div className={classes.drawerHeader}>
             <header>
-              <p className={classes.drawerHeaderOrganization}>CareTogether</p>
-              <p className={classes.drawerHeaderLocation}>Atlantis</p>
+              <p className={classes.drawerHeaderOrganization}>{organizationName}</p>
+              <p className={classes.drawerHeaderLocation}>{locationName}</p>
             </header>
             <IconButton onClick={handleDrawerClose}>
               <ChevronLeftIcon />

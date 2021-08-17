@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Container, Toolbar, Chip, Button, Menu, MenuItem, Divider, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Link } from '@material-ui/core';
-import { VolunteerFamily, FamilyAdultRelationshipType, CustodialRelationshipType, FormUploadRequirement, ActionRequirement, ActivityRequirement, Person, FilesClient, VolunteerFamiliesClient, UploadVolunteerFamilyForm } from '../GeneratedClient';
+import { Container, Toolbar, Chip, Button, Menu, MenuItem, Divider } from '@material-ui/core';
+import { VolunteerFamily, FamilyAdultRelationshipType, CustodialRelationshipType, FormUploadRequirement, ActionRequirement, ActivityRequirement, Person } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
-import { adultActivityTypesData, adultDocumentTypesData, currentLocationState, currentOrganizationState, familyActivityTypesData, familyDocumentTypesData } from '../Model/ConfigurationModel';
+import { adultActivityTypesData, adultDocumentTypesData, familyActivityTypesData, familyDocumentTypesData } from '../Model/ConfigurationModel';
 import { RoleApprovalStatus } from '../GeneratedClient';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
 import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
 import { AgeText } from './AgeText';
-import { DateTimePicker } from '@material-ui/pickers';
-import { AnonymousCredential, BlockBlobClient } from '@azure/storage-blob';
-import { authenticatingFetch } from '../Auth';
+import { RecordVolunteerFamilyStepDialog } from './RecordVolunteerFamilyStepDialog';
+import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
+import { RecordVolunteerAdultStepDialog } from './RecordVolunteerAdultStepDialog';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -26,133 +26,23 @@ const useStyles = makeStyles((theme) => ({
   },
   button: {
     margin: theme.spacing(1),
-  },
-  fileInput: {
   }
 }));
 
-interface RecordFamilyStepDialogProps {
-  stepActionRequirement: ActionRequirement | null,
-  volunteerFamily: VolunteerFamily,
-  onClose: () => void
-}
-
-function RecordFamilyStepDialog({stepActionRequirement, volunteerFamily, onClose}: RecordFamilyStepDialogProps) {
-  const classes = useStyles();
-  const [formFile, setFormFile] = useState<File>();
-  const [performedAtLocal, setPerformedAtLocal] = useState(new Date());
-
-  const organizationId = useRecoilValue(currentOrganizationState);
-  const locationId = useRecoilValue(currentLocationState);
-
-  async function recordUploadFormStep() {
-    if (!formFile) {
-      alert("No file was selected. Try again.");
-    } else {
-      const fileBuffer = await formFile.arrayBuffer();
-
-      const filesClient = new FilesClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const uploadInfo = await filesClient.generateUploadValetUrl(organizationId, locationId);
-
-      const blobClient = new BlockBlobClient(uploadInfo.valetUrl as string, new AnonymousCredential());
-      await blobClient.uploadData(fileBuffer);
-
-      const vfc = new VolunteerFamiliesClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const uploadCommand = new UploadVolunteerFamilyForm({
-        familyId: volunteerFamily.family?.id
-      });
-      uploadCommand.formName = (stepActionRequirement as FormUploadRequirement).formName;
-      uploadCommand.formVersion = (stepActionRequirement as FormUploadRequirement).formVersion;
-      uploadCommand.uploadedDocumentId = uploadInfo.documentId;
-      uploadCommand.uploadedFileName = formFile.name;
-      const updatedFamily = await vfc.submitVolunteerFamilyCommand(organizationId, locationId, uploadCommand);
-      console.log(updatedFamily);
-      //TODO: Update the client-side model with the result.
-      //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
-
-      onClose();
-    }
-  }
-
-  async function recordPerformActivityStep() {
-    //TODO: Actually do this :) and update the client-side model with the result.
-    onClose();
-  }
-
-  return (
-    <Dialog open={Boolean(stepActionRequirement)} onClose={onClose} aria-labelledby="record-family-step-title">
-      {(stepActionRequirement && stepActionRequirement instanceof FormUploadRequirement)
-        ? (
-          <>
-            <DialogTitle id="record-family-step-title">Family Form: {stepActionRequirement.formName}</DialogTitle>
-            <DialogContent>
-              <DialogContentText>
-                Do you want to upload this form for this family?
-              </DialogContentText>
-              <DialogContentText>
-                Template: <Link href={stepActionRequirement.templateLink} target="_blank" rel="noreferrer">
-                  {stepActionRequirement.formVersion} {stepActionRequirement.formName}
-                </Link>
-              </DialogContentText>
-              <DialogContentText>{stepActionRequirement.instructions}</DialogContentText>
-              <input
-                accept="*/*"
-                className={classes.fileInput}
-                multiple={false}
-                id="family-form-file"
-                type="file"
-                onChange={async (e) => {if (e.target.files && e.target.files.length > 0) {
-                  setFormFile(e.target.files[0]);
-                }}}
-              />
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={onClose} color="secondary">
-                Cancel
-              </Button>
-              <Button onClick={recordUploadFormStep} color="primary">
-                Upload
-              </Button>
-            </DialogActions>
-          </>
-        ) : (stepActionRequirement && stepActionRequirement instanceof ActivityRequirement)
-        ? (
-          <>
-            <DialogTitle id="record-family-step-title">Family Activity: {stepActionRequirement.activityName}</DialogTitle>
-            <DialogContent>
-              <DialogContentText>Do you want to record that this activity has been completed?</DialogContentText>
-              <DateTimePicker
-                label="When did this occur?"
-                value={performedAtLocal}
-                disableFuture
-                onChange={(date) => date && setPerformedAtLocal(date)}
-                showTodayButton />
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={onClose} color="secondary">
-                Cancel
-              </Button>
-              <Button onClick={recordPerformActivityStep} color="primary">
-                Mark Complete
-              </Button>
-            </DialogActions>
-          </>
-        ) : null}
-    </Dialog>
-  );
-}
-
 interface VolunteerFamilyPanelProps {
-  volunteerFamily: VolunteerFamily
+  volunteerFamilyId: string
 }
 
-export function VolunteerFamilyPanel({volunteerFamily}: VolunteerFamilyPanelProps) {
+export function VolunteerFamilyPanel({volunteerFamilyId}: VolunteerFamilyPanelProps) {
   const classes = useStyles();
 
+  const volunteerFamilies = useRecoilValue(volunteerFamiliesData); // Add as a dependency, rather than passing the selected family state in as props, to enable refresh
   const familyDocumentTypes = useRecoilValue(familyDocumentTypesData);
   const familyActivityTypes = useRecoilValue(familyActivityTypesData);
   const adultDocumentTypes = useRecoilValue(adultDocumentTypesData);
   const adultActivityTypes = useRecoilValue(adultActivityTypesData);
+
+  const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as VolunteerFamily;
 
   const [familyRecordMenuAnchor, setFamilyRecordMenuAnchor] = useState<Element | null>(null);
   const [recordFamilyStepParameter, setRecordFamilyStepParameter] = useState<ActionRequirement | null>(null);
@@ -161,11 +51,11 @@ export function VolunteerFamilyPanel({volunteerFamily}: VolunteerFamilyPanelProp
     setRecordFamilyStepParameter(requirement);
   }
   
-  const [adultRecordMenuAnchor, setAdultRecordMenuAnchor] = useState<Element | null>(null);
-  const [/*recordAdultStepParameter*/, setRecordAdultStepParameter] = useState<[ActionRequirement, Person] | null>(null);
+  const [adultRecordMenuAnchor, setAdultRecordMenuAnchor] = useState<{anchor: Element, adult: Person} | null>(null);
+  const [recordAdultStepParameter, setRecordAdultStepParameter] = useState<{requirement: ActionRequirement, adult: Person} | null>(null);
   function selectRecordAdultStep(requirement: FormUploadRequirement | ActivityRequirement, adult: Person) {
     setAdultRecordMenuAnchor(null);
-    setRecordAdultStepParameter([requirement, adult]);
+    setRecordAdultStepParameter({requirement, adult});
   }
 
   return (
@@ -192,7 +82,7 @@ export function VolunteerFamilyPanel({volunteerFamily}: VolunteerFamilyPanelProp
           <MenuItem key={activityType.activityName} onClick={() => selectRecordFamilyStep(activityType)}>{activityType.activityName}</MenuItem>
         ))}
       </Menu>
-      <RecordFamilyStepDialog volunteerFamily={volunteerFamily} stepActionRequirement={recordFamilyStepParameter} onClose={() => setRecordFamilyStepParameter(null)} />
+      <RecordVolunteerFamilyStepDialog volunteerFamily={volunteerFamily} stepActionRequirement={recordFamilyStepParameter} onClose={() => setRecordFamilyStepParameter(null)} />
     </Toolbar>
     <div className={classes.sectionChips}>
       {Object.entries(volunteerFamily.familyRoleApprovals || {}).map(([role, approvalStatus]) => (
@@ -225,22 +115,9 @@ export function VolunteerFamilyPanel({volunteerFamily}: VolunteerFamilyPanelProp
           <Button aria-controls="adult-record-menu" aria-haspopup="true"
             variant="contained" color="default" size="small" className={classes.button}
             startIcon={<AssignmentTurnedInIcon />}
-            onClick={(event) => setAdultRecordMenuAnchor(event.currentTarget)}>
+            onClick={(event) => setAdultRecordMenuAnchor({anchor: event.currentTarget, adult: adult.item1 as Person})}>
             Record Step
           </Button>
-          <Menu id="adult-record-menu"
-            anchorEl={adultRecordMenuAnchor}
-            keepMounted
-            open={Boolean(adultRecordMenuAnchor)}
-            onClose={() => setAdultRecordMenuAnchor(null)}>
-            {adultDocumentTypes.map(documentType => (
-              <MenuItem key={documentType.formName} onClick={() => adult.item1 && selectRecordAdultStep(documentType, adult.item1)}>{documentType.formName}</MenuItem>
-            ))}
-            <Divider />
-            {adultActivityTypes.map(activityType => (
-              <MenuItem key={activityType.activityName} onClick={() => adult.item1 && selectRecordAdultStep(activityType, adult.item1)}>{activityType.activityName}</MenuItem>
-            ))}
-          </Menu>
         </h4>
         <Container>
           <div className={classes.sectionChips}>
@@ -267,6 +144,23 @@ export function VolunteerFamilyPanel({volunteerFamily}: VolunteerFamilyPanelProp
         </Container>
       </React.Fragment>
     ))}
+    <Menu id="adult-record-menu"
+      anchorEl={adultRecordMenuAnchor?.anchor}
+      keepMounted
+      open={Boolean(adultRecordMenuAnchor)}
+      onClose={() => setAdultRecordMenuAnchor(null)}>
+      {adultDocumentTypes.map(documentType => (
+        <MenuItem key={documentType.formName} onClick={() =>
+          adultRecordMenuAnchor?.adult && selectRecordAdultStep(documentType, adultRecordMenuAnchor.adult)}>{documentType.formName}</MenuItem>
+      ))}
+      <Divider />
+      {adultActivityTypes.map(activityType => (
+        <MenuItem key={activityType.activityName} onClick={() =>
+          adultRecordMenuAnchor?.adult && selectRecordAdultStep(activityType, adultRecordMenuAnchor.adult)}>{activityType.activityName}</MenuItem>
+      ))}
+    </Menu>
+    {(recordAdultStepParameter && <RecordVolunteerAdultStepDialog volunteerFamily={volunteerFamily} adult={recordAdultStepParameter.adult}
+      stepActionRequirement={recordAdultStepParameter.requirement} onClose={() => setRecordAdultStepParameter(null)} />) || null}
     <Divider />
     <Toolbar variant="dense" disableGutters={true}>
       <h3 className={classes.sectionHeading}>Children</h3>

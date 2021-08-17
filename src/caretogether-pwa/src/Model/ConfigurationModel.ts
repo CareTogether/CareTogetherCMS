@@ -1,16 +1,7 @@
-import { atom, selector } from "recoil";
+import { selector } from "recoil";
 import { ActivityRequirement, ConfigurationClient, FormUploadRequirement, VolunteerFamilyRequirementScope } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
-
-export const currentOrganizationState = atom({
-  key: 'selectedOrganizationState',
-  default: '11111111-1111-1111-1111-111111111111'
-});
-
-export const currentLocationState = atom({
-  key: 'selectedLocationState',
-  default: '22222222-2222-2222-2222-222222222222'
-});
+import { currentLocationState, currentOrganizationState } from "./SessionModel";
 
 export const organizationConfigurationData = selector({
   key: 'organizationConfigurationData',
@@ -20,6 +11,23 @@ export const organizationConfigurationData = selector({
     const dataResponse = await configurationClient.getOrganizationConfiguration(organizationId);
     return dataResponse;
   }});
+
+export const organizationNameData = selector({
+  key: 'organizationNameData',
+  get: ({get}) => {
+    const organizationConfiguration = get(organizationConfigurationData);
+    return organizationConfiguration.organizationName as string;
+  }
+})
+
+export const locationNameData = selector({
+  key: 'locationNameData',
+  get: ({get}) => {
+    const organizationConfiguration = get(organizationConfigurationData);
+    const currentLocationId = get(currentLocationState);
+    return organizationConfiguration.locations?.find(x => x.id === currentLocationId)?.name as string;
+  }
+})
 
 export const policyData = selector({
   key: 'policyData',
