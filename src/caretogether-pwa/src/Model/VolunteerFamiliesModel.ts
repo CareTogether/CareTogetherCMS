@@ -1,5 +1,5 @@
 import { atom, useRecoilCallback } from "recoil";
-import { ActivityRequirement, FormUploadRequirement, PerformVolunteerFamilyActivity, UploadVolunteerFamilyForm, VolunteerFamiliesClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
+import { ActivityRequirement, FormUploadRequirement, PerformVolunteerActivity, PerformVolunteerFamilyActivity, UploadVolunteerFamilyForm, UploadVolunteerForm, VolunteerCommand, VolunteerFamiliesClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { uploadFileToTenant } from "./FilesModel";
@@ -37,8 +37,36 @@ function useVolunteerFamilyCommandCallback<T extends unknown[]>(
     (_organizationId, _locationId, volunteerFamilyId, ...args) => callback(volunteerFamilyId, ...args));
 }
 
+function useVolunteerCommandCallbackWithLocation<T extends unknown[]>(
+  callback: (organizationId: string, locationId: string, volunteerFamilyId: string, personId: string, ...args: T) => Promise<VolunteerCommand>) {
+  return useRecoilCallback(({snapshot, set}) => {
+    const asyncCallback = async (volunteerFamilyId: string, personId: string, ...args: T) => {
+      const organizationId = await snapshot.getPromise(currentOrganizationState);
+      const locationId = await snapshot.getPromise(currentLocationState);
+
+      const command = await callback(organizationId, locationId, volunteerFamilyId, personId, ...args);
+
+      const client = new VolunteerFamiliesClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+      const updatedFamily = await client.submitVolunteerCommand(organizationId, locationId, command);
+
+      set(volunteerFamiliesData, current => {
+        return current.map(currentEntry => currentEntry.family?.id === volunteerFamilyId
+          ? updatedFamily
+          : currentEntry);
+      });
+    };
+    return asyncCallback;
+  })
+}
+
+function useVolunteerCommandCallback<T extends unknown[]>(
+  callback: (volunteerFamilyId: string, personId: string, ...args: T) => Promise<VolunteerCommand>) {
+  return useVolunteerCommandCallbackWithLocation<T>(
+    (_organizationId, _locationId, volunteerFamilyId, personId, ...args) => callback(volunteerFamilyId, personId, ...args));
+}
+
 export function useVolunteerFamiliesModel() {
-  const uploadForm = useVolunteerFamilyCommandCallbackWithLocation(
+  const uploadFormFamily = useVolunteerFamilyCommandCallbackWithLocation(
     async (organizationId, locationId, volunteerFamilyId, requirement: FormUploadRequirement, formFile: File) => {
       const uploadedDocumentId = await uploadFileToTenant(organizationId, locationId, formFile);
 
@@ -51,7 +79,7 @@ export function useVolunteerFamiliesModel() {
       command.uploadedFileName = formFile.name;
       return command;
     });
-  const performActivity = useVolunteerFamilyCommandCallback(
+  const performActivityFamily = useVolunteerFamilyCommandCallback(
     async (volunteerFamilyId, requirement: ActivityRequirement, performedAtLocal: Date) => {
       const command = new PerformVolunteerFamilyActivity({
         familyId: volunteerFamilyId
@@ -60,9 +88,35 @@ export function useVolunteerFamiliesModel() {
       command.performedAtUtc = new Date(performedAtLocal.toUTCString());
       return command;
     });
+  const uploadFormPerson = useVolunteerCommandCallbackWithLocation(
+    async (organizationId, locationId, volunteerFamilyId, personId, requirement: FormUploadRequirement, formFile: File) => {
+      const uploadedDocumentId = await uploadFileToTenant(organizationId, locationId, formFile);
+
+      const command = new UploadVolunteerForm({
+        familyId: volunteerFamilyId,
+        personId: personId
+      });
+      command.formName = requirement.formName;
+      command.formVersion = requirement.formVersion;
+      command.uploadedDocumentId = uploadedDocumentId;
+      command.uploadedFileName = formFile.name;
+      return command;
+    });
+  const performActivityPerson = useVolunteerCommandCallback(
+    async (volunteerFamilyId, personId, requirement: ActivityRequirement, performedAtLocal: Date) => {
+      const command = new PerformVolunteerActivity({
+        familyId: volunteerFamilyId,
+        personId: personId
+      });
+      command.activityName = requirement.activityName;
+      command.performedAtUtc = new Date(performedAtLocal.toUTCString());
+      return command;
+    });
   
   return {
-    uploadForm,
-    performActivity
+    uploadFormFamily,
+    performActivityFamily,
+    uploadFormPerson,
+    performActivityPerson
   };
 }

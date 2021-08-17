@@ -8,8 +8,9 @@ import { RoleApprovalStatus } from '../GeneratedClient';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
 import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
 import { AgeText } from './AgeText';
-import { RecordFamilyStepDialog } from './RecordFamilyStepDialog';
+import { RecordVolunteerFamilyStepDialog } from './RecordVolunteerFamilyStepDialog';
 import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
+import { RecordVolunteerAdultStepDialog } from './RecordVolunteerAdultStepDialog';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -50,11 +51,11 @@ export function VolunteerFamilyPanel({volunteerFamilyId}: VolunteerFamilyPanelPr
     setRecordFamilyStepParameter(requirement);
   }
   
-  const [adultRecordMenuAnchor, setAdultRecordMenuAnchor] = useState<Element | null>(null);
-  const [/*recordAdultStepParameter*/, setRecordAdultStepParameter] = useState<[ActionRequirement, Person] | null>(null);
+  const [adultRecordMenuAnchor, setAdultRecordMenuAnchor] = useState<{anchor: Element, adult: Person} | null>(null);
+  const [recordAdultStepParameter, setRecordAdultStepParameter] = useState<{requirement: ActionRequirement, adult: Person} | null>(null);
   function selectRecordAdultStep(requirement: FormUploadRequirement | ActivityRequirement, adult: Person) {
     setAdultRecordMenuAnchor(null);
-    setRecordAdultStepParameter([requirement, adult]);
+    setRecordAdultStepParameter({requirement, adult});
   }
 
   return (
@@ -81,7 +82,7 @@ export function VolunteerFamilyPanel({volunteerFamilyId}: VolunteerFamilyPanelPr
           <MenuItem key={activityType.activityName} onClick={() => selectRecordFamilyStep(activityType)}>{activityType.activityName}</MenuItem>
         ))}
       </Menu>
-      <RecordFamilyStepDialog volunteerFamily={volunteerFamily} stepActionRequirement={recordFamilyStepParameter} onClose={() => setRecordFamilyStepParameter(null)} />
+      <RecordVolunteerFamilyStepDialog volunteerFamily={volunteerFamily} stepActionRequirement={recordFamilyStepParameter} onClose={() => setRecordFamilyStepParameter(null)} />
     </Toolbar>
     <div className={classes.sectionChips}>
       {Object.entries(volunteerFamily.familyRoleApprovals || {}).map(([role, approvalStatus]) => (
@@ -114,22 +115,9 @@ export function VolunteerFamilyPanel({volunteerFamilyId}: VolunteerFamilyPanelPr
           <Button aria-controls="adult-record-menu" aria-haspopup="true"
             variant="contained" color="default" size="small" className={classes.button}
             startIcon={<AssignmentTurnedInIcon />}
-            onClick={(event) => setAdultRecordMenuAnchor(event.currentTarget)}>
+            onClick={(event) => setAdultRecordMenuAnchor({anchor: event.currentTarget, adult: adult.item1 as Person})}>
             Record Step
           </Button>
-          <Menu id="adult-record-menu"
-            anchorEl={adultRecordMenuAnchor}
-            keepMounted
-            open={Boolean(adultRecordMenuAnchor)}
-            onClose={() => setAdultRecordMenuAnchor(null)}>
-            {adultDocumentTypes.map(documentType => (
-              <MenuItem key={documentType.formName} onClick={() => adult.item1 && selectRecordAdultStep(documentType, adult.item1)}>{documentType.formName}</MenuItem>
-            ))}
-            <Divider />
-            {adultActivityTypes.map(activityType => (
-              <MenuItem key={activityType.activityName} onClick={() => adult.item1 && selectRecordAdultStep(activityType, adult.item1)}>{activityType.activityName}</MenuItem>
-            ))}
-          </Menu>
         </h4>
         <Container>
           <div className={classes.sectionChips}>
@@ -156,6 +144,23 @@ export function VolunteerFamilyPanel({volunteerFamilyId}: VolunteerFamilyPanelPr
         </Container>
       </React.Fragment>
     ))}
+    <Menu id="adult-record-menu"
+      anchorEl={adultRecordMenuAnchor?.anchor}
+      keepMounted
+      open={Boolean(adultRecordMenuAnchor)}
+      onClose={() => setAdultRecordMenuAnchor(null)}>
+      {adultDocumentTypes.map(documentType => (
+        <MenuItem key={documentType.formName} onClick={() =>
+          adultRecordMenuAnchor?.adult && selectRecordAdultStep(documentType, adultRecordMenuAnchor.adult)}>{documentType.formName}</MenuItem>
+      ))}
+      <Divider />
+      {adultActivityTypes.map(activityType => (
+        <MenuItem key={activityType.activityName} onClick={() =>
+          adultRecordMenuAnchor?.adult && selectRecordAdultStep(activityType, adultRecordMenuAnchor.adult)}>{activityType.activityName}</MenuItem>
+      ))}
+    </Menu>
+    {(recordAdultStepParameter && <RecordVolunteerAdultStepDialog volunteerFamily={volunteerFamily} adult={recordAdultStepParameter.adult}
+      stepActionRequirement={recordAdultStepParameter.requirement} onClose={() => setRecordAdultStepParameter(null)} />) || null}
     <Divider />
     <Toolbar variant="dense" disableGutters={true}>
       <h3 className={classes.sectionHeading}>Children</h3>

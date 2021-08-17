@@ -10,13 +10,13 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-interface RecordFamilyStepDialogProps {
+interface RecordVolunteerFamilyStepDialogProps {
   stepActionRequirement: ActionRequirement | null,
   volunteerFamily: VolunteerFamily,
   onClose: () => void
 }
 
-export function RecordFamilyStepDialog({stepActionRequirement, volunteerFamily, onClose}: RecordFamilyStepDialogProps) {
+export function RecordVolunteerFamilyStepDialog({stepActionRequirement, volunteerFamily, onClose}: RecordVolunteerFamilyStepDialogProps) {
   const classes = useStyles();
   const [formFile, setFormFile] = useState<File>();
   const [performedAtLocal, setPerformedAtLocal] = useState(new Date());
@@ -26,14 +26,14 @@ export function RecordFamilyStepDialog({stepActionRequirement, volunteerFamily, 
     if (!formFile) {
       alert("No file was selected. Try again.");
     } else {
-      await volunteerFamiliesModel.uploadForm(volunteerFamily.family?.id as string, stepActionRequirement as FormUploadRequirement, formFile);
+      await volunteerFamiliesModel.uploadFormFamily(volunteerFamily.family?.id as string, stepActionRequirement as FormUploadRequirement, formFile);
       //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
       onClose();
     }
   }
 
   async function recordPerformActivityStep() {
-    await volunteerFamiliesModel.performActivity(volunteerFamily.family?.id as string, stepActionRequirement as ActivityRequirement, performedAtLocal);
+    await volunteerFamiliesModel.performActivityFamily(volunteerFamily.family?.id as string, stepActionRequirement as ActivityRequirement, performedAtLocal);
     //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
     onClose();
   }
