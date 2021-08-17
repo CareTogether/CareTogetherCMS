@@ -33,7 +33,8 @@ export function RecordFamilyStepDialog({stepActionRequirement, volunteerFamily, 
   }
 
   async function recordPerformActivityStep() {
-    //TODO: Actually do this :) and update the client-side model with the result.
+    await volunteerFamiliesModel.performActivity(volunteerFamily.family?.id as string, stepActionRequirement as ActivityRequirement, performedAtLocal);
+    //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
     onClose();
   }
 
