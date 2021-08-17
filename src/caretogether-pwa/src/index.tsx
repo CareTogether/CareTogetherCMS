@@ -22,7 +22,9 @@ function AuthWrapper() {
     <>
       {isAuthenticated
         ? <ModelLoader>
-            <App />
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <App />
+            </React.Suspense>
           </ModelLoader>
         : <p>You are not signed in. You can try to refresh your page (F5) to reattempt signing in.</p>
       }

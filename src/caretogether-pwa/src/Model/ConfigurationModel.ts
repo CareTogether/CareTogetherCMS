@@ -12,6 +12,23 @@ export const organizationConfigurationData = selector({
     return dataResponse;
   }});
 
+export const organizationNameData = selector({
+  key: 'organizationNameData',
+  get: ({get}) => {
+    const organizationConfiguration = get(organizationConfigurationData);
+    return organizationConfiguration.organizationName as string;
+  }
+})
+
+export const locationNameData = selector({
+  key: 'locationNameData',
+  get: ({get}) => {
+    const organizationConfiguration = get(organizationConfigurationData);
+    const currentLocationId = get(currentLocationState);
+    return organizationConfiguration.locations?.find(x => x.id === currentLocationId)?.name as string;
+  }
+})
+
 export const policyData = selector({
   key: 'policyData',
   get: async ({get}) => {
