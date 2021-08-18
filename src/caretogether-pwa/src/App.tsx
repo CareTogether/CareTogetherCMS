@@ -48,12 +48,11 @@ const useStyles = makeStyles((theme) => ({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '0 8px',
-    ...theme.mixins.toolbar,
   },
   drawerHeaderOrganization: {
     margin: '0',
     paddingLeft: '8px',
-    fontSize: '18px'
+    fontSize: '16px'
   },
   drawerHeaderLocation: {
     margin: '0',
@@ -144,7 +143,9 @@ const useStyles = makeStyles((theme) => ({
       width: theme.spacing(9),
     },
   },
-  appBarSpacer: theme.mixins.toolbar,
+  appBarSpacer: {
+    height: 48,
+  },
   content: {
     flexGrow: 1,
     height: '100vh',
@@ -188,7 +189,7 @@ function App() {
       <CssBaseline />
       <Router>
         <AppBar position="absolute" className={clsx(classes.appBar, open && classes.appBarShift)}>
-          <Toolbar className={classes.toolbar}>
+          <Toolbar className={classes.toolbar} variant="dense">
             <IconButton
               edge="start"
               color="inherit"
