@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Container, Toolbar, Chip, Button, Menu, MenuItem, Divider } from '@material-ui/core';
-import { VolunteerFamily, FamilyAdultRelationshipType, CustodialRelationshipType, FormUploadRequirement, ActionRequirement, ActivityRequirement, Person } from '../GeneratedClient';
+import { VolunteerFamily, FamilyAdultRelationshipType, FormUploadRequirement, ActionRequirement, ActivityRequirement, Person } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { adultActivityTypesData, adultDocumentTypesData, familyActivityTypesData, familyDocumentTypesData } from '../Model/ConfigurationModel';
 import { RoleApprovalStatus } from '../GeneratedClient';
