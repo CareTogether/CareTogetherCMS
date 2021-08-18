@@ -167,7 +167,7 @@ export function VolunteerFamilyPanel({volunteerFamilyId}: VolunteerFamilyPanelPr
     </Menu>
     {(recordAdultStepParameter && <RecordVolunteerAdultStepDialog volunteerFamily={volunteerFamily} adult={recordAdultStepParameter.adult}
       stepActionRequirement={recordAdultStepParameter.requirement} onClose={() => setRecordAdultStepParameter(null)} />) || null}
-    <Divider />
+    {/* <Divider />
     <Toolbar variant="dense" disableGutters={true}>
       <h3 className={classes.sectionHeading}>Children</h3>
       &nbsp;
@@ -197,6 +197,6 @@ export function VolunteerFamilyPanel({volunteerFamilyId}: VolunteerFamilyPanelPr
           </ul>
         </Container>
       </React.Fragment>
-    ))}
+    ))} */}
   </Container>);
 }
