@@ -2,6 +2,7 @@
 using CareTogether.Resources;
 using Nito.AsyncEx;
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
@@ -115,12 +116,10 @@ namespace CareTogether.Managers
 
                         var createPersonResult = await communitiesResource.ExecutePersonCommandAsync(organizationId, locationId,
                             createPersonSubcommand, user.UserId);
-
                         if (createPersonResult.TryPickT0(out var person, out var notFound1))
                         {
                             var addPersonToFamilyResult = await communitiesResource.ExecuteFamilyCommandAsync(organizationId, locationId,
                                 addAdultToFamilySubcommand, user.UserId);
-
                             if (addPersonToFamilyResult.TryPickT0(out var family, out var notFound2))
                             {
                                 var families = communitiesResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
@@ -137,6 +136,46 @@ namespace CareTogether.Managers
                         }
                         break;
                     }
+                case CreateVolunteerFamilyWithNewAdultCommand c:
+                    {
+                        var adultPersonId = Guid.NewGuid();
+                        var familyId = Guid.NewGuid();
+                        var createPersonSubcommand = new CreatePerson(adultPersonId, null, c.FirstName, c.LastName, c.Age);
+                        var createFamilySubcommand = new CreateFamily(familyId,
+                            new List<(Guid, FamilyAdultRelationshipInfo)>
+                            {
+                                (adultPersonId, c.FamilyAdultRelationshipInfo)
+                            }, new List<Guid>(), new List<CustodialRelationship>());
+                        var activateVolunteerFamilySubcommand = new ActivateVolunteerFamily(familyId);
+
+                        //TODO: Authorize the subcommands via the policy evaluation engine
+
+                        var createPersonResult = await communitiesResource.ExecutePersonCommandAsync(organizationId, locationId,
+                            createPersonSubcommand, user.UserId);
+                        if (createPersonResult.TryPickT0(out var person, out var notFound1))
+                        {
+                            var createFamilyResult = await communitiesResource.ExecuteFamilyCommandAsync(organizationId, locationId,
+                                createFamilySubcommand, user.UserId);
+                            if (createFamilyResult.TryPickT0(out var family, out var notFound2))
+                            {
+                                var activateVolunteerFamilyResult = await approvalsResource.ExecuteVolunteerFamilyCommandAsync(organizationId, locationId,
+                                    activateVolunteerFamilySubcommand, user.UserId);
+                                if (activateVolunteerFamilyResult.TryPickT0(out var volunteerFamilyEntry, out var notFound3))
+                                {
+                                    var families = communitiesResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+                                    var contacts = contactsResource.ListContactsAsync(organizationId, locationId).Result;
+
+                                    var disclosedVolunteerFamily = await policyEvaluationEngine.DiscloseVolunteerFamilyAsync(user,
+                                        await ToVolunteerFamilyAsync(organizationId, locationId, volunteerFamilyEntry, families, contacts));
+                                    return disclosedVolunteerFamily;
+                                }
+                            }
+                        }
+                        break;
+                    }
+                default:
+                    throw new NotImplementedException(
+                        $"The command type '{command.GetType().FullName}' has not been implemented.");
             }
 
             return ManagerResult.NotFound; //TODO: Pass-through reason code?

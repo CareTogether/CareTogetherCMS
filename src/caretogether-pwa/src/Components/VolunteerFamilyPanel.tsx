@@ -12,6 +12,7 @@ import { RecordVolunteerFamilyStepDialog } from './RecordVolunteerFamilyStepDial
 import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
 import { RecordVolunteerAdultStepDialog } from './RecordVolunteerAdultStepDialog';
 import { AddAdultDialog } from './AddAdultDialog';
+import { format } from 'date-fns';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -98,10 +99,10 @@ export function VolunteerFamilyPanel({volunteerFamilyId}: VolunteerFamilyPanelPr
     </div>
     <ul>
       {volunteerFamily.approvalFormUploads?.map((upload, i) => (
-        <li key={i}>{upload.formName} @ {upload.timestampUtc?.toDateString()}</li>
+        <li key={i}>{upload.formName} {upload.timestampUtc && format(upload.timestampUtc, "yyyy/MM/dd hh:mm aa")}</li>
       ))}
       {volunteerFamily.approvalActivitiesPerformed?.map((activity, i) => (
-        <li key={i}>{activity.activityName} @ {activity.timestampUtc?.toDateString()}</li>
+        <li key={i}>{activity.activityName} {activity.timestampUtc && format(activity.timestampUtc, "yyyy/MM/dd hh:mm aa")}</li>
       ))}
     </ul>
     <Divider />
@@ -143,10 +144,10 @@ export function VolunteerFamilyPanel({volunteerFamilyId}: VolunteerFamilyPanelPr
           </dl>
           <ul>
             {volunteerFamily.individualVolunteers?.[adult.item1.id].approvalFormUploads?.map((upload, i) => (
-              <li key={i}>{upload.formName} @ {upload.timestampUtc?.toDateString()}</li>
+              <li key={i}>{upload.formName} {upload.timestampUtc && format(upload.timestampUtc, "yyyy/MM/dd hh:mm aa")}</li>
             ))}
             {volunteerFamily.individualVolunteers?.[adult.item1.id].approvalActivitiesPerformed?.map((activity, i) => (
-              <li key={i}>{activity.activityName} @ {activity.timestampUtc?.toDateString()}</li>
+              <li key={i}>{activity.activityName} {activity.timestampUtc && format(activity.timestampUtc, "yyyy/MM/dd hh:mm aa")}</li>
             ))}
           </ul>
         </Container>

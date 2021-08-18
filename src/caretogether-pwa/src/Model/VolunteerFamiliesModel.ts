@@ -1,5 +1,5 @@
 import { atom, useRecoilCallback } from "recoil";
-import { ActivityRequirement, AddAdultToFamilyCommand, Age, ApprovalCommand, FamilyAdultRelationshipInfo, FamilyAdultRelationshipType, FormUploadRequirement, PerformVolunteerActivity, PerformVolunteerFamilyActivity, UploadVolunteerFamilyForm, UploadVolunteerForm, VolunteerCommand, VolunteerFamiliesClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
+import { ActivityRequirement, AddAdultToFamilyCommand, Age, ApprovalCommand, CreateVolunteerFamilyWithNewAdultCommand, FamilyAdultRelationshipInfo, FamilyAdultRelationshipType, FormUploadRequirement, PerformVolunteerActivity, PerformVolunteerFamilyActivity, UploadVolunteerFamilyForm, UploadVolunteerForm, VolunteerCommand, VolunteerFamiliesClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { uploadFileToTenant } from "./FilesModel";
@@ -77,11 +77,12 @@ function useApprovalCommandCallback<T extends unknown[]>(
       const client = new VolunteerFamiliesClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
       const updatedFamily = await client.submitApprovalCommand(organizationId, locationId, command);
 
-      set(volunteerFamiliesData, current => {
-        return current.map(currentEntry => currentEntry.family?.id === volunteerFamilyId
+      set(volunteerFamiliesData, current =>
+        current.some(currentEntry => currentEntry.family?.id === volunteerFamilyId)
+        ? current.map(currentEntry => currentEntry.family?.id === volunteerFamilyId
           ? updatedFamily
-          : currentEntry);
-      });
+          : currentEntry)
+        : current.concat(updatedFamily));
     };
     return asyncCallback;
   })
@@ -152,12 +153,30 @@ export function useVolunteerFamiliesModel() {
       });
       return command;
     });
+  const createVolunteerFamilyWithNewAdult = useApprovalCommandCallback(
+    async (firstName: string, lastName: string, age: Age,
+      isInHousehold: boolean, isPrimaryFamilyContact: boolean, relationshipToFamily?: FamilyAdultRelationshipType,
+        familyRelationshipNotes?: string, safetyRiskNotes?: string) => {
+      const command = new CreateVolunteerFamilyWithNewAdultCommand();
+      command.firstName = firstName;
+      command.lastName = lastName;
+      command.age = age;
+      command.familyAdultRelationshipInfo = new FamilyAdultRelationshipInfo({
+        familyRelationshipNotes: familyRelationshipNotes,
+        isInHousehold: isInHousehold,
+        isPrimaryFamilyContact: isPrimaryFamilyContact,
+        relationshipToFamily: relationshipToFamily,
+        safetyRiskNotes: safetyRiskNotes
+      });
+      return command;
+    });
   
   return {
     uploadFormFamily,
     performActivityFamily,
     uploadFormPerson,
     performActivityPerson,
-    addAdult
+    addAdult,
+    createVolunteerFamilyWithNewAdult
   };
 }

@@ -2416,9 +2416,9 @@
         "discriminator": {
           "propertyName": "discriminator",
           "mapping": {
+            "ActivateVolunteerFamily": "#/components/schemas/ActivateVolunteerFamily",
             "DeactivateVolunteerFamily": "#/components/schemas/DeactivateVolunteerFamily",
             "PerformVolunteerFamilyActivity": "#/components/schemas/PerformVolunteerFamilyActivity",
-            "ReactivateVolunteerFamily": "#/components/schemas/ReactivateVolunteerFamily",
             "SetVolunteerFamilyNote": "#/components/schemas/SetVolunteerFamilyNote",
             "UploadVolunteerFamilyForm": "#/components/schemas/UploadVolunteerFamilyForm"
           }
@@ -2437,6 +2437,17 @@
             "type": "string"
           }
         }
+      },
+      "ActivateVolunteerFamily": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerFamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false
+          }
+        ]
       },
       "DeactivateVolunteerFamily": {
         "allOf": [
@@ -2477,17 +2488,6 @@
                 "format": "guid"
               }
             }
-          }
-        ]
-      },
-      "ReactivateVolunteerFamily": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/VolunteerFamilyCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false
           }
         ]
       },
@@ -2672,7 +2672,8 @@
         "discriminator": {
           "propertyName": "discriminator",
           "mapping": {
-            "AddAdultToFamilyCommand": "#/components/schemas/AddAdultToFamilyCommand"
+            "AddAdultToFamilyCommand": "#/components/schemas/AddAdultToFamilyCommand",
+            "CreateVolunteerFamilyWithNewAdultCommand": "#/components/schemas/CreateVolunteerFamilyWithNewAdultCommand"
           }
         },
         "x-abstract": true,
@@ -2699,6 +2700,43 @@
                 "type": "string",
                 "format": "guid"
               },
+              "firstName": {
+                "type": "string",
+                "nullable": true
+              },
+              "lastName": {
+                "type": "string",
+                "nullable": true
+              },
+              "age": {
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/Age"
+                  }
+                ]
+              },
+              "familyAdultRelationshipInfo": {
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "CreateVolunteerFamilyWithNewAdultCommand": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ApprovalCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
               "firstName": {
                 "type": "string",
                 "nullable": true

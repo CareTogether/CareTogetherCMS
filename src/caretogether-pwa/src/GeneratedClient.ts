@@ -3986,6 +3986,11 @@ export abstract class VolunteerFamilyCommand implements IVolunteerFamilyCommand 
 
     static fromJS(data: any): VolunteerFamilyCommand {
         data = typeof data === 'object' ? data : {};
+        if (data["discriminator"] === "ActivateVolunteerFamily") {
+            let result = new ActivateVolunteerFamily();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "DeactivateVolunteerFamily") {
             let result = new DeactivateVolunteerFamily();
             result.init(data);
@@ -3993,11 +3998,6 @@ export abstract class VolunteerFamilyCommand implements IVolunteerFamilyCommand 
         }
         if (data["discriminator"] === "PerformVolunteerFamilyActivity") {
             let result = new PerformVolunteerFamilyActivity();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "ReactivateVolunteerFamily") {
-            let result = new ReactivateVolunteerFamily();
             result.init(data);
             return result;
         }
@@ -4024,6 +4024,34 @@ export abstract class VolunteerFamilyCommand implements IVolunteerFamilyCommand 
 
 export interface IVolunteerFamilyCommand {
     familyId?: string;
+}
+
+export class ActivateVolunteerFamily extends VolunteerFamilyCommand implements IActivateVolunteerFamily {
+
+    constructor(data?: IActivateVolunteerFamily) {
+        super(data);
+        this._discriminator = "ActivateVolunteerFamily";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+    }
+
+    static fromJS(data: any): ActivateVolunteerFamily {
+        data = typeof data === 'object' ? data : {};
+        let result = new ActivateVolunteerFamily();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IActivateVolunteerFamily extends IVolunteerFamilyCommand {
 }
 
 export class DeactivateVolunteerFamily extends VolunteerFamilyCommand implements IDeactivateVolunteerFamily {
@@ -4100,34 +4128,6 @@ export interface IPerformVolunteerFamilyActivity extends IVolunteerFamilyCommand
     activityName?: string | undefined;
     performedAtUtc?: Date;
     performedByPersonId?: string;
-}
-
-export class ReactivateVolunteerFamily extends VolunteerFamilyCommand implements IReactivateVolunteerFamily {
-
-    constructor(data?: IReactivateVolunteerFamily) {
-        super(data);
-        this._discriminator = "ReactivateVolunteerFamily";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-    }
-
-    static fromJS(data: any): ReactivateVolunteerFamily {
-        data = typeof data === 'object' ? data : {};
-        let result = new ReactivateVolunteerFamily();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IReactivateVolunteerFamily extends IVolunteerFamilyCommand {
 }
 
 export class SetVolunteerFamilyNote extends VolunteerFamilyCommand implements ISetVolunteerFamilyNote {
@@ -4485,6 +4485,11 @@ export abstract class ApprovalCommand implements IApprovalCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "CreateVolunteerFamilyWithNewAdultCommand") {
+            let result = new CreateVolunteerFamilyWithNewAdultCommand();
+            result.init(data);
+            return result;
+        }
         throw new Error("The abstract class 'ApprovalCommand' cannot be instantiated.");
     }
 
@@ -4542,6 +4547,52 @@ export class AddAdultToFamilyCommand extends ApprovalCommand implements IAddAdul
 
 export interface IAddAdultToFamilyCommand extends IApprovalCommand {
     familyId?: string;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    age?: Age | undefined;
+    familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo | undefined;
+}
+
+export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand implements ICreateVolunteerFamilyWithNewAdultCommand {
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    age?: Age | undefined;
+    familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo | undefined;
+
+    constructor(data?: ICreateVolunteerFamilyWithNewAdultCommand) {
+        super(data);
+        this._discriminator = "CreateVolunteerFamilyWithNewAdultCommand";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.firstName = _data["firstName"];
+            this.lastName = _data["lastName"];
+            this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
+            this.familyAdultRelationshipInfo = _data["familyAdultRelationshipInfo"] ? FamilyAdultRelationshipInfo.fromJS(_data["familyAdultRelationshipInfo"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): CreateVolunteerFamilyWithNewAdultCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateVolunteerFamilyWithNewAdultCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["firstName"] = this.firstName;
+        data["lastName"] = this.lastName;
+        data["age"] = this.age ? this.age.toJSON() : <any>undefined;
+        data["familyAdultRelationshipInfo"] = this.familyAdultRelationshipInfo ? this.familyAdultRelationshipInfo.toJSON() : <any>undefined;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface ICreateVolunteerFamilyWithNewAdultCommand extends IApprovalCommand {
     firstName?: string | undefined;
     lastName?: string | undefined;
     age?: Age | undefined;
