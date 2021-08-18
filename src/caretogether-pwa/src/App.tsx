@@ -22,19 +22,25 @@ import { Communities } from './Components/Communities';
 import { useRecoilValue } from 'recoil';
 import { locationNameData, organizationNameData } from './Model/ConfigurationModel';
 
+const copyrightStyles = makeStyles((theme) => ({
+  copyright: {
+    lineHeight: '3em'
+  }
+}));
+
 function Copyright() {
+  const classes = copyrightStyles();
   return (
-    <Typography variant="body2" color="textSecondary" align="center">
-      {'Powered by '}
+    <Typography variant="body2" color="textSecondary" align="center" className={classes.copyright}>
+      {' © '} {new Date().getFullYear()} &nbsp;
       <a color="inherit" href="https://caretogether.io/" target="_blank" rel="noreferrer">
         CareTogether CMS
       </a><br />
-      {' © '} {new Date().getFullYear()}
     </Typography>
   );
 }
 
-const drawerWidth = 240;
+const drawerWidth = 200;
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -48,12 +54,11 @@ const useStyles = makeStyles((theme) => ({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '0 8px',
-    ...theme.mixins.toolbar,
   },
   drawerHeaderOrganization: {
     margin: '0',
     paddingLeft: '8px',
-    fontSize: '18px'
+    fontSize: '16px'
   },
   drawerHeaderLocation: {
     margin: '0',
@@ -144,7 +149,9 @@ const useStyles = makeStyles((theme) => ({
       width: theme.spacing(9),
     },
   },
-  appBarSpacer: theme.mixins.toolbar,
+  appBarSpacer: {
+    height: 48,
+  },
   content: {
     flexGrow: 1,
     height: '100vh',
@@ -188,7 +195,7 @@ function App() {
       <CssBaseline />
       <Router>
         <AppBar position="absolute" className={clsx(classes.appBar, open && classes.appBarShift)}>
-          <Toolbar className={classes.toolbar}>
+          <Toolbar className={classes.toolbar} variant="dense">
             <IconButton
               edge="start"
               color="inherit"
@@ -271,7 +278,7 @@ function App() {
                   <Communities />
                 </Route>
                 <Route>
-                  <Redirect to="/arrangements" />
+                  <Redirect to="/volunteers" />
                 </Route>
               </Switch>
             </React.Suspense>

@@ -65,7 +65,9 @@ export function VolunteerFamilyPanel({volunteerFamilyId}: VolunteerFamilyPanelPr
   return (
   <Container>
     <Toolbar variant="dense" disableGutters={true}>
-      <h3 className={classes.sectionHeading}>Family</h3>
+      <h3 className={classes.sectionHeading}>{
+        volunteerFamily.family?.adults?.filter(adult => adult.item2?.isPrimaryFamilyContact)[0]?.item1?.lastName + " Family"}
+      </h3>
       &nbsp;
       <Button aria-controls="family-record-menu" aria-haspopup="true"
         variant="contained" color="default" size="small" className={classes.button}

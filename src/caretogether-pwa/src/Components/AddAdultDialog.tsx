@@ -87,7 +87,9 @@ export function AddAdultDialog({volunteerFamily, open, onClose}: AddAdultDialogP
 
   return (
     <Dialog open={open} onClose={onClose} aria-labelledby="add-adult-title">
-      <DialogTitle id="add-adult-title">Add Adult to Family</DialogTitle>
+      <DialogTitle id="add-adult-title">
+        Add Adult to {volunteerFamily.family?.adults?.filter(adult => adult.item2?.isPrimaryFamilyContact)[0]?.item1?.lastName} Family
+      </DialogTitle>
       <DialogContent>
         {/* <DialogContentText>
           Provide the basic information needed for this adult.
