@@ -676,6 +676,50 @@ export class VolunteerFamiliesClient {
         }
         return Promise.resolve<VolunteerFamily>(<any>null);
     }
+
+    submitApprovalCommand(organizationId: string, locationId: string, command: ApprovalCommand): Promise<VolunteerFamily> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/VolunteerFamilies/addAdult";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (locationId === undefined || locationId === null)
+            throw new Error("The parameter 'locationId' must be defined.");
+        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(command);
+
+        let options_ = <RequestInit>{
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSubmitApprovalCommand(_response);
+        });
+    }
+
+    protected processSubmitApprovalCommand(response: Response): Promise<VolunteerFamily> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = VolunteerFamily.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<VolunteerFamily>(<any>null);
+    }
 }
 
 export class OrganizationConfiguration implements IOrganizationConfiguration {
@@ -4415,6 +4459,93 @@ export interface IUploadVolunteerForm extends IVolunteerCommand {
     formVersion?: string | undefined;
     uploadedFileName?: string | undefined;
     uploadedDocumentId?: string;
+}
+
+export abstract class ApprovalCommand implements IApprovalCommand {
+
+    protected _discriminator: string;
+
+    constructor(data?: IApprovalCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        this._discriminator = "ApprovalCommand";
+    }
+
+    init(_data?: any) {
+    }
+
+    static fromJS(data: any): ApprovalCommand {
+        data = typeof data === 'object' ? data : {};
+        if (data["discriminator"] === "AddAdultToFamilyCommand") {
+            let result = new AddAdultToFamilyCommand();
+            result.init(data);
+            return result;
+        }
+        throw new Error("The abstract class 'ApprovalCommand' cannot be instantiated.");
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["discriminator"] = this._discriminator; 
+        return data; 
+    }
+}
+
+export interface IApprovalCommand {
+}
+
+export class AddAdultToFamilyCommand extends ApprovalCommand implements IAddAdultToFamilyCommand {
+    familyId?: string;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    age?: Age | undefined;
+    familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo | undefined;
+
+    constructor(data?: IAddAdultToFamilyCommand) {
+        super(data);
+        this._discriminator = "AddAdultToFamilyCommand";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.familyId = _data["familyId"];
+            this.firstName = _data["firstName"];
+            this.lastName = _data["lastName"];
+            this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
+            this.familyAdultRelationshipInfo = _data["familyAdultRelationshipInfo"] ? FamilyAdultRelationshipInfo.fromJS(_data["familyAdultRelationshipInfo"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): AddAdultToFamilyCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new AddAdultToFamilyCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["familyId"] = this.familyId;
+        data["firstName"] = this.firstName;
+        data["lastName"] = this.lastName;
+        data["age"] = this.age ? this.age.toJSON() : <any>undefined;
+        data["familyAdultRelationshipInfo"] = this.familyAdultRelationshipInfo ? this.familyAdultRelationshipInfo.toJSON() : <any>undefined;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IAddAdultToFamilyCommand extends IApprovalCommand {
+    familyId?: string;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    age?: Age | undefined;
+    familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo | undefined;
 }
 
 export class ApiException extends Error {

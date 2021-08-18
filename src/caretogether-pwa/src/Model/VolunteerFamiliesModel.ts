@@ -1,5 +1,5 @@
 import { atom, useRecoilCallback } from "recoil";
-import { ActivityRequirement, FormUploadRequirement, PerformVolunteerActivity, PerformVolunteerFamilyActivity, UploadVolunteerFamilyForm, UploadVolunteerForm, VolunteerCommand, VolunteerFamiliesClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
+import { ActivityRequirement, AddAdultToFamilyCommand, Age, ApprovalCommand, FamilyAdultRelationshipInfo, FamilyAdultRelationshipType, FormUploadRequirement, PerformVolunteerActivity, PerformVolunteerFamilyActivity, UploadVolunteerFamilyForm, UploadVolunteerForm, VolunteerCommand, VolunteerFamiliesClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { uploadFileToTenant } from "./FilesModel";
@@ -65,6 +65,28 @@ function useVolunteerCommandCallback<T extends unknown[]>(
     (_organizationId, _locationId, volunteerFamilyId, personId, ...args) => callback(volunteerFamilyId, personId, ...args));
 }
 
+function useApprovalCommandCallback<T extends unknown[]>(
+  callback: (volunteerFamilyId: string, personId: string, ...args: T) => Promise<ApprovalCommand>) {
+  return useRecoilCallback(({snapshot, set}) => {
+    const asyncCallback = async (volunteerFamilyId: string, personId: string, ...args: T) => {
+      const organizationId = await snapshot.getPromise(currentOrganizationState);
+      const locationId = await snapshot.getPromise(currentLocationState);
+
+      const command = await callback(volunteerFamilyId, personId, ...args);
+
+      const client = new VolunteerFamiliesClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+      const updatedFamily = await client.submitApprovalCommand(organizationId, locationId, command);
+
+      set(volunteerFamiliesData, current => {
+        return current.map(currentEntry => currentEntry.family?.id === volunteerFamilyId
+          ? updatedFamily
+          : currentEntry);
+      });
+    };
+    return asyncCallback;
+  })
+}
+
 export function useVolunteerFamiliesModel() {
   const uploadFormFamily = useVolunteerFamilyCommandCallbackWithLocation(
     async (organizationId, locationId, volunteerFamilyId, requirement: FormUploadRequirement, formFile: File) => {
@@ -112,11 +134,30 @@ export function useVolunteerFamiliesModel() {
       command.performedAtUtc = new Date(performedAtLocal.toUTCString());
       return command;
     });
+  const addAdult = useApprovalCommandCallback(
+    async (volunteerFamilyId, firstName: string, lastName: string, age: Age,
+        isInHousehold: boolean, isPrimaryFamilyContact: boolean, relationshipToFamily?: FamilyAdultRelationshipType,
+        familyRelationshipNotes?: string, safetyRiskNotes?: string) => {
+      const command = new AddAdultToFamilyCommand();
+      command.familyId = volunteerFamilyId;
+      command.firstName = firstName;
+      command.lastName = lastName;
+      command.age = age;
+      command.familyAdultRelationshipInfo = new FamilyAdultRelationshipInfo({
+        familyRelationshipNotes: familyRelationshipNotes,
+        isInHousehold: isInHousehold,
+        isPrimaryFamilyContact: isPrimaryFamilyContact,
+        relationshipToFamily: relationshipToFamily,
+        safetyRiskNotes: safetyRiskNotes
+      });
+      return command;
+    });
   
   return {
     uploadFormFamily,
     performActivityFamily,
     uploadFormPerson,
-    performActivityPerson
+    performActivityPerson,
+    addAdult
   };
 }

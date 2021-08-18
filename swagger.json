@@ -663,6 +663,60 @@
           }
         }
       }
+    },
+    "/api/{organizationId}/{locationId}/VolunteerFamilies/addAdult": {
+      "post": {
+        "tags": [
+          "VolunteerFamilies"
+        ],
+        "operationId": "VolunteerFamilies_SubmitApprovalCommand",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 3
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VolunteerFamily"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2608,6 +2662,66 @@
               "uploadedDocumentId": {
                 "type": "string",
                 "format": "guid"
+              }
+            }
+          }
+        ]
+      },
+      "ApprovalCommand": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "discriminator",
+          "mapping": {
+            "AddAdultToFamilyCommand": "#/components/schemas/AddAdultToFamilyCommand"
+          }
+        },
+        "x-abstract": true,
+        "additionalProperties": false,
+        "required": [
+          "discriminator"
+        ],
+        "properties": {
+          "discriminator": {
+            "type": "string"
+          }
+        }
+      },
+      "AddAdultToFamilyCommand": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ApprovalCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "familyId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "firstName": {
+                "type": "string",
+                "nullable": true
+              },
+              "lastName": {
+                "type": "string",
+                "nullable": true
+              },
+              "age": {
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/Age"
+                  }
+                ]
+              },
+              "familyAdultRelationshipInfo": {
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
+                  }
+                ]
               }
             }
           }
