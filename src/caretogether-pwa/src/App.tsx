@@ -272,7 +272,7 @@ function App() {
                   <Communities />
                 </Route>
                 <Route>
-                  <Redirect to="/arrangements" />
+                  <Redirect to="/volunteers" />
                 </Route>
               </Switch>
             </React.Suspense>
