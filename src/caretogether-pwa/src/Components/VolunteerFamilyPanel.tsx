@@ -58,6 +58,9 @@ export function VolunteerFamilyPanel({volunteerFamilyId}: VolunteerFamilyPanelPr
     setRecordAdultStepParameter({requirement, adult});
   }
 
+  const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
+  const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
+
   return (
   <Container>
     <Toolbar variant="dense" disableGutters={true}>
@@ -103,6 +106,7 @@ export function VolunteerFamilyPanel({volunteerFamilyId}: VolunteerFamilyPanelPr
       <h3 className={classes.sectionHeading}>Adults</h3>
       &nbsp;
       <Button
+        onClick={() => setAddAdultDialogOpen(true)}
         variant="contained" color="default" size="small" className={classes.button}
         startIcon={<AddCircleIcon />}>
         Add Adult
@@ -166,6 +170,7 @@ export function VolunteerFamilyPanel({volunteerFamilyId}: VolunteerFamilyPanelPr
       <h3 className={classes.sectionHeading}>Children</h3>
       &nbsp;
       <Button
+        onClick={() => setAddChildDialogOpen(true)}
         variant="contained" color="default" size="small" className={classes.button}
         startIcon={<AddCircleIcon />}>
         Add Child
