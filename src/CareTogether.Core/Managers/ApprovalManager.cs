@@ -161,13 +161,16 @@ namespace CareTogether.Managers
             return new VolunteerFamily(family,
                 entry.ApprovalFormUploads, entry.ApprovalActivitiesPerformed,
                 volunteerFamilyApprovalStatus.FamilyRoleApprovals,
-                volunteerFamilyApprovalStatus.IndividualVolunteers.Where(x => entry.IndividualEntries.ContainsKey(x.Key)).ToImmutableDictionary(
+                volunteerFamilyApprovalStatus.IndividualVolunteers.ToImmutableDictionary(
                     x => x.Key,
                     x =>
                     {
-                        var individualInfo = entry.IndividualEntries[x.Key];
-                        return new Volunteer(individualInfo.ApprovalFormUploads, individualInfo.ApprovalActivitiesPerformed,
-                            x.Value.IndividualRoleApprovals);
+                        if (entry.IndividualEntries.TryGetValue(x.Key, out var individualInfo))
+                            return new Volunteer(individualInfo.ApprovalFormUploads, individualInfo.ApprovalActivitiesPerformed,
+                                x.Value.IndividualRoleApprovals);
+                        else
+                            return new Volunteer(ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty,
+                                ImmutableDictionary<string, RoleApprovalStatus>.Empty);
                     }));
         }
     }
