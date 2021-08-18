@@ -1,7 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
 import { fade, makeStyles } from '@material-ui/core/styles';
-import { Typography, InputBase, CssBaseline, AppBar, Toolbar, IconButton, Badge, Drawer, Divider, List } from '@material-ui/core';
+import { Typography, InputBase, CssBaseline, AppBar, Toolbar, IconButton, Badge, Drawer, Divider, List, BottomNavigation, BottomNavigationAction, useMediaQuery, useTheme } from '@material-ui/core';
 import PermPhoneMsgIcon from '@material-ui/icons/PermPhoneMsg';
 import EmojiPeopleIcon from '@material-ui/icons/EmojiPeople';
 import SearchIcon from '@material-ui/icons/Search';
@@ -10,7 +10,7 @@ import MenuIcon from '@material-ui/icons/Menu';
 import NotificationsIcon from '@material-ui/icons/Notifications';
 import AssignmentIcon from '@material-ui/icons/Assignment';
 import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
-import { Route, Switch, Redirect, BrowserRouter as Router } from "react-router-dom";
+import { Route, Switch, Redirect, BrowserRouter as Router, Link } from "react-router-dom";
 import { ListItemLink } from './Components/ListItemLink';
 import { Arrangements } from './Components/Arrangements';
 import { Referrals } from './Components/Referrals';
@@ -153,7 +153,12 @@ const useStyles = makeStyles((theme) => ({
   container: {
     paddingTop: theme.spacing(4),
     paddingBottom: theme.spacing(4),
-  }
+  },
+  stickToBottom: {
+    width: '100%',
+    position: 'fixed',
+    bottom: 0,
+  },
 }));
 
 const mainListItems = (
@@ -179,6 +184,10 @@ function App() {
   const handleDrawerClose = () => {
     setOpen(false);
   };
+  const [value, setValue] = React.useState(0);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const organizationName = useRecoilValue(organizationNameData);
   const locationName = useRecoilValue(locationNameData);
@@ -187,7 +196,7 @@ function App() {
     <div className={classes.root}>
       <CssBaseline />
       <Router>
-        <AppBar position="absolute" className={clsx(classes.appBar, open && classes.appBarShift)}>
+        <AppBar position="absolute" className={clsx(classes.appBar, (open && !isMobile) && classes.appBarShift)}>
           <Toolbar className={classes.toolbar}>
             <IconButton
               edge="start"
@@ -221,61 +230,74 @@ function App() {
             </IconButton>
           </Toolbar>
         </AppBar>
-        <Drawer
-          variant="permanent"
-          classes={{
-            paper: clsx(classes.drawerPaper, !open && classes.drawerPaperClose),
-          }}
-          open={open}
-        >
-          <div className={classes.drawerHeader}>
-            <header>
-              <p className={classes.drawerHeaderOrganization}>{organizationName}</p>
-              <p className={classes.drawerHeaderLocation}>{locationName}</p>
-            </header>
-            <IconButton onClick={handleDrawerClose}>
-              <ChevronLeftIcon />
-            </IconButton>
-          </div>
-          <Divider />
-          {mainListItems}
-          <Divider />
-          {secondaryListItems}
-          <Divider />
-          { open && <Copyright /> }
-        </Drawer>
+        {isMobile ? null :
+          <Drawer
+            variant="permanent"
+            classes={{
+              paper: clsx(classes.drawerPaper, !open && classes.drawerPaperClose),
+            }}
+            open={open}
+          >
+            <div className={classes.drawerHeader}>
+              {isMobile ? null : <header>
+                <p className={classes.drawerHeaderOrganization}>{organizationName}</p>
+                <p className={classes.drawerHeaderLocation}>{locationName}</p>
+              </header>}
+              <IconButton onClick={handleDrawerClose}>
+                <ChevronLeftIcon />
+              </IconButton>
+            </div>
+            <Divider />
+            {mainListItems}
+            <Divider />
+            {secondaryListItems}
+            <Divider />
+            {open && <Copyright />}
+          </Drawer>}
         <main className={classes.content}>
           <div className={classes.appBarSpacer} />
           {/* <Container maxWidth="lg" className={classes.container}> */}
-            <React.Suspense fallback={<div>Loading...</div>}>
-              <Switch>
-                <Route path="/arrangements">
-                  <Arrangements />
-                </Route>
-                <Route path="/referrals">
-                  <Referrals />
-                </Route>
-                <Route path="/volunteers">
-                  <Volunteers />
-                </Route>
-                <Route path="/volunteerApplications">
-                  <VolunteerApplications />
-                </Route>
-                <Route path="/volunteerProgress">
-                  <VolunteerProgress />
-                </Route>
-                <Route path="/contacts">
-                  <Contacts />
-                </Route>
-                <Route path="/communities">
-                  <Communities />
-                </Route>
-                <Route>
-                  <Redirect to="/arrangements" />
-                </Route>
-              </Switch>
-            </React.Suspense>
+          <React.Suspense fallback={<div>Loading...</div>}>
+            <Switch>
+              <Route path="/arrangements">
+                <Arrangements />
+              </Route>
+              <Route path="/referrals">
+                <Referrals />
+              </Route>
+              <Route path="/volunteers">
+                <Volunteers />
+              </Route>
+              <Route path="/volunteerApplications">
+                <VolunteerApplications />
+              </Route>
+              <Route path="/volunteerProgress">
+                <VolunteerProgress />
+              </Route>
+              <Route path="/contacts">
+                <Contacts />
+              </Route>
+              <Route path="/communities">
+                <Communities />
+              </Route>
+              <Route>
+                <Redirect to="/arrangements" />
+              </Route>
+            </Switch>
+          </React.Suspense>
           {/* </Container> */}
+          {isMobile ? <BottomNavigation
+            value={value}
+            onChange={(event, newValue) => {
+              setValue(newValue);
+            }}
+            showLabels
+            className={classes.stickToBottom}
+          >
+            <BottomNavigationAction component={Link} to="/volunteers" label="Volunteers" icon={<EmojiPeopleIcon />} />
+            <BottomNavigationAction component={Link} to="/volunteerApplications" label="Applications" icon={<AssignmentIcon />} />
+            <BottomNavigationAction component={Link} to="/volunteerProgress" label="Progress" icon={<AssignmentTurnedInIcon />} />
+          </BottomNavigation> : null}
         </main>
       </Router>
     </div>
