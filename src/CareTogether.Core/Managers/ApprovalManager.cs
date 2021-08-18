@@ -100,6 +100,47 @@ namespace CareTogether.Managers
             else
                 return notFound;
         }
+        public async Task<ManagerResult<VolunteerFamily>> ExecuteApprovalCommandAsync(Guid organizationId, Guid locationId,
+            AuthorizedUser user, ApprovalCommand command)
+        {
+            switch (command)
+            {
+                case AddAdultToFamilyCommand c:
+                    {
+                        var adultPersonId = Guid.NewGuid();
+                        var createPersonSubcommand = new CreatePerson(adultPersonId, null, c.FirstName, c.LastName, c.Age);
+                        var addAdultToFamilySubcommand = new AddAdultToFamily(c.FamilyId, adultPersonId, c.FamilyAdultRelationshipInfo);
+
+                        //TODO: Authorize the subcommands via the policy evaluation engine
+
+                        var createPersonResult = await communitiesResource.ExecutePersonCommandAsync(organizationId, locationId,
+                            createPersonSubcommand, user.UserId);
+
+                        if (createPersonResult.TryPickT0(out var person, out var notFound1))
+                        {
+                            var addPersonToFamilyResult = await communitiesResource.ExecuteFamilyCommandAsync(organizationId, locationId,
+                                addAdultToFamilySubcommand, user.UserId);
+
+                            if (addPersonToFamilyResult.TryPickT0(out var family, out var notFound2))
+                            {
+                                var families = communitiesResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+                                var contacts = contactsResource.ListContactsAsync(organizationId, locationId).Result;
+
+                                var volunteerFamilyResult = await approvalsResource.GetVolunteerFamilyAsync(organizationId, locationId, c.FamilyId);
+                                if (volunteerFamilyResult.TryPickT0(out var volunteerFamilyEntry, out var notFound3))
+                                {
+                                    var disclosedVolunteerFamily = await policyEvaluationEngine.DiscloseVolunteerFamilyAsync(user,
+                                        await ToVolunteerFamilyAsync(organizationId, locationId, volunteerFamilyEntry, families, contacts));
+                                    return disclosedVolunteerFamily;
+                                }
+                            }
+                        }
+                        break;
+                    }
+            }
+
+            return ManagerResult.NotFound; //TODO: Pass-through reason code?
+        }
 
 
         private async Task<VolunteerFamily> ToVolunteerFamilyAsync(Guid organizationId, Guid locationId,
