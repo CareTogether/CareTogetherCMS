@@ -22,19 +22,25 @@ import { Communities } from './Components/Communities';
 import { useRecoilValue } from 'recoil';
 import { locationNameData, organizationNameData } from './Model/ConfigurationModel';
 
+const copyrightStyles = makeStyles((theme) => ({
+  copyright: {
+    lineHeight: '3em'
+  }
+}));
+
 function Copyright() {
+  const classes = copyrightStyles();
   return (
-    <Typography variant="body2" color="textSecondary" align="center">
-      {'Powered by '}
+    <Typography variant="body2" color="textSecondary" align="center" className={classes.copyright}>
+      {' © '} {new Date().getFullYear()} &nbsp;
       <a color="inherit" href="https://caretogether.io/" target="_blank" rel="noreferrer">
         CareTogether CMS
       </a><br />
-      {' © '} {new Date().getFullYear()}
     </Typography>
   );
 }
 
-const drawerWidth = 240;
+const drawerWidth = 200;
 
 const useStyles = makeStyles((theme) => ({
   root: {
