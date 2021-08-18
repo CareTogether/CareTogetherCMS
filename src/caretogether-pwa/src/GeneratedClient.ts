@@ -4485,6 +4485,11 @@ export abstract class ApprovalCommand implements IApprovalCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "CreateVolunteerFamilyWithNewAdultCommand") {
+            let result = new CreateVolunteerFamilyWithNewAdultCommand();
+            result.init(data);
+            return result;
+        }
         throw new Error("The abstract class 'ApprovalCommand' cannot be instantiated.");
     }
 
@@ -4542,6 +4547,52 @@ export class AddAdultToFamilyCommand extends ApprovalCommand implements IAddAdul
 
 export interface IAddAdultToFamilyCommand extends IApprovalCommand {
     familyId?: string;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    age?: Age | undefined;
+    familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo | undefined;
+}
+
+export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand implements ICreateVolunteerFamilyWithNewAdultCommand {
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    age?: Age | undefined;
+    familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo | undefined;
+
+    constructor(data?: ICreateVolunteerFamilyWithNewAdultCommand) {
+        super(data);
+        this._discriminator = "CreateVolunteerFamilyWithNewAdultCommand";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.firstName = _data["firstName"];
+            this.lastName = _data["lastName"];
+            this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
+            this.familyAdultRelationshipInfo = _data["familyAdultRelationshipInfo"] ? FamilyAdultRelationshipInfo.fromJS(_data["familyAdultRelationshipInfo"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): CreateVolunteerFamilyWithNewAdultCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateVolunteerFamilyWithNewAdultCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["firstName"] = this.firstName;
+        data["lastName"] = this.lastName;
+        data["age"] = this.age ? this.age.toJSON() : <any>undefined;
+        data["familyAdultRelationshipInfo"] = this.familyAdultRelationshipInfo ? this.familyAdultRelationshipInfo.toJSON() : <any>undefined;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface ICreateVolunteerFamilyWithNewAdultCommand extends IApprovalCommand {
     firstName?: string | undefined;
     lastName?: string | undefined;
     age?: Age | undefined;

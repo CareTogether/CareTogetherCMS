@@ -2672,7 +2672,8 @@
         "discriminator": {
           "propertyName": "discriminator",
           "mapping": {
-            "AddAdultToFamilyCommand": "#/components/schemas/AddAdultToFamilyCommand"
+            "AddAdultToFamilyCommand": "#/components/schemas/AddAdultToFamilyCommand",
+            "CreateVolunteerFamilyWithNewAdultCommand": "#/components/schemas/CreateVolunteerFamilyWithNewAdultCommand"
           }
         },
         "x-abstract": true,
@@ -2699,6 +2700,43 @@
                 "type": "string",
                 "format": "guid"
               },
+              "firstName": {
+                "type": "string",
+                "nullable": true
+              },
+              "lastName": {
+                "type": "string",
+                "nullable": true
+              },
+              "age": {
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/Age"
+                  }
+                ]
+              },
+              "familyAdultRelationshipInfo": {
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "CreateVolunteerFamilyWithNewAdultCommand": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ApprovalCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
               "firstName": {
                 "type": "string",
                 "nullable": true
