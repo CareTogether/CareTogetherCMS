@@ -161,7 +161,7 @@ namespace CareTogether.Managers
             return new VolunteerFamily(family,
                 entry.ApprovalFormUploads, entry.ApprovalActivitiesPerformed,
                 volunteerFamilyApprovalStatus.FamilyRoleApprovals,
-                volunteerFamilyApprovalStatus.IndividualVolunteers.ToImmutableDictionary(
+                volunteerFamilyApprovalStatus.IndividualVolunteers.Where(x => entry.IndividualEntries.ContainsKey(x.Key)).ToImmutableDictionary(
                     x => x.Key,
                     x =>
                     {
