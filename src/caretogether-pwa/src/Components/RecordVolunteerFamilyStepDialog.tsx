@@ -69,7 +69,7 @@ export function RecordVolunteerFamilyStepDialog({stepActionRequirement, voluntee
               <Button onClick={onClose} color="secondary">
                 Cancel
               </Button>
-              <Button onClick={recordUploadFormStep} color="primary">
+              <Button onClick={recordUploadFormStep} variant="contained" color="primary">
                 Upload
               </Button>
             </DialogActions>
@@ -91,7 +91,7 @@ export function RecordVolunteerFamilyStepDialog({stepActionRequirement, voluntee
               <Button onClick={onClose} color="secondary">
                 Cancel
               </Button>
-              <Button onClick={recordPerformActivityStep} color="primary">
+              <Button onClick={recordPerformActivityStep} variant="contained" color="primary">
                 Mark Complete
               </Button>
             </DialogActions>
