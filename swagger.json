@@ -2416,9 +2416,9 @@
         "discriminator": {
           "propertyName": "discriminator",
           "mapping": {
+            "ActivateVolunteerFamily": "#/components/schemas/ActivateVolunteerFamily",
             "DeactivateVolunteerFamily": "#/components/schemas/DeactivateVolunteerFamily",
             "PerformVolunteerFamilyActivity": "#/components/schemas/PerformVolunteerFamilyActivity",
-            "ReactivateVolunteerFamily": "#/components/schemas/ReactivateVolunteerFamily",
             "SetVolunteerFamilyNote": "#/components/schemas/SetVolunteerFamilyNote",
             "UploadVolunteerFamilyForm": "#/components/schemas/UploadVolunteerFamilyForm"
           }
@@ -2437,6 +2437,17 @@
             "type": "string"
           }
         }
+      },
+      "ActivateVolunteerFamily": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerFamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false
+          }
+        ]
       },
       "DeactivateVolunteerFamily": {
         "allOf": [
@@ -2477,17 +2488,6 @@
                 "format": "guid"
               }
             }
-          }
-        ]
-      },
-      "ReactivateVolunteerFamily": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/VolunteerFamilyCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false
           }
         ]
       },
