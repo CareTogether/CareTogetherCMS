@@ -1,16 +1,14 @@
 import { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@material-ui/core';
+import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@material-ui/core';
 import { VolunteerFamily, Age, ExactAge, FamilyAdultRelationshipType, AgeInYears } from '../GeneratedClient';
 import { useVolunteerFamiliesModel } from '../Model/VolunteerFamiliesModel';
 import WarningIcon from '@material-ui/icons/Warning';
-import { DatePicker, DateTimePicker } from '@material-ui/pickers';
-import { differenceInMonths, differenceInYears } from 'date-fns';
+import { DatePicker } from '@material-ui/pickers';
 
 const useStyles = makeStyles((theme) => ({
   form: {
     '& .MuiFormControl-root': {
-      //margin: theme.spacing(1)
     }
   },
   ageYears: {
@@ -33,7 +31,7 @@ export function AddAdultDialog({volunteerFamily, open, onClose}: AddAdultDialogP
     ageInYears: undefined as number | undefined,
     isInHousehold: true,
     isPrimaryFamilyContact: true,
-    relationshipToFamily: null as FamilyAdultRelationshipType | null,
+    relationshipToFamily: '' as FamilyAdultRelationshipType | '',
     familyRelationshipNotes: undefined as string | undefined,
     safetyRiskNotes: undefined as string | undefined
   });
@@ -52,15 +50,38 @@ export function AddAdultDialog({volunteerFamily, open, onClose}: AddAdultDialogP
   });
 
   async function addAdult() {
-    if (relationshipToFamily === null || firstName.length < 0 || lastName.length < 0) { //TODO: Actual validation!
+    if (firstName.length <= 0 || lastName.length <= 0) {
+      alert("First and last name are required. Try again.");
+    } else if (relationshipToFamily === '') { //TODO: Actual validation!
       alert("Family relationship was not selected. Try again.");
     } else {
+      let age: Age;
+      if (ageType === 'exact') {
+        age = new ExactAge();
+        (age as ExactAge).dateOfBirth = dateOfBirth;
+      } else {
+        age = new AgeInYears();
+        (age as AgeInYears).years = ageInYears;
+        (age as AgeInYears).asOf = new Date();
+      }
       await volunteerFamiliesModel.addAdult(volunteerFamily.family?.id as string,
-        firstName, lastName, ageType === 'exact' ? new ExactAge({dateOfBirth: dateOfBirth}) : new AgeInYears({ years: ageInYears, asOf: new Date() }),
-        isInHousehold, isPrimaryFamilyContact, relationshipToFamily,
+        firstName, lastName, age,
+        isInHousehold, isPrimaryFamilyContact, relationshipToFamily as FamilyAdultRelationshipType,
         familyRelationshipNotes, safetyRiskNotes);
       //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
       onClose();
+      // Since this dialog can be kept around, reset the state so the user can't accidentally submit previous values again.
+      setFields({
+        firstName: '',
+        lastName: '',
+        dateOfBirth: new Date(),
+        ageInYears: undefined as number | undefined,
+        isInHousehold: true,
+        isPrimaryFamilyContact: true,
+        relationshipToFamily: '' as FamilyAdultRelationshipType | '',
+        familyRelationshipNotes: undefined as string | undefined,
+        safetyRiskNotes: undefined as string | undefined
+      });
     }
   }
 
@@ -117,6 +138,9 @@ export function AddAdultDialog({volunteerFamily, open, onClose}: AddAdultDialogP
                   labelId="family-relationship-label" id="family-relationship"
                   value={relationshipToFamily}
                   onChange={e => setFields({...fields, relationshipToFamily: e.target.value as FamilyAdultRelationshipType})}>
+                    <MenuItem key="placeholder" value="" disabled>
+                      Select a relationship type
+                    </MenuItem>
                     {relationshipTypes.map(relationshipType =>
                       <MenuItem key={relationshipType} value={FamilyAdultRelationshipType[relationshipType as any]}>{relationshipType}</MenuItem>)}
                 </Select>
