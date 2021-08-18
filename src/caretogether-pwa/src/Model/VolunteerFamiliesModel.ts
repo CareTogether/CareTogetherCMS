@@ -1,5 +1,5 @@
 import { atom, useRecoilCallback } from "recoil";
-import { ActivityRequirement, AddAdultToFamilyCommand, Age, ApprovalCommand, FamilyAdultRelationshipInfo, FamilyAdultRelationshipType, FormUploadRequirement, PerformVolunteerActivity, PerformVolunteerFamilyActivity, ReactivateVolunteerFamily, UploadVolunteerFamilyForm, UploadVolunteerForm, VolunteerCommand, VolunteerFamiliesClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
+import { ActivityRequirement, AddAdultToFamilyCommand, Age, ApprovalCommand, FamilyAdultRelationshipInfo, FamilyAdultRelationshipType, FormUploadRequirement, PerformVolunteerActivity, PerformVolunteerFamilyActivity, UploadVolunteerFamilyForm, UploadVolunteerForm, VolunteerCommand, VolunteerFamiliesClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { uploadFileToTenant } from "./FilesModel";
@@ -138,9 +138,8 @@ export function useVolunteerFamiliesModel() {
     async (volunteerFamilyId, firstName: string, lastName: string, age: Age,
         isInHousehold: boolean, isPrimaryFamilyContact: boolean, relationshipToFamily?: FamilyAdultRelationshipType,
         familyRelationshipNotes?: string, safetyRiskNotes?: string) => {
-      const command = new AddAdultToFamilyCommand({
-        familyId: volunteerFamilyId
-      });
+      const command = new AddAdultToFamilyCommand();
+      command.familyId = volunteerFamilyId;
       command.firstName = firstName;
       command.lastName = lastName;
       command.age = age;

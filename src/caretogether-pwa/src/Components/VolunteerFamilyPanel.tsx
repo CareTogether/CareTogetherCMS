@@ -11,6 +11,7 @@ import { AgeText } from './AgeText';
 import { RecordVolunteerFamilyStepDialog } from './RecordVolunteerFamilyStepDialog';
 import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
 import { RecordVolunteerAdultStepDialog } from './RecordVolunteerAdultStepDialog';
+import { AddAdultDialog } from './AddAdultDialog';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -59,7 +60,7 @@ export function VolunteerFamilyPanel({volunteerFamilyId}: VolunteerFamilyPanelPr
   }
 
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
-  const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
+  //const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
 
   return (
   <Container>
@@ -112,6 +113,7 @@ export function VolunteerFamilyPanel({volunteerFamilyId}: VolunteerFamilyPanelPr
         Add Adult
       </Button>
     </Toolbar>
+    <AddAdultDialog volunteerFamily={volunteerFamily} open={addAdultDialogOpen} onClose={() => setAddAdultDialogOpen(false)} />
     {volunteerFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item2 && (
       <React.Fragment key={adult.item1.id}>
         <h4 className={classes.sectionHeading}>
@@ -170,7 +172,7 @@ export function VolunteerFamilyPanel({volunteerFamilyId}: VolunteerFamilyPanelPr
       <h3 className={classes.sectionHeading}>Children</h3>
       &nbsp;
       <Button
-        onClick={() => setAddChildDialogOpen(true)}
+        // onClick={() => setAddChildDialogOpen(true)}
         variant="contained" color="default" size="small" className={classes.button}
         startIcon={<AddCircleIcon />}>
         Add Child
