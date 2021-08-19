@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@material-ui/core';
-import { VolunteerFamily, Age, ExactAge, FamilyAdultRelationshipType, AgeInYears } from '../GeneratedClient';
+import { Age, ExactAge, FamilyAdultRelationshipType, AgeInYears } from '../GeneratedClient';
 import { useVolunteerFamiliesModel } from '../Model/VolunteerFamiliesModel';
 import WarningIcon from '@material-ui/icons/Warning';
 import { DatePicker } from '@material-ui/pickers';
@@ -63,7 +63,7 @@ export function CreateVolunteerFamilyDialog({open, onClose}: CreateVolunteerFami
         (age as AgeInYears).years = ageInYears;
         (age as AgeInYears).asOf = new Date();
       }
-      const newFamily = await volunteerFamiliesModel.createVolunteerFamilyWithNewAdult(
+      /*const newFamily =*/ await volunteerFamiliesModel.createVolunteerFamilyWithNewAdult(
         firstName, lastName, age,
         isInHousehold, isPrimaryFamilyContact, relationshipToFamily as FamilyAdultRelationshipType,
         familyRelationshipNotes, safetyRiskNotes);
