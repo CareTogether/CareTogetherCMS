@@ -210,7 +210,7 @@ function App() {
               color="inherit"
               aria-label="open drawer"
               onClick={handleDrawerOpen}
-              className={clsx(classes.menuButton, open && classes.menuButtonHidden)}
+              className={clsx(classes.menuButton, (open || isMobile) && classes.menuButtonHidden)}
             >
               <MenuIcon />
             </IconButton>
@@ -295,7 +295,7 @@ function App() {
           {/* </Container> */}
           {isMobile ? <BottomNavigation
             value={value}
-            onChange={(event, newValue) => {
+            onChange={(_, newValue) => {
               setValue(newValue);
             }}
             showLabels
