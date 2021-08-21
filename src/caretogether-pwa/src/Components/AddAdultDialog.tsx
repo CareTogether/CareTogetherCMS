@@ -27,14 +27,14 @@ export function AddAdultDialog({volunteerFamily, open, onClose}: AddAdultDialogP
   const [fields, setFields] = useState({
     firstName: '',
     lastName: '',
-    gender: undefined as Gender | undefined,
+    gender: null as Gender | null,
     dateOfBirth: null as Date | null,
-    ageInYears: undefined as number | undefined,
+    ageInYears: null as number | null,
     isInHousehold: true,
     isPrimaryFamilyContact: true,
     relationshipToFamily: '' as FamilyAdultRelationshipType | '',
-    notes: undefined as string | undefined,
-    concerns: undefined as string | undefined
+    notes: null as string | null,
+    concerns: null as string | null
   });
   const {
     firstName, lastName, gender, dateOfBirth, ageInYears,
@@ -57,7 +57,7 @@ export function AddAdultDialog({volunteerFamily, open, onClose}: AddAdultDialogP
       alert("Gender was not selected. Try again.");
     } else if (ageType === 'exact' && dateOfBirth == null) {
       alert("Date of birth was not specified. Try again.");
-    } else if (ageType === 'inYears' && typeof(ageInYears) === 'undefined') {
+    } else if (ageType === 'inYears' && ageInYears == null) {
       alert("Age in years was not specified. Try again.");
     } else if (relationshipToFamily === '') { //TODO: Actual validation!
       alert("Family relationship was not selected. Try again.");
@@ -68,27 +68,27 @@ export function AddAdultDialog({volunteerFamily, open, onClose}: AddAdultDialogP
         (age as ExactAge).dateOfBirth = (dateOfBirth == null ? undefined : dateOfBirth);
       } else {
         age = new AgeInYears();
-        (age as AgeInYears).years = ageInYears;
+        (age as AgeInYears).years = (ageInYears == null ? undefined : ageInYears);
         (age as AgeInYears).asOf = new Date();
       }
       await volunteerFamiliesModel.addAdult(volunteerFamily.family?.id as string,
-        firstName, lastName, gender, age,
+        firstName, lastName, gender as Gender, age,
         isInHousehold, isPrimaryFamilyContact, relationshipToFamily as FamilyAdultRelationshipType,
-        notes, concerns);
+        (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
       //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
       onClose();
       // Since this dialog can be kept around, reset the state so the user can't accidentally submit previous values again.
       setFields({
         firstName: '',
         lastName: '',
-        gender:  undefined as Gender | undefined,
+        gender: null as Gender | null,
         dateOfBirth: null as Date | null,
-        ageInYears: undefined as number | undefined,
+        ageInYears: null as number | null,
         isInHousehold: true,
         isPrimaryFamilyContact: true,
         relationshipToFamily: '' as FamilyAdultRelationshipType | '',
-        notes: undefined as string | undefined,
-        concerns: undefined as string | undefined
+        notes: null as string | null,
+        concerns: null as string | null
       });
     }
   }
@@ -116,7 +116,7 @@ export function AddAdultDialog({volunteerFamily, open, onClose}: AddAdultDialogP
               <FormControl component="fieldset">
                 <FormLabel component="legend">Gender:</FormLabel>
                 <RadioGroup aria-label="ageType" name="genderType" row
-                  value={typeof(gender) === 'undefined' ? null : Gender[gender]} onChange={e => { console.log(e.target.value); console.log(Gender[e.target.value as keyof typeof Gender]); setFields({...fields, gender: Gender[e.target.value as keyof typeof Gender]}); }}>
+                  value={gender == null ? null : Gender[gender]} onChange={e => setFields({...fields, gender: Gender[e.target.value as keyof typeof Gender]})}>
                   <FormControlLabel value={Gender[Gender.Male]} control={<Radio size="small" />} label="Male" />
                   <FormControlLabel value={Gender[Gender.Female]} control={<Radio size="small" />} label="Female" />
                   <FormControlLabel value={Gender[Gender.SeeNotes]} control={<Radio size="small" />} label="See Notes" />
@@ -146,7 +146,7 @@ export function AddAdultDialog({volunteerFamily, open, onClose}: AddAdultDialogP
                 <TextField
                   id="age-years" label="Age" className={classes.ageYears} size="small"
                   required type="number" disabled={ageType !== 'inYears'}
-                  value={ageInYears} onChange={e => setFields({...fields, ageInYears: Number.parseInt(e.target.value)})}
+                  value={ageInYears == null ? "" : ageInYears} onChange={e => setFields({...fields, ageInYears: Number.parseInt(e.target.value)})}
                   InputProps={{
                     endAdornment: <InputAdornment position="end">years</InputAdornment>,
                   }} />
@@ -193,7 +193,7 @@ export function AddAdultDialog({volunteerFamily, open, onClose}: AddAdultDialogP
                     </InputAdornment>
                   ),
                 }}
-                value={concerns} onChange={e => setFields({...fields, concerns: e.target.value})}
+                value={concerns == null ? "" : concerns} onChange={e => setFields({...fields, concerns: e.target.value})}
               />
             </Grid>
             <Grid item xs={12}>
@@ -201,7 +201,7 @@ export function AddAdultDialog({volunteerFamily, open, onClose}: AddAdultDialogP
                 id="notes"
                 label="Notes" placeholder="Space for any general notes"
                 multiline fullWidth variant="outlined" rows={2} rowsMax={5} size="small"
-                value={notes} onChange={e => setFields({...fields, notes: e.target.value})}
+                value={notes == null ? "" : notes} onChange={e => setFields({...fields, notes: e.target.value})}
               />
             </Grid>
           </Grid>
