@@ -1,5 +1,5 @@
 import { makeStyles } from '@material-ui/core/styles';
-import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Drawer, Fab } from '@material-ui/core';
+import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Drawer } from '@material-ui/core';
 import { ExactAge, AgeInYears } from '../GeneratedClient';
 import { differenceInYears } from 'date-fns';
 import { useRecoilValue } from 'recoil';
@@ -9,8 +9,6 @@ import { RoleApprovalStatus } from '../GeneratedClient';
 import React, { useState } from 'react';
 import clsx from 'clsx';
 import { VolunteerFamilyPanel } from './VolunteerFamilyPanel';
-import AddIcon from '@material-ui/icons/Add';
-import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -35,11 +33,6 @@ const useStyles = makeStyles((theme) => ({
     fontStyle: 'italic'
   },
   drawerPaper: {
-  },
-  fabAdd: {
-    position: 'fixed',
-    right: '30px',
-    bottom: '40px'
   }
 }));
 
@@ -63,7 +56,6 @@ function Volunteers() {
     || [];
 
   const [selectedVolunteerFamilyId, setSelectedVolunteerFamilyId] = useState<string | null>(null);
-  const [createVolunteerFamilyDialogOpen, setCreateVolunteerFamilyDialogOpen] = useState(false);
 
   return (
     <Grid container spacing={3}>
@@ -139,11 +131,6 @@ function Volunteers() {
             </TableBody>
           </Table>
         </TableContainer>
-        <Fab color="primary" aria-label="add" className={classes.fabAdd}
-          onClick={() => setCreateVolunteerFamilyDialogOpen(true)}>
-          <AddIcon />
-        </Fab>
-        <CreateVolunteerFamilyDialog open={createVolunteerFamilyDialogOpen} onClose={() => setCreateVolunteerFamilyDialogOpen(false)} /> {/* TODO: Also open the family panel to the created family! */}
         <Drawer anchor="right" classes={{
             paper: clsx(classes.drawerPaper),
           }} open={selectedVolunteerFamilyId !== null} onClose={() => setSelectedVolunteerFamilyId(null)}>

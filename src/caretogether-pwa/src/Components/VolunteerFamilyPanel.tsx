@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Container, Toolbar, Chip, Button, Menu, MenuItem, Divider } from '@material-ui/core';
-import { VolunteerFamily, FamilyAdultRelationshipType, FormUploadRequirement, ActionRequirement, ActivityRequirement, Person } from '../GeneratedClient';
+import { VolunteerFamily, FamilyAdultRelationshipType, CustodialRelationshipType, FormUploadRequirement, ActionRequirement, ActivityRequirement, Person } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { adultActivityTypesData, adultDocumentTypesData, familyActivityTypesData, familyDocumentTypesData } from '../Model/ConfigurationModel';
 import { RoleApprovalStatus } from '../GeneratedClient';
@@ -11,8 +11,6 @@ import { AgeText } from './AgeText';
 import { RecordVolunteerFamilyStepDialog } from './RecordVolunteerFamilyStepDialog';
 import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
 import { RecordVolunteerAdultStepDialog } from './RecordVolunteerAdultStepDialog';
-import { AddAdultDialog } from './AddAdultDialog';
-import { format } from 'date-fns';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -60,15 +58,10 @@ export function VolunteerFamilyPanel({volunteerFamilyId}: VolunteerFamilyPanelPr
     setRecordAdultStepParameter({requirement, adult});
   }
 
-  const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
-  //const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
-
   return (
   <Container>
     <Toolbar variant="dense" disableGutters={true}>
-      <h3 className={classes.sectionHeading}>{
-        volunteerFamily.family?.adults?.filter(adult => adult.item2?.isPrimaryFamilyContact)[0]?.item1?.lastName + " Family"}
-      </h3>
+      <h3 className={classes.sectionHeading}>Family</h3>
       &nbsp;
       <Button aria-controls="family-record-menu" aria-haspopup="true"
         variant="contained" color="default" size="small" className={classes.button}
@@ -99,10 +92,10 @@ export function VolunteerFamilyPanel({volunteerFamilyId}: VolunteerFamilyPanelPr
     </div>
     <ul>
       {volunteerFamily.approvalFormUploads?.map((upload, i) => (
-        <li key={i}>{upload.formName} {upload.timestampUtc && format(upload.timestampUtc, "yyyy/MM/dd hh:mm aa")}</li>
+        <li key={i}>{upload.formName} @ {upload.timestampUtc?.toDateString()}</li>
       ))}
       {volunteerFamily.approvalActivitiesPerformed?.map((activity, i) => (
-        <li key={i}>{activity.activityName} {activity.timestampUtc && format(activity.timestampUtc, "yyyy/MM/dd hh:mm aa")}</li>
+        <li key={i}>{activity.activityName} @ {activity.timestampUtc?.toDateString()}</li>
       ))}
     </ul>
     <Divider />
@@ -110,13 +103,11 @@ export function VolunteerFamilyPanel({volunteerFamilyId}: VolunteerFamilyPanelPr
       <h3 className={classes.sectionHeading}>Adults</h3>
       &nbsp;
       <Button
-        onClick={() => setAddAdultDialogOpen(true)}
         variant="contained" color="default" size="small" className={classes.button}
         startIcon={<AddCircleIcon />}>
         Add Adult
       </Button>
     </Toolbar>
-    <AddAdultDialog volunteerFamily={volunteerFamily} open={addAdultDialogOpen} onClose={() => setAddAdultDialogOpen(false)} />
     {volunteerFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item2 && (
       <React.Fragment key={adult.item1.id}>
         <h4 className={classes.sectionHeading}>
@@ -144,10 +135,10 @@ export function VolunteerFamilyPanel({volunteerFamilyId}: VolunteerFamilyPanelPr
           </dl>
           <ul>
             {volunteerFamily.individualVolunteers?.[adult.item1.id].approvalFormUploads?.map((upload, i) => (
-              <li key={i}>{upload.formName} {upload.timestampUtc && format(upload.timestampUtc, "yyyy/MM/dd hh:mm aa")}</li>
+              <li key={i}>{upload.formName} @ {upload.timestampUtc?.toDateString()}</li>
             ))}
             {volunteerFamily.individualVolunteers?.[adult.item1.id].approvalActivitiesPerformed?.map((activity, i) => (
-              <li key={i}>{activity.activityName} {activity.timestampUtc && format(activity.timestampUtc, "yyyy/MM/dd hh:mm aa")}</li>
+              <li key={i}>{activity.activityName} @ {activity.timestampUtc?.toDateString()}</li>
             ))}
           </ul>
         </Container>
@@ -170,12 +161,11 @@ export function VolunteerFamilyPanel({volunteerFamilyId}: VolunteerFamilyPanelPr
     </Menu>
     {(recordAdultStepParameter && <RecordVolunteerAdultStepDialog volunteerFamily={volunteerFamily} adult={recordAdultStepParameter.adult}
       stepActionRequirement={recordAdultStepParameter.requirement} onClose={() => setRecordAdultStepParameter(null)} />) || null}
-    {/* <Divider />
+    <Divider />
     <Toolbar variant="dense" disableGutters={true}>
       <h3 className={classes.sectionHeading}>Children</h3>
       &nbsp;
       <Button
-        // onClick={() => setAddChildDialogOpen(true)}
         variant="contained" color="default" size="small" className={classes.button}
         startIcon={<AddCircleIcon />}>
         Add Child
@@ -200,6 +190,6 @@ export function VolunteerFamilyPanel({volunteerFamilyId}: VolunteerFamilyPanelPr
           </ul>
         </Container>
       </React.Fragment>
-    ))} */}
+    ))}
   </Container>);
 }

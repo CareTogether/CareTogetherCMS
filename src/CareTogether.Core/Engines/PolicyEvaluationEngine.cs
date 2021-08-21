@@ -73,28 +73,24 @@ namespace CareTogether.Engines
             var individualVolunteerRoles = family.Adults.Select(x =>
             {
                 var (person, familyRelationship) = x;
+                var (formUploads, activities) = individualInfo[person.Id];
+
                 var individualRoles = new Dictionary<string, RoleApprovalStatus>();
-
-                if (individualInfo.TryGetValue(person.Id, out var personIndividualInfo))
+                foreach (var (roleName, rolePolicy) in policy.VolunteerRoles)
                 {
-                    var (formUploads, activities) = personIndividualInfo;
+                    var requirementsMet = rolePolicy.ApprovalRequirements.Select(requirement =>
+                        (requirement.RequiredToBeProspective, RequirementMet: requirement.ActionRequirement switch
+                        {
+                            FormUploadRequirement r => formUploads.Any(upload => upload.FormName == r.FormName),
+                            ActivityRequirement r => activities.Any(activity => activity.ActivityName == r.ActivityName),
+                            _ => throw new NotImplementedException(
+                                $"The action requirement type '{requirement.ActionRequirement.GetType().FullName}' has not been implemented.")
+                        })).ToList();
 
-                    foreach (var (roleName, rolePolicy) in policy.VolunteerRoles)
-                    {
-                        var requirementsMet = rolePolicy.ApprovalRequirements.Select(requirement =>
-                            (requirement.RequiredToBeProspective, RequirementMet: requirement.ActionRequirement switch
-                            {
-                                FormUploadRequirement r => formUploads.Any(upload => upload.FormName == r.FormName),
-                                ActivityRequirement r => activities.Any(activity => activity.ActivityName == r.ActivityName),
-                                _ => throw new NotImplementedException(
-                                    $"The action requirement type '{requirement.ActionRequirement.GetType().FullName}' has not been implemented.")
-                            })).ToList();
-
-                        if (requirementsMet.All(x => x.RequirementMet))
-                            individualRoles[roleName] = RoleApprovalStatus.Approved;
-                        else if (requirementsMet.Where(x => x.RequiredToBeProspective).All(x => x.RequirementMet))
-                            individualRoles[roleName] = RoleApprovalStatus.Prospective;
-                    }
+                    if (requirementsMet.All(x => x.RequirementMet))
+                        individualRoles[roleName] = RoleApprovalStatus.Approved;
+                    else if (requirementsMet.Where(x => x.RequiredToBeProspective).All(x => x.RequirementMet))
+                        individualRoles[roleName] = RoleApprovalStatus.Prospective;
                 }
                 return (person.Id, new VolunteerApprovalStatus(individualRoles.ToImmutableDictionary()));
             }).ToImmutableDictionary(x => x.Item1, x => x.Item2);
@@ -110,22 +106,14 @@ namespace CareTogether.Engines
                             FormUploadRequirement r => family.Adults.All(x =>
                             {
                                 var (person, familyRelationship) = x;
-                                if (individualInfo.TryGetValue(person.Id, out var personIndividualInfo))
-                                {
-                                    var (formUploads, activities) = personIndividualInfo;
-                                    return formUploads.Any(upload => upload.FormName == r.FormName);
-                                }
-                                return false;
+                                var (formUploads, activities) = individualInfo[person.Id];
+                                return formUploads.Any(upload => upload.FormName == r.FormName);
                             }),
                             ActivityRequirement r => family.Adults.All(x =>
                             {
                                 var (person, familyRelationship) = x;
-                                if (individualInfo.TryGetValue(person.Id, out var personIndividualInfo))
-                                {
-                                    var (formUploads, activities) = personIndividualInfo;
-                                    return activities.Any(activity => activity.ActivityName == r.ActivityName);
-                                }
-                                return false;
+                                var (formUploads, activities) = individualInfo[person.Id];
+                                return activities.Any(activity => activity.ActivityName == r.ActivityName);
                             }),
                             _ => throw new NotImplementedException(
                                 $"The action requirement type '{requirement.ActionRequirement.GetType().FullName}' " +

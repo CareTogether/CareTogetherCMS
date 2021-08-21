@@ -1,5 +1,4 @@
 using CareTogether.Resources;
-using JsonPolymorph;
 using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
@@ -17,14 +16,6 @@ namespace CareTogether.Managers
         ImmutableList<ActivityInfo> ApprovalActivitiesPerformed,
         ImmutableDictionary<string, RoleApprovalStatus> IndividualRoleApprovals);
 
-    [JsonHierarchyBase]
-    public abstract partial record ApprovalCommand();
-    public sealed record CreateVolunteerFamilyWithNewAdultCommand(
-        string FirstName, string LastName, Age Age, FamilyAdultRelationshipInfo FamilyAdultRelationshipInfo)
-        : ApprovalCommand;
-    public sealed record AddAdultToFamilyCommand(Guid FamilyId,
-        string FirstName, string LastName, Age Age, FamilyAdultRelationshipInfo FamilyAdultRelationshipInfo)
-        : ApprovalCommand;
 
     public interface IApprovalManager
     {
@@ -36,8 +27,5 @@ namespace CareTogether.Managers
 
         Task<ManagerResult<VolunteerFamily>> ExecuteVolunteerCommandAsync(Guid organizationId, Guid locationId,
             AuthorizedUser user, VolunteerCommand command);
-
-        Task<ManagerResult<VolunteerFamily>> ExecuteApprovalCommandAsync(Guid organizationId, Guid locationId,
-            AuthorizedUser user, ApprovalCommand command);
     }
 }

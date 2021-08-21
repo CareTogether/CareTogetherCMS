@@ -22,25 +22,19 @@ import { Communities } from './Components/Communities';
 import { useRecoilValue } from 'recoil';
 import { locationNameData, organizationNameData } from './Model/ConfigurationModel';
 
-const copyrightStyles = makeStyles((theme) => ({
-  copyright: {
-    lineHeight: '3em'
-  }
-}));
-
 function Copyright() {
-  const classes = copyrightStyles();
   return (
-    <Typography variant="body2" color="textSecondary" align="center" className={classes.copyright}>
-      {' © '} {new Date().getFullYear()} &nbsp;
+    <Typography variant="body2" color="textSecondary" align="center">
+      {'Powered by '}
       <a color="inherit" href="https://caretogether.io/" target="_blank" rel="noreferrer">
         CareTogether CMS
       </a><br />
+      {' © '} {new Date().getFullYear()}
     </Typography>
   );
 }
 
-const drawerWidth = 200;
+const drawerWidth = 240;
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -54,11 +48,12 @@ const useStyles = makeStyles((theme) => ({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '0 8px',
+    ...theme.mixins.toolbar,
   },
   drawerHeaderOrganization: {
     margin: '0',
     paddingLeft: '8px',
-    fontSize: '16px'
+    fontSize: '18px'
   },
   drawerHeaderLocation: {
     margin: '0',
@@ -149,9 +144,7 @@ const useStyles = makeStyles((theme) => ({
       width: theme.spacing(9),
     },
   },
-  appBarSpacer: {
-    height: 48,
-  },
+  appBarSpacer: theme.mixins.toolbar,
   content: {
     flexGrow: 1,
     height: '100vh',
@@ -204,13 +197,13 @@ function App() {
       <CssBaseline />
       <Router>
         <AppBar position="absolute" className={clsx(classes.appBar, (open && !isMobile) && classes.appBarShift)}>
-          <Toolbar className={classes.toolbar} variant="dense">
+          <Toolbar className={classes.toolbar}>
             <IconButton
               edge="start"
               color="inherit"
               aria-label="open drawer"
               onClick={handleDrawerOpen}
-              className={clsx(classes.menuButton, (open || isMobile) && classes.menuButtonHidden)}
+              className={clsx(classes.menuButton, open && classes.menuButtonHidden)}
             >
               <MenuIcon />
             </IconButton>
@@ -264,38 +257,38 @@ function App() {
         <main className={classes.content}>
           <div className={classes.appBarSpacer} />
           {/* <Container maxWidth="lg" className={classes.container}> */}
-            <React.Suspense fallback={<div>Loading...</div>}>
-              <Switch>
-                <Route path="/arrangements">
-                  <Arrangements />
-                </Route>
-                <Route path="/referrals">
-                  <Referrals />
-                </Route>
-                <Route path="/volunteers">
-                  <Volunteers />
-                </Route>
-                <Route path="/volunteerApplications">
-                  <VolunteerApplications />
-                </Route>
-                <Route path="/volunteerProgress">
-                  <VolunteerProgress />
-                </Route>
-                <Route path="/contacts">
-                  <Contacts />
-                </Route>
-                <Route path="/communities">
-                  <Communities />
-                </Route>
-                <Route>
-                  <Redirect to="/volunteers" />
-                </Route>
-              </Switch>
-            </React.Suspense>
+          <React.Suspense fallback={<div>Loading...</div>}>
+            <Switch>
+              <Route path="/arrangements">
+                <Arrangements />
+              </Route>
+              <Route path="/referrals">
+                <Referrals />
+              </Route>
+              <Route path="/volunteers">
+                <Volunteers />
+              </Route>
+              <Route path="/volunteerApplications">
+                <VolunteerApplications />
+              </Route>
+              <Route path="/volunteerProgress">
+                <VolunteerProgress />
+              </Route>
+              <Route path="/contacts">
+                <Contacts />
+              </Route>
+              <Route path="/communities">
+                <Communities />
+              </Route>
+              <Route>
+                <Redirect to="/arrangements" />
+              </Route>
+            </Switch>
+          </React.Suspense>
           {/* </Container> */}
           {isMobile ? <BottomNavigation
             value={value}
-            onChange={(_, newValue) => {
+            onChange={(event, newValue) => {
               setValue(newValue);
             }}
             showLabels

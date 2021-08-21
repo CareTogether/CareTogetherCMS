@@ -31,7 +31,7 @@ namespace CareTogether.Resources
     public sealed record DeactivateVolunteerFamily(Guid FamilyId,
         string Reason)
         : VolunteerFamilyCommand(FamilyId);
-    public sealed record ActivateVolunteerFamily(Guid FamilyId)
+    public sealed record ReactivateVolunteerFamily(Guid FamilyId)
         : VolunteerFamilyCommand(FamilyId);
     public sealed record SetVolunteerFamilyNote(Guid FamilyId,
         string Note)

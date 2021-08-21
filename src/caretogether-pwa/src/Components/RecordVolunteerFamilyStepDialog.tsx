@@ -69,7 +69,7 @@ export function RecordVolunteerFamilyStepDialog({stepActionRequirement, voluntee
               <Button onClick={onClose} color="secondary">
                 Cancel
               </Button>
-              <Button onClick={recordUploadFormStep} variant="contained" color="primary">
+              <Button onClick={recordUploadFormStep} color="primary">
                 Upload
               </Button>
             </DialogActions>
@@ -83,7 +83,7 @@ export function RecordVolunteerFamilyStepDialog({stepActionRequirement, voluntee
               <DateTimePicker
                 label="When did this occur?"
                 value={performedAtLocal}
-                disableFuture format="yyyy/MM/dd hh:mm aa"
+                disableFuture
                 onChange={(date) => date && setPerformedAtLocal(date)}
                 showTodayButton />
             </DialogContent>
@@ -91,7 +91,7 @@ export function RecordVolunteerFamilyStepDialog({stepActionRequirement, voluntee
               <Button onClick={onClose} color="secondary">
                 Cancel
               </Button>
-              <Button onClick={recordPerformActivityStep} variant="contained" color="primary">
+              <Button onClick={recordPerformActivityStep} color="primary">
                 Mark Complete
               </Button>
             </DialogActions>
