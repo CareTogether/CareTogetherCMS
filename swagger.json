@@ -1046,10 +1046,6 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "shortDescription": {
-            "type": "string",
-            "nullable": true
-          },
           "requiredToBeProspective": {
             "type": "boolean"
           },
@@ -1084,10 +1080,6 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "shortDescription": {
-            "type": "string",
-            "nullable": true
-          },
           "requiredToBeProspective": {
             "type": "boolean"
           },

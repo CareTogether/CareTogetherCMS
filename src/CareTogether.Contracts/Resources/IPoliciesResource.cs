@@ -41,10 +41,10 @@ namespace CareTogether.Resources
     public sealed record VolunteerFamilyRolePolicy(string VolunteerFamilyRoleType,
         ImmutableList<VolunteerFamilyApprovalRequirement> ApprovalRequirements);
 
-    public sealed record VolunteerApprovalRequirement(string ShortDescription,
+    public sealed record VolunteerApprovalRequirement(
         bool RequiredToBeProspective, ActionRequirement ActionRequirement);
 
-    public sealed record VolunteerFamilyApprovalRequirement(string ShortDescription,
+    public sealed record VolunteerFamilyApprovalRequirement(
         bool RequiredToBeProspective, ActionRequirement ActionRequirement, VolunteerFamilyRequirementScope Scope);
 
     public enum VolunteerFamilyRequirementScope { OncePerFamily, AllAdultsInTheFamily };

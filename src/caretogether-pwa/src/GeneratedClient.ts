@@ -1437,7 +1437,6 @@ export interface IVolunteerRolePolicy {
 }
 
 export class VolunteerApprovalRequirement implements IVolunteerApprovalRequirement {
-    shortDescription?: string | undefined;
     requiredToBeProspective?: boolean;
     actionRequirement?: ActionRequirement | undefined;
 
@@ -1452,7 +1451,6 @@ export class VolunteerApprovalRequirement implements IVolunteerApprovalRequireme
 
     init(_data?: any) {
         if (_data) {
-            this.shortDescription = _data["shortDescription"];
             this.requiredToBeProspective = _data["requiredToBeProspective"];
             this.actionRequirement = _data["actionRequirement"] ? ActionRequirement.fromJS(_data["actionRequirement"]) : <any>undefined;
         }
@@ -1467,7 +1465,6 @@ export class VolunteerApprovalRequirement implements IVolunteerApprovalRequireme
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["shortDescription"] = this.shortDescription;
         data["requiredToBeProspective"] = this.requiredToBeProspective;
         data["actionRequirement"] = this.actionRequirement ? this.actionRequirement.toJSON() : <any>undefined;
         return data; 
@@ -1475,7 +1472,6 @@ export class VolunteerApprovalRequirement implements IVolunteerApprovalRequireme
 }
 
 export interface IVolunteerApprovalRequirement {
-    shortDescription?: string | undefined;
     requiredToBeProspective?: boolean;
     actionRequirement?: ActionRequirement | undefined;
 }
@@ -1529,7 +1525,6 @@ export interface IVolunteerFamilyRolePolicy {
 }
 
 export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyApprovalRequirement {
-    shortDescription?: string | undefined;
     requiredToBeProspective?: boolean;
     actionRequirement?: ActionRequirement | undefined;
     scope?: VolunteerFamilyRequirementScope;
@@ -1545,7 +1540,6 @@ export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyAppro
 
     init(_data?: any) {
         if (_data) {
-            this.shortDescription = _data["shortDescription"];
             this.requiredToBeProspective = _data["requiredToBeProspective"];
             this.actionRequirement = _data["actionRequirement"] ? ActionRequirement.fromJS(_data["actionRequirement"]) : <any>undefined;
             this.scope = _data["scope"];
@@ -1561,7 +1555,6 @@ export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyAppro
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["shortDescription"] = this.shortDescription;
         data["requiredToBeProspective"] = this.requiredToBeProspective;
         data["actionRequirement"] = this.actionRequirement ? this.actionRequirement.toJSON() : <any>undefined;
         data["scope"] = this.scope;
@@ -1570,7 +1563,6 @@ export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyAppro
 }
 
 export interface IVolunteerFamilyApprovalRequirement {
-    shortDescription?: string | undefined;
     requiredToBeProspective?: boolean;
     actionRequirement?: ActionRequirement | undefined;
     scope?: VolunteerFamilyRequirementScope;
