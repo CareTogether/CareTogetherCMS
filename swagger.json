@@ -1527,7 +1527,7 @@
           "relationshipToFamily": {
             "$ref": "#/components/schemas/FamilyAdultRelationshipType"
           },
-          "familyRelationshipNotes": {
+          "notes": {
             "type": "string",
             "nullable": true
           },
@@ -1537,7 +1537,7 @@
           "isPrimaryFamilyContact": {
             "type": "boolean"
           },
-          "safetyRiskNotes": {
+          "concerns": {
             "type": "string",
             "nullable": true
           }
