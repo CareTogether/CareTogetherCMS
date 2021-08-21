@@ -1589,6 +1589,10 @@
             "type": "string",
             "format": "date-time"
           },
+          "completedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
           "formName": {
             "type": "string",
             "nullable": true
@@ -1963,6 +1967,10 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+              "completedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
               "formName": {
                 "type": "string",
                 "nullable": true
@@ -2206,6 +2214,10 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+              "completedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
               "formName": {
                 "type": "string",
                 "nullable": true
@@ -2509,6 +2521,10 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+              "completedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
               "formName": {
                 "type": "string",
                 "nullable": true
@@ -2639,6 +2655,10 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+              "completedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
               "formName": {
                 "type": "string",
                 "nullable": true
