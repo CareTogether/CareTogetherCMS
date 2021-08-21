@@ -191,7 +191,7 @@ function App() {
   const handleDrawerClose = () => {
     setOpen(false);
   };
-  const [value, setValue] = React.useState(0);
+  const [selectedBottomNavAction, setSelectedBottomNavAction] = React.useState(0);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -294,9 +294,9 @@ function App() {
           </React.Suspense>
           {/* </Container> */}
           {isMobile ? <BottomNavigation
-            value={value}
-            onChange={(event, newValue) => {
-              setValue(newValue);
+            value={selectedBottomNavAction}
+            onChange={(_, newValue) => {
+              setSelectedBottomNavAction(newValue);
             }}
             showLabels
             className={classes.stickToBottom}
