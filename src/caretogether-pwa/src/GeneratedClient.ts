@@ -1618,6 +1618,7 @@ export class Person implements IPerson {
     userId?: string | undefined;
     firstName?: string | undefined;
     lastName?: string | undefined;
+    gender?: Gender;
     age?: Age | undefined;
 
     constructor(data?: IPerson) {
@@ -1635,6 +1636,7 @@ export class Person implements IPerson {
             this.userId = _data["userId"];
             this.firstName = _data["firstName"];
             this.lastName = _data["lastName"];
+            this.gender = _data["gender"];
             this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
         }
     }
@@ -1652,6 +1654,7 @@ export class Person implements IPerson {
         data["userId"] = this.userId;
         data["firstName"] = this.firstName;
         data["lastName"] = this.lastName;
+        data["gender"] = this.gender;
         data["age"] = this.age ? this.age.toJSON() : <any>undefined;
         return data; 
     }
@@ -1662,7 +1665,14 @@ export interface IPerson {
     userId?: string | undefined;
     firstName?: string | undefined;
     lastName?: string | undefined;
+    gender?: Gender;
     age?: Age | undefined;
+}
+
+export enum Gender {
+    Male = 0,
+    Female = 1,
+    SeeNotes = 2,
 }
 
 export abstract class Age implements IAge {
@@ -4519,6 +4529,7 @@ export class AddAdultToFamilyCommand extends ApprovalCommand implements IAddAdul
     familyId?: string;
     firstName?: string | undefined;
     lastName?: string | undefined;
+    gender?: Gender;
     age?: Age | undefined;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo | undefined;
 
@@ -4533,6 +4544,7 @@ export class AddAdultToFamilyCommand extends ApprovalCommand implements IAddAdul
             this.familyId = _data["familyId"];
             this.firstName = _data["firstName"];
             this.lastName = _data["lastName"];
+            this.gender = _data["gender"];
             this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
             this.familyAdultRelationshipInfo = _data["familyAdultRelationshipInfo"] ? FamilyAdultRelationshipInfo.fromJS(_data["familyAdultRelationshipInfo"]) : <any>undefined;
         }
@@ -4550,6 +4562,7 @@ export class AddAdultToFamilyCommand extends ApprovalCommand implements IAddAdul
         data["familyId"] = this.familyId;
         data["firstName"] = this.firstName;
         data["lastName"] = this.lastName;
+        data["gender"] = this.gender;
         data["age"] = this.age ? this.age.toJSON() : <any>undefined;
         data["familyAdultRelationshipInfo"] = this.familyAdultRelationshipInfo ? this.familyAdultRelationshipInfo.toJSON() : <any>undefined;
         super.toJSON(data);
@@ -4561,6 +4574,7 @@ export interface IAddAdultToFamilyCommand extends IApprovalCommand {
     familyId?: string;
     firstName?: string | undefined;
     lastName?: string | undefined;
+    gender?: Gender;
     age?: Age | undefined;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo | undefined;
 }
@@ -4568,6 +4582,7 @@ export interface IAddAdultToFamilyCommand extends IApprovalCommand {
 export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand implements ICreateVolunteerFamilyWithNewAdultCommand {
     firstName?: string | undefined;
     lastName?: string | undefined;
+    gender?: Gender;
     age?: Age | undefined;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo | undefined;
 
@@ -4581,6 +4596,7 @@ export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand im
         if (_data) {
             this.firstName = _data["firstName"];
             this.lastName = _data["lastName"];
+            this.gender = _data["gender"];
             this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
             this.familyAdultRelationshipInfo = _data["familyAdultRelationshipInfo"] ? FamilyAdultRelationshipInfo.fromJS(_data["familyAdultRelationshipInfo"]) : <any>undefined;
         }
@@ -4597,6 +4613,7 @@ export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand im
         data = typeof data === 'object' ? data : {};
         data["firstName"] = this.firstName;
         data["lastName"] = this.lastName;
+        data["gender"] = this.gender;
         data["age"] = this.age ? this.age.toJSON() : <any>undefined;
         data["familyAdultRelationshipInfo"] = this.familyAdultRelationshipInfo ? this.familyAdultRelationshipInfo.toJSON() : <any>undefined;
         super.toJSON(data);
@@ -4607,6 +4624,7 @@ export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand im
 export interface ICreateVolunteerFamilyWithNewAdultCommand extends IApprovalCommand {
     firstName?: string | undefined;
     lastName?: string | undefined;
+    gender?: Gender;
     age?: Age | undefined;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo | undefined;
 }

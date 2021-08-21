@@ -24,7 +24,7 @@ namespace CareTogether.Core.Test
         static readonly Guid guid4 = Id('4');
 
         static readonly PersonCommandExecuted personCommand = new PersonCommandExecuted(guid4, new DateTime(2021, 7, 1),
-            new CreatePerson(guid3, guid4, "Jane", "Smith", new AgeInYears(42, new DateTime(2021, 1, 1))));
+            new CreatePerson(guid3, guid4, "Jane", "Smith", Gender.Female, new AgeInYears(42, new DateTime(2021, 1, 1))));
 
         AppendBlobMultitenantEventLog<CommunityEvent> communityEventLog;
         AppendBlobMultitenantEventLog<ContactCommandExecutedEvent> contactsEventLog;
