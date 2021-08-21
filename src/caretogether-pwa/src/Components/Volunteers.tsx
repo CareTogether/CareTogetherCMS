@@ -1,6 +1,6 @@
 import { makeStyles } from '@material-ui/core/styles';
 import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Drawer, Fab } from '@material-ui/core';
-import { ExactAge, AgeInYears } from '../GeneratedClient';
+import { Gender, ExactAge, AgeInYears } from '../GeneratedClient';
 import { differenceInYears } from 'date-fns';
 import { useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
@@ -74,6 +74,7 @@ function Volunteers() {
               <TableRow>
                 <TableCell>First Name</TableCell>
                 <TableCell>Last Name</TableCell>
+                <TableCell>Gender</TableCell>
                 <TableCell>Age</TableCell>
                 { volunteerFamilyRoleNames.map(roleName =>
                   (<TableCell key={roleName}>{roleName}</TableCell>))}
@@ -85,7 +86,7 @@ function Volunteers() {
               {volunteerFamilies.map((volunteerFamily) => (
                 <React.Fragment key={volunteerFamily.family?.id}>
                   <TableRow className={classes.familyRow} onClick={() => setSelectedVolunteerFamilyId(volunteerFamily.family?.id || null)}>
-                    <TableCell key="1" colSpan={3}>{
+                    <TableCell key="1" colSpan={4}>{
                       volunteerFamily.family?.adults
                         ?.filter(adult => adult.item2?.isPrimaryFamilyContact)
                         [0]?.item1?.lastName + " Family"
@@ -102,6 +103,7 @@ function Volunteers() {
                       className={classes.adultRow}>
                       <TableCell>{adult.item1.firstName}</TableCell>
                       <TableCell>{adult.item1.lastName}</TableCell>
+                      <TableCell>{typeof(adult.item1.gender) === 'undefined' ? "" : Gender[adult.item1.gender]}</TableCell>
                       <TableCell align="right">
                         { adult.item1.age instanceof ExactAge
                           ? adult.item1.age.dateOfBirth && differenceInYears(new Date(), adult.item1.age.dateOfBirth)

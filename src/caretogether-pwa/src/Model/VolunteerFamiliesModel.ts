@@ -1,5 +1,5 @@
 import { atom, useRecoilCallback } from "recoil";
-import { ActivityRequirement, AddAdultToFamilyCommand, Age, ApprovalCommand, CreateVolunteerFamilyWithNewAdultCommand, FamilyAdultRelationshipInfo, FamilyAdultRelationshipType, FormUploadRequirement, PerformVolunteerActivity, PerformVolunteerFamilyActivity, UploadVolunteerFamilyForm, UploadVolunteerForm, VolunteerCommand, VolunteerFamiliesClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
+import { ActivityRequirement, AddAdultToFamilyCommand, Age, ApprovalCommand, CreateVolunteerFamilyWithNewAdultCommand, FamilyAdultRelationshipInfo, FamilyAdultRelationshipType, FormUploadRequirement, Gender, PerformVolunteerActivity, PerformVolunteerFamilyActivity, UploadVolunteerFamilyForm, UploadVolunteerForm, VolunteerCommand, VolunteerFamiliesClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { uploadFileToTenant } from "./FilesModel";
@@ -138,13 +138,14 @@ export function useVolunteerFamiliesModel() {
       return command;
     });
   const addAdult = useApprovalCommandCallback(
-    async (volunteerFamilyId, firstName: string, lastName: string, age: Age,
+    async (volunteerFamilyId, firstName: string, lastName: string, gender: Gender, age: Age,
         isInHousehold: boolean, isPrimaryFamilyContact: boolean, relationshipToFamily?: FamilyAdultRelationshipType,
         familyRelationshipNotes?: string, safetyRiskNotes?: string) => {
       const command = new AddAdultToFamilyCommand();
       command.familyId = volunteerFamilyId;
       command.firstName = firstName;
       command.lastName = lastName;
+      command.gender = gender;
       command.age = age;
       command.familyAdultRelationshipInfo = new FamilyAdultRelationshipInfo({
         familyRelationshipNotes: familyRelationshipNotes,
@@ -156,12 +157,13 @@ export function useVolunteerFamiliesModel() {
       return command;
     });
   const createVolunteerFamilyWithNewAdult = useApprovalCommandCallback(
-    async (firstName: string, lastName: string, age: Age,
+    async (firstName: string, lastName: string, gender: Gender, age: Age,
       isInHousehold: boolean, isPrimaryFamilyContact: boolean, relationshipToFamily?: FamilyAdultRelationshipType,
         familyRelationshipNotes?: string, safetyRiskNotes?: string) => {
       const command = new CreateVolunteerFamilyWithNewAdultCommand();
       command.firstName = firstName;
       command.lastName = lastName;
+      command.gender = gender
       command.age = age;
       command.familyAdultRelationshipInfo = new FamilyAdultRelationshipInfo({
         familyRelationshipNotes: familyRelationshipNotes,
