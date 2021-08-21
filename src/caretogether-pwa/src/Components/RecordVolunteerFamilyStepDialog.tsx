@@ -26,7 +26,7 @@ export function RecordVolunteerFamilyStepDialog({stepActionRequirement, voluntee
     if (!formFile) {
       alert("No file was selected. Try again.");
     } else {
-      await volunteerFamiliesModel.uploadFormFamily(volunteerFamily.family?.id as string, stepActionRequirement as FormUploadRequirement, formFile);
+      await volunteerFamiliesModel.uploadFormFamily(volunteerFamily.family?.id as string, stepActionRequirement as FormUploadRequirement, formFile, performedAtLocal);
       //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
       onClose();
     }
@@ -64,6 +64,13 @@ export function RecordVolunteerFamilyStepDialog({stepActionRequirement, voluntee
                   setFormFile(e.target.files[0]);
                 }}}
               />
+              <DialogContentText></DialogContentText>
+              <DateTimePicker
+                label="When was this form completed?"
+                value={performedAtLocal} fullWidth
+                disableFuture format="MM/dd/yyyy hh:mm aa"
+                onChange={(date) => date && setPerformedAtLocal(date)}
+                showTodayButton />
             </DialogContent>
             <DialogActions>
               <Button onClick={onClose} color="secondary">
@@ -83,7 +90,7 @@ export function RecordVolunteerFamilyStepDialog({stepActionRequirement, voluntee
               <DateTimePicker
                 label="When did this occur?"
                 value={performedAtLocal}
-                disableFuture format="yyyy/MM/dd hh:mm aa"
+                disableFuture format="MM/dd/yyyy hh:mm aa"
                 onChange={(date) => date && setPerformedAtLocal(date)}
                 showTodayButton />
             </DialogContent>

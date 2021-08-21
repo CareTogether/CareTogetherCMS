@@ -1046,10 +1046,6 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "shortDescription": {
-            "type": "string",
-            "nullable": true
-          },
           "requiredToBeProspective": {
             "type": "boolean"
           },
@@ -1084,10 +1080,6 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "shortDescription": {
-            "type": "string",
-            "nullable": true
-          },
           "requiredToBeProspective": {
             "type": "boolean"
           },
@@ -1597,6 +1589,10 @@
             "type": "string",
             "format": "date-time"
           },
+          "completedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
           "formName": {
             "type": "string",
             "nullable": true
@@ -1971,6 +1967,10 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+              "completedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
               "formName": {
                 "type": "string",
                 "nullable": true
@@ -2214,6 +2214,10 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+              "completedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
               "formName": {
                 "type": "string",
                 "nullable": true
@@ -2517,6 +2521,10 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+              "completedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
               "formName": {
                 "type": "string",
                 "nullable": true
@@ -2647,6 +2655,10 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+              "completedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
               "formName": {
                 "type": "string",
                 "nullable": true

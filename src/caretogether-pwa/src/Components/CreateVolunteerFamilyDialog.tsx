@@ -4,7 +4,7 @@ import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogContentTe
 import { Age, ExactAge, FamilyAdultRelationshipType, AgeInYears } from '../GeneratedClient';
 import { useVolunteerFamiliesModel } from '../Model/VolunteerFamiliesModel';
 import WarningIcon from '@material-ui/icons/Warning';
-import { DatePicker } from '@material-ui/pickers';
+import { KeyboardDatePicker } from '@material-ui/pickers';
 
 const useStyles = makeStyles((theme) => ({
   form: {
@@ -116,10 +116,10 @@ export function CreateVolunteerFamilyDialog({open, onClose}: CreateVolunteerFami
             </Grid>
             <Grid item xs={12} sm={8} container direction="column" spacing={0}>
               <Grid item>
-                <DatePicker
-                  label="Date of birth" size="small"
-                  value={dateOfBirth}
-                  required disableFuture disabled={ageType !== 'exact'} format="yyyy/MM/dd"
+                <KeyboardDatePicker
+                  label="Date of birth" size="small" variant="inline"
+                  value={dateOfBirth} maxDate={new Date()} openTo="year"
+                  required disabled={ageType !== 'exact'} format="MM/dd/yyyy"
                   onChange={(date) => date && setFields({...fields, dateOfBirth: date})}
                   />
               </Grid>

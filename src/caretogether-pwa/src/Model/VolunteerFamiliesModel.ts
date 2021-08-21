@@ -90,7 +90,7 @@ function useApprovalCommandCallback<T extends unknown[]>(
 
 export function useVolunteerFamiliesModel() {
   const uploadFormFamily = useVolunteerFamilyCommandCallbackWithLocation(
-    async (organizationId, locationId, volunteerFamilyId, requirement: FormUploadRequirement, formFile: File) => {
+    async (organizationId, locationId, volunteerFamilyId, requirement: FormUploadRequirement, formFile: File, completedAtLocal: Date) => {
       const uploadedDocumentId = await uploadFileToTenant(organizationId, locationId, formFile);
 
       const command = new UploadVolunteerFamilyForm({
@@ -100,6 +100,7 @@ export function useVolunteerFamiliesModel() {
       command.formVersion = requirement.formVersion;
       command.uploadedDocumentId = uploadedDocumentId;
       command.uploadedFileName = formFile.name;
+      command.completedAtUtc = completedAtLocal;
       return command;
     });
   const performActivityFamily = useVolunteerFamilyCommandCallback(
@@ -112,7 +113,7 @@ export function useVolunteerFamiliesModel() {
       return command;
     });
   const uploadFormPerson = useVolunteerCommandCallbackWithLocation(
-    async (organizationId, locationId, volunteerFamilyId, personId, requirement: FormUploadRequirement, formFile: File) => {
+    async (organizationId, locationId, volunteerFamilyId, personId, requirement: FormUploadRequirement, formFile: File, completedAtLocal: Date) => {
       const uploadedDocumentId = await uploadFileToTenant(organizationId, locationId, formFile);
 
       const command = new UploadVolunteerForm({
@@ -123,6 +124,7 @@ export function useVolunteerFamiliesModel() {
       command.formVersion = requirement.formVersion;
       command.uploadedDocumentId = uploadedDocumentId;
       command.uploadedFileName = formFile.name;
+      command.completedAtUtc = completedAtLocal;
       return command;
     });
   const performActivityPerson = useVolunteerCommandCallback(

@@ -84,7 +84,7 @@ namespace CareTogether.Core.Test
             var result = await dut.CalculateVolunteerFamilyApprovalStatusAsync(guid1, guid2, volunteerFamily,
                 new List<FormUploadInfo>
                 {
-                    new FormUploadInfo(guid6, new DateTime(2021, 7, 1), "Host Family Application", "v1", "abc.pdf", Guid.Empty)
+                    new FormUploadInfo(guid6, new DateTime(2021, 7, 1), new DateTime(2021, 7, 1), "Host Family Application", "v1", "abc.pdf", Guid.Empty)
                 }.ToImmutableList(),
                 new List<ActivityInfo>
                 {
@@ -92,11 +92,11 @@ namespace CareTogether.Core.Test
                 new Dictionary<Guid, (ImmutableList<FormUploadInfo> FormUploads, ImmutableList<ActivityInfo> ActivitiesPerformed)>
                 {
                     [guid1] = (ImmutableList<FormUploadInfo>.Empty
-                        .Add(new FormUploadInfo(guid6, new DateTime(2021, 7, 1), "Family Friend Application", "v1", "ff1.docx", Guid.Empty))
-                        .Add(new FormUploadInfo(guid6, new DateTime(2021, 7, 1), "Family Coach Application", "v1", "fc.docx", Guid.Empty)),
+                        .Add(new FormUploadInfo(guid6, new DateTime(2021, 7, 1), new DateTime(2021, 7, 1), "Family Friend Application", "v1", "ff1.docx", Guid.Empty))
+                        .Add(new FormUploadInfo(guid6, new DateTime(2021, 7, 1), new DateTime(2021, 7, 1), "Family Coach Application", "v1", "fc.docx", Guid.Empty)),
                         ImmutableList<ActivityInfo>.Empty),
                     [guid2] = (ImmutableList<FormUploadInfo>.Empty
-                        .Add(new FormUploadInfo(guid6, new DateTime(2021, 7, 1), "Family Friend Application", "v1", "ff2.docx", Guid.Empty)),
+                        .Add(new FormUploadInfo(guid6, new DateTime(2021, 7, 1), new DateTime(2021, 7, 1), "Family Friend Application", "v1", "ff2.docx", Guid.Empty)),
                         ImmutableList<ActivityInfo>.Empty),
                     [guid3] = (ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty)
                 }.ToImmutableDictionary());
@@ -118,8 +118,8 @@ namespace CareTogether.Core.Test
             var result = await dut.CalculateVolunteerFamilyApprovalStatusAsync(guid1, guid2, volunteerFamily,
                 new List<FormUploadInfo>
                 {
-                    new FormUploadInfo(guid6, new DateTime(2021, 7, 1), "Host Family Application", "v1", "abc.pdf", Guid.Empty),
-                    new FormUploadInfo(guid6, new DateTime(2021, 7, 10), "Home Screening Checklist", "v1", "def.pdf", Guid.Empty)
+                    new FormUploadInfo(guid6, new DateTime(2021, 7, 1), new DateTime(2021, 7, 1), "Host Family Application", "v1", "abc.pdf", Guid.Empty),
+                    new FormUploadInfo(guid6, new DateTime(2021, 7, 10), new DateTime(2021, 7, 8), "Home Screening Checklist", "v1", "def.pdf", Guid.Empty)
                 }.ToImmutableList(),
                 new List<ActivityInfo>
                 {
@@ -128,7 +128,7 @@ namespace CareTogether.Core.Test
                 new Dictionary<Guid, (ImmutableList<FormUploadInfo> FormUploads, ImmutableList<ActivityInfo> ActivitiesPerformed)>
                 {
                     [guid1] = (ImmutableList<FormUploadInfo>.Empty
-                        .Add(new FormUploadInfo(guid1, new DateTime(2021, 7, 14), "Background Check", "v1", "bg1.pdf", Guid.Empty)),
+                        .Add(new FormUploadInfo(guid1, new DateTime(2021, 7, 14), new DateTime(2021, 7, 12), "Background Check", "v1", "bg1.pdf", Guid.Empty)),
                         ImmutableList<ActivityInfo>.Empty),
                     [guid2] = (ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty),
                     [guid3] = (ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty)
@@ -148,8 +148,8 @@ namespace CareTogether.Core.Test
             var result = await dut.CalculateVolunteerFamilyApprovalStatusAsync(guid1, guid2, volunteerFamily,
                 new List<FormUploadInfo>
                 {
-                    new FormUploadInfo(guid6, new DateTime(2021, 7, 1), "Host Family Application", "v1", "abc.pdf", Guid.Empty),
-                    new FormUploadInfo(guid6, new DateTime(2021, 7, 10), "Home Screening Checklist", "v1", "def.pdf", Guid.Empty)
+                    new FormUploadInfo(guid6, new DateTime(2021, 7, 1), new DateTime(2021, 7, 1), "Host Family Application", "v1", "abc.pdf", Guid.Empty),
+                    new FormUploadInfo(guid6, new DateTime(2021, 7, 10), new DateTime(2021, 7, 8), "Home Screening Checklist", "v1", "def.pdf", Guid.Empty)
                 }.ToImmutableList(),
                 new List<ActivityInfo>
                 {
@@ -158,11 +158,11 @@ namespace CareTogether.Core.Test
                 new Dictionary<Guid, (ImmutableList<FormUploadInfo> FormUploads, ImmutableList<ActivityInfo> ActivitiesPerformed)>
                 {
                     [guid1] = (ImmutableList<FormUploadInfo>.Empty
-                        .Add(new FormUploadInfo(guid6, new DateTime(2021, 7, 14), "Background Check", "v1", "bg1.pdf", Guid.Empty)), ImmutableList<ActivityInfo>.Empty),
+                        .Add(new FormUploadInfo(guid6, new DateTime(2021, 7, 14), new DateTime(2021, 7, 12), "Background Check", "v1", "bg1.pdf", Guid.Empty)), ImmutableList<ActivityInfo>.Empty),
                     [guid2] = (ImmutableList<FormUploadInfo>.Empty
-                        .Add(new FormUploadInfo(guid6, new DateTime(2021, 7, 15), "Background Check", "v1", "bg1.pdf", Guid.Empty)), ImmutableList<ActivityInfo>.Empty),
+                        .Add(new FormUploadInfo(guid6, new DateTime(2021, 7, 15), new DateTime(2021, 7, 13), "Background Check", "v1", "bg1.pdf", Guid.Empty)), ImmutableList<ActivityInfo>.Empty),
                     [guid3] = (ImmutableList<FormUploadInfo>.Empty
-                        .Add(new FormUploadInfo(guid6, new DateTime(2021, 7, 15), "Background Check", "v1", "bg1.pdf", Guid.Empty)), ImmutableList<ActivityInfo>.Empty)
+                        .Add(new FormUploadInfo(guid6, new DateTime(2021, 7, 15), new DateTime(2021, 7, 13), "Background Check", "v1", "bg1.pdf", Guid.Empty)), ImmutableList<ActivityInfo>.Empty)
                 }.ToImmutableDictionary());
 
             Assert.AreEqual(1, result.FamilyRoleApprovals.Count);

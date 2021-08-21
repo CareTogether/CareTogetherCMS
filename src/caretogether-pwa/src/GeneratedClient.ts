@@ -1437,7 +1437,6 @@ export interface IVolunteerRolePolicy {
 }
 
 export class VolunteerApprovalRequirement implements IVolunteerApprovalRequirement {
-    shortDescription?: string | undefined;
     requiredToBeProspective?: boolean;
     actionRequirement?: ActionRequirement | undefined;
 
@@ -1452,7 +1451,6 @@ export class VolunteerApprovalRequirement implements IVolunteerApprovalRequireme
 
     init(_data?: any) {
         if (_data) {
-            this.shortDescription = _data["shortDescription"];
             this.requiredToBeProspective = _data["requiredToBeProspective"];
             this.actionRequirement = _data["actionRequirement"] ? ActionRequirement.fromJS(_data["actionRequirement"]) : <any>undefined;
         }
@@ -1467,7 +1465,6 @@ export class VolunteerApprovalRequirement implements IVolunteerApprovalRequireme
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["shortDescription"] = this.shortDescription;
         data["requiredToBeProspective"] = this.requiredToBeProspective;
         data["actionRequirement"] = this.actionRequirement ? this.actionRequirement.toJSON() : <any>undefined;
         return data; 
@@ -1475,7 +1472,6 @@ export class VolunteerApprovalRequirement implements IVolunteerApprovalRequireme
 }
 
 export interface IVolunteerApprovalRequirement {
-    shortDescription?: string | undefined;
     requiredToBeProspective?: boolean;
     actionRequirement?: ActionRequirement | undefined;
 }
@@ -1529,7 +1525,6 @@ export interface IVolunteerFamilyRolePolicy {
 }
 
 export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyApprovalRequirement {
-    shortDescription?: string | undefined;
     requiredToBeProspective?: boolean;
     actionRequirement?: ActionRequirement | undefined;
     scope?: VolunteerFamilyRequirementScope;
@@ -1545,7 +1540,6 @@ export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyAppro
 
     init(_data?: any) {
         if (_data) {
-            this.shortDescription = _data["shortDescription"];
             this.requiredToBeProspective = _data["requiredToBeProspective"];
             this.actionRequirement = _data["actionRequirement"] ? ActionRequirement.fromJS(_data["actionRequirement"]) : <any>undefined;
             this.scope = _data["scope"];
@@ -1561,7 +1555,6 @@ export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyAppro
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["shortDescription"] = this.shortDescription;
         data["requiredToBeProspective"] = this.requiredToBeProspective;
         data["actionRequirement"] = this.actionRequirement ? this.actionRequirement.toJSON() : <any>undefined;
         data["scope"] = this.scope;
@@ -1570,7 +1563,6 @@ export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyAppro
 }
 
 export interface IVolunteerFamilyApprovalRequirement {
-    shortDescription?: string | undefined;
     requiredToBeProspective?: boolean;
     actionRequirement?: ActionRequirement | undefined;
     scope?: VolunteerFamilyRequirementScope;
@@ -2409,6 +2401,7 @@ export enum CustodialRelationshipType {
 export class FormUploadInfo implements IFormUploadInfo {
     userId?: string;
     timestampUtc?: Date;
+    completedAtUtc?: Date;
     formName?: string | undefined;
     formVersion?: string | undefined;
     originalFileName?: string | undefined;
@@ -2427,6 +2420,7 @@ export class FormUploadInfo implements IFormUploadInfo {
         if (_data) {
             this.userId = _data["userId"];
             this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
+            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
             this.formName = _data["formName"];
             this.formVersion = _data["formVersion"];
             this.originalFileName = _data["originalFileName"];
@@ -2445,6 +2439,7 @@ export class FormUploadInfo implements IFormUploadInfo {
         data = typeof data === 'object' ? data : {};
         data["userId"] = this.userId;
         data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
+        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
         data["formName"] = this.formName;
         data["formVersion"] = this.formVersion;
         data["originalFileName"] = this.originalFileName;
@@ -2456,6 +2451,7 @@ export class FormUploadInfo implements IFormUploadInfo {
 export interface IFormUploadInfo {
     userId?: string;
     timestampUtc?: Date;
+    completedAtUtc?: Date;
     formName?: string | undefined;
     formVersion?: string | undefined;
     originalFileName?: string | undefined;
@@ -3096,6 +3092,7 @@ export interface IPerformReferralActivity extends IReferralCommand {
 }
 
 export class UploadReferralForm extends ReferralCommand implements IUploadReferralForm {
+    completedAtUtc?: Date;
     formName?: string | undefined;
     formVersion?: string | undefined;
     uploadedFileName?: string | undefined;
@@ -3109,6 +3106,7 @@ export class UploadReferralForm extends ReferralCommand implements IUploadReferr
     init(_data?: any) {
         super.init(_data);
         if (_data) {
+            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
             this.formName = _data["formName"];
             this.formVersion = _data["formVersion"];
             this.uploadedFileName = _data["uploadedFileName"];
@@ -3125,6 +3123,7 @@ export class UploadReferralForm extends ReferralCommand implements IUploadReferr
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
+        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
         data["formName"] = this.formName;
         data["formVersion"] = this.formVersion;
         data["uploadedFileName"] = this.uploadedFileName;
@@ -3135,6 +3134,7 @@ export class UploadReferralForm extends ReferralCommand implements IUploadReferr
 }
 
 export interface IUploadReferralForm extends IReferralCommand {
+    completedAtUtc?: Date;
     formName?: string | undefined;
     formVersion?: string | undefined;
     uploadedFileName?: string | undefined;
@@ -3553,6 +3553,7 @@ export interface ITrackChildrenLocationChange extends IArrangementCommand {
 }
 
 export class UploadArrangementForm extends ArrangementCommand implements IUploadArrangementForm {
+    completedAtUtc?: Date;
     formName?: string | undefined;
     formVersion?: string | undefined;
     uploadedFileName?: string | undefined;
@@ -3566,6 +3567,7 @@ export class UploadArrangementForm extends ArrangementCommand implements IUpload
     init(_data?: any) {
         super.init(_data);
         if (_data) {
+            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
             this.formName = _data["formName"];
             this.formVersion = _data["formVersion"];
             this.uploadedFileName = _data["uploadedFileName"];
@@ -3582,6 +3584,7 @@ export class UploadArrangementForm extends ArrangementCommand implements IUpload
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
+        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
         data["formName"] = this.formName;
         data["formVersion"] = this.formVersion;
         data["uploadedFileName"] = this.uploadedFileName;
@@ -3592,6 +3595,7 @@ export class UploadArrangementForm extends ArrangementCommand implements IUpload
 }
 
 export interface IUploadArrangementForm extends IArrangementCommand {
+    completedAtUtc?: Date;
     formName?: string | undefined;
     formVersion?: string | undefined;
     uploadedFileName?: string | undefined;
@@ -4165,6 +4169,7 @@ export interface ISetVolunteerFamilyNote extends IVolunteerFamilyCommand {
 }
 
 export class UploadVolunteerFamilyForm extends VolunteerFamilyCommand implements IUploadVolunteerFamilyForm {
+    completedAtUtc?: Date;
     formName?: string | undefined;
     formVersion?: string | undefined;
     uploadedFileName?: string | undefined;
@@ -4178,6 +4183,7 @@ export class UploadVolunteerFamilyForm extends VolunteerFamilyCommand implements
     init(_data?: any) {
         super.init(_data);
         if (_data) {
+            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
             this.formName = _data["formName"];
             this.formVersion = _data["formVersion"];
             this.uploadedFileName = _data["uploadedFileName"];
@@ -4194,6 +4200,7 @@ export class UploadVolunteerFamilyForm extends VolunteerFamilyCommand implements
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
+        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
         data["formName"] = this.formName;
         data["formVersion"] = this.formVersion;
         data["uploadedFileName"] = this.uploadedFileName;
@@ -4204,6 +4211,7 @@ export class UploadVolunteerFamilyForm extends VolunteerFamilyCommand implements
 }
 
 export interface IUploadVolunteerFamilyForm extends IVolunteerFamilyCommand {
+    completedAtUtc?: Date;
     formName?: string | undefined;
     formVersion?: string | undefined;
     uploadedFileName?: string | undefined;
@@ -4416,6 +4424,7 @@ export interface ISetVolunteerNote extends IVolunteerCommand {
 }
 
 export class UploadVolunteerForm extends VolunteerCommand implements IUploadVolunteerForm {
+    completedAtUtc?: Date;
     formName?: string | undefined;
     formVersion?: string | undefined;
     uploadedFileName?: string | undefined;
@@ -4429,6 +4438,7 @@ export class UploadVolunteerForm extends VolunteerCommand implements IUploadVolu
     init(_data?: any) {
         super.init(_data);
         if (_data) {
+            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
             this.formName = _data["formName"];
             this.formVersion = _data["formVersion"];
             this.uploadedFileName = _data["uploadedFileName"];
@@ -4445,6 +4455,7 @@ export class UploadVolunteerForm extends VolunteerCommand implements IUploadVolu
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
+        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
         data["formName"] = this.formName;
         data["formVersion"] = this.formVersion;
         data["uploadedFileName"] = this.uploadedFileName;
@@ -4455,6 +4466,7 @@ export class UploadVolunteerForm extends VolunteerCommand implements IUploadVolu
 }
 
 export interface IUploadVolunteerForm extends IVolunteerCommand {
+    completedAtUtc?: Date;
     formName?: string | undefined;
     formVersion?: string | undefined;
     uploadedFileName?: string | undefined;
