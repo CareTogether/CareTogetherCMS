@@ -83,7 +83,7 @@ export function RecordVolunteerFamilyStepDialog({stepActionRequirement, voluntee
               <DateTimePicker
                 label="When did this occur?"
                 value={performedAtLocal}
-                disableFuture format="yyyy/MM/dd hh:mm aa"
+                disableFuture format="MM/dd/yyyy hh:mm aa"
                 onChange={(date) => date && setPerformedAtLocal(date)}
                 showTodayButton />
             </DialogContent>
