@@ -39,7 +39,7 @@ const useStyles = makeStyles((theme) => ({
   fabAdd: {
     position: 'fixed',
     right: '30px',
-    bottom: '40px'
+    bottom: '70px'
   }
 }));
 
