@@ -1144,6 +1144,9 @@
             "type": "string",
             "nullable": true
           },
+          "gender": {
+            "$ref": "#/components/schemas/Gender"
+          },
           "age": {
             "nullable": true,
             "oneOf": [
@@ -1153,6 +1156,20 @@
             ]
           }
         }
+      },
+      "Gender": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Male",
+          "Female",
+          "SeeNotes"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
       },
       "Age": {
         "type": "object",
@@ -2720,6 +2737,9 @@
                 "type": "string",
                 "nullable": true
               },
+              "gender": {
+                "$ref": "#/components/schemas/Gender"
+              },
               "age": {
                 "nullable": true,
                 "oneOf": [
@@ -2756,6 +2776,9 @@
               "lastName": {
                 "type": "string",
                 "nullable": true
+              },
+              "gender": {
+                "$ref": "#/components/schemas/Gender"
               },
               "age": {
                 "nullable": true,

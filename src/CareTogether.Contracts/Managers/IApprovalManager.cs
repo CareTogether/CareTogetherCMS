@@ -20,10 +20,10 @@ namespace CareTogether.Managers
     [JsonHierarchyBase]
     public abstract partial record ApprovalCommand();
     public sealed record CreateVolunteerFamilyWithNewAdultCommand(
-        string FirstName, string LastName, Age Age, FamilyAdultRelationshipInfo FamilyAdultRelationshipInfo)
+        string FirstName, string LastName, Gender Gender, Age Age, FamilyAdultRelationshipInfo FamilyAdultRelationshipInfo)
         : ApprovalCommand;
     public sealed record AddAdultToFamilyCommand(Guid FamilyId,
-        string FirstName, string LastName, Age Age, FamilyAdultRelationshipInfo FamilyAdultRelationshipInfo)
+        string FirstName, string LastName, Gender Gender, Age Age, FamilyAdultRelationshipInfo FamilyAdultRelationshipInfo)
         : ApprovalCommand;
 
     public interface IApprovalManager

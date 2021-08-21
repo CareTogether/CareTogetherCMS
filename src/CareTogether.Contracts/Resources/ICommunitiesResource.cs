@@ -11,7 +11,7 @@ namespace CareTogether.Resources
         List<Person> Children,
         List<CustodialRelationship> CustodialRelationships);
     public sealed record Person(Guid Id, Guid? UserId,
-        string FirstName, string LastName, Age Age);
+        string FirstName, string LastName, Gender Gender, Age Age);
     public sealed record FamilyAdultRelationshipInfo(
         FamilyAdultRelationshipType RelationshipToFamily, string FamilyRelationshipNotes,
         bool IsInHousehold, bool IsPrimaryFamilyContact, string SafetyRiskNotes);
@@ -19,6 +19,7 @@ namespace CareTogether.Resources
     public sealed record CustodialRelationship(
         Guid ChildId, Guid PersonId, CustodialRelationshipType Type);
     public enum CustodialRelationshipType { ParentWithCustody, ParentWithCourtAppointedCustody, LegalGuardian }
+    public enum Gender { Male, Female, SeeNotes }
 
     [JsonHierarchyBase]
     public abstract partial record Age();
@@ -53,7 +54,7 @@ namespace CareTogether.Resources
 
     [JsonHierarchyBase]
     public abstract partial record PersonCommand(Guid PersonId);
-    public sealed record CreatePerson(Guid PersonId, Guid? UserId, string FirstName, string LastName, Age Age)
+    public sealed record CreatePerson(Guid PersonId, Guid? UserId, string FirstName, string LastName, Gender Gender, Age Age)
         : PersonCommand(PersonId);
     public sealed record UpdatePersonName(Guid PersonId, string FirstName, string LastName)
         : PersonCommand(PersonId);

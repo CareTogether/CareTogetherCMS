@@ -109,7 +109,7 @@ namespace CareTogether.Managers
                 case AddAdultToFamilyCommand c:
                     {
                         var adultPersonId = Guid.NewGuid();
-                        var createPersonSubcommand = new CreatePerson(adultPersonId, null, c.FirstName, c.LastName, c.Age);
+                        var createPersonSubcommand = new CreatePerson(adultPersonId, null, c.FirstName, c.LastName, c.Gender, c.Age);
                         var addAdultToFamilySubcommand = new AddAdultToFamily(c.FamilyId, adultPersonId, c.FamilyAdultRelationshipInfo);
 
                         //TODO: Authorize the subcommands via the policy evaluation engine
@@ -140,7 +140,7 @@ namespace CareTogether.Managers
                     {
                         var adultPersonId = Guid.NewGuid();
                         var familyId = Guid.NewGuid();
-                        var createPersonSubcommand = new CreatePerson(adultPersonId, null, c.FirstName, c.LastName, c.Age);
+                        var createPersonSubcommand = new CreatePerson(adultPersonId, null, c.FirstName, c.LastName, c.Gender, c.Age);
                         var createFamilySubcommand = new CreateFamily(familyId,
                             new List<(Guid, FamilyAdultRelationshipInfo)>
                             {

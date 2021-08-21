@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@material-ui/core';
-import { Age, ExactAge, FamilyAdultRelationshipType, AgeInYears } from '../GeneratedClient';
+import { Age, ExactAge, FamilyAdultRelationshipType, AgeInYears, Gender } from '../GeneratedClient';
 import { useVolunteerFamiliesModel } from '../Model/VolunteerFamiliesModel';
 import WarningIcon from '@material-ui/icons/Warning';
 import { KeyboardDatePicker } from '@material-ui/pickers';
@@ -26,7 +26,8 @@ export function CreateVolunteerFamilyDialog({open, onClose}: CreateVolunteerFami
   const [fields, setFields] = useState({
     firstName: '',
     lastName: '',
-    dateOfBirth: new Date(),
+    gender: undefined as Gender | undefined,
+    dateOfBirth: null as Date | null,
     ageInYears: undefined as number | undefined,
     isInHousehold: true,
     isPrimaryFamilyContact: true,
@@ -35,7 +36,7 @@ export function CreateVolunteerFamilyDialog({open, onClose}: CreateVolunteerFami
     safetyRiskNotes: undefined as string | undefined
   });
   const {
-    firstName, lastName, dateOfBirth, ageInYears,
+    firstName, lastName, gender, dateOfBirth, ageInYears,
     isInHousehold, isPrimaryFamilyContact, relationshipToFamily,
     familyRelationshipNotes, safetyRiskNotes } = fields;
   const [ageType, setAgeType] = useState<'exact' | 'inYears'>('exact');
@@ -51,20 +52,26 @@ export function CreateVolunteerFamilyDialog({open, onClose}: CreateVolunteerFami
   async function addAdult() {
     if (firstName.length <= 0 || lastName.length <= 0) {
       alert("First and last name are required. Try again.");
+    } else if (typeof(gender) === 'undefined') {
+      alert("Gender was not selected. Try again.");
+    } else if (ageType === 'exact' && dateOfBirth == null) {
+      alert("Date of birth was not specified. Try again.");
+    } else if (ageType === 'inYears' && typeof(ageInYears) === 'undefined') {
+      alert("Age in years was not specified. Try again.");
     } else if (relationshipToFamily === '') { //TODO: Actual validation!
       alert("Family relationship was not selected. Try again.");
     } else {
       let age: Age;
       if (ageType === 'exact') {
         age = new ExactAge();
-        (age as ExactAge).dateOfBirth = dateOfBirth;
+        (age as ExactAge).dateOfBirth = (dateOfBirth == null ? undefined : dateOfBirth);
       } else {
         age = new AgeInYears();
         (age as AgeInYears).years = ageInYears;
         (age as AgeInYears).asOf = new Date();
       }
       /*const newFamily =*/ await volunteerFamiliesModel.createVolunteerFamilyWithNewAdult(
-        firstName, lastName, age,
+        firstName, lastName, gender, age,
         isInHousehold, isPrimaryFamilyContact, relationshipToFamily as FamilyAdultRelationshipType,
         familyRelationshipNotes, safetyRiskNotes);
       //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
@@ -74,7 +81,8 @@ export function CreateVolunteerFamilyDialog({open, onClose}: CreateVolunteerFami
       setFields({
         firstName: '',
         lastName: '',
-        dateOfBirth: new Date(),
+        gender: undefined as Gender | undefined,
+        dateOfBirth: null as Date | null,
         ageInYears: undefined as number | undefined,
         isInHousehold: true,
         isPrimaryFamilyContact: true,
@@ -103,6 +111,17 @@ export function CreateVolunteerFamilyDialog({open, onClose}: CreateVolunteerFami
             <Grid item xs={12} sm={6}>
               <TextField required id="last-name" label="Last Name" fullWidth size="small"
                 value={lastName} onChange={e => setFields({...fields, lastName: e.target.value})} />
+            </Grid>
+            <Grid item xs={12}>
+              <FormControl component="fieldset">
+                <FormLabel component="legend">Gender:</FormLabel>
+                <RadioGroup aria-label="ageType" name="genderType" row
+                  value={typeof(gender) === 'undefined' ? null : Gender[gender]} onChange={e => { console.log(e.target.value); console.log(Gender[e.target.value as keyof typeof Gender]); setFields({...fields, gender: Gender[e.target.value as keyof typeof Gender]}); }}>
+                  <FormControlLabel value={Gender[Gender.Male]} control={<Radio size="small" />} label="Male" />
+                  <FormControlLabel value={Gender[Gender.Female]} control={<Radio size="small" />} label="Female" />
+                  <FormControlLabel value={Gender[Gender.SeeNotes]} control={<Radio size="small" />} label="See Notes" />
+                </RadioGroup>
+              </FormControl>
             </Grid>
             <Grid item xs={12} sm={4}>
               <FormControl component="fieldset">
