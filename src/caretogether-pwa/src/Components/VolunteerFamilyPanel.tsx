@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Container, Toolbar, Chip, Button, Menu, MenuItem, Divider } from '@material-ui/core';
+import { Container, Toolbar, Chip, Button, Menu, MenuItem, Divider, useMediaQuery, useTheme } from '@material-ui/core';
 import { VolunteerFamily, FamilyAdultRelationshipType, FormUploadRequirement, ActionRequirement, ActivityRequirement, Person } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { adultActivityTypesData, adultDocumentTypesData, familyActivityTypesData, familyDocumentTypesData } from '../Model/ConfigurationModel';
@@ -13,6 +13,7 @@ import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
 import { RecordVolunteerAdultStepDialog } from './RecordVolunteerAdultStepDialog';
 import { AddAdultDialog } from './AddAdultDialog';
 import { format } from 'date-fns';
+import { ArrowBack } from '@material-ui/icons';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -32,10 +33,11 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 interface VolunteerFamilyPanelProps {
-  volunteerFamilyId: string
+  volunteerFamilyId: string,
+  onBack: () => void,
 }
 
-export function VolunteerFamilyPanel({volunteerFamilyId}: VolunteerFamilyPanelProps) {
+export function VolunteerFamilyPanel({volunteerFamilyId, onBack}: VolunteerFamilyPanelProps) {
   const classes = useStyles();
 
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData); // Add as a dependency, rather than passing the selected family state in as props, to enable refresh
@@ -45,7 +47,9 @@ export function VolunteerFamilyPanel({volunteerFamilyId}: VolunteerFamilyPanelPr
   const adultActivityTypes = useRecoilValue(adultActivityTypesData);
 
   const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as VolunteerFamily;
-
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
   const [familyRecordMenuAnchor, setFamilyRecordMenuAnchor] = useState<Element | null>(null);
   const [recordFamilyStepParameter, setRecordFamilyStepParameter] = useState<ActionRequirement | null>(null);
   function selectRecordFamilyStep(requirement: FormUploadRequirement | ActivityRequirement) {
@@ -66,6 +70,12 @@ export function VolunteerFamilyPanel({volunteerFamilyId}: VolunteerFamilyPanelPr
   return (
   <Container>
     <Toolbar variant="dense" disableGutters={true}>
+      {isMobile && <Button
+        onClick={() => onBack()}
+        variant="contained" color="default" size="small" className={classes.button}
+        startIcon={<ArrowBack />}>
+        Back
+      </Button>} 
       <h3 className={classes.sectionHeading}>{
         volunteerFamily.family?.adults?.filter(adult => adult.item2?.isPrimaryFamilyContact)[0]?.item1?.lastName + " Family"}
       </h3>
