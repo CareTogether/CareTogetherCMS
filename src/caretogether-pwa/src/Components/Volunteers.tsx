@@ -147,7 +147,7 @@ function Volunteers() {
         <Drawer anchor="right" classes={{
             paper: clsx(classes.drawerPaper),
           }} open={selectedVolunteerFamilyId !== null} onClose={() => setSelectedVolunteerFamilyId(null)}>
-          {(selectedVolunteerFamilyId && <VolunteerFamilyPanel volunteerFamilyId={selectedVolunteerFamilyId}/>) || null}
+          {(selectedVolunteerFamilyId && <VolunteerFamilyPanel volunteerFamilyId={selectedVolunteerFamilyId} onBack={() => setSelectedVolunteerFamilyId(null)}/>) || null}
         </Drawer>
       </Grid>
     </Grid>
