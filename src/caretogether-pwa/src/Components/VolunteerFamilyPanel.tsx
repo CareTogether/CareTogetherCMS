@@ -149,8 +149,8 @@ export function VolunteerFamilyPanel({volunteerFamilyId, onBack}: VolunteerFamil
             {adult.item2.isPrimaryFamilyContact && <Chip size="small" label="Primary Family Contact" />}
           </div>
           <dl>
-            {adult.item2.safetyRiskNotes && <><dt><strong>⚠ Safety Risk</strong></dt><dd>{adult.item2.safetyRiskNotes}</dd></>}
-            {adult.item2.familyRelationshipNotes && <><dt>📝 Family Relationship Notes</dt><dd>{adult.item2.familyRelationshipNotes}</dd></>}
+            {adult.item2.concerns && <><dt><strong>⚠ Concerns</strong></dt><dd>{adult.item2.concerns}</dd></>}
+            {adult.item2.notes && <><dt>📝 Notes</dt><dd>{adult.item2.notes}</dd></>}
           </dl>
           <ul>
             {volunteerFamily.individualVolunteers?.[adult.item1.id].approvalFormUploads?.map((upload, i) => (

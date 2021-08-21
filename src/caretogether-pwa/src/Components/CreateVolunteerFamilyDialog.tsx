@@ -32,13 +32,13 @@ export function CreateVolunteerFamilyDialog({open, onClose}: CreateVolunteerFami
     isInHousehold: true,
     isPrimaryFamilyContact: true,
     relationshipToFamily: '' as FamilyAdultRelationshipType | '',
-    familyRelationshipNotes: undefined as string | undefined,
-    safetyRiskNotes: undefined as string | undefined
+    notes: undefined as string | undefined,
+    concerns: undefined as string | undefined
   });
   const {
     firstName, lastName, gender, dateOfBirth, ageInYears,
     isInHousehold, isPrimaryFamilyContact, relationshipToFamily,
-    familyRelationshipNotes, safetyRiskNotes } = fields;
+    notes: notes, concerns: concerns } = fields;
   const [ageType, setAgeType] = useState<'exact' | 'inYears'>('exact');
   const volunteerFamiliesModel = useVolunteerFamiliesModel();
 
@@ -73,7 +73,7 @@ export function CreateVolunteerFamilyDialog({open, onClose}: CreateVolunteerFami
       /*const newFamily =*/ await volunteerFamiliesModel.createVolunteerFamilyWithNewAdult(
         firstName, lastName, gender, age,
         isInHousehold, isPrimaryFamilyContact, relationshipToFamily as FamilyAdultRelationshipType,
-        familyRelationshipNotes, safetyRiskNotes);
+        notes, concerns);
       //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
       //TODO: Retrieve the created volunteer family and return it through this onClose callback!
       onClose();
@@ -87,14 +87,14 @@ export function CreateVolunteerFamilyDialog({open, onClose}: CreateVolunteerFami
         isInHousehold: true,
         isPrimaryFamilyContact: true,
         relationshipToFamily: '' as FamilyAdultRelationshipType | '',
-        familyRelationshipNotes: undefined as string | undefined,
-        safetyRiskNotes: undefined as string | undefined
+        notes: undefined as string | undefined,
+        concerns: undefined as string | undefined
       });
     }
   }
 
   return (
-    <Dialog open={open} onClose={onClose} aria-labelledby="create-family-title">
+    <Dialog open={open} onClose={onClose} scroll='body' aria-labelledby="create-family-title">
       <DialogTitle id="create-family-title">
         Create Volunteer Family - First Adult
       </DialogTitle>
@@ -183,16 +183,8 @@ export function CreateVolunteerFamilyDialog({open, onClose}: CreateVolunteerFami
             </Grid>
             <Grid item xs={12}>
               <TextField
-                id="family-relationship-notes"
-                label="Family Relationship Notes"
-                multiline fullWidth variant="outlined" rows={2} rowsMax={5} size="small"
-                value={familyRelationshipNotes} onChange={e => setFields({...fields, familyRelationshipNotes: e.target.value})}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                id="safety-risk-notes"
-                label="Safety Risk Notes"
+                id="concerns"
+                label="Concerns" placeholder="Note any safety risks, allergies, etc."
                 multiline fullWidth variant="outlined" rows={2} rowsMax={5} size="small"
                 InputProps={{
                   startAdornment: (
@@ -201,7 +193,15 @@ export function CreateVolunteerFamilyDialog({open, onClose}: CreateVolunteerFami
                     </InputAdornment>
                   ),
                 }}
-                value={safetyRiskNotes} onChange={e => setFields({...fields, safetyRiskNotes: e.target.value})}
+                value={concerns} onChange={e => setFields({...fields, concerns: e.target.value})}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                id="notes"
+                label="Notes" placeholder="Space for any general notes"
+                multiline fullWidth variant="outlined" rows={2} rowsMax={5} size="small"
+                value={notes} onChange={e => setFields({...fields, notes: e.target.value})}
               />
             </Grid>
           </Grid>

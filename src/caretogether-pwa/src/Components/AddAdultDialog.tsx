@@ -33,13 +33,13 @@ export function AddAdultDialog({volunteerFamily, open, onClose}: AddAdultDialogP
     isInHousehold: true,
     isPrimaryFamilyContact: true,
     relationshipToFamily: '' as FamilyAdultRelationshipType | '',
-    familyRelationshipNotes: undefined as string | undefined,
-    safetyRiskNotes: undefined as string | undefined
+    notes: undefined as string | undefined,
+    concerns: undefined as string | undefined
   });
   const {
     firstName, lastName, gender, dateOfBirth, ageInYears,
     isInHousehold, isPrimaryFamilyContact, relationshipToFamily,
-    familyRelationshipNotes, safetyRiskNotes } = fields;
+    notes, concerns } = fields;
   const [ageType, setAgeType] = useState<'exact' | 'inYears'>('exact');
   const volunteerFamiliesModel = useVolunteerFamiliesModel();
 
@@ -74,7 +74,7 @@ export function AddAdultDialog({volunteerFamily, open, onClose}: AddAdultDialogP
       await volunteerFamiliesModel.addAdult(volunteerFamily.family?.id as string,
         firstName, lastName, gender, age,
         isInHousehold, isPrimaryFamilyContact, relationshipToFamily as FamilyAdultRelationshipType,
-        familyRelationshipNotes, safetyRiskNotes);
+        notes, concerns);
       //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
       onClose();
       // Since this dialog can be kept around, reset the state so the user can't accidentally submit previous values again.
@@ -87,14 +87,14 @@ export function AddAdultDialog({volunteerFamily, open, onClose}: AddAdultDialogP
         isInHousehold: true,
         isPrimaryFamilyContact: true,
         relationshipToFamily: '' as FamilyAdultRelationshipType | '',
-        familyRelationshipNotes: undefined as string | undefined,
-        safetyRiskNotes: undefined as string | undefined
+        notes: undefined as string | undefined,
+        concerns: undefined as string | undefined
       });
     }
   }
 
   return (
-    <Dialog open={open} onClose={onClose} aria-labelledby="add-adult-title">
+    <Dialog open={open} onClose={onClose} scroll='body' aria-labelledby="add-adult-title">
       <DialogTitle id="add-adult-title">
         Add Adult to {volunteerFamily.family?.adults?.filter(adult => adult.item2?.isPrimaryFamilyContact)[0]?.item1?.lastName} Family
       </DialogTitle>
@@ -183,16 +183,8 @@ export function AddAdultDialog({volunteerFamily, open, onClose}: AddAdultDialogP
             </Grid>
             <Grid item xs={12}>
               <TextField
-                id="family-relationship-notes"
-                label="Family Relationship Notes"
-                multiline fullWidth variant="outlined" rows={2} rowsMax={5} size="small"
-                value={familyRelationshipNotes} onChange={e => setFields({...fields, familyRelationshipNotes: e.target.value})}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                id="safety-risk-notes"
-                label="Safety Risk Notes"
+                id="concerns"
+                label="Concerns" placeholder="Note any safety risks, allergies, etc."
                 multiline fullWidth variant="outlined" rows={2} rowsMax={5} size="small"
                 InputProps={{
                   startAdornment: (
@@ -201,7 +193,15 @@ export function AddAdultDialog({volunteerFamily, open, onClose}: AddAdultDialogP
                     </InputAdornment>
                   ),
                 }}
-                value={safetyRiskNotes} onChange={e => setFields({...fields, safetyRiskNotes: e.target.value})}
+                value={concerns} onChange={e => setFields({...fields, concerns: e.target.value})}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                id="notes"
+                label="Notes" placeholder="Space for any general notes"
+                multiline fullWidth variant="outlined" rows={2} rowsMax={5} size="small"
+                value={notes} onChange={e => setFields({...fields, notes: e.target.value})}
               />
             </Grid>
           </Grid>
