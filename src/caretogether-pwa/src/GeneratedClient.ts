@@ -2299,10 +2299,10 @@ export interface IValueTupleOfPersonAndFamilyAdultRelationshipInfo {
 
 export class FamilyAdultRelationshipInfo implements IFamilyAdultRelationshipInfo {
     relationshipToFamily?: FamilyAdultRelationshipType;
-    familyRelationshipNotes?: string | undefined;
+    notes?: string | undefined;
     isInHousehold?: boolean;
     isPrimaryFamilyContact?: boolean;
-    safetyRiskNotes?: string | undefined;
+    concerns?: string | undefined;
 
     constructor(data?: IFamilyAdultRelationshipInfo) {
         if (data) {
@@ -2316,10 +2316,10 @@ export class FamilyAdultRelationshipInfo implements IFamilyAdultRelationshipInfo
     init(_data?: any) {
         if (_data) {
             this.relationshipToFamily = _data["relationshipToFamily"];
-            this.familyRelationshipNotes = _data["familyRelationshipNotes"];
+            this.notes = _data["notes"];
             this.isInHousehold = _data["isInHousehold"];
             this.isPrimaryFamilyContact = _data["isPrimaryFamilyContact"];
-            this.safetyRiskNotes = _data["safetyRiskNotes"];
+            this.concerns = _data["concerns"];
         }
     }
 
@@ -2333,20 +2333,20 @@ export class FamilyAdultRelationshipInfo implements IFamilyAdultRelationshipInfo
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["relationshipToFamily"] = this.relationshipToFamily;
-        data["familyRelationshipNotes"] = this.familyRelationshipNotes;
+        data["notes"] = this.notes;
         data["isInHousehold"] = this.isInHousehold;
         data["isPrimaryFamilyContact"] = this.isPrimaryFamilyContact;
-        data["safetyRiskNotes"] = this.safetyRiskNotes;
+        data["concerns"] = this.concerns;
         return data; 
     }
 }
 
 export interface IFamilyAdultRelationshipInfo {
     relationshipToFamily?: FamilyAdultRelationshipType;
-    familyRelationshipNotes?: string | undefined;
+    notes?: string | undefined;
     isInHousehold?: boolean;
     isPrimaryFamilyContact?: boolean;
-    safetyRiskNotes?: string | undefined;
+    concerns?: string | undefined;
 }
 
 export enum FamilyAdultRelationshipType {

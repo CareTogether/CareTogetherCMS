@@ -140,7 +140,7 @@ export function useVolunteerFamiliesModel() {
   const addAdult = useApprovalCommandCallback(
     async (volunteerFamilyId, firstName: string, lastName: string, gender: Gender, age: Age,
         isInHousehold: boolean, isPrimaryFamilyContact: boolean, relationshipToFamily?: FamilyAdultRelationshipType,
-        familyRelationshipNotes?: string, safetyRiskNotes?: string) => {
+        notes?: string, concerns?: string) => {
       const command = new AddAdultToFamilyCommand();
       command.familyId = volunteerFamilyId;
       command.firstName = firstName;
@@ -148,29 +148,29 @@ export function useVolunteerFamiliesModel() {
       command.gender = gender;
       command.age = age;
       command.familyAdultRelationshipInfo = new FamilyAdultRelationshipInfo({
-        familyRelationshipNotes: familyRelationshipNotes,
+        notes: notes,
         isInHousehold: isInHousehold,
         isPrimaryFamilyContact: isPrimaryFamilyContact,
         relationshipToFamily: relationshipToFamily,
-        safetyRiskNotes: safetyRiskNotes
+        concerns: concerns
       });
       return command;
     });
   const createVolunteerFamilyWithNewAdult = useApprovalCommandCallback(
     async (firstName: string, lastName: string, gender: Gender, age: Age,
       isInHousehold: boolean, isPrimaryFamilyContact: boolean, relationshipToFamily?: FamilyAdultRelationshipType,
-        familyRelationshipNotes?: string, safetyRiskNotes?: string) => {
+        notes?: string, concerns?: string) => {
       const command = new CreateVolunteerFamilyWithNewAdultCommand();
       command.firstName = firstName;
       command.lastName = lastName;
       command.gender = gender
       command.age = age;
       command.familyAdultRelationshipInfo = new FamilyAdultRelationshipInfo({
-        familyRelationshipNotes: familyRelationshipNotes,
+        notes: notes,
         isInHousehold: isInHousehold,
         isPrimaryFamilyContact: isPrimaryFamilyContact,
         relationshipToFamily: relationshipToFamily,
-        safetyRiskNotes: safetyRiskNotes
+        concerns: concerns
       });
       return command;
     });

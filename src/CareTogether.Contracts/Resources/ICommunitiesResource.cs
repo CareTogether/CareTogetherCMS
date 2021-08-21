@@ -13,8 +13,8 @@ namespace CareTogether.Resources
     public sealed record Person(Guid Id, Guid? UserId,
         string FirstName, string LastName, Gender Gender, Age Age);
     public sealed record FamilyAdultRelationshipInfo(
-        FamilyAdultRelationshipType RelationshipToFamily, string FamilyRelationshipNotes,
-        bool IsInHousehold, bool IsPrimaryFamilyContact, string SafetyRiskNotes);
+        FamilyAdultRelationshipType RelationshipToFamily, string Notes,
+        bool IsInHousehold, bool IsPrimaryFamilyContact, string Concerns);
     public enum FamilyAdultRelationshipType { Single, Dad, Mom, Relative, Friend, DomesticWorker }
     public sealed record CustodialRelationship(
         Guid ChildId, Guid PersonId, CustodialRelationshipType Type);
