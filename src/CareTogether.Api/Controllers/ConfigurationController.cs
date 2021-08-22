@@ -10,7 +10,8 @@ namespace CareTogether.Api.Controllers
     public record OrganizationConfiguration(string OrganizationName,
         ImmutableList<LocationConfiguration> Locations);
 
-    public record LocationConfiguration(Guid Id, string Name);
+    public record LocationConfiguration(Guid Id, string Name,
+        ImmutableList<string> Ethnicities, ImmutableList<string> AdultFamilyRelationships);
 
     [Authorize]
     [ApiController]
@@ -33,8 +34,12 @@ namespace CareTogether.Api.Controllers
 
             return Ok(new OrganizationConfiguration("CareTogether",
                 ImmutableList<LocationConfiguration>.Empty
-                    .Add(new LocationConfiguration(Guid.Parse("22222222-2222-2222-2222-222222222222"), "Atlantis"))
-                    .Add(new LocationConfiguration(Guid.Parse("33333333-3333-3333-3333-333333333333"), "El Dorado"))));
+                    .Add(new LocationConfiguration(Guid.Parse("22222222-2222-2222-2222-222222222222"), "Atlantis",
+                        ImmutableList<string>.Empty.AddRange(new[] { "Atlantean", "Aquatic", "Norse" }),
+                        ImmutableList<string>.Empty.AddRange(new[] { "Single", "Spouse", "Partner", "Dad", "Mom", "Relative", "Droid" })))
+                    .Add(new LocationConfiguration(Guid.Parse("33333333-3333-3333-3333-333333333333"), "El Dorado",
+                        ImmutableList<string>.Empty.AddRange(new[] { "Amazon", "Caucasian", "Other" }),
+                        ImmutableList<string>.Empty.AddRange(new[] { "Single", "Spouse", "Partner", "Dad", "Mom", "Relative", "Domestic Worker" })))));
         }
 
         [HttpGet("/api/{organizationId:guid}/{locationId:guid}/[controller]/policy")]

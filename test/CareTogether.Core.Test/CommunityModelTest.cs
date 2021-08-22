@@ -35,7 +35,7 @@ namespace CareTogether.Core.Test
         public async Task TestInitializeAsyncWithAnEvent()
         {
             var dut = await CommunityModel.InitializeAsync(EventSequence(
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid1, null, "John", "Smith", Gender.Male, null))
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid1, null, "John", "Smith", Gender.Male, null, "Ethnic"))
             ));
 
             Assert.AreEqual(0, dut.LastKnownSequenceNumber);
@@ -53,8 +53,8 @@ namespace CareTogether.Core.Test
         public async Task TestInitializeAsyncWithSeveralEvents()
         {
             var dut = await CommunityModel.InitializeAsync(EventSequence(
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid1, null, "John", "Doe", Gender.Male, null)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid2, guid3, "Jane", "Smith", Gender.Female, new AgeInYears(42, new DateTime(2021, 1, 1)))),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid1, null, "John", "Doe", Gender.Male, null, "Ethnic")),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid2, guid3, "Jane", "Smith", Gender.Female, new AgeInYears(42, new DateTime(2021, 1, 1)), "Ethnic")),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonName(guid2, "Jane", "Doe")),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonAge(guid1, new ExactAge(new DateTime(1975, 1, 1)))),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonAge(guid2, new ExactAge(new DateTime(1979, 7, 1)))),
@@ -81,23 +81,23 @@ namespace CareTogether.Core.Test
         public async Task TestInitializeAsyncWithEvenMoreEvents()
         {
             var dut = await CommunityModel.InitializeAsync(EventSequence(
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid1, null, "John", "Doe", Gender.Male, null)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid2, guid3, "Jane", "Smith", Gender.Female, new AgeInYears(42, new DateTime(2021, 1, 1)))),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid1, null, "John", "Doe", Gender.Male, null, "Ethnic")),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid2, guid3, "Jane", "Smith", Gender.Female, new AgeInYears(42, new DateTime(2021, 1, 1)), "Ethnic")),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonName(guid2, "Jane", "Doe")),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonAge(guid1, new ExactAge(new DateTime(1975, 1, 1)))),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonAge(guid2, new ExactAge(new DateTime(1979, 7, 1)))),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonUserLink(guid1, guid4)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid5,
-                    new List<(Guid, FamilyAdultRelationshipInfo)> { (guid1, new FamilyAdultRelationshipInfo(FamilyAdultRelationshipType.Dad, "ABC", true, true, "Test")) },
+                    new List<(Guid, FamilyAdultRelationshipInfo)> { (guid1, new FamilyAdultRelationshipInfo("Dad", "ABC", true, true, "Test")) },
                     null, null)),
-                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddAdultToFamily(guid5, guid2, new FamilyAdultRelationshipInfo(FamilyAdultRelationshipType.Mom, "DEF", true, true, null))),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid6, null, "Eric", "Doe", Gender.Male, new AgeInYears(12, new DateTime(2021, 1, 1)))),
+                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddAdultToFamily(guid5, guid2, new FamilyAdultRelationshipInfo("Mom", "DEF", true, true, null))),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid6, null, "Eric", "Doe", Gender.Male, new AgeInYears(12, new DateTime(2021, 1, 1)), "Ethnic")),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddChildToFamily(guid5, guid6, new List<CustodialRelationship>
                 {
                     new CustodialRelationship(guid6, guid1, CustodialRelationshipType.ParentWithCustody),
                     new CustodialRelationship(guid6, guid2, CustodialRelationshipType.ParentWithCustody)
                 })),
-                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdateAdultRelationshipToFamily(guid5, guid1, new FamilyAdultRelationshipInfo(FamilyAdultRelationshipType.Dad, "ABC123", false, false, "XYZ"))),
+                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdateAdultRelationshipToFamily(guid5, guid1, new FamilyAdultRelationshipInfo("Dad", "ABC123", false, false, "XYZ"))),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new RemoveCustodialRelationship(guid5, guid6, guid1)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdateCustodialRelationshipType(guid5, guid6, guid2, CustodialRelationshipType.ParentWithCourtAppointedCustody)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddCustodialRelationship(guid5, guid6, guid1, CustodialRelationshipType.ParentWithCourtAppointedCustody))
@@ -107,22 +107,22 @@ namespace CareTogether.Core.Test
             var families = dut.FindFamilies(x => true);
             var people = dut.FindPeople(x => true);
             Assert.AreEqual(3, people.Count);
-            Assert.AreEqual(new Person(guid1, guid4, "John", "Doe", Gender.Male, new ExactAge(new DateTime(1975, 1, 1))), people.Single(p => p.Id == guid1));
-            Assert.AreEqual(new Person(guid2, guid3, "Jane", "Doe", Gender.Female, new ExactAge(new DateTime(1979, 7, 1))), people.Single(p => p.Id == guid2));
-            Assert.AreEqual(new Person(guid6, null, "Eric", "Doe", Gender.Male, new AgeInYears(12, new DateTime(2021, 1, 1))), people.Single(p => p.Id == guid6));
+            Assert.AreEqual(new Person(guid1, guid4, "John", "Doe", Gender.Male, new ExactAge(new DateTime(1975, 1, 1)), "Ethnic"), people.Single(p => p.Id == guid1));
+            Assert.AreEqual(new Person(guid2, guid3, "Jane", "Doe", Gender.Female, new ExactAge(new DateTime(1979, 7, 1)), "Ethnic"), people.Single(p => p.Id == guid2));
+            Assert.AreEqual(new Person(guid6, null, "Eric", "Doe", Gender.Male, new AgeInYears(12, new DateTime(2021, 1, 1)), "Ethnic"), people.Single(p => p.Id == guid6));
             Assert.AreEqual(1, families.Count);
             var actualFamily = families[0];
             var expectedFamily = new Family(guid5,
                 new List<(Person, FamilyAdultRelationshipInfo)>
                 {
-                    (new Person(guid1, guid4, "John", "Doe", Gender.Male, new ExactAge(new DateTime(1975, 1, 1))),
-                        new FamilyAdultRelationshipInfo(FamilyAdultRelationshipType.Dad, "ABC123", false, false, "XYZ")),
-                    (new Person(guid2, guid3, "Jane", "Doe", Gender.Female, new ExactAge(new DateTime(1979, 7, 1))),
-                        new FamilyAdultRelationshipInfo(FamilyAdultRelationshipType.Mom, "DEF", true, true, null))
+                    (new Person(guid1, guid4, "John", "Doe", Gender.Male, new ExactAge(new DateTime(1975, 1, 1)), "Ethnic"),
+                        new FamilyAdultRelationshipInfo("Dad", "ABC123", false, false, "XYZ")),
+                    (new Person(guid2, guid3, "Jane", "Doe", Gender.Female, new ExactAge(new DateTime(1979, 7, 1)), "Ethnic"),
+                        new FamilyAdultRelationshipInfo("Mom", "DEF", true, true, null))
                 },
                 new List<Person>
                 {
-                    new Person(guid6, null, "Eric", "Doe", Gender.Male, new AgeInYears(12, new DateTime(2021, 1, 1)))
+                    new Person(guid6, null, "Eric", "Doe", Gender.Male, new AgeInYears(12, new DateTime(2021, 1, 1)), "Ethnic")
                 },
                 new List<CustodialRelationship>
                 {

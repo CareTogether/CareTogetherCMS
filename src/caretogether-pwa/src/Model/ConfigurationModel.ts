@@ -29,6 +29,24 @@ export const locationNameData = selector({
   }
 })
 
+export const ethnicitiesData = selector({
+  key: 'ethnicitiesData',
+  get: ({get}) => {
+    const organizationConfiguration = get(organizationConfigurationData);
+    const currentLocationId = get(currentLocationState);
+    return organizationConfiguration.locations?.find(x => x.id === currentLocationId)?.ethnicities as string[];
+  }
+})
+
+export const adultFamilyRelationshipsData = selector({
+  key: 'adultFamilyRelationshipsData',
+  get: ({get}) => {
+    const organizationConfiguration = get(organizationConfigurationData);
+    const currentLocationId = get(currentLocationState);
+    return organizationConfiguration.locations?.find(x => x.id === currentLocationId)?.adultFamilyRelationships as string[];
+  }
+})
+
 export const policyData = selector({
   key: 'policyData',
   get: async ({get}) => {
