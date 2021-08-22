@@ -1645,6 +1645,8 @@ export class Person implements IPerson {
     gender?: Gender;
     age?: Age | undefined;
     ethnicity?: string | undefined;
+    concerns?: string | undefined;
+    notes?: string | undefined;
 
     constructor(data?: IPerson) {
         if (data) {
@@ -1664,6 +1666,8 @@ export class Person implements IPerson {
             this.gender = _data["gender"];
             this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
             this.ethnicity = _data["ethnicity"];
+            this.concerns = _data["concerns"];
+            this.notes = _data["notes"];
         }
     }
 
@@ -1683,6 +1687,8 @@ export class Person implements IPerson {
         data["gender"] = this.gender;
         data["age"] = this.age ? this.age.toJSON() : <any>undefined;
         data["ethnicity"] = this.ethnicity;
+        data["concerns"] = this.concerns;
+        data["notes"] = this.notes;
         return data; 
     }
 }
@@ -1695,6 +1701,8 @@ export interface IPerson {
     gender?: Gender;
     age?: Age | undefined;
     ethnicity?: string | undefined;
+    concerns?: string | undefined;
+    notes?: string | undefined;
 }
 
 export enum Gender {
@@ -2327,10 +2335,8 @@ export interface IValueTupleOfPersonAndFamilyAdultRelationshipInfo {
 
 export class FamilyAdultRelationshipInfo implements IFamilyAdultRelationshipInfo {
     relationshipToFamily?: string | undefined;
-    notes?: string | undefined;
     isInHousehold?: boolean;
     isPrimaryFamilyContact?: boolean;
-    concerns?: string | undefined;
 
     constructor(data?: IFamilyAdultRelationshipInfo) {
         if (data) {
@@ -2344,10 +2350,8 @@ export class FamilyAdultRelationshipInfo implements IFamilyAdultRelationshipInfo
     init(_data?: any) {
         if (_data) {
             this.relationshipToFamily = _data["relationshipToFamily"];
-            this.notes = _data["notes"];
             this.isInHousehold = _data["isInHousehold"];
             this.isPrimaryFamilyContact = _data["isPrimaryFamilyContact"];
-            this.concerns = _data["concerns"];
         }
     }
 
@@ -2361,20 +2365,16 @@ export class FamilyAdultRelationshipInfo implements IFamilyAdultRelationshipInfo
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["relationshipToFamily"] = this.relationshipToFamily;
-        data["notes"] = this.notes;
         data["isInHousehold"] = this.isInHousehold;
         data["isPrimaryFamilyContact"] = this.isPrimaryFamilyContact;
-        data["concerns"] = this.concerns;
         return data; 
     }
 }
 
 export interface IFamilyAdultRelationshipInfo {
     relationshipToFamily?: string | undefined;
-    notes?: string | undefined;
     isInHousehold?: boolean;
     isPrimaryFamilyContact?: boolean;
-    concerns?: string | undefined;
 }
 
 export class CustodialRelationship implements ICustodialRelationship {
@@ -4552,6 +4552,8 @@ export class AddAdultToFamilyCommand extends ApprovalCommand implements IAddAdul
     age?: Age | undefined;
     ethnicity?: string | undefined;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo | undefined;
+    concerns?: string | undefined;
+    notes?: string | undefined;
 
     constructor(data?: IAddAdultToFamilyCommand) {
         super(data);
@@ -4568,6 +4570,8 @@ export class AddAdultToFamilyCommand extends ApprovalCommand implements IAddAdul
             this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
             this.ethnicity = _data["ethnicity"];
             this.familyAdultRelationshipInfo = _data["familyAdultRelationshipInfo"] ? FamilyAdultRelationshipInfo.fromJS(_data["familyAdultRelationshipInfo"]) : <any>undefined;
+            this.concerns = _data["concerns"];
+            this.notes = _data["notes"];
         }
     }
 
@@ -4587,6 +4591,8 @@ export class AddAdultToFamilyCommand extends ApprovalCommand implements IAddAdul
         data["age"] = this.age ? this.age.toJSON() : <any>undefined;
         data["ethnicity"] = this.ethnicity;
         data["familyAdultRelationshipInfo"] = this.familyAdultRelationshipInfo ? this.familyAdultRelationshipInfo.toJSON() : <any>undefined;
+        data["concerns"] = this.concerns;
+        data["notes"] = this.notes;
         super.toJSON(data);
         return data; 
     }
@@ -4600,6 +4606,8 @@ export interface IAddAdultToFamilyCommand extends IApprovalCommand {
     age?: Age | undefined;
     ethnicity?: string | undefined;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo | undefined;
+    concerns?: string | undefined;
+    notes?: string | undefined;
 }
 
 export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand implements ICreateVolunteerFamilyWithNewAdultCommand {
@@ -4609,6 +4617,8 @@ export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand im
     age?: Age | undefined;
     ethnicity?: string | undefined;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo | undefined;
+    concerns?: string | undefined;
+    notes?: string | undefined;
 
     constructor(data?: ICreateVolunteerFamilyWithNewAdultCommand) {
         super(data);
@@ -4624,6 +4634,8 @@ export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand im
             this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
             this.ethnicity = _data["ethnicity"];
             this.familyAdultRelationshipInfo = _data["familyAdultRelationshipInfo"] ? FamilyAdultRelationshipInfo.fromJS(_data["familyAdultRelationshipInfo"]) : <any>undefined;
+            this.concerns = _data["concerns"];
+            this.notes = _data["notes"];
         }
     }
 
@@ -4642,6 +4654,8 @@ export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand im
         data["age"] = this.age ? this.age.toJSON() : <any>undefined;
         data["ethnicity"] = this.ethnicity;
         data["familyAdultRelationshipInfo"] = this.familyAdultRelationshipInfo ? this.familyAdultRelationshipInfo.toJSON() : <any>undefined;
+        data["concerns"] = this.concerns;
+        data["notes"] = this.notes;
         super.toJSON(data);
         return data; 
     }
@@ -4654,6 +4668,8 @@ export interface ICreateVolunteerFamilyWithNewAdultCommand extends IApprovalComm
     age?: Age | undefined;
     ethnicity?: string | undefined;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo | undefined;
+    concerns?: string | undefined;
+    notes?: string | undefined;
 }
 
 export class ApiException extends Error {
