@@ -148,12 +148,12 @@ export function useVolunteerFamiliesModel() {
       command.gender = gender;
       command.age = age;
       command.ethnicity = ethnicity;
+      command.concerns = concerns;
+      command.notes = notes;
       command.familyAdultRelationshipInfo = new FamilyAdultRelationshipInfo({
-        notes: notes,
         isInHousehold: isInHousehold,
         isPrimaryFamilyContact: isPrimaryFamilyContact,
-        relationshipToFamily: relationshipToFamily,
-        concerns: concerns
+        relationshipToFamily: relationshipToFamily
       });
       return command;
     });
@@ -167,12 +167,12 @@ export function useVolunteerFamiliesModel() {
       command.gender = gender
       command.age = age;
       command.ethnicity = ethnicity;
+      command.concerns = concerns;
+      command.notes = notes;
       command.familyAdultRelationshipInfo = new FamilyAdultRelationshipInfo({
-        notes: notes,
         isInHousehold: isInHousehold,
         isPrimaryFamilyContact: isPrimaryFamilyContact,
-        relationshipToFamily: relationshipToFamily,
-        concerns: concerns
+        relationshipToFamily: relationshipToFamily
       });
       return command;
     });
