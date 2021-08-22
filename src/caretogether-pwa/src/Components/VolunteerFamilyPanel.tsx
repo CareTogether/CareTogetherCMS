@@ -130,7 +130,8 @@ export function VolunteerFamilyPanel({volunteerFamilyId, onBack}: VolunteerFamil
     {volunteerFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item2 && (
       <React.Fragment key={adult.item1.id}>
         <h4 className={classes.sectionHeading}>
-          {adult.item1.firstName} {adult.item1.lastName} (<AgeText age={adult.item1.age} /> {typeof(adult.item1.gender) === 'undefined' ? "" : Gender[adult.item1.gender]})
+          {adult.item1.firstName} {adult.item1.lastName} (
+            <AgeText age={adult.item1.age} /> {typeof(adult.item1.gender) === 'undefined' ? "" : Gender[adult.item1.gender]} {adult.item1.ethnicity})
           <Button aria-controls="adult-record-menu" aria-haspopup="true"
             variant="contained" color="default" size="small" className={classes.button}
             startIcon={<AssignmentTurnedInIcon />}
