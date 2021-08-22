@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Container, Toolbar, Chip, Button, Menu, MenuItem, Divider, useMediaQuery, useTheme } from '@material-ui/core';
-import { VolunteerFamily, FamilyAdultRelationshipType, FormUploadRequirement, ActionRequirement, ActivityRequirement, Person, Gender } from '../GeneratedClient';
+import { VolunteerFamily, FormUploadRequirement, ActionRequirement, ActivityRequirement, Person, Gender } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { adultActivityTypesData, adultDocumentTypesData, familyActivityTypesData, familyDocumentTypesData } from '../Model/ConfigurationModel';
 import { RoleApprovalStatus } from '../GeneratedClient';
@@ -144,7 +144,7 @@ export function VolunteerFamilyPanel({volunteerFamilyId, onBack}: VolunteerFamil
               <Chip key={role} size="small" color={approvalStatus === RoleApprovalStatus.Approved ? "primary" : "secondary"}
                 label={RoleApprovalStatus[approvalStatus] + " " + role} />
             ))}
-            {(adult.item2.relationshipToFamily && <Chip size="small" label={FamilyAdultRelationshipType[adult.item2.relationshipToFamily]} />) || null}
+            {(adult.item2.relationshipToFamily && <Chip size="small" label={adult.item2.relationshipToFamily} />) || null}
             {adult.item2.isInHousehold && <Chip size="small" label="In Household" />}
             {adult.item2.isPrimaryFamilyContact && <Chip size="small" label="Primary Family Contact" />}
           </div>
