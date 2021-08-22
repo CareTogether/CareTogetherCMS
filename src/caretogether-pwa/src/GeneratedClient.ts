@@ -773,6 +773,8 @@ export interface IOrganizationConfiguration {
 export class LocationConfiguration implements ILocationConfiguration {
     id?: string;
     name?: string | undefined;
+    ethnicities?: string[] | undefined;
+    adultFamilyRelationships?: string[] | undefined;
 
     constructor(data?: ILocationConfiguration) {
         if (data) {
@@ -787,6 +789,16 @@ export class LocationConfiguration implements ILocationConfiguration {
         if (_data) {
             this.id = _data["id"];
             this.name = _data["name"];
+            if (Array.isArray(_data["ethnicities"])) {
+                this.ethnicities = [] as any;
+                for (let item of _data["ethnicities"])
+                    this.ethnicities!.push(item);
+            }
+            if (Array.isArray(_data["adultFamilyRelationships"])) {
+                this.adultFamilyRelationships = [] as any;
+                for (let item of _data["adultFamilyRelationships"])
+                    this.adultFamilyRelationships!.push(item);
+            }
         }
     }
 
@@ -801,6 +813,16 @@ export class LocationConfiguration implements ILocationConfiguration {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
         data["name"] = this.name;
+        if (Array.isArray(this.ethnicities)) {
+            data["ethnicities"] = [];
+            for (let item of this.ethnicities)
+                data["ethnicities"].push(item);
+        }
+        if (Array.isArray(this.adultFamilyRelationships)) {
+            data["adultFamilyRelationships"] = [];
+            for (let item of this.adultFamilyRelationships)
+                data["adultFamilyRelationships"].push(item);
+        }
         return data; 
     }
 }
@@ -808,6 +830,8 @@ export class LocationConfiguration implements ILocationConfiguration {
 export interface ILocationConfiguration {
     id?: string;
     name?: string | undefined;
+    ethnicities?: string[] | undefined;
+    adultFamilyRelationships?: string[] | undefined;
 }
 
 export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
@@ -1620,6 +1644,7 @@ export class Person implements IPerson {
     lastName?: string | undefined;
     gender?: Gender;
     age?: Age | undefined;
+    ethnicity?: string | undefined;
 
     constructor(data?: IPerson) {
         if (data) {
@@ -1638,6 +1663,7 @@ export class Person implements IPerson {
             this.lastName = _data["lastName"];
             this.gender = _data["gender"];
             this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
+            this.ethnicity = _data["ethnicity"];
         }
     }
 
@@ -1656,6 +1682,7 @@ export class Person implements IPerson {
         data["lastName"] = this.lastName;
         data["gender"] = this.gender;
         data["age"] = this.age ? this.age.toJSON() : <any>undefined;
+        data["ethnicity"] = this.ethnicity;
         return data; 
     }
 }
@@ -1667,6 +1694,7 @@ export interface IPerson {
     lastName?: string | undefined;
     gender?: Gender;
     age?: Age | undefined;
+    ethnicity?: string | undefined;
 }
 
 export enum Gender {
@@ -2298,7 +2326,7 @@ export interface IValueTupleOfPersonAndFamilyAdultRelationshipInfo {
 }
 
 export class FamilyAdultRelationshipInfo implements IFamilyAdultRelationshipInfo {
-    relationshipToFamily?: FamilyAdultRelationshipType;
+    relationshipToFamily?: string | undefined;
     notes?: string | undefined;
     isInHousehold?: boolean;
     isPrimaryFamilyContact?: boolean;
@@ -2342,20 +2370,11 @@ export class FamilyAdultRelationshipInfo implements IFamilyAdultRelationshipInfo
 }
 
 export interface IFamilyAdultRelationshipInfo {
-    relationshipToFamily?: FamilyAdultRelationshipType;
+    relationshipToFamily?: string | undefined;
     notes?: string | undefined;
     isInHousehold?: boolean;
     isPrimaryFamilyContact?: boolean;
     concerns?: string | undefined;
-}
-
-export enum FamilyAdultRelationshipType {
-    Single = 0,
-    Dad = 1,
-    Mom = 2,
-    Relative = 3,
-    Friend = 4,
-    DomesticWorker = 5,
 }
 
 export class CustodialRelationship implements ICustodialRelationship {
@@ -4531,6 +4550,7 @@ export class AddAdultToFamilyCommand extends ApprovalCommand implements IAddAdul
     lastName?: string | undefined;
     gender?: Gender;
     age?: Age | undefined;
+    ethnicity?: string | undefined;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo | undefined;
 
     constructor(data?: IAddAdultToFamilyCommand) {
@@ -4546,6 +4566,7 @@ export class AddAdultToFamilyCommand extends ApprovalCommand implements IAddAdul
             this.lastName = _data["lastName"];
             this.gender = _data["gender"];
             this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
+            this.ethnicity = _data["ethnicity"];
             this.familyAdultRelationshipInfo = _data["familyAdultRelationshipInfo"] ? FamilyAdultRelationshipInfo.fromJS(_data["familyAdultRelationshipInfo"]) : <any>undefined;
         }
     }
@@ -4564,6 +4585,7 @@ export class AddAdultToFamilyCommand extends ApprovalCommand implements IAddAdul
         data["lastName"] = this.lastName;
         data["gender"] = this.gender;
         data["age"] = this.age ? this.age.toJSON() : <any>undefined;
+        data["ethnicity"] = this.ethnicity;
         data["familyAdultRelationshipInfo"] = this.familyAdultRelationshipInfo ? this.familyAdultRelationshipInfo.toJSON() : <any>undefined;
         super.toJSON(data);
         return data; 
@@ -4576,6 +4598,7 @@ export interface IAddAdultToFamilyCommand extends IApprovalCommand {
     lastName?: string | undefined;
     gender?: Gender;
     age?: Age | undefined;
+    ethnicity?: string | undefined;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo | undefined;
 }
 
@@ -4584,6 +4607,7 @@ export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand im
     lastName?: string | undefined;
     gender?: Gender;
     age?: Age | undefined;
+    ethnicity?: string | undefined;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo | undefined;
 
     constructor(data?: ICreateVolunteerFamilyWithNewAdultCommand) {
@@ -4598,6 +4622,7 @@ export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand im
             this.lastName = _data["lastName"];
             this.gender = _data["gender"];
             this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
+            this.ethnicity = _data["ethnicity"];
             this.familyAdultRelationshipInfo = _data["familyAdultRelationshipInfo"] ? FamilyAdultRelationshipInfo.fromJS(_data["familyAdultRelationshipInfo"]) : <any>undefined;
         }
     }
@@ -4615,6 +4640,7 @@ export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand im
         data["lastName"] = this.lastName;
         data["gender"] = this.gender;
         data["age"] = this.age ? this.age.toJSON() : <any>undefined;
+        data["ethnicity"] = this.ethnicity;
         data["familyAdultRelationshipInfo"] = this.familyAdultRelationshipInfo ? this.familyAdultRelationshipInfo.toJSON() : <any>undefined;
         super.toJSON(data);
         return data; 
@@ -4626,6 +4652,7 @@ export interface ICreateVolunteerFamilyWithNewAdultCommand extends IApprovalComm
     lastName?: string | undefined;
     gender?: Gender;
     age?: Age | undefined;
+    ethnicity?: string | undefined;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo | undefined;
 }
 

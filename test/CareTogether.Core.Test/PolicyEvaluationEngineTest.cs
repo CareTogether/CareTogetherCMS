@@ -22,18 +22,18 @@ namespace CareTogether.Core.Test
         static readonly Family volunteerFamily = new Family(guid4,
             new List<(Person, FamilyAdultRelationshipInfo)>
             {
-                (new Person(guid1, null, "John", "Voluntold", Gender.Male, new ExactAge(new DateTime(2000, 1, 1))),
-                    new FamilyAdultRelationshipInfo(FamilyAdultRelationshipType.Dad, "Works from home", true, true, null)),
-                (new Person(guid2, null, "Jane", "Voluntold", Gender.Female, new ExactAge(new DateTime(2000, 1, 1))),
-                    new FamilyAdultRelationshipInfo(FamilyAdultRelationshipType.Mom, "Travels for work", true, false, null)),
-                (new Person(guid3, null, "Janet", "Staywithus", Gender.Female, new ExactAge(new DateTime(2002, 1, 1))),
-                    new FamilyAdultRelationshipInfo(FamilyAdultRelationshipType.Relative, "Living with sister & brother-in-law during college",
+                (new Person(guid1, null, "John", "Voluntold", Gender.Male, new ExactAge(new DateTime(2000, 1, 1)), "Ethnic"),
+                    new FamilyAdultRelationshipInfo("Dad", "Works from home", true, true, null)),
+                (new Person(guid2, null, "Jane", "Voluntold", Gender.Female, new ExactAge(new DateTime(2000, 1, 1)), "Ethnic"),
+                    new FamilyAdultRelationshipInfo("Mom", "Travels for work", true, false, null)),
+                (new Person(guid3, null, "Janet", "Staywithus", Gender.Female, new ExactAge(new DateTime(2002, 1, 1)), "Ethnic"),
+                    new FamilyAdultRelationshipInfo("Relative", "Living with sister & brother-in-law during college",
                         true, false, "Likely sleep-deprived as she's getting her master's in social work"))
             },
             new List<Person>
             {
-                new Person(guid4, null, "Joe", "Voluntold", Gender.Male, new AgeInYears(4, new DateTime(2021, 7, 1))),
-                new Person(guid5, null, "Jill", "Notours", Gender.Female, new AgeInYears(2, new DateTime(2021, 7, 1))),
+                new Person(guid4, null, "Joe", "Voluntold", Gender.Male, new AgeInYears(4, new DateTime(2021, 7, 1)), "Ethnic"),
+                new Person(guid5, null, "Jill", "Notours", Gender.Female, new AgeInYears(2, new DateTime(2021, 7, 1)), "Ethnic"),
             },
             new List<CustodialRelationship>
             {

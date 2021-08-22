@@ -749,6 +749,20 @@
           "name": {
             "type": "string",
             "nullable": true
+          },
+          "ethnicities": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "adultFamilyRelationships": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -1154,6 +1168,10 @@
                 "$ref": "#/components/schemas/Age"
               }
             ]
+          },
+          "ethnicity": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -1525,7 +1543,8 @@
         "additionalProperties": false,
         "properties": {
           "relationshipToFamily": {
-            "$ref": "#/components/schemas/FamilyAdultRelationshipType"
+            "type": "string",
+            "nullable": true
           },
           "notes": {
             "type": "string",
@@ -1542,26 +1561,6 @@
             "nullable": true
           }
         }
-      },
-      "FamilyAdultRelationshipType": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "Single",
-          "Dad",
-          "Mom",
-          "Relative",
-          "Friend",
-          "DomesticWorker"
-        ],
-        "enum": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5
-        ]
       },
       "CustodialRelationship": {
         "type": "object",
@@ -2748,6 +2747,10 @@
                   }
                 ]
               },
+              "ethnicity": {
+                "type": "string",
+                "nullable": true
+              },
               "familyAdultRelationshipInfo": {
                 "nullable": true,
                 "oneOf": [
@@ -2787,6 +2790,10 @@
                     "$ref": "#/components/schemas/Age"
                   }
                 ]
+              },
+              "ethnicity": {
+                "type": "string",
+                "nullable": true
               },
               "familyAdultRelationshipInfo": {
                 "nullable": true,
