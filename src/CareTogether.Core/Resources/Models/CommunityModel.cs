@@ -31,10 +31,11 @@ namespace CareTogether.Resources.Models
                     CustodialRelationships.Select(cr => new CustodialRelationship(cr.Key.ChildId, cr.Key.AdultId, cr.Value)).ToList());
         }
 
-        internal record PersonEntry(Guid Id, Guid? UserId, string FirstName, string LastName, Gender Gender, Age Age, string Ethnicity)
+        internal record PersonEntry(Guid Id, Guid? UserId, string FirstName, string LastName,
+            Gender Gender, Age Age, string Ethnicity, string Concerns, string Notes)
         {
             internal Person ToPerson() =>
-                new(Id, UserId, FirstName, LastName, Gender, Age, Ethnicity);
+                new(Id, UserId, FirstName, LastName, Gender, Age, Ethnicity, Concerns, Notes);
         }
 
 
@@ -129,7 +130,8 @@ namespace CareTogether.Resources.Models
         {
             OneOf<PersonEntry, Error<string>> result = command switch
             {
-                CreatePerson c => new PersonEntry(c.PersonId, c.UserId, c.FirstName, c.LastName, c.Gender, c.Age, c.Ethnicity),
+                CreatePerson c => new PersonEntry(c.PersonId, c.UserId, c.FirstName, c.LastName,
+                    c.Gender, c.Age, c.Ethnicity, c.Concerns, c.Notes),
                 _ => people.TryGetValue(command.PersonId, out var personEntry)
                     ? command switch
                     {

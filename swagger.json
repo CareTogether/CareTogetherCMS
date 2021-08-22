@@ -1172,6 +1172,14 @@
           "ethnicity": {
             "type": "string",
             "nullable": true
+          },
+          "concerns": {
+            "type": "string",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -1546,19 +1554,11 @@
             "type": "string",
             "nullable": true
           },
-          "notes": {
-            "type": "string",
-            "nullable": true
-          },
           "isInHousehold": {
             "type": "boolean"
           },
           "isPrimaryFamilyContact": {
             "type": "boolean"
-          },
-          "concerns": {
-            "type": "string",
-            "nullable": true
           }
         }
       },
@@ -2758,6 +2758,14 @@
                     "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
                   }
                 ]
+              },
+              "concerns": {
+                "type": "string",
+                "nullable": true
+              },
+              "notes": {
+                "type": "string",
+                "nullable": true
               }
             }
           }
@@ -2802,6 +2810,14 @@
                     "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
                   }
                 ]
+              },
+              "concerns": {
+                "type": "string",
+                "nullable": true
+              },
+              "notes": {
+                "type": "string",
+                "nullable": true
               }
             }
           }
