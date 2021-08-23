@@ -109,10 +109,10 @@ export function VolunteerFamilyPanel({volunteerFamilyId, onBack}: VolunteerFamil
     </div>
     <ul>
       {volunteerFamily.approvalFormUploads?.map((upload, i) => (
-        <li key={i}>{upload.formName} {upload.timestampUtc && format(upload.timestampUtc, "yyyy/MM/dd hh:mm aa")}</li>
+        <li key={i}>{upload.formName} {upload.completedAtUtc && format(upload.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</li>
       ))}
       {volunteerFamily.approvalActivitiesPerformed?.map((activity, i) => (
-        <li key={i}>{activity.activityName} {activity.timestampUtc && format(activity.timestampUtc, "yyyy/MM/dd hh:mm aa")}</li>
+        <li key={i}>{activity.activityName} {activity.performedAtUtc && format(activity.performedAtUtc, "MM/dd/yyyy hh:mm aa")}</li>
       ))}
     </ul>
     <Divider />
@@ -155,10 +155,10 @@ export function VolunteerFamilyPanel({volunteerFamilyId, onBack}: VolunteerFamil
           </dl>
           <ul>
             {volunteerFamily.individualVolunteers?.[adult.item1.id].approvalFormUploads?.map((upload, i) => (
-              <li key={i}>{upload.formName} {upload.timestampUtc && format(upload.timestampUtc, "yyyy/MM/dd hh:mm aa")}</li>
+              <li key={i}>{upload.formName} {upload.completedAtUtc && format(upload.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</li>
             ))}
             {volunteerFamily.individualVolunteers?.[adult.item1.id].approvalActivitiesPerformed?.map((activity, i) => (
-              <li key={i}>{activity.activityName} {activity.timestampUtc && format(activity.timestampUtc, "yyyy/MM/dd hh:mm aa")}</li>
+              <li key={i}>{activity.activityName} {activity.performedAtUtc && format(activity.performedAtUtc, "MM/dd/yyyy hh:mm aa")}</li>
             ))}
           </ul>
         </Container>
