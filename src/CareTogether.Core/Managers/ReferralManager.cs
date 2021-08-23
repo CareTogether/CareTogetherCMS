@@ -152,7 +152,7 @@ namespace CareTogether.Managers
             new(entry.Id, entry.PolicyVersion, entry.CreatedUtc, entry.CloseReason,
                 families[entry.PartneringFamilyId],
                 families[entry.PartneringFamilyId].Adults
-                    .Select(a => contacts.TryGetValue(a.Item1.Id, out var c) ? c : null)
+                    .SelectMany(a => contacts.TryGetValue(a.Item1.Id, out var c) ? new[] { c } : Array.Empty<ContactInfo>())
                     .Where(c => c != null)
                     .ToImmutableList(),
                 entry.ReferralFormUploads, entry.ReferralActivitiesPerformed,
@@ -164,7 +164,7 @@ namespace CareTogether.Managers
                 entry.PartneringFamilyChildAssignments, entry.ChildrenLocationHistory,
                 entry.Notes.Values.Select(note =>
                     new Note(note.Id, note.AuthorId, TimestampUtc: note.Status == NoteStatus.Approved
-                        ? note.ApprovedTimestampUtc.Value
+                        ? note.ApprovedTimestampUtc!.Value
                         : note.LastEditTimestampUtc, note.Contents, note.Status)).ToImmutableList());
     }
 }

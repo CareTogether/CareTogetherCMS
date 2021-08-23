@@ -31,7 +31,7 @@ namespace CareTogether.TestData
             IMultitenantEventLog<GoalCommandExecutedEvent> goalsEventLog,
             IMultitenantEventLog<ReferralEvent> referralsEventLog,
             IMultitenantEventLog<ApprovalEvent> approvalsEventLog,
-            IObjectStore<string> draftNotesStore,
+            IObjectStore<string?> draftNotesStore,
             IObjectStore<EffectiveLocationPolicy> policiesStore)
         {
             await PopulateCommunityEvents(communityEventLog);
@@ -47,8 +47,8 @@ namespace CareTogether.TestData
         public static async Task PopulateCommunityEvents(IMultitenantEventLog<CommunityEvent> communityEventLog)
         {
             await communityEventLog.AppendEventsAsync(guid1, guid2,
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(adminId, adminId, "System", "Administrator", Gender.Male, null, "Ethnic", "Test", "ABC")),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid1, null, "John", "Doe", Gender.Male, null, "Ethnic", null, "DEF")),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(adminId, adminId, "System", "Administrator", Gender.Male, new ExactAge(new DateTime(2021, 7, 1)), "Ethnic", "Test", "ABC")),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid1, null, "John", "Doe", Gender.Male, new ExactAge(new DateTime(1980, 7, 1)), "Ethnic", null, "DEF")),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid2, guid3, "Jane", "Smith", Gender.Female, new AgeInYears(42, new DateTime(2021, 1, 1)), "Ethnic", null, null)),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonName(guid2, "Jane", "Doe")),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonAge(guid1, new ExactAge(new DateTime(1975, 1, 1)))),
@@ -56,7 +56,7 @@ namespace CareTogether.TestData
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonUserLink(guid1, guid4)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid1,
                     new List<(Guid, FamilyAdultRelationshipInfo)> { (guid1, new FamilyAdultRelationshipInfo("Dad", true, true)) },
-                    null, null)),
+                    new List<Guid>(), new List<CustodialRelationship>())),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddAdultToFamily(guid1, guid2, new FamilyAdultRelationshipInfo("Mom", true, true))),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid3, null, "Eric", "Doe", Gender.Male, new AgeInYears(12, new DateTime(2021, 1, 1)), "Ethnic", null, null)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddChildToFamily(guid1, guid3, new List<CustodialRelationship>
@@ -71,7 +71,7 @@ namespace CareTogether.TestData
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid4, null, "Emily", "Coachworthy", Gender.Female, new ExactAge(new DateTime(1980, 3, 19)), "Ethnic", null, null)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid4,
                     new List<(Guid, FamilyAdultRelationshipInfo)> { (guid4, new FamilyAdultRelationshipInfo("Single", true, true)) },
-                    null, null)),
+                    new List<Guid>(), new List<CustodialRelationship>())),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid5, null, "Han", "Solo", Gender.Male, new AgeInYears(30, new DateTime(2021, 7, 1)), "Ethnic", "Smuggler", null)),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid6, null, "Leia", "Skywalker", Gender.Male, new AgeInYears(28, new DateTime(2021, 7, 1)), "Ethnic", "Freedom fighter", "Uncertain claim to royalty")),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid7, null, "Ben", "Solo", Gender.Male, new AgeInYears(12, new DateTime(2021, 7, 1)), "Ethnic", null, null)),
@@ -206,7 +206,7 @@ namespace CareTogether.TestData
                     new UploadVolunteerForm(guid2, guid5, new DateTime(2021, 8, 11), "Family Friend Application", "v1", "ffhs.pdf", Guid.Empty)));
         }
 
-        public static async Task PopulateDraftNotes(IObjectStore<string> draftNotesStore)
+        public static async Task PopulateDraftNotes(IObjectStore<string?> draftNotesStore)
         {
             await draftNotesStore.UpsertAsync(guid1, guid2, guid3.ToString(),
                 "Kids are doing better playing this morning. For some reason they're both really into \"lightsabers\" or something like that... 😅");
@@ -214,7 +214,7 @@ namespace CareTogether.TestData
 
         public static async Task PopulatePolicies(IObjectStore<EffectiveLocationPolicy> policiesStore)
         {
-            await policiesStore?.UpsertAsync(guid1, guid2, "1", new EffectiveLocationPolicy(1, "Local test policy",
+            await policiesStore.UpsertAsync(guid1, guid2, "1", new EffectiveLocationPolicy(1, "Local test policy",
                 new ReferralPolicy(
                     new List<ActionRequirement>
                     {

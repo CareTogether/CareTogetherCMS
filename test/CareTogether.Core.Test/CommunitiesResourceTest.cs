@@ -20,16 +20,16 @@ namespace CareTogether.Core.Test
         static readonly Guid guid5 = Id('5');
         static readonly Guid guid6 = Id('6');
 
-
+#nullable disable
         MemoryMultitenantEventLog<CommunityEvent> events;
-
+#nullable restore
 
         [TestInitialize]
         public async Task TestInitialize()
         {
             events = new MemoryMultitenantEventLog<CommunityEvent>();
             foreach (var (domainEvent, index) in EventSequence(
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid1, null, "John", "Doe", Gender.Male, null, "Ethnic", "Test", "ABC")),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid1, null, "John", "Doe", Gender.Male, new ExactAge(new DateTime(1980, 7, 1)), "Ethnic", "Test", "ABC")),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid2, guid3, "Jane", "Smith", Gender.Female, new AgeInYears(42, new DateTime(2021, 1, 1)), "Ethnic", null, "DEF")),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonName(guid2, "Jane", "Doe")),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonAge(guid1, new ExactAge(new DateTime(1975, 1, 1)))),
@@ -37,7 +37,7 @@ namespace CareTogether.Core.Test
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonUserLink(guid1, guid4)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid5,
                     new List<(Guid, FamilyAdultRelationshipInfo)> { (guid1, new FamilyAdultRelationshipInfo("Dad", true, true)) },
-                    null, null)),
+                    new List<Guid>(), new List<CustodialRelationship>())),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddAdultToFamily(guid5, guid2, new FamilyAdultRelationshipInfo("Mom", true, true))),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid6, null, "Eric", "Doe", Gender.Male, new AgeInYears(12, new DateTime(2021, 1, 1)), "Ethnic", null, null)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddChildToFamily(guid5, guid6, new List<CustodialRelationship>
@@ -99,17 +99,17 @@ namespace CareTogether.Core.Test
         {
             var dut = new CommunitiesResource(events);
 
-            var result1 = await dut.ExecutePersonCommandAsync(guid1, guid2, new UpdatePersonAge(guid6, null), guid0);
-            var result2 = await dut.ExecutePersonCommandAsync(guid1, guid2, new UpdatePersonAge(guid5, null), guid0);
-            var result3 = await dut.ExecutePersonCommandAsync(guid2, guid1, new UpdatePersonAge(guid6, null), guid0);
+            var result1 = await dut.ExecutePersonCommandAsync(guid1, guid2, new UpdatePersonAge(guid6, new ExactAge(new DateTime(2021, 7, 1))), guid0);
+            var result2 = await dut.ExecutePersonCommandAsync(guid1, guid2, new UpdatePersonAge(guid5, new ExactAge(new DateTime(2021, 7, 2))), guid0);
+            var result3 = await dut.ExecutePersonCommandAsync(guid2, guid1, new UpdatePersonAge(guid6, new ExactAge(new DateTime(2021, 7, 3))), guid0);
 
-            Assert.AreEqual(new Person(guid6, null, "Eric", "Doe", Gender.Male, null, "Ethnic", null, null), result1.AsT0);
+            Assert.AreEqual(new Person(guid6, null, "Eric", "Doe", Gender.Male, new ExactAge(new DateTime(2021, 7, 1)), "Ethnic", null, null), result1.AsT0);
             Assert.AreEqual(ResourceResult.NotFound, result2.AsT1);
             Assert.AreEqual(ResourceResult.NotFound, result3.AsT1);
         }
 
 
-        private IEnumerable<(CommunityEvent, long)> EventSequence(params CommunityEvent[] events) =>
+        private static IEnumerable<(CommunityEvent, long)> EventSequence(params CommunityEvent[] events) =>
             events.Select((e, i) => (e, (long)i + 1));
     }
 }

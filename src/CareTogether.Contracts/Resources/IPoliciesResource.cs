@@ -52,7 +52,7 @@ namespace CareTogether.Resources
 
     [JsonHierarchyBase]
     public abstract partial record ActionRequirement(); //TODO: Include the arrangement function (who can perform the action)
-    public sealed record FormUploadRequirement(string FormName, string FormVersion, string Instructions, Uri TemplateLink)
+    public sealed record FormUploadRequirement(string FormName, string FormVersion, string? Instructions, Uri? TemplateLink)
         : ActionRequirement;
     public sealed record ActivityRequirement(string ActivityName)
         : ActionRequirement;

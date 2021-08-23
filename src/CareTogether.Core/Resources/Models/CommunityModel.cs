@@ -32,7 +32,7 @@ namespace CareTogether.Resources.Models
         }
 
         internal record PersonEntry(Guid Id, Guid? UserId, string FirstName, string LastName,
-            Gender Gender, Age Age, string Ethnicity, string Concerns, string Notes)
+            Gender Gender, Age Age, string Ethnicity, string? Concerns, string? Notes)
         {
             internal Person ToPerson() =>
                 new(Id, UserId, FirstName, LastName, Gender, Age, Ethnicity, Concerns, Notes);

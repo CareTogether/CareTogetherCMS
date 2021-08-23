@@ -44,7 +44,7 @@ namespace CareTogether.Resources
     public enum ChildrenLocationPlan { OvernightHousing, DaytimeChildCare, ReturnToFamily }
 
     public record NoteEntry(Guid Id, Guid AuthorId, DateTime LastEditTimestampUtc, NoteStatus Status,
-        string Contents, Guid? ApproverId, DateTime? ApprovedTimestampUtc);
+        string? Contents, Guid? ApproverId, DateTime? ApprovedTimestampUtc);
 
     public enum NoteStatus { Draft, Approved };
 
@@ -92,10 +92,10 @@ namespace CareTogether.Resources
     [JsonHierarchyBase]
     public abstract partial record ArrangementNoteCommand(Guid ReferralId, Guid ArrangementId, Guid NoteId);
     public sealed record CreateDraftArrangementNote(Guid ReferralId, Guid ArrangementId, Guid NoteId,
-        string DraftNoteContents)
+        string? DraftNoteContents)
         : ArrangementNoteCommand(ReferralId, ArrangementId, NoteId);
     public sealed record EditDraftArrangementNote(Guid ReferralId, Guid ArrangementId, Guid NoteId,
-        string DraftNoteContents)
+        string? DraftNoteContents)
         : ArrangementNoteCommand(ReferralId, ArrangementId, NoteId);
     public sealed record DiscardDraftArrangementNote(Guid ReferralId, Guid ArrangementId, Guid NoteId)
         : ArrangementNoteCommand(ReferralId, ArrangementId, NoteId);

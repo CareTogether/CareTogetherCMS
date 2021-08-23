@@ -25,7 +25,7 @@ namespace CareTogether
         {
             try
             {
-                return Guid.Parse(principal.FindFirst(Claims.UserId).Value);
+                return Guid.Parse(principal.FindFirst(Claims.UserId)!.Value);
             }
             catch (Exception ex)
             {

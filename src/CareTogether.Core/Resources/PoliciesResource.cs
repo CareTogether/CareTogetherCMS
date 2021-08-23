@@ -31,7 +31,7 @@ namespace CareTogether.Resources
             else if (version != 1)
                 return ResourceResult.NotFound;
 
-            var result = await locationPoliciesStore.GetAsync(organizationId, locationId, version.ToString());
+            var result = await locationPoliciesStore.GetAsync(organizationId, locationId, version.Value.ToString());
             return result.TryPickT0(out var success, out var _)
                 ? success.Value.ReferralPolicy
                 : ResourceResult.NotFound;
@@ -45,7 +45,7 @@ namespace CareTogether.Resources
             else if (version != 1)
                 return ResourceResult.NotFound;
 
-            var result = await locationPoliciesStore.GetAsync(organizationId, locationId, version.ToString());
+            var result = await locationPoliciesStore.GetAsync(organizationId, locationId, version.Value.ToString());
             return result.TryPickT0(out var success, out var _)
                 ? success.Value.VolunteerPolicy
                 : ResourceResult.NotFound;

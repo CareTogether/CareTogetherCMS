@@ -35,7 +35,7 @@ namespace CareTogether.Resources.Models
         public OneOf<Success<(GoalCommandExecutedEvent Event, long SequenceNumber, Goal Goal, Action OnCommit)>, Error<string>>
             ExecuteGoalCommand(GoalCommand command, Guid userId, DateTime timestampUtc)
         {
-            Goal goal;
+            Goal? goal;
             if (command is CreateGoal create)
                 goal = new Goal(create.GoalId, create.PersonId, create.Description, timestampUtc, create.TargetDate, null);
             else

@@ -35,7 +35,7 @@ namespace CareTogether.Core.Test
         public async Task TestInitializeAsyncWithAnEvent()
         {
             var dut = await CommunityModel.InitializeAsync(EventSequence(
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid1, null, "John", "Smith", Gender.Male, null, "Ethnic", null, null))
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid1, null, "John", "Smith", Gender.Male, new ExactAge(new DateTime(1980, 7, 1)), "Ethnic", null, null))
             ));
 
             Assert.AreEqual(0, dut.LastKnownSequenceNumber);
@@ -46,14 +46,14 @@ namespace CareTogether.Core.Test
             Assert.AreEqual(null, people[0].UserId);
             Assert.AreEqual("John", people[0].FirstName);
             Assert.AreEqual("Smith", people[0].LastName);
-            Assert.AreEqual(null, people[0].Age);
+            Assert.AreEqual(new ExactAge(new DateTime(1980, 7, 1)), people[0].Age);
         }
 
         [TestMethod]
         public async Task TestInitializeAsyncWithSeveralEvents()
         {
             var dut = await CommunityModel.InitializeAsync(EventSequence(
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid1, null, "John", "Doe", Gender.Male, null, "Ethnic", null, null)),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid1, null, "John", "Doe", Gender.Male, new ExactAge(new DateTime(1980, 7, 1)), "Ethnic", null, null)),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid2, guid3, "Jane", "Smith", Gender.Female, new AgeInYears(42, new DateTime(2021, 1, 1)), "Ethnic", null, null)),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonName(guid2, "Jane", "Doe")),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonAge(guid1, new ExactAge(new DateTime(1975, 1, 1)))),
@@ -81,7 +81,7 @@ namespace CareTogether.Core.Test
         public async Task TestInitializeAsyncWithEvenMoreEvents()
         {
             var dut = await CommunityModel.InitializeAsync(EventSequence(
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid1, null, "John", "Doe", Gender.Male, null, "Ethnic", "Test", "ABC")),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid1, null, "John", "Doe", Gender.Male, new ExactAge(new DateTime(1980, 7, 1)), "Ethnic", "Test", "ABC")),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid2, guid3, "Jane", "Smith", Gender.Female, new AgeInYears(42, new DateTime(2021, 1, 1)), "Ethnic", null, "DEF")),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonName(guid2, "Jane", "Doe")),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonAge(guid1, new ExactAge(new DateTime(1975, 1, 1)))),
@@ -89,7 +89,7 @@ namespace CareTogether.Core.Test
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonUserLink(guid1, guid4)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid5,
                     new List<(Guid, FamilyAdultRelationshipInfo)> { (guid1, new FamilyAdultRelationshipInfo("Dad", true, true)) },
-                    null, null)),
+                    new List<Guid>(), new List<CustodialRelationship>())),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddAdultToFamily(guid5, guid2, new FamilyAdultRelationshipInfo("Mom", true, true))),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid6, null, "Eric", "Doe", Gender.Male, new AgeInYears(12, new DateTime(2021, 1, 1)), "Ethnic", null, null)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddChildToFamily(guid5, guid6, new List<CustodialRelationship>
@@ -141,7 +141,7 @@ namespace CareTogether.Core.Test
         }
 
 
-        private IAsyncEnumerable<(CommunityEvent, long)> EventSequence(params CommunityEvent[] communityEvents) =>
+        private static IAsyncEnumerable<(CommunityEvent, long)> EventSequence(params CommunityEvent[] communityEvents) =>
             communityEvents
                 .Select((ce, i) => (ce, (long)i))
                 .ToAsyncEnumerable();
