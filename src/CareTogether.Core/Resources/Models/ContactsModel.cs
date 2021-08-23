@@ -34,7 +34,7 @@ namespace CareTogether.Resources.Models
         public OneOf<Success<(ContactCommandExecutedEvent Event, long SequenceNumber, ContactInfo Contact, Action OnCommit)>, Error<string>>
             ExecuteContactCommand(ContactCommand command, Guid userId, DateTime timestampUtc)
         {
-            ContactInfo contact;
+            ContactInfo? contact;
             if (command is CreateContact create)
                 contact = new ContactInfo(create.PersonId, new List<Address>(), null, new List<PhoneNumber>(), null, new List<EmailAddress>(), null,
                     create.ContactMethodPreferenceNotes);

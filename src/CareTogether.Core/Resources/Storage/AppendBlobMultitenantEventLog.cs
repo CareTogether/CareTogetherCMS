@@ -102,7 +102,7 @@ namespace CareTogether.Resources.Storage
 
                 using (var reader = new StringReader(eventString))
                 {
-                    string line;
+                    string? line;
 
                     while ((line = reader.ReadLine()) != null)
                     {

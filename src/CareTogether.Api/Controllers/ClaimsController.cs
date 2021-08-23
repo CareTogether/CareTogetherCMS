@@ -22,7 +22,7 @@ namespace CareTogether.Api.Controllers
         public IEnumerable<string> Get()
         {
             _logger.LogInformation("User '{UserName}' was authenticated via '{AuthenticationType}'",
-                User.Identity.Name, User.Identity.AuthenticationType);
+                User.Identity?.Name, User.Identity?.AuthenticationType);
 
             return User.Claims
                 .Select(c => c.ToString())

@@ -726,12 +726,10 @@
         "additionalProperties": false,
         "properties": {
           "organizationName": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "locations": {
             "type": "array",
-            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/LocationConfiguration"
             }
@@ -747,19 +745,16 @@
             "format": "guid"
           },
           "name": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "ethnicities": {
             "type": "array",
-            "nullable": true,
             "items": {
               "type": "string"
             }
           },
           "adultFamilyRelationships": {
             "type": "array",
-            "nullable": true,
             "items": {
               "type": "string"
             }
@@ -775,24 +770,13 @@
             "format": "int32"
           },
           "versionLabel": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "referralPolicy": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/ReferralPolicy"
-              }
-            ]
+            "$ref": "#/components/schemas/ReferralPolicy"
           },
           "volunteerPolicy": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/VolunteerPolicy"
-              }
-            ]
+            "$ref": "#/components/schemas/VolunteerPolicy"
           }
         }
       },
@@ -802,14 +786,12 @@
         "properties": {
           "requiredIntakeActions": {
             "type": "array",
-            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/ActionRequirement"
             }
           },
           "arrangementPolicies": {
             "type": "array",
-            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/ArrangementPolicy"
             }
@@ -846,8 +828,7 @@
             "additionalProperties": false,
             "properties": {
               "activityName": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               }
             }
           }
@@ -863,12 +844,10 @@
             "additionalProperties": false,
             "properties": {
               "formName": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "formVersion": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "instructions": {
                 "type": "string",
@@ -888,36 +867,31 @@
         "additionalProperties": false,
         "properties": {
           "arrangementType": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "childInvolvement": {
             "$ref": "#/components/schemas/ChildInvolvement"
           },
           "volunteerFunctions": {
             "type": "array",
-            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/VolunteerFunction"
             }
           },
           "requiredSetupActions": {
             "type": "array",
-            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/ActionRequirement"
             }
           },
           "requiredMonitoringActions": {
             "type": "array",
-            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/ValueTupleOfActionRequirementAndRecurrencePolicy"
             }
           },
           "requiredCloseoutActions": {
             "type": "array",
-            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/ActionRequirement"
             }
@@ -943,22 +917,19 @@
         "additionalProperties": false,
         "properties": {
           "arrangementFunction": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "requirement": {
             "$ref": "#/components/schemas/FunctionRequirement"
           },
           "eligibleIndividualVolunteerRoles": {
             "type": "array",
-            "nullable": true,
             "items": {
               "type": "string"
             }
           },
           "eligibleVolunteerFamilyRoles": {
             "type": "array",
-            "nullable": true,
             "items": {
               "type": "string"
             }
@@ -997,7 +968,6 @@
         "properties": {
           "stages": {
             "type": "array",
-            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/RecurrencePolicyStage"
             }
@@ -1025,14 +995,12 @@
         "properties": {
           "volunteerRoles": {
             "type": "object",
-            "nullable": true,
             "additionalProperties": {
               "$ref": "#/components/schemas/VolunteerRolePolicy"
             }
           },
           "volunteerFamilyRoles": {
             "type": "object",
-            "nullable": true,
             "additionalProperties": {
               "$ref": "#/components/schemas/VolunteerFamilyRolePolicy"
             }
@@ -1044,12 +1012,10 @@
         "additionalProperties": false,
         "properties": {
           "volunteerRoleType": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "approvalRequirements": {
             "type": "array",
-            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/VolunteerApprovalRequirement"
             }
@@ -1064,12 +1030,7 @@
             "type": "boolean"
           },
           "actionRequirement": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/ActionRequirement"
-              }
-            ]
+            "$ref": "#/components/schemas/ActionRequirement"
           }
         }
       },
@@ -1078,12 +1039,10 @@
         "additionalProperties": false,
         "properties": {
           "volunteerFamilyRoleType": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "approvalRequirements": {
             "type": "array",
-            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/VolunteerFamilyApprovalRequirement"
             }
@@ -1098,12 +1057,7 @@
             "type": "boolean"
           },
           "actionRequirement": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/ActionRequirement"
-              }
-            ]
+            "$ref": "#/components/schemas/ActionRequirement"
           },
           "scope": {
             "$ref": "#/components/schemas/VolunteerFamilyRequirementScope"
@@ -1132,8 +1086,7 @@
           },
           "valetUrl": {
             "type": "string",
-            "format": "uri",
-            "nullable": true
+            "format": "uri"
           }
         }
       },
@@ -1151,27 +1104,19 @@
             "nullable": true
           },
           "firstName": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "lastName": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "gender": {
             "$ref": "#/components/schemas/Gender"
           },
           "age": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/Age"
-              }
-            ]
+            "$ref": "#/components/schemas/Age"
           },
           "ethnicity": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "concerns": {
             "type": "string",
@@ -1260,20 +1205,10 @@
         "additionalProperties": false,
         "properties": {
           "person": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/Person"
-              }
-            ]
+            "$ref": "#/components/schemas/Person"
           },
           "contactInfo": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/ContactInfo"
-              }
-            ]
+            "$ref": "#/components/schemas/ContactInfo"
           }
         }
       },
@@ -1287,7 +1222,6 @@
           },
           "addresses": {
             "type": "array",
-            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/Address"
             }
@@ -1299,7 +1233,6 @@
           },
           "phoneNumbers": {
             "type": "array",
-            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/PhoneNumber"
             }
@@ -1311,7 +1244,6 @@
           },
           "emailAddresses": {
             "type": "array",
-            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/EmailAddress"
             }
@@ -1322,8 +1254,7 @@
             "nullable": true
           },
           "contactMethodPreferenceNotes": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           }
         }
       },
@@ -1336,24 +1267,21 @@
             "format": "guid"
           },
           "line1": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "line2": {
             "type": "string",
             "nullable": true
           },
           "city": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "stateId": {
             "type": "string",
             "format": "guid"
           },
           "postalCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "countryId": {
             "type": "string",
@@ -1370,8 +1298,7 @@
             "format": "guid"
           },
           "number": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "type": {
             "$ref": "#/components/schemas/PhoneNumberType"
@@ -1403,8 +1330,7 @@
             "format": "guid"
           },
           "address": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "type": {
             "$ref": "#/components/schemas/EmailAddressType"
@@ -1432,8 +1358,7 @@
             "format": "guid"
           },
           "policyVersion": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "createdUtc": {
             "type": "string",
@@ -1448,37 +1373,28 @@
             ]
           },
           "partneringFamily": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/Family"
-              }
-            ]
+            "$ref": "#/components/schemas/Family"
           },
           "contacts": {
             "type": "array",
-            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/ContactInfo"
             }
           },
           "referralFormUploads": {
             "type": "array",
-            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/FormUploadInfo"
             }
           },
           "referralActivitiesPerformed": {
             "type": "array",
-            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/ActivityInfo"
             }
           },
           "arrangements": {
             "type": "array",
-            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/Arrangement"
             }
@@ -1513,21 +1429,18 @@
           },
           "adults": {
             "type": "array",
-            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/ValueTupleOfPersonAndFamilyAdultRelationshipInfo"
             }
           },
           "children": {
             "type": "array",
-            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/Person"
             }
           },
           "custodialRelationships": {
             "type": "array",
-            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/CustodialRelationship"
             }
@@ -1551,8 +1464,7 @@
         "additionalProperties": false,
         "properties": {
           "relationshipToFamily": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "isInHousehold": {
             "type": "boolean"
@@ -1610,16 +1522,13 @@
             "format": "date-time"
           },
           "formName": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "formVersion": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "originalFileName": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "uploadedDocumentId": {
             "type": "string",
@@ -1640,8 +1549,7 @@
             "format": "date-time"
           },
           "activityName": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "performedAtUtc": {
             "type": "string",
@@ -1662,54 +1570,46 @@
             "format": "guid"
           },
           "policyVersion": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "arrangementType": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "state": {
             "$ref": "#/components/schemas/ArrangementState"
           },
           "arrangementFormUploads": {
             "type": "array",
-            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/FormUploadInfo"
             }
           },
           "arrangementActivitiesPerformed": {
             "type": "array",
-            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/ActivityInfo"
             }
           },
           "volunteerAssignments": {
             "type": "array",
-            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/VolunteerAssignment"
             }
           },
           "partneringFamilyChildAssignments": {
             "type": "array",
-            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/PartneringFamilyChildAssignment"
             }
           },
           "childrenLocationHistory": {
             "type": "array",
-            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/ChildrenLocationHistoryEntry"
             }
           },
           "notes": {
             "type": "array",
-            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/Note"
             }
@@ -1746,8 +1646,7 @@
         ],
         "properties": {
           "arrangementFunction": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "discriminator": {
             "type": "string"
@@ -1812,7 +1711,6 @@
           },
           "childrenIds": {
             "type": "array",
-            "nullable": true,
             "items": {
               "type": "string",
               "format": "guid"
@@ -1826,8 +1724,7 @@
             "$ref": "#/components/schemas/ChildrenLocationPlan"
           },
           "additionalExplanation": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           }
         }
       },
@@ -1938,8 +1835,7 @@
                 "format": "guid"
               },
               "policyVersion": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "openedAtUtc": {
                 "type": "string",
@@ -1959,8 +1855,7 @@
             "additionalProperties": false,
             "properties": {
               "activityName": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "performedAtUtc": {
                 "type": "string",
@@ -1988,16 +1883,13 @@
                 "format": "date-time"
               },
               "formName": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "formVersion": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "uploadedFileName": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "uploadedDocumentId": {
                 "type": "string",
@@ -2056,8 +1948,7 @@
                 "format": "guid"
               },
               "arrangementFunction": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               }
             }
           }
@@ -2074,7 +1965,6 @@
             "properties": {
               "childrenIds": {
                 "type": "array",
-                "nullable": true,
                 "items": {
                   "type": "string",
                   "format": "guid"
@@ -2098,8 +1988,7 @@
                 "format": "guid"
               },
               "arrangementFunction": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               }
             }
           }
@@ -2115,12 +2004,10 @@
             "additionalProperties": false,
             "properties": {
               "policyVersion": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "arrangementType": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               }
             }
           }
@@ -2170,8 +2057,7 @@
             "additionalProperties": false,
             "properties": {
               "activityName": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "performedAtUtc": {
                 "type": "string",
@@ -2200,7 +2086,6 @@
               },
               "childrenIds": {
                 "type": "array",
-                "nullable": true,
                 "items": {
                   "type": "string",
                   "format": "guid"
@@ -2214,8 +2099,7 @@
                 "$ref": "#/components/schemas/ChildrenLocationPlan"
               },
               "additionalExplanation": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               }
             }
           }
@@ -2235,16 +2119,13 @@
                 "format": "date-time"
               },
               "formName": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "formVersion": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "uploadedFileName": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "uploadedDocumentId": {
                 "type": "string",
@@ -2298,8 +2179,7 @@
             "additionalProperties": false,
             "properties": {
               "finalizedNoteContents": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               }
             }
           }
@@ -2355,37 +2235,28 @@
         "additionalProperties": false,
         "properties": {
           "family": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/Family"
-              }
-            ]
+            "$ref": "#/components/schemas/Family"
           },
           "approvalFormUploads": {
             "type": "array",
-            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/FormUploadInfo"
             }
           },
           "approvalActivitiesPerformed": {
             "type": "array",
-            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/ActivityInfo"
             }
           },
           "familyRoleApprovals": {
             "type": "object",
-            "nullable": true,
             "additionalProperties": {
               "$ref": "#/components/schemas/RoleApprovalStatus"
             }
           },
           "individualVolunteers": {
             "type": "object",
-            "nullable": true,
             "additionalProperties": {
               "$ref": "#/components/schemas/Volunteer"
             }
@@ -2410,21 +2281,18 @@
         "properties": {
           "approvalFormUploads": {
             "type": "array",
-            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/FormUploadInfo"
             }
           },
           "approvalActivitiesPerformed": {
             "type": "array",
-            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/ActivityInfo"
             }
           },
           "individualRoleApprovals": {
             "type": "object",
-            "nullable": true,
             "additionalProperties": {
               "$ref": "#/components/schemas/RoleApprovalStatus"
             }
@@ -2479,8 +2347,7 @@
             "additionalProperties": false,
             "properties": {
               "reason": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               }
             }
           }
@@ -2496,8 +2363,7 @@
             "additionalProperties": false,
             "properties": {
               "activityName": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "performedAtUtc": {
                 "type": "string",
@@ -2521,8 +2387,7 @@
             "additionalProperties": false,
             "properties": {
               "note": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               }
             }
           }
@@ -2542,16 +2407,13 @@
                 "format": "date-time"
               },
               "formName": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "formVersion": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "uploadedFileName": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "uploadedDocumentId": {
                 "type": "string",
@@ -2602,8 +2464,7 @@
             "additionalProperties": false,
             "properties": {
               "reason": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               }
             }
           }
@@ -2619,8 +2480,7 @@
             "additionalProperties": false,
             "properties": {
               "activityName": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "performedAtUtc": {
                 "type": "string",
@@ -2655,8 +2515,7 @@
             "additionalProperties": false,
             "properties": {
               "note": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               }
             }
           }
@@ -2676,16 +2535,13 @@
                 "format": "date-time"
               },
               "formName": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "formVersion": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "uploadedFileName": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "uploadedDocumentId": {
                 "type": "string",
@@ -2729,43 +2585,28 @@
                 "format": "guid"
               },
               "firstName": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "lastName": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "gender": {
                 "$ref": "#/components/schemas/Gender"
               },
               "age": {
-                "nullable": true,
-                "oneOf": [
-                  {
-                    "$ref": "#/components/schemas/Age"
-                  }
-                ]
+                "$ref": "#/components/schemas/Age"
               },
               "ethnicity": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "familyAdultRelationshipInfo": {
-                "nullable": true,
-                "oneOf": [
-                  {
-                    "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
-                  }
-                ]
+                "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
               },
               "concerns": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "notes": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               }
             }
           }
@@ -2781,43 +2622,28 @@
             "additionalProperties": false,
             "properties": {
               "firstName": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "lastName": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "gender": {
                 "$ref": "#/components/schemas/Gender"
               },
               "age": {
-                "nullable": true,
-                "oneOf": [
-                  {
-                    "$ref": "#/components/schemas/Age"
-                  }
-                ]
+                "$ref": "#/components/schemas/Age"
               },
               "ethnicity": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "familyAdultRelationshipInfo": {
-                "nullable": true,
-                "oneOf": [
-                  {
-                    "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
-                  }
-                ]
+                "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
               },
               "concerns": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "notes": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               }
             }
           }

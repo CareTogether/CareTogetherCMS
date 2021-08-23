@@ -723,8 +723,8 @@ export class VolunteerFamiliesClient {
 }
 
 export class OrganizationConfiguration implements IOrganizationConfiguration {
-    organizationName?: string | undefined;
-    locations?: LocationConfiguration[] | undefined;
+    organizationName?: string;
+    locations?: LocationConfiguration[];
 
     constructor(data?: IOrganizationConfiguration) {
         if (data) {
@@ -766,15 +766,15 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
 }
 
 export interface IOrganizationConfiguration {
-    organizationName?: string | undefined;
-    locations?: LocationConfiguration[] | undefined;
+    organizationName?: string;
+    locations?: LocationConfiguration[];
 }
 
 export class LocationConfiguration implements ILocationConfiguration {
     id?: string;
-    name?: string | undefined;
-    ethnicities?: string[] | undefined;
-    adultFamilyRelationships?: string[] | undefined;
+    name?: string;
+    ethnicities?: string[];
+    adultFamilyRelationships?: string[];
 
     constructor(data?: ILocationConfiguration) {
         if (data) {
@@ -829,16 +829,16 @@ export class LocationConfiguration implements ILocationConfiguration {
 
 export interface ILocationConfiguration {
     id?: string;
-    name?: string | undefined;
-    ethnicities?: string[] | undefined;
-    adultFamilyRelationships?: string[] | undefined;
+    name?: string;
+    ethnicities?: string[];
+    adultFamilyRelationships?: string[];
 }
 
 export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
     version?: number;
-    versionLabel?: string | undefined;
-    referralPolicy?: ReferralPolicy | undefined;
-    volunteerPolicy?: VolunteerPolicy | undefined;
+    versionLabel?: string;
+    referralPolicy?: ReferralPolicy;
+    volunteerPolicy?: VolunteerPolicy;
 
     constructor(data?: IEffectiveLocationPolicy) {
         if (data) {
@@ -877,14 +877,14 @@ export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
 
 export interface IEffectiveLocationPolicy {
     version?: number;
-    versionLabel?: string | undefined;
-    referralPolicy?: ReferralPolicy | undefined;
-    volunteerPolicy?: VolunteerPolicy | undefined;
+    versionLabel?: string;
+    referralPolicy?: ReferralPolicy;
+    volunteerPolicy?: VolunteerPolicy;
 }
 
 export class ReferralPolicy implements IReferralPolicy {
-    requiredIntakeActions?: ActionRequirement[] | undefined;
-    arrangementPolicies?: ArrangementPolicy[] | undefined;
+    requiredIntakeActions?: ActionRequirement[];
+    arrangementPolicies?: ArrangementPolicy[];
 
     constructor(data?: IReferralPolicy) {
         if (data) {
@@ -934,8 +934,8 @@ export class ReferralPolicy implements IReferralPolicy {
 }
 
 export interface IReferralPolicy {
-    requiredIntakeActions?: ActionRequirement[] | undefined;
-    arrangementPolicies?: ArrangementPolicy[] | undefined;
+    requiredIntakeActions?: ActionRequirement[];
+    arrangementPolicies?: ArrangementPolicy[];
 }
 
 export abstract class ActionRequirement implements IActionRequirement {
@@ -981,7 +981,7 @@ export interface IActionRequirement {
 }
 
 export class ActivityRequirement extends ActionRequirement implements IActivityRequirement {
-    activityName?: string | undefined;
+    activityName?: string;
 
     constructor(data?: IActivityRequirement) {
         super(data);
@@ -1011,12 +1011,12 @@ export class ActivityRequirement extends ActionRequirement implements IActivityR
 }
 
 export interface IActivityRequirement extends IActionRequirement {
-    activityName?: string | undefined;
+    activityName?: string;
 }
 
 export class FormUploadRequirement extends ActionRequirement implements IFormUploadRequirement {
-    formName?: string | undefined;
-    formVersion?: string | undefined;
+    formName?: string;
+    formVersion?: string;
     instructions?: string | undefined;
     templateLink?: string | undefined;
 
@@ -1054,19 +1054,19 @@ export class FormUploadRequirement extends ActionRequirement implements IFormUpl
 }
 
 export interface IFormUploadRequirement extends IActionRequirement {
-    formName?: string | undefined;
-    formVersion?: string | undefined;
+    formName?: string;
+    formVersion?: string;
     instructions?: string | undefined;
     templateLink?: string | undefined;
 }
 
 export class ArrangementPolicy implements IArrangementPolicy {
-    arrangementType?: string | undefined;
+    arrangementType?: string;
     childInvolvement?: ChildInvolvement;
-    volunteerFunctions?: VolunteerFunction[] | undefined;
-    requiredSetupActions?: ActionRequirement[] | undefined;
-    requiredMonitoringActions?: ValueTupleOfActionRequirementAndRecurrencePolicy[] | undefined;
-    requiredCloseoutActions?: ActionRequirement[] | undefined;
+    volunteerFunctions?: VolunteerFunction[];
+    requiredSetupActions?: ActionRequirement[];
+    requiredMonitoringActions?: ValueTupleOfActionRequirementAndRecurrencePolicy[];
+    requiredCloseoutActions?: ActionRequirement[];
 
     constructor(data?: IArrangementPolicy) {
         if (data) {
@@ -1140,12 +1140,12 @@ export class ArrangementPolicy implements IArrangementPolicy {
 }
 
 export interface IArrangementPolicy {
-    arrangementType?: string | undefined;
+    arrangementType?: string;
     childInvolvement?: ChildInvolvement;
-    volunteerFunctions?: VolunteerFunction[] | undefined;
-    requiredSetupActions?: ActionRequirement[] | undefined;
-    requiredMonitoringActions?: ValueTupleOfActionRequirementAndRecurrencePolicy[] | undefined;
-    requiredCloseoutActions?: ActionRequirement[] | undefined;
+    volunteerFunctions?: VolunteerFunction[];
+    requiredSetupActions?: ActionRequirement[];
+    requiredMonitoringActions?: ValueTupleOfActionRequirementAndRecurrencePolicy[];
+    requiredCloseoutActions?: ActionRequirement[];
 }
 
 export enum ChildInvolvement {
@@ -1155,10 +1155,10 @@ export enum ChildInvolvement {
 }
 
 export class VolunteerFunction implements IVolunteerFunction {
-    arrangementFunction?: string | undefined;
+    arrangementFunction?: string;
     requirement?: FunctionRequirement;
-    eligibleIndividualVolunteerRoles?: string[] | undefined;
-    eligibleVolunteerFamilyRoles?: string[] | undefined;
+    eligibleIndividualVolunteerRoles?: string[];
+    eligibleVolunteerFamilyRoles?: string[];
 
     constructor(data?: IVolunteerFunction) {
         if (data) {
@@ -1212,10 +1212,10 @@ export class VolunteerFunction implements IVolunteerFunction {
 }
 
 export interface IVolunteerFunction {
-    arrangementFunction?: string | undefined;
+    arrangementFunction?: string;
     requirement?: FunctionRequirement;
-    eligibleIndividualVolunteerRoles?: string[] | undefined;
-    eligibleVolunteerFamilyRoles?: string[] | undefined;
+    eligibleIndividualVolunteerRoles?: string[];
+    eligibleVolunteerFamilyRoles?: string[];
 }
 
 export enum FunctionRequirement {
@@ -1265,7 +1265,7 @@ export interface IValueTupleOfActionRequirementAndRecurrencePolicy {
 }
 
 export class RecurrencePolicy implements IRecurrencePolicy {
-    stages?: RecurrencePolicyStage[] | undefined;
+    stages?: RecurrencePolicyStage[];
 
     constructor(data?: IRecurrencePolicy) {
         if (data) {
@@ -1305,7 +1305,7 @@ export class RecurrencePolicy implements IRecurrencePolicy {
 }
 
 export interface IRecurrencePolicy {
-    stages?: RecurrencePolicyStage[] | undefined;
+    stages?: RecurrencePolicyStage[];
 }
 
 export class RecurrencePolicyStage implements IRecurrencePolicyStage {
@@ -1349,8 +1349,8 @@ export interface IRecurrencePolicyStage {
 }
 
 export class VolunteerPolicy implements IVolunteerPolicy {
-    volunteerRoles?: { [key: string]: VolunteerRolePolicy; } | undefined;
-    volunteerFamilyRoles?: { [key: string]: VolunteerFamilyRolePolicy; } | undefined;
+    volunteerRoles?: { [key: string]: VolunteerRolePolicy; };
+    volunteerFamilyRoles?: { [key: string]: VolunteerFamilyRolePolicy; };
 
     constructor(data?: IVolunteerPolicy) {
         if (data) {
@@ -1408,13 +1408,13 @@ export class VolunteerPolicy implements IVolunteerPolicy {
 }
 
 export interface IVolunteerPolicy {
-    volunteerRoles?: { [key: string]: VolunteerRolePolicy; } | undefined;
-    volunteerFamilyRoles?: { [key: string]: VolunteerFamilyRolePolicy; } | undefined;
+    volunteerRoles?: { [key: string]: VolunteerRolePolicy; };
+    volunteerFamilyRoles?: { [key: string]: VolunteerFamilyRolePolicy; };
 }
 
 export class VolunteerRolePolicy implements IVolunteerRolePolicy {
-    volunteerRoleType?: string | undefined;
-    approvalRequirements?: VolunteerApprovalRequirement[] | undefined;
+    volunteerRoleType?: string;
+    approvalRequirements?: VolunteerApprovalRequirement[];
 
     constructor(data?: IVolunteerRolePolicy) {
         if (data) {
@@ -1456,13 +1456,13 @@ export class VolunteerRolePolicy implements IVolunteerRolePolicy {
 }
 
 export interface IVolunteerRolePolicy {
-    volunteerRoleType?: string | undefined;
-    approvalRequirements?: VolunteerApprovalRequirement[] | undefined;
+    volunteerRoleType?: string;
+    approvalRequirements?: VolunteerApprovalRequirement[];
 }
 
 export class VolunteerApprovalRequirement implements IVolunteerApprovalRequirement {
     requiredToBeProspective?: boolean;
-    actionRequirement?: ActionRequirement | undefined;
+    actionRequirement?: ActionRequirement;
 
     constructor(data?: IVolunteerApprovalRequirement) {
         if (data) {
@@ -1497,12 +1497,12 @@ export class VolunteerApprovalRequirement implements IVolunteerApprovalRequireme
 
 export interface IVolunteerApprovalRequirement {
     requiredToBeProspective?: boolean;
-    actionRequirement?: ActionRequirement | undefined;
+    actionRequirement?: ActionRequirement;
 }
 
 export class VolunteerFamilyRolePolicy implements IVolunteerFamilyRolePolicy {
-    volunteerFamilyRoleType?: string | undefined;
-    approvalRequirements?: VolunteerFamilyApprovalRequirement[] | undefined;
+    volunteerFamilyRoleType?: string;
+    approvalRequirements?: VolunteerFamilyApprovalRequirement[];
 
     constructor(data?: IVolunteerFamilyRolePolicy) {
         if (data) {
@@ -1544,13 +1544,13 @@ export class VolunteerFamilyRolePolicy implements IVolunteerFamilyRolePolicy {
 }
 
 export interface IVolunteerFamilyRolePolicy {
-    volunteerFamilyRoleType?: string | undefined;
-    approvalRequirements?: VolunteerFamilyApprovalRequirement[] | undefined;
+    volunteerFamilyRoleType?: string;
+    approvalRequirements?: VolunteerFamilyApprovalRequirement[];
 }
 
 export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyApprovalRequirement {
     requiredToBeProspective?: boolean;
-    actionRequirement?: ActionRequirement | undefined;
+    actionRequirement?: ActionRequirement;
     scope?: VolunteerFamilyRequirementScope;
 
     constructor(data?: IVolunteerFamilyApprovalRequirement) {
@@ -1588,7 +1588,7 @@ export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyAppro
 
 export interface IVolunteerFamilyApprovalRequirement {
     requiredToBeProspective?: boolean;
-    actionRequirement?: ActionRequirement | undefined;
+    actionRequirement?: ActionRequirement;
     scope?: VolunteerFamilyRequirementScope;
 }
 
@@ -1599,7 +1599,7 @@ export enum VolunteerFamilyRequirementScope {
 
 export class DocumentUploadInfo implements IDocumentUploadInfo {
     documentId?: string;
-    valetUrl?: string | undefined;
+    valetUrl?: string;
 
     constructor(data?: IDocumentUploadInfo) {
         if (data) {
@@ -1634,17 +1634,17 @@ export class DocumentUploadInfo implements IDocumentUploadInfo {
 
 export interface IDocumentUploadInfo {
     documentId?: string;
-    valetUrl?: string | undefined;
+    valetUrl?: string;
 }
 
 export class Person implements IPerson {
     id?: string;
     userId?: string | undefined;
-    firstName?: string | undefined;
-    lastName?: string | undefined;
+    firstName?: string;
+    lastName?: string;
     gender?: Gender;
-    age?: Age | undefined;
-    ethnicity?: string | undefined;
+    age?: Age;
+    ethnicity?: string;
     concerns?: string | undefined;
     notes?: string | undefined;
 
@@ -1696,11 +1696,11 @@ export class Person implements IPerson {
 export interface IPerson {
     id?: string;
     userId?: string | undefined;
-    firstName?: string | undefined;
-    lastName?: string | undefined;
+    firstName?: string;
+    lastName?: string;
     gender?: Gender;
-    age?: Age | undefined;
-    ethnicity?: string | undefined;
+    age?: Age;
+    ethnicity?: string;
     concerns?: string | undefined;
     notes?: string | undefined;
 }
@@ -1826,8 +1826,8 @@ export interface IExactAge extends IAge {
 }
 
 export class PersonDetails implements IPersonDetails {
-    person?: Person | undefined;
-    contactInfo?: ContactInfo | undefined;
+    person?: Person;
+    contactInfo?: ContactInfo;
 
     constructor(data?: IPersonDetails) {
         if (data) {
@@ -1861,19 +1861,19 @@ export class PersonDetails implements IPersonDetails {
 }
 
 export interface IPersonDetails {
-    person?: Person | undefined;
-    contactInfo?: ContactInfo | undefined;
+    person?: Person;
+    contactInfo?: ContactInfo;
 }
 
 export class ContactInfo implements IContactInfo {
     personId?: string;
-    addresses?: Address[] | undefined;
+    addresses?: Address[];
     currentAddressId?: string | undefined;
-    phoneNumbers?: PhoneNumber[] | undefined;
+    phoneNumbers?: PhoneNumber[];
     preferredPhoneNumberId?: string | undefined;
-    emailAddresses?: EmailAddress[] | undefined;
+    emailAddresses?: EmailAddress[];
     preferredEmailAddressId?: string | undefined;
-    contactMethodPreferenceNotes?: string | undefined;
+    contactMethodPreferenceNotes?: string;
 
     constructor(data?: IContactInfo) {
         if (data) {
@@ -1944,22 +1944,22 @@ export class ContactInfo implements IContactInfo {
 
 export interface IContactInfo {
     personId?: string;
-    addresses?: Address[] | undefined;
+    addresses?: Address[];
     currentAddressId?: string | undefined;
-    phoneNumbers?: PhoneNumber[] | undefined;
+    phoneNumbers?: PhoneNumber[];
     preferredPhoneNumberId?: string | undefined;
-    emailAddresses?: EmailAddress[] | undefined;
+    emailAddresses?: EmailAddress[];
     preferredEmailAddressId?: string | undefined;
-    contactMethodPreferenceNotes?: string | undefined;
+    contactMethodPreferenceNotes?: string;
 }
 
 export class Address implements IAddress {
     id?: string;
-    line1?: string | undefined;
+    line1?: string;
     line2?: string | undefined;
-    city?: string | undefined;
+    city?: string;
     stateId?: string;
-    postalCode?: string | undefined;
+    postalCode?: string;
     countryId?: string;
 
     constructor(data?: IAddress) {
@@ -2005,17 +2005,17 @@ export class Address implements IAddress {
 
 export interface IAddress {
     id?: string;
-    line1?: string | undefined;
+    line1?: string;
     line2?: string | undefined;
-    city?: string | undefined;
+    city?: string;
     stateId?: string;
-    postalCode?: string | undefined;
+    postalCode?: string;
     countryId?: string;
 }
 
 export class PhoneNumber implements IPhoneNumber {
     id?: string;
-    number?: string | undefined;
+    number?: string;
     type?: PhoneNumberType;
 
     constructor(data?: IPhoneNumber) {
@@ -2053,7 +2053,7 @@ export class PhoneNumber implements IPhoneNumber {
 
 export interface IPhoneNumber {
     id?: string;
-    number?: string | undefined;
+    number?: string;
     type?: PhoneNumberType;
 }
 
@@ -2066,7 +2066,7 @@ export enum PhoneNumberType {
 
 export class EmailAddress implements IEmailAddress {
     id?: string;
-    address?: string | undefined;
+    address?: string;
     type?: EmailAddressType;
 
     constructor(data?: IEmailAddress) {
@@ -2104,7 +2104,7 @@ export class EmailAddress implements IEmailAddress {
 
 export interface IEmailAddress {
     id?: string;
-    address?: string | undefined;
+    address?: string;
     type?: EmailAddressType;
 }
 
@@ -2115,14 +2115,14 @@ export enum EmailAddressType {
 
 export class Referral implements IReferral {
     id?: string;
-    policyVersion?: string | undefined;
+    policyVersion?: string;
     createdUtc?: Date;
     closeReason?: ReferralCloseReason | undefined;
-    partneringFamily?: Family | undefined;
-    contacts?: ContactInfo[] | undefined;
-    referralFormUploads?: FormUploadInfo[] | undefined;
-    referralActivitiesPerformed?: ActivityInfo[] | undefined;
-    arrangements?: Arrangement[] | undefined;
+    partneringFamily?: Family;
+    contacts?: ContactInfo[];
+    referralFormUploads?: FormUploadInfo[];
+    referralActivitiesPerformed?: ActivityInfo[];
+    arrangements?: Arrangement[];
 
     constructor(data?: IReferral) {
         if (data) {
@@ -2203,14 +2203,14 @@ export class Referral implements IReferral {
 
 export interface IReferral {
     id?: string;
-    policyVersion?: string | undefined;
+    policyVersion?: string;
     createdUtc?: Date;
     closeReason?: ReferralCloseReason | undefined;
-    partneringFamily?: Family | undefined;
-    contacts?: ContactInfo[] | undefined;
-    referralFormUploads?: FormUploadInfo[] | undefined;
-    referralActivitiesPerformed?: ActivityInfo[] | undefined;
-    arrangements?: Arrangement[] | undefined;
+    partneringFamily?: Family;
+    contacts?: ContactInfo[];
+    referralFormUploads?: FormUploadInfo[];
+    referralActivitiesPerformed?: ActivityInfo[];
+    arrangements?: Arrangement[];
 }
 
 export enum ReferralCloseReason {
@@ -2223,9 +2223,9 @@ export enum ReferralCloseReason {
 
 export class Family implements IFamily {
     id?: string;
-    adults?: ValueTupleOfPersonAndFamilyAdultRelationshipInfo[] | undefined;
-    children?: Person[] | undefined;
-    custodialRelationships?: CustodialRelationship[] | undefined;
+    adults?: ValueTupleOfPersonAndFamilyAdultRelationshipInfo[];
+    children?: Person[];
+    custodialRelationships?: CustodialRelationship[];
 
     constructor(data?: IFamily) {
         if (data) {
@@ -2288,9 +2288,9 @@ export class Family implements IFamily {
 
 export interface IFamily {
     id?: string;
-    adults?: ValueTupleOfPersonAndFamilyAdultRelationshipInfo[] | undefined;
-    children?: Person[] | undefined;
-    custodialRelationships?: CustodialRelationship[] | undefined;
+    adults?: ValueTupleOfPersonAndFamilyAdultRelationshipInfo[];
+    children?: Person[];
+    custodialRelationships?: CustodialRelationship[];
 }
 
 export class ValueTupleOfPersonAndFamilyAdultRelationshipInfo implements IValueTupleOfPersonAndFamilyAdultRelationshipInfo {
@@ -2334,7 +2334,7 @@ export interface IValueTupleOfPersonAndFamilyAdultRelationshipInfo {
 }
 
 export class FamilyAdultRelationshipInfo implements IFamilyAdultRelationshipInfo {
-    relationshipToFamily?: string | undefined;
+    relationshipToFamily?: string;
     isInHousehold?: boolean;
     isPrimaryFamilyContact?: boolean;
 
@@ -2372,7 +2372,7 @@ export class FamilyAdultRelationshipInfo implements IFamilyAdultRelationshipInfo
 }
 
 export interface IFamilyAdultRelationshipInfo {
-    relationshipToFamily?: string | undefined;
+    relationshipToFamily?: string;
     isInHousehold?: boolean;
     isPrimaryFamilyContact?: boolean;
 }
@@ -2431,9 +2431,9 @@ export class FormUploadInfo implements IFormUploadInfo {
     userId?: string;
     timestampUtc?: Date;
     completedAtUtc?: Date;
-    formName?: string | undefined;
-    formVersion?: string | undefined;
-    originalFileName?: string | undefined;
+    formName?: string;
+    formVersion?: string;
+    originalFileName?: string;
     uploadedDocumentId?: string;
 
     constructor(data?: IFormUploadInfo) {
@@ -2481,16 +2481,16 @@ export interface IFormUploadInfo {
     userId?: string;
     timestampUtc?: Date;
     completedAtUtc?: Date;
-    formName?: string | undefined;
-    formVersion?: string | undefined;
-    originalFileName?: string | undefined;
+    formName?: string;
+    formVersion?: string;
+    originalFileName?: string;
     uploadedDocumentId?: string;
 }
 
 export class ActivityInfo implements IActivityInfo {
     userId?: string;
     timestampUtc?: Date;
-    activityName?: string | undefined;
+    activityName?: string;
     performedAtUtc?: Date;
     performedByPersonId?: string;
 
@@ -2534,22 +2534,22 @@ export class ActivityInfo implements IActivityInfo {
 export interface IActivityInfo {
     userId?: string;
     timestampUtc?: Date;
-    activityName?: string | undefined;
+    activityName?: string;
     performedAtUtc?: Date;
     performedByPersonId?: string;
 }
 
 export class Arrangement implements IArrangement {
     id?: string;
-    policyVersion?: string | undefined;
-    arrangementType?: string | undefined;
+    policyVersion?: string;
+    arrangementType?: string;
     state?: ArrangementState;
-    arrangementFormUploads?: FormUploadInfo[] | undefined;
-    arrangementActivitiesPerformed?: ActivityInfo[] | undefined;
-    volunteerAssignments?: VolunteerAssignment[] | undefined;
-    partneringFamilyChildAssignments?: PartneringFamilyChildAssignment[] | undefined;
-    childrenLocationHistory?: ChildrenLocationHistoryEntry[] | undefined;
-    notes?: Note[] | undefined;
+    arrangementFormUploads?: FormUploadInfo[];
+    arrangementActivitiesPerformed?: ActivityInfo[];
+    volunteerAssignments?: VolunteerAssignment[];
+    partneringFamilyChildAssignments?: PartneringFamilyChildAssignment[];
+    childrenLocationHistory?: ChildrenLocationHistoryEntry[];
+    notes?: Note[];
 
     constructor(data?: IArrangement) {
         if (data) {
@@ -2648,15 +2648,15 @@ export class Arrangement implements IArrangement {
 
 export interface IArrangement {
     id?: string;
-    policyVersion?: string | undefined;
-    arrangementType?: string | undefined;
+    policyVersion?: string;
+    arrangementType?: string;
     state?: ArrangementState;
-    arrangementFormUploads?: FormUploadInfo[] | undefined;
-    arrangementActivitiesPerformed?: ActivityInfo[] | undefined;
-    volunteerAssignments?: VolunteerAssignment[] | undefined;
-    partneringFamilyChildAssignments?: PartneringFamilyChildAssignment[] | undefined;
-    childrenLocationHistory?: ChildrenLocationHistoryEntry[] | undefined;
-    notes?: Note[] | undefined;
+    arrangementFormUploads?: FormUploadInfo[];
+    arrangementActivitiesPerformed?: ActivityInfo[];
+    volunteerAssignments?: VolunteerAssignment[];
+    partneringFamilyChildAssignments?: PartneringFamilyChildAssignment[];
+    childrenLocationHistory?: ChildrenLocationHistoryEntry[];
+    notes?: Note[];
 }
 
 export enum ArrangementState {
@@ -2666,7 +2666,7 @@ export enum ArrangementState {
 }
 
 export abstract class VolunteerAssignment implements IVolunteerAssignment {
-    arrangementFunction?: string | undefined;
+    arrangementFunction?: string;
 
     protected _discriminator: string;
 
@@ -2710,7 +2710,7 @@ export abstract class VolunteerAssignment implements IVolunteerAssignment {
 }
 
 export interface IVolunteerAssignment {
-    arrangementFunction?: string | undefined;
+    arrangementFunction?: string;
 }
 
 export class FamilyVolunteerAssignment extends VolunteerAssignment implements IFamilyVolunteerAssignment {
@@ -2820,10 +2820,10 @@ export interface IPartneringFamilyChildAssignment {
 export class ChildrenLocationHistoryEntry implements IChildrenLocationHistoryEntry {
     userId?: string;
     timestampUtc?: Date;
-    childrenIds?: string[] | undefined;
+    childrenIds?: string[];
     familyId?: string;
     plan?: ChildrenLocationPlan;
-    additionalExplanation?: string | undefined;
+    additionalExplanation?: string;
 
     constructor(data?: IChildrenLocationHistoryEntry) {
         if (data) {
@@ -2875,10 +2875,10 @@ export class ChildrenLocationHistoryEntry implements IChildrenLocationHistoryEnt
 export interface IChildrenLocationHistoryEntry {
     userId?: string;
     timestampUtc?: Date;
-    childrenIds?: string[] | undefined;
+    childrenIds?: string[];
     familyId?: string;
     plan?: ChildrenLocationPlan;
-    additionalExplanation?: string | undefined;
+    additionalExplanation?: string;
 }
 
 export enum ChildrenLocationPlan {
@@ -3038,7 +3038,7 @@ export interface ICloseReferral extends IReferralCommand {
 
 export class CreateReferral extends ReferralCommand implements ICreateReferral {
     familyId?: string;
-    policyVersion?: string | undefined;
+    policyVersion?: string;
     openedAtUtc?: Date;
 
     constructor(data?: ICreateReferral) {
@@ -3074,12 +3074,12 @@ export class CreateReferral extends ReferralCommand implements ICreateReferral {
 
 export interface ICreateReferral extends IReferralCommand {
     familyId?: string;
-    policyVersion?: string | undefined;
+    policyVersion?: string;
     openedAtUtc?: Date;
 }
 
 export class PerformReferralActivity extends ReferralCommand implements IPerformReferralActivity {
-    activityName?: string | undefined;
+    activityName?: string;
     performedAtUtc?: Date;
     performedByPersonId?: string;
 
@@ -3115,16 +3115,16 @@ export class PerformReferralActivity extends ReferralCommand implements IPerform
 }
 
 export interface IPerformReferralActivity extends IReferralCommand {
-    activityName?: string | undefined;
+    activityName?: string;
     performedAtUtc?: Date;
     performedByPersonId?: string;
 }
 
 export class UploadReferralForm extends ReferralCommand implements IUploadReferralForm {
     completedAtUtc?: Date;
-    formName?: string | undefined;
-    formVersion?: string | undefined;
-    uploadedFileName?: string | undefined;
+    formName?: string;
+    formVersion?: string;
+    uploadedFileName?: string;
     uploadedDocumentId?: string;
 
     constructor(data?: IUploadReferralForm) {
@@ -3164,9 +3164,9 @@ export class UploadReferralForm extends ReferralCommand implements IUploadReferr
 
 export interface IUploadReferralForm extends IReferralCommand {
     completedAtUtc?: Date;
-    formName?: string | undefined;
-    formVersion?: string | undefined;
-    uploadedFileName?: string | undefined;
+    formName?: string;
+    formVersion?: string;
+    uploadedFileName?: string;
     uploadedDocumentId?: string;
 }
 
@@ -3259,7 +3259,7 @@ export interface IArrangementCommand {
 
 export class AssignIndividualVolunteer extends ArrangementCommand implements IAssignIndividualVolunteer {
     personId?: string;
-    arrangementFunction?: string | undefined;
+    arrangementFunction?: string;
 
     constructor(data?: IAssignIndividualVolunteer) {
         super(data);
@@ -3292,11 +3292,11 @@ export class AssignIndividualVolunteer extends ArrangementCommand implements IAs
 
 export interface IAssignIndividualVolunteer extends IArrangementCommand {
     personId?: string;
-    arrangementFunction?: string | undefined;
+    arrangementFunction?: string;
 }
 
 export class AssignPartneringFamilyChildren extends ArrangementCommand implements IAssignPartneringFamilyChildren {
-    childrenIds?: string[] | undefined;
+    childrenIds?: string[];
 
     constructor(data?: IAssignPartneringFamilyChildren) {
         super(data);
@@ -3334,12 +3334,12 @@ export class AssignPartneringFamilyChildren extends ArrangementCommand implement
 }
 
 export interface IAssignPartneringFamilyChildren extends IArrangementCommand {
-    childrenIds?: string[] | undefined;
+    childrenIds?: string[];
 }
 
 export class AssignVolunteerFamily extends ArrangementCommand implements IAssignVolunteerFamily {
     familyId?: string;
-    arrangementFunction?: string | undefined;
+    arrangementFunction?: string;
 
     constructor(data?: IAssignVolunteerFamily) {
         super(data);
@@ -3372,12 +3372,12 @@ export class AssignVolunteerFamily extends ArrangementCommand implements IAssign
 
 export interface IAssignVolunteerFamily extends IArrangementCommand {
     familyId?: string;
-    arrangementFunction?: string | undefined;
+    arrangementFunction?: string;
 }
 
 export class CreateArrangement extends ArrangementCommand implements ICreateArrangement {
-    policyVersion?: string | undefined;
-    arrangementType?: string | undefined;
+    policyVersion?: string;
+    arrangementType?: string;
 
     constructor(data?: ICreateArrangement) {
         super(data);
@@ -3409,8 +3409,8 @@ export class CreateArrangement extends ArrangementCommand implements ICreateArra
 }
 
 export interface ICreateArrangement extends IArrangementCommand {
-    policyVersion?: string | undefined;
-    arrangementType?: string | undefined;
+    policyVersion?: string;
+    arrangementType?: string;
 }
 
 export class EndArrangement extends ArrangementCommand implements IEndArrangement {
@@ -3482,7 +3482,7 @@ export interface IInitiateArrangement extends IArrangementCommand {
 }
 
 export class PerformArrangementActivity extends ArrangementCommand implements IPerformArrangementActivity {
-    activityName?: string | undefined;
+    activityName?: string;
     performedAtUtc?: Date;
     performedByPersonId?: string;
 
@@ -3518,17 +3518,17 @@ export class PerformArrangementActivity extends ArrangementCommand implements IP
 }
 
 export interface IPerformArrangementActivity extends IArrangementCommand {
-    activityName?: string | undefined;
+    activityName?: string;
     performedAtUtc?: Date;
     performedByPersonId?: string;
 }
 
 export class TrackChildrenLocationChange extends ArrangementCommand implements ITrackChildrenLocationChange {
     changedAtUtc?: Date;
-    childrenIds?: string[] | undefined;
+    childrenIds?: string[];
     familyId?: string;
     plan?: ChildrenLocationPlan;
-    additionalExplanation?: string | undefined;
+    additionalExplanation?: string;
 
     constructor(data?: ITrackChildrenLocationChange) {
         super(data);
@@ -3575,17 +3575,17 @@ export class TrackChildrenLocationChange extends ArrangementCommand implements I
 
 export interface ITrackChildrenLocationChange extends IArrangementCommand {
     changedAtUtc?: Date;
-    childrenIds?: string[] | undefined;
+    childrenIds?: string[];
     familyId?: string;
     plan?: ChildrenLocationPlan;
-    additionalExplanation?: string | undefined;
+    additionalExplanation?: string;
 }
 
 export class UploadArrangementForm extends ArrangementCommand implements IUploadArrangementForm {
     completedAtUtc?: Date;
-    formName?: string | undefined;
-    formVersion?: string | undefined;
-    uploadedFileName?: string | undefined;
+    formName?: string;
+    formVersion?: string;
+    uploadedFileName?: string;
     uploadedDocumentId?: string;
 
     constructor(data?: IUploadArrangementForm) {
@@ -3625,9 +3625,9 @@ export class UploadArrangementForm extends ArrangementCommand implements IUpload
 
 export interface IUploadArrangementForm extends IArrangementCommand {
     completedAtUtc?: Date;
-    formName?: string | undefined;
-    formVersion?: string | undefined;
-    uploadedFileName?: string | undefined;
+    formName?: string;
+    formVersion?: string;
+    uploadedFileName?: string;
     uploadedDocumentId?: string;
 }
 
@@ -3698,7 +3698,7 @@ export interface IArrangementNoteCommand {
 }
 
 export class ApproveArrangementNote extends ArrangementNoteCommand implements IApproveArrangementNote {
-    finalizedNoteContents?: string | undefined;
+    finalizedNoteContents?: string;
 
     constructor(data?: IApproveArrangementNote) {
         super(data);
@@ -3728,7 +3728,7 @@ export class ApproveArrangementNote extends ArrangementNoteCommand implements IA
 }
 
 export interface IApproveArrangementNote extends IArrangementNoteCommand {
-    finalizedNoteContents?: string | undefined;
+    finalizedNoteContents?: string;
 }
 
 export class CreateDraftArrangementNote extends ArrangementNoteCommand implements ICreateDraftArrangementNote {
@@ -3828,11 +3828,11 @@ export interface IEditDraftArrangementNote extends IArrangementNoteCommand {
 }
 
 export class VolunteerFamily implements IVolunteerFamily {
-    family?: Family | undefined;
-    approvalFormUploads?: FormUploadInfo[] | undefined;
-    approvalActivitiesPerformed?: ActivityInfo[] | undefined;
-    familyRoleApprovals?: { [key: string]: RoleApprovalStatus; } | undefined;
-    individualVolunteers?: { [key: string]: Volunteer; } | undefined;
+    family?: Family;
+    approvalFormUploads?: FormUploadInfo[];
+    approvalActivitiesPerformed?: ActivityInfo[];
+    familyRoleApprovals?: { [key: string]: RoleApprovalStatus; };
+    individualVolunteers?: { [key: string]: Volunteer; };
 
     constructor(data?: IVolunteerFamily) {
         if (data) {
@@ -3912,11 +3912,11 @@ export class VolunteerFamily implements IVolunteerFamily {
 }
 
 export interface IVolunteerFamily {
-    family?: Family | undefined;
-    approvalFormUploads?: FormUploadInfo[] | undefined;
-    approvalActivitiesPerformed?: ActivityInfo[] | undefined;
-    familyRoleApprovals?: { [key: string]: RoleApprovalStatus; } | undefined;
-    individualVolunteers?: { [key: string]: Volunteer; } | undefined;
+    family?: Family;
+    approvalFormUploads?: FormUploadInfo[];
+    approvalActivitiesPerformed?: ActivityInfo[];
+    familyRoleApprovals?: { [key: string]: RoleApprovalStatus; };
+    individualVolunteers?: { [key: string]: Volunteer; };
 }
 
 export enum RoleApprovalStatus {
@@ -3925,9 +3925,9 @@ export enum RoleApprovalStatus {
 }
 
 export class Volunteer implements IVolunteer {
-    approvalFormUploads?: FormUploadInfo[] | undefined;
-    approvalActivitiesPerformed?: ActivityInfo[] | undefined;
-    individualRoleApprovals?: { [key: string]: RoleApprovalStatus; } | undefined;
+    approvalFormUploads?: FormUploadInfo[];
+    approvalActivitiesPerformed?: ActivityInfo[];
+    individualRoleApprovals?: { [key: string]: RoleApprovalStatus; };
 
     constructor(data?: IVolunteer) {
         if (data) {
@@ -3991,9 +3991,9 @@ export class Volunteer implements IVolunteer {
 }
 
 export interface IVolunteer {
-    approvalFormUploads?: FormUploadInfo[] | undefined;
-    approvalActivitiesPerformed?: ActivityInfo[] | undefined;
-    individualRoleApprovals?: { [key: string]: RoleApprovalStatus; } | undefined;
+    approvalFormUploads?: FormUploadInfo[];
+    approvalActivitiesPerformed?: ActivityInfo[];
+    individualRoleApprovals?: { [key: string]: RoleApprovalStatus; };
 }
 
 export abstract class VolunteerFamilyCommand implements IVolunteerFamilyCommand {
@@ -4088,7 +4088,7 @@ export interface IActivateVolunteerFamily extends IVolunteerFamilyCommand {
 }
 
 export class DeactivateVolunteerFamily extends VolunteerFamilyCommand implements IDeactivateVolunteerFamily {
-    reason?: string | undefined;
+    reason?: string;
 
     constructor(data?: IDeactivateVolunteerFamily) {
         super(data);
@@ -4118,11 +4118,11 @@ export class DeactivateVolunteerFamily extends VolunteerFamilyCommand implements
 }
 
 export interface IDeactivateVolunteerFamily extends IVolunteerFamilyCommand {
-    reason?: string | undefined;
+    reason?: string;
 }
 
 export class PerformVolunteerFamilyActivity extends VolunteerFamilyCommand implements IPerformVolunteerFamilyActivity {
-    activityName?: string | undefined;
+    activityName?: string;
     performedAtUtc?: Date;
     performedByPersonId?: string;
 
@@ -4158,13 +4158,13 @@ export class PerformVolunteerFamilyActivity extends VolunteerFamilyCommand imple
 }
 
 export interface IPerformVolunteerFamilyActivity extends IVolunteerFamilyCommand {
-    activityName?: string | undefined;
+    activityName?: string;
     performedAtUtc?: Date;
     performedByPersonId?: string;
 }
 
 export class SetVolunteerFamilyNote extends VolunteerFamilyCommand implements ISetVolunteerFamilyNote {
-    note?: string | undefined;
+    note?: string;
 
     constructor(data?: ISetVolunteerFamilyNote) {
         super(data);
@@ -4194,14 +4194,14 @@ export class SetVolunteerFamilyNote extends VolunteerFamilyCommand implements IS
 }
 
 export interface ISetVolunteerFamilyNote extends IVolunteerFamilyCommand {
-    note?: string | undefined;
+    note?: string;
 }
 
 export class UploadVolunteerFamilyForm extends VolunteerFamilyCommand implements IUploadVolunteerFamilyForm {
     completedAtUtc?: Date;
-    formName?: string | undefined;
-    formVersion?: string | undefined;
-    uploadedFileName?: string | undefined;
+    formName?: string;
+    formVersion?: string;
+    uploadedFileName?: string;
     uploadedDocumentId?: string;
 
     constructor(data?: IUploadVolunteerFamilyForm) {
@@ -4241,9 +4241,9 @@ export class UploadVolunteerFamilyForm extends VolunteerFamilyCommand implements
 
 export interface IUploadVolunteerFamilyForm extends IVolunteerFamilyCommand {
     completedAtUtc?: Date;
-    formName?: string | undefined;
-    formVersion?: string | undefined;
-    uploadedFileName?: string | undefined;
+    formName?: string;
+    formVersion?: string;
+    uploadedFileName?: string;
     uploadedDocumentId?: string;
 }
 
@@ -4315,7 +4315,7 @@ export interface IVolunteerCommand {
 }
 
 export class DeactivateVolunteer extends VolunteerCommand implements IDeactivateVolunteer {
-    reason?: string | undefined;
+    reason?: string;
 
     constructor(data?: IDeactivateVolunteer) {
         super(data);
@@ -4345,11 +4345,11 @@ export class DeactivateVolunteer extends VolunteerCommand implements IDeactivate
 }
 
 export interface IDeactivateVolunteer extends IVolunteerCommand {
-    reason?: string | undefined;
+    reason?: string;
 }
 
 export class PerformVolunteerActivity extends VolunteerCommand implements IPerformVolunteerActivity {
-    activityName?: string | undefined;
+    activityName?: string;
     performedAtUtc?: Date;
     performedByPersonId?: string;
 
@@ -4385,7 +4385,7 @@ export class PerformVolunteerActivity extends VolunteerCommand implements IPerfo
 }
 
 export interface IPerformVolunteerActivity extends IVolunteerCommand {
-    activityName?: string | undefined;
+    activityName?: string;
     performedAtUtc?: Date;
     performedByPersonId?: string;
 }
@@ -4419,7 +4419,7 @@ export interface IReactivateVolunteer extends IVolunteerCommand {
 }
 
 export class SetVolunteerNote extends VolunteerCommand implements ISetVolunteerNote {
-    note?: string | undefined;
+    note?: string;
 
     constructor(data?: ISetVolunteerNote) {
         super(data);
@@ -4449,14 +4449,14 @@ export class SetVolunteerNote extends VolunteerCommand implements ISetVolunteerN
 }
 
 export interface ISetVolunteerNote extends IVolunteerCommand {
-    note?: string | undefined;
+    note?: string;
 }
 
 export class UploadVolunteerForm extends VolunteerCommand implements IUploadVolunteerForm {
     completedAtUtc?: Date;
-    formName?: string | undefined;
-    formVersion?: string | undefined;
-    uploadedFileName?: string | undefined;
+    formName?: string;
+    formVersion?: string;
+    uploadedFileName?: string;
     uploadedDocumentId?: string;
 
     constructor(data?: IUploadVolunteerForm) {
@@ -4496,9 +4496,9 @@ export class UploadVolunteerForm extends VolunteerCommand implements IUploadVolu
 
 export interface IUploadVolunteerForm extends IVolunteerCommand {
     completedAtUtc?: Date;
-    formName?: string | undefined;
-    formVersion?: string | undefined;
-    uploadedFileName?: string | undefined;
+    formName?: string;
+    formVersion?: string;
+    uploadedFileName?: string;
     uploadedDocumentId?: string;
 }
 
@@ -4546,14 +4546,14 @@ export interface IApprovalCommand {
 
 export class AddAdultToFamilyCommand extends ApprovalCommand implements IAddAdultToFamilyCommand {
     familyId?: string;
-    firstName?: string | undefined;
-    lastName?: string | undefined;
+    firstName?: string;
+    lastName?: string;
     gender?: Gender;
-    age?: Age | undefined;
-    ethnicity?: string | undefined;
-    familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo | undefined;
-    concerns?: string | undefined;
-    notes?: string | undefined;
+    age?: Age;
+    ethnicity?: string;
+    familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
+    concerns?: string;
+    notes?: string;
 
     constructor(data?: IAddAdultToFamilyCommand) {
         super(data);
@@ -4600,25 +4600,25 @@ export class AddAdultToFamilyCommand extends ApprovalCommand implements IAddAdul
 
 export interface IAddAdultToFamilyCommand extends IApprovalCommand {
     familyId?: string;
-    firstName?: string | undefined;
-    lastName?: string | undefined;
+    firstName?: string;
+    lastName?: string;
     gender?: Gender;
-    age?: Age | undefined;
-    ethnicity?: string | undefined;
-    familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo | undefined;
-    concerns?: string | undefined;
-    notes?: string | undefined;
+    age?: Age;
+    ethnicity?: string;
+    familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
+    concerns?: string;
+    notes?: string;
 }
 
 export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand implements ICreateVolunteerFamilyWithNewAdultCommand {
-    firstName?: string | undefined;
-    lastName?: string | undefined;
+    firstName?: string;
+    lastName?: string;
     gender?: Gender;
-    age?: Age | undefined;
-    ethnicity?: string | undefined;
-    familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo | undefined;
-    concerns?: string | undefined;
-    notes?: string | undefined;
+    age?: Age;
+    ethnicity?: string;
+    familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
+    concerns?: string;
+    notes?: string;
 
     constructor(data?: ICreateVolunteerFamilyWithNewAdultCommand) {
         super(data);
@@ -4662,14 +4662,14 @@ export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand im
 }
 
 export interface ICreateVolunteerFamilyWithNewAdultCommand extends IApprovalCommand {
-    firstName?: string | undefined;
-    lastName?: string | undefined;
+    firstName?: string;
+    lastName?: string;
     gender?: Gender;
-    age?: Age | undefined;
-    ethnicity?: string | undefined;
-    familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo | undefined;
-    concerns?: string | undefined;
-    notes?: string | undefined;
+    age?: Age;
+    ethnicity?: string;
+    familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
+    concerns?: string;
+    notes?: string;
 }
 
 export class ApiException extends Error {

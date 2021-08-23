@@ -13,7 +13,7 @@ namespace CareTogether.Core.Test
     [TestClass]
     public class AppendBlobMultitenantEventLogTest
     {
-        BlobServiceClient testingClient;
+        private static readonly BlobServiceClient testingClient = new BlobServiceClient("UseDevelopmentStorage=true");
         private static Guid Id(char x) => Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
 
         // 'organizationId' and 'locationId' must be seeded with 1 and 2, respectively, because
@@ -26,15 +26,15 @@ namespace CareTogether.Core.Test
         static readonly PersonCommandExecuted personCommand = new PersonCommandExecuted(guid4, new DateTime(2021, 7, 1),
             new CreatePerson(guid3, guid4, "Jane", "Smith", Gender.Female, new AgeInYears(42, new DateTime(2021, 1, 1)), "Ethnic", null, null));
 
+#nullable disable
         AppendBlobMultitenantEventLog<CommunityEvent> communityEventLog;
         AppendBlobMultitenantEventLog<ContactCommandExecutedEvent> contactsEventLog;
         AppendBlobMultitenantEventLog<ReferralEvent> referralsEventLog;
+#nullable restore
 
         [TestInitialize]
         public void TestInitialize()
         {
-            testingClient = new BlobServiceClient("UseDevelopmentStorage=true");
-
             testingClient.GetBlobContainerClient(organizationId.ToString()).DeleteIfExists();
             testingClient.GetBlobContainerClient(guid3.ToString()).DeleteIfExists();
 

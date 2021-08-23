@@ -33,7 +33,7 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<IEnumerable<Person>>> Get(Guid organizationId, Guid locationId)
         {
             logger.LogInformation("User '{UserName}' was authenticated via '{AuthenticationType}'",
-                User.Identity.Name, User.Identity.AuthenticationType);
+                User.Identity?.Name, User.Identity?.AuthenticationType);
 
             var authorizedUser = await authorizationProvider.AuthorizeAsync(organizationId, locationId, User);
 
@@ -50,7 +50,7 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<PersonDetails>> GetContactInfo(Guid organizationId, Guid locationId, Guid personId)
         {
             logger.LogInformation("User '{UserName}' was authenticated via '{AuthenticationType}'",
-                User.Identity.Name, User.Identity.AuthenticationType);
+                User.Identity?.Name, User.Identity?.AuthenticationType);
 
             var authorizedUser = await authorizationProvider.AuthorizeAsync(organizationId, locationId, User);
 

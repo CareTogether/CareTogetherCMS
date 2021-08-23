@@ -23,7 +23,7 @@ namespace CareTogether.Managers
         ImmutableList<Note> Notes);
 
     public record Note(Guid Id, Guid AuthorId, DateTime TimestampUtc,
-        string Contents, NoteStatus Status);
+        string? Contents, NoteStatus Status);
 
     public interface IReferralManager
     {

@@ -12,7 +12,7 @@ namespace CareTogether.Resources
         List<EmailAddress> EmailAddresses, Guid? PreferredEmailAddressId,
         string ContactMethodPreferenceNotes);
     public sealed record Address(Guid Id,
-        string Line1, string Line2, string City, Guid StateId, string PostalCode, Guid CountryId);
+        string Line1, string? Line2, string City, Guid StateId, string PostalCode, Guid CountryId);
     public sealed record State(Guid Id, string Name);
     public sealed record Country(Guid Id, string Name);
     public sealed record PhoneNumber(Guid Id, string Number, PhoneNumberType Type);

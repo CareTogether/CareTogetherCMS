@@ -9,11 +9,11 @@ namespace CareTogether.Resources
     public sealed class ReferralsResource : IReferralsResource
     {
         private readonly IMultitenantEventLog<ReferralEvent> eventLog;
-        private readonly IObjectStore<string> draftNotesStore;
+        private readonly IObjectStore<string?> draftNotesStore;
         private readonly ConcurrentLockingStore<(Guid organizationId, Guid locationId), ReferralModel> tenantModels;
 
 
-        public ReferralsResource(IMultitenantEventLog<ReferralEvent> eventLog, IObjectStore<string> draftNotesStore)
+        public ReferralsResource(IMultitenantEventLog<ReferralEvent> eventLog, IObjectStore<string?> draftNotesStore)
         {
             this.eventLog = eventLog;
             this.draftNotesStore = draftNotesStore;
@@ -24,7 +24,7 @@ namespace CareTogether.Resources
                         var draftNoteResult = await draftNotesStore.GetAsync(key.organizationId, key.locationId, noteId.ToString());
                         return draftNoteResult.TryPickT0(out var draftNote, out var _)
                             ? draftNote.Value
-                            : null; //TODO: Log/return an error that the draft note could not be found!
+                            : ""; //TODO: Log/return an error that the draft note could not be found!
                     }));
         }
 

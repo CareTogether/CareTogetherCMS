@@ -43,7 +43,9 @@ namespace CareTogether.Core.Test
                 new CustodialRelationship(guid5, guid2, CustodialRelationshipType.LegalGuardian)
             });
 
+#nullable disable
         private PolicyEvaluationEngine dut;
+#nullable restore
 
         [TestInitialize]
         public async Task TestInitialize()

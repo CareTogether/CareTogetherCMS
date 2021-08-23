@@ -30,7 +30,7 @@ namespace CareTogether.Resources.Models
 
         public static async Task<ReferralModel> InitializeAsync(
             IAsyncEnumerable<(ReferralEvent DomainEvent, long SequenceNumber)> eventLog,
-            Func<Guid, Task<string>> loadDraftNoteAsync)
+            Func<Guid, Task<string?>> loadDraftNoteAsync)
         {
             var model = new ReferralModel();
 
@@ -207,7 +207,7 @@ namespace CareTogether.Resources.Models
             if (!referralEntry.Arrangements.TryGetValue(command.ArrangementId, out var arrangementEntry))
                 return new Error<string>("An arrangement with the specified ID does not exist.");
 
-            OneOf<NoteEntry, Error<string>> result = command switch
+            OneOf<NoteEntry?, Error<string>> result = command switch
             {
                 //TODO: Validate policy version and enforce any other invariants
                 CreateDraftArrangementNote c => new NoteEntry(c.NoteId, userId, timestampUtc, NoteStatus.Draft,
