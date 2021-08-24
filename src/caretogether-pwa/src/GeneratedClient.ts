@@ -4552,8 +4552,8 @@ export class AddAdultToFamilyCommand extends ApprovalCommand implements IAddAdul
     age?: Age;
     ethnicity?: string;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
-    concerns?: string;
-    notes?: string;
+    concerns?: string | undefined;
+    notes?: string | undefined;
 
     constructor(data?: IAddAdultToFamilyCommand) {
         super(data);
@@ -4606,8 +4606,8 @@ export interface IAddAdultToFamilyCommand extends IApprovalCommand {
     age?: Age;
     ethnicity?: string;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
-    concerns?: string;
-    notes?: string;
+    concerns?: string | undefined;
+    notes?: string | undefined;
 }
 
 export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand implements ICreateVolunteerFamilyWithNewAdultCommand {
@@ -4617,8 +4617,8 @@ export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand im
     age?: Age;
     ethnicity?: string;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
-    concerns?: string;
-    notes?: string;
+    concerns?: string | undefined;
+    notes?: string | undefined;
 
     constructor(data?: ICreateVolunteerFamilyWithNewAdultCommand) {
         super(data);
@@ -4668,8 +4668,8 @@ export interface ICreateVolunteerFamilyWithNewAdultCommand extends IApprovalComm
     age?: Age;
     ethnicity?: string;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
-    concerns?: string;
-    notes?: string;
+    concerns?: string | undefined;
+    notes?: string | undefined;
 }
 
 export class ApiException extends Error {

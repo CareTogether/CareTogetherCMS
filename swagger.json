@@ -2604,10 +2604,12 @@
                 "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
               },
               "concerns": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "notes": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               }
             }
           }
@@ -2641,10 +2643,12 @@
                 "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
               },
               "concerns": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "notes": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               }
             }
           }
