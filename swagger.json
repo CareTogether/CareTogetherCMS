@@ -1427,6 +1427,10 @@
             "type": "string",
             "format": "guid"
           },
+          "primaryFamilyContactPersonId": {
+            "type": "string",
+            "format": "guid"
+          },
           "adults": {
             "type": "array",
             "items": {
@@ -1467,9 +1471,6 @@
             "type": "string"
           },
           "isInHousehold": {
-            "type": "boolean"
-          },
-          "isPrimaryFamilyContact": {
             "type": "boolean"
           }
         }

@@ -54,32 +54,32 @@ namespace CareTogether.TestData
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonAge(guid1, new ExactAge(new DateTime(1975, 1, 1)))),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonAge(guid2, new ExactAge(new DateTime(1979, 7, 1)))),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonUserLink(guid1, guid4)),
-                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid1,
-                    new List<(Guid, FamilyAdultRelationshipInfo)> { (guid1, new FamilyAdultRelationshipInfo("Dad", true, true)) },
+                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid1, guid1,
+                    new List<(Guid, FamilyAdultRelationshipInfo)> { (guid1, new FamilyAdultRelationshipInfo("Dad", true)) },
                     new List<Guid>(), new List<CustodialRelationship>())),
-                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddAdultToFamily(guid1, guid2, new FamilyAdultRelationshipInfo("Mom", true, true))),
+                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddAdultToFamily(guid1, guid2, new FamilyAdultRelationshipInfo("Mom", true))),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid3, null, "Eric", "Doe", Gender.Male, new AgeInYears(12, new DateTime(2021, 1, 1)), "Ethnic", null, null)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddChildToFamily(guid1, guid3, new List<CustodialRelationship>
                 {
                     new CustodialRelationship(guid3, guid1, CustodialRelationshipType.ParentWithCustody),
                     new CustodialRelationship(guid3, guid2, CustodialRelationshipType.ParentWithCustody)
                 })),
-                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdateAdultRelationshipToFamily(guid1, guid1, new FamilyAdultRelationshipInfo("Dad", false, false))),
+                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdateAdultRelationshipToFamily(guid1, guid1, new FamilyAdultRelationshipInfo("Dad", false))),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new RemoveCustodialRelationship(guid1, guid3, guid1)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdateCustodialRelationshipType(guid1, guid3, guid2, CustodialRelationshipType.ParentWithCourtAppointedCustody)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddCustodialRelationship(guid1, guid3, guid1, CustodialRelationshipType.ParentWithCourtAppointedCustody)),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid4, null, "Emily", "Coachworthy", Gender.Female, new ExactAge(new DateTime(1980, 3, 19)), "Ethnic", null, null)),
-                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid4,
-                    new List<(Guid, FamilyAdultRelationshipInfo)> { (guid4, new FamilyAdultRelationshipInfo("Single", true, true)) },
+                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid4, guid4,
+                    new List<(Guid, FamilyAdultRelationshipInfo)> { (guid4, new FamilyAdultRelationshipInfo("Single", true)) },
                     new List<Guid>(), new List<CustodialRelationship>())),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid5, null, "Han", "Solo", Gender.Male, new AgeInYears(30, new DateTime(2021, 7, 1)), "Ethnic", "Smuggler", null)),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid6, null, "Leia", "Skywalker", Gender.Male, new AgeInYears(28, new DateTime(2021, 7, 1)), "Ethnic", "Freedom fighter", "Uncertain claim to royalty")),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid7, null, "Ben", "Solo", Gender.Male, new AgeInYears(12, new DateTime(2021, 7, 1)), "Ethnic", null, null)),
-                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid2,
+                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid2, guid6,
                     new List<(Guid, FamilyAdultRelationshipInfo)>
                     {
-                        (guid5, new FamilyAdultRelationshipInfo("Dad", true, true)),
-                        (guid6, new FamilyAdultRelationshipInfo("Mom", true, false))
+                        (guid5, new FamilyAdultRelationshipInfo("Dad", true)),
+                        (guid6, new FamilyAdultRelationshipInfo("Mom", true))
                     }, new List<Guid>() { guid7 }, new List<CustodialRelationship>()
                     {
                         new CustodialRelationship(guid7, guid5, CustodialRelationshipType.ParentWithCustody),
@@ -87,11 +87,11 @@ namespace CareTogether.TestData
                     })),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid8, null, "William", "Riker", Gender.Male, new ExactAge(new DateTime(1972, 1, 1)), "Ethnic", null, null)),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid9, null, "Deanna", "Riker", Gender.Female, new ExactAge(new DateTime(1970, 1, 1)), "Ethnic", null, null)),
-                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid3,
+                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid3, guid8,
                     new List<(Guid, FamilyAdultRelationshipInfo)>
                     {
-                        (guid8, new FamilyAdultRelationshipInfo("Dad", true, true)),
-                        (guid9, new FamilyAdultRelationshipInfo("Mom", true, false))
+                        (guid8, new FamilyAdultRelationshipInfo("Dad", true)),
+                        (guid9, new FamilyAdultRelationshipInfo("Mom", true))
                     }, new List<Guid>(), new List<CustodialRelationship>()))
             );
         }
