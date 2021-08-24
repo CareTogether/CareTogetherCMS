@@ -42,10 +42,12 @@ namespace CareTogether.Resources
         ImmutableList<VolunteerFamilyApprovalRequirement> ApprovalRequirements);
 
     public sealed record VolunteerApprovalRequirement(
-        bool RequiredToBeProspective, ActionRequirement ActionRequirement);
+        RequirementStage Stage, ActionRequirement ActionRequirement);
+
+    public enum RequirementStage { Application, Approval, Onboarding }
 
     public sealed record VolunteerFamilyApprovalRequirement(
-        bool RequiredToBeProspective, ActionRequirement ActionRequirement, VolunteerFamilyRequirementScope Scope);
+        RequirementStage Stage, ActionRequirement ActionRequirement, VolunteerFamilyRequirementScope Scope);
 
     public enum VolunteerFamilyRequirementScope { OncePerFamily, AllAdultsInTheFamily };
 

@@ -82,7 +82,7 @@ namespace CareTogether.Engines
                     foreach (var (roleName, rolePolicy) in policy.VolunteerRoles)
                     {
                         var requirementsMet = rolePolicy.ApprovalRequirements.Select(requirement =>
-                            (requirement.RequiredToBeProspective, RequirementMet: requirement.ActionRequirement switch
+                            (requirement.Stage, RequirementMet: requirement.ActionRequirement switch
                             {
                                 FormUploadRequirement r => formUploads.Any(upload => upload.FormName == r.FormName),
                                 ActivityRequirement r => activities.Any(activity => activity.ActivityName == r.ActivityName),
@@ -91,8 +91,10 @@ namespace CareTogether.Engines
                             })).ToList();
 
                         if (requirementsMet.All(x => x.RequirementMet))
+                            individualRoles[roleName] = RoleApprovalStatus.Onboarded;
+                        else if (requirementsMet.Where(x => x.Stage == RequirementStage.Application || x.Stage == RequirementStage.Approval).All(x => x.RequirementMet))
                             individualRoles[roleName] = RoleApprovalStatus.Approved;
-                        else if (requirementsMet.Where(x => x.RequiredToBeProspective).All(x => x.RequirementMet))
+                        else if (requirementsMet.Where(x => x.Stage == RequirementStage.Application).All(x => x.RequirementMet))
                             individualRoles[roleName] = RoleApprovalStatus.Prospective;
                     }
                 }
@@ -103,7 +105,7 @@ namespace CareTogether.Engines
             foreach (var (roleName, rolePolicy) in policy.VolunteerFamilyRoles)
             {
                 var requirementsMet = rolePolicy.ApprovalRequirements.Select(requirement =>
-                    (requirement.RequiredToBeProspective, RequirementMet: requirement.Scope switch
+                    (requirement.Stage, RequirementMet: requirement.Scope switch
                     {
                         VolunteerFamilyRequirementScope.AllAdultsInTheFamily => requirement.ActionRequirement switch
                         {
@@ -144,8 +146,10 @@ namespace CareTogether.Engines
                     })).ToList();
 
                 if (requirementsMet.All(x => x.RequirementMet))
+                    familyRoles[roleName] = RoleApprovalStatus.Onboarded;
+                else if (requirementsMet.Where(x => x.Stage == RequirementStage.Application || x.Stage == RequirementStage.Approval).All(x => x.RequirementMet))
                     familyRoles[roleName] = RoleApprovalStatus.Approved;
-                else if (requirementsMet.Where(x => x.RequiredToBeProspective).All(x => x.RequirementMet))
+                else if (requirementsMet.Where(x => x.Stage == RequirementStage.Application).All(x => x.RequirementMet))
                     familyRoles[roleName] = RoleApprovalStatus.Prospective;
             }
 

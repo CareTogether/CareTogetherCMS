@@ -168,7 +168,7 @@ namespace CareTogether.Core.Test
                 }.ToImmutableDictionary());
 
             Assert.AreEqual(1, result.FamilyRoleApprovals.Count);
-            Assert.AreEqual(RoleApprovalStatus.Approved, result.FamilyRoleApprovals["Host Family"]);
+            Assert.AreEqual(RoleApprovalStatus.Onboarded, result.FamilyRoleApprovals["Host Family"]);
             Assert.AreEqual(3, result.IndividualVolunteers.Count);
             Assert.AreEqual(0, result.IndividualVolunteers[guid1].IndividualRoleApprovals.Count);
             Assert.AreEqual(0, result.IndividualVolunteers[guid2].IndividualRoleApprovals.Count);

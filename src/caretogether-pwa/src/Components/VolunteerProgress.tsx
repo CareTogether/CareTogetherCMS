@@ -1,6 +1,6 @@
 import { makeStyles } from '@material-ui/core/styles';
 import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Drawer } from '@material-ui/core';
-import { FormUploadRequirement, ActivityRequirement } from '../GeneratedClient';
+import { FormUploadRequirement, ActivityRequirement, RequirementStage } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
 import { policyData } from '../Model/ConfigurationModel';
@@ -65,7 +65,7 @@ function VolunteerProgress() {
     Object.entries(policy.volunteerPolicy.volunteerFamilyRoles)
     .forEach(([roleName, rolePolicy]) => {
       rolePolicy.approvalRequirements?.forEach(requirement => {
-        if (requirement.requiredToBeProspective) return;
+        if (requirement.stage === RequirementStage.Application) return;
         if (requirement.actionRequirement instanceof FormUploadRequirement && requirement.actionRequirement.formName) {
           append(RequirementType.Document, requirement.actionRequirement.formName, roleName,
             requirement.scope === VolunteerFamilyRequirementScope.OncePerFamily
@@ -82,7 +82,7 @@ function VolunteerProgress() {
     Object.entries(policy.volunteerPolicy.volunteerRoles)
     .forEach(([roleName, rolePolicy]) => {
       rolePolicy.approvalRequirements?.forEach(requirement => {
-        if (requirement.requiredToBeProspective) return;
+        if (requirement.stage === RequirementStage.Application) return;
         if (requirement.actionRequirement instanceof FormUploadRequirement && requirement.actionRequirement.formName) {
           append(RequirementType.Document, requirement.actionRequirement.formName, roleName,
             RequirementScope.Individual);

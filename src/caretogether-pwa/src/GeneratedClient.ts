@@ -1461,7 +1461,7 @@ export interface IVolunteerRolePolicy {
 }
 
 export class VolunteerApprovalRequirement implements IVolunteerApprovalRequirement {
-    requiredToBeProspective?: boolean;
+    stage?: RequirementStage;
     actionRequirement?: ActionRequirement;
 
     constructor(data?: IVolunteerApprovalRequirement) {
@@ -1475,7 +1475,7 @@ export class VolunteerApprovalRequirement implements IVolunteerApprovalRequireme
 
     init(_data?: any) {
         if (_data) {
-            this.requiredToBeProspective = _data["requiredToBeProspective"];
+            this.stage = _data["stage"];
             this.actionRequirement = _data["actionRequirement"] ? ActionRequirement.fromJS(_data["actionRequirement"]) : <any>undefined;
         }
     }
@@ -1489,15 +1489,21 @@ export class VolunteerApprovalRequirement implements IVolunteerApprovalRequireme
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["requiredToBeProspective"] = this.requiredToBeProspective;
+        data["stage"] = this.stage;
         data["actionRequirement"] = this.actionRequirement ? this.actionRequirement.toJSON() : <any>undefined;
         return data; 
     }
 }
 
 export interface IVolunteerApprovalRequirement {
-    requiredToBeProspective?: boolean;
+    stage?: RequirementStage;
     actionRequirement?: ActionRequirement;
+}
+
+export enum RequirementStage {
+    Application = 0,
+    Approval = 1,
+    Onboarding = 2,
 }
 
 export class VolunteerFamilyRolePolicy implements IVolunteerFamilyRolePolicy {
@@ -1549,7 +1555,7 @@ export interface IVolunteerFamilyRolePolicy {
 }
 
 export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyApprovalRequirement {
-    requiredToBeProspective?: boolean;
+    stage?: RequirementStage;
     actionRequirement?: ActionRequirement;
     scope?: VolunteerFamilyRequirementScope;
 
@@ -1564,7 +1570,7 @@ export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyAppro
 
     init(_data?: any) {
         if (_data) {
-            this.requiredToBeProspective = _data["requiredToBeProspective"];
+            this.stage = _data["stage"];
             this.actionRequirement = _data["actionRequirement"] ? ActionRequirement.fromJS(_data["actionRequirement"]) : <any>undefined;
             this.scope = _data["scope"];
         }
@@ -1579,7 +1585,7 @@ export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyAppro
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["requiredToBeProspective"] = this.requiredToBeProspective;
+        data["stage"] = this.stage;
         data["actionRequirement"] = this.actionRequirement ? this.actionRequirement.toJSON() : <any>undefined;
         data["scope"] = this.scope;
         return data; 
@@ -1587,7 +1593,7 @@ export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyAppro
 }
 
 export interface IVolunteerFamilyApprovalRequirement {
-    requiredToBeProspective?: boolean;
+    stage?: RequirementStage;
     actionRequirement?: ActionRequirement;
     scope?: VolunteerFamilyRequirementScope;
 }
@@ -3922,6 +3928,7 @@ export interface IVolunteerFamily {
 export enum RoleApprovalStatus {
     Prospective = 0,
     Approved = 1,
+    Onboarded = 2,
 }
 
 export class Volunteer implements IVolunteer {

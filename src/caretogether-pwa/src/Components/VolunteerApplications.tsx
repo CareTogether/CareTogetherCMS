@@ -1,6 +1,6 @@
 import { makeStyles } from '@material-ui/core/styles';
 import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Drawer } from '@material-ui/core';
-import { FormUploadRequirement, VolunteerApprovalRequirement, VolunteerFamilyApprovalRequirement, ActivityRequirement } from '../GeneratedClient';
+import { FormUploadRequirement, VolunteerApprovalRequirement, VolunteerFamilyApprovalRequirement, ActivityRequirement, RequirementStage } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
 import { policyData } from '../Model/ConfigurationModel';
@@ -47,7 +47,7 @@ function VolunteerApplications() {
   const allFamilyJointRequirements =
     allFamilyRequirements.filter(requirement =>
       requirement.scope === VolunteerFamilyRequirementScope.OncePerFamily &&
-      requirement.requiredToBeProspective);
+      requirement.stage === RequirementStage.Application);
   const familyJointDocumentRequirements = allFamilyJointRequirements
     .reduce((previous, requirement) =>
       requirement.actionRequirement instanceof FormUploadRequirement
@@ -70,7 +70,7 @@ function VolunteerApplications() {
   const allFamilyPerAdultRequirements =
     allFamilyRequirements.filter(requirement =>
       requirement.scope === VolunteerFamilyRequirementScope.AllAdultsInTheFamily &&
-      requirement.requiredToBeProspective);
+      requirement.stage === RequirementStage.Application);
   const allFamilyPerAdultDocumentRequirements = allFamilyPerAdultRequirements
     .reduce((previous, requirement) =>
       requirement.actionRequirement instanceof FormUploadRequirement
@@ -92,13 +92,13 @@ function VolunteerApplications() {
   const allIndividualDocumentRequirements = allIndividualRequirements
     .reduce((previous, requirement) =>
       requirement.actionRequirement instanceof FormUploadRequirement &&
-      requirement.requiredToBeProspective
+      requirement.stage === RequirementStage.Application
       ? previous.concat(requirement.actionRequirement)
       : previous, [] as FormUploadRequirement[]);
   const allIndividualActivityRequirements = allIndividualRequirements
     .reduce((previous, requirement) =>
       requirement.actionRequirement instanceof ActivityRequirement &&
-      requirement.requiredToBeProspective
+      requirement.stage === RequirementStage.Application
       ? previous.concat(requirement.actionRequirement)
       : previous, [] as ActivityRequirement[]);
 

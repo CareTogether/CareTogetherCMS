@@ -18,7 +18,7 @@ namespace CareTogether.Resources
         ImmutableList<FormUploadInfo> ApprovalFormUploads,
         ImmutableList<ActivityInfo> ApprovalActivitiesPerformed);
 
-    public enum RoleApprovalStatus { Prospective, Approved };
+    public enum RoleApprovalStatus { Prospective, Approved, Onboarded };
 
     [JsonHierarchyBase]
     public abstract partial record VolunteerFamilyCommand(Guid FamilyId);
