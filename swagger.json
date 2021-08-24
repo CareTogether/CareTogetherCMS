@@ -1026,13 +1026,27 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "requiredToBeProspective": {
-            "type": "boolean"
+          "stage": {
+            "$ref": "#/components/schemas/RequirementStage"
           },
           "actionRequirement": {
             "$ref": "#/components/schemas/ActionRequirement"
           }
         }
+      },
+      "RequirementStage": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Application",
+          "Approval",
+          "Onboarding"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
       },
       "VolunteerFamilyRolePolicy": {
         "type": "object",
@@ -1053,8 +1067,8 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "requiredToBeProspective": {
-            "type": "boolean"
+          "stage": {
+            "$ref": "#/components/schemas/RequirementStage"
           },
           "actionRequirement": {
             "$ref": "#/components/schemas/ActionRequirement"
@@ -2269,11 +2283,13 @@
         "description": "",
         "x-enumNames": [
           "Prospective",
-          "Approved"
+          "Approved",
+          "Onboarded"
         ],
         "enum": [
           0,
-          1
+          1,
+          2
         ]
       },
       "Volunteer": {

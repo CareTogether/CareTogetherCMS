@@ -345,18 +345,18 @@ namespace CareTogether.TestData
                     {
                         ["Family Friend"] = new VolunteerRolePolicy("Family Friend", new List<VolunteerApprovalRequirement>
                         {
-                            new VolunteerApprovalRequirement(RequiredToBeProspective: true,
+                            new VolunteerApprovalRequirement(RequirementStage.Application,
                                 new FormUploadRequirement("Family Friend Application", "v1", null, new Uri("http://example.com/forms/app-ff"))),
-                            new VolunteerApprovalRequirement(RequiredToBeProspective: false,
+                            new VolunteerApprovalRequirement(RequirementStage.Approval,
                                 new FormUploadRequirement("Background Check", "v1", "See approval guide for directions", new Uri("http://example.com/forms/app-ff")))
                         }.ToImmutableList()),
                         ["Family Coach"] = new VolunteerRolePolicy("Family Coach", new List<VolunteerApprovalRequirement>
                         {
-                            new VolunteerApprovalRequirement(RequiredToBeProspective: true,
+                            new VolunteerApprovalRequirement(RequirementStage.Application,
                                 new FormUploadRequirement("Family Coach Application", "v1", null, new Uri("http://example.com/forms/app-fc"))),
-                            new VolunteerApprovalRequirement(RequiredToBeProspective: false,
+                            new VolunteerApprovalRequirement(RequirementStage.Approval,
                                 new FormUploadRequirement("Background Check", "v1", "See approval guide for directions", new Uri("http://example.com/forms/app-ff"))),
-                            new VolunteerApprovalRequirement(RequiredToBeProspective: false,
+                            new VolunteerApprovalRequirement(RequirementStage.Approval,
                                 new ActivityRequirement("Interview with Family Coach Supervisor"))
                         }.ToImmutableList())
                     }.ToImmutableDictionary(),
@@ -364,16 +364,16 @@ namespace CareTogether.TestData
                     {
                         ["Host Family"] = new VolunteerFamilyRolePolicy("Host Family", new List<VolunteerFamilyApprovalRequirement>
                         {
-                            new VolunteerFamilyApprovalRequirement(RequiredToBeProspective: true,
+                            new VolunteerFamilyApprovalRequirement(RequirementStage.Application,
                                 new FormUploadRequirement("Host Family Application", "v1", null, new Uri("http://example.com/forms/app-hf")),
                                 VolunteerFamilyRequirementScope.OncePerFamily),
-                            new VolunteerFamilyApprovalRequirement(RequiredToBeProspective: false,
+                            new VolunteerFamilyApprovalRequirement(RequirementStage.Approval,
                                 new FormUploadRequirement("Background Check", "v1", "See approval guide for directions", new Uri("http://example.com/forms/app-ff")),
                                 VolunteerFamilyRequirementScope.AllAdultsInTheFamily),
-                            new VolunteerFamilyApprovalRequirement(RequiredToBeProspective: false,
+                            new VolunteerFamilyApprovalRequirement(RequirementStage.Approval,
                                 new FormUploadRequirement("Home Screening Checklist", "v1", "Must be filled out by an approved home screener", new Uri("http://example.com/forms/hscheck")),
                                 VolunteerFamilyRequirementScope.OncePerFamily),
-                            new VolunteerFamilyApprovalRequirement(RequiredToBeProspective: false,
+                            new VolunteerFamilyApprovalRequirement(RequirementStage.Approval,
                                 new ActivityRequirement("Host Family Interview"),
                                 VolunteerFamilyRequirementScope.OncePerFamily)
                         }.ToImmutableList())
