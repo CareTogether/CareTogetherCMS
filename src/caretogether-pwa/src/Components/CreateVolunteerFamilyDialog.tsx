@@ -33,14 +33,13 @@ export function CreateVolunteerFamilyDialog({open, onClose}: CreateVolunteerFami
     ageInYears: null as number | null,
     ethnicity: '',
     isInHousehold: true,
-    isPrimaryFamilyContact: true,
     relationshipToFamily: '',
     notes: null as string | null,
     concerns: null as string | null
   });
   const {
     firstName, lastName, gender, dateOfBirth, ageInYears, ethnicity,
-    isInHousehold, isPrimaryFamilyContact, relationshipToFamily,
+    isInHousehold, relationshipToFamily,
     notes, concerns } = fields;
   const [ageType, setAgeType] = useState<'exact' | 'inYears'>('exact');
   const volunteerFamiliesModel = useVolunteerFamiliesModel();
@@ -73,7 +72,7 @@ export function CreateVolunteerFamilyDialog({open, onClose}: CreateVolunteerFami
       }
       /*const newFamily =*/ await volunteerFamiliesModel.createVolunteerFamilyWithNewAdult(
         firstName, lastName, gender as Gender, age, ethnicity,
-        isInHousehold, isPrimaryFamilyContact, relationshipToFamily,
+        isInHousehold, relationshipToFamily,
         (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
       //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
       //TODO: Retrieve the created volunteer family and return it through this onClose callback!
@@ -87,7 +86,6 @@ export function CreateVolunteerFamilyDialog({open, onClose}: CreateVolunteerFami
         ageInYears: null as number | null,
         ethnicity: '',
         isInHousehold: true,
-        isPrimaryFamilyContact: true,
         relationshipToFamily: '',
         notes: null as string | null,
         concerns: null as string | null
@@ -190,11 +188,6 @@ export function CreateVolunteerFamilyDialog({open, onClose}: CreateVolunteerFami
                   control={<Checkbox checked={isInHousehold} onChange={e => setFields({...fields, isInHousehold: e.target.checked})}
                     name="isInHousehold" color="primary" size="small" />}
                   label="In Household"
-                />
-                <FormControlLabel
-                  control={<Checkbox checked={isPrimaryFamilyContact} onChange={e => setFields({...fields, isPrimaryFamilyContact: e.target.checked})}
-                    name="isPrimaryFamilyContact" color="primary" size="small" />}
-                  label="Primary Family Contact"
                 />
               </FormGroup>
             </Grid>

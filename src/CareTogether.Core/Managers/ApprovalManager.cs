@@ -143,7 +143,7 @@ namespace CareTogether.Managers
                         var familyId = Guid.NewGuid();
                         var createPersonSubcommand = new CreatePerson(adultPersonId, null, c.FirstName, c.LastName,
                             c.Gender, c.Age, c.Ethnicity, c.Concerns, c.Notes);
-                        var createFamilySubcommand = new CreateFamily(familyId,
+                        var createFamilySubcommand = new CreateFamily(familyId, adultPersonId,
                             new List<(Guid, FamilyAdultRelationshipInfo)>
                             {
                                 (adultPersonId, c.FamilyAdultRelationshipInfo)

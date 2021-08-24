@@ -21,11 +21,11 @@ namespace CareTogether.Managers
     public abstract partial record ApprovalCommand();
     public sealed record CreateVolunteerFamilyWithNewAdultCommand(
         string FirstName, string LastName, Gender Gender, Age Age, string Ethnicity,
-        FamilyAdultRelationshipInfo FamilyAdultRelationshipInfo, string Concerns, string Notes)
+        FamilyAdultRelationshipInfo FamilyAdultRelationshipInfo, string? Concerns, string? Notes)
         : ApprovalCommand;
     public sealed record AddAdultToFamilyCommand(Guid FamilyId,
         string FirstName, string LastName, Gender Gender, Age Age, string Ethnicity,
-        FamilyAdultRelationshipInfo FamilyAdultRelationshipInfo, string Concerns, string Notes)
+        FamilyAdultRelationshipInfo FamilyAdultRelationshipInfo, string? Concerns, string? Notes)
         : ApprovalCommand;
 
     public interface IApprovalManager

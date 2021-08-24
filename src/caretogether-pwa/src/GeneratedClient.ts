@@ -2223,6 +2223,7 @@ export enum ReferralCloseReason {
 
 export class Family implements IFamily {
     id?: string;
+    primaryFamilyContactPersonId?: string;
     adults?: ValueTupleOfPersonAndFamilyAdultRelationshipInfo[];
     children?: Person[];
     custodialRelationships?: CustodialRelationship[];
@@ -2239,6 +2240,7 @@ export class Family implements IFamily {
     init(_data?: any) {
         if (_data) {
             this.id = _data["id"];
+            this.primaryFamilyContactPersonId = _data["primaryFamilyContactPersonId"];
             if (Array.isArray(_data["adults"])) {
                 this.adults = [] as any;
                 for (let item of _data["adults"])
@@ -2267,6 +2269,7 @@ export class Family implements IFamily {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
+        data["primaryFamilyContactPersonId"] = this.primaryFamilyContactPersonId;
         if (Array.isArray(this.adults)) {
             data["adults"] = [];
             for (let item of this.adults)
@@ -2288,6 +2291,7 @@ export class Family implements IFamily {
 
 export interface IFamily {
     id?: string;
+    primaryFamilyContactPersonId?: string;
     adults?: ValueTupleOfPersonAndFamilyAdultRelationshipInfo[];
     children?: Person[];
     custodialRelationships?: CustodialRelationship[];
@@ -2336,7 +2340,6 @@ export interface IValueTupleOfPersonAndFamilyAdultRelationshipInfo {
 export class FamilyAdultRelationshipInfo implements IFamilyAdultRelationshipInfo {
     relationshipToFamily?: string;
     isInHousehold?: boolean;
-    isPrimaryFamilyContact?: boolean;
 
     constructor(data?: IFamilyAdultRelationshipInfo) {
         if (data) {
@@ -2351,7 +2354,6 @@ export class FamilyAdultRelationshipInfo implements IFamilyAdultRelationshipInfo
         if (_data) {
             this.relationshipToFamily = _data["relationshipToFamily"];
             this.isInHousehold = _data["isInHousehold"];
-            this.isPrimaryFamilyContact = _data["isPrimaryFamilyContact"];
         }
     }
 
@@ -2366,7 +2368,6 @@ export class FamilyAdultRelationshipInfo implements IFamilyAdultRelationshipInfo
         data = typeof data === 'object' ? data : {};
         data["relationshipToFamily"] = this.relationshipToFamily;
         data["isInHousehold"] = this.isInHousehold;
-        data["isPrimaryFamilyContact"] = this.isPrimaryFamilyContact;
         return data; 
     }
 }
@@ -2374,7 +2375,6 @@ export class FamilyAdultRelationshipInfo implements IFamilyAdultRelationshipInfo
 export interface IFamilyAdultRelationshipInfo {
     relationshipToFamily?: string;
     isInHousehold?: boolean;
-    isPrimaryFamilyContact?: boolean;
 }
 
 export class CustodialRelationship implements ICustodialRelationship {
@@ -4552,8 +4552,8 @@ export class AddAdultToFamilyCommand extends ApprovalCommand implements IAddAdul
     age?: Age;
     ethnicity?: string;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
-    concerns?: string;
-    notes?: string;
+    concerns?: string | undefined;
+    notes?: string | undefined;
 
     constructor(data?: IAddAdultToFamilyCommand) {
         super(data);
@@ -4606,8 +4606,8 @@ export interface IAddAdultToFamilyCommand extends IApprovalCommand {
     age?: Age;
     ethnicity?: string;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
-    concerns?: string;
-    notes?: string;
+    concerns?: string | undefined;
+    notes?: string | undefined;
 }
 
 export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand implements ICreateVolunteerFamilyWithNewAdultCommand {
@@ -4617,8 +4617,8 @@ export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand im
     age?: Age;
     ethnicity?: string;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
-    concerns?: string;
-    notes?: string;
+    concerns?: string | undefined;
+    notes?: string | undefined;
 
     constructor(data?: ICreateVolunteerFamilyWithNewAdultCommand) {
         super(data);
@@ -4668,8 +4668,8 @@ export interface ICreateVolunteerFamilyWithNewAdultCommand extends IApprovalComm
     age?: Age;
     ethnicity?: string;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
-    concerns?: string;
-    notes?: string;
+    concerns?: string | undefined;
+    notes?: string | undefined;
 }
 
 export class ApiException extends Error {

@@ -1427,6 +1427,10 @@
             "type": "string",
             "format": "guid"
           },
+          "primaryFamilyContactPersonId": {
+            "type": "string",
+            "format": "guid"
+          },
           "adults": {
             "type": "array",
             "items": {
@@ -1467,9 +1471,6 @@
             "type": "string"
           },
           "isInHousehold": {
-            "type": "boolean"
-          },
-          "isPrimaryFamilyContact": {
             "type": "boolean"
           }
         }
@@ -2603,10 +2604,12 @@
                 "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
               },
               "concerns": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "notes": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               }
             }
           }
@@ -2640,10 +2643,12 @@
                 "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
               },
               "concerns": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "notes": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               }
             }
           }

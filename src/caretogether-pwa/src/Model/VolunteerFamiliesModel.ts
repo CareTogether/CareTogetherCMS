@@ -139,7 +139,7 @@ export function useVolunteerFamiliesModel() {
     });
   const addAdult = useApprovalCommandCallback(
     async (volunteerFamilyId, firstName: string, lastName: string, gender: Gender, age: Age, ethnicity: string,
-        isInHousehold: boolean, isPrimaryFamilyContact: boolean, relationshipToFamily?: string,
+        isInHousehold: boolean, relationshipToFamily?: string,
         notes?: string, concerns?: string) => {
       const command = new AddAdultToFamilyCommand();
       command.familyId = volunteerFamilyId;
@@ -152,14 +152,13 @@ export function useVolunteerFamiliesModel() {
       command.notes = notes;
       command.familyAdultRelationshipInfo = new FamilyAdultRelationshipInfo({
         isInHousehold: isInHousehold,
-        isPrimaryFamilyContact: isPrimaryFamilyContact,
         relationshipToFamily: relationshipToFamily
       });
       return command;
     });
   const createVolunteerFamilyWithNewAdult = useApprovalCommandCallback(
     async (firstName: string, lastName: string, gender: Gender, age: Age, ethnicity: string,
-      isInHousehold: boolean, isPrimaryFamilyContact: boolean, relationshipToFamily?: string,
+      isInHousehold: boolean, relationshipToFamily?: string,
         notes?: string, concerns?: string) => {
       const command = new CreateVolunteerFamilyWithNewAdultCommand();
       command.firstName = firstName;
@@ -171,7 +170,6 @@ export function useVolunteerFamiliesModel() {
       command.notes = notes;
       command.familyAdultRelationshipInfo = new FamilyAdultRelationshipInfo({
         isInHousehold: isInHousehold,
-        isPrimaryFamilyContact: isPrimaryFamilyContact,
         relationshipToFamily: relationshipToFamily
       });
       return command;

@@ -77,7 +77,7 @@ export function VolunteerFamilyPanel({volunteerFamilyId, onBack}: VolunteerFamil
         Back
       </Button>} 
       <h3 className={classes.sectionHeading}>{
-        volunteerFamily.family?.adults?.filter(adult => adult.item2?.isPrimaryFamilyContact)[0]?.item1?.lastName + " Family"}
+        volunteerFamily.family?.adults?.filter(adult => adult.item1?.id === volunteerFamily.family?.primaryFamilyContactPersonId)[0]?.item1?.lastName + " Family"}
       </h3>
       &nbsp;
       <Button aria-controls="family-record-menu" aria-haspopup="true"
@@ -99,6 +99,7 @@ export function VolunteerFamilyPanel({volunteerFamilyId, onBack}: VolunteerFamil
           <MenuItem key={activityType.activityName} onClick={() => selectRecordFamilyStep(activityType)}>{activityType.activityName}</MenuItem>
         ))}
       </Menu>
+      <span>Primary Contact: {volunteerFamily.family?.adults?.filter(adult => adult.item1?.id === volunteerFamily.family?.primaryFamilyContactPersonId)[0]?.item1?.firstName}</span>
       <RecordVolunteerFamilyStepDialog volunteerFamily={volunteerFamily} stepActionRequirement={recordFamilyStepParameter} onClose={() => setRecordFamilyStepParameter(null)} />
     </Toolbar>
     <div className={classes.sectionChips}>
@@ -147,7 +148,6 @@ export function VolunteerFamilyPanel({volunteerFamilyId, onBack}: VolunteerFamil
             ))}
             {(adult.item2.relationshipToFamily && <Chip size="small" label={adult.item2.relationshipToFamily} />) || null}
             {adult.item2.isInHousehold && <Chip size="small" label="In Household" />}
-            {adult.item2.isPrimaryFamilyContact && <Chip size="small" label="Primary Family Contact" />}
           </div>
           <dl>
             {adult.item1.concerns && <><dt><strong>⚠ Concerns</strong></dt><dd>{adult.item1.concerns}</dd></>}

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Resources
 {
-    public sealed record Family(Guid Id,
+    public sealed record Family(Guid Id, Guid PrimaryFamilyContactPersonId,
         List<(Person, FamilyAdultRelationshipInfo)> Adults,
         List<Person> Children,
         List<CustodialRelationship> CustodialRelationships);
@@ -14,7 +14,7 @@ namespace CareTogether.Resources
         string FirstName, string LastName, Gender Gender, Age Age, string Ethnicity,
         string? Concerns, string? Notes);
     public sealed record FamilyAdultRelationshipInfo(
-        string RelationshipToFamily, bool IsInHousehold, bool IsPrimaryFamilyContact);
+        string RelationshipToFamily, bool IsInHousehold);
     public sealed record CustodialRelationship(
         Guid ChildId, Guid PersonId, CustodialRelationshipType Type);
     public enum CustodialRelationshipType { ParentWithCustody, ParentWithCourtAppointedCustody, LegalGuardian }
@@ -27,7 +27,7 @@ namespace CareTogether.Resources
 
     [JsonHierarchyBase]
     public abstract partial record FamilyCommand(Guid FamilyId);
-    public sealed record CreateFamily(Guid FamilyId,
+    public sealed record CreateFamily(Guid FamilyId, Guid PrimaryFamilyContactPersonId,
         List<(Guid, FamilyAdultRelationshipInfo)> Adults,
         List<Guid> Children,
         List<CustodialRelationship> CustodialRelationships)

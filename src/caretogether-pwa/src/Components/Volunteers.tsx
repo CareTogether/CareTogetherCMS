@@ -88,7 +88,7 @@ function Volunteers() {
                   <TableRow className={classes.familyRow} onClick={() => setSelectedVolunteerFamilyId(volunteerFamily.family?.id || null)}>
                     <TableCell key="1" colSpan={4}>{
                       volunteerFamily.family?.adults
-                        ?.filter(adult => adult.item2?.isPrimaryFamilyContact)
+                        ?.filter(adult => volunteerFamily.family?.primaryFamilyContactPersonId === adult.item1?.id)
                         [0]?.item1?.lastName + " Family"
                     }</TableCell>
                     { volunteerFamilyRoleNames.map(roleName =>
