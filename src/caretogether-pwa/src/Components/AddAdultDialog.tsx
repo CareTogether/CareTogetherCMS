@@ -34,14 +34,13 @@ export function AddAdultDialog({volunteerFamily, open, onClose}: AddAdultDialogP
     ageInYears: null as number | null,
     ethnicity: '',
     isInHousehold: true,
-    isPrimaryFamilyContact: true,
     relationshipToFamily: '',
     notes: null as string | null,
     concerns: null as string | null
   });
   const {
     firstName, lastName, gender, dateOfBirth, ageInYears, ethnicity,
-    isInHousehold, isPrimaryFamilyContact, relationshipToFamily,
+    isInHousehold, relationshipToFamily,
     notes, concerns } = fields;
   const [ageType, setAgeType] = useState<'exact' | 'inYears'>('exact');
   const volunteerFamiliesModel = useVolunteerFamiliesModel();
@@ -74,7 +73,7 @@ export function AddAdultDialog({volunteerFamily, open, onClose}: AddAdultDialogP
       }
       await volunteerFamiliesModel.addAdult(volunteerFamily.family?.id as string,
         firstName, lastName, gender as Gender, age, ethnicity,
-        isInHousehold, isPrimaryFamilyContact, relationshipToFamily,
+        isInHousehold, relationshipToFamily,
         (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
       //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
       onClose();
@@ -87,7 +86,6 @@ export function AddAdultDialog({volunteerFamily, open, onClose}: AddAdultDialogP
         ageInYears: null as number | null,
         ethnicity: '',
         isInHousehold: true,
-        isPrimaryFamilyContact: true,
         relationshipToFamily: '',
         notes: null as string | null,
         concerns: null as string | null
@@ -98,7 +96,7 @@ export function AddAdultDialog({volunteerFamily, open, onClose}: AddAdultDialogP
   return (
     <Dialog open={open} onClose={onClose} scroll='body' aria-labelledby="add-adult-title">
       <DialogTitle id="add-adult-title">
-        Add Adult to {volunteerFamily.family?.adults?.filter(adult => adult.item2?.isPrimaryFamilyContact)[0]?.item1?.lastName} Family
+        Add Adult to {volunteerFamily.family?.adults?.filter(adult => adult.item1?.id === volunteerFamily.family?.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family
       </DialogTitle>
       <DialogContent>
         {/* <DialogContentText>
@@ -190,11 +188,6 @@ export function AddAdultDialog({volunteerFamily, open, onClose}: AddAdultDialogP
                   control={<Checkbox checked={isInHousehold} onChange={e => setFields({...fields, isInHousehold: e.target.checked})}
                     name="isInHousehold" color="primary" size="small" />}
                   label="In Household"
-                />
-                <FormControlLabel
-                  control={<Checkbox checked={isPrimaryFamilyContact} onChange={e => setFields({...fields, isPrimaryFamilyContact: e.target.checked})}
-                    name="isPrimaryFamilyContact" color="primary" size="small" />}
-                  label="Primary Family Contact"
                 />
               </FormGroup>
             </Grid>

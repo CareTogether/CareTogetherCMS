@@ -142,7 +142,7 @@ function VolunteerApplications() {
                   <TableRow className={classes.familyRow}>
                     <TableCell key="1" colSpan={2}>{
                       volunteerFamily.family?.adults
-                        ?.filter(adult => adult.item2?.isPrimaryFamilyContact)
+                        ?.filter(adult => adult.item1?.id === volunteerFamily.family?.primaryFamilyContactPersonId)
                         [0]?.item1?.lastName + " Family"
                     }</TableCell>
                     {familyJointDocumentRequirements.map(requirement =>

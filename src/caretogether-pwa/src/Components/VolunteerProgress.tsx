@@ -291,7 +291,7 @@ function VolunteerProgress() {
                   <TableRow className={classes.familyRow} onClick={() => setDrawerOpen(true)}>
                     <TableCell key="1" colSpan={2}>{
                       volunteerFamilyProgress.family.family?.adults
-                        ?.filter(adult => adult.item2?.isPrimaryFamilyContact)
+                        ?.filter(adult => adult.item1?.id === volunteerFamilyProgress.family.family?.primaryFamilyContactPersonId)
                         [0]?.item1?.lastName + " Family"
                     }</TableCell>
                     {volunteerFamilyProgress.progress.map((value, i) =>
