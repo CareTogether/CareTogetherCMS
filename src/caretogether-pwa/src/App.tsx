@@ -4,6 +4,7 @@ import { fade, makeStyles } from '@material-ui/core/styles';
 import { Typography, InputBase, CssBaseline, AppBar, Toolbar, IconButton, Badge, Drawer, Divider, List, BottomNavigation, BottomNavigationAction, useMediaQuery, useTheme } from '@material-ui/core';
 import PermPhoneMsgIcon from '@material-ui/icons/PermPhoneMsg';
 import EmojiPeopleIcon from '@material-ui/icons/EmojiPeople';
+import PeopleIcon from '@material-ui/icons/People';
 import SearchIcon from '@material-ui/icons/Search';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import MenuIcon from '@material-ui/icons/Menu';
@@ -14,13 +15,14 @@ import { Route, Switch, Redirect, BrowserRouter as Router, Link } from "react-ro
 import { ListItemLink } from './Components/ListItemLink';
 import { Arrangements } from './Components/Arrangements';
 import { Referrals } from './Components/Referrals';
-import { Volunteers } from './Components/Volunteers';
+import { VolunteerApproval } from './Components/VolunteerApproval';
 import { VolunteerApplications } from './Components/VolunteerApplications';
 import { VolunteerProgress } from './Components/VolunteerProgress';
 import { Contacts } from './Components/Contacts';
 import { Communities } from './Components/Communities';
 import { useRecoilValue } from 'recoil';
 import { locationNameData, organizationNameData } from './Model/ConfigurationModel';
+import { Volunteers } from './Components/Volunteers';
 
 const copyrightStyles = makeStyles((theme) => ({
   copyright: {
@@ -176,7 +178,8 @@ const mainListItems = (
 
 const secondaryListItems = (
   <List aria-label="secondary navigation">
-    <ListItemLink to="/volunteers" primary="Volunteers" icon={<EmojiPeopleIcon />} />
+    <ListItemLink to="/volunteers" primary="Volunteers" icon={<PeopleIcon />} />
+    <ListItemLink to="/volunteerApproval" primary="Approvals" icon={<EmojiPeopleIcon />} />
     <ListItemLink to="/volunteerApplications" primary="Applications" icon={<AssignmentIcon />} />
     <ListItemLink to="/volunteerProgress" primary="Progress" icon={<AssignmentTurnedInIcon />} />
   </List>
@@ -275,6 +278,9 @@ function App() {
               <Route path="/volunteers">
                 <Volunteers />
               </Route>
+              <Route path="/volunteerApproval">
+                <VolunteerApproval />
+              </Route>
               <Route path="/volunteerApplications">
                 <VolunteerApplications />
               </Route>
@@ -288,7 +294,7 @@ function App() {
                 <Communities />
               </Route>
               <Route>
-                <Redirect to="/volunteers" />
+                <Redirect to="/volunteerApproval" />
               </Route>
             </Switch>
           </React.Suspense>
@@ -301,7 +307,8 @@ function App() {
             showLabels
             className={classes.stickToBottom}
           >
-            <BottomNavigationAction component={Link} to="/volunteers" label="Volunteers" icon={<EmojiPeopleIcon />} />
+            <BottomNavigationAction component={Link} to="/volunteers" label="Volunteers" icon={<PeopleIcon />} />
+            <BottomNavigationAction component={Link} to="/volunteerApproval" label="Approvals" icon={<EmojiPeopleIcon />} />
             <BottomNavigationAction component={Link} to="/volunteerApplications" label="Applications" icon={<AssignmentIcon />} />
             <BottomNavigationAction component={Link} to="/volunteerProgress" label="Progress" icon={<AssignmentTurnedInIcon />} />
           </BottomNavigation> : null}
