@@ -50,9 +50,10 @@ namespace CareTogether.Core.Test
         [TestInitialize]
         public async Task TestInitialize()
         {
+            var configurationStore = new MemoryMultitenantObjectStore<OrganizationConfiguration>();
             var policiesStore = new MemoryMultitenantObjectStore<EffectiveLocationPolicy>();
             await TestDataProvider.PopulatePolicies(policiesStore);
-            var policiesResource = new PoliciesResource(policiesStore);
+            var policiesResource = new PoliciesResource(configurationStore, policiesStore);
             dut = new PolicyEvaluationEngine(policiesResource);
         }
 
