@@ -32,6 +32,7 @@ namespace CareTogether.TestData
             IMultitenantEventLog<ReferralEvent> referralsEventLog,
             IMultitenantEventLog<ApprovalEvent> approvalsEventLog,
             IObjectStore<string?> draftNotesStore,
+            IObjectStore<OrganizationConfiguration> configurationStore,
             IObjectStore<EffectiveLocationPolicy> policiesStore)
         {
             await PopulateCommunityEvents(communityEventLog);
@@ -40,6 +41,7 @@ namespace CareTogether.TestData
             await PopulateReferralEvents(referralsEventLog);
             await PopulateApprovalEvents(approvalsEventLog);
             await PopulateDraftNotes(draftNotesStore);
+            await PopulateConfigurations(configurationStore);
             await PopulatePolicies(policiesStore);
         }
 
@@ -210,6 +212,19 @@ namespace CareTogether.TestData
         {
             await draftNotesStore.UpsertAsync(guid1, guid2, guid3.ToString(),
                 "Kids are doing better playing this morning. For some reason they're both really into \"lightsabers\" or something like that... 😅");
+        }
+
+        public static async Task PopulateConfigurations(IObjectStore<OrganizationConfiguration> configurationStore)
+        {
+            await configurationStore.UpsertAsync(guid1, Guid.Empty, "config",
+                new OrganizationConfiguration("CareTogether",
+                    ImmutableList<LocationConfiguration>.Empty
+                        .Add(new LocationConfiguration(Guid.Parse("22222222-2222-2222-2222-222222222222"), "Atlantis",
+                            ImmutableList<string>.Empty.AddRange(new[] { "Atlantean", "Aquatic", "Norse" }),
+                            ImmutableList<string>.Empty.AddRange(new[] { "Single", "Spouse", "Partner", "Dad", "Mom", "Relative", "Droid" })))
+                        .Add(new LocationConfiguration(Guid.Parse("33333333-3333-3333-3333-333333333333"), "El Dorado",
+                            ImmutableList<string>.Empty.AddRange(new[] { "Amazon", "Caucasian", "Other" }),
+                            ImmutableList<string>.Empty.AddRange(new[] { "Single", "Spouse", "Partner", "Dad", "Mom", "Relative", "Domestic Worker" })))));
         }
 
         public static async Task PopulatePolicies(IObjectStore<EffectiveLocationPolicy> policiesStore)

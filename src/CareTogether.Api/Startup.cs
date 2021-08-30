@@ -46,6 +46,7 @@ namespace CareTogether.Api
             var referralsEventLog = new AppendBlobMultitenantEventLog<ReferralEvent>(blobServiceClient, LogType.ReferralsEventLog);
             var approvalsEventLog = new AppendBlobMultitenantEventLog<ApprovalEvent>(blobServiceClient, LogType.ApprovalsEventLog);
             var draftNotesStore = new JsonBlobObjectStore<string?>(blobServiceClient, "DraftNotes");
+            var configurationStore = new JsonBlobObjectStore<OrganizationConfiguration>(blobServiceClient, "Configuration");
             var policiesStore = new JsonBlobObjectStore<EffectiveLocationPolicy>(blobServiceClient, "LocationPolicies");
 
 //#if DEBUG
@@ -55,7 +56,14 @@ namespace CareTogether.Api
                 // Note that this will not reset data (storage containers) for tenants other than the test tenant used by the TestData project.
                 TestData.TestStorageHelper.ResetTestTenantData(blobServiceClient);
                 TestData.TestDataProvider.PopulateTestDataAsync(
-                    communityEventLog, contactsEventLog, goalsEventLog, referralsEventLog, approvalsEventLog, draftNotesStore, policiesStore).Wait();
+                    communityEventLog,
+                    contactsEventLog,
+                    goalsEventLog,
+                    referralsEventLog,
+                    approvalsEventLog,
+                    draftNotesStore,
+                    configurationStore,
+                    policiesStore).Wait();
 //            }
 //#endif
 
@@ -64,7 +72,7 @@ namespace CareTogether.Api
             var communitiesResource = new CommunitiesResource(communityEventLog);
             var contactsResource = new ContactsResource(contactsEventLog);
             var goalsResource = new GoalsResource(goalsEventLog);
-            var policiesResource = new PoliciesResource(policiesStore);
+            var policiesResource = new PoliciesResource(configurationStore, policiesStore);
             var referralsResource = new ReferralsResource(referralsEventLog, draftNotesStore);
 
             //TODO: If we want to be strict about conventions, this should have a manager intermediary for authz.
