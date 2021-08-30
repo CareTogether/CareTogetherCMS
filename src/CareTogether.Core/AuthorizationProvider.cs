@@ -20,6 +20,8 @@ namespace CareTogether
         public async Task<AuthorizedUser> AuthorizeAsync(Guid organizationId, Guid locationId, ClaimsPrincipal principal)
         {
             //TODO: This should be provided before managers are called (by an authorization layer) so the logic can be uniformly extracted.
+            if (locationId == Guid.Empty)
+                locationId = Guid.Parse("22222222-2222-2222-2222-222222222222");
             var userResult = await communitiesResource.FindUserAsync(organizationId, locationId, principal.UserId());
 
             return userResult.Match(
