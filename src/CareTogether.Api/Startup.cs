@@ -95,8 +95,10 @@ namespace CareTogether.Api
 
             services.AddAuthorization(options =>
             {
-                // By default, all incoming requests will be authorized according to the default policy
-                options.FallbackPolicy = options.DefaultPolicy;
+                // Require all users to be authenticated.
+                options.FallbackPolicy = new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .Build();
             });
 
             services.AddOpenApiDocument(options =>
