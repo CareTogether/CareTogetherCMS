@@ -4,11 +4,10 @@ import { AppBar, Badge, Button, ButtonGroup, fade, IconButton, InputBase, Toolba
 import SearchIcon from '@material-ui/icons/Search';
 import NotificationsIcon from '@material-ui/icons/Notifications';
 import React from 'react';
-import { Redirect, Route, Switch, useRouteMatch } from 'react-router-dom';
+import { Link, Redirect, Route, Switch, useLocation, useRouteMatch } from 'react-router-dom';
 import { VolunteerApproval } from './VolunteerApproval';
 import { VolunteerApplications } from './VolunteerApplications';
 import { VolunteerProgress } from './VolunteerProgress';
-import { Link } from 'react-router-dom';
 
 const useStyles = makeStyles((theme) => ({
     appBar: {
@@ -77,7 +76,8 @@ const useStyles = makeStyles((theme) => ({
 
 function Volunteers() {
     const classes = useStyles();
-    let match = useRouteMatch();
+    const match = useRouteMatch();
+    const location = useLocation();
 
     return (
         <>
@@ -87,9 +87,9 @@ function Volunteers() {
                         Volunteers
                     </Typography>
                     <ButtonGroup variant="text" color="inherit" aria-label="text inherit button group">
-                        <Button component={Link} to={`${match.url}/approval`}>Approvals</Button>
-                        <Button component={Link} to={`${match.url}/applications`}>Applications</Button>
-                        <Button component={Link} to={`${match.url}/progress`}>Progress</Button>
+                        <Button color={location.pathname === `${match.url}/approval` ? 'default' : 'inherit'} component={Link} to={`${match.url}/approval`}>Approvals</Button>
+                        <Button color={location.pathname === `${match.url}/applications` ? 'default' : 'inherit'} component={Link} to={`${match.url}/applications`}>Applications</Button>
+                        <Button color={location.pathname === `${match.url}/progress` ? 'default' : 'inherit'} component={Link} to={`${match.url}/progress`}>Progress</Button>
                     </ButtonGroup>
                     <div className={classes.search}>
                         <div className={classes.searchIcon}>

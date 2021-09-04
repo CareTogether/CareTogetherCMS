@@ -179,9 +179,6 @@ const mainListItems = (
 const secondaryListItems = (
   <List aria-label="secondary navigation">
     <ListItemLink to="/volunteers" primary="Volunteers" icon={<PeopleIcon />} />
-    <ListItemLink to="/volunteerApproval" primary="Approvals" icon={<EmojiPeopleIcon />} />
-    <ListItemLink to="/volunteerApplications" primary="Applications" icon={<AssignmentIcon />} />
-    <ListItemLink to="/volunteerProgress" primary="Progress" icon={<AssignmentTurnedInIcon />} />
   </List>
 );
 
