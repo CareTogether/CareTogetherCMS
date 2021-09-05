@@ -7,5 +7,7 @@
         public const string OrganizationId = "OrganizationId";
 
         public const string LocationId = "LocationId";
+
+        public const string PersonId = "PersonId";
     }
 }

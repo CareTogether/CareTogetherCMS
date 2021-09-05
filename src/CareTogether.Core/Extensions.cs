@@ -33,11 +33,27 @@ namespace CareTogether
             }
         }
 
-        public static bool IsInRole(this AuthorizedUser user, string role) =>
-            user.Principal.IsInRole(role);
+        public static Guid PersonId(this ClaimsPrincipal principal)
+        {
+            try
+            {
+                return Guid.Parse(principal.FindFirst(Claims.PersonId)!.Value);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("The provided principal does not have a valid person ID claim.", ex);
+            }
+        }
 
-        public static bool CanAccess(this AuthorizedUser user, Guid organizationId, Guid locationId) =>
-            user.Principal.HasClaim(Claims.OrganizationId, organizationId.ToString()) &&
-            user.Principal.HasClaim(Claims.LocationId, locationId.ToString());
+        public static void AddClaimOnlyOnce(this ClaimsPrincipal principal,
+            ClaimsIdentity identity, string type, string value)
+        {
+            if (!principal.HasClaim(x => x.Type == type))
+                identity.AddClaim(new Claim(type, value));
+        }
+
+        public static bool CanAccess(this ClaimsPrincipal user, Guid organizationId, Guid locationId) =>
+            user.HasClaim(Claims.OrganizationId, organizationId.ToString()) &&
+            user.HasClaim(Claims.LocationId, locationId.ToString());
     }
 }

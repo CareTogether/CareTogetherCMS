@@ -1,6 +1,7 @@
 ﻿using CareTogether.Resources;
 using System;
 using System.Collections.Immutable;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace CareTogether.Managers
@@ -30,12 +31,12 @@ namespace CareTogether.Managers
         Task<ImmutableList<Referral>> ListReferralsAsync(Guid organizationId, Guid locationId);
 
         Task<ManagerResult<Referral>> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId,
-            AuthorizedUser user, ReferralCommand command);
+            ClaimsPrincipal user, ReferralCommand command);
 
         Task<ManagerResult<Referral>> ExecuteArrangementCommandAsync(Guid organizationId, Guid locationId,
-            AuthorizedUser user, ArrangementCommand command);
+            ClaimsPrincipal user, ArrangementCommand command);
 
         Task<ManagerResult<Referral>> ExecuteArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
-            AuthorizedUser user, ArrangementNoteCommand command);
+            ClaimsPrincipal user, ArrangementNoteCommand command);
     }
 }

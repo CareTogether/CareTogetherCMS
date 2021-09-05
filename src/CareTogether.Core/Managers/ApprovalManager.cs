@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace CareTogether.Managers
@@ -27,7 +28,7 @@ namespace CareTogether.Managers
         }
 
 
-        public async Task<ImmutableList<VolunteerFamily>> ListVolunteerFamiliesAsync(AuthorizedUser user, Guid organizationId, Guid locationId)
+        public async Task<ImmutableList<VolunteerFamily>> ListVolunteerFamiliesAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId)
         {
             var families = (await communitiesResource.ListFamiliesAsync(organizationId, locationId)).ToImmutableDictionary(x => x.Id);
             var contacts = await contactsResource.ListContactsAsync(organizationId, locationId);
@@ -39,7 +40,7 @@ namespace CareTogether.Managers
         }
 
         public async Task<ManagerResult<VolunteerFamily>> ExecuteVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
-            AuthorizedUser user, VolunteerFamilyCommand command)
+            ClaimsPrincipal user, VolunteerFamilyCommand command)
         {
             var getVolunteerFamilyResult = await approvalsResource.GetVolunteerFamilyAsync(organizationId, locationId, command.FamilyId);
             if (getVolunteerFamilyResult.TryPickT0(out var volunteerFamilyEntry, out var notFound))
@@ -53,7 +54,7 @@ namespace CareTogether.Managers
                     organizationId, locationId, user, command, referral);
                 if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
                 {
-                    var commandResult = await approvalsResource.ExecuteVolunteerFamilyCommandAsync(organizationId, locationId, command, user.UserId);
+                    var commandResult = await approvalsResource.ExecuteVolunteerFamilyCommandAsync(organizationId, locationId, command, user.UserId());
                     if (commandResult.TryPickT0(out var volunteerFamily, out var commandError))
                     {
                         var disclosedVolunteerFamily = await policyEvaluationEngine.DiscloseVolunteerFamilyAsync(user,
@@ -71,7 +72,7 @@ namespace CareTogether.Managers
         }
 
         public async Task<ManagerResult<VolunteerFamily>> ExecuteVolunteerCommandAsync(Guid organizationId, Guid locationId,
-            AuthorizedUser user, VolunteerCommand command)
+            ClaimsPrincipal user, VolunteerCommand command)
         {
             var getVolunteerFamilyResult = await approvalsResource.GetVolunteerFamilyAsync(organizationId, locationId, command.FamilyId);
             if (getVolunteerFamilyResult.TryPickT0(out var volunteerFamilyEntry, out var notFound))
@@ -85,7 +86,7 @@ namespace CareTogether.Managers
                     organizationId, locationId, user, command, referral);
                 if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
                 {
-                    var commandResult = await approvalsResource.ExecuteVolunteerCommandAsync(organizationId, locationId, command, user.UserId);
+                    var commandResult = await approvalsResource.ExecuteVolunteerCommandAsync(organizationId, locationId, command, user.UserId());
                     if (commandResult.TryPickT0(out var volunteerFamily, out var commandError))
                     {
                         var disclosedVolunteerFamily = await policyEvaluationEngine.DiscloseVolunteerFamilyAsync(user,
@@ -102,7 +103,7 @@ namespace CareTogether.Managers
                 return notFound;
         }
         public async Task<ManagerResult<VolunteerFamily>> ExecuteApprovalCommandAsync(Guid organizationId, Guid locationId,
-            AuthorizedUser user, ApprovalCommand command)
+            ClaimsPrincipal user, ApprovalCommand command)
         {
             switch (command)
             {
@@ -116,11 +117,11 @@ namespace CareTogether.Managers
                         //TODO: Authorize the subcommands via the policy evaluation engine
 
                         var createPersonResult = await communitiesResource.ExecutePersonCommandAsync(organizationId, locationId,
-                            createPersonSubcommand, user.UserId);
+                            createPersonSubcommand, user.UserId());
                         if (createPersonResult.TryPickT0(out var person, out var notFound1))
                         {
                             var addPersonToFamilyResult = await communitiesResource.ExecuteFamilyCommandAsync(organizationId, locationId,
-                                addAdultToFamilySubcommand, user.UserId);
+                                addAdultToFamilySubcommand, user.UserId());
                             if (addPersonToFamilyResult.TryPickT0(out var family, out var notFound2))
                             {
                                 var families = communitiesResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
@@ -153,15 +154,15 @@ namespace CareTogether.Managers
                         //TODO: Authorize the subcommands via the policy evaluation engine
 
                         var createPersonResult = await communitiesResource.ExecutePersonCommandAsync(organizationId, locationId,
-                            createPersonSubcommand, user.UserId);
+                            createPersonSubcommand, user.UserId());
                         if (createPersonResult.TryPickT0(out var person, out var notFound1))
                         {
                             var createFamilyResult = await communitiesResource.ExecuteFamilyCommandAsync(organizationId, locationId,
-                                createFamilySubcommand, user.UserId);
+                                createFamilySubcommand, user.UserId());
                             if (createFamilyResult.TryPickT0(out var family, out var notFound2))
                             {
                                 var activateVolunteerFamilyResult = await approvalsResource.ExecuteVolunteerFamilyCommandAsync(organizationId, locationId,
-                                    activateVolunteerFamilySubcommand, user.UserId);
+                                    activateVolunteerFamilySubcommand, user.UserId());
                                 if (activateVolunteerFamilyResult.TryPickT0(out var volunteerFamilyEntry, out var notFound3))
                                 {
                                     var families = communitiesResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);

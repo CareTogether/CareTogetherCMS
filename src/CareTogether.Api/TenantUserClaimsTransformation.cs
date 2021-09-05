@@ -22,21 +22,23 @@ namespace CareTogether.Api
             //return userResult.Match(
             //    person =>
             //    {
-            //        var augmentedPrincipal = principal.Identities.First();
-            //        augmentedPrincipal.AddClaim(new Claim(Claims.OrganizationId, organizationId.ToString()));
-            //        augmentedPrincipal.AddClaim(new Claim(Claims.LocationId, locationId.ToString()));
-            //        //TODO: Pull role information from the communitiesResource!
-            //        augmentedPrincipal.AddClaim(new Claim(augmentedPrincipal.RoleClaimType, Roles.OrganizationAdministrator));
-            //        return new AuthorizedUser(principal, principal.UserId(), person);
             //    },
             //    NotFound => throw new InvalidOperationException("No person with the requested user ID was found.")); //TODO: Use a ResourceResult instead?
+            principal.AddClaimOnlyOnce(claimsIdentity, Claims.OrganizationId, organizationId);
+            principal.AddClaimOnlyOnce(claimsIdentity, Claims.LocationId, locationId);
+            principal.AddClaimOnlyOnce(claimsIdentity, Claims.PersonId, personId);
 
-            if (!principal.HasClaim(x => x.Type == "organizationId"))
-                claimsIdentity.AddClaim(new Claim("organizationId", organizationId));
-            if (!principal.HasClaim(x => x.Type == "locationId"))
-                claimsIdentity.AddClaim(new Claim("locationId", locationId));
-            if (!principal.HasClaim(x => x.Type == "personId"))
-                claimsIdentity.AddClaim(new Claim("personId", personId));
+            //TODO: Pull role information from the communitiesResource!
+            var roles = new List<string>
+            {
+                Roles.OrganizationAdministrator
+            };
+
+            foreach (var role in roles)
+                claimsIdentity.AddClaim(new Claim(claimsIdentity.RoleClaimType, role));
+
+            //TODO: Store the individual permissions (set union of role grants minus set union of role denies),
+            //      rather than the coarse-grained roles?
 
             claimsIdentity.Label = "Tenant User";
             principal.AddIdentity(claimsIdentity);
