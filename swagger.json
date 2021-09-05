@@ -15,29 +15,6 @@
     "version": "v1"
   },
   "paths": {
-    "/Claims": {
-      "get": {
-        "tags": [
-          "Claims"
-        ],
-        "operationId": "Claims_Get",
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/{organizationId}/Configuration": {
       "get": {
         "tags": [
