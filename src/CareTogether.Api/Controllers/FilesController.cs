@@ -11,16 +11,14 @@ namespace CareTogether.Api.Controllers
     [Route("/api/{organizationId:guid}/{locationId:guid}/[controller]")]
     public class FilesController : ControllerBase
     {
-        private readonly AuthorizationProvider authorizationProvider;
         private readonly IFileStore fileStore;
 
 
         public sealed record DocumentUploadInfo(Guid DocumentId, Uri ValetUrl);
 
 
-        public FilesController(AuthorizationProvider authorizationProvider, IFileStore fileStore)
+        public FilesController(IFileStore fileStore)
         {
-            this.authorizationProvider = authorizationProvider;
             this.fileStore = fileStore;
         }
 
@@ -28,8 +26,6 @@ namespace CareTogether.Api.Controllers
         [HttpGet("{documentId:guid}")]
         public async Task<ActionResult<Uri>> GetReadValetUrl(Guid organizationId, Guid locationId, Guid documentId)
         {
-            var authorizedUser = await authorizationProvider.AuthorizeAsync(organizationId, locationId, User);
-
             if (authorizedUser.CanAccess(organizationId, locationId) &&
                 authorizedUser.IsInRole(Roles.OrganizationAdministrator))
             {
@@ -44,8 +40,6 @@ namespace CareTogether.Api.Controllers
         [HttpPost("upload")]
         public async Task<ActionResult<DocumentUploadInfo>> GenerateUploadValetUrl(Guid organizationId, Guid locationId)
         {
-            var authorizedUser = await authorizationProvider.AuthorizeAsync(organizationId, locationId, User);
-
             if (authorizedUser.CanAccess(organizationId, locationId) &&
                 authorizedUser.IsInRole(Roles.OrganizationAdministrator))
             {

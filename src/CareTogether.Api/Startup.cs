@@ -92,7 +92,6 @@ namespace CareTogether.Api
             services.AddSingleton<IApprovalManager>(new ApprovalManager(approvalsResource, policyEvaluationEngine, communitiesResource, contactsResource));
 
             // Utility providers
-            services.AddSingleton(new AuthorizationProvider(communitiesResource));
             services.AddSingleton<IFileStore>(new BlobFileStore(blobServiceClient, "Uploads"));
 
             // Use legacy Newtonsoft JSON to support JsonPolymorph & NSwag for polymorphic serialization
@@ -100,13 +99,16 @@ namespace CareTogether.Api
 
             services.AddAuthorization(options =>
             {
-                // Require all users to be authenticated.
+                // Require all users to be authenticated and have access to the specified tenant -
+                // the organization ID and, if specified in the request, the location ID.
                 options.FallbackPolicy = new AuthorizationPolicyBuilder()
                     .RequireAuthenticatedUser()
                     .RequireAssertion(context =>
                         context.Resource is HttpContext httpContext &&
-                        httpContext.Request.RouteValues.TryGetValue("orgId", out var orgId) &&
-                        context.User.HasClaim("orgId", (string)orgId!)) //TODO: Location ID...
+                        httpContext.Request.RouteValues.TryGetValue("organizationId", out var orgId) &&
+                        context.User.HasClaim("organizationId", (string)orgId!) &&
+                        (!httpContext.Request.RouteValues.TryGetValue("locationId", out var locId) ||
+                        context.User.HasClaim("locationId", (string)locId!)))
                     .Build();
             });
 
