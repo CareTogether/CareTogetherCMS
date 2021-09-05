@@ -14,9 +14,10 @@ namespace CareTogether.Api
             var claimsIdentity = new ClaimsIdentity();
             var userId = principal.UserId();
 
-            //TODO: Look up the user's organization ID and roles/permissions per location
+            //TODO: Look up the user's person ID, organization ID, and roles/permissions per location
             var organizationId = "11111111-1111-1111-1111-111111111111";
             var locationId = "22222222-2222-2222-2222-222222222222";
+            var personId = "2b87864a-63e3-4406-bcbc-c0068a13ac05";
             //var userResult = await communitiesResource.FindUserAsync(organizationId, locationId, principal.UserId());
             //return userResult.Match(
             //    person =>
@@ -34,6 +35,8 @@ namespace CareTogether.Api
                 claimsIdentity.AddClaim(new Claim("organizationId", organizationId));
             if (!principal.HasClaim(x => x.Type == "locationId"))
                 claimsIdentity.AddClaim(new Claim("locationId", locationId));
+            if (!principal.HasClaim(x => x.Type == "personId"))
+                claimsIdentity.AddClaim(new Claim("personId", personId));
 
             claimsIdentity.Label = "Tenant User";
             principal.AddIdentity(claimsIdentity);

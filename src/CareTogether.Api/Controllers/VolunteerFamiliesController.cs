@@ -24,7 +24,7 @@ namespace CareTogether.Api.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<VolunteerFamily>>> ListAllVolunteerFamiliesAsync(Guid organizationId, Guid locationId)
         {
-            var referrals = await approvalManager.ListVolunteerFamiliesAsync(authorizedUser, organizationId, locationId);
+            var referrals = await approvalManager.ListVolunteerFamiliesAsync(User, organizationId, locationId);
 
             return Ok(referrals);
         }
@@ -33,7 +33,7 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<VolunteerFamily>> SubmitVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
             [FromBody] VolunteerFamilyCommand command)
         {
-            var result = await approvalManager.ExecuteVolunteerFamilyCommandAsync(organizationId, locationId, authorizedUser, command);
+            var result = await approvalManager.ExecuteVolunteerFamilyCommandAsync(organizationId, locationId, User, command);
 
             return result.Match<ActionResult<VolunteerFamily>>(
                 volunteerFamily => volunteerFamily,
@@ -45,7 +45,7 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<VolunteerFamily>> SubmitVolunteerCommandAsync(Guid organizationId, Guid locationId,
             [FromBody] VolunteerCommand command)
         {
-            var result = await approvalManager.ExecuteVolunteerCommandAsync(organizationId, locationId, authorizedUser, command);
+            var result = await approvalManager.ExecuteVolunteerCommandAsync(organizationId, locationId, User, command);
 
             return result.Match<ActionResult<VolunteerFamily>>(
                 volunteerFamily => volunteerFamily,
@@ -57,7 +57,7 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<VolunteerFamily>> SubmitApprovalCommandAsync(Guid organizationId, Guid locationId,
             [FromBody] ApprovalCommand command)
         {
-            var result = await approvalManager.ExecuteApprovalCommandAsync(organizationId, locationId, authorizedUser, command);
+            var result = await approvalManager.ExecuteApprovalCommandAsync(organizationId, locationId, User, command);
 
             return result.Match<ActionResult<VolunteerFamily>>(
                 volunteerFamily => volunteerFamily,

@@ -32,7 +32,7 @@ namespace CareTogether.Api.Controllers
             logger.LogInformation("User '{UserName}' was authenticated via '{AuthenticationType}'",
                 User.Identity?.Name, User.Identity?.AuthenticationType);
 
-            var result = await membershipManager.QueryPeopleAsync(authorizedUser, organizationId, locationId, "");
+            var result = await membershipManager.QueryPeopleAsync(User, organizationId, locationId, "");
             if (result.TryPickT0(out var people, out var error))
                 return Ok(people);
             else
@@ -47,13 +47,13 @@ namespace CareTogether.Api.Controllers
             logger.LogInformation("User '{UserName}' was authenticated via '{AuthenticationType}'",
                 User.Identity?.Name, User.Identity?.AuthenticationType);
 
-            var result = await membershipManager.QueryPeopleAsync(authorizedUser, organizationId, locationId, "");
+            var result = await membershipManager.QueryPeopleAsync(User, organizationId, locationId, "");
             if (result.TryPickT0(out var people, out var error))
             {
                 var person = people.SingleOrDefault(person => person.Id == personId);
                 if (person != null)
                 {
-                    var contactInfoResult = await membershipManager.GetContactInfoAsync(authorizedUser, organizationId, locationId, personId);
+                    var contactInfoResult = await membershipManager.GetContactInfoAsync(User, organizationId, locationId, personId);
                     if (contactInfoResult.TryPickT0(out var contactInfo, out var contactInfoError))
                         return Ok(new PersonDetails(person, contactInfo));
                     else

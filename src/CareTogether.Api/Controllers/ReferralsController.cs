@@ -33,7 +33,7 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<Referral>> SubmitReferralCommandAsync(Guid organizationId, Guid locationId,
             [FromBody] ReferralCommand command)
         {
-            var result = await referralManager.ExecuteReferralCommandAsync(organizationId, locationId, authorizedUser, command);
+            var result = await referralManager.ExecuteReferralCommandAsync(organizationId, locationId, User, command);
             return result.Match<ActionResult<Referral>>(
                 referral => referral,
                 notAllowed => BadRequest(),
@@ -44,7 +44,7 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<Referral>> SubmitArrangementCommandAsync(Guid organizationId, Guid locationId,
             [FromBody] ArrangementCommand command)
         {
-            var result = await referralManager.ExecuteArrangementCommandAsync(organizationId, locationId, authorizedUser, command);
+            var result = await referralManager.ExecuteArrangementCommandAsync(organizationId, locationId, User, command);
 
             return result.Match<ActionResult<Referral>>(
                 referral => referral,
@@ -56,7 +56,7 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<Referral>> SubmitArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
             [FromBody] ArrangementNoteCommand command)
         {
-            var result = await referralManager.ExecuteArrangementNoteCommandAsync(organizationId, locationId, authorizedUser, command);
+            var result = await referralManager.ExecuteArrangementNoteCommandAsync(organizationId, locationId, User, command);
 
             return result.Match<ActionResult<Referral>>(
                 referral => referral,
