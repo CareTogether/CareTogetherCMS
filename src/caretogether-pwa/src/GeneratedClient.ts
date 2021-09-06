@@ -673,6 +673,7 @@ export class VolunteerFamiliesClient {
 export class OrganizationConfiguration implements IOrganizationConfiguration {
     organizationName?: string;
     locations?: LocationConfiguration[];
+    users?: { [key: string]: UserAccessConfiguration; };
 
     constructor(data?: IOrganizationConfiguration) {
         if (data) {
@@ -690,6 +691,13 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
                 this.locations = [] as any;
                 for (let item of _data["locations"])
                     this.locations!.push(LocationConfiguration.fromJS(item));
+            }
+            if (_data["users"]) {
+                this.users = {} as any;
+                for (let key in _data["users"]) {
+                    if (_data["users"].hasOwnProperty(key))
+                        (<any>this.users)![key] = _data["users"][key] ? UserAccessConfiguration.fromJS(_data["users"][key]) : new UserAccessConfiguration();
+                }
             }
         }
     }
@@ -709,6 +717,13 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
             for (let item of this.locations)
                 data["locations"].push(item.toJSON());
         }
+        if (this.users) {
+            data["users"] = {};
+            for (let key in this.users) {
+                if (this.users.hasOwnProperty(key))
+                    (<any>data["users"])[key] = this.users[key] ? this.users[key].toJSON() : <any>undefined;
+            }
+        }
         return data; 
     }
 }
@@ -716,6 +731,7 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
 export interface IOrganizationConfiguration {
     organizationName?: string;
     locations?: LocationConfiguration[];
+    users?: { [key: string]: UserAccessConfiguration; };
 }
 
 export class LocationConfiguration implements ILocationConfiguration {
@@ -780,6 +796,90 @@ export interface ILocationConfiguration {
     name?: string;
     ethnicities?: string[];
     adultFamilyRelationships?: string[];
+}
+
+export class UserAccessConfiguration implements IUserAccessConfiguration {
+    locationRole?: UserLocationRole[];
+
+    constructor(data?: IUserAccessConfiguration) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["locationRole"])) {
+                this.locationRole = [] as any;
+                for (let item of _data["locationRole"])
+                    this.locationRole!.push(UserLocationRole.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): UserAccessConfiguration {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserAccessConfiguration();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.locationRole)) {
+            data["locationRole"] = [];
+            for (let item of this.locationRole)
+                data["locationRole"].push(item.toJSON());
+        }
+        return data; 
+    }
+}
+
+export interface IUserAccessConfiguration {
+    locationRole?: UserLocationRole[];
+}
+
+export class UserLocationRole implements IUserLocationRole {
+    locationId?: string;
+    roleName?: string;
+
+    constructor(data?: IUserLocationRole) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.locationId = _data["locationId"];
+            this.roleName = _data["roleName"];
+        }
+    }
+
+    static fromJS(data: any): UserLocationRole {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserLocationRole();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["locationId"] = this.locationId;
+        data["roleName"] = this.roleName;
+        return data; 
+    }
+}
+
+export interface IUserLocationRole {
+    locationId?: string;
+    roleName?: string;
 }
 
 export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
