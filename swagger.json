@@ -748,7 +748,11 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "locationRole": {
+          "personId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "locationRoles": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/UserLocationRole"

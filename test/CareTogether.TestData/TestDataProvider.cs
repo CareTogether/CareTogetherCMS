@@ -226,7 +226,7 @@ namespace CareTogether.TestData
                             ImmutableList<string>.Empty.AddRange(new[] { "Amazon", "Caucasian", "Other" }),
                             ImmutableList<string>.Empty.AddRange(new[] { "Single", "Spouse", "Partner", "Dad", "Mom", "Relative", "Domestic Worker" }))),
                     ImmutableDictionary<Guid, UserAccessConfiguration>.Empty
-                        .Add(adminId, new UserAccessConfiguration(ImmutableList<UserLocationRole>.Empty
+                        .Add(adminId, new UserAccessConfiguration(adminId, ImmutableList<UserLocationRole>.Empty
                             .Add(new UserLocationRole(guid2, Roles.OrganizationAdministrator))))));
         }
 

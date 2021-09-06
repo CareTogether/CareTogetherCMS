@@ -799,7 +799,8 @@ export interface ILocationConfiguration {
 }
 
 export class UserAccessConfiguration implements IUserAccessConfiguration {
-    locationRole?: UserLocationRole[];
+    personId?: string;
+    locationRoles?: UserLocationRole[];
 
     constructor(data?: IUserAccessConfiguration) {
         if (data) {
@@ -812,10 +813,11 @@ export class UserAccessConfiguration implements IUserAccessConfiguration {
 
     init(_data?: any) {
         if (_data) {
-            if (Array.isArray(_data["locationRole"])) {
-                this.locationRole = [] as any;
-                for (let item of _data["locationRole"])
-                    this.locationRole!.push(UserLocationRole.fromJS(item));
+            this.personId = _data["personId"];
+            if (Array.isArray(_data["locationRoles"])) {
+                this.locationRoles = [] as any;
+                for (let item of _data["locationRoles"])
+                    this.locationRoles!.push(UserLocationRole.fromJS(item));
             }
         }
     }
@@ -829,17 +831,19 @@ export class UserAccessConfiguration implements IUserAccessConfiguration {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        if (Array.isArray(this.locationRole)) {
-            data["locationRole"] = [];
-            for (let item of this.locationRole)
-                data["locationRole"].push(item.toJSON());
+        data["personId"] = this.personId;
+        if (Array.isArray(this.locationRoles)) {
+            data["locationRoles"] = [];
+            for (let item of this.locationRoles)
+                data["locationRoles"].push(item.toJSON());
         }
         return data; 
     }
 }
 
 export interface IUserAccessConfiguration {
-    locationRole?: UserLocationRole[];
+    personId?: string;
+    locationRoles?: UserLocationRole[];
 }
 
 export class UserLocationRole implements IUserLocationRole {
