@@ -15,6 +15,26 @@
     "version": "v1"
   },
   "paths": {
+    "/api/user/tenantAccess": {
+      "get": {
+        "tags": [
+          "Configuration"
+        ],
+        "operationId": "Configuration_GetUserTenantAccess",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserTenantAccessSummary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/{organizationId}/Configuration": {
       "get": {
         "tags": [
@@ -698,6 +718,23 @@
   },
   "components": {
     "schemas": {
+      "UserTenantAccessSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "organizationId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "locationIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "guid"
+            }
+          }
+        }
+      },
       "OrganizationConfiguration": {
         "type": "object",
         "additionalProperties": false,

@@ -1,8 +1,5 @@
 ﻿using CareTogether.Resources;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Http;
-using System;
-using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -10,14 +7,13 @@ namespace CareTogether.Api
 {
     public class TenantUserClaimsTransformation : IClaimsTransformation
     {
+        private readonly IAccountsResource accountsResource;
         private readonly IPoliciesResource policiesResource;
-        private readonly IHttpContextAccessor httpContextAccessor;
 
-        public TenantUserClaimsTransformation(IPoliciesResource policiesResource,
-            IHttpContextAccessor httpContextAccessor)
+        public TenantUserClaimsTransformation(IAccountsResource accountsResource, IPoliciesResource policiesResource)
         {
+            this.accountsResource = accountsResource;
             this.policiesResource = policiesResource;
-            this.httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
@@ -25,38 +21,32 @@ namespace CareTogether.Api
             var claimsIdentity = new ClaimsIdentity();
             var userId = principal.UserId();
 
-            // Look up the permissions for the organization that the user is trying to access.
-            // These permissions will be maintained in the session cookie.
-            if (httpContextAccessor.HttpContext == null ||
-                !httpContextAccessor.HttpContext.Request.RouteValues.TryGetValue("organizationId", out var orgId))
-                return principal;
-            var organizationPolicy = await policiesResource.GetConfigurationAsync(Guid.Parse((string)orgId!));
-
-            if (!organizationPolicy.TryPickT0(out var configuration, out var _))
+            // Look up the tenant access for the user.
+            var userTenantAccessResult = await accountsResource.GetTenantAccessSummaryAsync(principal);
+            if (!userTenantAccessResult.TryPickT0(out var userTenantAccess, out _))
                 return principal;
 
-            if (!configuration.Users.ContainsKey(userId))
-                return principal;
+            var organizationId = userTenantAccess.OrganizationId;
+            principal.AddClaimOnlyOnce(claimsIdentity, Claims.OrganizationId, organizationId.ToString());
 
-            //TODO: Look up the user's person ID, organization ID, and roles/permissions per location
-            //var organizationId = "11111111-1111-1111-1111-111111111111";
-            //var locationId = "22222222-2222-2222-2222-222222222222";
-            //var personId = "2b87864a-63e3-4406-bcbc-c0068a13ac05";
+            //// Look up the person info corresponding to the user.
+            //var locationId = userTenantAccess.LocationIds.First(); //NOTE: Currently only one location per user is supported.
             //var userResult = await communitiesResource.FindUserAsync(organizationId, locationId, principal.UserId());
-            //return userResult.Match(
-            //    person =>
-            //    {
-            //    },
-            //    NotFound => throw new InvalidOperationException("No person with the requested user ID was found.")); //TODO: Use a ResourceResult instead?
-            principal.AddClaimOnlyOnce(claimsIdentity, Claims.OrganizationId, (string)orgId!);
-            //principal.AddClaimOnlyOnce(claimsIdentity, Claims.LocationId, locationId);
-            principal.AddClaimOnlyOnce(claimsIdentity, Claims.PersonId, configuration.Users[userId].PersonId.ToString());
+            //if (!userResult.TryPickT0(out var person, out _))
+            //    return principal;
+            //principal.AddClaimOnlyOnce(claimsIdentity, Claims.PersonId, person!.Id.ToString());
 
-            foreach (var locationRole in configuration.Users[userId].LocationRoles)
+            // Then look up the organization-managed role access and person ID for that user.
+            var configurationResult = await policiesResource.GetConfigurationAsync(organizationId);
+            if (!configurationResult.TryPickT0(out var configuration, out _))
+                return principal;
+            var userAccessConfiguration = configuration.Users[userId];
+            foreach (var locationRole in userAccessConfiguration.LocationRoles)
             {
-                //TODO: Fix this to properly scope the session to just one location at a time!
-                claimsIdentity.AddClaim(new Claim(Claims.LocationId, locationRole.LocationId.ToString()));
-                claimsIdentity.AddClaim(new Claim(claimsIdentity.RoleClaimType, locationRole.RoleName));
+                //TODO: We should either define a more complex claims structure or scope authentication to a user-specified location.
+                principal.AddClaimOnlyOnce(claimsIdentity, Claims.LocationId, locationRole.LocationId.ToString());
+                principal.AddClaimOnlyOnce(claimsIdentity, claimsIdentity.RoleClaimType, locationRole.RoleName);
+                principal.AddClaimOnlyOnce(claimsIdentity, Claims.PersonId, userAccessConfiguration.PersonId.ToString());
             }
 
             //TODO: Store the individual permissions (set union of role grants minus set union of role denies),

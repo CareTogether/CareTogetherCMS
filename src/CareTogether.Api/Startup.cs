@@ -53,6 +53,7 @@ namespace CareTogether.Api
             var draftNotesStore = new JsonBlobObjectStore<string?>(blobServiceClient, "DraftNotes");
             var configurationStore = new JsonBlobObjectStore<OrganizationConfiguration>(blobServiceClient, "Configuration");
             var policiesStore = new JsonBlobObjectStore<EffectiveLocationPolicy>(blobServiceClient, "LocationPolicies");
+            var userTenantAccessStore = new JsonBlobObjectStore<UserTenantAccessSummary>(blobServiceClient, "UserTenantAccess");
 
 //#if DEBUG
 //            if (HostEnvironment.IsDevelopment())
@@ -68,7 +69,8 @@ namespace CareTogether.Api
                     approvalsEventLog,
                     draftNotesStore,
                     configurationStore,
-                    policiesStore).Wait();
+                    policiesStore,
+                    userTenantAccessStore).Wait();
 //            }
 //#endif
 
@@ -78,6 +80,7 @@ namespace CareTogether.Api
             var contactsResource = new ContactsResource(contactsEventLog);
             var goalsResource = new GoalsResource(goalsEventLog);
             var policiesResource = new PoliciesResource(configurationStore, policiesStore);
+            var accountsResource = new AccountsResource(userTenantAccessStore);
             var referralsResource = new ReferralsResource(referralsEventLog, draftNotesStore);
 
             //TODO: If we want to be strict about conventions, this should have a manager intermediary for authz.
@@ -100,15 +103,15 @@ namespace CareTogether.Api
             services.AddAuthorization(options =>
             {
                 // Require all users to be authenticated and have access to the specified tenant -
-                // the organization ID and, if specified in the request, the location ID.
+                // the organization ID and location ID (if specified).
                 options.FallbackPolicy = new AuthorizationPolicyBuilder()
                     .RequireAuthenticatedUser()
                     .RequireAssertion(context =>
                         context.Resource is HttpContext httpContext &&
-                        httpContext.Request.RouteValues.TryGetValue("organizationId", out var orgId) &&
-                        context.User.HasClaim("organizationId", (string)orgId!) &&
+                        (!httpContext.Request.RouteValues.TryGetValue("organizationId", out var orgId) ||
+                            context.User.HasClaim("organizationId", (string)orgId!)) &&
                         (!httpContext.Request.RouteValues.TryGetValue("locationId", out var locId) ||
-                        context.User.HasClaim("locationId", (string)locId!)))
+                            context.User.HasClaim("locationId", (string)locId!)))
                     .Build();
             });
 

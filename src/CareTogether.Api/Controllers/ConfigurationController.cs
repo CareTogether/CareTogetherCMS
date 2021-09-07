@@ -1,5 +1,4 @@
 ﻿using CareTogether.Resources;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
@@ -9,13 +8,25 @@ namespace CareTogether.Api.Controllers
     [ApiController]
     public class ConfigurationController : ControllerBase
     {
+        private readonly IAccountsResource accountsResource;
         private readonly IPoliciesResource policiesResource;
 
-        public ConfigurationController(IPoliciesResource policiesResource)
+
+        public ConfigurationController(IAccountsResource accountsResource, IPoliciesResource policiesResource)
         {
+            this.accountsResource = accountsResource;
             this.policiesResource = policiesResource;
         }
 
+
+        [HttpGet("/api/user/tenantAccess")]
+        public async Task<ActionResult<UserTenantAccessSummary>> GetUserTenantAccess()
+        {
+            var tenantAccessSummaryResult = await accountsResource.GetTenantAccessSummaryAsync(User);
+            return tenantAccessSummaryResult.TryPickT0(out var tenantAccessSummary, out _)
+                ? Ok(tenantAccessSummary)
+                : NotFound();
+        }
 
         [HttpGet("/api/{organizationId:guid}/[controller]")]
         public async Task<ActionResult<OrganizationConfiguration>> GetOrganizationConfiguration(Guid organizationId)

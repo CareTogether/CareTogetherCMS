@@ -33,7 +33,8 @@ namespace CareTogether.TestData
             IMultitenantEventLog<ApprovalEvent> approvalsEventLog,
             IObjectStore<string?> draftNotesStore,
             IObjectStore<OrganizationConfiguration> configurationStore,
-            IObjectStore<EffectiveLocationPolicy> policiesStore)
+            IObjectStore<EffectiveLocationPolicy> policiesStore,
+            IObjectStore<UserTenantAccessSummary> userTenantAccessStore)
         {
             await PopulateCommunityEvents(communityEventLog);
             await PopulateContactEvents(contactsEventLog);
@@ -43,6 +44,7 @@ namespace CareTogether.TestData
             await PopulateDraftNotes(draftNotesStore);
             await PopulateConfigurations(configurationStore);
             await PopulatePolicies(policiesStore);
+            await PopulateUserTenantAccess(userTenantAccessStore);
         }
 
         
@@ -396,6 +398,13 @@ namespace CareTogether.TestData
                                 VolunteerFamilyRequirementScope.OncePerFamily)
                         }.ToImmutableList())
                     }.ToImmutableDictionary())));
+        }
+
+        public static async Task PopulateUserTenantAccess(IObjectStore<UserTenantAccessSummary> userTenantAccessStore)
+        {
+            await userTenantAccessStore.UpsertAsync(Guid.Empty, Guid.Empty,
+                adminId.ToString(),
+                new UserTenantAccessSummary(guid1, ImmutableList<Guid>.Empty.Add(guid2)));
         }
 
 
