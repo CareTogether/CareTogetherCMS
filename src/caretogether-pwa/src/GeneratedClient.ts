@@ -17,40 +17,6 @@ export class ConfigurationClient {
         this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
     }
 
-    getUserTenantAccess(): Promise<UserTenantAccessSummary> {
-        let url_ = this.baseUrl + "/api/user/tenantAccess";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_ = <RequestInit>{
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetUserTenantAccess(_response);
-        });
-    }
-
-    protected processGetUserTenantAccess(response: Response): Promise<UserTenantAccessSummary> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = UserTenantAccessSummary.fromJS(resultData200);
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<UserTenantAccessSummary>(<any>null);
-    }
-
     getOrganizationConfiguration(organizationId: string): Promise<OrganizationConfiguration> {
         let url_ = this.baseUrl + "/api/{organizationId}/Configuration";
         if (organizationId === undefined || organizationId === null)
@@ -514,6 +480,51 @@ export class ReferralsClient {
     }
 }
 
+export class UsersClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : <any>window;
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
+    }
+
+    getUserTenantAccess(): Promise<UserTenantAccessSummary> {
+        let url_ = this.baseUrl + "/api/Users/me/tenantAccess";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ = <RequestInit>{
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetUserTenantAccess(_response);
+        });
+    }
+
+    protected processGetUserTenantAccess(response: Response): Promise<UserTenantAccessSummary> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = UserTenantAccessSummary.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<UserTenantAccessSummary>(<any>null);
+    }
+}
+
 export class VolunteerFamiliesClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
@@ -702,54 +713,6 @@ export class VolunteerFamiliesClient {
         }
         return Promise.resolve<VolunteerFamily>(<any>null);
     }
-}
-
-export class UserTenantAccessSummary implements IUserTenantAccessSummary {
-    organizationId?: string;
-    locationIds?: string[];
-
-    constructor(data?: IUserTenantAccessSummary) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.organizationId = _data["organizationId"];
-            if (Array.isArray(_data["locationIds"])) {
-                this.locationIds = [] as any;
-                for (let item of _data["locationIds"])
-                    this.locationIds!.push(item);
-            }
-        }
-    }
-
-    static fromJS(data: any): UserTenantAccessSummary {
-        data = typeof data === 'object' ? data : {};
-        let result = new UserTenantAccessSummary();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["organizationId"] = this.organizationId;
-        if (Array.isArray(this.locationIds)) {
-            data["locationIds"] = [];
-            for (let item of this.locationIds)
-                data["locationIds"].push(item);
-        }
-        return data; 
-    }
-}
-
-export interface IUserTenantAccessSummary {
-    organizationId?: string;
-    locationIds?: string[];
 }
 
 export class OrganizationConfiguration implements IOrganizationConfiguration {
@@ -3965,6 +3928,54 @@ export class EditDraftArrangementNote extends ArrangementNoteCommand implements 
 
 export interface IEditDraftArrangementNote extends IArrangementNoteCommand {
     draftNoteContents?: string | undefined;
+}
+
+export class UserTenantAccessSummary implements IUserTenantAccessSummary {
+    organizationId?: string;
+    locationIds?: string[];
+
+    constructor(data?: IUserTenantAccessSummary) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.organizationId = _data["organizationId"];
+            if (Array.isArray(_data["locationIds"])) {
+                this.locationIds = [] as any;
+                for (let item of _data["locationIds"])
+                    this.locationIds!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): UserTenantAccessSummary {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserTenantAccessSummary();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["organizationId"] = this.organizationId;
+        if (Array.isArray(this.locationIds)) {
+            data["locationIds"] = [];
+            for (let item of this.locationIds)
+                data["locationIds"].push(item);
+        }
+        return data; 
+    }
+}
+
+export interface IUserTenantAccessSummary {
+    organizationId?: string;
+    locationIds?: string[];
 }
 
 export class VolunteerFamily implements IVolunteerFamily {
