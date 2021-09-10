@@ -33,7 +33,8 @@ namespace CareTogether.TestData
             IMultitenantEventLog<ApprovalEvent> approvalsEventLog,
             IObjectStore<string?> draftNotesStore,
             IObjectStore<OrganizationConfiguration> configurationStore,
-            IObjectStore<EffectiveLocationPolicy> policiesStore)
+            IObjectStore<EffectiveLocationPolicy> policiesStore,
+            IObjectStore<UserTenantAccessSummary> userTenantAccessStore)
         {
             await PopulateCommunityEvents(communityEventLog);
             await PopulateContactEvents(contactsEventLog);
@@ -43,6 +44,7 @@ namespace CareTogether.TestData
             await PopulateDraftNotes(draftNotesStore);
             await PopulateConfigurations(configurationStore);
             await PopulatePolicies(policiesStore);
+            await PopulateUserTenantAccess(userTenantAccessStore);
         }
 
         
@@ -224,7 +226,10 @@ namespace CareTogether.TestData
                             ImmutableList<string>.Empty.AddRange(new[] { "Single", "Spouse", "Partner", "Dad", "Mom", "Relative", "Droid" })))
                         .Add(new LocationConfiguration(Guid.Parse("33333333-3333-3333-3333-333333333333"), "El Dorado",
                             ImmutableList<string>.Empty.AddRange(new[] { "Amazon", "Caucasian", "Other" }),
-                            ImmutableList<string>.Empty.AddRange(new[] { "Single", "Spouse", "Partner", "Dad", "Mom", "Relative", "Domestic Worker" })))));
+                            ImmutableList<string>.Empty.AddRange(new[] { "Single", "Spouse", "Partner", "Dad", "Mom", "Relative", "Domestic Worker" }))),
+                    ImmutableDictionary<Guid, UserAccessConfiguration>.Empty
+                        .Add(adminId, new UserAccessConfiguration(adminId, ImmutableList<UserLocationRole>.Empty
+                            .Add(new UserLocationRole(guid2, Roles.OrganizationAdministrator))))));
         }
 
         public static async Task PopulatePolicies(IObjectStore<EffectiveLocationPolicy> policiesStore)
@@ -393,6 +398,13 @@ namespace CareTogether.TestData
                                 VolunteerFamilyRequirementScope.OncePerFamily)
                         }.ToImmutableList())
                     }.ToImmutableDictionary())));
+        }
+
+        public static async Task PopulateUserTenantAccess(IObjectStore<UserTenantAccessSummary> userTenantAccessStore)
+        {
+            await userTenantAccessStore.UpsertAsync(Guid.Empty, Guid.Empty,
+                adminId.ToString(),
+                new UserTenantAccessSummary(guid1, ImmutableList<Guid>.Empty.Add(guid2)));
         }
 
 

@@ -4,9 +4,12 @@ using CareTogether.Managers;
 using CareTogether.Resources;
 using CareTogether.Resources.Models;
 using CareTogether.Resources.Storage;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -35,6 +38,8 @@ namespace CareTogether.Api
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddMicrosoftIdentityWebApi(Configuration.GetSection("AzureAdB2C"));
+            
+            services.AddTransient<IClaimsTransformation, TenantUserClaimsTransformation>();
 
             // Shared blob storage client configured to authenticate according to the environment
             var blobServiceClient = new BlobServiceClient(Configuration["Persistence:BlobStorageConnectionString"]);
@@ -48,6 +53,7 @@ namespace CareTogether.Api
             var draftNotesStore = new JsonBlobObjectStore<string?>(blobServiceClient, "DraftNotes");
             var configurationStore = new JsonBlobObjectStore<OrganizationConfiguration>(blobServiceClient, "Configuration");
             var policiesStore = new JsonBlobObjectStore<EffectiveLocationPolicy>(blobServiceClient, "LocationPolicies");
+            var userTenantAccessStore = new JsonBlobObjectStore<UserTenantAccessSummary>(blobServiceClient, "UserTenantAccess");
 
 //#if DEBUG
 //            if (HostEnvironment.IsDevelopment())
@@ -63,7 +69,8 @@ namespace CareTogether.Api
                     approvalsEventLog,
                     draftNotesStore,
                     configurationStore,
-                    policiesStore).Wait();
+                    policiesStore,
+                    userTenantAccessStore).Wait();
 //            }
 //#endif
 
@@ -73,10 +80,12 @@ namespace CareTogether.Api
             var contactsResource = new ContactsResource(contactsEventLog);
             var goalsResource = new GoalsResource(goalsEventLog);
             var policiesResource = new PoliciesResource(configurationStore, policiesStore);
+            var accountsResource = new AccountsResource(userTenantAccessStore);
             var referralsResource = new ReferralsResource(referralsEventLog, draftNotesStore);
 
             //TODO: If we want to be strict about conventions, this should have a manager intermediary for authz.
             services.AddSingleton<IPoliciesResource>(policiesResource);
+            services.AddSingleton<IAccountsResource>(accountsResource);
 
             // Engine services
             var policyEvaluationEngine = new PolicyEvaluationEngine(policiesResource);
@@ -87,7 +96,6 @@ namespace CareTogether.Api
             services.AddSingleton<IApprovalManager>(new ApprovalManager(approvalsResource, policyEvaluationEngine, communitiesResource, contactsResource));
 
             // Utility providers
-            services.AddSingleton(new AuthorizationProvider(communitiesResource));
             services.AddSingleton<IFileStore>(new BlobFileStore(blobServiceClient, "Uploads"));
 
             // Use legacy Newtonsoft JSON to support JsonPolymorph & NSwag for polymorphic serialization
@@ -95,8 +103,17 @@ namespace CareTogether.Api
 
             services.AddAuthorization(options =>
             {
-                // By default, all incoming requests will be authorized according to the default policy
-                options.FallbackPolicy = options.DefaultPolicy;
+                // Require all users to be authenticated and have access to the specified tenant -
+                // the organization ID and location ID (if specified).
+                options.FallbackPolicy = new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .RequireAssertion(context =>
+                        context.Resource is HttpContext httpContext &&
+                        (!httpContext.Request.RouteValues.TryGetValue("organizationId", out var orgId) ||
+                            context.User.HasClaim("organizationId", (string)orgId!)) &&
+                        (!httpContext.Request.RouteValues.TryGetValue("locationId", out var locId) ||
+                            context.User.HasClaim("locationId", (string)locId!)))
+                    .Build();
             });
 
             services.AddOpenApiDocument(options =>

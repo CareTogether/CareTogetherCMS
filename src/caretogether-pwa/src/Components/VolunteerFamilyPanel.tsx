@@ -104,7 +104,7 @@ export function VolunteerFamilyPanel({volunteerFamilyId, onBack}: VolunteerFamil
     </Toolbar>
     <div className={classes.sectionChips}>
       {Object.entries(volunteerFamily.familyRoleApprovals || {}).map(([role, approvalStatus]) => (
-        <Chip key={role} size="small" color={approvalStatus === RoleApprovalStatus.Approved ? "primary" : "secondary"}
+        <Chip key={role} size="small" color={approvalStatus === RoleApprovalStatus.Onboarded ? "primary" : "secondary"}
           label={RoleApprovalStatus[approvalStatus] + " " + role} />
       ))}
     </div>
@@ -143,7 +143,7 @@ export function VolunteerFamilyPanel({volunteerFamilyId, onBack}: VolunteerFamil
         <Container>
           <div className={classes.sectionChips}>
             {Object.entries(volunteerFamily.individualVolunteers?.[adult.item1.id].individualRoleApprovals || {}).map(([role, approvalStatus]) => (
-              <Chip key={role} size="small" color={approvalStatus === RoleApprovalStatus.Approved ? "primary" : "secondary"}
+              <Chip key={role} size="small" color={approvalStatus === RoleApprovalStatus.Onboarded ? "primary" : "secondary"}
                 label={RoleApprovalStatus[approvalStatus] + " " + role} />
             ))}
             {(adult.item2.relationshipToFamily && <Chip size="small" label={adult.item2.relationshipToFamily} />) || null}

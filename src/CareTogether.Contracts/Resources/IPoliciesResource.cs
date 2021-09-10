@@ -6,10 +6,16 @@ using System.Threading.Tasks;
 namespace CareTogether.Resources
 {
     public sealed record OrganizationConfiguration(string OrganizationName,
-        ImmutableList<LocationConfiguration> Locations);
+        ImmutableList<LocationConfiguration> Locations,
+        ImmutableDictionary<Guid, UserAccessConfiguration> Users);
 
     public sealed record LocationConfiguration(Guid Id, string Name,
         ImmutableList<string> Ethnicities, ImmutableList<string> AdultFamilyRelationships);
+
+    public sealed record UserAccessConfiguration(Guid PersonId,
+        ImmutableList<UserLocationRole> LocationRoles);
+
+    public sealed record UserLocationRole(Guid LocationId, string RoleName);
 
     public sealed record EffectiveLocationPolicy(int Version, string VersionLabel,
         ReferralPolicy ReferralPolicy,

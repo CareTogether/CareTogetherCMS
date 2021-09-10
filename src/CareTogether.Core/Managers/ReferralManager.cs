@@ -3,6 +3,7 @@ using CareTogether.Resources;
 using System;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace CareTogether.Managers
@@ -26,7 +27,7 @@ namespace CareTogether.Managers
 
 
         public async Task<ManagerResult<Referral>> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId,
-            AuthorizedUser user, ReferralCommand command)
+            ClaimsPrincipal user, ReferralCommand command)
         {
             command = command switch
             {
@@ -45,7 +46,7 @@ namespace CareTogether.Managers
                     organizationId, locationId, user, command, referral);
                 if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
                 {
-                    var commandResult = await referralsResource.ExecuteReferralCommandAsync(organizationId, locationId, command, user.UserId);
+                    var commandResult = await referralsResource.ExecuteReferralCommandAsync(organizationId, locationId, command, user.UserId());
                     if (commandResult.TryPickT0(out referralEntry, out var commandError))
                     {
                         var disclosedReferral = await policyEvaluationEngine.DiscloseReferralAsync(user,
@@ -63,7 +64,7 @@ namespace CareTogether.Managers
         }
 
         public async Task<ManagerResult<Referral>> ExecuteArrangementCommandAsync(Guid organizationId, Guid locationId,
-            AuthorizedUser user, ArrangementCommand command)
+            ClaimsPrincipal user, ArrangementCommand command)
         {
             command = command switch
             {
@@ -82,7 +83,7 @@ namespace CareTogether.Managers
                     organizationId, locationId, user, command, referral);
                 if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
                 {
-                    var commandResult = await referralsResource.ExecuteArrangementCommandAsync(organizationId, locationId, command, user.UserId);
+                    var commandResult = await referralsResource.ExecuteArrangementCommandAsync(organizationId, locationId, command, user.UserId());
                     if (commandResult.TryPickT0(out referralEntry, out var commandError))
                     {
                         var disclosedReferral = await policyEvaluationEngine.DiscloseReferralAsync(user,
@@ -100,7 +101,7 @@ namespace CareTogether.Managers
         }
 
         public async Task<ManagerResult<Referral>> ExecuteArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
-            AuthorizedUser user, ArrangementNoteCommand command)
+            ClaimsPrincipal user, ArrangementNoteCommand command)
         {
             command = command switch
             {
@@ -119,7 +120,7 @@ namespace CareTogether.Managers
                     organizationId, locationId, user, command, referral);
                 if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
                 {
-                    var commandResult = await referralsResource.ExecuteArrangementNoteCommandAsync(organizationId, locationId, command, user.UserId);
+                    var commandResult = await referralsResource.ExecuteArrangementNoteCommandAsync(organizationId, locationId, command, user.UserId());
                     if (commandResult.TryPickT0(out referralEntry, out var commandError))
                     {
                         var disclosedReferral = await policyEvaluationEngine.DiscloseReferralAsync(user,

@@ -13,12 +13,10 @@ namespace CareTogether.Api.Controllers
     [Route("/api/{organizationId:guid}/{locationId:guid}/[controller]")]
     public class ReferralsController : ControllerBase
     {
-        private readonly AuthorizationProvider authorizationProvider;
         private readonly IReferralManager referralManager;
 
-        public ReferralsController(AuthorizationProvider authorizationProvider, IReferralManager referralManager)
+        public ReferralsController(IReferralManager referralManager)
         {
-            this.authorizationProvider = authorizationProvider;
             this.referralManager = referralManager;
         }
 
@@ -26,8 +24,6 @@ namespace CareTogether.Api.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Referral>>> ListAllReferralsAsync(Guid organizationId, Guid locationId)
         {
-            var authorizedUser = await authorizationProvider.AuthorizeAsync(organizationId, locationId, User);
-
             var referrals = await referralManager.ListReferralsAsync(organizationId, locationId);
 
             return Ok(referrals);
@@ -37,9 +33,7 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<Referral>> SubmitReferralCommandAsync(Guid organizationId, Guid locationId,
             [FromBody] ReferralCommand command)
         {
-            var authorizedUser = await authorizationProvider.AuthorizeAsync(organizationId, locationId, User);
-
-            var result = await referralManager.ExecuteReferralCommandAsync(organizationId, locationId, authorizedUser, command);
+            var result = await referralManager.ExecuteReferralCommandAsync(organizationId, locationId, User, command);
             return result.Match<ActionResult<Referral>>(
                 referral => referral,
                 notAllowed => BadRequest(),
@@ -50,9 +44,7 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<Referral>> SubmitArrangementCommandAsync(Guid organizationId, Guid locationId,
             [FromBody] ArrangementCommand command)
         {
-            var authorizedUser = await authorizationProvider.AuthorizeAsync(organizationId, locationId, User);
-
-            var result = await referralManager.ExecuteArrangementCommandAsync(organizationId, locationId, authorizedUser, command);
+            var result = await referralManager.ExecuteArrangementCommandAsync(organizationId, locationId, User, command);
 
             return result.Match<ActionResult<Referral>>(
                 referral => referral,
@@ -64,9 +56,7 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<Referral>> SubmitArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
             [FromBody] ArrangementNoteCommand command)
         {
-            var authorizedUser = await authorizationProvider.AuthorizeAsync(organizationId, locationId, User);
-
-            var result = await referralManager.ExecuteArrangementNoteCommandAsync(organizationId, locationId, authorizedUser, command);
+            var result = await referralManager.ExecuteArrangementNoteCommandAsync(organizationId, locationId, User, command);
 
             return result.Match<ActionResult<Referral>>(
                 referral => referral,

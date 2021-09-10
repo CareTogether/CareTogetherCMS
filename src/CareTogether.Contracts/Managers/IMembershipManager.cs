@@ -1,6 +1,7 @@
 ﻿using CareTogether.Resources;
 using System;
 using System.Collections.Immutable;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace CareTogether.Managers
@@ -11,12 +12,12 @@ namespace CareTogether.Managers
     /// </summary>
     public interface IMembershipManager
     {
-        Task<ManagerResult<ContactInfo>> GetContactInfoAsync(AuthorizedUser user, Guid organizationId, Guid locationId, Guid personId);
+        Task<ManagerResult<ContactInfo>> GetContactInfoAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId, Guid personId);
 
-        Task<ManagerResult<ContactInfo>> UpdateContactInfoAsync(AuthorizedUser user, Guid organizationId, Guid locationId, ContactCommand command);
+        Task<ManagerResult<ContactInfo>> UpdateContactInfoAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId, ContactCommand command);
 
-        Task<ManagerResult<ImmutableList<Person>>> QueryPeopleAsync(AuthorizedUser user, Guid organizationId, Guid locationId, string searchQuery);
+        Task<ManagerResult<ImmutableList<Person>>> QueryPeopleAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId, string searchQuery);
 
-        Task<ManagerResult<Family>> ExecuteFamilyCommandAsync(AuthorizedUser user, Guid organizationId, Guid locationId, FamilyCommand command);
+        Task<ManagerResult<Family>> ExecuteFamilyCommandAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId, FamilyCommand command);
     }
 }

@@ -2,6 +2,7 @@ using CareTogether.Resources;
 using JsonPolymorph;
 using System;
 using System.Collections.Immutable;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace CareTogether.Managers
@@ -31,15 +32,15 @@ namespace CareTogether.Managers
     public interface IApprovalManager
     {
         Task<ImmutableList<VolunteerFamily>> ListVolunteerFamiliesAsync(
-            AuthorizedUser user, Guid organizationId, Guid locationId);
+            ClaimsPrincipal user, Guid organizationId, Guid locationId);
 
         Task<ManagerResult<VolunteerFamily>> ExecuteVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
-            AuthorizedUser user, VolunteerFamilyCommand command);
+            ClaimsPrincipal user, VolunteerFamilyCommand command);
 
         Task<ManagerResult<VolunteerFamily>> ExecuteVolunteerCommandAsync(Guid organizationId, Guid locationId,
-            AuthorizedUser user, VolunteerCommand command);
+            ClaimsPrincipal user, VolunteerCommand command);
 
         Task<ManagerResult<VolunteerFamily>> ExecuteApprovalCommandAsync(Guid organizationId, Guid locationId,
-            AuthorizedUser user, ApprovalCommand command);
+            ClaimsPrincipal user, ApprovalCommand command);
     }
 }
