@@ -1,7 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
 import { fade, makeStyles } from '@material-ui/core/styles';
-import { Typography, InputBase, CssBaseline, AppBar, Toolbar, IconButton, Badge, Drawer, Divider, List, BottomNavigation, BottomNavigationAction, useMediaQuery, useTheme } from '@material-ui/core';
+import { Typography, InputBase, CssBaseline, AppBar, Toolbar, IconButton, Badge, Drawer, Divider, List, useMediaQuery, useTheme } from '@material-ui/core';
 import PermPhoneMsgIcon from '@material-ui/icons/PermPhoneMsg';
 import EmojiPeopleIcon from '@material-ui/icons/EmojiPeople';
 import SearchIcon from '@material-ui/icons/Search';
@@ -10,7 +10,7 @@ import MenuIcon from '@material-ui/icons/Menu';
 import NotificationsIcon from '@material-ui/icons/Notifications';
 import AssignmentIcon from '@material-ui/icons/Assignment';
 import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
-import { Route, Switch, Redirect, BrowserRouter as Router, Link } from "react-router-dom";
+import { Route, Switch, Redirect, BrowserRouter as Router } from "react-router-dom";
 import { ListItemLink } from './Components/ListItemLink';
 import { Arrangements } from './Components/Arrangements';
 import { Referrals } from './Components/Referrals';
@@ -21,6 +21,7 @@ import { Contacts } from './Components/Contacts';
 import { Communities } from './Components/Communities';
 import { useRecoilValue } from 'recoil';
 import { locationNameData, organizationNameData } from './Model/ConfigurationModel';
+import Footer from './Components/Footer';
 
 const copyrightStyles = makeStyles((theme) => ({
   copyright: {
@@ -161,11 +162,6 @@ const useStyles = makeStyles((theme) => ({
     paddingTop: theme.spacing(4),
     paddingBottom: theme.spacing(4),
   },
-  stickToBottom: {
-    width: '100%',
-    position: 'fixed',
-    bottom: 0,
-  },
 }));
 
 const mainListItems = (
@@ -191,7 +187,6 @@ function App() {
   const handleDrawerClose = () => {
     setOpen(false);
   };
-  const [selectedBottomNavAction, setSelectedBottomNavAction] = React.useState(0);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -293,18 +288,7 @@ function App() {
             </Switch>
           </React.Suspense>
           {/* </Container> */}
-          {isMobile ? <BottomNavigation
-            value={selectedBottomNavAction}
-            onChange={(_, newValue) => {
-              setSelectedBottomNavAction(newValue);
-            }}
-            showLabels
-            className={classes.stickToBottom}
-          >
-            <BottomNavigationAction component={Link} to="/volunteers" label="Volunteers" icon={<EmojiPeopleIcon />} />
-            <BottomNavigationAction component={Link} to="/volunteerApplications" label="Applications" icon={<AssignmentIcon />} />
-            <BottomNavigationAction component={Link} to="/volunteerProgress" label="Progress" icon={<AssignmentTurnedInIcon />} />
-          </BottomNavigation> : null}
+          {isMobile && <Footer></Footer>}
         </main>
       </Router>
     </div>
