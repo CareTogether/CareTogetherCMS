@@ -4,6 +4,7 @@ using OneOf;
 using OneOf.Types;
 using System;
 using System.Collections.Immutable;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace CareTogether.Engines
@@ -18,19 +19,19 @@ namespace CareTogether.Engines
     public interface IPolicyEvaluationEngine
     {
         Task<OneOf<Yes, Error<string>>> AuthorizeReferralCommandAsync(Guid organizationId, Guid locationId,
-            AuthorizedUser user, ReferralCommand command, Referral referral);
+            ClaimsPrincipal user, ReferralCommand command, Referral referral);
 
         Task<OneOf<Yes, Error<string>>> AuthorizeArrangementCommandAsync(Guid organizationId, Guid locationId,
-            AuthorizedUser user, ArrangementCommand command, Referral referral);
+            ClaimsPrincipal user, ArrangementCommand command, Referral referral);
 
         Task<OneOf<Yes, Error<string>>> AuthorizeArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
-            AuthorizedUser user, ArrangementNoteCommand command, Referral referral);
+            ClaimsPrincipal user, ArrangementNoteCommand command, Referral referral);
 
         Task<OneOf<Yes, Error<string>>> AuthorizeVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
-            AuthorizedUser user, VolunteerFamilyCommand command, VolunteerFamily volunteerFamily);
+            ClaimsPrincipal user, VolunteerFamilyCommand command, VolunteerFamily volunteerFamily);
 
         Task<OneOf<Yes, Error<string>>> AuthorizeVolunteerCommandAsync(Guid organizationId, Guid locationId,
-            AuthorizedUser user, VolunteerCommand command, VolunteerFamily volunteerFamily);
+            ClaimsPrincipal user, VolunteerCommand command, VolunteerFamily volunteerFamily);
 
 
         Task<VolunteerFamilyApprovalStatus> CalculateVolunteerFamilyApprovalStatusAsync(
@@ -42,16 +43,16 @@ namespace CareTogether.Engines
                     ImmutableList<ActivityInfo> ActivitiesPerformed)> IndividualInfo);
 
 
-        Task<Referral> DiscloseReferralAsync(AuthorizedUser user, Referral referral);
+        Task<Referral> DiscloseReferralAsync(ClaimsPrincipal user, Referral referral);
 
-        Task<Arrangement> DiscloseArrangementAsync(AuthorizedUser user, Arrangement arrangement);
+        Task<Arrangement> DiscloseArrangementAsync(ClaimsPrincipal user, Arrangement arrangement);
 
-        Task<VolunteerFamily> DiscloseVolunteerFamilyAsync(AuthorizedUser user, VolunteerFamily volunteerFamily);
+        Task<VolunteerFamily> DiscloseVolunteerFamilyAsync(ClaimsPrincipal user, VolunteerFamily volunteerFamily);
 
-        Task<Family> DiscloseFamilyAsync(AuthorizedUser user, Family family);
+        Task<Family> DiscloseFamilyAsync(ClaimsPrincipal user, Family family);
 
-        Task<Person> DisclosePersonAsync(AuthorizedUser user, Person person);
+        Task<Person> DisclosePersonAsync(ClaimsPrincipal user, Person person);
 
-        Task<ContactInfo> DiscloseContactInfoAsync(AuthorizedUser user, ContactInfo contactInfo);
+        Task<ContactInfo> DiscloseContactInfoAsync(ClaimsPrincipal user, ContactInfo contactInfo);
     }
 }

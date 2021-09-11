@@ -15,29 +15,6 @@
     "version": "v1"
   },
   "paths": {
-    "/Claims": {
-      "get": {
-        "tags": [
-          "Claims"
-        ],
-        "operationId": "Claims_Get",
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/{organizationId}/Configuration": {
       "get": {
         "tags": [
@@ -511,6 +488,26 @@
         }
       }
     },
+    "/api/Users/me/tenantAccess": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "Users_GetUserTenantAccess",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserTenantAccessSummary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/{organizationId}/{locationId}/VolunteerFamilies": {
       "get": {
         "tags": [
@@ -733,6 +730,12 @@
             "items": {
               "$ref": "#/components/schemas/LocationConfiguration"
             }
+          },
+          "users": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/UserAccessConfiguration"
+            }
           }
         }
       },
@@ -758,6 +761,35 @@
             "items": {
               "type": "string"
             }
+          }
+        }
+      },
+      "UserAccessConfiguration": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "personId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "locationRoles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserLocationRole"
+            }
+          }
+        }
+      },
+      "UserLocationRole": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "locationId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "roleName": {
+            "type": "string"
           }
         }
       },
@@ -2244,6 +2276,23 @@
             }
           }
         ]
+      },
+      "UserTenantAccessSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "organizationId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "locationIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "guid"
+            }
+          }
+        }
       },
       "VolunteerFamily": {
         "type": "object",

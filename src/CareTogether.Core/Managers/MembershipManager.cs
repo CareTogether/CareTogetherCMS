@@ -1,6 +1,7 @@
 ﻿using CareTogether.Resources;
 using System;
 using System.Collections.Immutable;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace CareTogether.Managers
@@ -18,17 +19,17 @@ namespace CareTogether.Managers
         }
 
 
-        public async Task<ManagerResult<ContactInfo>> GetContactInfoAsync(AuthorizedUser user, Guid organizationId, Guid locationId, Guid personId)
+        public async Task<ManagerResult<ContactInfo>> GetContactInfoAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId, Guid personId)
         {
             //TODO: This is just a demo implementation of a business rule, not a true business rule.
             if (user.CanAccess(organizationId, locationId) &&
-            (user.PersonId == personId || user.IsInRole(Roles.OrganizationAdministrator)))
+            (user.PersonId() == personId || user.IsInRole(Roles.OrganizationAdministrator)))
                 return await profilesResource.FindUserContactInfoAsync(organizationId, locationId, personId);
             else
                 return ManagerResult.NotAllowed;
         }
 
-        public async Task<ManagerResult<ContactInfo>> UpdateContactInfoAsync(AuthorizedUser user, Guid organizationId, Guid locationId, ContactCommand command)
+        public async Task<ManagerResult<ContactInfo>> UpdateContactInfoAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId, ContactCommand command)
         {
             command = command switch
             {
@@ -38,13 +39,13 @@ namespace CareTogether.Managers
 
             //TODO: This is just a demo implementation of a business rule, not a true business rule.
             if (user.CanAccess(organizationId, locationId) &&
-            ((command is not CreateContact && user.PersonId == command.PersonId) || user.IsInRole(Roles.OrganizationAdministrator)))
-                return await profilesResource.ExecuteContactCommandAsync(organizationId, locationId, command, user.UserId);
+            ((command is not CreateContact && user.PersonId() == command.PersonId) || user.IsInRole(Roles.OrganizationAdministrator)))
+                return await profilesResource.ExecuteContactCommandAsync(organizationId, locationId, command, user.UserId());
             else
                 return ManagerResult.NotAllowed;
         }
 
-        public async Task<ManagerResult<ImmutableList<Person>>> QueryPeopleAsync(AuthorizedUser user, Guid organizationId, Guid locationId, string searchQuery)
+        public async Task<ManagerResult<ImmutableList<Person>>> QueryPeopleAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId, string searchQuery)
         {
             //TODO: This is just a demo implementation of a business rule, not a true business rule.
             if (user.CanAccess(organizationId, locationId) &&
@@ -57,7 +58,7 @@ namespace CareTogether.Managers
                 return ManagerResult.NotAllowed;
         }
 
-        public async Task<ManagerResult<Family>> ExecuteFamilyCommandAsync(AuthorizedUser user, Guid organizationId, Guid locationId, FamilyCommand command)
+        public async Task<ManagerResult<Family>> ExecuteFamilyCommandAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId, FamilyCommand command)
         {
             command = command switch
             {
@@ -65,7 +66,7 @@ namespace CareTogether.Managers
                 _ => command
             };
 
-            return await communitiesResource.ExecuteFamilyCommandAsync(organizationId, locationId, command, user.UserId);
+            return await communitiesResource.ExecuteFamilyCommandAsync(organizationId, locationId, command, user.UserId());
         }
     }
 }

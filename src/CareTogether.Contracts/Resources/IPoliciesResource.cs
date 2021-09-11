@@ -5,6 +5,18 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Resources
 {
+    public sealed record OrganizationConfiguration(string OrganizationName,
+        ImmutableList<LocationConfiguration> Locations,
+        ImmutableDictionary<Guid, UserAccessConfiguration> Users);
+
+    public sealed record LocationConfiguration(Guid Id, string Name,
+        ImmutableList<string> Ethnicities, ImmutableList<string> AdultFamilyRelationships);
+
+    public sealed record UserAccessConfiguration(Guid PersonId,
+        ImmutableList<UserLocationRole> LocationRoles);
+
+    public sealed record UserLocationRole(Guid LocationId, string RoleName);
+
     public sealed record EffectiveLocationPolicy(int Version, string VersionLabel,
         ReferralPolicy ReferralPolicy,
         VolunteerPolicy VolunteerPolicy);
@@ -67,6 +79,8 @@ namespace CareTogether.Resources
     /// </summary>
     public interface IPoliciesResource
     {
+        Task<ResourceResult<OrganizationConfiguration>> GetConfigurationAsync(Guid organizationId);
+
         Task<ResourceResult<EffectiveLocationPolicy>> GetCurrentPolicy(Guid organizationId, Guid locationId);
 
         Task<ResourceResult<ReferralPolicy>> GetEffectiveReferralPolicy(Guid organizationId, Guid locationId,

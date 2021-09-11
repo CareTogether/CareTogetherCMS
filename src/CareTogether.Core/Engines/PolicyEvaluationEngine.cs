@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace CareTogether.Engines
@@ -22,7 +23,7 @@ namespace CareTogether.Engines
 
 
         public async Task<OneOf<Yes, Error<string>>> AuthorizeArrangementCommandAsync(
-            Guid organizationId, Guid locationId, AuthorizedUser user, ArrangementCommand command, Referral referral)
+            Guid organizationId, Guid locationId, ClaimsPrincipal user, ArrangementCommand command, Referral referral)
         {
             await Task.Yield();
             return new Yes();
@@ -30,7 +31,7 @@ namespace CareTogether.Engines
         }
 
         public async Task<OneOf<Yes, Error<string>>> AuthorizeArrangementNoteCommandAsync(
-            Guid organizationId, Guid locationId, AuthorizedUser user, ArrangementNoteCommand command, Referral referral)
+            Guid organizationId, Guid locationId, ClaimsPrincipal user, ArrangementNoteCommand command, Referral referral)
         {
             await Task.Yield();
             return new Yes();
@@ -38,7 +39,7 @@ namespace CareTogether.Engines
         }
 
         public async Task<OneOf<Yes, Error<string>>> AuthorizeReferralCommandAsync(
-            Guid organizationId, Guid locationId, AuthorizedUser user, ReferralCommand command, Referral referral)
+            Guid organizationId, Guid locationId, ClaimsPrincipal user, ReferralCommand command, Referral referral)
         {
             await Task.Yield();
             return new Yes();
@@ -46,7 +47,7 @@ namespace CareTogether.Engines
         }
 
         public async Task<OneOf<Yes, Error<string>>> AuthorizeVolunteerCommandAsync(
-            Guid organizationId, Guid locationId, AuthorizedUser user, VolunteerCommand command, VolunteerFamily volunteerFamily)
+            Guid organizationId, Guid locationId, ClaimsPrincipal user, VolunteerCommand command, VolunteerFamily volunteerFamily)
         {
             await Task.Yield();
             return new Yes();
@@ -54,7 +55,7 @@ namespace CareTogether.Engines
         }
 
         public async Task<OneOf<Yes, Error<string>>> AuthorizeVolunteerFamilyCommandAsync(
-            Guid organizationId, Guid locationId, AuthorizedUser user, VolunteerFamilyCommand command, VolunteerFamily volunteerFamily)
+            Guid organizationId, Guid locationId, ClaimsPrincipal user, VolunteerFamilyCommand command, VolunteerFamily volunteerFamily)
         {
             await Task.Yield();
             return new Yes();
@@ -158,42 +159,42 @@ namespace CareTogether.Engines
                 individualVolunteerRoles);
         }
 
-        public async Task<Arrangement> DiscloseArrangementAsync(AuthorizedUser user, Arrangement arrangement)
+        public async Task<Arrangement> DiscloseArrangementAsync(ClaimsPrincipal user, Arrangement arrangement)
         {
             await Task.Yield();
             return arrangement;
             //throw new NotImplementedException();
         }
 
-        public async Task<ContactInfo> DiscloseContactInfoAsync(AuthorizedUser user, ContactInfo contactInfo)
+        public async Task<ContactInfo> DiscloseContactInfoAsync(ClaimsPrincipal user, ContactInfo contactInfo)
         {
             await Task.Yield();
             return contactInfo;
             //throw new NotImplementedException();
         }
 
-        public async Task<Family> DiscloseFamilyAsync(AuthorizedUser user, Family family)
+        public async Task<Family> DiscloseFamilyAsync(ClaimsPrincipal user, Family family)
         {
             await Task.Yield();
             return family;
             //throw new NotImplementedException();
         }
 
-        public async Task<Person> DisclosePersonAsync(AuthorizedUser user, Person person)
+        public async Task<Person> DisclosePersonAsync(ClaimsPrincipal user, Person person)
         {
             await Task.Yield();
             return person;
             //throw new NotImplementedException();
         }
 
-        public async Task<Referral> DiscloseReferralAsync(AuthorizedUser user, Referral referral)
+        public async Task<Referral> DiscloseReferralAsync(ClaimsPrincipal user, Referral referral)
         {
             await Task.Yield();
             return referral;
             //throw new NotImplementedException();
         }
 
-        public async Task<VolunteerFamily> DiscloseVolunteerFamilyAsync(AuthorizedUser user, VolunteerFamily volunteerFamily)
+        public async Task<VolunteerFamily> DiscloseVolunteerFamilyAsync(ClaimsPrincipal user, VolunteerFamily volunteerFamily)
         {
             await Task.Yield();
             return volunteerFamily;

@@ -32,7 +32,9 @@ namespace CareTogether.TestData
             IMultitenantEventLog<ReferralEvent> referralsEventLog,
             IMultitenantEventLog<ApprovalEvent> approvalsEventLog,
             IObjectStore<string?> draftNotesStore,
-            IObjectStore<EffectiveLocationPolicy> policiesStore)
+            IObjectStore<OrganizationConfiguration> configurationStore,
+            IObjectStore<EffectiveLocationPolicy> policiesStore,
+            IObjectStore<UserTenantAccessSummary> userTenantAccessStore)
         {
             await PopulateCommunityEvents(communityEventLog);
             await PopulateContactEvents(contactsEventLog);
@@ -40,7 +42,9 @@ namespace CareTogether.TestData
             await PopulateReferralEvents(referralsEventLog);
             await PopulateApprovalEvents(approvalsEventLog);
             await PopulateDraftNotes(draftNotesStore);
+            await PopulateConfigurations(configurationStore);
             await PopulatePolicies(policiesStore);
+            await PopulateUserTenantAccess(userTenantAccessStore);
         }
 
         
@@ -212,6 +216,22 @@ namespace CareTogether.TestData
                 "Kids are doing better playing this morning. For some reason they're both really into \"lightsabers\" or something like that... 😅");
         }
 
+        public static async Task PopulateConfigurations(IObjectStore<OrganizationConfiguration> configurationStore)
+        {
+            await configurationStore.UpsertAsync(guid1, Guid.Empty, "config",
+                new OrganizationConfiguration("CareTogether",
+                    ImmutableList<LocationConfiguration>.Empty
+                        .Add(new LocationConfiguration(Guid.Parse("22222222-2222-2222-2222-222222222222"), "Atlantis",
+                            ImmutableList<string>.Empty.AddRange(new[] { "Atlantean", "Aquatic", "Norse" }),
+                            ImmutableList<string>.Empty.AddRange(new[] { "Single", "Spouse", "Partner", "Dad", "Mom", "Relative", "Droid" })))
+                        .Add(new LocationConfiguration(Guid.Parse("33333333-3333-3333-3333-333333333333"), "El Dorado",
+                            ImmutableList<string>.Empty.AddRange(new[] { "Amazon", "Caucasian", "Other" }),
+                            ImmutableList<string>.Empty.AddRange(new[] { "Single", "Spouse", "Partner", "Dad", "Mom", "Relative", "Domestic Worker" }))),
+                    ImmutableDictionary<Guid, UserAccessConfiguration>.Empty
+                        .Add(adminId, new UserAccessConfiguration(adminId, ImmutableList<UserLocationRole>.Empty
+                            .Add(new UserLocationRole(guid2, Roles.OrganizationAdministrator))))));
+        }
+
         public static async Task PopulatePolicies(IObjectStore<EffectiveLocationPolicy> policiesStore)
         {
             await policiesStore.UpsertAsync(guid1, guid2, "1", new EffectiveLocationPolicy(1, "Local test policy",
@@ -378,6 +398,13 @@ namespace CareTogether.TestData
                                 VolunteerFamilyRequirementScope.OncePerFamily)
                         }.ToImmutableList())
                     }.ToImmutableDictionary())));
+        }
+
+        public static async Task PopulateUserTenantAccess(IObjectStore<UserTenantAccessSummary> userTenantAccessStore)
+        {
+            await userTenantAccessStore.UpsertAsync(Guid.Empty, Guid.Empty,
+                adminId.ToString(),
+                new UserTenantAccessSummary(guid1, ImmutableList<Guid>.Empty.Add(guid2)));
         }
 
 
