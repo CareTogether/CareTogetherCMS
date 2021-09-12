@@ -2623,6 +2623,7 @@
           "propertyName": "discriminator",
           "mapping": {
             "AddAdultToFamilyCommand": "#/components/schemas/AddAdultToFamilyCommand",
+            "AddChildToFamilyCommand": "#/components/schemas/AddChildToFamilyCommand",
             "CreateVolunteerFamilyWithNewAdultCommand": "#/components/schemas/CreateVolunteerFamilyWithNewAdultCommand"
           }
         },
@@ -2667,6 +2668,52 @@
               },
               "familyAdultRelationshipInfo": {
                 "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
+              },
+              "concerns": {
+                "type": "string",
+                "nullable": true
+              },
+              "notes": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "AddChildToFamilyCommand": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ApprovalCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "familyId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "firstName": {
+                "type": "string"
+              },
+              "lastName": {
+                "type": "string"
+              },
+              "gender": {
+                "$ref": "#/components/schemas/Gender"
+              },
+              "age": {
+                "$ref": "#/components/schemas/Age"
+              },
+              "ethnicity": {
+                "type": "string"
+              },
+              "custodialRelationships": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CustodialRelationship"
+                }
               },
               "concerns": {
                 "type": "string",

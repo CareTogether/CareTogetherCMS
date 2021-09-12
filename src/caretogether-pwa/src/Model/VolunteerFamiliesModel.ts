@@ -1,5 +1,5 @@
 import { atom, useRecoilCallback } from "recoil";
-import { ActivityRequirement, AddAdultToFamilyCommand, Age, ApprovalCommand, CreateVolunteerFamilyWithNewAdultCommand, FamilyAdultRelationshipInfo, FormUploadRequirement, Gender, PerformVolunteerActivity, PerformVolunteerFamilyActivity, UploadVolunteerFamilyForm, UploadVolunteerForm, VolunteerCommand, VolunteerFamiliesClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
+import { ActivityRequirement, AddAdultToFamilyCommand, AddChildToFamilyCommand, Age, ApprovalCommand, CreateVolunteerFamilyWithNewAdultCommand, FamilyAdultRelationshipInfo, FormUploadRequirement, Gender, PerformVolunteerActivity, PerformVolunteerFamilyActivity, UploadVolunteerFamilyForm, UploadVolunteerForm, VolunteerCommand, VolunteerFamiliesClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { uploadFileToTenant } from "./FilesModel";
@@ -156,6 +156,20 @@ export function useVolunteerFamiliesModel() {
       });
       return command;
     });
+  const addChild = useApprovalCommandCallback(
+    async (volunteerFamilyId, firstName: string, lastName: string, gender: Gender, age: Age, ethnicity: string,
+        notes?: string, concerns?: string) => {
+      const command = new AddChildToFamilyCommand();
+      command.familyId = volunteerFamilyId;
+      command.firstName = firstName;
+      command.lastName = lastName;
+      command.gender = gender;
+      command.age = age;
+      command.ethnicity = ethnicity;
+      command.concerns = concerns;
+      command.notes = notes;
+      return command;
+    });
   const createVolunteerFamilyWithNewAdult = useApprovalCommandCallback(
     async (firstName: string, lastName: string, gender: Gender, age: Age, ethnicity: string,
       isInHousehold: boolean, relationshipToFamily?: string,
@@ -181,6 +195,7 @@ export function useVolunteerFamiliesModel() {
     uploadFormPerson,
     performActivityPerson,
     addAdult,
+    addChild,
     createVolunteerFamilyWithNewAdult
   };
 }

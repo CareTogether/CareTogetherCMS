@@ -4678,6 +4678,11 @@ export abstract class ApprovalCommand implements IApprovalCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "AddChildToFamilyCommand") {
+            let result = new AddChildToFamilyCommand();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "CreateVolunteerFamilyWithNewAdultCommand") {
             let result = new CreateVolunteerFamilyWithNewAdultCommand();
             result.init(data);
@@ -4758,6 +4763,80 @@ export interface IAddAdultToFamilyCommand extends IApprovalCommand {
     age?: Age;
     ethnicity?: string;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
+    concerns?: string | undefined;
+    notes?: string | undefined;
+}
+
+export class AddChildToFamilyCommand extends ApprovalCommand implements IAddChildToFamilyCommand {
+    familyId?: string;
+    firstName?: string;
+    lastName?: string;
+    gender?: Gender;
+    age?: Age;
+    ethnicity?: string;
+    custodialRelationships?: CustodialRelationship[];
+    concerns?: string | undefined;
+    notes?: string | undefined;
+
+    constructor(data?: IAddChildToFamilyCommand) {
+        super(data);
+        this._discriminator = "AddChildToFamilyCommand";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.familyId = _data["familyId"];
+            this.firstName = _data["firstName"];
+            this.lastName = _data["lastName"];
+            this.gender = _data["gender"];
+            this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
+            this.ethnicity = _data["ethnicity"];
+            if (Array.isArray(_data["custodialRelationships"])) {
+                this.custodialRelationships = [] as any;
+                for (let item of _data["custodialRelationships"])
+                    this.custodialRelationships!.push(CustodialRelationship.fromJS(item));
+            }
+            this.concerns = _data["concerns"];
+            this.notes = _data["notes"];
+        }
+    }
+
+    static fromJS(data: any): AddChildToFamilyCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new AddChildToFamilyCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["familyId"] = this.familyId;
+        data["firstName"] = this.firstName;
+        data["lastName"] = this.lastName;
+        data["gender"] = this.gender;
+        data["age"] = this.age ? this.age.toJSON() : <any>undefined;
+        data["ethnicity"] = this.ethnicity;
+        if (Array.isArray(this.custodialRelationships)) {
+            data["custodialRelationships"] = [];
+            for (let item of this.custodialRelationships)
+                data["custodialRelationships"].push(item.toJSON());
+        }
+        data["concerns"] = this.concerns;
+        data["notes"] = this.notes;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IAddChildToFamilyCommand extends IApprovalCommand {
+    familyId?: string;
+    firstName?: string;
+    lastName?: string;
+    gender?: Gender;
+    age?: Age;
+    ethnicity?: string;
+    custodialRelationships?: CustodialRelationship[];
     concerns?: string | undefined;
     notes?: string | undefined;
 }
