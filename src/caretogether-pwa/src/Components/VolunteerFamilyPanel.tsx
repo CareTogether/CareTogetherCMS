@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Container, Toolbar, Chip, Button, Menu, MenuItem, Divider, useMediaQuery, useTheme } from '@material-ui/core';
-import { VolunteerFamily, FormUploadRequirement, ActionRequirement, ActivityRequirement, Person, Gender } from '../GeneratedClient';
+import { VolunteerFamily, FormUploadRequirement, ActionRequirement, ActivityRequirement, Person, Gender, CustodialRelationshipType } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { adultActivityTypesData, adultDocumentTypesData, familyActivityTypesData, familyDocumentTypesData } from '../Model/ConfigurationModel';
 import { RoleApprovalStatus } from '../GeneratedClient';
@@ -14,6 +14,7 @@ import { RecordVolunteerAdultStepDialog } from './RecordVolunteerAdultStepDialog
 import { AddAdultDialog } from './AddAdultDialog';
 import { format } from 'date-fns';
 import { ArrowBack } from '@material-ui/icons';
+import { AddChildDialog } from './AddChildDialog';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -65,7 +66,7 @@ export function VolunteerFamilyPanel({volunteerFamilyId, onBack}: VolunteerFamil
   }
 
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
-  //const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
+  const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
 
   return (
   <Container>
@@ -181,20 +182,21 @@ export function VolunteerFamilyPanel({volunteerFamilyId, onBack}: VolunteerFamil
     </Menu>
     {(recordAdultStepParameter && <RecordVolunteerAdultStepDialog volunteerFamily={volunteerFamily} adult={recordAdultStepParameter.adult}
       stepActionRequirement={recordAdultStepParameter.requirement} onClose={() => setRecordAdultStepParameter(null)} />) || null}
-    {/* <Divider />
+    <Divider />
     <Toolbar variant="dense" disableGutters={true}>
       <h3 className={classes.sectionHeading}>Children</h3>
       &nbsp;
       <Button
-        // onClick={() => setAddChildDialogOpen(true)}
+        onClick={() => setAddChildDialogOpen(true)}
         variant="contained" color="default" size="small" className={classes.button}
         startIcon={<AddCircleIcon />}>
         Add Child
       </Button>
     </Toolbar>
+    <AddChildDialog volunteerFamily={volunteerFamily} open={addChildDialogOpen} onClose={() => setAddChildDialogOpen(false)} />
     {volunteerFamily.family?.children?.map(child => (
       <React.Fragment key={child.id}>
-        <h4 className={classes.sectionHeading}>{child.firstName} {child.lastName} (<AgeText age={child.age} />)</h4>
+        <h4 className={classes.sectionHeading}>{child.firstName} {child.lastName} (<AgeText age={child.age} /> {typeof(child.gender) === 'undefined' ? "" : Gender[child.gender]} {child.ethnicity})</h4>
         <Container>
           <ul>
             {volunteerFamily.family?.custodialRelationships?.filter(relationship => relationship.childId === child.id)?.map(relationship => (
@@ -209,8 +211,12 @@ export function VolunteerFamilyPanel({volunteerFamilyId, onBack}: VolunteerFamil
               </li>
             ))}
           </ul>
+          <dl>
+            {child.concerns && <><dt><strong>⚠ Concerns</strong></dt><dd>{child.concerns}</dd></>}
+            {child.notes && <><dt>📝 Notes</dt><dd>{child.notes}</dd></>}
+          </dl>
         </Container>
       </React.Fragment>
-    ))} */}
+    ))}
   </Container>);
 }
