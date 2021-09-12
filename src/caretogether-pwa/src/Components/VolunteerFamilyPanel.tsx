@@ -196,7 +196,7 @@ export function VolunteerFamilyPanel({volunteerFamilyId, onBack}: VolunteerFamil
     <AddChildDialog volunteerFamily={volunteerFamily} open={addChildDialogOpen} onClose={() => setAddChildDialogOpen(false)} />
     {volunteerFamily.family?.children?.map(child => (
       <React.Fragment key={child.id}>
-        <h4 className={classes.sectionHeading}>{child.firstName} {child.lastName} (<AgeText age={child.age} />)</h4>
+        <h4 className={classes.sectionHeading}>{child.firstName} {child.lastName} (<AgeText age={child.age} /> {typeof(child.gender) === 'undefined' ? "" : Gender[child.gender]} {child.ethnicity})</h4>
         <Container>
           <ul>
             {volunteerFamily.family?.custodialRelationships?.filter(relationship => relationship.childId === child.id)?.map(relationship => (
@@ -211,6 +211,10 @@ export function VolunteerFamilyPanel({volunteerFamilyId, onBack}: VolunteerFamil
               </li>
             ))}
           </ul>
+          <dl>
+            {child.concerns && <><dt><strong>⚠ Concerns</strong></dt><dd>{child.concerns}</dd></>}
+            {child.notes && <><dt>📝 Notes</dt><dd>{child.notes}</dd></>}
+          </dl>
         </Container>
       </React.Fragment>
     ))}

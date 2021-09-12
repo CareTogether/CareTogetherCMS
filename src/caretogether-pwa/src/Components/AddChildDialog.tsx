@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@material-ui/core';
-import { VolunteerFamily, Age, ExactAge, AgeInYears, Gender } from '../GeneratedClient';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@material-ui/core';
+import { VolunteerFamily, Age, ExactAge, AgeInYears, Gender, CustodialRelationshipType, CustodialRelationship } from '../GeneratedClient';
 import { useVolunteerFamiliesModel } from '../Model/VolunteerFamiliesModel';
 import WarningIcon from '@material-ui/icons/Warning';
 import { KeyboardDatePicker } from '@material-ui/pickers';
@@ -33,11 +33,14 @@ export function AddChildDialog({volunteerFamily, open, onClose}: AddChildDialogP
     dateOfBirth: null as Date | null,
     ageInYears: null as number | null,
     ethnicity: '',
+    custodialRelationships: volunteerFamily.family!.adults!.map(adult =>
+      ({ adult: adult.item1!, relationship: CustodialRelationshipType.ParentWithCustody as CustodialRelationshipType | -1 })),
     notes: null as string | null,
     concerns: null as string | null
   });
   const {
     firstName, lastName, gender, dateOfBirth, ageInYears, ethnicity,
+    custodialRelationships,
     notes, concerns } = fields;
   const [ageType, setAgeType] = useState<'exact' | 'inYears'>('exact');
   const volunteerFamiliesModel = useVolunteerFamiliesModel();
@@ -67,6 +70,12 @@ export function AddChildDialog({volunteerFamily, open, onClose}: AddChildDialogP
       }
       await volunteerFamiliesModel.addChild(volunteerFamily.family?.id as string,
         firstName, lastName, gender as Gender, age, ethnicity,
+        custodialRelationships.filter(cr => cr.relationship !== -1).map(cr => {
+          const result = new CustodialRelationship();
+          result.personId = cr.adult.id;
+          result.type = cr.relationship as CustodialRelationshipType;
+          return result;
+        }),
         (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
       //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
       onClose();
@@ -78,6 +87,7 @@ export function AddChildDialog({volunteerFamily, open, onClose}: AddChildDialogP
         dateOfBirth: null as Date | null,
         ageInYears: null as number | null,
         ethnicity: '',
+        custodialRelationships: [],
         notes: null as string | null,
         concerns: null as string | null
       });
@@ -157,6 +167,38 @@ export function AddChildDialog({volunteerFamily, open, onClose}: AddChildDialogP
                       <MenuItem key={ethnicity} value={ethnicity}>{ethnicity}</MenuItem>)}
                 </Select>
               </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+              <table>
+                <thead>
+                  <tr>
+                    <td>Adult</td>
+                    <td>Custodial Relationship</td>
+                  </tr>
+                </thead>
+                <tbody>
+                  {custodialRelationships.map(custodialRelationship => (
+                    <tr key={custodialRelationship.adult.id}>
+                      <td>{custodialRelationship.adult.firstName + " " + custodialRelationship.adult.lastName}</td>
+                      <td>
+                        <FormControl required fullWidth size="small">
+                          <Select
+                            id={"custodial-relationship-"+custodialRelationship.adult.id}
+                            value={custodialRelationship.relationship}
+                            onChange={e => {console.log(e.target.value); setFields({...fields, custodialRelationships: custodialRelationships.map(cr => cr.adult.id === custodialRelationship.adult.id
+                              ? { adult: custodialRelationship.adult, relationship: e.target.value as CustodialRelationshipType | -1 }
+                              : cr) });}}>
+                              <MenuItem key="none" value={-1}>None</MenuItem>
+                              <MenuItem key='ParentWithCustody' value={CustodialRelationshipType.ParentWithCustody}>Parent with custody</MenuItem>
+                              <MenuItem key='ParentWithCourtAppointedCustody' value={CustodialRelationshipType.ParentWithCourtAppointedCustody}>Parent with court-appointed custody</MenuItem>
+                              <MenuItem key='LegalGuardian' value={CustodialRelationshipType.LegalGuardian}>Legal guardian</MenuItem>
+                          </Select>
+                        </FormControl>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </Grid>
             <Grid item xs={12}>
               <TextField

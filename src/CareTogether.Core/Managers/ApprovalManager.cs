@@ -143,7 +143,8 @@ namespace CareTogether.Managers
                         var childPersonId = Guid.NewGuid();
                         var createPersonSubcommand = new CreatePerson(childPersonId, null, c.FirstName, c.LastName,
                             c.Gender, c.Age, c.Ethnicity, c.Concerns, c.Notes);
-                        var addChildToFamilySubcommand = new AddChildToFamily(c.FamilyId, childPersonId, c.CustodialRelationships);
+                        var addChildToFamilySubcommand = new AddChildToFamily(c.FamilyId, childPersonId, c.CustodialRelationships.Select(cr =>
+                            cr with { ChildId = childPersonId }).ToList());
 
                         //TODO: Authorize the subcommands via the policy evaluation engine
 
