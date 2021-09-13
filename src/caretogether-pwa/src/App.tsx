@@ -10,9 +10,6 @@ import { Route, Switch, Redirect, BrowserRouter as Router } from "react-router-d
 import { ListItemLink } from './Components/ListItemLink';
 import { Arrangements } from './Components/Arrangements';
 import { Referrals } from './Components/Referrals';
-import { VolunteerApproval } from './Components/VolunteerApproval';
-import { VolunteerApplications } from './Components/VolunteerApplications';
-import { VolunteerProgress } from './Components/VolunteerProgress';
 import { Contacts } from './Components/Contacts';
 import { Communities } from './Components/Communities';
 import { useRecoilValue } from 'recoil';
@@ -89,22 +86,18 @@ const useStyles = makeStyles((theme) => ({
     flexGrow: 1,
     height: '100vh',
     overflow: 'auto',
-  },
-  container: {
-    paddingTop: theme.spacing(4),
-    paddingBottom: theme.spacing(4),
-  },
+  }
 }));
 
 const mainListItems = (
   <List aria-label="main navigation">
     <ListItemLink to="/dashboard" primary="Dashboard" icon={<DashboardIcon />} />
-    <ListItemLink to="/referrals" primary="Referrals" icon={<PermPhoneMsgIcon />} />
   </List>
 );
 
 const secondaryListItems = (
   <List aria-label="secondary navigation">
+    <ListItemLink to="/referrals" primary="Referrals" icon={<PermPhoneMsgIcon />} />
     <ListItemLink to="/volunteers" primary="Volunteers" icon={<PeopleIcon />} />
   </List>
 );
@@ -156,7 +149,6 @@ function App() {
           </Drawer>}
         <main className={classes.content}>
           <div className={classes.appBarSpacer} />
-          {/* <Container maxWidth="lg" className={classes.container}> */}
           <React.Suspense fallback={<div>Loading...</div>}>
             <Switch>
               <Route path="/dashboard">
@@ -171,15 +163,6 @@ function App() {
               <Route path="/volunteers">
                 <Volunteers />
               </Route>
-              <Route path="/volunteerApproval">
-                <VolunteerApproval />
-              </Route>
-              <Route path="/volunteerApplications">
-                <VolunteerApplications />
-              </Route>
-              <Route path="/volunteerProgress">
-                <VolunteerProgress />
-              </Route>
               <Route path="/contacts">
                 <Contacts />
               </Route>
@@ -187,11 +170,10 @@ function App() {
                 <Communities />
               </Route>
               <Route>
-                <Redirect to="/volunteerApproval" />
+                <Redirect to="/volunteers" />
               </Route>
             </Switch>
           </React.Suspense>
-          {/* </Container> */}
           {isMobile && <Footer></Footer>}
         </main>
       </Router>
