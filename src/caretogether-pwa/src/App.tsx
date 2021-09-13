@@ -1,12 +1,12 @@
 import React from 'react';
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
-import { Typography, CssBaseline, IconButton, Drawer, Divider, List, BottomNavigation, BottomNavigationAction, useMediaQuery, useTheme } from '@material-ui/core';
+import { Typography, CssBaseline, IconButton, Drawer, Divider, List, useMediaQuery, useTheme } from '@material-ui/core';
 import PermPhoneMsgIcon from '@material-ui/icons/PermPhoneMsg';
 import PeopleIcon from '@material-ui/icons/People';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import DashboardIcon from '@material-ui/icons/Dashboard';
-import { Route, Switch, Redirect, BrowserRouter as Router, Link } from "react-router-dom";
+import { Route, Switch, Redirect, BrowserRouter as Router } from "react-router-dom";
 import { ListItemLink } from './Components/ListItemLink';
 import { Arrangements } from './Components/Arrangements';
 import { Referrals } from './Components/Referrals';
@@ -20,6 +20,7 @@ import { locationNameData, organizationNameData } from './Model/ConfigurationMod
 import { Volunteers } from './Components/Volunteers';
 import Header from './Components/Header';
 import { Dashboard } from './Components/Dashboard';
+import Footer from './Components/Footer';
 
 const copyrightStyles = makeStyles((theme) => ({
   copyright: {
@@ -93,11 +94,6 @@ const useStyles = makeStyles((theme) => ({
     paddingTop: theme.spacing(4),
     paddingBottom: theme.spacing(4),
   },
-  stickToBottom: {
-    width: '100%',
-    position: 'fixed',
-    bottom: 0,
-  },
 }));
 
 const mainListItems = (
@@ -122,7 +118,6 @@ function App() {
   const handleDrawerClose = () => {
     setOpen(false);
   };
-  const [selectedBottomNavAction, setSelectedBottomNavAction] = React.useState(0);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -197,19 +192,8 @@ function App() {
             </Switch>
           </React.Suspense>
           {/* </Container> */}
+          {isMobile && <Footer></Footer>}
         </main>
-        {isMobile ? <BottomNavigation
-          value={selectedBottomNavAction}
-          onChange={(_, newValue) => {
-            setSelectedBottomNavAction(newValue);
-          }}
-          showLabels
-          className={classes.stickToBottom}
-        >
-          <BottomNavigationAction component={Link} to="/dashboard" label="Dashboard" icon={<DashboardIcon />} />
-          <BottomNavigationAction component={Link} to="/referrals" label="Referrals" icon={<PermPhoneMsgIcon />} />
-          <BottomNavigationAction component={Link} to="/volunteers" label="Volunteers" icon={<PeopleIcon />} />
-        </BottomNavigation> : null}
       </Router>
     </div>
   );

@@ -138,6 +138,38 @@ namespace CareTogether.Managers
                         }
                         break;
                     }
+                case AddChildToFamilyCommand c:
+                    {
+                        var childPersonId = Guid.NewGuid();
+                        var createPersonSubcommand = new CreatePerson(childPersonId, null, c.FirstName, c.LastName,
+                            c.Gender, c.Age, c.Ethnicity, c.Concerns, c.Notes);
+                        var addChildToFamilySubcommand = new AddChildToFamily(c.FamilyId, childPersonId, c.CustodialRelationships.Select(cr =>
+                            cr with { ChildId = childPersonId }).ToList());
+
+                        //TODO: Authorize the subcommands via the policy evaluation engine
+
+                        var createPersonResult = await communitiesResource.ExecutePersonCommandAsync(organizationId, locationId,
+                            createPersonSubcommand, user.UserId());
+                        if (createPersonResult.TryPickT0(out var person, out var notFound1))
+                        {
+                            var addChildToFamilyResult = await communitiesResource.ExecuteFamilyCommandAsync(organizationId, locationId,
+                                addChildToFamilySubcommand, user.UserId());
+                            if (addChildToFamilyResult.TryPickT0(out var family, out var notFound2))
+                            {
+                                var families = communitiesResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+                                var contacts = contactsResource.ListContactsAsync(organizationId, locationId).Result;
+
+                                var volunteerFamilyResult = await approvalsResource.GetVolunteerFamilyAsync(organizationId, locationId, c.FamilyId);
+                                if (volunteerFamilyResult.TryPickT0(out var volunteerFamilyEntry, out var notFound3))
+                                {
+                                    var disclosedVolunteerFamily = await policyEvaluationEngine.DiscloseVolunteerFamilyAsync(user,
+                                        await ToVolunteerFamilyAsync(organizationId, locationId, volunteerFamilyEntry, families, contacts));
+                                    return disclosedVolunteerFamily;
+                                }
+                            }
+                        }
+                        break;
+                    }
                 case CreateVolunteerFamilyWithNewAdultCommand c:
                     {
                         var adultPersonId = Guid.NewGuid();
