@@ -1,11 +1,8 @@
 import React from 'react';
 import clsx from 'clsx';
-import { AppBar, Toolbar, IconButton, Typography, InputBase, Badge, useMediaQuery, useTheme, fade, Button, ButtonGroup } from "@material-ui/core";
+import { AppBar, Toolbar, IconButton, Typography, useMediaQuery, useTheme, fade, Button, ButtonGroup } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
-
-import SearchIcon from '@material-ui/icons/Search';
 import MenuIcon from '@material-ui/icons/Menu';
-import NotificationsIcon from '@material-ui/icons/Notifications';
 import { Link, useLocation, useRouteMatch } from 'react-router-dom';
 
 const drawerWidth = 200;
@@ -130,24 +127,6 @@ function Header(props: HeaderProps) {
                     <Button color={location.pathname === "/volunteers/applications" ? 'default' : 'inherit'} component={Link} to={"/volunteers/applications"}>Applications</Button>
                     <Button color={location.pathname === "/volunteers/progress" ? 'default' : 'inherit'} component={Link} to={"/volunteers/progress"}>Progress</Button>
                 </ButtonGroup>}
-                <div className={classes.search}>
-                    <div className={classes.searchIcon}>
-                        <SearchIcon />
-                    </div>
-                    <InputBase
-                        placeholder="Search…"
-                        classes={{
-                            root: classes.inputRoot,
-                            input: classes.inputInput,
-                        }}
-                        inputProps={{ 'aria-label': 'search' }}
-                    />
-                </div>
-                <IconButton color="inherit">
-                    <Badge badgeContent={4} color="secondary">
-                        <NotificationsIcon />
-                    </Badge>
-                </IconButton>
             </Toolbar>
         </AppBar>
     );
