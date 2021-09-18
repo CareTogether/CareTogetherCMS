@@ -1,5 +1,5 @@
 import { makeStyles } from '@material-ui/core/styles';
-import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Drawer, Fab } from '@material-ui/core';
+import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab } from '@material-ui/core';
 import { Gender, ExactAge, AgeInYears } from '../GeneratedClient';
 import { differenceInYears } from 'date-fns';
 import { useRecoilValue } from 'recoil';
@@ -7,10 +7,9 @@ import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
 import { policyData } from '../Model/ConfigurationModel';
 import { RoleApprovalStatus } from '../GeneratedClient';
 import React, { useState } from 'react';
-import clsx from 'clsx';
-import { VolunteerFamilyPanel } from './VolunteerFamilyPanel';
 import AddIcon from '@material-ui/icons/Add';
 import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';
+import { useHistory } from 'react-router-dom';
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -49,6 +48,7 @@ function approvalStatus(value: number | undefined) {
 
 function VolunteerApproval() {
   const classes = useStyles();
+  const history = useHistory();
 
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
   const policy = useRecoilValue(policyData);
@@ -62,7 +62,9 @@ function VolunteerApproval() {
     Object.entries(policy.volunteerPolicy?.volunteerRoles).map(([key]) => key))
     || [];
 
-  const [selectedVolunteerFamilyId, setSelectedVolunteerFamilyId] = useState<string | null>(null);
+  function openVolunteerFamily(volunteerFamilyId: string) {
+    history.push(`/volunteers/family/${volunteerFamilyId}`);
+  }
   const [createVolunteerFamilyDialogOpen, setCreateVolunteerFamilyDialogOpen] = useState(false);
 
   return (
@@ -85,7 +87,7 @@ function VolunteerApproval() {
             <TableBody>
               {volunteerFamilies.map((volunteerFamily) => (
                 <React.Fragment key={volunteerFamily.family?.id}>
-                  <TableRow className={classes.familyRow} onClick={() => setSelectedVolunteerFamilyId(volunteerFamily.family?.id || null)}>
+                  <TableRow className={classes.familyRow} onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}>
                     <TableCell key="1" colSpan={4}>{
                       volunteerFamily.family?.adults
                         ?.filter(adult => volunteerFamily.family?.primaryFamilyContactPersonId === adult.item1?.id)
@@ -99,7 +101,7 @@ function VolunteerApproval() {
                   </TableRow>
                   {volunteerFamily.family?.adults?.map(adult => adult.item1 && (
                     <TableRow key={volunteerFamily.family?.id + ":" + adult.item1.id}
-                      onClick={() => setSelectedVolunteerFamilyId(volunteerFamily.family?.id || null)}
+                      onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}
                       className={classes.adultRow}>
                       <TableCell>{adult.item1.firstName}</TableCell>
                       <TableCell>{adult.item1.lastName}</TableCell>
@@ -120,7 +122,7 @@ function VolunteerApproval() {
                   ))}
                   {volunteerFamily.family?.children?.map(child => (
                     <TableRow key={volunteerFamily.family?.id + ":" + child.id}
-                      onClick={() => setSelectedVolunteerFamilyId(volunteerFamily.family?.id || null)}
+                      onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}
                       className={classes.childRow}>
                       <TableCell>{child.firstName}</TableCell>
                       <TableCell>{child.lastName}</TableCell>
@@ -146,11 +148,6 @@ function VolunteerApproval() {
           <AddIcon />
         </Fab>
         <CreateVolunteerFamilyDialog open={createVolunteerFamilyDialogOpen} onClose={() => setCreateVolunteerFamilyDialogOpen(false)} /> {/* TODO: Also open the family panel to the created family! */}
-        <Drawer anchor="right" classes={{
-            paper: clsx(classes.drawerPaper),
-          }} open={selectedVolunteerFamilyId !== null} onClose={() => setSelectedVolunteerFamilyId(null)}>
-          {(selectedVolunteerFamilyId && <VolunteerFamilyPanel volunteerFamilyId={selectedVolunteerFamilyId} onBack={() => setSelectedVolunteerFamilyId(null)}/>) || null}
-        </Drawer>
       </Grid>
     </Grid>
   );
