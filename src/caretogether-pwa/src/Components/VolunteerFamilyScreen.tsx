@@ -117,7 +117,7 @@ export function VolunteerFamilyScreen() {
         Add Adult
       </Button>
     </Toolbar>
-    <AddAdultDialog volunteerFamily={volunteerFamily} open={addAdultDialogOpen} onClose={() => setAddAdultDialogOpen(false)} />
+    {addAdultDialogOpen && <AddAdultDialog onClose={() => setAddAdultDialogOpen(false)} />}
     {volunteerFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item2 && (
       <React.Fragment key={adult.item1.id}>
         <h4 className={classes.sectionHeading}>

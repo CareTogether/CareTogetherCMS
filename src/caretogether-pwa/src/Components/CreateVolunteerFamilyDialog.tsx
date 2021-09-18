@@ -19,11 +19,10 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 interface CreateVolunteerFamilyDialogProps {
-  open: boolean,
   onClose: () => void
 }
 
-export function CreateVolunteerFamilyDialog({open, onClose}: CreateVolunteerFamilyDialogProps) {
+export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDialogProps) {
   const classes = useStyles();
   const [fields, setFields] = useState({
     firstName: '',
@@ -77,24 +76,11 @@ export function CreateVolunteerFamilyDialog({open, onClose}: CreateVolunteerFami
       //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
       //TODO: Retrieve the created volunteer family and return it through this onClose callback!
       onClose();
-      // Since this dialog can be kept around, reset the state so the user can't accidentally submit previous values again.
-      setFields({
-        firstName: '',
-        lastName: '',
-        gender: null as Gender | null,
-        dateOfBirth: null as Date | null,
-        ageInYears: null as number | null,
-        ethnicity: '',
-        isInHousehold: true,
-        relationshipToFamily: '',
-        notes: null as string | null,
-        concerns: null as string | null
-      });
     }
   }
 
   return (
-    <Dialog open={open} onClose={onClose} scroll='body' aria-labelledby="create-family-title">
+    <Dialog open={true} onClose={onClose} scroll='body' aria-labelledby="create-family-title">
       <DialogTitle id="create-family-title">
         Create Volunteer Family - First Adult
       </DialogTitle>
