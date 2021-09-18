@@ -117,11 +117,11 @@ function Header(props: HeaderProps) {
                 >
                     <MenuIcon />
                 </IconButton>
-                <Typography component="h1" variant="h6" color="inherit" noWrap className={classes.title}>
+                {!isMobile && <Typography component="h1" variant="h6" color="inherit" noWrap className={classes.title}>
                     {dashboardMatch && "Dashboard"}
                     {referralsMatch && "Referrals"}
                     {volunteerMatch && "Volunteers"}
-                </Typography>
+                </Typography>}
                 {volunteerMatch && <ButtonGroup variant="text" color="inherit" aria-label="text inherit button group">
                     <Button color={location.pathname === "/volunteers/approval" ? 'default' : 'inherit'} component={Link} to={"/volunteers/approval"}>Approvals</Button>
                     <Button color={location.pathname === "/volunteers/applications" ? 'default' : 'inherit'} component={Link} to={"/volunteers/applications"}>Applications</Button>
