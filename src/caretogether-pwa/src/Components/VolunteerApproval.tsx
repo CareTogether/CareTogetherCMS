@@ -147,7 +147,10 @@ function VolunteerApproval() {
           onClick={() => setCreateVolunteerFamilyDialogOpen(true)}>
           <AddIcon />
         </Fab>
-        {createVolunteerFamilyDialogOpen && <CreateVolunteerFamilyDialog onClose={() => setCreateVolunteerFamilyDialogOpen(false)} />} {/* TODO: Also open the family panel to the created family! */}
+        {createVolunteerFamilyDialogOpen && <CreateVolunteerFamilyDialog onClose={(volunteerFamilyId) => {
+          setCreateVolunteerFamilyDialogOpen(false);
+          volunteerFamilyId && history.push(`/volunteers/family/${volunteerFamilyId}`);
+        }} />}
       </Grid>
     </Grid>
   );

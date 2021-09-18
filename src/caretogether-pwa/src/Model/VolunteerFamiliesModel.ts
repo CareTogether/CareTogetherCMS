@@ -83,6 +83,8 @@ function useApprovalCommandCallback<T extends unknown[]>(
           ? updatedFamily
           : currentEntry)
         : current.concat(updatedFamily));
+      
+      return updatedFamily;
     };
     return asyncCallback;
   })

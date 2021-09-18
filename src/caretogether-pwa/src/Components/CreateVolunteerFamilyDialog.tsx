@@ -19,7 +19,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 interface CreateVolunteerFamilyDialogProps {
-  onClose: () => void
+  onClose: (volunteerFamilyId?: string) => void
 }
 
 export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDialogProps) {
@@ -69,18 +69,18 @@ export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDial
         (age as AgeInYears).years = (ageInYears == null ? undefined : ageInYears);
         (age as AgeInYears).asOf = new Date();
       }
-      /*const newFamily =*/ await volunteerFamiliesModel.createVolunteerFamilyWithNewAdult(
+      const newFamily = await volunteerFamiliesModel.createVolunteerFamilyWithNewAdult(
         firstName, lastName, gender as Gender, age, ethnicity,
         isInHousehold, relationshipToFamily,
         (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
       //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
       //TODO: Retrieve the created volunteer family and return it through this onClose callback!
-      onClose();
+      onClose(newFamily.family?.id);
     }
   }
 
   return (
-    <Dialog open={true} onClose={onClose} scroll='body' aria-labelledby="create-family-title">
+    <Dialog open={true} onClose={() => onClose()} scroll='body' aria-labelledby="create-family-title">
       <DialogTitle id="create-family-title">
         Create Volunteer Family - First Adult
       </DialogTitle>
@@ -204,7 +204,7 @@ export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDial
         </form>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} color="secondary">
+        <Button onClick={() => onClose()} color="secondary">
           Cancel
         </Button>
         <Button onClick={addAdult} variant="contained" color="primary">
