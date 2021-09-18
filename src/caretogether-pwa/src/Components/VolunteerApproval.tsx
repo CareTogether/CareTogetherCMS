@@ -126,6 +126,7 @@ function VolunteerApproval() {
                       className={classes.childRow}>
                       <TableCell>{child.firstName}</TableCell>
                       <TableCell>{child.lastName}</TableCell>
+                      <TableCell>{typeof(child.gender) === 'undefined' ? "" : Gender[child.gender]}</TableCell>
                       <TableCell align="right">
                         { child.age instanceof ExactAge
                           ? child.age.dateOfBirth && differenceInYears(new Date(), child.age.dateOfBirth)
@@ -147,7 +148,10 @@ function VolunteerApproval() {
           onClick={() => setCreateVolunteerFamilyDialogOpen(true)}>
           <AddIcon />
         </Fab>
-        <CreateVolunteerFamilyDialog open={createVolunteerFamilyDialogOpen} onClose={() => setCreateVolunteerFamilyDialogOpen(false)} /> {/* TODO: Also open the family panel to the created family! */}
+        {createVolunteerFamilyDialogOpen && <CreateVolunteerFamilyDialog onClose={(volunteerFamilyId) => {
+          setCreateVolunteerFamilyDialogOpen(false);
+          volunteerFamilyId && history.push(`/volunteers/family/${volunteerFamilyId}`);
+        }} />}
       </Grid>
     </Grid>
   );

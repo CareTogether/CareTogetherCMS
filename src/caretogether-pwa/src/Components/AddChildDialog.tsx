@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@material-ui/core';
 import { VolunteerFamily, Age, ExactAge, AgeInYears, Gender, CustodialRelationshipType, CustodialRelationship } from '../GeneratedClient';
-import { useVolunteerFamiliesModel } from '../Model/VolunteerFamiliesModel';
+import { useVolunteerFamiliesModel, volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
 import WarningIcon from '@material-ui/icons/Warning';
 import { KeyboardDatePicker } from '@material-ui/pickers';
 import { useRecoilValue } from 'recoil';
 import { ethnicitiesData } from '../Model/ConfigurationModel';
+import { useParams } from 'react-router-dom';
 
 const useStyles = makeStyles((theme) => ({
   form: {
@@ -19,13 +20,15 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 interface AddChildDialogProps {
-  volunteerFamily: VolunteerFamily,
-  open: boolean,
   onClose: () => void
 }
 
-export function AddChildDialog({volunteerFamily, open, onClose}: AddChildDialogProps) {
+export function AddChildDialog({onClose}: AddChildDialogProps) {
   const classes = useStyles();
+  const { volunteerFamilyId } = useParams<{ volunteerFamilyId: string }>();
+  const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
+  const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as VolunteerFamily;
+
   const [fields, setFields] = useState({
     firstName: '',
     lastName: '',
@@ -79,23 +82,11 @@ export function AddChildDialog({volunteerFamily, open, onClose}: AddChildDialogP
         (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
       //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
       onClose();
-      // Since this dialog can be kept around, reset the state so the user can't accidentally submit previous values again.
-      setFields({
-        firstName: '',
-        lastName: '',
-        gender: null as Gender | null,
-        dateOfBirth: null as Date | null,
-        ageInYears: null as number | null,
-        ethnicity: '',
-        custodialRelationships: [],
-        notes: null as string | null,
-        concerns: null as string | null
-      });
     }
   }
 
   return (
-    <Dialog open={open} onClose={onClose} scroll='body' aria-labelledby="add-child-title">
+    <Dialog open={true} onClose={onClose} scroll='body' aria-labelledby="add-child-title">
       <DialogTitle id="add-child-title">
         Add Child to {volunteerFamily.family?.adults?.filter(adult => adult.item1?.id === volunteerFamily.family?.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family
       </DialogTitle>

@@ -19,11 +19,10 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 interface CreateVolunteerFamilyDialogProps {
-  open: boolean,
-  onClose: () => void
+  onClose: (volunteerFamilyId?: string) => void
 }
 
-export function CreateVolunteerFamilyDialog({open, onClose}: CreateVolunteerFamilyDialogProps) {
+export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDialogProps) {
   const classes = useStyles();
   const [fields, setFields] = useState({
     firstName: '',
@@ -70,31 +69,18 @@ export function CreateVolunteerFamilyDialog({open, onClose}: CreateVolunteerFami
         (age as AgeInYears).years = (ageInYears == null ? undefined : ageInYears);
         (age as AgeInYears).asOf = new Date();
       }
-      /*const newFamily =*/ await volunteerFamiliesModel.createVolunteerFamilyWithNewAdult(
+      const newFamily = await volunteerFamiliesModel.createVolunteerFamilyWithNewAdult(
         firstName, lastName, gender as Gender, age, ethnicity,
         isInHousehold, relationshipToFamily,
         (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
       //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
       //TODO: Retrieve the created volunteer family and return it through this onClose callback!
-      onClose();
-      // Since this dialog can be kept around, reset the state so the user can't accidentally submit previous values again.
-      setFields({
-        firstName: '',
-        lastName: '',
-        gender: null as Gender | null,
-        dateOfBirth: null as Date | null,
-        ageInYears: null as number | null,
-        ethnicity: '',
-        isInHousehold: true,
-        relationshipToFamily: '',
-        notes: null as string | null,
-        concerns: null as string | null
-      });
+      onClose(newFamily.family?.id);
     }
   }
 
   return (
-    <Dialog open={open} onClose={onClose} scroll='body' aria-labelledby="create-family-title">
+    <Dialog open={true} onClose={() => onClose()} scroll='body' aria-labelledby="create-family-title">
       <DialogTitle id="create-family-title">
         Create Volunteer Family - First Adult
       </DialogTitle>
@@ -218,7 +204,7 @@ export function CreateVolunteerFamilyDialog({open, onClose}: CreateVolunteerFami
         </form>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} color="secondary">
+        <Button onClick={() => onClose()} color="secondary">
           Cancel
         </Button>
         <Button onClick={addAdult} variant="contained" color="primary">
