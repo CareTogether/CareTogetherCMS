@@ -38,7 +38,7 @@ export function VolunteerFamilyScreen() {
   const classes = useStyles();
   const { volunteerFamilyId } = useParams<{ volunteerFamilyId: string }>();
 
-  const volunteerFamilies = useRecoilValue(volunteerFamiliesData); // Add as a dependency, rather than passing the selected family state in as props, to enable refresh
+  const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
   const familyDocumentTypes = useRecoilValue(familyDocumentTypesData);
   const familyActivityTypes = useRecoilValue(familyActivityTypesData);
   const adultDocumentTypes = useRecoilValue(adultDocumentTypesData);
@@ -182,7 +182,7 @@ export function VolunteerFamilyScreen() {
         Add Child
       </Button>
     </Toolbar>
-    <AddChildDialog volunteerFamily={volunteerFamily} open={addChildDialogOpen} onClose={() => setAddChildDialogOpen(false)} />
+    {addChildDialogOpen && <AddChildDialog onClose={() => setAddChildDialogOpen(false)} />}
     {volunteerFamily.family?.children?.map(child => (
       <React.Fragment key={child.id}>
         <h4 className={classes.sectionHeading}>{child.firstName} {child.lastName} (<AgeText age={child.age} /> {typeof(child.gender) === 'undefined' ? "" : Gender[child.gender]} {child.ethnicity})</h4>
