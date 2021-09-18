@@ -126,6 +126,7 @@ function VolunteerApproval() {
                       className={classes.childRow}>
                       <TableCell>{child.firstName}</TableCell>
                       <TableCell>{child.lastName}</TableCell>
+                      <TableCell>{typeof(child.gender) === 'undefined' ? "" : Gender[child.gender]}</TableCell>
                       <TableCell align="right">
                         { child.age instanceof ExactAge
                           ? child.age.dateOfBirth && differenceInYears(new Date(), child.age.dateOfBirth)
