@@ -18,8 +18,7 @@ function Footer(props: any) {
   const classes = useStyles();
 
   const links = ['/dashboard', '/referrals', '/volunteers'];
-  const selectedLink = links.find(link => link.startsWith(location.pathname));
-  console.log(selectedLink);
+  const selectedLink = links.findIndex(link => location.pathname.startsWith(link));
 
   return (
     <BottomNavigation
