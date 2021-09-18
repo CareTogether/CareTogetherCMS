@@ -1,49 +1,36 @@
 import { makeStyles } from '@material-ui/core/styles';
 import { BottomNavigation, BottomNavigationAction } from '@material-ui/core';
-import { Link, withRouter } from 'react-router-dom';
-import { useEffect, useMemo, useState } from 'react';
-
-import EmojiPeopleIcon from '@material-ui/icons/EmojiPeople';
-import AssignmentIcon from '@material-ui/icons/Assignment';
-import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
+import { Link, useLocation, withRouter } from 'react-router-dom';
+import PermPhoneMsgIcon from '@material-ui/icons/PermPhoneMsg';
+import PeopleIcon from '@material-ui/icons/People';
+import DashboardIcon from '@material-ui/icons/Dashboard';
 
 const useStyles = makeStyles((theme) => ({
-    stickToBottom: {
-        width: '100%',
-        position: 'fixed',
-        bottom: 0,
-    },
+  stickToBottom: {
+    width: '100%',
+    position: 'fixed',
+    bottom: 0,
+  },
 }));
 
 function Footer(props: any) {
-    const { location } = props;
+  const location = useLocation();
+  const classes = useStyles();
 
-    const classes = useStyles();
-    const [selectedBottomNavAction, setSelectedBottomNavAction] = useState(0);
+  const links = ['/dashboard', '/referrals', '/volunteers'];
+  const selectedLink = links.findIndex(link => location.pathname.startsWith(link));
 
-    const memoizedPathMap = useMemo(() => {
-        return ['/volunteers', '/volunteerApplications', '/volunteerProgress'];
-    }, []);
-
-    useEffect(() => {
-        const newValue = memoizedPathMap.indexOf(location.pathname);
-        setSelectedBottomNavAction(newValue);
-    }, [memoizedPathMap, location.pathname]);
-
-    return (
-        <BottomNavigation
-            value={selectedBottomNavAction}
-            onChange={(_, newValue) => {
-                setSelectedBottomNavAction(newValue);
-            }}
-            showLabels
-            className={classes.stickToBottom}
-        >
-            <BottomNavigationAction component={Link} to={memoizedPathMap[0]} label="Volunteers" icon={<EmojiPeopleIcon />} />
-            <BottomNavigationAction component={Link} to={memoizedPathMap[1]} label="Applications" icon={<AssignmentIcon />} />
-            <BottomNavigationAction component={Link} to={memoizedPathMap[2]} label="Progress" icon={<AssignmentTurnedInIcon />} />
-        </BottomNavigation>
-    );
+  return (
+    <BottomNavigation
+      value={selectedLink}
+      showLabels
+      className={classes.stickToBottom}
+    >
+      <BottomNavigationAction component={Link} to='/dashboard' label="Dashboard" icon={<DashboardIcon />} />
+      <BottomNavigationAction component={Link} to='/referrals' label="Referrals" icon={<PermPhoneMsgIcon />} />
+      <BottomNavigationAction component={Link} to='/volunteers' label="Volunteers" icon={<PeopleIcon />} />
+    </BottomNavigation>
+  );
 }
 
 export default withRouter(Footer);
