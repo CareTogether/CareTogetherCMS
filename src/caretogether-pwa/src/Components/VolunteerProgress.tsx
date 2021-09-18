@@ -1,12 +1,13 @@
 import { makeStyles } from '@material-ui/core/styles';
-import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Drawer } from '@material-ui/core';
+import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow } from '@material-ui/core';
 import { FormUploadRequirement, ActivityRequirement, RequirementStage } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
 import { policyData } from '../Model/ConfigurationModel';
 import { VolunteerFamilyRequirementScope } from '../GeneratedClient';
 import { format } from 'date-fns';
-import React, { useState } from 'react';
+import React from 'react';
+import { useHistory } from 'react-router-dom';
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -34,6 +35,7 @@ const useStyles = makeStyles((theme) => ({
 
 function VolunteerProgress() {
   const classes = useStyles();
+  const history = useHistory();
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
   const policy = useRecoilValue(policyData);
 
@@ -181,7 +183,9 @@ function VolunteerProgress() {
     individualRequirementColumns.push({Type: Type, Name: Name});
   });
 
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  function openVolunteerFamily(volunteerFamilyId: string) {
+    history.push(`/volunteers/family/${volunteerFamilyId}`);
+  }
 
   // const allFamilyRequirements =
   //   policy.volunteerPolicy?.volunteerFamilyRoles
@@ -288,7 +292,7 @@ function VolunteerProgress() {
             <TableBody>
               {volunteerFamilyProgress.map((volunteerFamilyProgress) => (
                 <React.Fragment key={volunteerFamilyProgress.family.family?.id}>
-                  <TableRow className={classes.familyRow} onClick={() => setDrawerOpen(true)}>
+                  <TableRow className={classes.familyRow} onClick={() => openVolunteerFamily(volunteerFamilyProgress.family.family!.id!)}>
                     <TableCell key="1" colSpan={2}>{
                       volunteerFamilyProgress.family.family?.adults
                         ?.filter(adult => adult.item1?.id === volunteerFamilyProgress.family.family?.primaryFamilyContactPersonId)
@@ -313,9 +317,6 @@ function VolunteerProgress() {
             </TableBody>
           </Table>
         </TableContainer>
-        <Drawer anchor={'right'} open={drawerOpen} onClose={() => setDrawerOpen(false)}>
-          Volunteer Family &amp; Individual Records
-        </Drawer>
       </Grid>
     </Grid>
   );

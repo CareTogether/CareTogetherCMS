@@ -6,6 +6,7 @@ import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
 import { policyData } from '../Model/ConfigurationModel';
 import { VolunteerFamilyRequirementScope } from '../GeneratedClient';
 import React, { useState } from 'react';
+import { useHistory } from 'react-router-dom';
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -33,6 +34,7 @@ const useStyles = makeStyles((theme) => ({
 
 function VolunteerApplications() {
   const classes = useStyles();
+  const history = useHistory();
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
   const policy = useRecoilValue(policyData);
 
@@ -115,6 +117,10 @@ function VolunteerApplications() {
       ? previous.concat(requirement)
       : previous, [] as ActivityRequirement[]);
 
+  function openVolunteerFamily(volunteerFamilyId: string) {
+    history.push(`/volunteers/family/${volunteerFamilyId}`);
+  }
+  
   const [drawerOpen, setDrawerOpen] = useState(false);
   
   return (
@@ -139,7 +145,7 @@ function VolunteerApplications() {
             <TableBody>
               {volunteerFamilies.map((volunteerFamily) => (
                 <React.Fragment key={volunteerFamily.family?.id}>
-                  <TableRow className={classes.familyRow}>
+                  <TableRow className={classes.familyRow} onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}>
                     <TableCell key="1" colSpan={2}>{
                       volunteerFamily.family?.adults
                         ?.filter(adult => adult.item1?.id === volunteerFamily.family?.primaryFamilyContactPersonId)
