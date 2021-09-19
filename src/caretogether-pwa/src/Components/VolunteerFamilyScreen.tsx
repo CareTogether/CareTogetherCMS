@@ -66,15 +66,12 @@ export function VolunteerFamilyScreen() {
   return (
   <Container>
     <Toolbar variant="dense" disableGutters={true}>
-      <h3 className={classes.sectionHeading}>{
-        volunteerFamily.family?.adults?.filter(adult => adult.item1?.id === volunteerFamily.family?.primaryFamilyContactPersonId)[0]?.item1?.lastName + " Family"}
-      </h3>
-      &nbsp;
+      <span>Primary Contact: {volunteerFamily.family?.adults?.filter(adult => adult.item1?.id === volunteerFamily.family?.primaryFamilyContactPersonId)[0]?.item1?.firstName}</span>
       <Button aria-controls="family-record-menu" aria-haspopup="true"
         variant="contained" color="default" size="small" className={classes.button}
         startIcon={<AssignmentTurnedInIcon />}
         onClick={(event) => setFamilyRecordMenuAnchor(event.currentTarget)}>
-        Record Step
+        Record Family Step
       </Button>
       <Menu id="family-record-menu"
         anchorEl={familyRecordMenuAnchor}
@@ -89,7 +86,6 @@ export function VolunteerFamilyScreen() {
           <MenuItem key={activityType.activityName} onClick={() => selectRecordFamilyStep(activityType)}>{activityType.activityName}</MenuItem>
         ))}
       </Menu>
-      <span>Primary Contact: {volunteerFamily.family?.adults?.filter(adult => adult.item1?.id === volunteerFamily.family?.primaryFamilyContactPersonId)[0]?.item1?.firstName}</span>
       <RecordVolunteerFamilyStepDialog volunteerFamily={volunteerFamily} stepActionRequirement={recordFamilyStepParameter} onClose={() => setRecordFamilyStepParameter(null)} />
     </Toolbar>
     <div className={classes.sectionChips}>

@@ -5,6 +5,8 @@ import { makeStyles } from "@material-ui/core/styles";
 import MenuIcon from '@material-ui/icons/Menu';
 import { Link, useLocation, useRouteMatch, useHistory } from 'react-router-dom';
 import { ArrowBack } from '@material-ui/icons';
+import { useRecoilValue } from 'recoil';
+import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
 
 const drawerWidth = 200;
 
@@ -70,13 +72,15 @@ function Header(props: HeaderProps) {
     strict: true,
     sensitive: true
   });
-  const volunteerFamilyMatch = useRouteMatch({
+  const volunteerFamilyMatch = useRouteMatch<{ volunteerFamilyId: string }>({
     path: '/volunteers/family/:volunteerFamilyId',
     strict: true,
     sensitive: true
   });
   const location = useLocation();
   const history = useHistory();
+  const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
+  const volunteerFamily = volunteerFamilyMatch && volunteerFamilies.find(x => x.family?.id === volunteerFamilyMatch.params.volunteerFamilyId);
 
   return (
     <AppBar position="absolute" className={clsx(classes.appBar, (open && !isMobile) && classes.appBarShift)}>
@@ -96,13 +100,13 @@ function Header(props: HeaderProps) {
           {!volunteerFamilyMatch && volunteerListMatch && "Volunteers"}
         </Typography>}
         {volunteerFamilyMatch && <Typography component="h1" variant="h6" color="inherit" noWrap className={classes.title}>
-          <Button
+          <IconButton
+            color="inherit"
             onClick={() => history.goBack()}
-            variant="contained" color="default" size="small" className={classes.backButton}
-            startIcon={<ArrowBack />}>
-            Back
-          </Button>
-          Volunteer Family
+          >
+            <ArrowBack />
+          </IconButton>&nbsp;
+          {volunteerFamily?.family?.adults!.filter(adult => adult.item1!.id === volunteerFamily!.family!.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family
         </Typography>}
         {!volunteerFamilyMatch && volunteerListMatch && <ButtonGroup variant="text" color="inherit" aria-label="text inherit button group" className={classes.toggleGroup}>
           <Button color={location.pathname === "/volunteers/approval" ? 'default' : 'inherit'} component={Link} to={"/volunteers/approval"}>Approvals</Button>
