@@ -11,6 +11,18 @@ import { globalMsalInstance } from './Auth';
 import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 import DateFnsUtils from '@date-io/date-fns';
 import { ModelLoader } from './Model/ModelLoader';
+import { ThemeProvider } from '@material-ui/core';
+import { createTheme } from '@material-ui/core/styles';
+import amber from '@material-ui/core/colors/amber';
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#00838f',
+    },
+    secondary: amber,
+  }
+});
 
 function AuthWrapper() {
   // Force the user to sign in if not already authenticated, then render the app.
@@ -36,15 +48,17 @@ function AuthWrapper() {
 // https://docs.microsoft.com/en-us/azure/azure-monitor/app/javascript-react-plugin
 ReactDOM.render(
   <React.StrictMode>
-    <AppInsightsContext.Provider value={aiReact}>
-      <MsalProvider instance={globalMsalInstance}>
-        <MuiPickersUtilsProvider utils={DateFnsUtils}>
-          <RecoilRoot>
-            <AuthWrapper />
-          </RecoilRoot>
-        </MuiPickersUtilsProvider>
-      </MsalProvider>
-    </AppInsightsContext.Provider>
+    <ThemeProvider theme={theme}>
+      <AppInsightsContext.Provider value={aiReact}>
+        <MsalProvider instance={globalMsalInstance}>
+          <MuiPickersUtilsProvider utils={DateFnsUtils}>
+            <RecoilRoot>
+              <AuthWrapper />
+            </RecoilRoot>
+          </MuiPickersUtilsProvider>
+        </MsalProvider>
+      </AppInsightsContext.Provider>
+    </ThemeProvider>
   </React.StrictMode>,
   document.getElementById('root')
 );
