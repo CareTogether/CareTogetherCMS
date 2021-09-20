@@ -64,5 +64,17 @@ namespace CareTogether.Api.Controllers
                 notAllowed => BadRequest(),
                 notFound => NotFound());
         }
+
+        [HttpPost("personCommand")]
+        public async Task<ActionResult<VolunteerFamily>> SubmitPersonCommandAsync(Guid organizationId, Guid locationId,
+            Guid familyId, [FromBody] PersonCommand command)
+        {
+            var result = await approvalManager.ExecutePersonCommandAsync(organizationId, locationId, User, familyId, command);
+
+            return result.Match<ActionResult<VolunteerFamily>>(
+                volunteerFamily => volunteerFamily,
+                notAllowed => BadRequest(),
+                notFound => NotFound());
+        }
     }
 }

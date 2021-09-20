@@ -714,6 +714,69 @@
           }
         }
       }
+    },
+    "/api/{organizationId}/{locationId}/VolunteerFamilies/personCommand": {
+      "post": {
+        "tags": [
+          "VolunteerFamilies"
+        ],
+        "operationId": "VolunteerFamilies_SubmitPersonCommand",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          },
+          {
+            "name": "familyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 3
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PersonCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 4
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VolunteerFamily"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2760,6 +2823,126 @@
               },
               "notes": {
                 "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "PersonCommand": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "discriminator",
+          "mapping": {
+            "CreatePerson": "#/components/schemas/CreatePerson",
+            "UpdatePersonAge": "#/components/schemas/UpdatePersonAge",
+            "UpdatePersonName": "#/components/schemas/UpdatePersonName",
+            "UpdatePersonUserLink": "#/components/schemas/UpdatePersonUserLink"
+          }
+        },
+        "x-abstract": true,
+        "additionalProperties": false,
+        "required": [
+          "discriminator"
+        ],
+        "properties": {
+          "personId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "discriminator": {
+            "type": "string"
+          }
+        }
+      },
+      "CreatePerson": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "userId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              },
+              "firstName": {
+                "type": "string"
+              },
+              "lastName": {
+                "type": "string"
+              },
+              "gender": {
+                "$ref": "#/components/schemas/Gender"
+              },
+              "age": {
+                "$ref": "#/components/schemas/Age"
+              },
+              "ethnicity": {
+                "type": "string"
+              },
+              "concerns": {
+                "type": "string",
+                "nullable": true
+              },
+              "notes": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "UpdatePersonAge": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "age": {
+                "$ref": "#/components/schemas/Age"
+              }
+            }
+          }
+        ]
+      },
+      "UpdatePersonName": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "firstName": {
+                "type": "string"
+              },
+              "lastName": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "UpdatePersonUserLink": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "userId": {
+                "type": "string",
+                "format": "guid",
                 "nullable": true
               }
             }
