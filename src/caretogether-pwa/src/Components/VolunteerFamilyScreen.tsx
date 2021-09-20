@@ -1,21 +1,20 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Container, Toolbar, Chip, Button, Menu, MenuItem, Divider, Card, CardActions, CardContent, Typography, Grid, CardHeader, IconButton, ListItemText } from '@material-ui/core';
-import { VolunteerFamily, FormUploadRequirement, ActionRequirement, ActivityRequirement, Person, Gender, CustodialRelationshipType } from '../GeneratedClient';
+import { Container, Toolbar, Chip, Button, Menu, MenuItem, Divider, Grid } from '@material-ui/core';
+import { VolunteerFamily, FormUploadRequirement, ActionRequirement, ActivityRequirement, Gender, CustodialRelationshipType } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
-import { adultActivityTypesData, adultDocumentTypesData, familyActivityTypesData, familyDocumentTypesData } from '../Model/ConfigurationModel';
+import { familyActivityTypesData, familyDocumentTypesData } from '../Model/ConfigurationModel';
 import { RoleApprovalStatus } from '../GeneratedClient';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
-import MoreVertIcon from '@material-ui/icons/MoreVert';
 import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
 import { AgeText } from './AgeText';
 import { RecordVolunteerFamilyStepDialog } from './RecordVolunteerFamilyStepDialog';
 import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
-import { RecordVolunteerAdultStepDialog } from './RecordVolunteerAdultStepDialog';
 import { AddAdultDialog } from './AddAdultDialog';
 import { format } from 'date-fns';
 import { AddChildDialog } from './AddChildDialog';
 import { useParams } from 'react-router';
+import { VolunteerAdultCard } from './VolunteerAdultCard';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -62,8 +61,6 @@ export function VolunteerFamilyScreen() {
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
   const familyDocumentTypes = useRecoilValue(familyDocumentTypesData);
   const familyActivityTypes = useRecoilValue(familyActivityTypesData);
-  const adultDocumentTypes = useRecoilValue(adultDocumentTypesData);
-  const adultActivityTypes = useRecoilValue(adultActivityTypesData);
 
   const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as VolunteerFamily;
   
@@ -74,19 +71,6 @@ export function VolunteerFamilyScreen() {
     setRecordFamilyStepParameter(requirement);
   }
   
-  const [adultRecordMenuAnchor, setAdultRecordMenuAnchor] = useState<{anchor: Element, adult: Person} | null>(null);
-  const [recordAdultStepParameter, setRecordAdultStepParameter] = useState<{requirement: ActionRequirement, adult: Person} | null>(null);
-  function selectRecordAdultStep(requirement: FormUploadRequirement | ActivityRequirement, adult: Person) {
-    setAdultRecordMenuAnchor(null);
-    setRecordAdultStepParameter({requirement, adult});
-  }
-
-  const [adultMoreMenuAnchor, setAdultMoreMenuAnchor] = useState<{anchor: Element, adult: Person} | null>(null);
-  function selectChangeName(adult: Person) {
-    setAdultMoreMenuAnchor(null);
-    //TODO: Rename...
-  }
-
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
   const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
 
@@ -139,91 +123,10 @@ export function VolunteerFamilyScreen() {
     <Grid container spacing={2}>
       {volunteerFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item2 && (
         <Grid item key={adult.item1.id}>
-          <Card className={classes.card}>
-            <CardHeader className={classes.cardHeader}
-              title={adult.item1.firstName + " " + adult.item1.lastName}
-              subheader={<>
-                Adult, <AgeText age={adult.item1.age} />, {typeof(adult.item1.gender) === 'undefined' ? "" : Gender[adult.item1.gender] + ","} {adult.item1.ethnicity}
-              </>}
-              action={
-                <IconButton
-                  onClick={(event) => setAdultMoreMenuAnchor({anchor: event.currentTarget, adult: adult.item1 as Person})}
-                  aria-controls="adult-more-menu" aria-haspopup="true">
-                  <MoreVertIcon />
-                </IconButton>} />
-            <CardContent className={classes.cardContent}>
-              <Typography color="textSecondary" className={classes.sectionChips}>
-                {Object.entries(volunteerFamily.individualVolunteers?.[adult.item1.id].individualRoleApprovals || {}).map(([role, approvalStatus]) => (
-                  <Chip key={role} size="small" color={approvalStatus === RoleApprovalStatus.Onboarded ? "primary" : "secondary"}
-                    label={RoleApprovalStatus[approvalStatus] + " " + role} />
-                ))}
-                {(adult.item2.relationshipToFamily && <Chip size="small" label={adult.item2.relationshipToFamily} />) || null}
-                {adult.item2.isInHousehold && <Chip size="small" label="In Household" />}
-              </Typography>
-              <Typography variant="body2" component="p">
-                {adult.item1.concerns && <><strong>⚠&nbsp;&nbsp;&nbsp;{adult.item1.concerns}</strong></>}
-                {adult.item1.concerns && adult.item1.notes && <br />}
-                {adult.item1.notes && <>📝&nbsp;{adult.item1.notes}</>}
-              </Typography>
-              <Typography variant="body2" component="p">
-                <ul className={classes.cardList}>
-                  {volunteerFamily.individualVolunteers?.[adult.item1.id].approvalFormUploads?.map((upload, i) => (
-                    <li key={i}>
-                      ▸{upload.formName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                      {upload.completedAtUtc && <span style={{float:'right'}}>{format(upload.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
-                    </li>
-                  ))}
-                  {volunteerFamily.individualVolunteers?.[adult.item1.id].approvalActivitiesPerformed?.map((activity, i) => (
-                    <li key={i}>
-                      ▸{activity.activityName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                      {activity.performedAtUtc && <span style={{float:'right'}}>{format(activity.performedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
-                    </li>
-                  ))}
-                </ul>
-              </Typography>
-            </CardContent>
-            <CardActions>
-              <Button size="small">Contact Info...</Button>
-              <IconButton size="small" className={classes.rightCardAction}
-                onClick={(event) => setAdultRecordMenuAnchor({anchor: event.currentTarget, adult: adult.item1 as Person})}
-                aria-controls="adult-record-menu" aria-haspopup="true">
-                <AssignmentTurnedInIcon />
-              </IconButton>
-            </CardActions>
-          </Card>
+          <VolunteerAdultCard volunteerFamilyId={volunteerFamilyId} personId={adult.item1.id} />
         </Grid>
       ))}
     </Grid>
-    <Menu id="adult-record-menu"
-      anchorEl={adultRecordMenuAnchor?.anchor}
-      keepMounted
-      open={Boolean(adultRecordMenuAnchor)}
-      onClose={() => setAdultRecordMenuAnchor(null)}>
-      {adultDocumentTypes.map(documentType => (
-        <MenuItem key={documentType.formName} onClick={() =>
-          adultRecordMenuAnchor?.adult && selectRecordAdultStep(documentType, adultRecordMenuAnchor.adult)}>
-          <ListItemText primary={documentType.formName} />
-        </MenuItem>
-      ))}
-      <Divider />
-      {adultActivityTypes.map(activityType => (
-        <MenuItem key={activityType.activityName} onClick={() =>
-          adultRecordMenuAnchor?.adult && selectRecordAdultStep(activityType, adultRecordMenuAnchor.adult)}>
-          <ListItemText primary={activityType.activityName} />
-        </MenuItem>
-      ))}
-    </Menu>
-    {(recordAdultStepParameter && <RecordVolunteerAdultStepDialog volunteerFamily={volunteerFamily} adult={recordAdultStepParameter.adult}
-      stepActionRequirement={recordAdultStepParameter.requirement} onClose={() => setRecordAdultStepParameter(null)} />) || null}
-    <Menu id="adult-more-menu"
-      anchorEl={adultMoreMenuAnchor?.anchor}
-      keepMounted
-      open={Boolean(adultMoreMenuAnchor)}
-      onClose={() => setAdultMoreMenuAnchor(null)}>
-      <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectChangeName(adultMoreMenuAnchor.adult)}>
-        <ListItemText primary="Change name" />
-      </MenuItem>
-    </Menu>
     <Toolbar variant="dense" disableGutters={true}>
       <h3 className={classes.sectionHeading}>Children</h3>
       &nbsp;
