@@ -109,11 +109,6 @@ namespace CareTogether.Managers
             var getVolunteerFamilyResult = await approvalsResource.GetVolunteerFamilyAsync(organizationId, locationId, familyId);
             if (getVolunteerFamilyResult.TryPickT0(out var volunteerFamilyEntry, out var notFound))
             {
-                var families = communitiesResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
-                var contacts = contactsResource.ListContactsAsync(organizationId, locationId).Result;
-                var referral = await ToVolunteerFamilyAsync(
-                    organizationId, locationId, volunteerFamilyEntry, families, contacts);
-
                 //var authorizationResult = await policyEvaluationEngine.AuthorizePersonCommandAsync(
                 //    organizationId, locationId, user, command, referral);
                 //if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
@@ -121,15 +116,14 @@ namespace CareTogether.Managers
                 var commandResult = await communitiesResource.ExecutePersonCommandAsync(organizationId, locationId, command, user.UserId());
                 if (commandResult.TryPickT0(out var person, out var commandError))
                 {
-                    var updatedVolunteerFamilyResult = await approvalsResource.GetVolunteerFamilyAsync(organizationId, locationId, familyId);
-                    if (updatedVolunteerFamilyResult.TryPickT0(out var updatedVolunteerFamily, out var updatedNotFound))
-                    {
-                        var disclosedVolunteerFamily = await policyEvaluationEngine.DiscloseVolunteerFamilyAsync(user,
-                            await ToVolunteerFamilyAsync(organizationId, locationId, updatedVolunteerFamily, families, contacts));
-                        return disclosedVolunteerFamily;
-                    }
-                    else
-                        return ManagerResult.NotFound;
+                    var families = communitiesResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+                    var contacts = contactsResource.ListContactsAsync(organizationId, locationId).Result;
+                    var referral = await ToVolunteerFamilyAsync(
+                        organizationId, locationId, volunteerFamilyEntry, families, contacts);
+
+                    var disclosedVolunteerFamily = await policyEvaluationEngine.DiscloseVolunteerFamilyAsync(user,
+                        await ToVolunteerFamilyAsync(organizationId, locationId, volunteerFamilyEntry, families, contacts));
+                    return disclosedVolunteerFamily;
                 }
                 else
                     return ManagerResult.NotAllowed; //TODO: Include reason from 'commandError'?

@@ -9,6 +9,7 @@ import { useRecoilValue } from "recoil";
 import { volunteerFamiliesData } from "../Model/VolunteerFamiliesModel";
 import { RecordVolunteerAdultStepDialog } from "./RecordVolunteerAdultStepDialog";
 import { adultDocumentTypesData, adultActivityTypesData } from "../Model/ConfigurationModel";
+import { RenamePersonDialog } from "./RenamePersonDialog";
 
 const useStyles = makeStyles((theme) => ({
   sectionChips: {
@@ -67,9 +68,10 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
   }
 
   const [adultMoreMenuAnchor, setAdultMoreMenuAnchor] = useState<{anchor: Element, adult: Person} | null>(null);
+  const [renamePersonParameter, setRenamePersonParameter] = useState<{volunteerFamilyId: string, person: Person} | null>(null);
   function selectChangeName(adult: Person) {
     setAdultMoreMenuAnchor(null);
-    //TODO: Rename...
+    setRenamePersonParameter({volunteerFamilyId, person: adult});
   }
 
   return (<>{adult?.item1 && adult.item1.id && adult.item2 &&
@@ -152,5 +154,7 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
           <ListItemText primary="Change name" />
         </MenuItem>
       </Menu>
+      {(renamePersonParameter && <RenamePersonDialog volunteerFamilyId={volunteerFamilyId} person={renamePersonParameter.person}
+        onClose={() => setRenamePersonParameter(null)} />) || null}
     </Card>}</>);
 }
