@@ -102,6 +102,39 @@ namespace CareTogether.Managers
             else
                 return notFound;
         }
+
+        public async Task<ManagerResult<VolunteerFamily>> ExecutePersonCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, Guid familyId, PersonCommand command)
+        {
+            var getVolunteerFamilyResult = await approvalsResource.GetVolunteerFamilyAsync(organizationId, locationId, familyId);
+            if (getVolunteerFamilyResult.TryPickT0(out var volunteerFamilyEntry, out var notFound))
+            {
+                //var authorizationResult = await policyEvaluationEngine.AuthorizePersonCommandAsync(
+                //    organizationId, locationId, user, command, referral);
+                //if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
+                //{
+                var commandResult = await communitiesResource.ExecutePersonCommandAsync(organizationId, locationId, command, user.UserId());
+                if (commandResult.TryPickT0(out var person, out var commandError))
+                {
+                    var families = communitiesResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+                    var contacts = contactsResource.ListContactsAsync(organizationId, locationId).Result;
+                    var referral = await ToVolunteerFamilyAsync(
+                        organizationId, locationId, volunteerFamilyEntry, families, contacts);
+
+                    var disclosedVolunteerFamily = await policyEvaluationEngine.DiscloseVolunteerFamilyAsync(user,
+                        await ToVolunteerFamilyAsync(organizationId, locationId, volunteerFamilyEntry, families, contacts));
+                    return disclosedVolunteerFamily;
+                }
+                else
+                    return ManagerResult.NotAllowed; //TODO: Include reason from 'commandError'?
+                //}
+                //else
+                //    return ManagerResult.NotAllowed; //TODO: Include reason from 'authorizationError'?
+            }
+            else
+                return notFound;
+        }
+
         public async Task<ManagerResult<VolunteerFamily>> ExecuteApprovalCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, ApprovalCommand command)
         {

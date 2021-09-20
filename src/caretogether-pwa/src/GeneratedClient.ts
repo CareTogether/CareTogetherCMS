@@ -713,6 +713,54 @@ export class VolunteerFamiliesClient {
         }
         return Promise.resolve<VolunteerFamily>(<any>null);
     }
+
+    submitPersonCommand(organizationId: string, locationId: string, familyId: string | undefined, command: PersonCommand): Promise<VolunteerFamily> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/VolunteerFamilies/personCommand?";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (locationId === undefined || locationId === null)
+            throw new Error("The parameter 'locationId' must be defined.");
+        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
+        if (familyId === null)
+            throw new Error("The parameter 'familyId' cannot be null.");
+        else if (familyId !== undefined)
+            url_ += "familyId=" + encodeURIComponent("" + familyId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(command);
+
+        let options_ = <RequestInit>{
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSubmitPersonCommand(_response);
+        });
+    }
+
+    protected processSubmitPersonCommand(response: Response): Promise<VolunteerFamily> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = VolunteerFamily.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<VolunteerFamily>(<any>null);
+    }
 }
 
 export class OrganizationConfiguration implements IOrganizationConfiguration {
@@ -4901,6 +4949,232 @@ export interface ICreateVolunteerFamilyWithNewAdultCommand extends IApprovalComm
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
     concerns?: string | undefined;
     notes?: string | undefined;
+}
+
+export abstract class PersonCommand implements IPersonCommand {
+    personId?: string;
+
+    protected _discriminator: string;
+
+    constructor(data?: IPersonCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        this._discriminator = "PersonCommand";
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.personId = _data["personId"];
+        }
+    }
+
+    static fromJS(data: any): PersonCommand {
+        data = typeof data === 'object' ? data : {};
+        if (data["discriminator"] === "CreatePerson") {
+            let result = new CreatePerson();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UpdatePersonAge") {
+            let result = new UpdatePersonAge();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UpdatePersonName") {
+            let result = new UpdatePersonName();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UpdatePersonUserLink") {
+            let result = new UpdatePersonUserLink();
+            result.init(data);
+            return result;
+        }
+        throw new Error("The abstract class 'PersonCommand' cannot be instantiated.");
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["discriminator"] = this._discriminator; 
+        data["personId"] = this.personId;
+        return data; 
+    }
+}
+
+export interface IPersonCommand {
+    personId?: string;
+}
+
+export class CreatePerson extends PersonCommand implements ICreatePerson {
+    userId?: string | undefined;
+    firstName?: string;
+    lastName?: string;
+    gender?: Gender;
+    age?: Age;
+    ethnicity?: string;
+    concerns?: string | undefined;
+    notes?: string | undefined;
+
+    constructor(data?: ICreatePerson) {
+        super(data);
+        this._discriminator = "CreatePerson";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.userId = _data["userId"];
+            this.firstName = _data["firstName"];
+            this.lastName = _data["lastName"];
+            this.gender = _data["gender"];
+            this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
+            this.ethnicity = _data["ethnicity"];
+            this.concerns = _data["concerns"];
+            this.notes = _data["notes"];
+        }
+    }
+
+    static fromJS(data: any): CreatePerson {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreatePerson();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["firstName"] = this.firstName;
+        data["lastName"] = this.lastName;
+        data["gender"] = this.gender;
+        data["age"] = this.age ? this.age.toJSON() : <any>undefined;
+        data["ethnicity"] = this.ethnicity;
+        data["concerns"] = this.concerns;
+        data["notes"] = this.notes;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface ICreatePerson extends IPersonCommand {
+    userId?: string | undefined;
+    firstName?: string;
+    lastName?: string;
+    gender?: Gender;
+    age?: Age;
+    ethnicity?: string;
+    concerns?: string | undefined;
+    notes?: string | undefined;
+}
+
+export class UpdatePersonAge extends PersonCommand implements IUpdatePersonAge {
+    age?: Age;
+
+    constructor(data?: IUpdatePersonAge) {
+        super(data);
+        this._discriminator = "UpdatePersonAge";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): UpdatePersonAge {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdatePersonAge();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["age"] = this.age ? this.age.toJSON() : <any>undefined;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUpdatePersonAge extends IPersonCommand {
+    age?: Age;
+}
+
+export class UpdatePersonName extends PersonCommand implements IUpdatePersonName {
+    firstName?: string;
+    lastName?: string;
+
+    constructor(data?: IUpdatePersonName) {
+        super(data);
+        this._discriminator = "UpdatePersonName";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.firstName = _data["firstName"];
+            this.lastName = _data["lastName"];
+        }
+    }
+
+    static fromJS(data: any): UpdatePersonName {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdatePersonName();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["firstName"] = this.firstName;
+        data["lastName"] = this.lastName;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUpdatePersonName extends IPersonCommand {
+    firstName?: string;
+    lastName?: string;
+}
+
+export class UpdatePersonUserLink extends PersonCommand implements IUpdatePersonUserLink {
+    userId?: string | undefined;
+
+    constructor(data?: IUpdatePersonUserLink) {
+        super(data);
+        this._discriminator = "UpdatePersonUserLink";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.userId = _data["userId"];
+        }
+    }
+
+    static fromJS(data: any): UpdatePersonUserLink {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdatePersonUserLink();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUpdatePersonUserLink extends IPersonCommand {
+    userId?: string | undefined;
 }
 
 export class ApiException extends Error {

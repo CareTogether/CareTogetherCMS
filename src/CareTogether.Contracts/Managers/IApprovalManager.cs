@@ -48,5 +48,8 @@ namespace CareTogether.Managers
 
         Task<ManagerResult<VolunteerFamily>> ExecuteApprovalCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, ApprovalCommand command);
+
+        Task<ManagerResult<VolunteerFamily>> ExecutePersonCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, Guid familyId, PersonCommand command);
     }
 }

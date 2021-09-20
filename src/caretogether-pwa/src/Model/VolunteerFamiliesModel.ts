@@ -1,5 +1,5 @@
 import { atom, useRecoilCallback } from "recoil";
-import { ActivityRequirement, AddAdultToFamilyCommand, AddChildToFamilyCommand, Age, ApprovalCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, FamilyAdultRelationshipInfo, FormUploadRequirement, Gender, PerformVolunteerActivity, PerformVolunteerFamilyActivity, UploadVolunteerFamilyForm, UploadVolunteerForm, VolunteerCommand, VolunteerFamiliesClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
+import { ActivityRequirement, AddAdultToFamilyCommand, AddChildToFamilyCommand, Age, ApprovalCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, FamilyAdultRelationshipInfo, FormUploadRequirement, Gender, PerformVolunteerActivity, PerformVolunteerFamilyActivity, PersonCommand, UpdatePersonName, UploadVolunteerFamilyForm, UploadVolunteerForm, VolunteerCommand, VolunteerFamiliesClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { uploadFileToTenant } from "./FilesModel";
@@ -63,6 +63,31 @@ function useVolunteerCommandCallback<T extends unknown[]>(
   callback: (volunteerFamilyId: string, personId: string, ...args: T) => Promise<VolunteerCommand>) {
   return useVolunteerCommandCallbackWithLocation<T>(
     (_organizationId, _locationId, volunteerFamilyId, personId, ...args) => callback(volunteerFamilyId, personId, ...args));
+}
+
+function usePersonCommandCallback<T extends unknown[]>(
+  callback: (volunteerFamilyId: string, personId: string, ...args: T) => Promise<PersonCommand>) {
+  return useRecoilCallback(({snapshot, set}) => {
+    const asyncCallback = async (volunteerFamilyId: string, personId: string, ...args: T) => {
+      const organizationId = await snapshot.getPromise(currentOrganizationState);
+      const locationId = await snapshot.getPromise(currentLocationState);
+
+      const command = await callback(volunteerFamilyId, personId, ...args);
+
+      const client = new VolunteerFamiliesClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+      const updatedFamily = await client.submitPersonCommand(organizationId, locationId, volunteerFamilyId, command);
+
+      set(volunteerFamiliesData, current =>
+        current.some(currentEntry => currentEntry.family?.id === volunteerFamilyId)
+        ? current.map(currentEntry => currentEntry.family?.id === volunteerFamilyId
+          ? updatedFamily
+          : currentEntry)
+        : current.concat(updatedFamily));
+      
+      return updatedFamily;
+    };
+    return asyncCallback;
+  })
 }
 
 function useApprovalCommandCallback<T extends unknown[]>(
@@ -139,6 +164,15 @@ export function useVolunteerFamiliesModel() {
       command.performedAtUtc = new Date(performedAtLocal.toUTCString());
       return command;
     });
+  const updatePersonName = usePersonCommandCallback(
+    async (volunteerFamilyId, personId, firstName: string, lastName: string) => {
+      const command = new UpdatePersonName({
+        personId: personId
+      });
+      command.firstName = firstName;
+      command.lastName = lastName;
+      return command;
+    });
   const addAdult = useApprovalCommandCallback(
     async (volunteerFamilyId, firstName: string, lastName: string, gender: Gender, age: Age, ethnicity: string,
         isInHousehold: boolean, relationshipToFamily?: string,
@@ -198,6 +232,7 @@ export function useVolunteerFamiliesModel() {
     performActivityFamily,
     uploadFormPerson,
     performActivityPerson,
+    updatePersonName,
     addAdult,
     addChild,
     createVolunteerFamilyWithNewAdult
