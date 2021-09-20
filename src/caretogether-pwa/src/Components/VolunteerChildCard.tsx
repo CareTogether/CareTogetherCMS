@@ -23,7 +23,8 @@ const useStyles = makeStyles((theme) => ({
   },
   cardContent: {
     paddingTop: 8,
-    paddingBottom: 8
+    paddingBottom: 8,
+    maxWidth: 500
   },
   cardList: {
     padding: 0,
