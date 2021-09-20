@@ -10,8 +10,6 @@ import { Route, Switch, Redirect, BrowserRouter as Router } from "react-router-d
 import { ListItemLink } from './Components/ListItemLink';
 import { Arrangements } from './Components/Arrangements';
 import { Referrals } from './Components/Referrals';
-import { Contacts } from './Components/Contacts';
-import { Communities } from './Components/Communities';
 import { useRecoilValue } from 'recoil';
 import { locationNameData, organizationNameData } from './Model/ConfigurationModel';
 import { Volunteers } from './Components/Volunteers';
@@ -162,12 +160,6 @@ function App() {
               </Route>
               <Route path="/volunteers">
                 <Volunteers />
-              </Route>
-              <Route path="/contacts">
-                <Contacts />
-              </Route>
-              <Route path="/communities">
-                <Communities />
               </Route>
               <Route>
                 <Redirect to="/volunteers" />
