@@ -5,6 +5,7 @@ import { AgeText } from "./AgeText";
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import { useRecoilValue } from "recoil";
 import { volunteerFamiliesData } from "../Model/VolunteerFamiliesModel";
+import { RenamePersonDialog } from "./RenamePersonDialog";
 
 const useStyles = makeStyles((theme) => ({
   sectionChips: {
@@ -54,9 +55,10 @@ export function VolunteerChildCard({volunteerFamilyId, personId}: VolunteerChild
   const child = volunteerFamily.family?.children?.find(x => x.id === personId);
 
   const [childMoreMenuAnchor, setChildMoreMenuAnchor] = useState<{anchor: Element, child: Person} | null>(null);
+  const [renamePersonParameter, setRenamePersonParameter] = useState<{volunteerFamilyId: string, person: Person} | null>(null);
   function selectChangeName(child: Person) {
     setChildMoreMenuAnchor(null);
-    //TODO: Rename...
+    setRenamePersonParameter({volunteerFamilyId, person: child});
   }
 
   return (<>{child &&
@@ -105,5 +107,7 @@ export function VolunteerChildCard({volunteerFamilyId, personId}: VolunteerChild
           <ListItemText primary="Change name" />
         </MenuItem>
       </Menu>
+      {(renamePersonParameter && <RenamePersonDialog volunteerFamilyId={volunteerFamilyId} person={renamePersonParameter.person}
+        onClose={() => setRenamePersonParameter(null)} />) || null}
     </Card>}</>);
 }
