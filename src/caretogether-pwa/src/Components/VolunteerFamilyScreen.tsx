@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Container, Toolbar, Chip, Button, Menu, MenuItem, Divider, Grid } from '@material-ui/core';
-import { VolunteerFamily, FormUploadRequirement, ActionRequirement, ActivityRequirement, Gender, CustodialRelationshipType } from '../GeneratedClient';
+import { VolunteerFamily, FormUploadRequirement, ActionRequirement, ActivityRequirement } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { familyActivityTypesData, familyDocumentTypesData } from '../Model/ConfigurationModel';
 import { RoleApprovalStatus } from '../GeneratedClient';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
 import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
-import { AgeText } from './AgeText';
 import { RecordVolunteerFamilyStepDialog } from './RecordVolunteerFamilyStepDialog';
 import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
 import { AddAdultDialog } from './AddAdultDialog';
@@ -15,6 +14,7 @@ import { format } from 'date-fns';
 import { AddChildDialog } from './AddChildDialog';
 import { useParams } from 'react-router';
 import { VolunteerAdultCard } from './VolunteerAdultCard';
+import { VolunteerChildCard } from './VolunteerChildCard';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -88,7 +88,13 @@ export function VolunteerFamilyScreen() {
         onClick={() => setAddAdultDialogOpen(true)}
         variant="contained" color="default" size="small" className={classes.button}
         startIcon={<AddCircleIcon />}>
-        Add Adult
+        Adult
+      </Button>
+      <Button
+        onClick={() => setAddChildDialogOpen(true)}
+        variant="contained" color="default" size="small" className={classes.button}
+        startIcon={<AddCircleIcon />}>
+        Child
       </Button>
       <Menu id="family-record-menu"
         anchorEl={familyRecordMenuAnchor}
@@ -105,6 +111,7 @@ export function VolunteerFamilyScreen() {
       </Menu>
       <RecordVolunteerFamilyStepDialog volunteerFamily={volunteerFamily} stepActionRequirement={recordFamilyStepParameter} onClose={() => setRecordFamilyStepParameter(null)} />
       {addAdultDialogOpen && <AddAdultDialog onClose={() => setAddAdultDialogOpen(false)} />}
+      {addChildDialogOpen && <AddChildDialog onClose={() => setAddChildDialogOpen(false)} />}
     </Toolbar>
     <div className={classes.sectionChips}>
       {Object.entries(volunteerFamily.familyRoleApprovals || {}).map(([role, approvalStatus]) => (
@@ -126,41 +133,11 @@ export function VolunteerFamilyScreen() {
           <VolunteerAdultCard volunteerFamilyId={volunteerFamilyId} personId={adult.item1.id} />
         </Grid>
       ))}
+      {volunteerFamily.family?.children?.map(child => (
+        <Grid item key={child.id!}>
+          <VolunteerChildCard volunteerFamilyId={volunteerFamilyId} personId={child.id!} />
+        </Grid>
+      ))}
     </Grid>
-    <Toolbar variant="dense" disableGutters={true}>
-      <h3 className={classes.sectionHeading}>Children</h3>
-      &nbsp;
-      <Button
-        onClick={() => setAddChildDialogOpen(true)}
-        variant="contained" color="default" size="small" className={classes.button}
-        startIcon={<AddCircleIcon />}>
-        Add Child
-      </Button>
-    </Toolbar>
-    {addChildDialogOpen && <AddChildDialog onClose={() => setAddChildDialogOpen(false)} />}
-    {volunteerFamily.family?.children?.map(child => (
-      <React.Fragment key={child.id}>
-        <h4 className={classes.sectionHeading}>{child.firstName} {child.lastName} (<AgeText age={child.age} /> {typeof(child.gender) === 'undefined' ? "" : Gender[child.gender]} {child.ethnicity})</h4>
-        <Container>
-          <ul>
-            {volunteerFamily.family?.custodialRelationships?.filter(relationship => relationship.childId === child.id)?.map(relationship => (
-              <li key={relationship.personId}>{volunteerFamily.family?.adults?.filter(x => x.item1?.id === relationship.personId)[0].item1?.firstName}:&nbsp;
-                {relationship.type === CustodialRelationshipType.LegalGuardian
-                  ? "legal guardian"
-                  : relationship.type === CustodialRelationshipType.ParentWithCustody
-                  ? "parent (with joint custody)"
-                  : relationship.type === CustodialRelationshipType.ParentWithCourtAppointedCustody
-                  ? "parent with court-appointed sole custody"
-                  : null}
-              </li>
-            ))}
-          </ul>
-          <dl>
-            {child.concerns && <><dt><strong>⚠ Concerns</strong></dt><dd>{child.concerns}</dd></>}
-            {child.notes && <><dt>📝 Notes</dt><dd>{child.notes}</dd></>}
-          </dl>
-        </Container>
-      </React.Fragment>
-    ))}
   </Container>);
 }
