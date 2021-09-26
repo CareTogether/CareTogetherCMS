@@ -10,11 +10,11 @@ using System.Threading.Tasks;
 namespace CareTogether.Engines
 {
     public sealed record VolunteerFamilyApprovalStatus(
-        ImmutableDictionary<string, RoleApprovalStatus> FamilyRoleApprovals,
+        ImmutableDictionary<(string Role, string Version), RoleApprovalStatus> FamilyRoleApprovals,
         ImmutableDictionary<Guid, VolunteerApprovalStatus> IndividualVolunteers);
 
     public sealed record VolunteerApprovalStatus(
-        ImmutableDictionary<string, RoleApprovalStatus> IndividualRoleApprovals);
+        ImmutableDictionary<(string Role, string Version), RoleApprovalStatus> IndividualRoleApprovals);
 
     public interface IPolicyEvaluationEngine
     {
