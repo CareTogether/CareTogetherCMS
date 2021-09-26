@@ -26,7 +26,7 @@ namespace CareTogether.Resources
     public enum ArrangementState { Setup, Open, Closed };
 
     public sealed record FormUploadInfo(Guid UserId, DateTime TimestampUtc,
-        DateTime CompletedAtUtc, string FormName, string FormVersion, string OriginalFileName, Guid UploadedDocumentId);
+        DateTime CompletedAtUtc, string FormName, string OriginalFileName, Guid UploadedDocumentId);
     public sealed record ActivityInfo(Guid UserId, DateTime TimestampUtc,
         string ActivityName, DateTime PerformedAtUtc, Guid PerformedByPersonId);
 

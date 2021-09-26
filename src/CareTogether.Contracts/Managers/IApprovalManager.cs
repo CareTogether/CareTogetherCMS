@@ -11,13 +11,13 @@ namespace CareTogether.Managers
     public sealed record VolunteerFamily(Family Family,
         ImmutableList<FormUploadInfo> ApprovalFormUploads,
         ImmutableList<ActivityInfo> ApprovalActivitiesPerformed,
-        ImmutableDictionary<string, RoleApprovalStatus> FamilyRoleApprovals,
+        ImmutableDictionary<(string Role, string Version), RoleApprovalStatus> FamilyRoleApprovals,
         ImmutableDictionary<Guid, Volunteer> IndividualVolunteers);
 
     public sealed record Volunteer(
         ImmutableList<FormUploadInfo> ApprovalFormUploads,
         ImmutableList<ActivityInfo> ApprovalActivitiesPerformed,
-        ImmutableDictionary<string, RoleApprovalStatus> IndividualRoleApprovals);
+        ImmutableDictionary<(string Role, string Version), RoleApprovalStatus> IndividualRoleApprovals);
 
     [JsonHierarchyBase]
     public abstract partial record ApprovalCommand();

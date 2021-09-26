@@ -138,10 +138,10 @@ namespace CareTogether.TestData
         public static async Task PopulateReferralEvents(IMultitenantEventLog<ReferralEvent> referralsEventLog)
         {
             await referralsEventLog.AppendEventsAsync(guid1, guid2,
-                new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 5, 4, 10, 0), new CreateReferral(guid1, guid1, new DateTime(2020, 3, 5, 4, 10, 0))),
+                new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 5, 4, 10, 0), new CreateReferral(guid1, guid1, "v1", new DateTime(2020, 3, 5, 4, 10, 0))),
                 new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 5, 4, 15, 15), new UploadReferralForm(guid1, new DateTime(2020, 3, 5, 4, 12, 15), "Request for Help Form", "Jane Doe referral info.pdf", guid1)),
                 new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 6, 8, 45, 30), new PerformReferralActivity(guid1, "Intake Coordinator Screening Call", new DateTime(2020, 3, 6, 8, 45, 30), adminId)),
-                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 12, 13), new CreateArrangement(guid1, guid1, "Hosting")),
+                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 12, 13), new CreateArrangement(guid1, guid1, "v1", "Hosting")),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 13, 14), new AssignIndividualVolunteer(guid1, guid1, guid4, "Family Coach")),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 13, 55), new AssignVolunteerFamily(guid1, guid1, guid2, "Host Family")),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 12, 22, 21), new AssignVolunteerFamily(guid1, guid1, guid3, "Host Family Friend")),
@@ -170,7 +170,7 @@ namespace CareTogether.TestData
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 30, 18, 18, 18), new TrackChildrenLocationChange(guid1, guid1,
                     new DateTime(2020, 3, 30, 18, 18, 18), ImmutableList<Guid>.Empty.Add(guid3), guid1, ChildrenLocationPlan.ReturnToFamily, "Mom met us and picked him up at DQ")),
                 new ReferralCommandExecuted(adminId, new DateTime(2020, 10, 4, 12, 32, 55), new CloseReferral(guid1, ReferralCloseReason.NeedMet)),
-                new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 30, 45), new CreateReferral(guid2, guid1, new DateTime(2021, 7, 10, 19, 30, 45))),
+                new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 30, 45), new CreateReferral(guid2, guid1, "v1", new DateTime(2021, 7, 10, 19, 30, 45))),
                 new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 32, 0), new UploadReferralForm(guid2, new DateTime(2021, 7, 10, 18, 0, 0), "Request for Help Form", "Jane Doe second referral info.pdf", guid2)),
                 new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 32, 0), new PerformReferralActivity(guid2, "Intake Coordinator Screening Call",
                     new DateTime(2021, 7, 10, 19, 32, 0), adminId)));
@@ -386,7 +386,7 @@ namespace CareTogether.TestData
                 new VolunteerPolicy(
                     new Dictionary<string, VolunteerRolePolicy>
                     {
-                        ["Family Friend"] = new VolunteerRolePolicy("Family Friend", ApprovalRequirementsByPolicyVersion: new Dictionary<string, ImmutableList<VolunteerApprovalRequirement>>
+                        ["Family Friend"] = new VolunteerRolePolicy("Family Friend", DefaultVersion: "v2", ApprovalRequirementsByPolicyVersion: new Dictionary<string, ImmutableList<VolunteerApprovalRequirement>>
                         {
                             ["v1"] = new List<VolunteerApprovalRequirement>
                             {
@@ -399,7 +399,7 @@ namespace CareTogether.TestData
                                 new VolunteerApprovalRequirement(RequirementStage.Approval, "Comprehensive Background Check")
                             }.ToImmutableList()
                         }.ToImmutableDictionary()),
-                        ["Family Coach"] = new VolunteerRolePolicy("Family Coach", ApprovalRequirementsByPolicyVersion: new Dictionary<string, ImmutableList<VolunteerApprovalRequirement>>
+                        ["Family Coach"] = new VolunteerRolePolicy("Family Coach", DefaultVersion: "v2", ApprovalRequirementsByPolicyVersion: new Dictionary<string, ImmutableList<VolunteerApprovalRequirement>>
                         {
                             ["v1"] = new List<VolunteerApprovalRequirement>
                             {
@@ -417,7 +417,7 @@ namespace CareTogether.TestData
                     }.ToImmutableDictionary(),
                     new Dictionary<string, VolunteerFamilyRolePolicy>
                     {
-                        ["Host Family"] = new VolunteerFamilyRolePolicy("Host Family", ApprovalRequirementsByPolicyVersion: new Dictionary<string, ImmutableList<VolunteerFamilyApprovalRequirement>>
+                        ["Host Family"] = new VolunteerFamilyRolePolicy("Host Family", DefaultVersion: "v2", ApprovalRequirementsByPolicyVersion: new Dictionary<string, ImmutableList<VolunteerFamilyApprovalRequirement>>
                         {
                             ["v1"] = new List<VolunteerFamilyApprovalRequirement>
                             {

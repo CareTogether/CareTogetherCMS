@@ -860,36 +860,17 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "version": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "versionLabel": {
-            "type": "string"
+          "actionDefinitions": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ActionRequirement"
+            }
           },
           "referralPolicy": {
             "$ref": "#/components/schemas/ReferralPolicy"
           },
           "volunteerPolicy": {
             "$ref": "#/components/schemas/VolunteerPolicy"
-          }
-        }
-      },
-      "ReferralPolicy": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "requiredIntakeActions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ActionRequirement"
-            }
-          },
-          "arrangementPolicies": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ArrangementPolicy"
-            }
           }
         }
       },
@@ -941,9 +922,6 @@
               "formName": {
                 "type": "string"
               },
-              "formVersion": {
-                "type": "string"
-              },
               "instructions": {
                 "type": "string",
                 "nullable": true
@@ -956,6 +934,24 @@
             }
           }
         ]
+      },
+      "ReferralPolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "requiredIntakeActionNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "arrangementPolicies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArrangementPolicy"
+            }
+          }
+        }
       },
       "ArrangementPolicy": {
         "type": "object",
@@ -973,22 +969,22 @@
               "$ref": "#/components/schemas/VolunteerFunction"
             }
           },
-          "requiredSetupActions": {
+          "requiredSetupActionNames": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ActionRequirement"
+              "type": "string"
             }
           },
-          "requiredMonitoringActions": {
+          "requiredMonitoringActionNames": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ValueTupleOfActionRequirementAndRecurrencePolicy"
+              "$ref": "#/components/schemas/ValueTupleOfStringAndRecurrencePolicy"
             }
           },
-          "requiredCloseoutActions": {
+          "requiredCloseoutActionNames": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ActionRequirement"
+              "type": "string"
             }
           }
         }
@@ -1045,12 +1041,12 @@
           2
         ]
       },
-      "ValueTupleOfActionRequirementAndRecurrencePolicy": {
+      "ValueTupleOfStringAndRecurrencePolicy": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "item1": {
-            "$ref": "#/components/schemas/ActionRequirement"
+            "type": "string"
           },
           "item2": {
             "$ref": "#/components/schemas/RecurrencePolicy"
@@ -1109,10 +1105,16 @@
           "volunteerRoleType": {
             "type": "string"
           },
-          "approvalRequirements": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/VolunteerApprovalRequirement"
+          "defaultVersion": {
+            "type": "string"
+          },
+          "approvalRequirementsByPolicyVersion": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/VolunteerApprovalRequirement"
+              }
             }
           }
         }
@@ -1124,8 +1126,12 @@
           "stage": {
             "$ref": "#/components/schemas/RequirementStage"
           },
-          "actionRequirement": {
-            "$ref": "#/components/schemas/ActionRequirement"
+          "actionName": {
+            "type": "string"
+          },
+          "policyVersion": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -1150,10 +1156,16 @@
           "volunteerFamilyRoleType": {
             "type": "string"
           },
-          "approvalRequirements": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/VolunteerFamilyApprovalRequirement"
+          "defaultVersion": {
+            "type": "string"
+          },
+          "approvalRequirementsByPolicyVersion": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/VolunteerFamilyApprovalRequirement"
+              }
             }
           }
         }
@@ -1165,11 +1177,15 @@
           "stage": {
             "$ref": "#/components/schemas/RequirementStage"
           },
-          "actionRequirement": {
-            "$ref": "#/components/schemas/ActionRequirement"
+          "actionName": {
+            "type": "string"
           },
           "scope": {
             "$ref": "#/components/schemas/VolunteerFamilyRequirementScope"
+          },
+          "policyVersion": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -1634,9 +1650,6 @@
           "formName": {
             "type": "string"
           },
-          "formVersion": {
-            "type": "string"
-          },
           "originalFileName": {
             "type": "string"
           },
@@ -1993,9 +2006,6 @@
                 "format": "date-time"
               },
               "formName": {
-                "type": "string"
-              },
-              "formVersion": {
                 "type": "string"
               },
               "uploadedFileName": {
@@ -2538,9 +2548,6 @@
               "formName": {
                 "type": "string"
               },
-              "formVersion": {
-                "type": "string"
-              },
               "uploadedFileName": {
                 "type": "string"
               },
@@ -2664,9 +2671,6 @@
                 "format": "date-time"
               },
               "formName": {
-                "type": "string"
-              },
-              "formVersion": {
                 "type": "string"
               },
               "uploadedFileName": {
