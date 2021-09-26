@@ -67,7 +67,7 @@ namespace CareTogether.Engines
             Family family, ImmutableList<FormUploadInfo> familyFormUploads, ImmutableList<ActivityInfo> familyActivitiesPerformed,
             ImmutableDictionary<Guid, (ImmutableList<FormUploadInfo> FormUploads, ImmutableList<ActivityInfo> ActivitiesPerformed)> individualInfo)
         {
-            var policyResult = await policiesResource.GetEffectiveVolunteerPolicy(organizationId, locationId);
+            var policyResult = await policiesResource.GetCurrentPolicy(organizationId, locationId);
             if (!policyResult.TryPickT0(out var policy, out var error))
                 throw new InvalidOperationException(error.ToString());
 
@@ -80,7 +80,7 @@ namespace CareTogether.Engines
                 {
                     var (formUploads, activities) = personIndividualInfo;
 
-                    foreach (var (roleName, rolePolicy) in policy.VolunteerRoles)
+                    foreach (var (roleName, rolePolicy) in policy.VolunteerPolicy.VolunteerRoles)
                     {
                         var requirementsMet = rolePolicy.ApprovalRequirements.Select(requirement =>
                             (requirement.Stage, RequirementMet: requirement.ActionRequirement switch
@@ -103,7 +103,7 @@ namespace CareTogether.Engines
             }).ToImmutableDictionary(x => x.Item1, x => x.Item2);
 
             var familyRoles = new Dictionary<string, RoleApprovalStatus>();
-            foreach (var (roleName, rolePolicy) in policy.VolunteerFamilyRoles)
+            foreach (var (roleName, rolePolicy) in policy.VolunteerPolicy.VolunteerFamilyRoles)
             {
                 var requirementsMet = rolePolicy.ApprovalRequirements.Select(requirement =>
                     (requirement.Stage, RequirementMet: requirement.Scope switch

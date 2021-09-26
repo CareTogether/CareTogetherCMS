@@ -82,11 +82,5 @@ namespace CareTogether.Resources
         Task<ResourceResult<OrganizationConfiguration>> GetConfigurationAsync(Guid organizationId);
 
         Task<ResourceResult<EffectiveLocationPolicy>> GetCurrentPolicy(Guid organizationId, Guid locationId);
-
-        Task<ResourceResult<ReferralPolicy>> GetEffectiveReferralPolicy(Guid organizationId, Guid locationId,
-            int? version = null);
-
-        Task<ResourceResult<VolunteerPolicy>> GetEffectiveVolunteerPolicy(Guid organizationId, Guid locationId,
-            int? version = null);
     }
 }
