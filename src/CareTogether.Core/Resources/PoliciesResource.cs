@@ -30,7 +30,7 @@ namespace CareTogether.Resources
 
         public async Task<ResourceResult<EffectiveLocationPolicy>> GetCurrentPolicy(Guid organizationId, Guid locationId)
         {
-            var result = await locationPoliciesStore.GetAsync(organizationId, locationId, "1");
+            var result = await locationPoliciesStore.GetAsync(organizationId, locationId, "policy");
             return result.TryPickT0(out var success, out var _)
                 ? success.Value
                 : ResourceResult.NotFound;
