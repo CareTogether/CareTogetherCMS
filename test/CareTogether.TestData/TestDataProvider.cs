@@ -138,10 +138,10 @@ namespace CareTogether.TestData
         public static async Task PopulateReferralEvents(IMultitenantEventLog<ReferralEvent> referralsEventLog)
         {
             await referralsEventLog.AppendEventsAsync(guid1, guid2,
-                new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 5, 4, 10, 0), new CreateReferral(guid1, guid1, "v1", new DateTime(2020, 3, 5, 4, 10, 0))),
-                new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 5, 4, 15, 15), new UploadReferralForm(guid1, new DateTime(2020, 3, 5, 4, 12, 15), "Request for Help Form", "v1", "Jane Doe referral info.pdf", guid1)),
+                new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 5, 4, 10, 0), new CreateReferral(guid1, guid1, new DateTime(2020, 3, 5, 4, 10, 0))),
+                new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 5, 4, 15, 15), new UploadReferralForm(guid1, new DateTime(2020, 3, 5, 4, 12, 15), "Request for Help Form", "Jane Doe referral info.pdf", guid1)),
                 new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 6, 8, 45, 30), new PerformReferralActivity(guid1, "Intake Coordinator Screening Call", new DateTime(2020, 3, 6, 8, 45, 30), adminId)),
-                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 12, 13), new CreateArrangement(guid1, guid1, "v1", "Hosting")),
+                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 12, 13), new CreateArrangement(guid1, guid1, "Hosting")),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 13, 14), new AssignIndividualVolunteer(guid1, guid1, guid4, "Family Coach")),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 13, 55), new AssignVolunteerFamily(guid1, guid1, guid2, "Host Family")),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 12, 22, 21), new AssignVolunteerFamily(guid1, guid1, guid3, "Host Family Friend")),
@@ -170,8 +170,8 @@ namespace CareTogether.TestData
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 30, 18, 18, 18), new TrackChildrenLocationChange(guid1, guid1,
                     new DateTime(2020, 3, 30, 18, 18, 18), ImmutableList<Guid>.Empty.Add(guid3), guid1, ChildrenLocationPlan.ReturnToFamily, "Mom met us and picked him up at DQ")),
                 new ReferralCommandExecuted(adminId, new DateTime(2020, 10, 4, 12, 32, 55), new CloseReferral(guid1, ReferralCloseReason.NeedMet)),
-                new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 30, 45), new CreateReferral(guid2, guid1, "v1", new DateTime(2021, 7, 10, 19, 30, 45))),
-                new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 32, 0), new UploadReferralForm(guid2, new DateTime(2021, 7, 10, 18, 0, 0), "Request for Help Form", "v1", "Jane Doe second referral info.pdf", guid2)),
+                new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 30, 45), new CreateReferral(guid2, guid1, new DateTime(2021, 7, 10, 19, 30, 45))),
+                new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 32, 0), new UploadReferralForm(guid2, new DateTime(2021, 7, 10, 18, 0, 0), "Request for Help Form", "Jane Doe second referral info.pdf", guid2)),
                 new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 32, 0), new PerformReferralActivity(guid2, "Intake Coordinator Screening Call",
                     new DateTime(2021, 7, 10, 19, 32, 0), adminId)));
         }
@@ -191,23 +191,23 @@ namespace CareTogether.TestData
         {
             await approvalsEventLog.AppendEventsAsync(guid1, guid2,
                 new VolunteerCommandExecuted(adminId, new DateTime(2021, 7, 1),
-                    new UploadVolunteerForm(guid4, guid4, new DateTime(2021, 7, 1), "Family Coach Application", "v1", "abc.pdf", Guid.Empty)),
+                    new UploadVolunteerForm(guid4, guid4, new DateTime(2021, 7, 1), "Family Coach Application", "abc.pdf", Guid.Empty)),
                 new VolunteerCommandExecuted(adminId, new DateTime(2021, 7, 10),
                     new PerformVolunteerActivity(guid4, guid4, "Interview with Family Coach Supervisor", new DateTime(2021, 7, 9), guid1)),
                 new VolunteerCommandExecuted(adminId, new DateTime(2021, 7, 14),
-                    new UploadVolunteerForm(guid4, guid4, new DateTime(2021, 7, 13), "Background Check", "v1", "def.pdf", Guid.Empty)),
+                    new UploadVolunteerForm(guid4, guid4, new DateTime(2021, 7, 13), "Background Check", "def.pdf", Guid.Empty)),
                 new VolunteerFamilyCommandExecuted(adminId, new DateTime(2021, 7, 1),
-                    new UploadVolunteerFamilyForm(guid3, new DateTime(2021, 7, 1), "Host Family Application", "v1", "abc.pdf", Guid.Empty)),
+                    new UploadVolunteerFamilyForm(guid3, new DateTime(2021, 7, 1), "Host Family Application", "abc.pdf", Guid.Empty)),
                 new VolunteerFamilyCommandExecuted(adminId, new DateTime(2021, 7, 15),
-                    new UploadVolunteerFamilyForm(guid3, new DateTime(2021, 7, 14), "Home Screening Checklist", "v1", "def.pdf", Guid.Empty)),
+                    new UploadVolunteerFamilyForm(guid3, new DateTime(2021, 7, 14), "Home Screening Checklist", "def.pdf", Guid.Empty)),
                 new VolunteerCommandExecuted(adminId, new DateTime(2021, 7, 18),
-                    new UploadVolunteerForm(guid3, guid8, new DateTime(2021, 7, 16), "Background Check", "v1", "bg8.jpg", Guid.Empty)),
+                    new UploadVolunteerForm(guid3, guid8, new DateTime(2021, 7, 16), "Background Check", "bg8.jpg", Guid.Empty)),
                 new VolunteerCommandExecuted(adminId, new DateTime(2021, 7, 18),
-                    new UploadVolunteerForm(guid3, guid9, new DateTime(2021, 7, 16), "Background Check", "v1", "bg9.jpg", Guid.Empty)),
+                    new UploadVolunteerForm(guid3, guid9, new DateTime(2021, 7, 16), "Background Check", "bg9.jpg", Guid.Empty)),
                 new VolunteerCommandExecuted(adminId, new DateTime(2021, 8, 10),
-                    new UploadVolunteerForm(guid2, guid6, new DateTime(2021, 8, 10), "Family Friend Application", "v1", "ffls.pdf", Guid.Empty)),
+                    new UploadVolunteerForm(guid2, guid6, new DateTime(2021, 8, 10), "Family Friend Application", "ffls.pdf", Guid.Empty)),
                 new VolunteerCommandExecuted(adminId, new DateTime(2021, 8, 11), //TODO: This is a workaround for a bug!
-                    new UploadVolunteerForm(guid2, guid5, new DateTime(2021, 8, 11), "Family Friend Application", "v1", "ffhs.pdf", Guid.Empty)));
+                    new UploadVolunteerForm(guid2, guid5, new DateTime(2021, 8, 11), "Family Friend Application", "ffhs.pdf", Guid.Empty)));
         }
 
         public static async Task PopulateDraftNotes(IObjectStore<string?> draftNotesStore)
@@ -234,15 +234,42 @@ namespace CareTogether.TestData
 
         public static async Task PopulatePolicies(IObjectStore<EffectiveLocationPolicy> policiesStore)
         {
-            await policiesStore.UpsertAsync(guid1, guid2, "1", new EffectiveLocationPolicy(1, "Local test policy",
+            await policiesStore.UpsertAsync(guid1, guid2, "policy", new EffectiveLocationPolicy(
+                ActionDefinitions: new Dictionary<string, ActionRequirement>
+                {
+                    ["Request for Help Form"] = new FormUploadRequirement("Request for Help Form",
+                        "Can be done over the phone", new Uri("http://example.com/forms/requestforhelp-v1")),
+                    ["Intake Coordinator Screening Call"] = new ActivityRequirement("Intake Coordinator Screening Call"),
+                    ["Intake Form"] = new FormUploadRequirement("Intake Form",
+                        "Email or text the Cognito Form link", new Uri("http://example.com/forms/intake-v1")),
+                    ["Hosting Consent"] = new FormUploadRequirement("Hosting Consent",
+                        "This must be notarized.", new Uri("http://example.com/forms/consent-v1")),
+                    ["Medical POA"] = new FormUploadRequirement("Medical POA",
+                        "This must be notarized.", new Uri("http://example.com/forms/medicalpoa-v2")),
+                    ["Family Coach Safety Visit"] = new ActivityRequirement("Family Coach Safety Visit"),
+                    ["Family Coach Supervision"] = new ActivityRequirement("Family Coach Supervision"),
+                    ["Return of Child Form"] = new FormUploadRequirement("Return of Child",
+                        null, new Uri("http://example.com/forms/returnofchild-v1")),
+                    ["Advocacy Agreement"] = new FormUploadRequirement("Advocacy Agreement",
+                        null, new Uri("http://example.com/forms/advocacy-v1")),
+                    ["Family Coach Checkin"] = new ActivityRequirement("Family Coach Checkin"),
+                    ["Family Coach Supervision"] = new ActivityRequirement("Family Coach Supervision"),
+                    ["Family Friend Application"] = new FormUploadRequirement("Family Friend Application", null, new Uri("http://example.com/forms/app-ff")),
+                    ["Background Check"] = new FormUploadRequirement("Background Check", "See approval guide for directions", new Uri("http://example.com/forms/app-ff")),
+                    ["Family Coach Application"] = new FormUploadRequirement("Family Coach Application", null, new Uri("http://example.com/forms/app-fc")),
+                    ["Background Check"] = new FormUploadRequirement("Background Check", "See approval guide for directions", new Uri("http://example.com/forms/app-ff")),
+                    ["Interview with Family Coach Supervisor"] = new ActivityRequirement("Interview with Family Coach Supervisor"),
+                    ["Host Family Application"] = new FormUploadRequirement("Host Family Application", null, new Uri("http://example.com/forms/app-hf")),
+                    ["Background Check"] = new FormUploadRequirement("Background Check", "See approval guide for directions", new Uri("http://example.com/forms/app-ff")),
+                    ["Home Screening Checklist"] = new FormUploadRequirement("Home Screening Checklist", "Must be filled out by an approved home screener", new Uri("http://example.com/forms/hscheck")),
+                    ["Host Family Interview"] = new ActivityRequirement("Host Family Interview")
+                }.ToImmutableDictionary(),
                 new ReferralPolicy(
-                    new List<ActionRequirement>
+                    new List<string>
                     {
-                        new FormUploadRequirement("Request for Help Form", "v1",
-                            "Can be done over the phone", new Uri("http://example.com/forms/requestforhelp-v1")),
-                        new ActivityRequirement("Intake Coordinator Screening Call"),
-                        new FormUploadRequirement("Intake Form", "v1",
-                            "Email or text the Cognito Form link", new Uri("http://example.com/forms/intake-v1"))
+                        "Request for Help Form",
+                        "Intake Coordinator Screening Call",
+                        "Intake Form"
                     }.ToImmutableList(),
                     new List<ArrangementPolicy>
                     {
@@ -292,32 +319,29 @@ namespace CareTogether.TestData
                                     "Host Family"
                                 }.ToImmutableList())
                             }.ToImmutableList(),
-                            RequiredSetupActions: new List<ActionRequirement>
+                            RequiredSetupActionNames: new List<string>
                             {
-                                new FormUploadRequirement("Hosting Consent", "v1",
-                                    "This must be notarized.", new Uri("http://example.com/forms/consent-v1")),
-                                new FormUploadRequirement("Medical POA", "v2",
-                                    "This must be notarized.", new Uri("http://example.com/forms/medicalpoa-v2"))
+                                "Hosting Consent",
+                                "Medical POA"
                             }.ToImmutableList(),
-                            RequiredMonitoringActions: new List<(ActionRequirement, RecurrencePolicy)>
+                            RequiredMonitoringActionNames: new List<(string, RecurrencePolicy)>
                             {
-                                (new ActivityRequirement("Family Coach Safety Visit"),
+                                ("Family Coach Safety Visit",
                                     new RecurrencePolicy(new List<RecurrencePolicyStage>
                                     {
                                         new RecurrencePolicyStage(TimeSpan.FromHours(48), 1),
                                         new RecurrencePolicyStage(TimeSpan.FromDays(7), 5),
                                         new RecurrencePolicyStage(TimeSpan.FromDays(14), null)
                                     }.ToImmutableList())),
-                                (new ActivityRequirement("Family Coach Supervision"),
+                                ("Family Coach Supervision",
                                     new RecurrencePolicy(new List<RecurrencePolicyStage>
                                     {
                                         new RecurrencePolicyStage(TimeSpan.FromDays(7), null)
                                     }.ToImmutableList()))
                             }.ToImmutableList(),
-                            RequiredCloseoutActions: new List<ActionRequirement>
+                            RequiredCloseoutActionNames: new List<string>
                             {
-                                new FormUploadRequirement("Return of Child", "v1",
-                                    null, new Uri("http://example.com/forms/returnofchild-v1")),
+                                "Return of Child Form"
                             }.ToImmutableList()),
                         new ArrangementPolicy("Friending", ChildInvolvement.NoChildInvolvement,
                             VolunteerFunctions: new List<VolunteerFunction>
@@ -339,64 +363,77 @@ namespace CareTogether.TestData
                                 }.ToImmutableList(),
                                 EligibleVolunteerFamilyRoles: ImmutableList<string>.Empty)
                             }.ToImmutableList(),
-                            RequiredSetupActions: new List<ActionRequirement>
+                            RequiredSetupActionNames: new List<string>
                             {
-                                new FormUploadRequirement("Advocacy Agreement", "v1",
-                                    null, new Uri("http://example.com/forms/advocacy-v1")),
+                                "Advocacy Agreement"
                             }.ToImmutableList(),
-                            RequiredMonitoringActions: new List<(ActionRequirement, RecurrencePolicy)>
+                            RequiredMonitoringActionNames: new List<(string, RecurrencePolicy)>
                             {
-                                (new ActivityRequirement("Family Coach Checkin"),
+                                ("Family Coach Checkin",
                                     new RecurrencePolicy(new List<RecurrencePolicyStage>
                                     {
                                         new RecurrencePolicyStage(TimeSpan.FromDays(7), null)
                                     }.ToImmutableList())),
-                                (new ActivityRequirement("Family Coach Supervision"),
+                                ("Family Coach Supervision",
                                     new RecurrencePolicy(new List<RecurrencePolicyStage>
                                     {
                                         new RecurrencePolicyStage(TimeSpan.FromDays(7), null)
                                     }.ToImmutableList()))
                             }.ToImmutableList(),
-                            RequiredCloseoutActions: new List<ActionRequirement>
+                            RequiredCloseoutActionNames: new List<string>
                             { }.ToImmutableList())
                     }.ToImmutableList()),
                 new VolunteerPolicy(
                     new Dictionary<string, VolunteerRolePolicy>
                     {
-                        ["Family Friend"] = new VolunteerRolePolicy("Family Friend", new List<VolunteerApprovalRequirement>
+                        ["Family Friend"] = new VolunteerRolePolicy("Family Friend", ApprovalRequirementsByPolicyVersion: new Dictionary<string, ImmutableList<VolunteerApprovalRequirement>>
                         {
-                            new VolunteerApprovalRequirement(RequirementStage.Application,
-                                new FormUploadRequirement("Family Friend Application", "v1", null, new Uri("http://example.com/forms/app-ff"))),
-                            new VolunteerApprovalRequirement(RequirementStage.Approval,
-                                new FormUploadRequirement("Background Check", "v1", "See approval guide for directions", new Uri("http://example.com/forms/app-ff")))
-                        }.ToImmutableList()),
-                        ["Family Coach"] = new VolunteerRolePolicy("Family Coach", new List<VolunteerApprovalRequirement>
+                            ["v1"] = new List<VolunteerApprovalRequirement>
+                            {
+                                new VolunteerApprovalRequirement(RequirementStage.Application, "Family Friend Application"),
+                                new VolunteerApprovalRequirement(RequirementStage.Approval, "Background Check")
+                            }.ToImmutableList(),
+                            ["v2"] = new List<VolunteerApprovalRequirement>
+                            {
+                                new VolunteerApprovalRequirement(RequirementStage.Application, "Family Friend Application"),
+                                new VolunteerApprovalRequirement(RequirementStage.Approval, "Comprehensive Background Check")
+                            }.ToImmutableList()
+                        }.ToImmutableDictionary()),
+                        ["Family Coach"] = new VolunteerRolePolicy("Family Coach", ApprovalRequirementsByPolicyVersion: new Dictionary<string, ImmutableList<VolunteerApprovalRequirement>>
                         {
-                            new VolunteerApprovalRequirement(RequirementStage.Application,
-                                new FormUploadRequirement("Family Coach Application", "v1", null, new Uri("http://example.com/forms/app-fc"))),
-                            new VolunteerApprovalRequirement(RequirementStage.Approval,
-                                new FormUploadRequirement("Background Check", "v1", "See approval guide for directions", new Uri("http://example.com/forms/app-ff"))),
-                            new VolunteerApprovalRequirement(RequirementStage.Approval,
-                                new ActivityRequirement("Interview with Family Coach Supervisor"))
-                        }.ToImmutableList())
+                            ["v1"] = new List<VolunteerApprovalRequirement>
+                            {
+                                new VolunteerApprovalRequirement(RequirementStage.Application, "Family Coach Application"),
+                                new VolunteerApprovalRequirement(RequirementStage.Approval, "Background Check"),
+                                new VolunteerApprovalRequirement(RequirementStage.Approval, "Interview with Family Coach Supervisor")
+                            }.ToImmutableList(),
+                            ["v2"] = new List<VolunteerApprovalRequirement>
+                            {
+                                new VolunteerApprovalRequirement(RequirementStage.Application, "Family Coach Application"),
+                                new VolunteerApprovalRequirement(RequirementStage.Approval, "Comprehensive Background Check"),
+                                new VolunteerApprovalRequirement(RequirementStage.Approval, "Interview with Family Coach Supervisor")
+                            }.ToImmutableList()
+                        }.ToImmutableDictionary())
                     }.ToImmutableDictionary(),
                     new Dictionary<string, VolunteerFamilyRolePolicy>
                     {
-                        ["Host Family"] = new VolunteerFamilyRolePolicy("Host Family", new List<VolunteerFamilyApprovalRequirement>
+                        ["Host Family"] = new VolunteerFamilyRolePolicy("Host Family", ApprovalRequirementsByPolicyVersion: new Dictionary<string, ImmutableList<VolunteerFamilyApprovalRequirement>>
                         {
-                            new VolunteerFamilyApprovalRequirement(RequirementStage.Application,
-                                new FormUploadRequirement("Host Family Application", "v1", null, new Uri("http://example.com/forms/app-hf")),
-                                VolunteerFamilyRequirementScope.OncePerFamily),
-                            new VolunteerFamilyApprovalRequirement(RequirementStage.Approval,
-                                new FormUploadRequirement("Background Check", "v1", "See approval guide for directions", new Uri("http://example.com/forms/app-ff")),
-                                VolunteerFamilyRequirementScope.AllAdultsInTheFamily),
-                            new VolunteerFamilyApprovalRequirement(RequirementStage.Approval,
-                                new FormUploadRequirement("Home Screening Checklist", "v1", "Must be filled out by an approved home screener", new Uri("http://example.com/forms/hscheck")),
-                                VolunteerFamilyRequirementScope.OncePerFamily),
-                            new VolunteerFamilyApprovalRequirement(RequirementStage.Approval,
-                                new ActivityRequirement("Host Family Interview"),
-                                VolunteerFamilyRequirementScope.OncePerFamily)
-                        }.ToImmutableList())
+                            ["v1"] = new List<VolunteerFamilyApprovalRequirement>
+                            {
+                                new VolunteerFamilyApprovalRequirement(RequirementStage.Application, "Host Family Application", VolunteerFamilyRequirementScope.OncePerFamily),
+                                new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Background Check", VolunteerFamilyRequirementScope.AllAdultsInTheFamily),
+                                new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Home Screening Checklist", VolunteerFamilyRequirementScope.OncePerFamily),
+                                new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Host Family Interview", VolunteerFamilyRequirementScope.OncePerFamily)
+                            }.ToImmutableList(),
+                            ["v2"] = new List<VolunteerFamilyApprovalRequirement>
+                            {
+                                new VolunteerFamilyApprovalRequirement(RequirementStage.Application, "Host Family Application", VolunteerFamilyRequirementScope.OncePerFamily),
+                                new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Comprehensive Background Check", VolunteerFamilyRequirementScope.AllAdultsInTheFamily),
+                                new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Home Screening Checklist", VolunteerFamilyRequirementScope.OncePerFamily),
+                                new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Host Family Interview", VolunteerFamilyRequirementScope.OncePerFamily)
+                            }.ToImmutableList()
+                        }.ToImmutableDictionary())
                     }.ToImmutableDictionary())));
         }
 

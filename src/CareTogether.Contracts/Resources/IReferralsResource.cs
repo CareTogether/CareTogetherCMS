@@ -56,7 +56,7 @@ namespace CareTogether.Resources
         Guid PerformedByPersonId)
         : ReferralCommand(ReferralId);
     public sealed record UploadReferralForm(Guid ReferralId,
-        DateTime CompletedAtUtc, string FormName, string FormVersion, string UploadedFileName, Guid UploadedDocumentId)
+        DateTime CompletedAtUtc, string FormName, string UploadedFileName, Guid UploadedDocumentId)
         : ReferralCommand(ReferralId);
     public sealed record CloseReferral(Guid ReferralId, ReferralCloseReason CloseReason)
         : ReferralCommand(ReferralId);
