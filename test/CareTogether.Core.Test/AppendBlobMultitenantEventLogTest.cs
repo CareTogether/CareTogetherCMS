@@ -101,7 +101,7 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public async Task AppendingAnEventToAnUninitializedTenantLogValidatesTheExpectedSequenceNumber()
         {
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 2));
+            await Assert.ThrowsExceptionAsync<Exception>(() => communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 2));
             var getResult = await communityEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
             Assert.AreEqual(1, getResult.Count);
         }
