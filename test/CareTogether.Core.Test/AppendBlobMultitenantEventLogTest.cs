@@ -92,9 +92,8 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public async Task AppendingAnEventToAnUninitializedTenantLogStoresItWithTheCorrectSequenceNumber()
         {
-            var appendResult = await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 1);
+            await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 1);
             var getResult = await communityEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
-            Assert.IsTrue(appendResult.IsT0);
             Assert.AreEqual(1, getResult.Count);
             Assert.AreEqual(1, getResult[0].SequenceNumber);
         }
@@ -102,9 +101,8 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public async Task AppendingAnEventToAnUninitializedTenantLogValidatesTheExpectedSequenceNumber()
         {
-            var appendResult = await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 2);
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 2));
             var getResult = await communityEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
-            Assert.IsTrue(appendResult.IsT1);
             Assert.AreEqual(1, getResult.Count);
         }
 
@@ -144,21 +142,18 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public async Task AppendingMultipleEventsToMultipleTenantLogsMaintainsSeparation()
         {
-            var appendResults = new[]
-            {
-                await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 1),
-                await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 2),
-                await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 3),
-                await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 4),
-                await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 5),
-                await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 6),
-                await communityEventLog.AppendEventAsync(guid3, guid4, personCommand, 1),
-                await communityEventLog.AppendEventAsync(guid3, guid4, personCommand, 2),
-                await communityEventLog.AppendEventAsync(guid3, guid4, personCommand, 3),
-                await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 7)
-            };
+            await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 1);
+            await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 2);
+            await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 3);
+            await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 4);
+            await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 5);
+            await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 6);
+            await communityEventLog.AppendEventAsync(guid3, guid4, personCommand, 1);
+            await communityEventLog.AppendEventAsync(guid3, guid4, personCommand, 2);
+            await communityEventLog.AppendEventAsync(guid3, guid4, personCommand, 3);
+            await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 7);
+
             var getResult = await communityEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
-            Assert.IsTrue(appendResults.All(result => result.IsT0));
             Assert.AreEqual(7, getResult.Count);
             Assert.AreEqual((personCommand, 1), getResult[0]);
             Assert.AreEqual((personCommand, 2), getResult[1]);
