@@ -1,4 +1,4 @@
-using CareTogether.Engines;
+﻿using CareTogether.Engines;
 using CareTogether.Resources;
 using Nito.AsyncEx;
 using System;
@@ -214,6 +214,13 @@ namespace CareTogether.Managers
                             {
                                 (adultPersonId, c.FamilyAdultRelationshipInfo)
                             }, new List<Guid>(), new List<CustodialRelationship>());
+                        var createContactSubcommand = new CreateContact(adultPersonId, ContactMethodPreferenceNotes: null);
+                        var addContactAddressSubcommand = new AddContactAddress(adultPersonId,
+                            c.Address with { Id = Guid.NewGuid() }, IsCurrentAddress: true);
+                        var addContactPhoneNumberSubcommand = new AddContactPhoneNumber(adultPersonId,
+                            c.PhoneNumber with { Id = Guid.NewGuid() }, IsPreferredPhoneNumber: true);
+                        var addContactEmailAddressSubcommand = new AddContactEmailAddress(adultPersonId,
+                            c.EmailAddress with { Id = Guid.NewGuid() }, IsPreferredEmailAddress: true);
                         var activateVolunteerFamilySubcommand = new ActivateVolunteerFamily(familyId);
 
                         //TODO: Authorize the subcommands via the policy evaluation engine
