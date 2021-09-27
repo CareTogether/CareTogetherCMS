@@ -86,7 +86,7 @@ namespace CareTogether.Resources.Models
                 Event: new ContactCommandExecutedEvent(userId, timestampUtc, command),
                 SequenceNumber: LastKnownSequenceNumber + 1,
                 Contact: contact,
-                OnCommit: () => { contacts = contacts.SetItem(contact.PersonId, contact); }
+                OnCommit: () => { LastKnownSequenceNumber++; contacts = contacts.SetItem(contact.PersonId, contact); }
             );
         }
 

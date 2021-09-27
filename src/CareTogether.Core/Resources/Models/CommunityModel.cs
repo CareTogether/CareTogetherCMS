@@ -118,7 +118,11 @@ namespace CareTogether.Resources.Models
                 Event: new FamilyCommandExecuted(userId, timestampUtc, command),
                 SequenceNumber: LastKnownSequenceNumber + 1,
                 Family: familyEntryToUpsert.ToFamily(people),
-                OnCommit: () => families = families.SetItem(familyEntryToUpsert.Id, familyEntryToUpsert));
+                OnCommit: () =>
+                {
+                    LastKnownSequenceNumber++;
+                    families = families.SetItem(familyEntryToUpsert.Id, familyEntryToUpsert);
+                });
         }
 
         public (PersonCommandExecuted Event, long SequenceNumber, Person Person, Action OnCommit)
@@ -144,7 +148,11 @@ namespace CareTogether.Resources.Models
                 Event: new PersonCommandExecuted(userId, timestampUtc, command),
                 SequenceNumber: LastKnownSequenceNumber + 1,
                 Person: personEntryToUpsert.ToPerson(),
-                OnCommit: () => people = people.SetItem(personEntryToUpsert.Id, personEntryToUpsert));
+                OnCommit: () =>
+                {
+                    LastKnownSequenceNumber++;
+                    people = people.SetItem(personEntryToUpsert.Id, personEntryToUpsert);
+                });
         }
 
         public ImmutableList<Family> FindFamilies(Func<Family, bool> predicate) =>

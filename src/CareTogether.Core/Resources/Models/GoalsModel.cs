@@ -64,7 +64,7 @@ namespace CareTogether.Resources.Models
                 Event: new GoalCommandExecutedEvent(userId, timestampUtc, command),
                 SequenceNumber: LastKnownSequenceNumber + 1,
                 Goal: goal,
-                OnCommit: () => { goals = goals.SetItem((goal.PersonId, goal.Id), goal); }
+                OnCommit: () => { LastKnownSequenceNumber++; goals = goals.SetItem((goal.PersonId, goal.Id), goal); }
             );
         }
 
