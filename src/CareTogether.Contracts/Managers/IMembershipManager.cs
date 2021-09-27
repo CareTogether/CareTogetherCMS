@@ -12,12 +12,12 @@ namespace CareTogether.Managers
     /// </summary>
     public interface IMembershipManager
     {
-        Task<ManagerResult<ContactInfo>> GetContactInfoAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId, Guid personId);
+        Task<ContactInfo> GetContactInfoAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId, Guid personId);
 
-        Task<ManagerResult<ContactInfo>> UpdateContactInfoAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId, ContactCommand command);
+        Task<ContactInfo> UpdateContactInfoAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId, ContactCommand command);
 
-        Task<ManagerResult<ImmutableList<Person>>> QueryPeopleAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId, string searchQuery);
+        Task<ImmutableList<Person>> QueryPeopleAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId, string searchQuery);
 
-        Task<ManagerResult<Family>> ExecuteFamilyCommandAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId, FamilyCommand command);
+        Task<Family> ExecuteFamilyCommandAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId, FamilyCommand command);
     }
 }

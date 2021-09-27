@@ -1,6 +1,4 @@
 ﻿using JsonPolymorph;
-using OneOf;
-using OneOf.Types;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -58,10 +56,10 @@ namespace CareTogether.Resources.Models
         }
 
 
-        public OneOf<Success<(FamilyCommandExecuted Event, long SequenceNumber, Family Family, Action OnCommit)>, Error<string>>
+        public (FamilyCommandExecuted Event, long SequenceNumber, Family Family, Action OnCommit)
             ExecuteFamilyCommand(FamilyCommand command, Guid userId, DateTime timestampUtc)
         {
-            OneOf<FamilyEntry, Error<string>> result = command switch
+            var familyEntryToUpsert = command switch
             {
                 CreateFamily c => new FamilyEntry(c.FamilyId, c.PrimaryFamilyContactPersonId,
                     AdultRelationships: ImmutableDictionary<Guid, FamilyAdultRelationshipInfo>.Empty.AddRange(
@@ -113,22 +111,20 @@ namespace CareTogether.Resources.Models
                         _ => throw new NotImplementedException(
                             $"The command type '{command.GetType().FullName}' has not been implemented.")
                     }
-                    : new Error<string>("A family with the specified ID does not exist.")
+                    : throw new KeyNotFoundException("A family with the specified ID does not exist.")
             };
-            if (result.TryPickT0(out var familyEntryToUpsert, out var error))
-                return new Success<(FamilyCommandExecuted Event, long SequenceNumber, Family Family, Action OnCommit)>((
-                    Event: new FamilyCommandExecuted(userId, timestampUtc, command),
-                    SequenceNumber: LastKnownSequenceNumber + 1,
-                    Family: familyEntryToUpsert.ToFamily(people),
-                    OnCommit: () => families = families.SetItem(familyEntryToUpsert.Id, familyEntryToUpsert)));
-            else
-                return result.AsT1;
+
+            return (
+                Event: new FamilyCommandExecuted(userId, timestampUtc, command),
+                SequenceNumber: LastKnownSequenceNumber + 1,
+                Family: familyEntryToUpsert.ToFamily(people),
+                OnCommit: () => families = families.SetItem(familyEntryToUpsert.Id, familyEntryToUpsert));
         }
 
-        public OneOf<Success<(PersonCommandExecuted Event, long SequenceNumber, Person Person, Action OnCommit)>, Error<string>>
+        public (PersonCommandExecuted Event, long SequenceNumber, Person Person, Action OnCommit)
             ExecutePersonCommand(PersonCommand command, Guid userId, DateTime timestampUtc)
         {
-            OneOf<PersonEntry, Error<string>> result = command switch
+            var personEntryToUpsert = command switch
             {
                 CreatePerson c => new PersonEntry(c.PersonId, c.UserId, c.FirstName, c.LastName,
                     c.Gender, c.Age, c.Ethnicity, c.Concerns, c.Notes),
@@ -141,16 +137,14 @@ namespace CareTogether.Resources.Models
                         _ => throw new NotImplementedException(
                             $"The command type '{command.GetType().FullName}' has not been implemented.")
                     }
-                    : new Error<string>("A person with the specified ID does not exist.")
+                    : throw new KeyNotFoundException("A person with the specified ID does not exist.")
             };
-            if (result.TryPickT0(out var personEntryToUpsert, out var error))
-                return new Success<(PersonCommandExecuted Event, long SequenceNumber, Person Person, Action OnCommit)>((
-                    Event: new PersonCommandExecuted(userId, timestampUtc, command),
-                    SequenceNumber: LastKnownSequenceNumber + 1,
-                    Person: personEntryToUpsert.ToPerson(),
-                    OnCommit: () => people = people.SetItem(personEntryToUpsert.Id, personEntryToUpsert)));
-            else
-                return result.AsT1;
+
+            return (
+                Event: new PersonCommandExecuted(userId, timestampUtc, command),
+                SequenceNumber: LastKnownSequenceNumber + 1,
+                Person: personEntryToUpsert.ToPerson(),
+                OnCommit: () => people = people.SetItem(personEntryToUpsert.Id, personEntryToUpsert));
         }
 
         public ImmutableList<Family> FindFamilies(Func<Family, bool> predicate) =>
@@ -171,13 +165,13 @@ namespace CareTogether.Resources.Models
             if (domainEvent is FamilyCommandExecuted familyCommandExecuted)
             {
                 var (_, _, _, onCommit) = ExecuteFamilyCommand(familyCommandExecuted.Command,
-                    familyCommandExecuted.UserId, familyCommandExecuted.TimestampUtc).AsT0.Value;
+                    familyCommandExecuted.UserId, familyCommandExecuted.TimestampUtc);
                 onCommit();
             }
             else if (domainEvent is PersonCommandExecuted personCommandExecuted)
             {
                 var (_, _, _, onCommit) = ExecutePersonCommand(personCommandExecuted.Command,
-                    personCommandExecuted.UserId, personCommandExecuted.TimestampUtc).AsT0.Value;
+                    personCommandExecuted.UserId, personCommandExecuted.TimestampUtc);
                 onCommit();
             }
             else

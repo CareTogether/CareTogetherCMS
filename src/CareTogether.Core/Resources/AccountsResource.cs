@@ -16,12 +16,10 @@ namespace CareTogether.Resources
         }
 
 
-        public async Task<ResourceResult<UserTenantAccessSummary>> GetTenantAccessSummaryAsync(ClaimsPrincipal user)
+        public async Task<UserTenantAccessSummary> GetTenantAccessSummaryAsync(ClaimsPrincipal user)
         {
             var result = await configurationStore.GetAsync(Guid.Empty, Guid.Empty, user.UserId().ToString());
-            return result.TryPickT0(out var success, out var _)
-                ? success.Value
-                : ResourceResult.NotFound;
+            return result;
         }
     }
 }

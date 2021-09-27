@@ -34,11 +34,7 @@ namespace CareTogether.Api.Controllers
             [FromBody] VolunteerFamilyCommand command)
         {
             var result = await approvalManager.ExecuteVolunteerFamilyCommandAsync(organizationId, locationId, User, command);
-
-            return result.Match<ActionResult<VolunteerFamily>>(
-                volunteerFamily => volunteerFamily,
-                notAllowed => BadRequest(),
-                notFound => NotFound());
+            return result;
         }
 
         [HttpPost("volunteerCommand")]
@@ -46,11 +42,7 @@ namespace CareTogether.Api.Controllers
             [FromBody] VolunteerCommand command)
         {
             var result = await approvalManager.ExecuteVolunteerCommandAsync(organizationId, locationId, User, command);
-
-            return result.Match<ActionResult<VolunteerFamily>>(
-                volunteerFamily => volunteerFamily,
-                notAllowed => BadRequest(),
-                notFound => NotFound());
+            return result;
         }
 
         [HttpPost("addAdult")]
@@ -58,11 +50,7 @@ namespace CareTogether.Api.Controllers
             [FromBody] ApprovalCommand command)
         {
             var result = await approvalManager.ExecuteApprovalCommandAsync(organizationId, locationId, User, command);
-
-            return result.Match<ActionResult<VolunteerFamily>>(
-                volunteerFamily => volunteerFamily,
-                notAllowed => BadRequest(),
-                notFound => NotFound());
+            return result;
         }
 
         [HttpPost("personCommand")]
@@ -70,11 +58,7 @@ namespace CareTogether.Api.Controllers
             Guid familyId, [FromBody] PersonCommand command)
         {
             var result = await approvalManager.ExecutePersonCommandAsync(organizationId, locationId, User, familyId, command);
-
-            return result.Match<ActionResult<VolunteerFamily>>(
-                volunteerFamily => volunteerFamily,
-                notAllowed => BadRequest(),
-                notFound => NotFound());
+            return result;
         }
     }
 }

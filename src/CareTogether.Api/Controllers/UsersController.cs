@@ -19,10 +19,9 @@ namespace CareTogether.Api.Controllers
         [HttpGet("/api/[controller]/me/tenantAccess")]
         public async Task<ActionResult<UserTenantAccessSummary>> GetUserTenantAccess()
         {
-            var tenantAccessSummaryResult = await accountsResource.GetTenantAccessSummaryAsync(User);
-            return tenantAccessSummaryResult.TryPickT0(out var tenantAccessSummary, out _)
-                ? Ok(tenantAccessSummary)
-                : NotFound();
+            var tenantAccessSummary = await accountsResource.GetTenantAccessSummaryAsync(User);
+
+            return Ok(tenantAccessSummary);
         }
     }
 }

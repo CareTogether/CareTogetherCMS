@@ -59,12 +59,12 @@ namespace CareTogether.Resources
     {
         Task<ImmutableList<VolunteerFamilyEntry>> ListVolunteerFamiliesAsync(Guid organizationId, Guid locationId);
 
-        Task<ResourceResult<VolunteerFamilyEntry>> GetVolunteerFamilyAsync(Guid organizationId, Guid locationId, Guid familyId);
+        Task<VolunteerFamilyEntry> GetVolunteerFamilyAsync(Guid organizationId, Guid locationId, Guid familyId);
 
-        Task<ResourceResult<VolunteerFamilyEntry>> ExecuteVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
+        Task<VolunteerFamilyEntry> ExecuteVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
             VolunteerFamilyCommand command, Guid userId);
 
-        Task<ResourceResult<VolunteerFamilyEntry>> ExecuteVolunteerCommandAsync(Guid organizationId, Guid locationId,
+        Task<VolunteerFamilyEntry> ExecuteVolunteerCommandAsync(Guid organizationId, Guid locationId,
             VolunteerCommand command, Guid userId);
     }
 }

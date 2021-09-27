@@ -2,8 +2,6 @@
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs.Specialized;
 using Newtonsoft.Json;
-using OneOf;
-using OneOf.Types;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -26,7 +24,7 @@ namespace CareTogether.Resources.Storage
             organizationBlobContainerClients = new();
         }
 
-        public async Task<OneOf<Success, Error>> AppendEventAsync(Guid organizationId, Guid locationId, T domainEvent, long expectedSequenceNumber)
+        public async Task AppendEventAsync(Guid organizationId, Guid locationId, T domainEvent, long expectedSequenceNumber)
         {
             var tenantContainer = await createContainerIfNotExists(organizationId);
 
@@ -52,7 +50,7 @@ namespace CareTogether.Resources.Storage
 
                 if (appendResult.Value.BlobCommittedBlockCount == getBlockNumber(expectedSequenceNumber))
                 {
-                    return new Success();
+                    return;
                 }
                 else
                 {
@@ -63,7 +61,7 @@ namespace CareTogether.Resources.Storage
             {
                 System.Diagnostics.Debug.WriteLine($"There was an issue appending to block {expectedSequenceNumber} in {locationId}/{_logType}/{currentBlobNumber:D5}.ndjson" +
                     $" under tenant {organizationId}: " + e.Message);
-                return new Error();
+                throw;
             }
         }
 

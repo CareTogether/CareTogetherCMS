@@ -21,20 +21,16 @@ namespace CareTogether.Resources
         }
 
 
-        public async Task<ResourceResult<ContactInfo>> ExecuteContactCommandAsync(
+        public async Task<ContactInfo> ExecuteContactCommandAsync(
             Guid organizationId, Guid locationId, ContactCommand command, Guid userId)
         {
             using (var lockedModel = await tenantContactsModels.WriteLockItemAsync((organizationId, locationId)))
             {
                 var result = lockedModel.Value.ExecuteContactCommand(command, userId, DateTime.UtcNow);
-                if (result.TryPickT0(out var success, out var _))
-                {
-                    await contactsEventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
-                    success.Value.OnCommit();
-                    return success.Value.Contact;
-                }
-                else
-                    return ResourceResult.NotFound; //TODO: Something more specific involving 'error'?
+                
+                await contactsEventLog.AppendEventAsync(organizationId, locationId, result.Event, result.SequenceNumber);
+                result.OnCommit();
+                return result.Contact;
             }
         }
 
@@ -47,15 +43,12 @@ namespace CareTogether.Resources
             }
         }
 
-        public async Task<ResourceResult<ContactInfo>> FindUserContactInfoAsync(Guid organizationId, Guid locationId, Guid personId)
+        public async Task<ContactInfo> FindUserContactInfoAsync(Guid organizationId, Guid locationId, Guid personId)
         {
             using (var lockedModel = await tenantContactsModels.ReadLockItemAsync((organizationId, locationId)))
             {
-                var result = lockedModel.Value.FindContacts(c => c.PersonId == personId).SingleOrDefault();
-                if (result != null)
-                    return result;
-                else
-                    return ResourceResult.NotFound;
+                var result = lockedModel.Value.FindContacts(c => c.PersonId == personId).Single();
+                return result;
             }
         }
     }

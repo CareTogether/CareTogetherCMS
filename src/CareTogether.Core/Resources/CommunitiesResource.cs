@@ -21,37 +21,29 @@ namespace CareTogether.Resources
         }
 
 
-        public async Task<ResourceResult<Family>> ExecuteFamilyCommandAsync(Guid organizationId, Guid locationId,
+        public async Task<Family> ExecuteFamilyCommandAsync(Guid organizationId, Guid locationId,
             FamilyCommand command, Guid userId)
         {
             using (var lockedModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
             {
                 var result = lockedModel.Value.ExecuteFamilyCommand(command, userId, DateTime.UtcNow);
-                if (result.TryPickT0(out var success, out var _))
-                {
-                    await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
-                    success.Value.OnCommit();
-                    return success.Value.Family;
-                }
-                else
-                    return ResourceResult.NotFound; //TODO: Something more specific involving 'error'?
+                
+                await eventLog.AppendEventAsync(organizationId, locationId, result.Event, result.SequenceNumber);
+                result.OnCommit();
+                return result.Family;
             }
         }
 
-        public async Task<ResourceResult<Person>> ExecutePersonCommandAsync(Guid organizationId, Guid locationId,
+        public async Task<Person> ExecutePersonCommandAsync(Guid organizationId, Guid locationId,
             PersonCommand command, Guid userId)
         {
             using (var lockedModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
             {
                 var result = lockedModel.Value.ExecutePersonCommand(command, userId, DateTime.UtcNow);
-                if (result.TryPickT0(out var success, out var _))
-                {
-                    await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
-                    success.Value.OnCommit();
-                    return success.Value.Person;
-                }
-                else
-                    return ResourceResult.NotFound; //TODO: Something more specific involving 'error'?
+                
+                await eventLog.AppendEventAsync(organizationId, locationId, result.Event, result.SequenceNumber);
+                result.OnCommit();
+                return result.Person;
             }
         }
 
@@ -63,17 +55,14 @@ namespace CareTogether.Resources
             }
         }
 
-        public async Task<ResourceResult<Person>> FindUserAsync(Guid organizationId, Guid locationId, Guid userId)
+        public async Task<Person> FindUserAsync(Guid organizationId, Guid locationId, Guid userId)
         {
             using (var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId)))
             {
                 var result = lockedModel.Value.FindPeople(p => p.UserId == userId);
-                if (result.Count == 1)
-                    return result.Single();
-                else
-                    //TODO: Handle the exception case where multiple people have the same user ID assigned, or
-                    //      protect against that scenario in the domain model.
-                    return ResourceResult.NotFound;
+                return result.Single();
+                //TODO: Handle the exception case where multiple people have the same user ID assigned, or
+                //      protect against that scenario in the domain model.
             }
         }
 
@@ -85,15 +74,12 @@ namespace CareTogether.Resources
             }
         }
 
-        public async Task<ResourceResult<Family>> FindFamilyAsync(Guid organizationId, Guid locationId, Guid familyId)
+        public async Task<Family> FindFamilyAsync(Guid organizationId, Guid locationId, Guid familyId)
         {
             using (var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId)))
             {
                 var result = lockedModel.Value.FindFamilies(f => f.Id == familyId);
-                if (result.Count == 1)
-                    return result.Single();
-                else
-                    return ResourceResult.NotFound;
+                return result.Single();
             }
         }
     }

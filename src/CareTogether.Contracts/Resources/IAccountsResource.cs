@@ -13,6 +13,6 @@ namespace CareTogether.Resources
     /// </summary>
     public interface IAccountsResource
     {
-        Task<ResourceResult<UserTenantAccessSummary>> GetTenantAccessSummaryAsync(ClaimsPrincipal user);
+        Task<UserTenantAccessSummary> GetTenantAccessSummaryAsync(ClaimsPrincipal user);
     }
 }

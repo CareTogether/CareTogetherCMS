@@ -1,6 +1,5 @@
 ﻿using CareTogether.Resources.Storage;
 using System;
-using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace CareTogether.Resources
@@ -20,20 +19,16 @@ namespace CareTogether.Resources
         }
 
 
-        public async Task<ResourceResult<OrganizationConfiguration>> GetConfigurationAsync(Guid organizationId)
+        public async Task<OrganizationConfiguration> GetConfigurationAsync(Guid organizationId)
         {
             var result = await configurationStore.GetAsync(organizationId, Guid.Empty, "config");
-            return result.TryPickT0(out var success, out var _)
-                ? success.Value
-                : ResourceResult.NotFound;
+            return result;
         }
 
-        public async Task<ResourceResult<EffectiveLocationPolicy>> GetCurrentPolicy(Guid organizationId, Guid locationId)
+        public async Task<EffectiveLocationPolicy> GetCurrentPolicy(Guid organizationId, Guid locationId)
         {
             var result = await locationPoliciesStore.GetAsync(organizationId, locationId, "policy");
-            return result.TryPickT0(out var success, out var _)
-                ? success.Value
-                : ResourceResult.NotFound;
+            return result;
         }
     }
 }
