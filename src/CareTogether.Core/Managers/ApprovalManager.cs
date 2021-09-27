@@ -180,6 +180,11 @@ namespace CareTogether.Managers
                         
                         var family = await communitiesResource.ExecuteFamilyCommandAsync(organizationId, locationId,
                             createFamilySubcommand, user.UserId());
+
+                        await contactsResource.ExecuteContactCommandAsync(organizationId, locationId, createContactSubcommand, user.UserId());
+                        await contactsResource.ExecuteContactCommandAsync(organizationId, locationId, addContactAddressSubcommand, user.UserId());
+                        await contactsResource.ExecuteContactCommandAsync(organizationId, locationId, addContactPhoneNumberSubcommand, user.UserId());
+                        await contactsResource.ExecuteContactCommandAsync(organizationId, locationId, addContactEmailAddressSubcommand, user.UserId());
                             
                         var volunteerFamilyEntry = await approvalsResource.ExecuteVolunteerFamilyCommandAsync(organizationId, locationId,
                             activateVolunteerFamilySubcommand, user.UserId());
