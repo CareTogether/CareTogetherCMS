@@ -1,4 +1,4 @@
-﻿using CareTogether.Engines;
+using CareTogether.Engines;
 using CareTogether.Resources;
 using Nito.AsyncEx;
 using System;
@@ -278,7 +278,10 @@ namespace CareTogether.Managers
                         else
                             return new Volunteer(ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty,
                                 ImmutableDictionary<(string Role, string Version), RoleApprovalStatus>.Empty);
-                    }));
+                    }),
+                entry.IndividualEntries.ToImmutableDictionary(
+                    x => x.Key,
+                    x => contacts[x.Key]));
         }
     }
 }
