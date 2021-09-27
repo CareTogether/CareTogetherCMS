@@ -1,6 +1,4 @@
-﻿using OneOf;
-using OneOf.Types;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -31,7 +29,7 @@ namespace CareTogether.Resources.Models
         }
 
 
-        public OneOf<Success<(ContactCommandExecutedEvent Event, long SequenceNumber, ContactInfo Contact, Action OnCommit)>, Error<string>>
+        public (ContactCommandExecutedEvent Event, long SequenceNumber, ContactInfo Contact, Action OnCommit)
             ExecuteContactCommand(ContactCommand command, Guid userId, DateTime timestampUtc)
         {
             ContactInfo? contact;
@@ -41,7 +39,7 @@ namespace CareTogether.Resources.Models
             else
             {
                 if (!contacts.TryGetValue(command.PersonId, out contact))
-                    return new Error<string>("A person with the specified ID does not exist.");
+                    throw new KeyNotFoundException("A person with the specified ID does not exist.");
 
                 contact = command switch
                 {
@@ -84,12 +82,12 @@ namespace CareTogether.Resources.Models
                 };
             }
 
-            return new Success<(ContactCommandExecutedEvent Event, long SequenceNumber, ContactInfo Contact, Action OnCommit)>((
+            return (
                 Event: new ContactCommandExecutedEvent(userId, timestampUtc, command),
                 SequenceNumber: LastKnownSequenceNumber + 1,
                 Contact: contact,
                 OnCommit: () => { contacts = contacts.SetItem(contact.PersonId, contact); }
-            ));
+            );
         }
 
         public ImmutableList<ContactInfo> FindContacts(Func<ContactInfo, bool> predicate) =>
@@ -101,7 +99,7 @@ namespace CareTogether.Resources.Models
         private void ReplayEvent(ContactCommandExecutedEvent domainEvent, long sequenceNumber)
         {
             var (_, _, _, onCommit) = ExecuteContactCommand(domainEvent.Command,
-                    domainEvent.UserId, domainEvent.TimestampUtc).AsT0.Value;
+                    domainEvent.UserId, domainEvent.TimestampUtc);
             onCommit();
             LastKnownSequenceNumber = sequenceNumber;
         }

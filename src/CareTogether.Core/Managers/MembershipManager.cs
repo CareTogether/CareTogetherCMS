@@ -19,17 +19,17 @@ namespace CareTogether.Managers
         }
 
 
-        public async Task<ManagerResult<ContactInfo>> GetContactInfoAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId, Guid personId)
+        public async Task<ContactInfo> GetContactInfoAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId, Guid personId)
         {
             //TODO: This is just a demo implementation of a business rule, not a true business rule.
             if (user.CanAccess(organizationId, locationId) &&
-            (user.PersonId() == personId || user.IsInRole(Roles.OrganizationAdministrator)))
+                (user.PersonId() == personId || user.IsInRole(Roles.OrganizationAdministrator)))
                 return await profilesResource.FindUserContactInfoAsync(organizationId, locationId, personId);
             else
-                return ManagerResult.NotAllowed;
+                throw new Exception("That action is not allowed");
         }
 
-        public async Task<ManagerResult<ContactInfo>> UpdateContactInfoAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId, ContactCommand command)
+        public async Task<ContactInfo> UpdateContactInfoAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId, ContactCommand command)
         {
             command = command switch
             {
@@ -39,26 +39,26 @@ namespace CareTogether.Managers
 
             //TODO: This is just a demo implementation of a business rule, not a true business rule.
             if (user.CanAccess(organizationId, locationId) &&
-            ((command is not CreateContact && user.PersonId() == command.PersonId) || user.IsInRole(Roles.OrganizationAdministrator)))
+                ((command is not CreateContact && user.PersonId() == command.PersonId) || user.IsInRole(Roles.OrganizationAdministrator)))
                 return await profilesResource.ExecuteContactCommandAsync(organizationId, locationId, command, user.UserId());
             else
-                return ManagerResult.NotAllowed;
+                throw new Exception("That action is not allowed");
         }
 
-        public async Task<ManagerResult<ImmutableList<Person>>> QueryPeopleAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId, string searchQuery)
+        public async Task<ImmutableList<Person>> QueryPeopleAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId, string searchQuery)
         {
             //TODO: This is just a demo implementation of a business rule, not a true business rule.
             if (user.CanAccess(organizationId, locationId) &&
-            user.IsInRole(Roles.OrganizationAdministrator))
+                user.IsInRole(Roles.OrganizationAdministrator))
             {
                 var people = await communitiesResource.ListPeopleAsync(organizationId, locationId); //TODO: Actually query.
                 return people.ToImmutableList();
             }
             else
-                return ManagerResult.NotAllowed;
+                throw new Exception("That action is not allowed");
         }
 
-        public async Task<ManagerResult<Family>> ExecuteFamilyCommandAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId, FamilyCommand command)
+        public async Task<Family> ExecuteFamilyCommandAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId, FamilyCommand command)
         {
             command = command switch
             {

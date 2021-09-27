@@ -450,9 +450,7 @@ namespace CareTogether.TestData
             foreach (var (domainEvent, index) in events
                 .Select((e, i) => (e, (long)i)))
             {
-                var result = await eventLog.AppendEventAsync(organizationId, locationId, domainEvent, index + 1);
-                if (result.IsT1)
-                    throw new InvalidOperationException(result.ToString());
+                await eventLog.AppendEventAsync(organizationId, locationId, domainEvent, index + 1);
             }
         }
     }

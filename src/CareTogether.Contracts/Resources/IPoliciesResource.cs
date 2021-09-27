@@ -80,8 +80,8 @@ namespace CareTogether.Resources
     /// </summary>
     public interface IPoliciesResource
     {
-        Task<ResourceResult<OrganizationConfiguration>> GetConfigurationAsync(Guid organizationId);
+        Task<OrganizationConfiguration> GetConfigurationAsync(Guid organizationId);
 
-        Task<ResourceResult<EffectiveLocationPolicy>> GetCurrentPolicy(Guid organizationId, Guid locationId);
+        Task<EffectiveLocationPolicy> GetCurrentPolicy(Guid organizationId, Guid locationId);
     }
 }

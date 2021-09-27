@@ -1,7 +1,5 @@
 ﻿using CareTogether.Managers;
 using CareTogether.Resources;
-using OneOf;
-using OneOf.Types;
 using System;
 using System.Collections.Immutable;
 using System.Security.Claims;
@@ -18,19 +16,19 @@ namespace CareTogether.Engines
 
     public interface IPolicyEvaluationEngine
     {
-        Task<OneOf<Yes, Error<string>>> AuthorizeReferralCommandAsync(Guid organizationId, Guid locationId,
+        Task<bool> AuthorizeReferralCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, ReferralCommand command, Referral referral);
 
-        Task<OneOf<Yes, Error<string>>> AuthorizeArrangementCommandAsync(Guid organizationId, Guid locationId,
+        Task<bool> AuthorizeArrangementCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, ArrangementCommand command, Referral referral);
 
-        Task<OneOf<Yes, Error<string>>> AuthorizeArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
+        Task<bool> AuthorizeArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, ArrangementNoteCommand command, Referral referral);
 
-        Task<OneOf<Yes, Error<string>>> AuthorizeVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
+        Task<bool> AuthorizeVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, VolunteerFamilyCommand command, VolunteerFamily volunteerFamily);
 
-        Task<OneOf<Yes, Error<string>>> AuthorizeVolunteerCommandAsync(Guid organizationId, Guid locationId,
+        Task<bool> AuthorizeVolunteerCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, VolunteerCommand command, VolunteerFamily volunteerFamily);
 
 

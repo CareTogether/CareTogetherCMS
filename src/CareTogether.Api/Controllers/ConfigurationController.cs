@@ -20,19 +20,15 @@ namespace CareTogether.Api.Controllers
         [HttpGet("/api/{organizationId:guid}/[controller]")]
         public async Task<ActionResult<OrganizationConfiguration>> GetOrganizationConfiguration(Guid organizationId)
         {
-            var configurationResult = await policiesResource.GetConfigurationAsync(organizationId);
-            return configurationResult.TryPickT0(out var configuration, out _)
-                ? Ok(configuration)
-                : NotFound();
+            var result = await policiesResource.GetConfigurationAsync(organizationId);
+            return Ok(result);
         }
 
         [HttpGet("/api/{organizationId:guid}/{locationId:guid}/[controller]/policy")]
         public async Task<ActionResult<EffectiveLocationPolicy>> GetEffectiveLocationPolicy(Guid organizationId, Guid locationId)
         {
-            var policyResult = await policiesResource.GetCurrentPolicy(organizationId, locationId);
-            return policyResult.TryPickT0(out var policy, out _)
-                ? Ok(policy)
-                : NotFound();
+            var result = await policiesResource.GetCurrentPolicy(organizationId, locationId);
+            return Ok(result);
         }
     }
 }

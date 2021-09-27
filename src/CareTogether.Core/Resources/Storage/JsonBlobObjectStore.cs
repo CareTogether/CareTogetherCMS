@@ -2,8 +2,6 @@
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs.Specialized;
 using Newtonsoft.Json;
-using OneOf;
-using OneOf.Types;
 using System;
 using System.Collections.Concurrent;
 using System.IO;
@@ -26,62 +24,35 @@ namespace CareTogether.Resources.Storage
         }
 
 
-        public async Task<OneOf<Success, Error>> DeleteAsync(Guid organizationId, Guid locationId, string objectId)
+        public async Task DeleteAsync(Guid organizationId, Guid locationId, string objectId)
         {
-            try
-            {
-                var tenantContainer = await CreateContainerIfNotExists(organizationId);
-                var objectBlob = tenantContainer.GetBlockBlobClient($"{locationId}/{objectType}/{objectId}.json");
+            var tenantContainer = await CreateContainerIfNotExists(organizationId);
+            var objectBlob = tenantContainer.GetBlockBlobClient($"{locationId}/{objectType}/{objectId}.json");
 
-                await objectBlob.DeleteIfExistsAsync();
-                return new Success();
-            }
-            catch (Exception)
-            {
-                //TODO: Exception detail logging
-                return new Error();
-            }
+            await objectBlob.DeleteIfExistsAsync();
         }
 
-        public async Task<OneOf<Success<T>, Error>> GetAsync(Guid organizationId, Guid locationId, string objectId)
+        public async Task<T> GetAsync(Guid organizationId, Guid locationId, string objectId)
         {
-            try
-            {
-                var tenantContainer = await CreateContainerIfNotExists(organizationId);
-                var objectBlob = tenantContainer.GetBlockBlobClient($"{locationId}/{objectType}/{objectId}.json");
+            var tenantContainer = await CreateContainerIfNotExists(organizationId);
+            var objectBlob = tenantContainer.GetBlockBlobClient($"{locationId}/{objectType}/{objectId}.json");
 
-                var objectStream = await objectBlob.DownloadStreamingAsync();
-                var objectText = new StreamReader(objectStream.Value.Content).ReadToEnd();
-                var objectValue = JsonConvert.DeserializeObject<T>(objectText);
+            var objectStream = await objectBlob.DownloadStreamingAsync();
+            var objectText = new StreamReader(objectStream.Value.Content).ReadToEnd();
+            var objectValue = JsonConvert.DeserializeObject<T>(objectText);
 
-                return new Success<T>(objectValue);
-            }
-            catch (Exception)
-            {
-                //TODO: Exception detail logging
-                return new Error();
-            }
+            return objectValue;
         }
 
-        public async Task<OneOf<Success, Error>> UpsertAsync(Guid organizationId, Guid locationId, string objectId, T value)
+        public async Task UpsertAsync(Guid organizationId, Guid locationId, string objectId, T value)
         {
-            try
-            {
-                var tenantContainer = await CreateContainerIfNotExists(organizationId);
-                var objectBlob = tenantContainer.GetBlockBlobClient($"{locationId}/{objectType}/{objectId}.json");
+            var tenantContainer = await CreateContainerIfNotExists(organizationId);
+            var objectBlob = tenantContainer.GetBlockBlobClient($"{locationId}/{objectType}/{objectId}.json");
 
-                var objectText = JsonConvert.SerializeObject(value);
-                var objectStream = new MemoryStream(Encoding.UTF8.GetBytes(objectText));
-                await objectBlob.UploadAsync(objectStream,
-                    new BlobUploadOptions { HttpHeaders = new BlobHttpHeaders { ContentType = "application/json" } });
-
-                return new Success();
-            }
-            catch (Exception)
-            {
-                //TODO: Exception detail logging
-                return new Error();
-            }
+            var objectText = JsonConvert.SerializeObject(value);
+            var objectStream = new MemoryStream(Encoding.UTF8.GetBytes(objectText));
+            await objectBlob.UploadAsync(objectStream,
+                new BlobUploadOptions { HttpHeaders = new BlobHttpHeaders { ContentType = "application/json" } });
         }
 
 

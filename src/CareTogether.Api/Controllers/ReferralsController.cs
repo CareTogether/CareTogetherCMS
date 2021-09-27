@@ -34,10 +34,7 @@ namespace CareTogether.Api.Controllers
             [FromBody] ReferralCommand command)
         {
             var result = await referralManager.ExecuteReferralCommandAsync(organizationId, locationId, User, command);
-            return result.Match<ActionResult<Referral>>(
-                referral => referral,
-                notAllowed => BadRequest(),
-                notFound => NotFound());
+            return result;
         }
 
         [HttpPost("arrangementCommand")]
@@ -45,11 +42,7 @@ namespace CareTogether.Api.Controllers
             [FromBody] ArrangementCommand command)
         {
             var result = await referralManager.ExecuteArrangementCommandAsync(organizationId, locationId, User, command);
-
-            return result.Match<ActionResult<Referral>>(
-                referral => referral,
-                notAllowed => BadRequest(),
-                notFound => NotFound());
+            return result;
         }
 
         [HttpPost("arrangementNoteCommand")]
@@ -57,11 +50,7 @@ namespace CareTogether.Api.Controllers
             [FromBody] ArrangementNoteCommand command)
         {
             var result = await referralManager.ExecuteArrangementNoteCommandAsync(organizationId, locationId, User, command);
-
-            return result.Match<ActionResult<Referral>>(
-                referral => referral,
-                notAllowed => BadRequest(),
-                notFound => NotFound());
+            return result;
         }
     }
 }

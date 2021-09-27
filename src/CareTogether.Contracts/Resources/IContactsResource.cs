@@ -44,9 +44,9 @@ namespace CareTogether.Resources
     /// </summary>
     public interface IContactsResource
     {
-        Task<ResourceResult<ContactInfo>> ExecuteContactCommandAsync(Guid organizationId, Guid locationId, ContactCommand command, Guid userId);
+        Task<ContactInfo> ExecuteContactCommandAsync(Guid organizationId, Guid locationId, ContactCommand command, Guid userId);
 
-        Task<ResourceResult<ContactInfo>> FindUserContactInfoAsync(Guid organizationId, Guid locationId, Guid personId);
+        Task<ContactInfo> FindUserContactInfoAsync(Guid organizationId, Guid locationId, Guid personId);
 
         Task<ImmutableDictionary<Guid, ContactInfo>> ListContactsAsync(Guid organizationId, Guid locationId);
     }

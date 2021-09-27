@@ -1,6 +1,4 @@
 ﻿using JsonPolymorph;
-using OneOf;
-using OneOf.Types;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -37,14 +35,14 @@ namespace CareTogether.Resources.Models
         }
 
 
-        public OneOf<Success<(VolunteerFamilyCommandExecuted Event, long SequenceNumber, VolunteerFamilyEntry VolunteerFamilyEntry, Action OnCommit)>, Error<string>>
+        public (VolunteerFamilyCommandExecuted Event, long SequenceNumber, VolunteerFamilyEntry VolunteerFamilyEntry, Action OnCommit)
             ExecuteVolunteerFamilyCommand(VolunteerFamilyCommand command, Guid userId, DateTime timestampUtc)
         {
             if (!volunteerFamilies.TryGetValue(command.FamilyId, out var volunteerFamilyEntry))
                 volunteerFamilyEntry = new VolunteerFamilyEntry(command.FamilyId, VolunteerFamilyStatus.Inactive, "",
                     ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty, ImmutableDictionary<Guid, VolunteerEntry>.Empty);
 
-            OneOf<VolunteerFamilyEntry, Error<string>> result = command switch
+            var volunteerFamilyEntryToUpsert = command switch
             {
                 //TODO: Enforce any business rules dynamically via the policy evaluation engine.
                 //      This involves returning "allowed actions" with the rendered Approval state
@@ -75,19 +73,15 @@ namespace CareTogether.Resources.Models
                 _ => throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented.")
             };
-            if (result.TryPickT0(out var volunteerFamilyEntryToUpsert, out var error))
-            {
-                return new Success<(VolunteerFamilyCommandExecuted Event, long SequenceNumber, VolunteerFamilyEntry VolunteerFamilyEntry, Action OnCommit)>((
-                    Event: new VolunteerFamilyCommandExecuted(userId, timestampUtc, command),
-                    SequenceNumber: LastKnownSequenceNumber + 1,
-                    VolunteerFamilyEntry: volunteerFamilyEntryToUpsert,
-                    OnCommit: () => volunteerFamilies = volunteerFamilies.SetItem(volunteerFamilyEntryToUpsert.FamilyId, volunteerFamilyEntryToUpsert)));
-            }
-            else
-                return result.AsT1;
+            
+            return (
+                Event: new VolunteerFamilyCommandExecuted(userId, timestampUtc, command),
+                SequenceNumber: LastKnownSequenceNumber + 1,
+                VolunteerFamilyEntry: volunteerFamilyEntryToUpsert,
+                OnCommit: () => volunteerFamilies = volunteerFamilies.SetItem(volunteerFamilyEntryToUpsert.FamilyId, volunteerFamilyEntryToUpsert));
         }
 
-        public OneOf<Success<(VolunteerCommandExecuted Event, long SequenceNumber, VolunteerFamilyEntry VolunteerFamilyEntry, Action OnCommit)>, Error<string>>
+        public (VolunteerCommandExecuted Event, long SequenceNumber, VolunteerFamilyEntry VolunteerFamilyEntry, Action OnCommit)
             ExecuteVolunteerCommand(VolunteerCommand command, Guid userId, DateTime timestampUtc)
         {
             if (!volunteerFamilies.TryGetValue(command.FamilyId, out var volunteerFamilyEntry))
@@ -98,7 +92,7 @@ namespace CareTogether.Resources.Models
                 volunteerEntry = new VolunteerEntry(command.PersonId, true, "",
                     ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty);
 
-            OneOf<VolunteerEntry, Error<string>> result = command switch
+            var volunteerEntryToUpsert = command switch
             {
                 //TODO: Enforce any business rules dynamically via the policy evaluation engine.
                 //      This involves returning "allowed actions" with the rendered Approval state
@@ -130,20 +124,15 @@ namespace CareTogether.Resources.Models
                     $"The command type '{command.GetType().FullName}' has not been implemented.")
             };
 
-            if (result.TryPickT0(out var volunteerEntryToUpsert, out var error))
+            var volunteerFamilyEntryToUpsert = volunteerFamilyEntry with
             {
-                var volunteerFamilyEntryToUpsert = volunteerFamilyEntry with
-                {
-                    IndividualEntries = volunteerFamilyEntry.IndividualEntries.SetItem(command.PersonId, volunteerEntryToUpsert)
-                };
-                return new Success<(VolunteerCommandExecuted Event, long SequenceNumber, VolunteerFamilyEntry VolunteerFamilyEntry, Action OnCommit)>((
-                    Event: new VolunteerCommandExecuted(userId, timestampUtc, command),
-                    SequenceNumber: LastKnownSequenceNumber + 1,
-                    VolunteerFamilyEntry: volunteerFamilyEntryToUpsert,
-                    OnCommit: () => volunteerFamilies = volunteerFamilies.SetItem(volunteerFamilyEntryToUpsert.FamilyId, volunteerFamilyEntryToUpsert)));
-            }
-            else
-                return error;
+                IndividualEntries = volunteerFamilyEntry.IndividualEntries.SetItem(command.PersonId, volunteerEntryToUpsert)
+            };
+            return (
+                Event: new VolunteerCommandExecuted(userId, timestampUtc, command),
+                SequenceNumber: LastKnownSequenceNumber + 1,
+                VolunteerFamilyEntry: volunteerFamilyEntryToUpsert,
+                OnCommit: () => volunteerFamilies = volunteerFamilies.SetItem(volunteerFamilyEntryToUpsert.FamilyId, volunteerFamilyEntryToUpsert));
         }
 
         public ImmutableList<VolunteerFamilyEntry> FindVolunteerFamilyEntries(Func<VolunteerFamilyEntry, bool> predicate)
@@ -153,24 +142,21 @@ namespace CareTogether.Resources.Models
                 .ToImmutableList();
         }
 
-        public ResourceResult<VolunteerFamilyEntry> GetVolunteerFamilyEntry(Guid familyId) =>
-            volunteerFamilies.TryGetValue(familyId, out var familyEntry)
-            ? familyEntry
-            : ResourceResult.NotFound;
+        public VolunteerFamilyEntry GetVolunteerFamilyEntry(Guid familyId) => volunteerFamilies[familyId];
 
 
         private void ReplayEvent(ApprovalEvent domainEvent, long sequenceNumber)
         {
             if (domainEvent is VolunteerFamilyCommandExecuted volunteerFamilyCommandExecuted)
             {
-                var (_, _, _, onCommit) = (ExecuteVolunteerFamilyCommand(volunteerFamilyCommandExecuted.Command,
-                    volunteerFamilyCommandExecuted.UserId, volunteerFamilyCommandExecuted.TimestampUtc)).AsT0.Value;
+                var (_, _, _, onCommit) = ExecuteVolunteerFamilyCommand(volunteerFamilyCommandExecuted.Command,
+                    volunteerFamilyCommandExecuted.UserId, volunteerFamilyCommandExecuted.TimestampUtc);
                 onCommit();
             }
             else if (domainEvent is VolunteerCommandExecuted volunteerCommandExecuted)
             {
-                var (_, _, _, onCommit) = (ExecuteVolunteerCommand(volunteerCommandExecuted.Command,
-                    volunteerCommandExecuted.UserId, volunteerCommandExecuted.TimestampUtc)).AsT0.Value;
+                var (_, _, _, onCommit) = ExecuteVolunteerCommand(volunteerCommandExecuted.Command,
+                    volunteerCommandExecuted.UserId, volunteerCommandExecuted.TimestampUtc);
                 onCommit();
             }
             else
