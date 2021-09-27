@@ -10,7 +10,7 @@ namespace CareTogether.Resources
         List<Address> Addresses, Guid? CurrentAddressId,
         List<PhoneNumber> PhoneNumbers, Guid? PreferredPhoneNumberId,
         List<EmailAddress> EmailAddresses, Guid? PreferredEmailAddressId,
-        string ContactMethodPreferenceNotes);
+        string? ContactMethodPreferenceNotes);
     public sealed record Address(Guid Id,
         string Line1, string? Line2, string City, Guid StateId, string PostalCode, Guid CountryId);
     public sealed record State(Guid Id, string Name);
@@ -23,7 +23,7 @@ namespace CareTogether.Resources
     [JsonHierarchyBase]
     public abstract partial record ContactCommand(Guid PersonId);
     public sealed record CreateContact(Guid PersonId,
-        string ContactMethodPreferenceNotes) : ContactCommand(PersonId);
+        string? ContactMethodPreferenceNotes) : ContactCommand(PersonId);
     public sealed record AddContactAddress(Guid PersonId, Address Address, bool IsCurrentAddress)
         : ContactCommand(PersonId);
     public sealed record UpdateContactAddress(Guid PersonId, Address Address, bool IsCurrentAddress)
@@ -37,7 +37,7 @@ namespace CareTogether.Resources
     public sealed record UpdateContactEmailAddress(Guid PersonId, EmailAddress EmailAddress,
         bool IsPreferredEmailAddress) : ContactCommand(PersonId);
     public sealed record UpdateContactMethodPreferenceNotes(Guid PersonId,
-        string ContactMethodPreferenceNotes) : ContactCommand(PersonId);
+        string? ContactMethodPreferenceNotes) : ContactCommand(PersonId);
 
     /// <summary>
     /// The <see cref="IContactsResource"/> is responsible for all contact information in CareTogether.
