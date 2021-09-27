@@ -1128,10 +1128,6 @@
           },
           "actionName": {
             "type": "string"
-          },
-          "policyVersion": {
-            "type": "string",
-            "nullable": true
           }
         }
       },
@@ -1182,10 +1178,6 @@
           },
           "scope": {
             "$ref": "#/components/schemas/VolunteerFamilyRequirementScope"
-          },
-          "policyVersion": {
-            "type": "string",
-            "nullable": true
           }
         }
       },

@@ -1620,7 +1620,6 @@ export interface IVolunteerRolePolicy {
 export class VolunteerApprovalRequirement implements IVolunteerApprovalRequirement {
     stage?: RequirementStage;
     actionName?: string;
-    policyVersion?: string | undefined;
 
     constructor(data?: IVolunteerApprovalRequirement) {
         if (data) {
@@ -1635,7 +1634,6 @@ export class VolunteerApprovalRequirement implements IVolunteerApprovalRequireme
         if (_data) {
             this.stage = _data["stage"];
             this.actionName = _data["actionName"];
-            this.policyVersion = _data["policyVersion"];
         }
     }
 
@@ -1650,7 +1648,6 @@ export class VolunteerApprovalRequirement implements IVolunteerApprovalRequireme
         data = typeof data === 'object' ? data : {};
         data["stage"] = this.stage;
         data["actionName"] = this.actionName;
-        data["policyVersion"] = this.policyVersion;
         return data; 
     }
 }
@@ -1658,7 +1655,6 @@ export class VolunteerApprovalRequirement implements IVolunteerApprovalRequireme
 export interface IVolunteerApprovalRequirement {
     stage?: RequirementStage;
     actionName?: string;
-    policyVersion?: string | undefined;
 }
 
 export enum RequirementStage {
@@ -1727,7 +1723,6 @@ export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyAppro
     stage?: RequirementStage;
     actionName?: string;
     scope?: VolunteerFamilyRequirementScope;
-    policyVersion?: string | undefined;
 
     constructor(data?: IVolunteerFamilyApprovalRequirement) {
         if (data) {
@@ -1743,7 +1738,6 @@ export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyAppro
             this.stage = _data["stage"];
             this.actionName = _data["actionName"];
             this.scope = _data["scope"];
-            this.policyVersion = _data["policyVersion"];
         }
     }
 
@@ -1759,7 +1753,6 @@ export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyAppro
         data["stage"] = this.stage;
         data["actionName"] = this.actionName;
         data["scope"] = this.scope;
-        data["policyVersion"] = this.policyVersion;
         return data; 
     }
 }
@@ -1768,7 +1761,6 @@ export interface IVolunteerFamilyApprovalRequirement {
     stage?: RequirementStage;
     actionName?: string;
     scope?: VolunteerFamilyRequirementScope;
-    policyVersion?: string | undefined;
 }
 
 export enum VolunteerFamilyRequirementScope {

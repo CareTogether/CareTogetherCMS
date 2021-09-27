@@ -55,12 +55,12 @@ namespace CareTogether.Resources
         ImmutableDictionary<string, ImmutableList<VolunteerFamilyApprovalRequirement>> ApprovalRequirementsByPolicyVersion);
 
     public sealed record VolunteerApprovalRequirement(
-        RequirementStage Stage, string ActionName, string? PolicyVersion = null);
+        RequirementStage Stage, string ActionName);
 
     public enum RequirementStage { Application, Approval, Onboarding }
 
     public sealed record VolunteerFamilyApprovalRequirement(
-        RequirementStage Stage, string ActionName, VolunteerFamilyRequirementScope Scope, string? PolicyVersion = null);
+        RequirementStage Stage, string ActionName, VolunteerFamilyRequirementScope Scope);
 
     public enum VolunteerFamilyRequirementScope { OncePerFamily, AllAdultsInTheFamily };
 
