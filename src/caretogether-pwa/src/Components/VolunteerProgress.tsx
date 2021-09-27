@@ -93,10 +93,10 @@ function VolunteerProgress() {
           if (requirement.stage === RequirementStage.Application) return;
           const action = policy.actionDefinitions![requirement.actionName!];
           if (action instanceof FormUploadRequirement && action.formName) {
-            append(RequirementType.Document, action.formName, roleName,
+            append(RequirementType.Document, action.formName, roleNameVersion,
               RequirementScope.Individual);
           } else if (action instanceof ActivityRequirement && action.activityName) {
-            append(RequirementType.Activity, action.activityName, roleName,
+            append(RequirementType.Activity, action.activityName, roleNameVersion,
               RequirementScope.Individual);
           }
         });
