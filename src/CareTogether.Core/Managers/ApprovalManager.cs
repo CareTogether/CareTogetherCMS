@@ -232,9 +232,9 @@ namespace CareTogether.Managers
                             return new Volunteer(ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty,
                                 ImmutableDictionary<(string Role, string Version), RoleApprovalStatus>.Empty);
                     }),
-                entry.IndividualEntries.ToImmutableDictionary(
-                    x => x.Key,
-                    x => contacts[x.Key]));
+                entry.IndividualEntries.SelectMany(x => contacts.TryGetValue(x.Key, out var contactInfo)
+                    ? new KeyValuePair<Guid, ContactInfo>[] { new KeyValuePair<Guid, ContactInfo>(x.Key, contactInfo) }
+                    : new KeyValuePair<Guid, ContactInfo>[] { }).ToImmutableDictionary());
         }
     }
 }
