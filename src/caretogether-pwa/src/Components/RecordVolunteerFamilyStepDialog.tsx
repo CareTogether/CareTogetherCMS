@@ -50,7 +50,7 @@ export function RecordVolunteerFamilyStepDialog({stepActionRequirement, voluntee
               </DialogContentText>
               <DialogContentText>
                 Template: <Link href={stepActionRequirement.templateLink} target="_blank" rel="noreferrer">
-                  {stepActionRequirement.formVersion} {stepActionRequirement.formName}
+                  {stepActionRequirement.formName}
                 </Link>
               </DialogContentText>
               <DialogContentText>{stepActionRequirement.instructions}</DialogContentText>

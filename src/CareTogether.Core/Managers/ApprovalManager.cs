@@ -277,7 +277,7 @@ namespace CareTogether.Managers
                                 x.Value.IndividualRoleApprovals);
                         else
                             return new Volunteer(ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty,
-                                ImmutableDictionary<string, RoleApprovalStatus>.Empty);
+                                ImmutableDictionary<(string Role, string Version), RoleApprovalStatus>.Empty);
                     }));
         }
     }

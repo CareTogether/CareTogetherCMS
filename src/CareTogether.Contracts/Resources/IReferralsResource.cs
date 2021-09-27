@@ -26,7 +26,7 @@ namespace CareTogether.Resources
     public enum ArrangementState { Setup, Open, Closed };
 
     public sealed record FormUploadInfo(Guid UserId, DateTime TimestampUtc,
-        DateTime CompletedAtUtc, string FormName, string FormVersion, string OriginalFileName, Guid UploadedDocumentId);
+        DateTime CompletedAtUtc, string FormName, string OriginalFileName, Guid UploadedDocumentId);
     public sealed record ActivityInfo(Guid UserId, DateTime TimestampUtc,
         string ActivityName, DateTime PerformedAtUtc, Guid PerformedByPersonId);
 
@@ -56,7 +56,7 @@ namespace CareTogether.Resources
         Guid PerformedByPersonId)
         : ReferralCommand(ReferralId);
     public sealed record UploadReferralForm(Guid ReferralId,
-        DateTime CompletedAtUtc, string FormName, string FormVersion, string UploadedFileName, Guid UploadedDocumentId)
+        DateTime CompletedAtUtc, string FormName, string UploadedFileName, Guid UploadedDocumentId)
         : ReferralCommand(ReferralId);
     public sealed record CloseReferral(Guid ReferralId, ReferralCloseReason CloseReason)
         : ReferralCommand(ReferralId);

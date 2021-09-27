@@ -980,8 +980,7 @@ export interface IUserLocationRole {
 }
 
 export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
-    version?: number;
-    versionLabel?: string;
+    actionDefinitions?: { [key: string]: ActionRequirement; };
     referralPolicy?: ReferralPolicy;
     volunteerPolicy?: VolunteerPolicy;
 
@@ -996,8 +995,13 @@ export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
 
     init(_data?: any) {
         if (_data) {
-            this.version = _data["version"];
-            this.versionLabel = _data["versionLabel"];
+            if (_data["actionDefinitions"]) {
+                this.actionDefinitions = {} as any;
+                for (let key in _data["actionDefinitions"]) {
+                    if (_data["actionDefinitions"].hasOwnProperty(key))
+                        (<any>this.actionDefinitions)![key] = _data["actionDefinitions"][key] ? ActionRequirement.fromJS(_data["actionDefinitions"][key]) : <any>undefined;
+                }
+            }
             this.referralPolicy = _data["referralPolicy"] ? ReferralPolicy.fromJS(_data["referralPolicy"]) : <any>undefined;
             this.volunteerPolicy = _data["volunteerPolicy"] ? VolunteerPolicy.fromJS(_data["volunteerPolicy"]) : <any>undefined;
         }
@@ -1012,8 +1016,13 @@ export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["version"] = this.version;
-        data["versionLabel"] = this.versionLabel;
+        if (this.actionDefinitions) {
+            data["actionDefinitions"] = {};
+            for (let key in this.actionDefinitions) {
+                if (this.actionDefinitions.hasOwnProperty(key))
+                    (<any>data["actionDefinitions"])[key] = this.actionDefinitions[key] ? this.actionDefinitions[key].toJSON() : <any>undefined;
+            }
+        }
         data["referralPolicy"] = this.referralPolicy ? this.referralPolicy.toJSON() : <any>undefined;
         data["volunteerPolicy"] = this.volunteerPolicy ? this.volunteerPolicy.toJSON() : <any>undefined;
         return data; 
@@ -1021,66 +1030,9 @@ export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
 }
 
 export interface IEffectiveLocationPolicy {
-    version?: number;
-    versionLabel?: string;
+    actionDefinitions?: { [key: string]: ActionRequirement; };
     referralPolicy?: ReferralPolicy;
     volunteerPolicy?: VolunteerPolicy;
-}
-
-export class ReferralPolicy implements IReferralPolicy {
-    requiredIntakeActions?: ActionRequirement[];
-    arrangementPolicies?: ArrangementPolicy[];
-
-    constructor(data?: IReferralPolicy) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            if (Array.isArray(_data["requiredIntakeActions"])) {
-                this.requiredIntakeActions = [] as any;
-                for (let item of _data["requiredIntakeActions"])
-                    this.requiredIntakeActions!.push(ActionRequirement.fromJS(item));
-            }
-            if (Array.isArray(_data["arrangementPolicies"])) {
-                this.arrangementPolicies = [] as any;
-                for (let item of _data["arrangementPolicies"])
-                    this.arrangementPolicies!.push(ArrangementPolicy.fromJS(item));
-            }
-        }
-    }
-
-    static fromJS(data: any): ReferralPolicy {
-        data = typeof data === 'object' ? data : {};
-        let result = new ReferralPolicy();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        if (Array.isArray(this.requiredIntakeActions)) {
-            data["requiredIntakeActions"] = [];
-            for (let item of this.requiredIntakeActions)
-                data["requiredIntakeActions"].push(item.toJSON());
-        }
-        if (Array.isArray(this.arrangementPolicies)) {
-            data["arrangementPolicies"] = [];
-            for (let item of this.arrangementPolicies)
-                data["arrangementPolicies"].push(item.toJSON());
-        }
-        return data; 
-    }
-}
-
-export interface IReferralPolicy {
-    requiredIntakeActions?: ActionRequirement[];
-    arrangementPolicies?: ArrangementPolicy[];
 }
 
 export abstract class ActionRequirement implements IActionRequirement {
@@ -1161,7 +1113,6 @@ export interface IActivityRequirement extends IActionRequirement {
 
 export class FormUploadRequirement extends ActionRequirement implements IFormUploadRequirement {
     formName?: string;
-    formVersion?: string;
     instructions?: string | undefined;
     templateLink?: string | undefined;
 
@@ -1174,7 +1125,6 @@ export class FormUploadRequirement extends ActionRequirement implements IFormUpl
         super.init(_data);
         if (_data) {
             this.formName = _data["formName"];
-            this.formVersion = _data["formVersion"];
             this.instructions = _data["instructions"];
             this.templateLink = _data["templateLink"];
         }
@@ -1190,7 +1140,6 @@ export class FormUploadRequirement extends ActionRequirement implements IFormUpl
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["formName"] = this.formName;
-        data["formVersion"] = this.formVersion;
         data["instructions"] = this.instructions;
         data["templateLink"] = this.templateLink;
         super.toJSON(data);
@@ -1200,18 +1149,73 @@ export class FormUploadRequirement extends ActionRequirement implements IFormUpl
 
 export interface IFormUploadRequirement extends IActionRequirement {
     formName?: string;
-    formVersion?: string;
     instructions?: string | undefined;
     templateLink?: string | undefined;
+}
+
+export class ReferralPolicy implements IReferralPolicy {
+    requiredIntakeActionNames?: string[];
+    arrangementPolicies?: ArrangementPolicy[];
+
+    constructor(data?: IReferralPolicy) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["requiredIntakeActionNames"])) {
+                this.requiredIntakeActionNames = [] as any;
+                for (let item of _data["requiredIntakeActionNames"])
+                    this.requiredIntakeActionNames!.push(item);
+            }
+            if (Array.isArray(_data["arrangementPolicies"])) {
+                this.arrangementPolicies = [] as any;
+                for (let item of _data["arrangementPolicies"])
+                    this.arrangementPolicies!.push(ArrangementPolicy.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): ReferralPolicy {
+        data = typeof data === 'object' ? data : {};
+        let result = new ReferralPolicy();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.requiredIntakeActionNames)) {
+            data["requiredIntakeActionNames"] = [];
+            for (let item of this.requiredIntakeActionNames)
+                data["requiredIntakeActionNames"].push(item);
+        }
+        if (Array.isArray(this.arrangementPolicies)) {
+            data["arrangementPolicies"] = [];
+            for (let item of this.arrangementPolicies)
+                data["arrangementPolicies"].push(item.toJSON());
+        }
+        return data; 
+    }
+}
+
+export interface IReferralPolicy {
+    requiredIntakeActionNames?: string[];
+    arrangementPolicies?: ArrangementPolicy[];
 }
 
 export class ArrangementPolicy implements IArrangementPolicy {
     arrangementType?: string;
     childInvolvement?: ChildInvolvement;
     volunteerFunctions?: VolunteerFunction[];
-    requiredSetupActions?: ActionRequirement[];
-    requiredMonitoringActions?: ValueTupleOfActionRequirementAndRecurrencePolicy[];
-    requiredCloseoutActions?: ActionRequirement[];
+    requiredSetupActionNames?: string[];
+    requiredMonitoringActionNames?: ValueTupleOfStringAndRecurrencePolicy[];
+    requiredCloseoutActionNames?: string[];
 
     constructor(data?: IArrangementPolicy) {
         if (data) {
@@ -1231,20 +1235,20 @@ export class ArrangementPolicy implements IArrangementPolicy {
                 for (let item of _data["volunteerFunctions"])
                     this.volunteerFunctions!.push(VolunteerFunction.fromJS(item));
             }
-            if (Array.isArray(_data["requiredSetupActions"])) {
-                this.requiredSetupActions = [] as any;
-                for (let item of _data["requiredSetupActions"])
-                    this.requiredSetupActions!.push(ActionRequirement.fromJS(item));
+            if (Array.isArray(_data["requiredSetupActionNames"])) {
+                this.requiredSetupActionNames = [] as any;
+                for (let item of _data["requiredSetupActionNames"])
+                    this.requiredSetupActionNames!.push(item);
             }
-            if (Array.isArray(_data["requiredMonitoringActions"])) {
-                this.requiredMonitoringActions = [] as any;
-                for (let item of _data["requiredMonitoringActions"])
-                    this.requiredMonitoringActions!.push(ValueTupleOfActionRequirementAndRecurrencePolicy.fromJS(item));
+            if (Array.isArray(_data["requiredMonitoringActionNames"])) {
+                this.requiredMonitoringActionNames = [] as any;
+                for (let item of _data["requiredMonitoringActionNames"])
+                    this.requiredMonitoringActionNames!.push(ValueTupleOfStringAndRecurrencePolicy.fromJS(item));
             }
-            if (Array.isArray(_data["requiredCloseoutActions"])) {
-                this.requiredCloseoutActions = [] as any;
-                for (let item of _data["requiredCloseoutActions"])
-                    this.requiredCloseoutActions!.push(ActionRequirement.fromJS(item));
+            if (Array.isArray(_data["requiredCloseoutActionNames"])) {
+                this.requiredCloseoutActionNames = [] as any;
+                for (let item of _data["requiredCloseoutActionNames"])
+                    this.requiredCloseoutActionNames!.push(item);
             }
         }
     }
@@ -1265,20 +1269,20 @@ export class ArrangementPolicy implements IArrangementPolicy {
             for (let item of this.volunteerFunctions)
                 data["volunteerFunctions"].push(item.toJSON());
         }
-        if (Array.isArray(this.requiredSetupActions)) {
-            data["requiredSetupActions"] = [];
-            for (let item of this.requiredSetupActions)
-                data["requiredSetupActions"].push(item.toJSON());
+        if (Array.isArray(this.requiredSetupActionNames)) {
+            data["requiredSetupActionNames"] = [];
+            for (let item of this.requiredSetupActionNames)
+                data["requiredSetupActionNames"].push(item);
         }
-        if (Array.isArray(this.requiredMonitoringActions)) {
-            data["requiredMonitoringActions"] = [];
-            for (let item of this.requiredMonitoringActions)
-                data["requiredMonitoringActions"].push(item.toJSON());
+        if (Array.isArray(this.requiredMonitoringActionNames)) {
+            data["requiredMonitoringActionNames"] = [];
+            for (let item of this.requiredMonitoringActionNames)
+                data["requiredMonitoringActionNames"].push(item.toJSON());
         }
-        if (Array.isArray(this.requiredCloseoutActions)) {
-            data["requiredCloseoutActions"] = [];
-            for (let item of this.requiredCloseoutActions)
-                data["requiredCloseoutActions"].push(item.toJSON());
+        if (Array.isArray(this.requiredCloseoutActionNames)) {
+            data["requiredCloseoutActionNames"] = [];
+            for (let item of this.requiredCloseoutActionNames)
+                data["requiredCloseoutActionNames"].push(item);
         }
         return data; 
     }
@@ -1288,9 +1292,9 @@ export interface IArrangementPolicy {
     arrangementType?: string;
     childInvolvement?: ChildInvolvement;
     volunteerFunctions?: VolunteerFunction[];
-    requiredSetupActions?: ActionRequirement[];
-    requiredMonitoringActions?: ValueTupleOfActionRequirementAndRecurrencePolicy[];
-    requiredCloseoutActions?: ActionRequirement[];
+    requiredSetupActionNames?: string[];
+    requiredMonitoringActionNames?: ValueTupleOfStringAndRecurrencePolicy[];
+    requiredCloseoutActionNames?: string[];
 }
 
 export enum ChildInvolvement {
@@ -1369,11 +1373,11 @@ export enum FunctionRequirement {
     OneOrMore = 2,
 }
 
-export class ValueTupleOfActionRequirementAndRecurrencePolicy implements IValueTupleOfActionRequirementAndRecurrencePolicy {
-    item1?: ActionRequirement;
+export class ValueTupleOfStringAndRecurrencePolicy implements IValueTupleOfStringAndRecurrencePolicy {
+    item1?: string;
     item2?: RecurrencePolicy;
 
-    constructor(data?: IValueTupleOfActionRequirementAndRecurrencePolicy) {
+    constructor(data?: IValueTupleOfStringAndRecurrencePolicy) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -1384,28 +1388,28 @@ export class ValueTupleOfActionRequirementAndRecurrencePolicy implements IValueT
 
     init(_data?: any) {
         if (_data) {
-            this.item1 = _data["item1"] ? ActionRequirement.fromJS(_data["item1"]) : <any>undefined;
+            this.item1 = _data["item1"];
             this.item2 = _data["item2"] ? RecurrencePolicy.fromJS(_data["item2"]) : <any>undefined;
         }
     }
 
-    static fromJS(data: any): ValueTupleOfActionRequirementAndRecurrencePolicy {
+    static fromJS(data: any): ValueTupleOfStringAndRecurrencePolicy {
         data = typeof data === 'object' ? data : {};
-        let result = new ValueTupleOfActionRequirementAndRecurrencePolicy();
+        let result = new ValueTupleOfStringAndRecurrencePolicy();
         result.init(data);
         return result;
     }
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["item1"] = this.item1 ? this.item1.toJSON() : <any>undefined;
+        data["item1"] = this.item1;
         data["item2"] = this.item2 ? this.item2.toJSON() : <any>undefined;
         return data; 
     }
 }
 
-export interface IValueTupleOfActionRequirementAndRecurrencePolicy {
-    item1?: ActionRequirement;
+export interface IValueTupleOfStringAndRecurrencePolicy {
+    item1?: string;
     item2?: RecurrencePolicy;
 }
 
@@ -1559,7 +1563,8 @@ export interface IVolunteerPolicy {
 
 export class VolunteerRolePolicy implements IVolunteerRolePolicy {
     volunteerRoleType?: string;
-    approvalRequirements?: VolunteerApprovalRequirement[];
+    currentVersion?: string;
+    approvalRequirementsByPolicyVersion?: { [key: string]: VolunteerApprovalRequirement[]; };
 
     constructor(data?: IVolunteerRolePolicy) {
         if (data) {
@@ -1573,10 +1578,13 @@ export class VolunteerRolePolicy implements IVolunteerRolePolicy {
     init(_data?: any) {
         if (_data) {
             this.volunteerRoleType = _data["volunteerRoleType"];
-            if (Array.isArray(_data["approvalRequirements"])) {
-                this.approvalRequirements = [] as any;
-                for (let item of _data["approvalRequirements"])
-                    this.approvalRequirements!.push(VolunteerApprovalRequirement.fromJS(item));
+            this.currentVersion = _data["currentVersion"];
+            if (_data["approvalRequirementsByPolicyVersion"]) {
+                this.approvalRequirementsByPolicyVersion = {} as any;
+                for (let key in _data["approvalRequirementsByPolicyVersion"]) {
+                    if (_data["approvalRequirementsByPolicyVersion"].hasOwnProperty(key))
+                        (<any>this.approvalRequirementsByPolicyVersion)![key] = _data["approvalRequirementsByPolicyVersion"][key] ? _data["approvalRequirementsByPolicyVersion"][key].map((i: any) => VolunteerApprovalRequirement.fromJS(i)) : [];
+                }
             }
         }
     }
@@ -1591,10 +1599,13 @@ export class VolunteerRolePolicy implements IVolunteerRolePolicy {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["volunteerRoleType"] = this.volunteerRoleType;
-        if (Array.isArray(this.approvalRequirements)) {
-            data["approvalRequirements"] = [];
-            for (let item of this.approvalRequirements)
-                data["approvalRequirements"].push(item.toJSON());
+        data["currentVersion"] = this.currentVersion;
+        if (this.approvalRequirementsByPolicyVersion) {
+            data["approvalRequirementsByPolicyVersion"] = {};
+            for (let key in this.approvalRequirementsByPolicyVersion) {
+                if (this.approvalRequirementsByPolicyVersion.hasOwnProperty(key))
+                    (<any>data["approvalRequirementsByPolicyVersion"])[key] = this.approvalRequirementsByPolicyVersion[key];
+            }
         }
         return data; 
     }
@@ -1602,12 +1613,13 @@ export class VolunteerRolePolicy implements IVolunteerRolePolicy {
 
 export interface IVolunteerRolePolicy {
     volunteerRoleType?: string;
-    approvalRequirements?: VolunteerApprovalRequirement[];
+    currentVersion?: string;
+    approvalRequirementsByPolicyVersion?: { [key: string]: VolunteerApprovalRequirement[]; };
 }
 
 export class VolunteerApprovalRequirement implements IVolunteerApprovalRequirement {
     stage?: RequirementStage;
-    actionRequirement?: ActionRequirement;
+    actionName?: string;
 
     constructor(data?: IVolunteerApprovalRequirement) {
         if (data) {
@@ -1621,7 +1633,7 @@ export class VolunteerApprovalRequirement implements IVolunteerApprovalRequireme
     init(_data?: any) {
         if (_data) {
             this.stage = _data["stage"];
-            this.actionRequirement = _data["actionRequirement"] ? ActionRequirement.fromJS(_data["actionRequirement"]) : <any>undefined;
+            this.actionName = _data["actionName"];
         }
     }
 
@@ -1635,14 +1647,14 @@ export class VolunteerApprovalRequirement implements IVolunteerApprovalRequireme
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["stage"] = this.stage;
-        data["actionRequirement"] = this.actionRequirement ? this.actionRequirement.toJSON() : <any>undefined;
+        data["actionName"] = this.actionName;
         return data; 
     }
 }
 
 export interface IVolunteerApprovalRequirement {
     stage?: RequirementStage;
-    actionRequirement?: ActionRequirement;
+    actionName?: string;
 }
 
 export enum RequirementStage {
@@ -1653,7 +1665,8 @@ export enum RequirementStage {
 
 export class VolunteerFamilyRolePolicy implements IVolunteerFamilyRolePolicy {
     volunteerFamilyRoleType?: string;
-    approvalRequirements?: VolunteerFamilyApprovalRequirement[];
+    currentVersion?: string;
+    approvalRequirementsByPolicyVersion?: { [key: string]: VolunteerFamilyApprovalRequirement[]; };
 
     constructor(data?: IVolunteerFamilyRolePolicy) {
         if (data) {
@@ -1667,10 +1680,13 @@ export class VolunteerFamilyRolePolicy implements IVolunteerFamilyRolePolicy {
     init(_data?: any) {
         if (_data) {
             this.volunteerFamilyRoleType = _data["volunteerFamilyRoleType"];
-            if (Array.isArray(_data["approvalRequirements"])) {
-                this.approvalRequirements = [] as any;
-                for (let item of _data["approvalRequirements"])
-                    this.approvalRequirements!.push(VolunteerFamilyApprovalRequirement.fromJS(item));
+            this.currentVersion = _data["currentVersion"];
+            if (_data["approvalRequirementsByPolicyVersion"]) {
+                this.approvalRequirementsByPolicyVersion = {} as any;
+                for (let key in _data["approvalRequirementsByPolicyVersion"]) {
+                    if (_data["approvalRequirementsByPolicyVersion"].hasOwnProperty(key))
+                        (<any>this.approvalRequirementsByPolicyVersion)![key] = _data["approvalRequirementsByPolicyVersion"][key] ? _data["approvalRequirementsByPolicyVersion"][key].map((i: any) => VolunteerFamilyApprovalRequirement.fromJS(i)) : [];
+                }
             }
         }
     }
@@ -1685,10 +1701,13 @@ export class VolunteerFamilyRolePolicy implements IVolunteerFamilyRolePolicy {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["volunteerFamilyRoleType"] = this.volunteerFamilyRoleType;
-        if (Array.isArray(this.approvalRequirements)) {
-            data["approvalRequirements"] = [];
-            for (let item of this.approvalRequirements)
-                data["approvalRequirements"].push(item.toJSON());
+        data["currentVersion"] = this.currentVersion;
+        if (this.approvalRequirementsByPolicyVersion) {
+            data["approvalRequirementsByPolicyVersion"] = {};
+            for (let key in this.approvalRequirementsByPolicyVersion) {
+                if (this.approvalRequirementsByPolicyVersion.hasOwnProperty(key))
+                    (<any>data["approvalRequirementsByPolicyVersion"])[key] = this.approvalRequirementsByPolicyVersion[key];
+            }
         }
         return data; 
     }
@@ -1696,12 +1715,13 @@ export class VolunteerFamilyRolePolicy implements IVolunteerFamilyRolePolicy {
 
 export interface IVolunteerFamilyRolePolicy {
     volunteerFamilyRoleType?: string;
-    approvalRequirements?: VolunteerFamilyApprovalRequirement[];
+    currentVersion?: string;
+    approvalRequirementsByPolicyVersion?: { [key: string]: VolunteerFamilyApprovalRequirement[]; };
 }
 
 export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyApprovalRequirement {
     stage?: RequirementStage;
-    actionRequirement?: ActionRequirement;
+    actionName?: string;
     scope?: VolunteerFamilyRequirementScope;
 
     constructor(data?: IVolunteerFamilyApprovalRequirement) {
@@ -1716,7 +1736,7 @@ export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyAppro
     init(_data?: any) {
         if (_data) {
             this.stage = _data["stage"];
-            this.actionRequirement = _data["actionRequirement"] ? ActionRequirement.fromJS(_data["actionRequirement"]) : <any>undefined;
+            this.actionName = _data["actionName"];
             this.scope = _data["scope"];
         }
     }
@@ -1731,7 +1751,7 @@ export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyAppro
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["stage"] = this.stage;
-        data["actionRequirement"] = this.actionRequirement ? this.actionRequirement.toJSON() : <any>undefined;
+        data["actionName"] = this.actionName;
         data["scope"] = this.scope;
         return data; 
     }
@@ -1739,7 +1759,7 @@ export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyAppro
 
 export interface IVolunteerFamilyApprovalRequirement {
     stage?: RequirementStage;
-    actionRequirement?: ActionRequirement;
+    actionName?: string;
     scope?: VolunteerFamilyRequirementScope;
 }
 
@@ -2583,7 +2603,6 @@ export class FormUploadInfo implements IFormUploadInfo {
     timestampUtc?: Date;
     completedAtUtc?: Date;
     formName?: string;
-    formVersion?: string;
     originalFileName?: string;
     uploadedDocumentId?: string;
 
@@ -2602,7 +2621,6 @@ export class FormUploadInfo implements IFormUploadInfo {
             this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
             this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
             this.formName = _data["formName"];
-            this.formVersion = _data["formVersion"];
             this.originalFileName = _data["originalFileName"];
             this.uploadedDocumentId = _data["uploadedDocumentId"];
         }
@@ -2621,7 +2639,6 @@ export class FormUploadInfo implements IFormUploadInfo {
         data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
         data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
         data["formName"] = this.formName;
-        data["formVersion"] = this.formVersion;
         data["originalFileName"] = this.originalFileName;
         data["uploadedDocumentId"] = this.uploadedDocumentId;
         return data; 
@@ -2633,7 +2650,6 @@ export interface IFormUploadInfo {
     timestampUtc?: Date;
     completedAtUtc?: Date;
     formName?: string;
-    formVersion?: string;
     originalFileName?: string;
     uploadedDocumentId?: string;
 }
@@ -3274,7 +3290,6 @@ export interface IPerformReferralActivity extends IReferralCommand {
 export class UploadReferralForm extends ReferralCommand implements IUploadReferralForm {
     completedAtUtc?: Date;
     formName?: string;
-    formVersion?: string;
     uploadedFileName?: string;
     uploadedDocumentId?: string;
 
@@ -3288,7 +3303,6 @@ export class UploadReferralForm extends ReferralCommand implements IUploadReferr
         if (_data) {
             this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
             this.formName = _data["formName"];
-            this.formVersion = _data["formVersion"];
             this.uploadedFileName = _data["uploadedFileName"];
             this.uploadedDocumentId = _data["uploadedDocumentId"];
         }
@@ -3305,7 +3319,6 @@ export class UploadReferralForm extends ReferralCommand implements IUploadReferr
         data = typeof data === 'object' ? data : {};
         data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
         data["formName"] = this.formName;
-        data["formVersion"] = this.formVersion;
         data["uploadedFileName"] = this.uploadedFileName;
         data["uploadedDocumentId"] = this.uploadedDocumentId;
         super.toJSON(data);
@@ -3316,7 +3329,6 @@ export class UploadReferralForm extends ReferralCommand implements IUploadReferr
 export interface IUploadReferralForm extends IReferralCommand {
     completedAtUtc?: Date;
     formName?: string;
-    formVersion?: string;
     uploadedFileName?: string;
     uploadedDocumentId?: string;
 }
@@ -4400,7 +4412,6 @@ export interface ISetVolunteerFamilyNote extends IVolunteerFamilyCommand {
 export class UploadVolunteerFamilyForm extends VolunteerFamilyCommand implements IUploadVolunteerFamilyForm {
     completedAtUtc?: Date;
     formName?: string;
-    formVersion?: string;
     uploadedFileName?: string;
     uploadedDocumentId?: string;
 
@@ -4414,7 +4425,6 @@ export class UploadVolunteerFamilyForm extends VolunteerFamilyCommand implements
         if (_data) {
             this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
             this.formName = _data["formName"];
-            this.formVersion = _data["formVersion"];
             this.uploadedFileName = _data["uploadedFileName"];
             this.uploadedDocumentId = _data["uploadedDocumentId"];
         }
@@ -4431,7 +4441,6 @@ export class UploadVolunteerFamilyForm extends VolunteerFamilyCommand implements
         data = typeof data === 'object' ? data : {};
         data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
         data["formName"] = this.formName;
-        data["formVersion"] = this.formVersion;
         data["uploadedFileName"] = this.uploadedFileName;
         data["uploadedDocumentId"] = this.uploadedDocumentId;
         super.toJSON(data);
@@ -4442,7 +4451,6 @@ export class UploadVolunteerFamilyForm extends VolunteerFamilyCommand implements
 export interface IUploadVolunteerFamilyForm extends IVolunteerFamilyCommand {
     completedAtUtc?: Date;
     formName?: string;
-    formVersion?: string;
     uploadedFileName?: string;
     uploadedDocumentId?: string;
 }
@@ -4655,7 +4663,6 @@ export interface ISetVolunteerNote extends IVolunteerCommand {
 export class UploadVolunteerForm extends VolunteerCommand implements IUploadVolunteerForm {
     completedAtUtc?: Date;
     formName?: string;
-    formVersion?: string;
     uploadedFileName?: string;
     uploadedDocumentId?: string;
 
@@ -4669,7 +4676,6 @@ export class UploadVolunteerForm extends VolunteerCommand implements IUploadVolu
         if (_data) {
             this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
             this.formName = _data["formName"];
-            this.formVersion = _data["formVersion"];
             this.uploadedFileName = _data["uploadedFileName"];
             this.uploadedDocumentId = _data["uploadedDocumentId"];
         }
@@ -4686,7 +4692,6 @@ export class UploadVolunteerForm extends VolunteerCommand implements IUploadVolu
         data = typeof data === 'object' ? data : {};
         data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
         data["formName"] = this.formName;
-        data["formVersion"] = this.formVersion;
         data["uploadedFileName"] = this.uploadedFileName;
         data["uploadedDocumentId"] = this.uploadedDocumentId;
         super.toJSON(data);
@@ -4697,7 +4702,6 @@ export class UploadVolunteerForm extends VolunteerCommand implements IUploadVolu
 export interface IUploadVolunteerForm extends IVolunteerCommand {
     completedAtUtc?: Date;
     formName?: string;
-    formVersion?: string;
     uploadedFileName?: string;
     uploadedDocumentId?: string;
 }

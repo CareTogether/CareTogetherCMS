@@ -124,7 +124,6 @@ export function useVolunteerFamiliesModel() {
         familyId: volunteerFamilyId
       });
       command.formName = requirement.formName;
-      command.formVersion = requirement.formVersion;
       command.uploadedDocumentId = uploadedDocumentId;
       command.uploadedFileName = formFile.name;
       command.completedAtUtc = completedAtLocal;
@@ -148,7 +147,6 @@ export function useVolunteerFamiliesModel() {
         personId: personId
       });
       command.formName = requirement.formName;
-      command.formVersion = requirement.formVersion;
       command.uploadedDocumentId = uploadedDocumentId;
       command.uploadedFileName = formFile.name;
       command.completedAtUtc = completedAtLocal;

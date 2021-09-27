@@ -66,32 +66,40 @@ function VolunteerProgress() {
   policy.volunteerPolicy?.volunteerFamilyRoles &&
     Object.entries(policy.volunteerPolicy.volunteerFamilyRoles)
     .forEach(([roleName, rolePolicy]) => {
-      rolePolicy.approvalRequirements?.forEach(requirement => {
-        if (requirement.stage === RequirementStage.Application) return;
-        if (requirement.actionRequirement instanceof FormUploadRequirement && requirement.actionRequirement.formName) {
-          append(RequirementType.Document, requirement.actionRequirement.formName, roleName,
-            requirement.scope === VolunteerFamilyRequirementScope.OncePerFamily
-            ? RequirementScope.Family : RequirementScope.Individual);
-        } else if (requirement.actionRequirement instanceof ActivityRequirement && requirement.actionRequirement.activityName) {
-          append(RequirementType.Activity, requirement.actionRequirement.activityName, roleName,
-            requirement.scope === VolunteerFamilyRequirementScope.OncePerFamily
-            ? RequirementScope.Family : RequirementScope.Individual);
-        }
+      rolePolicy.approvalRequirementsByPolicyVersion && Object.entries(rolePolicy.approvalRequirementsByPolicyVersion).forEach(([version, requirements]) => {
+        const roleNameVersion = roleName + "-" + version;
+        requirements?.forEach(requirement => {
+          if (requirement.stage === RequirementStage.Application) return;
+          const action = policy.actionDefinitions![requirement.actionName!];
+          if (action instanceof FormUploadRequirement && action.formName) {
+            append(RequirementType.Document, action.formName, roleNameVersion,
+              requirement.scope === VolunteerFamilyRequirementScope.OncePerFamily
+              ? RequirementScope.Family : RequirementScope.Individual);
+          } else if (action instanceof ActivityRequirement && action.activityName) {
+            append(RequirementType.Activity, action.activityName, roleNameVersion,
+              requirement.scope === VolunteerFamilyRequirementScope.OncePerFamily
+              ? RequirementScope.Family : RequirementScope.Individual);
+          }
+        });
       });
     });
     
   policy.volunteerPolicy?.volunteerRoles &&
     Object.entries(policy.volunteerPolicy.volunteerRoles)
     .forEach(([roleName, rolePolicy]) => {
-      rolePolicy.approvalRequirements?.forEach(requirement => {
-        if (requirement.stage === RequirementStage.Application) return;
-        if (requirement.actionRequirement instanceof FormUploadRequirement && requirement.actionRequirement.formName) {
-          append(RequirementType.Document, requirement.actionRequirement.formName, roleName,
-            RequirementScope.Individual);
-        } else if (requirement.actionRequirement instanceof ActivityRequirement && requirement.actionRequirement.activityName) {
-          append(RequirementType.Activity, requirement.actionRequirement.activityName, roleName,
-            RequirementScope.Individual);
-        }
+      rolePolicy.approvalRequirementsByPolicyVersion && Object.entries(rolePolicy.approvalRequirementsByPolicyVersion).forEach(([version, requirements]) => {
+        const roleNameVersion = roleName + "-" + version;
+        requirements?.forEach(requirement => {
+          if (requirement.stage === RequirementStage.Application) return;
+          const action = policy.actionDefinitions![requirement.actionName!];
+          if (action instanceof FormUploadRequirement && action.formName) {
+            append(RequirementType.Document, action.formName, roleNameVersion,
+              RequirementScope.Individual);
+          } else if (action instanceof ActivityRequirement && action.activityName) {
+            append(RequirementType.Activity, action.activityName, roleNameVersion,
+              RequirementScope.Individual);
+          }
+        });
       });
     });
 
