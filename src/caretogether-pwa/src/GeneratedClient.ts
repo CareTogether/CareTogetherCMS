@@ -2044,7 +2044,7 @@ export class ContactInfo implements IContactInfo {
     preferredPhoneNumberId?: string | undefined;
     emailAddresses?: EmailAddress[];
     preferredEmailAddressId?: string | undefined;
-    contactMethodPreferenceNotes?: string;
+    contactMethodPreferenceNotes?: string | undefined;
 
     constructor(data?: IContactInfo) {
         if (data) {
@@ -2121,7 +2121,7 @@ export interface IContactInfo {
     preferredPhoneNumberId?: string | undefined;
     emailAddresses?: EmailAddress[];
     preferredEmailAddressId?: string | undefined;
-    contactMethodPreferenceNotes?: string;
+    contactMethodPreferenceNotes?: string | undefined;
 }
 
 export class Address implements IAddress {
@@ -4044,6 +4044,7 @@ export class VolunteerFamily implements IVolunteerFamily {
     approvalActivitiesPerformed?: ActivityInfo[];
     familyRoleApprovals?: { [key: string]: RoleApprovalStatus; };
     individualVolunteers?: { [key: string]: Volunteer; };
+    contactInfo?: { [key: string]: ContactInfo; };
 
     constructor(data?: IVolunteerFamily) {
         if (data) {
@@ -4079,6 +4080,13 @@ export class VolunteerFamily implements IVolunteerFamily {
                 for (let key in _data["individualVolunteers"]) {
                     if (_data["individualVolunteers"].hasOwnProperty(key))
                         (<any>this.individualVolunteers)![key] = _data["individualVolunteers"][key] ? Volunteer.fromJS(_data["individualVolunteers"][key]) : new Volunteer();
+                }
+            }
+            if (_data["contactInfo"]) {
+                this.contactInfo = {} as any;
+                for (let key in _data["contactInfo"]) {
+                    if (_data["contactInfo"].hasOwnProperty(key))
+                        (<any>this.contactInfo)![key] = _data["contactInfo"][key] ? ContactInfo.fromJS(_data["contactInfo"][key]) : new ContactInfo();
                 }
             }
         }
@@ -4118,6 +4126,13 @@ export class VolunteerFamily implements IVolunteerFamily {
                     (<any>data["individualVolunteers"])[key] = this.individualVolunteers[key] ? this.individualVolunteers[key].toJSON() : <any>undefined;
             }
         }
+        if (this.contactInfo) {
+            data["contactInfo"] = {};
+            for (let key in this.contactInfo) {
+                if (this.contactInfo.hasOwnProperty(key))
+                    (<any>data["contactInfo"])[key] = this.contactInfo[key] ? this.contactInfo[key].toJSON() : <any>undefined;
+            }
+        }
         return data; 
     }
 }
@@ -4128,6 +4143,7 @@ export interface IVolunteerFamily {
     approvalActivitiesPerformed?: ActivityInfo[];
     familyRoleApprovals?: { [key: string]: RoleApprovalStatus; };
     individualVolunteers?: { [key: string]: Volunteer; };
+    contactInfo?: { [key: string]: ContactInfo; };
 }
 
 export enum RoleApprovalStatus {
@@ -4763,6 +4779,9 @@ export class AddAdultToFamilyCommand extends ApprovalCommand implements IAddAdul
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
     concerns?: string | undefined;
     notes?: string | undefined;
+    address?: Address | undefined;
+    phoneNumber?: PhoneNumber | undefined;
+    emailAddress?: EmailAddress | undefined;
 
     constructor(data?: IAddAdultToFamilyCommand) {
         super(data);
@@ -4781,6 +4800,9 @@ export class AddAdultToFamilyCommand extends ApprovalCommand implements IAddAdul
             this.familyAdultRelationshipInfo = _data["familyAdultRelationshipInfo"] ? FamilyAdultRelationshipInfo.fromJS(_data["familyAdultRelationshipInfo"]) : <any>undefined;
             this.concerns = _data["concerns"];
             this.notes = _data["notes"];
+            this.address = _data["address"] ? Address.fromJS(_data["address"]) : <any>undefined;
+            this.phoneNumber = _data["phoneNumber"] ? PhoneNumber.fromJS(_data["phoneNumber"]) : <any>undefined;
+            this.emailAddress = _data["emailAddress"] ? EmailAddress.fromJS(_data["emailAddress"]) : <any>undefined;
         }
     }
 
@@ -4802,6 +4824,9 @@ export class AddAdultToFamilyCommand extends ApprovalCommand implements IAddAdul
         data["familyAdultRelationshipInfo"] = this.familyAdultRelationshipInfo ? this.familyAdultRelationshipInfo.toJSON() : <any>undefined;
         data["concerns"] = this.concerns;
         data["notes"] = this.notes;
+        data["address"] = this.address ? this.address.toJSON() : <any>undefined;
+        data["phoneNumber"] = this.phoneNumber ? this.phoneNumber.toJSON() : <any>undefined;
+        data["emailAddress"] = this.emailAddress ? this.emailAddress.toJSON() : <any>undefined;
         super.toJSON(data);
         return data; 
     }
@@ -4817,6 +4842,9 @@ export interface IAddAdultToFamilyCommand extends IApprovalCommand {
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
     concerns?: string | undefined;
     notes?: string | undefined;
+    address?: Address | undefined;
+    phoneNumber?: PhoneNumber | undefined;
+    emailAddress?: EmailAddress | undefined;
 }
 
 export class AddChildToFamilyCommand extends ApprovalCommand implements IAddChildToFamilyCommand {
@@ -4902,6 +4930,9 @@ export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand im
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
     concerns?: string | undefined;
     notes?: string | undefined;
+    address?: Address;
+    phoneNumber?: PhoneNumber;
+    emailAddress?: EmailAddress;
 
     constructor(data?: ICreateVolunteerFamilyWithNewAdultCommand) {
         super(data);
@@ -4919,6 +4950,9 @@ export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand im
             this.familyAdultRelationshipInfo = _data["familyAdultRelationshipInfo"] ? FamilyAdultRelationshipInfo.fromJS(_data["familyAdultRelationshipInfo"]) : <any>undefined;
             this.concerns = _data["concerns"];
             this.notes = _data["notes"];
+            this.address = _data["address"] ? Address.fromJS(_data["address"]) : <any>undefined;
+            this.phoneNumber = _data["phoneNumber"] ? PhoneNumber.fromJS(_data["phoneNumber"]) : <any>undefined;
+            this.emailAddress = _data["emailAddress"] ? EmailAddress.fromJS(_data["emailAddress"]) : <any>undefined;
         }
     }
 
@@ -4939,6 +4973,9 @@ export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand im
         data["familyAdultRelationshipInfo"] = this.familyAdultRelationshipInfo ? this.familyAdultRelationshipInfo.toJSON() : <any>undefined;
         data["concerns"] = this.concerns;
         data["notes"] = this.notes;
+        data["address"] = this.address ? this.address.toJSON() : <any>undefined;
+        data["phoneNumber"] = this.phoneNumber ? this.phoneNumber.toJSON() : <any>undefined;
+        data["emailAddress"] = this.emailAddress ? this.emailAddress.toJSON() : <any>undefined;
         super.toJSON(data);
         return data; 
     }
@@ -4953,6 +4990,9 @@ export interface ICreateVolunteerFamilyWithNewAdultCommand extends IApprovalComm
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
     concerns?: string | undefined;
     notes?: string | undefined;
+    address?: Address;
+    phoneNumber?: PhoneNumber;
+    emailAddress?: EmailAddress;
 }
 
 export abstract class PersonCommand implements IPersonCommand {

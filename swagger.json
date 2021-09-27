@@ -1371,7 +1371,8 @@
             "nullable": true
           },
           "contactMethodPreferenceNotes": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -2389,6 +2390,12 @@
             "additionalProperties": {
               "$ref": "#/components/schemas/Volunteer"
             }
+          },
+          "contactInfo": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ContactInfo"
+            }
           }
         }
       },
@@ -2735,6 +2742,30 @@
               "notes": {
                 "type": "string",
                 "nullable": true
+              },
+              "address": {
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/Address"
+                  }
+                ]
+              },
+              "phoneNumber": {
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/PhoneNumber"
+                  }
+                ]
+              },
+              "emailAddress": {
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/EmailAddress"
+                  }
+                ]
               }
             }
           }
@@ -2820,6 +2851,15 @@
               "notes": {
                 "type": "string",
                 "nullable": true
+              },
+              "address": {
+                "$ref": "#/components/schemas/Address"
+              },
+              "phoneNumber": {
+                "$ref": "#/components/schemas/PhoneNumber"
+              },
+              "emailAddress": {
+                "$ref": "#/components/schemas/EmailAddress"
               }
             }
           }
