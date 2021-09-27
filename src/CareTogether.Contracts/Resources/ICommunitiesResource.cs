@@ -71,16 +71,16 @@ namespace CareTogether.Resources
     /// </summary>
     public interface ICommunitiesResource
     {
-        Task<ResourceResult<Person>> FindUserAsync(Guid organizationId, Guid locationId, Guid userId);
+        Task<Person> FindUserAsync(Guid organizationId, Guid locationId, Guid userId);
 
         Task<ImmutableList<Person>> ListPeopleAsync(Guid organizationId, Guid locationId);
 
-        Task<ResourceResult<Family>> FindFamilyAsync(Guid organizationId, Guid locationId, Guid familyId);
+        Task<Family> FindFamilyAsync(Guid organizationId, Guid locationId, Guid familyId);
 
         Task<ImmutableList<Family>> ListFamiliesAsync(Guid organizationId, Guid locationId);
 
-        Task<ResourceResult<Family>> ExecuteFamilyCommandAsync(Guid organizationId, Guid locationId, FamilyCommand command, Guid userId);
+        Task<Family> ExecuteFamilyCommandAsync(Guid organizationId, Guid locationId, FamilyCommand command, Guid userId);
 
-        Task<ResourceResult<Person>> ExecutePersonCommandAsync(Guid organizationId, Guid locationId, PersonCommand command, Guid userId);
+        Task<Person> ExecutePersonCommandAsync(Guid organizationId, Guid locationId, PersonCommand command, Guid userId);
     }
 }

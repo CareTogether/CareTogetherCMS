@@ -22,43 +22,43 @@ namespace CareTogether.Engines
         }
 
 
-        public async Task<OneOf<Yes, Error<string>>> AuthorizeArrangementCommandAsync(
+        public async Task<bool> AuthorizeArrangementCommandAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user, ArrangementCommand command, Referral referral)
         {
             await Task.Yield();
-            return new Yes();
+            return true;
             //throw new NotImplementedException();
         }
 
-        public async Task<OneOf<Yes, Error<string>>> AuthorizeArrangementNoteCommandAsync(
+        public async Task<bool> AuthorizeArrangementNoteCommandAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user, ArrangementNoteCommand command, Referral referral)
         {
             await Task.Yield();
-            return new Yes();
+            return true;
             //throw new NotImplementedException();
         }
 
-        public async Task<OneOf<Yes, Error<string>>> AuthorizeReferralCommandAsync(
+        public async Task<bool> AuthorizeReferralCommandAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user, ReferralCommand command, Referral referral)
         {
             await Task.Yield();
-            return new Yes();
+            return true;
             //throw new NotImplementedException();
         }
 
-        public async Task<OneOf<Yes, Error<string>>> AuthorizeVolunteerCommandAsync(
+        public async Task<bool> AuthorizeVolunteerCommandAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user, VolunteerCommand command, VolunteerFamily volunteerFamily)
         {
             await Task.Yield();
-            return new Yes();
+            return true;
             //throw new NotImplementedException();
         }
 
-        public async Task<OneOf<Yes, Error<string>>> AuthorizeVolunteerFamilyCommandAsync(
+        public async Task<bool> AuthorizeVolunteerFamilyCommandAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user, VolunteerFamilyCommand command, VolunteerFamily volunteerFamily)
         {
             await Task.Yield();
-            return new Yes();
+            return true;
             //throw new NotImplementedException();
         }
 
@@ -67,9 +67,7 @@ namespace CareTogether.Engines
             Family family, ImmutableList<FormUploadInfo> familyFormUploads, ImmutableList<ActivityInfo> familyActivitiesPerformed,
             ImmutableDictionary<Guid, (ImmutableList<FormUploadInfo> FormUploads, ImmutableList<ActivityInfo> ActivitiesPerformed)> individualInfo)
         {
-            var policyResult = await policiesResource.GetCurrentPolicy(organizationId, locationId);
-            if (!policyResult.TryPickT0(out var policy, out var error))
-                throw new InvalidOperationException(error.ToString());
+            var policy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
 
             var individualVolunteerRoles = family.Adults.Select(x =>
             {

@@ -26,7 +26,7 @@ namespace CareTogether.Resources
     /// </summary>
     public interface IGoalsResource
     {
-        Task<ResourceResult<Goal>> ExecuteGoalCommandAsync(Guid organizationId, Guid locationId, GoalCommand command, Guid userId);
+        Task<Goal> ExecuteGoalCommandAsync(Guid organizationId, Guid locationId, GoalCommand command, Guid userId);
 
         Task<ImmutableList<Goal>> ListPersonGoalsAsync(Guid organizationId, Guid locationId, Guid personId);
     }

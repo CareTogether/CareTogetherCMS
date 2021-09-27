@@ -30,13 +30,13 @@ namespace CareTogether.Managers
     {
         Task<ImmutableList<Referral>> ListReferralsAsync(Guid organizationId, Guid locationId);
 
-        Task<ManagerResult<Referral>> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId,
+        Task<Referral> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, ReferralCommand command);
 
-        Task<ManagerResult<Referral>> ExecuteArrangementCommandAsync(Guid organizationId, Guid locationId,
+        Task<Referral> ExecuteArrangementCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, ArrangementCommand command);
 
-        Task<ManagerResult<Referral>> ExecuteArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
+        Task<Referral> ExecuteArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, ArrangementNoteCommand command);
     }
 }

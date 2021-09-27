@@ -40,16 +40,16 @@ namespace CareTogether.Managers
         Task<ImmutableList<VolunteerFamily>> ListVolunteerFamiliesAsync(
             ClaimsPrincipal user, Guid organizationId, Guid locationId);
 
-        Task<ManagerResult<VolunteerFamily>> ExecuteVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
+        Task<VolunteerFamily> ExecuteVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, VolunteerFamilyCommand command);
 
-        Task<ManagerResult<VolunteerFamily>> ExecuteVolunteerCommandAsync(Guid organizationId, Guid locationId,
+        Task<VolunteerFamily> ExecuteVolunteerCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, VolunteerCommand command);
 
-        Task<ManagerResult<VolunteerFamily>> ExecuteApprovalCommandAsync(Guid organizationId, Guid locationId,
+        Task<VolunteerFamily> ExecuteApprovalCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, ApprovalCommand command);
 
-        Task<ManagerResult<VolunteerFamily>> ExecutePersonCommandAsync(Guid organizationId, Guid locationId,
+        Task<VolunteerFamily> ExecutePersonCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, Guid familyId, PersonCommand command);
     }
 }

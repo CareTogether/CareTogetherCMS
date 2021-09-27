@@ -1,7 +1,5 @@
 ﻿using JsonPolymorph;
 using Nito.AsyncEx;
-using OneOf;
-using OneOf.Types;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -66,10 +64,10 @@ namespace CareTogether.Resources.Models
         }
 
 
-        public OneOf<Success<(ReferralCommandExecuted Event, long SequenceNumber, ReferralEntry ReferralEntry, Action OnCommit)>, Error<string>>
+        public (ReferralCommandExecuted Event, long SequenceNumber, ReferralEntry ReferralEntry, Action OnCommit)
             ExecuteReferralCommand(ReferralCommand command, Guid userId, DateTime timestampUtc)
         {
-            OneOf<ReferralEntry, Error<string>> result = command switch
+            var referralEntryToUpsert = command switch
             {
                 //TODO: Validate policy version and enforce any other invariants
                 CreateReferral c => new ReferralEntry(c.ReferralId, c.PolicyVersion,
@@ -100,27 +98,23 @@ namespace CareTogether.Resources.Models
                         _ => throw new NotImplementedException(
                             $"The command type '{command.GetType().FullName}' has not been implemented.")
                     }
-                    : new Error<string>("A family with the specified ID does not exist.")
+                    : throw new KeyNotFoundException("A family with the specified ID does not exist.")
             };
-            if (result.TryPickT0(out var referralEntryToUpsert, out var error))
-            {
-                return new Success<(ReferralCommandExecuted Event, long SequenceNumber, ReferralEntry ReferralEntry, Action OnCommit)>((
-                    Event: new ReferralCommandExecuted(userId, timestampUtc, command),
-                    SequenceNumber: LastKnownSequenceNumber + 1,
-                    ReferralEntry: referralEntryToUpsert,
-                    OnCommit: () => referrals = referrals.SetItem(referralEntryToUpsert.Id, referralEntryToUpsert)));
-            }
-            else
-                return result.AsT1;
+
+            return (
+                Event: new ReferralCommandExecuted(userId, timestampUtc, command),
+                SequenceNumber: LastKnownSequenceNumber + 1,
+                ReferralEntry: referralEntryToUpsert,
+                OnCommit: () => referrals = referrals.SetItem(referralEntryToUpsert.Id, referralEntryToUpsert));
         }
 
-        public OneOf<Success<(ArrangementCommandExecuted Event, long SequenceNumber, ReferralEntry ReferralEntry, Action OnCommit)>, Error<string>>
+        public (ArrangementCommandExecuted Event, long SequenceNumber, ReferralEntry ReferralEntry, Action OnCommit)
             ExecuteArrangementCommand(ArrangementCommand command, Guid userId, DateTime timestampUtc)
         {
             if (!referrals.TryGetValue(command.ReferralId, out var referralEntry))
-                return new Error<string>("A referral with the specified ID does not exist.");
+                throw new KeyNotFoundException("A referral with the specified ID does not exist.");
 
-            OneOf<ArrangementEntry, Error<string>> result = command switch
+            var arrangementEntryToUpsert = command switch
             {
                 //TODO: Validate policy version and enforce any other invariants
                 CreateArrangement c => new ArrangementEntry(c.ArrangementId, c.PolicyVersion, c.ArrangementType,
@@ -179,35 +173,30 @@ namespace CareTogether.Resources.Models
                         _ => throw new NotImplementedException(
                             $"The command type '{command.GetType().FullName}' has not been implemented.")
                     }
-                    : new Error<string>("An arrangement with the specified ID does not exist.")
+                    : throw new KeyNotFoundException("An arrangement with the specified ID does not exist.")
             };
 
-            if (result.TryPickT0(out var arrangementEntryToUpsert, out var error))
+            var referralEntryToUpsert = referralEntry with
             {
-                var referralEntryToUpsert = referralEntry with
-                {
-                    Arrangements = referralEntry.Arrangements.SetItem(command.ArrangementId, arrangementEntryToUpsert)
-                };
-                return new Success<(ArrangementCommandExecuted Event, long SequenceNumber, ReferralEntry ReferralEntry, Action OnCommit)>((
-                    Event: new ArrangementCommandExecuted(userId, timestampUtc, command),
-                    SequenceNumber: LastKnownSequenceNumber + 1,
-                    ReferralEntry: referralEntryToUpsert,
-                    OnCommit: () => referrals = referrals.SetItem(referralEntryToUpsert.Id, referralEntryToUpsert)));
-            }
-            else
-                return error;
+                Arrangements = referralEntry.Arrangements.SetItem(command.ArrangementId, arrangementEntryToUpsert)
+            };
+            return (
+                Event: new ArrangementCommandExecuted(userId, timestampUtc, command),
+                SequenceNumber: LastKnownSequenceNumber + 1,
+                ReferralEntry: referralEntryToUpsert,
+                OnCommit: () => referrals = referrals.SetItem(referralEntryToUpsert.Id, referralEntryToUpsert));
         }
 
-        public OneOf<Success<(ArrangementNoteCommandExecuted Event, long SequenceNumber, ReferralEntry ReferralEntry, Action OnCommit)>, Error<string>>
+        public (ArrangementNoteCommandExecuted Event, long SequenceNumber, ReferralEntry ReferralEntry, Action OnCommit)
             ExecuteArrangementNoteCommand(ArrangementNoteCommand command, Guid userId, DateTime timestampUtc)
         {
             if (!referrals.TryGetValue(command.ReferralId, out var referralEntry))
-                return new Error<string>("A referral with the specified ID does not exist.");
+                throw new KeyNotFoundException("A referral with the specified ID does not exist.");
 
             if (!referralEntry.Arrangements.TryGetValue(command.ArrangementId, out var arrangementEntry))
-                return new Error<string>("An arrangement with the specified ID does not exist.");
+                throw new KeyNotFoundException("An arrangement with the specified ID does not exist.");
 
-            OneOf<NoteEntry?, Error<string>> result = command switch
+            var noteEntryToUpsert = command switch
             {
                 //TODO: Validate policy version and enforce any other invariants
                 CreateDraftArrangementNote c => new NoteEntry(c.NoteId, userId, timestampUtc, NoteStatus.Draft,
@@ -235,30 +224,25 @@ namespace CareTogether.Resources.Models
                         _ => throw new NotImplementedException(
                             $"The command type '{command.GetType().FullName}' has not been implemented.")
                     }
-                    : new Error<string>("An arrangement with the specified ID does not exist.")
+                    : throw new KeyNotFoundException("An arrangement with the specified ID does not exist.")
             };
 
-            if (result.TryPickT0(out var noteEntryToUpsert, out var error))
+            var referralEntryToUpsert = referralEntry with
             {
-                var referralEntryToUpsert = referralEntry with
+                Arrangements = referralEntry.Arrangements.SetItem(command.ArrangementId, arrangementEntry with
                 {
-                    Arrangements = referralEntry.Arrangements.SetItem(command.ArrangementId, arrangementEntry with
-                    {
-                        Notes = noteEntryToUpsert == null
-                            ? arrangementEntry.Notes.Remove(command.NoteId)
-                            : arrangementEntry.Notes.SetItem(command.NoteId, noteEntryToUpsert)
-                    })
-                };
-                return new Success<(ArrangementNoteCommandExecuted Event, long SequenceNumber, ReferralEntry ReferralEntry, Action OnCommit)>((
-                    Event: new ArrangementNoteCommandExecuted(userId, timestampUtc, command),
-                    SequenceNumber: LastKnownSequenceNumber + 1,
-                    ReferralEntry: referralEntryToUpsert,
-                    OnCommit: () => referrals = referrals.SetItem(referralEntryToUpsert.Id, referralEntryToUpsert)));
-                    //TODO: Implement -- requires coordination with underlying resource service via emitting IFormsResource commands
-                    //      (which are not executed by the ReferralModel but by its caller, the ReferralManager, in non-replay scenarios).
-            }
-            else
-                return error;
+                    Notes = noteEntryToUpsert == null
+                        ? arrangementEntry.Notes.Remove(command.NoteId)
+                        : arrangementEntry.Notes.SetItem(command.NoteId, noteEntryToUpsert)
+                })
+            };
+            return (
+                Event: new ArrangementNoteCommandExecuted(userId, timestampUtc, command),
+                SequenceNumber: LastKnownSequenceNumber + 1,
+                ReferralEntry: referralEntryToUpsert,
+                OnCommit: () => referrals = referrals.SetItem(referralEntryToUpsert.Id, referralEntryToUpsert));
+                //TODO: Implement -- requires coordination with underlying resource service via emitting IFormsResource commands
+                //      (which are not executed by the ReferralModel but by its caller, the ReferralManager, in non-replay scenarios).
         }
 
         public ImmutableList<ReferralEntry> FindReferralEntries(Func<ReferralEntry, bool> predicate)
@@ -268,10 +252,7 @@ namespace CareTogether.Resources.Models
                 .ToImmutableList();
         }
 
-        public ResourceResult<ReferralEntry> GetReferralEntry(Guid referralId) =>
-            referrals.TryGetValue(referralId, out var referralEntry)
-            ? referralEntry
-            : ResourceResult.NotFound;
+        public ReferralEntry GetReferralEntry(Guid referralId) => referrals[referralId];
 
 
         private void ReplayEvent(ReferralEvent domainEvent, long sequenceNumber)
@@ -279,19 +260,19 @@ namespace CareTogether.Resources.Models
             if (domainEvent is ReferralCommandExecuted referralCommandExecuted)
             {
                 var (_, _, _, onCommit) = ExecuteReferralCommand(referralCommandExecuted.Command,
-                    referralCommandExecuted.UserId, referralCommandExecuted.TimestampUtc).AsT0.Value;
+                    referralCommandExecuted.UserId, referralCommandExecuted.TimestampUtc);
                 onCommit();
             }
             else if (domainEvent is ArrangementCommandExecuted arrangementCommandExecuted)
             {
                 var (_, _, _, onCommit) = ExecuteArrangementCommand(arrangementCommandExecuted.Command,
-                    arrangementCommandExecuted.UserId, arrangementCommandExecuted.TimestampUtc).AsT0.Value;
+                    arrangementCommandExecuted.UserId, arrangementCommandExecuted.TimestampUtc);
                 onCommit();
             }
             else if (domainEvent is ArrangementNoteCommandExecuted arrangementNoteCommandExecuted)
             {
                 var (_, _, _, onCommit) = ExecuteArrangementNoteCommand(arrangementNoteCommandExecuted.Command,
-                    arrangementNoteCommandExecuted.UserId, arrangementNoteCommandExecuted.TimestampUtc).AsT0.Value;
+                    arrangementNoteCommandExecuted.UserId, arrangementNoteCommandExecuted.TimestampUtc);
                 onCommit();
             }
             else

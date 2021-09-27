@@ -78,8 +78,8 @@ namespace CareTogether.Core.Test
             var user2 = await dut.FindUserAsync(guid1, guid2, guid3);
             var user1 = await dut.FindUserAsync(guid1, guid2, guid4);
 
-            Assert.AreEqual(guid2, user2.AsT0.Id);
-            Assert.AreEqual(guid1, user1.AsT0.Id);
+            Assert.AreEqual(guid2, user2.Id);
+            Assert.AreEqual(guid1, user1.Id);
         }
 
         [TestMethod]
@@ -100,12 +100,10 @@ namespace CareTogether.Core.Test
             var dut = new CommunitiesResource(events);
 
             var result1 = await dut.ExecutePersonCommandAsync(guid1, guid2, new UpdatePersonAge(guid6, new ExactAge(new DateTime(2021, 7, 1))), guid0);
-            var result2 = await dut.ExecutePersonCommandAsync(guid1, guid2, new UpdatePersonAge(guid5, new ExactAge(new DateTime(2021, 7, 2))), guid0);
-            var result3 = await dut.ExecutePersonCommandAsync(guid2, guid1, new UpdatePersonAge(guid6, new ExactAge(new DateTime(2021, 7, 3))), guid0);
+            await Assert.ThrowsExceptionAsync<KeyNotFoundException>(() => dut.ExecutePersonCommandAsync(guid1, guid2, new UpdatePersonAge(guid5, new ExactAge(new DateTime(2021, 7, 2))), guid0));
+            await Assert.ThrowsExceptionAsync<KeyNotFoundException>(() => dut.ExecutePersonCommandAsync(guid2, guid1, new UpdatePersonAge(guid6, new ExactAge(new DateTime(2021, 7, 3))), guid0));
 
-            Assert.AreEqual(new Person(guid6, null, "Eric", "Doe", Gender.Male, new ExactAge(new DateTime(2021, 7, 1)), "Ethnic", null, null), result1.AsT0);
-            Assert.AreEqual(ResourceResult.NotFound, result2.AsT1);
-            Assert.AreEqual(ResourceResult.NotFound, result3.AsT1);
+            Assert.AreEqual(new Person(guid6, null, "Eric", "Doe", Gender.Male, new ExactAge(new DateTime(2021, 7, 1)), "Ethnic", null, null), result1);
         }
 
 
