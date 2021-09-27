@@ -48,10 +48,10 @@ namespace CareTogether.Resources
         ImmutableDictionary<string, VolunteerRolePolicy> VolunteerRoles,
         ImmutableDictionary<string, VolunteerFamilyRolePolicy> VolunteerFamilyRoles);
 
-    public sealed record VolunteerRolePolicy(string VolunteerRoleType, string DefaultVersion,
+    public sealed record VolunteerRolePolicy(string VolunteerRoleType, string CurrentVersion,
         ImmutableDictionary<string, ImmutableList<VolunteerApprovalRequirement>> ApprovalRequirementsByPolicyVersion);
 
-    public sealed record VolunteerFamilyRolePolicy(string VolunteerFamilyRoleType, string DefaultVersion,
+    public sealed record VolunteerFamilyRolePolicy(string VolunteerFamilyRoleType, string CurrentVersion,
         ImmutableDictionary<string, ImmutableList<VolunteerFamilyApprovalRequirement>> ApprovalRequirementsByPolicyVersion);
 
     public sealed record VolunteerApprovalRequirement(

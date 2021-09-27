@@ -1563,7 +1563,7 @@ export interface IVolunteerPolicy {
 
 export class VolunteerRolePolicy implements IVolunteerRolePolicy {
     volunteerRoleType?: string;
-    defaultVersion?: string;
+    currentVersion?: string;
     approvalRequirementsByPolicyVersion?: { [key: string]: VolunteerApprovalRequirement[]; };
 
     constructor(data?: IVolunteerRolePolicy) {
@@ -1578,7 +1578,7 @@ export class VolunteerRolePolicy implements IVolunteerRolePolicy {
     init(_data?: any) {
         if (_data) {
             this.volunteerRoleType = _data["volunteerRoleType"];
-            this.defaultVersion = _data["defaultVersion"];
+            this.currentVersion = _data["currentVersion"];
             if (_data["approvalRequirementsByPolicyVersion"]) {
                 this.approvalRequirementsByPolicyVersion = {} as any;
                 for (let key in _data["approvalRequirementsByPolicyVersion"]) {
@@ -1599,7 +1599,7 @@ export class VolunteerRolePolicy implements IVolunteerRolePolicy {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["volunteerRoleType"] = this.volunteerRoleType;
-        data["defaultVersion"] = this.defaultVersion;
+        data["currentVersion"] = this.currentVersion;
         if (this.approvalRequirementsByPolicyVersion) {
             data["approvalRequirementsByPolicyVersion"] = {};
             for (let key in this.approvalRequirementsByPolicyVersion) {
@@ -1613,7 +1613,7 @@ export class VolunteerRolePolicy implements IVolunteerRolePolicy {
 
 export interface IVolunteerRolePolicy {
     volunteerRoleType?: string;
-    defaultVersion?: string;
+    currentVersion?: string;
     approvalRequirementsByPolicyVersion?: { [key: string]: VolunteerApprovalRequirement[]; };
 }
 
@@ -1669,7 +1669,7 @@ export enum RequirementStage {
 
 export class VolunteerFamilyRolePolicy implements IVolunteerFamilyRolePolicy {
     volunteerFamilyRoleType?: string;
-    defaultVersion?: string;
+    currentVersion?: string;
     approvalRequirementsByPolicyVersion?: { [key: string]: VolunteerFamilyApprovalRequirement[]; };
 
     constructor(data?: IVolunteerFamilyRolePolicy) {
@@ -1684,7 +1684,7 @@ export class VolunteerFamilyRolePolicy implements IVolunteerFamilyRolePolicy {
     init(_data?: any) {
         if (_data) {
             this.volunteerFamilyRoleType = _data["volunteerFamilyRoleType"];
-            this.defaultVersion = _data["defaultVersion"];
+            this.currentVersion = _data["currentVersion"];
             if (_data["approvalRequirementsByPolicyVersion"]) {
                 this.approvalRequirementsByPolicyVersion = {} as any;
                 for (let key in _data["approvalRequirementsByPolicyVersion"]) {
@@ -1705,7 +1705,7 @@ export class VolunteerFamilyRolePolicy implements IVolunteerFamilyRolePolicy {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["volunteerFamilyRoleType"] = this.volunteerFamilyRoleType;
-        data["defaultVersion"] = this.defaultVersion;
+        data["currentVersion"] = this.currentVersion;
         if (this.approvalRequirementsByPolicyVersion) {
             data["approvalRequirementsByPolicyVersion"] = {};
             for (let key in this.approvalRequirementsByPolicyVersion) {
@@ -1719,7 +1719,7 @@ export class VolunteerFamilyRolePolicy implements IVolunteerFamilyRolePolicy {
 
 export interface IVolunteerFamilyRolePolicy {
     volunteerFamilyRoleType?: string;
-    defaultVersion?: string;
+    currentVersion?: string;
     approvalRequirementsByPolicyVersion?: { [key: string]: VolunteerFamilyApprovalRequirement[]; };
 }
 

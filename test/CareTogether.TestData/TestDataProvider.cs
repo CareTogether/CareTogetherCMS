@@ -255,12 +255,11 @@ namespace CareTogether.TestData
                     ["Family Coach Checkin"] = new ActivityRequirement("Family Coach Checkin"),
                     ["Family Coach Supervision"] = new ActivityRequirement("Family Coach Supervision"),
                     ["Family Friend Application"] = new FormUploadRequirement("Family Friend Application", null, new Uri("http://example.com/forms/app-ff")),
-                    ["Background Check"] = new FormUploadRequirement("Background Check", "See approval guide for directions", new Uri("http://example.com/forms/app-ff")),
+                    ["Background Check"] = new FormUploadRequirement("Background Check", "See approval guide for directions", new Uri("http://example.com/forms/bgcheck")),
                     ["Family Coach Application"] = new FormUploadRequirement("Family Coach Application", null, new Uri("http://example.com/forms/app-fc")),
-                    ["Background Check"] = new FormUploadRequirement("Background Check", "See approval guide for directions", new Uri("http://example.com/forms/app-ff")),
+                    ["Comprehensive Background Check"] = new FormUploadRequirement("Comprehensive Background Check", "This is an all-in-one background check", new Uri("http://example.com/forms/compbgcheck")),
                     ["Interview with Family Coach Supervisor"] = new ActivityRequirement("Interview with Family Coach Supervisor"),
                     ["Host Family Application"] = new FormUploadRequirement("Host Family Application", null, new Uri("http://example.com/forms/app-hf")),
-                    ["Background Check"] = new FormUploadRequirement("Background Check", "See approval guide for directions", new Uri("http://example.com/forms/app-ff")),
                     ["Home Screening Checklist"] = new FormUploadRequirement("Home Screening Checklist", "Must be filled out by an approved home screener", new Uri("http://example.com/forms/hscheck")),
                     ["Host Family Interview"] = new ActivityRequirement("Host Family Interview")
                 }.ToImmutableDictionary(),
@@ -386,7 +385,7 @@ namespace CareTogether.TestData
                 new VolunteerPolicy(
                     new Dictionary<string, VolunteerRolePolicy>
                     {
-                        ["Family Friend"] = new VolunteerRolePolicy("Family Friend", DefaultVersion: "v2", ApprovalRequirementsByPolicyVersion: new Dictionary<string, ImmutableList<VolunteerApprovalRequirement>>
+                        ["Family Friend"] = new VolunteerRolePolicy("Family Friend", CurrentVersion: "v2", ApprovalRequirementsByPolicyVersion: new Dictionary<string, ImmutableList<VolunteerApprovalRequirement>>
                         {
                             ["v1"] = new List<VolunteerApprovalRequirement>
                             {
@@ -399,7 +398,7 @@ namespace CareTogether.TestData
                                 new VolunteerApprovalRequirement(RequirementStage.Approval, "Comprehensive Background Check")
                             }.ToImmutableList()
                         }.ToImmutableDictionary()),
-                        ["Family Coach"] = new VolunteerRolePolicy("Family Coach", DefaultVersion: "v2", ApprovalRequirementsByPolicyVersion: new Dictionary<string, ImmutableList<VolunteerApprovalRequirement>>
+                        ["Family Coach"] = new VolunteerRolePolicy("Family Coach", CurrentVersion: "v2", ApprovalRequirementsByPolicyVersion: new Dictionary<string, ImmutableList<VolunteerApprovalRequirement>>
                         {
                             ["v1"] = new List<VolunteerApprovalRequirement>
                             {
@@ -417,7 +416,7 @@ namespace CareTogether.TestData
                     }.ToImmutableDictionary(),
                     new Dictionary<string, VolunteerFamilyRolePolicy>
                     {
-                        ["Host Family"] = new VolunteerFamilyRolePolicy("Host Family", DefaultVersion: "v2", ApprovalRequirementsByPolicyVersion: new Dictionary<string, ImmutableList<VolunteerFamilyApprovalRequirement>>
+                        ["Host Family"] = new VolunteerFamilyRolePolicy("Host Family", CurrentVersion: "v2", ApprovalRequirementsByPolicyVersion: new Dictionary<string, ImmutableList<VolunteerFamilyApprovalRequirement>>
                         {
                             ["v1"] = new List<VolunteerFamilyApprovalRequirement>
                             {
