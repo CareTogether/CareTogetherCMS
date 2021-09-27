@@ -104,14 +104,18 @@ namespace CareTogether.Core.Test
                     [guid3] = (ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty)
                 }.ToImmutableDictionary());
 
-            Assert.AreEqual(1, result.FamilyRoleApprovals.Count);
+            Assert.AreEqual(2, result.FamilyRoleApprovals.Count);
             Assert.AreEqual(RoleApprovalStatus.Prospective, result.FamilyRoleApprovals[("Host Family", "v1")]);
+            Assert.AreEqual(RoleApprovalStatus.Prospective, result.FamilyRoleApprovals[("Host Family", "v2")]);
             Assert.AreEqual(3, result.IndividualVolunteers.Count);
-            Assert.AreEqual(2, result.IndividualVolunteers[guid1].IndividualRoleApprovals.Count);
+            Assert.AreEqual(4, result.IndividualVolunteers[guid1].IndividualRoleApprovals.Count);
             Assert.AreEqual(RoleApprovalStatus.Prospective, result.IndividualVolunteers[guid1].IndividualRoleApprovals[("Family Friend", "v1")]);
+            Assert.AreEqual(RoleApprovalStatus.Prospective, result.IndividualVolunteers[guid1].IndividualRoleApprovals[("Family Friend", "v2")]);
             Assert.AreEqual(RoleApprovalStatus.Prospective, result.IndividualVolunteers[guid1].IndividualRoleApprovals[("Family Coach", "v1")]);
-            Assert.AreEqual(1, result.IndividualVolunteers[guid2].IndividualRoleApprovals.Count);
-            Assert.AreEqual(RoleApprovalStatus.Prospective, result.IndividualVolunteers[guid1].IndividualRoleApprovals[("Family Friend", "v1")]);
+            Assert.AreEqual(RoleApprovalStatus.Prospective, result.IndividualVolunteers[guid1].IndividualRoleApprovals[("Family Coach", "v2")]);
+            Assert.AreEqual(2, result.IndividualVolunteers[guid2].IndividualRoleApprovals.Count);
+            Assert.AreEqual(RoleApprovalStatus.Prospective, result.IndividualVolunteers[guid2].IndividualRoleApprovals[("Family Friend", "v1")]);
+            Assert.AreEqual(RoleApprovalStatus.Prospective, result.IndividualVolunteers[guid2].IndividualRoleApprovals[("Family Friend", "v2")]);
             Assert.AreEqual(0, result.IndividualVolunteers[guid3].IndividualRoleApprovals.Count);
         }
 
@@ -137,8 +141,9 @@ namespace CareTogether.Core.Test
                     [guid3] = (ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty)
                 }.ToImmutableDictionary());
 
-            Assert.AreEqual(1, result.FamilyRoleApprovals.Count);
+            Assert.AreEqual(2, result.FamilyRoleApprovals.Count);
             Assert.AreEqual(RoleApprovalStatus.Prospective, result.FamilyRoleApprovals[("Host Family", "v1")]);
+            Assert.AreEqual(RoleApprovalStatus.Prospective, result.FamilyRoleApprovals[("Host Family", "v2")]);
             Assert.AreEqual(3, result.IndividualVolunteers.Count);
             Assert.AreEqual(0, result.IndividualVolunteers[guid1].IndividualRoleApprovals.Count);
             Assert.AreEqual(0, result.IndividualVolunteers[guid2].IndividualRoleApprovals.Count);
@@ -168,8 +173,9 @@ namespace CareTogether.Core.Test
                         .Add(new FormUploadInfo(guid6, new DateTime(2021, 7, 15), new DateTime(2021, 7, 13), "Background Check", "bg1.pdf", Guid.Empty)), ImmutableList<ActivityInfo>.Empty)
                 }.ToImmutableDictionary());
 
-            Assert.AreEqual(1, result.FamilyRoleApprovals.Count);
+            Assert.AreEqual(2, result.FamilyRoleApprovals.Count);
             Assert.AreEqual(RoleApprovalStatus.Onboarded, result.FamilyRoleApprovals[("Host Family", "v1")]);
+            Assert.AreEqual(RoleApprovalStatus.Prospective, result.FamilyRoleApprovals[("Host Family", "v2")]);
             Assert.AreEqual(3, result.IndividualVolunteers.Count);
             Assert.AreEqual(0, result.IndividualVolunteers[guid1].IndividualRoleApprovals.Count);
             Assert.AreEqual(0, result.IndividualVolunteers[guid2].IndividualRoleApprovals.Count);
