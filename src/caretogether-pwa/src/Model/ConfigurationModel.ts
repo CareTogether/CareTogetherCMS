@@ -64,12 +64,12 @@ export const familyDocumentTypesData = selector({
     return (policy.volunteerPolicy?.volunteerFamilyRoles &&
       Object.entries(policy.volunteerPolicy.volunteerFamilyRoles)
         .reduce((previous, [, familyRolePolicy]) => {
-          const formUploads = familyRolePolicy.approvalRequirements
-            ?.filter(requirement =>
-              requirement.actionRequirement instanceof FormUploadRequirement &&
+          const formUploads = familyRolePolicy.approvalRequirementsByPolicyVersion &&
+            Object.entries(familyRolePolicy.approvalRequirementsByPolicyVersion).map(([version, requirements]) => requirements.filter(requirement =>
+              policy.actionDefinitions![requirement.actionName!] instanceof FormUploadRequirement &&
               requirement.scope === VolunteerFamilyRequirementScope.OncePerFamily)
-            ?.map(requirement => requirement.actionRequirement as FormUploadRequirement) || [];
-          return previous.concat(formUploads);
+            ?.map(requirement => policy.actionDefinitions![requirement.actionName!] as FormUploadRequirement)) || [];
+          return previous.concat(formUploads.flat());
         }, [] as FormUploadRequirement[])
         .reduce((previous, familyFormUploadRequirement) => {
           return previous.filter(x => x.formName === familyFormUploadRequirement.formName).length > 0
@@ -85,12 +85,12 @@ export const familyActivityTypesData = selector({
     return (policy.volunteerPolicy?.volunteerFamilyRoles &&
       Object.entries(policy.volunteerPolicy.volunteerFamilyRoles)
         .reduce((previous, [, familyRolePolicy]) => {
-          const activities = familyRolePolicy.approvalRequirements
-            ?.filter(requirement =>
-              requirement.actionRequirement instanceof ActivityRequirement &&
+          const activities = familyRolePolicy.approvalRequirementsByPolicyVersion &&
+            Object.entries(familyRolePolicy.approvalRequirementsByPolicyVersion).map(([version, requirements]) => requirements.filter(requirement =>
+              policy.actionDefinitions![requirement.actionName!] instanceof ActivityRequirement &&
               requirement.scope === VolunteerFamilyRequirementScope.OncePerFamily)
-            ?.map(requirement => requirement.actionRequirement as ActivityRequirement) || [];
-          return previous.concat(activities);
+            ?.map(requirement => policy.actionDefinitions![requirement.actionName!] as ActivityRequirement)) || [];
+          return previous.concat(activities.flat());
         }, [] as ActivityRequirement[])
         .reduce((previous, familyActivityRequirement) => {
           return previous.filter(x => x.activityName === familyActivityRequirement.activityName).length > 0
@@ -106,20 +106,21 @@ export const adultDocumentTypesData = selector({
     const familyAllAdultForms = (policy.volunteerPolicy?.volunteerFamilyRoles &&
       Object.entries(policy.volunteerPolicy.volunteerFamilyRoles)
         .reduce((previous, [, familyRolePolicy]) => {
-          const formUploads = familyRolePolicy.approvalRequirements
-            ?.filter(requirement =>
-              requirement.actionRequirement instanceof FormUploadRequirement &&
+          const formUploads = familyRolePolicy.approvalRequirementsByPolicyVersion &&
+            Object.entries(familyRolePolicy.approvalRequirementsByPolicyVersion).map(([version, requirements]) => requirements.filter(requirement =>
+              policy.actionDefinitions![requirement.actionName!] instanceof FormUploadRequirement &&
               requirement.scope === VolunteerFamilyRequirementScope.AllAdultsInTheFamily)
-            ?.map(requirement => requirement.actionRequirement as FormUploadRequirement) || [];
-          return previous.concat(formUploads);
+            ?.map(requirement => policy.actionDefinitions![requirement.actionName!] as FormUploadRequirement)) || [];
+          return previous.concat(formUploads.flat());
         }, [] as FormUploadRequirement[])) || [];
     const individualForms = (policy.volunteerPolicy?.volunteerRoles &&
       Object.entries(policy.volunteerPolicy.volunteerRoles)
         .reduce((previous, [, rolePolicy]) => {
-          const formUploads = rolePolicy.approvalRequirements
-            ?.filter(requirement =>requirement.actionRequirement instanceof FormUploadRequirement)
-            ?.map(requirement => requirement.actionRequirement as FormUploadRequirement) || [];
-          return previous.concat(formUploads);
+          const formUploads = rolePolicy.approvalRequirementsByPolicyVersion &&
+            Object.entries(rolePolicy.approvalRequirementsByPolicyVersion).map(([version, requirements]) => requirements.filter(requirement =>
+              policy.actionDefinitions![requirement.actionName!] instanceof FormUploadRequirement)
+            ?.map(requirement => policy.actionDefinitions![requirement.actionName!] as FormUploadRequirement)) || [];
+          return previous.concat(formUploads.flat());
         }, [] as FormUploadRequirement[])) || [];
     return familyAllAdultForms.concat(individualForms)
         .reduce((previous, familyFormUploadRequirement) => {
@@ -136,20 +137,21 @@ export const adultActivityTypesData = selector({
     const familyAllAdultActivities = (policy.volunteerPolicy?.volunteerFamilyRoles &&
       Object.entries(policy.volunteerPolicy.volunteerFamilyRoles)
         .reduce((previous, [, familyRolePolicy]) => {
-          const activities = familyRolePolicy.approvalRequirements
-            ?.filter(requirement =>
-              requirement.actionRequirement instanceof ActivityRequirement &&
+          const activities = familyRolePolicy.approvalRequirementsByPolicyVersion &&
+            Object.entries(familyRolePolicy.approvalRequirementsByPolicyVersion).map(([version, requirements]) => requirements.filter(requirement =>
+              policy.actionDefinitions![requirement.actionName!] instanceof ActivityRequirement &&
               requirement.scope === VolunteerFamilyRequirementScope.AllAdultsInTheFamily)
-            ?.map(requirement => requirement.actionRequirement as ActivityRequirement) || [];
-          return previous.concat(activities);
+            ?.map(requirement => policy.actionDefinitions![requirement.actionName!] as ActivityRequirement)) || [];
+          return previous.concat(activities.flat());
         }, [] as ActivityRequirement[])) || [];
     const individualActivities = (policy.volunteerPolicy?.volunteerRoles &&
       Object.entries(policy.volunteerPolicy.volunteerRoles)
         .reduce((previous, [, rolePolicy]) => {
-          const activities = rolePolicy.approvalRequirements
-            ?.filter(requirement =>requirement.actionRequirement instanceof ActivityRequirement)
-            ?.map(requirement => requirement.actionRequirement as ActivityRequirement) || [];
-          return previous.concat(activities);
+          const activities = rolePolicy.approvalRequirementsByPolicyVersion &&
+            Object.entries(rolePolicy.approvalRequirementsByPolicyVersion).map(([version, requirements]) => requirements.filter(requirement =>
+              policy.actionDefinitions![requirement.actionName!] instanceof ActivityRequirement)
+            ?.map(requirement => policy.actionDefinitions![requirement.actionName!] as ActivityRequirement)) || [];
+          return previous.concat(activities.flat());
         }, [] as ActivityRequirement[])) || [];
     return familyAllAdultActivities.concat(individualActivities)
         .reduce((previous, familyFormUploadRequirement) => {

@@ -42,7 +42,8 @@ function VolunteerApplications() {
     policy.volunteerPolicy?.volunteerFamilyRoles
     ? Object.entries(policy.volunteerPolicy.volunteerFamilyRoles)
       .reduce((previous, [, value]) =>
-        previous.concat(value.approvalRequirements || []),
+        previous.concat(value.approvalRequirementsByPolicyVersion &&
+          Object.entries(value.approvalRequirementsByPolicyVersion).map(([version, requirements]) => requirements).flat() || []),
         [] as VolunteerFamilyApprovalRequirement[])
         : ([] as VolunteerFamilyApprovalRequirement[]);
 
@@ -52,8 +53,8 @@ function VolunteerApplications() {
       requirement.stage === RequirementStage.Application);
   const familyJointDocumentRequirements = allFamilyJointRequirements
     .reduce((previous, requirement) =>
-      requirement.actionRequirement instanceof FormUploadRequirement
-      ? previous.concat(requirement.actionRequirement)
+    policy.actionDefinitions![requirement.actionName!] instanceof FormUploadRequirement
+      ? previous.concat(policy.actionDefinitions![requirement.actionName!])
       : previous, [] as FormUploadRequirement[])
     .reduce((previous, requirement) =>
       previous.filter(x => x.formName === requirement.formName).length === 0
@@ -61,8 +62,8 @@ function VolunteerApplications() {
       : previous, [] as FormUploadRequirement[]);
   const familyJointActivityRequirements = allFamilyJointRequirements
     .reduce((previous, requirement) =>
-      requirement.actionRequirement instanceof ActivityRequirement
-      ? previous.concat(requirement.actionRequirement)
+    policy.actionDefinitions![requirement.actionName!] instanceof ActivityRequirement
+      ? previous.concat(policy.actionDefinitions![requirement.actionName!])
       : previous, [] as ActivityRequirement[])
     .reduce((previous, requirement) =>
       previous.filter(x => x.activityName === requirement.activityName).length === 0
@@ -75,33 +76,34 @@ function VolunteerApplications() {
       requirement.stage === RequirementStage.Application);
   const allFamilyPerAdultDocumentRequirements = allFamilyPerAdultRequirements
     .reduce((previous, requirement) =>
-      requirement.actionRequirement instanceof FormUploadRequirement
-      ? previous.concat(requirement.actionRequirement)
+    policy.actionDefinitions![requirement.actionName!] instanceof FormUploadRequirement
+      ? previous.concat(policy.actionDefinitions![requirement.actionName!])
       : previous, [] as FormUploadRequirement[]);
   const allFamilyPerAdultActivityRequirements = allFamilyPerAdultRequirements
     .reduce((previous, requirement) =>
-      requirement.actionRequirement instanceof ActivityRequirement
-      ? previous.concat(requirement.actionRequirement)
+    policy.actionDefinitions![requirement.actionName!] instanceof ActivityRequirement
+      ? previous.concat(policy.actionDefinitions![requirement.actionName!])
       : previous, [] as ActivityRequirement[]);
 
   const allIndividualRequirements =
     policy.volunteerPolicy?.volunteerRoles
     ? Object.entries(policy.volunteerPolicy.volunteerRoles)
       .reduce((previous, [, value]) =>
-        previous.concat(value.approvalRequirements || []),
+        previous.concat(value.approvalRequirementsByPolicyVersion &&
+          Object.entries(value.approvalRequirementsByPolicyVersion).map(([version, requirements]) => requirements).flat() || []),
         [] as VolunteerApprovalRequirement[])
         : ([] as VolunteerApprovalRequirement[]);
   const allIndividualDocumentRequirements = allIndividualRequirements
     .reduce((previous, requirement) =>
-      requirement.actionRequirement instanceof FormUploadRequirement &&
+    policy.actionDefinitions![requirement.actionName!] instanceof FormUploadRequirement &&
       requirement.stage === RequirementStage.Application
-      ? previous.concat(requirement.actionRequirement)
+      ? previous.concat(policy.actionDefinitions![requirement.actionName!])
       : previous, [] as FormUploadRequirement[]);
   const allIndividualActivityRequirements = allIndividualRequirements
     .reduce((previous, requirement) =>
-      requirement.actionRequirement instanceof ActivityRequirement &&
+    policy.actionDefinitions![requirement.actionName!] instanceof ActivityRequirement &&
       requirement.stage === RequirementStage.Application
-      ? previous.concat(requirement.actionRequirement)
+      ? previous.concat(policy.actionDefinitions![requirement.actionName!])
       : previous, [] as ActivityRequirement[]);
 
   const individualDocumentRequirements =
