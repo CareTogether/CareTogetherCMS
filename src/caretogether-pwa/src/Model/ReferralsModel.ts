@@ -2,6 +2,7 @@ import { atom, selector, useSetRecoilState } from "recoil";
 import { ReferralsClient } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
+import { AsyncWrapper } from "../App";
 
 // We're using the request ID pattern for query refresh:
 // https://recoiljs.org/docs/guides/asynchronous-data-queries#query-refresh
@@ -17,7 +18,7 @@ export const referralsData = selector({
     const organizationId = get(currentOrganizationState);
     const locationId = get(currentLocationState);
     const referralsClient = new ReferralsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-    const dataResponse = await referralsClient.listAllReferrals(organizationId, locationId);
+    const dataResponse = await AsyncWrapper(referralsClient.listAllReferrals.bind(referralsClient), organizationId, locationId);
     return dataResponse;
   },
 });

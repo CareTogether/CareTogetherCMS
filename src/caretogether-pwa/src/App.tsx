@@ -104,41 +104,24 @@ const secondaryListItems = (
   </List>
 );
 
-const backdropState = atom({
+export const backdropState = atom({
   key: 'backdropState', // unique ID (with respect to other atoms/selectors)
   default: false, // default value (aka initial value)
 });
-// export function MyAsync(f: any) {
-//   return async function() {
-//                 return await f.apply(this, arguments);
-//         }
-//     };
-// export const asyncWrapper = async (asyncFunction: (arg0: null) => any, params = null) => {
-//   try {
-//       const data = await asyncFunction(params)
-//       return [data, null]
-//   }
-//   catch (error) {
-//       return [ null, error ]
-//   }
-// }
 
-// export function asyncWrap(fn: (arg0: any, arg1: any) => any) {
-//   return async function wrappedFn(req: any, res: any, next: (arg0: unknown) => void) {
-//     const [_, setBackdropOpen] = useRecoilState(backdropState);
-//     setBackdropOpen(true);
-//     await fn(req, res);
-//     setBackdropOpen(false);
-//   };
-// };
-// export function asyncWrap2((...args) => any) {
-//   return async function wrappedFn(args) {
-//     const [_, setBackdropOpen] = useRecoilState(backdropState);
-//     setBackdropOpen(true);
-//     await fn(args);
-//     setBackdropOpen(false);
-//   };
-// };
+export const AsyncWrapper = async (asyncFunction: (...asyncArguments: any) => Promise<any>, ...args: any) => {
+  try {
+    const [_, setBackdropOpen] = useRecoilState(backdropState);
+    setBackdropOpen(true);
+    const results = await asyncFunction(...args);
+    setBackdropOpen(false);
+    return results;
+  }
+  catch (error) {
+    return [null, error];
+  }
+}
+
 function App() {
   const classes = useStyles();
   const [open, setOpen] = React.useState(false);

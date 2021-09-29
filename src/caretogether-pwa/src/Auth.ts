@@ -1,4 +1,6 @@
-import { PublicClientApplication, IPublicClientApplication } from "@azure/msal-browser";
+import { PublicClientApplication, IPublicClientApplication, AuthenticationResult } from "@azure/msal-browser";
+import { useRecoilState } from "recoil";
+import { AsyncWrapper, backdropState } from "./App";
 
 // MSAL configuration for single page application authorization. For guidance, see
 // https://docs.microsoft.com/en-us/azure/active-directory/develop/scenario-spa-app-configuration?tabs=react and
@@ -17,7 +19,7 @@ const config = {
 
 export const globalMsalInstance: IPublicClientApplication = new PublicClientApplication(config);
 
-const acquireAccessToken = async (msalInstance: IPublicClientApplication) => {
+const AcquireAccessToken = async (msalInstance: IPublicClientApplication) => {
   // As long as this function is only called by the model classes after the user has authenticated,
   // either 'activeAccount' or 'accounts' will return a usable value.
   const activeAccount = msalInstance.getActiveAccount();
@@ -29,17 +31,22 @@ const acquireAccessToken = async (msalInstance: IPublicClientApplication) => {
   };
 
   try {
+    //const [_, setBackdropOpen] = useRecoilState(backdropState);
+    //setBackdropOpen(true);
+    //const authResponse = await asyncWrapper2(msalInstance.acquireTokenSilent, request) as AuthenticationResult;
     const authResponse = await msalInstance.acquireTokenSilent(request);
+    //setBackdropOpen(false);
     return authResponse.accessToken;
   } catch (error) {
     // Fall back to interaction if the silent call fails.
     await msalInstance.acquireTokenRedirect(request);
+    //await asyncWrapper2(msalInstance.acquireTokenRedirect, request);
   }
 };
 
 class AuthenticatedHttp {
   async fetch(url: RequestInfo, init?: RequestInit): Promise<Response> {
-    const accessToken = await acquireAccessToken(globalMsalInstance);
+    const accessToken = await AcquireAccessToken(globalMsalInstance);
 
     init && (init.headers = {
       ...init.headers,

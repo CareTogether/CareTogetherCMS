@@ -3,6 +3,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import { Grid, Paper } from '@material-ui/core';
 import { useRecoilValue } from 'recoil';
 import { referralsData, useRefreshReferrals } from '../Model/ReferralsModel';
+import { Key } from 'react';
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -35,7 +36,7 @@ function Referrals() {
               </tr>
             </thead>
             <tbody>
-              {referrals.map(referral => (
+              {referrals.map((referral: { id: Key | null | undefined; }) => (
                 <tr key={referral.id}>
                   <td>{JSON.stringify(referral)}<br />================</td>
                 </tr>
