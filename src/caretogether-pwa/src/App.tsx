@@ -1,7 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
-import { Typography, CssBaseline, IconButton, Drawer, Divider, List, useMediaQuery, useTheme } from '@material-ui/core';
+import { Typography, CssBaseline, IconButton, Drawer, Divider, List, useMediaQuery, useTheme, Backdrop, Button, CircularProgress } from '@material-ui/core';
 import PermPhoneMsgIcon from '@material-ui/icons/PermPhoneMsg';
 import PeopleIcon from '@material-ui/icons/People';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
@@ -10,7 +10,7 @@ import { Route, Switch, Redirect, BrowserRouter as Router } from "react-router-d
 import { ListItemLink } from './Components/ListItemLink';
 import { Arrangements } from './Components/Arrangements';
 import { Referrals } from './Components/Referrals';
-import { useRecoilValue } from 'recoil';
+import { atom, useRecoilState, useRecoilValue } from 'recoil';
 import { locationNameData, organizationNameData } from './Model/ConfigurationModel';
 import { Volunteers } from './Components/Volunteers';
 import Header from './Components/Header';
@@ -84,7 +84,11 @@ const useStyles = makeStyles((theme) => ({
     flexGrow: 1,
     height: '100vh',
     overflow: 'auto',
-  }
+  },
+  backdrop: {
+    color: '#fff',
+    zIndex: theme.zIndex.drawer +1
+  },
 }));
 
 const mainListItems = (
@@ -100,6 +104,41 @@ const secondaryListItems = (
   </List>
 );
 
+const backdropState = atom({
+  key: 'backdropState', // unique ID (with respect to other atoms/selectors)
+  default: false, // default value (aka initial value)
+});
+// export function MyAsync(f: any) {
+//   return async function() {
+//                 return await f.apply(this, arguments);
+//         }
+//     };
+// export const asyncWrapper = async (asyncFunction: (arg0: null) => any, params = null) => {
+//   try {
+//       const data = await asyncFunction(params)
+//       return [data, null]
+//   }
+//   catch (error) {
+//       return [ null, error ]
+//   }
+// }
+
+// export function asyncWrap(fn: (arg0: any, arg1: any) => any) {
+//   return async function wrappedFn(req: any, res: any, next: (arg0: unknown) => void) {
+//     const [_, setBackdropOpen] = useRecoilState(backdropState);
+//     setBackdropOpen(true);
+//     await fn(req, res);
+//     setBackdropOpen(false);
+//   };
+// };
+// export function asyncWrap2((...args) => any) {
+//   return async function wrappedFn(args) {
+//     const [_, setBackdropOpen] = useRecoilState(backdropState);
+//     setBackdropOpen(true);
+//     await fn(args);
+//     setBackdropOpen(false);
+//   };
+// };
 function App() {
   const classes = useStyles();
   const [open, setOpen] = React.useState(false);
@@ -116,10 +155,27 @@ function App() {
   const organizationName = useRecoilValue(organizationNameData);
   const locationName = useRecoilValue(locationNameData);
 
+  // const [backdropOpen, setBackdropOpen] = React.useState(false);
+  const [backdropOpen, setBackdropOpen] = useRecoilState(backdropState);
+  const handleBackdropClose = () => {
+    setBackdropOpen(false);
+  };
+  const handleToggle = () => {
+    setBackdropOpen(!open);
+  };
+
   return (
     <div className={classes.root}>
       <CssBaseline />
       <Router>
+        <Button onClick={handleToggle}>Show backdrop</Button>
+        <Backdrop
+          className={classes.backdrop}
+          open={backdropOpen}
+          onClick={handleBackdropClose}
+        >
+          <CircularProgress color="inherit" />
+        </Backdrop>
         <Header open={open} handleDrawerOpen={handleDrawerOpen} />
         {isMobile ? null :
           <Drawer
