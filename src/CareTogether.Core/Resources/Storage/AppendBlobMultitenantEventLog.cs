@@ -48,14 +48,14 @@ namespace CareTogether.Resources.Storage
             {
                 var appendResult = await logSegmentBlob.AppendBlockAsync(eventStream);
 
-                if (appendResult.Value.BlobCommittedBlockCount == getBlockNumber(expectedSequenceNumber))
-                {
-                    return;
-                }
-                else
-                {
-                    throw new Exception($"The append block number {appendResult.Value.BlobCommittedBlockCount} did not match the expected block number {expectedSequenceNumber}");
-                }
+                //if (appendResult.Value.BlobCommittedBlockCount == getBlockNumber(expectedSequenceNumber))
+                //{
+                //    return;
+                //}
+                //else
+                //{
+                //    throw new Exception($"The append block number {appendResult.Value.BlobCommittedBlockCount} did not match the expected block number {expectedSequenceNumber}");
+                //}
             }
             catch (Exception e)
             {
