@@ -1,4 +1,4 @@
-import { Card, CardHeader, IconButton, CardContent, Typography, Chip, CardActions, Button, makeStyles, Divider, ListItemText, Menu, MenuItem } from "@material-ui/core";
+import { Card, CardHeader, IconButton, CardContent, Typography, Chip, CardActions, Button, makeStyles, Divider, ListItemText, Menu, MenuItem, MenuList, useMediaQuery, useTheme } from "@material-ui/core";
 import { format } from 'date-fns';
 import { useState } from "react";
 import { ActionRequirement, ActivityRequirement, FormUploadRequirement, Gender, Person, RoleApprovalStatus, VolunteerFamily } from "../GeneratedClient";
@@ -73,6 +73,9 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
     setAdultMoreMenuAnchor(null);
     setRenamePersonParameter({volunteerFamilyId, person: adult});
   }
+  
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
 
   return (<>{adult?.item1 && adult.item1.id && adult.item2 &&
     <Card className={classes.card}>
@@ -129,19 +132,21 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         keepMounted
         open={Boolean(adultRecordMenuAnchor)}
         onClose={() => setAdultRecordMenuAnchor(null)}>
-        {adultDocumentTypes.map(documentType => (
-          <MenuItem key={documentType.formName} onClick={() =>
-            adultRecordMenuAnchor?.adult && selectRecordAdultStep(documentType, adultRecordMenuAnchor.adult)}>
-            <ListItemText primary={documentType.formName} />
-          </MenuItem>
-        ))}
-        <Divider />
-        {adultActivityTypes.map(activityType => (
-          <MenuItem key={activityType.activityName} onClick={() =>
-            adultRecordMenuAnchor?.adult && selectRecordAdultStep(activityType, adultRecordMenuAnchor.adult)}>
-            <ListItemText primary={activityType.activityName} />
-          </MenuItem>
-        ))}
+        <MenuList dense={isMobile}>
+          {adultDocumentTypes.map(documentType => (
+            <MenuItem key={documentType.formName} onClick={() =>
+              adultRecordMenuAnchor?.adult && selectRecordAdultStep(documentType, adultRecordMenuAnchor.adult)}>
+              <ListItemText primary={documentType.formName} />
+            </MenuItem>
+          ))}
+          <Divider />
+          {adultActivityTypes.map(activityType => (
+            <MenuItem key={activityType.activityName} onClick={() =>
+              adultRecordMenuAnchor?.adult && selectRecordAdultStep(activityType, adultRecordMenuAnchor.adult)}>
+              <ListItemText primary={activityType.activityName} />
+            </MenuItem>
+          ))}
+        </MenuList>
       </Menu>
       {(recordAdultStepParameter && <RecordVolunteerAdultStepDialog volunteerFamily={volunteerFamily} adult={recordAdultStepParameter.adult}
         stepActionRequirement={recordAdultStepParameter.requirement} onClose={() => setRecordAdultStepParameter(null)} />) || null}
