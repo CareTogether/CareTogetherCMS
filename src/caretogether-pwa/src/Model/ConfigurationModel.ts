@@ -75,7 +75,8 @@ export const familyDocumentTypesData = selector({
           return previous.filter(x => x.formName === familyFormUploadRequirement.formName).length > 0
             ? previous
             : previous.concat(familyFormUploadRequirement);
-        }, [] as FormUploadRequirement[])) || [];
+        }, [] as FormUploadRequirement[])
+        .sort((a, b) => a.formName! < b.formName! ? -1 : a.formName! > b.formName! ? 1 : 0)) || [];
   }});
 
 export const familyActivityTypesData = selector({
@@ -96,7 +97,8 @@ export const familyActivityTypesData = selector({
           return previous.filter(x => x.activityName === familyActivityRequirement.activityName).length > 0
             ? previous
             : previous.concat(familyActivityRequirement);
-        }, [] as ActivityRequirement[])) || [];
+        }, [] as ActivityRequirement[])
+        .sort((a, b) => a.activityName! < b.activityName! ? -1 : a.activityName! > b.activityName! ? 1 : 0)) || [];
   }});
 
 export const adultDocumentTypesData = selector({
@@ -127,7 +129,8 @@ export const adultDocumentTypesData = selector({
           return previous.filter(x => x.formName === familyFormUploadRequirement.formName).length > 0
             ? previous
             : previous.concat(familyFormUploadRequirement);
-        }, [] as FormUploadRequirement[]);
+        }, [] as FormUploadRequirement[])
+        .sort((a, b) => a.formName! < b.formName! ? -1 : a.formName! > b.formName! ? 1 : 0);
   }});
 
 export const adultActivityTypesData = selector({
@@ -158,5 +161,6 @@ export const adultActivityTypesData = selector({
           return previous.filter(x => x.activityName === familyFormUploadRequirement.activityName).length > 0
             ? previous
             : previous.concat(familyFormUploadRequirement);
-        }, [] as ActivityRequirement[]);
+        }, [] as ActivityRequirement[])
+        .sort((a, b) => a.activityName! < b.activityName! ? -1 : a.activityName! > b.activityName! ? 1 : 0);
   }});

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Container, Toolbar, Chip, Button, Menu, MenuItem, Divider, Grid } from '@material-ui/core';
+import { Container, Toolbar, Chip, Button, Menu, MenuItem, Divider, Grid, useMediaQuery, useTheme, MenuList } from '@material-ui/core';
 import { VolunteerFamily, FormUploadRequirement, ActionRequirement, ActivityRequirement } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { familyActivityTypesData, familyDocumentTypesData } from '../Model/ConfigurationModel';
@@ -73,6 +73,9 @@ export function VolunteerFamilyScreen() {
   
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
   const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
+  
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
 
   return (
   <Container>
@@ -101,13 +104,15 @@ export function VolunteerFamilyScreen() {
         keepMounted
         open={Boolean(familyRecordMenuAnchor)}
         onClose={() => setFamilyRecordMenuAnchor(null)}>
-        {familyDocumentTypes.map(documentType => (
-          <MenuItem key={documentType.formName} onClick={() => selectRecordFamilyStep(documentType)}>{documentType.formName}</MenuItem>
-        ))}
-        <Divider />
-        {familyActivityTypes.map(activityType => (
-          <MenuItem key={activityType.activityName} onClick={() => selectRecordFamilyStep(activityType)}>{activityType.activityName}</MenuItem>
-        ))}
+        <MenuList dense={isMobile}>
+          {familyDocumentTypes.map(documentType => (
+            <MenuItem key={documentType.formName} onClick={() => selectRecordFamilyStep(documentType)}>{documentType.formName}</MenuItem>
+          ))}
+          <Divider />
+          {familyActivityTypes.map(activityType => (
+            <MenuItem key={activityType.activityName} onClick={() => selectRecordFamilyStep(activityType)}>{activityType.activityName}</MenuItem>
+          ))}
+        </MenuList>
       </Menu>
       <RecordVolunteerFamilyStepDialog volunteerFamily={volunteerFamily} stepActionRequirement={recordFamilyStepParameter} onClose={() => setRecordFamilyStepParameter(null)} />
       {addAdultDialogOpen && <AddAdultDialog onClose={() => setAddAdultDialogOpen(false)} />}
