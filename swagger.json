@@ -1394,16 +1394,14 @@
           "city": {
             "type": "string"
           },
-          "stateId": {
-            "type": "string",
-            "format": "guid"
+          "state": {
+            "type": "string"
           },
           "postalCode": {
             "type": "string"
           },
-          "countryId": {
-            "type": "string",
-            "format": "guid"
+          "country": {
+            "type": "string"
           }
         }
       },
