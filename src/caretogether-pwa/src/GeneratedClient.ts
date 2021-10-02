@@ -1563,8 +1563,7 @@ export interface IVolunteerPolicy {
 
 export class VolunteerRolePolicy implements IVolunteerRolePolicy {
     volunteerRoleType?: string;
-    currentVersion?: string;
-    approvalRequirementsByPolicyVersion?: { [key: string]: VolunteerApprovalRequirement[]; };
+    policyVersions?: VolunteerRolePolicyVersion[];
 
     constructor(data?: IVolunteerRolePolicy) {
         if (data) {
@@ -1578,13 +1577,10 @@ export class VolunteerRolePolicy implements IVolunteerRolePolicy {
     init(_data?: any) {
         if (_data) {
             this.volunteerRoleType = _data["volunteerRoleType"];
-            this.currentVersion = _data["currentVersion"];
-            if (_data["approvalRequirementsByPolicyVersion"]) {
-                this.approvalRequirementsByPolicyVersion = {} as any;
-                for (let key in _data["approvalRequirementsByPolicyVersion"]) {
-                    if (_data["approvalRequirementsByPolicyVersion"].hasOwnProperty(key))
-                        (<any>this.approvalRequirementsByPolicyVersion)![key] = _data["approvalRequirementsByPolicyVersion"][key] ? _data["approvalRequirementsByPolicyVersion"][key].map((i: any) => VolunteerApprovalRequirement.fromJS(i)) : [];
-                }
+            if (Array.isArray(_data["policyVersions"])) {
+                this.policyVersions = [] as any;
+                for (let item of _data["policyVersions"])
+                    this.policyVersions!.push(VolunteerRolePolicyVersion.fromJS(item));
             }
         }
     }
@@ -1599,13 +1595,10 @@ export class VolunteerRolePolicy implements IVolunteerRolePolicy {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["volunteerRoleType"] = this.volunteerRoleType;
-        data["currentVersion"] = this.currentVersion;
-        if (this.approvalRequirementsByPolicyVersion) {
-            data["approvalRequirementsByPolicyVersion"] = {};
-            for (let key in this.approvalRequirementsByPolicyVersion) {
-                if (this.approvalRequirementsByPolicyVersion.hasOwnProperty(key))
-                    (<any>data["approvalRequirementsByPolicyVersion"])[key] = this.approvalRequirementsByPolicyVersion[key];
-            }
+        if (Array.isArray(this.policyVersions)) {
+            data["policyVersions"] = [];
+            for (let item of this.policyVersions)
+                data["policyVersions"].push(item.toJSON());
         }
         return data; 
     }
@@ -1613,8 +1606,59 @@ export class VolunteerRolePolicy implements IVolunteerRolePolicy {
 
 export interface IVolunteerRolePolicy {
     volunteerRoleType?: string;
-    currentVersion?: string;
-    approvalRequirementsByPolicyVersion?: { [key: string]: VolunteerApprovalRequirement[]; };
+    policyVersions?: VolunteerRolePolicyVersion[];
+}
+
+export class VolunteerRolePolicyVersion implements IVolunteerRolePolicyVersion {
+    version?: string;
+    supersededAtUtc?: Date | undefined;
+    requirements?: VolunteerApprovalRequirement[];
+
+    constructor(data?: IVolunteerRolePolicyVersion) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.version = _data["version"];
+            this.supersededAtUtc = _data["supersededAtUtc"] ? new Date(_data["supersededAtUtc"].toString()) : <any>undefined;
+            if (Array.isArray(_data["requirements"])) {
+                this.requirements = [] as any;
+                for (let item of _data["requirements"])
+                    this.requirements!.push(VolunteerApprovalRequirement.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): VolunteerRolePolicyVersion {
+        data = typeof data === 'object' ? data : {};
+        let result = new VolunteerRolePolicyVersion();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["version"] = this.version;
+        data["supersededAtUtc"] = this.supersededAtUtc ? this.supersededAtUtc.toISOString() : <any>undefined;
+        if (Array.isArray(this.requirements)) {
+            data["requirements"] = [];
+            for (let item of this.requirements)
+                data["requirements"].push(item.toJSON());
+        }
+        return data; 
+    }
+}
+
+export interface IVolunteerRolePolicyVersion {
+    version?: string;
+    supersededAtUtc?: Date | undefined;
+    requirements?: VolunteerApprovalRequirement[];
 }
 
 export class VolunteerApprovalRequirement implements IVolunteerApprovalRequirement {
@@ -1665,8 +1709,7 @@ export enum RequirementStage {
 
 export class VolunteerFamilyRolePolicy implements IVolunteerFamilyRolePolicy {
     volunteerFamilyRoleType?: string;
-    currentVersion?: string;
-    approvalRequirementsByPolicyVersion?: { [key: string]: VolunteerFamilyApprovalRequirement[]; };
+    policyVersions?: VolunteerFamilyRolePolicyVersion[];
 
     constructor(data?: IVolunteerFamilyRolePolicy) {
         if (data) {
@@ -1680,13 +1723,10 @@ export class VolunteerFamilyRolePolicy implements IVolunteerFamilyRolePolicy {
     init(_data?: any) {
         if (_data) {
             this.volunteerFamilyRoleType = _data["volunteerFamilyRoleType"];
-            this.currentVersion = _data["currentVersion"];
-            if (_data["approvalRequirementsByPolicyVersion"]) {
-                this.approvalRequirementsByPolicyVersion = {} as any;
-                for (let key in _data["approvalRequirementsByPolicyVersion"]) {
-                    if (_data["approvalRequirementsByPolicyVersion"].hasOwnProperty(key))
-                        (<any>this.approvalRequirementsByPolicyVersion)![key] = _data["approvalRequirementsByPolicyVersion"][key] ? _data["approvalRequirementsByPolicyVersion"][key].map((i: any) => VolunteerFamilyApprovalRequirement.fromJS(i)) : [];
-                }
+            if (Array.isArray(_data["policyVersions"])) {
+                this.policyVersions = [] as any;
+                for (let item of _data["policyVersions"])
+                    this.policyVersions!.push(VolunteerFamilyRolePolicyVersion.fromJS(item));
             }
         }
     }
@@ -1701,13 +1741,10 @@ export class VolunteerFamilyRolePolicy implements IVolunteerFamilyRolePolicy {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["volunteerFamilyRoleType"] = this.volunteerFamilyRoleType;
-        data["currentVersion"] = this.currentVersion;
-        if (this.approvalRequirementsByPolicyVersion) {
-            data["approvalRequirementsByPolicyVersion"] = {};
-            for (let key in this.approvalRequirementsByPolicyVersion) {
-                if (this.approvalRequirementsByPolicyVersion.hasOwnProperty(key))
-                    (<any>data["approvalRequirementsByPolicyVersion"])[key] = this.approvalRequirementsByPolicyVersion[key];
-            }
+        if (Array.isArray(this.policyVersions)) {
+            data["policyVersions"] = [];
+            for (let item of this.policyVersions)
+                data["policyVersions"].push(item.toJSON());
         }
         return data; 
     }
@@ -1715,8 +1752,59 @@ export class VolunteerFamilyRolePolicy implements IVolunteerFamilyRolePolicy {
 
 export interface IVolunteerFamilyRolePolicy {
     volunteerFamilyRoleType?: string;
-    currentVersion?: string;
-    approvalRequirementsByPolicyVersion?: { [key: string]: VolunteerFamilyApprovalRequirement[]; };
+    policyVersions?: VolunteerFamilyRolePolicyVersion[];
+}
+
+export class VolunteerFamilyRolePolicyVersion implements IVolunteerFamilyRolePolicyVersion {
+    version?: string;
+    supersededAtUtc?: Date | undefined;
+    requirements?: VolunteerFamilyApprovalRequirement[];
+
+    constructor(data?: IVolunteerFamilyRolePolicyVersion) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.version = _data["version"];
+            this.supersededAtUtc = _data["supersededAtUtc"] ? new Date(_data["supersededAtUtc"].toString()) : <any>undefined;
+            if (Array.isArray(_data["requirements"])) {
+                this.requirements = [] as any;
+                for (let item of _data["requirements"])
+                    this.requirements!.push(VolunteerFamilyApprovalRequirement.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): VolunteerFamilyRolePolicyVersion {
+        data = typeof data === 'object' ? data : {};
+        let result = new VolunteerFamilyRolePolicyVersion();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["version"] = this.version;
+        data["supersededAtUtc"] = this.supersededAtUtc ? this.supersededAtUtc.toISOString() : <any>undefined;
+        if (Array.isArray(this.requirements)) {
+            data["requirements"] = [];
+            for (let item of this.requirements)
+                data["requirements"].push(item.toJSON());
+        }
+        return data; 
+    }
+}
+
+export interface IVolunteerFamilyRolePolicyVersion {
+    version?: string;
+    supersededAtUtc?: Date | undefined;
+    requirements?: VolunteerFamilyApprovalRequirement[];
 }
 
 export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyApprovalRequirement {

@@ -1105,16 +1105,30 @@
           "volunteerRoleType": {
             "type": "string"
           },
-          "currentVersion": {
+          "policyVersions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VolunteerRolePolicyVersion"
+            }
+          }
+        }
+      },
+      "VolunteerRolePolicyVersion": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "version": {
             "type": "string"
           },
-          "approvalRequirementsByPolicyVersion": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/VolunteerApprovalRequirement"
-              }
+          "supersededAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "requirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VolunteerApprovalRequirement"
             }
           }
         }
@@ -1152,16 +1166,30 @@
           "volunteerFamilyRoleType": {
             "type": "string"
           },
-          "currentVersion": {
+          "policyVersions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VolunteerFamilyRolePolicyVersion"
+            }
+          }
+        }
+      },
+      "VolunteerFamilyRolePolicyVersion": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "version": {
             "type": "string"
           },
-          "approvalRequirementsByPolicyVersion": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/VolunteerFamilyApprovalRequirement"
-              }
+          "supersededAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "requirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VolunteerFamilyApprovalRequirement"
             }
           }
         }
