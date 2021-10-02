@@ -105,7 +105,7 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
             <Grid item xs={12}>
               <FormControl required component="fieldset">
                 <FormLabel component="legend">Gender:</FormLabel>
-                <RadioGroup aria-label="ageType" name="genderType" row
+                <RadioGroup aria-label="genderType" name="genderType" row
                   value={gender == null ? null : Gender[gender]} onChange={e => setFields({...fields, gender: Gender[e.target.value as keyof typeof Gender]})}>
                   <FormControlLabel value={Gender[Gender.Male]} control={<Radio size="small" />} label="Male" />
                   <FormControlLabel value={Gender[Gender.Female]} control={<Radio size="small" />} label="Female" />
