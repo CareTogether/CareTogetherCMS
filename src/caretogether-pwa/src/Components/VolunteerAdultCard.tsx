@@ -1,4 +1,4 @@
-import { Card, CardHeader, IconButton, CardContent, Typography, Chip, CardActions, Button, makeStyles, Divider, ListItemText, Menu, MenuItem, MenuList, useMediaQuery, useTheme } from "@material-ui/core";
+import { Card, CardHeader, IconButton, CardContent, Typography, Chip, CardActions, makeStyles, Divider, ListItemText, Menu, MenuItem, MenuList, useMediaQuery, useTheme } from "@material-ui/core";
 import { format } from 'date-fns';
 import { useState } from "react";
 import { ActionRequirement, ActivityRequirement, FormUploadRequirement, Gender, Person, RoleApprovalStatus, VolunteerFamily } from "../GeneratedClient";
@@ -10,6 +10,8 @@ import { volunteerFamiliesData } from "../Model/VolunteerFamiliesModel";
 import { RecordVolunteerAdultStepDialog } from "./RecordVolunteerAdultStepDialog";
 import { adultDocumentTypesData, adultActivityTypesData } from "../Model/ConfigurationModel";
 import { RenamePersonDialog } from "./RenamePersonDialog";
+import { ContactDisplay } from "./ContactDisplay";
+import { CardInfoRow } from "./CardInfoRow";
 
 const useStyles = makeStyles((theme) => ({
   sectionChips: {
@@ -59,6 +61,7 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
 
   const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as VolunteerFamily;
   const adult = volunteerFamily.family?.adults?.find(x => x.item1?.id === personId);
+  const contactInfo = volunteerFamily.contactInfo?.[personId];
 
   const [adultRecordMenuAnchor, setAdultRecordMenuAnchor] = useState<{anchor: Element, adult: Person} | null>(null);
   const [recordAdultStepParameter, setRecordAdultStepParameter] = useState<{requirement: ActionRequirement, adult: Person} | null>(null);
@@ -99,10 +102,10 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
           {adult.item2.isInHousehold && <Chip size="small" label="In Household" />}
         </Typography>
         <Typography variant="body2" component="div">
-          {adult.item1.concerns && <><strong>⚠&nbsp;&nbsp;&nbsp;{adult.item1.concerns}</strong></>}
-          {adult.item1.concerns && adult.item1.notes && <br />}
-          {adult.item1.notes && <>📝&nbsp;{adult.item1.notes}</>}
+          {adult.item1.concerns && <CardInfoRow icon='⚠'><strong>{adult.item1.concerns}</strong></CardInfoRow>}
+          {adult.item1.notes && <CardInfoRow icon='📝'>{adult.item1.notes}</CardInfoRow>}
         </Typography>
+        <Divider />
         <Typography variant="body2" component="div">
           <ul className={classes.cardList}>
             {volunteerFamily.individualVolunteers?.[adult.item1.id].approvalFormUploads?.map((upload, i) => (
@@ -119,9 +122,16 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
             ))}
           </ul>
         </Typography>
+        {contactInfo && (
+          <>
+            <Divider />
+            <Typography variant="body2" component="div">
+              <ContactDisplay contact={contactInfo} />
+            </Typography>
+          </>
+        )}
       </CardContent>
       <CardActions>
-        <Button size="small">Contact Info...</Button>
         <IconButton size="small" className={classes.rightCardAction}
           onClick={(event) => setAdultRecordMenuAnchor({anchor: event.currentTarget, adult: adult.item1 as Person})}>
           <AssignmentTurnedInIcon />
