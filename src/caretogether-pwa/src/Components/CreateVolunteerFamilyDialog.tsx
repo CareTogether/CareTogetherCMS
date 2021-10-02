@@ -212,7 +212,7 @@ export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDial
                 value={emailAddress} onChange={e => setFields({...fields, emailAddress: e.target.value})} />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <FormControl required component="fieldset">
+              <FormControl component="fieldset">
                 <FormLabel component="legend">Email Type:</FormLabel>
                 <RadioGroup aria-label="emailType" name="emailType" row
                   value={EmailAddressType[emailType]} onChange={e => setFields({...fields, emailType: EmailAddressType[e.target.value as keyof typeof EmailAddressType]})}>
