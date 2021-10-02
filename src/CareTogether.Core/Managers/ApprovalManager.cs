@@ -232,8 +232,8 @@ namespace CareTogether.Managers
                             return new Volunteer(ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty,
                                 ImmutableDictionary<(string Role, string Version), RoleApprovalStatus>.Empty);
                     }),
-                entry.IndividualEntries.SelectMany(x => contacts.TryGetValue(x.Key, out var contactInfo)
-                    ? new KeyValuePair<Guid, ContactInfo>[] { new KeyValuePair<Guid, ContactInfo>(x.Key, contactInfo) }
+                family.Adults.SelectMany(x => contacts.TryGetValue(x.Item1.Id, out var contactInfo)
+                    ? new KeyValuePair<Guid, ContactInfo>[] { new KeyValuePair<Guid, ContactInfo>(x.Item1.Id, contactInfo) }
                     : new KeyValuePair<Guid, ContactInfo>[] { }).ToImmutableDictionary());
         }
     }
