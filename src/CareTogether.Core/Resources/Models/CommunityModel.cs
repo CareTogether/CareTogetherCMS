@@ -138,6 +138,8 @@ namespace CareTogether.Resources.Models
                         UpdatePersonName c => personEntry with { FirstName = c.FirstName, LastName = c.LastName },
                         UpdatePersonAge c => personEntry with { Age = c.Age },
                         UpdatePersonUserLink c => personEntry with { UserId = c.UserId },
+                        UpdatePersonConcerns c => personEntry with { Concerns = c.Concerns },
+                        UpdatePersonNotes c => personEntry with { Notes = c.Notes },
                         _ => throw new NotImplementedException(
                             $"The command type '{command.GetType().FullName}' has not been implemented.")
                     }

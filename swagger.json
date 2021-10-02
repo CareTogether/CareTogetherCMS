@@ -2898,7 +2898,9 @@
           "mapping": {
             "CreatePerson": "#/components/schemas/CreatePerson",
             "UpdatePersonAge": "#/components/schemas/UpdatePersonAge",
+            "UpdatePersonConcerns": "#/components/schemas/UpdatePersonConcerns",
             "UpdatePersonName": "#/components/schemas/UpdatePersonName",
+            "UpdatePersonNotes": "#/components/schemas/UpdatePersonNotes",
             "UpdatePersonUserLink": "#/components/schemas/UpdatePersonUserLink"
           }
         },
@@ -2974,6 +2976,23 @@
           }
         ]
       },
+      "UpdatePersonConcerns": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "concerns": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
       "UpdatePersonName": {
         "allOf": [
           {
@@ -2988,6 +3007,23 @@
               },
               "lastName": {
                 "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "UpdatePersonNotes": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "notes": {
+                "type": "string",
+                "nullable": true
               }
             }
           }

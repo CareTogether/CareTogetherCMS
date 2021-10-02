@@ -5116,8 +5116,18 @@ export abstract class PersonCommand implements IPersonCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "UpdatePersonConcerns") {
+            let result = new UpdatePersonConcerns();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "UpdatePersonName") {
             let result = new UpdatePersonName();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UpdatePersonNotes") {
+            let result = new UpdatePersonNotes();
             result.init(data);
             return result;
         }
@@ -5237,6 +5247,40 @@ export interface IUpdatePersonAge extends IPersonCommand {
     age?: Age;
 }
 
+export class UpdatePersonConcerns extends PersonCommand implements IUpdatePersonConcerns {
+    concerns?: string | undefined;
+
+    constructor(data?: IUpdatePersonConcerns) {
+        super(data);
+        this._discriminator = "UpdatePersonConcerns";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.concerns = _data["concerns"];
+        }
+    }
+
+    static fromJS(data: any): UpdatePersonConcerns {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdatePersonConcerns();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["concerns"] = this.concerns;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUpdatePersonConcerns extends IPersonCommand {
+    concerns?: string | undefined;
+}
+
 export class UpdatePersonName extends PersonCommand implements IUpdatePersonName {
     firstName?: string;
     lastName?: string;
@@ -5273,6 +5317,40 @@ export class UpdatePersonName extends PersonCommand implements IUpdatePersonName
 export interface IUpdatePersonName extends IPersonCommand {
     firstName?: string;
     lastName?: string;
+}
+
+export class UpdatePersonNotes extends PersonCommand implements IUpdatePersonNotes {
+    notes?: string | undefined;
+
+    constructor(data?: IUpdatePersonNotes) {
+        super(data);
+        this._discriminator = "UpdatePersonNotes";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.notes = _data["notes"];
+        }
+    }
+
+    static fromJS(data: any): UpdatePersonNotes {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdatePersonNotes();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["notes"] = this.notes;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUpdatePersonNotes extends IPersonCommand {
+    notes?: string | undefined;
 }
 
 export class UpdatePersonUserLink extends PersonCommand implements IUpdatePersonUserLink {
