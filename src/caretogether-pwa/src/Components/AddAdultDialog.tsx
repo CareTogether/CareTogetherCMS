@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@material-ui/core';
-import { VolunteerFamily, Age, ExactAge, AgeInYears, Gender } from '../GeneratedClient';
+import { VolunteerFamily, Age, ExactAge, AgeInYears, Gender, EmailAddressType, PhoneNumberType } from '../GeneratedClient';
 import { useVolunteerFamiliesModel, volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
 import WarningIcon from '@material-ui/icons/Warning';
 import { KeyboardDatePicker } from '@material-ui/pickers';
@@ -38,12 +38,24 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
     ethnicity: '',
     isInHousehold: true,
     relationshipToFamily: '',
+    addressLine1: '',
+    addressLine2: '',
+    city: '',
+    state: '',
+    postalCode: '',
+    country: 'United States',
+    phoneNumber: '',
+    phoneType: PhoneNumberType.Mobile,
+    emailAddress: '',
+    emailType: EmailAddressType.Personal,
     notes: null as string | null,
     concerns: null as string | null
   });
   const {
     firstName, lastName, gender, dateOfBirth, ageInYears, ethnicity,
     isInHousehold, relationshipToFamily,
+    addressLine1, addressLine2, city, state, postalCode, country,
+    phoneNumber, phoneType, emailAddress, emailType,
     notes, concerns } = fields;
   const [ageType, setAgeType] = useState<'exact' | 'inYears'>('exact');
   const volunteerFamiliesModel = useVolunteerFamiliesModel();
@@ -77,6 +89,8 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
       await volunteerFamiliesModel.addAdult(volunteerFamily.family?.id as string,
         firstName, lastName, gender as Gender, age, ethnicity,
         isInHousehold, relationshipToFamily,
+        addressLine1, addressLine2, city, state, postalCode, country,
+        phoneNumber, phoneType, emailAddress, emailType,
         (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
       //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
       onClose();
@@ -180,6 +194,56 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
                   label="In Household"
                 />
               </FormGroup>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField id="phone-number" label="Phone Number" fullWidth size="small" type="tel"
+                value={phoneNumber} onChange={e => setFields({...fields, phoneNumber: e.target.value})} />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl component="fieldset">
+                <FormLabel component="legend">Phone Type:</FormLabel>
+                <RadioGroup aria-label="phoneType" name="phoneType" row
+                  value={PhoneNumberType[phoneType]} onChange={e => setFields({...fields, phoneType: PhoneNumberType[e.target.value as keyof typeof PhoneNumberType]})}>
+                  <FormControlLabel value={PhoneNumberType[PhoneNumberType.Mobile]} control={<Radio size="small" />} label="Mobile" />
+                  <FormControlLabel value={PhoneNumberType[PhoneNumberType.Home]} control={<Radio size="small" />} label="Home" />
+                  <FormControlLabel value={PhoneNumberType[PhoneNumberType.Work]} control={<Radio size="small" />} label="Work" />
+                  {/* <FormControlLabel value={PhoneNumberType[PhoneNumberType.Fax]} control={<Radio size="small" />} label="Fax" /> */}
+                </RadioGroup>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField id="email-address" label="Email Address" fullWidth size="small" type="email"
+                value={emailAddress} onChange={e => setFields({...fields, emailAddress: e.target.value})} />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl component="fieldset">
+                <FormLabel component="legend">Email Type:</FormLabel>
+                <RadioGroup aria-label="emailType" name="emailType" row
+                  value={EmailAddressType[emailType]} onChange={e => setFields({...fields, emailType: EmailAddressType[e.target.value as keyof typeof EmailAddressType]})}>
+                  <FormControlLabel value={EmailAddressType[EmailAddressType.Personal]} control={<Radio size="small" />} label="Personal" />
+                  <FormControlLabel value={EmailAddressType[EmailAddressType.Work]} control={<Radio size="small" />} label="Work" />
+                </RadioGroup>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+              <TextField id="address-line1" label="Address Line 1" fullWidth size="small"
+                value={addressLine1} onChange={e => setFields({...fields, addressLine1: e.target.value})} />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField id="address-line2" label="Address Line 2" fullWidth size="small"
+                value={addressLine2} onChange={e => setFields({...fields, addressLine2: e.target.value})} />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField id="address-city" label="City" fullWidth size="small"
+                value={city} onChange={e => setFields({...fields, city: e.target.value})} />
+            </Grid>
+            <Grid item xs={12} sm={2}>
+              <TextField id="address-state" label="State" fullWidth size="small"
+                value={state} onChange={e => setFields({...fields, state: e.target.value})} />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <TextField id="address-postalcode" label="ZIP/Postal Code" fullWidth size="small"
+                value={postalCode} onChange={e => setFields({...fields, postalCode: e.target.value})} />
             </Grid>
             <Grid item xs={12}>
               <TextField
