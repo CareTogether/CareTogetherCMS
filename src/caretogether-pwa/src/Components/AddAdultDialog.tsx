@@ -23,6 +23,10 @@ interface AddAdultDialogProps {
   onClose: () => void
 }
 
+function optional(arg: string) {
+  return arg.length > 0 ? arg : null;
+}
+
 export function AddAdultDialog({onClose}: AddAdultDialogProps) {
   const classes = useStyles();
   const { volunteerFamilyId } = useParams<{ volunteerFamilyId: string }>();
@@ -89,8 +93,8 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
       await volunteerFamiliesModel.addAdult(volunteerFamily.family?.id as string,
         firstName, lastName, gender as Gender, age, ethnicity,
         isInHousehold, relationshipToFamily,
-        addressLine1, addressLine2, city, state, postalCode, country,
-        phoneNumber, phoneType, emailAddress, emailType,
+        optional(addressLine1), optional(addressLine2), optional(city), optional(state), optional(postalCode), optional(country),
+        optional(phoneNumber), phoneType, optional(emailAddress), emailType,
         (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
       //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
       onClose();

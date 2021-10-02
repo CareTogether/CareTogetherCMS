@@ -84,7 +84,7 @@ export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDial
       const newFamily = await volunteerFamiliesModel.createVolunteerFamilyWithNewAdult(
         firstName, lastName, gender as Gender, age, ethnicity,
         isInHousehold, relationshipToFamily,
-        addressLine1, addressLine2, city, state, postalCode, country,
+        addressLine1, addressLine2.length > 0 ? addressLine2 : null, city, state, postalCode, country,
         phoneNumber, phoneType, emailAddress, emailType,
         (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
       //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
