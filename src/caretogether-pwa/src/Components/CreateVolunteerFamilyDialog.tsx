@@ -181,7 +181,7 @@ export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDial
               <TextField
                 id="concerns"
                 label="Concerns" placeholder="Note any safety risks, allergies, etc."
-                multiline fullWidth variant="outlined" rows={2} rowsMax={5} size="small"
+                multiline fullWidth variant="outlined" minRows={2} maxRows={5} size="small"
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -196,7 +196,7 @@ export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDial
               <TextField
                 id="notes"
                 label="Notes" placeholder="Space for any general notes"
-                multiline fullWidth variant="outlined" rows={2} rowsMax={5} size="small"
+                multiline fullWidth variant="outlined" minRows={2} maxRows={5} size="small"
                 value={notes == null ? "" : notes} onChange={e => setFields({...fields, notes: e.target.value})}
               />
             </Grid>
