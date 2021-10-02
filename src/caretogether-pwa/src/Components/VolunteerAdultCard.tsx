@@ -110,14 +110,18 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
           <ul className={classes.cardList}>
             {volunteerFamily.individualVolunteers?.[adult.item1.id].approvalFormUploads?.map((upload, i) => (
               <li key={i}>
-                ▸{upload.formName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                {upload.completedAtUtc && <span style={{float:'right'}}>{format(upload.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
+                <CardInfoRow icon='▸'>
+                  {upload.formName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                  {upload.completedAtUtc && <span style={{float:'right'}}>{format(upload.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
+                </CardInfoRow>
               </li>
             ))}
             {volunteerFamily.individualVolunteers?.[adult.item1.id].approvalActivitiesPerformed?.map((activity, i) => (
               <li key={i}>
-                ▸{activity.activityName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                {activity.performedAtUtc && <span style={{float:'right'}}>{format(activity.performedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
+                <CardInfoRow icon='▸'>
+                  {activity.activityName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                  {activity.performedAtUtc && <span style={{float:'right'}}>{format(activity.performedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
+                </CardInfoRow>
               </li>
             ))}
           </ul>
