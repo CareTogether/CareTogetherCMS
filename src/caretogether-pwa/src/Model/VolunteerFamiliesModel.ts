@@ -1,5 +1,5 @@
 import { atom, useRecoilCallback } from "recoil";
-import { ActivityRequirement, AddAdultToFamilyCommand, AddChildToFamilyCommand, Age, ApprovalCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, FamilyAdultRelationshipInfo, FormUploadRequirement, Gender, PerformVolunteerActivity, PerformVolunteerFamilyActivity, PersonCommand, UpdatePersonName, UploadVolunteerFamilyForm, UploadVolunteerForm, VolunteerCommand, VolunteerFamiliesClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
+import { ActivityRequirement, AddAdultToFamilyCommand, AddChildToFamilyCommand, Address, Age, ApprovalCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, FormUploadRequirement, Gender, PerformVolunteerActivity, PerformVolunteerFamilyActivity, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonName, UploadVolunteerFamilyForm, UploadVolunteerForm, VolunteerCommand, VolunteerFamiliesClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { uploadFileToTenant } from "./FilesModel";
@@ -208,8 +208,10 @@ export function useVolunteerFamiliesModel() {
     });
   const createVolunteerFamilyWithNewAdult = useApprovalCommandCallback(
     async (firstName: string, lastName: string, gender: Gender, age: Age, ethnicity: string,
-      isInHousehold: boolean, relationshipToFamily?: string,
-        notes?: string, concerns?: string) => {
+      isInHousehold: boolean, relationshipToFamily: string,
+      addressLine1: string, addressLine2: string | null, city: string, state: string, postalCode: string, country: string,
+      phoneNumber: string, phoneType: PhoneNumberType, emailAddress?: string, emailType?: EmailAddressType,
+      notes?: string, concerns?: string) => {
       const command = new CreateVolunteerFamilyWithNewAdultCommand();
       command.firstName = firstName;
       command.lastName = lastName;
@@ -222,6 +224,19 @@ export function useVolunteerFamiliesModel() {
         isInHousehold: isInHousehold,
         relationshipToFamily: relationshipToFamily
       });
+      command.address = new Address();
+      command.address.line1 = addressLine1;
+      command.address.line2 = addressLine2 === null ? undefined : addressLine2;
+      command.address.city = city;
+      command.address.state = state;
+      command.address.postalCode = postalCode;
+      command.address.country = country;
+      command.phoneNumber = new PhoneNumber();
+      command.phoneNumber.number = phoneNumber;
+      command.phoneNumber.type = phoneType;
+      command.emailAddress = new EmailAddress();
+      command.emailAddress.address = emailAddress;
+      command.emailAddress.type = emailType;
       return command;
     });
   
