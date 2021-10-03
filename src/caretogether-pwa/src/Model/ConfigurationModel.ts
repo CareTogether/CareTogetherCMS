@@ -64,10 +64,9 @@ export const familyDocumentTypesData = selector({
     return (policy.volunteerPolicy?.volunteerFamilyRoles &&
       Object.entries(policy.volunteerPolicy.volunteerFamilyRoles)
         .reduce((previous, [, familyRolePolicy]) => {
-          const formUploads = (familyRolePolicy.approvalRequirementsByPolicyVersion &&
-            Object.entries(familyRolePolicy.approvalRequirementsByPolicyVersion).map(([version, requirements]) => requirements.filter(requirement =>
+          const formUploads = (familyRolePolicy.policyVersions?.map(policyVersion => (policyVersion.requirements?.filter(requirement =>
               policy.actionDefinitions![requirement.actionName!] instanceof FormUploadRequirement &&
-              requirement.scope === VolunteerFamilyRequirementScope.OncePerFamily)
+              requirement.scope === VolunteerFamilyRequirementScope.OncePerFamily) || [])
             ?.map(requirement => policy.actionDefinitions![requirement.actionName!] as FormUploadRequirement))) || [];
           return previous.concat(formUploads.flat());
         }, [] as FormUploadRequirement[])
@@ -86,11 +85,10 @@ export const familyActivityTypesData = selector({
     return (policy.volunteerPolicy?.volunteerFamilyRoles &&
       Object.entries(policy.volunteerPolicy.volunteerFamilyRoles)
         .reduce((previous, [, familyRolePolicy]) => {
-          const activities = (familyRolePolicy.approvalRequirementsByPolicyVersion &&
-            Object.entries(familyRolePolicy.approvalRequirementsByPolicyVersion).map(([version, requirements]) => requirements.filter(requirement =>
+          const activities = familyRolePolicy.policyVersions?.map(policyVersion => (policyVersion.requirements?.filter(requirement =>
               policy.actionDefinitions![requirement.actionName!] instanceof ActivityRequirement &&
-              requirement.scope === VolunteerFamilyRequirementScope.OncePerFamily)
-            ?.map(requirement => policy.actionDefinitions![requirement.actionName!] as ActivityRequirement))) || [];
+              requirement.scope === VolunteerFamilyRequirementScope.OncePerFamily) || [])
+            ?.map(requirement => policy.actionDefinitions![requirement.actionName!] as ActivityRequirement)) || [];
           return previous.concat(activities.flat());
         }, [] as ActivityRequirement[])
         .reduce((previous, familyActivityRequirement) => {
@@ -108,19 +106,17 @@ export const adultDocumentTypesData = selector({
     const familyAllAdultForms = (policy.volunteerPolicy?.volunteerFamilyRoles &&
       Object.entries(policy.volunteerPolicy.volunteerFamilyRoles)
         .reduce((previous, [, familyRolePolicy]) => {
-          const formUploads = (familyRolePolicy.approvalRequirementsByPolicyVersion &&
-            Object.entries(familyRolePolicy.approvalRequirementsByPolicyVersion).map(([version, requirements]) => requirements.filter(requirement =>
+          const formUploads = (familyRolePolicy.policyVersions?.map(policyVersion => (policyVersion.requirements?.filter(requirement =>
               policy.actionDefinitions![requirement.actionName!] instanceof FormUploadRequirement &&
-              requirement.scope === VolunteerFamilyRequirementScope.AllAdultsInTheFamily)
+              requirement.scope === VolunteerFamilyRequirementScope.AllAdultsInTheFamily) || [])
             ?.map(requirement => policy.actionDefinitions![requirement.actionName!] as FormUploadRequirement))) || [];
           return previous.concat(formUploads.flat());
         }, [] as FormUploadRequirement[])) || [];
     const individualForms = (policy.volunteerPolicy?.volunteerRoles &&
       Object.entries(policy.volunteerPolicy.volunteerRoles)
         .reduce((previous, [, rolePolicy]) => {
-          const formUploads = (rolePolicy.approvalRequirementsByPolicyVersion &&
-            Object.entries(rolePolicy.approvalRequirementsByPolicyVersion).map(([version, requirements]) => requirements.filter(requirement =>
-              policy.actionDefinitions![requirement.actionName!] instanceof FormUploadRequirement)
+          const formUploads = (rolePolicy.policyVersions?.map(policyVersion => (policyVersion.requirements?.filter(requirement =>
+              policy.actionDefinitions![requirement.actionName!] instanceof FormUploadRequirement) || [])
             ?.map(requirement => policy.actionDefinitions![requirement.actionName!] as FormUploadRequirement))) || [];
           return previous.concat(formUploads.flat());
         }, [] as FormUploadRequirement[])) || [];
@@ -140,19 +136,17 @@ export const adultActivityTypesData = selector({
     const familyAllAdultActivities = (policy.volunteerPolicy?.volunteerFamilyRoles &&
       Object.entries(policy.volunteerPolicy.volunteerFamilyRoles)
         .reduce((previous, [, familyRolePolicy]) => {
-          const activities = (familyRolePolicy.approvalRequirementsByPolicyVersion &&
-            Object.entries(familyRolePolicy.approvalRequirementsByPolicyVersion).map(([version, requirements]) => requirements.filter(requirement =>
+          const activities = (familyRolePolicy.policyVersions?.map(policyVersion => (policyVersion.requirements?.filter(requirement =>
               policy.actionDefinitions![requirement.actionName!] instanceof ActivityRequirement &&
-              requirement.scope === VolunteerFamilyRequirementScope.AllAdultsInTheFamily)
+              requirement.scope === VolunteerFamilyRequirementScope.AllAdultsInTheFamily) || [])
             ?.map(requirement => policy.actionDefinitions![requirement.actionName!] as ActivityRequirement))) || [];
           return previous.concat(activities.flat());
         }, [] as ActivityRequirement[])) || [];
     const individualActivities = (policy.volunteerPolicy?.volunteerRoles &&
       Object.entries(policy.volunteerPolicy.volunteerRoles)
         .reduce((previous, [, rolePolicy]) => {
-          const activities = (rolePolicy.approvalRequirementsByPolicyVersion &&
-            Object.entries(rolePolicy.approvalRequirementsByPolicyVersion).map(([version, requirements]) => requirements.filter(requirement =>
-              policy.actionDefinitions![requirement.actionName!] instanceof ActivityRequirement)
+          const activities = (rolePolicy.policyVersions?.map(policyVersion => (policyVersion.requirements?.filter(requirement =>
+              policy.actionDefinitions![requirement.actionName!] instanceof ActivityRequirement) || [])
             ?.map(requirement => policy.actionDefinitions![requirement.actionName!] as ActivityRequirement))) || [];
           return previous.concat(activities.flat());
         }, [] as ActivityRequirement[])) || [];

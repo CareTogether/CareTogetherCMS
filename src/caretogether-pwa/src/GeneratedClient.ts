@@ -1563,8 +1563,7 @@ export interface IVolunteerPolicy {
 
 export class VolunteerRolePolicy implements IVolunteerRolePolicy {
     volunteerRoleType?: string;
-    currentVersion?: string;
-    approvalRequirementsByPolicyVersion?: { [key: string]: VolunteerApprovalRequirement[]; };
+    policyVersions?: VolunteerRolePolicyVersion[];
 
     constructor(data?: IVolunteerRolePolicy) {
         if (data) {
@@ -1578,13 +1577,10 @@ export class VolunteerRolePolicy implements IVolunteerRolePolicy {
     init(_data?: any) {
         if (_data) {
             this.volunteerRoleType = _data["volunteerRoleType"];
-            this.currentVersion = _data["currentVersion"];
-            if (_data["approvalRequirementsByPolicyVersion"]) {
-                this.approvalRequirementsByPolicyVersion = {} as any;
-                for (let key in _data["approvalRequirementsByPolicyVersion"]) {
-                    if (_data["approvalRequirementsByPolicyVersion"].hasOwnProperty(key))
-                        (<any>this.approvalRequirementsByPolicyVersion)![key] = _data["approvalRequirementsByPolicyVersion"][key] ? _data["approvalRequirementsByPolicyVersion"][key].map((i: any) => VolunteerApprovalRequirement.fromJS(i)) : [];
-                }
+            if (Array.isArray(_data["policyVersions"])) {
+                this.policyVersions = [] as any;
+                for (let item of _data["policyVersions"])
+                    this.policyVersions!.push(VolunteerRolePolicyVersion.fromJS(item));
             }
         }
     }
@@ -1599,13 +1595,10 @@ export class VolunteerRolePolicy implements IVolunteerRolePolicy {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["volunteerRoleType"] = this.volunteerRoleType;
-        data["currentVersion"] = this.currentVersion;
-        if (this.approvalRequirementsByPolicyVersion) {
-            data["approvalRequirementsByPolicyVersion"] = {};
-            for (let key in this.approvalRequirementsByPolicyVersion) {
-                if (this.approvalRequirementsByPolicyVersion.hasOwnProperty(key))
-                    (<any>data["approvalRequirementsByPolicyVersion"])[key] = this.approvalRequirementsByPolicyVersion[key];
-            }
+        if (Array.isArray(this.policyVersions)) {
+            data["policyVersions"] = [];
+            for (let item of this.policyVersions)
+                data["policyVersions"].push(item.toJSON());
         }
         return data; 
     }
@@ -1613,8 +1606,59 @@ export class VolunteerRolePolicy implements IVolunteerRolePolicy {
 
 export interface IVolunteerRolePolicy {
     volunteerRoleType?: string;
-    currentVersion?: string;
-    approvalRequirementsByPolicyVersion?: { [key: string]: VolunteerApprovalRequirement[]; };
+    policyVersions?: VolunteerRolePolicyVersion[];
+}
+
+export class VolunteerRolePolicyVersion implements IVolunteerRolePolicyVersion {
+    version?: string;
+    supersededAtUtc?: Date | undefined;
+    requirements?: VolunteerApprovalRequirement[];
+
+    constructor(data?: IVolunteerRolePolicyVersion) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.version = _data["version"];
+            this.supersededAtUtc = _data["supersededAtUtc"] ? new Date(_data["supersededAtUtc"].toString()) : <any>undefined;
+            if (Array.isArray(_data["requirements"])) {
+                this.requirements = [] as any;
+                for (let item of _data["requirements"])
+                    this.requirements!.push(VolunteerApprovalRequirement.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): VolunteerRolePolicyVersion {
+        data = typeof data === 'object' ? data : {};
+        let result = new VolunteerRolePolicyVersion();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["version"] = this.version;
+        data["supersededAtUtc"] = this.supersededAtUtc ? this.supersededAtUtc.toISOString() : <any>undefined;
+        if (Array.isArray(this.requirements)) {
+            data["requirements"] = [];
+            for (let item of this.requirements)
+                data["requirements"].push(item.toJSON());
+        }
+        return data; 
+    }
+}
+
+export interface IVolunteerRolePolicyVersion {
+    version?: string;
+    supersededAtUtc?: Date | undefined;
+    requirements?: VolunteerApprovalRequirement[];
 }
 
 export class VolunteerApprovalRequirement implements IVolunteerApprovalRequirement {
@@ -1665,8 +1709,7 @@ export enum RequirementStage {
 
 export class VolunteerFamilyRolePolicy implements IVolunteerFamilyRolePolicy {
     volunteerFamilyRoleType?: string;
-    currentVersion?: string;
-    approvalRequirementsByPolicyVersion?: { [key: string]: VolunteerFamilyApprovalRequirement[]; };
+    policyVersions?: VolunteerFamilyRolePolicyVersion[];
 
     constructor(data?: IVolunteerFamilyRolePolicy) {
         if (data) {
@@ -1680,13 +1723,10 @@ export class VolunteerFamilyRolePolicy implements IVolunteerFamilyRolePolicy {
     init(_data?: any) {
         if (_data) {
             this.volunteerFamilyRoleType = _data["volunteerFamilyRoleType"];
-            this.currentVersion = _data["currentVersion"];
-            if (_data["approvalRequirementsByPolicyVersion"]) {
-                this.approvalRequirementsByPolicyVersion = {} as any;
-                for (let key in _data["approvalRequirementsByPolicyVersion"]) {
-                    if (_data["approvalRequirementsByPolicyVersion"].hasOwnProperty(key))
-                        (<any>this.approvalRequirementsByPolicyVersion)![key] = _data["approvalRequirementsByPolicyVersion"][key] ? _data["approvalRequirementsByPolicyVersion"][key].map((i: any) => VolunteerFamilyApprovalRequirement.fromJS(i)) : [];
-                }
+            if (Array.isArray(_data["policyVersions"])) {
+                this.policyVersions = [] as any;
+                for (let item of _data["policyVersions"])
+                    this.policyVersions!.push(VolunteerFamilyRolePolicyVersion.fromJS(item));
             }
         }
     }
@@ -1701,13 +1741,10 @@ export class VolunteerFamilyRolePolicy implements IVolunteerFamilyRolePolicy {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["volunteerFamilyRoleType"] = this.volunteerFamilyRoleType;
-        data["currentVersion"] = this.currentVersion;
-        if (this.approvalRequirementsByPolicyVersion) {
-            data["approvalRequirementsByPolicyVersion"] = {};
-            for (let key in this.approvalRequirementsByPolicyVersion) {
-                if (this.approvalRequirementsByPolicyVersion.hasOwnProperty(key))
-                    (<any>data["approvalRequirementsByPolicyVersion"])[key] = this.approvalRequirementsByPolicyVersion[key];
-            }
+        if (Array.isArray(this.policyVersions)) {
+            data["policyVersions"] = [];
+            for (let item of this.policyVersions)
+                data["policyVersions"].push(item.toJSON());
         }
         return data; 
     }
@@ -1715,8 +1752,59 @@ export class VolunteerFamilyRolePolicy implements IVolunteerFamilyRolePolicy {
 
 export interface IVolunteerFamilyRolePolicy {
     volunteerFamilyRoleType?: string;
-    currentVersion?: string;
-    approvalRequirementsByPolicyVersion?: { [key: string]: VolunteerFamilyApprovalRequirement[]; };
+    policyVersions?: VolunteerFamilyRolePolicyVersion[];
+}
+
+export class VolunteerFamilyRolePolicyVersion implements IVolunteerFamilyRolePolicyVersion {
+    version?: string;
+    supersededAtUtc?: Date | undefined;
+    requirements?: VolunteerFamilyApprovalRequirement[];
+
+    constructor(data?: IVolunteerFamilyRolePolicyVersion) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.version = _data["version"];
+            this.supersededAtUtc = _data["supersededAtUtc"] ? new Date(_data["supersededAtUtc"].toString()) : <any>undefined;
+            if (Array.isArray(_data["requirements"])) {
+                this.requirements = [] as any;
+                for (let item of _data["requirements"])
+                    this.requirements!.push(VolunteerFamilyApprovalRequirement.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): VolunteerFamilyRolePolicyVersion {
+        data = typeof data === 'object' ? data : {};
+        let result = new VolunteerFamilyRolePolicyVersion();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["version"] = this.version;
+        data["supersededAtUtc"] = this.supersededAtUtc ? this.supersededAtUtc.toISOString() : <any>undefined;
+        if (Array.isArray(this.requirements)) {
+            data["requirements"] = [];
+            for (let item of this.requirements)
+                data["requirements"].push(item.toJSON());
+        }
+        return data; 
+    }
+}
+
+export interface IVolunteerFamilyRolePolicyVersion {
+    version?: string;
+    supersededAtUtc?: Date | undefined;
+    requirements?: VolunteerFamilyApprovalRequirement[];
 }
 
 export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyApprovalRequirement {
@@ -2044,7 +2132,7 @@ export class ContactInfo implements IContactInfo {
     preferredPhoneNumberId?: string | undefined;
     emailAddresses?: EmailAddress[];
     preferredEmailAddressId?: string | undefined;
-    contactMethodPreferenceNotes?: string;
+    contactMethodPreferenceNotes?: string | undefined;
 
     constructor(data?: IContactInfo) {
         if (data) {
@@ -2121,7 +2209,7 @@ export interface IContactInfo {
     preferredPhoneNumberId?: string | undefined;
     emailAddresses?: EmailAddress[];
     preferredEmailAddressId?: string | undefined;
-    contactMethodPreferenceNotes?: string;
+    contactMethodPreferenceNotes?: string | undefined;
 }
 
 export class Address implements IAddress {
@@ -2129,9 +2217,9 @@ export class Address implements IAddress {
     line1?: string;
     line2?: string | undefined;
     city?: string;
-    stateId?: string;
+    state?: string;
     postalCode?: string;
-    countryId?: string;
+    country?: string;
 
     constructor(data?: IAddress) {
         if (data) {
@@ -2148,9 +2236,9 @@ export class Address implements IAddress {
             this.line1 = _data["line1"];
             this.line2 = _data["line2"];
             this.city = _data["city"];
-            this.stateId = _data["stateId"];
+            this.state = _data["state"];
             this.postalCode = _data["postalCode"];
-            this.countryId = _data["countryId"];
+            this.country = _data["country"];
         }
     }
 
@@ -2167,9 +2255,9 @@ export class Address implements IAddress {
         data["line1"] = this.line1;
         data["line2"] = this.line2;
         data["city"] = this.city;
-        data["stateId"] = this.stateId;
+        data["state"] = this.state;
         data["postalCode"] = this.postalCode;
-        data["countryId"] = this.countryId;
+        data["country"] = this.country;
         return data; 
     }
 }
@@ -2179,9 +2267,9 @@ export interface IAddress {
     line1?: string;
     line2?: string | undefined;
     city?: string;
-    stateId?: string;
+    state?: string;
     postalCode?: string;
-    countryId?: string;
+    country?: string;
 }
 
 export class PhoneNumber implements IPhoneNumber {
@@ -4044,6 +4132,7 @@ export class VolunteerFamily implements IVolunteerFamily {
     approvalActivitiesPerformed?: ActivityInfo[];
     familyRoleApprovals?: { [key: string]: RoleApprovalStatus; };
     individualVolunteers?: { [key: string]: Volunteer; };
+    contactInfo?: { [key: string]: ContactInfo; };
 
     constructor(data?: IVolunteerFamily) {
         if (data) {
@@ -4079,6 +4168,13 @@ export class VolunteerFamily implements IVolunteerFamily {
                 for (let key in _data["individualVolunteers"]) {
                     if (_data["individualVolunteers"].hasOwnProperty(key))
                         (<any>this.individualVolunteers)![key] = _data["individualVolunteers"][key] ? Volunteer.fromJS(_data["individualVolunteers"][key]) : new Volunteer();
+                }
+            }
+            if (_data["contactInfo"]) {
+                this.contactInfo = {} as any;
+                for (let key in _data["contactInfo"]) {
+                    if (_data["contactInfo"].hasOwnProperty(key))
+                        (<any>this.contactInfo)![key] = _data["contactInfo"][key] ? ContactInfo.fromJS(_data["contactInfo"][key]) : new ContactInfo();
                 }
             }
         }
@@ -4118,6 +4214,13 @@ export class VolunteerFamily implements IVolunteerFamily {
                     (<any>data["individualVolunteers"])[key] = this.individualVolunteers[key] ? this.individualVolunteers[key].toJSON() : <any>undefined;
             }
         }
+        if (this.contactInfo) {
+            data["contactInfo"] = {};
+            for (let key in this.contactInfo) {
+                if (this.contactInfo.hasOwnProperty(key))
+                    (<any>data["contactInfo"])[key] = this.contactInfo[key] ? this.contactInfo[key].toJSON() : <any>undefined;
+            }
+        }
         return data; 
     }
 }
@@ -4128,6 +4231,7 @@ export interface IVolunteerFamily {
     approvalActivitiesPerformed?: ActivityInfo[];
     familyRoleApprovals?: { [key: string]: RoleApprovalStatus; };
     individualVolunteers?: { [key: string]: Volunteer; };
+    contactInfo?: { [key: string]: ContactInfo; };
 }
 
 export enum RoleApprovalStatus {
@@ -4763,6 +4867,9 @@ export class AddAdultToFamilyCommand extends ApprovalCommand implements IAddAdul
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
     concerns?: string | undefined;
     notes?: string | undefined;
+    address?: Address | undefined;
+    phoneNumber?: PhoneNumber | undefined;
+    emailAddress?: EmailAddress | undefined;
 
     constructor(data?: IAddAdultToFamilyCommand) {
         super(data);
@@ -4781,6 +4888,9 @@ export class AddAdultToFamilyCommand extends ApprovalCommand implements IAddAdul
             this.familyAdultRelationshipInfo = _data["familyAdultRelationshipInfo"] ? FamilyAdultRelationshipInfo.fromJS(_data["familyAdultRelationshipInfo"]) : <any>undefined;
             this.concerns = _data["concerns"];
             this.notes = _data["notes"];
+            this.address = _data["address"] ? Address.fromJS(_data["address"]) : <any>undefined;
+            this.phoneNumber = _data["phoneNumber"] ? PhoneNumber.fromJS(_data["phoneNumber"]) : <any>undefined;
+            this.emailAddress = _data["emailAddress"] ? EmailAddress.fromJS(_data["emailAddress"]) : <any>undefined;
         }
     }
 
@@ -4802,6 +4912,9 @@ export class AddAdultToFamilyCommand extends ApprovalCommand implements IAddAdul
         data["familyAdultRelationshipInfo"] = this.familyAdultRelationshipInfo ? this.familyAdultRelationshipInfo.toJSON() : <any>undefined;
         data["concerns"] = this.concerns;
         data["notes"] = this.notes;
+        data["address"] = this.address ? this.address.toJSON() : <any>undefined;
+        data["phoneNumber"] = this.phoneNumber ? this.phoneNumber.toJSON() : <any>undefined;
+        data["emailAddress"] = this.emailAddress ? this.emailAddress.toJSON() : <any>undefined;
         super.toJSON(data);
         return data; 
     }
@@ -4817,6 +4930,9 @@ export interface IAddAdultToFamilyCommand extends IApprovalCommand {
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
     concerns?: string | undefined;
     notes?: string | undefined;
+    address?: Address | undefined;
+    phoneNumber?: PhoneNumber | undefined;
+    emailAddress?: EmailAddress | undefined;
 }
 
 export class AddChildToFamilyCommand extends ApprovalCommand implements IAddChildToFamilyCommand {
@@ -4902,6 +5018,9 @@ export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand im
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
     concerns?: string | undefined;
     notes?: string | undefined;
+    address?: Address;
+    phoneNumber?: PhoneNumber;
+    emailAddress?: EmailAddress;
 
     constructor(data?: ICreateVolunteerFamilyWithNewAdultCommand) {
         super(data);
@@ -4919,6 +5038,9 @@ export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand im
             this.familyAdultRelationshipInfo = _data["familyAdultRelationshipInfo"] ? FamilyAdultRelationshipInfo.fromJS(_data["familyAdultRelationshipInfo"]) : <any>undefined;
             this.concerns = _data["concerns"];
             this.notes = _data["notes"];
+            this.address = _data["address"] ? Address.fromJS(_data["address"]) : <any>undefined;
+            this.phoneNumber = _data["phoneNumber"] ? PhoneNumber.fromJS(_data["phoneNumber"]) : <any>undefined;
+            this.emailAddress = _data["emailAddress"] ? EmailAddress.fromJS(_data["emailAddress"]) : <any>undefined;
         }
     }
 
@@ -4939,6 +5061,9 @@ export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand im
         data["familyAdultRelationshipInfo"] = this.familyAdultRelationshipInfo ? this.familyAdultRelationshipInfo.toJSON() : <any>undefined;
         data["concerns"] = this.concerns;
         data["notes"] = this.notes;
+        data["address"] = this.address ? this.address.toJSON() : <any>undefined;
+        data["phoneNumber"] = this.phoneNumber ? this.phoneNumber.toJSON() : <any>undefined;
+        data["emailAddress"] = this.emailAddress ? this.emailAddress.toJSON() : <any>undefined;
         super.toJSON(data);
         return data; 
     }
@@ -4953,6 +5078,9 @@ export interface ICreateVolunteerFamilyWithNewAdultCommand extends IApprovalComm
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
     concerns?: string | undefined;
     notes?: string | undefined;
+    address?: Address;
+    phoneNumber?: PhoneNumber;
+    emailAddress?: EmailAddress;
 }
 
 export abstract class PersonCommand implements IPersonCommand {
@@ -4988,8 +5116,18 @@ export abstract class PersonCommand implements IPersonCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "UpdatePersonConcerns") {
+            let result = new UpdatePersonConcerns();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "UpdatePersonName") {
             let result = new UpdatePersonName();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UpdatePersonNotes") {
+            let result = new UpdatePersonNotes();
             result.init(data);
             return result;
         }
@@ -5109,6 +5247,40 @@ export interface IUpdatePersonAge extends IPersonCommand {
     age?: Age;
 }
 
+export class UpdatePersonConcerns extends PersonCommand implements IUpdatePersonConcerns {
+    concerns?: string | undefined;
+
+    constructor(data?: IUpdatePersonConcerns) {
+        super(data);
+        this._discriminator = "UpdatePersonConcerns";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.concerns = _data["concerns"];
+        }
+    }
+
+    static fromJS(data: any): UpdatePersonConcerns {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdatePersonConcerns();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["concerns"] = this.concerns;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUpdatePersonConcerns extends IPersonCommand {
+    concerns?: string | undefined;
+}
+
 export class UpdatePersonName extends PersonCommand implements IUpdatePersonName {
     firstName?: string;
     lastName?: string;
@@ -5145,6 +5317,40 @@ export class UpdatePersonName extends PersonCommand implements IUpdatePersonName
 export interface IUpdatePersonName extends IPersonCommand {
     firstName?: string;
     lastName?: string;
+}
+
+export class UpdatePersonNotes extends PersonCommand implements IUpdatePersonNotes {
+    notes?: string | undefined;
+
+    constructor(data?: IUpdatePersonNotes) {
+        super(data);
+        this._discriminator = "UpdatePersonNotes";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.notes = _data["notes"];
+        }
+    }
+
+    static fromJS(data: any): UpdatePersonNotes {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdatePersonNotes();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["notes"] = this.notes;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUpdatePersonNotes extends IPersonCommand {
+    notes?: string | undefined;
 }
 
 export class UpdatePersonUserLink extends PersonCommand implements IUpdatePersonUserLink {

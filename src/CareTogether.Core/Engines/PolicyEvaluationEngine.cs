@@ -80,13 +80,18 @@ namespace CareTogether.Engines
 
                     foreach (var (roleName, rolePolicy) in policy.VolunteerPolicy.VolunteerRoles)
                     {
-                        foreach (var (version, requirements) in rolePolicy.ApprovalRequirementsByPolicyVersion)
+                        foreach (var policyVersion in rolePolicy.PolicyVersions)
                         {
-                            var requirementsMet = requirements.Select(requirement =>
+                            var version = policyVersion.Version;
+                            var supersededAtUtc = policyVersion.SupersededAtUtc;
+
+                            var requirementsMet = policyVersion.Requirements.Select(requirement =>
                                 (requirement.Stage, RequirementMet: policy.ActionDefinitions[requirement.ActionName] switch
                                 {
-                                    FormUploadRequirement r => formUploads.Any(upload => upload.FormName == r.FormName),
-                                    ActivityRequirement r => activities.Any(activity => activity.ActivityName == r.ActivityName),
+                                    FormUploadRequirement r => formUploads.Any(upload => upload.FormName == r.FormName &&
+                                        (supersededAtUtc == null || upload.CompletedAtUtc < supersededAtUtc)),
+                                    ActivityRequirement r => activities.Any(activity => activity.ActivityName == r.ActivityName &&
+                                        (supersededAtUtc == null || activity.PerformedAtUtc < supersededAtUtc)),
                                     _ => throw new NotImplementedException(
                                         $"The action requirement type '{policy.ActionDefinitions[requirement.ActionName].GetType().FullName}' has not been implemented.")
                                 })).ToList();
@@ -106,9 +111,12 @@ namespace CareTogether.Engines
             var familyRoles = new Dictionary<(string Role, string Version), RoleApprovalStatus>();
             foreach (var (roleName, rolePolicy) in policy.VolunteerPolicy.VolunteerFamilyRoles)
             {
-                foreach (var (version, requirements) in rolePolicy.ApprovalRequirementsByPolicyVersion)
+                foreach (var policyVersion in rolePolicy.PolicyVersions)
                 {
-                    var requirementsMet = requirements.Select(requirement =>
+                    var version = policyVersion.Version;
+                    var supersededAtUtc = policyVersion.SupersededAtUtc;
+
+                    var requirementsMet = policyVersion.Requirements.Select(requirement =>
                         (requirement.Stage, RequirementMet: requirement.Scope switch
                         {
                             VolunteerFamilyRequirementScope.AllAdultsInTheFamily => policy.ActionDefinitions[requirement.ActionName] switch
@@ -119,7 +127,8 @@ namespace CareTogether.Engines
                                     if (individualInfo.TryGetValue(person.Id, out var personIndividualInfo))
                                     {
                                         var (formUploads, activities) = personIndividualInfo;
-                                        return formUploads.Any(upload => upload.FormName == r.FormName);
+                                        return formUploads.Any(upload => upload.FormName == r.FormName &&
+                                            (supersededAtUtc == null || upload.CompletedAtUtc < supersededAtUtc));
                                     }
                                     return false;
                                 }),
@@ -129,7 +138,8 @@ namespace CareTogether.Engines
                                     if (individualInfo.TryGetValue(person.Id, out var personIndividualInfo))
                                     {
                                         var (formUploads, activities) = personIndividualInfo;
-                                        return activities.Any(activity => activity.ActivityName == r.ActivityName);
+                                        return activities.Any(activity => activity.ActivityName == r.ActivityName &&
+                                            (supersededAtUtc == null || activity.PerformedAtUtc < supersededAtUtc));
                                     }
                                     return false;
                                 }),
@@ -139,8 +149,10 @@ namespace CareTogether.Engines
                             },
                             VolunteerFamilyRequirementScope.OncePerFamily => policy.ActionDefinitions[requirement.ActionName] switch
                             {
-                                FormUploadRequirement r => familyFormUploads.Any(upload => upload.FormName == r.FormName),
-                                ActivityRequirement r => familyActivitiesPerformed.Any(activity => activity.ActivityName == r.ActivityName),
+                                FormUploadRequirement r => familyFormUploads.Any(upload => upload.FormName == r.FormName &&
+                                    (supersededAtUtc == null || upload.CompletedAtUtc < supersededAtUtc)),
+                                ActivityRequirement r => familyActivitiesPerformed.Any(activity => activity.ActivityName == r.ActivityName &&
+                                    (supersededAtUtc == null || activity.PerformedAtUtc < supersededAtUtc)),
                                 _ => throw new NotImplementedException(
                                     $"The action requirement type '{policy.ActionDefinitions[requirement.ActionName].GetType().FullName}' " +
                                     $"has not been implemented for scope '{nameof(VolunteerFamilyRequirementScope.OncePerFamily)}'.")

@@ -78,7 +78,11 @@ namespace CareTogether.Resources.Models
                 Event: new VolunteerFamilyCommandExecuted(userId, timestampUtc, command),
                 SequenceNumber: LastKnownSequenceNumber + 1,
                 VolunteerFamilyEntry: volunteerFamilyEntryToUpsert,
-                OnCommit: () => volunteerFamilies = volunteerFamilies.SetItem(volunteerFamilyEntryToUpsert.FamilyId, volunteerFamilyEntryToUpsert));
+                OnCommit: () =>
+                {
+                    LastKnownSequenceNumber++;
+                    volunteerFamilies = volunteerFamilies.SetItem(volunteerFamilyEntryToUpsert.FamilyId, volunteerFamilyEntryToUpsert);
+                });
         }
 
         public (VolunteerCommandExecuted Event, long SequenceNumber, VolunteerFamilyEntry VolunteerFamilyEntry, Action OnCommit)
@@ -132,7 +136,11 @@ namespace CareTogether.Resources.Models
                 Event: new VolunteerCommandExecuted(userId, timestampUtc, command),
                 SequenceNumber: LastKnownSequenceNumber + 1,
                 VolunteerFamilyEntry: volunteerFamilyEntryToUpsert,
-                OnCommit: () => volunteerFamilies = volunteerFamilies.SetItem(volunteerFamilyEntryToUpsert.FamilyId, volunteerFamilyEntryToUpsert));
+                OnCommit: () =>
+                {
+                    LastKnownSequenceNumber++;
+                    volunteerFamilies = volunteerFamilies.SetItem(volunteerFamilyEntryToUpsert.FamilyId, volunteerFamilyEntryToUpsert);
+                });
         }
 
         public ImmutableList<VolunteerFamilyEntry> FindVolunteerFamilyEntries(Func<VolunteerFamilyEntry, bool> predicate)

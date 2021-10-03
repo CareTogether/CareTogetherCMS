@@ -110,6 +110,13 @@ namespace CareTogether.Managers
                         var createPersonSubcommand = new CreatePerson(adultPersonId, null, c.FirstName, c.LastName,
                             c.Gender, c.Age, c.Ethnicity, c.Concerns, c.Notes);
                         var addAdultToFamilySubcommand = new AddAdultToFamily(c.FamilyId, adultPersonId, c.FamilyAdultRelationshipInfo);
+                        var createContactSubcommand = new CreateContact(adultPersonId, ContactMethodPreferenceNotes: null);
+                        var addContactAddressSubcommand = c.Address == null ? null : new AddContactAddress(adultPersonId,
+                            c.Address with { Id = Guid.NewGuid() }, IsCurrentAddress: true);
+                        var addContactPhoneNumberSubcommand = c.PhoneNumber == null ? null :  new AddContactPhoneNumber(adultPersonId,
+                            c.PhoneNumber with { Id = Guid.NewGuid() }, IsPreferredPhoneNumber: true);
+                        var addContactEmailAddressSubcommand = c.EmailAddress == null ? null : new AddContactEmailAddress(adultPersonId,
+                            c.EmailAddress with { Id = Guid.NewGuid() }, IsPreferredEmailAddress: true);
 
                         //TODO: Authorize the subcommands via the policy evaluation engine
 
@@ -118,7 +125,15 @@ namespace CareTogether.Managers
                         
                         var family = await communitiesResource.ExecuteFamilyCommandAsync(organizationId, locationId,
                             addAdultToFamilySubcommand, user.UserId());
-                            
+
+                        await contactsResource.ExecuteContactCommandAsync(organizationId, locationId, createContactSubcommand, user.UserId());
+                        if (addContactAddressSubcommand != null)
+                            await contactsResource.ExecuteContactCommandAsync(organizationId, locationId, addContactAddressSubcommand, user.UserId());
+                        if (addContactPhoneNumberSubcommand != null)
+                            await contactsResource.ExecuteContactCommandAsync(organizationId, locationId, addContactPhoneNumberSubcommand, user.UserId());
+                        if (addContactEmailAddressSubcommand != null)
+                            await contactsResource.ExecuteContactCommandAsync(organizationId, locationId, addContactEmailAddressSubcommand, user.UserId());
+
                         var families = communitiesResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
                         var contacts = contactsResource.ListContactsAsync(organizationId, locationId).Result;
 
@@ -164,6 +179,13 @@ namespace CareTogether.Managers
                             {
                                 (adultPersonId, c.FamilyAdultRelationshipInfo)
                             }, new List<Guid>(), new List<CustodialRelationship>());
+                        var createContactSubcommand = new CreateContact(adultPersonId, ContactMethodPreferenceNotes: null);
+                        var addContactAddressSubcommand = new AddContactAddress(adultPersonId,
+                            c.Address with { Id = Guid.NewGuid() }, IsCurrentAddress: true);
+                        var addContactPhoneNumberSubcommand = new AddContactPhoneNumber(adultPersonId,
+                            c.PhoneNumber with { Id = Guid.NewGuid() }, IsPreferredPhoneNumber: true);
+                        var addContactEmailAddressSubcommand = new AddContactEmailAddress(adultPersonId,
+                            c.EmailAddress with { Id = Guid.NewGuid() }, IsPreferredEmailAddress: true);
                         var activateVolunteerFamilySubcommand = new ActivateVolunteerFamily(familyId);
 
                         //TODO: Authorize the subcommands via the policy evaluation engine
@@ -173,7 +195,12 @@ namespace CareTogether.Managers
                         
                         var family = await communitiesResource.ExecuteFamilyCommandAsync(organizationId, locationId,
                             createFamilySubcommand, user.UserId());
-                            
+
+                        await contactsResource.ExecuteContactCommandAsync(organizationId, locationId, createContactSubcommand, user.UserId());
+                        await contactsResource.ExecuteContactCommandAsync(organizationId, locationId, addContactAddressSubcommand, user.UserId());
+                        await contactsResource.ExecuteContactCommandAsync(organizationId, locationId, addContactPhoneNumberSubcommand, user.UserId());
+                        await contactsResource.ExecuteContactCommandAsync(organizationId, locationId, addContactEmailAddressSubcommand, user.UserId());
+                        
                         var volunteerFamilyEntry = await approvalsResource.ExecuteVolunteerFamilyCommandAsync(organizationId, locationId,
                             activateVolunteerFamilySubcommand, user.UserId());
 
@@ -219,7 +246,10 @@ namespace CareTogether.Managers
                         else
                             return new Volunteer(ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty,
                                 ImmutableDictionary<(string Role, string Version), RoleApprovalStatus>.Empty);
-                    }));
+                    }),
+                family.Adults.SelectMany(x => contacts.TryGetValue(x.Item1.Id, out var contactInfo)
+                    ? new KeyValuePair<Guid, ContactInfo>[] { new KeyValuePair<Guid, ContactInfo>(x.Item1.Id, contactInfo) }
+                    : new KeyValuePair<Guid, ContactInfo>[] { }).ToImmutableDictionary());
         }
     }
 }

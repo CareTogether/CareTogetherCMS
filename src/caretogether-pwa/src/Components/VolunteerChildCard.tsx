@@ -6,6 +6,8 @@ import MoreVertIcon from '@material-ui/icons/MoreVert';
 import { useRecoilValue } from "recoil";
 import { volunteerFamiliesData } from "../Model/VolunteerFamiliesModel";
 import { RenamePersonDialog } from "./RenamePersonDialog";
+import { UpdateConcernsDialog } from "./UpdateConcernsDialog";
+import { UpdateNotesDialog } from "./UpdateNotesDialog";
 
 const useStyles = makeStyles((theme) => ({
   sectionChips: {
@@ -60,6 +62,16 @@ export function VolunteerChildCard({volunteerFamilyId, personId}: VolunteerChild
     setChildMoreMenuAnchor(null);
     setRenamePersonParameter({volunteerFamilyId, person: child});
   }
+  const [updateConcernsParameter, setUpdateConcernsParameter] = useState<{volunteerFamilyId: string, person: Person} | null>(null);
+  function selectUpdateConcerns(child: Person) {
+    setChildMoreMenuAnchor(null);
+    setUpdateConcernsParameter({volunteerFamilyId, person: child});
+  }
+  const [updateNotesParameter, setUpdateNotesParameter] = useState<{volunteerFamilyId: string, person: Person} | null>(null);
+  function selectUpdateNotes(child: Person) {
+    setChildMoreMenuAnchor(null);
+    setUpdateNotesParameter({volunteerFamilyId, person: child});
+  }
 
   return (<>{child &&
     <Card className={classes.card}>
@@ -106,8 +118,18 @@ export function VolunteerChildCard({volunteerFamilyId, personId}: VolunteerChild
         <MenuItem onClick={() => childMoreMenuAnchor?.child && selectChangeName(childMoreMenuAnchor.child)}>
           <ListItemText primary="Change name" />
         </MenuItem>
+        <MenuItem onClick={() => childMoreMenuAnchor?.child && selectUpdateConcerns(childMoreMenuAnchor.child)}>
+          <ListItemText primary="Update concerns" />
+        </MenuItem>
+        <MenuItem onClick={() => childMoreMenuAnchor?.child && selectUpdateNotes(childMoreMenuAnchor.child)}>
+          <ListItemText primary="Update notes" />
+        </MenuItem>
       </Menu>
       {(renamePersonParameter && <RenamePersonDialog volunteerFamilyId={volunteerFamilyId} person={renamePersonParameter.person}
         onClose={() => setRenamePersonParameter(null)} />) || null}
+      {(updateConcernsParameter && <UpdateConcernsDialog volunteerFamilyId={volunteerFamilyId} person={updateConcernsParameter.person}
+        onClose={() => setUpdateConcernsParameter(null)} />) || null}
+      {(updateNotesParameter && <UpdateNotesDialog volunteerFamilyId={volunteerFamilyId} person={updateNotesParameter.person}
+        onClose={() => setUpdateNotesParameter(null)} />) || null}
     </Card>}</>);
 }

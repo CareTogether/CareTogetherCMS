@@ -62,6 +62,10 @@ namespace CareTogether.Resources
         : PersonCommand(PersonId);
     public sealed record UpdatePersonUserLink(Guid PersonId, Guid? UserId)
         : PersonCommand(PersonId);
+    public sealed record UpdatePersonConcerns(Guid PersonId, string? Concerns)
+        : PersonCommand(PersonId);
+    public sealed record UpdatePersonNotes(Guid PersonId, string? Notes)
+        : PersonCommand(PersonId);
 
     /// <summary>
     /// The <see cref="ICommunitiesResource"/> is responsible for the "social networking" aspects of CareTogether.

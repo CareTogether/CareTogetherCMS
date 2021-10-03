@@ -66,9 +66,9 @@ function VolunteerProgress() {
   policy.volunteerPolicy?.volunteerFamilyRoles &&
     Object.entries(policy.volunteerPolicy.volunteerFamilyRoles)
     .forEach(([roleName, rolePolicy]) => {
-      rolePolicy.approvalRequirementsByPolicyVersion && Object.entries(rolePolicy.approvalRequirementsByPolicyVersion).forEach(([version, requirements]) => {
-        const roleNameVersion = roleName + "-" + version;
-        requirements?.forEach(requirement => {
+      rolePolicy.policyVersions?.forEach(policyVersion => {
+        const roleNameVersion = roleName + "-" + policyVersion.version;
+        policyVersion.requirements?.forEach(requirement => {
           if (requirement.stage === RequirementStage.Application) return;
           const action = policy.actionDefinitions![requirement.actionName!];
           if (action instanceof FormUploadRequirement && action.formName) {
@@ -87,9 +87,9 @@ function VolunteerProgress() {
   policy.volunteerPolicy?.volunteerRoles &&
     Object.entries(policy.volunteerPolicy.volunteerRoles)
     .forEach(([roleName, rolePolicy]) => {
-      rolePolicy.approvalRequirementsByPolicyVersion && Object.entries(rolePolicy.approvalRequirementsByPolicyVersion).forEach(([version, requirements]) => {
-        const roleNameVersion = roleName + "-" + version;
-        requirements?.forEach(requirement => {
+      rolePolicy.policyVersions?.forEach(policyVersion => {
+        const roleNameVersion = roleName + "-" + policyVersion.version;
+        policyVersion.requirements?.forEach(requirement => {
           if (requirement.stage === RequirementStage.Application) return;
           const action = policy.actionDefinitions![requirement.actionName!];
           if (action instanceof FormUploadRequirement && action.formName) {

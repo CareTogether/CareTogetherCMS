@@ -48,11 +48,17 @@ namespace CareTogether.Resources
         ImmutableDictionary<string, VolunteerRolePolicy> VolunteerRoles,
         ImmutableDictionary<string, VolunteerFamilyRolePolicy> VolunteerFamilyRoles);
 
-    public sealed record VolunteerRolePolicy(string VolunteerRoleType, string CurrentVersion,
-        ImmutableDictionary<string, ImmutableList<VolunteerApprovalRequirement>> ApprovalRequirementsByPolicyVersion);
+    public sealed record VolunteerRolePolicy(string VolunteerRoleType,
+        ImmutableList<VolunteerRolePolicyVersion> PolicyVersions);
 
-    public sealed record VolunteerFamilyRolePolicy(string VolunteerFamilyRoleType, string CurrentVersion,
-        ImmutableDictionary<string, ImmutableList<VolunteerFamilyApprovalRequirement>> ApprovalRequirementsByPolicyVersion);
+    public sealed record VolunteerRolePolicyVersion(string Version, DateTime? SupersededAtUtc,
+        ImmutableList<VolunteerApprovalRequirement> Requirements);
+
+    public sealed record VolunteerFamilyRolePolicy(string VolunteerFamilyRoleType,
+        ImmutableList<VolunteerFamilyRolePolicyVersion> PolicyVersions);
+
+    public sealed record VolunteerFamilyRolePolicyVersion(string Version, DateTime? SupersededAtUtc,
+        ImmutableList<VolunteerFamilyApprovalRequirement> Requirements);
 
     public sealed record VolunteerApprovalRequirement(
         RequirementStage Stage, string ActionName);

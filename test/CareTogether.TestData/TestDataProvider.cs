@@ -105,7 +105,7 @@ namespace CareTogether.TestData
             await contactsEventLog.AppendEventsAsync(guid1, guid2,
                 new ContactCommandExecutedEvent(guid0, new DateTime(2021, 7, 1), new CreateContact(guid1, "Amy has contact details for a callback")),
                 new ContactCommandExecutedEvent(guid0, new DateTime(2021, 7, 1), new AddContactAddress(guid1,
-                    new Address(guid3, "456 Old Ave.", null, "Bigtown", guid4, "67890", guid4),
+                    new Address(guid3, "456 Old Ave.", null, "Bigtown", "TX", "67890", "United States"),
                     true)),
                 new ContactCommandExecutedEvent(guid0, new DateTime(2021, 7, 1), new AddContactPhoneNumber(guid1,
                     new PhoneNumber(guid2, "1235554567", PhoneNumberType.Mobile),
@@ -114,10 +114,10 @@ namespace CareTogether.TestData
                     new EmailAddress(guid2, "personal@example.com", EmailAddressType.Personal),
                     true)),
                 new ContactCommandExecutedEvent(guid0, new DateTime(2021, 7, 1), new AddContactAddress(guid1,
-                    new Address(guid2, "123 Main St.", "Apt. A", "Smallville", guid3, "12345", guid4),
+                    new Address(guid2, "123 Main St.", "Apt. A", "Smallville", "NY", "12345", "United States"),
                     true)),
                 new ContactCommandExecutedEvent(guid0, new DateTime(2021, 7, 1), new UpdateContactAddress(guid1,
-                    new Address(guid3, "456 Old Ave.", null, "Bigtown", guid4, "67890", guid4),
+                    new Address(guid3, "456 Old Ave.", null, "Bigtown", "TX", "67890", "United States"),
                     false)),
                 new ContactCommandExecutedEvent(guid0, new DateTime(2021, 7, 1), new AddContactPhoneNumber(guid1,
                     new PhoneNumber(guid3, "1235555555", PhoneNumberType.Home),
@@ -132,6 +132,36 @@ namespace CareTogether.TestData
                     new EmailAddress(guid2, "personal@example.com", EmailAddressType.Personal),
                     false)),
                 new ContactCommandExecutedEvent(guid0, new DateTime(2021, 7, 1), new UpdateContactMethodPreferenceNotes(guid1,
+                    "Cannot receive voicemails")),
+                new ContactCommandExecutedEvent(guid0, new DateTime(2021, 8, 1), new CreateContact(guid4, "Test contact info that was copy-pasted")),
+                new ContactCommandExecutedEvent(guid0, new DateTime(2021, 8, 1), new AddContactAddress(guid4,
+                    new Address(guid3, "456 Old Ave.", null, "Bigtown", "TX", "67890", "United States"),
+                    true)),
+                new ContactCommandExecutedEvent(guid0, new DateTime(2021, 8, 1), new AddContactPhoneNumber(guid4,
+                    new PhoneNumber(guid2, "1235554567", PhoneNumberType.Mobile),
+                    true)),
+                new ContactCommandExecutedEvent(guid0, new DateTime(2021, 8, 1), new AddContactEmailAddress(guid4,
+                    new EmailAddress(guid2, "personal@example.com", EmailAddressType.Personal),
+                    true)),
+                new ContactCommandExecutedEvent(guid0, new DateTime(2021, 8, 1), new AddContactAddress(guid4,
+                    new Address(guid2, "123 Main St.", "Apt. A", "Smallville", "NY", "12345", "United States"),
+                    true)),
+                new ContactCommandExecutedEvent(guid0, new DateTime(2021, 8, 1), new UpdateContactAddress(guid4,
+                    new Address(guid3, "456 Old Ave.", null, "Bigtown", "TX", "67890", "United States"),
+                    false)),
+                new ContactCommandExecutedEvent(guid0, new DateTime(2021, 8, 1), new AddContactPhoneNumber(guid4,
+                    new PhoneNumber(guid3, "1235555555", PhoneNumberType.Home),
+                    true)),
+                new ContactCommandExecutedEvent(guid0, new DateTime(2021, 8, 1), new UpdateContactPhoneNumber(guid4,
+                    new PhoneNumber(guid2, "1235554567", PhoneNumberType.Mobile),
+                    false)),
+                new ContactCommandExecutedEvent(guid0, new DateTime(2021, 8, 1), new AddContactEmailAddress(guid4,
+                    new EmailAddress(guid3, "work@example.com", EmailAddressType.Work),
+                    true)),
+                new ContactCommandExecutedEvent(guid0, new DateTime(2021, 8, 1), new UpdateContactEmailAddress(guid4,
+                    new EmailAddress(guid2, "personal@example.com", EmailAddressType.Personal),
+                    false)),
+                new ContactCommandExecutedEvent(guid0, new DateTime(2021, 8, 1), new UpdateContactMethodPreferenceNotes(guid4,
                     "Cannot receive voicemails")));
         }
 
@@ -385,54 +415,54 @@ namespace CareTogether.TestData
                 new VolunteerPolicy(
                     new Dictionary<string, VolunteerRolePolicy>
                     {
-                        ["Family Friend"] = new VolunteerRolePolicy("Family Friend", CurrentVersion: "v2", ApprovalRequirementsByPolicyVersion: new Dictionary<string, ImmutableList<VolunteerApprovalRequirement>>
+                        ["Family Friend"] = new VolunteerRolePolicy("Family Friend", PolicyVersions: new List<VolunteerRolePolicyVersion>
                         {
-                            ["v1"] = new List<VolunteerApprovalRequirement>
+                            new VolunteerRolePolicyVersion("v1", new DateTime(2021, 10, 1), new List<VolunteerApprovalRequirement>
                             {
                                 new VolunteerApprovalRequirement(RequirementStage.Application, "Family Friend Application"),
                                 new VolunteerApprovalRequirement(RequirementStage.Approval, "Background Check")
-                            }.ToImmutableList(),
-                            ["v2"] = new List<VolunteerApprovalRequirement>
+                            }.ToImmutableList()),
+                            new VolunteerRolePolicyVersion("v2", null, new List<VolunteerApprovalRequirement>
                             {
                                 new VolunteerApprovalRequirement(RequirementStage.Application, "Family Friend Application"),
                                 new VolunteerApprovalRequirement(RequirementStage.Approval, "Comprehensive Background Check")
-                            }.ToImmutableList()
-                        }.ToImmutableDictionary()),
-                        ["Family Coach"] = new VolunteerRolePolicy("Family Coach", CurrentVersion: "v2", ApprovalRequirementsByPolicyVersion: new Dictionary<string, ImmutableList<VolunteerApprovalRequirement>>
+                            }.ToImmutableList())
+                        }.ToImmutableList()),
+                        ["Family Coach"] = new VolunteerRolePolicy("Family Coach", PolicyVersions: new List<VolunteerRolePolicyVersion>
                         {
-                            ["v1"] = new List<VolunteerApprovalRequirement>
+                            new VolunteerRolePolicyVersion("v1", new DateTime(2021, 10, 1), new List<VolunteerApprovalRequirement>
                             {
                                 new VolunteerApprovalRequirement(RequirementStage.Application, "Family Coach Application"),
                                 new VolunteerApprovalRequirement(RequirementStage.Approval, "Background Check"),
                                 new VolunteerApprovalRequirement(RequirementStage.Approval, "Interview with Family Coach Supervisor")
-                            }.ToImmutableList(),
-                            ["v2"] = new List<VolunteerApprovalRequirement>
+                            }.ToImmutableList()),
+                            new VolunteerRolePolicyVersion("v2", null, new List<VolunteerApprovalRequirement>
                             {
                                 new VolunteerApprovalRequirement(RequirementStage.Application, "Family Coach Application"),
                                 new VolunteerApprovalRequirement(RequirementStage.Approval, "Comprehensive Background Check"),
                                 new VolunteerApprovalRequirement(RequirementStage.Approval, "Interview with Family Coach Supervisor")
-                            }.ToImmutableList()
-                        }.ToImmutableDictionary())
+                            }.ToImmutableList())
+                        }.ToImmutableList())
                     }.ToImmutableDictionary(),
                     new Dictionary<string, VolunteerFamilyRolePolicy>
                     {
-                        ["Host Family"] = new VolunteerFamilyRolePolicy("Host Family", CurrentVersion: "v2", ApprovalRequirementsByPolicyVersion: new Dictionary<string, ImmutableList<VolunteerFamilyApprovalRequirement>>
+                        ["Host Family"] = new VolunteerFamilyRolePolicy("Host Family", PolicyVersions: new List<VolunteerFamilyRolePolicyVersion>
                         {
-                            ["v1"] = new List<VolunteerFamilyApprovalRequirement>
+                            new VolunteerFamilyRolePolicyVersion("v1", new DateTime(2021, 10, 1), new List<VolunteerFamilyApprovalRequirement>
                             {
                                 new VolunteerFamilyApprovalRequirement(RequirementStage.Application, "Host Family Application", VolunteerFamilyRequirementScope.OncePerFamily),
                                 new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Background Check", VolunteerFamilyRequirementScope.AllAdultsInTheFamily),
                                 new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Home Screening Checklist", VolunteerFamilyRequirementScope.OncePerFamily),
                                 new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Host Family Interview", VolunteerFamilyRequirementScope.OncePerFamily)
-                            }.ToImmutableList(),
-                            ["v2"] = new List<VolunteerFamilyApprovalRequirement>
+                            }.ToImmutableList()),
+                            new VolunteerFamilyRolePolicyVersion("v2", null, new List<VolunteerFamilyApprovalRequirement>
                             {
                                 new VolunteerFamilyApprovalRequirement(RequirementStage.Application, "Host Family Application", VolunteerFamilyRequirementScope.OncePerFamily),
                                 new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Comprehensive Background Check", VolunteerFamilyRequirementScope.AllAdultsInTheFamily),
                                 new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Home Screening Checklist", VolunteerFamilyRequirementScope.OncePerFamily),
                                 new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Host Family Interview", VolunteerFamilyRequirementScope.OncePerFamily)
-                            }.ToImmutableList()
-                        }.ToImmutableDictionary())
+                            }.ToImmutableList())
+                        }.ToImmutableList())
                     }.ToImmutableDictionary())));
         }
 

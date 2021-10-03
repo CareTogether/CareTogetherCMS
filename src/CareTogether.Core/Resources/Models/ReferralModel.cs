@@ -105,7 +105,11 @@ namespace CareTogether.Resources.Models
                 Event: new ReferralCommandExecuted(userId, timestampUtc, command),
                 SequenceNumber: LastKnownSequenceNumber + 1,
                 ReferralEntry: referralEntryToUpsert,
-                OnCommit: () => referrals = referrals.SetItem(referralEntryToUpsert.Id, referralEntryToUpsert));
+                OnCommit: () =>
+                {
+                    LastKnownSequenceNumber++;
+                    referrals = referrals.SetItem(referralEntryToUpsert.Id, referralEntryToUpsert);
+                });
         }
 
         public (ArrangementCommandExecuted Event, long SequenceNumber, ReferralEntry ReferralEntry, Action OnCommit)
@@ -184,7 +188,11 @@ namespace CareTogether.Resources.Models
                 Event: new ArrangementCommandExecuted(userId, timestampUtc, command),
                 SequenceNumber: LastKnownSequenceNumber + 1,
                 ReferralEntry: referralEntryToUpsert,
-                OnCommit: () => referrals = referrals.SetItem(referralEntryToUpsert.Id, referralEntryToUpsert));
+                OnCommit: () =>
+                {
+                    LastKnownSequenceNumber++;
+                    referrals = referrals.SetItem(referralEntryToUpsert.Id, referralEntryToUpsert);
+                });
         }
 
         public (ArrangementNoteCommandExecuted Event, long SequenceNumber, ReferralEntry ReferralEntry, Action OnCommit)
@@ -240,7 +248,11 @@ namespace CareTogether.Resources.Models
                 Event: new ArrangementNoteCommandExecuted(userId, timestampUtc, command),
                 SequenceNumber: LastKnownSequenceNumber + 1,
                 ReferralEntry: referralEntryToUpsert,
-                OnCommit: () => referrals = referrals.SetItem(referralEntryToUpsert.Id, referralEntryToUpsert));
+                OnCommit: () =>
+                {
+                    LastKnownSequenceNumber++;
+                    referrals = referrals.SetItem(referralEntryToUpsert.Id, referralEntryToUpsert);
+                });
                 //TODO: Implement -- requires coordination with underlying resource service via emitting IFormsResource commands
                 //      (which are not executed by the ReferralModel but by its caller, the ReferralManager, in non-replay scenarios).
         }

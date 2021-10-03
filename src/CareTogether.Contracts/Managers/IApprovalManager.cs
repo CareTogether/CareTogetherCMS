@@ -12,7 +12,8 @@ namespace CareTogether.Managers
         ImmutableList<FormUploadInfo> ApprovalFormUploads,
         ImmutableList<ActivityInfo> ApprovalActivitiesPerformed,
         ImmutableDictionary<(string Role, string Version), RoleApprovalStatus> FamilyRoleApprovals,
-        ImmutableDictionary<Guid, Volunteer> IndividualVolunteers);
+        ImmutableDictionary<Guid, Volunteer> IndividualVolunteers,
+        ImmutableDictionary<Guid, ContactInfo> ContactInfo);
 
     public sealed record Volunteer(
         ImmutableList<FormUploadInfo> ApprovalFormUploads,
@@ -23,11 +24,13 @@ namespace CareTogether.Managers
     public abstract partial record ApprovalCommand();
     public sealed record CreateVolunteerFamilyWithNewAdultCommand(
         string FirstName, string LastName, Gender Gender, Age Age, string Ethnicity,
-        FamilyAdultRelationshipInfo FamilyAdultRelationshipInfo, string? Concerns, string? Notes)
+        FamilyAdultRelationshipInfo FamilyAdultRelationshipInfo, string? Concerns, string? Notes,
+        Address Address, PhoneNumber PhoneNumber, EmailAddress EmailAddress)
         : ApprovalCommand;
     public sealed record AddAdultToFamilyCommand(Guid FamilyId,
         string FirstName, string LastName, Gender Gender, Age Age, string Ethnicity,
-        FamilyAdultRelationshipInfo FamilyAdultRelationshipInfo, string? Concerns, string? Notes)
+        FamilyAdultRelationshipInfo FamilyAdultRelationshipInfo, string? Concerns, string? Notes,
+        Address? Address, PhoneNumber? PhoneNumber, EmailAddress? EmailAddress)
         : ApprovalCommand;
     public sealed record AddChildToFamilyCommand(Guid FamilyId,
         string FirstName, string LastName, Gender Gender, Age Age, string Ethnicity,

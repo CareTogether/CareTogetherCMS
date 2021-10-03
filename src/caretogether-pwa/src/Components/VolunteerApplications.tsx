@@ -42,8 +42,7 @@ function VolunteerApplications() {
     policy.volunteerPolicy?.volunteerFamilyRoles
     ? Object.entries(policy.volunteerPolicy.volunteerFamilyRoles)
       .reduce((previous, [, value]) =>
-        previous.concat((value.approvalRequirementsByPolicyVersion &&
-          Object.entries(value.approvalRequirementsByPolicyVersion).map(([version, requirements]) => requirements).flat()) || []),
+        previous.concat((value.policyVersions?.map(policyVersion => policyVersion.requirements || []).flat()) || []),
         [] as VolunteerFamilyApprovalRequirement[])
         : ([] as VolunteerFamilyApprovalRequirement[]);
 
@@ -89,8 +88,7 @@ function VolunteerApplications() {
     policy.volunteerPolicy?.volunteerRoles
     ? Object.entries(policy.volunteerPolicy.volunteerRoles)
       .reduce((previous, [, value]) =>
-        previous.concat((value.approvalRequirementsByPolicyVersion &&
-          Object.entries(value.approvalRequirementsByPolicyVersion).map(([version, requirements]) => requirements).flat()) || []),
+        previous.concat((value.policyVersions?.map(policyVersion => policyVersion.requirements || []).flat()) || []),
         [] as VolunteerApprovalRequirement[])
         : ([] as VolunteerApprovalRequirement[]);
   const allIndividualDocumentRequirements = allIndividualRequirements

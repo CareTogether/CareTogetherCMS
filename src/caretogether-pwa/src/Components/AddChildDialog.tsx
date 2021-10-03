@@ -107,7 +107,7 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
             <Grid item xs={12}>
               <FormControl required component="fieldset">
                 <FormLabel component="legend">Gender:</FormLabel>
-                <RadioGroup aria-label="ageType" name="genderType" row
+                <RadioGroup aria-label="genderType" name="genderType" row
                   value={gender == null ? null : Gender[gender]} onChange={e => setFields({...fields, gender: Gender[e.target.value as keyof typeof Gender]})}>
                   <FormControlLabel value={Gender[Gender.Male]} control={<Radio size="small" />} label="Male" />
                   <FormControlLabel value={Gender[Gender.Female]} control={<Radio size="small" />} label="Female" />
@@ -195,7 +195,7 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
               <TextField
                 id="concerns"
                 label="Concerns" placeholder="Note any safety risks, allergies, etc."
-                multiline fullWidth variant="outlined" rows={2} rowsMax={5} size="small"
+                multiline fullWidth variant="outlined" minRows={2} maxRows={5} size="small"
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -210,7 +210,7 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
               <TextField
                 id="notes"
                 label="Notes" placeholder="Space for any general notes"
-                multiline fullWidth variant="outlined" rows={2} rowsMax={5} size="small"
+                multiline fullWidth variant="outlined" minRows={2} maxRows={5} size="small"
                 value={notes == null ? "" : notes} onChange={e => setFields({...fields, notes: e.target.value})}
               />
             </Grid>
