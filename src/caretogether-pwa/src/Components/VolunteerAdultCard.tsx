@@ -10,6 +10,8 @@ import { volunteerFamiliesData } from "../Model/VolunteerFamiliesModel";
 import { RecordVolunteerAdultStepDialog } from "./RecordVolunteerAdultStepDialog";
 import { adultDocumentTypesData, adultActivityTypesData } from "../Model/ConfigurationModel";
 import { RenamePersonDialog } from "./RenamePersonDialog";
+import { UpdateConcernsDialog } from "./UpdateConcernsDialog";
+import { UpdateNotesDialog } from "./UpdateNotesDialog";
 import { ContactDisplay } from "./ContactDisplay";
 import { CardInfoRow } from "./CardInfoRow";
 
@@ -75,6 +77,16 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
   function selectChangeName(adult: Person) {
     setAdultMoreMenuAnchor(null);
     setRenamePersonParameter({volunteerFamilyId, person: adult});
+  }
+  const [updateConcernsParameter, setUpdateConcernsParameter] = useState<{volunteerFamilyId: string, person: Person} | null>(null);
+  function selectUpdateConcerns(adult: Person) {
+    setAdultMoreMenuAnchor(null);
+    setUpdateConcernsParameter({volunteerFamilyId, person: adult});
+  }
+  const [updateNotesParameter, setUpdateNotesParameter] = useState<{volunteerFamilyId: string, person: Person} | null>(null);
+  function selectUpdateNotes(adult: Person) {
+    setAdultMoreMenuAnchor(null);
+    setUpdateNotesParameter({volunteerFamilyId, person: adult});
   }
   
   const theme = useTheme();
@@ -172,8 +184,18 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectChangeName(adultMoreMenuAnchor.adult)}>
           <ListItemText primary="Change name" />
         </MenuItem>
+        <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectUpdateConcerns(adultMoreMenuAnchor.adult)}>
+          <ListItemText primary="Update concerns" />
+        </MenuItem>
+        <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectUpdateNotes(adultMoreMenuAnchor.adult)}>
+          <ListItemText primary="Update notes" />
+        </MenuItem>
       </Menu>
       {(renamePersonParameter && <RenamePersonDialog volunteerFamilyId={volunteerFamilyId} person={renamePersonParameter.person}
         onClose={() => setRenamePersonParameter(null)} />) || null}
+      {(updateConcernsParameter && <UpdateConcernsDialog volunteerFamilyId={volunteerFamilyId} person={updateConcernsParameter.person}
+        onClose={() => setUpdateConcernsParameter(null)} />) || null}
+      {(updateNotesParameter && <UpdateNotesDialog volunteerFamilyId={volunteerFamilyId} person={updateNotesParameter.person}
+        onClose={() => setUpdateNotesParameter(null)} />) || null}
     </Card>}</>);
 }

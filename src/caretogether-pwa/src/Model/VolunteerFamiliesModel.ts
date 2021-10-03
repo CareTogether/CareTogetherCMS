@@ -1,5 +1,5 @@
 import { atom, useRecoilCallback } from "recoil";
-import { ActivityRequirement, AddAdultToFamilyCommand, AddChildToFamilyCommand, Address, Age, ApprovalCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, FormUploadRequirement, Gender, PerformVolunteerActivity, PerformVolunteerFamilyActivity, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonName, UploadVolunteerFamilyForm, UploadVolunteerForm, VolunteerCommand, VolunteerFamiliesClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
+import { ActivityRequirement, AddAdultToFamilyCommand, AddChildToFamilyCommand, Address, Age, ApprovalCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, FormUploadRequirement, Gender, PerformVolunteerActivity, PerformVolunteerFamilyActivity, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonConcerns, UpdatePersonName, UpdatePersonNotes, UploadVolunteerFamilyForm, UploadVolunteerForm, VolunteerCommand, VolunteerFamiliesClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { uploadFileToTenant } from "./FilesModel";
@@ -171,6 +171,22 @@ export function useVolunteerFamiliesModel() {
       command.lastName = lastName;
       return command;
     });
+  const updatePersonConcerns = usePersonCommandCallback(
+    async (volunteerFamilyId, personId, concerns: string | null) => {
+      const command = new UpdatePersonConcerns({
+        personId: personId
+      });
+      command.concerns = concerns || undefined;
+      return command;
+    });
+  const updatePersonNotes = usePersonCommandCallback(
+    async (volunteerFamilyId, personId, notes: string | null) => {
+      const command = new UpdatePersonNotes({
+        personId: personId
+      });
+      command.notes = notes || undefined;
+      return command;
+    });
   const addAdult = useApprovalCommandCallback(
     async (volunteerFamilyId, firstName: string, lastName: string, gender: Gender, age: Age, ethnicity: string,
         isInHousehold: boolean, relationshipToFamily: string,
@@ -267,6 +283,8 @@ export function useVolunteerFamiliesModel() {
     uploadFormPerson,
     performActivityPerson,
     updatePersonName,
+    updatePersonConcerns,
+    updatePersonNotes,
     addAdult,
     addChild,
     createVolunteerFamilyWithNewAdult
