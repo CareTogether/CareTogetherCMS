@@ -9,10 +9,12 @@ namespace CareTogether.Engines
 {
     public sealed record VolunteerFamilyApprovalStatus(
         ImmutableDictionary<(string Role, string Version), RoleApprovalStatus> FamilyRoleApprovals,
+        ImmutableList<string> MissingFamilyRequirements,
         ImmutableDictionary<Guid, VolunteerApprovalStatus> IndividualVolunteers);
 
     public sealed record VolunteerApprovalStatus(
-        ImmutableDictionary<(string Role, string Version), RoleApprovalStatus> IndividualRoleApprovals);
+        ImmutableDictionary<(string Role, string Version), RoleApprovalStatus> IndividualRoleApprovals,
+        ImmutableList<string> MissingIndividualRequirements);
 
     public interface IPolicyEvaluationEngine
     {

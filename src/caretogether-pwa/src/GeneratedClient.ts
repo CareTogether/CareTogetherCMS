@@ -3920,6 +3920,7 @@ export class VolunteerFamily implements IVolunteerFamily {
     family?: Family;
     completedRequirements?: CompletedRequirementInfo[];
     uploadedDocuments?: UploadedDocumentInfo[];
+    missingRequirements?: string[];
     familyRoleApprovals?: { [key: string]: RoleApprovalStatus; };
     individualVolunteers?: { [key: string]: Volunteer; };
     contactInfo?: { [key: string]: ContactInfo; };
@@ -3945,6 +3946,11 @@ export class VolunteerFamily implements IVolunteerFamily {
                 this.uploadedDocuments = [] as any;
                 for (let item of _data["uploadedDocuments"])
                     this.uploadedDocuments!.push(UploadedDocumentInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["missingRequirements"])) {
+                this.missingRequirements = [] as any;
+                for (let item of _data["missingRequirements"])
+                    this.missingRequirements!.push(item);
             }
             if (_data["familyRoleApprovals"]) {
                 this.familyRoleApprovals = {} as any;
@@ -3990,6 +3996,11 @@ export class VolunteerFamily implements IVolunteerFamily {
             for (let item of this.uploadedDocuments)
                 data["uploadedDocuments"].push(item.toJSON());
         }
+        if (Array.isArray(this.missingRequirements)) {
+            data["missingRequirements"] = [];
+            for (let item of this.missingRequirements)
+                data["missingRequirements"].push(item);
+        }
         if (this.familyRoleApprovals) {
             data["familyRoleApprovals"] = {};
             for (let key in this.familyRoleApprovals) {
@@ -4019,6 +4030,7 @@ export interface IVolunteerFamily {
     family?: Family;
     completedRequirements?: CompletedRequirementInfo[];
     uploadedDocuments?: UploadedDocumentInfo[];
+    missingRequirements?: string[];
     familyRoleApprovals?: { [key: string]: RoleApprovalStatus; };
     individualVolunteers?: { [key: string]: Volunteer; };
     contactInfo?: { [key: string]: ContactInfo; };
@@ -4132,6 +4144,7 @@ export enum RoleApprovalStatus {
 
 export class Volunteer implements IVolunteer {
     completedRequirements?: CompletedRequirementInfo[];
+    missingRequirements?: string[];
     individualRoleApprovals?: { [key: string]: RoleApprovalStatus; };
 
     constructor(data?: IVolunteer) {
@@ -4149,6 +4162,11 @@ export class Volunteer implements IVolunteer {
                 this.completedRequirements = [] as any;
                 for (let item of _data["completedRequirements"])
                     this.completedRequirements!.push(CompletedRequirementInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["missingRequirements"])) {
+                this.missingRequirements = [] as any;
+                for (let item of _data["missingRequirements"])
+                    this.missingRequirements!.push(item);
             }
             if (_data["individualRoleApprovals"]) {
                 this.individualRoleApprovals = {} as any;
@@ -4174,6 +4192,11 @@ export class Volunteer implements IVolunteer {
             for (let item of this.completedRequirements)
                 data["completedRequirements"].push(item.toJSON());
         }
+        if (Array.isArray(this.missingRequirements)) {
+            data["missingRequirements"] = [];
+            for (let item of this.missingRequirements)
+                data["missingRequirements"].push(item);
+        }
         if (this.individualRoleApprovals) {
             data["individualRoleApprovals"] = {};
             for (let key in this.individualRoleApprovals) {
@@ -4187,6 +4210,7 @@ export class Volunteer implements IVolunteer {
 
 export interface IVolunteer {
     completedRequirements?: CompletedRequirementInfo[];
+    missingRequirements?: string[];
     individualRoleApprovals?: { [key: string]: RoleApprovalStatus; };
 }
 

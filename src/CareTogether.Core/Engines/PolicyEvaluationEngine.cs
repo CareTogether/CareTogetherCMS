@@ -73,6 +73,7 @@ namespace CareTogether.Engines
             {
                 var (person, familyRelationship) = x;
                 var individualRoles = new Dictionary<(string Role, string Version), RoleApprovalStatus>();
+                var missingRequirements = new List<string>();
 
                 if (completedIndividualRequirements.TryGetValue(person.Id, out var completedRequirements))
                 {
@@ -98,10 +99,11 @@ namespace CareTogether.Engines
                         }
                     }
                 }
-                return (person.Id, new VolunteerApprovalStatus(individualRoles.ToImmutableDictionary()));
+                return (person.Id, new VolunteerApprovalStatus(individualRoles.ToImmutableDictionary(), missingRequirements.ToImmutableList()));
             }).ToImmutableDictionary(x => x.Item1, x => x.Item2);
 
             var familyRoles = new Dictionary<(string Role, string Version), RoleApprovalStatus>();
+            var missingRequirements = new List<string>();
             foreach (var (roleName, rolePolicy) in policy.VolunteerPolicy.VolunteerFamilyRoles)
             {
                 foreach (var policyVersion in rolePolicy.PolicyVersions)
@@ -137,6 +139,7 @@ namespace CareTogether.Engines
 
             return new VolunteerFamilyApprovalStatus(
                 familyRoles.ToImmutableDictionary(),
+                missingRequirements.ToImmutableList(),
                 individualVolunteerRoles);
         }
 
