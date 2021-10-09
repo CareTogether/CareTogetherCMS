@@ -69,6 +69,9 @@ namespace CareTogether.Engines
         {
             var policy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
 
+            var missingFamilyRequirements = new HashSet<string>();
+            var missingIndividualRequirements = new Dictionary<Guid, HashSet<string>>();
+
             var individualVolunteerRoles = family.Adults.Select(x =>
             {
                 var (person, familyRelationship) = x;
@@ -109,11 +112,11 @@ namespace CareTogether.Engines
                         }
                     }
                 }
-                return (person.Id, new VolunteerApprovalStatus(individualRoles.ToImmutableDictionary(), missingRequirements.ToImmutableList()));
+                missingIndividualRequirements[person.Id] = missingRequirements;
+                return (person.Id, new VolunteerApprovalStatus(individualRoles.ToImmutableDictionary(), ImmutableList<string>.Empty));
             }).ToImmutableDictionary(x => x.Item1, x => x.Item2);
 
             var familyRoles = new Dictionary<(string Role, string Version), RoleApprovalStatus>();
-            var missingFamilyRequirements = new HashSet<string>();
             foreach (var (roleName, rolePolicy) in policy.VolunteerPolicy.VolunteerFamilyRoles)
             {
                 foreach (var policyVersion in rolePolicy.PolicyVersions)
@@ -122,7 +125,7 @@ namespace CareTogether.Engines
                     var supersededAtUtc = policyVersion.SupersededAtUtc;
 
                     var requirementsMet = policyVersion.Requirements.Select(requirement =>
-                        (requirement.ActionName, requirement.Stage, RequirementMet: requirement.Scope switch
+                        (requirement.ActionName, requirement.Stage, requirement.Scope, RequirementMet: requirement.Scope switch
                         {
                             VolunteerFamilyRequirementScope.AllAdultsInTheFamily => family.Adults.All(a =>
                             {
@@ -136,6 +139,18 @@ namespace CareTogether.Engines
                                 (supersededAtUtc == null || x.CompletedAtUtc < supersededAtUtc)),
                             _ => throw new NotImplementedException(
                                 $"The volunteer family requirement scope '{requirement.Scope}' has not been implemented.")
+                        }, RequirementMissingForIndividuals: requirement.Scope switch
+                        {
+                            VolunteerFamilyRequirementScope.AllAdultsInTheFamily => family.Adults.Where(a =>
+                            {
+                                var (person, familyRelationship) = a;
+                                return !completedIndividualRequirements.TryGetValue(person.Id, out var completedRequirements)
+                                    || !completedRequirements.Any(x => x.RequirementName == requirement.ActionName &&
+                                    (supersededAtUtc == null || x.CompletedAtUtc < supersededAtUtc));
+                            }).Select(a => a.Item1.Id).ToList(),
+                            VolunteerFamilyRequirementScope.OncePerFamily => new List<Guid>(),
+                            _ => throw new NotImplementedException(
+                                $"The volunteer family requirement scope '{requirement.Scope}' has not been implemented.")
                         })).ToList();
 
                     if (requirementsMet.All(x => x.RequirementMet))
@@ -144,15 +159,25 @@ namespace CareTogether.Engines
                     {
                         familyRoles[(roleName, version)] = RoleApprovalStatus.Approved;
                         missingFamilyRequirements.UnionWith(requirementsMet
-                            .Where(x => !x.RequirementMet && x.Stage == RequirementStage.Onboarding)
+                            .Where(x => !x.RequirementMet && x.Stage == RequirementStage.Onboarding
+                                && x.Scope == VolunteerFamilyRequirementScope.OncePerFamily)
                             .Select(x => x.ActionName));
+                        foreach (var (PersonId, ActionName) in requirementsMet
+                            .Where(x => x.Stage == RequirementStage.Onboarding)
+                            .SelectMany(x => x.RequirementMissingForIndividuals.Select(y => (PersonId: y, x.ActionName))))
+                            missingIndividualRequirements[PersonId].Add(ActionName);
                     }
                     else if (requirementsMet.Where(x => x.Stage == RequirementStage.Application).All(x => x.RequirementMet))
                     {
                         familyRoles[(roleName, version)] = RoleApprovalStatus.Prospective;
                         missingFamilyRequirements.UnionWith(requirementsMet
-                            .Where(x => !x.RequirementMet && x.Stage == RequirementStage.Approval)
+                            .Where(x => !x.RequirementMet && x.Stage == RequirementStage.Approval
+                                && x.Scope == VolunteerFamilyRequirementScope.OncePerFamily)
                             .Select(x => x.ActionName));
+                        foreach (var (PersonId, ActionName) in requirementsMet
+                            .Where(x => x.Stage == RequirementStage.Approval)
+                            .SelectMany(x => x.RequirementMissingForIndividuals.Select(y => (PersonId: y, x.ActionName))))
+                            missingIndividualRequirements[PersonId].Add(ActionName);
                     }
                 }
             }
@@ -160,7 +185,9 @@ namespace CareTogether.Engines
             return new VolunteerFamilyApprovalStatus(
                 familyRoles.ToImmutableDictionary(),
                 missingFamilyRequirements.ToImmutableList(),
-                individualVolunteerRoles);
+                individualVolunteerRoles.ToImmutableDictionary(
+                    x => x.Key,
+                    x => x.Value with { MissingIndividualRequirements = missingIndividualRequirements[x.Key].ToImmutableList() }));
         }
 
         public async Task<Arrangement> DiscloseArrangementAsync(ClaimsPrincipal user, Arrangement arrangement)
