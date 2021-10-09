@@ -125,27 +125,48 @@ export function VolunteerFamilyScreen() {
       {addAdultDialogOpen && <AddAdultDialog onClose={() => setAddAdultDialogOpen(false)} />}
       {addChildDialogOpen && <AddChildDialog onClose={() => setAddChildDialogOpen(false)} />}
     </Toolbar>
-    <div className={classes.sectionChips}>
-      {Object.entries(volunteerFamily.familyRoleApprovals || {}).map(([role, approvalStatus]) => (
-        <Chip key={role} size="small" color={approvalStatus === RoleApprovalStatus.Onboarded ? "primary" : "secondary"}
-          label={RoleApprovalStatus[approvalStatus] + " " + role} />
-      ))}
-    </div>
-    <ul className={classes.familyDocumentsList}>
-      {volunteerFamily.uploadedDocuments?.map((uploaded, i) => (
-        <li key={i}>📃 {uploaded.uploadedFileName} {uploaded.timestampUtc && format(uploaded.timestampUtc, "MM/dd/yyyy hh:mm aa")}</li>
-      ))}
-    </ul>
-    <ul className={classes.familyRequirementsList}>
-      {volunteerFamily.completedRequirements?.map((completed, i) => (
-        <li key={i}>✅ {completed.requirementName} {completed.completedAtUtc && format(completed.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</li>
-      ))}
-    </ul>
-    <ul className={classes.familyRequirementsList}>
-      {volunteerFamily.missingRequirements?.map((missingRequirementName, i) => (
-        <li key={i}>❌ {missingRequirementName}</li>
-      ))}
-    </ul>
+    <Grid container spacing={0}>
+      <Grid item xs={12}>
+        <div className={classes.sectionChips}>
+          {Object.entries(volunteerFamily.familyRoleApprovals || {}).map(([role, approvalStatus]) => (
+            <Chip key={role} size="small" color={approvalStatus === RoleApprovalStatus.Onboarded ? "primary" : "secondary"}
+              label={RoleApprovalStatus[approvalStatus] + " " + role} />
+          ))}
+        </div>
+      </Grid>
+      <Grid item xs={12} sm={6} md={4}>
+        <h3>Missing</h3>
+        <ul className={classes.familyRequirementsList}>
+          {volunteerFamily.missingRequirements?.map((missingRequirementName, i) => (
+            <li key={i}>
+              ❌ {missingRequirementName}
+            </li>
+          ))}
+        </ul>
+      </Grid>
+      <Grid item xs={12} sm={6} md={4}>
+        <h3>Completed</h3>
+        <ul className={classes.familyRequirementsList}>
+          {volunteerFamily.completedRequirements?.map((completed, i) => (
+            <li key={i}>
+              ✅ {completed.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              {completed.completedAtUtc && <span style={{float:'right',marginRight:20}}>{format(completed.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
+            </li>
+          ))}
+        </ul>
+      </Grid>
+      <Grid item xs={12} sm={6} md={4}>
+        <h3>Documents</h3>
+        <ul className={classes.familyDocumentsList}>
+          {volunteerFamily.uploadedDocuments?.map((uploaded, i) => (
+            <li key={i}>
+              📃 {uploaded.uploadedFileName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              {uploaded.timestampUtc && <span style={{float:'right',marginRight:20}}>{format(uploaded.timestampUtc, "MM/dd/yyyy hh:mm aa")}</span>}
+            </li>
+          ))}
+        </ul>
+      </Grid>
+    </Grid>
     <Grid container spacing={2}>
       {volunteerFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item2 && (
         <Grid item key={adult.item1.id}>
