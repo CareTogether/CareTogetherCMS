@@ -123,11 +123,20 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
           <ul className={classes.cardList}>
             {volunteerFamily.individualVolunteers?.[adult.item1.id].completedRequirements?.map((completed, i) => (
               <li key={i}>
-                <CardInfoRow icon='▸'>
+                <CardInfoRow icon='✅'>
                   {completed.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                   {completed.completedAtUtc && <span style={{float:'right'}}>{format(completed.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
                 </CardInfoRow>
               </li>
+            ))}
+          </ul>
+          <ul className={classes.cardList}>
+            {volunteerFamily.individualVolunteers?.[adult.item1.id].missingRequirements?.map((missingRequirementName, i) => (
+              <li key={i}>
+              <CardInfoRow icon='❌'>
+                {missingRequirementName}
+              </CardInfoRow>
+            </li>
             ))}
           </ul>
         </Typography>

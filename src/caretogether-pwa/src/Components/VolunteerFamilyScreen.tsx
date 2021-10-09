@@ -30,6 +30,10 @@ const useStyles = makeStyles((theme) => ({
   button: {
     margin: theme.spacing(1),
   },
+  familyRequirementsList: {
+    listStyle: 'none',
+    paddingLeft: 0
+  },
   card: {
     minWidth: 275,
   },
@@ -123,9 +127,14 @@ export function VolunteerFamilyScreen() {
           label={RoleApprovalStatus[approvalStatus] + " " + role} />
       ))}
     </div>
-    <ul>
+    <ul className={classes.familyRequirementsList}>
       {volunteerFamily.completedRequirements?.map((completed, i) => (
-        <li key={i}>{completed.requirementName} {completed.completedAtUtc && format(completed.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</li>
+        <li key={i}>✅ {completed.requirementName} {completed.completedAtUtc && format(completed.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</li>
+      ))}
+    </ul>
+    <ul className={classes.familyRequirementsList}>
+      {volunteerFamily.missingRequirements?.map((missingRequirementName, i) => (
+        <li key={i}>❌ {missingRequirementName}</li>
       ))}
     </ul>
     <Grid container spacing={2}>
