@@ -184,103 +184,6 @@
         }
       }
     },
-    "/api/{organizationId}/{locationId}/People": {
-      "get": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "People_Get",
-        "parameters": [
-          {
-            "name": "organizationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          },
-          {
-            "name": "locationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 2
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Person"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/{organizationId}/{locationId}/People/{personId}": {
-      "get": {
-        "tags": [
-          "People"
-        ],
-        "operationId": "People_GetContactInfo",
-        "parameters": [
-          {
-            "name": "organizationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          },
-          {
-            "name": "locationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 2
-          },
-          {
-            "name": "personId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 3
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PersonDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/{organizationId}/{locationId}/Referrals": {
       "get": {
         "tags": [
@@ -1235,6 +1138,120 @@
           }
         }
       },
+      "Referral": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
+          "policyVersion": {
+            "type": "string"
+          },
+          "createdUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "closeReason": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReferralCloseReason"
+              }
+            ]
+          },
+          "partneringFamily": {
+            "$ref": "#/components/schemas/Family"
+          },
+          "contacts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContactInfo"
+            }
+          },
+          "referralFormUploads": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FormUploadInfo"
+            }
+          },
+          "referralActivitiesPerformed": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActivityInfo"
+            }
+          },
+          "arrangements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Arrangement"
+            }
+          }
+        }
+      },
+      "ReferralCloseReason": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "NotAppropriate",
+          "Resourced",
+          "NoCapacity",
+          "NoLongerNeeded",
+          "NeedMet"
+        ],
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      "Family": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
+          "primaryFamilyContactPersonId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "adults": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValueTupleOfPersonAndFamilyAdultRelationshipInfo"
+            }
+          },
+          "children": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Person"
+            }
+          },
+          "custodialRelationships": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustodialRelationship"
+            }
+          }
+        }
+      },
+      "ValueTupleOfPersonAndFamilyAdultRelationshipInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "item1": {
+            "$ref": "#/components/schemas/Person"
+          },
+          "item2": {
+            "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
+          }
+        }
+      },
       "Person": {
         "type": "object",
         "additionalProperties": false,
@@ -1345,17 +1362,48 @@
           }
         ]
       },
-      "PersonDetails": {
+      "FamilyAdultRelationshipInfo": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "person": {
-            "$ref": "#/components/schemas/Person"
+          "relationshipToFamily": {
+            "type": "string"
           },
-          "contactInfo": {
-            "$ref": "#/components/schemas/ContactInfo"
+          "isInHousehold": {
+            "type": "boolean"
           }
         }
+      },
+      "CustodialRelationship": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "childId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "personId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CustodialRelationshipType"
+          }
+        }
+      },
+      "CustodialRelationshipType": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "ParentWithCustody",
+          "ParentWithCourtAppointedCustody",
+          "LegalGuardian"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
       },
       "ContactInfo": {
         "type": "object",
@@ -1491,163 +1539,6 @@
         "enum": [
           0,
           1
-        ]
-      },
-      "Referral": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "guid"
-          },
-          "policyVersion": {
-            "type": "string"
-          },
-          "createdUtc": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "closeReason": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/ReferralCloseReason"
-              }
-            ]
-          },
-          "partneringFamily": {
-            "$ref": "#/components/schemas/Family"
-          },
-          "contacts": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ContactInfo"
-            }
-          },
-          "referralFormUploads": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/FormUploadInfo"
-            }
-          },
-          "referralActivitiesPerformed": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ActivityInfo"
-            }
-          },
-          "arrangements": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Arrangement"
-            }
-          }
-        }
-      },
-      "ReferralCloseReason": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "NotAppropriate",
-          "Resourced",
-          "NoCapacity",
-          "NoLongerNeeded",
-          "NeedMet"
-        ],
-        "enum": [
-          0,
-          1,
-          2,
-          3,
-          4
-        ]
-      },
-      "Family": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "guid"
-          },
-          "primaryFamilyContactPersonId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "adults": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ValueTupleOfPersonAndFamilyAdultRelationshipInfo"
-            }
-          },
-          "children": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Person"
-            }
-          },
-          "custodialRelationships": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CustodialRelationship"
-            }
-          }
-        }
-      },
-      "ValueTupleOfPersonAndFamilyAdultRelationshipInfo": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "item1": {
-            "$ref": "#/components/schemas/Person"
-          },
-          "item2": {
-            "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
-          }
-        }
-      },
-      "FamilyAdultRelationshipInfo": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "relationshipToFamily": {
-            "type": "string"
-          },
-          "isInHousehold": {
-            "type": "boolean"
-          }
-        }
-      },
-      "CustodialRelationship": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "childId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "personId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "type": {
-            "$ref": "#/components/schemas/CustodialRelationshipType"
-          }
-        }
-      },
-      "CustodialRelationshipType": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "ParentWithCustody",
-          "ParentWithCourtAppointedCustody",
-          "LegalGuardian"
-        ],
-        "enum": [
-          0,
-          1,
-          2
         ]
       },
       "FormUploadInfo": {
