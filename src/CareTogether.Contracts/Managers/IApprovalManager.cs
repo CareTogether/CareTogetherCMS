@@ -9,15 +9,14 @@ using System.Threading.Tasks;
 namespace CareTogether.Managers
 {
     public sealed record VolunteerFamily(Family Family,
-        ImmutableList<FormUploadInfo> ApprovalFormUploads,
-        ImmutableList<ActivityInfo> ApprovalActivitiesPerformed,
+        ImmutableList<CompletedRequirementInfo> CompletedRequirements,
+        ImmutableList<UploadedDocumentInfo> UploadedDocuments,
         ImmutableDictionary<(string Role, string Version), RoleApprovalStatus> FamilyRoleApprovals,
         ImmutableDictionary<Guid, Volunteer> IndividualVolunteers,
         ImmutableDictionary<Guid, ContactInfo> ContactInfo);
 
     public sealed record Volunteer(
-        ImmutableList<FormUploadInfo> ApprovalFormUploads,
-        ImmutableList<ActivityInfo> ApprovalActivitiesPerformed,
+        ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableDictionary<(string Role, string Version), RoleApprovalStatus> IndividualRoleApprovals);
 
     [JsonHierarchyBase]

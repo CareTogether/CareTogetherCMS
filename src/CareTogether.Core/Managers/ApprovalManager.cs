@@ -220,29 +220,23 @@ namespace CareTogether.Managers
             ImmutableDictionary<Guid, ContactInfo> contacts)
         {
             var family = families[entry.FamilyId];
-            var individualInfo = entry.IndividualEntries.ToImmutableDictionary(
+            var completedIndividualRequirements = entry.IndividualEntries.ToImmutableDictionary(
                 x => x.Key,
-                x => (x.Value.ApprovalFormUploads, x.Value.ApprovalActivitiesPerformed));
+                x => x.Value.CompletedRequirements);
 
             var volunteerFamilyApprovalStatus = await policyEvaluationEngine.CalculateVolunteerFamilyApprovalStatusAsync(
-                organizationId, locationId, family,
-                entry.ApprovalFormUploads, entry.ApprovalActivitiesPerformed,
-                individualInfo);
+                organizationId, locationId, family, entry.CompletedRequirements, completedIndividualRequirements);
 
             return new VolunteerFamily(family,
-                entry.ApprovalFormUploads, entry.ApprovalActivitiesPerformed,
+                entry.CompletedRequirements, entry.UploadedDocuments,
                 volunteerFamilyApprovalStatus.FamilyRoleApprovals,
                 volunteerFamilyApprovalStatus.IndividualVolunteers.ToImmutableDictionary(
                     x => x.Key,
-                    x =>
-                    {
-                        if (entry.IndividualEntries.TryGetValue(x.Key, out var individualInfo))
-                            return new Volunteer(individualInfo.ApprovalFormUploads, individualInfo.ApprovalActivitiesPerformed,
-                                x.Value.IndividualRoleApprovals);
-                        else
-                            return new Volunteer(ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty,
-                                ImmutableDictionary<(string Role, string Version), RoleApprovalStatus>.Empty);
-                    }),
+                    x => entry.IndividualEntries.TryGetValue(x.Key, out var individualInfo)
+                        ? new Volunteer(individualInfo.CompletedRequirements,
+                            x.Value.IndividualRoleApprovals)
+                        : new Volunteer(ImmutableList<CompletedRequirementInfo>.Empty,
+                            ImmutableDictionary<(string Role, string Version), RoleApprovalStatus>.Empty)),
                 family.Adults.SelectMany(x => contacts.TryGetValue(x.Item1.Id, out var contactInfo)
                     ? new KeyValuePair<Guid, ContactInfo>[] { new KeyValuePair<Guid, ContactInfo>(x.Item1.Id, contactInfo) }
                     : new KeyValuePair<Guid, ContactInfo>[] { }).ToImmutableDictionary());
