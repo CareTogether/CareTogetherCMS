@@ -103,7 +103,6 @@ namespace CareTogether.TestData
         public static async Task PopulateContactEvents(IMultitenantEventLog<ContactCommandExecutedEvent> contactsEventLog)
         {
             await contactsEventLog.AppendEventsAsync(guid1, guid2,
-                new ContactCommandExecutedEvent(guid0, new DateTime(2021, 7, 1), new CreateContact(guid1, "Amy has contact details for a callback")),
                 new ContactCommandExecutedEvent(guid0, new DateTime(2021, 7, 1), new AddContactAddress(guid1,
                     new Address(guid3, "456 Old Ave.", null, "Bigtown", "TX", "67890", "United States"),
                     true)),
@@ -133,7 +132,6 @@ namespace CareTogether.TestData
                     false)),
                 new ContactCommandExecutedEvent(guid0, new DateTime(2021, 7, 1), new UpdateContactMethodPreferenceNotes(guid1,
                     "Cannot receive voicemails")),
-                new ContactCommandExecutedEvent(guid0, new DateTime(2021, 8, 1), new CreateContact(guid4, "Test contact info that was copy-pasted")),
                 new ContactCommandExecutedEvent(guid0, new DateTime(2021, 8, 1), new AddContactAddress(guid4,
                     new Address(guid3, "456 Old Ave.", null, "Bigtown", "TX", "67890", "United States"),
                     true)),

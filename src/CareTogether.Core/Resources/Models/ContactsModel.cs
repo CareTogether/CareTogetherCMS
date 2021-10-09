@@ -32,55 +32,48 @@ namespace CareTogether.Resources.Models
         public (ContactCommandExecutedEvent Event, long SequenceNumber, ContactInfo Contact, Action OnCommit)
             ExecuteContactCommand(ContactCommand command, Guid userId, DateTime timestampUtc)
         {
-            ContactInfo? contact;
-            if (command is CreateContact create)
-                contact = new ContactInfo(create.PersonId, new List<Address>(), null, new List<PhoneNumber>(), null, new List<EmailAddress>(), null,
-                    create.ContactMethodPreferenceNotes);
-            else
+            if (!contacts.TryGetValue(command.PersonId, out var contact))
+                contact = new ContactInfo(command.PersonId, new List<Address>(), null, new List<PhoneNumber>(), null, new List<EmailAddress>(), null, null);
+            
+            contact = command switch
             {
-                if (!contacts.TryGetValue(command.PersonId, out contact))
-                    throw new KeyNotFoundException("A person with the specified ID does not exist.");
-
-                contact = command switch
+                AddContactAddress c => contact with
                 {
-                    AddContactAddress c => contact with
-                    {
-                        Addresses = contact.Addresses.With(c.Address),
-                        CurrentAddressId = c.IsCurrentAddress ? c.Address.Id : contact.CurrentAddressId
-                    },
-                    UpdateContactAddress c => contact with
-                    {
-                        Addresses = contact.Addresses.With(c.Address, a => a.Id == c.Address.Id),
-                        CurrentAddressId = c.IsCurrentAddress ? c.Address.Id : contact.CurrentAddressId
-                    },
-                    AddContactPhoneNumber c => contact with
-                    {
-                        PhoneNumbers = contact.PhoneNumbers.With(c.PhoneNumber),
-                        PreferredPhoneNumberId = c.IsPreferredPhoneNumber ? c.PhoneNumber.Id : contact.PreferredPhoneNumberId
-                    },
-                    UpdateContactPhoneNumber c => contact with
-                    {
-                        PhoneNumbers = contact.PhoneNumbers.With(c.PhoneNumber, p => p.Id == c.PhoneNumber.Id),
-                        PreferredPhoneNumberId = c.IsPreferredPhoneNumber ? c.PhoneNumber.Id : contact.PreferredPhoneNumberId
-                    },
-                    AddContactEmailAddress c => contact with
-                    {
-                        EmailAddresses = contact.EmailAddresses.With(c.EmailAddress),
-                        PreferredEmailAddressId = c.IsPreferredEmailAddress ? c.EmailAddress.Id : contact.PreferredEmailAddressId
-                    },
-                    UpdateContactEmailAddress c => contact with
-                    {
-                        EmailAddresses = contact.EmailAddresses.With(c.EmailAddress, e => e.Id == c.EmailAddress.Id),
-                        PreferredEmailAddressId = c.IsPreferredEmailAddress ? c.EmailAddress.Id : contact.PreferredEmailAddressId
-                    },
-                    UpdateContactMethodPreferenceNotes c => contact with
-                    {
-                        ContactMethodPreferenceNotes = c.ContactMethodPreferenceNotes
-                    },
-                    _ => throw new NotImplementedException(
-                        $"The command type '{command.GetType().FullName}' has not been implemented.")
-                };
-            }
+                    Addresses = contact.Addresses.With(c.Address),
+                    CurrentAddressId = c.IsCurrentAddress ? c.Address.Id : contact.CurrentAddressId
+                },
+                UpdateContactAddress c => contact with
+                {
+                    Addresses = contact.Addresses.With(c.Address, a => a.Id == c.Address.Id),
+                    CurrentAddressId = c.IsCurrentAddress ? c.Address.Id : contact.CurrentAddressId
+                },
+                AddContactPhoneNumber c => contact with
+                {
+                    PhoneNumbers = contact.PhoneNumbers.With(c.PhoneNumber),
+                    PreferredPhoneNumberId = c.IsPreferredPhoneNumber ? c.PhoneNumber.Id : contact.PreferredPhoneNumberId
+                },
+                UpdateContactPhoneNumber c => contact with
+                {
+                    PhoneNumbers = contact.PhoneNumbers.With(c.PhoneNumber, p => p.Id == c.PhoneNumber.Id),
+                    PreferredPhoneNumberId = c.IsPreferredPhoneNumber ? c.PhoneNumber.Id : contact.PreferredPhoneNumberId
+                },
+                AddContactEmailAddress c => contact with
+                {
+                    EmailAddresses = contact.EmailAddresses.With(c.EmailAddress),
+                    PreferredEmailAddressId = c.IsPreferredEmailAddress ? c.EmailAddress.Id : contact.PreferredEmailAddressId
+                },
+                UpdateContactEmailAddress c => contact with
+                {
+                    EmailAddresses = contact.EmailAddresses.With(c.EmailAddress, e => e.Id == c.EmailAddress.Id),
+                    PreferredEmailAddressId = c.IsPreferredEmailAddress ? c.EmailAddress.Id : contact.PreferredEmailAddressId
+                },
+                UpdateContactMethodPreferenceNotes c => contact with
+                {
+                    ContactMethodPreferenceNotes = c.ContactMethodPreferenceNotes
+                },
+                _ => throw new NotImplementedException(
+                    $"The command type '{command.GetType().FullName}' has not been implemented.")
+            };
 
             return (
                 Event: new ContactCommandExecutedEvent(userId, timestampUtc, command),

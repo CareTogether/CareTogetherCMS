@@ -20,8 +20,6 @@ namespace CareTogether.Resources
 
     [JsonHierarchyBase]
     public abstract partial record ContactCommand(Guid PersonId);
-    public sealed record CreateContact(Guid PersonId,
-        string? ContactMethodPreferenceNotes) : ContactCommand(PersonId);
     public sealed record AddContactAddress(Guid PersonId, Address Address, bool IsCurrentAddress)
         : ContactCommand(PersonId);
     public sealed record UpdateContactAddress(Guid PersonId, Address Address, bool IsCurrentAddress)
