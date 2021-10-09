@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Container, Toolbar, Chip, Button, Menu, MenuItem, Divider, Grid, useMediaQuery, useTheme, MenuList } from '@material-ui/core';
-import { VolunteerFamily, FormUploadRequirement, ActionRequirement, ActivityRequirement } from '../GeneratedClient';
+import { Container, Toolbar, Chip, Button, Menu, MenuItem, Grid, useMediaQuery, useTheme, MenuList } from '@material-ui/core';
+import { VolunteerFamily, ActionRequirement } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
-import { familyActivityTypesData, familyDocumentTypesData } from '../Model/ConfigurationModel';
+import { familyRequirementsData, policyData } from '../Model/ConfigurationModel';
 import { RoleApprovalStatus } from '../GeneratedClient';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
 import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
@@ -29,6 +29,14 @@ const useStyles = makeStyles((theme) => ({
   },
   button: {
     margin: theme.spacing(1),
+  },
+  familyRequirementsList: {
+    listStyle: 'none',
+    paddingLeft: 0
+  },
+  familyDocumentsList: {
+    listStyle: 'none',
+    paddingLeft: 0
   },
   card: {
     minWidth: 275,
@@ -59,16 +67,17 @@ export function VolunteerFamilyScreen() {
   const { volunteerFamilyId } = useParams<{ volunteerFamilyId: string }>();
 
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
-  const familyDocumentTypes = useRecoilValue(familyDocumentTypesData);
-  const familyActivityTypes = useRecoilValue(familyActivityTypesData);
+  const familyRequirements = useRecoilValue(familyRequirementsData);
+  const policy = useRecoilValue(policyData);
 
   const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as VolunteerFamily;
   
   const [familyRecordMenuAnchor, setFamilyRecordMenuAnchor] = useState<Element | null>(null);
-  const [recordFamilyStepParameter, setRecordFamilyStepParameter] = useState<ActionRequirement | null>(null);
-  function selectRecordFamilyStep(requirement: FormUploadRequirement | ActivityRequirement) {
+  const [recordFamilyStepParameter, setRecordFamilyStepParameter] = useState<{requirementName: string, requirementInfo: ActionRequirement} | null>(null);
+  function selectRecordFamilyStep(requirementName: string) {
     setFamilyRecordMenuAnchor(null);
-    setRecordFamilyStepParameter(requirement);
+    const requirementInfo = policy.actionDefinitions![requirementName];
+    setRecordFamilyStepParameter({requirementName, requirementInfo});
   }
   
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
@@ -105,33 +114,59 @@ export function VolunteerFamilyScreen() {
         open={Boolean(familyRecordMenuAnchor)}
         onClose={() => setFamilyRecordMenuAnchor(null)}>
         <MenuList dense={isMobile}>
-          {familyDocumentTypes.map(documentType => (
-            <MenuItem key={documentType.formName} onClick={() => selectRecordFamilyStep(documentType)}>{documentType.formName}</MenuItem>
-          ))}
-          <Divider />
-          {familyActivityTypes.map(activityType => (
-            <MenuItem key={activityType.activityName} onClick={() => selectRecordFamilyStep(activityType)}>{activityType.activityName}</MenuItem>
+          {familyRequirements.map(requirementName => (
+            <MenuItem key={requirementName} onClick={() => selectRecordFamilyStep(requirementName)}>{requirementName}</MenuItem>
           ))}
         </MenuList>
       </Menu>
-      <RecordVolunteerFamilyStepDialog volunteerFamily={volunteerFamily} stepActionRequirement={recordFamilyStepParameter} onClose={() => setRecordFamilyStepParameter(null)} />
+      {recordFamilyStepParameter && <RecordVolunteerFamilyStepDialog volunteerFamily={volunteerFamily}
+        requirementName={recordFamilyStepParameter.requirementName} stepActionRequirement={recordFamilyStepParameter.requirementInfo}
+        onClose={() => setRecordFamilyStepParameter(null)} />}
       {addAdultDialogOpen && <AddAdultDialog onClose={() => setAddAdultDialogOpen(false)} />}
       {addChildDialogOpen && <AddChildDialog onClose={() => setAddChildDialogOpen(false)} />}
     </Toolbar>
-    <div className={classes.sectionChips}>
-      {Object.entries(volunteerFamily.familyRoleApprovals || {}).map(([role, approvalStatus]) => (
-        <Chip key={role} size="small" color={approvalStatus === RoleApprovalStatus.Onboarded ? "primary" : "secondary"}
-          label={RoleApprovalStatus[approvalStatus] + " " + role} />
-      ))}
-    </div>
-    <ul>
-      {volunteerFamily.approvalFormUploads?.map((upload, i) => (
-        <li key={i}>{upload.formName} {upload.completedAtUtc && format(upload.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</li>
-      ))}
-      {volunteerFamily.approvalActivitiesPerformed?.map((activity, i) => (
-        <li key={i}>{activity.activityName} {activity.performedAtUtc && format(activity.performedAtUtc, "MM/dd/yyyy hh:mm aa")}</li>
-      ))}
-    </ul>
+    <Grid container spacing={0}>
+      <Grid item xs={12}>
+        <div className={classes.sectionChips}>
+          {Object.entries(volunteerFamily.familyRoleApprovals || {}).map(([role, approvalStatus]) => (
+            <Chip key={role} size="small" color={approvalStatus === RoleApprovalStatus.Onboarded ? "primary" : "secondary"}
+              label={RoleApprovalStatus[approvalStatus] + " " + role} />
+          ))}
+        </div>
+      </Grid>
+      <Grid item xs={12} sm={6} md={4}>
+        <h3>Missing</h3>
+        <ul className={classes.familyRequirementsList}>
+          {volunteerFamily.missingRequirements?.map((missingRequirementName, i) => (
+            <li key={i}>
+              ❌ {missingRequirementName}
+            </li>
+          ))}
+        </ul>
+      </Grid>
+      <Grid item xs={12} sm={6} md={4}>
+        <h3>Completed</h3>
+        <ul className={classes.familyRequirementsList}>
+          {volunteerFamily.completedRequirements?.map((completed, i) => (
+            <li key={i}>
+              ✅ {completed.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              {completed.completedAtUtc && <span style={{float:'right',marginRight:20}}>{format(completed.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
+            </li>
+          ))}
+        </ul>
+      </Grid>
+      <Grid item xs={12} sm={6} md={4}>
+        <h3>Documents</h3>
+        <ul className={classes.familyDocumentsList}>
+          {volunteerFamily.uploadedDocuments?.map((uploaded, i) => (
+            <li key={i}>
+              📃 {uploaded.uploadedFileName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              {uploaded.timestampUtc && <span style={{float:'right',marginRight:20}}>{format(uploaded.timestampUtc, "MM/dd/yyyy hh:mm aa")}</span>}
+            </li>
+          ))}
+        </ul>
+      </Grid>
+    </Grid>
     <Grid container spacing={2}>
       {volunteerFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item2 && (
         <Grid item key={adult.item1.id}>

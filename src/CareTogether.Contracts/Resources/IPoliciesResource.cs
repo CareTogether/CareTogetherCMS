@@ -22,6 +22,15 @@ namespace CareTogether.Resources
         ReferralPolicy ReferralPolicy,
         VolunteerPolicy VolunteerPolicy);
 
+    public enum DocumentLinkRequirement
+    {
+        None,
+        Allowed,
+        //Required
+    }
+
+    public sealed record ActionRequirement(DocumentLinkRequirement DocumentLink, string? Instructions, Uri? InfoLink);
+
     public sealed record ReferralPolicy(
         ImmutableList<string> RequiredIntakeActionNames,
         ImmutableList<ArrangementPolicy> ArrangementPolicies);
@@ -69,14 +78,6 @@ namespace CareTogether.Resources
         RequirementStage Stage, string ActionName, VolunteerFamilyRequirementScope Scope);
 
     public enum VolunteerFamilyRequirementScope { OncePerFamily, AllAdultsInTheFamily };
-
-
-    [JsonHierarchyBase]
-    public abstract partial record ActionRequirement(); //TODO: Include the arrangement function (who can perform the action)
-    public sealed record FormUploadRequirement(string FormName, string? Instructions, Uri? TemplateLink)
-        : ActionRequirement;
-    public sealed record ActivityRequirement(string ActivityName)
-        : ActionRequirement;
 
 
     /// <summary>

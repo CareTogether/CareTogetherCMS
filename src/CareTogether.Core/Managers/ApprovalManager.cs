@@ -110,7 +110,6 @@ namespace CareTogether.Managers
                         var createPersonSubcommand = new CreatePerson(adultPersonId, null, c.FirstName, c.LastName,
                             c.Gender, c.Age, c.Ethnicity, c.Concerns, c.Notes);
                         var addAdultToFamilySubcommand = new AddAdultToFamily(c.FamilyId, adultPersonId, c.FamilyAdultRelationshipInfo);
-                        var createContactSubcommand = new CreateContact(adultPersonId, ContactMethodPreferenceNotes: null);
                         var addContactAddressSubcommand = c.Address == null ? null : new AddContactAddress(adultPersonId,
                             c.Address with { Id = Guid.NewGuid() }, IsCurrentAddress: true);
                         var addContactPhoneNumberSubcommand = c.PhoneNumber == null ? null :  new AddContactPhoneNumber(adultPersonId,
@@ -126,7 +125,6 @@ namespace CareTogether.Managers
                         var family = await communitiesResource.ExecuteFamilyCommandAsync(organizationId, locationId,
                             addAdultToFamilySubcommand, user.UserId());
 
-                        await contactsResource.ExecuteContactCommandAsync(organizationId, locationId, createContactSubcommand, user.UserId());
                         if (addContactAddressSubcommand != null)
                             await contactsResource.ExecuteContactCommandAsync(organizationId, locationId, addContactAddressSubcommand, user.UserId());
                         if (addContactPhoneNumberSubcommand != null)
@@ -179,7 +177,6 @@ namespace CareTogether.Managers
                             {
                                 (adultPersonId, c.FamilyAdultRelationshipInfo)
                             }, new List<Guid>(), new List<CustodialRelationship>());
-                        var createContactSubcommand = new CreateContact(adultPersonId, ContactMethodPreferenceNotes: null);
                         var addContactAddressSubcommand = new AddContactAddress(adultPersonId,
                             c.Address with { Id = Guid.NewGuid() }, IsCurrentAddress: true);
                         var addContactPhoneNumberSubcommand = new AddContactPhoneNumber(adultPersonId,
@@ -196,7 +193,6 @@ namespace CareTogether.Managers
                         var family = await communitiesResource.ExecuteFamilyCommandAsync(organizationId, locationId,
                             createFamilySubcommand, user.UserId());
 
-                        await contactsResource.ExecuteContactCommandAsync(organizationId, locationId, createContactSubcommand, user.UserId());
                         await contactsResource.ExecuteContactCommandAsync(organizationId, locationId, addContactAddressSubcommand, user.UserId());
                         await contactsResource.ExecuteContactCommandAsync(organizationId, locationId, addContactPhoneNumberSubcommand, user.UserId());
                         await contactsResource.ExecuteContactCommandAsync(organizationId, locationId, addContactEmailAddressSubcommand, user.UserId());
@@ -224,29 +220,24 @@ namespace CareTogether.Managers
             ImmutableDictionary<Guid, ContactInfo> contacts)
         {
             var family = families[entry.FamilyId];
-            var individualInfo = entry.IndividualEntries.ToImmutableDictionary(
+            var completedIndividualRequirements = entry.IndividualEntries.ToImmutableDictionary(
                 x => x.Key,
-                x => (x.Value.ApprovalFormUploads, x.Value.ApprovalActivitiesPerformed));
+                x => x.Value.CompletedRequirements);
 
             var volunteerFamilyApprovalStatus = await policyEvaluationEngine.CalculateVolunteerFamilyApprovalStatusAsync(
-                organizationId, locationId, family,
-                entry.ApprovalFormUploads, entry.ApprovalActivitiesPerformed,
-                individualInfo);
+                organizationId, locationId, family, entry.CompletedRequirements, completedIndividualRequirements);
 
             return new VolunteerFamily(family,
-                entry.ApprovalFormUploads, entry.ApprovalActivitiesPerformed,
+                entry.CompletedRequirements, entry.UploadedDocuments,
+                volunteerFamilyApprovalStatus.MissingFamilyRequirements,
                 volunteerFamilyApprovalStatus.FamilyRoleApprovals,
                 volunteerFamilyApprovalStatus.IndividualVolunteers.ToImmutableDictionary(
                     x => x.Key,
-                    x =>
-                    {
-                        if (entry.IndividualEntries.TryGetValue(x.Key, out var individualInfo))
-                            return new Volunteer(individualInfo.ApprovalFormUploads, individualInfo.ApprovalActivitiesPerformed,
-                                x.Value.IndividualRoleApprovals);
-                        else
-                            return new Volunteer(ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty,
-                                ImmutableDictionary<(string Role, string Version), RoleApprovalStatus>.Empty);
-                    }),
+                    x => entry.IndividualEntries.TryGetValue(x.Key, out var individualInfo)
+                        ? new Volunteer(individualInfo.CompletedRequirements, x.Value.MissingIndividualRequirements,
+                            x.Value.IndividualRoleApprovals)
+                        : new Volunteer(ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<string>.Empty,
+                            ImmutableDictionary<(string Role, string Version), RoleApprovalStatus>.Empty)),
                 family.Adults.SelectMany(x => contacts.TryGetValue(x.Item1.Id, out var contactInfo)
                     ? new KeyValuePair<Guid, ContactInfo>[] { new KeyValuePair<Guid, ContactInfo>(x.Item1.Id, contactInfo) }
                     : new KeyValuePair<Guid, ContactInfo>[] { }).ToImmutableDictionary());

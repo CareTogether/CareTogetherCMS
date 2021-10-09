@@ -9,10 +9,12 @@ namespace CareTogether.Engines
 {
     public sealed record VolunteerFamilyApprovalStatus(
         ImmutableDictionary<(string Role, string Version), RoleApprovalStatus> FamilyRoleApprovals,
+        ImmutableList<string> MissingFamilyRequirements,
         ImmutableDictionary<Guid, VolunteerApprovalStatus> IndividualVolunteers);
 
     public sealed record VolunteerApprovalStatus(
-        ImmutableDictionary<(string Role, string Version), RoleApprovalStatus> IndividualRoleApprovals);
+        ImmutableDictionary<(string Role, string Version), RoleApprovalStatus> IndividualRoleApprovals,
+        ImmutableList<string> MissingIndividualRequirements);
 
     public interface IPolicyEvaluationEngine
     {
@@ -34,11 +36,8 @@ namespace CareTogether.Engines
 
         Task<VolunteerFamilyApprovalStatus> CalculateVolunteerFamilyApprovalStatusAsync(
             Guid organizationId, Guid locationId, Family family,
-            ImmutableList<FormUploadInfo> familyFormUploads,
-            ImmutableList<ActivityInfo> familyActivitiesPerformed,
-            ImmutableDictionary<Guid,
-                (ImmutableList<FormUploadInfo> FormUploads,
-                    ImmutableList<ActivityInfo> ActivitiesPerformed)> IndividualInfo);
+            ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
+            ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements);
 
 
         Task<Referral> DiscloseReferralAsync(ClaimsPrincipal user, Referral referral);

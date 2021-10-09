@@ -40,23 +40,22 @@ namespace CareTogether.Resources.Models
         {
             if (!volunteerFamilies.TryGetValue(command.FamilyId, out var volunteerFamilyEntry))
                 volunteerFamilyEntry = new VolunteerFamilyEntry(command.FamilyId, VolunteerFamilyStatus.Inactive, "",
-                    ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty, ImmutableDictionary<Guid, VolunteerEntry>.Empty);
+                    ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<UploadedDocumentInfo>.Empty, ImmutableDictionary<Guid, VolunteerEntry>.Empty);
 
             var volunteerFamilyEntryToUpsert = command switch
             {
                 //TODO: Enforce any business rules dynamically via the policy evaluation engine.
                 //      This involves returning "allowed actions" with the rendered Approval state
                 //      and failing any attempted actions that are not allowed.
-                PerformVolunteerFamilyActivity c => volunteerFamilyEntry with
+                CompleteVolunteerFamilyRequirement c => volunteerFamilyEntry with
                 {
-                    ApprovalActivitiesPerformed = volunteerFamilyEntry.ApprovalActivitiesPerformed.Add(
-                        new ActivityInfo(userId, timestampUtc, c.ActivityName, c.PerformedAtUtc, c.PerformedByPersonId))
+                    CompletedRequirements = volunteerFamilyEntry.CompletedRequirements.Add(
+                        new CompletedRequirementInfo(userId, timestampUtc, c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId))
                 },
-                UploadVolunteerFamilyForm c => volunteerFamilyEntry with
+                UploadVolunteerFamilyDocument c => volunteerFamilyEntry with
                 {
-                    ApprovalFormUploads = volunteerFamilyEntry.ApprovalFormUploads.Add(
-                        new FormUploadInfo(userId, timestampUtc, c.CompletedAtUtc, c.FormName,
-                            c.UploadedFileName, c.UploadedDocumentId))
+                    UploadedDocuments = volunteerFamilyEntry.UploadedDocuments.Add(
+                        new UploadedDocumentInfo(userId, timestampUtc, c.UploadedDocumentId, c.UploadedFileName))
                 },
                 DeactivateVolunteerFamily c => volunteerFamilyEntry with
                 {
@@ -90,27 +89,21 @@ namespace CareTogether.Resources.Models
         {
             if (!volunteerFamilies.TryGetValue(command.FamilyId, out var volunteerFamilyEntry))
                 volunteerFamilyEntry = new VolunteerFamilyEntry(command.FamilyId, VolunteerFamilyStatus.Active, "",
-                    ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty, ImmutableDictionary<Guid, VolunteerEntry>.Empty);
+                    ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<UploadedDocumentInfo>.Empty, ImmutableDictionary<Guid, VolunteerEntry>.Empty);
 
             if (!volunteerFamilyEntry.IndividualEntries.TryGetValue(command.PersonId, out var volunteerEntry))
                 volunteerEntry = new VolunteerEntry(command.PersonId, true, "",
-                    ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty);
+                    ImmutableList<CompletedRequirementInfo>.Empty);
 
             var volunteerEntryToUpsert = command switch
             {
                 //TODO: Enforce any business rules dynamically via the policy evaluation engine.
                 //      This involves returning "allowed actions" with the rendered Approval state
                 //      and failing any attempted actions that are not allowed.
-                PerformVolunteerActivity c => volunteerEntry with
+                CompleteVolunteerRequirement c => volunteerEntry with
                 {
-                    ApprovalActivitiesPerformed = volunteerEntry.ApprovalActivitiesPerformed.Add(
-                        new ActivityInfo(userId, timestampUtc, c.ActivityName, c.PerformedAtUtc, c.PerformedByPersonId))
-                },
-                UploadVolunteerForm c => volunteerEntry with
-                {
-                    ApprovalFormUploads = volunteerEntry.ApprovalFormUploads.Add(
-                        new FormUploadInfo(userId, timestampUtc, c.CompletedAtUtc, c.FormName,
-                            c.UploadedFileName, c.UploadedDocumentId))
+                    CompletedRequirements = volunteerEntry.CompletedRequirements.Add(
+                        new CompletedRequirementInfo(userId, timestampUtc, c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId))
                 },
                 DeactivateVolunteer c => volunteerEntry with
                 {

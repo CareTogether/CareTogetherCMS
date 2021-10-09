@@ -61,17 +61,14 @@ namespace CareTogether.Core.Test
         public async Task TestCalculateVolunteerFamilyApprovalStatusWithNoActions()
         {
             var result = await dut.CalculateVolunteerFamilyApprovalStatusAsync(guid1, guid2, volunteerFamily,
-                new List<FormUploadInfo>
+                new List<CompletedRequirementInfo>
                 {
                 }.ToImmutableList(),
-                new List<ActivityInfo>
+                new Dictionary<Guid, ImmutableList<CompletedRequirementInfo>>
                 {
-                }.ToImmutableList(),
-                new Dictionary<Guid, (ImmutableList<FormUploadInfo> FormUploads, ImmutableList<ActivityInfo> ActivitiesPerformed)>
-                {
-                    [guid1] = (ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty),
-                    [guid2] = (ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty),
-                    [guid3] = (ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty)
+                    [guid1] = ImmutableList<CompletedRequirementInfo>.Empty,
+                    [guid2] = ImmutableList<CompletedRequirementInfo>.Empty,
+                    [guid3] = ImmutableList<CompletedRequirementInfo>.Empty
                 }.ToImmutableDictionary());
 
             Assert.AreEqual(0, result.FamilyRoleApprovals.Count);
@@ -85,23 +82,18 @@ namespace CareTogether.Core.Test
         public async Task TestCalculateVolunteerFamilyApprovalStatusWithJustApplications()
         {
             var result = await dut.CalculateVolunteerFamilyApprovalStatusAsync(guid1, guid2, volunteerFamily,
-                new List<FormUploadInfo>
+                new List<CompletedRequirementInfo>
                 {
-                    new FormUploadInfo(guid6, new DateTime(2021, 7, 1), new DateTime(2021, 7, 1), "Host Family Application", "abc.pdf", Guid.Empty)
+                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 1), "Host Family Application", new DateTime(2021, 7, 1), Guid.Empty)
                 }.ToImmutableList(),
-                new List<ActivityInfo>
+                new Dictionary<Guid, ImmutableList<CompletedRequirementInfo>>
                 {
-                }.ToImmutableList(),
-                new Dictionary<Guid, (ImmutableList<FormUploadInfo> FormUploads, ImmutableList<ActivityInfo> ActivitiesPerformed)>
-                {
-                    [guid1] = (ImmutableList<FormUploadInfo>.Empty
-                        .Add(new FormUploadInfo(guid6, new DateTime(2021, 7, 1), new DateTime(2021, 7, 1), "Family Friend Application", "ff1.docx", Guid.Empty))
-                        .Add(new FormUploadInfo(guid6, new DateTime(2021, 7, 1), new DateTime(2021, 7, 1), "Family Coach Application", "fc.docx", Guid.Empty)),
-                        ImmutableList<ActivityInfo>.Empty),
-                    [guid2] = (ImmutableList<FormUploadInfo>.Empty
-                        .Add(new FormUploadInfo(guid6, new DateTime(2021, 7, 1), new DateTime(2021, 7, 1), "Family Friend Application", "ff2.docx", Guid.Empty)),
-                        ImmutableList<ActivityInfo>.Empty),
-                    [guid3] = (ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty)
+                    [guid1] = ImmutableList<CompletedRequirementInfo>.Empty
+                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 1), "Family Friend Application", new DateTime(2021, 7, 1), Guid.Empty))
+                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 1), "Family Coach Application", new DateTime(2021, 7, 1), Guid.Empty)),
+                    [guid2] = ImmutableList<CompletedRequirementInfo>.Empty
+                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 1), "Family Friend Application", new DateTime(2021, 7, 1), Guid.Empty)),
+                    [guid3] = ImmutableList<CompletedRequirementInfo>.Empty
                 }.ToImmutableDictionary());
 
             Assert.AreEqual(2, result.FamilyRoleApprovals.Count);
@@ -123,22 +115,18 @@ namespace CareTogether.Core.Test
         public async Task TestCalculateVolunteerFamilyApprovalStatusWithPartialHostFamilyProgress()
         {
             var result = await dut.CalculateVolunteerFamilyApprovalStatusAsync(guid1, guid2, volunteerFamily,
-                new List<FormUploadInfo>
+                new List<CompletedRequirementInfo>
                 {
-                    new FormUploadInfo(guid6, new DateTime(2021, 7, 1), new DateTime(2021, 7, 1), "Host Family Application", "abc.pdf", Guid.Empty),
-                    new FormUploadInfo(guid6, new DateTime(2021, 7, 10), new DateTime(2021, 7, 8), "Home Screening Checklist", "def.pdf", Guid.Empty)
+                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 1), "Host Family Application", new DateTime(2021, 7, 1), Guid.Empty),
+                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 10), "Home Screening Checklist", new DateTime(2021, 7, 8), Guid.Empty),
+                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 10), "Host Family Interview", new DateTime(2021, 7, 10), Guid.Empty)
                 }.ToImmutableList(),
-                new List<ActivityInfo>
+                new Dictionary<Guid, ImmutableList<CompletedRequirementInfo>>
                 {
-                    new ActivityInfo(guid6, new DateTime(2021, 7, 10), "Host Family Interview", new DateTime(2021, 7, 10), guid1)
-                }.ToImmutableList(),
-                new Dictionary<Guid, (ImmutableList<FormUploadInfo> FormUploads, ImmutableList<ActivityInfo> ActivitiesPerformed)>
-                {
-                    [guid1] = (ImmutableList<FormUploadInfo>.Empty
-                        .Add(new FormUploadInfo(guid1, new DateTime(2021, 7, 14), new DateTime(2021, 7, 12), "Background Check", "bg1.pdf", Guid.Empty)),
-                        ImmutableList<ActivityInfo>.Empty),
-                    [guid2] = (ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty),
-                    [guid3] = (ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty)
+                    [guid1] = ImmutableList<CompletedRequirementInfo>.Empty
+                        .Add(new CompletedRequirementInfo(guid1, new DateTime(2021, 7, 14), "Background Check", new DateTime(2021, 7, 12), Guid.Empty)),
+                    [guid2] = ImmutableList<CompletedRequirementInfo>.Empty,
+                    [guid3] = ImmutableList<CompletedRequirementInfo>.Empty
                 }.ToImmutableDictionary());
 
             Assert.AreEqual(2, result.FamilyRoleApprovals.Count);
@@ -154,23 +142,20 @@ namespace CareTogether.Core.Test
         public async Task TestCalculateVolunteerFamilyApprovalStatusWithCompleteHostFamilyProgress()
         {
             var result = await dut.CalculateVolunteerFamilyApprovalStatusAsync(guid1, guid2, volunteerFamily,
-                new List<FormUploadInfo>
+                new List<CompletedRequirementInfo>
                 {
-                    new FormUploadInfo(guid6, new DateTime(2021, 7, 1), new DateTime(2021, 7, 1), "Host Family Application", "abc.pdf", Guid.Empty),
-                    new FormUploadInfo(guid6, new DateTime(2021, 7, 10), new DateTime(2021, 7, 8), "Home Screening Checklist", "def.pdf", Guid.Empty)
+                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 1), "Host Family Application", new DateTime(2021, 7, 1), Guid.Empty),
+                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 10), "Home Screening Checklist", new DateTime(2021, 7, 8), Guid.Empty),
+                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 10), "Host Family Interview", new DateTime(2021, 7, 10), Guid.Empty)
                 }.ToImmutableList(),
-                new List<ActivityInfo>
+                new Dictionary<Guid, ImmutableList<CompletedRequirementInfo>>
                 {
-                    new ActivityInfo(guid6, new DateTime(2021, 7, 10), "Host Family Interview", new DateTime(2021, 7, 10), guid1)
-                }.ToImmutableList(),
-                new Dictionary<Guid, (ImmutableList<FormUploadInfo> FormUploads, ImmutableList<ActivityInfo> ActivitiesPerformed)>
-                {
-                    [guid1] = (ImmutableList<FormUploadInfo>.Empty
-                        .Add(new FormUploadInfo(guid6, new DateTime(2021, 7, 14), new DateTime(2021, 7, 12), "Background Check", "bg1.pdf", Guid.Empty)), ImmutableList<ActivityInfo>.Empty),
-                    [guid2] = (ImmutableList<FormUploadInfo>.Empty
-                        .Add(new FormUploadInfo(guid6, new DateTime(2021, 7, 15), new DateTime(2021, 7, 13), "Background Check", "bg1.pdf", Guid.Empty)), ImmutableList<ActivityInfo>.Empty),
-                    [guid3] = (ImmutableList<FormUploadInfo>.Empty
-                        .Add(new FormUploadInfo(guid6, new DateTime(2021, 7, 15), new DateTime(2021, 7, 13), "Background Check", "bg1.pdf", Guid.Empty)), ImmutableList<ActivityInfo>.Empty)
+                    [guid1] = ImmutableList<CompletedRequirementInfo>.Empty
+                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 14), "Background Check", new DateTime(2021, 7, 12), Guid.Empty)),
+                    [guid2] = ImmutableList<CompletedRequirementInfo>.Empty
+                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 15), "Background Check", new DateTime(2021, 7, 13), Guid.Empty)),
+                    [guid3] = ImmutableList<CompletedRequirementInfo>.Empty
+                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 15), "Background Check", new DateTime(2021, 7, 13), Guid.Empty)),
                 }.ToImmutableDictionary());
 
             Assert.AreEqual(2, result.FamilyRoleApprovals.Count);

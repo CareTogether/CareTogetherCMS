@@ -91,7 +91,6 @@ namespace CareTogether.Api
             var policyEvaluationEngine = new PolicyEvaluationEngine(policiesResource);
 
             // Manager services
-            services.AddSingleton<IMembershipManager>(new MembershipManager(communitiesResource, contactsResource));
             services.AddSingleton<IReferralManager>(new ReferralManager(policyEvaluationEngine, communitiesResource, referralsResource, contactsResource));
             services.AddSingleton<IApprovalManager>(new ApprovalManager(approvalsResource, policyEvaluationEngine, communitiesResource, contactsResource));
 

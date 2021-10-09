@@ -1,6 +1,6 @@
 import { makeStyles } from '@material-ui/core/styles';
 import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow } from '@material-ui/core';
-import { FormUploadRequirement, ActivityRequirement, RequirementStage } from '../GeneratedClient';
+import { RequirementStage } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
 import { policyData } from '../Model/ConfigurationModel';
@@ -52,15 +52,14 @@ function VolunteerProgress() {
         If not, leave blank as not-applicable.
   */
 
-  enum RequirementType { Document, Activity };
   enum RequirementScope { Family, Individual };
-  const allFamilyRequirementRoles: { Type: RequirementType, Name: string, Role: string }[] = [];
-  const allIndividualRequirementRoles: { Type: RequirementType, Name: string, Role: string }[] = [];
-  function append(type: RequirementType, name: string, roleName: string, scope: RequirementScope) {
+  const allFamilyRequirementRoles: { Name: string, Role: string }[] = [];
+  const allIndividualRequirementRoles: { Name: string, Role: string }[] = [];
+  function append(name: string, roleName: string, scope: RequirementScope) {
     if (scope === RequirementScope.Family)
-      allFamilyRequirementRoles.push({Type: type, Name: name, Role: roleName});
+      allFamilyRequirementRoles.push({Name: name, Role: roleName});
     else
-      allIndividualRequirementRoles.push({Type: type, Name: name, Role: roleName});
+      allIndividualRequirementRoles.push({Name: name, Role: roleName});
   }
 
   policy.volunteerPolicy?.volunteerFamilyRoles &&
@@ -70,16 +69,9 @@ function VolunteerProgress() {
         const roleNameVersion = roleName + "-" + policyVersion.version;
         policyVersion.requirements?.forEach(requirement => {
           if (requirement.stage === RequirementStage.Application) return;
-          const action = policy.actionDefinitions![requirement.actionName!];
-          if (action instanceof FormUploadRequirement && action.formName) {
-            append(RequirementType.Document, action.formName, roleNameVersion,
-              requirement.scope === VolunteerFamilyRequirementScope.OncePerFamily
-              ? RequirementScope.Family : RequirementScope.Individual);
-          } else if (action instanceof ActivityRequirement && action.activityName) {
-            append(RequirementType.Activity, action.activityName, roleNameVersion,
-              requirement.scope === VolunteerFamilyRequirementScope.OncePerFamily
-              ? RequirementScope.Family : RequirementScope.Individual);
-          }
+          append(requirement.actionName!, roleNameVersion,
+            requirement.scope === VolunteerFamilyRequirementScope.OncePerFamily
+            ? RequirementScope.Family : RequirementScope.Individual);
         });
       });
     });
@@ -91,14 +83,8 @@ function VolunteerProgress() {
         const roleNameVersion = roleName + "-" + policyVersion.version;
         policyVersion.requirements?.forEach(requirement => {
           if (requirement.stage === RequirementStage.Application) return;
-          const action = policy.actionDefinitions![requirement.actionName!];
-          if (action instanceof FormUploadRequirement && action.formName) {
-            append(RequirementType.Document, action.formName, roleNameVersion,
-              RequirementScope.Individual);
-          } else if (action instanceof ActivityRequirement && action.activityName) {
-            append(RequirementType.Activity, action.activityName, roleNameVersion,
-              RequirementScope.Individual);
-          }
+          append(requirement.actionName!, roleNameVersion,
+            RequirementScope.Individual);
         });
       });
     });
@@ -114,56 +100,40 @@ function VolunteerProgress() {
     }, {} as Record<K, V[]>);
 
   const groupedFamilyRequirementRoles = groupBy(allFamilyRequirementRoles,
-    x => x.Type.toString()+'|'+x.Name, x => x.Role);
+    x => x.Name, x => x.Role);
   const groupedIndividualRequirementRoles = groupBy(allIndividualRequirementRoles,
-    x => x.Type.toString()+'|'+x.Name, x => x.Role);
+    x => x.Name, x => x.Role);
   
   const volunteerFamilyProgress = volunteerFamilies.map(volunteerFamily => {
     const familyProgress: Array<string | 'needed' | null> = [];
     Object.entries(groupedFamilyRequirementRoles).forEach(([requirement, roleNames]) => {
-      const [Type, Name] = requirement.split('|');
+      const [, Name] = requirement.split('|');
       // If the family is in progress or approved for any role that a requirement applies to,
       // then record whether the family has met that requirement or still needs to.
       if (roleNames.filter(roleForRequirement =>
         volunteerFamily?.familyRoleApprovals?.[roleForRequirement] !== undefined).length > 0) {
-        if (Type === RequirementType.Document.toString()) {
-          const submissions = volunteerFamily.approvalFormUploads?.filter(x => x.formName === Name);
-          familyProgress.push(submissions && submissions.length > 0
-            ? format(submissions[0].timestampUtc as Date, 'M/d/yy')
-            : 'needed');
-            return;
-        } else if (Type === RequirementType.Activity.toString()) {
-          const submissions = volunteerFamily.approvalActivitiesPerformed?.filter(x => x.activityName === Name);
-          familyProgress.push(submissions && submissions.length > 0
-            ? format(submissions[0].timestampUtc as Date, 'M/d/yy')
-            : 'needed');
-            return;
-        }
+        const submissions = volunteerFamily.completedRequirements?.filter(x => x.requirementName === Name);
+        familyProgress.push(submissions && submissions.length > 0
+          ? format(submissions[0].timestampUtc as Date, 'M/d/yy')
+          : 'needed');
+          return;
       }
       familyProgress.push(null);
     });
     const adults = volunteerFamily.family?.adults?.map(adult => {
       const individualProgress: Array<string | 'needed' | null> = [];
       Object.entries(groupedIndividualRequirementRoles).forEach(([requirement, roleNames]) => {
-        const [Type, Name] = requirement.split('|');
+        const [, Name] = requirement.split('|');
         const individualVolunteer = volunteerFamily.individualVolunteers?.[adult.item1!.id as string];
         // If the individual is in progress or approved for any role that a requirement applies to,
         // then record whether the individual has met that requirement or still needs to.
         if (individualVolunteer && roleNames.filter(roleForRequirement =>
           individualVolunteer.individualRoleApprovals?.[roleForRequirement] !== undefined).length > 0) {
-          if (Type === RequirementType.Document.toString()) {
-            const submissions = individualVolunteer.approvalFormUploads?.filter(x => x.formName === Name);
-            individualProgress.push(submissions && submissions.length > 0
-              ? format(submissions[0].timestampUtc as Date, 'M/d/yy')
-              : 'needed');
-              return;
-          } else if (Type === RequirementType.Activity.toString()) {
-            const submissions = individualVolunteer.approvalActivitiesPerformed?.filter(x => x.activityName === Name);
-            individualProgress.push(submissions && submissions.length > 0
-              ? format(submissions[0].timestampUtc as Date, 'M/d/yy')
-              : 'needed');
-              return;
-          }
+          const submissions = individualVolunteer.completedRequirements?.filter(x => x.requirementName === Name);
+          individualProgress.push(submissions && submissions.length > 0
+            ? format(submissions[0].timestampUtc as Date, 'M/d/yy')
+            : 'needed');
+            return;
         }
         individualProgress.push(null);
       });
