@@ -218,24 +218,36 @@ namespace CareTogether.TestData
         public static async Task PopulateApprovalEvents(IMultitenantEventLog<ApprovalEvent> approvalsEventLog)
         {
             await approvalsEventLog.AppendEventsAsync(guid1, guid2,
+                new VolunteerFamilyCommandExecuted(adminId, new DateTime(),
+                    new UploadVolunteerFamilyDocument(guid4, guid1, "fca.pdf")),
                 new VolunteerCommandExecuted(adminId, new DateTime(2021, 7, 1),
-                    new CompleteVolunteerRequirement(guid4, guid4, "Family Coach Application", new DateTime(2021, 7, 1), Guid.Empty)),
+                    new CompleteVolunteerRequirement(guid4, guid4, "Family Coach Application", new DateTime(2021, 7, 1), guid1)),
                 new VolunteerCommandExecuted(adminId, new DateTime(2021, 7, 10),
                     new CompleteVolunteerRequirement(guid4, guid4, "Interview with Family Coach Supervisor", new DateTime(2021, 7, 9), Guid.Empty)),
+                new VolunteerFamilyCommandExecuted(adminId, new DateTime(2021, 7, 14),
+                    new UploadVolunteerFamilyDocument(guid4, guid2, "bgcheck.pdf")),
                 new VolunteerCommandExecuted(adminId, new DateTime(2021, 7, 14),
-                    new CompleteVolunteerRequirement(guid4, guid4, "Background Check", new DateTime(2021, 7, 13), Guid.Empty)),
+                    new CompleteVolunteerRequirement(guid4, guid4, "Background Check", new DateTime(2021, 7, 13), guid2)),
                 new VolunteerFamilyCommandExecuted(adminId, new DateTime(2021, 7, 1),
-                    new CompleteVolunteerFamilyRequirement(guid3, "Host Family Application", new DateTime(2021, 7, 1), Guid.Empty)),
+                    new UploadVolunteerFamilyDocument(guid3, guid3, "hfapp.pdf")), 
+                new VolunteerFamilyCommandExecuted(adminId, new DateTime(2021, 7, 1),
+                    new CompleteVolunteerFamilyRequirement(guid3, "Host Family Application", new DateTime(2021, 7, 1), guid3)),
                 new VolunteerFamilyCommandExecuted(adminId, new DateTime(2021, 7, 15),
                     new CompleteVolunteerFamilyRequirement(guid3, "Home Screening Checklist", new DateTime(2021, 7, 14), Guid.Empty)),
+                new VolunteerFamilyCommandExecuted(adminId, new DateTime(2021, 7, 18),
+                    new UploadVolunteerFamilyDocument(guid3, guid4, "bgcheck23.pdf")),
                 new VolunteerCommandExecuted(adminId, new DateTime(2021, 7, 18),
-                    new CompleteVolunteerRequirement(guid3, guid8, "Background Check", new DateTime(2021, 7, 16), Guid.Empty)),
+                    new CompleteVolunteerRequirement(guid3, guid8, "Background Check", new DateTime(2021, 7, 16), guid4)),
+                new VolunteerFamilyCommandExecuted(adminId, new DateTime(2021, 7, 18),
+                    new UploadVolunteerFamilyDocument(guid3, guid5, "background check.pdf")),
                 new VolunteerCommandExecuted(adminId, new DateTime(2021, 7, 18),
-                    new CompleteVolunteerRequirement(guid3, guid9, "Background Check", new DateTime(2021, 7, 16), Guid.Empty)),
+                    new CompleteVolunteerRequirement(guid3, guid9, "Background Check", new DateTime(2021, 7, 16), guid5)),
+                new VolunteerFamilyCommandExecuted(adminId, new DateTime(2021, 8, 10),
+                    new UploadVolunteerFamilyDocument(guid2, guid6, "famfriendapp.pdf")),
                 new VolunteerCommandExecuted(adminId, new DateTime(2021, 8, 10),
-                    new CompleteVolunteerRequirement(guid2, guid6, "Family Friend Application", new DateTime(2021, 8, 10), Guid.Empty)),
+                    new CompleteVolunteerRequirement(guid2, guid6, "Family Friend Application", new DateTime(2021, 8, 10), guid6)),
                 new VolunteerCommandExecuted(adminId, new DateTime(2021, 8, 11), //TODO: This is a workaround for a bug!
-                    new CompleteVolunteerRequirement(guid2, guid5, "Family Friend Application", new DateTime(2021, 8, 11), Guid.Empty)));
+                    new CompleteVolunteerRequirement(guid2, guid5, "Family Friend Application", new DateTime(2021, 8, 11), guid7)));
         }
 
         public static async Task PopulateDraftNotes(IObjectStore<string?> draftNotesStore)

@@ -34,6 +34,10 @@ const useStyles = makeStyles((theme) => ({
     listStyle: 'none',
     paddingLeft: 0
   },
+  familyDocumentsList: {
+    listStyle: 'none',
+    paddingLeft: 0
+  },
   card: {
     minWidth: 275,
   },
@@ -127,6 +131,11 @@ export function VolunteerFamilyScreen() {
           label={RoleApprovalStatus[approvalStatus] + " " + role} />
       ))}
     </div>
+    <ul className={classes.familyDocumentsList}>
+      {volunteerFamily.uploadedDocuments?.map((uploaded, i) => (
+        <li key={i}>📃 {uploaded.uploadedFileName} {uploaded.timestampUtc && format(uploaded.timestampUtc, "MM/dd/yyyy hh:mm aa")}</li>
+      ))}
+    </ul>
     <ul className={classes.familyRequirementsList}>
       {volunteerFamily.completedRequirements?.map((completed, i) => (
         <li key={i}>✅ {completed.requirementName} {completed.completedAtUtc && format(completed.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</li>
