@@ -779,63 +779,32 @@
       },
       "ActionRequirement": {
         "type": "object",
-        "discriminator": {
-          "propertyName": "discriminator",
-          "mapping": {
-            "ActivityRequirement": "#/components/schemas/ActivityRequirement",
-            "FormUploadRequirement": "#/components/schemas/FormUploadRequirement"
-          }
-        },
-        "x-abstract": true,
         "additionalProperties": false,
-        "required": [
-          "discriminator"
-        ],
         "properties": {
-          "discriminator": {
-            "type": "string"
+          "documentLink": {
+            "$ref": "#/components/schemas/DocumentLinkRequirement"
+          },
+          "instructions": {
+            "type": "string",
+            "nullable": true
+          },
+          "infoLink": {
+            "type": "string",
+            "format": "uri",
+            "nullable": true
           }
         }
       },
-      "ActivityRequirement": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ActionRequirement"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "activityName": {
-                "type": "string"
-              }
-            }
-          }
-        ]
-      },
-      "FormUploadRequirement": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ActionRequirement"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "formName": {
-                "type": "string"
-              },
-              "instructions": {
-                "type": "string",
-                "nullable": true
-              },
-              "templateLink": {
-                "type": "string",
-                "format": "uri",
-                "nullable": true
-              }
-            }
-          }
+      "DocumentLinkRequirement": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "None",
+          "Allowed"
+        ],
+        "enum": [
+          0,
+          1
         ]
       },
       "ReferralPolicy": {
@@ -2284,16 +2253,16 @@
           "family": {
             "$ref": "#/components/schemas/Family"
           },
-          "approvalFormUploads": {
+          "completedRequirements": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/FormUploadInfo"
+              "$ref": "#/components/schemas/CompletedRequirementInfo"
             }
           },
-          "approvalActivitiesPerformed": {
+          "uploadedDocuments": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ActivityInfo"
+              "$ref": "#/components/schemas/UploadedDocumentInfo"
             }
           },
           "familyRoleApprovals": {
@@ -2316,6 +2285,53 @@
           }
         }
       },
+      "CompletedRequirementInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "timestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "requirementName": {
+            "type": "string"
+          },
+          "completedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "uploadedDocumentId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          }
+        }
+      },
+      "UploadedDocumentInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "timestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "uploadedDocumentId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "uploadedFileName": {
+            "type": "string"
+          }
+        }
+      },
       "RoleApprovalStatus": {
         "type": "integer",
         "description": "",
@@ -2334,16 +2350,10 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "approvalFormUploads": {
+          "completedRequirements": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/FormUploadInfo"
-            }
-          },
-          "approvalActivitiesPerformed": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ActivityInfo"
+              "$ref": "#/components/schemas/CompletedRequirementInfo"
             }
           },
           "individualRoleApprovals": {
@@ -2360,10 +2370,10 @@
           "propertyName": "discriminator",
           "mapping": {
             "ActivateVolunteerFamily": "#/components/schemas/ActivateVolunteerFamily",
+            "CompleteVolunteerFamilyRequirement": "#/components/schemas/CompleteVolunteerFamilyRequirement",
             "DeactivateVolunteerFamily": "#/components/schemas/DeactivateVolunteerFamily",
-            "PerformVolunteerFamilyActivity": "#/components/schemas/PerformVolunteerFamilyActivity",
             "SetVolunteerFamilyNote": "#/components/schemas/SetVolunteerFamilyNote",
-            "UploadVolunteerFamilyForm": "#/components/schemas/UploadVolunteerFamilyForm"
+            "UploadVolunteerFamilyDocument": "#/components/schemas/UploadVolunteerFamilyDocument"
           }
         },
         "x-abstract": true,
@@ -2392,6 +2402,31 @@
           }
         ]
       },
+      "CompleteVolunteerFamilyRequirement": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerFamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "requirementName": {
+                "type": "string"
+              },
+              "completedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "uploadedDocumentId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
       "DeactivateVolunteerFamily": {
         "allOf": [
           {
@@ -2403,30 +2438,6 @@
             "properties": {
               "reason": {
                 "type": "string"
-              }
-            }
-          }
-        ]
-      },
-      "PerformVolunteerFamilyActivity": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/VolunteerFamilyCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "activityName": {
-                "type": "string"
-              },
-              "performedAtUtc": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "performedByPersonId": {
-                "type": "string",
-                "format": "guid"
               }
             }
           }
@@ -2448,7 +2459,7 @@
           }
         ]
       },
-      "UploadVolunteerFamilyForm": {
+      "UploadVolunteerFamilyDocument": {
         "allOf": [
           {
             "$ref": "#/components/schemas/VolunteerFamilyCommand"
@@ -2457,19 +2468,12 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
-              "completedAtUtc": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "formName": {
-                "type": "string"
-              },
-              "uploadedFileName": {
-                "type": "string"
-              },
               "uploadedDocumentId": {
                 "type": "string",
                 "format": "guid"
+              },
+              "uploadedFileName": {
+                "type": "string"
               }
             }
           }
@@ -2480,11 +2484,10 @@
         "discriminator": {
           "propertyName": "discriminator",
           "mapping": {
+            "CompleteVolunteerRequirement": "#/components/schemas/CompleteVolunteerRequirement",
             "DeactivateVolunteer": "#/components/schemas/DeactivateVolunteer",
-            "PerformVolunteerActivity": "#/components/schemas/PerformVolunteerActivity",
             "ReactivateVolunteer": "#/components/schemas/ReactivateVolunteer",
-            "SetVolunteerNote": "#/components/schemas/SetVolunteerNote",
-            "UploadVolunteerForm": "#/components/schemas/UploadVolunteerForm"
+            "SetVolunteerNote": "#/components/schemas/SetVolunteerNote"
           }
         },
         "x-abstract": true,
@@ -2506,6 +2509,31 @@
           }
         }
       },
+      "CompleteVolunteerRequirement": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "requirementName": {
+                "type": "string"
+              },
+              "completedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "uploadedDocumentId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
       "DeactivateVolunteer": {
         "allOf": [
           {
@@ -2517,30 +2545,6 @@
             "properties": {
               "reason": {
                 "type": "string"
-              }
-            }
-          }
-        ]
-      },
-      "PerformVolunteerActivity": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/VolunteerCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "activityName": {
-                "type": "string"
-              },
-              "performedAtUtc": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "performedByPersonId": {
-                "type": "string",
-                "format": "guid"
               }
             }
           }
@@ -2568,33 +2572,6 @@
             "properties": {
               "note": {
                 "type": "string"
-              }
-            }
-          }
-        ]
-      },
-      "UploadVolunteerForm": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/VolunteerCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "completedAtUtc": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "formName": {
-                "type": "string"
-              },
-              "uploadedFileName": {
-                "type": "string"
-              },
-              "uploadedDocumentId": {
-                "type": "string",
-                "format": "guid"
               }
             }
           }
