@@ -73,7 +73,7 @@ namespace CareTogether.Engines
             {
                 var (person, familyRelationship) = x;
                 var individualRoles = new Dictionary<(string Role, string Version), RoleApprovalStatus>();
-                var missingRequirements = new List<string>();
+                var missingRequirements = new HashSet<string>();
 
                 if (completedIndividualRequirements.TryGetValue(person.Id, out var completedRequirements))
                 {
@@ -85,7 +85,7 @@ namespace CareTogether.Engines
                             var supersededAtUtc = policyVersion.SupersededAtUtc;
 
                             var requirementsMet = policyVersion.Requirements.Select(requirement =>
-                                (requirement.Stage, RequirementMet: completedRequirements.Any(x =>
+                                (requirement.ActionName, requirement.Stage, RequirementMet: completedRequirements.Any(x =>
                                     x.RequirementName == requirement.ActionName &&
                                     (supersededAtUtc == null || x.CompletedAtUtc < supersededAtUtc))))
                                 .ToList();
@@ -93,9 +93,19 @@ namespace CareTogether.Engines
                             if (requirementsMet.All(x => x.RequirementMet))
                                 individualRoles[(roleName, version)] = RoleApprovalStatus.Onboarded;
                             else if (requirementsMet.Where(x => x.Stage == RequirementStage.Application || x.Stage == RequirementStage.Approval).All(x => x.RequirementMet))
+                            {
                                 individualRoles[(roleName, version)] = RoleApprovalStatus.Approved;
+                                missingRequirements.UnionWith(requirementsMet
+                                    .Where(x => !x.RequirementMet && x.Stage == RequirementStage.Onboarding)
+                                    .Select(x => x.ActionName));
+                            }
                             else if (requirementsMet.Where(x => x.Stage == RequirementStage.Application).All(x => x.RequirementMet))
+                            {
                                 individualRoles[(roleName, version)] = RoleApprovalStatus.Prospective;
+                                missingRequirements.UnionWith(requirementsMet
+                                    .Where(x => !x.RequirementMet && x.Stage == RequirementStage.Approval)
+                                    .Select(x => x.ActionName));
+                            }
                         }
                     }
                 }
@@ -103,7 +113,7 @@ namespace CareTogether.Engines
             }).ToImmutableDictionary(x => x.Item1, x => x.Item2);
 
             var familyRoles = new Dictionary<(string Role, string Version), RoleApprovalStatus>();
-            var missingRequirements = new List<string>();
+            var missingFamilyRequirements = new HashSet<string>();
             foreach (var (roleName, rolePolicy) in policy.VolunteerPolicy.VolunteerFamilyRoles)
             {
                 foreach (var policyVersion in rolePolicy.PolicyVersions)
@@ -112,7 +122,7 @@ namespace CareTogether.Engines
                     var supersededAtUtc = policyVersion.SupersededAtUtc;
 
                     var requirementsMet = policyVersion.Requirements.Select(requirement =>
-                        (requirement.Stage, RequirementMet: requirement.Scope switch
+                        (requirement.ActionName, requirement.Stage, RequirementMet: requirement.Scope switch
                         {
                             VolunteerFamilyRequirementScope.AllAdultsInTheFamily => family.Adults.All(a =>
                             {
@@ -131,15 +141,25 @@ namespace CareTogether.Engines
                     if (requirementsMet.All(x => x.RequirementMet))
                         familyRoles[(roleName, version)] = RoleApprovalStatus.Onboarded;
                     else if (requirementsMet.Where(x => x.Stage == RequirementStage.Application || x.Stage == RequirementStage.Approval).All(x => x.RequirementMet))
+                    {
                         familyRoles[(roleName, version)] = RoleApprovalStatus.Approved;
+                        missingFamilyRequirements.UnionWith(requirementsMet
+                            .Where(x => !x.RequirementMet && x.Stage == RequirementStage.Onboarding)
+                            .Select(x => x.ActionName));
+                    }
                     else if (requirementsMet.Where(x => x.Stage == RequirementStage.Application).All(x => x.RequirementMet))
+                    {
                         familyRoles[(roleName, version)] = RoleApprovalStatus.Prospective;
+                        missingFamilyRequirements.UnionWith(requirementsMet
+                            .Where(x => !x.RequirementMet && x.Stage == RequirementStage.Approval)
+                            .Select(x => x.ActionName));
+                    }
                 }
             }
 
             return new VolunteerFamilyApprovalStatus(
                 familyRoles.ToImmutableDictionary(),
-                missingRequirements.ToImmutableList(),
+                missingFamilyRequirements.ToImmutableList(),
                 individualVolunteerRoles);
         }
 
