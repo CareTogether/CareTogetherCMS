@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Container, Toolbar, Chip, Button, Menu, MenuItem, Divider, Grid, useMediaQuery, useTheme, MenuList } from '@material-ui/core';
-import { VolunteerFamily, FormUploadRequirement, ActionRequirement, ActivityRequirement } from '../GeneratedClient';
+import { Container, Toolbar, Chip, Button, Menu, MenuItem, Grid, useMediaQuery, useTheme, MenuList } from '@material-ui/core';
+import { VolunteerFamily, ActionRequirement } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
-import { familyActivityTypesData, familyDocumentTypesData } from '../Model/ConfigurationModel';
+import { familyRequirementsData, policyData } from '../Model/ConfigurationModel';
 import { RoleApprovalStatus } from '../GeneratedClient';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
 import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
@@ -59,16 +59,17 @@ export function VolunteerFamilyScreen() {
   const { volunteerFamilyId } = useParams<{ volunteerFamilyId: string }>();
 
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
-  const familyDocumentTypes = useRecoilValue(familyDocumentTypesData);
-  const familyActivityTypes = useRecoilValue(familyActivityTypesData);
+  const familyRequirements = useRecoilValue(familyRequirementsData);
+  const policy = useRecoilValue(policyData);
 
   const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as VolunteerFamily;
   
   const [familyRecordMenuAnchor, setFamilyRecordMenuAnchor] = useState<Element | null>(null);
-  const [recordFamilyStepParameter, setRecordFamilyStepParameter] = useState<ActionRequirement | null>(null);
-  function selectRecordFamilyStep(requirement: FormUploadRequirement | ActivityRequirement) {
+  const [recordFamilyStepParameter, setRecordFamilyStepParameter] = useState<{requirementName: string, requirementInfo: ActionRequirement} | null>(null);
+  function selectRecordFamilyStep(requirementName: string) {
     setFamilyRecordMenuAnchor(null);
-    setRecordFamilyStepParameter(requirement);
+    const requirementInfo = policy.actionDefinitions![requirementName];
+    setRecordFamilyStepParameter({requirementName, requirementInfo});
   }
   
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
@@ -105,16 +106,14 @@ export function VolunteerFamilyScreen() {
         open={Boolean(familyRecordMenuAnchor)}
         onClose={() => setFamilyRecordMenuAnchor(null)}>
         <MenuList dense={isMobile}>
-          {familyDocumentTypes.map(documentType => (
-            <MenuItem key={documentType.formName} onClick={() => selectRecordFamilyStep(documentType)}>{documentType.formName}</MenuItem>
-          ))}
-          <Divider />
-          {familyActivityTypes.map(activityType => (
-            <MenuItem key={activityType.activityName} onClick={() => selectRecordFamilyStep(activityType)}>{activityType.activityName}</MenuItem>
+          {familyRequirements.map(requirementName => (
+            <MenuItem key={requirementName} onClick={() => selectRecordFamilyStep(requirementName)}>{requirementName}</MenuItem>
           ))}
         </MenuList>
       </Menu>
-      <RecordVolunteerFamilyStepDialog volunteerFamily={volunteerFamily} stepActionRequirement={recordFamilyStepParameter} onClose={() => setRecordFamilyStepParameter(null)} />
+      {recordFamilyStepParameter && <RecordVolunteerFamilyStepDialog volunteerFamily={volunteerFamily}
+        requirementName={recordFamilyStepParameter.requirementName} stepActionRequirement={recordFamilyStepParameter.requirementInfo}
+        onClose={() => setRecordFamilyStepParameter(null)} />}
       {addAdultDialogOpen && <AddAdultDialog onClose={() => setAddAdultDialogOpen(false)} />}
       {addChildDialogOpen && <AddChildDialog onClose={() => setAddChildDialogOpen(false)} />}
     </Toolbar>
@@ -125,11 +124,8 @@ export function VolunteerFamilyScreen() {
       ))}
     </div>
     <ul>
-      {volunteerFamily.approvalFormUploads?.map((upload, i) => (
-        <li key={i}>{upload.formName} {upload.completedAtUtc && format(upload.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</li>
-      ))}
-      {volunteerFamily.approvalActivitiesPerformed?.map((activity, i) => (
-        <li key={i}>{activity.activityName} {activity.performedAtUtc && format(activity.performedAtUtc, "MM/dd/yyyy hh:mm aa")}</li>
+      {volunteerFamily.completedRequirements?.map((completed, i) => (
+        <li key={i}>{completed.requirementName} {completed.completedAtUtc && format(completed.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</li>
       ))}
     </ul>
     <Grid container spacing={2}>
