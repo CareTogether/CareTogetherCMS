@@ -166,6 +166,13 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
               <ListItemText primary={missingRequirementName} />
             </MenuItem>
           )}
+          <Divider />
+          {volunteerFamily.individualVolunteers?.[adult.item1.id].availableApplications?.map(requirementName =>
+            <MenuItem key={requirementName} onClick={() =>
+              adultRecordMenuAnchor?.adult && selectRecordAdultStep(requirementName, adultRecordMenuAnchor.adult)}>
+              <ListItemText primary={requirementName} />
+            </MenuItem>
+          )}
         </MenuList>
       </Menu>
       {(recordAdultStepParameter && <RecordVolunteerAdultStepDialog volunteerFamily={volunteerFamily} adult={recordAdultStepParameter.adult}

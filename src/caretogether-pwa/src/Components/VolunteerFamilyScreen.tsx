@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Container, Toolbar, Chip, Button, Menu, MenuItem, Grid, useMediaQuery, useTheme, MenuList } from '@material-ui/core';
+import { Container, Toolbar, Chip, Button, Menu, MenuItem, Grid, useMediaQuery, useTheme, MenuList, Divider } from '@material-ui/core';
 import { VolunteerFamily, ActionRequirement } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../Model/ConfigurationModel';
@@ -124,6 +124,10 @@ export function VolunteerFamilyScreen() {
         onClose={() => setFamilyRecordMenuAnchor(null)}>
         <MenuList dense={isMobile}>
           {volunteerFamily.missingRequirements?.map(requirementName => (
+            <MenuItem key={requirementName} onClick={() => selectRecordFamilyStep(requirementName)}>{requirementName}</MenuItem>
+          ))}
+          <Divider />
+          {volunteerFamily.availableApplications?.map(requirementName => (
             <MenuItem key={requirementName} onClick={() => selectRecordFamilyStep(requirementName)}>{requirementName}</MenuItem>
           ))}
         </MenuList>
