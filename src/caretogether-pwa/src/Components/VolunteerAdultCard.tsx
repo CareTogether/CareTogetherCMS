@@ -161,12 +161,12 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         open={Boolean(adultRecordMenuAnchor)}
         onClose={() => setAdultRecordMenuAnchor(null)}>
         <MenuList dense={isMobile}>
-          {adultRequirements.map(requirementName => (
-            <MenuItem key={requirementName} onClick={() =>
-              adultRecordMenuAnchor?.adult && selectRecordAdultStep(requirementName, adultRecordMenuAnchor.adult)}>
-              <ListItemText primary={requirementName} />
+          {volunteerFamily.individualVolunteers?.[adult.item1.id].missingRequirements?.map(missingRequirementName =>
+            <MenuItem key={missingRequirementName} onClick={() =>
+              adultRecordMenuAnchor?.adult && selectRecordAdultStep(missingRequirementName, adultRecordMenuAnchor.adult)}>
+              <ListItemText primary={missingRequirementName} />
             </MenuItem>
-          ))}
+          )}
         </MenuList>
       </Menu>
       {(recordAdultStepParameter && <RecordVolunteerAdultStepDialog volunteerFamily={volunteerFamily} adult={recordAdultStepParameter.adult}

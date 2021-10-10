@@ -124,7 +124,7 @@ export function VolunteerFamilyScreen() {
         open={Boolean(familyRecordMenuAnchor)}
         onClose={() => setFamilyRecordMenuAnchor(null)}>
         <MenuList dense={isMobile}>
-          {familyRequirements.map(requirementName => (
+          {volunteerFamily.missingRequirements?.map(requirementName => (
             <MenuItem key={requirementName} onClick={() => selectRecordFamilyStep(requirementName)}>{requirementName}</MenuItem>
           ))}
         </MenuList>
