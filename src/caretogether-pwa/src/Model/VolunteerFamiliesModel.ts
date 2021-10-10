@@ -1,5 +1,5 @@
 import { atom, useRecoilCallback } from "recoil";
-import { ActionRequirement, AddAdultToFamilyCommand, AddChildToFamilyCommand, Address, Age, ApprovalCommand, CompleteVolunteerRequirement, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonConcerns, UpdatePersonName, UpdatePersonNotes, UploadVolunteerFamilyDocument, VolunteerCommand, VolunteerFamiliesClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
+import { ActionRequirement, AddAdultToFamilyCommand, AddChildToFamilyCommand, Address, Age, ApprovalCommand, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonConcerns, UpdatePersonName, UpdatePersonNotes, UploadVolunteerFamilyDocument, VolunteerCommand, VolunteerFamiliesClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { uploadFileToTenant } from "./FilesModel";
@@ -127,20 +127,31 @@ export function useVolunteerFamiliesModel() {
       command.uploadedFileName = documentFile.name;
       return command;
     });
-  // const performActivityFamily = useVolunteerFamilyCommandCallback(
-  //   async (volunteerFamilyId, requirement: ActivityRequirement, performedAtLocal: Date) => {
-  //     const command = new PerformVolunteerFamilyActivity({
-  //       familyId: volunteerFamilyId
-  //     });
-  //     command.activityName = requirement.activityName;
-  //     command.performedAtUtc = new Date(performedAtLocal.toUTCString());
-  //     return command;
-  //   });
+  const completeFamilyRequirement = useVolunteerFamilyCommandCallbackWithLocation(
+    async (organizationId, locationId, volunteerFamilyId, requirementName: string, requirement: ActionRequirement,
+      completedAtLocal: Date, document: string | File | null) => {
+      let documentId = null as string | null;
+      if (document instanceof File)
+        //await uploadDocument(volunteerFmailyId, document); TODO: Get the uploaded document ID back out!
+        documentId = await uploadFileToTenant(organizationId, locationId, document) as string;
+      else
+        documentId = document;
+
+      const command = new CompleteVolunteerFamilyRequirement({
+        familyId: volunteerFamilyId
+      });
+      command.requirementName = requirementName;
+      command.completedAtUtc = completedAtLocal;
+      if (documentId != null)
+        command.uploadedDocumentId = documentId;
+      return command;
+    });
   const completeIndividualRequirement = useVolunteerCommandCallbackWithLocation(
     async (organizationId, locationId, volunteerFamilyId, personId, requirementName: string, requirement: ActionRequirement,
       completedAtLocal: Date, document: string | File | null) => {
       let documentId = null as string | null;
       if (document instanceof File)
+        //await uploadDocument(volunteerFmailyId, document); TODO: Get the uploaded document ID back out!
         documentId = await uploadFileToTenant(organizationId, locationId, document) as string;
       else
         documentId = document;
@@ -272,7 +283,7 @@ export function useVolunteerFamiliesModel() {
   
   return {
     uploadDocument,
-    // performActivityFamily,
+    completeFamilyRequirement,
     completeIndividualRequirement,
     updatePersonName,
     updatePersonConcerns,
