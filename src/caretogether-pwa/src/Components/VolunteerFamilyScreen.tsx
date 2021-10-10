@@ -34,11 +34,13 @@ const useStyles = makeStyles((theme) => ({
   },
   familyRequirementsList: {
     listStyle: 'none',
-    paddingLeft: 0
+    paddingLeft: 22,
+    textIndent: -22
   },
   familyDocumentsList: {
     listStyle: 'none',
-    paddingLeft: 0
+    paddingLeft: 22,
+    textIndent: -22
   },
   card: {
     minWidth: 275,
