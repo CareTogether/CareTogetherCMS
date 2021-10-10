@@ -3,7 +3,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import { Container, Toolbar, Chip, Button, Menu, MenuItem, Grid, useMediaQuery, useTheme, MenuList } from '@material-ui/core';
 import { VolunteerFamily, ActionRequirement } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
-import { familyRequirementsData, policyData } from '../Model/ConfigurationModel';
+import { policyData } from '../Model/ConfigurationModel';
 import { RoleApprovalStatus } from '../GeneratedClient';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
 import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
@@ -71,7 +71,6 @@ export function VolunteerFamilyScreen() {
   const { volunteerFamilyId } = useParams<{ volunteerFamilyId: string }>();
 
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
-  const familyRequirements = useRecoilValue(familyRequirementsData);
   const policy = useRecoilValue(policyData);
 
   const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as VolunteerFamily;

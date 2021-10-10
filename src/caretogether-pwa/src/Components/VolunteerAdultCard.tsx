@@ -8,7 +8,7 @@ import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
 import { useRecoilValue } from "recoil";
 import { volunteerFamiliesData } from "../Model/VolunteerFamiliesModel";
 import { RecordVolunteerAdultStepDialog } from "./RecordVolunteerAdultStepDialog";
-import { adultRequirementsData, policyData } from "../Model/ConfigurationModel";
+import { policyData } from '../Model/ConfigurationModel';
 import { RenamePersonDialog } from "./RenamePersonDialog";
 import { UpdateConcernsDialog } from "./UpdateConcernsDialog";
 import { UpdateNotesDialog } from "./UpdateNotesDialog";
@@ -58,7 +58,6 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
   const classes = useStyles();
 
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
-  const adultRequirements = useRecoilValue(adultRequirementsData);
   const policy = useRecoilValue(policyData);
 
   const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as VolunteerFamily;
