@@ -2271,6 +2271,12 @@
               "type": "string"
             }
           },
+          "availableApplications": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "familyRoleApprovals": {
             "type": "object",
             "additionalProperties": {
@@ -2363,6 +2369,12 @@
             }
           },
           "missingRequirements": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "availableApplications": {
             "type": "array",
             "items": {
               "type": "string"

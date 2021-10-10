@@ -71,12 +71,15 @@ namespace CareTogether.Engines
 
             var missingFamilyRequirements = new HashSet<string>();
             var missingIndividualRequirements = new Dictionary<Guid, HashSet<string>>();
+            // We do not currently support family role application requirements with a scope of per-adult, so this only needs to track per-family.
+            var availableFamilyApplications = new HashSet<string>();
 
             var individualVolunteerRoles = family.Adults.Select(x =>
             {
                 var (person, familyRelationship) = x;
                 var individualRoles = new Dictionary<(string Role, string Version), RoleApprovalStatus>();
                 var missingRequirements = new HashSet<string>();
+                var availableApplications = new HashSet<string>();
 
                 if (completedIndividualRequirements.TryGetValue(person.Id, out var completedRequirements))
                 {
@@ -95,25 +98,36 @@ namespace CareTogether.Engines
 
                             if (requirementsMet.All(x => x.RequirementMet))
                                 individualRoles[(roleName, version)] = RoleApprovalStatus.Onboarded;
-                            else if (requirementsMet.Where(x => x.Stage == RequirementStage.Application || x.Stage == RequirementStage.Approval).All(x => x.RequirementMet))
+                            else if (requirementsMet
+                                .Where(x => x.Stage == RequirementStage.Application || x.Stage == RequirementStage.Approval)
+                                .All(x => x.RequirementMet))
                             {
                                 individualRoles[(roleName, version)] = RoleApprovalStatus.Approved;
                                 missingRequirements.UnionWith(requirementsMet
                                     .Where(x => !x.RequirementMet && x.Stage == RequirementStage.Onboarding)
                                     .Select(x => x.ActionName));
                             }
-                            else if (requirementsMet.Where(x => x.Stage == RequirementStage.Application).All(x => x.RequirementMet))
+                            else if (requirementsMet
+                                .Where(x => x.Stage == RequirementStage.Application)
+                                .All(x => x.RequirementMet))
                             {
                                 individualRoles[(roleName, version)] = RoleApprovalStatus.Prospective;
                                 missingRequirements.UnionWith(requirementsMet
                                     .Where(x => !x.RequirementMet && x.Stage == RequirementStage.Approval)
                                     .Select(x => x.ActionName));
                             }
+                            else
+                            {
+                                availableApplications.UnionWith(requirementsMet
+                                    .Where(x => !x.RequirementMet && x.Stage == RequirementStage.Application)
+                                    .Select(x => x.ActionName));
+                            }
                         }
                     }
                 }
                 missingIndividualRequirements[person.Id] = missingRequirements;
-                return (person.Id, new VolunteerApprovalStatus(individualRoles.ToImmutableDictionary(), ImmutableList<string>.Empty));
+                return (person.Id, new VolunteerApprovalStatus(individualRoles.ToImmutableDictionary(),
+                    ImmutableList<string>.Empty, availableApplications.ToImmutableList()));
             }).ToImmutableDictionary(x => x.Item1, x => x.Item2);
 
             var familyRoles = new Dictionary<(string Role, string Version), RoleApprovalStatus>();
@@ -155,7 +169,9 @@ namespace CareTogether.Engines
 
                     if (requirementsMet.All(x => x.RequirementMet))
                         familyRoles[(roleName, version)] = RoleApprovalStatus.Onboarded;
-                    else if (requirementsMet.Where(x => x.Stage == RequirementStage.Application || x.Stage == RequirementStage.Approval).All(x => x.RequirementMet))
+                    else if (requirementsMet
+                        .Where(x => x.Stage == RequirementStage.Application || x.Stage == RequirementStage.Approval)
+                        .All(x => x.RequirementMet))
                     {
                         familyRoles[(roleName, version)] = RoleApprovalStatus.Approved;
                         missingFamilyRequirements.UnionWith(requirementsMet
@@ -167,7 +183,9 @@ namespace CareTogether.Engines
                             .SelectMany(x => x.RequirementMissingForIndividuals.Select(y => (PersonId: y, x.ActionName))))
                             missingIndividualRequirements[PersonId].Add(ActionName);
                     }
-                    else if (requirementsMet.Where(x => x.Stage == RequirementStage.Application).All(x => x.RequirementMet))
+                    else if (requirementsMet
+                        .Where(x => x.Stage == RequirementStage.Application)
+                        .All(x => x.RequirementMet))
                     {
                         familyRoles[(roleName, version)] = RoleApprovalStatus.Prospective;
                         missingFamilyRequirements.UnionWith(requirementsMet
@@ -179,12 +197,20 @@ namespace CareTogether.Engines
                             .SelectMany(x => x.RequirementMissingForIndividuals.Select(y => (PersonId: y, x.ActionName))))
                             missingIndividualRequirements[PersonId].Add(ActionName);
                     }
+                    else
+                    {
+                        availableFamilyApplications.UnionWith(requirementsMet
+                            .Where(x => !x.RequirementMet && x.Stage == RequirementStage.Application
+                                && x.Scope == VolunteerFamilyRequirementScope.OncePerFamily)
+                            .Select(x => x.ActionName));
+                    }
                 }
             }
 
             return new VolunteerFamilyApprovalStatus(
                 familyRoles.ToImmutableDictionary(),
                 missingFamilyRequirements.ToImmutableList(),
+                availableFamilyApplications.ToImmutableList(),
                 individualVolunteerRoles.ToImmutableDictionary(
                     x => x.Key,
                     x => x.Value with { MissingIndividualRequirements = missingIndividualRequirements[x.Key].ToImmutableList() }));
