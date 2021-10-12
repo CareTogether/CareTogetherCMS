@@ -81,47 +81,48 @@ namespace CareTogether.Engines
                 var missingRequirements = new HashSet<string>();
                 var availableApplications = new HashSet<string>();
 
-                if (completedIndividualRequirements.TryGetValue(person.Id, out var completedRequirements))
+                ImmutableList<CompletedRequirementInfo>? completedRequirements;
+                if (!completedIndividualRequirements.TryGetValue(person.Id, out completedRequirements))
+                    completedRequirements = ImmutableList<CompletedRequirementInfo>.Empty;
+                
+                foreach (var (roleName, rolePolicy) in policy.VolunteerPolicy.VolunteerRoles)
                 {
-                    foreach (var (roleName, rolePolicy) in policy.VolunteerPolicy.VolunteerRoles)
+                    foreach (var policyVersion in rolePolicy.PolicyVersions)
                     {
-                        foreach (var policyVersion in rolePolicy.PolicyVersions)
+                        var version = policyVersion.Version;
+                        var supersededAtUtc = policyVersion.SupersededAtUtc;
+
+                        var requirementsMet = policyVersion.Requirements.Select(requirement =>
+                            (requirement.ActionName, requirement.Stage, RequirementMet: completedRequirements.Any(x =>
+                                x.RequirementName == requirement.ActionName &&
+                                (supersededAtUtc == null || x.CompletedAtUtc < supersededAtUtc))))
+                            .ToList();
+
+                        if (requirementsMet.All(x => x.RequirementMet))
+                            individualRoles[(roleName, version)] = RoleApprovalStatus.Onboarded;
+                        else if (requirementsMet
+                            .Where(x => x.Stage == RequirementStage.Application || x.Stage == RequirementStage.Approval)
+                            .All(x => x.RequirementMet))
                         {
-                            var version = policyVersion.Version;
-                            var supersededAtUtc = policyVersion.SupersededAtUtc;
-
-                            var requirementsMet = policyVersion.Requirements.Select(requirement =>
-                                (requirement.ActionName, requirement.Stage, RequirementMet: completedRequirements.Any(x =>
-                                    x.RequirementName == requirement.ActionName &&
-                                    (supersededAtUtc == null || x.CompletedAtUtc < supersededAtUtc))))
-                                .ToList();
-
-                            if (requirementsMet.All(x => x.RequirementMet))
-                                individualRoles[(roleName, version)] = RoleApprovalStatus.Onboarded;
-                            else if (requirementsMet
-                                .Where(x => x.Stage == RequirementStage.Application || x.Stage == RequirementStage.Approval)
-                                .All(x => x.RequirementMet))
-                            {
-                                individualRoles[(roleName, version)] = RoleApprovalStatus.Approved;
-                                missingRequirements.UnionWith(requirementsMet
-                                    .Where(x => !x.RequirementMet && x.Stage == RequirementStage.Onboarding)
-                                    .Select(x => x.ActionName));
-                            }
-                            else if (requirementsMet
-                                .Where(x => x.Stage == RequirementStage.Application)
-                                .All(x => x.RequirementMet))
-                            {
-                                individualRoles[(roleName, version)] = RoleApprovalStatus.Prospective;
-                                missingRequirements.UnionWith(requirementsMet
-                                    .Where(x => !x.RequirementMet && x.Stage == RequirementStage.Approval)
-                                    .Select(x => x.ActionName));
-                            }
-                            else
-                            {
-                                availableApplications.UnionWith(requirementsMet
-                                    .Where(x => !x.RequirementMet && x.Stage == RequirementStage.Application)
-                                    .Select(x => x.ActionName));
-                            }
+                            individualRoles[(roleName, version)] = RoleApprovalStatus.Approved;
+                            missingRequirements.UnionWith(requirementsMet
+                                .Where(x => !x.RequirementMet && x.Stage == RequirementStage.Onboarding)
+                                .Select(x => x.ActionName));
+                        }
+                        else if (requirementsMet
+                            .Where(x => x.Stage == RequirementStage.Application)
+                            .All(x => x.RequirementMet))
+                        {
+                            individualRoles[(roleName, version)] = RoleApprovalStatus.Prospective;
+                            missingRequirements.UnionWith(requirementsMet
+                                .Where(x => !x.RequirementMet && x.Stage == RequirementStage.Approval)
+                                .Select(x => x.ActionName));
+                        }
+                        else
+                        {
+                            availableApplications.UnionWith(requirementsMet
+                                .Where(x => !x.RequirementMet && x.Stage == RequirementStage.Application)
+                                .Select(x => x.ActionName));
                         }
                     }
                 }

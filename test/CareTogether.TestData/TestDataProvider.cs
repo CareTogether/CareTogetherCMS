@@ -72,25 +72,27 @@ namespace CareTogether.TestData
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new RemoveCustodialRelationship(guid1, guid3, guid1)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdateCustodialRelationshipType(guid1, guid3, guid2, CustodialRelationshipType.ParentWithCourtAppointedCustody)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddCustodialRelationship(guid1, guid3, guid1, CustodialRelationshipType.ParentWithCourtAppointedCustody)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid4, null, "Emily", "Coachworthy", Gender.Female, new ExactAge(new DateTime(1980, 3, 19)), "Ethnic", null, null)),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid4, null, "Emily", "Coachworthy", Gender.Female, new ExactAge(new DateTime(1980, 3, 19)), "Caucasian", null, null)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid4, guid4,
                     new List<(Guid, FamilyAdultRelationshipInfo)> { (guid4, new FamilyAdultRelationshipInfo("Single", true)) },
                     new List<Guid>(), new List<CustodialRelationship>())),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid5, null, "Han", "Solo", Gender.Male, new AgeInYears(30, new DateTime(2021, 7, 1)), "Ethnic", "Smuggler", null)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid6, null, "Leia", "Skywalker", Gender.Male, new AgeInYears(28, new DateTime(2021, 7, 1)), "Ethnic", "Freedom fighter", "Uncertain claim to royalty")),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid7, null, "Ben", "Solo", Gender.Male, new AgeInYears(12, new DateTime(2021, 7, 1)), "Ethnic", null, null)),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid5, null, "Han", "Solo", Gender.Male, new AgeInYears(30, new DateTime(2021, 7, 1)), "Corellian", "Smuggler", null)),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid6, null, "Leia", "Skywalker", Gender.Male, new AgeInYears(28, new DateTime(2021, 7, 1)), "Tatooinian", "Freedom fighter", "Uncertain claim to royalty")),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid7, null, "Ben", "Solo", Gender.Male, new AgeInYears(12, new DateTime(2021, 7, 1)), "Chandrilan", null, null)),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid0, null, "Luke", "Skywalker", Gender.Male, new AgeInYears(28, new DateTime(2021, 7, 1)), "Tatooinian", null, null)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid2, guid6,
                     new List<(Guid, FamilyAdultRelationshipInfo)>
                     {
                         (guid5, new FamilyAdultRelationshipInfo("Dad", true)),
-                        (guid6, new FamilyAdultRelationshipInfo("Mom", true))
+                        (guid6, new FamilyAdultRelationshipInfo("Mom", true)),
+                        (guid0, new FamilyAdultRelationshipInfo("Sibling", false))
                     }, new List<Guid>() { guid7 }, new List<CustodialRelationship>()
                     {
                         new CustodialRelationship(guid7, guid5, CustodialRelationshipType.ParentWithCustody),
                         new CustodialRelationship(guid7, guid6, CustodialRelationshipType.ParentWithCustody)
                     })),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid8, null, "William", "Riker", Gender.Male, new ExactAge(new DateTime(1972, 1, 1)), "Ethnic", null, null)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid9, null, "Deanna", "Riker", Gender.Female, new ExactAge(new DateTime(1970, 1, 1)), "Ethnic", null, null)),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid8, null, "William", "Riker", Gender.Male, new ExactAge(new DateTime(1972, 1, 1)), "Alaskan", null, null)),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid9, null, "Deanna", "Riker", Gender.Female, new ExactAge(new DateTime(1970, 1, 1)), "Betazoid", null, null)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid3, guid8,
                     new List<(Guid, FamilyAdultRelationshipInfo)>
                     {
