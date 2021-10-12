@@ -3,6 +3,9 @@ import { makeStyles } from '@material-ui/core/styles';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@material-ui/core';
 import { VolunteerFamily } from '../GeneratedClient';
 import { useVolunteerFamiliesModel } from '../Model/VolunteerFamiliesModel';
+import { uploadFileToTenant } from '../Model/FilesModel';
+import { useRecoilValue } from 'recoil';
+import { currentOrganizationState, currentLocationState } from '../Model/SessionModel';
 
 const useStyles = makeStyles((theme) => ({
   fileInput: {
@@ -17,13 +20,16 @@ interface UploadVolunteerFamilyDocumentDialogProps {
 export function UploadVolunteerFamilyDocumentDialog({volunteerFamily, onClose}: UploadVolunteerFamilyDocumentDialogProps) {
   const classes = useStyles();
   const [documentFile, setDocumentFile] = useState<File>();
+  const organizationId = useRecoilValue(currentOrganizationState);
+  const locationId = useRecoilValue(currentLocationState);
   const volunteerFamiliesModel = useVolunteerFamiliesModel();
 
   async function uploadDocument() {
     if (!documentFile) {
       alert("No file was selected. Try again.");
     } else {
-      await volunteerFamiliesModel.uploadDocument(volunteerFamily.family?.id as string, documentFile);
+      const documentId = await uploadFileToTenant(organizationId, locationId, documentFile!);
+      await volunteerFamiliesModel.uploadDocument(volunteerFamily.family!.id!, documentId, documentFile!.name);
       //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
       onClose();
     }

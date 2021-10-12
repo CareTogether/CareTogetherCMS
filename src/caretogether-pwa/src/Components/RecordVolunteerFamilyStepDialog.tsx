@@ -4,6 +4,9 @@ import { Button, Dialog, DialogActions, DialogContent, DialogContentText, Dialog
 import { VolunteerFamily, ActionRequirement, DocumentLinkRequirement } from '../GeneratedClient';
 import { DateTimePicker } from '@material-ui/pickers';
 import { useVolunteerFamiliesModel } from '../Model/VolunteerFamiliesModel';
+import { uploadFileToTenant } from "../Model/FilesModel";
+import { currentLocationState, currentOrganizationState } from '../Model/SessionModel';
+import { useRecoilValue } from 'recoil';
 
 const useStyles = makeStyles((theme) => ({
   fileInput: {
@@ -22,6 +25,8 @@ export function RecordVolunteerFamilyStepDialog({requirementName, stepActionRequ
   const [documentFile, setDocumentFile] = useState<File | null>(null);
   const [documentId, setDocumentId] = useState<string>("");
   const [completedAtLocal, setCompletedAtLocal] = useState(new Date());
+  const organizationId = useRecoilValue(currentOrganizationState);
+  const locationId = useRecoilValue(currentLocationState);
   const volunteerFamiliesModel = useVolunteerFamiliesModel();
   const UPLOAD_NEW = "__uploadnew__";
 
@@ -29,12 +34,13 @@ export function RecordVolunteerFamilyStepDialog({requirementName, stepActionRequ
     if (documentId === UPLOAD_NEW && !documentFile) {
       alert("No file was selected. Try again.");
     } else {
-      const document = documentId === UPLOAD_NEW
-        ? documentFile
-        : documentId === ""
-        ? null : documentId;
+      let document = documentId;
+      if (documentId === UPLOAD_NEW) {
+        document = await uploadFileToTenant(organizationId, locationId, documentFile!);
+        await volunteerFamiliesModel.uploadDocument(volunteerFamily.family!.id!, document, documentFile!.name);
+      }
       await volunteerFamiliesModel.completeFamilyRequirement(volunteerFamily.family?.id as string,
-        requirementName, stepActionRequirement, completedAtLocal, document);
+        requirementName, stepActionRequirement, completedAtLocal, document == "" ? null : document);
       //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
       onClose();
     }
