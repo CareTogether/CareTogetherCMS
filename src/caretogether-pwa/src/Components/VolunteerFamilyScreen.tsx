@@ -153,7 +153,7 @@ export function VolunteerFamilyScreen() {
         </div>
       </Grid>
       <Grid item xs={12} sm={6} md={4}>
-        <h3>Missing</h3>
+        <h3>Incomplete</h3>
         <ul className={classes.familyRequirementsList}>
           {volunteerFamily.missingRequirements?.map((missingRequirementName, i) => (
             <li key={i}>
