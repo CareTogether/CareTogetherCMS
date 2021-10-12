@@ -41,7 +41,7 @@ export function RecordVolunteerAdultStepDialog({requirementName, stepActionRequi
         await volunteerFamiliesModel.uploadDocument(volunteerFamily.family!.id!, document, documentFile!.name);
       }
       await volunteerFamiliesModel.completeIndividualRequirement(volunteerFamily.family?.id as string, adult.id as string,
-        requirementName, stepActionRequirement, completedAtLocal, document == "" ? null : document);
+        requirementName, stepActionRequirement, completedAtLocal, document === "" ? null : document);
       //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
       onClose();
     }
