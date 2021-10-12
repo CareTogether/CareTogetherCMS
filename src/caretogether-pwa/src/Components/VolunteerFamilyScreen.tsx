@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Container, Toolbar, Chip, Button, Menu, MenuItem, Grid, useMediaQuery, useTheme, MenuList } from '@material-ui/core';
+import { Container, Toolbar, Chip, Button, Menu, MenuItem, Grid, useMediaQuery, useTheme, MenuList, Divider } from '@material-ui/core';
 import { VolunteerFamily, ActionRequirement } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
-import { familyRequirementsData, policyData } from '../Model/ConfigurationModel';
+import { policyData } from '../Model/ConfigurationModel';
 import { RoleApprovalStatus } from '../GeneratedClient';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
 import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
+import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import { RecordVolunteerFamilyStepDialog } from './RecordVolunteerFamilyStepDialog';
 import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
 import { AddAdultDialog } from './AddAdultDialog';
@@ -15,6 +16,7 @@ import { AddChildDialog } from './AddChildDialog';
 import { useParams } from 'react-router';
 import { VolunteerAdultCard } from './VolunteerAdultCard';
 import { VolunteerChildCard } from './VolunteerChildCard';
+import { UploadVolunteerFamilyDocumentDialog } from './UploadVolunteerFamilyDocumentDialog';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -32,11 +34,13 @@ const useStyles = makeStyles((theme) => ({
   },
   familyRequirementsList: {
     listStyle: 'none',
-    paddingLeft: 0
+    paddingLeft: 22,
+    textIndent: -22
   },
   familyDocumentsList: {
     listStyle: 'none',
-    paddingLeft: 0
+    paddingLeft: 22,
+    textIndent: -22
   },
   card: {
     minWidth: 275,
@@ -67,7 +71,6 @@ export function VolunteerFamilyScreen() {
   const { volunteerFamilyId } = useParams<{ volunteerFamilyId: string }>();
 
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
-  const familyRequirements = useRecoilValue(familyRequirementsData);
   const policy = useRecoilValue(policyData);
 
   const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as VolunteerFamily;
@@ -80,6 +83,7 @@ export function VolunteerFamilyScreen() {
     setRecordFamilyStepParameter({requirementName, requirementInfo});
   }
   
+  const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] = useState(false);
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
   const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
   
@@ -89,12 +93,17 @@ export function VolunteerFamilyScreen() {
   return (
   <Container>
     <Toolbar variant="dense" disableGutters={true}>
-      <span>Primary Contact: {volunteerFamily.family?.adults?.filter(adult => adult.item1?.id === volunteerFamily.family?.primaryFamilyContactPersonId)[0]?.item1?.firstName}</span>
       <Button aria-controls="family-record-menu" aria-haspopup="true"
         variant="contained" color="default" size="small" className={classes.button}
         startIcon={<AssignmentTurnedInIcon />}
         onClick={(event) => setFamilyRecordMenuAnchor(event.currentTarget)}>
         Complete…
+      </Button>
+      <Button
+        onClick={() => setUploadDocumentDialogOpen(true)}
+        variant="contained" color="default" size="small" className={classes.button}
+        startIcon={<CloudUploadIcon />}>
+        Upload
       </Button>
       <Button
         onClick={() => setAddAdultDialogOpen(true)}
@@ -114,7 +123,11 @@ export function VolunteerFamilyScreen() {
         open={Boolean(familyRecordMenuAnchor)}
         onClose={() => setFamilyRecordMenuAnchor(null)}>
         <MenuList dense={isMobile}>
-          {familyRequirements.map(requirementName => (
+          {volunteerFamily.missingRequirements?.map(requirementName => (
+            <MenuItem key={requirementName} onClick={() => selectRecordFamilyStep(requirementName)}>{requirementName}</MenuItem>
+          ))}
+          <Divider />
+          {volunteerFamily.availableApplications?.map(requirementName => (
             <MenuItem key={requirementName} onClick={() => selectRecordFamilyStep(requirementName)}>{requirementName}</MenuItem>
           ))}
         </MenuList>
@@ -122,10 +135,15 @@ export function VolunteerFamilyScreen() {
       {recordFamilyStepParameter && <RecordVolunteerFamilyStepDialog volunteerFamily={volunteerFamily}
         requirementName={recordFamilyStepParameter.requirementName} stepActionRequirement={recordFamilyStepParameter.requirementInfo}
         onClose={() => setRecordFamilyStepParameter(null)} />}
+      {uploadDocumentDialogOpen && <UploadVolunteerFamilyDocumentDialog volunteerFamily={volunteerFamily}
+        onClose={() => setUploadDocumentDialogOpen(false)} />}
       {addAdultDialogOpen && <AddAdultDialog onClose={() => setAddAdultDialogOpen(false)} />}
       {addChildDialogOpen && <AddChildDialog onClose={() => setAddChildDialogOpen(false)} />}
     </Toolbar>
     <Grid container spacing={0}>
+      <Grid item xs={12}>
+        <span>Primary Contact: {volunteerFamily.family?.adults?.filter(adult => adult.item1?.id === volunteerFamily.family?.primaryFamilyContactPersonId)[0]?.item1?.firstName}</span>
+      </Grid>
       <Grid item xs={12}>
         <div className={classes.sectionChips}>
           {Object.entries(volunteerFamily.familyRoleApprovals || {}).map(([role, approvalStatus]) => (

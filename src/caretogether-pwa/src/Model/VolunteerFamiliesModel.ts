@@ -1,5 +1,5 @@
 import { atom, useRecoilCallback } from "recoil";
-import { AddAdultToFamilyCommand, AddChildToFamilyCommand, Address, Age, ApprovalCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonConcerns, UpdatePersonName, UpdatePersonNotes, VolunteerFamiliesClient, VolunteerFamily } from "../GeneratedClient";
+import { ActionRequirement, AddAdultToFamilyCommand, AddChildToFamilyCommand, Address, Age, ApprovalCommand, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonConcerns, UpdatePersonName, UpdatePersonNotes, UploadVolunteerFamilyDocument, VolunteerCommand, VolunteerFamiliesClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 
@@ -8,27 +8,27 @@ export const volunteerFamiliesData = atom<VolunteerFamily[]>({
   default: []
 });
 
-// function useVolunteerFamilyCommandCallbackWithLocation<T extends unknown[]>(
-//   callback: (organizationId: string, locationId: string, volunteerFamilyId: string, ...args: T) => Promise<VolunteerFamilyCommand>) {
-//   return useRecoilCallback(({snapshot, set}) => {
-//     const asyncCallback = async (volunteerFamilyId: string, ...args: T) => {
-//       const organizationId = await snapshot.getPromise(currentOrganizationState);
-//       const locationId = await snapshot.getPromise(currentLocationState);
+function useVolunteerFamilyCommandCallbackWithLocation<T extends unknown[]>(
+  callback: (organizationId: string, locationId: string, volunteerFamilyId: string, ...args: T) => Promise<VolunteerFamilyCommand>) {
+  return useRecoilCallback(({snapshot, set}) => {
+    const asyncCallback = async (volunteerFamilyId: string, ...args: T) => {
+      const organizationId = await snapshot.getPromise(currentOrganizationState);
+      const locationId = await snapshot.getPromise(currentLocationState);
 
-//       const command = await callback(organizationId, locationId, volunteerFamilyId, ...args);
+      const command = await callback(organizationId, locationId, volunteerFamilyId, ...args);
 
-//       const client = new VolunteerFamiliesClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-//       const updatedFamily = await client.submitVolunteerFamilyCommand(organizationId, locationId, command);
+      const client = new VolunteerFamiliesClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+      const updatedFamily = await client.submitVolunteerFamilyCommand(organizationId, locationId, command);
 
-//       set(volunteerFamiliesData, current => {
-//         return current.map(currentEntry => currentEntry.family?.id === volunteerFamilyId
-//           ? updatedFamily
-//           : currentEntry);
-//       });
-//     };
-//     return asyncCallback;
-//   })
-// }
+      set(volunteerFamiliesData, current => {
+        return current.map(currentEntry => currentEntry.family?.id === volunteerFamilyId
+          ? updatedFamily
+          : currentEntry);
+      });
+    };
+    return asyncCallback;
+  })
+}
 
 // function useVolunteerFamilyCommandCallback<T extends unknown[]>(
 //   callback: (volunteerFamilyId: string, ...args: T) => Promise<VolunteerFamilyCommand>) {
@@ -36,27 +36,27 @@ export const volunteerFamiliesData = atom<VolunteerFamily[]>({
 //     (_organizationId, _locationId, volunteerFamilyId, ...args) => callback(volunteerFamilyId, ...args));
 // }
 
-// function useVolunteerCommandCallbackWithLocation<T extends unknown[]>(
-//   callback: (organizationId: string, locationId: string, volunteerFamilyId: string, personId: string, ...args: T) => Promise<VolunteerCommand>) {
-//   return useRecoilCallback(({snapshot, set}) => {
-//     const asyncCallback = async (volunteerFamilyId: string, personId: string, ...args: T) => {
-//       const organizationId = await snapshot.getPromise(currentOrganizationState);
-//       const locationId = await snapshot.getPromise(currentLocationState);
+function useVolunteerCommandCallbackWithLocation<T extends unknown[]>(
+  callback: (organizationId: string, locationId: string, volunteerFamilyId: string, personId: string, ...args: T) => Promise<VolunteerCommand>) {
+  return useRecoilCallback(({snapshot, set}) => {
+    const asyncCallback = async (volunteerFamilyId: string, personId: string, ...args: T) => {
+      const organizationId = await snapshot.getPromise(currentOrganizationState);
+      const locationId = await snapshot.getPromise(currentLocationState);
 
-//       const command = await callback(organizationId, locationId, volunteerFamilyId, personId, ...args);
+      const command = await callback(organizationId, locationId, volunteerFamilyId, personId, ...args);
 
-//       const client = new VolunteerFamiliesClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-//       const updatedFamily = await client.submitVolunteerCommand(organizationId, locationId, command);
+      const client = new VolunteerFamiliesClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+      const updatedFamily = await client.submitVolunteerCommand(organizationId, locationId, command);
 
-//       set(volunteerFamiliesData, current => {
-//         return current.map(currentEntry => currentEntry.family?.id === volunteerFamilyId
-//           ? updatedFamily
-//           : currentEntry);
-//       });
-//     };
-//     return asyncCallback;
-//   })
-// }
+      set(volunteerFamiliesData, current => {
+        return current.map(currentEntry => currentEntry.family?.id === volunteerFamilyId
+          ? updatedFamily
+          : currentEntry);
+      });
+    };
+    return asyncCallback;
+  })
+}
 
 // function useVolunteerCommandCallback<T extends unknown[]>(
 //   callback: (volunteerFamilyId: string, personId: string, ...args: T) => Promise<VolunteerCommand>) {
@@ -115,52 +115,40 @@ function useApprovalCommandCallback<T extends unknown[]>(
 }
 
 export function useVolunteerFamiliesModel() {
-  // const uploadFormFamily = useVolunteerFamilyCommandCallbackWithLocation(
-  //   async (organizationId, locationId, volunteerFamilyId, requirement: FormUploadRequirement, formFile: File, completedAtLocal: Date) => {
-  //     const uploadedDocumentId = await uploadFileToTenant(organizationId, locationId, formFile);
-
-  //     const command = new UploadVolunteerFamilyForm({
-  //       familyId: volunteerFamilyId
-  //     });
-  //     command.formName = requirement.formName;
-  //     command.uploadedDocumentId = uploadedDocumentId;
-  //     command.uploadedFileName = formFile.name;
-  //     command.completedAtUtc = completedAtLocal;
-  //     return command;
-  //   });
-  // const performActivityFamily = useVolunteerFamilyCommandCallback(
-  //   async (volunteerFamilyId, requirement: ActivityRequirement, performedAtLocal: Date) => {
-  //     const command = new PerformVolunteerFamilyActivity({
-  //       familyId: volunteerFamilyId
-  //     });
-  //     command.activityName = requirement.activityName;
-  //     command.performedAtUtc = new Date(performedAtLocal.toUTCString());
-  //     return command;
-  //   });
-  // const uploadFormPerson = useVolunteerCommandCallbackWithLocation(
-  //   async (organizationId, locationId, volunteerFamilyId, personId, requirement: FormUploadRequirement, formFile: File, completedAtLocal: Date) => {
-  //     const uploadedDocumentId = await uploadFileToTenant(organizationId, locationId, formFile);
-
-  //     const command = new UploadVolunteerForm({
-  //       familyId: volunteerFamilyId,
-  //       personId: personId
-  //     });
-  //     command.formName = requirement.formName;
-  //     command.uploadedDocumentId = uploadedDocumentId;
-  //     command.uploadedFileName = formFile.name;
-  //     command.completedAtUtc = completedAtLocal;
-  //     return command;
-  //   });
-  // const performActivityPerson = useVolunteerCommandCallback(
-  //   async (volunteerFamilyId, personId, requirement: ActivityRequirement, performedAtLocal: Date) => {
-  //     const command = new PerformVolunteerActivity({
-  //       familyId: volunteerFamilyId,
-  //       personId: personId
-  //     });
-  //     command.activityName = requirement.activityName;
-  //     command.performedAtUtc = new Date(performedAtLocal.toUTCString());
-  //     return command;
-  //   });
+  const uploadDocument = useVolunteerFamilyCommandCallbackWithLocation(
+    async (organizationId, locationId, volunteerFamilyId, uploadedDocumentId: string, uploadedFileName: string) => {
+      const command = new UploadVolunteerFamilyDocument({
+        familyId: volunteerFamilyId
+      });
+      command.uploadedDocumentId = uploadedDocumentId;
+      command.uploadedFileName = uploadedFileName;
+      return command;
+    });
+  const completeFamilyRequirement = useVolunteerFamilyCommandCallbackWithLocation(
+    async (organizationId, locationId, volunteerFamilyId, requirementName: string, requirement: ActionRequirement,
+      completedAtLocal: Date, documentId: string | null) => {
+      const command = new CompleteVolunteerFamilyRequirement({
+        familyId: volunteerFamilyId
+      });
+      command.requirementName = requirementName;
+      command.completedAtUtc = completedAtLocal;
+      if (documentId != null)
+        command.uploadedDocumentId = documentId;
+      return command;
+    });
+  const completeIndividualRequirement = useVolunteerCommandCallbackWithLocation(
+    async (organizationId, locationId, volunteerFamilyId, personId, requirementName: string, requirement: ActionRequirement,
+      completedAtLocal: Date, documentId: string | null) => {
+      const command = new CompleteVolunteerRequirement({
+        familyId: volunteerFamilyId,
+        personId: personId
+      });
+      command.requirementName = requirementName;
+      command.completedAtUtc = completedAtLocal;
+      if (documentId != null)
+        command.uploadedDocumentId = documentId;
+      return command;
+    });
   const updatePersonName = usePersonCommandCallback(
     async (volunteerFamilyId, personId, firstName: string, lastName: string) => {
       const command = new UpdatePersonName({
@@ -277,10 +265,9 @@ export function useVolunteerFamiliesModel() {
     });
   
   return {
-    // uploadFormFamily,
-    // performActivityFamily,
-    // uploadFormPerson,
-    // performActivityPerson,
+    uploadDocument,
+    completeFamilyRequirement,
+    completeIndividualRequirement,
     updatePersonName,
     updatePersonConcerns,
     updatePersonNotes,

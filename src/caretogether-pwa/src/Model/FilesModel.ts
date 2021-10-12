@@ -11,5 +11,5 @@ export async function uploadFileToTenant(organizationId: string, locationId: str
   const blobClient = new BlockBlobClient(uploadInfo.valetUrl as string, new AnonymousCredential());
   await blobClient.uploadData(fileBuffer);
 
-  return uploadInfo.documentId;
+  return uploadInfo.documentId as string;
 }

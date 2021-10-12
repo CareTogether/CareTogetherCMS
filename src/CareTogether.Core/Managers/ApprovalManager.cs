@@ -230,14 +230,15 @@ namespace CareTogether.Managers
             return new VolunteerFamily(family,
                 entry.CompletedRequirements, entry.UploadedDocuments,
                 volunteerFamilyApprovalStatus.MissingFamilyRequirements,
+                volunteerFamilyApprovalStatus.AvailableFamilyApplications,
                 volunteerFamilyApprovalStatus.FamilyRoleApprovals,
                 volunteerFamilyApprovalStatus.IndividualVolunteers.ToImmutableDictionary(
                     x => x.Key,
                     x => entry.IndividualEntries.TryGetValue(x.Key, out var individualInfo)
                         ? new Volunteer(individualInfo.CompletedRequirements, x.Value.MissingIndividualRequirements,
-                            x.Value.IndividualRoleApprovals)
+                            x.Value.AvailableIndividualApplications, x.Value.IndividualRoleApprovals)
                         : new Volunteer(ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<string>.Empty,
-                            ImmutableDictionary<(string Role, string Version), RoleApprovalStatus>.Empty)),
+                            ImmutableList<string>.Empty, ImmutableDictionary<(string Role, string Version), RoleApprovalStatus>.Empty)),
                 family.Adults.SelectMany(x => contacts.TryGetValue(x.Item1.Id, out var contactInfo)
                     ? new KeyValuePair<Guid, ContactInfo>[] { new KeyValuePair<Guid, ContactInfo>(x.Item1.Id, contactInfo) }
                     : new KeyValuePair<Guid, ContactInfo>[] { }).ToImmutableDictionary());

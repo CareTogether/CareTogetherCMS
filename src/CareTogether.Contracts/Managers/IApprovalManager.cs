@@ -12,6 +12,7 @@ namespace CareTogether.Managers
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<UploadedDocumentInfo> UploadedDocuments,
         ImmutableList<string> MissingRequirements,
+        ImmutableList<string> AvailableApplications,
         ImmutableDictionary<(string Role, string Version), RoleApprovalStatus> FamilyRoleApprovals,
         ImmutableDictionary<Guid, Volunteer> IndividualVolunteers,
         ImmutableDictionary<Guid, ContactInfo> ContactInfo);
@@ -19,6 +20,7 @@ namespace CareTogether.Managers
     public sealed record Volunteer(
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<string> MissingRequirements,
+        ImmutableList<string> AvailableApplications,
         ImmutableDictionary<(string Role, string Version), RoleApprovalStatus> IndividualRoleApprovals);
 
     [JsonHierarchyBase]

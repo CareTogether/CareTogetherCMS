@@ -8,7 +8,7 @@ import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
 import { useRecoilValue } from "recoil";
 import { volunteerFamiliesData } from "../Model/VolunteerFamiliesModel";
 import { RecordVolunteerAdultStepDialog } from "./RecordVolunteerAdultStepDialog";
-import { adultRequirementsData, policyData } from "../Model/ConfigurationModel";
+import { policyData } from '../Model/ConfigurationModel';
 import { RenamePersonDialog } from "./RenamePersonDialog";
 import { UpdateConcernsDialog } from "./UpdateConcernsDialog";
 import { UpdateNotesDialog } from "./UpdateNotesDialog";
@@ -58,7 +58,6 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
   const classes = useStyles();
 
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
-  const adultRequirements = useRecoilValue(adultRequirementsData);
   const policy = useRecoilValue(policyData);
 
   const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as VolunteerFamily;
@@ -161,12 +160,19 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         open={Boolean(adultRecordMenuAnchor)}
         onClose={() => setAdultRecordMenuAnchor(null)}>
         <MenuList dense={isMobile}>
-          {adultRequirements.map(requirementName => (
+          {volunteerFamily.individualVolunteers?.[adult.item1.id].missingRequirements?.map(missingRequirementName =>
+            <MenuItem key={missingRequirementName} onClick={() =>
+              adultRecordMenuAnchor?.adult && selectRecordAdultStep(missingRequirementName, adultRecordMenuAnchor.adult)}>
+              <ListItemText primary={missingRequirementName} />
+            </MenuItem>
+          )}
+          <Divider />
+          {volunteerFamily.individualVolunteers?.[adult.item1.id].availableApplications?.map(requirementName =>
             <MenuItem key={requirementName} onClick={() =>
               adultRecordMenuAnchor?.adult && selectRecordAdultStep(requirementName, adultRecordMenuAnchor.adult)}>
               <ListItemText primary={requirementName} />
             </MenuItem>
-          ))}
+          )}
         </MenuList>
       </Menu>
       {(recordAdultStepParameter && <RecordVolunteerAdultStepDialog volunteerFamily={volunteerFamily} adult={recordAdultStepParameter.adult}
