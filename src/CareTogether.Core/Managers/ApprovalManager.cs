@@ -234,11 +234,16 @@ namespace CareTogether.Managers
                 volunteerFamilyApprovalStatus.FamilyRoleApprovals,
                 volunteerFamilyApprovalStatus.IndividualVolunteers.ToImmutableDictionary(
                     x => x.Key,
-                    x => entry.IndividualEntries.TryGetValue(x.Key, out var individualInfo)
-                        ? new Volunteer(individualInfo.CompletedRequirements, x.Value.MissingIndividualRequirements,
-                            x.Value.AvailableIndividualApplications, x.Value.IndividualRoleApprovals)
-                        : new Volunteer(ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<string>.Empty,
-                            ImmutableList<string>.Empty, ImmutableDictionary<(string Role, string Version), RoleApprovalStatus>.Empty)),
+                    x =>
+                    {
+                        var hasEntry = entry.IndividualEntries.TryGetValue(x.Key, out var individualEntry);
+                        var result = hasEntry
+                            ? new Volunteer(individualEntry!.CompletedRequirements, x.Value.MissingIndividualRequirements,
+                                x.Value.AvailableIndividualApplications, x.Value.IndividualRoleApprovals)
+                            : new Volunteer(ImmutableList<CompletedRequirementInfo>.Empty, x.Value.MissingIndividualRequirements,
+                                x.Value.AvailableIndividualApplications, x.Value.IndividualRoleApprovals);
+                        return result;
+                    }),
                 family.Adults.SelectMany(x => contacts.TryGetValue(x.Item1.Id, out var contactInfo)
                     ? new KeyValuePair<Guid, ContactInfo>[] { new KeyValuePair<Guid, ContactInfo>(x.Item1.Id, contactInfo) }
                     : new KeyValuePair<Guid, ContactInfo>[] { }).ToImmutableDictionary());
