@@ -33,6 +33,8 @@ export function RecordVolunteerFamilyStepDialog({requirementName, stepActionRequ
   async function recordRequirementCompletion() {
     if (documentId === UPLOAD_NEW && !documentFile) {
       alert("No file was selected. Try again.");
+    } else if (documentId === "" && stepActionRequirement.documentLink === DocumentLinkRequirement.Required) {
+      alert("You must either select from an already-uploaded document or upload a new document for this requirement.");
     } else {
       let document = documentId;
       if (documentId === UPLOAD_NEW) {
@@ -66,10 +68,11 @@ export function RecordVolunteerFamilyStepDialog({requirementName, stepActionRequ
               onChange={(date) => date && setCompletedAtLocal(date)}
               showTodayButton />
           </Grid>
-          {stepActionRequirement.documentLink === DocumentLinkRequirement.Allowed &&
+          {(stepActionRequirement.documentLink === DocumentLinkRequirement.Allowed ||
+            stepActionRequirement.documentLink === DocumentLinkRequirement.Required) &&
             <>
               <Grid item xs={12} sm={6}>
-                <FormControl fullWidth size="small">
+                <FormControl fullWidth size="small" required={stepActionRequirement.documentLink === DocumentLinkRequirement.Required}>
                   <InputLabel id="document-label">Document</InputLabel>
                   <Select
                     labelId="document-label" id="document"

@@ -800,11 +800,13 @@
         "description": "",
         "x-enumNames": [
           "None",
-          "Allowed"
+          "Allowed",
+          "Required"
         ],
         "enum": [
           0,
-          1
+          1,
+          2
         ]
       },
       "ReferralPolicy": {

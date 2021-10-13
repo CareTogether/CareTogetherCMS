@@ -26,7 +26,7 @@ namespace CareTogether.Resources
     {
         None,
         Allowed,
-        //Required
+        Required
     }
 
     public sealed record ActionRequirement(DocumentLinkRequirement DocumentLink, string? Instructions, Uri? InfoLink);

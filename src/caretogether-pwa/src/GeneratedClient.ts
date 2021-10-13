@@ -981,6 +981,7 @@ export interface IActionRequirement {
 export enum DocumentLinkRequirement {
     None = 0,
     Allowed = 1,
+    Required = 2,
 }
 
 export class ReferralPolicy implements IReferralPolicy {
