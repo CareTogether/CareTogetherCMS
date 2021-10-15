@@ -67,6 +67,13 @@ namespace CareTogether.Engines
             Family family, ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
             ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements)
         {
+            static void AddToEntryList<T, U>(Dictionary<T, ImmutableList<U>> dictionary, T key, U value)
+                where T : notnull
+            {
+                var list = dictionary.GetValueOrDefault(key, ImmutableList<U>.Empty);
+                dictionary[key] = list.Add(value);
+            }
+
             var policy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
 
             var missingFamilyRequirements = new HashSet<string>();
@@ -77,7 +84,7 @@ namespace CareTogether.Engines
             var individualVolunteerRoles = family.Adults.Select(x =>
             {
                 var (person, familyRelationship) = x;
-                var individualRoles = new Dictionary<(string Role, string Version), RoleApprovalStatus>();
+                var individualRoles = new Dictionary<string, ImmutableList<RoleVersionApproval>>();
                 var missingRequirements = new HashSet<string>();
                 var availableApplications = new HashSet<string>();
 
@@ -99,12 +106,12 @@ namespace CareTogether.Engines
                             .ToList();
 
                         if (requirementsMet.All(x => x.RequirementMet))
-                            individualRoles[(roleName, version)] = RoleApprovalStatus.Onboarded;
+                            AddToEntryList(individualRoles, roleName, new RoleVersionApproval(version, RoleApprovalStatus.Onboarded));
                         else if (requirementsMet
                             .Where(x => x.Stage == RequirementStage.Application || x.Stage == RequirementStage.Approval)
                             .All(x => x.RequirementMet))
                         {
-                            individualRoles[(roleName, version)] = RoleApprovalStatus.Approved;
+                            AddToEntryList(individualRoles, roleName, new RoleVersionApproval(version, RoleApprovalStatus.Approved));
                             missingRequirements.UnionWith(requirementsMet
                                 .Where(x => !x.RequirementMet && x.Stage == RequirementStage.Onboarding)
                                 .Select(x => x.ActionName));
@@ -113,7 +120,7 @@ namespace CareTogether.Engines
                             .Where(x => x.Stage == RequirementStage.Application)
                             .All(x => x.RequirementMet))
                         {
-                            individualRoles[(roleName, version)] = RoleApprovalStatus.Prospective;
+                            AddToEntryList(individualRoles, roleName, new RoleVersionApproval(version, RoleApprovalStatus.Prospective));
                             missingRequirements.UnionWith(requirementsMet
                                 .Where(x => !x.RequirementMet && x.Stage == RequirementStage.Approval)
                                 .Select(x => x.ActionName));
@@ -131,7 +138,7 @@ namespace CareTogether.Engines
                     ImmutableList<string>.Empty, availableApplications.ToImmutableList()));
             }).ToImmutableDictionary(x => x.Item1, x => x.Item2);
 
-            var familyRoles = new Dictionary<(string Role, string Version), RoleApprovalStatus>();
+            var familyRoles = new Dictionary<string, ImmutableList<RoleVersionApproval>>();
             foreach (var (roleName, rolePolicy) in policy.VolunteerPolicy.VolunteerFamilyRoles)
             {
                 foreach (var policyVersion in rolePolicy.PolicyVersions)
@@ -169,12 +176,12 @@ namespace CareTogether.Engines
                         })).ToList();
 
                     if (requirementsMet.All(x => x.RequirementMet))
-                        familyRoles[(roleName, version)] = RoleApprovalStatus.Onboarded;
+                        AddToEntryList(familyRoles, roleName, new RoleVersionApproval(version, RoleApprovalStatus.Onboarded));
                     else if (requirementsMet
                         .Where(x => x.Stage == RequirementStage.Application || x.Stage == RequirementStage.Approval)
                         .All(x => x.RequirementMet))
                     {
-                        familyRoles[(roleName, version)] = RoleApprovalStatus.Approved;
+                        AddToEntryList(familyRoles, roleName, new RoleVersionApproval(version, RoleApprovalStatus.Approved));
                         missingFamilyRequirements.UnionWith(requirementsMet
                             .Where(x => !x.RequirementMet && x.Stage == RequirementStage.Onboarding
                                 && x.Scope == VolunteerFamilyRequirementScope.OncePerFamily)
@@ -188,7 +195,7 @@ namespace CareTogether.Engines
                         .Where(x => x.Stage == RequirementStage.Application)
                         .All(x => x.RequirementMet))
                     {
-                        familyRoles[(roleName, version)] = RoleApprovalStatus.Prospective;
+                        AddToEntryList(familyRoles, roleName, new RoleVersionApproval(version, RoleApprovalStatus.Prospective));
                         missingFamilyRequirements.UnionWith(requirementsMet
                             .Where(x => !x.RequirementMet && x.Stage == RequirementStage.Approval
                                 && x.Scope == VolunteerFamilyRequirementScope.OncePerFamily)

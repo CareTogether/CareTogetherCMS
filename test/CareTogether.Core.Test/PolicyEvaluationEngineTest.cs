@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace CareTogether.Core.Test
@@ -97,17 +98,17 @@ namespace CareTogether.Core.Test
                 }.ToImmutableDictionary());
 
             Assert.AreEqual(2, result.FamilyRoleApprovals.Count);
-            Assert.AreEqual(RoleApprovalStatus.Prospective, result.FamilyRoleApprovals[("Host Family", "v1")]);
-            Assert.AreEqual(RoleApprovalStatus.Prospective, result.FamilyRoleApprovals[("Host Family", "v2")]);
+            Assert.AreEqual(RoleApprovalStatus.Prospective, result.FamilyRoleApprovals["Host Family"].Single(x => x.Version == "v1"));
+            Assert.AreEqual(RoleApprovalStatus.Prospective, result.FamilyRoleApprovals["Host Family"].Single(x => x.Version == "v2"));
             Assert.AreEqual(3, result.IndividualVolunteers.Count);
             Assert.AreEqual(4, result.IndividualVolunteers[guid1].IndividualRoleApprovals.Count);
-            Assert.AreEqual(RoleApprovalStatus.Prospective, result.IndividualVolunteers[guid1].IndividualRoleApprovals[("Family Friend", "v1")]);
-            Assert.AreEqual(RoleApprovalStatus.Prospective, result.IndividualVolunteers[guid1].IndividualRoleApprovals[("Family Friend", "v2")]);
-            Assert.AreEqual(RoleApprovalStatus.Prospective, result.IndividualVolunteers[guid1].IndividualRoleApprovals[("Family Coach", "v1")]);
-            Assert.AreEqual(RoleApprovalStatus.Prospective, result.IndividualVolunteers[guid1].IndividualRoleApprovals[("Family Coach", "v2")]);
+            Assert.AreEqual(RoleApprovalStatus.Prospective, result.IndividualVolunteers[guid1].IndividualRoleApprovals["Family Friend"].Single(x => x.Version == "v1"));
+            Assert.AreEqual(RoleApprovalStatus.Prospective, result.IndividualVolunteers[guid1].IndividualRoleApprovals["Family Friend"].Single(x => x.Version == "v2"));
+            Assert.AreEqual(RoleApprovalStatus.Prospective, result.IndividualVolunteers[guid1].IndividualRoleApprovals["Family Coach"].Single(x => x.Version == "v1"));
+            Assert.AreEqual(RoleApprovalStatus.Prospective, result.IndividualVolunteers[guid1].IndividualRoleApprovals["Family Coach"].Single(x => x.Version == "v2"));
             Assert.AreEqual(2, result.IndividualVolunteers[guid2].IndividualRoleApprovals.Count);
-            Assert.AreEqual(RoleApprovalStatus.Prospective, result.IndividualVolunteers[guid2].IndividualRoleApprovals[("Family Friend", "v1")]);
-            Assert.AreEqual(RoleApprovalStatus.Prospective, result.IndividualVolunteers[guid2].IndividualRoleApprovals[("Family Friend", "v2")]);
+            Assert.AreEqual(RoleApprovalStatus.Prospective, result.IndividualVolunteers[guid2].IndividualRoleApprovals["Family Friend"].Single(x => x.Version == "v1"));
+            Assert.AreEqual(RoleApprovalStatus.Prospective, result.IndividualVolunteers[guid2].IndividualRoleApprovals["Family Friend"].Single(x => x.Version == "v2"));
             Assert.AreEqual(0, result.IndividualVolunteers[guid3].IndividualRoleApprovals.Count);
         }
 
@@ -130,8 +131,8 @@ namespace CareTogether.Core.Test
                 }.ToImmutableDictionary());
 
             Assert.AreEqual(2, result.FamilyRoleApprovals.Count);
-            Assert.AreEqual(RoleApprovalStatus.Prospective, result.FamilyRoleApprovals[("Host Family", "v1")]);
-            Assert.AreEqual(RoleApprovalStatus.Prospective, result.FamilyRoleApprovals[("Host Family", "v2")]);
+            Assert.AreEqual(RoleApprovalStatus.Prospective, result.FamilyRoleApprovals["Host Family"].Single(x => x.Version == "v1"));
+            Assert.AreEqual(RoleApprovalStatus.Prospective, result.FamilyRoleApprovals["Host Family"].Single(x => x.Version == "v2"));
             Assert.AreEqual(3, result.IndividualVolunteers.Count);
             Assert.AreEqual(0, result.IndividualVolunteers[guid1].IndividualRoleApprovals.Count);
             Assert.AreEqual(0, result.IndividualVolunteers[guid2].IndividualRoleApprovals.Count);
@@ -159,8 +160,8 @@ namespace CareTogether.Core.Test
                 }.ToImmutableDictionary());
 
             Assert.AreEqual(2, result.FamilyRoleApprovals.Count);
-            Assert.AreEqual(RoleApprovalStatus.Onboarded, result.FamilyRoleApprovals[("Host Family", "v1")]);
-            Assert.AreEqual(RoleApprovalStatus.Prospective, result.FamilyRoleApprovals[("Host Family", "v2")]);
+            Assert.AreEqual(RoleApprovalStatus.Onboarded, result.FamilyRoleApprovals["Host Family"].Single(x => x.Version == "v1"));
+            Assert.AreEqual(RoleApprovalStatus.Prospective, result.FamilyRoleApprovals["Host Family"].Single(x => x.Version == "v2"));
             Assert.AreEqual(3, result.IndividualVolunteers.Count);
             Assert.AreEqual(0, result.IndividualVolunteers[guid1].IndividualRoleApprovals.Count);
             Assert.AreEqual(0, result.IndividualVolunteers[guid2].IndividualRoleApprovals.Count);
