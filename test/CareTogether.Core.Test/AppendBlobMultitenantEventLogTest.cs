@@ -59,7 +59,7 @@ namespace CareTogether.Core.Test
 
             var communityEvents = await communityEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
 
-            Assert.AreEqual(24, communityEvents.Count);
+            Assert.AreEqual(25, communityEvents.Count);
             Assert.AreEqual(typeof(FamilyCommandExecuted), communityEvents[10].DomainEvent.GetType());
 
             var contactEvents = await contactsEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
