@@ -146,10 +146,11 @@ export function VolunteerFamilyScreen() {
       </Grid>
       <Grid item xs={12}>
         <div className={classes.sectionChips}>
-          {Object.entries(volunteerFamily.familyRoleApprovals || {}).map(([role, approvalStatus]) => (
-            <Chip key={role} size="small" color={approvalStatus === RoleApprovalStatus.Onboarded ? "primary" : "secondary"}
-              label={RoleApprovalStatus[approvalStatus] + " " + role} />
-          ))}
+          {Object.entries(volunteerFamily.familyRoleApprovals || {}).flatMap(([role, roleVersionApprovals]) =>
+            roleVersionApprovals.map(rva => (
+            <Chip key={role + "__" + rva.version} size="small" color={rva.approvalStatus === RoleApprovalStatus.Onboarded ? "primary" : "secondary"}
+              label={RoleApprovalStatus[rva.approvalStatus!] + " " + role + " (" + rva.version + ")"} />
+          )))}
         </div>
       </Grid>
       <Grid item xs={12} sm={6} md={4}>
