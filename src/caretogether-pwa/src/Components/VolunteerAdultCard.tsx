@@ -106,10 +106,11 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
           </IconButton>} />
       <CardContent className={classes.cardContent}>
         <Typography color="textSecondary" className={classes.sectionChips} component="div">
-          {Object.entries(volunteerFamily.individualVolunteers?.[adult.item1.id].individualRoleApprovals || {}).map(([role, approvalStatus]) => (
-            <Chip key={role} size="small" color={approvalStatus === RoleApprovalStatus.Onboarded ? "primary" : "secondary"}
-              label={RoleApprovalStatus[approvalStatus] + " " + role} />
-          ))}
+          {Object.entries(volunteerFamily.individualVolunteers?.[adult.item1.id].individualRoleApprovals || {}).flatMap(([role, roleVersionApprovals]) =>
+            roleVersionApprovals.map(rva => (
+            <Chip key={role + "__" + rva.version} size="small" color={rva.approvalStatus === RoleApprovalStatus.Onboarded ? "primary" : "secondary"}
+              label={RoleApprovalStatus[rva.approvalStatus!] + " " + role + " (" + rva.version + ")"} />
+          )))}
           {(adult.item2.relationshipToFamily && <Chip size="small" label={adult.item2.relationshipToFamily} />) || null}
           {adult.item2.isInHousehold && <Chip size="small" label="In Household" />}
         </Typography>

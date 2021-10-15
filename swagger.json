@@ -2282,7 +2282,10 @@
           "familyRoleApprovals": {
             "type": "object",
             "additionalProperties": {
-              "$ref": "#/components/schemas/RoleApprovalStatus"
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/RoleVersionApproval"
+              }
             }
           },
           "individualVolunteers": {
@@ -2346,6 +2349,18 @@
           }
         }
       },
+      "RoleVersionApproval": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "approvalStatus": {
+            "$ref": "#/components/schemas/RoleApprovalStatus"
+          }
+        }
+      },
       "RoleApprovalStatus": {
         "type": "integer",
         "description": "",
@@ -2385,7 +2400,10 @@
           "individualRoleApprovals": {
             "type": "object",
             "additionalProperties": {
-              "$ref": "#/components/schemas/RoleApprovalStatus"
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/RoleVersionApproval"
+              }
             }
           }
         }

@@ -1,6 +1,6 @@
 import { makeStyles } from '@material-ui/core/styles';
 import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab } from '@material-ui/core';
-import { Gender, ExactAge, AgeInYears } from '../GeneratedClient';
+import { Gender, ExactAge, AgeInYears, RoleVersionApproval } from '../GeneratedClient';
 import { differenceInYears } from 'date-fns';
 import { useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
@@ -42,8 +42,16 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-function approvalStatus(value: number | undefined) {
-  return (value !== undefined && RoleApprovalStatus[value]) || "-";
+function approvalStatus(roleVersionApprovals: RoleVersionApproval[] | undefined) {
+  return !roleVersionApprovals
+    ? "-"
+    : roleVersionApprovals.some(x => x.approvalStatus === RoleApprovalStatus.Onboarded)
+    ? "Onboarded"
+    : roleVersionApprovals.some(x => x.approvalStatus === RoleApprovalStatus.Approved)
+    ? "Approved"
+    : roleVersionApprovals.some(x => x.approvalStatus === RoleApprovalStatus.Prospective)
+    ? "Prospective"
+    : "-";
 }
 
 function VolunteerApproval() {

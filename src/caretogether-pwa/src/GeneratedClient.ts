@@ -3923,7 +3923,7 @@ export class VolunteerFamily implements IVolunteerFamily {
     uploadedDocuments?: UploadedDocumentInfo[];
     missingRequirements?: string[];
     availableApplications?: string[];
-    familyRoleApprovals?: { [key: string]: RoleApprovalStatus; };
+    familyRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
     individualVolunteers?: { [key: string]: Volunteer; };
     contactInfo?: { [key: string]: ContactInfo; };
 
@@ -3963,7 +3963,7 @@ export class VolunteerFamily implements IVolunteerFamily {
                 this.familyRoleApprovals = {} as any;
                 for (let key in _data["familyRoleApprovals"]) {
                     if (_data["familyRoleApprovals"].hasOwnProperty(key))
-                        (<any>this.familyRoleApprovals)![key] = _data["familyRoleApprovals"][key];
+                        (<any>this.familyRoleApprovals)![key] = _data["familyRoleApprovals"][key] ? _data["familyRoleApprovals"][key].map((i: any) => RoleVersionApproval.fromJS(i)) : [];
                 }
             }
             if (_data["individualVolunteers"]) {
@@ -4044,7 +4044,7 @@ export interface IVolunteerFamily {
     uploadedDocuments?: UploadedDocumentInfo[];
     missingRequirements?: string[];
     availableApplications?: string[];
-    familyRoleApprovals?: { [key: string]: RoleApprovalStatus; };
+    familyRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
     individualVolunteers?: { [key: string]: Volunteer; };
     contactInfo?: { [key: string]: ContactInfo; };
 }
@@ -4149,6 +4149,46 @@ export interface IUploadedDocumentInfo {
     uploadedFileName?: string;
 }
 
+export class RoleVersionApproval implements IRoleVersionApproval {
+    version?: string;
+    approvalStatus?: RoleApprovalStatus;
+
+    constructor(data?: IRoleVersionApproval) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.version = _data["version"];
+            this.approvalStatus = _data["approvalStatus"];
+        }
+    }
+
+    static fromJS(data: any): RoleVersionApproval {
+        data = typeof data === 'object' ? data : {};
+        let result = new RoleVersionApproval();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["version"] = this.version;
+        data["approvalStatus"] = this.approvalStatus;
+        return data; 
+    }
+}
+
+export interface IRoleVersionApproval {
+    version?: string;
+    approvalStatus?: RoleApprovalStatus;
+}
+
 export enum RoleApprovalStatus {
     Prospective = 0,
     Approved = 1,
@@ -4159,7 +4199,7 @@ export class Volunteer implements IVolunteer {
     completedRequirements?: CompletedRequirementInfo[];
     missingRequirements?: string[];
     availableApplications?: string[];
-    individualRoleApprovals?: { [key: string]: RoleApprovalStatus; };
+    individualRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
 
     constructor(data?: IVolunteer) {
         if (data) {
@@ -4191,7 +4231,7 @@ export class Volunteer implements IVolunteer {
                 this.individualRoleApprovals = {} as any;
                 for (let key in _data["individualRoleApprovals"]) {
                     if (_data["individualRoleApprovals"].hasOwnProperty(key))
-                        (<any>this.individualRoleApprovals)![key] = _data["individualRoleApprovals"][key];
+                        (<any>this.individualRoleApprovals)![key] = _data["individualRoleApprovals"][key] ? _data["individualRoleApprovals"][key].map((i: any) => RoleVersionApproval.fromJS(i)) : [];
                 }
             }
         }
@@ -4236,7 +4276,7 @@ export interface IVolunteer {
     completedRequirements?: CompletedRequirementInfo[];
     missingRequirements?: string[];
     availableApplications?: string[];
-    individualRoleApprovals?: { [key: string]: RoleApprovalStatus; };
+    individualRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
 }
 
 export abstract class VolunteerFamilyCommand implements IVolunteerFamilyCommand {

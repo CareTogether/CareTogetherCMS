@@ -1,3 +1,4 @@
+using CareTogether.Engines;
 using CareTogether.Resources;
 using JsonPolymorph;
 using System;
@@ -13,7 +14,7 @@ namespace CareTogether.Managers
         ImmutableList<UploadedDocumentInfo> UploadedDocuments,
         ImmutableList<string> MissingRequirements,
         ImmutableList<string> AvailableApplications,
-        ImmutableDictionary<(string Role, string Version), RoleApprovalStatus> FamilyRoleApprovals,
+        ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> FamilyRoleApprovals,
         ImmutableDictionary<Guid, Volunteer> IndividualVolunteers,
         ImmutableDictionary<Guid, ContactInfo> ContactInfo);
 
@@ -21,7 +22,7 @@ namespace CareTogether.Managers
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<string> MissingRequirements,
         ImmutableList<string> AvailableApplications,
-        ImmutableDictionary<(string Role, string Version), RoleApprovalStatus> IndividualRoleApprovals);
+        ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> IndividualRoleApprovals);
 
     [JsonHierarchyBase]
     public abstract partial record ApprovalCommand();

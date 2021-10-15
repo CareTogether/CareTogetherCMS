@@ -8,15 +8,17 @@ using System.Threading.Tasks;
 namespace CareTogether.Engines
 {
     public sealed record VolunteerFamilyApprovalStatus(
-        ImmutableDictionary<(string Role, string Version), RoleApprovalStatus> FamilyRoleApprovals,
+        ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> FamilyRoleApprovals,
         ImmutableList<string> MissingFamilyRequirements,
         ImmutableList<string> AvailableFamilyApplications,
         ImmutableDictionary<Guid, VolunteerApprovalStatus> IndividualVolunteers);
 
     public sealed record VolunteerApprovalStatus(
-        ImmutableDictionary<(string Role, string Version), RoleApprovalStatus> IndividualRoleApprovals,
+        ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> IndividualRoleApprovals,
         ImmutableList<string> MissingIndividualRequirements,
         ImmutableList<string> AvailableIndividualApplications);
+
+    public sealed record RoleVersionApproval(string Version, RoleApprovalStatus ApprovalStatus);
 
     public interface IPolicyEvaluationEngine
     {
