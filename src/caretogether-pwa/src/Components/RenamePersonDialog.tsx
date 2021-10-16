@@ -1,18 +1,7 @@
 import { useState } from 'react';
-import { makeStyles } from '@material-ui/core/styles';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid, TextField } from '@material-ui/core';
 import { Person } from '../GeneratedClient';
 import { useVolunteerFamiliesModel } from '../Model/VolunteerFamiliesModel';
-
-const useStyles = makeStyles((theme) => ({
-  form: {
-    '& .MuiFormControl-root': {
-    }
-  },
-  ageYears: {
-    width: '20ch'
-  }
-}));
 
 interface RenamePersonProps {
   volunteerFamilyId: string,
@@ -21,8 +10,6 @@ interface RenamePersonProps {
 }
 
 export function RenamePersonDialog({volunteerFamilyId, person, onClose}: RenamePersonProps) {
-  const classes = useStyles();
-
   const [fields, setFields] = useState({
     firstName: person.firstName as string,
     lastName: person.lastName as string
@@ -48,7 +35,7 @@ export function RenamePersonDialog({volunteerFamilyId, person, onClose}: RenameP
         Rename Person
       </DialogTitle>
       <DialogContent>
-        <form className={classes.form} noValidate autoComplete="off">
+        <form noValidate autoComplete="off">
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
               <TextField required id="first-name" label="First Name" fullWidth size="small"
