@@ -66,7 +66,6 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
 
   const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as VolunteerFamily;
   const adult = volunteerFamily.family?.adults?.find(x => x.item1?.id === personId);
-  const contactInfo = volunteerFamily.contactInfo?.[personId];
 
   const [adultRecordMenuAnchor, setAdultRecordMenuAnchor] = useState<{anchor: Element, adult: Person} | null>(null);
   const [recordAdultStepParameter, setRecordAdultStepParameter] = useState<{requirementName: string, requirementInfo: ActionRequirement, adult: Person} | null>(null);
@@ -156,14 +155,10 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
             ))}
           </ul>
         </Typography>
-        {contactInfo && (
-          <>
-            <Divider />
-            <Typography variant="body2" component="div">
-              <ContactDisplay contact={contactInfo} />
-            </Typography>
-          </>
-        )}
+        <Divider />
+        <Typography variant="body2" component="div">
+          <ContactDisplay person={adult.item1} />
+        </Typography>
       </CardContent>
       <CardActions>
         <IconButton size="small" className={classes.rightCardAction}

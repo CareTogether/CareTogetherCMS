@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@material-ui/core';
 import { Person, PhoneNumberType } from '../GeneratedClient';
-import { useVolunteerFamiliesModel, volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
+import { useVolunteerFamiliesModel } from '../Model/VolunteerFamiliesModel';
 import { UpdateDialog } from './UpdateDialog';
-import { useRecoilValue } from 'recoil';
 
 interface UpdatePhoneDialogProps {
   volunteerFamilyId: string,
@@ -13,9 +12,7 @@ interface UpdatePhoneDialogProps {
 
 export function UpdatePhoneDialog({volunteerFamilyId, person, onClose}: UpdatePhoneDialogProps) {
   const volunteerFamiliesModel = useVolunteerFamiliesModel();
-  const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
-  const contactInfo = volunteerFamilies?.find(x => x.family?.id === volunteerFamilyId)?.contactInfo?.[person.id!];
-  const currentPhoneNumber = contactInfo?.phoneNumbers?.find(x => x.id === contactInfo.preferredPhoneNumberId);
+  const currentPhoneNumber = person.phoneNumbers?.find(x => x.id === person.preferredPhoneNumberId);
   const [fields, setFields] = useState({
     phoneNumber: currentPhoneNumber?.number || "",
     phoneType: currentPhoneNumber?.type || PhoneNumberType.Mobile
