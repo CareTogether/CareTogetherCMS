@@ -7,17 +7,17 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Resources
 {
-    public sealed class CommunitiesResource : ICommunitiesResource
+    public sealed class DirectoryResource : IDirectoryResource
     {
-        private readonly IMultitenantEventLog<CommunityEvent> eventLog;
-        private readonly ConcurrentLockingStore<(Guid organizationId, Guid locationId), CommunityModel> tenantModels;
+        private readonly IMultitenantEventLog<DirectoryEvent> eventLog;
+        private readonly ConcurrentLockingStore<(Guid organizationId, Guid locationId), DirectoryModel> tenantModels;
 
 
-        public CommunitiesResource(IMultitenantEventLog<CommunityEvent> eventLog)
+        public DirectoryResource(IMultitenantEventLog<DirectoryEvent> eventLog)
         {
             this.eventLog = eventLog;
-            tenantModels = new ConcurrentLockingStore<(Guid organizationId, Guid locationId), CommunityModel>(key =>
-                CommunityModel.InitializeAsync(eventLog.GetAllEventsAsync(key.organizationId, key.locationId)));
+            tenantModels = new ConcurrentLockingStore<(Guid organizationId, Guid locationId), DirectoryModel>(key =>
+                DirectoryModel.InitializeAsync(eventLog.GetAllEventsAsync(key.organizationId, key.locationId)));
         }
 
 

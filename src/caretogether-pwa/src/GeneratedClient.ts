@@ -1733,7 +1733,6 @@ export class Referral implements IReferral {
     createdUtc?: Date;
     closeReason?: ReferralCloseReason | undefined;
     partneringFamily?: Family;
-    contacts?: ContactInfo[];
     referralFormUploads?: FormUploadInfo[];
     referralActivitiesPerformed?: ActivityInfo[];
     arrangements?: Arrangement[];
@@ -1754,11 +1753,6 @@ export class Referral implements IReferral {
             this.createdUtc = _data["createdUtc"] ? new Date(_data["createdUtc"].toString()) : <any>undefined;
             this.closeReason = _data["closeReason"];
             this.partneringFamily = _data["partneringFamily"] ? Family.fromJS(_data["partneringFamily"]) : <any>undefined;
-            if (Array.isArray(_data["contacts"])) {
-                this.contacts = [] as any;
-                for (let item of _data["contacts"])
-                    this.contacts!.push(ContactInfo.fromJS(item));
-            }
             if (Array.isArray(_data["referralFormUploads"])) {
                 this.referralFormUploads = [] as any;
                 for (let item of _data["referralFormUploads"])
@@ -1791,11 +1785,6 @@ export class Referral implements IReferral {
         data["createdUtc"] = this.createdUtc ? this.createdUtc.toISOString() : <any>undefined;
         data["closeReason"] = this.closeReason;
         data["partneringFamily"] = this.partneringFamily ? this.partneringFamily.toJSON() : <any>undefined;
-        if (Array.isArray(this.contacts)) {
-            data["contacts"] = [];
-            for (let item of this.contacts)
-                data["contacts"].push(item.toJSON());
-        }
         if (Array.isArray(this.referralFormUploads)) {
             data["referralFormUploads"] = [];
             for (let item of this.referralFormUploads)
@@ -1821,7 +1810,6 @@ export interface IReferral {
     createdUtc?: Date;
     closeReason?: ReferralCloseReason | undefined;
     partneringFamily?: Family;
-    contacts?: ContactInfo[];
     referralFormUploads?: FormUploadInfo[];
     referralActivitiesPerformed?: ActivityInfo[];
     arrangements?: Arrangement[];
@@ -1959,6 +1947,12 @@ export class Person implements IPerson {
     gender?: Gender;
     age?: Age;
     ethnicity?: string;
+    addresses?: Address[];
+    currentAddressId?: string | undefined;
+    phoneNumbers?: PhoneNumber[];
+    preferredPhoneNumberId?: string | undefined;
+    emailAddresses?: EmailAddress[];
+    preferredEmailAddressId?: string | undefined;
     concerns?: string | undefined;
     notes?: string | undefined;
 
@@ -1980,6 +1974,24 @@ export class Person implements IPerson {
             this.gender = _data["gender"];
             this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
             this.ethnicity = _data["ethnicity"];
+            if (Array.isArray(_data["addresses"])) {
+                this.addresses = [] as any;
+                for (let item of _data["addresses"])
+                    this.addresses!.push(Address.fromJS(item));
+            }
+            this.currentAddressId = _data["currentAddressId"];
+            if (Array.isArray(_data["phoneNumbers"])) {
+                this.phoneNumbers = [] as any;
+                for (let item of _data["phoneNumbers"])
+                    this.phoneNumbers!.push(PhoneNumber.fromJS(item));
+            }
+            this.preferredPhoneNumberId = _data["preferredPhoneNumberId"];
+            if (Array.isArray(_data["emailAddresses"])) {
+                this.emailAddresses = [] as any;
+                for (let item of _data["emailAddresses"])
+                    this.emailAddresses!.push(EmailAddress.fromJS(item));
+            }
+            this.preferredEmailAddressId = _data["preferredEmailAddressId"];
             this.concerns = _data["concerns"];
             this.notes = _data["notes"];
         }
@@ -2001,6 +2013,24 @@ export class Person implements IPerson {
         data["gender"] = this.gender;
         data["age"] = this.age ? this.age.toJSON() : <any>undefined;
         data["ethnicity"] = this.ethnicity;
+        if (Array.isArray(this.addresses)) {
+            data["addresses"] = [];
+            for (let item of this.addresses)
+                data["addresses"].push(item.toJSON());
+        }
+        data["currentAddressId"] = this.currentAddressId;
+        if (Array.isArray(this.phoneNumbers)) {
+            data["phoneNumbers"] = [];
+            for (let item of this.phoneNumbers)
+                data["phoneNumbers"].push(item.toJSON());
+        }
+        data["preferredPhoneNumberId"] = this.preferredPhoneNumberId;
+        if (Array.isArray(this.emailAddresses)) {
+            data["emailAddresses"] = [];
+            for (let item of this.emailAddresses)
+                data["emailAddresses"].push(item.toJSON());
+        }
+        data["preferredEmailAddressId"] = this.preferredEmailAddressId;
         data["concerns"] = this.concerns;
         data["notes"] = this.notes;
         return data; 
@@ -2015,6 +2045,12 @@ export interface IPerson {
     gender?: Gender;
     age?: Age;
     ethnicity?: string;
+    addresses?: Address[];
+    currentAddressId?: string | undefined;
+    phoneNumbers?: PhoneNumber[];
+    preferredPhoneNumberId?: string | undefined;
+    emailAddresses?: EmailAddress[];
+    preferredEmailAddressId?: string | undefined;
     concerns?: string | undefined;
     notes?: string | undefined;
 }
@@ -2137,184 +2173,6 @@ export class ExactAge extends Age implements IExactAge {
 
 export interface IExactAge extends IAge {
     dateOfBirth?: Date;
-}
-
-export class FamilyAdultRelationshipInfo implements IFamilyAdultRelationshipInfo {
-    relationshipToFamily?: string;
-    isInHousehold?: boolean;
-
-    constructor(data?: IFamilyAdultRelationshipInfo) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.relationshipToFamily = _data["relationshipToFamily"];
-            this.isInHousehold = _data["isInHousehold"];
-        }
-    }
-
-    static fromJS(data: any): FamilyAdultRelationshipInfo {
-        data = typeof data === 'object' ? data : {};
-        let result = new FamilyAdultRelationshipInfo();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["relationshipToFamily"] = this.relationshipToFamily;
-        data["isInHousehold"] = this.isInHousehold;
-        return data; 
-    }
-}
-
-export interface IFamilyAdultRelationshipInfo {
-    relationshipToFamily?: string;
-    isInHousehold?: boolean;
-}
-
-export class CustodialRelationship implements ICustodialRelationship {
-    childId?: string;
-    personId?: string;
-    type?: CustodialRelationshipType;
-
-    constructor(data?: ICustodialRelationship) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.childId = _data["childId"];
-            this.personId = _data["personId"];
-            this.type = _data["type"];
-        }
-    }
-
-    static fromJS(data: any): CustodialRelationship {
-        data = typeof data === 'object' ? data : {};
-        let result = new CustodialRelationship();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["childId"] = this.childId;
-        data["personId"] = this.personId;
-        data["type"] = this.type;
-        return data; 
-    }
-}
-
-export interface ICustodialRelationship {
-    childId?: string;
-    personId?: string;
-    type?: CustodialRelationshipType;
-}
-
-export enum CustodialRelationshipType {
-    ParentWithCustody = 0,
-    ParentWithCourtAppointedCustody = 1,
-    LegalGuardian = 2,
-}
-
-export class ContactInfo implements IContactInfo {
-    personId?: string;
-    addresses?: Address[];
-    currentAddressId?: string | undefined;
-    phoneNumbers?: PhoneNumber[];
-    preferredPhoneNumberId?: string | undefined;
-    emailAddresses?: EmailAddress[];
-    preferredEmailAddressId?: string | undefined;
-    contactMethodPreferenceNotes?: string | undefined;
-
-    constructor(data?: IContactInfo) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.personId = _data["personId"];
-            if (Array.isArray(_data["addresses"])) {
-                this.addresses = [] as any;
-                for (let item of _data["addresses"])
-                    this.addresses!.push(Address.fromJS(item));
-            }
-            this.currentAddressId = _data["currentAddressId"];
-            if (Array.isArray(_data["phoneNumbers"])) {
-                this.phoneNumbers = [] as any;
-                for (let item of _data["phoneNumbers"])
-                    this.phoneNumbers!.push(PhoneNumber.fromJS(item));
-            }
-            this.preferredPhoneNumberId = _data["preferredPhoneNumberId"];
-            if (Array.isArray(_data["emailAddresses"])) {
-                this.emailAddresses = [] as any;
-                for (let item of _data["emailAddresses"])
-                    this.emailAddresses!.push(EmailAddress.fromJS(item));
-            }
-            this.preferredEmailAddressId = _data["preferredEmailAddressId"];
-            this.contactMethodPreferenceNotes = _data["contactMethodPreferenceNotes"];
-        }
-    }
-
-    static fromJS(data: any): ContactInfo {
-        data = typeof data === 'object' ? data : {};
-        let result = new ContactInfo();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["personId"] = this.personId;
-        if (Array.isArray(this.addresses)) {
-            data["addresses"] = [];
-            for (let item of this.addresses)
-                data["addresses"].push(item.toJSON());
-        }
-        data["currentAddressId"] = this.currentAddressId;
-        if (Array.isArray(this.phoneNumbers)) {
-            data["phoneNumbers"] = [];
-            for (let item of this.phoneNumbers)
-                data["phoneNumbers"].push(item.toJSON());
-        }
-        data["preferredPhoneNumberId"] = this.preferredPhoneNumberId;
-        if (Array.isArray(this.emailAddresses)) {
-            data["emailAddresses"] = [];
-            for (let item of this.emailAddresses)
-                data["emailAddresses"].push(item.toJSON());
-        }
-        data["preferredEmailAddressId"] = this.preferredEmailAddressId;
-        data["contactMethodPreferenceNotes"] = this.contactMethodPreferenceNotes;
-        return data; 
-    }
-}
-
-export interface IContactInfo {
-    personId?: string;
-    addresses?: Address[];
-    currentAddressId?: string | undefined;
-    phoneNumbers?: PhoneNumber[];
-    preferredPhoneNumberId?: string | undefined;
-    emailAddresses?: EmailAddress[];
-    preferredEmailAddressId?: string | undefined;
-    contactMethodPreferenceNotes?: string | undefined;
 }
 
 export class Address implements IAddress {
@@ -2475,6 +2333,96 @@ export interface IEmailAddress {
 export enum EmailAddressType {
     Personal = 0,
     Work = 1,
+}
+
+export class FamilyAdultRelationshipInfo implements IFamilyAdultRelationshipInfo {
+    relationshipToFamily?: string;
+    isInHousehold?: boolean;
+
+    constructor(data?: IFamilyAdultRelationshipInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.relationshipToFamily = _data["relationshipToFamily"];
+            this.isInHousehold = _data["isInHousehold"];
+        }
+    }
+
+    static fromJS(data: any): FamilyAdultRelationshipInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new FamilyAdultRelationshipInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["relationshipToFamily"] = this.relationshipToFamily;
+        data["isInHousehold"] = this.isInHousehold;
+        return data; 
+    }
+}
+
+export interface IFamilyAdultRelationshipInfo {
+    relationshipToFamily?: string;
+    isInHousehold?: boolean;
+}
+
+export class CustodialRelationship implements ICustodialRelationship {
+    childId?: string;
+    personId?: string;
+    type?: CustodialRelationshipType;
+
+    constructor(data?: ICustodialRelationship) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.childId = _data["childId"];
+            this.personId = _data["personId"];
+            this.type = _data["type"];
+        }
+    }
+
+    static fromJS(data: any): CustodialRelationship {
+        data = typeof data === 'object' ? data : {};
+        let result = new CustodialRelationship();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["childId"] = this.childId;
+        data["personId"] = this.personId;
+        data["type"] = this.type;
+        return data; 
+    }
+}
+
+export interface ICustodialRelationship {
+    childId?: string;
+    personId?: string;
+    type?: CustodialRelationshipType;
+}
+
+export enum CustodialRelationshipType {
+    ParentWithCustody = 0,
+    ParentWithCourtAppointedCustody = 1,
+    LegalGuardian = 2,
 }
 
 export class FormUploadInfo implements IFormUploadInfo {
@@ -3925,7 +3873,6 @@ export class VolunteerFamily implements IVolunteerFamily {
     availableApplications?: string[];
     familyRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
     individualVolunteers?: { [key: string]: Volunteer; };
-    contactInfo?: { [key: string]: ContactInfo; };
 
     constructor(data?: IVolunteerFamily) {
         if (data) {
@@ -3971,13 +3918,6 @@ export class VolunteerFamily implements IVolunteerFamily {
                 for (let key in _data["individualVolunteers"]) {
                     if (_data["individualVolunteers"].hasOwnProperty(key))
                         (<any>this.individualVolunteers)![key] = _data["individualVolunteers"][key] ? Volunteer.fromJS(_data["individualVolunteers"][key]) : new Volunteer();
-                }
-            }
-            if (_data["contactInfo"]) {
-                this.contactInfo = {} as any;
-                for (let key in _data["contactInfo"]) {
-                    if (_data["contactInfo"].hasOwnProperty(key))
-                        (<any>this.contactInfo)![key] = _data["contactInfo"][key] ? ContactInfo.fromJS(_data["contactInfo"][key]) : new ContactInfo();
                 }
             }
         }
@@ -4027,13 +3967,6 @@ export class VolunteerFamily implements IVolunteerFamily {
                     (<any>data["individualVolunteers"])[key] = this.individualVolunteers[key] ? this.individualVolunteers[key].toJSON() : <any>undefined;
             }
         }
-        if (this.contactInfo) {
-            data["contactInfo"] = {};
-            for (let key in this.contactInfo) {
-                if (this.contactInfo.hasOwnProperty(key))
-                    (<any>data["contactInfo"])[key] = this.contactInfo[key] ? this.contactInfo[key].toJSON() : <any>undefined;
-            }
-        }
         return data; 
     }
 }
@@ -4046,7 +3979,6 @@ export interface IVolunteerFamily {
     availableApplications?: string[];
     familyRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
     individualVolunteers?: { [key: string]: Volunteer; };
-    contactInfo?: { [key: string]: ContactInfo; };
 }
 
 export class CompletedRequirementInfo implements ICompletedRequirementInfo {
@@ -5014,8 +4946,28 @@ export abstract class PersonCommand implements IPersonCommand {
 
     static fromJS(data: any): PersonCommand {
         data = typeof data === 'object' ? data : {};
+        if (data["discriminator"] === "AddPersonAddress") {
+            let result = new AddPersonAddress();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "AddPersonEmailAddress") {
+            let result = new AddPersonEmailAddress();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "AddPersonPhoneNumber") {
+            let result = new AddPersonPhoneNumber();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "CreatePerson") {
             let result = new CreatePerson();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UpdatePersonAddress") {
+            let result = new UpdatePersonAddress();
             result.init(data);
             return result;
         }
@@ -5029,6 +4981,11 @@ export abstract class PersonCommand implements IPersonCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "UpdatePersonEmailAddress") {
+            let result = new UpdatePersonEmailAddress();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "UpdatePersonName") {
             let result = new UpdatePersonName();
             result.init(data);
@@ -5036,6 +4993,11 @@ export abstract class PersonCommand implements IPersonCommand {
         }
         if (data["discriminator"] === "UpdatePersonNotes") {
             let result = new UpdatePersonNotes();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UpdatePersonPhoneNumber") {
+            let result = new UpdatePersonPhoneNumber();
             result.init(data);
             return result;
         }
@@ -5059,6 +5021,120 @@ export interface IPersonCommand {
     personId?: string;
 }
 
+export class AddPersonAddress extends PersonCommand implements IAddPersonAddress {
+    address?: Address;
+    isCurrentAddress?: boolean;
+
+    constructor(data?: IAddPersonAddress) {
+        super(data);
+        this._discriminator = "AddPersonAddress";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.address = _data["address"] ? Address.fromJS(_data["address"]) : <any>undefined;
+            this.isCurrentAddress = _data["isCurrentAddress"];
+        }
+    }
+
+    static fromJS(data: any): AddPersonAddress {
+        data = typeof data === 'object' ? data : {};
+        let result = new AddPersonAddress();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["address"] = this.address ? this.address.toJSON() : <any>undefined;
+        data["isCurrentAddress"] = this.isCurrentAddress;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IAddPersonAddress extends IPersonCommand {
+    address?: Address;
+    isCurrentAddress?: boolean;
+}
+
+export class AddPersonEmailAddress extends PersonCommand implements IAddPersonEmailAddress {
+    emailAddress?: EmailAddress;
+    isPreferredEmailAddress?: boolean;
+
+    constructor(data?: IAddPersonEmailAddress) {
+        super(data);
+        this._discriminator = "AddPersonEmailAddress";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.emailAddress = _data["emailAddress"] ? EmailAddress.fromJS(_data["emailAddress"]) : <any>undefined;
+            this.isPreferredEmailAddress = _data["isPreferredEmailAddress"];
+        }
+    }
+
+    static fromJS(data: any): AddPersonEmailAddress {
+        data = typeof data === 'object' ? data : {};
+        let result = new AddPersonEmailAddress();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["emailAddress"] = this.emailAddress ? this.emailAddress.toJSON() : <any>undefined;
+        data["isPreferredEmailAddress"] = this.isPreferredEmailAddress;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IAddPersonEmailAddress extends IPersonCommand {
+    emailAddress?: EmailAddress;
+    isPreferredEmailAddress?: boolean;
+}
+
+export class AddPersonPhoneNumber extends PersonCommand implements IAddPersonPhoneNumber {
+    phoneNumber?: PhoneNumber;
+    isPreferredPhoneNumber?: boolean;
+
+    constructor(data?: IAddPersonPhoneNumber) {
+        super(data);
+        this._discriminator = "AddPersonPhoneNumber";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.phoneNumber = _data["phoneNumber"] ? PhoneNumber.fromJS(_data["phoneNumber"]) : <any>undefined;
+            this.isPreferredPhoneNumber = _data["isPreferredPhoneNumber"];
+        }
+    }
+
+    static fromJS(data: any): AddPersonPhoneNumber {
+        data = typeof data === 'object' ? data : {};
+        let result = new AddPersonPhoneNumber();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["phoneNumber"] = this.phoneNumber ? this.phoneNumber.toJSON() : <any>undefined;
+        data["isPreferredPhoneNumber"] = this.isPreferredPhoneNumber;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IAddPersonPhoneNumber extends IPersonCommand {
+    phoneNumber?: PhoneNumber;
+    isPreferredPhoneNumber?: boolean;
+}
+
 export class CreatePerson extends PersonCommand implements ICreatePerson {
     userId?: string | undefined;
     firstName?: string;
@@ -5066,6 +5142,12 @@ export class CreatePerson extends PersonCommand implements ICreatePerson {
     gender?: Gender;
     age?: Age;
     ethnicity?: string;
+    addresses?: Address[];
+    currentAddressId?: string | undefined;
+    phoneNumbers?: PhoneNumber[];
+    preferredPhoneNumberId?: string | undefined;
+    emailAddresses?: EmailAddress[];
+    preferredEmailAddressId?: string | undefined;
     concerns?: string | undefined;
     notes?: string | undefined;
 
@@ -5083,6 +5165,24 @@ export class CreatePerson extends PersonCommand implements ICreatePerson {
             this.gender = _data["gender"];
             this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
             this.ethnicity = _data["ethnicity"];
+            if (Array.isArray(_data["addresses"])) {
+                this.addresses = [] as any;
+                for (let item of _data["addresses"])
+                    this.addresses!.push(Address.fromJS(item));
+            }
+            this.currentAddressId = _data["currentAddressId"];
+            if (Array.isArray(_data["phoneNumbers"])) {
+                this.phoneNumbers = [] as any;
+                for (let item of _data["phoneNumbers"])
+                    this.phoneNumbers!.push(PhoneNumber.fromJS(item));
+            }
+            this.preferredPhoneNumberId = _data["preferredPhoneNumberId"];
+            if (Array.isArray(_data["emailAddresses"])) {
+                this.emailAddresses = [] as any;
+                for (let item of _data["emailAddresses"])
+                    this.emailAddresses!.push(EmailAddress.fromJS(item));
+            }
+            this.preferredEmailAddressId = _data["preferredEmailAddressId"];
             this.concerns = _data["concerns"];
             this.notes = _data["notes"];
         }
@@ -5103,6 +5203,24 @@ export class CreatePerson extends PersonCommand implements ICreatePerson {
         data["gender"] = this.gender;
         data["age"] = this.age ? this.age.toJSON() : <any>undefined;
         data["ethnicity"] = this.ethnicity;
+        if (Array.isArray(this.addresses)) {
+            data["addresses"] = [];
+            for (let item of this.addresses)
+                data["addresses"].push(item.toJSON());
+        }
+        data["currentAddressId"] = this.currentAddressId;
+        if (Array.isArray(this.phoneNumbers)) {
+            data["phoneNumbers"] = [];
+            for (let item of this.phoneNumbers)
+                data["phoneNumbers"].push(item.toJSON());
+        }
+        data["preferredPhoneNumberId"] = this.preferredPhoneNumberId;
+        if (Array.isArray(this.emailAddresses)) {
+            data["emailAddresses"] = [];
+            for (let item of this.emailAddresses)
+                data["emailAddresses"].push(item.toJSON());
+        }
+        data["preferredEmailAddressId"] = this.preferredEmailAddressId;
         data["concerns"] = this.concerns;
         data["notes"] = this.notes;
         super.toJSON(data);
@@ -5117,8 +5235,52 @@ export interface ICreatePerson extends IPersonCommand {
     gender?: Gender;
     age?: Age;
     ethnicity?: string;
+    addresses?: Address[];
+    currentAddressId?: string | undefined;
+    phoneNumbers?: PhoneNumber[];
+    preferredPhoneNumberId?: string | undefined;
+    emailAddresses?: EmailAddress[];
+    preferredEmailAddressId?: string | undefined;
     concerns?: string | undefined;
     notes?: string | undefined;
+}
+
+export class UpdatePersonAddress extends PersonCommand implements IUpdatePersonAddress {
+    address?: Address;
+    isCurrentAddress?: boolean;
+
+    constructor(data?: IUpdatePersonAddress) {
+        super(data);
+        this._discriminator = "UpdatePersonAddress";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.address = _data["address"] ? Address.fromJS(_data["address"]) : <any>undefined;
+            this.isCurrentAddress = _data["isCurrentAddress"];
+        }
+    }
+
+    static fromJS(data: any): UpdatePersonAddress {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdatePersonAddress();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["address"] = this.address ? this.address.toJSON() : <any>undefined;
+        data["isCurrentAddress"] = this.isCurrentAddress;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUpdatePersonAddress extends IPersonCommand {
+    address?: Address;
+    isCurrentAddress?: boolean;
 }
 
 export class UpdatePersonAge extends PersonCommand implements IUpdatePersonAge {
@@ -5187,6 +5349,44 @@ export class UpdatePersonConcerns extends PersonCommand implements IUpdatePerson
 
 export interface IUpdatePersonConcerns extends IPersonCommand {
     concerns?: string | undefined;
+}
+
+export class UpdatePersonEmailAddress extends PersonCommand implements IUpdatePersonEmailAddress {
+    emailAddress?: EmailAddress;
+    isPreferredEmailAddress?: boolean;
+
+    constructor(data?: IUpdatePersonEmailAddress) {
+        super(data);
+        this._discriminator = "UpdatePersonEmailAddress";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.emailAddress = _data["emailAddress"] ? EmailAddress.fromJS(_data["emailAddress"]) : <any>undefined;
+            this.isPreferredEmailAddress = _data["isPreferredEmailAddress"];
+        }
+    }
+
+    static fromJS(data: any): UpdatePersonEmailAddress {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdatePersonEmailAddress();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["emailAddress"] = this.emailAddress ? this.emailAddress.toJSON() : <any>undefined;
+        data["isPreferredEmailAddress"] = this.isPreferredEmailAddress;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUpdatePersonEmailAddress extends IPersonCommand {
+    emailAddress?: EmailAddress;
+    isPreferredEmailAddress?: boolean;
 }
 
 export class UpdatePersonName extends PersonCommand implements IUpdatePersonName {
@@ -5259,6 +5459,44 @@ export class UpdatePersonNotes extends PersonCommand implements IUpdatePersonNot
 
 export interface IUpdatePersonNotes extends IPersonCommand {
     notes?: string | undefined;
+}
+
+export class UpdatePersonPhoneNumber extends PersonCommand implements IUpdatePersonPhoneNumber {
+    phoneNumber?: PhoneNumber;
+    isPreferredPhoneNumber?: boolean;
+
+    constructor(data?: IUpdatePersonPhoneNumber) {
+        super(data);
+        this._discriminator = "UpdatePersonPhoneNumber";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.phoneNumber = _data["phoneNumber"] ? PhoneNumber.fromJS(_data["phoneNumber"]) : <any>undefined;
+            this.isPreferredPhoneNumber = _data["isPreferredPhoneNumber"];
+        }
+    }
+
+    static fromJS(data: any): UpdatePersonPhoneNumber {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdatePersonPhoneNumber();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["phoneNumber"] = this.phoneNumber ? this.phoneNumber.toJSON() : <any>undefined;
+        data["isPreferredPhoneNumber"] = this.isPreferredPhoneNumber;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUpdatePersonPhoneNumber extends IPersonCommand {
+    phoneNumber?: PhoneNumber;
+    isPreferredPhoneNumber?: boolean;
 }
 
 export class UpdatePersonUserLink extends PersonCommand implements IUpdatePersonUserLink {

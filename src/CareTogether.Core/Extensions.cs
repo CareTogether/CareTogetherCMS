@@ -1,23 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Security.Claims;
 
 namespace CareTogether
 {
     public static class Extensions
     {
-        public static List<T> With<T>(this List<T> list, T valueToAdd)
+        public static ImmutableList<T> With<T>(this ImmutableList<T> list, T valueToAdd)
         {
-            list.Add(valueToAdd);
-            return list;
+            return list.Add(valueToAdd);
         }
 
-        public static List<T> With<T>(this List<T> list, T valueToUpdate, Predicate<T> predicate)
+        public static ImmutableList<T> With<T>(this ImmutableList<T> list, T valueToUpdate, Predicate<T> predicate)
         {
-            for (var i = 0; i < list.Count; i++)
-                if (predicate(list[i]))
-                    list[i] = valueToUpdate;
-            return list;
+            return list.Select(x => predicate(x) ? valueToUpdate : x).ToImmutableList();
         }
 
 

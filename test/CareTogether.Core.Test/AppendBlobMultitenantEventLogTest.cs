@@ -5,6 +5,7 @@ using CareTogether.Resources.Storage;
 using CareTogether.TestData;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -24,11 +25,12 @@ namespace CareTogether.Core.Test
         static readonly Guid guid4 = Id('4');
 
         static readonly PersonCommandExecuted personCommand = new PersonCommandExecuted(guid4, new DateTime(2021, 7, 1),
-            new CreatePerson(guid3, guid4, "Jane", "Smith", Gender.Female, new AgeInYears(42, new DateTime(2021, 1, 1)), "Ethnic", null, null));
+            new CreatePerson(guid3, guid4, "Jane", "Smith", Gender.Female, new AgeInYears(42, new DateTime(2021, 1, 1)), "Ethnic",
+                ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null,
+                null, null));
 
 #nullable disable
-        AppendBlobMultitenantEventLog<CommunityEvent> communityEventLog;
-        AppendBlobMultitenantEventLog<ContactCommandExecutedEvent> contactsEventLog;
+        AppendBlobMultitenantEventLog<DirectoryEvent> communityEventLog;
         AppendBlobMultitenantEventLog<ReferralEvent> referralsEventLog;
 #nullable restore
 
@@ -38,9 +40,8 @@ namespace CareTogether.Core.Test
             testingClient.GetBlobContainerClient(organizationId.ToString()).DeleteIfExists();
             testingClient.GetBlobContainerClient(guid3.ToString()).DeleteIfExists();
 
-            communityEventLog = new AppendBlobMultitenantEventLog<CommunityEvent>(testingClient, LogType.CommunityEventLog);
-            contactsEventLog = new AppendBlobMultitenantEventLog<ContactCommandExecutedEvent>(testingClient, LogType.ContactsEventLog);
-            referralsEventLog = new AppendBlobMultitenantEventLog<ReferralEvent>(testingClient, LogType.ReferralsEventLog);
+            communityEventLog = new AppendBlobMultitenantEventLog<DirectoryEvent>(testingClient, "CommunityEventLog");
+            referralsEventLog = new AppendBlobMultitenantEventLog<ReferralEvent>(testingClient, "ReferralsEventLog");
         }
 
         [TestCleanup]
@@ -54,18 +55,13 @@ namespace CareTogether.Core.Test
         public async Task ResultsFromContainerAfterTestDataPopulationMatchesExpected()
         {
             await TestDataProvider.PopulateCommunityEvents(communityEventLog);
-            await TestDataProvider.PopulateContactEvents(contactsEventLog);
             await TestDataProvider.PopulateReferralEvents(referralsEventLog);
 
             var communityEvents = await communityEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
 
             Assert.AreEqual(25, communityEvents.Count);
             Assert.AreEqual(typeof(FamilyCommandExecuted), communityEvents[10].DomainEvent.GetType());
-
-            var contactEvents = await contactsEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
-
-            Assert.AreEqual(20, contactEvents.Count);
-            Assert.AreEqual(typeof(ContactCommandExecutedEvent), contactEvents[8].DomainEvent.GetType());
+            Assert.AreEqual(typeof(PersonCommandExecuted), communityEvents[8].DomainEvent.GetType());
 
             var referralEvents = await referralsEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
 

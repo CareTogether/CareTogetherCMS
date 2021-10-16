@@ -9,7 +9,6 @@ namespace CareTogether.Managers
     public record Referral(Guid Id, string PolicyVersion,
         DateTime CreatedUtc, ReferralCloseReason? CloseReason,
         Family PartneringFamily,
-        ImmutableList<ContactInfo> Contacts,
         ImmutableList<FormUploadInfo> ReferralFormUploads,
         ImmutableList<ActivityInfo> ReferralActivitiesPerformed,
         ImmutableList<Arrangement> Arrangements);

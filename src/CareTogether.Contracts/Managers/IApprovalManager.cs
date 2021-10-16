@@ -15,8 +15,7 @@ namespace CareTogether.Managers
         ImmutableList<string> MissingRequirements,
         ImmutableList<string> AvailableApplications,
         ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> FamilyRoleApprovals,
-        ImmutableDictionary<Guid, Volunteer> IndividualVolunteers,
-        ImmutableDictionary<Guid, ContactInfo> ContactInfo);
+        ImmutableDictionary<Guid, Volunteer> IndividualVolunteers);
 
     public sealed record Volunteer(
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,

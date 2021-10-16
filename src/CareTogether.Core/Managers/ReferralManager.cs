@@ -11,18 +11,16 @@ namespace CareTogether.Managers
     public sealed class ReferralManager : IReferralManager
     {
         private readonly IPolicyEvaluationEngine policyEvaluationEngine;
-        private readonly ICommunitiesResource communitiesResource;
+        private readonly IDirectoryResource communitiesResource;
         private readonly IReferralsResource referralsResource;
-        private readonly IContactsResource contactsResource;
 
 
         public ReferralManager(IPolicyEvaluationEngine policyEvaluationEngine,
-            ICommunitiesResource communitiesResource, IReferralsResource referralsResource, IContactsResource contactsResource)
+            IDirectoryResource communitiesResource, IReferralsResource referralsResource)
         {
             this.policyEvaluationEngine = policyEvaluationEngine;
             this.communitiesResource = communitiesResource;
             this.referralsResource = referralsResource;
-            this.contactsResource = contactsResource;
         }
 
 
@@ -38,8 +36,7 @@ namespace CareTogether.Managers
             var referralEntry = await referralsResource.GetReferralAsync(organizationId, locationId, command.ReferralId);
             
             var families = communitiesResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
-            var contacts = contactsResource.ListContactsAsync(organizationId, locationId).Result;
-            var referral = ToReferral(referralEntry, families, contacts);
+            var referral = ToReferral(referralEntry, families);
 
             var authorizationResult = await policyEvaluationEngine.AuthorizeReferralCommandAsync(
                 organizationId, locationId, user, command, referral);
@@ -47,7 +44,7 @@ namespace CareTogether.Managers
             referralEntry = await referralsResource.ExecuteReferralCommandAsync(organizationId, locationId, command, user.UserId());
                 
             var disclosedReferral = await policyEvaluationEngine.DiscloseReferralAsync(user,
-                ToReferral(referralEntry, families, contacts));
+                ToReferral(referralEntry, families));
             return disclosedReferral;
         }
 
@@ -63,8 +60,7 @@ namespace CareTogether.Managers
             var referralEntry = await referralsResource.GetReferralAsync(organizationId, locationId, command.ReferralId);
             
             var families = communitiesResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
-            var contacts = contactsResource.ListContactsAsync(organizationId, locationId).Result;
-            var referral = ToReferral(referralEntry, families, contacts);
+            var referral = ToReferral(referralEntry, families);
 
             var authorizationResult = await policyEvaluationEngine.AuthorizeArrangementCommandAsync(
                 organizationId, locationId, user, command, referral);
@@ -72,7 +68,7 @@ namespace CareTogether.Managers
             referralEntry = await referralsResource.ExecuteArrangementCommandAsync(organizationId, locationId, command, user.UserId());
 
             var disclosedReferral = await policyEvaluationEngine.DiscloseReferralAsync(user,
-                ToReferral(referralEntry, families, contacts));
+                ToReferral(referralEntry, families));
             return disclosedReferral;
         }
 
@@ -88,8 +84,7 @@ namespace CareTogether.Managers
             var referralEntry = await referralsResource.GetReferralAsync(organizationId, locationId, command.ReferralId);
             
             var families = communitiesResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
-            var contacts = contactsResource.ListContactsAsync(organizationId, locationId).Result;
-            var referral = ToReferral(referralEntry, families, contacts);
+            var referral = ToReferral(referralEntry, families);
 
             var authorizationResult = await policyEvaluationEngine.AuthorizeArrangementNoteCommandAsync(
                 organizationId, locationId, user, command, referral);
@@ -97,29 +92,23 @@ namespace CareTogether.Managers
             referralEntry = await referralsResource.ExecuteArrangementNoteCommandAsync(organizationId, locationId, command, user.UserId());
                 
             var disclosedReferral = await policyEvaluationEngine.DiscloseReferralAsync(user,
-                ToReferral(referralEntry, families, contacts));
+                ToReferral(referralEntry, families));
             return disclosedReferral;
         }
 
         public async Task<ImmutableList<Referral>> ListReferralsAsync(Guid organizationId, Guid locationId)
         {
             var families = communitiesResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
-            var contacts = contactsResource.ListContactsAsync(organizationId, locationId).Result;
             var referrals = await referralsResource.ListReferralsAsync(organizationId, locationId);
 
-            return referrals.Select(r => ToReferral(r, families, contacts)).ToImmutableList();
+            return referrals.Select(r => ToReferral(r, families)).ToImmutableList();
         }
 
 
         private Referral ToReferral(ReferralEntry entry,
-            ImmutableDictionary<Guid, Family> families,
-            ImmutableDictionary<Guid, ContactInfo> contacts) =>
+            ImmutableDictionary<Guid, Family> families) =>
             new(entry.Id, entry.PolicyVersion, entry.CreatedUtc, entry.CloseReason,
                 families[entry.PartneringFamilyId],
-                families[entry.PartneringFamilyId].Adults
-                    .SelectMany(a => contacts.TryGetValue(a.Item1.Id, out var c) ? new[] { c } : Array.Empty<ContactInfo>())
-                    .Where(c => c != null)
-                    .ToImmutableList(),
                 entry.ReferralFormUploads, entry.ReferralActivitiesPerformed,
                 entry.Arrangements.Select(a => ToArrangement(a.Value)).ToImmutableList());
 
