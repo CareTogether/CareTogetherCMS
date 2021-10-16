@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Grid, TextField } from '@material-ui/core';
-import { Person } from '../GeneratedClient';
-import { useVolunteerFamiliesModel } from '../Model/VolunteerFamiliesModel';
+import { FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@material-ui/core';
+import { Person, PhoneNumberType } from '../GeneratedClient';
+import { useVolunteerFamiliesModel, volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
 import { UpdateDialog } from './UpdateDialog';
+import { useRecoilValue } from 'recoil';
 
 interface UpdatePhoneDialogProps {
   volunteerFamilyId: string,
@@ -11,23 +12,42 @@ interface UpdatePhoneDialogProps {
 }
 
 export function UpdatePhoneDialog({volunteerFamilyId, person, onClose}: UpdatePhoneDialogProps) {
-  const [fields, setFields] = useState({
-    notes: person.notes || ''
-  });
-  const { notes } = fields;
   const volunteerFamiliesModel = useVolunteerFamiliesModel();
+  const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
+  const contactInfo = volunteerFamilies?.find(x => x.family?.id === volunteerFamilyId)?.contactInfo?.[person.id!];
+  const currentPhoneNumber = contactInfo?.phoneNumbers?.find(x => x.id === contactInfo.preferredPhoneNumberId);
+  const [fields, setFields] = useState({
+    phoneNumber: currentPhoneNumber?.number || "",
+    phoneType: currentPhoneNumber?.type || PhoneNumberType.Mobile
+  });
+  const { phoneNumber, phoneType } = fields;
 
   async function save() {
-    await volunteerFamiliesModel.updatePersonNotes(volunteerFamilyId, person.id as string,
-      notes.length > 0 ? notes : null);
+    alert("TODO");
+    // await volunteerFamiliesModel.updatePersonNotes(volunteerFamilyId, person.id as string,
+    //   notes.length > 0 ? notes : null);
   }
 
   return (
     <UpdateDialog title={`Update Phone for ${person.firstName} ${person.lastName}`} onClose={onClose}
-      onSave={save} enableSave={() => notes !== person.notes}>
+      onSave={save} enableSave={() => phoneNumber !== currentPhoneNumber?.number || phoneType !== currentPhoneNumber?.type}>
       <form noValidate autoComplete="off">
         <Grid container spacing={2}>
-          <Grid item xs={12}>
+          <Grid item xs={12} sm={6}>
+            <TextField id="phone-number" label="Phone Number" fullWidth size="small" type="tel"
+              value={phoneNumber} onChange={e => setFields({...fields, phoneNumber: e.target.value})} />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <FormControl component="fieldset">
+              <FormLabel component="legend">Phone Type:</FormLabel>
+              <RadioGroup aria-label="phoneType" name="phoneType" row
+                value={PhoneNumberType[phoneType]} onChange={e => setFields({...fields, phoneType: PhoneNumberType[e.target.value as keyof typeof PhoneNumberType]})}>
+                <FormControlLabel value={PhoneNumberType[PhoneNumberType.Mobile]} control={<Radio size="small" />} label="Mobile" />
+                <FormControlLabel value={PhoneNumberType[PhoneNumberType.Home]} control={<Radio size="small" />} label="Home" />
+                <FormControlLabel value={PhoneNumberType[PhoneNumberType.Work]} control={<Radio size="small" />} label="Work" />
+                {/* <FormControlLabel value={PhoneNumberType[PhoneNumberType.Fax]} control={<Radio size="small" />} label="Fax" /> */}
+              </RadioGroup>
+            </FormControl>
           </Grid>
         </Grid>
       </form>
