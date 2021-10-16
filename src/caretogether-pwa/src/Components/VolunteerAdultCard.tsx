@@ -15,6 +15,9 @@ import { UpdateNotesDialog } from "./UpdateNotesDialog";
 import { ContactDisplay } from "./ContactDisplay";
 import { CardInfoRow } from "./CardInfoRow";
 import { VolunteerRoleApprovalStatusChip } from "./VolunteerRoleApprovalStatusChipProps";
+import { UpdatePhoneDialog } from "./UpdatePhoneDialog";
+import { UpdateEmailDialog } from "./UpdateEmailDialog";
+import { UpdateAddressDialog } from "./UpdateAddressDialog";
 
 const useStyles = makeStyles((theme) => ({
   sectionChips: {
@@ -88,6 +91,21 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
   function selectUpdateNotes(adult: Person) {
     setAdultMoreMenuAnchor(null);
     setUpdateNotesParameter({volunteerFamilyId, person: adult});
+  }
+  const [updatePhoneParameter, setUpdatePhoneParameter] = useState<{volunteerFamilyId: string, person: Person} | null>(null);
+  function selectUpdatePhone(adult: Person) {
+    setAdultMoreMenuAnchor(null);
+    setUpdatePhoneParameter({volunteerFamilyId, person: adult});
+  }
+  const [updateEmailParameter, setUpdateEmailParameter] = useState<{volunteerFamilyId: string, person: Person} | null>(null);
+  function selectUpdateEmail(adult: Person) {
+    setAdultMoreMenuAnchor(null);
+    setUpdateEmailParameter({volunteerFamilyId, person: adult});
+  }
+  const [updateAddressParameter, setUpdateAddressParameter] = useState<{volunteerFamilyId: string, person: Person} | null>(null);
+  function selectUpdateAddress(adult: Person) {
+    setAdultMoreMenuAnchor(null);
+    setUpdateAddressParameter({volunteerFamilyId, person: adult});
   }
   
   const theme = useTheme();
@@ -191,6 +209,15 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectUpdateNotes(adultMoreMenuAnchor.adult)}>
           <ListItemText primary="Update notes" />
         </MenuItem>
+        <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectUpdatePhone(adultMoreMenuAnchor.adult)}>
+          <ListItemText primary="Update phone" />
+        </MenuItem>
+        <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectUpdateEmail(adultMoreMenuAnchor.adult)}>
+          <ListItemText primary="Update email" />
+        </MenuItem>
+        <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectUpdateAddress(adultMoreMenuAnchor.adult)}>
+          <ListItemText primary="Update address" />
+        </MenuItem>
       </Menu>
       {(renamePersonParameter && <RenamePersonDialog volunteerFamilyId={volunteerFamilyId} person={renamePersonParameter.person}
         onClose={() => setRenamePersonParameter(null)} />) || null}
@@ -198,5 +225,11 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         onClose={() => setUpdateConcernsParameter(null)} />) || null}
       {(updateNotesParameter && <UpdateNotesDialog volunteerFamilyId={volunteerFamilyId} person={updateNotesParameter.person}
         onClose={() => setUpdateNotesParameter(null)} />) || null}
+      {(updatePhoneParameter && <UpdatePhoneDialog volunteerFamilyId={volunteerFamilyId} person={updatePhoneParameter.person}
+        onClose={() => setUpdatePhoneParameter(null)} />) || null}
+      {(updateEmailParameter && <UpdateEmailDialog volunteerFamilyId={volunteerFamilyId} person={updateEmailParameter.person}
+        onClose={() => setUpdateEmailParameter(null)} />) || null}
+      {(updateAddressParameter && <UpdateAddressDialog volunteerFamilyId={volunteerFamilyId} person={updateAddressParameter.person}
+        onClose={() => setUpdateAddressParameter(null)} />) || null}
     </Card>}</>);
 }
