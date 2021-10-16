@@ -1,7 +1,7 @@
 import { Card, CardHeader, IconButton, CardContent, Typography, Chip, CardActions, makeStyles, Divider, ListItemText, Menu, MenuItem, MenuList, useMediaQuery, useTheme } from "@material-ui/core";
 import { format } from 'date-fns';
 import { useState } from "react";
-import { ActionRequirement, Gender, Person, RoleApprovalStatus, VolunteerFamily } from "../GeneratedClient";
+import { ActionRequirement, Gender, Person, VolunteerFamily } from "../GeneratedClient";
 import { AgeText } from "./AgeText";
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
@@ -14,6 +14,7 @@ import { UpdateConcernsDialog } from "./UpdateConcernsDialog";
 import { UpdateNotesDialog } from "./UpdateNotesDialog";
 import { ContactDisplay } from "./ContactDisplay";
 import { CardInfoRow } from "./CardInfoRow";
+import { VolunteerRoleApprovalStatusChip } from "./VolunteerRoleApprovalStatusChipProps";
 
 const useStyles = makeStyles((theme) => ({
   sectionChips: {
@@ -106,11 +107,8 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
           </IconButton>} />
       <CardContent className={classes.cardContent}>
         <Typography color="textSecondary" className={classes.sectionChips} component="div">
-          {Object.entries(volunteerFamily.individualVolunteers?.[adult.item1.id].individualRoleApprovals || {}).flatMap(([role, roleVersionApprovals]) =>
-            roleVersionApprovals.map(rva => (
-            <Chip key={role + "__" + rva.version} size="small" color={rva.approvalStatus === RoleApprovalStatus.Onboarded ? "primary" : "secondary"}
-              label={RoleApprovalStatus[rva.approvalStatus!] + " " + role + " (" + rva.version + ")"} />
-          )))}
+          {Object.entries(volunteerFamily.individualVolunteers?.[adult.item1.id].individualRoleApprovals || {}).map(([role, roleVersionApprovals]) =>
+            <VolunteerRoleApprovalStatusChip key={role} roleName={role} roleVersionApprovals={roleVersionApprovals} />)}
           {(adult.item2.relationshipToFamily && <Chip size="small" label={adult.item2.relationshipToFamily} />) || null}
           {adult.item2.isInHousehold && <Chip size="small" label="In Household" />}
         </Typography>
