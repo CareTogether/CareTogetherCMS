@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Container, Toolbar, Chip, Button, Menu, MenuItem, Grid, useMediaQuery, useTheme, MenuList, Divider } from '@material-ui/core';
+import { Container, Toolbar, Button, Menu, MenuItem, Grid, useMediaQuery, useTheme, MenuList, Divider } from '@material-ui/core';
 import { VolunteerFamily, ActionRequirement } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../Model/ConfigurationModel';
-import { RoleApprovalStatus } from '../GeneratedClient';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
 import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
@@ -19,6 +18,7 @@ import { VolunteerChildCard } from './VolunteerChildCard';
 import { UploadVolunteerFamilyDocumentDialog } from './UploadVolunteerFamilyDocumentDialog';
 import { downloadFile } from '../Model/FilesModel';
 import { currentOrganizationState, currentLocationState } from '../Model/SessionModel';
+import { VolunteerRoleApprovalStatusChip } from './VolunteerRoleApprovalStatusChipProps';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -151,10 +151,7 @@ export function VolunteerFamilyScreen() {
       <Grid item xs={12}>
         <div className={classes.sectionChips}>
           {Object.entries(volunteerFamily.familyRoleApprovals || {}).flatMap(([role, roleVersionApprovals]) =>
-            roleVersionApprovals.map(rva => (
-            <Chip key={role + "__" + rva.version} size="small" color={rva.approvalStatus === RoleApprovalStatus.Onboarded ? "primary" : "secondary"}
-              label={RoleApprovalStatus[rva.approvalStatus!] + " " + role + " (" + rva.version + ")"} />
-          )))}
+            <VolunteerRoleApprovalStatusChip key={role} roleName={role} roleVersionApprovals={roleVersionApprovals} />)}
         </div>
       </Grid>
       <Grid item xs={12} sm={6} md={4}>
