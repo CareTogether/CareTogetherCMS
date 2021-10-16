@@ -27,8 +27,8 @@ function Footer(props: any) {
       showLabels
       className={classes.stickToBottom}
     >
-      <BottomNavigationAction component={Link} to='/dashboard' label="Dashboard" icon={<DashboardIcon />} />
-      <BottomNavigationAction component={Link} to='/referrals' label="Referrals" icon={<PermPhoneMsgIcon />} />
+      {/* <BottomNavigationAction component={Link} to='/dashboard' label="Dashboard" icon={<DashboardIcon />} /> */}
+      {/* <BottomNavigationAction component={Link} to='/referrals' label="Referrals" icon={<PermPhoneMsgIcon />} /> */}
       <BottomNavigationAction component={Link} to='/volunteers' label="Volunteers" icon={<PeopleIcon />} />
     </BottomNavigation>
   );

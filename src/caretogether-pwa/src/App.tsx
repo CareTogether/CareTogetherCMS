@@ -89,13 +89,13 @@ const useStyles = makeStyles((theme) => ({
 
 const mainListItems = (
   <List aria-label="main navigation">
-    <ListItemLink to="/dashboard" primary="Dashboard" icon={<DashboardIcon />} />
+    {/* <ListItemLink to="/dashboard" primary="Dashboard" icon={<DashboardIcon />} /> */}
   </List>
 );
 
 const secondaryListItems = (
   <List aria-label="secondary navigation">
-    <ListItemLink to="/referrals" primary="Referrals" icon={<PermPhoneMsgIcon />} />
+    {/* <ListItemLink to="/referrals" primary="Referrals" icon={<PermPhoneMsgIcon />} /> */}
     <ListItemLink to="/volunteers" primary="Volunteers" icon={<PeopleIcon />} />
   </List>
 );
