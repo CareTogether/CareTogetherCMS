@@ -1,5 +1,5 @@
 import { selector } from "recoil";
-import { ConfigurationClient, VolunteerFamilyRequirementScope } from "../GeneratedClient";
+import { ConfigurationClient, RequirementStage, VolunteerFamilyRequirementScope } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentLocationState, currentOrganizationState } from "./SessionModel";
 
@@ -56,6 +56,25 @@ export const policyData = selector({
     const dataResponse = await configurationClient.getEffectiveLocationPolicy(organizationId, locationId);
     return dataResponse;
   }});
+
+export const allApprovalAndOnboardingRequirementsData = selector({
+  key: 'allApprovalAndOnboardingRequirementsData',
+  get: ({get}) => {
+    const policy = get(policyData);
+    const sortedActionNames = (policy.actionDefinitions && Object.entries(policy.actionDefinitions)
+      .map(([actionName,]) => actionName)
+      .sort((a, b) => a < b ? -1 : a > b ? 1 : 0)) || [];
+    return sortedActionNames.filter(actionName =>
+      (policy.volunteerPolicy?.volunteerFamilyRoles && Object.entries(policy.volunteerPolicy.volunteerFamilyRoles).some(([role, rolePolicy]) =>
+        rolePolicy.policyVersions && Object.entries(rolePolicy.policyVersions).some(([version, rolePolicyVersion]) =>
+          rolePolicyVersion.requirements && rolePolicyVersion.requirements.some(requirement =>
+            requirement.actionName === actionName && requirement.stage !== RequirementStage.Application)))) ||
+      (policy.volunteerPolicy?.volunteerRoles && Object.entries(policy.volunteerPolicy.volunteerRoles).some(([role, rolePolicy]) =>
+        rolePolicy.policyVersions && Object.entries(rolePolicy.policyVersions).some(([version, rolePolicyVersion]) =>
+          rolePolicyVersion.requirements && rolePolicyVersion.requirements.some(requirement =>
+            requirement.actionName === actionName && requirement.stage !== RequirementStage.Application)))));
+  }
+});
 
 export const familyRequirementsData = selector({
   key: 'familyRequirementsData',
