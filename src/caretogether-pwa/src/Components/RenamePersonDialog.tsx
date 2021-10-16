@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid, TextField } from '@material-ui/core';
+import { Grid, TextField } from '@material-ui/core';
 import { Person } from '../GeneratedClient';
 import { useVolunteerFamiliesModel } from '../Model/VolunteerFamiliesModel';
+import { UpdateDialog } from './UpdateDialog';
 
 interface RenamePersonProps {
   volunteerFamilyId: string,
@@ -24,39 +25,24 @@ export function RenamePersonDialog({volunteerFamilyId, person, onClose}: RenameP
     } else {
       await volunteerFamiliesModel.updatePersonName(volunteerFamilyId, person.id as string,
         firstName, lastName);
-      //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
-      onClose();
     }
   }
 
   return (
-    <Dialog open={true} onClose={onClose} scroll='body' aria-labelledby="rename-person-title">
-      <DialogTitle id="rename-person-title">
-        Rename Person
-      </DialogTitle>
-      <DialogContent>
-        <form noValidate autoComplete="off">
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
-              <TextField required id="first-name" label="First Name" fullWidth size="small"
-                value={firstName} onChange={e => setFields({...fields, firstName: e.target.value})} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField required id="last-name" label="Last Name" fullWidth size="small"
-                value={lastName} onChange={e => setFields({...fields, lastName: e.target.value})} />
-            </Grid>
+    <UpdateDialog title="Rename Person" onClose={onClose}
+      onSave={renamePerson} enableSave={() => firstName!==person.firstName || lastName !== person.lastName}>
+      <form noValidate autoComplete="off">
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <TextField required id="first-name" label="First Name" fullWidth size="small"
+              value={firstName} onChange={e => setFields({...fields, firstName: e.target.value})} />
           </Grid>
-        </form>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} color="secondary">
-          Cancel
-        </Button>
-        <Button onClick={renamePerson} variant="contained" color="primary"
-          disabled={firstName===person.firstName && lastName === person.lastName}>
-          Rename
-        </Button>
-      </DialogActions>
-    </Dialog>
+          <Grid item xs={12} sm={6}>
+            <TextField required id="last-name" label="Last Name" fullWidth size="small"
+              value={lastName} onChange={e => setFields({...fields, lastName: e.target.value})} />
+          </Grid>
+        </Grid>
+      </form>
+    </UpdateDialog>
   );
 }

@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid, InputAdornment, TextField } from '@material-ui/core';
+import { Grid, InputAdornment, TextField } from '@material-ui/core';
 import WarningIcon from '@material-ui/icons/Warning';
 import { Person } from '../GeneratedClient';
 import { useVolunteerFamiliesModel } from '../Model/VolunteerFamiliesModel';
+import { UpdateDialog } from './UpdateDialog';
 
 interface UpdateConcernsDialogProps {
   volunteerFamilyId: string,
@@ -20,44 +21,30 @@ export function UpdateConcernsDialog({volunteerFamilyId, person, onClose}: Updat
   async function save() {
     await volunteerFamiliesModel.updatePersonConcerns(volunteerFamilyId, person.id as string,
       concerns.length > 0 ? concerns : null);
-      //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
-      onClose();
   }
 
   return (
-    <Dialog open={true} onClose={onClose} scroll='body' aria-labelledby="update-person-concerns-title">
-      <DialogTitle id="update-person-concerns-title">
-        Update Concerns for {person.firstName} {person.lastName}
-      </DialogTitle>
-      <DialogContent>
-        <form noValidate autoComplete="off">
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <TextField
-                id="concerns"
-                label="Concerns" placeholder="Note any safety risks, allergies, etc."
-                multiline fullWidth variant="outlined" minRows={2} maxRows={5} size="small"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <WarningIcon />
-                    </InputAdornment>
-                  ),
-                }}
-                value={concerns} onChange={e => setFields({...fields, concerns: e.target.value})}
-              />
-            </Grid>
+    <UpdateDialog title={`Update Concerns for ${person.firstName} ${person.lastName}`} onClose={onClose}
+      onSave={save} enableSave={() => concerns !== person.concerns}>
+      <form noValidate autoComplete="off">
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <TextField
+              id="concerns"
+              label="Concerns" placeholder="Note any safety risks, allergies, etc."
+              multiline fullWidth variant="outlined" minRows={2} maxRows={5} size="small"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <WarningIcon />
+                  </InputAdornment>
+                ),
+              }}
+              value={concerns} onChange={e => setFields({...fields, concerns: e.target.value})}
+            />
           </Grid>
-        </form>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} color="secondary">
-          Cancel
-        </Button>
-        <Button onClick={save} variant="contained" color="primary">
-          Save
-        </Button>
-      </DialogActions>
-    </Dialog>
+        </Grid>
+      </form>
+    </UpdateDialog>
   );
 }
