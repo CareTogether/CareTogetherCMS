@@ -17,6 +17,8 @@ import { useParams } from 'react-router';
 import { VolunteerAdultCard } from './VolunteerAdultCard';
 import { VolunteerChildCard } from './VolunteerChildCard';
 import { UploadVolunteerFamilyDocumentDialog } from './UploadVolunteerFamilyDocumentDialog';
+import { downloadFile } from '../Model/FilesModel';
+import { currentOrganizationState, currentLocationState } from '../Model/SessionModel';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -72,6 +74,8 @@ export function VolunteerFamilyScreen() {
 
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
   const policy = useRecoilValue(policyData);
+  const organizationId = useRecoilValue(currentOrganizationState);
+  const locationId = useRecoilValue(currentLocationState);
 
   const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as VolunteerFamily;
   
@@ -178,7 +182,8 @@ export function VolunteerFamilyScreen() {
         <h3>Documents</h3>
         <ul className={classes.familyDocumentsList}>
           {volunteerFamily.uploadedDocuments?.map((uploaded, i) => (
-            <li key={i}>
+            <li key={i}
+              onClick={() => downloadFile(organizationId, locationId, uploaded.uploadedDocumentId!)}>
               📃 {uploaded.uploadedFileName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               {uploaded.timestampUtc && <span style={{float:'right',marginRight:20}}>{format(uploaded.timestampUtc, "MM/dd/yyyy hh:mm aa")}</span>}
             </li>
