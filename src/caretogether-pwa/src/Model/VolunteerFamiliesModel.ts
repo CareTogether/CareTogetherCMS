@@ -1,5 +1,5 @@
 import { atom, useRecoilCallback } from "recoil";
-import { ActionRequirement, AddAdultToFamilyCommand, AddChildToFamilyCommand, Address, Age, ApprovalCommand, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonConcerns, UpdatePersonName, UpdatePersonNotes, UploadVolunteerFamilyDocument, VolunteerCommand, VolunteerFamiliesClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
+import { ActionRequirement, AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonPhoneNumber, Address, Age, ApprovalCommand, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonConcerns, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, UploadVolunteerFamilyDocument, VolunteerCommand, VolunteerFamiliesClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 
@@ -174,6 +174,24 @@ export function useVolunteerFamiliesModel() {
       command.notes = notes || undefined;
       return command;
     });
+  const addPersonPhoneNumber = usePersonCommandCallback(
+    async (volunteerFamilyId, personId, phoneNumber: string, phoneType: PhoneNumberType) => {
+      const command = new AddPersonPhoneNumber({
+        personId: personId
+      });
+      command.phoneNumber = new PhoneNumber({ number: phoneNumber, type: phoneType })
+      command.isPreferredPhoneNumber = true;
+      return command;
+    });
+  const updatePersonPhoneNumber = usePersonCommandCallback(
+    async (volunteerFamilyId, personId, phoneId: string, phoneNumber: string, phoneType: PhoneNumberType) => {
+      const command = new UpdatePersonPhoneNumber({
+        personId: personId
+      });
+      command.phoneNumber = new PhoneNumber({ id: phoneId, number: phoneNumber, type: phoneType })
+      command.isPreferredPhoneNumber = true;
+      return command;
+    });
   const addAdult = useApprovalCommandCallback(
     async (volunteerFamilyId, firstName: string, lastName: string, gender: Gender, age: Age, ethnicity: string,
         isInHousehold: boolean, relationshipToFamily: string,
@@ -271,6 +289,8 @@ export function useVolunteerFamiliesModel() {
     updatePersonName,
     updatePersonConcerns,
     updatePersonNotes,
+    addPersonPhoneNumber,
+    updatePersonPhoneNumber,
     addAdult,
     addChild,
     createVolunteerFamilyWithNewAdult

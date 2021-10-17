@@ -20,9 +20,12 @@ export function UpdatePhoneDialog({volunteerFamilyId, person, onClose}: UpdatePh
   const { phoneNumber, phoneType } = fields;
 
   async function save() {
-    alert("TODO");
-    // await volunteerFamiliesModel.updatePersonNotes(volunteerFamilyId, person.id as string,
-    //   notes.length > 0 ? notes : null);
+    if (currentPhoneNumber)
+      await volunteerFamiliesModel.updatePersonPhoneNumber(volunteerFamilyId, person.id as string,
+        currentPhoneNumber.id!, phoneNumber, phoneType);
+    else
+      await volunteerFamiliesModel.addPersonPhoneNumber(volunteerFamilyId, person.id as string,
+        phoneNumber, phoneType);
   }
 
   return (

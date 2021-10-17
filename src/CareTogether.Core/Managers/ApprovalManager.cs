@@ -14,7 +14,7 @@ namespace CareTogether.Managers
     {
         private readonly IApprovalsResource approvalsResource;
         private readonly IPolicyEvaluationEngine policyEvaluationEngine;
-        private readonly IDirectoryResource communitiesResource;
+        private readonly IDirectoryResource directoryResource;
 
 
         public ApprovalManager(IApprovalsResource approvalsResource, IPolicyEvaluationEngine policyEvaluationEngine,
@@ -22,13 +22,13 @@ namespace CareTogether.Managers
         {
             this.approvalsResource = approvalsResource;
             this.policyEvaluationEngine = policyEvaluationEngine;
-            this.communitiesResource = communitiesResource;
+            this.directoryResource = communitiesResource;
         }
 
 
         public async Task<ImmutableList<VolunteerFamily>> ListVolunteerFamiliesAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId)
         {
-            var families = (await communitiesResource.ListFamiliesAsync(organizationId, locationId)).ToImmutableDictionary(x => x.Id);
+            var families = (await directoryResource.ListFamiliesAsync(organizationId, locationId)).ToImmutableDictionary(x => x.Id);
             var volunteerFamilies = await approvalsResource.ListVolunteerFamiliesAsync(organizationId, locationId);
 
             var result = await volunteerFamilies.Select(vf => ToVolunteerFamilyAsync(
@@ -41,7 +41,7 @@ namespace CareTogether.Managers
         {
             var volunteerFamilyEntry = await approvalsResource.GetVolunteerFamilyAsync(organizationId, locationId, command.FamilyId);
             
-            var families = communitiesResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+            var families = directoryResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
             var referral = await ToVolunteerFamilyAsync(
                 organizationId, locationId, volunteerFamilyEntry, families);
 
@@ -60,7 +60,7 @@ namespace CareTogether.Managers
         {
             var volunteerFamilyEntry = await approvalsResource.GetVolunteerFamilyAsync(organizationId, locationId, command.FamilyId);
             
-            var families = communitiesResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+            var families = directoryResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
             var referral = await ToVolunteerFamilyAsync(
                 organizationId, locationId, volunteerFamilyEntry, families);
 
@@ -78,13 +78,21 @@ namespace CareTogether.Managers
             ClaimsPrincipal user, Guid familyId, PersonCommand command)
         {
             var volunteerFamilyEntry = await approvalsResource.GetVolunteerFamilyAsync(organizationId, locationId, familyId);
-            
+
             //var authorizationResult = await policyEvaluationEngine.AuthorizePersonCommandAsync(
             //    organizationId, locationId, user, command, referral);
 
-            var person = await communitiesResource.ExecutePersonCommandAsync(organizationId, locationId, command, user.UserId());
+            command = command switch
+            {
+                AddPersonPhoneNumber c => c with { PhoneNumber = c.PhoneNumber with { Id = Guid.NewGuid() } },
+                AddPersonEmailAddress c => c with { EmailAddress = c.EmailAddress with { Id = Guid.NewGuid() } },
+                AddPersonAddress c => c with { Address = c.Address with { Id = Guid.NewGuid() } },
+                _ => command
+            };
+
+            var person = await directoryResource.ExecutePersonCommandAsync(organizationId, locationId, command, user.UserId());
                 
-            var families = communitiesResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+            var families = directoryResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
             var referral = await ToVolunteerFamilyAsync(
                 organizationId, locationId, volunteerFamilyEntry, families);
 
@@ -118,13 +126,13 @@ namespace CareTogether.Managers
 
                         //TODO: Authorize the subcommands via the policy evaluation engine
 
-                        var person = await communitiesResource.ExecutePersonCommandAsync(organizationId, locationId,
+                        var person = await directoryResource.ExecutePersonCommandAsync(organizationId, locationId,
                             createPersonSubcommand, user.UserId());
                         
-                        var family = await communitiesResource.ExecuteFamilyCommandAsync(organizationId, locationId,
+                        var family = await directoryResource.ExecuteFamilyCommandAsync(organizationId, locationId,
                             addAdultToFamilySubcommand, user.UserId());
 
-                        var families = communitiesResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+                        var families = directoryResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
 
                         var volunteerFamilyEntry = await approvalsResource.GetVolunteerFamilyAsync(organizationId, locationId, c.FamilyId);
                                 
@@ -146,13 +154,13 @@ namespace CareTogether.Managers
 
                         //TODO: Authorize the subcommands via the policy evaluation engine
 
-                        var person = await communitiesResource.ExecutePersonCommandAsync(organizationId, locationId,
+                        var person = await directoryResource.ExecutePersonCommandAsync(organizationId, locationId,
                             createPersonSubcommand, user.UserId());
                         
-                        var family = await communitiesResource.ExecuteFamilyCommandAsync(organizationId, locationId,
+                        var family = await directoryResource.ExecuteFamilyCommandAsync(organizationId, locationId,
                             addChildToFamilySubcommand, user.UserId());
                             
-                        var families = communitiesResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+                        var families = directoryResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
 
                         var volunteerFamilyEntry = await approvalsResource.GetVolunteerFamilyAsync(organizationId, locationId, c.FamilyId);
                                 
@@ -185,16 +193,16 @@ namespace CareTogether.Managers
 
                         //TODO: Authorize the subcommands via the policy evaluation engine
 
-                        var person = await communitiesResource.ExecutePersonCommandAsync(organizationId, locationId,
+                        var person = await directoryResource.ExecutePersonCommandAsync(organizationId, locationId,
                             createPersonSubcommand, user.UserId());
                         
-                        var family = await communitiesResource.ExecuteFamilyCommandAsync(organizationId, locationId,
+                        var family = await directoryResource.ExecuteFamilyCommandAsync(organizationId, locationId,
                             createFamilySubcommand, user.UserId());
 
                         var volunteerFamilyEntry = await approvalsResource.ExecuteVolunteerFamilyCommandAsync(organizationId, locationId,
                             activateVolunteerFamilySubcommand, user.UserId());
 
-                        var families = communitiesResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+                        var families = directoryResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
 
                         var disclosedVolunteerFamily = await policyEvaluationEngine.DiscloseVolunteerFamilyAsync(user,
                             await ToVolunteerFamilyAsync(organizationId, locationId, volunteerFamilyEntry, families));
