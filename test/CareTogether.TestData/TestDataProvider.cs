@@ -26,7 +26,7 @@ namespace CareTogether.TestData
 
 
         public static async Task PopulateTestDataAsync(
-            IMultitenantEventLog<DirectoryEvent> communityEventLog,
+            IMultitenantEventLog<DirectoryEvent> directoryEventLog,
             IMultitenantEventLog<GoalCommandExecutedEvent> goalsEventLog,
             IMultitenantEventLog<ReferralEvent> referralsEventLog,
             IMultitenantEventLog<ApprovalEvent> approvalsEventLog,
@@ -35,7 +35,7 @@ namespace CareTogether.TestData
             IObjectStore<EffectiveLocationPolicy> policiesStore,
             IObjectStore<UserTenantAccessSummary> userTenantAccessStore)
         {
-            await PopulateCommunityEvents(communityEventLog);
+            await PopulateDirectoryEvents(directoryEventLog);
             await PopulateGoalEvents(goalsEventLog);
             await PopulateReferralEvents(referralsEventLog);
             await PopulateApprovalEvents(approvalsEventLog);
@@ -46,9 +46,9 @@ namespace CareTogether.TestData
         }
 
         
-        public static async Task PopulateCommunityEvents(IMultitenantEventLog<DirectoryEvent> communityEventLog)
+        public static async Task PopulateDirectoryEvents(IMultitenantEventLog<DirectoryEvent> directoryEventLog)
         {
-            await communityEventLog.AppendEventsAsync(guid1, guid2,
+            await directoryEventLog.AppendEventsAsync(guid1, guid2,
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(adminId, adminId, "System", "Administrator", Gender.Male, new ExactAge(new DateTime(2021, 7, 1)), "Ethnic",
                 ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, "Test", "ABC")),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid1, null, "John", "Doe", Gender.Male, new ExactAge(new DateTime(1980, 7, 1)), "Ethnic",

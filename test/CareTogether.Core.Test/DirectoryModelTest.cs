@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace CareTogether.Core.Test
 {
     [TestClass]
-    public class CommunityModelTest
+    public class DirectoryModelTest
     {
         private static Guid Id(char x) => Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
         static readonly Guid guid0 = Id('0');
@@ -146,8 +146,8 @@ namespace CareTogether.Core.Test
         }
 
 
-        private static IAsyncEnumerable<(DirectoryEvent, long)> EventSequence(params DirectoryEvent[] communityEvents) =>
-            communityEvents
+        private static IAsyncEnumerable<(DirectoryEvent, long)> EventSequence(params DirectoryEvent[] directoryEvents) =>
+            directoryEvents
                 .Select((ce, i) => (ce, (long)i))
                 .ToAsyncEnumerable();
     }

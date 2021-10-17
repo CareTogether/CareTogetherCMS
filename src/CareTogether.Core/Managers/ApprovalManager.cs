@@ -18,11 +18,11 @@ namespace CareTogether.Managers
 
 
         public ApprovalManager(IApprovalsResource approvalsResource, IPolicyEvaluationEngine policyEvaluationEngine,
-            IDirectoryResource communitiesResource)
+            IDirectoryResource directoryResource)
         {
             this.approvalsResource = approvalsResource;
             this.policyEvaluationEngine = policyEvaluationEngine;
-            this.directoryResource = communitiesResource;
+            this.directoryResource = directoryResource;
         }
 
 

@@ -74,7 +74,7 @@ namespace CareTogether.Api
 
             // Resource services
             var approvalsResource = new ApprovalsResource(approvalsEventLog);
-            var communitiesResource = new DirectoryResource(directoryEventLog);
+            var directoryResource = new DirectoryResource(directoryEventLog);
             var goalsResource = new GoalsResource(goalsEventLog);
             var policiesResource = new PoliciesResource(configurationStore, policiesStore);
             var accountsResource = new AccountsResource(userTenantAccessStore);
@@ -88,8 +88,8 @@ namespace CareTogether.Api
             var policyEvaluationEngine = new PolicyEvaluationEngine(policiesResource);
 
             // Manager services
-            services.AddSingleton<IReferralManager>(new ReferralManager(policyEvaluationEngine, communitiesResource, referralsResource));
-            services.AddSingleton<IApprovalManager>(new ApprovalManager(approvalsResource, policyEvaluationEngine, communitiesResource));
+            services.AddSingleton<IReferralManager>(new ReferralManager(policyEvaluationEngine, directoryResource, referralsResource));
+            services.AddSingleton<IApprovalManager>(new ApprovalManager(approvalsResource, policyEvaluationEngine, directoryResource));
 
             // Utility providers
             services.AddSingleton<IFileStore>(new BlobFileStore(blobServiceClient, "Uploads"));

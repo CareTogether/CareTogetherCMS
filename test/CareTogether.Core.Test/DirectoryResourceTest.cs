@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace CareTogether.Core.Test
 {
     [TestClass]
-    public class CommunitiesModelTest
+    public class DirectoryResourceTest
     {
         private static Guid Id(char x) => Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
         static readonly Guid guid0 = Id('0');
