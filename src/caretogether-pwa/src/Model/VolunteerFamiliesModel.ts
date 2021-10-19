@@ -1,5 +1,5 @@
 import { atom, useRecoilCallback } from "recoil";
-import { ActionRequirement, AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonPhoneNumber, Address, Age, ApprovalCommand, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonConcerns, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, UploadVolunteerFamilyDocument, VolunteerCommand, VolunteerFamiliesClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
+import { ActionRequirement, AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, ApprovalCommand, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, UploadVolunteerFamilyDocument, VolunteerCommand, VolunteerFamiliesClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 
@@ -192,6 +192,24 @@ export function useVolunteerFamiliesModel() {
       command.isPreferredPhoneNumber = true;
       return command;
     });
+  const addPersonEmailAddress = usePersonCommandCallback(
+    async (volunteerFamilyId, personId, emailAddress: string, phoneType: EmailAddressType) => {
+      const command = new AddPersonEmailAddress({
+        personId: personId
+      });
+      command.emailAddress = new EmailAddress({ address: emailAddress, type: phoneType })
+      command.isPreferredEmailAddress = true;
+      return command;
+    });
+  const updatePersonEmailAddress = usePersonCommandCallback(
+    async (volunteerFamilyId, personId, phoneId: string, emailAddress: string, phoneType: EmailAddressType) => {
+      const command = new UpdatePersonEmailAddress({
+        personId: personId
+      });
+      command.emailAddress = new EmailAddress({ id: phoneId, address: emailAddress, type: phoneType })
+      command.isPreferredEmailAddress = true;
+      return command;
+    });
   const addAdult = useApprovalCommandCallback(
     async (volunteerFamilyId, firstName: string, lastName: string, gender: Gender, age: Age, ethnicity: string,
         isInHousehold: boolean, relationshipToFamily: string,
@@ -291,6 +309,8 @@ export function useVolunteerFamiliesModel() {
     updatePersonNotes,
     addPersonPhoneNumber,
     updatePersonPhoneNumber,
+    addPersonEmailAddress,
+    updatePersonEmailAddress,
     addAdult,
     addChild,
     createVolunteerFamilyWithNewAdult
