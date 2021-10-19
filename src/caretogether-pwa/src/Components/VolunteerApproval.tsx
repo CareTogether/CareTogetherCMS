@@ -1,6 +1,6 @@
 import { makeStyles } from '@material-ui/core/styles';
 import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab } from '@material-ui/core';
-import { Gender, ExactAge, AgeInYears, RoleVersionApproval } from '../GeneratedClient';
+import { Gender, ExactAge, AgeInYears, RoleVersionApproval, VolunteerFamily } from '../GeneratedClient';
 import { differenceInYears } from 'date-fns';
 import { useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
@@ -54,11 +54,17 @@ function approvalStatus(roleVersionApprovals: RoleVersionApproval[] | undefined)
     : "-";
 }
 
+function familyLastName(family: VolunteerFamily) {
+  return family.family!.adults?.filter(adult => family.family!.primaryFamilyContactPersonId === adult.item1?.id)[0]?.item1?.lastName || "";
+}
+
 function VolunteerApproval() {
   const classes = useStyles();
   const history = useHistory();
 
-  const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
+  // The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
+  const volunteerFamilies = useRecoilValue(volunteerFamiliesData).map(x => x).sort((a, b) =>
+    familyLastName(a) < familyLastName(b) ? -1 : familyLastName(a) > familyLastName(b) ? 1 : 0);
   const policy = useRecoilValue(policyData);
 
   const volunteerFamilyRoleNames =
@@ -96,10 +102,7 @@ function VolunteerApproval() {
               {volunteerFamilies.map((volunteerFamily) => (
                 <React.Fragment key={volunteerFamily.family?.id}>
                   <TableRow className={classes.familyRow} onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}>
-                    <TableCell key="1" colSpan={4}>{
-                      volunteerFamily.family?.adults
-                        ?.filter(adult => volunteerFamily.family?.primaryFamilyContactPersonId === adult.item1?.id)
-                        [0]?.item1?.lastName + " Family"
+                    <TableCell key="1" colSpan={4}>{familyLastName(volunteerFamily) + " Family"
                     }</TableCell>
                     { volunteerFamilyRoleNames.map(roleName =>
                       (<TableCell key={roleName}>{
