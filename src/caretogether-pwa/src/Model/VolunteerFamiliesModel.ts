@@ -215,7 +215,7 @@ export function useVolunteerFamiliesModel() {
       const command = new AddPersonAddress({
         personId: personId
       });
-      command.address = new Address({ line1: line1, line2: line2, city: city, state: state, postalCode: postalCode })
+      command.address = new Address({ line1: line1, line2: line2, city: city, state: state, postalCode: postalCode, country: "" })
       command.isCurrentAddress = true;
       return command;
     });
@@ -225,7 +225,7 @@ export function useVolunteerFamiliesModel() {
       const command = new UpdatePersonAddress({
         personId: personId
       });
-      command.address = new Address({ id: addressId, line1: line1, line2: line2, city: city, state: state, postalCode: postalCode })
+      command.address = new Address({ id: addressId, line1: line1, line2: line2, city: city, state: state, postalCode: postalCode, country: "" })
       command.isCurrentAddress = true;
       return command;
     });
