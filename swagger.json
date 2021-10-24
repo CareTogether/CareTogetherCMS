@@ -1135,12 +1135,6 @@
           "partneringFamily": {
             "$ref": "#/components/schemas/Family"
           },
-          "contacts": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ContactInfo"
-            }
-          },
           "referralFormUploads": {
             "type": "array",
             "items": {
@@ -1251,6 +1245,39 @@
           "ethnicity": {
             "type": "string"
           },
+          "addresses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Address"
+            }
+          },
+          "currentAddressId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          },
+          "phoneNumbers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PhoneNumber"
+            }
+          },
+          "preferredPhoneNumberId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          },
+          "emailAddresses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EmailAddress"
+            }
+          },
+          "preferredEmailAddressId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          },
           "concerns": {
             "type": "string",
             "nullable": true
@@ -1333,96 +1360,6 @@
           }
         ]
       },
-      "FamilyAdultRelationshipInfo": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "relationshipToFamily": {
-            "type": "string"
-          },
-          "isInHousehold": {
-            "type": "boolean"
-          }
-        }
-      },
-      "CustodialRelationship": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "childId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "personId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "type": {
-            "$ref": "#/components/schemas/CustodialRelationshipType"
-          }
-        }
-      },
-      "CustodialRelationshipType": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "ParentWithCustody",
-          "ParentWithCourtAppointedCustody",
-          "LegalGuardian"
-        ],
-        "enum": [
-          0,
-          1,
-          2
-        ]
-      },
-      "ContactInfo": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "personId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "addresses": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Address"
-            }
-          },
-          "currentAddressId": {
-            "type": "string",
-            "format": "guid",
-            "nullable": true
-          },
-          "phoneNumbers": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PhoneNumber"
-            }
-          },
-          "preferredPhoneNumberId": {
-            "type": "string",
-            "format": "guid",
-            "nullable": true
-          },
-          "emailAddresses": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/EmailAddress"
-            }
-          },
-          "preferredEmailAddressId": {
-            "type": "string",
-            "format": "guid",
-            "nullable": true
-          },
-          "contactMethodPreferenceNotes": {
-            "type": "string",
-            "nullable": true
-          }
-        }
-      },
       "Address": {
         "type": "object",
         "additionalProperties": false,
@@ -1445,9 +1382,6 @@
             "type": "string"
           },
           "postalCode": {
-            "type": "string"
-          },
-          "country": {
             "type": "string"
           }
         }
@@ -1510,6 +1444,49 @@
         "enum": [
           0,
           1
+        ]
+      },
+      "FamilyAdultRelationshipInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "relationshipToFamily": {
+            "type": "string"
+          },
+          "isInHousehold": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CustodialRelationship": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "childId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "personId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CustodialRelationshipType"
+          }
+        }
+      },
+      "CustodialRelationshipType": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "ParentWithCustody",
+          "ParentWithCourtAppointedCustody",
+          "LegalGuardian"
+        ],
+        "enum": [
+          0,
+          1,
+          2
         ]
       },
       "FormUploadInfo": {
@@ -2293,12 +2270,6 @@
             "additionalProperties": {
               "$ref": "#/components/schemas/Volunteer"
             }
-          },
-          "contactInfo": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/ContactInfo"
-            }
           }
         }
       },
@@ -2808,11 +2779,17 @@
         "discriminator": {
           "propertyName": "discriminator",
           "mapping": {
+            "AddPersonAddress": "#/components/schemas/AddPersonAddress",
+            "AddPersonEmailAddress": "#/components/schemas/AddPersonEmailAddress",
+            "AddPersonPhoneNumber": "#/components/schemas/AddPersonPhoneNumber",
             "CreatePerson": "#/components/schemas/CreatePerson",
+            "UpdatePersonAddress": "#/components/schemas/UpdatePersonAddress",
             "UpdatePersonAge": "#/components/schemas/UpdatePersonAge",
             "UpdatePersonConcerns": "#/components/schemas/UpdatePersonConcerns",
+            "UpdatePersonEmailAddress": "#/components/schemas/UpdatePersonEmailAddress",
             "UpdatePersonName": "#/components/schemas/UpdatePersonName",
             "UpdatePersonNotes": "#/components/schemas/UpdatePersonNotes",
+            "UpdatePersonPhoneNumber": "#/components/schemas/UpdatePersonPhoneNumber",
             "UpdatePersonUserLink": "#/components/schemas/UpdatePersonUserLink"
           }
         },
@@ -2830,6 +2807,63 @@
             "type": "string"
           }
         }
+      },
+      "AddPersonAddress": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "address": {
+                "$ref": "#/components/schemas/Address"
+              },
+              "isCurrentAddress": {
+                "type": "boolean"
+              }
+            }
+          }
+        ]
+      },
+      "AddPersonEmailAddress": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "emailAddress": {
+                "$ref": "#/components/schemas/EmailAddress"
+              },
+              "isPreferredEmailAddress": {
+                "type": "boolean"
+              }
+            }
+          }
+        ]
+      },
+      "AddPersonPhoneNumber": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "phoneNumber": {
+                "$ref": "#/components/schemas/PhoneNumber"
+              },
+              "isPreferredPhoneNumber": {
+                "type": "boolean"
+              }
+            }
+          }
+        ]
       },
       "CreatePerson": {
         "allOf": [
@@ -2860,6 +2894,39 @@
               "ethnicity": {
                 "type": "string"
               },
+              "addresses": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Address"
+                }
+              },
+              "currentAddressId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              },
+              "phoneNumbers": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/PhoneNumber"
+                }
+              },
+              "preferredPhoneNumberId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              },
+              "emailAddresses": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/EmailAddress"
+                }
+              },
+              "preferredEmailAddressId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              },
               "concerns": {
                 "type": "string",
                 "nullable": true
@@ -2867,6 +2934,25 @@
               "notes": {
                 "type": "string",
                 "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "UpdatePersonAddress": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "address": {
+                "$ref": "#/components/schemas/Address"
+              },
+              "isCurrentAddress": {
+                "type": "boolean"
               }
             }
           }
@@ -2905,6 +2991,25 @@
           }
         ]
       },
+      "UpdatePersonEmailAddress": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "emailAddress": {
+                "$ref": "#/components/schemas/EmailAddress"
+              },
+              "isPreferredEmailAddress": {
+                "type": "boolean"
+              }
+            }
+          }
+        ]
+      },
       "UpdatePersonName": {
         "allOf": [
           {
@@ -2936,6 +3041,25 @@
               "notes": {
                 "type": "string",
                 "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "UpdatePersonPhoneNumber": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "phoneNumber": {
+                "$ref": "#/components/schemas/PhoneNumber"
+              },
+              "isPreferredPhoneNumber": {
+                "type": "boolean"
               }
             }
           }

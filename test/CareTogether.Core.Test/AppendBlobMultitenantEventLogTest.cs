@@ -5,6 +5,7 @@ using CareTogether.Resources.Storage;
 using CareTogether.TestData;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -24,11 +25,12 @@ namespace CareTogether.Core.Test
         static readonly Guid guid4 = Id('4');
 
         static readonly PersonCommandExecuted personCommand = new PersonCommandExecuted(guid4, new DateTime(2021, 7, 1),
-            new CreatePerson(guid3, guid4, "Jane", "Smith", Gender.Female, new AgeInYears(42, new DateTime(2021, 1, 1)), "Ethnic", null, null));
+            new CreatePerson(guid3, guid4, "Jane", "Smith", Gender.Female, new AgeInYears(42, new DateTime(2021, 1, 1)), "Ethnic",
+                ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null,
+                null, null));
 
 #nullable disable
-        AppendBlobMultitenantEventLog<CommunityEvent> communityEventLog;
-        AppendBlobMultitenantEventLog<ContactCommandExecutedEvent> contactsEventLog;
+        AppendBlobMultitenantEventLog<DirectoryEvent> directoryEventLog;
         AppendBlobMultitenantEventLog<ReferralEvent> referralsEventLog;
 #nullable restore
 
@@ -38,9 +40,8 @@ namespace CareTogether.Core.Test
             testingClient.GetBlobContainerClient(organizationId.ToString()).DeleteIfExists();
             testingClient.GetBlobContainerClient(guid3.ToString()).DeleteIfExists();
 
-            communityEventLog = new AppendBlobMultitenantEventLog<CommunityEvent>(testingClient, LogType.CommunityEventLog);
-            contactsEventLog = new AppendBlobMultitenantEventLog<ContactCommandExecutedEvent>(testingClient, LogType.ContactsEventLog);
-            referralsEventLog = new AppendBlobMultitenantEventLog<ReferralEvent>(testingClient, LogType.ReferralsEventLog);
+            directoryEventLog = new AppendBlobMultitenantEventLog<DirectoryEvent>(testingClient, "DirectoryEventLog");
+            referralsEventLog = new AppendBlobMultitenantEventLog<ReferralEvent>(testingClient, "ReferralsEventLog");
         }
 
         [TestCleanup]
@@ -53,19 +54,14 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public async Task ResultsFromContainerAfterTestDataPopulationMatchesExpected()
         {
-            await TestDataProvider.PopulateCommunityEvents(communityEventLog);
-            await TestDataProvider.PopulateContactEvents(contactsEventLog);
+            await TestDataProvider.PopulateDirectoryEvents(directoryEventLog);
             await TestDataProvider.PopulateReferralEvents(referralsEventLog);
 
-            var communityEvents = await communityEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
+            var directoryEvents = await directoryEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
 
-            Assert.AreEqual(25, communityEvents.Count);
-            Assert.AreEqual(typeof(FamilyCommandExecuted), communityEvents[10].DomainEvent.GetType());
-
-            var contactEvents = await contactsEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
-
-            Assert.AreEqual(20, contactEvents.Count);
-            Assert.AreEqual(typeof(ContactCommandExecutedEvent), contactEvents[8].DomainEvent.GetType());
+            Assert.AreEqual(43, directoryEvents.Count);
+            Assert.AreEqual(typeof(FamilyCommandExecuted), directoryEvents[10].DomainEvent.GetType());
+            Assert.AreEqual(typeof(PersonCommandExecuted), directoryEvents[38].DomainEvent.GetType());
 
             var referralEvents = await referralsEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
 
@@ -76,15 +72,15 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public async Task GettingUninitializedTenantLogReturnsEmptySequence()
         {
-            var result = communityEventLog.GetAllEventsAsync(organizationId, locationId);
+            var result = directoryEventLog.GetAllEventsAsync(organizationId, locationId);
             Assert.AreEqual(0, await result.CountAsync());
         }
 
         //[TestMethod]
         //public async Task GettingPreviouslyInitializedTenantLogReturnsSameSequence()
         //{
-        //    var result1 = communityEventLog.GetAllEventsAsync(organizationId, locationId);
-        //    var result2 = communityEventLog.GetAllEventsAsync(organizationId, locationId);
+        //    var result1 = directoryEventLog.GetAllEventsAsync(organizationId, locationId);
+        //    var result2 = directoryEventLog.GetAllEventsAsync(organizationId, locationId);
         //    Assert.AreEqual(0, await result1.CountAsync());
         //    Assert.AreEqual(0, await result2.CountAsync());
         //}
@@ -92,8 +88,8 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public async Task AppendingAnEventToAnUninitializedTenantLogStoresItWithTheCorrectSequenceNumber()
         {
-            await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 1);
-            var getResult = await communityEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
+            await directoryEventLog.AppendEventAsync(organizationId, locationId, personCommand, 1);
+            var getResult = await directoryEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
             Assert.AreEqual(1, getResult.Count);
             Assert.AreEqual(1, getResult[0].SequenceNumber);
         }
@@ -102,8 +98,8 @@ namespace CareTogether.Core.Test
         //[TestMethod]
         //public async Task AppendingAnEventToAnUninitializedTenantLogValidatesTheExpectedSequenceNumber()
         //{
-        //    await Assert.ThrowsExceptionAsync<Exception>(() => communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 2));
-        //    var getResult = await communityEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
+        //    await Assert.ThrowsExceptionAsync<Exception>(() => directoryEventLog.AppendEventAsync(organizationId, locationId, personCommand, 2));
+        //    var getResult = await directoryEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
         //    Assert.AreEqual(1, getResult.Count);
         //}
 
@@ -111,10 +107,10 @@ namespace CareTogether.Core.Test
         //[TestMethod]
         //public async Task AppendingMultipleEventsToAnUninitializedTenantLogStoresThemCorrectly()
         //{
-        //    var appendResult1 = await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 1);
-        //    var appendResult2 = await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 2);
-        //    var appendResult3 = await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 3);
-        //    var getResult = await communityEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
+        //    var appendResult1 = await directoryEventLog.AppendEventAsync(organizationId, locationId, personCommand, 1);
+        //    var appendResult2 = await directoryEventLog.AppendEventAsync(organizationId, locationId, personCommand, 2);
+        //    var appendResult3 = await directoryEventLog.AppendEventAsync(organizationId, locationId, personCommand, 3);
+        //    var getResult = await directoryEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
         //    Assert.IsTrue(appendResult1.IsT0);
         //    Assert.IsTrue(appendResult2.IsT0);
         //    Assert.IsTrue(appendResult3.IsT0);
@@ -127,10 +123,10 @@ namespace CareTogether.Core.Test
         //[TestMethod]
         //public async Task AppendingMultipleEventsToAnInitializedTenantLogStoresThemCorrectly()
         //{
-        //    var appendResult1 = await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 4);
-        //    var appendResult2 = await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 5);
-        //    var appendResult3 = await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 6);
-        //    var getResult = await communityEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
+        //    var appendResult1 = await directoryEventLog.AppendEventAsync(organizationId, locationId, personCommand, 4);
+        //    var appendResult2 = await directoryEventLog.AppendEventAsync(organizationId, locationId, personCommand, 5);
+        //    var appendResult3 = await directoryEventLog.AppendEventAsync(organizationId, locationId, personCommand, 6);
+        //    var getResult = await directoryEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
         //    Assert.IsTrue(appendResult1.IsT0);
         //    Assert.IsTrue(appendResult2.IsT0);
         //    Assert.IsTrue(appendResult3.IsT0);
@@ -143,18 +139,18 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public async Task AppendingMultipleEventsToMultipleTenantLogsMaintainsSeparation()
         {
-            await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 1);
-            await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 2);
-            await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 3);
-            await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 4);
-            await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 5);
-            await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 6);
-            await communityEventLog.AppendEventAsync(guid3, guid4, personCommand, 1);
-            await communityEventLog.AppendEventAsync(guid3, guid4, personCommand, 2);
-            await communityEventLog.AppendEventAsync(guid3, guid4, personCommand, 3);
-            await communityEventLog.AppendEventAsync(organizationId, locationId, personCommand, 7);
+            await directoryEventLog.AppendEventAsync(organizationId, locationId, personCommand, 1);
+            await directoryEventLog.AppendEventAsync(organizationId, locationId, personCommand, 2);
+            await directoryEventLog.AppendEventAsync(organizationId, locationId, personCommand, 3);
+            await directoryEventLog.AppendEventAsync(organizationId, locationId, personCommand, 4);
+            await directoryEventLog.AppendEventAsync(organizationId, locationId, personCommand, 5);
+            await directoryEventLog.AppendEventAsync(organizationId, locationId, personCommand, 6);
+            await directoryEventLog.AppendEventAsync(guid3, guid4, personCommand, 1);
+            await directoryEventLog.AppendEventAsync(guid3, guid4, personCommand, 2);
+            await directoryEventLog.AppendEventAsync(guid3, guid4, personCommand, 3);
+            await directoryEventLog.AppendEventAsync(organizationId, locationId, personCommand, 7);
 
-            var getResult = await communityEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
+            var getResult = await directoryEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
             Assert.AreEqual(7, getResult.Count);
             Assert.AreEqual((personCommand, 1), getResult[0]);
             Assert.AreEqual((personCommand, 2), getResult[1]);
@@ -164,11 +160,11 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public void BlobNumberCalculatedCorrectly()
         {
-            var firstResult = communityEventLog.getBlobNumber(1);
-            var secondResult = communityEventLog.getBlobNumber(49999);
-            var thirdResult = communityEventLog.getBlobNumber(50000);
-            var fourthResult = communityEventLog.getBlobNumber(50001);
-            var fifthResult = communityEventLog.getBlobNumber(485919);
+            var firstResult = directoryEventLog.getBlobNumber(1);
+            var secondResult = directoryEventLog.getBlobNumber(49999);
+            var thirdResult = directoryEventLog.getBlobNumber(50000);
+            var fourthResult = directoryEventLog.getBlobNumber(50001);
+            var fifthResult = directoryEventLog.getBlobNumber(485919);
 
             Assert.AreEqual(1, firstResult);
             Assert.AreEqual(1, secondResult);
@@ -180,11 +176,11 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public void BlockNumberCalculatedCorrectly()
         {
-            var firstResult = communityEventLog.getBlockNumber(1);
-            var secondResult = communityEventLog.getBlockNumber(49999);
-            var thirdResult = communityEventLog.getBlockNumber(50000);
-            var fourthResult = communityEventLog.getBlockNumber(50001);
-            var fifthResult = communityEventLog.getBlockNumber(485919);
+            var firstResult = directoryEventLog.getBlockNumber(1);
+            var secondResult = directoryEventLog.getBlockNumber(49999);
+            var thirdResult = directoryEventLog.getBlockNumber(50000);
+            var fourthResult = directoryEventLog.getBlockNumber(50001);
+            var fifthResult = directoryEventLog.getBlockNumber(485919);
 
             Assert.AreEqual(1, firstResult);
             Assert.AreEqual(49999, secondResult);

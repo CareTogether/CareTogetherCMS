@@ -1,5 +1,5 @@
 import { atom, useRecoilCallback } from "recoil";
-import { ActionRequirement, AddAdultToFamilyCommand, AddChildToFamilyCommand, Address, Age, ApprovalCommand, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonConcerns, UpdatePersonName, UpdatePersonNotes, UploadVolunteerFamilyDocument, VolunteerCommand, VolunteerFamiliesClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
+import { ActionRequirement, AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, ApprovalCommand, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, UploadVolunteerFamilyDocument, VolunteerCommand, VolunteerFamiliesClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 
@@ -174,6 +174,61 @@ export function useVolunteerFamiliesModel() {
       command.notes = notes || undefined;
       return command;
     });
+  const addPersonPhoneNumber = usePersonCommandCallback(
+    async (volunteerFamilyId, personId, phoneNumber: string, phoneType: PhoneNumberType) => {
+      const command = new AddPersonPhoneNumber({
+        personId: personId
+      });
+      command.phoneNumber = new PhoneNumber({ number: phoneNumber, type: phoneType })
+      command.isPreferredPhoneNumber = true;
+      return command;
+    });
+  const updatePersonPhoneNumber = usePersonCommandCallback(
+    async (volunteerFamilyId, personId, phoneId: string, phoneNumber: string, phoneType: PhoneNumberType) => {
+      const command = new UpdatePersonPhoneNumber({
+        personId: personId
+      });
+      command.phoneNumber = new PhoneNumber({ id: phoneId, number: phoneNumber, type: phoneType })
+      command.isPreferredPhoneNumber = true;
+      return command;
+    });
+  const addPersonEmailAddress = usePersonCommandCallback(
+    async (volunteerFamilyId, personId, emailAddress: string, phoneType: EmailAddressType) => {
+      const command = new AddPersonEmailAddress({
+        personId: personId
+      });
+      command.emailAddress = new EmailAddress({ address: emailAddress, type: phoneType })
+      command.isPreferredEmailAddress = true;
+      return command;
+    });
+  const updatePersonEmailAddress = usePersonCommandCallback(
+    async (volunteerFamilyId, personId, phoneId: string, emailAddress: string, phoneType: EmailAddressType) => {
+      const command = new UpdatePersonEmailAddress({
+        personId: personId
+      });
+      command.emailAddress = new EmailAddress({ id: phoneId, address: emailAddress, type: phoneType })
+      command.isPreferredEmailAddress = true;
+      return command;
+    });
+  const addPersonAddress = usePersonCommandCallback(
+    async (volunteerFamilyId, personId, line1: string, line2: string, city: string, state: string, postalCode: string) => {
+      const command = new AddPersonAddress({
+        personId: personId
+      });
+      command.address = new Address({ line1: line1, line2: line2, city: city, state: state, postalCode: postalCode })
+      command.isCurrentAddress = true;
+      return command;
+    });
+  const updatePersonAddress = usePersonCommandCallback(
+    async (volunteerFamilyId, personId, addressId: string,
+      line1: string, line2: string, city: string, state: string, postalCode: string) => {
+      const command = new UpdatePersonAddress({
+        personId: personId
+      });
+      command.address = new Address({ id: addressId, line1: line1, line2: line2, city: city, state: state, postalCode: postalCode })
+      command.isCurrentAddress = true;
+      return command;
+    });
   const addAdult = useApprovalCommandCallback(
     async (volunteerFamilyId, firstName: string, lastName: string, gender: Gender, age: Age, ethnicity: string,
         isInHousehold: boolean, relationshipToFamily: string,
@@ -200,7 +255,6 @@ export function useVolunteerFamiliesModel() {
         command.address.city = city || undefined;
         command.address.state = state || undefined;
         command.address.postalCode = postalCode || undefined;
-        command.address.country = country || undefined;
       }
       if (phoneNumber != null) {
         command.phoneNumber = new PhoneNumber();
@@ -254,7 +308,6 @@ export function useVolunteerFamiliesModel() {
       command.address.city = city;
       command.address.state = state;
       command.address.postalCode = postalCode;
-      command.address.country = country;
       command.phoneNumber = new PhoneNumber();
       command.phoneNumber.number = phoneNumber;
       command.phoneNumber.type = phoneType;
@@ -271,6 +324,12 @@ export function useVolunteerFamiliesModel() {
     updatePersonName,
     updatePersonConcerns,
     updatePersonNotes,
+    addPersonPhoneNumber,
+    updatePersonPhoneNumber,
+    addPersonEmailAddress,
+    updatePersonEmailAddress,
+    addPersonAddress,
+    updatePersonAddress,
     addAdult,
     addChild,
     createVolunteerFamilyWithNewAdult

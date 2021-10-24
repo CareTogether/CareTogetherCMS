@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import AddIcon from '@material-ui/icons/Add';
 import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';
+import { VolunteerFamily } from '../GeneratedClient';
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -37,11 +38,17 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
+function familyLastName(family: VolunteerFamily) {
+  return family.family!.adults?.filter(adult => family.family!.primaryFamilyContactPersonId === adult.item1?.id)[0]?.item1?.lastName || "";
+}
+
 function VolunteerProgress() {
   const classes = useStyles();
   const history = useHistory();
 
-  const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
+  // The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
+  const volunteerFamilies = useRecoilValue(volunteerFamiliesData).map(x => x).sort((a, b) =>
+    familyLastName(a) < familyLastName(b) ? -1 : familyLastName(a) > familyLastName(b) ? 1 : 0);
   const allApprovalAndOnboardingRequirements = useRecoilValue(allApprovalAndOnboardingRequirementsData);
 
   function openVolunteerFamily(volunteerFamilyId: string) {
@@ -66,10 +73,7 @@ function VolunteerProgress() {
               {volunteerFamilies.map(volunteerFamily => (
                 <React.Fragment key={volunteerFamily.family!.id!}>
                   <TableRow className={classes.familyRow} onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}>
-                    <TableCell key="1" colSpan={2}>{
-                      volunteerFamily.family?.adults
-                        ?.filter(adult => adult.item1?.id === volunteerFamily.family?.primaryFamilyContactPersonId)
-                        [0]?.item1?.lastName + " Family"
+                    <TableCell key="1" colSpan={2}>{familyLastName(volunteerFamily) + " Family"
                     }</TableCell>
                     {allApprovalAndOnboardingRequirements.map(actionName =>
                       (<TableCell key={actionName}>{

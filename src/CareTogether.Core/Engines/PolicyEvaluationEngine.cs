@@ -231,13 +231,6 @@ namespace CareTogether.Engines
             //throw new NotImplementedException();
         }
 
-        public async Task<ContactInfo> DiscloseContactInfoAsync(ClaimsPrincipal user, ContactInfo contactInfo)
-        {
-            await Task.Yield();
-            return contactInfo;
-            //throw new NotImplementedException();
-        }
-
         public async Task<Family> DiscloseFamilyAsync(ClaimsPrincipal user, Family family)
         {
             await Task.Yield();

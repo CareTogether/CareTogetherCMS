@@ -29,7 +29,7 @@ namespace CareTogether.Api
 
             //// Look up the person info corresponding to the user.
             //var locationId = userTenantAccess.LocationIds.First(); //NOTE: Currently only one location per user is supported.
-            //var person = await communitiesResource.FindUserAsync(organizationId, locationId, principal.UserId());
+            //var person = await directoryResource.FindUserAsync(organizationId, locationId, principal.UserId());
             //principal.AddClaimOnlyOnce(claimsIdentity, Claims.PersonId, person!.Id.ToString());
 
             // Then look up the organization-managed role access and person ID for that user.

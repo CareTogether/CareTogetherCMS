@@ -1,14 +1,14 @@
-import { ContactInfo } from "../GeneratedClient";
+import { Person } from "../GeneratedClient";
 import { CardInfoRow } from "./CardInfoRow";
 
 type ContactDisplayProps = {
-  contact: ContactInfo
+  person: Person
 }
 
-export function ContactDisplay({ contact }: ContactDisplayProps) {
-  const preferredPhoneNumber = contact.phoneNumbers?.find(x => x.id === contact.preferredPhoneNumberId);
-  const preferredEmailAddress = contact.emailAddresses?.find(x => x.id === contact.preferredEmailAddressId);
-  const currentAddress = contact.addresses?.find(x => x.id === contact.currentAddressId);
+export function ContactDisplay({ person }: ContactDisplayProps) {
+  const preferredPhoneNumber = person.phoneNumbers?.find(x => x.id === person.preferredPhoneNumberId);
+  const preferredEmailAddress = person.emailAddresses?.find(x => x.id === person.preferredEmailAddressId);
+  const currentAddress = person.addresses?.find(x => x.id === person.currentAddressId);
 
   return (
     <>

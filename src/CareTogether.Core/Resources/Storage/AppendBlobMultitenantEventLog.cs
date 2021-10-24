@@ -13,11 +13,11 @@ namespace CareTogether.Resources.Storage
 {
     public class AppendBlobMultitenantEventLog<T> : IMultitenantEventLog<T>
     {
-        private readonly LogType _logType;
+        private readonly string _logType;
         private readonly BlobServiceClient _blobServiceClient;
         private readonly ConcurrentDictionary<Guid, BlobContainerClient> organizationBlobContainerClients;
 
-        public AppendBlobMultitenantEventLog(BlobServiceClient blobServiceClient, LogType logType)
+        public AppendBlobMultitenantEventLog(BlobServiceClient blobServiceClient, string logType)
         {
             _blobServiceClient = blobServiceClient;
             _logType = logType;

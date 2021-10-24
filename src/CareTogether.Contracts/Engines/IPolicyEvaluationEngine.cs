@@ -53,7 +53,5 @@ namespace CareTogether.Engines
         Task<Family> DiscloseFamilyAsync(ClaimsPrincipal user, Family family);
 
         Task<Person> DisclosePersonAsync(ClaimsPrincipal user, Person person);
-
-        Task<ContactInfo> DiscloseContactInfoAsync(ClaimsPrincipal user, ContactInfo contactInfo);
     }
 }
