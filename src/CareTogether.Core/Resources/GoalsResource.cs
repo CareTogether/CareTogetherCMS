@@ -20,20 +20,16 @@ namespace CareTogether.Resources
         }
 
 
-        public async Task<ResourceResult<Goal>> ExecuteGoalCommandAsync(Guid organizationId, Guid locationId, GoalCommand command,
+        public async Task<Goal> ExecuteGoalCommandAsync(Guid organizationId, Guid locationId, GoalCommand command,
             Guid userId)
         {
             using (var lockedModel = await tenantGoalsModels.WriteLockItemAsync((organizationId, locationId)))
             {
                 var result = lockedModel.Value.ExecuteGoalCommand(command, userId, DateTime.UtcNow);
-                if (result.TryPickT0(out var success, out var _))
-                {
-                    await goalsEventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
-                    success.Value.OnCommit();
-                    return success.Value.Goal;
-                }
-                else
-                    return ResourceResult.NotFound; //TODO: Something more specific involving 'error'?
+
+                await goalsEventLog.AppendEventAsync(organizationId, locationId, result.Event, result.SequenceNumber);
+                result.OnCommit();
+                return result.Goal;
             }
         }
 

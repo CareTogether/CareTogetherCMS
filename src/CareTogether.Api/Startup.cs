@@ -45,11 +45,10 @@ namespace CareTogether.Api
             var blobServiceClient = new BlobServiceClient(Configuration["Persistence:BlobStorageConnectionString"]);
 
             // Data store services
-            var communityEventLog = new AppendBlobMultitenantEventLog<CommunityEvent>(blobServiceClient, LogType.CommunityEventLog);
-            var contactsEventLog = new AppendBlobMultitenantEventLog<ContactCommandExecutedEvent>(blobServiceClient, LogType.ContactsEventLog);
-            var goalsEventLog = new AppendBlobMultitenantEventLog<GoalCommandExecutedEvent>(blobServiceClient, LogType.GoalsEventLog);
-            var referralsEventLog = new AppendBlobMultitenantEventLog<ReferralEvent>(blobServiceClient, LogType.ReferralsEventLog);
-            var approvalsEventLog = new AppendBlobMultitenantEventLog<ApprovalEvent>(blobServiceClient, LogType.ApprovalsEventLog);
+            var directoryEventLog = new AppendBlobMultitenantEventLog<DirectoryEvent>(blobServiceClient, "DirectoryEventLog");
+            var goalsEventLog = new AppendBlobMultitenantEventLog<GoalCommandExecutedEvent>(blobServiceClient, "GoalsEventLog");
+            var referralsEventLog = new AppendBlobMultitenantEventLog<ReferralEvent>(blobServiceClient, "ReferralsEventLog");
+            var approvalsEventLog = new AppendBlobMultitenantEventLog<ApprovalEvent>(blobServiceClient, "ApprovalsEventLog");
             var draftNotesStore = new JsonBlobObjectStore<string?>(blobServiceClient, "DraftNotes");
             var configurationStore = new JsonBlobObjectStore<OrganizationConfiguration>(blobServiceClient, "Configuration");
             var policiesStore = new JsonBlobObjectStore<EffectiveLocationPolicy>(blobServiceClient, "LocationPolicies");
@@ -62,8 +61,7 @@ namespace CareTogether.Api
                 // Note that this will not reset data (storage containers) for tenants other than the test tenant used by the TestData project.
                 TestData.TestStorageHelper.ResetTestTenantData(blobServiceClient);
                 TestData.TestDataProvider.PopulateTestDataAsync(
-                    communityEventLog,
-                    contactsEventLog,
+                    directoryEventLog,
                     goalsEventLog,
                     referralsEventLog,
                     approvalsEventLog,
@@ -76,8 +74,7 @@ namespace CareTogether.Api
 
             // Resource services
             var approvalsResource = new ApprovalsResource(approvalsEventLog);
-            var communitiesResource = new CommunitiesResource(communityEventLog);
-            var contactsResource = new ContactsResource(contactsEventLog);
+            var directoryResource = new DirectoryResource(directoryEventLog);
             var goalsResource = new GoalsResource(goalsEventLog);
             var policiesResource = new PoliciesResource(configurationStore, policiesStore);
             var accountsResource = new AccountsResource(userTenantAccessStore);
@@ -91,9 +88,8 @@ namespace CareTogether.Api
             var policyEvaluationEngine = new PolicyEvaluationEngine(policiesResource);
 
             // Manager services
-            services.AddSingleton<IMembershipManager>(new MembershipManager(communitiesResource, contactsResource));
-            services.AddSingleton<IReferralManager>(new ReferralManager(policyEvaluationEngine, communitiesResource, referralsResource, contactsResource));
-            services.AddSingleton<IApprovalManager>(new ApprovalManager(approvalsResource, policyEvaluationEngine, communitiesResource, contactsResource));
+            services.AddSingleton<IReferralManager>(new ReferralManager(policyEvaluationEngine, directoryResource, referralsResource));
+            services.AddSingleton<IApprovalManager>(new ApprovalManager(approvalsResource, policyEvaluationEngine, directoryResource));
 
             // Utility providers
             services.AddSingleton<IFileStore>(new BlobFileStore(blobServiceClient, "Uploads"));

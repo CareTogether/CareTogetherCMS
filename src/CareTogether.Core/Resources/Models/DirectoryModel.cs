@@ -1,6 +1,4 @@
 ﻿using JsonPolymorph;
-using OneOf;
-using OneOf.Types;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -10,14 +8,14 @@ using System.Threading.Tasks;
 namespace CareTogether.Resources.Models
 {
     [JsonHierarchyBase]
-    public abstract partial record CommunityEvent(Guid UserId, DateTime TimestampUtc)
+    public abstract partial record DirectoryEvent(Guid UserId, DateTime TimestampUtc)
         : DomainEvent(UserId, TimestampUtc);
     public sealed record FamilyCommandExecuted(Guid UserId, DateTime TimestampUtc,
-        FamilyCommand Command) : CommunityEvent(UserId, TimestampUtc);
+        FamilyCommand Command) : DirectoryEvent(UserId, TimestampUtc);
     public sealed record PersonCommandExecuted(Guid UserId, DateTime TimestampUtc,
-        PersonCommand Command) : CommunityEvent(UserId, TimestampUtc);
+        PersonCommand Command) : DirectoryEvent(UserId, TimestampUtc);
 
-    public sealed class CommunityModel
+    public sealed class DirectoryModel
     {
         internal record FamilyEntry(Guid Id, Guid PrimaryFamilyContactPersonId,
             ImmutableDictionary<Guid, FamilyAdultRelationshipInfo> AdultRelationships,
@@ -26,16 +24,24 @@ namespace CareTogether.Resources.Models
         {
             internal Family ToFamily(ImmutableDictionary<Guid, PersonEntry> people) =>
                 new(Id, PrimaryFamilyContactPersonId,
-                    AdultRelationships.Select(ar => (people[ar.Key].ToPerson(), ar.Value)).ToList(),
-                    Children.Select(c => people[c].ToPerson()).ToList(),
-                    CustodialRelationships.Select(cr => new CustodialRelationship(cr.Key.ChildId, cr.Key.AdultId, cr.Value)).ToList());
+                    AdultRelationships.Select(ar => (people[ar.Key].ToPerson(), ar.Value)).ToImmutableList(),
+                    Children.Select(c => people[c].ToPerson()).ToImmutableList(),
+                    CustodialRelationships.Select(cr => new CustodialRelationship(cr.Key.ChildId, cr.Key.AdultId, cr.Value)).ToImmutableList());
         }
 
         internal record PersonEntry(Guid Id, Guid? UserId, string FirstName, string LastName,
-            Gender Gender, Age Age, string Ethnicity, string? Concerns, string? Notes)
+            Gender Gender, Age Age, string Ethnicity,
+            ImmutableList<Address> Addresses, Guid? CurrentAddressId,
+            ImmutableList<PhoneNumber> PhoneNumbers, Guid? PreferredPhoneNumberId,
+            ImmutableList<EmailAddress> EmailAddresses, Guid? PreferredEmailAddressId,
+            string? Concerns, string? Notes)
         {
             internal Person ToPerson() =>
-                new(Id, UserId, FirstName, LastName, Gender, Age, Ethnicity, Concerns, Notes);
+                new(Id, UserId, FirstName, LastName, Gender, Age, Ethnicity,
+                    Addresses, CurrentAddressId,
+                    PhoneNumbers, PreferredPhoneNumberId,
+                    EmailAddresses, PreferredEmailAddressId,
+                    Concerns, Notes);
         }
 
 
@@ -46,10 +52,10 @@ namespace CareTogether.Resources.Models
         public long LastKnownSequenceNumber { get; private set; } = -1;
 
 
-        public static async Task<CommunityModel> InitializeAsync(
-            IAsyncEnumerable<(CommunityEvent DomainEvent, long SequenceNumber)> eventLog)
+        public static async Task<DirectoryModel> InitializeAsync(
+            IAsyncEnumerable<(DirectoryEvent DomainEvent, long SequenceNumber)> eventLog)
         {
-            var model = new CommunityModel();
+            var model = new DirectoryModel();
 
             await foreach (var (domainEvent, sequenceNumber) in eventLog)
                 model.ReplayEvent(domainEvent, sequenceNumber);
@@ -58,16 +64,16 @@ namespace CareTogether.Resources.Models
         }
 
 
-        public OneOf<Success<(FamilyCommandExecuted Event, long SequenceNumber, Family Family, Action OnCommit)>, Error<string>>
+        public (FamilyCommandExecuted Event, long SequenceNumber, Family Family, Action OnCommit)
             ExecuteFamilyCommand(FamilyCommand command, Guid userId, DateTime timestampUtc)
         {
-            OneOf<FamilyEntry, Error<string>> result = command switch
+            var familyEntryToUpsert = command switch
             {
                 CreateFamily c => new FamilyEntry(c.FamilyId, c.PrimaryFamilyContactPersonId,
                     AdultRelationships: ImmutableDictionary<Guid, FamilyAdultRelationshipInfo>.Empty.AddRange(
                         c.Adults?.Select(a => new KeyValuePair<Guid, FamilyAdultRelationshipInfo>(a.Item1, a.Item2))
                         ?? new List<KeyValuePair<Guid, FamilyAdultRelationshipInfo>>()),
-                    Children: ImmutableList<Guid>.Empty.AddRange(c.Children ?? new List<Guid>()),
+                    Children: ImmutableList<Guid>.Empty.AddRange(c.Children ?? ImmutableList<Guid>.Empty),
                     CustodialRelationships: ImmutableDictionary<(Guid ChildId, Guid AdultId), CustodialRelationshipType>.Empty.AddRange(
                         c.CustodialRelationships?.Select(cr =>
                             new KeyValuePair<(Guid ChildId, Guid AdultId), CustodialRelationshipType>((cr.ChildId, cr.PersonId), cr.Type))
@@ -98,7 +104,8 @@ namespace CareTogether.Resources.Models
                         //TODO: Error if child is not found
                         AddCustodialRelationship c => familyEntry with
                         {
-                            CustodialRelationships = familyEntry.CustodialRelationships.Add((c.ChildPersonId, c.AdultPersonId), c.Type)
+                            CustodialRelationships = familyEntry.CustodialRelationships.Add(
+                                (c.CustodialRelationship.ChildId, c.CustodialRelationship.PersonId), c.CustodialRelationship.Type)
                         },
                         //TODO: Error if key is not found
                         UpdateCustodialRelationshipType c => familyEntry with
@@ -113,44 +120,84 @@ namespace CareTogether.Resources.Models
                         _ => throw new NotImplementedException(
                             $"The command type '{command.GetType().FullName}' has not been implemented.")
                     }
-                    : new Error<string>("A family with the specified ID does not exist.")
+                    : throw new KeyNotFoundException("A family with the specified ID does not exist.")
             };
-            if (result.TryPickT0(out var familyEntryToUpsert, out var error))
-                return new Success<(FamilyCommandExecuted Event, long SequenceNumber, Family Family, Action OnCommit)>((
-                    Event: new FamilyCommandExecuted(userId, timestampUtc, command),
-                    SequenceNumber: LastKnownSequenceNumber + 1,
-                    Family: familyEntryToUpsert.ToFamily(people),
-                    OnCommit: () => families = families.SetItem(familyEntryToUpsert.Id, familyEntryToUpsert)));
-            else
-                return result.AsT1;
+
+            return (
+                Event: new FamilyCommandExecuted(userId, timestampUtc, command),
+                SequenceNumber: LastKnownSequenceNumber + 1,
+                Family: familyEntryToUpsert.ToFamily(people),
+                OnCommit: () =>
+                {
+                    LastKnownSequenceNumber++;
+                    families = families.SetItem(familyEntryToUpsert.Id, familyEntryToUpsert);
+                });
         }
 
-        public OneOf<Success<(PersonCommandExecuted Event, long SequenceNumber, Person Person, Action OnCommit)>, Error<string>>
+        public (PersonCommandExecuted Event, long SequenceNumber, Person Person, Action OnCommit)
             ExecutePersonCommand(PersonCommand command, Guid userId, DateTime timestampUtc)
         {
-            OneOf<PersonEntry, Error<string>> result = command switch
+            var personEntryToUpsert = command switch
             {
                 CreatePerson c => new PersonEntry(c.PersonId, c.UserId, c.FirstName, c.LastName,
-                    c.Gender, c.Age, c.Ethnicity, c.Concerns, c.Notes),
+                    c.Gender, c.Age, c.Ethnicity,
+                    c.Addresses, c.CurrentAddressId,
+                    c.PhoneNumbers, c.PreferredPhoneNumberId,
+                    c.EmailAddresses, c.PreferredEmailAddressId,
+                    c.Concerns, c.Notes),
                 _ => people.TryGetValue(command.PersonId, out var personEntry)
                     ? command switch
                     {
                         UpdatePersonName c => personEntry with { FirstName = c.FirstName, LastName = c.LastName },
                         UpdatePersonAge c => personEntry with { Age = c.Age },
                         UpdatePersonUserLink c => personEntry with { UserId = c.UserId },
+                        UpdatePersonConcerns c => personEntry with { Concerns = c.Concerns },
+                        UpdatePersonNotes c => personEntry with { Notes = c.Notes },
+                        AddPersonAddress c => personEntry with
+                        {
+                            Addresses = personEntry.Addresses.With(c.Address),
+                            CurrentAddressId = c.IsCurrentAddress ? c.Address.Id : personEntry.CurrentAddressId
+                        },
+                        UpdatePersonAddress c => personEntry with
+                        {
+                            Addresses = personEntry.Addresses.With(c.Address, a => a.Id == c.Address.Id),
+                            CurrentAddressId = c.IsCurrentAddress ? c.Address.Id : personEntry.CurrentAddressId
+                        },
+                        AddPersonPhoneNumber c => personEntry with
+                        {
+                            PhoneNumbers = personEntry.PhoneNumbers.With(c.PhoneNumber),
+                            PreferredPhoneNumberId = c.IsPreferredPhoneNumber ? c.PhoneNumber.Id : personEntry.PreferredPhoneNumberId
+                        },
+                        UpdatePersonPhoneNumber c => personEntry with
+                        {
+                            PhoneNumbers = personEntry.PhoneNumbers.With(c.PhoneNumber, p => p.Id == c.PhoneNumber.Id),
+                            PreferredPhoneNumberId = c.IsPreferredPhoneNumber ? c.PhoneNumber.Id : personEntry.PreferredPhoneNumberId
+                        },
+                        AddPersonEmailAddress c => personEntry with
+                        {
+                            EmailAddresses = personEntry.EmailAddresses.With(c.EmailAddress),
+                            PreferredEmailAddressId = c.IsPreferredEmailAddress ? c.EmailAddress.Id : personEntry.PreferredEmailAddressId
+                        },
+                        UpdatePersonEmailAddress c => personEntry with
+                        {
+                            EmailAddresses = personEntry.EmailAddresses.With(c.EmailAddress, e => e.Id == c.EmailAddress.Id),
+                            PreferredEmailAddressId = c.IsPreferredEmailAddress ? c.EmailAddress.Id : personEntry.PreferredEmailAddressId
+                        },
                         _ => throw new NotImplementedException(
                             $"The command type '{command.GetType().FullName}' has not been implemented.")
                     }
-                    : new Error<string>("A person with the specified ID does not exist.")
+                    : throw new KeyNotFoundException("A person with the specified ID does not exist.")
             };
-            if (result.TryPickT0(out var personEntryToUpsert, out var error))
-                return new Success<(PersonCommandExecuted Event, long SequenceNumber, Person Person, Action OnCommit)>((
-                    Event: new PersonCommandExecuted(userId, timestampUtc, command),
-                    SequenceNumber: LastKnownSequenceNumber + 1,
-                    Person: personEntryToUpsert.ToPerson(),
-                    OnCommit: () => people = people.SetItem(personEntryToUpsert.Id, personEntryToUpsert)));
-            else
-                return result.AsT1;
+
+            return (
+                Event: new PersonCommandExecuted(userId, timestampUtc, command),
+                SequenceNumber: LastKnownSequenceNumber + 1,
+                Person: personEntryToUpsert.ToPerson(),
+                OnCommit: () =>
+                {
+                    LastKnownSequenceNumber++;
+                    people = people.SetItem(personEntryToUpsert.Id, personEntryToUpsert);
+                });
         }
 
         public ImmutableList<Family> FindFamilies(Func<Family, bool> predicate) =>
@@ -166,18 +213,18 @@ namespace CareTogether.Resources.Models
                 .ToImmutableList();
 
 
-        private void ReplayEvent(CommunityEvent domainEvent, long sequenceNumber)
+        private void ReplayEvent(DirectoryEvent domainEvent, long sequenceNumber)
         {
             if (domainEvent is FamilyCommandExecuted familyCommandExecuted)
             {
                 var (_, _, _, onCommit) = ExecuteFamilyCommand(familyCommandExecuted.Command,
-                    familyCommandExecuted.UserId, familyCommandExecuted.TimestampUtc).AsT0.Value;
+                    familyCommandExecuted.UserId, familyCommandExecuted.TimestampUtc);
                 onCommit();
             }
             else if (domainEvent is PersonCommandExecuted personCommandExecuted)
             {
                 var (_, _, _, onCommit) = ExecutePersonCommand(personCommandExecuted.Command,
-                    personCommandExecuted.UserId, personCommandExecuted.TimestampUtc).AsT0.Value;
+                    personCommandExecuted.UserId, personCommandExecuted.TimestampUtc);
                 onCommit();
             }
             else

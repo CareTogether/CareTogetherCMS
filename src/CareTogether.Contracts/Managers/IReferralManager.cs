@@ -9,7 +9,6 @@ namespace CareTogether.Managers
     public record Referral(Guid Id, string PolicyVersion,
         DateTime CreatedUtc, ReferralCloseReason? CloseReason,
         Family PartneringFamily,
-        ImmutableList<ContactInfo> Contacts,
         ImmutableList<FormUploadInfo> ReferralFormUploads,
         ImmutableList<ActivityInfo> ReferralActivitiesPerformed,
         ImmutableList<Arrangement> Arrangements);
@@ -30,13 +29,13 @@ namespace CareTogether.Managers
     {
         Task<ImmutableList<Referral>> ListReferralsAsync(Guid organizationId, Guid locationId);
 
-        Task<ManagerResult<Referral>> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId,
+        Task<Referral> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, ReferralCommand command);
 
-        Task<ManagerResult<Referral>> ExecuteArrangementCommandAsync(Guid organizationId, Guid locationId,
+        Task<Referral> ExecuteArrangementCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, ArrangementCommand command);
 
-        Task<ManagerResult<Referral>> ExecuteArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
+        Task<Referral> ExecuteArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, ArrangementNoteCommand command);
     }
 }

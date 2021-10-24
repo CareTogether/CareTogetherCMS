@@ -14,128 +14,94 @@ namespace CareTogether.Managers
     {
         private readonly IApprovalsResource approvalsResource;
         private readonly IPolicyEvaluationEngine policyEvaluationEngine;
-        private readonly ICommunitiesResource communitiesResource;
-        private readonly IContactsResource contactsResource;
+        private readonly IDirectoryResource directoryResource;
 
 
         public ApprovalManager(IApprovalsResource approvalsResource, IPolicyEvaluationEngine policyEvaluationEngine,
-            ICommunitiesResource communitiesResource, IContactsResource contactsResource)
+            IDirectoryResource directoryResource)
         {
             this.approvalsResource = approvalsResource;
             this.policyEvaluationEngine = policyEvaluationEngine;
-            this.communitiesResource = communitiesResource;
-            this.contactsResource = contactsResource;
+            this.directoryResource = directoryResource;
         }
 
 
         public async Task<ImmutableList<VolunteerFamily>> ListVolunteerFamiliesAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId)
         {
-            var families = (await communitiesResource.ListFamiliesAsync(organizationId, locationId)).ToImmutableDictionary(x => x.Id);
-            var contacts = await contactsResource.ListContactsAsync(organizationId, locationId);
+            var families = (await directoryResource.ListFamiliesAsync(organizationId, locationId)).ToImmutableDictionary(x => x.Id);
             var volunteerFamilies = await approvalsResource.ListVolunteerFamiliesAsync(organizationId, locationId);
 
             var result = await volunteerFamilies.Select(vf => ToVolunteerFamilyAsync(
-                organizationId, locationId, vf, families, contacts)).WhenAll();
+                organizationId, locationId, vf, families)).WhenAll();
             return result.ToImmutableList();
         }
 
-        public async Task<ManagerResult<VolunteerFamily>> ExecuteVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
+        public async Task<VolunteerFamily> ExecuteVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, VolunteerFamilyCommand command)
         {
-            var getVolunteerFamilyResult = await approvalsResource.GetVolunteerFamilyAsync(organizationId, locationId, command.FamilyId);
-            if (getVolunteerFamilyResult.TryPickT0(out var volunteerFamilyEntry, out var notFound))
-            {
-                var families = communitiesResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
-                var contacts = contactsResource.ListContactsAsync(organizationId, locationId).Result;
-                var referral = await ToVolunteerFamilyAsync(
-                    organizationId, locationId, volunteerFamilyEntry, families, contacts);
+            var volunteerFamilyEntry = await approvalsResource.GetVolunteerFamilyAsync(organizationId, locationId, command.FamilyId);
+            
+            var families = directoryResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+            var referral = await ToVolunteerFamilyAsync(
+                organizationId, locationId, volunteerFamilyEntry, families);
 
-                var authorizationResult = await policyEvaluationEngine.AuthorizeVolunteerFamilyCommandAsync(
-                    organizationId, locationId, user, command, referral);
-                if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
-                {
-                    var commandResult = await approvalsResource.ExecuteVolunteerFamilyCommandAsync(organizationId, locationId, command, user.UserId());
-                    if (commandResult.TryPickT0(out var volunteerFamily, out var commandError))
-                    {
-                        var disclosedVolunteerFamily = await policyEvaluationEngine.DiscloseVolunteerFamilyAsync(user,
-                            await ToVolunteerFamilyAsync(organizationId, locationId, volunteerFamily, families, contacts));
-                        return disclosedVolunteerFamily;
-                    }
-                    else
-                        return ManagerResult.NotAllowed; //TODO: Include reason from 'commandError'?
-                }
-                else
-                    return ManagerResult.NotAllowed; //TODO: Include reason from 'authorizationError'?
-            }
-            else
-                return notFound;
+            var authorizationResult = await policyEvaluationEngine.AuthorizeVolunteerFamilyCommandAsync(
+                organizationId, locationId, user, command, referral);
+            
+            var volunteerFamily = await approvalsResource.ExecuteVolunteerFamilyCommandAsync(organizationId, locationId, command, user.UserId());
+                
+            var disclosedVolunteerFamily = await policyEvaluationEngine.DiscloseVolunteerFamilyAsync(user,
+                await ToVolunteerFamilyAsync(organizationId, locationId, volunteerFamily, families));
+            return disclosedVolunteerFamily;
         }
 
-        public async Task<ManagerResult<VolunteerFamily>> ExecuteVolunteerCommandAsync(Guid organizationId, Guid locationId,
+        public async Task<VolunteerFamily> ExecuteVolunteerCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, VolunteerCommand command)
         {
-            var getVolunteerFamilyResult = await approvalsResource.GetVolunteerFamilyAsync(organizationId, locationId, command.FamilyId);
-            if (getVolunteerFamilyResult.TryPickT0(out var volunteerFamilyEntry, out var notFound))
-            {
-                var families = communitiesResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
-                var contacts = contactsResource.ListContactsAsync(organizationId, locationId).Result;
-                var referral = await ToVolunteerFamilyAsync(
-                    organizationId, locationId, volunteerFamilyEntry, families, contacts);
+            var volunteerFamilyEntry = await approvalsResource.GetVolunteerFamilyAsync(organizationId, locationId, command.FamilyId);
+            
+            var families = directoryResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+            var referral = await ToVolunteerFamilyAsync(
+                organizationId, locationId, volunteerFamilyEntry, families);
 
-                var authorizationResult = await policyEvaluationEngine.AuthorizeVolunteerCommandAsync(
-                    organizationId, locationId, user, command, referral);
-                if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
-                {
-                    var commandResult = await approvalsResource.ExecuteVolunteerCommandAsync(organizationId, locationId, command, user.UserId());
-                    if (commandResult.TryPickT0(out var volunteerFamily, out var commandError))
-                    {
-                        var disclosedVolunteerFamily = await policyEvaluationEngine.DiscloseVolunteerFamilyAsync(user,
-                            await ToVolunteerFamilyAsync(organizationId, locationId, volunteerFamily, families, contacts));
-                        return disclosedVolunteerFamily;
-                    }
-                    else
-                        return ManagerResult.NotAllowed; //TODO: Include reason from 'commandError'?
-                }
-                else
-                    return ManagerResult.NotAllowed; //TODO: Include reason from 'authorizationError'?
-            }
-            else
-                return notFound;
+            var authorizationResult = await policyEvaluationEngine.AuthorizeVolunteerCommandAsync(
+                organizationId, locationId, user, command, referral);
+            
+            var volunteerFamily = await approvalsResource.ExecuteVolunteerCommandAsync(organizationId, locationId, command, user.UserId());
+            
+            var disclosedVolunteerFamily = await policyEvaluationEngine.DiscloseVolunteerFamilyAsync(user,
+                await ToVolunteerFamilyAsync(organizationId, locationId, volunteerFamily, families));
+            return disclosedVolunteerFamily;
         }
 
-        public async Task<ManagerResult<VolunteerFamily>> ExecutePersonCommandAsync(Guid organizationId, Guid locationId,
+        public async Task<VolunteerFamily> ExecutePersonCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, Guid familyId, PersonCommand command)
         {
-            var getVolunteerFamilyResult = await approvalsResource.GetVolunteerFamilyAsync(organizationId, locationId, familyId);
-            if (getVolunteerFamilyResult.TryPickT0(out var volunteerFamilyEntry, out var notFound))
-            {
-                //var authorizationResult = await policyEvaluationEngine.AuthorizePersonCommandAsync(
-                //    organizationId, locationId, user, command, referral);
-                //if (authorizationResult.TryPickT0(out var yes, out var authorizationError))
-                //{
-                var commandResult = await communitiesResource.ExecutePersonCommandAsync(organizationId, locationId, command, user.UserId());
-                if (commandResult.TryPickT0(out var person, out var commandError))
-                {
-                    var families = communitiesResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
-                    var contacts = contactsResource.ListContactsAsync(organizationId, locationId).Result;
-                    var referral = await ToVolunteerFamilyAsync(
-                        organizationId, locationId, volunteerFamilyEntry, families, contacts);
+            var volunteerFamilyEntry = await approvalsResource.GetVolunteerFamilyAsync(organizationId, locationId, familyId);
 
-                    var disclosedVolunteerFamily = await policyEvaluationEngine.DiscloseVolunteerFamilyAsync(user,
-                        await ToVolunteerFamilyAsync(organizationId, locationId, volunteerFamilyEntry, families, contacts));
-                    return disclosedVolunteerFamily;
-                }
-                else
-                    return ManagerResult.NotAllowed; //TODO: Include reason from 'commandError'?
-                //}
-                //else
-                //    return ManagerResult.NotAllowed; //TODO: Include reason from 'authorizationError'?
-            }
-            else
-                return notFound;
+            //var authorizationResult = await policyEvaluationEngine.AuthorizePersonCommandAsync(
+            //    organizationId, locationId, user, command, referral);
+
+            command = command switch
+            {
+                AddPersonPhoneNumber c => c with { PhoneNumber = c.PhoneNumber with { Id = Guid.NewGuid() } },
+                AddPersonEmailAddress c => c with { EmailAddress = c.EmailAddress with { Id = Guid.NewGuid() } },
+                AddPersonAddress c => c with { Address = c.Address with { Id = Guid.NewGuid() } },
+                _ => command
+            };
+
+            var person = await directoryResource.ExecutePersonCommandAsync(organizationId, locationId, command, user.UserId());
+                
+            var families = directoryResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+            var referral = await ToVolunteerFamilyAsync(
+                organizationId, locationId, volunteerFamilyEntry, families);
+
+            var disclosedVolunteerFamily = await policyEvaluationEngine.DiscloseVolunteerFamilyAsync(user,
+                await ToVolunteerFamilyAsync(organizationId, locationId, volunteerFamilyEntry, families));
+            return disclosedVolunteerFamily;
         }
 
-        public async Task<ManagerResult<VolunteerFamily>> ExecuteApprovalCommandAsync(Guid organizationId, Guid locationId,
+        public async Task<VolunteerFamily> ExecuteApprovalCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, ApprovalCommand command)
         {
             switch (command)
@@ -143,141 +109,140 @@ namespace CareTogether.Managers
                 case AddAdultToFamilyCommand c:
                     {
                         var adultPersonId = Guid.NewGuid();
+                        var address = c.Address == null ? null : c.Address with { Id = Guid.NewGuid() };
+                        var phoneNumber = c.PhoneNumber == null ? null : c.PhoneNumber with { Id = Guid.NewGuid() };
+                        var emailAddress = c.EmailAddress == null ? null : c.EmailAddress with { Id = Guid.NewGuid() };
+                        var addresses = address == null ? ImmutableList<Address>.Empty : ImmutableList<Address>.Empty.Add(address);
+                        var phoneNumbers = phoneNumber == null ? ImmutableList<PhoneNumber>.Empty : ImmutableList<PhoneNumber>.Empty.Add(phoneNumber);
+                        var emailAddresses = emailAddress == null ? ImmutableList<EmailAddress>.Empty : ImmutableList<EmailAddress>.Empty.Add(emailAddress);
+                        
                         var createPersonSubcommand = new CreatePerson(adultPersonId, null, c.FirstName, c.LastName,
-                            c.Gender, c.Age, c.Ethnicity, c.Concerns, c.Notes);
+                            c.Gender, c.Age, c.Ethnicity,
+                            addresses, address?.Id,
+                            phoneNumbers, phoneNumber?.Id,
+                            emailAddresses, emailAddress?.Id,
+                            c.Concerns, c.Notes);
                         var addAdultToFamilySubcommand = new AddAdultToFamily(c.FamilyId, adultPersonId, c.FamilyAdultRelationshipInfo);
 
                         //TODO: Authorize the subcommands via the policy evaluation engine
 
-                        var createPersonResult = await communitiesResource.ExecutePersonCommandAsync(organizationId, locationId,
+                        var person = await directoryResource.ExecutePersonCommandAsync(organizationId, locationId,
                             createPersonSubcommand, user.UserId());
-                        if (createPersonResult.TryPickT0(out var person, out var notFound1))
-                        {
-                            var addPersonToFamilyResult = await communitiesResource.ExecuteFamilyCommandAsync(organizationId, locationId,
-                                addAdultToFamilySubcommand, user.UserId());
-                            if (addPersonToFamilyResult.TryPickT0(out var family, out var notFound2))
-                            {
-                                var families = communitiesResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
-                                var contacts = contactsResource.ListContactsAsync(organizationId, locationId).Result;
+                        
+                        var family = await directoryResource.ExecuteFamilyCommandAsync(organizationId, locationId,
+                            addAdultToFamilySubcommand, user.UserId());
 
-                                var volunteerFamilyResult = await approvalsResource.GetVolunteerFamilyAsync(organizationId, locationId, c.FamilyId);
-                                if (volunteerFamilyResult.TryPickT0(out var volunteerFamilyEntry, out var notFound3))
-                                {
-                                    var disclosedVolunteerFamily = await policyEvaluationEngine.DiscloseVolunteerFamilyAsync(user,
-                                        await ToVolunteerFamilyAsync(organizationId, locationId, volunteerFamilyEntry, families, contacts));
-                                    return disclosedVolunteerFamily;
-                                }
-                            }
-                        }
-                        break;
+                        var families = directoryResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+
+                        var volunteerFamilyEntry = await approvalsResource.GetVolunteerFamilyAsync(organizationId, locationId, c.FamilyId);
+                                
+                        var disclosedVolunteerFamily = await policyEvaluationEngine.DiscloseVolunteerFamilyAsync(user,
+                            await ToVolunteerFamilyAsync(organizationId, locationId, volunteerFamilyEntry, families));
+                        return disclosedVolunteerFamily;
                     }
                 case AddChildToFamilyCommand c:
                     {
                         var childPersonId = Guid.NewGuid();
                         var createPersonSubcommand = new CreatePerson(childPersonId, null, c.FirstName, c.LastName,
-                            c.Gender, c.Age, c.Ethnicity, c.Concerns, c.Notes);
+                            c.Gender, c.Age, c.Ethnicity,
+                            ImmutableList<Address>.Empty, null,
+                            ImmutableList<PhoneNumber>.Empty, null,
+                            ImmutableList<EmailAddress>.Empty, null,
+                            c.Concerns, c.Notes);
                         var addChildToFamilySubcommand = new AddChildToFamily(c.FamilyId, childPersonId, c.CustodialRelationships.Select(cr =>
-                            cr with { ChildId = childPersonId }).ToList());
+                            cr with { ChildId = childPersonId }).ToImmutableList());
 
                         //TODO: Authorize the subcommands via the policy evaluation engine
 
-                        var createPersonResult = await communitiesResource.ExecutePersonCommandAsync(organizationId, locationId,
+                        var person = await directoryResource.ExecutePersonCommandAsync(organizationId, locationId,
                             createPersonSubcommand, user.UserId());
-                        if (createPersonResult.TryPickT0(out var person, out var notFound1))
-                        {
-                            var addChildToFamilyResult = await communitiesResource.ExecuteFamilyCommandAsync(organizationId, locationId,
-                                addChildToFamilySubcommand, user.UserId());
-                            if (addChildToFamilyResult.TryPickT0(out var family, out var notFound2))
-                            {
-                                var families = communitiesResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
-                                var contacts = contactsResource.ListContactsAsync(organizationId, locationId).Result;
+                        
+                        var family = await directoryResource.ExecuteFamilyCommandAsync(organizationId, locationId,
+                            addChildToFamilySubcommand, user.UserId());
+                            
+                        var families = directoryResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
 
-                                var volunteerFamilyResult = await approvalsResource.GetVolunteerFamilyAsync(organizationId, locationId, c.FamilyId);
-                                if (volunteerFamilyResult.TryPickT0(out var volunteerFamilyEntry, out var notFound3))
-                                {
-                                    var disclosedVolunteerFamily = await policyEvaluationEngine.DiscloseVolunteerFamilyAsync(user,
-                                        await ToVolunteerFamilyAsync(organizationId, locationId, volunteerFamilyEntry, families, contacts));
-                                    return disclosedVolunteerFamily;
-                                }
-                            }
-                        }
-                        break;
+                        var volunteerFamilyEntry = await approvalsResource.GetVolunteerFamilyAsync(organizationId, locationId, c.FamilyId);
+                                
+                        var disclosedVolunteerFamily = await policyEvaluationEngine.DiscloseVolunteerFamilyAsync(user,
+                            await ToVolunteerFamilyAsync(organizationId, locationId, volunteerFamilyEntry, families));
+                        return disclosedVolunteerFamily;
                     }
                 case CreateVolunteerFamilyWithNewAdultCommand c:
                     {
                         var adultPersonId = Guid.NewGuid();
                         var familyId = Guid.NewGuid();
+                        var address = c.Address == null ? null : c.Address with { Id = Guid.NewGuid() };
+                        var phoneNumber = c.PhoneNumber == null ? null : c.PhoneNumber with { Id = Guid.NewGuid() };
+                        var emailAddress = c.EmailAddress == null ? null : c.EmailAddress with { Id = Guid.NewGuid() };
+                        var addresses = address == null ? ImmutableList<Address>.Empty : ImmutableList<Address>.Empty.Add(address);
+                        var phoneNumbers = phoneNumber == null ? ImmutableList<PhoneNumber>.Empty : ImmutableList<PhoneNumber>.Empty.Add(phoneNumber);
+                        var emailAddresses = emailAddress == null ? ImmutableList<EmailAddress>.Empty : ImmutableList<EmailAddress>.Empty.Add(emailAddress);
+                        
                         var createPersonSubcommand = new CreatePerson(adultPersonId, null, c.FirstName, c.LastName,
-                            c.Gender, c.Age, c.Ethnicity, c.Concerns, c.Notes);
+                            c.Gender, c.Age, c.Ethnicity,
+                            addresses, address?.Id,
+                            phoneNumbers, phoneNumber?.Id,
+                            emailAddresses, emailAddress?.Id,
+                            c.Concerns, c.Notes);
                         var createFamilySubcommand = new CreateFamily(familyId, adultPersonId,
-                            new List<(Guid, FamilyAdultRelationshipInfo)>
-                            {
-                                (adultPersonId, c.FamilyAdultRelationshipInfo)
-                            }, new List<Guid>(), new List<CustodialRelationship>());
+                            ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty.Add((adultPersonId, c.FamilyAdultRelationshipInfo)),
+                            ImmutableList<Guid>.Empty,
+                            ImmutableList<CustodialRelationship>.Empty);
                         var activateVolunteerFamilySubcommand = new ActivateVolunteerFamily(familyId);
 
                         //TODO: Authorize the subcommands via the policy evaluation engine
 
-                        var createPersonResult = await communitiesResource.ExecutePersonCommandAsync(organizationId, locationId,
+                        var person = await directoryResource.ExecutePersonCommandAsync(organizationId, locationId,
                             createPersonSubcommand, user.UserId());
-                        if (createPersonResult.TryPickT0(out var person, out var notFound1))
-                        {
-                            var createFamilyResult = await communitiesResource.ExecuteFamilyCommandAsync(organizationId, locationId,
-                                createFamilySubcommand, user.UserId());
-                            if (createFamilyResult.TryPickT0(out var family, out var notFound2))
-                            {
-                                var activateVolunteerFamilyResult = await approvalsResource.ExecuteVolunteerFamilyCommandAsync(organizationId, locationId,
-                                    activateVolunteerFamilySubcommand, user.UserId());
-                                if (activateVolunteerFamilyResult.TryPickT0(out var volunteerFamilyEntry, out var notFound3))
-                                {
-                                    var families = communitiesResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
-                                    var contacts = contactsResource.ListContactsAsync(organizationId, locationId).Result;
+                        
+                        var family = await directoryResource.ExecuteFamilyCommandAsync(organizationId, locationId,
+                            createFamilySubcommand, user.UserId());
 
-                                    var disclosedVolunteerFamily = await policyEvaluationEngine.DiscloseVolunteerFamilyAsync(user,
-                                        await ToVolunteerFamilyAsync(organizationId, locationId, volunteerFamilyEntry, families, contacts));
-                                    return disclosedVolunteerFamily;
-                                }
-                            }
-                        }
-                        break;
+                        var volunteerFamilyEntry = await approvalsResource.ExecuteVolunteerFamilyCommandAsync(organizationId, locationId,
+                            activateVolunteerFamilySubcommand, user.UserId());
+
+                        var families = directoryResource.ListFamiliesAsync(organizationId, locationId).Result.ToImmutableDictionary(x => x.Id);
+
+                        var disclosedVolunteerFamily = await policyEvaluationEngine.DiscloseVolunteerFamilyAsync(user,
+                            await ToVolunteerFamilyAsync(organizationId, locationId, volunteerFamilyEntry, families));
+                        return disclosedVolunteerFamily;
                     }
                 default:
                     throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented.");
             }
-
-            return ManagerResult.NotFound; //TODO: Pass-through reason code?
         }
 
 
         private async Task<VolunteerFamily> ToVolunteerFamilyAsync(Guid organizationId, Guid locationId,
             VolunteerFamilyEntry entry,
-            ImmutableDictionary<Guid, Family> families,
-            ImmutableDictionary<Guid, ContactInfo> contacts)
+            ImmutableDictionary<Guid, Family> families)
         {
             var family = families[entry.FamilyId];
-            var individualInfo = entry.IndividualEntries.ToImmutableDictionary(
+            var completedIndividualRequirements = entry.IndividualEntries.ToImmutableDictionary(
                 x => x.Key,
-                x => (x.Value.ApprovalFormUploads, x.Value.ApprovalActivitiesPerformed));
+                x => x.Value.CompletedRequirements);
 
             var volunteerFamilyApprovalStatus = await policyEvaluationEngine.CalculateVolunteerFamilyApprovalStatusAsync(
-                organizationId, locationId, family,
-                entry.ApprovalFormUploads, entry.ApprovalActivitiesPerformed,
-                individualInfo);
+                organizationId, locationId, family, entry.CompletedRequirements, completedIndividualRequirements);
 
             return new VolunteerFamily(family,
-                entry.ApprovalFormUploads, entry.ApprovalActivitiesPerformed,
+                entry.CompletedRequirements, entry.UploadedDocuments,
+                volunteerFamilyApprovalStatus.MissingFamilyRequirements,
+                volunteerFamilyApprovalStatus.AvailableFamilyApplications,
                 volunteerFamilyApprovalStatus.FamilyRoleApprovals,
                 volunteerFamilyApprovalStatus.IndividualVolunteers.ToImmutableDictionary(
                     x => x.Key,
                     x =>
                     {
-                        if (entry.IndividualEntries.TryGetValue(x.Key, out var individualInfo))
-                            return new Volunteer(individualInfo.ApprovalFormUploads, individualInfo.ApprovalActivitiesPerformed,
-                                x.Value.IndividualRoleApprovals);
-                        else
-                            return new Volunteer(ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty,
-                                ImmutableDictionary<string, RoleApprovalStatus>.Empty);
+                        var hasEntry = entry.IndividualEntries.TryGetValue(x.Key, out var individualEntry);
+                        var result = hasEntry
+                            ? new Volunteer(individualEntry!.CompletedRequirements, x.Value.MissingIndividualRequirements,
+                                x.Value.AvailableIndividualApplications, x.Value.IndividualRoleApprovals)
+                            : new Volunteer(ImmutableList<CompletedRequirementInfo>.Empty, x.Value.MissingIndividualRequirements,
+                                x.Value.AvailableIndividualApplications, x.Value.IndividualRoleApprovals);
+                        return result;
                     }));
         }
     }

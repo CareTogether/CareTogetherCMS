@@ -1,9 +1,9 @@
 import { makeStyles } from '@material-ui/core/styles';
 import { BottomNavigation, BottomNavigationAction } from '@material-ui/core';
 import { Link, useLocation, withRouter } from 'react-router-dom';
-import PermPhoneMsgIcon from '@material-ui/icons/PermPhoneMsg';
+//import PermPhoneMsgIcon from '@material-ui/icons/PermPhoneMsg';
 import PeopleIcon from '@material-ui/icons/People';
-import DashboardIcon from '@material-ui/icons/Dashboard';
+//import DashboardIcon from '@material-ui/icons/Dashboard';
 
 const useStyles = makeStyles((theme) => ({
   stickToBottom: {
@@ -27,8 +27,8 @@ function Footer(props: any) {
       showLabels
       className={classes.stickToBottom}
     >
-      <BottomNavigationAction component={Link} to='/dashboard' label="Dashboard" icon={<DashboardIcon />} />
-      <BottomNavigationAction component={Link} to='/referrals' label="Referrals" icon={<PermPhoneMsgIcon />} />
+      {/* <BottomNavigationAction component={Link} to='/dashboard' label="Dashboard" icon={<DashboardIcon />} /> */}
+      {/* <BottomNavigationAction component={Link} to='/referrals' label="Referrals" icon={<PermPhoneMsgIcon />} /> */}
       <BottomNavigationAction component={Link} to='/volunteers' label="Volunteers" icon={<PeopleIcon />} />
     </BottomNavigation>
   );

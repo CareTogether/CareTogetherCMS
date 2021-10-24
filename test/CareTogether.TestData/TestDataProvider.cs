@@ -26,8 +26,7 @@ namespace CareTogether.TestData
 
 
         public static async Task PopulateTestDataAsync(
-            IMultitenantEventLog<CommunityEvent> communityEventLog,
-            IMultitenantEventLog<ContactCommandExecutedEvent> contactsEventLog,
+            IMultitenantEventLog<DirectoryEvent> directoryEventLog,
             IMultitenantEventLog<GoalCommandExecutedEvent> goalsEventLog,
             IMultitenantEventLog<ReferralEvent> referralsEventLog,
             IMultitenantEventLog<ApprovalEvent> approvalsEventLog,
@@ -36,8 +35,7 @@ namespace CareTogether.TestData
             IObjectStore<EffectiveLocationPolicy> policiesStore,
             IObjectStore<UserTenantAccessSummary> userTenantAccessStore)
         {
-            await PopulateCommunityEvents(communityEventLog);
-            await PopulateContactEvents(contactsEventLog);
+            await PopulateDirectoryEvents(directoryEventLog);
             await PopulateGoalEvents(goalsEventLog);
             await PopulateReferralEvents(referralsEventLog);
             await PopulateApprovalEvents(approvalsEventLog);
@@ -48,98 +46,128 @@ namespace CareTogether.TestData
         }
 
         
-        public static async Task PopulateCommunityEvents(IMultitenantEventLog<CommunityEvent> communityEventLog)
+        public static async Task PopulateDirectoryEvents(IMultitenantEventLog<DirectoryEvent> directoryEventLog)
         {
-            await communityEventLog.AppendEventsAsync(guid1, guid2,
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(adminId, adminId, "System", "Administrator", Gender.Male, new ExactAge(new DateTime(2021, 7, 1)), "Ethnic", "Test", "ABC")),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid1, null, "John", "Doe", Gender.Male, new ExactAge(new DateTime(1980, 7, 1)), "Ethnic", null, "DEF")),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid2, guid3, "Jane", "Smith", Gender.Female, new AgeInYears(42, new DateTime(2021, 1, 1)), "Ethnic", null, null)),
+            await directoryEventLog.AppendEventsAsync(guid1, guid2,
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(adminId, adminId, "System", "Administrator", Gender.Male, new ExactAge(new DateTime(2021, 7, 1)), "Ethnic",
+                ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, "Test", "ABC")),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid1, null, "John", "Doe", Gender.Male, new ExactAge(new DateTime(1980, 7, 1)), "Ethnic",
+                ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, "DEF")),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid2, guid3, "Jane", "Smith", Gender.Female, new AgeInYears(42, new DateTime(2021, 1, 1)), "Ethnic",
+                ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonName(guid2, "Jane", "Doe")),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonAge(guid1, new ExactAge(new DateTime(1975, 1, 1)))),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonAge(guid2, new ExactAge(new DateTime(1979, 7, 1)))),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonUserLink(guid1, guid4)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid1, guid1,
-                    new List<(Guid, FamilyAdultRelationshipInfo)> { (guid1, new FamilyAdultRelationshipInfo("Dad", true)) },
-                    new List<Guid>(), new List<CustodialRelationship>())),
+                    ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty.Add((guid1, new FamilyAdultRelationshipInfo("Dad", true))),
+                    ImmutableList<Guid>.Empty, ImmutableList<CustodialRelationship>.Empty)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddAdultToFamily(guid1, guid2, new FamilyAdultRelationshipInfo("Mom", true))),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid3, null, "Eric", "Doe", Gender.Male, new AgeInYears(12, new DateTime(2021, 1, 1)), "Ethnic", null, null)),
-                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddChildToFamily(guid1, guid3, new List<CustodialRelationship>
-                {
-                    new CustodialRelationship(guid3, guid1, CustodialRelationshipType.ParentWithCustody),
-                    new CustodialRelationship(guid3, guid2, CustodialRelationshipType.ParentWithCustody)
-                })),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid3, null, "Eric", "Doe", Gender.Male, new AgeInYears(12, new DateTime(2021, 1, 1)), "Ethnic",
+                ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
+                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddChildToFamily(guid1, guid3, ImmutableList<CustodialRelationship>.Empty
+                    .Add(new CustodialRelationship(guid3, guid1, CustodialRelationshipType.ParentWithCustody))
+                    .Add(new CustodialRelationship(guid3, guid2, CustodialRelationshipType.ParentWithCustody)))),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdateAdultRelationshipToFamily(guid1, guid1, new FamilyAdultRelationshipInfo("Dad", false))),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new RemoveCustodialRelationship(guid1, guid3, guid1)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdateCustodialRelationshipType(guid1, guid3, guid2, CustodialRelationshipType.ParentWithCourtAppointedCustody)),
-                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddCustodialRelationship(guid1, guid3, guid1, CustodialRelationshipType.ParentWithCourtAppointedCustody)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid4, null, "Emily", "Coachworthy", Gender.Female, new ExactAge(new DateTime(1980, 3, 19)), "Ethnic", null, null)),
+                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddCustodialRelationship(guid1, new CustodialRelationship(guid3, guid1, CustodialRelationshipType.ParentWithCourtAppointedCustody))),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid4, null, "Emily", "Coachworthy", Gender.Female, new ExactAge(new DateTime(1980, 3, 19)), "Caucasian",
+                ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid4, guid4,
-                    new List<(Guid, FamilyAdultRelationshipInfo)> { (guid4, new FamilyAdultRelationshipInfo("Single", true)) },
-                    new List<Guid>(), new List<CustodialRelationship>())),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid5, null, "Han", "Solo", Gender.Male, new AgeInYears(30, new DateTime(2021, 7, 1)), "Ethnic", "Smuggler", null)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid6, null, "Leia", "Skywalker", Gender.Male, new AgeInYears(28, new DateTime(2021, 7, 1)), "Ethnic", "Freedom fighter", "Uncertain claim to royalty")),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid7, null, "Ben", "Solo", Gender.Male, new AgeInYears(12, new DateTime(2021, 7, 1)), "Ethnic", null, null)),
+                    ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty.Add((guid4, new FamilyAdultRelationshipInfo("Single", true))),
+                    ImmutableList<Guid>.Empty, ImmutableList<CustodialRelationship>.Empty)),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid5, null, "Han", "Solo", Gender.Male, new AgeInYears(30, new DateTime(2021, 7, 1)), "Corellian",
+                ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, "Smuggler", null)),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid6, null, "Leia", "Skywalker", Gender.Male, new AgeInYears(28, new DateTime(2021, 7, 1)), "Tatooinian",
+                ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, "Freedom fighter", "Uncertain claim to royalty")),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid7, null, "Ben", "Solo", Gender.Male, new AgeInYears(12, new DateTime(2021, 7, 1)), "Chandrilan",
+                ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid0, null, "Luke", "Skywalker", Gender.Male, new AgeInYears(28, new DateTime(2021, 7, 1)), "Tatooinian",
+                ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid2, guid6,
-                    new List<(Guid, FamilyAdultRelationshipInfo)>
-                    {
-                        (guid5, new FamilyAdultRelationshipInfo("Dad", true)),
-                        (guid6, new FamilyAdultRelationshipInfo("Mom", true))
-                    }, new List<Guid>() { guid7 }, new List<CustodialRelationship>()
-                    {
-                        new CustodialRelationship(guid7, guid5, CustodialRelationshipType.ParentWithCustody),
-                        new CustodialRelationship(guid7, guid6, CustodialRelationshipType.ParentWithCustody)
-                    })),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid8, null, "William", "Riker", Gender.Male, new ExactAge(new DateTime(1972, 1, 1)), "Ethnic", null, null)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid9, null, "Deanna", "Riker", Gender.Female, new ExactAge(new DateTime(1970, 1, 1)), "Ethnic", null, null)),
+                    ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty
+                        .Add((guid5, new FamilyAdultRelationshipInfo("Dad", true)))
+                        .Add((guid6, new FamilyAdultRelationshipInfo("Mom", true)))
+                        .Add((guid0, new FamilyAdultRelationshipInfo("Sibling", false))),
+                    ImmutableList<Guid>.Empty.Add(guid7), ImmutableList<CustodialRelationship>.Empty
+                        .Add(new CustodialRelationship(guid7, guid5, CustodialRelationshipType.ParentWithCustody))
+                        .Add(new CustodialRelationship(guid7, guid6, CustodialRelationshipType.ParentWithCustody)))),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid8, null, "William", "Riker", Gender.Male, new ExactAge(new DateTime(1972, 1, 1)), "Alaskan",
+                ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid9, null, "Deanna", "Riker", Gender.Female, new ExactAge(new DateTime(1970, 1, 1)), "Betazoid",
+                ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid3, guid8,
-                    new List<(Guid, FamilyAdultRelationshipInfo)>
-                    {
-                        (guid8, new FamilyAdultRelationshipInfo("Dad", true)),
-                        (guid9, new FamilyAdultRelationshipInfo("Mom", true))
-                    }, new List<Guid>(), new List<CustodialRelationship>()))
-            );
-        }
-
-        public static async Task PopulateContactEvents(IMultitenantEventLog<ContactCommandExecutedEvent> contactsEventLog)
-        {
-            await contactsEventLog.AppendEventsAsync(guid1, guid2,
-                new ContactCommandExecutedEvent(guid0, new DateTime(2021, 7, 1), new CreateContact(guid1, "Amy has contact details for a callback")),
-                new ContactCommandExecutedEvent(guid0, new DateTime(2021, 7, 1), new AddContactAddress(guid1,
-                    new Address(guid3, "456 Old Ave.", null, "Bigtown", guid4, "67890", guid4),
+                    ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty
+                        .Add((guid8, new FamilyAdultRelationshipInfo("Dad", true)))
+                        .Add((guid9, new FamilyAdultRelationshipInfo("Mom", true))),
+                    ImmutableList<Guid>.Empty, ImmutableList<CustodialRelationship>.Empty)),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddPersonAddress(guid1,
+                    new Address(guid3, "456 Old Ave.", null, "Bigtown", "TX", "67890"),
                     true)),
-                new ContactCommandExecutedEvent(guid0, new DateTime(2021, 7, 1), new AddContactPhoneNumber(guid1,
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddPersonPhoneNumber(guid1,
                     new PhoneNumber(guid2, "1235554567", PhoneNumberType.Mobile),
                     true)),
-                new ContactCommandExecutedEvent(guid0, new DateTime(2021, 7, 1), new AddContactEmailAddress(guid1,
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddPersonEmailAddress(guid1,
                     new EmailAddress(guid2, "personal@example.com", EmailAddressType.Personal),
                     true)),
-                new ContactCommandExecutedEvent(guid0, new DateTime(2021, 7, 1), new AddContactAddress(guid1,
-                    new Address(guid2, "123 Main St.", "Apt. A", "Smallville", guid3, "12345", guid4),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddPersonAddress(guid1,
+                    new Address(guid2, "123 Main St.", "Apt. A", "Smallville", "NY", "12345"),
                     true)),
-                new ContactCommandExecutedEvent(guid0, new DateTime(2021, 7, 1), new UpdateContactAddress(guid1,
-                    new Address(guid3, "456 Old Ave.", null, "Bigtown", guid4, "67890", guid4),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonAddress(guid1,
+                    new Address(guid3, "456 Old Ave.", null, "Bigtown", "TX", "67890"),
                     false)),
-                new ContactCommandExecutedEvent(guid0, new DateTime(2021, 7, 1), new AddContactPhoneNumber(guid1,
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddPersonPhoneNumber(guid1,
                     new PhoneNumber(guid3, "1235555555", PhoneNumberType.Home),
                     true)),
-                new ContactCommandExecutedEvent(guid0, new DateTime(2021, 7, 1), new UpdateContactPhoneNumber(guid1,
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonPhoneNumber(guid1,
                     new PhoneNumber(guid2, "1235554567", PhoneNumberType.Mobile),
                     false)),
-                new ContactCommandExecutedEvent(guid0, new DateTime(2021, 7, 1), new AddContactEmailAddress(guid1,
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddPersonEmailAddress(guid1,
                     new EmailAddress(guid3, "work@example.com", EmailAddressType.Work),
                     true)),
-                new ContactCommandExecutedEvent(guid0, new DateTime(2021, 7, 1), new UpdateContactEmailAddress(guid1,
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonEmailAddress(guid1,
                     new EmailAddress(guid2, "personal@example.com", EmailAddressType.Personal),
                     false)),
-                new ContactCommandExecutedEvent(guid0, new DateTime(2021, 7, 1), new UpdateContactMethodPreferenceNotes(guid1,
-                    "Cannot receive voicemails")));
+                //new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonContactMethodPreferenceNotes(guid1,
+                //    "Cannot receive voicemails")),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 8, 1), new AddPersonAddress(guid4,
+                    new Address(guid3, "456 Old Ave.", null, "Bigtown", "TX", "67890"),
+                    true)),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 8, 1), new AddPersonPhoneNumber(guid4,
+                    new PhoneNumber(guid2, "1235554567", PhoneNumberType.Mobile),
+                    true)),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 8, 1), new AddPersonEmailAddress(guid4,
+                    new EmailAddress(guid2, "personal@example.com", EmailAddressType.Personal),
+                    true)),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 8, 1), new AddPersonAddress(guid4,
+                    new Address(guid2, "123 Main St.", "Apt. A", "Smallville", "NY", "12345"),
+                    true)),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 8, 1), new UpdatePersonAddress(guid4,
+                    new Address(guid3, "456 Old Ave.", null, "Bigtown", "TX", "67890"),
+                    false)),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 8, 1), new AddPersonPhoneNumber(guid4,
+                    new PhoneNumber(guid3, "1235555555", PhoneNumberType.Home),
+                    true)),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 8, 1), new UpdatePersonPhoneNumber(guid4,
+                    new PhoneNumber(guid2, "1235554567", PhoneNumberType.Mobile),
+                    false)),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 8, 1), new AddPersonEmailAddress(guid4,
+                    new EmailAddress(guid3, "work@example.com", EmailAddressType.Work),
+                    true)),
+                new PersonCommandExecuted(guid0, new DateTime(2021, 8, 1), new UpdatePersonEmailAddress(guid4,
+                    new EmailAddress(guid2, "personal@example.com", EmailAddressType.Personal),
+                    false))
+                //new PersonCommandExecuted(guid0, new DateTime(2021, 8, 1), new UpdatePersonContactMethodPreferenceNotes(guid4,
+                //    "Cannot receive voicemails"))
+            );
         }
 
         public static async Task PopulateReferralEvents(IMultitenantEventLog<ReferralEvent> referralsEventLog)
         {
             await referralsEventLog.AppendEventsAsync(guid1, guid2,
                 new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 5, 4, 10, 0), new CreateReferral(guid1, guid1, "v1", new DateTime(2020, 3, 5, 4, 10, 0))),
-                new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 5, 4, 15, 15), new UploadReferralForm(guid1, new DateTime(2020, 3, 5, 4, 12, 15), "Request for Help Form", "v1", "Jane Doe referral info.pdf", guid1)),
+                new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 5, 4, 15, 15), new UploadReferralForm(guid1, new DateTime(2020, 3, 5, 4, 12, 15), "Request for Help Form", "Jane Doe referral info.pdf", guid1)),
                 new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 6, 8, 45, 30), new PerformReferralActivity(guid1, "Intake Coordinator Screening Call", new DateTime(2020, 3, 6, 8, 45, 30), adminId)),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 12, 13), new CreateArrangement(guid1, guid1, "v1", "Hosting")),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 13, 14), new AssignIndividualVolunteer(guid1, guid1, guid4, "Family Coach")),
@@ -171,7 +199,7 @@ namespace CareTogether.TestData
                     new DateTime(2020, 3, 30, 18, 18, 18), ImmutableList<Guid>.Empty.Add(guid3), guid1, ChildrenLocationPlan.ReturnToFamily, "Mom met us and picked him up at DQ")),
                 new ReferralCommandExecuted(adminId, new DateTime(2020, 10, 4, 12, 32, 55), new CloseReferral(guid1, ReferralCloseReason.NeedMet)),
                 new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 30, 45), new CreateReferral(guid2, guid1, "v1", new DateTime(2021, 7, 10, 19, 30, 45))),
-                new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 32, 0), new UploadReferralForm(guid2, new DateTime(2021, 7, 10, 18, 0, 0), "Request for Help Form", "v1", "Jane Doe second referral info.pdf", guid2)),
+                new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 32, 0), new UploadReferralForm(guid2, new DateTime(2021, 7, 10, 18, 0, 0), "Request for Help Form", "Jane Doe second referral info.pdf", guid2)),
                 new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 32, 0), new PerformReferralActivity(guid2, "Intake Coordinator Screening Call",
                     new DateTime(2021, 7, 10, 19, 32, 0), adminId)));
         }
@@ -190,24 +218,36 @@ namespace CareTogether.TestData
         public static async Task PopulateApprovalEvents(IMultitenantEventLog<ApprovalEvent> approvalsEventLog)
         {
             await approvalsEventLog.AppendEventsAsync(guid1, guid2,
+                new VolunteerFamilyCommandExecuted(adminId, new DateTime(),
+                    new UploadVolunteerFamilyDocument(guid4, guid1, "fca.pdf")),
                 new VolunteerCommandExecuted(adminId, new DateTime(2021, 7, 1),
-                    new UploadVolunteerForm(guid4, guid4, new DateTime(2021, 7, 1), "Family Coach Application", "v1", "abc.pdf", Guid.Empty)),
+                    new CompleteVolunteerRequirement(guid4, guid4, "Family Coach Application", new DateTime(2021, 7, 1), guid1)),
                 new VolunteerCommandExecuted(adminId, new DateTime(2021, 7, 10),
-                    new PerformVolunteerActivity(guid4, guid4, "Interview with Family Coach Supervisor", new DateTime(2021, 7, 9), guid1)),
+                    new CompleteVolunteerRequirement(guid4, guid4, "Interview with Family Coach Supervisor", new DateTime(2021, 7, 9), Guid.Empty)),
+                new VolunteerFamilyCommandExecuted(adminId, new DateTime(2021, 7, 14),
+                    new UploadVolunteerFamilyDocument(guid4, guid2, "bgcheck.pdf")),
                 new VolunteerCommandExecuted(adminId, new DateTime(2021, 7, 14),
-                    new UploadVolunteerForm(guid4, guid4, new DateTime(2021, 7, 13), "Background Check", "v1", "def.pdf", Guid.Empty)),
+                    new CompleteVolunteerRequirement(guid4, guid4, "Background Check", new DateTime(2021, 7, 13), guid2)),
                 new VolunteerFamilyCommandExecuted(adminId, new DateTime(2021, 7, 1),
-                    new UploadVolunteerFamilyForm(guid3, new DateTime(2021, 7, 1), "Host Family Application", "v1", "abc.pdf", Guid.Empty)),
+                    new UploadVolunteerFamilyDocument(guid3, guid3, "hfapp.pdf")), 
+                new VolunteerFamilyCommandExecuted(adminId, new DateTime(2021, 7, 1),
+                    new CompleteVolunteerFamilyRequirement(guid3, "Host Family Application", new DateTime(2021, 7, 1), guid3)),
                 new VolunteerFamilyCommandExecuted(adminId, new DateTime(2021, 7, 15),
-                    new UploadVolunteerFamilyForm(guid3, new DateTime(2021, 7, 14), "Home Screening Checklist", "v1", "def.pdf", Guid.Empty)),
+                    new CompleteVolunteerFamilyRequirement(guid3, "Home Screening Checklist", new DateTime(2021, 7, 14), Guid.Empty)),
+                new VolunteerFamilyCommandExecuted(adminId, new DateTime(2021, 7, 18),
+                    new UploadVolunteerFamilyDocument(guid3, guid4, "bgcheck23.pdf")),
                 new VolunteerCommandExecuted(adminId, new DateTime(2021, 7, 18),
-                    new UploadVolunteerForm(guid3, guid8, new DateTime(2021, 7, 16), "Background Check", "v1", "bg8.jpg", Guid.Empty)),
+                    new CompleteVolunteerRequirement(guid3, guid8, "Background Check", new DateTime(2021, 7, 16), guid4)),
+                new VolunteerFamilyCommandExecuted(adminId, new DateTime(2021, 7, 18),
+                    new UploadVolunteerFamilyDocument(guid3, guid5, "background check.pdf")),
                 new VolunteerCommandExecuted(adminId, new DateTime(2021, 7, 18),
-                    new UploadVolunteerForm(guid3, guid9, new DateTime(2021, 7, 16), "Background Check", "v1", "bg9.jpg", Guid.Empty)),
+                    new CompleteVolunteerRequirement(guid3, guid9, "Background Check", new DateTime(2021, 7, 16), guid5)),
+                new VolunteerFamilyCommandExecuted(adminId, new DateTime(2021, 8, 10),
+                    new UploadVolunteerFamilyDocument(guid2, guid6, "famfriendapp.pdf")),
                 new VolunteerCommandExecuted(adminId, new DateTime(2021, 8, 10),
-                    new UploadVolunteerForm(guid2, guid6, new DateTime(2021, 8, 10), "Family Friend Application", "v1", "ffls.pdf", Guid.Empty)),
+                    new CompleteVolunteerRequirement(guid2, guid6, "Family Friend Application", new DateTime(2021, 8, 10), guid6)),
                 new VolunteerCommandExecuted(adminId, new DateTime(2021, 8, 11), //TODO: This is a workaround for a bug!
-                    new UploadVolunteerForm(guid2, guid5, new DateTime(2021, 8, 11), "Family Friend Application", "v1", "ffhs.pdf", Guid.Empty)));
+                    new CompleteVolunteerRequirement(guid2, guid5, "Family Friend Application", new DateTime(2021, 8, 11), guid7)));
         }
 
         public static async Task PopulateDraftNotes(IObjectStore<string?> draftNotesStore)
@@ -234,15 +274,47 @@ namespace CareTogether.TestData
 
         public static async Task PopulatePolicies(IObjectStore<EffectiveLocationPolicy> policiesStore)
         {
-            await policiesStore.UpsertAsync(guid1, guid2, "1", new EffectiveLocationPolicy(1, "Local test policy",
+            await policiesStore.UpsertAsync(guid1, guid2, "policy", new EffectiveLocationPolicy(
+                ActionDefinitions: new Dictionary<string, ActionRequirement>
+                {
+                    ["Request for Help Form"] = new ActionRequirement(DocumentLinkRequirement.Allowed,
+                        "Can be done over the phone", new Uri("http://example.com/forms/requestforhelp-v1")),
+                    ["Intake Coordinator Screening Call"] = new ActionRequirement(DocumentLinkRequirement.None, null, null),
+                    ["Intake Form"] = new ActionRequirement(DocumentLinkRequirement.Required,
+                        "Email or text the Cognito Form link", new Uri("http://example.com/forms/intake-v1")),
+                    ["Hosting Consent"] = new ActionRequirement(DocumentLinkRequirement.Required,
+                        "This must be notarized.", new Uri("http://example.com/forms/consent-v1")),
+                    ["Medical POA"] = new ActionRequirement(DocumentLinkRequirement.Required,
+                        "This must be notarized.", new Uri("http://example.com/forms/medicalpoa-v2")),
+                    ["Family Coach Safety Visit"] = new ActionRequirement(DocumentLinkRequirement.None, null, null),
+                    ["Return of Child Form"] = new ActionRequirement(DocumentLinkRequirement.Required,
+                        null, new Uri("http://example.com/forms/returnofchild-v1")),
+                    ["Advocacy Agreement"] = new ActionRequirement(DocumentLinkRequirement.Required,
+                        null, new Uri("http://example.com/forms/advocacy-v1")),
+                    ["Family Coach Checkin"] = new ActionRequirement(DocumentLinkRequirement.None, null, null),
+                    ["Family Coach Supervision"] = new ActionRequirement(DocumentLinkRequirement.Allowed, null, null),
+                    ["Family Friend Application"] = new ActionRequirement(DocumentLinkRequirement.Required,
+                        null, new Uri("http://example.com/forms/app-ff")),
+                    ["Background Check"] = new ActionRequirement(DocumentLinkRequirement.Required,
+                        "See approval guide for directions", new Uri("http://example.com/forms/bgcheck")),
+                    ["Family Coach Application"] = new ActionRequirement(DocumentLinkRequirement.Required,
+                        null, new Uri("http://example.com/forms/app-fc")),
+                    ["Comprehensive Background Check"] = new ActionRequirement(DocumentLinkRequirement.Required,
+                        "This is an all-in-one background check", new Uri("http://example.com/forms/compbgcheck")),
+                    ["Interview with Family Coach Supervisor"] = new ActionRequirement(DocumentLinkRequirement.Allowed, null, null),
+                    ["Host Family Application"] = new ActionRequirement(DocumentLinkRequirement.Required,
+                        null, new Uri("http://example.com/forms/app-hf")),
+                    ["Home Screening Checklist"] = new ActionRequirement(DocumentLinkRequirement.Required,
+                        "Must be filled out by an approved home screener", new Uri("http://example.com/forms/hscheck")),
+                    ["Host Family Interview"] = new ActionRequirement(DocumentLinkRequirement.Allowed, null, null),
+                    ["Meet & Greet"] = new ActionRequirement(DocumentLinkRequirement.Required, null, new Uri("http://example.com/forms/mag"))
+                }.ToImmutableDictionary(),
                 new ReferralPolicy(
-                    new List<ActionRequirement>
+                    new List<string>
                     {
-                        new FormUploadRequirement("Request for Help Form", "v1",
-                            "Can be done over the phone", new Uri("http://example.com/forms/requestforhelp-v1")),
-                        new ActivityRequirement("Intake Coordinator Screening Call"),
-                        new FormUploadRequirement("Intake Form", "v1",
-                            "Email or text the Cognito Form link", new Uri("http://example.com/forms/intake-v1"))
+                        "Request for Help Form",
+                        "Intake Coordinator Screening Call",
+                        "Intake Form"
                     }.ToImmutableList(),
                     new List<ArrangementPolicy>
                     {
@@ -292,32 +364,29 @@ namespace CareTogether.TestData
                                     "Host Family"
                                 }.ToImmutableList())
                             }.ToImmutableList(),
-                            RequiredSetupActions: new List<ActionRequirement>
+                            RequiredSetupActionNames: new List<string>
                             {
-                                new FormUploadRequirement("Hosting Consent", "v1",
-                                    "This must be notarized.", new Uri("http://example.com/forms/consent-v1")),
-                                new FormUploadRequirement("Medical POA", "v2",
-                                    "This must be notarized.", new Uri("http://example.com/forms/medicalpoa-v2"))
+                                "Hosting Consent",
+                                "Medical POA"
                             }.ToImmutableList(),
-                            RequiredMonitoringActions: new List<(ActionRequirement, RecurrencePolicy)>
+                            RequiredMonitoringActionNames: new List<(string, RecurrencePolicy)>
                             {
-                                (new ActivityRequirement("Family Coach Safety Visit"),
+                                ("Family Coach Safety Visit",
                                     new RecurrencePolicy(new List<RecurrencePolicyStage>
                                     {
                                         new RecurrencePolicyStage(TimeSpan.FromHours(48), 1),
                                         new RecurrencePolicyStage(TimeSpan.FromDays(7), 5),
                                         new RecurrencePolicyStage(TimeSpan.FromDays(14), null)
                                     }.ToImmutableList())),
-                                (new ActivityRequirement("Family Coach Supervision"),
+                                ("Family Coach Supervision",
                                     new RecurrencePolicy(new List<RecurrencePolicyStage>
                                     {
                                         new RecurrencePolicyStage(TimeSpan.FromDays(7), null)
                                     }.ToImmutableList()))
                             }.ToImmutableList(),
-                            RequiredCloseoutActions: new List<ActionRequirement>
+                            RequiredCloseoutActionNames: new List<string>
                             {
-                                new FormUploadRequirement("Return of Child", "v1",
-                                    null, new Uri("http://example.com/forms/returnofchild-v1")),
+                                "Return of Child Form"
                             }.ToImmutableList()),
                         new ArrangementPolicy("Friending", ChildInvolvement.NoChildInvolvement,
                             VolunteerFunctions: new List<VolunteerFunction>
@@ -339,63 +408,78 @@ namespace CareTogether.TestData
                                 }.ToImmutableList(),
                                 EligibleVolunteerFamilyRoles: ImmutableList<string>.Empty)
                             }.ToImmutableList(),
-                            RequiredSetupActions: new List<ActionRequirement>
+                            RequiredSetupActionNames: new List<string>
                             {
-                                new FormUploadRequirement("Advocacy Agreement", "v1",
-                                    null, new Uri("http://example.com/forms/advocacy-v1")),
+                                "Advocacy Agreement"
                             }.ToImmutableList(),
-                            RequiredMonitoringActions: new List<(ActionRequirement, RecurrencePolicy)>
+                            RequiredMonitoringActionNames: new List<(string, RecurrencePolicy)>
                             {
-                                (new ActivityRequirement("Family Coach Checkin"),
+                                ("Family Coach Checkin",
                                     new RecurrencePolicy(new List<RecurrencePolicyStage>
                                     {
                                         new RecurrencePolicyStage(TimeSpan.FromDays(7), null)
                                     }.ToImmutableList())),
-                                (new ActivityRequirement("Family Coach Supervision"),
+                                ("Family Coach Supervision",
                                     new RecurrencePolicy(new List<RecurrencePolicyStage>
                                     {
                                         new RecurrencePolicyStage(TimeSpan.FromDays(7), null)
                                     }.ToImmutableList()))
                             }.ToImmutableList(),
-                            RequiredCloseoutActions: new List<ActionRequirement>
+                            RequiredCloseoutActionNames: new List<string>
                             { }.ToImmutableList())
                     }.ToImmutableList()),
                 new VolunteerPolicy(
                     new Dictionary<string, VolunteerRolePolicy>
                     {
-                        ["Family Friend"] = new VolunteerRolePolicy("Family Friend", new List<VolunteerApprovalRequirement>
+                        ["Family Friend"] = new VolunteerRolePolicy("Family Friend", PolicyVersions: new List<VolunteerRolePolicyVersion>
                         {
-                            new VolunteerApprovalRequirement(RequirementStage.Application,
-                                new FormUploadRequirement("Family Friend Application", "v1", null, new Uri("http://example.com/forms/app-ff"))),
-                            new VolunteerApprovalRequirement(RequirementStage.Approval,
-                                new FormUploadRequirement("Background Check", "v1", "See approval guide for directions", new Uri("http://example.com/forms/app-ff")))
+                            new VolunteerRolePolicyVersion("v1", new DateTime(2021, 10, 1), new List<VolunteerApprovalRequirement>
+                            {
+                                new VolunteerApprovalRequirement(RequirementStage.Application, "Family Friend Application"),
+                                new VolunteerApprovalRequirement(RequirementStage.Approval, "Background Check")
+                            }.ToImmutableList()),
+                            new VolunteerRolePolicyVersion("v2", null, new List<VolunteerApprovalRequirement>
+                            {
+                                new VolunteerApprovalRequirement(RequirementStage.Application, "Family Friend Application"),
+                                new VolunteerApprovalRequirement(RequirementStage.Approval, "Comprehensive Background Check")
+                            }.ToImmutableList())
                         }.ToImmutableList()),
-                        ["Family Coach"] = new VolunteerRolePolicy("Family Coach", new List<VolunteerApprovalRequirement>
+                        ["Family Coach"] = new VolunteerRolePolicy("Family Coach", PolicyVersions: new List<VolunteerRolePolicyVersion>
                         {
-                            new VolunteerApprovalRequirement(RequirementStage.Application,
-                                new FormUploadRequirement("Family Coach Application", "v1", null, new Uri("http://example.com/forms/app-fc"))),
-                            new VolunteerApprovalRequirement(RequirementStage.Approval,
-                                new FormUploadRequirement("Background Check", "v1", "See approval guide for directions", new Uri("http://example.com/forms/app-ff"))),
-                            new VolunteerApprovalRequirement(RequirementStage.Approval,
-                                new ActivityRequirement("Interview with Family Coach Supervisor"))
+                            new VolunteerRolePolicyVersion("v1", new DateTime(2021, 10, 1), new List<VolunteerApprovalRequirement>
+                            {
+                                new VolunteerApprovalRequirement(RequirementStage.Application, "Family Coach Application"),
+                                new VolunteerApprovalRequirement(RequirementStage.Approval, "Background Check"),
+                                new VolunteerApprovalRequirement(RequirementStage.Approval, "Interview with Family Coach Supervisor")
+                            }.ToImmutableList()),
+                            new VolunteerRolePolicyVersion("v2", null, new List<VolunteerApprovalRequirement>
+                            {
+                                new VolunteerApprovalRequirement(RequirementStage.Application, "Family Coach Application"),
+                                new VolunteerApprovalRequirement(RequirementStage.Approval, "Comprehensive Background Check"),
+                                new VolunteerApprovalRequirement(RequirementStage.Approval, "Interview with Family Coach Supervisor")
+                            }.ToImmutableList())
                         }.ToImmutableList())
                     }.ToImmutableDictionary(),
                     new Dictionary<string, VolunteerFamilyRolePolicy>
                     {
-                        ["Host Family"] = new VolunteerFamilyRolePolicy("Host Family", new List<VolunteerFamilyApprovalRequirement>
+                        ["Host Family"] = new VolunteerFamilyRolePolicy("Host Family", PolicyVersions: new List<VolunteerFamilyRolePolicyVersion>
                         {
-                            new VolunteerFamilyApprovalRequirement(RequirementStage.Application,
-                                new FormUploadRequirement("Host Family Application", "v1", null, new Uri("http://example.com/forms/app-hf")),
-                                VolunteerFamilyRequirementScope.OncePerFamily),
-                            new VolunteerFamilyApprovalRequirement(RequirementStage.Approval,
-                                new FormUploadRequirement("Background Check", "v1", "See approval guide for directions", new Uri("http://example.com/forms/app-ff")),
-                                VolunteerFamilyRequirementScope.AllAdultsInTheFamily),
-                            new VolunteerFamilyApprovalRequirement(RequirementStage.Approval,
-                                new FormUploadRequirement("Home Screening Checklist", "v1", "Must be filled out by an approved home screener", new Uri("http://example.com/forms/hscheck")),
-                                VolunteerFamilyRequirementScope.OncePerFamily),
-                            new VolunteerFamilyApprovalRequirement(RequirementStage.Approval,
-                                new ActivityRequirement("Host Family Interview"),
-                                VolunteerFamilyRequirementScope.OncePerFamily)
+                            new VolunteerFamilyRolePolicyVersion("v1", new DateTime(2021, 10, 1), new List<VolunteerFamilyApprovalRequirement>
+                            {
+                                new VolunteerFamilyApprovalRequirement(RequirementStage.Application, "Host Family Application", VolunteerFamilyRequirementScope.OncePerFamily),
+                                new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Background Check", VolunteerFamilyRequirementScope.AllAdultsInTheFamily),
+                                new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Home Screening Checklist", VolunteerFamilyRequirementScope.OncePerFamily),
+                                new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Host Family Interview", VolunteerFamilyRequirementScope.OncePerFamily),
+                                new VolunteerFamilyApprovalRequirement(RequirementStage.Onboarding, "Meet & Greet", VolunteerFamilyRequirementScope.OncePerFamily)
+                            }.ToImmutableList()),
+                            new VolunteerFamilyRolePolicyVersion("v2", null, new List<VolunteerFamilyApprovalRequirement>
+                            {
+                                new VolunteerFamilyApprovalRequirement(RequirementStage.Application, "Host Family Application", VolunteerFamilyRequirementScope.OncePerFamily),
+                                new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Comprehensive Background Check", VolunteerFamilyRequirementScope.AllAdultsInTheFamily),
+                                new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Home Screening Checklist", VolunteerFamilyRequirementScope.OncePerFamily),
+                                new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Host Family Interview", VolunteerFamilyRequirementScope.OncePerFamily),
+                                new VolunteerFamilyApprovalRequirement(RequirementStage.Onboarding, "Meet & Greet", VolunteerFamilyRequirementScope.OncePerFamily)
+                            }.ToImmutableList())
                         }.ToImmutableList())
                     }.ToImmutableDictionary())));
         }
@@ -414,9 +498,7 @@ namespace CareTogether.TestData
             foreach (var (domainEvent, index) in events
                 .Select((e, i) => (e, (long)i)))
             {
-                var result = await eventLog.AppendEventAsync(organizationId, locationId, domainEvent, index + 1);
-                if (result.IsT1)
-                    throw new InvalidOperationException(result.ToString());
+                await eventLog.AppendEventAsync(organizationId, locationId, domainEvent, index + 1);
             }
         }
     }

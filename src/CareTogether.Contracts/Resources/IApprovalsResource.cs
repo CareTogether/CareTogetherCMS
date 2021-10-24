@@ -7,26 +7,31 @@ namespace CareTogether.Resources
 {
     public record VolunteerFamilyEntry(Guid FamilyId,
         VolunteerFamilyStatus Status, string Note,
-        ImmutableList<FormUploadInfo> ApprovalFormUploads,
-        ImmutableList<ActivityInfo> ApprovalActivitiesPerformed,
+        ImmutableList<CompletedRequirementInfo> CompletedRequirements,
+        ImmutableList<UploadedDocumentInfo> UploadedDocuments,
         ImmutableDictionary<Guid, VolunteerEntry> IndividualEntries);
 
     public enum VolunteerFamilyStatus { Active, Inactive }
 
     public record VolunteerEntry(Guid PersonId,
         bool Active, string Note,
-        ImmutableList<FormUploadInfo> ApprovalFormUploads,
-        ImmutableList<ActivityInfo> ApprovalActivitiesPerformed);
+        ImmutableList<CompletedRequirementInfo> CompletedRequirements);
 
     public enum RoleApprovalStatus { Prospective, Approved, Onboarded };
 
+    public sealed record CompletedRequirementInfo(Guid UserId, DateTime TimestampUtc,
+        string RequirementName, DateTime CompletedAtUtc, Guid? UploadedDocumentId);
+
+    public sealed record UploadedDocumentInfo(Guid UserId, DateTime TimestampUtc,
+        Guid UploadedDocumentId, string UploadedFileName);
+
     [JsonHierarchyBase]
     public abstract partial record VolunteerFamilyCommand(Guid FamilyId);
-    public sealed record PerformVolunteerFamilyActivity(Guid FamilyId, string ActivityName,
-        DateTime PerformedAtUtc, Guid PerformedByPersonId)
+    public sealed record CompleteVolunteerFamilyRequirement(Guid FamilyId,
+        string RequirementName, DateTime CompletedAtUtc, Guid? UploadedDocumentId)
         : VolunteerFamilyCommand(FamilyId);
-    public sealed record UploadVolunteerFamilyForm(Guid FamilyId, DateTime CompletedAtUtc,
-        string FormName, string FormVersion, string UploadedFileName, Guid UploadedDocumentId)
+    public sealed record UploadVolunteerFamilyDocument(Guid FamilyId,
+        Guid UploadedDocumentId, string UploadedFileName)
         : VolunteerFamilyCommand(FamilyId);
     public sealed record DeactivateVolunteerFamily(Guid FamilyId,
         string Reason)
@@ -39,10 +44,8 @@ namespace CareTogether.Resources
 
     [JsonHierarchyBase]
     public abstract partial record VolunteerCommand(Guid FamilyId, Guid PersonId);
-    public sealed record PerformVolunteerActivity(Guid FamilyId, Guid PersonId,
-        string ActivityName, DateTime PerformedAtUtc, Guid PerformedByPersonId) : VolunteerCommand(FamilyId, PersonId);
-    public sealed record UploadVolunteerForm(Guid FamilyId, Guid PersonId,
-        DateTime CompletedAtUtc, string FormName, string FormVersion, string UploadedFileName, Guid UploadedDocumentId)
+    public sealed record CompleteVolunteerRequirement(Guid FamilyId, Guid PersonId,
+        string RequirementName,  DateTime CompletedAtUtc, Guid? UploadedDocumentId)
         : VolunteerCommand(FamilyId, PersonId);
     public sealed record DeactivateVolunteer(Guid FamilyId, Guid PersonId,
         string Reason) : VolunteerCommand(FamilyId, PersonId);
@@ -59,12 +62,12 @@ namespace CareTogether.Resources
     {
         Task<ImmutableList<VolunteerFamilyEntry>> ListVolunteerFamiliesAsync(Guid organizationId, Guid locationId);
 
-        Task<ResourceResult<VolunteerFamilyEntry>> GetVolunteerFamilyAsync(Guid organizationId, Guid locationId, Guid familyId);
+        Task<VolunteerFamilyEntry> GetVolunteerFamilyAsync(Guid organizationId, Guid locationId, Guid familyId);
 
-        Task<ResourceResult<VolunteerFamilyEntry>> ExecuteVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
+        Task<VolunteerFamilyEntry> ExecuteVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
             VolunteerFamilyCommand command, Guid userId);
 
-        Task<ResourceResult<VolunteerFamilyEntry>> ExecuteVolunteerCommandAsync(Guid organizationId, Guid locationId,
+        Task<VolunteerFamilyEntry> ExecuteVolunteerCommandAsync(Guid organizationId, Guid locationId,
             VolunteerCommand command, Guid userId);
     }
 }

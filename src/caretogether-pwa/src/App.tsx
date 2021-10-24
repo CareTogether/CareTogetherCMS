@@ -1,11 +1,13 @@
 import React from 'react';
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
+import { Typography, CssBaseline, IconButton, Drawer, Divider, List, useMediaQuery, useTheme } from '@material-ui/core';
+//import PermPhoneMsgIcon from '@material-ui/icons/PermPhoneMsg';
 import { Typography, CssBaseline, IconButton, Drawer, Divider, List, useMediaQuery, useTheme, Backdrop, Button, CircularProgress } from '@material-ui/core';
 import PermPhoneMsgIcon from '@material-ui/icons/PermPhoneMsg';
 import PeopleIcon from '@material-ui/icons/People';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
-import DashboardIcon from '@material-ui/icons/Dashboard';
+//import DashboardIcon from '@material-ui/icons/Dashboard';
 import { Route, Switch, Redirect, BrowserRouter as Router } from "react-router-dom";
 import { ListItemLink } from './Components/ListItemLink';
 import { Arrangements } from './Components/Arrangements';
@@ -93,13 +95,13 @@ const useStyles = makeStyles((theme) => ({
 
 const mainListItems = (
   <List aria-label="main navigation">
-    <ListItemLink to="/dashboard" primary="Dashboard" icon={<DashboardIcon />} />
+    {/* <ListItemLink to="/dashboard" primary="Dashboard" icon={<DashboardIcon />} /> */}
   </List>
 );
 
 const secondaryListItems = (
   <List aria-label="secondary navigation">
-    <ListItemLink to="/referrals" primary="Referrals" icon={<PermPhoneMsgIcon />} />
+    {/* <ListItemLink to="/referrals" primary="Referrals" icon={<PermPhoneMsgIcon />} /> */}
     <ListItemLink to="/volunteers" primary="Volunteers" icon={<PeopleIcon />} />
   </List>
 );

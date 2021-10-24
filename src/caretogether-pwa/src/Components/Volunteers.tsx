@@ -1,6 +1,6 @@
 import { Redirect, Route, Switch, useRouteMatch } from 'react-router-dom';
 import { VolunteerApproval } from './VolunteerApproval';
-import { VolunteerApplications } from './VolunteerApplications';
+//import { VolunteerApplications } from './VolunteerApplications';
 import { VolunteerProgress } from './VolunteerProgress';
 import { VolunteerFamilyScreen } from './VolunteerFamilyScreen';
 
@@ -13,9 +13,9 @@ function Volunteers() {
         <Route path={`${match.path}/approval`}>
           <VolunteerApproval />
         </Route>
-        <Route path={`${match.path}/applications`}>
+        {/* <Route path={`${match.path}/applications`}>
           <VolunteerApplications />
-        </Route>
+        </Route> */}
         <Route path={`${match.path}/progress`}>
           <VolunteerProgress />
         </Route>

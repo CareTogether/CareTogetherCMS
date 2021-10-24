@@ -1,15 +1,23 @@
-import { Card, CardHeader, IconButton, CardContent, Typography, Chip, CardActions, Button, makeStyles, Divider, ListItemText, Menu, MenuItem } from "@material-ui/core";
+import { Card, CardHeader, IconButton, CardContent, Typography, Chip, CardActions, makeStyles, Divider, ListItemText, Menu, MenuItem, MenuList, useMediaQuery, useTheme } from "@material-ui/core";
 import { format } from 'date-fns';
 import { useState } from "react";
-import { ActionRequirement, ActivityRequirement, FormUploadRequirement, Gender, Person, RoleApprovalStatus, VolunteerFamily } from "../GeneratedClient";
+import { ActionRequirement, Gender, Person, VolunteerFamily } from "../GeneratedClient";
 import { AgeText } from "./AgeText";
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
 import { useRecoilValue } from "recoil";
 import { volunteerFamiliesData } from "../Model/VolunteerFamiliesModel";
 import { RecordVolunteerAdultStepDialog } from "./RecordVolunteerAdultStepDialog";
-import { adultDocumentTypesData, adultActivityTypesData } from "../Model/ConfigurationModel";
+import { policyData } from '../Model/ConfigurationModel';
 import { RenamePersonDialog } from "./RenamePersonDialog";
+import { UpdateConcernsDialog } from "./UpdateConcernsDialog";
+import { UpdateNotesDialog } from "./UpdateNotesDialog";
+import { ContactDisplay } from "./ContactDisplay";
+import { CardInfoRow } from "./CardInfoRow";
+import { VolunteerRoleApprovalStatusChip } from "./VolunteerRoleApprovalStatusChipProps";
+import { UpdatePhoneDialog } from "./UpdatePhoneDialog";
+import { UpdateEmailDialog } from "./UpdateEmailDialog";
+import { UpdateAddressDialog } from "./UpdateAddressDialog";
 
 const useStyles = makeStyles((theme) => ({
   sectionChips: {
@@ -54,17 +62,17 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
   const classes = useStyles();
 
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
-  const adultDocumentTypes = useRecoilValue(adultDocumentTypesData);
-  const adultActivityTypes = useRecoilValue(adultActivityTypesData);
+  const policy = useRecoilValue(policyData);
 
   const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as VolunteerFamily;
   const adult = volunteerFamily.family?.adults?.find(x => x.item1?.id === personId);
 
   const [adultRecordMenuAnchor, setAdultRecordMenuAnchor] = useState<{anchor: Element, adult: Person} | null>(null);
-  const [recordAdultStepParameter, setRecordAdultStepParameter] = useState<{requirement: ActionRequirement, adult: Person} | null>(null);
-  function selectRecordAdultStep(requirement: FormUploadRequirement | ActivityRequirement, adult: Person) {
+  const [recordAdultStepParameter, setRecordAdultStepParameter] = useState<{requirementName: string, requirementInfo: ActionRequirement, adult: Person} | null>(null);
+  function selectRecordAdultStep(requirementName: string, adult: Person) {
     setAdultRecordMenuAnchor(null);
-    setRecordAdultStepParameter({requirement, adult});
+    const requirementInfo = policy.actionDefinitions![requirementName];
+    setRecordAdultStepParameter({requirementName, requirementInfo, adult});
   }
 
   const [adultMoreMenuAnchor, setAdultMoreMenuAnchor] = useState<{anchor: Element, adult: Person} | null>(null);
@@ -73,6 +81,34 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
     setAdultMoreMenuAnchor(null);
     setRenamePersonParameter({volunteerFamilyId, person: adult});
   }
+  const [updateConcernsParameter, setUpdateConcernsParameter] = useState<{volunteerFamilyId: string, person: Person} | null>(null);
+  function selectUpdateConcerns(adult: Person) {
+    setAdultMoreMenuAnchor(null);
+    setUpdateConcernsParameter({volunteerFamilyId, person: adult});
+  }
+  const [updateNotesParameter, setUpdateNotesParameter] = useState<{volunteerFamilyId: string, person: Person} | null>(null);
+  function selectUpdateNotes(adult: Person) {
+    setAdultMoreMenuAnchor(null);
+    setUpdateNotesParameter({volunteerFamilyId, person: adult});
+  }
+  const [updatePhoneParameter, setUpdatePhoneParameter] = useState<{volunteerFamilyId: string, person: Person} | null>(null);
+  function selectUpdatePhone(adult: Person) {
+    setAdultMoreMenuAnchor(null);
+    setUpdatePhoneParameter({volunteerFamilyId, person: adult});
+  }
+  const [updateEmailParameter, setUpdateEmailParameter] = useState<{volunteerFamilyId: string, person: Person} | null>(null);
+  function selectUpdateEmail(adult: Person) {
+    setAdultMoreMenuAnchor(null);
+    setUpdateEmailParameter({volunteerFamilyId, person: adult});
+  }
+  const [updateAddressParameter, setUpdateAddressParameter] = useState<{volunteerFamilyId: string, person: Person} | null>(null);
+  function selectUpdateAddress(adult: Person) {
+    setAdultMoreMenuAnchor(null);
+    setUpdateAddressParameter({volunteerFamilyId, person: adult});
+  }
+  
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
 
   return (<>{adult?.item1 && adult.item1.id && adult.item2 &&
     <Card className={classes.card}>
@@ -88,37 +124,43 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
           </IconButton>} />
       <CardContent className={classes.cardContent}>
         <Typography color="textSecondary" className={classes.sectionChips} component="div">
-          {Object.entries(volunteerFamily.individualVolunteers?.[adult.item1.id].individualRoleApprovals || {}).map(([role, approvalStatus]) => (
-            <Chip key={role} size="small" color={approvalStatus === RoleApprovalStatus.Onboarded ? "primary" : "secondary"}
-              label={RoleApprovalStatus[approvalStatus] + " " + role} />
-          ))}
+          {Object.entries(volunteerFamily.individualVolunteers?.[adult.item1.id].individualRoleApprovals || {}).map(([role, roleVersionApprovals]) =>
+            <VolunteerRoleApprovalStatusChip key={role} roleName={role} roleVersionApprovals={roleVersionApprovals} />)}
           {(adult.item2.relationshipToFamily && <Chip size="small" label={adult.item2.relationshipToFamily} />) || null}
           {adult.item2.isInHousehold && <Chip size="small" label="In Household" />}
         </Typography>
         <Typography variant="body2" component="div">
-          {adult.item1.concerns && <><strong>⚠&nbsp;&nbsp;&nbsp;{adult.item1.concerns}</strong></>}
-          {adult.item1.concerns && adult.item1.notes && <br />}
-          {adult.item1.notes && <>📝&nbsp;{adult.item1.notes}</>}
+          {adult.item1.concerns && <CardInfoRow icon='⚠'><strong>{adult.item1.concerns}</strong></CardInfoRow>}
+          {adult.item1.notes && <CardInfoRow icon='📝'>{adult.item1.notes}</CardInfoRow>}
         </Typography>
+        <Divider />
         <Typography variant="body2" component="div">
           <ul className={classes.cardList}>
-            {volunteerFamily.individualVolunteers?.[adult.item1.id].approvalFormUploads?.map((upload, i) => (
+            {volunteerFamily.individualVolunteers?.[adult.item1.id].completedRequirements?.map((completed, i) => (
               <li key={i}>
-                ▸{upload.formName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                {upload.completedAtUtc && <span style={{float:'right'}}>{format(upload.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
-              </li>
-            ))}
-            {volunteerFamily.individualVolunteers?.[adult.item1.id].approvalActivitiesPerformed?.map((activity, i) => (
-              <li key={i}>
-                ▸{activity.activityName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                {activity.performedAtUtc && <span style={{float:'right'}}>{format(activity.performedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
+                <CardInfoRow icon='✅'>
+                  {completed.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                  {completed.completedAtUtc && <span style={{float:'right'}}>{format(completed.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
+                </CardInfoRow>
               </li>
             ))}
           </ul>
+          <ul className={classes.cardList}>
+            {volunteerFamily.individualVolunteers?.[adult.item1.id].missingRequirements?.map((missingRequirementName, i) => (
+              <li key={i}>
+              <CardInfoRow icon='❌'>
+                {missingRequirementName}
+              </CardInfoRow>
+            </li>
+            ))}
+          </ul>
+        </Typography>
+        <Divider />
+        <Typography variant="body2" component="div">
+          <ContactDisplay person={adult.item1} />
         </Typography>
       </CardContent>
       <CardActions>
-        <Button size="small">Contact Info...</Button>
         <IconButton size="small" className={classes.rightCardAction}
           onClick={(event) => setAdultRecordMenuAnchor({anchor: event.currentTarget, adult: adult.item1 as Person})}>
           <AssignmentTurnedInIcon />
@@ -129,22 +171,25 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         keepMounted
         open={Boolean(adultRecordMenuAnchor)}
         onClose={() => setAdultRecordMenuAnchor(null)}>
-        {adultDocumentTypes.map(documentType => (
-          <MenuItem key={documentType.formName} onClick={() =>
-            adultRecordMenuAnchor?.adult && selectRecordAdultStep(documentType, adultRecordMenuAnchor.adult)}>
-            <ListItemText primary={documentType.formName} />
-          </MenuItem>
-        ))}
-        <Divider />
-        {adultActivityTypes.map(activityType => (
-          <MenuItem key={activityType.activityName} onClick={() =>
-            adultRecordMenuAnchor?.adult && selectRecordAdultStep(activityType, adultRecordMenuAnchor.adult)}>
-            <ListItemText primary={activityType.activityName} />
-          </MenuItem>
-        ))}
+        <MenuList dense={isMobile}>
+          {volunteerFamily.individualVolunteers?.[adult.item1.id].missingRequirements?.map(missingRequirementName =>
+            <MenuItem key={missingRequirementName} onClick={() =>
+              adultRecordMenuAnchor?.adult && selectRecordAdultStep(missingRequirementName, adultRecordMenuAnchor.adult)}>
+              <ListItemText primary={missingRequirementName} />
+            </MenuItem>
+          )}
+          <Divider />
+          {volunteerFamily.individualVolunteers?.[adult.item1.id].availableApplications?.map(requirementName =>
+            <MenuItem key={requirementName} onClick={() =>
+              adultRecordMenuAnchor?.adult && selectRecordAdultStep(requirementName, adultRecordMenuAnchor.adult)}>
+              <ListItemText primary={requirementName} />
+            </MenuItem>
+          )}
+        </MenuList>
       </Menu>
       {(recordAdultStepParameter && <RecordVolunteerAdultStepDialog volunteerFamily={volunteerFamily} adult={recordAdultStepParameter.adult}
-        stepActionRequirement={recordAdultStepParameter.requirement} onClose={() => setRecordAdultStepParameter(null)} />) || null}
+        requirementName={recordAdultStepParameter.requirementName} stepActionRequirement={recordAdultStepParameter.requirementInfo}
+        onClose={() => setRecordAdultStepParameter(null)} />) || null}
       <Menu id="adult-more-menu"
         anchorEl={adultMoreMenuAnchor?.anchor}
         keepMounted
@@ -153,8 +198,33 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectChangeName(adultMoreMenuAnchor.adult)}>
           <ListItemText primary="Change name" />
         </MenuItem>
+        <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectUpdateConcerns(adultMoreMenuAnchor.adult)}>
+          <ListItemText primary="Update concerns" />
+        </MenuItem>
+        <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectUpdateNotes(adultMoreMenuAnchor.adult)}>
+          <ListItemText primary="Update notes" />
+        </MenuItem>
+        <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectUpdatePhone(adultMoreMenuAnchor.adult)}>
+          <ListItemText primary="Update phone" />
+        </MenuItem>
+        <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectUpdateEmail(adultMoreMenuAnchor.adult)}>
+          <ListItemText primary="Update email" />
+        </MenuItem>
+        <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectUpdateAddress(adultMoreMenuAnchor.adult)}>
+          <ListItemText primary="Update address" />
+        </MenuItem>
       </Menu>
       {(renamePersonParameter && <RenamePersonDialog volunteerFamilyId={volunteerFamilyId} person={renamePersonParameter.person}
         onClose={() => setRenamePersonParameter(null)} />) || null}
+      {(updateConcernsParameter && <UpdateConcernsDialog volunteerFamilyId={volunteerFamilyId} person={updateConcernsParameter.person}
+        onClose={() => setUpdateConcernsParameter(null)} />) || null}
+      {(updateNotesParameter && <UpdateNotesDialog volunteerFamilyId={volunteerFamilyId} person={updateNotesParameter.person}
+        onClose={() => setUpdateNotesParameter(null)} />) || null}
+      {(updatePhoneParameter && <UpdatePhoneDialog volunteerFamilyId={volunteerFamilyId} person={updatePhoneParameter.person}
+        onClose={() => setUpdatePhoneParameter(null)} />) || null}
+      {(updateEmailParameter && <UpdateEmailDialog volunteerFamilyId={volunteerFamilyId} person={updateEmailParameter.person}
+        onClose={() => setUpdateEmailParameter(null)} />) || null}
+      {(updateAddressParameter && <UpdateAddressDialog volunteerFamilyId={volunteerFamilyId} person={updateAddressParameter.person}
+        onClose={() => setUpdateAddressParameter(null)} />) || null}
     </Card>}</>);
 }

@@ -22,24 +22,19 @@ namespace CareTogether.Api
             var userId = principal.UserId();
 
             // Look up the tenant access for the user.
-            var userTenantAccessResult = await accountsResource.GetTenantAccessSummaryAsync(principal);
-            if (!userTenantAccessResult.TryPickT0(out var userTenantAccess, out _))
-                return principal;
-
+            var userTenantAccess = await accountsResource.GetTenantAccessSummaryAsync(principal);
+            
             var organizationId = userTenantAccess.OrganizationId;
             principal.AddClaimOnlyOnce(claimsIdentity, Claims.OrganizationId, organizationId.ToString());
 
             //// Look up the person info corresponding to the user.
             //var locationId = userTenantAccess.LocationIds.First(); //NOTE: Currently only one location per user is supported.
-            //var userResult = await communitiesResource.FindUserAsync(organizationId, locationId, principal.UserId());
-            //if (!userResult.TryPickT0(out var person, out _))
-            //    return principal;
+            //var person = await directoryResource.FindUserAsync(organizationId, locationId, principal.UserId());
             //principal.AddClaimOnlyOnce(claimsIdentity, Claims.PersonId, person!.Id.ToString());
 
             // Then look up the organization-managed role access and person ID for that user.
-            var configurationResult = await policiesResource.GetConfigurationAsync(organizationId);
-            if (!configurationResult.TryPickT0(out var configuration, out _))
-                return principal;
+            var configuration = await policiesResource.GetConfigurationAsync(organizationId);
+            
             var userAccessConfiguration = configuration.Users[userId];
             foreach (var locationRole in userAccessConfiguration.LocationRoles)
             {

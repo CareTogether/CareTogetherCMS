@@ -2,8 +2,6 @@
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs.Specialized;
 using Newtonsoft.Json;
-using OneOf;
-using OneOf.Types;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -15,18 +13,18 @@ namespace CareTogether.Resources.Storage
 {
     public class AppendBlobMultitenantEventLog<T> : IMultitenantEventLog<T>
     {
-        private readonly LogType _logType;
+        private readonly string _logType;
         private readonly BlobServiceClient _blobServiceClient;
         private readonly ConcurrentDictionary<Guid, BlobContainerClient> organizationBlobContainerClients;
 
-        public AppendBlobMultitenantEventLog(BlobServiceClient blobServiceClient, LogType logType)
+        public AppendBlobMultitenantEventLog(BlobServiceClient blobServiceClient, string logType)
         {
             _blobServiceClient = blobServiceClient;
             _logType = logType;
             organizationBlobContainerClients = new();
         }
 
-        public async Task<OneOf<Success, Error>> AppendEventAsync(Guid organizationId, Guid locationId, T domainEvent, long expectedSequenceNumber)
+        public async Task AppendEventAsync(Guid organizationId, Guid locationId, T domainEvent, long expectedSequenceNumber)
         {
             var tenantContainer = await createContainerIfNotExists(organizationId);
 
@@ -50,20 +48,20 @@ namespace CareTogether.Resources.Storage
             {
                 var appendResult = await logSegmentBlob.AppendBlockAsync(eventStream);
 
-                if (appendResult.Value.BlobCommittedBlockCount == getBlockNumber(expectedSequenceNumber))
-                {
-                    return new Success();
-                }
-                else
-                {
-                    throw new Exception($"The append block number {appendResult.Value.BlobCommittedBlockCount} did not match the expected block number {expectedSequenceNumber}");
-                }
+                //if (appendResult.Value.BlobCommittedBlockCount == getBlockNumber(expectedSequenceNumber))
+                //{
+                //    return;
+                //}
+                //else
+                //{
+                //    throw new Exception($"The append block number {appendResult.Value.BlobCommittedBlockCount} did not match the expected block number {expectedSequenceNumber}");
+                //}
             }
             catch (Exception e)
             {
                 System.Diagnostics.Debug.WriteLine($"There was an issue appending to block {expectedSequenceNumber} in {locationId}/{_logType}/{currentBlobNumber:D5}.ndjson" +
                     $" under tenant {organizationId}: " + e.Message);
-                return new Error();
+                throw;
             }
         }
 

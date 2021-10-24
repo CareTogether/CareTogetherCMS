@@ -20,41 +20,33 @@ namespace CareTogether.Resources
         }
 
 
-        public async Task<ResourceResult<VolunteerFamilyEntry>> ExecuteVolunteerCommandAsync(Guid organizationId, Guid locationId,
+        public async Task<VolunteerFamilyEntry> ExecuteVolunteerCommandAsync(Guid organizationId, Guid locationId,
             VolunteerCommand command, Guid userId)
         {
             using (var lockedModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
             {
                 var result = lockedModel.Value.ExecuteVolunteerCommand(command, userId, DateTime.UtcNow);
-                if (result.TryPickT0(out var success, out var _))
-                {
-                    await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
-                    success.Value.OnCommit();
-                    return success.Value.VolunteerFamilyEntry;
-                }
-                else
-                    return ResourceResult.NotFound; //TODO: Something more specific involving 'error'?
+                
+                await eventLog.AppendEventAsync(organizationId, locationId, result.Event, result.SequenceNumber);
+                result.OnCommit();
+                return result.VolunteerFamilyEntry;
             }
         }
 
-        public async Task<ResourceResult<VolunteerFamilyEntry>> ExecuteVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
+        public async Task<VolunteerFamilyEntry> ExecuteVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
             VolunteerFamilyCommand command, Guid userId)
         {
             using (var lockedModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
             {
                 var result = lockedModel.Value.ExecuteVolunteerFamilyCommand(command, userId, DateTime.UtcNow);
-                if (result.TryPickT0(out var success, out var _))
-                {
-                    await eventLog.AppendEventAsync(organizationId, locationId, success.Value.Event, success.Value.SequenceNumber);
-                    success.Value.OnCommit();
-                    return success.Value.VolunteerFamilyEntry;
-                }
-                else
-                    return ResourceResult.NotFound; //TODO: Something more specific involving 'error'?
+                    
+                await eventLog.AppendEventAsync(organizationId, locationId, result.Event, result.SequenceNumber);
+                result.OnCommit();
+                return result.VolunteerFamilyEntry;
             }
         }
 
-        public async Task<ResourceResult<VolunteerFamilyEntry>> GetVolunteerFamilyAsync(Guid organizationId, Guid locationId, Guid familyId)
+        public async Task<VolunteerFamilyEntry> GetVolunteerFamilyAsync(Guid organizationId, Guid locationId, Guid familyId)
         {
             using (var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId)))
             {

@@ -39,9 +39,8 @@ namespace CareTogether.Core.Test
         {
             var dut = new MemoryMultitenantEventLog<int>();
 
-            var appendResult = await dut.AppendEventAsync(guid1, guid2, 42, 1);
+            await dut.AppendEventAsync(guid1, guid2, 42, 1);
             var getResult = await dut.GetAllEventsAsync(guid1, guid2).ToListAsync();
-            Assert.IsTrue(appendResult.IsT0);
             Assert.AreEqual(1, getResult.Count);
             Assert.AreEqual((42, 1), getResult[0]);
         }
@@ -51,9 +50,8 @@ namespace CareTogether.Core.Test
         {
             var dut = new MemoryMultitenantEventLog<int>();
 
-            var appendResult = await dut.AppendEventAsync(guid1, guid2, 42, 2);
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => dut.AppendEventAsync(guid1, guid2, 42, 2));
             var getResult = await dut.GetAllEventsAsync(guid1, guid2).ToListAsync();
-            Assert.IsTrue(appendResult.IsT1);
             Assert.AreEqual(0, getResult.Count);
         }
 
@@ -62,13 +60,10 @@ namespace CareTogether.Core.Test
         {
             var dut = new MemoryMultitenantEventLog<int>();
 
-            var appendResult1 = await dut.AppendEventAsync(guid1, guid2, 41, 1);
-            var appendResult2 = await dut.AppendEventAsync(guid1, guid2, 42, 2);
-            var appendResult3 = await dut.AppendEventAsync(guid1, guid2, 43, 3);
+            await dut.AppendEventAsync(guid1, guid2, 41, 1);
+            await dut.AppendEventAsync(guid1, guid2, 42, 2);
+            await dut.AppendEventAsync(guid1, guid2, 43, 3);
             var getResult = await dut.GetAllEventsAsync(guid1, guid2).ToListAsync();
-            Assert.IsTrue(appendResult1.IsT0);
-            Assert.IsTrue(appendResult2.IsT0);
-            Assert.IsTrue(appendResult3.IsT0);
             Assert.AreEqual(3, getResult.Count);
             Assert.AreEqual((41, 1), getResult[0]);
             Assert.AreEqual((42, 2), getResult[1]);
@@ -81,13 +76,10 @@ namespace CareTogether.Core.Test
             var dut = new MemoryMultitenantEventLog<int>();
 
             var getResult1 = await dut.GetAllEventsAsync(guid1, guid2).ToListAsync();
-            var appendResult1 = await dut.AppendEventAsync(guid1, guid2, 41, 1);
-            var appendResult2 = await dut.AppendEventAsync(guid1, guid2, 42, 2);
-            var appendResult3 = await dut.AppendEventAsync(guid1, guid2, 43, 3);
+            await dut.AppendEventAsync(guid1, guid2, 41, 1);
+            await dut.AppendEventAsync(guid1, guid2, 42, 2);
+            await dut.AppendEventAsync(guid1, guid2, 43, 3);
             var getResult2 = await dut.GetAllEventsAsync(guid1, guid2).ToListAsync();
-            Assert.IsTrue(appendResult1.IsT0);
-            Assert.IsTrue(appendResult2.IsT0);
-            Assert.IsTrue(appendResult3.IsT0);
             Assert.AreEqual(0, getResult1.Count);
             Assert.AreEqual(3, getResult2.Count);
             Assert.AreEqual((41, 1), getResult2[0]);
@@ -100,13 +92,10 @@ namespace CareTogether.Core.Test
         {
             var dut = new MemoryMultitenantEventLog<int>();
 
-            var appendResult1 = await dut.AppendEventAsync(guid1, guid2, 41, 1);
-            var appendResult2 = await dut.AppendEventAsync(guid1, guid2, 42, 3);
-            var appendResult3 = await dut.AppendEventAsync(guid1, guid2, 43, 2);
+            await dut.AppendEventAsync(guid1, guid2, 41, 1);
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => dut.AppendEventAsync(guid1, guid2, 42, 3));
+            await dut.AppendEventAsync(guid1, guid2, 43, 2);
             var getResult = await dut.GetAllEventsAsync(guid1, guid2).ToListAsync();
-            Assert.IsTrue(appendResult1.IsT0);
-            Assert.IsTrue(appendResult2.IsT1);
-            Assert.IsTrue(appendResult3.IsT0);
             Assert.AreEqual(2, getResult.Count);
             Assert.AreEqual((41, 1), getResult[0]);
             Assert.AreEqual((43, 2), getResult[1]);
@@ -117,21 +106,18 @@ namespace CareTogether.Core.Test
         {
             var dut = new MemoryMultitenantEventLog<int>();
 
-            var appendResults = new[]
-            {
-                await dut.AppendEventAsync(guid1, guid2, 1, 1),
-                await dut.AppendEventAsync(guid1, guid2, 2, 2),
-                await dut.AppendEventAsync(guid1, guid2, 3, 3),
-                await dut.AppendEventAsync(guid1, guid4, 1, 1),
-                await dut.AppendEventAsync(guid1, guid4, 2, 2),
-                await dut.AppendEventAsync(guid1, guid4, 3, 3),
-                await dut.AppendEventAsync(guid2, guid3, 1, 1),
-                await dut.AppendEventAsync(guid2, guid3, 2, 2),
-                await dut.AppendEventAsync(guid2, guid3, 3, 3),
-                await dut.AppendEventAsync(guid1, guid2, 4, 4)
-            };
+            await dut.AppendEventAsync(guid1, guid2, 1, 1);
+            await dut.AppendEventAsync(guid1, guid2, 2, 2);
+            await dut.AppendEventAsync(guid1, guid2, 3, 3);
+            await dut.AppendEventAsync(guid1, guid4, 1, 1);
+            await dut.AppendEventAsync(guid1, guid4, 2, 2);
+            await dut.AppendEventAsync(guid1, guid4, 3, 3);
+            await dut.AppendEventAsync(guid2, guid3, 1, 1);
+            await dut.AppendEventAsync(guid2, guid3, 2, 2);
+            await dut.AppendEventAsync(guid2, guid3, 3, 3);
+            await dut.AppendEventAsync(guid1, guid2, 4, 4);
+
             var getResult = await dut.GetAllEventsAsync(guid1, guid2).ToListAsync();
-            Assert.IsTrue(appendResults.All(result => result.IsT0));
             Assert.AreEqual(4, getResult.Count);
             Assert.AreEqual((1, 1), getResult[0]);
             Assert.AreEqual((2, 2), getResult[1]);

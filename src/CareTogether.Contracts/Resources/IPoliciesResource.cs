@@ -17,22 +17,32 @@ namespace CareTogether.Resources
 
     public sealed record UserLocationRole(Guid LocationId, string RoleName);
 
-    public sealed record EffectiveLocationPolicy(int Version, string VersionLabel,
+    public sealed record EffectiveLocationPolicy(
+        ImmutableDictionary<string, ActionRequirement> ActionDefinitions,
         ReferralPolicy ReferralPolicy,
         VolunteerPolicy VolunteerPolicy);
 
+    public enum DocumentLinkRequirement
+    {
+        None,
+        Allowed,
+        Required
+    }
+
+    public sealed record ActionRequirement(DocumentLinkRequirement DocumentLink, string? Instructions, Uri? InfoLink);
+
     public sealed record ReferralPolicy(
-        ImmutableList<ActionRequirement> RequiredIntakeActions,
+        ImmutableList<string> RequiredIntakeActionNames,
         ImmutableList<ArrangementPolicy> ArrangementPolicies);
         //TODO: Include referral close reasons
 
     public sealed record ArrangementPolicy(string ArrangementType,
         ChildInvolvement ChildInvolvement,
         ImmutableList<VolunteerFunction> VolunteerFunctions,
-        ImmutableList<ActionRequirement> RequiredSetupActions,
+        ImmutableList<string> RequiredSetupActionNames,
         //TODO: Include draft note approval policy
-        ImmutableList<(ActionRequirement Action, RecurrencePolicy Recurrence)> RequiredMonitoringActions,
-        ImmutableList<ActionRequirement> RequiredCloseoutActions);
+        ImmutableList<(string ActionName, RecurrencePolicy Recurrence)> RequiredMonitoringActionNames,
+        ImmutableList<string> RequiredCloseoutActionNames);
     public enum ChildInvolvement { ChildHousing, DaytimeChildCareOnly, NoChildInvolvement };
 
     public enum FunctionRequirement { ZeroOrMore, ExactlyOne, OneOrMore };
@@ -48,28 +58,26 @@ namespace CareTogether.Resources
         ImmutableDictionary<string, VolunteerFamilyRolePolicy> VolunteerFamilyRoles);
 
     public sealed record VolunteerRolePolicy(string VolunteerRoleType,
-        ImmutableList<VolunteerApprovalRequirement> ApprovalRequirements);
+        ImmutableList<VolunteerRolePolicyVersion> PolicyVersions);
+
+    public sealed record VolunteerRolePolicyVersion(string Version, DateTime? SupersededAtUtc,
+        ImmutableList<VolunteerApprovalRequirement> Requirements);
 
     public sealed record VolunteerFamilyRolePolicy(string VolunteerFamilyRoleType,
-        ImmutableList<VolunteerFamilyApprovalRequirement> ApprovalRequirements);
+        ImmutableList<VolunteerFamilyRolePolicyVersion> PolicyVersions);
+
+    public sealed record VolunteerFamilyRolePolicyVersion(string Version, DateTime? SupersededAtUtc,
+        ImmutableList<VolunteerFamilyApprovalRequirement> Requirements);
 
     public sealed record VolunteerApprovalRequirement(
-        RequirementStage Stage, ActionRequirement ActionRequirement);
+        RequirementStage Stage, string ActionName);
 
     public enum RequirementStage { Application, Approval, Onboarding }
 
     public sealed record VolunteerFamilyApprovalRequirement(
-        RequirementStage Stage, ActionRequirement ActionRequirement, VolunteerFamilyRequirementScope Scope);
+        RequirementStage Stage, string ActionName, VolunteerFamilyRequirementScope Scope);
 
     public enum VolunteerFamilyRequirementScope { OncePerFamily, AllAdultsInTheFamily };
-
-
-    [JsonHierarchyBase]
-    public abstract partial record ActionRequirement(); //TODO: Include the arrangement function (who can perform the action)
-    public sealed record FormUploadRequirement(string FormName, string FormVersion, string? Instructions, Uri? TemplateLink)
-        : ActionRequirement;
-    public sealed record ActivityRequirement(string ActivityName)
-        : ActionRequirement;
 
 
     /// <summary>
@@ -79,14 +87,8 @@ namespace CareTogether.Resources
     /// </summary>
     public interface IPoliciesResource
     {
-        Task<ResourceResult<OrganizationConfiguration>> GetConfigurationAsync(Guid organizationId);
+        Task<OrganizationConfiguration> GetConfigurationAsync(Guid organizationId);
 
-        Task<ResourceResult<EffectiveLocationPolicy>> GetCurrentPolicy(Guid organizationId, Guid locationId);
-
-        Task<ResourceResult<ReferralPolicy>> GetEffectiveReferralPolicy(Guid organizationId, Guid locationId,
-            int? version = null);
-
-        Task<ResourceResult<VolunteerPolicy>> GetEffectiveVolunteerPolicy(Guid organizationId, Guid locationId,
-            int? version = null);
+        Task<EffectiveLocationPolicy> GetCurrentPolicy(Guid organizationId, Guid locationId);
     }
 }

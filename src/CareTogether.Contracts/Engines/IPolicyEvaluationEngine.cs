@@ -1,7 +1,5 @@
 ﻿using CareTogether.Managers;
 using CareTogether.Resources;
-using OneOf;
-using OneOf.Types;
 using System;
 using System.Collections.Immutable;
 using System.Security.Claims;
@@ -10,37 +8,40 @@ using System.Threading.Tasks;
 namespace CareTogether.Engines
 {
     public sealed record VolunteerFamilyApprovalStatus(
-        ImmutableDictionary<string, RoleApprovalStatus> FamilyRoleApprovals,
+        ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> FamilyRoleApprovals,
+        ImmutableList<string> MissingFamilyRequirements,
+        ImmutableList<string> AvailableFamilyApplications,
         ImmutableDictionary<Guid, VolunteerApprovalStatus> IndividualVolunteers);
 
     public sealed record VolunteerApprovalStatus(
-        ImmutableDictionary<string, RoleApprovalStatus> IndividualRoleApprovals);
+        ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> IndividualRoleApprovals,
+        ImmutableList<string> MissingIndividualRequirements,
+        ImmutableList<string> AvailableIndividualApplications);
+
+    public sealed record RoleVersionApproval(string Version, RoleApprovalStatus ApprovalStatus);
 
     public interface IPolicyEvaluationEngine
     {
-        Task<OneOf<Yes, Error<string>>> AuthorizeReferralCommandAsync(Guid organizationId, Guid locationId,
+        Task<bool> AuthorizeReferralCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, ReferralCommand command, Referral referral);
 
-        Task<OneOf<Yes, Error<string>>> AuthorizeArrangementCommandAsync(Guid organizationId, Guid locationId,
+        Task<bool> AuthorizeArrangementCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, ArrangementCommand command, Referral referral);
 
-        Task<OneOf<Yes, Error<string>>> AuthorizeArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
+        Task<bool> AuthorizeArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, ArrangementNoteCommand command, Referral referral);
 
-        Task<OneOf<Yes, Error<string>>> AuthorizeVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
+        Task<bool> AuthorizeVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, VolunteerFamilyCommand command, VolunteerFamily volunteerFamily);
 
-        Task<OneOf<Yes, Error<string>>> AuthorizeVolunteerCommandAsync(Guid organizationId, Guid locationId,
+        Task<bool> AuthorizeVolunteerCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, VolunteerCommand command, VolunteerFamily volunteerFamily);
 
 
         Task<VolunteerFamilyApprovalStatus> CalculateVolunteerFamilyApprovalStatusAsync(
             Guid organizationId, Guid locationId, Family family,
-            ImmutableList<FormUploadInfo> familyFormUploads,
-            ImmutableList<ActivityInfo> familyActivitiesPerformed,
-            ImmutableDictionary<Guid,
-                (ImmutableList<FormUploadInfo> FormUploads,
-                    ImmutableList<ActivityInfo> ActivitiesPerformed)> IndividualInfo);
+            ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
+            ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements);
 
 
         Task<Referral> DiscloseReferralAsync(ClaimsPrincipal user, Referral referral);
@@ -52,7 +53,5 @@ namespace CareTogether.Engines
         Task<Family> DiscloseFamilyAsync(ClaimsPrincipal user, Family family);
 
         Task<Person> DisclosePersonAsync(ClaimsPrincipal user, Person person);
-
-        Task<ContactInfo> DiscloseContactInfoAsync(ClaimsPrincipal user, ContactInfo contactInfo);
     }
 }

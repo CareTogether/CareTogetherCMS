@@ -189,107 +189,6 @@ export class FilesClient {
     }
 }
 
-export class PeopleClient {
-    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
-    private baseUrl: string;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
-        this.http = http ? http : <any>window;
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
-    }
-
-    get(organizationId: string, locationId: string): Promise<Person[]> {
-        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/People";
-        if (organizationId === undefined || organizationId === null)
-            throw new Error("The parameter 'organizationId' must be defined.");
-        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
-        if (locationId === undefined || locationId === null)
-            throw new Error("The parameter 'locationId' must be defined.");
-        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_ = <RequestInit>{
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGet(_response);
-        });
-    }
-
-    protected processGet(response: Response): Promise<Person[]> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(Person.fromJS(item));
-            }
-            else {
-                result200 = <any>null;
-            }
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<Person[]>(<any>null);
-    }
-
-    getContactInfo(organizationId: string, locationId: string, personId: string): Promise<PersonDetails> {
-        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/People/{personId}";
-        if (organizationId === undefined || organizationId === null)
-            throw new Error("The parameter 'organizationId' must be defined.");
-        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
-        if (locationId === undefined || locationId === null)
-            throw new Error("The parameter 'locationId' must be defined.");
-        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
-        if (personId === undefined || personId === null)
-            throw new Error("The parameter 'personId' must be defined.");
-        url_ = url_.replace("{personId}", encodeURIComponent("" + personId));
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_ = <RequestInit>{
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetContactInfo(_response);
-        });
-    }
-
-    protected processGetContactInfo(response: Response): Promise<PersonDetails> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = PersonDetails.fromJS(resultData200);
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<PersonDetails>(<any>null);
-    }
-}
-
 export class ReferralsClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
@@ -980,8 +879,7 @@ export interface IUserLocationRole {
 }
 
 export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
-    version?: number;
-    versionLabel?: string;
+    actionDefinitions?: { [key: string]: ActionRequirement; };
     referralPolicy?: ReferralPolicy;
     volunteerPolicy?: VolunteerPolicy;
 
@@ -996,8 +894,13 @@ export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
 
     init(_data?: any) {
         if (_data) {
-            this.version = _data["version"];
-            this.versionLabel = _data["versionLabel"];
+            if (_data["actionDefinitions"]) {
+                this.actionDefinitions = {} as any;
+                for (let key in _data["actionDefinitions"]) {
+                    if (_data["actionDefinitions"].hasOwnProperty(key))
+                        (<any>this.actionDefinitions)![key] = _data["actionDefinitions"][key] ? ActionRequirement.fromJS(_data["actionDefinitions"][key]) : new ActionRequirement();
+                }
+            }
             this.referralPolicy = _data["referralPolicy"] ? ReferralPolicy.fromJS(_data["referralPolicy"]) : <any>undefined;
             this.volunteerPolicy = _data["volunteerPolicy"] ? VolunteerPolicy.fromJS(_data["volunteerPolicy"]) : <any>undefined;
         }
@@ -1012,8 +915,13 @@ export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["version"] = this.version;
-        data["versionLabel"] = this.versionLabel;
+        if (this.actionDefinitions) {
+            data["actionDefinitions"] = {};
+            for (let key in this.actionDefinitions) {
+                if (this.actionDefinitions.hasOwnProperty(key))
+                    (<any>data["actionDefinitions"])[key] = this.actionDefinitions[key] ? this.actionDefinitions[key].toJSON() : <any>undefined;
+            }
+        }
         data["referralPolicy"] = this.referralPolicy ? this.referralPolicy.toJSON() : <any>undefined;
         data["volunteerPolicy"] = this.volunteerPolicy ? this.volunteerPolicy.toJSON() : <any>undefined;
         return data; 
@@ -1021,14 +929,63 @@ export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
 }
 
 export interface IEffectiveLocationPolicy {
-    version?: number;
-    versionLabel?: string;
+    actionDefinitions?: { [key: string]: ActionRequirement; };
     referralPolicy?: ReferralPolicy;
     volunteerPolicy?: VolunteerPolicy;
 }
 
+export class ActionRequirement implements IActionRequirement {
+    documentLink?: DocumentLinkRequirement;
+    instructions?: string | undefined;
+    infoLink?: string | undefined;
+
+    constructor(data?: IActionRequirement) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.documentLink = _data["documentLink"];
+            this.instructions = _data["instructions"];
+            this.infoLink = _data["infoLink"];
+        }
+    }
+
+    static fromJS(data: any): ActionRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new ActionRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["documentLink"] = this.documentLink;
+        data["instructions"] = this.instructions;
+        data["infoLink"] = this.infoLink;
+        return data; 
+    }
+}
+
+export interface IActionRequirement {
+    documentLink?: DocumentLinkRequirement;
+    instructions?: string | undefined;
+    infoLink?: string | undefined;
+}
+
+export enum DocumentLinkRequirement {
+    None = 0,
+    Allowed = 1,
+    Required = 2,
+}
+
 export class ReferralPolicy implements IReferralPolicy {
-    requiredIntakeActions?: ActionRequirement[];
+    requiredIntakeActionNames?: string[];
     arrangementPolicies?: ArrangementPolicy[];
 
     constructor(data?: IReferralPolicy) {
@@ -1042,10 +999,10 @@ export class ReferralPolicy implements IReferralPolicy {
 
     init(_data?: any) {
         if (_data) {
-            if (Array.isArray(_data["requiredIntakeActions"])) {
-                this.requiredIntakeActions = [] as any;
-                for (let item of _data["requiredIntakeActions"])
-                    this.requiredIntakeActions!.push(ActionRequirement.fromJS(item));
+            if (Array.isArray(_data["requiredIntakeActionNames"])) {
+                this.requiredIntakeActionNames = [] as any;
+                for (let item of _data["requiredIntakeActionNames"])
+                    this.requiredIntakeActionNames!.push(item);
             }
             if (Array.isArray(_data["arrangementPolicies"])) {
                 this.arrangementPolicies = [] as any;
@@ -1064,10 +1021,10 @@ export class ReferralPolicy implements IReferralPolicy {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        if (Array.isArray(this.requiredIntakeActions)) {
-            data["requiredIntakeActions"] = [];
-            for (let item of this.requiredIntakeActions)
-                data["requiredIntakeActions"].push(item.toJSON());
+        if (Array.isArray(this.requiredIntakeActionNames)) {
+            data["requiredIntakeActionNames"] = [];
+            for (let item of this.requiredIntakeActionNames)
+                data["requiredIntakeActionNames"].push(item);
         }
         if (Array.isArray(this.arrangementPolicies)) {
             data["arrangementPolicies"] = [];
@@ -1079,139 +1036,17 @@ export class ReferralPolicy implements IReferralPolicy {
 }
 
 export interface IReferralPolicy {
-    requiredIntakeActions?: ActionRequirement[];
+    requiredIntakeActionNames?: string[];
     arrangementPolicies?: ArrangementPolicy[];
-}
-
-export abstract class ActionRequirement implements IActionRequirement {
-
-    protected _discriminator: string;
-
-    constructor(data?: IActionRequirement) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-        this._discriminator = "ActionRequirement";
-    }
-
-    init(_data?: any) {
-    }
-
-    static fromJS(data: any): ActionRequirement {
-        data = typeof data === 'object' ? data : {};
-        if (data["discriminator"] === "ActivityRequirement") {
-            let result = new ActivityRequirement();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "FormUploadRequirement") {
-            let result = new FormUploadRequirement();
-            result.init(data);
-            return result;
-        }
-        throw new Error("The abstract class 'ActionRequirement' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["discriminator"] = this._discriminator; 
-        return data; 
-    }
-}
-
-export interface IActionRequirement {
-}
-
-export class ActivityRequirement extends ActionRequirement implements IActivityRequirement {
-    activityName?: string;
-
-    constructor(data?: IActivityRequirement) {
-        super(data);
-        this._discriminator = "ActivityRequirement";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.activityName = _data["activityName"];
-        }
-    }
-
-    static fromJS(data: any): ActivityRequirement {
-        data = typeof data === 'object' ? data : {};
-        let result = new ActivityRequirement();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["activityName"] = this.activityName;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IActivityRequirement extends IActionRequirement {
-    activityName?: string;
-}
-
-export class FormUploadRequirement extends ActionRequirement implements IFormUploadRequirement {
-    formName?: string;
-    formVersion?: string;
-    instructions?: string | undefined;
-    templateLink?: string | undefined;
-
-    constructor(data?: IFormUploadRequirement) {
-        super(data);
-        this._discriminator = "FormUploadRequirement";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.formName = _data["formName"];
-            this.formVersion = _data["formVersion"];
-            this.instructions = _data["instructions"];
-            this.templateLink = _data["templateLink"];
-        }
-    }
-
-    static fromJS(data: any): FormUploadRequirement {
-        data = typeof data === 'object' ? data : {};
-        let result = new FormUploadRequirement();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["formName"] = this.formName;
-        data["formVersion"] = this.formVersion;
-        data["instructions"] = this.instructions;
-        data["templateLink"] = this.templateLink;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IFormUploadRequirement extends IActionRequirement {
-    formName?: string;
-    formVersion?: string;
-    instructions?: string | undefined;
-    templateLink?: string | undefined;
 }
 
 export class ArrangementPolicy implements IArrangementPolicy {
     arrangementType?: string;
     childInvolvement?: ChildInvolvement;
     volunteerFunctions?: VolunteerFunction[];
-    requiredSetupActions?: ActionRequirement[];
-    requiredMonitoringActions?: ValueTupleOfActionRequirementAndRecurrencePolicy[];
-    requiredCloseoutActions?: ActionRequirement[];
+    requiredSetupActionNames?: string[];
+    requiredMonitoringActionNames?: ValueTupleOfStringAndRecurrencePolicy[];
+    requiredCloseoutActionNames?: string[];
 
     constructor(data?: IArrangementPolicy) {
         if (data) {
@@ -1231,20 +1066,20 @@ export class ArrangementPolicy implements IArrangementPolicy {
                 for (let item of _data["volunteerFunctions"])
                     this.volunteerFunctions!.push(VolunteerFunction.fromJS(item));
             }
-            if (Array.isArray(_data["requiredSetupActions"])) {
-                this.requiredSetupActions = [] as any;
-                for (let item of _data["requiredSetupActions"])
-                    this.requiredSetupActions!.push(ActionRequirement.fromJS(item));
+            if (Array.isArray(_data["requiredSetupActionNames"])) {
+                this.requiredSetupActionNames = [] as any;
+                for (let item of _data["requiredSetupActionNames"])
+                    this.requiredSetupActionNames!.push(item);
             }
-            if (Array.isArray(_data["requiredMonitoringActions"])) {
-                this.requiredMonitoringActions = [] as any;
-                for (let item of _data["requiredMonitoringActions"])
-                    this.requiredMonitoringActions!.push(ValueTupleOfActionRequirementAndRecurrencePolicy.fromJS(item));
+            if (Array.isArray(_data["requiredMonitoringActionNames"])) {
+                this.requiredMonitoringActionNames = [] as any;
+                for (let item of _data["requiredMonitoringActionNames"])
+                    this.requiredMonitoringActionNames!.push(ValueTupleOfStringAndRecurrencePolicy.fromJS(item));
             }
-            if (Array.isArray(_data["requiredCloseoutActions"])) {
-                this.requiredCloseoutActions = [] as any;
-                for (let item of _data["requiredCloseoutActions"])
-                    this.requiredCloseoutActions!.push(ActionRequirement.fromJS(item));
+            if (Array.isArray(_data["requiredCloseoutActionNames"])) {
+                this.requiredCloseoutActionNames = [] as any;
+                for (let item of _data["requiredCloseoutActionNames"])
+                    this.requiredCloseoutActionNames!.push(item);
             }
         }
     }
@@ -1265,20 +1100,20 @@ export class ArrangementPolicy implements IArrangementPolicy {
             for (let item of this.volunteerFunctions)
                 data["volunteerFunctions"].push(item.toJSON());
         }
-        if (Array.isArray(this.requiredSetupActions)) {
-            data["requiredSetupActions"] = [];
-            for (let item of this.requiredSetupActions)
-                data["requiredSetupActions"].push(item.toJSON());
+        if (Array.isArray(this.requiredSetupActionNames)) {
+            data["requiredSetupActionNames"] = [];
+            for (let item of this.requiredSetupActionNames)
+                data["requiredSetupActionNames"].push(item);
         }
-        if (Array.isArray(this.requiredMonitoringActions)) {
-            data["requiredMonitoringActions"] = [];
-            for (let item of this.requiredMonitoringActions)
-                data["requiredMonitoringActions"].push(item.toJSON());
+        if (Array.isArray(this.requiredMonitoringActionNames)) {
+            data["requiredMonitoringActionNames"] = [];
+            for (let item of this.requiredMonitoringActionNames)
+                data["requiredMonitoringActionNames"].push(item.toJSON());
         }
-        if (Array.isArray(this.requiredCloseoutActions)) {
-            data["requiredCloseoutActions"] = [];
-            for (let item of this.requiredCloseoutActions)
-                data["requiredCloseoutActions"].push(item.toJSON());
+        if (Array.isArray(this.requiredCloseoutActionNames)) {
+            data["requiredCloseoutActionNames"] = [];
+            for (let item of this.requiredCloseoutActionNames)
+                data["requiredCloseoutActionNames"].push(item);
         }
         return data; 
     }
@@ -1288,9 +1123,9 @@ export interface IArrangementPolicy {
     arrangementType?: string;
     childInvolvement?: ChildInvolvement;
     volunteerFunctions?: VolunteerFunction[];
-    requiredSetupActions?: ActionRequirement[];
-    requiredMonitoringActions?: ValueTupleOfActionRequirementAndRecurrencePolicy[];
-    requiredCloseoutActions?: ActionRequirement[];
+    requiredSetupActionNames?: string[];
+    requiredMonitoringActionNames?: ValueTupleOfStringAndRecurrencePolicy[];
+    requiredCloseoutActionNames?: string[];
 }
 
 export enum ChildInvolvement {
@@ -1369,11 +1204,11 @@ export enum FunctionRequirement {
     OneOrMore = 2,
 }
 
-export class ValueTupleOfActionRequirementAndRecurrencePolicy implements IValueTupleOfActionRequirementAndRecurrencePolicy {
-    item1?: ActionRequirement;
+export class ValueTupleOfStringAndRecurrencePolicy implements IValueTupleOfStringAndRecurrencePolicy {
+    item1?: string;
     item2?: RecurrencePolicy;
 
-    constructor(data?: IValueTupleOfActionRequirementAndRecurrencePolicy) {
+    constructor(data?: IValueTupleOfStringAndRecurrencePolicy) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -1384,28 +1219,28 @@ export class ValueTupleOfActionRequirementAndRecurrencePolicy implements IValueT
 
     init(_data?: any) {
         if (_data) {
-            this.item1 = _data["item1"] ? ActionRequirement.fromJS(_data["item1"]) : <any>undefined;
+            this.item1 = _data["item1"];
             this.item2 = _data["item2"] ? RecurrencePolicy.fromJS(_data["item2"]) : <any>undefined;
         }
     }
 
-    static fromJS(data: any): ValueTupleOfActionRequirementAndRecurrencePolicy {
+    static fromJS(data: any): ValueTupleOfStringAndRecurrencePolicy {
         data = typeof data === 'object' ? data : {};
-        let result = new ValueTupleOfActionRequirementAndRecurrencePolicy();
+        let result = new ValueTupleOfStringAndRecurrencePolicy();
         result.init(data);
         return result;
     }
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["item1"] = this.item1 ? this.item1.toJSON() : <any>undefined;
+        data["item1"] = this.item1;
         data["item2"] = this.item2 ? this.item2.toJSON() : <any>undefined;
         return data; 
     }
 }
 
-export interface IValueTupleOfActionRequirementAndRecurrencePolicy {
-    item1?: ActionRequirement;
+export interface IValueTupleOfStringAndRecurrencePolicy {
+    item1?: string;
     item2?: RecurrencePolicy;
 }
 
@@ -1559,7 +1394,7 @@ export interface IVolunteerPolicy {
 
 export class VolunteerRolePolicy implements IVolunteerRolePolicy {
     volunteerRoleType?: string;
-    approvalRequirements?: VolunteerApprovalRequirement[];
+    policyVersions?: VolunteerRolePolicyVersion[];
 
     constructor(data?: IVolunteerRolePolicy) {
         if (data) {
@@ -1573,10 +1408,10 @@ export class VolunteerRolePolicy implements IVolunteerRolePolicy {
     init(_data?: any) {
         if (_data) {
             this.volunteerRoleType = _data["volunteerRoleType"];
-            if (Array.isArray(_data["approvalRequirements"])) {
-                this.approvalRequirements = [] as any;
-                for (let item of _data["approvalRequirements"])
-                    this.approvalRequirements!.push(VolunteerApprovalRequirement.fromJS(item));
+            if (Array.isArray(_data["policyVersions"])) {
+                this.policyVersions = [] as any;
+                for (let item of _data["policyVersions"])
+                    this.policyVersions!.push(VolunteerRolePolicyVersion.fromJS(item));
             }
         }
     }
@@ -1591,10 +1426,10 @@ export class VolunteerRolePolicy implements IVolunteerRolePolicy {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["volunteerRoleType"] = this.volunteerRoleType;
-        if (Array.isArray(this.approvalRequirements)) {
-            data["approvalRequirements"] = [];
-            for (let item of this.approvalRequirements)
-                data["approvalRequirements"].push(item.toJSON());
+        if (Array.isArray(this.policyVersions)) {
+            data["policyVersions"] = [];
+            for (let item of this.policyVersions)
+                data["policyVersions"].push(item.toJSON());
         }
         return data; 
     }
@@ -1602,12 +1437,64 @@ export class VolunteerRolePolicy implements IVolunteerRolePolicy {
 
 export interface IVolunteerRolePolicy {
     volunteerRoleType?: string;
-    approvalRequirements?: VolunteerApprovalRequirement[];
+    policyVersions?: VolunteerRolePolicyVersion[];
+}
+
+export class VolunteerRolePolicyVersion implements IVolunteerRolePolicyVersion {
+    version?: string;
+    supersededAtUtc?: Date | undefined;
+    requirements?: VolunteerApprovalRequirement[];
+
+    constructor(data?: IVolunteerRolePolicyVersion) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.version = _data["version"];
+            this.supersededAtUtc = _data["supersededAtUtc"] ? new Date(_data["supersededAtUtc"].toString()) : <any>undefined;
+            if (Array.isArray(_data["requirements"])) {
+                this.requirements = [] as any;
+                for (let item of _data["requirements"])
+                    this.requirements!.push(VolunteerApprovalRequirement.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): VolunteerRolePolicyVersion {
+        data = typeof data === 'object' ? data : {};
+        let result = new VolunteerRolePolicyVersion();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["version"] = this.version;
+        data["supersededAtUtc"] = this.supersededAtUtc ? this.supersededAtUtc.toISOString() : <any>undefined;
+        if (Array.isArray(this.requirements)) {
+            data["requirements"] = [];
+            for (let item of this.requirements)
+                data["requirements"].push(item.toJSON());
+        }
+        return data; 
+    }
+}
+
+export interface IVolunteerRolePolicyVersion {
+    version?: string;
+    supersededAtUtc?: Date | undefined;
+    requirements?: VolunteerApprovalRequirement[];
 }
 
 export class VolunteerApprovalRequirement implements IVolunteerApprovalRequirement {
     stage?: RequirementStage;
-    actionRequirement?: ActionRequirement;
+    actionName?: string;
 
     constructor(data?: IVolunteerApprovalRequirement) {
         if (data) {
@@ -1621,7 +1508,7 @@ export class VolunteerApprovalRequirement implements IVolunteerApprovalRequireme
     init(_data?: any) {
         if (_data) {
             this.stage = _data["stage"];
-            this.actionRequirement = _data["actionRequirement"] ? ActionRequirement.fromJS(_data["actionRequirement"]) : <any>undefined;
+            this.actionName = _data["actionName"];
         }
     }
 
@@ -1635,14 +1522,14 @@ export class VolunteerApprovalRequirement implements IVolunteerApprovalRequireme
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["stage"] = this.stage;
-        data["actionRequirement"] = this.actionRequirement ? this.actionRequirement.toJSON() : <any>undefined;
+        data["actionName"] = this.actionName;
         return data; 
     }
 }
 
 export interface IVolunteerApprovalRequirement {
     stage?: RequirementStage;
-    actionRequirement?: ActionRequirement;
+    actionName?: string;
 }
 
 export enum RequirementStage {
@@ -1653,7 +1540,7 @@ export enum RequirementStage {
 
 export class VolunteerFamilyRolePolicy implements IVolunteerFamilyRolePolicy {
     volunteerFamilyRoleType?: string;
-    approvalRequirements?: VolunteerFamilyApprovalRequirement[];
+    policyVersions?: VolunteerFamilyRolePolicyVersion[];
 
     constructor(data?: IVolunteerFamilyRolePolicy) {
         if (data) {
@@ -1667,10 +1554,10 @@ export class VolunteerFamilyRolePolicy implements IVolunteerFamilyRolePolicy {
     init(_data?: any) {
         if (_data) {
             this.volunteerFamilyRoleType = _data["volunteerFamilyRoleType"];
-            if (Array.isArray(_data["approvalRequirements"])) {
-                this.approvalRequirements = [] as any;
-                for (let item of _data["approvalRequirements"])
-                    this.approvalRequirements!.push(VolunteerFamilyApprovalRequirement.fromJS(item));
+            if (Array.isArray(_data["policyVersions"])) {
+                this.policyVersions = [] as any;
+                for (let item of _data["policyVersions"])
+                    this.policyVersions!.push(VolunteerFamilyRolePolicyVersion.fromJS(item));
             }
         }
     }
@@ -1685,10 +1572,10 @@ export class VolunteerFamilyRolePolicy implements IVolunteerFamilyRolePolicy {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["volunteerFamilyRoleType"] = this.volunteerFamilyRoleType;
-        if (Array.isArray(this.approvalRequirements)) {
-            data["approvalRequirements"] = [];
-            for (let item of this.approvalRequirements)
-                data["approvalRequirements"].push(item.toJSON());
+        if (Array.isArray(this.policyVersions)) {
+            data["policyVersions"] = [];
+            for (let item of this.policyVersions)
+                data["policyVersions"].push(item.toJSON());
         }
         return data; 
     }
@@ -1696,12 +1583,64 @@ export class VolunteerFamilyRolePolicy implements IVolunteerFamilyRolePolicy {
 
 export interface IVolunteerFamilyRolePolicy {
     volunteerFamilyRoleType?: string;
-    approvalRequirements?: VolunteerFamilyApprovalRequirement[];
+    policyVersions?: VolunteerFamilyRolePolicyVersion[];
+}
+
+export class VolunteerFamilyRolePolicyVersion implements IVolunteerFamilyRolePolicyVersion {
+    version?: string;
+    supersededAtUtc?: Date | undefined;
+    requirements?: VolunteerFamilyApprovalRequirement[];
+
+    constructor(data?: IVolunteerFamilyRolePolicyVersion) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.version = _data["version"];
+            this.supersededAtUtc = _data["supersededAtUtc"] ? new Date(_data["supersededAtUtc"].toString()) : <any>undefined;
+            if (Array.isArray(_data["requirements"])) {
+                this.requirements = [] as any;
+                for (let item of _data["requirements"])
+                    this.requirements!.push(VolunteerFamilyApprovalRequirement.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): VolunteerFamilyRolePolicyVersion {
+        data = typeof data === 'object' ? data : {};
+        let result = new VolunteerFamilyRolePolicyVersion();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["version"] = this.version;
+        data["supersededAtUtc"] = this.supersededAtUtc ? this.supersededAtUtc.toISOString() : <any>undefined;
+        if (Array.isArray(this.requirements)) {
+            data["requirements"] = [];
+            for (let item of this.requirements)
+                data["requirements"].push(item.toJSON());
+        }
+        return data; 
+    }
+}
+
+export interface IVolunteerFamilyRolePolicyVersion {
+    version?: string;
+    supersededAtUtc?: Date | undefined;
+    requirements?: VolunteerFamilyApprovalRequirement[];
 }
 
 export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyApprovalRequirement {
     stage?: RequirementStage;
-    actionRequirement?: ActionRequirement;
+    actionName?: string;
     scope?: VolunteerFamilyRequirementScope;
 
     constructor(data?: IVolunteerFamilyApprovalRequirement) {
@@ -1716,7 +1655,7 @@ export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyAppro
     init(_data?: any) {
         if (_data) {
             this.stage = _data["stage"];
-            this.actionRequirement = _data["actionRequirement"] ? ActionRequirement.fromJS(_data["actionRequirement"]) : <any>undefined;
+            this.actionName = _data["actionName"];
             this.scope = _data["scope"];
         }
     }
@@ -1731,7 +1670,7 @@ export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyAppro
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["stage"] = this.stage;
-        data["actionRequirement"] = this.actionRequirement ? this.actionRequirement.toJSON() : <any>undefined;
+        data["actionName"] = this.actionName;
         data["scope"] = this.scope;
         return data; 
     }
@@ -1739,7 +1678,7 @@ export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyAppro
 
 export interface IVolunteerFamilyApprovalRequirement {
     stage?: RequirementStage;
-    actionRequirement?: ActionRequirement;
+    actionName?: string;
     scope?: VolunteerFamilyRequirementScope;
 }
 
@@ -1788,489 +1727,12 @@ export interface IDocumentUploadInfo {
     valetUrl?: string;
 }
 
-export class Person implements IPerson {
-    id?: string;
-    userId?: string | undefined;
-    firstName?: string;
-    lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
-    concerns?: string | undefined;
-    notes?: string | undefined;
-
-    constructor(data?: IPerson) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.id = _data["id"];
-            this.userId = _data["userId"];
-            this.firstName = _data["firstName"];
-            this.lastName = _data["lastName"];
-            this.gender = _data["gender"];
-            this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
-            this.ethnicity = _data["ethnicity"];
-            this.concerns = _data["concerns"];
-            this.notes = _data["notes"];
-        }
-    }
-
-    static fromJS(data: any): Person {
-        data = typeof data === 'object' ? data : {};
-        let result = new Person();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["id"] = this.id;
-        data["userId"] = this.userId;
-        data["firstName"] = this.firstName;
-        data["lastName"] = this.lastName;
-        data["gender"] = this.gender;
-        data["age"] = this.age ? this.age.toJSON() : <any>undefined;
-        data["ethnicity"] = this.ethnicity;
-        data["concerns"] = this.concerns;
-        data["notes"] = this.notes;
-        return data; 
-    }
-}
-
-export interface IPerson {
-    id?: string;
-    userId?: string | undefined;
-    firstName?: string;
-    lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
-    concerns?: string | undefined;
-    notes?: string | undefined;
-}
-
-export enum Gender {
-    Male = 0,
-    Female = 1,
-    SeeNotes = 2,
-}
-
-export abstract class Age implements IAge {
-
-    protected _discriminator: string;
-
-    constructor(data?: IAge) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-        this._discriminator = "Age";
-    }
-
-    init(_data?: any) {
-    }
-
-    static fromJS(data: any): Age {
-        data = typeof data === 'object' ? data : {};
-        if (data["discriminator"] === "AgeInYears") {
-            let result = new AgeInYears();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "ExactAge") {
-            let result = new ExactAge();
-            result.init(data);
-            return result;
-        }
-        throw new Error("The abstract class 'Age' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["discriminator"] = this._discriminator; 
-        return data; 
-    }
-}
-
-export interface IAge {
-}
-
-export class AgeInYears extends Age implements IAgeInYears {
-    years?: number;
-    asOf?: Date;
-
-    constructor(data?: IAgeInYears) {
-        super(data);
-        this._discriminator = "AgeInYears";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.years = _data["years"];
-            this.asOf = _data["asOf"] ? new Date(_data["asOf"].toString()) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): AgeInYears {
-        data = typeof data === 'object' ? data : {};
-        let result = new AgeInYears();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["years"] = this.years;
-        data["asOf"] = this.asOf ? this.asOf.toISOString() : <any>undefined;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IAgeInYears extends IAge {
-    years?: number;
-    asOf?: Date;
-}
-
-export class ExactAge extends Age implements IExactAge {
-    dateOfBirth?: Date;
-
-    constructor(data?: IExactAge) {
-        super(data);
-        this._discriminator = "ExactAge";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.dateOfBirth = _data["dateOfBirth"] ? new Date(_data["dateOfBirth"].toString()) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): ExactAge {
-        data = typeof data === 'object' ? data : {};
-        let result = new ExactAge();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["dateOfBirth"] = this.dateOfBirth ? this.dateOfBirth.toISOString() : <any>undefined;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IExactAge extends IAge {
-    dateOfBirth?: Date;
-}
-
-export class PersonDetails implements IPersonDetails {
-    person?: Person;
-    contactInfo?: ContactInfo;
-
-    constructor(data?: IPersonDetails) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.person = _data["person"] ? Person.fromJS(_data["person"]) : <any>undefined;
-            this.contactInfo = _data["contactInfo"] ? ContactInfo.fromJS(_data["contactInfo"]) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): PersonDetails {
-        data = typeof data === 'object' ? data : {};
-        let result = new PersonDetails();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["person"] = this.person ? this.person.toJSON() : <any>undefined;
-        data["contactInfo"] = this.contactInfo ? this.contactInfo.toJSON() : <any>undefined;
-        return data; 
-    }
-}
-
-export interface IPersonDetails {
-    person?: Person;
-    contactInfo?: ContactInfo;
-}
-
-export class ContactInfo implements IContactInfo {
-    personId?: string;
-    addresses?: Address[];
-    currentAddressId?: string | undefined;
-    phoneNumbers?: PhoneNumber[];
-    preferredPhoneNumberId?: string | undefined;
-    emailAddresses?: EmailAddress[];
-    preferredEmailAddressId?: string | undefined;
-    contactMethodPreferenceNotes?: string;
-
-    constructor(data?: IContactInfo) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.personId = _data["personId"];
-            if (Array.isArray(_data["addresses"])) {
-                this.addresses = [] as any;
-                for (let item of _data["addresses"])
-                    this.addresses!.push(Address.fromJS(item));
-            }
-            this.currentAddressId = _data["currentAddressId"];
-            if (Array.isArray(_data["phoneNumbers"])) {
-                this.phoneNumbers = [] as any;
-                for (let item of _data["phoneNumbers"])
-                    this.phoneNumbers!.push(PhoneNumber.fromJS(item));
-            }
-            this.preferredPhoneNumberId = _data["preferredPhoneNumberId"];
-            if (Array.isArray(_data["emailAddresses"])) {
-                this.emailAddresses = [] as any;
-                for (let item of _data["emailAddresses"])
-                    this.emailAddresses!.push(EmailAddress.fromJS(item));
-            }
-            this.preferredEmailAddressId = _data["preferredEmailAddressId"];
-            this.contactMethodPreferenceNotes = _data["contactMethodPreferenceNotes"];
-        }
-    }
-
-    static fromJS(data: any): ContactInfo {
-        data = typeof data === 'object' ? data : {};
-        let result = new ContactInfo();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["personId"] = this.personId;
-        if (Array.isArray(this.addresses)) {
-            data["addresses"] = [];
-            for (let item of this.addresses)
-                data["addresses"].push(item.toJSON());
-        }
-        data["currentAddressId"] = this.currentAddressId;
-        if (Array.isArray(this.phoneNumbers)) {
-            data["phoneNumbers"] = [];
-            for (let item of this.phoneNumbers)
-                data["phoneNumbers"].push(item.toJSON());
-        }
-        data["preferredPhoneNumberId"] = this.preferredPhoneNumberId;
-        if (Array.isArray(this.emailAddresses)) {
-            data["emailAddresses"] = [];
-            for (let item of this.emailAddresses)
-                data["emailAddresses"].push(item.toJSON());
-        }
-        data["preferredEmailAddressId"] = this.preferredEmailAddressId;
-        data["contactMethodPreferenceNotes"] = this.contactMethodPreferenceNotes;
-        return data; 
-    }
-}
-
-export interface IContactInfo {
-    personId?: string;
-    addresses?: Address[];
-    currentAddressId?: string | undefined;
-    phoneNumbers?: PhoneNumber[];
-    preferredPhoneNumberId?: string | undefined;
-    emailAddresses?: EmailAddress[];
-    preferredEmailAddressId?: string | undefined;
-    contactMethodPreferenceNotes?: string;
-}
-
-export class Address implements IAddress {
-    id?: string;
-    line1?: string;
-    line2?: string | undefined;
-    city?: string;
-    stateId?: string;
-    postalCode?: string;
-    countryId?: string;
-
-    constructor(data?: IAddress) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.id = _data["id"];
-            this.line1 = _data["line1"];
-            this.line2 = _data["line2"];
-            this.city = _data["city"];
-            this.stateId = _data["stateId"];
-            this.postalCode = _data["postalCode"];
-            this.countryId = _data["countryId"];
-        }
-    }
-
-    static fromJS(data: any): Address {
-        data = typeof data === 'object' ? data : {};
-        let result = new Address();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["id"] = this.id;
-        data["line1"] = this.line1;
-        data["line2"] = this.line2;
-        data["city"] = this.city;
-        data["stateId"] = this.stateId;
-        data["postalCode"] = this.postalCode;
-        data["countryId"] = this.countryId;
-        return data; 
-    }
-}
-
-export interface IAddress {
-    id?: string;
-    line1?: string;
-    line2?: string | undefined;
-    city?: string;
-    stateId?: string;
-    postalCode?: string;
-    countryId?: string;
-}
-
-export class PhoneNumber implements IPhoneNumber {
-    id?: string;
-    number?: string;
-    type?: PhoneNumberType;
-
-    constructor(data?: IPhoneNumber) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.id = _data["id"];
-            this.number = _data["number"];
-            this.type = _data["type"];
-        }
-    }
-
-    static fromJS(data: any): PhoneNumber {
-        data = typeof data === 'object' ? data : {};
-        let result = new PhoneNumber();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["id"] = this.id;
-        data["number"] = this.number;
-        data["type"] = this.type;
-        return data; 
-    }
-}
-
-export interface IPhoneNumber {
-    id?: string;
-    number?: string;
-    type?: PhoneNumberType;
-}
-
-export enum PhoneNumberType {
-    Mobile = 0,
-    Home = 1,
-    Work = 2,
-    Fax = 3,
-}
-
-export class EmailAddress implements IEmailAddress {
-    id?: string;
-    address?: string;
-    type?: EmailAddressType;
-
-    constructor(data?: IEmailAddress) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.id = _data["id"];
-            this.address = _data["address"];
-            this.type = _data["type"];
-        }
-    }
-
-    static fromJS(data: any): EmailAddress {
-        data = typeof data === 'object' ? data : {};
-        let result = new EmailAddress();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["id"] = this.id;
-        data["address"] = this.address;
-        data["type"] = this.type;
-        return data; 
-    }
-}
-
-export interface IEmailAddress {
-    id?: string;
-    address?: string;
-    type?: EmailAddressType;
-}
-
-export enum EmailAddressType {
-    Personal = 0,
-    Work = 1,
-}
-
 export class Referral implements IReferral {
     id?: string;
     policyVersion?: string;
     createdUtc?: Date;
     closeReason?: ReferralCloseReason | undefined;
     partneringFamily?: Family;
-    contacts?: ContactInfo[];
     referralFormUploads?: FormUploadInfo[];
     referralActivitiesPerformed?: ActivityInfo[];
     arrangements?: Arrangement[];
@@ -2291,11 +1753,6 @@ export class Referral implements IReferral {
             this.createdUtc = _data["createdUtc"] ? new Date(_data["createdUtc"].toString()) : <any>undefined;
             this.closeReason = _data["closeReason"];
             this.partneringFamily = _data["partneringFamily"] ? Family.fromJS(_data["partneringFamily"]) : <any>undefined;
-            if (Array.isArray(_data["contacts"])) {
-                this.contacts = [] as any;
-                for (let item of _data["contacts"])
-                    this.contacts!.push(ContactInfo.fromJS(item));
-            }
             if (Array.isArray(_data["referralFormUploads"])) {
                 this.referralFormUploads = [] as any;
                 for (let item of _data["referralFormUploads"])
@@ -2328,11 +1785,6 @@ export class Referral implements IReferral {
         data["createdUtc"] = this.createdUtc ? this.createdUtc.toISOString() : <any>undefined;
         data["closeReason"] = this.closeReason;
         data["partneringFamily"] = this.partneringFamily ? this.partneringFamily.toJSON() : <any>undefined;
-        if (Array.isArray(this.contacts)) {
-            data["contacts"] = [];
-            for (let item of this.contacts)
-                data["contacts"].push(item.toJSON());
-        }
         if (Array.isArray(this.referralFormUploads)) {
             data["referralFormUploads"] = [];
             for (let item of this.referralFormUploads)
@@ -2358,7 +1810,6 @@ export interface IReferral {
     createdUtc?: Date;
     closeReason?: ReferralCloseReason | undefined;
     partneringFamily?: Family;
-    contacts?: ContactInfo[];
     referralFormUploads?: FormUploadInfo[];
     referralActivitiesPerformed?: ActivityInfo[];
     arrangements?: Arrangement[];
@@ -2488,6 +1939,398 @@ export interface IValueTupleOfPersonAndFamilyAdultRelationshipInfo {
     item2?: FamilyAdultRelationshipInfo;
 }
 
+export class Person implements IPerson {
+    id?: string;
+    userId?: string | undefined;
+    firstName?: string;
+    lastName?: string;
+    gender?: Gender;
+    age?: Age;
+    ethnicity?: string;
+    addresses?: Address[];
+    currentAddressId?: string | undefined;
+    phoneNumbers?: PhoneNumber[];
+    preferredPhoneNumberId?: string | undefined;
+    emailAddresses?: EmailAddress[];
+    preferredEmailAddressId?: string | undefined;
+    concerns?: string | undefined;
+    notes?: string | undefined;
+
+    constructor(data?: IPerson) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.userId = _data["userId"];
+            this.firstName = _data["firstName"];
+            this.lastName = _data["lastName"];
+            this.gender = _data["gender"];
+            this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
+            this.ethnicity = _data["ethnicity"];
+            if (Array.isArray(_data["addresses"])) {
+                this.addresses = [] as any;
+                for (let item of _data["addresses"])
+                    this.addresses!.push(Address.fromJS(item));
+            }
+            this.currentAddressId = _data["currentAddressId"];
+            if (Array.isArray(_data["phoneNumbers"])) {
+                this.phoneNumbers = [] as any;
+                for (let item of _data["phoneNumbers"])
+                    this.phoneNumbers!.push(PhoneNumber.fromJS(item));
+            }
+            this.preferredPhoneNumberId = _data["preferredPhoneNumberId"];
+            if (Array.isArray(_data["emailAddresses"])) {
+                this.emailAddresses = [] as any;
+                for (let item of _data["emailAddresses"])
+                    this.emailAddresses!.push(EmailAddress.fromJS(item));
+            }
+            this.preferredEmailAddressId = _data["preferredEmailAddressId"];
+            this.concerns = _data["concerns"];
+            this.notes = _data["notes"];
+        }
+    }
+
+    static fromJS(data: any): Person {
+        data = typeof data === 'object' ? data : {};
+        let result = new Person();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["userId"] = this.userId;
+        data["firstName"] = this.firstName;
+        data["lastName"] = this.lastName;
+        data["gender"] = this.gender;
+        data["age"] = this.age ? this.age.toJSON() : <any>undefined;
+        data["ethnicity"] = this.ethnicity;
+        if (Array.isArray(this.addresses)) {
+            data["addresses"] = [];
+            for (let item of this.addresses)
+                data["addresses"].push(item.toJSON());
+        }
+        data["currentAddressId"] = this.currentAddressId;
+        if (Array.isArray(this.phoneNumbers)) {
+            data["phoneNumbers"] = [];
+            for (let item of this.phoneNumbers)
+                data["phoneNumbers"].push(item.toJSON());
+        }
+        data["preferredPhoneNumberId"] = this.preferredPhoneNumberId;
+        if (Array.isArray(this.emailAddresses)) {
+            data["emailAddresses"] = [];
+            for (let item of this.emailAddresses)
+                data["emailAddresses"].push(item.toJSON());
+        }
+        data["preferredEmailAddressId"] = this.preferredEmailAddressId;
+        data["concerns"] = this.concerns;
+        data["notes"] = this.notes;
+        return data; 
+    }
+}
+
+export interface IPerson {
+    id?: string;
+    userId?: string | undefined;
+    firstName?: string;
+    lastName?: string;
+    gender?: Gender;
+    age?: Age;
+    ethnicity?: string;
+    addresses?: Address[];
+    currentAddressId?: string | undefined;
+    phoneNumbers?: PhoneNumber[];
+    preferredPhoneNumberId?: string | undefined;
+    emailAddresses?: EmailAddress[];
+    preferredEmailAddressId?: string | undefined;
+    concerns?: string | undefined;
+    notes?: string | undefined;
+}
+
+export enum Gender {
+    Male = 0,
+    Female = 1,
+    SeeNotes = 2,
+}
+
+export abstract class Age implements IAge {
+
+    protected _discriminator: string;
+
+    constructor(data?: IAge) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        this._discriminator = "Age";
+    }
+
+    init(_data?: any) {
+    }
+
+    static fromJS(data: any): Age {
+        data = typeof data === 'object' ? data : {};
+        if (data["discriminator"] === "AgeInYears") {
+            let result = new AgeInYears();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "ExactAge") {
+            let result = new ExactAge();
+            result.init(data);
+            return result;
+        }
+        throw new Error("The abstract class 'Age' cannot be instantiated.");
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["discriminator"] = this._discriminator; 
+        return data; 
+    }
+}
+
+export interface IAge {
+}
+
+export class AgeInYears extends Age implements IAgeInYears {
+    years?: number;
+    asOf?: Date;
+
+    constructor(data?: IAgeInYears) {
+        super(data);
+        this._discriminator = "AgeInYears";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.years = _data["years"];
+            this.asOf = _data["asOf"] ? new Date(_data["asOf"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): AgeInYears {
+        data = typeof data === 'object' ? data : {};
+        let result = new AgeInYears();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["years"] = this.years;
+        data["asOf"] = this.asOf ? this.asOf.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IAgeInYears extends IAge {
+    years?: number;
+    asOf?: Date;
+}
+
+export class ExactAge extends Age implements IExactAge {
+    dateOfBirth?: Date;
+
+    constructor(data?: IExactAge) {
+        super(data);
+        this._discriminator = "ExactAge";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.dateOfBirth = _data["dateOfBirth"] ? new Date(_data["dateOfBirth"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ExactAge {
+        data = typeof data === 'object' ? data : {};
+        let result = new ExactAge();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["dateOfBirth"] = this.dateOfBirth ? this.dateOfBirth.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IExactAge extends IAge {
+    dateOfBirth?: Date;
+}
+
+export class Address implements IAddress {
+    id?: string;
+    line1?: string;
+    line2?: string | undefined;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+
+    constructor(data?: IAddress) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.line1 = _data["line1"];
+            this.line2 = _data["line2"];
+            this.city = _data["city"];
+            this.state = _data["state"];
+            this.postalCode = _data["postalCode"];
+        }
+    }
+
+    static fromJS(data: any): Address {
+        data = typeof data === 'object' ? data : {};
+        let result = new Address();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["line1"] = this.line1;
+        data["line2"] = this.line2;
+        data["city"] = this.city;
+        data["state"] = this.state;
+        data["postalCode"] = this.postalCode;
+        return data; 
+    }
+}
+
+export interface IAddress {
+    id?: string;
+    line1?: string;
+    line2?: string | undefined;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+}
+
+export class PhoneNumber implements IPhoneNumber {
+    id?: string;
+    number?: string;
+    type?: PhoneNumberType;
+
+    constructor(data?: IPhoneNumber) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.number = _data["number"];
+            this.type = _data["type"];
+        }
+    }
+
+    static fromJS(data: any): PhoneNumber {
+        data = typeof data === 'object' ? data : {};
+        let result = new PhoneNumber();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["number"] = this.number;
+        data["type"] = this.type;
+        return data; 
+    }
+}
+
+export interface IPhoneNumber {
+    id?: string;
+    number?: string;
+    type?: PhoneNumberType;
+}
+
+export enum PhoneNumberType {
+    Mobile = 0,
+    Home = 1,
+    Work = 2,
+    Fax = 3,
+}
+
+export class EmailAddress implements IEmailAddress {
+    id?: string;
+    address?: string;
+    type?: EmailAddressType;
+
+    constructor(data?: IEmailAddress) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.address = _data["address"];
+            this.type = _data["type"];
+        }
+    }
+
+    static fromJS(data: any): EmailAddress {
+        data = typeof data === 'object' ? data : {};
+        let result = new EmailAddress();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["address"] = this.address;
+        data["type"] = this.type;
+        return data; 
+    }
+}
+
+export interface IEmailAddress {
+    id?: string;
+    address?: string;
+    type?: EmailAddressType;
+}
+
+export enum EmailAddressType {
+    Personal = 0,
+    Work = 1,
+}
+
 export class FamilyAdultRelationshipInfo implements IFamilyAdultRelationshipInfo {
     relationshipToFamily?: string;
     isInHousehold?: boolean;
@@ -2583,7 +2426,6 @@ export class FormUploadInfo implements IFormUploadInfo {
     timestampUtc?: Date;
     completedAtUtc?: Date;
     formName?: string;
-    formVersion?: string;
     originalFileName?: string;
     uploadedDocumentId?: string;
 
@@ -2602,7 +2444,6 @@ export class FormUploadInfo implements IFormUploadInfo {
             this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
             this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
             this.formName = _data["formName"];
-            this.formVersion = _data["formVersion"];
             this.originalFileName = _data["originalFileName"];
             this.uploadedDocumentId = _data["uploadedDocumentId"];
         }
@@ -2621,7 +2462,6 @@ export class FormUploadInfo implements IFormUploadInfo {
         data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
         data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
         data["formName"] = this.formName;
-        data["formVersion"] = this.formVersion;
         data["originalFileName"] = this.originalFileName;
         data["uploadedDocumentId"] = this.uploadedDocumentId;
         return data; 
@@ -2633,7 +2473,6 @@ export interface IFormUploadInfo {
     timestampUtc?: Date;
     completedAtUtc?: Date;
     formName?: string;
-    formVersion?: string;
     originalFileName?: string;
     uploadedDocumentId?: string;
 }
@@ -3274,7 +3113,6 @@ export interface IPerformReferralActivity extends IReferralCommand {
 export class UploadReferralForm extends ReferralCommand implements IUploadReferralForm {
     completedAtUtc?: Date;
     formName?: string;
-    formVersion?: string;
     uploadedFileName?: string;
     uploadedDocumentId?: string;
 
@@ -3288,7 +3126,6 @@ export class UploadReferralForm extends ReferralCommand implements IUploadReferr
         if (_data) {
             this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
             this.formName = _data["formName"];
-            this.formVersion = _data["formVersion"];
             this.uploadedFileName = _data["uploadedFileName"];
             this.uploadedDocumentId = _data["uploadedDocumentId"];
         }
@@ -3305,7 +3142,6 @@ export class UploadReferralForm extends ReferralCommand implements IUploadReferr
         data = typeof data === 'object' ? data : {};
         data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
         data["formName"] = this.formName;
-        data["formVersion"] = this.formVersion;
         data["uploadedFileName"] = this.uploadedFileName;
         data["uploadedDocumentId"] = this.uploadedDocumentId;
         super.toJSON(data);
@@ -3316,7 +3152,6 @@ export class UploadReferralForm extends ReferralCommand implements IUploadReferr
 export interface IUploadReferralForm extends IReferralCommand {
     completedAtUtc?: Date;
     formName?: string;
-    formVersion?: string;
     uploadedFileName?: string;
     uploadedDocumentId?: string;
 }
@@ -4028,9 +3863,11 @@ export interface IUserTenantAccessSummary {
 
 export class VolunteerFamily implements IVolunteerFamily {
     family?: Family;
-    approvalFormUploads?: FormUploadInfo[];
-    approvalActivitiesPerformed?: ActivityInfo[];
-    familyRoleApprovals?: { [key: string]: RoleApprovalStatus; };
+    completedRequirements?: CompletedRequirementInfo[];
+    uploadedDocuments?: UploadedDocumentInfo[];
+    missingRequirements?: string[];
+    availableApplications?: string[];
+    familyRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
     individualVolunteers?: { [key: string]: Volunteer; };
 
     constructor(data?: IVolunteerFamily) {
@@ -4045,21 +3882,31 @@ export class VolunteerFamily implements IVolunteerFamily {
     init(_data?: any) {
         if (_data) {
             this.family = _data["family"] ? Family.fromJS(_data["family"]) : <any>undefined;
-            if (Array.isArray(_data["approvalFormUploads"])) {
-                this.approvalFormUploads = [] as any;
-                for (let item of _data["approvalFormUploads"])
-                    this.approvalFormUploads!.push(FormUploadInfo.fromJS(item));
+            if (Array.isArray(_data["completedRequirements"])) {
+                this.completedRequirements = [] as any;
+                for (let item of _data["completedRequirements"])
+                    this.completedRequirements!.push(CompletedRequirementInfo.fromJS(item));
             }
-            if (Array.isArray(_data["approvalActivitiesPerformed"])) {
-                this.approvalActivitiesPerformed = [] as any;
-                for (let item of _data["approvalActivitiesPerformed"])
-                    this.approvalActivitiesPerformed!.push(ActivityInfo.fromJS(item));
+            if (Array.isArray(_data["uploadedDocuments"])) {
+                this.uploadedDocuments = [] as any;
+                for (let item of _data["uploadedDocuments"])
+                    this.uploadedDocuments!.push(UploadedDocumentInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["missingRequirements"])) {
+                this.missingRequirements = [] as any;
+                for (let item of _data["missingRequirements"])
+                    this.missingRequirements!.push(item);
+            }
+            if (Array.isArray(_data["availableApplications"])) {
+                this.availableApplications = [] as any;
+                for (let item of _data["availableApplications"])
+                    this.availableApplications!.push(item);
             }
             if (_data["familyRoleApprovals"]) {
                 this.familyRoleApprovals = {} as any;
                 for (let key in _data["familyRoleApprovals"]) {
                     if (_data["familyRoleApprovals"].hasOwnProperty(key))
-                        (<any>this.familyRoleApprovals)![key] = _data["familyRoleApprovals"][key];
+                        (<any>this.familyRoleApprovals)![key] = _data["familyRoleApprovals"][key] ? _data["familyRoleApprovals"][key].map((i: any) => RoleVersionApproval.fromJS(i)) : [];
                 }
             }
             if (_data["individualVolunteers"]) {
@@ -4082,15 +3929,25 @@ export class VolunteerFamily implements IVolunteerFamily {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["family"] = this.family ? this.family.toJSON() : <any>undefined;
-        if (Array.isArray(this.approvalFormUploads)) {
-            data["approvalFormUploads"] = [];
-            for (let item of this.approvalFormUploads)
-                data["approvalFormUploads"].push(item.toJSON());
+        if (Array.isArray(this.completedRequirements)) {
+            data["completedRequirements"] = [];
+            for (let item of this.completedRequirements)
+                data["completedRequirements"].push(item.toJSON());
         }
-        if (Array.isArray(this.approvalActivitiesPerformed)) {
-            data["approvalActivitiesPerformed"] = [];
-            for (let item of this.approvalActivitiesPerformed)
-                data["approvalActivitiesPerformed"].push(item.toJSON());
+        if (Array.isArray(this.uploadedDocuments)) {
+            data["uploadedDocuments"] = [];
+            for (let item of this.uploadedDocuments)
+                data["uploadedDocuments"].push(item.toJSON());
+        }
+        if (Array.isArray(this.missingRequirements)) {
+            data["missingRequirements"] = [];
+            for (let item of this.missingRequirements)
+                data["missingRequirements"].push(item);
+        }
+        if (Array.isArray(this.availableApplications)) {
+            data["availableApplications"] = [];
+            for (let item of this.availableApplications)
+                data["availableApplications"].push(item);
         }
         if (this.familyRoleApprovals) {
             data["familyRoleApprovals"] = {};
@@ -4112,10 +3969,152 @@ export class VolunteerFamily implements IVolunteerFamily {
 
 export interface IVolunteerFamily {
     family?: Family;
-    approvalFormUploads?: FormUploadInfo[];
-    approvalActivitiesPerformed?: ActivityInfo[];
-    familyRoleApprovals?: { [key: string]: RoleApprovalStatus; };
+    completedRequirements?: CompletedRequirementInfo[];
+    uploadedDocuments?: UploadedDocumentInfo[];
+    missingRequirements?: string[];
+    availableApplications?: string[];
+    familyRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
     individualVolunteers?: { [key: string]: Volunteer; };
+}
+
+export class CompletedRequirementInfo implements ICompletedRequirementInfo {
+    userId?: string;
+    timestampUtc?: Date;
+    requirementName?: string;
+    completedAtUtc?: Date;
+    uploadedDocumentId?: string | undefined;
+
+    constructor(data?: ICompletedRequirementInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
+            this.requirementName = _data["requirementName"];
+            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
+        }
+    }
+
+    static fromJS(data: any): CompletedRequirementInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new CompletedRequirementInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
+        data["requirementName"] = this.requirementName;
+        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
+        return data; 
+    }
+}
+
+export interface ICompletedRequirementInfo {
+    userId?: string;
+    timestampUtc?: Date;
+    requirementName?: string;
+    completedAtUtc?: Date;
+    uploadedDocumentId?: string | undefined;
+}
+
+export class UploadedDocumentInfo implements IUploadedDocumentInfo {
+    userId?: string;
+    timestampUtc?: Date;
+    uploadedDocumentId?: string;
+    uploadedFileName?: string;
+
+    constructor(data?: IUploadedDocumentInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
+            this.uploadedFileName = _data["uploadedFileName"];
+        }
+    }
+
+    static fromJS(data: any): UploadedDocumentInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new UploadedDocumentInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
+        data["uploadedFileName"] = this.uploadedFileName;
+        return data; 
+    }
+}
+
+export interface IUploadedDocumentInfo {
+    userId?: string;
+    timestampUtc?: Date;
+    uploadedDocumentId?: string;
+    uploadedFileName?: string;
+}
+
+export class RoleVersionApproval implements IRoleVersionApproval {
+    version?: string;
+    approvalStatus?: RoleApprovalStatus;
+
+    constructor(data?: IRoleVersionApproval) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.version = _data["version"];
+            this.approvalStatus = _data["approvalStatus"];
+        }
+    }
+
+    static fromJS(data: any): RoleVersionApproval {
+        data = typeof data === 'object' ? data : {};
+        let result = new RoleVersionApproval();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["version"] = this.version;
+        data["approvalStatus"] = this.approvalStatus;
+        return data; 
+    }
+}
+
+export interface IRoleVersionApproval {
+    version?: string;
+    approvalStatus?: RoleApprovalStatus;
 }
 
 export enum RoleApprovalStatus {
@@ -4125,9 +4124,10 @@ export enum RoleApprovalStatus {
 }
 
 export class Volunteer implements IVolunteer {
-    approvalFormUploads?: FormUploadInfo[];
-    approvalActivitiesPerformed?: ActivityInfo[];
-    individualRoleApprovals?: { [key: string]: RoleApprovalStatus; };
+    completedRequirements?: CompletedRequirementInfo[];
+    missingRequirements?: string[];
+    availableApplications?: string[];
+    individualRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
 
     constructor(data?: IVolunteer) {
         if (data) {
@@ -4140,21 +4140,26 @@ export class Volunteer implements IVolunteer {
 
     init(_data?: any) {
         if (_data) {
-            if (Array.isArray(_data["approvalFormUploads"])) {
-                this.approvalFormUploads = [] as any;
-                for (let item of _data["approvalFormUploads"])
-                    this.approvalFormUploads!.push(FormUploadInfo.fromJS(item));
+            if (Array.isArray(_data["completedRequirements"])) {
+                this.completedRequirements = [] as any;
+                for (let item of _data["completedRequirements"])
+                    this.completedRequirements!.push(CompletedRequirementInfo.fromJS(item));
             }
-            if (Array.isArray(_data["approvalActivitiesPerformed"])) {
-                this.approvalActivitiesPerformed = [] as any;
-                for (let item of _data["approvalActivitiesPerformed"])
-                    this.approvalActivitiesPerformed!.push(ActivityInfo.fromJS(item));
+            if (Array.isArray(_data["missingRequirements"])) {
+                this.missingRequirements = [] as any;
+                for (let item of _data["missingRequirements"])
+                    this.missingRequirements!.push(item);
+            }
+            if (Array.isArray(_data["availableApplications"])) {
+                this.availableApplications = [] as any;
+                for (let item of _data["availableApplications"])
+                    this.availableApplications!.push(item);
             }
             if (_data["individualRoleApprovals"]) {
                 this.individualRoleApprovals = {} as any;
                 for (let key in _data["individualRoleApprovals"]) {
                     if (_data["individualRoleApprovals"].hasOwnProperty(key))
-                        (<any>this.individualRoleApprovals)![key] = _data["individualRoleApprovals"][key];
+                        (<any>this.individualRoleApprovals)![key] = _data["individualRoleApprovals"][key] ? _data["individualRoleApprovals"][key].map((i: any) => RoleVersionApproval.fromJS(i)) : [];
                 }
             }
         }
@@ -4169,15 +4174,20 @@ export class Volunteer implements IVolunteer {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        if (Array.isArray(this.approvalFormUploads)) {
-            data["approvalFormUploads"] = [];
-            for (let item of this.approvalFormUploads)
-                data["approvalFormUploads"].push(item.toJSON());
+        if (Array.isArray(this.completedRequirements)) {
+            data["completedRequirements"] = [];
+            for (let item of this.completedRequirements)
+                data["completedRequirements"].push(item.toJSON());
         }
-        if (Array.isArray(this.approvalActivitiesPerformed)) {
-            data["approvalActivitiesPerformed"] = [];
-            for (let item of this.approvalActivitiesPerformed)
-                data["approvalActivitiesPerformed"].push(item.toJSON());
+        if (Array.isArray(this.missingRequirements)) {
+            data["missingRequirements"] = [];
+            for (let item of this.missingRequirements)
+                data["missingRequirements"].push(item);
+        }
+        if (Array.isArray(this.availableApplications)) {
+            data["availableApplications"] = [];
+            for (let item of this.availableApplications)
+                data["availableApplications"].push(item);
         }
         if (this.individualRoleApprovals) {
             data["individualRoleApprovals"] = {};
@@ -4191,9 +4201,10 @@ export class Volunteer implements IVolunteer {
 }
 
 export interface IVolunteer {
-    approvalFormUploads?: FormUploadInfo[];
-    approvalActivitiesPerformed?: ActivityInfo[];
-    individualRoleApprovals?: { [key: string]: RoleApprovalStatus; };
+    completedRequirements?: CompletedRequirementInfo[];
+    missingRequirements?: string[];
+    availableApplications?: string[];
+    individualRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
 }
 
 export abstract class VolunteerFamilyCommand implements IVolunteerFamilyCommand {
@@ -4224,13 +4235,13 @@ export abstract class VolunteerFamilyCommand implements IVolunteerFamilyCommand 
             result.init(data);
             return result;
         }
-        if (data["discriminator"] === "DeactivateVolunteerFamily") {
-            let result = new DeactivateVolunteerFamily();
+        if (data["discriminator"] === "CompleteVolunteerFamilyRequirement") {
+            let result = new CompleteVolunteerFamilyRequirement();
             result.init(data);
             return result;
         }
-        if (data["discriminator"] === "PerformVolunteerFamilyActivity") {
-            let result = new PerformVolunteerFamilyActivity();
+        if (data["discriminator"] === "DeactivateVolunteerFamily") {
+            let result = new DeactivateVolunteerFamily();
             result.init(data);
             return result;
         }
@@ -4239,8 +4250,8 @@ export abstract class VolunteerFamilyCommand implements IVolunteerFamilyCommand 
             result.init(data);
             return result;
         }
-        if (data["discriminator"] === "UploadVolunteerFamilyForm") {
-            let result = new UploadVolunteerFamilyForm();
+        if (data["discriminator"] === "UploadVolunteerFamilyDocument") {
+            let result = new UploadVolunteerFamilyDocument();
             result.init(data);
             return result;
         }
@@ -4287,6 +4298,48 @@ export class ActivateVolunteerFamily extends VolunteerFamilyCommand implements I
 export interface IActivateVolunteerFamily extends IVolunteerFamilyCommand {
 }
 
+export class CompleteVolunteerFamilyRequirement extends VolunteerFamilyCommand implements ICompleteVolunteerFamilyRequirement {
+    requirementName?: string;
+    completedAtUtc?: Date;
+    uploadedDocumentId?: string | undefined;
+
+    constructor(data?: ICompleteVolunteerFamilyRequirement) {
+        super(data);
+        this._discriminator = "CompleteVolunteerFamilyRequirement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.requirementName = _data["requirementName"];
+            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
+        }
+    }
+
+    static fromJS(data: any): CompleteVolunteerFamilyRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new CompleteVolunteerFamilyRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["requirementName"] = this.requirementName;
+        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface ICompleteVolunteerFamilyRequirement extends IVolunteerFamilyCommand {
+    requirementName?: string;
+    completedAtUtc?: Date;
+    uploadedDocumentId?: string | undefined;
+}
+
 export class DeactivateVolunteerFamily extends VolunteerFamilyCommand implements IDeactivateVolunteerFamily {
     reason?: string;
 
@@ -4319,48 +4372,6 @@ export class DeactivateVolunteerFamily extends VolunteerFamilyCommand implements
 
 export interface IDeactivateVolunteerFamily extends IVolunteerFamilyCommand {
     reason?: string;
-}
-
-export class PerformVolunteerFamilyActivity extends VolunteerFamilyCommand implements IPerformVolunteerFamilyActivity {
-    activityName?: string;
-    performedAtUtc?: Date;
-    performedByPersonId?: string;
-
-    constructor(data?: IPerformVolunteerFamilyActivity) {
-        super(data);
-        this._discriminator = "PerformVolunteerFamilyActivity";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.activityName = _data["activityName"];
-            this.performedAtUtc = _data["performedAtUtc"] ? new Date(_data["performedAtUtc"].toString()) : <any>undefined;
-            this.performedByPersonId = _data["performedByPersonId"];
-        }
-    }
-
-    static fromJS(data: any): PerformVolunteerFamilyActivity {
-        data = typeof data === 'object' ? data : {};
-        let result = new PerformVolunteerFamilyActivity();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["activityName"] = this.activityName;
-        data["performedAtUtc"] = this.performedAtUtc ? this.performedAtUtc.toISOString() : <any>undefined;
-        data["performedByPersonId"] = this.performedByPersonId;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IPerformVolunteerFamilyActivity extends IVolunteerFamilyCommand {
-    activityName?: string;
-    performedAtUtc?: Date;
-    performedByPersonId?: string;
 }
 
 export class SetVolunteerFamilyNote extends VolunteerFamilyCommand implements ISetVolunteerFamilyNote {
@@ -4397,54 +4408,42 @@ export interface ISetVolunteerFamilyNote extends IVolunteerFamilyCommand {
     note?: string;
 }
 
-export class UploadVolunteerFamilyForm extends VolunteerFamilyCommand implements IUploadVolunteerFamilyForm {
-    completedAtUtc?: Date;
-    formName?: string;
-    formVersion?: string;
-    uploadedFileName?: string;
+export class UploadVolunteerFamilyDocument extends VolunteerFamilyCommand implements IUploadVolunteerFamilyDocument {
     uploadedDocumentId?: string;
+    uploadedFileName?: string;
 
-    constructor(data?: IUploadVolunteerFamilyForm) {
+    constructor(data?: IUploadVolunteerFamilyDocument) {
         super(data);
-        this._discriminator = "UploadVolunteerFamilyForm";
+        this._discriminator = "UploadVolunteerFamilyDocument";
     }
 
     init(_data?: any) {
         super.init(_data);
         if (_data) {
-            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
-            this.formName = _data["formName"];
-            this.formVersion = _data["formVersion"];
-            this.uploadedFileName = _data["uploadedFileName"];
             this.uploadedDocumentId = _data["uploadedDocumentId"];
+            this.uploadedFileName = _data["uploadedFileName"];
         }
     }
 
-    static fromJS(data: any): UploadVolunteerFamilyForm {
+    static fromJS(data: any): UploadVolunteerFamilyDocument {
         data = typeof data === 'object' ? data : {};
-        let result = new UploadVolunteerFamilyForm();
+        let result = new UploadVolunteerFamilyDocument();
         result.init(data);
         return result;
     }
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
-        data["formName"] = this.formName;
-        data["formVersion"] = this.formVersion;
-        data["uploadedFileName"] = this.uploadedFileName;
         data["uploadedDocumentId"] = this.uploadedDocumentId;
+        data["uploadedFileName"] = this.uploadedFileName;
         super.toJSON(data);
         return data; 
     }
 }
 
-export interface IUploadVolunteerFamilyForm extends IVolunteerFamilyCommand {
-    completedAtUtc?: Date;
-    formName?: string;
-    formVersion?: string;
-    uploadedFileName?: string;
+export interface IUploadVolunteerFamilyDocument extends IVolunteerFamilyCommand {
     uploadedDocumentId?: string;
+    uploadedFileName?: string;
 }
 
 export abstract class VolunteerCommand implements IVolunteerCommand {
@@ -4472,13 +4471,13 @@ export abstract class VolunteerCommand implements IVolunteerCommand {
 
     static fromJS(data: any): VolunteerCommand {
         data = typeof data === 'object' ? data : {};
-        if (data["discriminator"] === "DeactivateVolunteer") {
-            let result = new DeactivateVolunteer();
+        if (data["discriminator"] === "CompleteVolunteerRequirement") {
+            let result = new CompleteVolunteerRequirement();
             result.init(data);
             return result;
         }
-        if (data["discriminator"] === "PerformVolunteerActivity") {
-            let result = new PerformVolunteerActivity();
+        if (data["discriminator"] === "DeactivateVolunteer") {
+            let result = new DeactivateVolunteer();
             result.init(data);
             return result;
         }
@@ -4489,11 +4488,6 @@ export abstract class VolunteerCommand implements IVolunteerCommand {
         }
         if (data["discriminator"] === "SetVolunteerNote") {
             let result = new SetVolunteerNote();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "UploadVolunteerForm") {
-            let result = new UploadVolunteerForm();
             result.init(data);
             return result;
         }
@@ -4512,6 +4506,48 @@ export abstract class VolunteerCommand implements IVolunteerCommand {
 export interface IVolunteerCommand {
     familyId?: string;
     personId?: string;
+}
+
+export class CompleteVolunteerRequirement extends VolunteerCommand implements ICompleteVolunteerRequirement {
+    requirementName?: string;
+    completedAtUtc?: Date;
+    uploadedDocumentId?: string | undefined;
+
+    constructor(data?: ICompleteVolunteerRequirement) {
+        super(data);
+        this._discriminator = "CompleteVolunteerRequirement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.requirementName = _data["requirementName"];
+            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
+        }
+    }
+
+    static fromJS(data: any): CompleteVolunteerRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new CompleteVolunteerRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["requirementName"] = this.requirementName;
+        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface ICompleteVolunteerRequirement extends IVolunteerCommand {
+    requirementName?: string;
+    completedAtUtc?: Date;
+    uploadedDocumentId?: string | undefined;
 }
 
 export class DeactivateVolunteer extends VolunteerCommand implements IDeactivateVolunteer {
@@ -4546,48 +4582,6 @@ export class DeactivateVolunteer extends VolunteerCommand implements IDeactivate
 
 export interface IDeactivateVolunteer extends IVolunteerCommand {
     reason?: string;
-}
-
-export class PerformVolunteerActivity extends VolunteerCommand implements IPerformVolunteerActivity {
-    activityName?: string;
-    performedAtUtc?: Date;
-    performedByPersonId?: string;
-
-    constructor(data?: IPerformVolunteerActivity) {
-        super(data);
-        this._discriminator = "PerformVolunteerActivity";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.activityName = _data["activityName"];
-            this.performedAtUtc = _data["performedAtUtc"] ? new Date(_data["performedAtUtc"].toString()) : <any>undefined;
-            this.performedByPersonId = _data["performedByPersonId"];
-        }
-    }
-
-    static fromJS(data: any): PerformVolunteerActivity {
-        data = typeof data === 'object' ? data : {};
-        let result = new PerformVolunteerActivity();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["activityName"] = this.activityName;
-        data["performedAtUtc"] = this.performedAtUtc ? this.performedAtUtc.toISOString() : <any>undefined;
-        data["performedByPersonId"] = this.performedByPersonId;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IPerformVolunteerActivity extends IVolunteerCommand {
-    activityName?: string;
-    performedAtUtc?: Date;
-    performedByPersonId?: string;
 }
 
 export class ReactivateVolunteer extends VolunteerCommand implements IReactivateVolunteer {
@@ -4652,56 +4646,6 @@ export interface ISetVolunteerNote extends IVolunteerCommand {
     note?: string;
 }
 
-export class UploadVolunteerForm extends VolunteerCommand implements IUploadVolunteerForm {
-    completedAtUtc?: Date;
-    formName?: string;
-    formVersion?: string;
-    uploadedFileName?: string;
-    uploadedDocumentId?: string;
-
-    constructor(data?: IUploadVolunteerForm) {
-        super(data);
-        this._discriminator = "UploadVolunteerForm";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
-            this.formName = _data["formName"];
-            this.formVersion = _data["formVersion"];
-            this.uploadedFileName = _data["uploadedFileName"];
-            this.uploadedDocumentId = _data["uploadedDocumentId"];
-        }
-    }
-
-    static fromJS(data: any): UploadVolunteerForm {
-        data = typeof data === 'object' ? data : {};
-        let result = new UploadVolunteerForm();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
-        data["formName"] = this.formName;
-        data["formVersion"] = this.formVersion;
-        data["uploadedFileName"] = this.uploadedFileName;
-        data["uploadedDocumentId"] = this.uploadedDocumentId;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IUploadVolunteerForm extends IVolunteerCommand {
-    completedAtUtc?: Date;
-    formName?: string;
-    formVersion?: string;
-    uploadedFileName?: string;
-    uploadedDocumentId?: string;
-}
-
 export abstract class ApprovalCommand implements IApprovalCommand {
 
     protected _discriminator: string;
@@ -4759,6 +4703,9 @@ export class AddAdultToFamilyCommand extends ApprovalCommand implements IAddAdul
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
     concerns?: string | undefined;
     notes?: string | undefined;
+    address?: Address | undefined;
+    phoneNumber?: PhoneNumber | undefined;
+    emailAddress?: EmailAddress | undefined;
 
     constructor(data?: IAddAdultToFamilyCommand) {
         super(data);
@@ -4777,6 +4724,9 @@ export class AddAdultToFamilyCommand extends ApprovalCommand implements IAddAdul
             this.familyAdultRelationshipInfo = _data["familyAdultRelationshipInfo"] ? FamilyAdultRelationshipInfo.fromJS(_data["familyAdultRelationshipInfo"]) : <any>undefined;
             this.concerns = _data["concerns"];
             this.notes = _data["notes"];
+            this.address = _data["address"] ? Address.fromJS(_data["address"]) : <any>undefined;
+            this.phoneNumber = _data["phoneNumber"] ? PhoneNumber.fromJS(_data["phoneNumber"]) : <any>undefined;
+            this.emailAddress = _data["emailAddress"] ? EmailAddress.fromJS(_data["emailAddress"]) : <any>undefined;
         }
     }
 
@@ -4798,6 +4748,9 @@ export class AddAdultToFamilyCommand extends ApprovalCommand implements IAddAdul
         data["familyAdultRelationshipInfo"] = this.familyAdultRelationshipInfo ? this.familyAdultRelationshipInfo.toJSON() : <any>undefined;
         data["concerns"] = this.concerns;
         data["notes"] = this.notes;
+        data["address"] = this.address ? this.address.toJSON() : <any>undefined;
+        data["phoneNumber"] = this.phoneNumber ? this.phoneNumber.toJSON() : <any>undefined;
+        data["emailAddress"] = this.emailAddress ? this.emailAddress.toJSON() : <any>undefined;
         super.toJSON(data);
         return data; 
     }
@@ -4813,6 +4766,9 @@ export interface IAddAdultToFamilyCommand extends IApprovalCommand {
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
     concerns?: string | undefined;
     notes?: string | undefined;
+    address?: Address | undefined;
+    phoneNumber?: PhoneNumber | undefined;
+    emailAddress?: EmailAddress | undefined;
 }
 
 export class AddChildToFamilyCommand extends ApprovalCommand implements IAddChildToFamilyCommand {
@@ -4898,6 +4854,9 @@ export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand im
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
     concerns?: string | undefined;
     notes?: string | undefined;
+    address?: Address;
+    phoneNumber?: PhoneNumber;
+    emailAddress?: EmailAddress;
 
     constructor(data?: ICreateVolunteerFamilyWithNewAdultCommand) {
         super(data);
@@ -4915,6 +4874,9 @@ export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand im
             this.familyAdultRelationshipInfo = _data["familyAdultRelationshipInfo"] ? FamilyAdultRelationshipInfo.fromJS(_data["familyAdultRelationshipInfo"]) : <any>undefined;
             this.concerns = _data["concerns"];
             this.notes = _data["notes"];
+            this.address = _data["address"] ? Address.fromJS(_data["address"]) : <any>undefined;
+            this.phoneNumber = _data["phoneNumber"] ? PhoneNumber.fromJS(_data["phoneNumber"]) : <any>undefined;
+            this.emailAddress = _data["emailAddress"] ? EmailAddress.fromJS(_data["emailAddress"]) : <any>undefined;
         }
     }
 
@@ -4935,6 +4897,9 @@ export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand im
         data["familyAdultRelationshipInfo"] = this.familyAdultRelationshipInfo ? this.familyAdultRelationshipInfo.toJSON() : <any>undefined;
         data["concerns"] = this.concerns;
         data["notes"] = this.notes;
+        data["address"] = this.address ? this.address.toJSON() : <any>undefined;
+        data["phoneNumber"] = this.phoneNumber ? this.phoneNumber.toJSON() : <any>undefined;
+        data["emailAddress"] = this.emailAddress ? this.emailAddress.toJSON() : <any>undefined;
         super.toJSON(data);
         return data; 
     }
@@ -4949,6 +4914,9 @@ export interface ICreateVolunteerFamilyWithNewAdultCommand extends IApprovalComm
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
     concerns?: string | undefined;
     notes?: string | undefined;
+    address?: Address;
+    phoneNumber?: PhoneNumber;
+    emailAddress?: EmailAddress;
 }
 
 export abstract class PersonCommand implements IPersonCommand {
@@ -4974,8 +4942,28 @@ export abstract class PersonCommand implements IPersonCommand {
 
     static fromJS(data: any): PersonCommand {
         data = typeof data === 'object' ? data : {};
+        if (data["discriminator"] === "AddPersonAddress") {
+            let result = new AddPersonAddress();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "AddPersonEmailAddress") {
+            let result = new AddPersonEmailAddress();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "AddPersonPhoneNumber") {
+            let result = new AddPersonPhoneNumber();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "CreatePerson") {
             let result = new CreatePerson();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UpdatePersonAddress") {
+            let result = new UpdatePersonAddress();
             result.init(data);
             return result;
         }
@@ -4984,8 +4972,28 @@ export abstract class PersonCommand implements IPersonCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "UpdatePersonConcerns") {
+            let result = new UpdatePersonConcerns();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UpdatePersonEmailAddress") {
+            let result = new UpdatePersonEmailAddress();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "UpdatePersonName") {
             let result = new UpdatePersonName();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UpdatePersonNotes") {
+            let result = new UpdatePersonNotes();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UpdatePersonPhoneNumber") {
+            let result = new UpdatePersonPhoneNumber();
             result.init(data);
             return result;
         }
@@ -5009,6 +5017,120 @@ export interface IPersonCommand {
     personId?: string;
 }
 
+export class AddPersonAddress extends PersonCommand implements IAddPersonAddress {
+    address?: Address;
+    isCurrentAddress?: boolean;
+
+    constructor(data?: IAddPersonAddress) {
+        super(data);
+        this._discriminator = "AddPersonAddress";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.address = _data["address"] ? Address.fromJS(_data["address"]) : <any>undefined;
+            this.isCurrentAddress = _data["isCurrentAddress"];
+        }
+    }
+
+    static fromJS(data: any): AddPersonAddress {
+        data = typeof data === 'object' ? data : {};
+        let result = new AddPersonAddress();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["address"] = this.address ? this.address.toJSON() : <any>undefined;
+        data["isCurrentAddress"] = this.isCurrentAddress;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IAddPersonAddress extends IPersonCommand {
+    address?: Address;
+    isCurrentAddress?: boolean;
+}
+
+export class AddPersonEmailAddress extends PersonCommand implements IAddPersonEmailAddress {
+    emailAddress?: EmailAddress;
+    isPreferredEmailAddress?: boolean;
+
+    constructor(data?: IAddPersonEmailAddress) {
+        super(data);
+        this._discriminator = "AddPersonEmailAddress";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.emailAddress = _data["emailAddress"] ? EmailAddress.fromJS(_data["emailAddress"]) : <any>undefined;
+            this.isPreferredEmailAddress = _data["isPreferredEmailAddress"];
+        }
+    }
+
+    static fromJS(data: any): AddPersonEmailAddress {
+        data = typeof data === 'object' ? data : {};
+        let result = new AddPersonEmailAddress();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["emailAddress"] = this.emailAddress ? this.emailAddress.toJSON() : <any>undefined;
+        data["isPreferredEmailAddress"] = this.isPreferredEmailAddress;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IAddPersonEmailAddress extends IPersonCommand {
+    emailAddress?: EmailAddress;
+    isPreferredEmailAddress?: boolean;
+}
+
+export class AddPersonPhoneNumber extends PersonCommand implements IAddPersonPhoneNumber {
+    phoneNumber?: PhoneNumber;
+    isPreferredPhoneNumber?: boolean;
+
+    constructor(data?: IAddPersonPhoneNumber) {
+        super(data);
+        this._discriminator = "AddPersonPhoneNumber";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.phoneNumber = _data["phoneNumber"] ? PhoneNumber.fromJS(_data["phoneNumber"]) : <any>undefined;
+            this.isPreferredPhoneNumber = _data["isPreferredPhoneNumber"];
+        }
+    }
+
+    static fromJS(data: any): AddPersonPhoneNumber {
+        data = typeof data === 'object' ? data : {};
+        let result = new AddPersonPhoneNumber();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["phoneNumber"] = this.phoneNumber ? this.phoneNumber.toJSON() : <any>undefined;
+        data["isPreferredPhoneNumber"] = this.isPreferredPhoneNumber;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IAddPersonPhoneNumber extends IPersonCommand {
+    phoneNumber?: PhoneNumber;
+    isPreferredPhoneNumber?: boolean;
+}
+
 export class CreatePerson extends PersonCommand implements ICreatePerson {
     userId?: string | undefined;
     firstName?: string;
@@ -5016,6 +5138,12 @@ export class CreatePerson extends PersonCommand implements ICreatePerson {
     gender?: Gender;
     age?: Age;
     ethnicity?: string;
+    addresses?: Address[];
+    currentAddressId?: string | undefined;
+    phoneNumbers?: PhoneNumber[];
+    preferredPhoneNumberId?: string | undefined;
+    emailAddresses?: EmailAddress[];
+    preferredEmailAddressId?: string | undefined;
     concerns?: string | undefined;
     notes?: string | undefined;
 
@@ -5033,6 +5161,24 @@ export class CreatePerson extends PersonCommand implements ICreatePerson {
             this.gender = _data["gender"];
             this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
             this.ethnicity = _data["ethnicity"];
+            if (Array.isArray(_data["addresses"])) {
+                this.addresses = [] as any;
+                for (let item of _data["addresses"])
+                    this.addresses!.push(Address.fromJS(item));
+            }
+            this.currentAddressId = _data["currentAddressId"];
+            if (Array.isArray(_data["phoneNumbers"])) {
+                this.phoneNumbers = [] as any;
+                for (let item of _data["phoneNumbers"])
+                    this.phoneNumbers!.push(PhoneNumber.fromJS(item));
+            }
+            this.preferredPhoneNumberId = _data["preferredPhoneNumberId"];
+            if (Array.isArray(_data["emailAddresses"])) {
+                this.emailAddresses = [] as any;
+                for (let item of _data["emailAddresses"])
+                    this.emailAddresses!.push(EmailAddress.fromJS(item));
+            }
+            this.preferredEmailAddressId = _data["preferredEmailAddressId"];
             this.concerns = _data["concerns"];
             this.notes = _data["notes"];
         }
@@ -5053,6 +5199,24 @@ export class CreatePerson extends PersonCommand implements ICreatePerson {
         data["gender"] = this.gender;
         data["age"] = this.age ? this.age.toJSON() : <any>undefined;
         data["ethnicity"] = this.ethnicity;
+        if (Array.isArray(this.addresses)) {
+            data["addresses"] = [];
+            for (let item of this.addresses)
+                data["addresses"].push(item.toJSON());
+        }
+        data["currentAddressId"] = this.currentAddressId;
+        if (Array.isArray(this.phoneNumbers)) {
+            data["phoneNumbers"] = [];
+            for (let item of this.phoneNumbers)
+                data["phoneNumbers"].push(item.toJSON());
+        }
+        data["preferredPhoneNumberId"] = this.preferredPhoneNumberId;
+        if (Array.isArray(this.emailAddresses)) {
+            data["emailAddresses"] = [];
+            for (let item of this.emailAddresses)
+                data["emailAddresses"].push(item.toJSON());
+        }
+        data["preferredEmailAddressId"] = this.preferredEmailAddressId;
         data["concerns"] = this.concerns;
         data["notes"] = this.notes;
         super.toJSON(data);
@@ -5067,8 +5231,52 @@ export interface ICreatePerson extends IPersonCommand {
     gender?: Gender;
     age?: Age;
     ethnicity?: string;
+    addresses?: Address[];
+    currentAddressId?: string | undefined;
+    phoneNumbers?: PhoneNumber[];
+    preferredPhoneNumberId?: string | undefined;
+    emailAddresses?: EmailAddress[];
+    preferredEmailAddressId?: string | undefined;
     concerns?: string | undefined;
     notes?: string | undefined;
+}
+
+export class UpdatePersonAddress extends PersonCommand implements IUpdatePersonAddress {
+    address?: Address;
+    isCurrentAddress?: boolean;
+
+    constructor(data?: IUpdatePersonAddress) {
+        super(data);
+        this._discriminator = "UpdatePersonAddress";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.address = _data["address"] ? Address.fromJS(_data["address"]) : <any>undefined;
+            this.isCurrentAddress = _data["isCurrentAddress"];
+        }
+    }
+
+    static fromJS(data: any): UpdatePersonAddress {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdatePersonAddress();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["address"] = this.address ? this.address.toJSON() : <any>undefined;
+        data["isCurrentAddress"] = this.isCurrentAddress;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUpdatePersonAddress extends IPersonCommand {
+    address?: Address;
+    isCurrentAddress?: boolean;
 }
 
 export class UpdatePersonAge extends PersonCommand implements IUpdatePersonAge {
@@ -5103,6 +5311,78 @@ export class UpdatePersonAge extends PersonCommand implements IUpdatePersonAge {
 
 export interface IUpdatePersonAge extends IPersonCommand {
     age?: Age;
+}
+
+export class UpdatePersonConcerns extends PersonCommand implements IUpdatePersonConcerns {
+    concerns?: string | undefined;
+
+    constructor(data?: IUpdatePersonConcerns) {
+        super(data);
+        this._discriminator = "UpdatePersonConcerns";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.concerns = _data["concerns"];
+        }
+    }
+
+    static fromJS(data: any): UpdatePersonConcerns {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdatePersonConcerns();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["concerns"] = this.concerns;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUpdatePersonConcerns extends IPersonCommand {
+    concerns?: string | undefined;
+}
+
+export class UpdatePersonEmailAddress extends PersonCommand implements IUpdatePersonEmailAddress {
+    emailAddress?: EmailAddress;
+    isPreferredEmailAddress?: boolean;
+
+    constructor(data?: IUpdatePersonEmailAddress) {
+        super(data);
+        this._discriminator = "UpdatePersonEmailAddress";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.emailAddress = _data["emailAddress"] ? EmailAddress.fromJS(_data["emailAddress"]) : <any>undefined;
+            this.isPreferredEmailAddress = _data["isPreferredEmailAddress"];
+        }
+    }
+
+    static fromJS(data: any): UpdatePersonEmailAddress {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdatePersonEmailAddress();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["emailAddress"] = this.emailAddress ? this.emailAddress.toJSON() : <any>undefined;
+        data["isPreferredEmailAddress"] = this.isPreferredEmailAddress;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUpdatePersonEmailAddress extends IPersonCommand {
+    emailAddress?: EmailAddress;
+    isPreferredEmailAddress?: boolean;
 }
 
 export class UpdatePersonName extends PersonCommand implements IUpdatePersonName {
@@ -5141,6 +5421,78 @@ export class UpdatePersonName extends PersonCommand implements IUpdatePersonName
 export interface IUpdatePersonName extends IPersonCommand {
     firstName?: string;
     lastName?: string;
+}
+
+export class UpdatePersonNotes extends PersonCommand implements IUpdatePersonNotes {
+    notes?: string | undefined;
+
+    constructor(data?: IUpdatePersonNotes) {
+        super(data);
+        this._discriminator = "UpdatePersonNotes";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.notes = _data["notes"];
+        }
+    }
+
+    static fromJS(data: any): UpdatePersonNotes {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdatePersonNotes();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["notes"] = this.notes;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUpdatePersonNotes extends IPersonCommand {
+    notes?: string | undefined;
+}
+
+export class UpdatePersonPhoneNumber extends PersonCommand implements IUpdatePersonPhoneNumber {
+    phoneNumber?: PhoneNumber;
+    isPreferredPhoneNumber?: boolean;
+
+    constructor(data?: IUpdatePersonPhoneNumber) {
+        super(data);
+        this._discriminator = "UpdatePersonPhoneNumber";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.phoneNumber = _data["phoneNumber"] ? PhoneNumber.fromJS(_data["phoneNumber"]) : <any>undefined;
+            this.isPreferredPhoneNumber = _data["isPreferredPhoneNumber"];
+        }
+    }
+
+    static fromJS(data: any): UpdatePersonPhoneNumber {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdatePersonPhoneNumber();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["phoneNumber"] = this.phoneNumber ? this.phoneNumber.toJSON() : <any>undefined;
+        data["isPreferredPhoneNumber"] = this.isPreferredPhoneNumber;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUpdatePersonPhoneNumber extends IPersonCommand {
+    phoneNumber?: PhoneNumber;
+    isPreferredPhoneNumber?: boolean;
 }
 
 export class UpdatePersonUserLink extends PersonCommand implements IUpdatePersonUserLink {
