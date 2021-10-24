@@ -215,7 +215,7 @@ export function useVolunteerFamiliesModel() {
       const command = new AddPersonAddress({
         personId: personId
       });
-      command.address = new Address({ line1: line1, line2: line2, city: city, state: state, postalCode: postalCode, country: "" })
+      command.address = new Address({ line1: line1, line2: line2, city: city, state: state, postalCode: postalCode })
       command.isCurrentAddress = true;
       return command;
     });
@@ -225,7 +225,7 @@ export function useVolunteerFamiliesModel() {
       const command = new UpdatePersonAddress({
         personId: personId
       });
-      command.address = new Address({ id: addressId, line1: line1, line2: line2, city: city, state: state, postalCode: postalCode, country: "" })
+      command.address = new Address({ id: addressId, line1: line1, line2: line2, city: city, state: state, postalCode: postalCode })
       command.isCurrentAddress = true;
       return command;
     });
@@ -255,7 +255,6 @@ export function useVolunteerFamiliesModel() {
         command.address.city = city || undefined;
         command.address.state = state || undefined;
         command.address.postalCode = postalCode || undefined;
-        command.address.country = country || undefined;
       }
       if (phoneNumber != null) {
         command.phoneNumber = new PhoneNumber();
@@ -309,7 +308,6 @@ export function useVolunteerFamiliesModel() {
       command.address.city = city;
       command.address.state = state;
       command.address.postalCode = postalCode;
-      command.address.country = country;
       command.phoneNumber = new PhoneNumber();
       command.phoneNumber.number = phoneNumber;
       command.phoneNumber.type = phoneType;

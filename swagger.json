@@ -1383,9 +1383,6 @@
           },
           "postalCode": {
             "type": "string"
-          },
-          "country": {
-            "type": "string"
           }
         }
       },

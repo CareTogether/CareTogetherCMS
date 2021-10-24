@@ -2182,7 +2182,6 @@ export class Address implements IAddress {
     city?: string;
     state?: string;
     postalCode?: string;
-    country?: string;
 
     constructor(data?: IAddress) {
         if (data) {
@@ -2201,7 +2200,6 @@ export class Address implements IAddress {
             this.city = _data["city"];
             this.state = _data["state"];
             this.postalCode = _data["postalCode"];
-            this.country = _data["country"];
         }
     }
 
@@ -2220,7 +2218,6 @@ export class Address implements IAddress {
         data["city"] = this.city;
         data["state"] = this.state;
         data["postalCode"] = this.postalCode;
-        data["country"] = this.country;
         return data; 
     }
 }
@@ -2232,7 +2229,6 @@ export interface IAddress {
     city?: string;
     state?: string;
     postalCode?: string;
-    country?: string;
 }
 
 export class PhoneNumber implements IPhoneNumber {
