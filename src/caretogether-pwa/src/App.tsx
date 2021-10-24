@@ -3,8 +3,6 @@ import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import { Typography, CssBaseline, IconButton, Drawer, Divider, List, useMediaQuery, useTheme } from '@material-ui/core';
 //import PermPhoneMsgIcon from '@material-ui/icons/PermPhoneMsg';
-import { Typography, CssBaseline, IconButton, Drawer, Divider, List, useMediaQuery, useTheme, Backdrop, Button, CircularProgress } from '@material-ui/core';
-import PermPhoneMsgIcon from '@material-ui/icons/PermPhoneMsg';
 import PeopleIcon from '@material-ui/icons/People';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 //import DashboardIcon from '@material-ui/icons/Dashboard';
@@ -12,12 +10,13 @@ import { Route, Switch, Redirect, BrowserRouter as Router } from "react-router-d
 import { ListItemLink } from './Components/ListItemLink';
 import { Arrangements } from './Components/Arrangements';
 import { Referrals } from './Components/Referrals';
-import { atom, useRecoilState, useRecoilValue } from 'recoil';
+import { useRecoilValue } from 'recoil';
 import { locationNameData, organizationNameData } from './Model/ConfigurationModel';
 import { Volunteers } from './Components/Volunteers';
 import Header from './Components/Header';
 import { Dashboard } from './Components/Dashboard';
 import Footer from './Components/Footer';
+import RequestBackdrop from './Model/RequestBackdrop';
 
 const copyrightStyles = makeStyles((theme) => ({
   copyright: {
@@ -86,11 +85,7 @@ const useStyles = makeStyles((theme) => ({
     flexGrow: 1,
     height: '100vh',
     overflow: 'auto',
-  },
-  backdrop: {
-    color: '#fff',
-    zIndex: theme.zIndex.drawer +1
-  },
+  }
 }));
 
 const mainListItems = (
@@ -105,24 +100,6 @@ const secondaryListItems = (
     <ListItemLink to="/volunteers" primary="Volunteers" icon={<PeopleIcon />} />
   </List>
 );
-
-export const backdropState = atom({
-  key: 'backdropState', // unique ID (with respect to other atoms/selectors)
-  default: false, // default value (aka initial value)
-});
-
-export const AsyncWrapper = async (asyncFunction: (...asyncArguments: any) => Promise<any>, ...args: any) => {
-  try {
-    const [_, setBackdropOpen] = useRecoilState(backdropState);
-    setBackdropOpen(true);
-    const results = await asyncFunction(...args);
-    setBackdropOpen(false);
-    return results;
-  }
-  catch (error) {
-    return [null, error];
-  }
-}
 
 function App() {
   const classes = useStyles();
@@ -140,27 +117,10 @@ function App() {
   const organizationName = useRecoilValue(organizationNameData);
   const locationName = useRecoilValue(locationNameData);
 
-  // const [backdropOpen, setBackdropOpen] = React.useState(false);
-  const [backdropOpen, setBackdropOpen] = useRecoilState(backdropState);
-  const handleBackdropClose = () => {
-    setBackdropOpen(false);
-  };
-  const handleToggle = () => {
-    setBackdropOpen(!open);
-  };
-
   return (
     <div className={classes.root}>
       <CssBaseline />
       <Router>
-        <Button onClick={handleToggle}>Show backdrop</Button>
-        <Backdrop
-          className={classes.backdrop}
-          open={backdropOpen}
-          onClick={handleBackdropClose}
-        >
-          <CircularProgress color="inherit" />
-        </Backdrop>
         <Header open={open} handleDrawerOpen={handleDrawerOpen} />
         {isMobile ? null :
           <Drawer
@@ -210,6 +170,7 @@ function App() {
           {isMobile && <Footer></Footer>}
         </main>
       </Router>
+      <RequestBackdrop />
     </div>
   );
 }

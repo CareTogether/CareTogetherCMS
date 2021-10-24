@@ -8,6 +8,7 @@ import { KeyboardDatePicker } from '@material-ui/pickers';
 import { useRecoilValue } from 'recoil';
 import { adultFamilyRelationshipsData, ethnicitiesData } from '../Model/ConfigurationModel';
 import { useParams } from 'react-router-dom';
+import { useBackdrop } from '../Model/RequestBackdrop';
 
 const useStyles = makeStyles((theme) => ({
   form: {
@@ -67,6 +68,8 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
   const relationshipTypes = useRecoilValue(adultFamilyRelationshipsData);
   const ethnicities = useRecoilValue(ethnicitiesData);
 
+  const withBackdrop = useBackdrop();
+
   async function addAdult() {
     if (firstName.length <= 0 || lastName.length <= 0) {
       alert("First and last name are required. Try again.");
@@ -90,13 +93,15 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
         (age as AgeInYears).years = (ageInYears == null ? undefined : ageInYears);
         (age as AgeInYears).asOf = new Date();
       }
-      await volunteerFamiliesModel.addAdult(volunteerFamily.family?.id as string,
-        firstName, lastName, gender as Gender, age, ethnicity,
-        isInHousehold, relationshipToFamily,
-        optional(addressLine1), optional(addressLine2), optional(city), optional(state), optional(postalCode), optional(country),
-        optional(phoneNumber), phoneType, optional(emailAddress), emailType,
-        (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
-      //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
+      await withBackdrop(async () => {
+        await volunteerFamiliesModel.addAdult(volunteerFamily.family?.id as string,
+          firstName, lastName, gender as Gender, age, ethnicity,
+          isInHousehold, relationshipToFamily,
+          optional(addressLine1), optional(addressLine2), optional(city), optional(state), optional(postalCode), optional(country),
+          optional(phoneNumber), phoneType, optional(emailAddress), emailType,
+          (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
+        //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
+      });
       onClose();
     }
   }
