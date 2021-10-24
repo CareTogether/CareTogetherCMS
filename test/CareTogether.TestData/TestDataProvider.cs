@@ -306,7 +306,8 @@ namespace CareTogether.TestData
                         null, new Uri("http://example.com/forms/app-hf")),
                     ["Home Screening Checklist"] = new ActionRequirement(DocumentLinkRequirement.Required,
                         "Must be filled out by an approved home screener", new Uri("http://example.com/forms/hscheck")),
-                    ["Host Family Interview"] = new ActionRequirement(DocumentLinkRequirement.Allowed, null, null)
+                    ["Host Family Interview"] = new ActionRequirement(DocumentLinkRequirement.Allowed, null, null),
+                    ["Meet & Greet"] = new ActionRequirement(DocumentLinkRequirement.Required, null, new Uri("http://example.com/forms/mag"))
                 }.ToImmutableDictionary(),
                 new ReferralPolicy(
                     new List<string>
@@ -468,14 +469,16 @@ namespace CareTogether.TestData
                                 new VolunteerFamilyApprovalRequirement(RequirementStage.Application, "Host Family Application", VolunteerFamilyRequirementScope.OncePerFamily),
                                 new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Background Check", VolunteerFamilyRequirementScope.AllAdultsInTheFamily),
                                 new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Home Screening Checklist", VolunteerFamilyRequirementScope.OncePerFamily),
-                                new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Host Family Interview", VolunteerFamilyRequirementScope.OncePerFamily)
+                                new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Host Family Interview", VolunteerFamilyRequirementScope.OncePerFamily),
+                                new VolunteerFamilyApprovalRequirement(RequirementStage.Onboarding, "Meet & Greet", VolunteerFamilyRequirementScope.OncePerFamily)
                             }.ToImmutableList()),
                             new VolunteerFamilyRolePolicyVersion("v2", null, new List<VolunteerFamilyApprovalRequirement>
                             {
                                 new VolunteerFamilyApprovalRequirement(RequirementStage.Application, "Host Family Application", VolunteerFamilyRequirementScope.OncePerFamily),
                                 new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Comprehensive Background Check", VolunteerFamilyRequirementScope.AllAdultsInTheFamily),
                                 new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Home Screening Checklist", VolunteerFamilyRequirementScope.OncePerFamily),
-                                new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Host Family Interview", VolunteerFamilyRequirementScope.OncePerFamily)
+                                new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Host Family Interview", VolunteerFamilyRequirementScope.OncePerFamily),
+                                new VolunteerFamilyApprovalRequirement(RequirementStage.Onboarding, "Meet & Greet", VolunteerFamilyRequirementScope.OncePerFamily)
                             }.ToImmutableList())
                         }.ToImmutableList())
                     }.ToImmutableDictionary())));
