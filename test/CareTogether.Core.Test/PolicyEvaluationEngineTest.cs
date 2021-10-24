@@ -165,7 +165,7 @@ namespace CareTogether.Core.Test
 
             Assert.AreEqual(1, result.FamilyRoleApprovals.Count);
             Assert.AreEqual(2, result.FamilyRoleApprovals["Host Family"].Count);
-            Assert.AreEqual(new RoleVersionApproval("v1", RoleApprovalStatus.Onboarded), result.FamilyRoleApprovals["Host Family"].Single(x => x.Version == "v1"));
+            Assert.AreEqual(new RoleVersionApproval("v1", RoleApprovalStatus.Approved), result.FamilyRoleApprovals["Host Family"].Single(x => x.Version == "v1"));
             Assert.AreEqual(new RoleVersionApproval("v2", RoleApprovalStatus.Prospective), result.FamilyRoleApprovals["Host Family"].Single(x => x.Version == "v2"));
             Assert.AreEqual(3, result.IndividualVolunteers.Count);
             Assert.AreEqual(0, result.IndividualVolunteers[guid1].IndividualRoleApprovals.Count);
