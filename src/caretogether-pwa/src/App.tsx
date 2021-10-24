@@ -16,6 +16,7 @@ import { Volunteers } from './Components/Volunteers';
 import Header from './Components/Header';
 import { Dashboard } from './Components/Dashboard';
 import Footer from './Components/Footer';
+import RequestBackdrop from './Model/RequestBackdrop';
 
 const copyrightStyles = makeStyles((theme) => ({
   copyright: {
@@ -169,6 +170,7 @@ function App() {
           {isMobile && <Footer></Footer>}
         </main>
       </Router>
+      <RequestBackdrop />
     </div>
   );
 }

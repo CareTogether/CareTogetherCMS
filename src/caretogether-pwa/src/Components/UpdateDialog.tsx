@@ -1,4 +1,5 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@material-ui/core';
+import { useBackdrop } from '../Model/RequestBackdrop';
 
 type UpdateDialogProps = {
   title: string,
@@ -13,22 +14,32 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
   onSave,
   enableSave,
   children,
-}) =>(
-  <Dialog open={true} onClose={onClose} scroll='body' aria-labelledby="update-dialog-title">
-    <DialogTitle id="update-dialog-title">
-      {title}
-    </DialogTitle>
-    <DialogContent>
-      {children}
-    </DialogContent>
-    <DialogActions>
-      <Button onClick={onClose} color="secondary">
-        Cancel
-      </Button>
-      <Button onClick={async () => { await onSave(); onClose(); }} variant="contained" color="primary"
-        disabled={enableSave && !enableSave()}>
-        Save
-      </Button>
-    </DialogActions>
-  </Dialog>
-);
+}) => {
+  const withBackdrop = useBackdrop();
+  
+  async function saveHandler() {
+    await withBackdrop(async () => {
+      await onSave();
+      onClose();
+    });
+  }
+  return (
+    <Dialog open={true} onClose={onClose} scroll='body' aria-labelledby="update-dialog-title">
+      <DialogTitle id="update-dialog-title">
+        {title}
+      </DialogTitle>
+      <DialogContent>
+        {children}
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose} color="secondary">
+          Cancel
+        </Button>
+        <Button onClick={saveHandler} variant="contained" color="primary"
+          disabled={enableSave && !enableSave()}>
+          Save
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}

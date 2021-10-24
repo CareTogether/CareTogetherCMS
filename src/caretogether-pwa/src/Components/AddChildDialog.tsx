@@ -8,6 +8,7 @@ import { KeyboardDatePicker } from '@material-ui/pickers';
 import { useRecoilValue } from 'recoil';
 import { ethnicitiesData } from '../Model/ConfigurationModel';
 import { useParams } from 'react-router-dom';
+import { useBackdrop } from '../Model/RequestBackdrop';
 
 const useStyles = makeStyles((theme) => ({
   form: {
@@ -49,40 +50,44 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
   const volunteerFamiliesModel = useVolunteerFamiliesModel();
 
   const ethnicities = useRecoilValue(ethnicitiesData);
+  
+  const withBackdrop = useBackdrop();
 
   async function addChild() {
-    if (firstName.length <= 0 || lastName.length <= 0) {
-      alert("First and last name are required. Try again.");
-    } else if (typeof(gender) === 'undefined') {
-      alert("Gender was not selected. Try again.");
-    } else if (ageType === 'exact' && dateOfBirth == null) {
-      alert("Date of birth was not specified. Try again.");
-    } else if (ageType === 'inYears' && ageInYears == null) {
-      alert("Age in years was not specified. Try again.");
-    } else if (ethnicity === '') {
-      alert("Ethnicity was not selected. Try again.");
-    } else {
-      let age: Age;
-      if (ageType === 'exact') {
-        age = new ExactAge();
-        (age as ExactAge).dateOfBirth = (dateOfBirth == null ? undefined : dateOfBirth);
+    await withBackdrop(async () => {
+      if (firstName.length <= 0 || lastName.length <= 0) {
+        alert("First and last name are required. Try again.");
+      } else if (typeof(gender) === 'undefined') {
+        alert("Gender was not selected. Try again.");
+      } else if (ageType === 'exact' && dateOfBirth == null) {
+        alert("Date of birth was not specified. Try again.");
+      } else if (ageType === 'inYears' && ageInYears == null) {
+        alert("Age in years was not specified. Try again.");
+      } else if (ethnicity === '') {
+        alert("Ethnicity was not selected. Try again.");
       } else {
-        age = new AgeInYears();
-        (age as AgeInYears).years = (ageInYears == null ? undefined : ageInYears);
-        (age as AgeInYears).asOf = new Date();
+        let age: Age;
+        if (ageType === 'exact') {
+          age = new ExactAge();
+          (age as ExactAge).dateOfBirth = (dateOfBirth == null ? undefined : dateOfBirth);
+        } else {
+          age = new AgeInYears();
+          (age as AgeInYears).years = (ageInYears == null ? undefined : ageInYears);
+          (age as AgeInYears).asOf = new Date();
+        }
+        await volunteerFamiliesModel.addChild(volunteerFamily.family?.id as string,
+          firstName, lastName, gender as Gender, age, ethnicity,
+          custodialRelationships.filter(cr => cr.relationship !== -1).map(cr => {
+            const result = new CustodialRelationship();
+            result.personId = cr.adult.id;
+            result.type = cr.relationship as CustodialRelationshipType;
+            return result;
+          }),
+          (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
+        //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
+        onClose();
       }
-      await volunteerFamiliesModel.addChild(volunteerFamily.family?.id as string,
-        firstName, lastName, gender as Gender, age, ethnicity,
-        custodialRelationships.filter(cr => cr.relationship !== -1).map(cr => {
-          const result = new CustodialRelationship();
-          result.personId = cr.adult.id;
-          result.type = cr.relationship as CustodialRelationshipType;
-          return result;
-        }),
-        (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
-      //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
-      onClose();
-    }
+    });
   }
 
   return (
@@ -176,9 +181,9 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
                           <Select
                             id={"custodial-relationship-"+custodialRelationship.adult.id}
                             value={custodialRelationship.relationship}
-                            onChange={e => {console.log(e.target.value); setFields({...fields, custodialRelationships: custodialRelationships.map(cr => cr.adult.id === custodialRelationship.adult.id
+                            onChange={e => setFields({...fields, custodialRelationships: custodialRelationships.map(cr => cr.adult.id === custodialRelationship.adult.id
                               ? { adult: custodialRelationship.adult, relationship: e.target.value as CustodialRelationshipType | -1 }
-                              : cr) });}}>
+                              : cr) })}>
                               <MenuItem key="none" value={-1}>None</MenuItem>
                               <MenuItem key='ParentWithCustody' value={CustodialRelationshipType.ParentWithCustody}>Parent with custody</MenuItem>
                               <MenuItem key='ParentWithCourtAppointedCustody' value={CustodialRelationshipType.ParentWithCourtAppointedCustody}>Parent with court-appointed custody</MenuItem>
