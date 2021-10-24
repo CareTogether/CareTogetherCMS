@@ -19,8 +19,11 @@ export function useBackdrop() {
   });
   return async (asyncFunction: () => Promise<void>) => {
     await showBackdrop();
-    await asyncFunction();
-    await hideBackdrop();
+    try {
+      await asyncFunction();
+    } finally {
+      await hideBackdrop();
+    }
   }
 }
 
