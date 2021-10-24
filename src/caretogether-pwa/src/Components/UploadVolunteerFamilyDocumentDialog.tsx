@@ -6,6 +6,7 @@ import { useVolunteerFamiliesModel } from '../Model/VolunteerFamiliesModel';
 import { uploadFileToTenant } from '../Model/FilesModel';
 import { useRecoilValue } from 'recoil';
 import { currentOrganizationState, currentLocationState } from '../Model/SessionModel';
+import { useBackdrop } from '../Model/RequestBackdrop';
 
 const useStyles = makeStyles((theme) => ({
   fileInput: {
@@ -24,15 +25,19 @@ export function UploadVolunteerFamilyDocumentDialog({volunteerFamily, onClose}: 
   const locationId = useRecoilValue(currentLocationState);
   const volunteerFamiliesModel = useVolunteerFamiliesModel();
 
+  const withBackdrop = useBackdrop();
+
   async function uploadDocument() {
-    if (!documentFile) {
-      alert("No file was selected. Try again.");
-    } else {
-      const documentId = await uploadFileToTenant(organizationId, locationId, documentFile!);
-      await volunteerFamiliesModel.uploadDocument(volunteerFamily.family!.id!, documentId, documentFile!.name);
-      //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
-      onClose();
-    }
+    await withBackdrop(async () => {
+      if (!documentFile) {
+        alert("No file was selected. Try again.");
+      } else {
+        const documentId = await uploadFileToTenant(organizationId, locationId, documentFile!);
+        await volunteerFamiliesModel.uploadDocument(volunteerFamily.family!.id!, documentId, documentFile!.name);
+        //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
+        onClose();
+      }
+    });
   }
 
   return (

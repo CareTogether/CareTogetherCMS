@@ -7,6 +7,7 @@ import { useVolunteerFamiliesModel } from '../Model/VolunteerFamiliesModel';
 import { uploadFileToTenant } from "../Model/FilesModel";
 import { currentLocationState, currentOrganizationState } from '../Model/SessionModel';
 import { useRecoilValue } from 'recoil';
+import { useBackdrop } from '../Model/RequestBackdrop';
 
 const useStyles = makeStyles((theme) => ({
   fileInput: {
@@ -30,22 +31,26 @@ export function RecordVolunteerFamilyStepDialog({requirementName, stepActionRequ
   const volunteerFamiliesModel = useVolunteerFamiliesModel();
   const UPLOAD_NEW = "__uploadnew__";
 
+  const withBackdrop = useBackdrop();
+  
   async function recordRequirementCompletion() {
-    if (documentId === UPLOAD_NEW && !documentFile) {
-      alert("No file was selected. Try again.");
-    } else if (documentId === "" && stepActionRequirement.documentLink === DocumentLinkRequirement.Required) {
-      alert("You must either select from an already-uploaded document or upload a new document for this requirement.");
-    } else {
-      let document = documentId;
-      if (documentId === UPLOAD_NEW) {
-        document = await uploadFileToTenant(organizationId, locationId, documentFile!);
-        await volunteerFamiliesModel.uploadDocument(volunteerFamily.family!.id!, document, documentFile!.name);
+    await withBackdrop(async () => {
+      if (documentId === UPLOAD_NEW && !documentFile) {
+        alert("No file was selected. Try again.");
+      } else if (documentId === "" && stepActionRequirement.documentLink === DocumentLinkRequirement.Required) {
+        alert("You must either select from an already-uploaded document or upload a new document for this requirement.");
+      } else {
+        let document = documentId;
+        if (documentId === UPLOAD_NEW) {
+          document = await uploadFileToTenant(organizationId, locationId, documentFile!);
+          await volunteerFamiliesModel.uploadDocument(volunteerFamily.family!.id!, document, documentFile!.name);
+        }
+        await volunteerFamiliesModel.completeFamilyRequirement(volunteerFamily.family?.id as string,
+          requirementName, stepActionRequirement, completedAtLocal, document === "" ? null : document);
+        //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
+        onClose();
       }
-      await volunteerFamiliesModel.completeFamilyRequirement(volunteerFamily.family?.id as string,
-        requirementName, stepActionRequirement, completedAtLocal, document === "" ? null : document);
-      //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
-      onClose();
-    }
+    });
   }
 
   return (

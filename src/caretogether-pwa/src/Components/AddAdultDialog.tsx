@@ -71,39 +71,39 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
   const withBackdrop = useBackdrop();
 
   async function addAdult() {
-    if (firstName.length <= 0 || lastName.length <= 0) {
-      alert("First and last name are required. Try again.");
-    } else if (typeof(gender) === 'undefined') {
-      alert("Gender was not selected. Try again.");
-    } else if (ageType === 'exact' && dateOfBirth == null) {
-      alert("Date of birth was not specified. Try again.");
-    } else if (ageType === 'inYears' && ageInYears == null) {
-      alert("Age in years was not specified. Try again.");
-    } else if (ethnicity === '') {
-      alert("Ethnicity was not selected. Try again.");
-    } else if (relationshipToFamily === '') { //TODO: Actual validation!
-      alert("Family relationship was not selected. Try again.");
-    } else {
-      let age: Age;
-      if (ageType === 'exact') {
-        age = new ExactAge();
-        (age as ExactAge).dateOfBirth = (dateOfBirth == null ? undefined : dateOfBirth);
+    await withBackdrop(async () => {
+      if (firstName.length <= 0 || lastName.length <= 0) {
+        alert("First and last name are required. Try again.");
+      } else if (typeof(gender) === 'undefined') {
+        alert("Gender was not selected. Try again.");
+      } else if (ageType === 'exact' && dateOfBirth == null) {
+        alert("Date of birth was not specified. Try again.");
+      } else if (ageType === 'inYears' && ageInYears == null) {
+        alert("Age in years was not specified. Try again.");
+      } else if (ethnicity === '') {
+        alert("Ethnicity was not selected. Try again.");
+      } else if (relationshipToFamily === '') { //TODO: Actual validation!
+        alert("Family relationship was not selected. Try again.");
       } else {
-        age = new AgeInYears();
-        (age as AgeInYears).years = (ageInYears == null ? undefined : ageInYears);
-        (age as AgeInYears).asOf = new Date();
-      }
-      await withBackdrop(async () => {
+        let age: Age;
+        if (ageType === 'exact') {
+          age = new ExactAge();
+          (age as ExactAge).dateOfBirth = (dateOfBirth == null ? undefined : dateOfBirth);
+        } else {
+          age = new AgeInYears();
+          (age as AgeInYears).years = (ageInYears == null ? undefined : ageInYears);
+          (age as AgeInYears).asOf = new Date();
+        }
         await volunteerFamiliesModel.addAdult(volunteerFamily.family?.id as string,
           firstName, lastName, gender as Gender, age, ethnicity,
           isInHousehold, relationshipToFamily,
           optional(addressLine1), optional(addressLine2), optional(city), optional(state), optional(postalCode), optional(country),
           optional(phoneNumber), phoneType, optional(emailAddress), emailType,
           (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
-        //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
-      });
-      onClose();
-    }
+          //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
+        onClose();
+      }
+    });
   }
 
   return (

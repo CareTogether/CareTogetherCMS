@@ -7,6 +7,7 @@ import WarningIcon from '@material-ui/icons/Warning';
 import { KeyboardDatePicker } from '@material-ui/pickers';
 import { useRecoilValue } from 'recoil';
 import { adultFamilyRelationshipsData, ethnicitiesData } from '../Model/ConfigurationModel';
+import { useBackdrop } from '../Model/RequestBackdrop';
 
 const useStyles = makeStyles((theme) => ({
   form: {
@@ -57,40 +58,44 @@ export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDial
 
   const relationshipTypes = useRecoilValue(adultFamilyRelationshipsData);
   const ethnicities = useRecoilValue(ethnicitiesData);
+  
+  const withBackdrop = useBackdrop();
 
   async function addAdult() {
-    if (firstName.length <= 0 || lastName.length <= 0) {
-      alert("First and last name are required. Try again.");
-    } else if (typeof(gender) === 'undefined') {
-      alert("Gender was not selected. Try again.");
-    } else if (ageType === 'exact' && dateOfBirth == null) {
-      alert("Date of birth was not specified. Try again.");
-    } else if (ageType === 'inYears' && ageInYears == null) {
-      alert("Age in years was not specified. Try again.");
-    } else if (ethnicity === '') {
-      alert("Ethnicity was not selected. Try again.");
-    } else if (relationshipToFamily === '') { //TODO: Actual validation!
-      alert("Family relationship was not selected. Try again.");
-    } else {
-      let age: Age;
-      if (ageType === 'exact') {
-        age = new ExactAge();
-        (age as ExactAge).dateOfBirth = (dateOfBirth == null ? undefined : dateOfBirth);
+    await withBackdrop(async () => {
+      if (firstName.length <= 0 || lastName.length <= 0) {
+        alert("First and last name are required. Try again.");
+      } else if (typeof(gender) === 'undefined') {
+        alert("Gender was not selected. Try again.");
+      } else if (ageType === 'exact' && dateOfBirth == null) {
+        alert("Date of birth was not specified. Try again.");
+      } else if (ageType === 'inYears' && ageInYears == null) {
+        alert("Age in years was not specified. Try again.");
+      } else if (ethnicity === '') {
+        alert("Ethnicity was not selected. Try again.");
+      } else if (relationshipToFamily === '') { //TODO: Actual validation!
+        alert("Family relationship was not selected. Try again.");
       } else {
-        age = new AgeInYears();
-        (age as AgeInYears).years = (ageInYears == null ? undefined : ageInYears);
-        (age as AgeInYears).asOf = new Date();
+        let age: Age;
+        if (ageType === 'exact') {
+          age = new ExactAge();
+          (age as ExactAge).dateOfBirth = (dateOfBirth == null ? undefined : dateOfBirth);
+        } else {
+          age = new AgeInYears();
+          (age as AgeInYears).years = (ageInYears == null ? undefined : ageInYears);
+          (age as AgeInYears).asOf = new Date();
+        }
+        const newFamily = await volunteerFamiliesModel.createVolunteerFamilyWithNewAdult(
+          firstName, lastName, gender as Gender, age, ethnicity,
+          isInHousehold, relationshipToFamily,
+          addressLine1, addressLine2.length > 0 ? addressLine2 : null, city, state, postalCode, country,
+          phoneNumber, phoneType, emailAddress, emailType,
+          (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
+        //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
+        //TODO: Retrieve the created volunteer family and return it through this onClose callback!
+        onClose(newFamily.family?.id);
       }
-      const newFamily = await volunteerFamiliesModel.createVolunteerFamilyWithNewAdult(
-        firstName, lastName, gender as Gender, age, ethnicity,
-        isInHousehold, relationshipToFamily,
-        addressLine1, addressLine2.length > 0 ? addressLine2 : null, city, state, postalCode, country,
-        phoneNumber, phoneType, emailAddress, emailType,
-        (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
-      //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
-      //TODO: Retrieve the created volunteer family and return it through this onClose callback!
-      onClose(newFamily.family?.id);
-    }
+    });
   }
 
   return (
