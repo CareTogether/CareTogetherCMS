@@ -181,9 +181,9 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
                           <Select
                             id={"custodial-relationship-"+custodialRelationship.adult.id}
                             value={custodialRelationship.relationship}
-                            onChange={e => {console.log(e.target.value); setFields({...fields, custodialRelationships: custodialRelationships.map(cr => cr.adult.id === custodialRelationship.adult.id
+                            onChange={e => setFields({...fields, custodialRelationships: custodialRelationships.map(cr => cr.adult.id === custodialRelationship.adult.id
                               ? { adult: custodialRelationship.adult, relationship: e.target.value as CustodialRelationshipType | -1 }
-                              : cr) });}}>
+                              : cr) })}>
                               <MenuItem key="none" value={-1}>None</MenuItem>
                               <MenuItem key='ParentWithCustody' value={CustodialRelationshipType.ParentWithCustody}>Parent with custody</MenuItem>
                               <MenuItem key='ParentWithCourtAppointedCustody' value={CustodialRelationshipType.ParentWithCourtAppointedCustody}>Parent with court-appointed custody</MenuItem>
