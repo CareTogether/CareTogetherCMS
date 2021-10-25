@@ -6,17 +6,20 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Managers
 {
+    public record PartneringFamily(Family Family,
+        Referral? OpenReferral,
+        ImmutableList<Referral> ClosedReferrals);
+
     public record Referral(Guid Id, string PolicyVersion,
         DateTime CreatedUtc, ReferralCloseReason? CloseReason,
-        Family PartneringFamily,
-        ImmutableList<FormUploadInfo> ReferralFormUploads,
-        ImmutableList<ActivityInfo> ReferralActivitiesPerformed,
+        ImmutableList<FormUploadInfo> ReferralFormUploads, //TODO: Consolidate similar to how Volunteers was streamlined
+        ImmutableList<ActivityInfo> ReferralActivitiesPerformed, //TODO: Consolidate similar to how Volunteers was streamlined
         ImmutableList<Arrangement> Arrangements);
 
     public record Arrangement(Guid Id, string PolicyVersion, string ArrangementType,
         ArrangementState State,
-        ImmutableList<FormUploadInfo> ArrangementFormUploads,
-        ImmutableList<ActivityInfo> ArrangementActivitiesPerformed,
+        ImmutableList<FormUploadInfo> ArrangementFormUploads, //TODO: Consolidate similar to how Volunteers was streamlined
+        ImmutableList<ActivityInfo> ArrangementActivitiesPerformed, //TODO: Consolidate similar to how Volunteers was streamlined
         ImmutableList<VolunteerAssignment> VolunteerAssignments,
         ImmutableList<PartneringFamilyChildAssignment> PartneringFamilyChildAssignments,
         ImmutableList<ChildrenLocationHistoryEntry> ChildrenLocationHistory,
