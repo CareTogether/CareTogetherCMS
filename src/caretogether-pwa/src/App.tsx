@@ -16,7 +16,7 @@ import { Volunteers } from './Components/Volunteers/Volunteers';
 import Header from './Components/Header';
 import { Dashboard } from './Components/Dashboard';
 import Footer from './Components/Footer';
-import RequestBackdrop from './Model/RequestBackdrop';
+import RequestBackdrop from './Components/RequestBackdrop';
 import { CurrentFeatureFlags } from './GeneratedClient';
 
 const copyrightStyles = makeStyles((theme) => ({
