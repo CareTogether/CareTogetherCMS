@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@material-ui/core';
-import { Person, PhoneNumberType } from '../GeneratedClient';
-import { useVolunteersModel } from '../Model/VolunteersModel';
-import { UpdateDialog } from './UpdateDialog';
+import { Person, PhoneNumberType } from '../../GeneratedClient';
+import { useVolunteersModel } from '../../Model/VolunteersModel';
+import { UpdateDialog } from '../UpdateDialog';
 
 interface UpdatePhoneDialogProps {
   volunteerFamilyId: string,

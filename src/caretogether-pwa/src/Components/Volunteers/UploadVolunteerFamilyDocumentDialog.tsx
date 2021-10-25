@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@material-ui/core';
-import { VolunteerFamily } from '../GeneratedClient';
-import { useVolunteersModel } from '../Model/VolunteersModel';
-import { uploadFileToTenant } from '../Model/FilesModel';
+import { VolunteerFamily } from '../../GeneratedClient';
+import { useVolunteersModel } from '../../Model/VolunteersModel';
+import { uploadFileToTenant } from '../../Model/FilesModel';
 import { useRecoilValue } from 'recoil';
-import { currentOrganizationState, currentLocationState } from '../Model/SessionModel';
-import { useBackdrop } from '../Model/RequestBackdrop';
+import { currentOrganizationState, currentLocationState } from '../../Model/SessionModel';
+import { useBackdrop } from '../../Model/RequestBackdrop';
 
 const useStyles = makeStyles((theme) => ({
   fileInput: {

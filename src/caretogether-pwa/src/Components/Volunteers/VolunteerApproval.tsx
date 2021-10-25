@@ -1,11 +1,11 @@
 import { makeStyles } from '@material-ui/core/styles';
 import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab } from '@material-ui/core';
-import { Gender, ExactAge, AgeInYears, RoleVersionApproval, VolunteerFamily } from '../GeneratedClient';
+import { Gender, ExactAge, AgeInYears, RoleVersionApproval, VolunteerFamily } from '../../GeneratedClient';
 import { differenceInYears } from 'date-fns';
 import { useRecoilValue } from 'recoil';
-import { volunteerFamiliesData } from '../Model/VolunteersModel';
-import { policyData } from '../Model/ConfigurationModel';
-import { RoleApprovalStatus } from '../GeneratedClient';
+import { volunteerFamiliesData } from '../../Model/VolunteersModel';
+import { policyData } from '../../Model/ConfigurationModel';
+import { RoleApprovalStatus } from '../../GeneratedClient';
 import React, { useState } from 'react';
 import AddIcon from '@material-ui/icons/Add';
 import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';

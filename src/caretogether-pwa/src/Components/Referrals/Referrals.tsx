@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import { Grid, Paper } from '@material-ui/core';
 import { useRecoilValue } from 'recoil';
-import { referralsData, useRefreshReferrals } from '../Model/ReferralsModel';
+import { referralsData, useRefreshReferrals } from '../../Model/ReferralsModel';
 
 const useStyles = makeStyles((theme) => ({
   paper: {

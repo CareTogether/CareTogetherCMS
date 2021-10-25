@@ -1,28 +1,27 @@
 import { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, Grid, InputLabel, Link, MenuItem, Select } from '@material-ui/core';
-import { VolunteerFamily, ActionRequirement, Person, DocumentLinkRequirement } from '../GeneratedClient';
+import { VolunteerFamily, ActionRequirement, DocumentLinkRequirement } from '../../GeneratedClient';
 import { DateTimePicker } from '@material-ui/pickers';
-import { useVolunteersModel } from '../Model/VolunteersModel';
-import { uploadFileToTenant } from "../Model/FilesModel";
-import { currentLocationState, currentOrganizationState } from '../Model/SessionModel';
+import { useVolunteersModel } from '../../Model/VolunteersModel';
+import { uploadFileToTenant } from "../../Model/FilesModel";
+import { currentLocationState, currentOrganizationState } from '../../Model/SessionModel';
 import { useRecoilValue } from 'recoil';
-import { useBackdrop } from '../Model/RequestBackdrop';
+import { useBackdrop } from '../../Model/RequestBackdrop';
 
 const useStyles = makeStyles((theme) => ({
   fileInput: {
   }
 }));
 
-interface RecordVolunteerAdultStepDialogProps {
+interface RecordVolunteerFamilyStepDialogProps {
   requirementName: string,
   stepActionRequirement: ActionRequirement,
   volunteerFamily: VolunteerFamily,
-  adult: Person,
   onClose: () => void
 }
 
-export function RecordVolunteerAdultStepDialog({requirementName, stepActionRequirement, volunteerFamily, adult, onClose}: RecordVolunteerAdultStepDialogProps) {
+export function RecordVolunteerFamilyStepDialog({requirementName, stepActionRequirement, volunteerFamily, onClose}: RecordVolunteerFamilyStepDialogProps) {
   const classes = useStyles();
   const [documentFile, setDocumentFile] = useState<File | null>(null);
   const [documentId, setDocumentId] = useState<string>("");
@@ -31,7 +30,7 @@ export function RecordVolunteerAdultStepDialog({requirementName, stepActionRequi
   const locationId = useRecoilValue(currentLocationState);
   const volunteerFamiliesModel = useVolunteersModel();
   const UPLOAD_NEW = "__uploadnew__";
-  
+
   const withBackdrop = useBackdrop();
   
   async function recordRequirementCompletion() {
@@ -46,7 +45,7 @@ export function RecordVolunteerAdultStepDialog({requirementName, stepActionRequi
           document = await uploadFileToTenant(organizationId, locationId, documentFile!);
           await volunteerFamiliesModel.uploadDocument(volunteerFamily.family!.id!, document, documentFile!.name);
         }
-        await volunteerFamiliesModel.completeIndividualRequirement(volunteerFamily.family?.id as string, adult.id as string,
+        await volunteerFamiliesModel.completeFamilyRequirement(volunteerFamily.family?.id as string,
           requirementName, stepActionRequirement, completedAtLocal, document === "" ? null : document);
         //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
         onClose();
@@ -55,10 +54,10 @@ export function RecordVolunteerAdultStepDialog({requirementName, stepActionRequi
   }
 
   return (
-    <Dialog open={Boolean(stepActionRequirement)} onClose={onClose} aria-labelledby="record-adult-step-title">
-      <DialogTitle id="record-adult-step-title">Adult Requirement: {requirementName}</DialogTitle>
+    <Dialog open={Boolean(stepActionRequirement)} onClose={onClose} aria-labelledby="record-family-step-title">
+      <DialogTitle id="record-family-step-title">Family Requirement: {requirementName}</DialogTitle>
       <DialogContent>
-        <DialogContentText>Do you want to complete this requirement for this adult?</DialogContentText>
+        <DialogContentText>Do you want to complete this requirement for this family?</DialogContentText>
         {stepActionRequirement.instructions && <DialogContentText>{stepActionRequirement.instructions}</DialogContentText>}
         {stepActionRequirement.infoLink && (
           <DialogContentText>

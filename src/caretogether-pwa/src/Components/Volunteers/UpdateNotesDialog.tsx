@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Grid, TextField } from '@material-ui/core';
-import { Person } from '../GeneratedClient';
-import { useVolunteersModel } from '../Model/VolunteersModel';
-import { UpdateDialog } from './UpdateDialog';
+import { Person } from '../../GeneratedClient';
+import { useVolunteersModel } from '../../Model/VolunteersModel';
+import { UpdateDialog } from '../UpdateDialog';
 
 interface UpdateNotesDialogProps {
   volunteerFamilyId: string,
