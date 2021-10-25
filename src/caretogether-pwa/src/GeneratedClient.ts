@@ -424,7 +424,7 @@ export class UsersClient {
     }
 }
 
-export class VolunteerFamiliesClient {
+export class VolunteersClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
     protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
@@ -435,7 +435,7 @@ export class VolunteerFamiliesClient {
     }
 
     listAllVolunteerFamilies(organizationId: string, locationId: string): Promise<VolunteerFamily[]> {
-        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/VolunteerFamilies";
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Volunteers";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
         url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
@@ -482,7 +482,7 @@ export class VolunteerFamiliesClient {
     }
 
     submitVolunteerFamilyCommand(organizationId: string, locationId: string, command: VolunteerFamilyCommand): Promise<VolunteerFamily> {
-        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/VolunteerFamilies/volunteerFamilyCommand";
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Volunteers/volunteerFamilyCommand";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
         url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
@@ -526,7 +526,7 @@ export class VolunteerFamiliesClient {
     }
 
     submitVolunteerCommand(organizationId: string, locationId: string, command: VolunteerCommand): Promise<VolunteerFamily> {
-        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/VolunteerFamilies/volunteerCommand";
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Volunteers/volunteerCommand";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
         url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
@@ -570,7 +570,7 @@ export class VolunteerFamiliesClient {
     }
 
     submitApprovalCommand(organizationId: string, locationId: string, command: ApprovalCommand): Promise<VolunteerFamily> {
-        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/VolunteerFamilies/addAdult";
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Volunteers/addAdult";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
         url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
@@ -614,7 +614,7 @@ export class VolunteerFamiliesClient {
     }
 
     submitPersonCommand(organizationId: string, locationId: string, familyId: string | undefined, command: PersonCommand): Promise<VolunteerFamily> {
-        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/VolunteerFamilies/personCommand?";
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Volunteers/personCommand?";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
         url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));

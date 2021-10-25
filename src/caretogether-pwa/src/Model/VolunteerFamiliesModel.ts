@@ -1,5 +1,5 @@
 import { atom, useRecoilCallback } from "recoil";
-import { ActionRequirement, AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, ApprovalCommand, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, UploadVolunteerFamilyDocument, VolunteerCommand, VolunteerFamiliesClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
+import { ActionRequirement, AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, ApprovalCommand, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, UploadVolunteerFamilyDocument, VolunteerCommand, VolunteersClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 
@@ -17,7 +17,7 @@ function useVolunteerFamilyCommandCallbackWithLocation<T extends unknown[]>(
 
       const command = await callback(organizationId, locationId, volunteerFamilyId, ...args);
 
-      const client = new VolunteerFamiliesClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+      const client = new VolunteersClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
       const updatedFamily = await client.submitVolunteerFamilyCommand(organizationId, locationId, command);
 
       set(volunteerFamiliesData, current => {
@@ -45,7 +45,7 @@ function useVolunteerCommandCallbackWithLocation<T extends unknown[]>(
 
       const command = await callback(organizationId, locationId, volunteerFamilyId, personId, ...args);
 
-      const client = new VolunteerFamiliesClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+      const client = new VolunteersClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
       const updatedFamily = await client.submitVolunteerCommand(organizationId, locationId, command);
 
       set(volunteerFamiliesData, current => {
@@ -73,7 +73,7 @@ function usePersonCommandCallback<T extends unknown[]>(
 
       const command = await callback(volunteerFamilyId, personId, ...args);
 
-      const client = new VolunteerFamiliesClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+      const client = new VolunteersClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
       const updatedFamily = await client.submitPersonCommand(organizationId, locationId, volunteerFamilyId, command);
 
       set(volunteerFamiliesData, current =>
@@ -98,7 +98,7 @@ function useApprovalCommandCallback<T extends unknown[]>(
 
       const command = await callback(volunteerFamilyId, personId, ...args);
 
-      const client = new VolunteerFamiliesClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+      const client = new VolunteersClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
       const updatedFamily = await client.submitApprovalCommand(organizationId, locationId, command);
 
       set(volunteerFamiliesData, current =>

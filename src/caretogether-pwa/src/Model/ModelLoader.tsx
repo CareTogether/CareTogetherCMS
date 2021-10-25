@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRecoilState, useSetRecoilState } from "recoil";
 import { authenticatingFetch } from "../Auth";
-import { UsersClient, VolunteerFamiliesClient } from "../GeneratedClient";
+import { UsersClient, VolunteersClient } from "../GeneratedClient";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { volunteerFamiliesData } from "./VolunteerFamiliesModel";
 
@@ -30,7 +30,7 @@ export function ModelLoader({children}: ModelLoaderProps) {
   useEffect(() => {
     const loadInitialData = async () => {
       if (organizationId.length > 0 && locationId.length > 0) {
-        const volunteerFamiliesClient = new VolunteerFamiliesClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+        const volunteerFamiliesClient = new VolunteersClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
         const dataResponse = await volunteerFamiliesClient.listAllVolunteerFamilies(organizationId, locationId);
         setVolunteerFamilies(dataResponse);
 
