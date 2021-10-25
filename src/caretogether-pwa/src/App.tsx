@@ -2,7 +2,7 @@ import React from 'react';
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import { Typography, CssBaseline, IconButton, Drawer, Divider, List, useMediaQuery, useTheme } from '@material-ui/core';
-//import PermPhoneMsgIcon from '@material-ui/icons/PermPhoneMsg';
+import PermPhoneMsgIcon from '@material-ui/icons/PermPhoneMsg';
 import PeopleIcon from '@material-ui/icons/People';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 //import DashboardIcon from '@material-ui/icons/Dashboard';
@@ -11,12 +11,13 @@ import { ListItemLink } from './Components/ListItemLink';
 import { Arrangements } from './Components/Referrals/Arrangements';
 import { Referrals } from './Components/Referrals/Referrals';
 import { useRecoilValue } from 'recoil';
-import { locationNameData, organizationNameData } from './Model/ConfigurationModel';
+import { locationNameData, organizationNameData, useFeatureFlags } from './Model/ConfigurationModel';
 import { Volunteers } from './Components/Volunteers/Volunteers';
 import Header from './Components/Header';
 import { Dashboard } from './Components/Dashboard';
 import Footer from './Components/Footer';
 import RequestBackdrop from './Model/RequestBackdrop';
+import { CurrentFeatureFlags } from './GeneratedClient';
 
 const copyrightStyles = makeStyles((theme) => ({
   copyright: {
@@ -88,15 +89,15 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-const mainListItems = (
+const mainListItems = (flags: CurrentFeatureFlags) => (
   <List aria-label="main navigation">
     {/* <ListItemLink to="/dashboard" primary="Dashboard" icon={<DashboardIcon />} /> */}
   </List>
 );
 
-const secondaryListItems = (
+const secondaryListItems = (flags: CurrentFeatureFlags) => (
   <List aria-label="secondary navigation">
-    {/* <ListItemLink to="/referrals" primary="Referrals" icon={<PermPhoneMsgIcon />} /> */}
+    {flags.viewReferrals && <ListItemLink to="/referrals" primary="Referrals" icon={<PermPhoneMsgIcon />} />}
     <ListItemLink to="/volunteers" primary="Volunteers" icon={<PeopleIcon />} />
   </List>
 );
@@ -116,6 +117,8 @@ function App() {
 
   const organizationName = useRecoilValue(organizationNameData);
   const locationName = useRecoilValue(locationNameData);
+
+  const featureFlags = useFeatureFlags();
 
   return (
     <div className={classes.root}>
@@ -140,9 +143,9 @@ function App() {
               </IconButton>
             </div>
             <Divider />
-            {mainListItems}
+            {mainListItems(featureFlags)}
             <Divider />
-            {secondaryListItems}
+            {secondaryListItems(featureFlags)}
             <Divider />
             {open && <Copyright />}
           </Drawer>}

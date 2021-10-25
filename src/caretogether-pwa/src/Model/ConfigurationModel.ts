@@ -1,4 +1,4 @@
-import { selector } from "recoil";
+import { selector, useRecoilValue } from "recoil";
 import { ConfigurationClient, RequirementStage, VolunteerFamilyRequirementScope } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentLocationState, currentOrganizationState } from "./SessionModel";
@@ -123,3 +123,18 @@ export const adultRequirementsData = selector({
         }, [] as string[])
         .sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
   }});
+
+const featureFlagData = selector({
+  key: 'featureFlagData',
+  get: async ({get}) => {
+    const organizationId = get(currentOrganizationState);
+    const locationId = get(currentLocationState);
+    const configurationClient = new ConfigurationClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+    const dataResponse = await configurationClient.getLocationFlags(organizationId, locationId);
+    return dataResponse;
+  }});
+
+export function useFeatureFlags() {
+  const featureFlags = useRecoilValue(featureFlagData);
+  return featureFlags;
+}

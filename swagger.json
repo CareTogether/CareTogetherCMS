@@ -89,6 +89,47 @@
         }
       }
     },
+    "/api/{organizationId}/{locationId}/Configuration/flags": {
+      "get": {
+        "tags": [
+          "Configuration"
+        ],
+        "operationId": "Configuration_GetLocationFlags",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentFeatureFlags"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/{organizationId}/{locationId}/Files/{documentId}": {
       "get": {
         "tags": [
@@ -1094,6 +1135,15 @@
           0,
           1
         ]
+      },
+      "CurrentFeatureFlags": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "viewReferrals": {
+            "type": "boolean"
+          }
+        }
       },
       "DocumentUploadInfo": {
         "type": "object",
