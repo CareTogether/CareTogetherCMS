@@ -4,7 +4,7 @@ import { CustodialRelationshipType, Gender, Person, VolunteerFamily } from "../G
 import { AgeText } from "./AgeText";
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import { useRecoilValue } from "recoil";
-import { volunteerFamiliesData } from "../Model/VolunteerFamiliesModel";
+import { volunteerFamiliesData } from "../Model/VolunteersModel";
 import { RenamePersonDialog } from "./RenamePersonDialog";
 import { UpdateConcernsDialog } from "./UpdateConcernsDialog";
 import { UpdateNotesDialog } from "./UpdateNotesDialog";

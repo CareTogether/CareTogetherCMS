@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Grid, TextField } from '@material-ui/core';
 import { Person } from '../GeneratedClient';
-import { useVolunteerFamiliesModel } from '../Model/VolunteerFamiliesModel';
+import { useVolunteersModel } from '../Model/VolunteersModel';
 import { UpdateDialog } from './UpdateDialog';
 
 interface UpdateNotesDialogProps {
@@ -15,7 +15,7 @@ export function UpdateNotesDialog({volunteerFamilyId, person, onClose}: UpdateNo
     notes: person.notes || ''
   });
   const { notes } = fields;
-  const volunteerFamiliesModel = useVolunteerFamiliesModel();
+  const volunteerFamiliesModel = useVolunteersModel();
 
   async function save() {
     await volunteerFamiliesModel.updatePersonNotes(volunteerFamilyId, person.id as string,

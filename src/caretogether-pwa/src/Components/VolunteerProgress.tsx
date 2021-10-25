@@ -1,7 +1,7 @@
 import { makeStyles } from '@material-ui/core/styles';
 import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab } from '@material-ui/core';
 import { useRecoilValue } from 'recoil';
-import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
+import { volunteerFamiliesData } from '../Model/VolunteersModel';
 import { allApprovalAndOnboardingRequirementsData } from '../Model/ConfigurationModel';
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';

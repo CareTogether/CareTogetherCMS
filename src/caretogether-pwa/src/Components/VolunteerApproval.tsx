@@ -3,7 +3,7 @@ import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, Ta
 import { Gender, ExactAge, AgeInYears, RoleVersionApproval, VolunteerFamily } from '../GeneratedClient';
 import { differenceInYears } from 'date-fns';
 import { useRecoilValue } from 'recoil';
-import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
+import { volunteerFamiliesData } from '../Model/VolunteersModel';
 import { policyData } from '../Model/ConfigurationModel';
 import { RoleApprovalStatus } from '../GeneratedClient';
 import React, { useState } from 'react';

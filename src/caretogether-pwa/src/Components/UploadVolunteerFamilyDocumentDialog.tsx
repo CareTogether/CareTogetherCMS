@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@material-ui/core';
 import { VolunteerFamily } from '../GeneratedClient';
-import { useVolunteerFamiliesModel } from '../Model/VolunteerFamiliesModel';
+import { useVolunteersModel } from '../Model/VolunteersModel';
 import { uploadFileToTenant } from '../Model/FilesModel';
 import { useRecoilValue } from 'recoil';
 import { currentOrganizationState, currentLocationState } from '../Model/SessionModel';
@@ -23,7 +23,7 @@ export function UploadVolunteerFamilyDocumentDialog({volunteerFamily, onClose}: 
   const [documentFile, setDocumentFile] = useState<File>();
   const organizationId = useRecoilValue(currentOrganizationState);
   const locationId = useRecoilValue(currentLocationState);
-  const volunteerFamiliesModel = useVolunteerFamiliesModel();
+  const volunteerFamiliesModel = useVolunteersModel();
 
   const withBackdrop = useBackdrop();
 

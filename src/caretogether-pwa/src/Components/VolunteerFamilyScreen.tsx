@@ -8,7 +8,7 @@ import AddCircleIcon from '@material-ui/icons/AddCircle';
 import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import { RecordVolunteerFamilyStepDialog } from './RecordVolunteerFamilyStepDialog';
-import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
+import { volunteerFamiliesData } from '../Model/VolunteersModel';
 import { AddAdultDialog } from './AddAdultDialog';
 import { format } from 'date-fns';
 import { AddChildDialog } from './AddChildDialog';

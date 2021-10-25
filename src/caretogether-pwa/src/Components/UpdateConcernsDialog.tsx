@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Grid, InputAdornment, TextField } from '@material-ui/core';
 import WarningIcon from '@material-ui/icons/Warning';
 import { Person } from '../GeneratedClient';
-import { useVolunteerFamiliesModel } from '../Model/VolunteerFamiliesModel';
+import { useVolunteersModel } from '../Model/VolunteersModel';
 import { UpdateDialog } from './UpdateDialog';
 
 interface UpdateConcernsDialogProps {
@@ -16,7 +16,7 @@ export function UpdateConcernsDialog({volunteerFamilyId, person, onClose}: Updat
     concerns: person.concerns || ''
   });
   const { concerns } = fields;
-  const volunteerFamiliesModel = useVolunteerFamiliesModel();
+  const volunteerFamiliesModel = useVolunteersModel();
 
   async function save() {
     await volunteerFamiliesModel.updatePersonConcerns(volunteerFamilyId, person.id as string,

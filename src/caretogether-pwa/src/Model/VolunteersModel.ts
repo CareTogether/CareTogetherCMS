@@ -114,7 +114,7 @@ function useApprovalCommandCallback<T extends unknown[]>(
   })
 }
 
-export function useVolunteerFamiliesModel() {
+export function useVolunteersModel() {
   const uploadDocument = useVolunteerFamilyCommandCallbackWithLocation(
     async (organizationId, locationId, volunteerFamilyId, uploadedDocumentId: string, uploadedFileName: string) => {
       const command = new UploadVolunteerFamilyDocument({

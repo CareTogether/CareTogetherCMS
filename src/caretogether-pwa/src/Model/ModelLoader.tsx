@@ -3,7 +3,7 @@ import { useRecoilState, useSetRecoilState } from "recoil";
 import { authenticatingFetch } from "../Auth";
 import { UsersClient, VolunteersClient } from "../GeneratedClient";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
-import { volunteerFamiliesData } from "./VolunteerFamiliesModel";
+import { volunteerFamiliesData } from "./VolunteersModel";
 
 interface ModelLoaderProps {
   children?: React.ReactNode

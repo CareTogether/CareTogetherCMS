@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@material-ui/core';
 import { Age, ExactAge, AgeInYears, Gender, PhoneNumberType, EmailAddressType } from '../GeneratedClient';
-import { useVolunteerFamiliesModel } from '../Model/VolunteerFamiliesModel';
+import { useVolunteersModel } from '../Model/VolunteersModel';
 import WarningIcon from '@material-ui/icons/Warning';
 import { KeyboardDatePicker } from '@material-ui/pickers';
 import { useRecoilValue } from 'recoil';
@@ -54,7 +54,7 @@ export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDial
     phoneNumber, phoneType, emailAddress, emailType,
     notes, concerns } = fields;
   const [ageType, setAgeType] = useState<'exact' | 'inYears'>('exact');
-  const volunteerFamiliesModel = useVolunteerFamiliesModel();
+  const volunteerFamiliesModel = useVolunteersModel();
 
   const relationshipTypes = useRecoilValue(adultFamilyRelationshipsData);
   const ethnicities = useRecoilValue(ethnicitiesData);

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@material-ui/core';
 import { Person, EmailAddressType } from '../GeneratedClient';
-import { useVolunteerFamiliesModel } from '../Model/VolunteerFamiliesModel';
+import { useVolunteersModel } from '../Model/VolunteersModel';
 import { UpdateDialog } from './UpdateDialog';
 
 interface UpdateEmailDialogProps {
@@ -11,7 +11,7 @@ interface UpdateEmailDialogProps {
 }
 
 export function UpdateEmailDialog({volunteerFamilyId, person, onClose}: UpdateEmailDialogProps) {
-  const volunteerFamiliesModel = useVolunteerFamiliesModel();
+  const volunteerFamiliesModel = useVolunteersModel();
   const currentEmailAddress = person.emailAddresses?.find(x => x.id === person.preferredEmailAddressId);
   const [fields, setFields] = useState({
     emailAddress: currentEmailAddress?.address || "",

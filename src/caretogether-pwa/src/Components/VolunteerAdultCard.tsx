@@ -6,7 +6,7 @@ import { AgeText } from "./AgeText";
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
 import { useRecoilValue } from "recoil";
-import { volunteerFamiliesData } from "../Model/VolunteerFamiliesModel";
+import { volunteerFamiliesData } from "../Model/VolunteersModel";
 import { RecordVolunteerAdultStepDialog } from "./RecordVolunteerAdultStepDialog";
 import { policyData } from '../Model/ConfigurationModel';
 import { RenamePersonDialog } from "./RenamePersonDialog";

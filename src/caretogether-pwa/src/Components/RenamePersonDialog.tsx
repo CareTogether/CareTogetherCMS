@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Grid, TextField } from '@material-ui/core';
 import { Person } from '../GeneratedClient';
-import { useVolunteerFamiliesModel } from '../Model/VolunteerFamiliesModel';
+import { useVolunteersModel } from '../Model/VolunteersModel';
 import { UpdateDialog } from './UpdateDialog';
 
 interface RenamePersonProps {
@@ -17,7 +17,7 @@ export function RenamePersonDialog({volunteerFamilyId, person, onClose}: RenameP
   });
   const {
     firstName, lastName } = fields;
-  const volunteerFamiliesModel = useVolunteerFamiliesModel();
+  const volunteerFamiliesModel = useVolunteersModel();
 
   async function renamePerson() {
     if (firstName.length <= 0 || lastName.length <= 0) {

@@ -3,7 +3,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, Grid, InputLabel, Link, MenuItem, Select } from '@material-ui/core';
 import { VolunteerFamily, ActionRequirement, Person, DocumentLinkRequirement } from '../GeneratedClient';
 import { DateTimePicker } from '@material-ui/pickers';
-import { useVolunteerFamiliesModel } from '../Model/VolunteerFamiliesModel';
+import { useVolunteersModel } from '../Model/VolunteersModel';
 import { uploadFileToTenant } from "../Model/FilesModel";
 import { currentLocationState, currentOrganizationState } from '../Model/SessionModel';
 import { useRecoilValue } from 'recoil';
@@ -29,7 +29,7 @@ export function RecordVolunteerAdultStepDialog({requirementName, stepActionRequi
   const [completedAtLocal, setCompletedAtLocal] = useState(new Date());
   const organizationId = useRecoilValue(currentOrganizationState);
   const locationId = useRecoilValue(currentLocationState);
-  const volunteerFamiliesModel = useVolunteerFamiliesModel();
+  const volunteerFamiliesModel = useVolunteersModel();
   const UPLOAD_NEW = "__uploadnew__";
   
   const withBackdrop = useBackdrop();
