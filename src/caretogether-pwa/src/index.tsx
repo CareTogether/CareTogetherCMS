@@ -14,6 +14,8 @@ import { ModelLoader } from './Model/ModelLoader';
 import { ThemeProvider } from '@material-ui/core';
 import { createTheme } from '@material-ui/core/styles';
 import amber from '@material-ui/core/colors/amber';
+import ErrorBackdrop from './Components/ErrorBackdrop';
+import RequestBackdrop from './Components/RequestBackdrop';
 
 const theme = createTheme({
   palette: {
@@ -40,6 +42,8 @@ function AuthWrapper() {
           </ModelLoader>
         : <p>You are not signed in. You can try to refresh your page (F5) to reattempt signing in.</p>
       }
+      <RequestBackdrop />
+      <ErrorBackdrop />
     </>
   );
 }
