@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@material-ui/core';
-import { VolunteerFamily, Age, ExactAge, AgeInYears, Gender, EmailAddressType, PhoneNumberType } from '../GeneratedClient';
-import { useVolunteerFamiliesModel, volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
+import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@material-ui/core';
+import { Age, ExactAge, AgeInYears, Gender, PhoneNumberType, EmailAddressType } from '../../GeneratedClient';
+import { useVolunteersModel } from '../../Model/VolunteersModel';
 import WarningIcon from '@material-ui/icons/Warning';
 import { KeyboardDatePicker } from '@material-ui/pickers';
 import { useRecoilValue } from 'recoil';
-import { adultFamilyRelationshipsData, ethnicitiesData } from '../Model/ConfigurationModel';
-import { useParams } from 'react-router-dom';
-import { useBackdrop } from '../Model/RequestBackdrop';
+import { adultFamilyRelationshipsData, ethnicitiesData } from '../../Model/ConfigurationModel';
+import { useBackdrop } from '../../Model/RequestBackdrop';
 
 const useStyles = makeStyles((theme) => ({
   form: {
@@ -20,20 +19,12 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-interface AddAdultDialogProps {
-  onClose: () => void
+interface CreateVolunteerFamilyDialogProps {
+  onClose: (volunteerFamilyId?: string) => void
 }
 
-function optional(arg: string) {
-  return arg.length > 0 ? arg : null;
-}
-
-export function AddAdultDialog({onClose}: AddAdultDialogProps) {
+export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDialogProps) {
   const classes = useStyles();
-  const { volunteerFamilyId } = useParams<{ volunteerFamilyId: string }>();
-  const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
-  const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as VolunteerFamily;
-
   const [fields, setFields] = useState({
     firstName: '',
     lastName: '',
@@ -63,11 +54,11 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
     phoneNumber, phoneType, emailAddress, emailType,
     notes, concerns } = fields;
   const [ageType, setAgeType] = useState<'exact' | 'inYears'>('exact');
-  const volunteerFamiliesModel = useVolunteerFamiliesModel();
+  const volunteerFamiliesModel = useVolunteersModel();
 
   const relationshipTypes = useRecoilValue(adultFamilyRelationshipsData);
   const ethnicities = useRecoilValue(ethnicitiesData);
-
+  
   const withBackdrop = useBackdrop();
 
   async function addAdult() {
@@ -94,27 +85,28 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
           (age as AgeInYears).years = (ageInYears == null ? undefined : ageInYears);
           (age as AgeInYears).asOf = new Date();
         }
-        await volunteerFamiliesModel.addAdult(volunteerFamily.family?.id as string,
+        const newFamily = await volunteerFamiliesModel.createVolunteerFamilyWithNewAdult(
           firstName, lastName, gender as Gender, age, ethnicity,
           isInHousehold, relationshipToFamily,
-          optional(addressLine1), optional(addressLine2), optional(city), optional(state), optional(postalCode), optional(country),
-          optional(phoneNumber), phoneType, optional(emailAddress), emailType,
+          addressLine1, addressLine2.length > 0 ? addressLine2 : null, city, state, postalCode, country,
+          phoneNumber, phoneType, emailAddress, emailType,
           (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
-          //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
-        onClose();
+        //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
+        //TODO: Retrieve the created volunteer family and return it through this onClose callback!
+        onClose(newFamily.family?.id);
       }
     });
   }
 
   return (
-    <Dialog open={true} onClose={onClose} scroll='body' aria-labelledby="add-adult-title">
-      <DialogTitle id="add-adult-title">
-        Add Adult to {volunteerFamily.family?.adults?.filter(adult => adult.item1?.id === volunteerFamily.family?.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family
+    <Dialog open={true} onClose={() => onClose()} scroll='body' aria-labelledby="create-family-title">
+      <DialogTitle id="create-family-title">
+        Create Volunteer Family - First Adult
       </DialogTitle>
       <DialogContent>
-        {/* <DialogContentText>
-          Provide the basic information needed for this adult.
-        </DialogContentText> */}
+        <DialogContentText>
+          Provide the basic information needed for the first adult in the family.
+        </DialogContentText>
         <form className={classes.form} noValidate autoComplete="off">
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
@@ -205,11 +197,11 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
               </FormGroup>
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField id="phone-number" label="Phone Number" fullWidth size="small" type="tel"
+              <TextField required id="phone-number" label="Phone Number" fullWidth size="small" type="tel"
                 value={phoneNumber} onChange={e => setFields({...fields, phoneNumber: e.target.value})} />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <FormControl component="fieldset">
+              <FormControl required component="fieldset">
                 <FormLabel component="legend">Phone Type:</FormLabel>
                 <RadioGroup aria-label="phoneType" name="phoneType" row
                   value={PhoneNumberType[phoneType]} onChange={e => setFields({...fields, phoneType: PhoneNumberType[e.target.value as keyof typeof PhoneNumberType]})}>
@@ -235,7 +227,7 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
               </FormControl>
             </Grid>
             <Grid item xs={12}>
-              <TextField id="address-line1" label="Address Line 1" fullWidth size="small"
+              <TextField required id="address-line1" label="Address Line 1" fullWidth size="small"
                 value={addressLine1} onChange={e => setFields({...fields, addressLine1: e.target.value})} />
             </Grid>
             <Grid item xs={12}>
@@ -243,15 +235,15 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
                 value={addressLine2} onChange={e => setFields({...fields, addressLine2: e.target.value})} />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField id="address-city" label="City" fullWidth size="small"
+              <TextField required id="address-city" label="City" fullWidth size="small"
                 value={city} onChange={e => setFields({...fields, city: e.target.value})} />
             </Grid>
             <Grid item xs={12} sm={2}>
-              <TextField id="address-state" label="State" fullWidth size="small"
+              <TextField required id="address-state" label="State" fullWidth size="small"
                 value={state} onChange={e => setFields({...fields, state: e.target.value})} />
             </Grid>
             <Grid item xs={12} sm={4}>
-              <TextField id="address-postalcode" label="ZIP/Postal Code" fullWidth size="small"
+              <TextField required id="address-postalcode" label="ZIP/Postal Code" fullWidth size="small"
                 value={postalCode} onChange={e => setFields({...fields, postalCode: e.target.value})} />
             </Grid>
             <Grid item xs={12}>
@@ -281,11 +273,11 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
         </form>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} color="secondary">
+        <Button onClick={() => onClose()} color="secondary">
           Cancel
         </Button>
         <Button onClick={addAdult} variant="contained" color="primary">
-          Add to Family
+          Create Family
         </Button>
       </DialogActions>
     </Dialog>

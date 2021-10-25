@@ -1,10 +1,10 @@
 import { Card, CardHeader, IconButton, CardContent, Typography, CardActions, makeStyles, ListItemText, Menu, MenuItem } from "@material-ui/core";
 import { useState } from "react";
-import { CustodialRelationshipType, Gender, Person, VolunteerFamily } from "../GeneratedClient";
-import { AgeText } from "./AgeText";
+import { CustodialRelationshipType, Gender, Person, VolunteerFamily } from "../../GeneratedClient";
+import { AgeText } from "../AgeText";
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import { useRecoilValue } from "recoil";
-import { volunteerFamiliesData } from "../Model/VolunteerFamiliesModel";
+import { volunteerFamiliesData } from "../../Model/VolunteersModel";
 import { RenamePersonDialog } from "./RenamePersonDialog";
 import { UpdateConcernsDialog } from "./UpdateConcernsDialog";
 import { UpdateNotesDialog } from "./UpdateNotesDialog";

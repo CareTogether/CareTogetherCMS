@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@material-ui/core';
-import { VolunteerFamily, Age, ExactAge, AgeInYears, Gender, CustodialRelationshipType, CustodialRelationship } from '../GeneratedClient';
-import { useVolunteerFamiliesModel, volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
+import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@material-ui/core';
+import { VolunteerFamily, Age, ExactAge, AgeInYears, Gender, EmailAddressType, PhoneNumberType } from '../../GeneratedClient';
+import { useVolunteersModel, volunteerFamiliesData } from '../../Model/VolunteersModel';
 import WarningIcon from '@material-ui/icons/Warning';
 import { KeyboardDatePicker } from '@material-ui/pickers';
 import { useRecoilValue } from 'recoil';
-import { ethnicitiesData } from '../Model/ConfigurationModel';
+import { adultFamilyRelationshipsData, ethnicitiesData } from '../../Model/ConfigurationModel';
 import { useParams } from 'react-router-dom';
-import { useBackdrop } from '../Model/RequestBackdrop';
+import { useBackdrop } from '../../Model/RequestBackdrop';
 
 const useStyles = makeStyles((theme) => ({
   form: {
@@ -20,11 +20,15 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-interface AddChildDialogProps {
+interface AddAdultDialogProps {
   onClose: () => void
 }
 
-export function AddChildDialog({onClose}: AddChildDialogProps) {
+function optional(arg: string) {
+  return arg.length > 0 ? arg : null;
+}
+
+export function AddAdultDialog({onClose}: AddAdultDialogProps) {
   const classes = useStyles();
   const { volunteerFamilyId } = useParams<{ volunteerFamilyId: string }>();
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
@@ -37,23 +41,36 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
     dateOfBirth: null as Date | null,
     ageInYears: null as number | null,
     ethnicity: '',
-    custodialRelationships: volunteerFamily.family!.adults!.map(adult =>
-      ({ adult: adult.item1!, relationship: CustodialRelationshipType.ParentWithCustody as CustodialRelationshipType | -1 })),
+    isInHousehold: true,
+    relationshipToFamily: '',
+    addressLine1: '',
+    addressLine2: '',
+    city: '',
+    state: '',
+    postalCode: '',
+    country: 'United States',
+    phoneNumber: '',
+    phoneType: PhoneNumberType.Mobile,
+    emailAddress: '',
+    emailType: EmailAddressType.Personal,
     notes: null as string | null,
     concerns: null as string | null
   });
   const {
     firstName, lastName, gender, dateOfBirth, ageInYears, ethnicity,
-    custodialRelationships,
+    isInHousehold, relationshipToFamily,
+    addressLine1, addressLine2, city, state, postalCode, country,
+    phoneNumber, phoneType, emailAddress, emailType,
     notes, concerns } = fields;
   const [ageType, setAgeType] = useState<'exact' | 'inYears'>('exact');
-  const volunteerFamiliesModel = useVolunteerFamiliesModel();
+  const volunteerFamiliesModel = useVolunteersModel();
 
+  const relationshipTypes = useRecoilValue(adultFamilyRelationshipsData);
   const ethnicities = useRecoilValue(ethnicitiesData);
-  
+
   const withBackdrop = useBackdrop();
 
-  async function addChild() {
+  async function addAdult() {
     await withBackdrop(async () => {
       if (firstName.length <= 0 || lastName.length <= 0) {
         alert("First and last name are required. Try again.");
@@ -65,6 +82,8 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
         alert("Age in years was not specified. Try again.");
       } else if (ethnicity === '') {
         alert("Ethnicity was not selected. Try again.");
+      } else if (relationshipToFamily === '') { //TODO: Actual validation!
+        alert("Family relationship was not selected. Try again.");
       } else {
         let age: Age;
         if (ageType === 'exact') {
@@ -75,29 +94,26 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
           (age as AgeInYears).years = (ageInYears == null ? undefined : ageInYears);
           (age as AgeInYears).asOf = new Date();
         }
-        await volunteerFamiliesModel.addChild(volunteerFamily.family?.id as string,
+        await volunteerFamiliesModel.addAdult(volunteerFamily.family?.id as string,
           firstName, lastName, gender as Gender, age, ethnicity,
-          custodialRelationships.filter(cr => cr.relationship !== -1).map(cr => {
-            const result = new CustodialRelationship();
-            result.personId = cr.adult.id;
-            result.type = cr.relationship as CustodialRelationshipType;
-            return result;
-          }),
+          isInHousehold, relationshipToFamily,
+          optional(addressLine1), optional(addressLine2), optional(city), optional(state), optional(postalCode), optional(country),
+          optional(phoneNumber), phoneType, optional(emailAddress), emailType,
           (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
-        //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
+          //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
         onClose();
       }
     });
   }
 
   return (
-    <Dialog open={true} onClose={onClose} scroll='body' aria-labelledby="add-child-title">
-      <DialogTitle id="add-child-title">
-        Add Child to {volunteerFamily.family?.adults?.filter(adult => adult.item1?.id === volunteerFamily.family?.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family
+    <Dialog open={true} onClose={onClose} scroll='body' aria-labelledby="add-adult-title">
+      <DialogTitle id="add-adult-title">
+        Add Adult to {volunteerFamily.family?.adults?.filter(adult => adult.item1?.id === volunteerFamily.family?.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family
       </DialogTitle>
       <DialogContent>
         {/* <DialogContentText>
-          Provide the basic information needed for this child.
+          Provide the basic information needed for this adult.
         </DialogContentText> */}
         <form className={classes.form} noValidate autoComplete="off">
           <Grid container spacing={2}>
@@ -164,37 +180,79 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
                 </Select>
               </FormControl>
             </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl required fullWidth size="small">
+                <InputLabel id="family-relationship-label">Relationship to Family</InputLabel>
+                <Select
+                  labelId="family-relationship-label" id="family-relationship"
+                  value={relationshipToFamily}
+                  onChange={e => setFields({...fields, relationshipToFamily: e.target.value as string})}>
+                    <MenuItem key="placeholder" value="" disabled>
+                      Select a relationship type
+                    </MenuItem>
+                    {relationshipTypes.map(relationshipType =>
+                      <MenuItem key={relationshipType} value={relationshipType}>{relationshipType}</MenuItem>)}
+                </Select>
+              </FormControl>
+            </Grid>
             <Grid item xs={12}>
-              <table>
-                <thead>
-                  <tr>
-                    <td>Adult</td>
-                    <td>Custodial Relationship</td>
-                  </tr>
-                </thead>
-                <tbody>
-                  {custodialRelationships.map(custodialRelationship => (
-                    <tr key={custodialRelationship.adult.id}>
-                      <td>{custodialRelationship.adult.firstName + " " + custodialRelationship.adult.lastName}</td>
-                      <td>
-                        <FormControl required fullWidth size="small">
-                          <Select
-                            id={"custodial-relationship-"+custodialRelationship.adult.id}
-                            value={custodialRelationship.relationship}
-                            onChange={e => setFields({...fields, custodialRelationships: custodialRelationships.map(cr => cr.adult.id === custodialRelationship.adult.id
-                              ? { adult: custodialRelationship.adult, relationship: e.target.value as CustodialRelationshipType | -1 }
-                              : cr) })}>
-                              <MenuItem key="none" value={-1}>None</MenuItem>
-                              <MenuItem key='ParentWithCustody' value={CustodialRelationshipType.ParentWithCustody}>Parent with custody</MenuItem>
-                              <MenuItem key='ParentWithCourtAppointedCustody' value={CustodialRelationshipType.ParentWithCourtAppointedCustody}>Parent with court-appointed custody</MenuItem>
-                              <MenuItem key='LegalGuardian' value={CustodialRelationshipType.LegalGuardian}>Legal guardian</MenuItem>
-                          </Select>
-                        </FormControl>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <FormGroup row>
+                <FormControlLabel
+                  control={<Checkbox checked={isInHousehold} onChange={e => setFields({...fields, isInHousehold: e.target.checked})}
+                    name="isInHousehold" color="primary" size="small" />}
+                  label="In Household"
+                />
+              </FormGroup>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField id="phone-number" label="Phone Number" fullWidth size="small" type="tel"
+                value={phoneNumber} onChange={e => setFields({...fields, phoneNumber: e.target.value})} />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl component="fieldset">
+                <FormLabel component="legend">Phone Type:</FormLabel>
+                <RadioGroup aria-label="phoneType" name="phoneType" row
+                  value={PhoneNumberType[phoneType]} onChange={e => setFields({...fields, phoneType: PhoneNumberType[e.target.value as keyof typeof PhoneNumberType]})}>
+                  <FormControlLabel value={PhoneNumberType[PhoneNumberType.Mobile]} control={<Radio size="small" />} label="Mobile" />
+                  <FormControlLabel value={PhoneNumberType[PhoneNumberType.Home]} control={<Radio size="small" />} label="Home" />
+                  <FormControlLabel value={PhoneNumberType[PhoneNumberType.Work]} control={<Radio size="small" />} label="Work" />
+                  {/* <FormControlLabel value={PhoneNumberType[PhoneNumberType.Fax]} control={<Radio size="small" />} label="Fax" /> */}
+                </RadioGroup>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField id="email-address" label="Email Address" fullWidth size="small" type="email"
+                value={emailAddress} onChange={e => setFields({...fields, emailAddress: e.target.value})} />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl component="fieldset">
+                <FormLabel component="legend">Email Type:</FormLabel>
+                <RadioGroup aria-label="emailType" name="emailType" row
+                  value={EmailAddressType[emailType]} onChange={e => setFields({...fields, emailType: EmailAddressType[e.target.value as keyof typeof EmailAddressType]})}>
+                  <FormControlLabel value={EmailAddressType[EmailAddressType.Personal]} control={<Radio size="small" />} label="Personal" />
+                  <FormControlLabel value={EmailAddressType[EmailAddressType.Work]} control={<Radio size="small" />} label="Work" />
+                </RadioGroup>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+              <TextField id="address-line1" label="Address Line 1" fullWidth size="small"
+                value={addressLine1} onChange={e => setFields({...fields, addressLine1: e.target.value})} />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField id="address-line2" label="Address Line 2" fullWidth size="small"
+                value={addressLine2} onChange={e => setFields({...fields, addressLine2: e.target.value})} />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField id="address-city" label="City" fullWidth size="small"
+                value={city} onChange={e => setFields({...fields, city: e.target.value})} />
+            </Grid>
+            <Grid item xs={12} sm={2}>
+              <TextField id="address-state" label="State" fullWidth size="small"
+                value={state} onChange={e => setFields({...fields, state: e.target.value})} />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <TextField id="address-postalcode" label="ZIP/Postal Code" fullWidth size="small"
+                value={postalCode} onChange={e => setFields({...fields, postalCode: e.target.value})} />
             </Grid>
             <Grid item xs={12}>
               <TextField
@@ -226,7 +284,7 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
         <Button onClick={onClose} color="secondary">
           Cancel
         </Button>
-        <Button onClick={addChild} variant="contained" color="primary">
+        <Button onClick={addAdult} variant="contained" color="primary">
           Add to Family
         </Button>
       </DialogActions>

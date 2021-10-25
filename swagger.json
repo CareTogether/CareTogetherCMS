@@ -89,6 +89,47 @@
         }
       }
     },
+    "/api/{organizationId}/{locationId}/Configuration/flags": {
+      "get": {
+        "tags": [
+          "Configuration"
+        ],
+        "operationId": "Configuration_GetLocationFlags",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentFeatureFlags"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/{organizationId}/{locationId}/Files/{documentId}": {
       "get": {
         "tags": [
@@ -411,12 +452,12 @@
         }
       }
     },
-    "/api/{organizationId}/{locationId}/VolunteerFamilies": {
+    "/api/{organizationId}/{locationId}/Volunteers": {
       "get": {
         "tags": [
-          "VolunteerFamilies"
+          "Volunteers"
         ],
-        "operationId": "VolunteerFamilies_ListAllVolunteerFamilies",
+        "operationId": "Volunteers_ListAllVolunteerFamilies",
         "parameters": [
           {
             "name": "organizationId",
@@ -456,12 +497,12 @@
         }
       }
     },
-    "/api/{organizationId}/{locationId}/VolunteerFamilies/volunteerFamilyCommand": {
+    "/api/{organizationId}/{locationId}/Volunteers/volunteerFamilyCommand": {
       "post": {
         "tags": [
-          "VolunteerFamilies"
+          "Volunteers"
         ],
-        "operationId": "VolunteerFamilies_SubmitVolunteerFamilyCommand",
+        "operationId": "Volunteers_SubmitVolunteerFamilyCommand",
         "parameters": [
           {
             "name": "organizationId",
@@ -510,12 +551,12 @@
         }
       }
     },
-    "/api/{organizationId}/{locationId}/VolunteerFamilies/volunteerCommand": {
+    "/api/{organizationId}/{locationId}/Volunteers/volunteerCommand": {
       "post": {
         "tags": [
-          "VolunteerFamilies"
+          "Volunteers"
         ],
-        "operationId": "VolunteerFamilies_SubmitVolunteerCommand",
+        "operationId": "Volunteers_SubmitVolunteerCommand",
         "parameters": [
           {
             "name": "organizationId",
@@ -564,12 +605,12 @@
         }
       }
     },
-    "/api/{organizationId}/{locationId}/VolunteerFamilies/addAdult": {
+    "/api/{organizationId}/{locationId}/Volunteers/addAdult": {
       "post": {
         "tags": [
-          "VolunteerFamilies"
+          "Volunteers"
         ],
-        "operationId": "VolunteerFamilies_SubmitApprovalCommand",
+        "operationId": "Volunteers_SubmitApprovalCommand",
         "parameters": [
           {
             "name": "organizationId",
@@ -618,12 +659,12 @@
         }
       }
     },
-    "/api/{organizationId}/{locationId}/VolunteerFamilies/personCommand": {
+    "/api/{organizationId}/{locationId}/Volunteers/personCommand": {
       "post": {
         "tags": [
-          "VolunteerFamilies"
+          "Volunteers"
         ],
-        "operationId": "VolunteerFamilies_SubmitPersonCommand",
+        "operationId": "Volunteers_SubmitPersonCommand",
         "parameters": [
           {
             "name": "organizationId",
@@ -1094,6 +1135,15 @@
           0,
           1
         ]
+      },
+      "CurrentFeatureFlags": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "viewReferrals": {
+            "type": "boolean"
+          }
+        }
       },
       "DocumentUploadInfo": {
         "type": "object",

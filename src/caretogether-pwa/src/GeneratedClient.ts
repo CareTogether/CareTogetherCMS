@@ -93,6 +93,46 @@ export class ConfigurationClient {
         }
         return Promise.resolve<EffectiveLocationPolicy>(<any>null);
     }
+
+    getLocationFlags(organizationId: string, locationId: string): Promise<CurrentFeatureFlags> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Configuration/flags";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (locationId === undefined || locationId === null)
+            throw new Error("The parameter 'locationId' must be defined.");
+        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ = <RequestInit>{
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetLocationFlags(_response);
+        });
+    }
+
+    protected processGetLocationFlags(response: Response): Promise<CurrentFeatureFlags> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = CurrentFeatureFlags.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<CurrentFeatureFlags>(<any>null);
+    }
 }
 
 export class FilesClient {
@@ -424,7 +464,7 @@ export class UsersClient {
     }
 }
 
-export class VolunteerFamiliesClient {
+export class VolunteersClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
     protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
@@ -435,7 +475,7 @@ export class VolunteerFamiliesClient {
     }
 
     listAllVolunteerFamilies(organizationId: string, locationId: string): Promise<VolunteerFamily[]> {
-        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/VolunteerFamilies";
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Volunteers";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
         url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
@@ -482,7 +522,7 @@ export class VolunteerFamiliesClient {
     }
 
     submitVolunteerFamilyCommand(organizationId: string, locationId: string, command: VolunteerFamilyCommand): Promise<VolunteerFamily> {
-        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/VolunteerFamilies/volunteerFamilyCommand";
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Volunteers/volunteerFamilyCommand";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
         url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
@@ -526,7 +566,7 @@ export class VolunteerFamiliesClient {
     }
 
     submitVolunteerCommand(organizationId: string, locationId: string, command: VolunteerCommand): Promise<VolunteerFamily> {
-        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/VolunteerFamilies/volunteerCommand";
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Volunteers/volunteerCommand";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
         url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
@@ -570,7 +610,7 @@ export class VolunteerFamiliesClient {
     }
 
     submitApprovalCommand(organizationId: string, locationId: string, command: ApprovalCommand): Promise<VolunteerFamily> {
-        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/VolunteerFamilies/addAdult";
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Volunteers/addAdult";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
         url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
@@ -614,7 +654,7 @@ export class VolunteerFamiliesClient {
     }
 
     submitPersonCommand(organizationId: string, locationId: string, familyId: string | undefined, command: PersonCommand): Promise<VolunteerFamily> {
-        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/VolunteerFamilies/personCommand?";
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Volunteers/personCommand?";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
         url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
@@ -1685,6 +1725,42 @@ export interface IVolunteerFamilyApprovalRequirement {
 export enum VolunteerFamilyRequirementScope {
     OncePerFamily = 0,
     AllAdultsInTheFamily = 1,
+}
+
+export class CurrentFeatureFlags implements ICurrentFeatureFlags {
+    viewReferrals?: boolean;
+
+    constructor(data?: ICurrentFeatureFlags) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.viewReferrals = _data["viewReferrals"];
+        }
+    }
+
+    static fromJS(data: any): CurrentFeatureFlags {
+        data = typeof data === 'object' ? data : {};
+        let result = new CurrentFeatureFlags();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["viewReferrals"] = this.viewReferrals;
+        return data; 
+    }
+}
+
+export interface ICurrentFeatureFlags {
+    viewReferrals?: boolean;
 }
 
 export class DocumentUploadInfo implements IDocumentUploadInfo {

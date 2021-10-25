@@ -6,7 +6,7 @@ import MenuIcon from '@material-ui/icons/Menu';
 import { Link, useLocation, useRouteMatch, useHistory } from 'react-router-dom';
 import { ArrowBack } from '@material-ui/icons';
 import { useRecoilValue } from 'recoil';
-import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
+import { volunteerFamiliesData } from '../Model/VolunteersModel';
 
 const drawerWidth = 200;
 

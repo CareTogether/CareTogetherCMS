@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Grid, TextField } from '@material-ui/core';
-import { Person } from '../GeneratedClient';
-import { useVolunteerFamiliesModel } from '../Model/VolunteerFamiliesModel';
-import { UpdateDialog } from './UpdateDialog';
+import { Person } from '../../GeneratedClient';
+import { useVolunteersModel } from '../../Model/VolunteersModel';
+import { UpdateDialog } from '../UpdateDialog';
 
 interface UpdateAddressDialogProps {
   volunteerFamilyId: string,
@@ -11,7 +11,7 @@ interface UpdateAddressDialogProps {
 }
 
 export function UpdateAddressDialog({volunteerFamilyId, person, onClose}: UpdateAddressDialogProps) {
-  const volunteerFamiliesModel = useVolunteerFamiliesModel();
+  const volunteerFamiliesModel = useVolunteersModel();
   const currentAddress = person.addresses?.find(x => x.id === person.currentAddressId);
   const [fields, setFields] = useState({
     line1: currentAddress?.line1 || "",

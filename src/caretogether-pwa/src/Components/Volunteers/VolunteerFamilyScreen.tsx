@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Container, Toolbar, Button, Menu, MenuItem, Grid, useMediaQuery, useTheme, MenuList, Divider } from '@material-ui/core';
-import { VolunteerFamily, ActionRequirement } from '../GeneratedClient';
+import { VolunteerFamily, ActionRequirement } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
-import { policyData } from '../Model/ConfigurationModel';
+import { policyData } from '../../Model/ConfigurationModel';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
 import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import { RecordVolunteerFamilyStepDialog } from './RecordVolunteerFamilyStepDialog';
-import { volunteerFamiliesData } from '../Model/VolunteerFamiliesModel';
+import { volunteerFamiliesData } from '../../Model/VolunteersModel';
 import { AddAdultDialog } from './AddAdultDialog';
 import { format } from 'date-fns';
 import { AddChildDialog } from './AddChildDialog';
@@ -16,9 +16,9 @@ import { useParams } from 'react-router';
 import { VolunteerAdultCard } from './VolunteerAdultCard';
 import { VolunteerChildCard } from './VolunteerChildCard';
 import { UploadVolunteerFamilyDocumentDialog } from './UploadVolunteerFamilyDocumentDialog';
-import { downloadFile } from '../Model/FilesModel';
-import { currentOrganizationState, currentLocationState } from '../Model/SessionModel';
-import { VolunteerRoleApprovalStatusChip } from './VolunteerRoleApprovalStatusChipProps';
+import { downloadFile } from '../../Model/FilesModel';
+import { currentOrganizationState, currentLocationState } from '../../Model/SessionModel';
+import { VolunteerRoleApprovalStatusChip } from './VolunteerRoleApprovalStatusChip';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {

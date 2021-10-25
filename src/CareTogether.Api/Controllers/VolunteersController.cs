@@ -11,11 +11,11 @@ namespace CareTogether.Api.Controllers
     [Authorize]
     [ApiController]
     [Route("/api/{organizationId:guid}/{locationId:guid}/[controller]")]
-    public class VolunteerFamiliesController : ControllerBase
+    public class VolunteersController : ControllerBase
     {
         private readonly IApprovalManager approvalManager;
 
-        public VolunteerFamiliesController(IApprovalManager approvalManager)
+        public VolunteersController(IApprovalManager approvalManager)
         {
             this.approvalManager = approvalManager;
         }

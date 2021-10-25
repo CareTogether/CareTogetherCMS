@@ -2,6 +2,7 @@
 using CareTogether.Resources;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.FeatureManagement.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ namespace CareTogether.Api.Controllers
 {
     [Authorize]
     [ApiController]
+    [FeatureGate(FeatureFlags.ViewReferrals)]
     [Route("/api/{organizationId:guid}/{locationId:guid}/[controller]")]
     public class ReferralsController : ControllerBase
     {
