@@ -1,7 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
-import { Typography, CssBaseline, IconButton, Drawer, Divider, List, useMediaQuery, useTheme, Button } from '@material-ui/core';
+import { Typography, CssBaseline, IconButton, Drawer, Divider, List, useMediaQuery, useTheme } from '@material-ui/core';
 //import PermPhoneMsgIcon from '@material-ui/icons/PermPhoneMsg';
 import PeopleIcon from '@material-ui/icons/People';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
@@ -10,13 +10,13 @@ import { Route, Switch, Redirect, BrowserRouter as Router } from "react-router-d
 import { ListItemLink } from './Components/ListItemLink';
 import { Arrangements } from './Components/Arrangements';
 import { Referrals } from './Components/Referrals';
-import { useRecoilState, useRecoilValue } from 'recoil';
+import { useRecoilValue } from 'recoil';
 import { locationNameData, organizationNameData } from './Model/ConfigurationModel';
 import { Volunteers } from './Components/Volunteers';
 import Header from './Components/Header';
 import { Dashboard } from './Components/Dashboard';
 import Footer from './Components/Footer';
-import AsyncBackdrop, { backdropState } from './Components/AsyncBackdrop';
+import AsyncBackdrop from './Components/AsyncBackdrop';
 
 const copyrightStyles = makeStyles((theme) => ({
   copyright: {
@@ -116,13 +116,11 @@ function App() {
 
   const organizationName = useRecoilValue(organizationNameData);
   const locationName = useRecoilValue(locationNameData);
-  const [backdropOpen, setBackdropOpen] = useRecoilState(backdropState);
 
   return (
     <div className={classes.root}>
       <CssBaseline />
       <Router>
-      <Button onClick={() => setBackdropOpen(!backdropOpen)}>Show backdrop</Button>
         <AsyncBackdrop/>
         <Header open={open} handleDrawerOpen={handleDrawerOpen} />
         {isMobile ? null :
