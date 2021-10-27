@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRecoilState, useSetRecoilState } from "recoil";
 import { authenticatingFetch } from "../Auth";
+import { backdropState } from "../Components/AsyncBackdrop";
 import { UsersClient, VolunteerFamiliesClient } from "../GeneratedClient";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { volunteerFamiliesData } from "./VolunteerFamiliesModel";
@@ -16,19 +17,24 @@ export function ModelLoader({children}: ModelLoaderProps) {
   
   const setVolunteerFamilies = useSetRecoilState(volunteerFamiliesData);
 
+  const [, setBackdropOpen] = useRecoilState(backdropState);
+
   //TODO: Consider useRecoilSnapshot here instead
   useEffect(() => {
     const loadInitialLocation = async () => {
+      setBackdropOpen(true);
       const usersClient = new UsersClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
       const userResponse = await usersClient.getUserTenantAccess();
       setOrganizationId(userResponse.organizationId!);
       setLocationId(userResponse.locationIds![0]);
+      setBackdropOpen(false);
     }
     loadInitialLocation();
-  }, [setOrganizationId, setLocationId]);
+  }, [setOrganizationId, setLocationId, setBackdropOpen]);
 
   useEffect(() => {
     const loadInitialData = async () => {
+      setBackdropOpen(true);
       if (organizationId.length > 0 && locationId.length > 0) {
         const volunteerFamiliesClient = new VolunteerFamiliesClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
         const dataResponse = await volunteerFamiliesClient.listAllVolunteerFamilies(organizationId, locationId);
@@ -36,9 +42,10 @@ export function ModelLoader({children}: ModelLoaderProps) {
 
         setLoaded(true);
       }
+      setBackdropOpen(false);
     }
     loadInitialData();
-  }, [organizationId, locationId, setVolunteerFamilies]);
+  }, [organizationId, locationId, setVolunteerFamilies, setBackdropOpen]);
 
   return loaded
     ? <>{children}</>
