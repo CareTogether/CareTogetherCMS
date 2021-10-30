@@ -44,21 +44,5 @@ namespace CareTogether.Api.Controllers
             var result = await approvalManager.ExecuteVolunteerCommandAsync(organizationId, locationId, User, command);
             return result;
         }
-
-        [HttpPost("addAdult")]
-        public async Task<ActionResult<VolunteerFamily>> SubmitApprovalCommandAsync(Guid organizationId, Guid locationId,
-            [FromBody] ApprovalCommand command)
-        {
-            var result = await approvalManager.ExecuteApprovalCommandAsync(organizationId, locationId, User, command);
-            return result;
-        }
-
-        [HttpPost("personCommand")]
-        public async Task<ActionResult<VolunteerFamily>> SubmitPersonCommandAsync(Guid organizationId, Guid locationId,
-            Guid familyId, [FromBody] PersonCommand command)
-        {
-            var result = await approvalManager.ExecutePersonCommandAsync(organizationId, locationId, User, familyId, command);
-            return result;
-        }
     }
 }

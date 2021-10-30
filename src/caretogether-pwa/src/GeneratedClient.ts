@@ -135,6 +135,113 @@ export class ConfigurationClient {
     }
 }
 
+export class DirectoryClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : <any>window;
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
+    }
+
+    submitDirectoryCommand(organizationId: string, locationId: string, familyId: string | undefined, command: DirectoryCommand): Promise<Family> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Directory/directoryCommand?";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (locationId === undefined || locationId === null)
+            throw new Error("The parameter 'locationId' must be defined.");
+        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
+        if (familyId === null)
+            throw new Error("The parameter 'familyId' cannot be null.");
+        else if (familyId !== undefined)
+            url_ += "familyId=" + encodeURIComponent("" + familyId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(command);
+
+        let options_ = <RequestInit>{
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSubmitDirectoryCommand(_response);
+        });
+    }
+
+    protected processSubmitDirectoryCommand(response: Response): Promise<Family> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = Family.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<Family>(<any>null);
+    }
+
+    submitPersonCommand(organizationId: string, locationId: string, familyId: string | undefined, command: PersonCommand): Promise<Family> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Directory/personCommand?";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (locationId === undefined || locationId === null)
+            throw new Error("The parameter 'locationId' must be defined.");
+        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
+        if (familyId === null)
+            throw new Error("The parameter 'familyId' cannot be null.");
+        else if (familyId !== undefined)
+            url_ += "familyId=" + encodeURIComponent("" + familyId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(command);
+
+        let options_ = <RequestInit>{
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSubmitPersonCommand(_response);
+        });
+    }
+
+    protected processSubmitPersonCommand(response: Response): Promise<Family> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = Family.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<Family>(<any>null);
+    }
+}
+
 export class FilesClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
@@ -592,98 +699,6 @@ export class VolunteersClient {
     }
 
     protected processSubmitVolunteerCommand(response: Response): Promise<VolunteerFamily> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = VolunteerFamily.fromJS(resultData200);
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<VolunteerFamily>(<any>null);
-    }
-
-    submitApprovalCommand(organizationId: string, locationId: string, command: ApprovalCommand): Promise<VolunteerFamily> {
-        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Volunteers/addAdult";
-        if (organizationId === undefined || organizationId === null)
-            throw new Error("The parameter 'organizationId' must be defined.");
-        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
-        if (locationId === undefined || locationId === null)
-            throw new Error("The parameter 'locationId' must be defined.");
-        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(command);
-
-        let options_ = <RequestInit>{
-            body: content_,
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processSubmitApprovalCommand(_response);
-        });
-    }
-
-    protected processSubmitApprovalCommand(response: Response): Promise<VolunteerFamily> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = VolunteerFamily.fromJS(resultData200);
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<VolunteerFamily>(<any>null);
-    }
-
-    submitPersonCommand(organizationId: string, locationId: string, familyId: string | undefined, command: PersonCommand): Promise<VolunteerFamily> {
-        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Volunteers/personCommand?";
-        if (organizationId === undefined || organizationId === null)
-            throw new Error("The parameter 'organizationId' must be defined.");
-        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
-        if (locationId === undefined || locationId === null)
-            throw new Error("The parameter 'locationId' must be defined.");
-        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
-        if (familyId === null)
-            throw new Error("The parameter 'familyId' cannot be null.");
-        else if (familyId !== undefined)
-            url_ += "familyId=" + encodeURIComponent("" + familyId) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(command);
-
-        let options_ = <RequestInit>{
-            body: content_,
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processSubmitPersonCommand(_response);
-        });
-    }
-
-    protected processSubmitPersonCommand(response: Response): Promise<VolunteerFamily> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -1763,98 +1778,6 @@ export interface ICurrentFeatureFlags {
     viewReferrals?: boolean;
 }
 
-export class DocumentUploadInfo implements IDocumentUploadInfo {
-    documentId?: string;
-    valetUrl?: string;
-
-    constructor(data?: IDocumentUploadInfo) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.documentId = _data["documentId"];
-            this.valetUrl = _data["valetUrl"];
-        }
-    }
-
-    static fromJS(data: any): DocumentUploadInfo {
-        data = typeof data === 'object' ? data : {};
-        let result = new DocumentUploadInfo();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["documentId"] = this.documentId;
-        data["valetUrl"] = this.valetUrl;
-        return data; 
-    }
-}
-
-export interface IDocumentUploadInfo {
-    documentId?: string;
-    valetUrl?: string;
-}
-
-export class PartneringFamily implements IPartneringFamily {
-    family?: Family;
-    openReferral?: Referral | undefined;
-    closedReferrals?: Referral[];
-
-    constructor(data?: IPartneringFamily) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.family = _data["family"] ? Family.fromJS(_data["family"]) : <any>undefined;
-            this.openReferral = _data["openReferral"] ? Referral.fromJS(_data["openReferral"]) : <any>undefined;
-            if (Array.isArray(_data["closedReferrals"])) {
-                this.closedReferrals = [] as any;
-                for (let item of _data["closedReferrals"])
-                    this.closedReferrals!.push(Referral.fromJS(item));
-            }
-        }
-    }
-
-    static fromJS(data: any): PartneringFamily {
-        data = typeof data === 'object' ? data : {};
-        let result = new PartneringFamily();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["family"] = this.family ? this.family.toJSON() : <any>undefined;
-        data["openReferral"] = this.openReferral ? this.openReferral.toJSON() : <any>undefined;
-        if (Array.isArray(this.closedReferrals)) {
-            data["closedReferrals"] = [];
-            for (let item of this.closedReferrals)
-                data["closedReferrals"].push(item.toJSON());
-        }
-        return data; 
-    }
-}
-
-export interface IPartneringFamily {
-    family?: Family;
-    openReferral?: Referral | undefined;
-    closedReferrals?: Referral[];
-}
-
 export class Family implements IFamily {
     id?: string;
     primaryFamilyContactPersonId?: string;
@@ -2451,6 +2374,981 @@ export enum CustodialRelationshipType {
     ParentWithCustody = 0,
     ParentWithCourtAppointedCustody = 1,
     LegalGuardian = 2,
+}
+
+export abstract class DirectoryCommand implements IDirectoryCommand {
+
+    protected _discriminator: string;
+
+    constructor(data?: IDirectoryCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        this._discriminator = "DirectoryCommand";
+    }
+
+    init(_data?: any) {
+    }
+
+    static fromJS(data: any): DirectoryCommand {
+        data = typeof data === 'object' ? data : {};
+        if (data["discriminator"] === "AddAdultToFamilyCommand") {
+            let result = new AddAdultToFamilyCommand();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "AddChildToFamilyCommand") {
+            let result = new AddChildToFamilyCommand();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "CreateVolunteerFamilyWithNewAdultCommand") {
+            let result = new CreateVolunteerFamilyWithNewAdultCommand();
+            result.init(data);
+            return result;
+        }
+        throw new Error("The abstract class 'DirectoryCommand' cannot be instantiated.");
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["discriminator"] = this._discriminator; 
+        return data; 
+    }
+}
+
+export interface IDirectoryCommand {
+}
+
+export class AddAdultToFamilyCommand extends DirectoryCommand implements IAddAdultToFamilyCommand {
+    familyId?: string;
+    firstName?: string;
+    lastName?: string;
+    gender?: Gender;
+    age?: Age;
+    ethnicity?: string;
+    familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
+    concerns?: string | undefined;
+    notes?: string | undefined;
+    address?: Address | undefined;
+    phoneNumber?: PhoneNumber | undefined;
+    emailAddress?: EmailAddress | undefined;
+
+    constructor(data?: IAddAdultToFamilyCommand) {
+        super(data);
+        this._discriminator = "AddAdultToFamilyCommand";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.familyId = _data["familyId"];
+            this.firstName = _data["firstName"];
+            this.lastName = _data["lastName"];
+            this.gender = _data["gender"];
+            this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
+            this.ethnicity = _data["ethnicity"];
+            this.familyAdultRelationshipInfo = _data["familyAdultRelationshipInfo"] ? FamilyAdultRelationshipInfo.fromJS(_data["familyAdultRelationshipInfo"]) : <any>undefined;
+            this.concerns = _data["concerns"];
+            this.notes = _data["notes"];
+            this.address = _data["address"] ? Address.fromJS(_data["address"]) : <any>undefined;
+            this.phoneNumber = _data["phoneNumber"] ? PhoneNumber.fromJS(_data["phoneNumber"]) : <any>undefined;
+            this.emailAddress = _data["emailAddress"] ? EmailAddress.fromJS(_data["emailAddress"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): AddAdultToFamilyCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new AddAdultToFamilyCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["familyId"] = this.familyId;
+        data["firstName"] = this.firstName;
+        data["lastName"] = this.lastName;
+        data["gender"] = this.gender;
+        data["age"] = this.age ? this.age.toJSON() : <any>undefined;
+        data["ethnicity"] = this.ethnicity;
+        data["familyAdultRelationshipInfo"] = this.familyAdultRelationshipInfo ? this.familyAdultRelationshipInfo.toJSON() : <any>undefined;
+        data["concerns"] = this.concerns;
+        data["notes"] = this.notes;
+        data["address"] = this.address ? this.address.toJSON() : <any>undefined;
+        data["phoneNumber"] = this.phoneNumber ? this.phoneNumber.toJSON() : <any>undefined;
+        data["emailAddress"] = this.emailAddress ? this.emailAddress.toJSON() : <any>undefined;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IAddAdultToFamilyCommand extends IDirectoryCommand {
+    familyId?: string;
+    firstName?: string;
+    lastName?: string;
+    gender?: Gender;
+    age?: Age;
+    ethnicity?: string;
+    familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
+    concerns?: string | undefined;
+    notes?: string | undefined;
+    address?: Address | undefined;
+    phoneNumber?: PhoneNumber | undefined;
+    emailAddress?: EmailAddress | undefined;
+}
+
+export class AddChildToFamilyCommand extends DirectoryCommand implements IAddChildToFamilyCommand {
+    familyId?: string;
+    firstName?: string;
+    lastName?: string;
+    gender?: Gender;
+    age?: Age;
+    ethnicity?: string;
+    custodialRelationships?: CustodialRelationship[];
+    concerns?: string | undefined;
+    notes?: string | undefined;
+
+    constructor(data?: IAddChildToFamilyCommand) {
+        super(data);
+        this._discriminator = "AddChildToFamilyCommand";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.familyId = _data["familyId"];
+            this.firstName = _data["firstName"];
+            this.lastName = _data["lastName"];
+            this.gender = _data["gender"];
+            this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
+            this.ethnicity = _data["ethnicity"];
+            if (Array.isArray(_data["custodialRelationships"])) {
+                this.custodialRelationships = [] as any;
+                for (let item of _data["custodialRelationships"])
+                    this.custodialRelationships!.push(CustodialRelationship.fromJS(item));
+            }
+            this.concerns = _data["concerns"];
+            this.notes = _data["notes"];
+        }
+    }
+
+    static fromJS(data: any): AddChildToFamilyCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new AddChildToFamilyCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["familyId"] = this.familyId;
+        data["firstName"] = this.firstName;
+        data["lastName"] = this.lastName;
+        data["gender"] = this.gender;
+        data["age"] = this.age ? this.age.toJSON() : <any>undefined;
+        data["ethnicity"] = this.ethnicity;
+        if (Array.isArray(this.custodialRelationships)) {
+            data["custodialRelationships"] = [];
+            for (let item of this.custodialRelationships)
+                data["custodialRelationships"].push(item.toJSON());
+        }
+        data["concerns"] = this.concerns;
+        data["notes"] = this.notes;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IAddChildToFamilyCommand extends IDirectoryCommand {
+    familyId?: string;
+    firstName?: string;
+    lastName?: string;
+    gender?: Gender;
+    age?: Age;
+    ethnicity?: string;
+    custodialRelationships?: CustodialRelationship[];
+    concerns?: string | undefined;
+    notes?: string | undefined;
+}
+
+export class CreateVolunteerFamilyWithNewAdultCommand extends DirectoryCommand implements ICreateVolunteerFamilyWithNewAdultCommand {
+    firstName?: string;
+    lastName?: string;
+    gender?: Gender;
+    age?: Age;
+    ethnicity?: string;
+    familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
+    concerns?: string | undefined;
+    notes?: string | undefined;
+    address?: Address;
+    phoneNumber?: PhoneNumber;
+    emailAddress?: EmailAddress;
+
+    constructor(data?: ICreateVolunteerFamilyWithNewAdultCommand) {
+        super(data);
+        this._discriminator = "CreateVolunteerFamilyWithNewAdultCommand";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.firstName = _data["firstName"];
+            this.lastName = _data["lastName"];
+            this.gender = _data["gender"];
+            this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
+            this.ethnicity = _data["ethnicity"];
+            this.familyAdultRelationshipInfo = _data["familyAdultRelationshipInfo"] ? FamilyAdultRelationshipInfo.fromJS(_data["familyAdultRelationshipInfo"]) : <any>undefined;
+            this.concerns = _data["concerns"];
+            this.notes = _data["notes"];
+            this.address = _data["address"] ? Address.fromJS(_data["address"]) : <any>undefined;
+            this.phoneNumber = _data["phoneNumber"] ? PhoneNumber.fromJS(_data["phoneNumber"]) : <any>undefined;
+            this.emailAddress = _data["emailAddress"] ? EmailAddress.fromJS(_data["emailAddress"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): CreateVolunteerFamilyWithNewAdultCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateVolunteerFamilyWithNewAdultCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["firstName"] = this.firstName;
+        data["lastName"] = this.lastName;
+        data["gender"] = this.gender;
+        data["age"] = this.age ? this.age.toJSON() : <any>undefined;
+        data["ethnicity"] = this.ethnicity;
+        data["familyAdultRelationshipInfo"] = this.familyAdultRelationshipInfo ? this.familyAdultRelationshipInfo.toJSON() : <any>undefined;
+        data["concerns"] = this.concerns;
+        data["notes"] = this.notes;
+        data["address"] = this.address ? this.address.toJSON() : <any>undefined;
+        data["phoneNumber"] = this.phoneNumber ? this.phoneNumber.toJSON() : <any>undefined;
+        data["emailAddress"] = this.emailAddress ? this.emailAddress.toJSON() : <any>undefined;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface ICreateVolunteerFamilyWithNewAdultCommand extends IDirectoryCommand {
+    firstName?: string;
+    lastName?: string;
+    gender?: Gender;
+    age?: Age;
+    ethnicity?: string;
+    familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
+    concerns?: string | undefined;
+    notes?: string | undefined;
+    address?: Address;
+    phoneNumber?: PhoneNumber;
+    emailAddress?: EmailAddress;
+}
+
+export abstract class PersonCommand implements IPersonCommand {
+    personId?: string;
+
+    protected _discriminator: string;
+
+    constructor(data?: IPersonCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        this._discriminator = "PersonCommand";
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.personId = _data["personId"];
+        }
+    }
+
+    static fromJS(data: any): PersonCommand {
+        data = typeof data === 'object' ? data : {};
+        if (data["discriminator"] === "AddPersonAddress") {
+            let result = new AddPersonAddress();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "AddPersonEmailAddress") {
+            let result = new AddPersonEmailAddress();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "AddPersonPhoneNumber") {
+            let result = new AddPersonPhoneNumber();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "CreatePerson") {
+            let result = new CreatePerson();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UpdatePersonAddress") {
+            let result = new UpdatePersonAddress();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UpdatePersonAge") {
+            let result = new UpdatePersonAge();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UpdatePersonConcerns") {
+            let result = new UpdatePersonConcerns();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UpdatePersonEmailAddress") {
+            let result = new UpdatePersonEmailAddress();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UpdatePersonName") {
+            let result = new UpdatePersonName();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UpdatePersonNotes") {
+            let result = new UpdatePersonNotes();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UpdatePersonPhoneNumber") {
+            let result = new UpdatePersonPhoneNumber();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UpdatePersonUserLink") {
+            let result = new UpdatePersonUserLink();
+            result.init(data);
+            return result;
+        }
+        throw new Error("The abstract class 'PersonCommand' cannot be instantiated.");
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["discriminator"] = this._discriminator; 
+        data["personId"] = this.personId;
+        return data; 
+    }
+}
+
+export interface IPersonCommand {
+    personId?: string;
+}
+
+export class AddPersonAddress extends PersonCommand implements IAddPersonAddress {
+    address?: Address;
+    isCurrentAddress?: boolean;
+
+    constructor(data?: IAddPersonAddress) {
+        super(data);
+        this._discriminator = "AddPersonAddress";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.address = _data["address"] ? Address.fromJS(_data["address"]) : <any>undefined;
+            this.isCurrentAddress = _data["isCurrentAddress"];
+        }
+    }
+
+    static fromJS(data: any): AddPersonAddress {
+        data = typeof data === 'object' ? data : {};
+        let result = new AddPersonAddress();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["address"] = this.address ? this.address.toJSON() : <any>undefined;
+        data["isCurrentAddress"] = this.isCurrentAddress;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IAddPersonAddress extends IPersonCommand {
+    address?: Address;
+    isCurrentAddress?: boolean;
+}
+
+export class AddPersonEmailAddress extends PersonCommand implements IAddPersonEmailAddress {
+    emailAddress?: EmailAddress;
+    isPreferredEmailAddress?: boolean;
+
+    constructor(data?: IAddPersonEmailAddress) {
+        super(data);
+        this._discriminator = "AddPersonEmailAddress";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.emailAddress = _data["emailAddress"] ? EmailAddress.fromJS(_data["emailAddress"]) : <any>undefined;
+            this.isPreferredEmailAddress = _data["isPreferredEmailAddress"];
+        }
+    }
+
+    static fromJS(data: any): AddPersonEmailAddress {
+        data = typeof data === 'object' ? data : {};
+        let result = new AddPersonEmailAddress();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["emailAddress"] = this.emailAddress ? this.emailAddress.toJSON() : <any>undefined;
+        data["isPreferredEmailAddress"] = this.isPreferredEmailAddress;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IAddPersonEmailAddress extends IPersonCommand {
+    emailAddress?: EmailAddress;
+    isPreferredEmailAddress?: boolean;
+}
+
+export class AddPersonPhoneNumber extends PersonCommand implements IAddPersonPhoneNumber {
+    phoneNumber?: PhoneNumber;
+    isPreferredPhoneNumber?: boolean;
+
+    constructor(data?: IAddPersonPhoneNumber) {
+        super(data);
+        this._discriminator = "AddPersonPhoneNumber";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.phoneNumber = _data["phoneNumber"] ? PhoneNumber.fromJS(_data["phoneNumber"]) : <any>undefined;
+            this.isPreferredPhoneNumber = _data["isPreferredPhoneNumber"];
+        }
+    }
+
+    static fromJS(data: any): AddPersonPhoneNumber {
+        data = typeof data === 'object' ? data : {};
+        let result = new AddPersonPhoneNumber();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["phoneNumber"] = this.phoneNumber ? this.phoneNumber.toJSON() : <any>undefined;
+        data["isPreferredPhoneNumber"] = this.isPreferredPhoneNumber;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IAddPersonPhoneNumber extends IPersonCommand {
+    phoneNumber?: PhoneNumber;
+    isPreferredPhoneNumber?: boolean;
+}
+
+export class CreatePerson extends PersonCommand implements ICreatePerson {
+    userId?: string | undefined;
+    firstName?: string;
+    lastName?: string;
+    gender?: Gender;
+    age?: Age;
+    ethnicity?: string;
+    addresses?: Address[];
+    currentAddressId?: string | undefined;
+    phoneNumbers?: PhoneNumber[];
+    preferredPhoneNumberId?: string | undefined;
+    emailAddresses?: EmailAddress[];
+    preferredEmailAddressId?: string | undefined;
+    concerns?: string | undefined;
+    notes?: string | undefined;
+
+    constructor(data?: ICreatePerson) {
+        super(data);
+        this._discriminator = "CreatePerson";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.userId = _data["userId"];
+            this.firstName = _data["firstName"];
+            this.lastName = _data["lastName"];
+            this.gender = _data["gender"];
+            this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
+            this.ethnicity = _data["ethnicity"];
+            if (Array.isArray(_data["addresses"])) {
+                this.addresses = [] as any;
+                for (let item of _data["addresses"])
+                    this.addresses!.push(Address.fromJS(item));
+            }
+            this.currentAddressId = _data["currentAddressId"];
+            if (Array.isArray(_data["phoneNumbers"])) {
+                this.phoneNumbers = [] as any;
+                for (let item of _data["phoneNumbers"])
+                    this.phoneNumbers!.push(PhoneNumber.fromJS(item));
+            }
+            this.preferredPhoneNumberId = _data["preferredPhoneNumberId"];
+            if (Array.isArray(_data["emailAddresses"])) {
+                this.emailAddresses = [] as any;
+                for (let item of _data["emailAddresses"])
+                    this.emailAddresses!.push(EmailAddress.fromJS(item));
+            }
+            this.preferredEmailAddressId = _data["preferredEmailAddressId"];
+            this.concerns = _data["concerns"];
+            this.notes = _data["notes"];
+        }
+    }
+
+    static fromJS(data: any): CreatePerson {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreatePerson();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["firstName"] = this.firstName;
+        data["lastName"] = this.lastName;
+        data["gender"] = this.gender;
+        data["age"] = this.age ? this.age.toJSON() : <any>undefined;
+        data["ethnicity"] = this.ethnicity;
+        if (Array.isArray(this.addresses)) {
+            data["addresses"] = [];
+            for (let item of this.addresses)
+                data["addresses"].push(item.toJSON());
+        }
+        data["currentAddressId"] = this.currentAddressId;
+        if (Array.isArray(this.phoneNumbers)) {
+            data["phoneNumbers"] = [];
+            for (let item of this.phoneNumbers)
+                data["phoneNumbers"].push(item.toJSON());
+        }
+        data["preferredPhoneNumberId"] = this.preferredPhoneNumberId;
+        if (Array.isArray(this.emailAddresses)) {
+            data["emailAddresses"] = [];
+            for (let item of this.emailAddresses)
+                data["emailAddresses"].push(item.toJSON());
+        }
+        data["preferredEmailAddressId"] = this.preferredEmailAddressId;
+        data["concerns"] = this.concerns;
+        data["notes"] = this.notes;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface ICreatePerson extends IPersonCommand {
+    userId?: string | undefined;
+    firstName?: string;
+    lastName?: string;
+    gender?: Gender;
+    age?: Age;
+    ethnicity?: string;
+    addresses?: Address[];
+    currentAddressId?: string | undefined;
+    phoneNumbers?: PhoneNumber[];
+    preferredPhoneNumberId?: string | undefined;
+    emailAddresses?: EmailAddress[];
+    preferredEmailAddressId?: string | undefined;
+    concerns?: string | undefined;
+    notes?: string | undefined;
+}
+
+export class UpdatePersonAddress extends PersonCommand implements IUpdatePersonAddress {
+    address?: Address;
+    isCurrentAddress?: boolean;
+
+    constructor(data?: IUpdatePersonAddress) {
+        super(data);
+        this._discriminator = "UpdatePersonAddress";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.address = _data["address"] ? Address.fromJS(_data["address"]) : <any>undefined;
+            this.isCurrentAddress = _data["isCurrentAddress"];
+        }
+    }
+
+    static fromJS(data: any): UpdatePersonAddress {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdatePersonAddress();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["address"] = this.address ? this.address.toJSON() : <any>undefined;
+        data["isCurrentAddress"] = this.isCurrentAddress;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUpdatePersonAddress extends IPersonCommand {
+    address?: Address;
+    isCurrentAddress?: boolean;
+}
+
+export class UpdatePersonAge extends PersonCommand implements IUpdatePersonAge {
+    age?: Age;
+
+    constructor(data?: IUpdatePersonAge) {
+        super(data);
+        this._discriminator = "UpdatePersonAge";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): UpdatePersonAge {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdatePersonAge();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["age"] = this.age ? this.age.toJSON() : <any>undefined;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUpdatePersonAge extends IPersonCommand {
+    age?: Age;
+}
+
+export class UpdatePersonConcerns extends PersonCommand implements IUpdatePersonConcerns {
+    concerns?: string | undefined;
+
+    constructor(data?: IUpdatePersonConcerns) {
+        super(data);
+        this._discriminator = "UpdatePersonConcerns";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.concerns = _data["concerns"];
+        }
+    }
+
+    static fromJS(data: any): UpdatePersonConcerns {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdatePersonConcerns();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["concerns"] = this.concerns;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUpdatePersonConcerns extends IPersonCommand {
+    concerns?: string | undefined;
+}
+
+export class UpdatePersonEmailAddress extends PersonCommand implements IUpdatePersonEmailAddress {
+    emailAddress?: EmailAddress;
+    isPreferredEmailAddress?: boolean;
+
+    constructor(data?: IUpdatePersonEmailAddress) {
+        super(data);
+        this._discriminator = "UpdatePersonEmailAddress";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.emailAddress = _data["emailAddress"] ? EmailAddress.fromJS(_data["emailAddress"]) : <any>undefined;
+            this.isPreferredEmailAddress = _data["isPreferredEmailAddress"];
+        }
+    }
+
+    static fromJS(data: any): UpdatePersonEmailAddress {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdatePersonEmailAddress();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["emailAddress"] = this.emailAddress ? this.emailAddress.toJSON() : <any>undefined;
+        data["isPreferredEmailAddress"] = this.isPreferredEmailAddress;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUpdatePersonEmailAddress extends IPersonCommand {
+    emailAddress?: EmailAddress;
+    isPreferredEmailAddress?: boolean;
+}
+
+export class UpdatePersonName extends PersonCommand implements IUpdatePersonName {
+    firstName?: string;
+    lastName?: string;
+
+    constructor(data?: IUpdatePersonName) {
+        super(data);
+        this._discriminator = "UpdatePersonName";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.firstName = _data["firstName"];
+            this.lastName = _data["lastName"];
+        }
+    }
+
+    static fromJS(data: any): UpdatePersonName {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdatePersonName();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["firstName"] = this.firstName;
+        data["lastName"] = this.lastName;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUpdatePersonName extends IPersonCommand {
+    firstName?: string;
+    lastName?: string;
+}
+
+export class UpdatePersonNotes extends PersonCommand implements IUpdatePersonNotes {
+    notes?: string | undefined;
+
+    constructor(data?: IUpdatePersonNotes) {
+        super(data);
+        this._discriminator = "UpdatePersonNotes";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.notes = _data["notes"];
+        }
+    }
+
+    static fromJS(data: any): UpdatePersonNotes {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdatePersonNotes();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["notes"] = this.notes;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUpdatePersonNotes extends IPersonCommand {
+    notes?: string | undefined;
+}
+
+export class UpdatePersonPhoneNumber extends PersonCommand implements IUpdatePersonPhoneNumber {
+    phoneNumber?: PhoneNumber;
+    isPreferredPhoneNumber?: boolean;
+
+    constructor(data?: IUpdatePersonPhoneNumber) {
+        super(data);
+        this._discriminator = "UpdatePersonPhoneNumber";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.phoneNumber = _data["phoneNumber"] ? PhoneNumber.fromJS(_data["phoneNumber"]) : <any>undefined;
+            this.isPreferredPhoneNumber = _data["isPreferredPhoneNumber"];
+        }
+    }
+
+    static fromJS(data: any): UpdatePersonPhoneNumber {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdatePersonPhoneNumber();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["phoneNumber"] = this.phoneNumber ? this.phoneNumber.toJSON() : <any>undefined;
+        data["isPreferredPhoneNumber"] = this.isPreferredPhoneNumber;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUpdatePersonPhoneNumber extends IPersonCommand {
+    phoneNumber?: PhoneNumber;
+    isPreferredPhoneNumber?: boolean;
+}
+
+export class UpdatePersonUserLink extends PersonCommand implements IUpdatePersonUserLink {
+    userId?: string | undefined;
+
+    constructor(data?: IUpdatePersonUserLink) {
+        super(data);
+        this._discriminator = "UpdatePersonUserLink";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.userId = _data["userId"];
+        }
+    }
+
+    static fromJS(data: any): UpdatePersonUserLink {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdatePersonUserLink();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUpdatePersonUserLink extends IPersonCommand {
+    userId?: string | undefined;
+}
+
+export class DocumentUploadInfo implements IDocumentUploadInfo {
+    documentId?: string;
+    valetUrl?: string;
+
+    constructor(data?: IDocumentUploadInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.documentId = _data["documentId"];
+            this.valetUrl = _data["valetUrl"];
+        }
+    }
+
+    static fromJS(data: any): DocumentUploadInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new DocumentUploadInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["documentId"] = this.documentId;
+        data["valetUrl"] = this.valetUrl;
+        return data; 
+    }
+}
+
+export interface IDocumentUploadInfo {
+    documentId?: string;
+    valetUrl?: string;
+}
+
+export class PartneringFamily implements IPartneringFamily {
+    family?: Family;
+    openReferral?: Referral | undefined;
+    closedReferrals?: Referral[];
+
+    constructor(data?: IPartneringFamily) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.family = _data["family"] ? Family.fromJS(_data["family"]) : <any>undefined;
+            this.openReferral = _data["openReferral"] ? Referral.fromJS(_data["openReferral"]) : <any>undefined;
+            if (Array.isArray(_data["closedReferrals"])) {
+                this.closedReferrals = [] as any;
+                for (let item of _data["closedReferrals"])
+                    this.closedReferrals!.push(Referral.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): PartneringFamily {
+        data = typeof data === 'object' ? data : {};
+        let result = new PartneringFamily();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["family"] = this.family ? this.family.toJSON() : <any>undefined;
+        data["openReferral"] = this.openReferral ? this.openReferral.toJSON() : <any>undefined;
+        if (Array.isArray(this.closedReferrals)) {
+            data["closedReferrals"] = [];
+            for (let item of this.closedReferrals)
+                data["closedReferrals"].push(item.toJSON());
+        }
+        return data; 
+    }
+}
+
+export interface IPartneringFamily {
+    family?: Family;
+    openReferral?: Referral | undefined;
+    closedReferrals?: Referral[];
 }
 
 export class Referral implements IReferral {
@@ -4616,889 +5514,6 @@ export class SetVolunteerNote extends VolunteerCommand implements ISetVolunteerN
 
 export interface ISetVolunteerNote extends IVolunteerCommand {
     note?: string;
-}
-
-export abstract class ApprovalCommand implements IApprovalCommand {
-
-    protected _discriminator: string;
-
-    constructor(data?: IApprovalCommand) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-        this._discriminator = "ApprovalCommand";
-    }
-
-    init(_data?: any) {
-    }
-
-    static fromJS(data: any): ApprovalCommand {
-        data = typeof data === 'object' ? data : {};
-        if (data["discriminator"] === "AddAdultToFamilyCommand") {
-            let result = new AddAdultToFamilyCommand();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "AddChildToFamilyCommand") {
-            let result = new AddChildToFamilyCommand();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "CreateVolunteerFamilyWithNewAdultCommand") {
-            let result = new CreateVolunteerFamilyWithNewAdultCommand();
-            result.init(data);
-            return result;
-        }
-        throw new Error("The abstract class 'ApprovalCommand' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["discriminator"] = this._discriminator; 
-        return data; 
-    }
-}
-
-export interface IApprovalCommand {
-}
-
-export class AddAdultToFamilyCommand extends ApprovalCommand implements IAddAdultToFamilyCommand {
-    familyId?: string;
-    firstName?: string;
-    lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
-    familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
-    concerns?: string | undefined;
-    notes?: string | undefined;
-    address?: Address | undefined;
-    phoneNumber?: PhoneNumber | undefined;
-    emailAddress?: EmailAddress | undefined;
-
-    constructor(data?: IAddAdultToFamilyCommand) {
-        super(data);
-        this._discriminator = "AddAdultToFamilyCommand";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.familyId = _data["familyId"];
-            this.firstName = _data["firstName"];
-            this.lastName = _data["lastName"];
-            this.gender = _data["gender"];
-            this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
-            this.ethnicity = _data["ethnicity"];
-            this.familyAdultRelationshipInfo = _data["familyAdultRelationshipInfo"] ? FamilyAdultRelationshipInfo.fromJS(_data["familyAdultRelationshipInfo"]) : <any>undefined;
-            this.concerns = _data["concerns"];
-            this.notes = _data["notes"];
-            this.address = _data["address"] ? Address.fromJS(_data["address"]) : <any>undefined;
-            this.phoneNumber = _data["phoneNumber"] ? PhoneNumber.fromJS(_data["phoneNumber"]) : <any>undefined;
-            this.emailAddress = _data["emailAddress"] ? EmailAddress.fromJS(_data["emailAddress"]) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): AddAdultToFamilyCommand {
-        data = typeof data === 'object' ? data : {};
-        let result = new AddAdultToFamilyCommand();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["familyId"] = this.familyId;
-        data["firstName"] = this.firstName;
-        data["lastName"] = this.lastName;
-        data["gender"] = this.gender;
-        data["age"] = this.age ? this.age.toJSON() : <any>undefined;
-        data["ethnicity"] = this.ethnicity;
-        data["familyAdultRelationshipInfo"] = this.familyAdultRelationshipInfo ? this.familyAdultRelationshipInfo.toJSON() : <any>undefined;
-        data["concerns"] = this.concerns;
-        data["notes"] = this.notes;
-        data["address"] = this.address ? this.address.toJSON() : <any>undefined;
-        data["phoneNumber"] = this.phoneNumber ? this.phoneNumber.toJSON() : <any>undefined;
-        data["emailAddress"] = this.emailAddress ? this.emailAddress.toJSON() : <any>undefined;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IAddAdultToFamilyCommand extends IApprovalCommand {
-    familyId?: string;
-    firstName?: string;
-    lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
-    familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
-    concerns?: string | undefined;
-    notes?: string | undefined;
-    address?: Address | undefined;
-    phoneNumber?: PhoneNumber | undefined;
-    emailAddress?: EmailAddress | undefined;
-}
-
-export class AddChildToFamilyCommand extends ApprovalCommand implements IAddChildToFamilyCommand {
-    familyId?: string;
-    firstName?: string;
-    lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
-    custodialRelationships?: CustodialRelationship[];
-    concerns?: string | undefined;
-    notes?: string | undefined;
-
-    constructor(data?: IAddChildToFamilyCommand) {
-        super(data);
-        this._discriminator = "AddChildToFamilyCommand";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.familyId = _data["familyId"];
-            this.firstName = _data["firstName"];
-            this.lastName = _data["lastName"];
-            this.gender = _data["gender"];
-            this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
-            this.ethnicity = _data["ethnicity"];
-            if (Array.isArray(_data["custodialRelationships"])) {
-                this.custodialRelationships = [] as any;
-                for (let item of _data["custodialRelationships"])
-                    this.custodialRelationships!.push(CustodialRelationship.fromJS(item));
-            }
-            this.concerns = _data["concerns"];
-            this.notes = _data["notes"];
-        }
-    }
-
-    static fromJS(data: any): AddChildToFamilyCommand {
-        data = typeof data === 'object' ? data : {};
-        let result = new AddChildToFamilyCommand();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["familyId"] = this.familyId;
-        data["firstName"] = this.firstName;
-        data["lastName"] = this.lastName;
-        data["gender"] = this.gender;
-        data["age"] = this.age ? this.age.toJSON() : <any>undefined;
-        data["ethnicity"] = this.ethnicity;
-        if (Array.isArray(this.custodialRelationships)) {
-            data["custodialRelationships"] = [];
-            for (let item of this.custodialRelationships)
-                data["custodialRelationships"].push(item.toJSON());
-        }
-        data["concerns"] = this.concerns;
-        data["notes"] = this.notes;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IAddChildToFamilyCommand extends IApprovalCommand {
-    familyId?: string;
-    firstName?: string;
-    lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
-    custodialRelationships?: CustodialRelationship[];
-    concerns?: string | undefined;
-    notes?: string | undefined;
-}
-
-export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand implements ICreateVolunteerFamilyWithNewAdultCommand {
-    firstName?: string;
-    lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
-    familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
-    concerns?: string | undefined;
-    notes?: string | undefined;
-    address?: Address;
-    phoneNumber?: PhoneNumber;
-    emailAddress?: EmailAddress;
-
-    constructor(data?: ICreateVolunteerFamilyWithNewAdultCommand) {
-        super(data);
-        this._discriminator = "CreateVolunteerFamilyWithNewAdultCommand";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.firstName = _data["firstName"];
-            this.lastName = _data["lastName"];
-            this.gender = _data["gender"];
-            this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
-            this.ethnicity = _data["ethnicity"];
-            this.familyAdultRelationshipInfo = _data["familyAdultRelationshipInfo"] ? FamilyAdultRelationshipInfo.fromJS(_data["familyAdultRelationshipInfo"]) : <any>undefined;
-            this.concerns = _data["concerns"];
-            this.notes = _data["notes"];
-            this.address = _data["address"] ? Address.fromJS(_data["address"]) : <any>undefined;
-            this.phoneNumber = _data["phoneNumber"] ? PhoneNumber.fromJS(_data["phoneNumber"]) : <any>undefined;
-            this.emailAddress = _data["emailAddress"] ? EmailAddress.fromJS(_data["emailAddress"]) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): CreateVolunteerFamilyWithNewAdultCommand {
-        data = typeof data === 'object' ? data : {};
-        let result = new CreateVolunteerFamilyWithNewAdultCommand();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["firstName"] = this.firstName;
-        data["lastName"] = this.lastName;
-        data["gender"] = this.gender;
-        data["age"] = this.age ? this.age.toJSON() : <any>undefined;
-        data["ethnicity"] = this.ethnicity;
-        data["familyAdultRelationshipInfo"] = this.familyAdultRelationshipInfo ? this.familyAdultRelationshipInfo.toJSON() : <any>undefined;
-        data["concerns"] = this.concerns;
-        data["notes"] = this.notes;
-        data["address"] = this.address ? this.address.toJSON() : <any>undefined;
-        data["phoneNumber"] = this.phoneNumber ? this.phoneNumber.toJSON() : <any>undefined;
-        data["emailAddress"] = this.emailAddress ? this.emailAddress.toJSON() : <any>undefined;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface ICreateVolunteerFamilyWithNewAdultCommand extends IApprovalCommand {
-    firstName?: string;
-    lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
-    familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
-    concerns?: string | undefined;
-    notes?: string | undefined;
-    address?: Address;
-    phoneNumber?: PhoneNumber;
-    emailAddress?: EmailAddress;
-}
-
-export abstract class PersonCommand implements IPersonCommand {
-    personId?: string;
-
-    protected _discriminator: string;
-
-    constructor(data?: IPersonCommand) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-        this._discriminator = "PersonCommand";
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.personId = _data["personId"];
-        }
-    }
-
-    static fromJS(data: any): PersonCommand {
-        data = typeof data === 'object' ? data : {};
-        if (data["discriminator"] === "AddPersonAddress") {
-            let result = new AddPersonAddress();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "AddPersonEmailAddress") {
-            let result = new AddPersonEmailAddress();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "AddPersonPhoneNumber") {
-            let result = new AddPersonPhoneNumber();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "CreatePerson") {
-            let result = new CreatePerson();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "UpdatePersonAddress") {
-            let result = new UpdatePersonAddress();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "UpdatePersonAge") {
-            let result = new UpdatePersonAge();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "UpdatePersonConcerns") {
-            let result = new UpdatePersonConcerns();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "UpdatePersonEmailAddress") {
-            let result = new UpdatePersonEmailAddress();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "UpdatePersonName") {
-            let result = new UpdatePersonName();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "UpdatePersonNotes") {
-            let result = new UpdatePersonNotes();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "UpdatePersonPhoneNumber") {
-            let result = new UpdatePersonPhoneNumber();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "UpdatePersonUserLink") {
-            let result = new UpdatePersonUserLink();
-            result.init(data);
-            return result;
-        }
-        throw new Error("The abstract class 'PersonCommand' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["discriminator"] = this._discriminator; 
-        data["personId"] = this.personId;
-        return data; 
-    }
-}
-
-export interface IPersonCommand {
-    personId?: string;
-}
-
-export class AddPersonAddress extends PersonCommand implements IAddPersonAddress {
-    address?: Address;
-    isCurrentAddress?: boolean;
-
-    constructor(data?: IAddPersonAddress) {
-        super(data);
-        this._discriminator = "AddPersonAddress";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.address = _data["address"] ? Address.fromJS(_data["address"]) : <any>undefined;
-            this.isCurrentAddress = _data["isCurrentAddress"];
-        }
-    }
-
-    static fromJS(data: any): AddPersonAddress {
-        data = typeof data === 'object' ? data : {};
-        let result = new AddPersonAddress();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["address"] = this.address ? this.address.toJSON() : <any>undefined;
-        data["isCurrentAddress"] = this.isCurrentAddress;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IAddPersonAddress extends IPersonCommand {
-    address?: Address;
-    isCurrentAddress?: boolean;
-}
-
-export class AddPersonEmailAddress extends PersonCommand implements IAddPersonEmailAddress {
-    emailAddress?: EmailAddress;
-    isPreferredEmailAddress?: boolean;
-
-    constructor(data?: IAddPersonEmailAddress) {
-        super(data);
-        this._discriminator = "AddPersonEmailAddress";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.emailAddress = _data["emailAddress"] ? EmailAddress.fromJS(_data["emailAddress"]) : <any>undefined;
-            this.isPreferredEmailAddress = _data["isPreferredEmailAddress"];
-        }
-    }
-
-    static fromJS(data: any): AddPersonEmailAddress {
-        data = typeof data === 'object' ? data : {};
-        let result = new AddPersonEmailAddress();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["emailAddress"] = this.emailAddress ? this.emailAddress.toJSON() : <any>undefined;
-        data["isPreferredEmailAddress"] = this.isPreferredEmailAddress;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IAddPersonEmailAddress extends IPersonCommand {
-    emailAddress?: EmailAddress;
-    isPreferredEmailAddress?: boolean;
-}
-
-export class AddPersonPhoneNumber extends PersonCommand implements IAddPersonPhoneNumber {
-    phoneNumber?: PhoneNumber;
-    isPreferredPhoneNumber?: boolean;
-
-    constructor(data?: IAddPersonPhoneNumber) {
-        super(data);
-        this._discriminator = "AddPersonPhoneNumber";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.phoneNumber = _data["phoneNumber"] ? PhoneNumber.fromJS(_data["phoneNumber"]) : <any>undefined;
-            this.isPreferredPhoneNumber = _data["isPreferredPhoneNumber"];
-        }
-    }
-
-    static fromJS(data: any): AddPersonPhoneNumber {
-        data = typeof data === 'object' ? data : {};
-        let result = new AddPersonPhoneNumber();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["phoneNumber"] = this.phoneNumber ? this.phoneNumber.toJSON() : <any>undefined;
-        data["isPreferredPhoneNumber"] = this.isPreferredPhoneNumber;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IAddPersonPhoneNumber extends IPersonCommand {
-    phoneNumber?: PhoneNumber;
-    isPreferredPhoneNumber?: boolean;
-}
-
-export class CreatePerson extends PersonCommand implements ICreatePerson {
-    userId?: string | undefined;
-    firstName?: string;
-    lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
-    addresses?: Address[];
-    currentAddressId?: string | undefined;
-    phoneNumbers?: PhoneNumber[];
-    preferredPhoneNumberId?: string | undefined;
-    emailAddresses?: EmailAddress[];
-    preferredEmailAddressId?: string | undefined;
-    concerns?: string | undefined;
-    notes?: string | undefined;
-
-    constructor(data?: ICreatePerson) {
-        super(data);
-        this._discriminator = "CreatePerson";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.userId = _data["userId"];
-            this.firstName = _data["firstName"];
-            this.lastName = _data["lastName"];
-            this.gender = _data["gender"];
-            this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
-            this.ethnicity = _data["ethnicity"];
-            if (Array.isArray(_data["addresses"])) {
-                this.addresses = [] as any;
-                for (let item of _data["addresses"])
-                    this.addresses!.push(Address.fromJS(item));
-            }
-            this.currentAddressId = _data["currentAddressId"];
-            if (Array.isArray(_data["phoneNumbers"])) {
-                this.phoneNumbers = [] as any;
-                for (let item of _data["phoneNumbers"])
-                    this.phoneNumbers!.push(PhoneNumber.fromJS(item));
-            }
-            this.preferredPhoneNumberId = _data["preferredPhoneNumberId"];
-            if (Array.isArray(_data["emailAddresses"])) {
-                this.emailAddresses = [] as any;
-                for (let item of _data["emailAddresses"])
-                    this.emailAddresses!.push(EmailAddress.fromJS(item));
-            }
-            this.preferredEmailAddressId = _data["preferredEmailAddressId"];
-            this.concerns = _data["concerns"];
-            this.notes = _data["notes"];
-        }
-    }
-
-    static fromJS(data: any): CreatePerson {
-        data = typeof data === 'object' ? data : {};
-        let result = new CreatePerson();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["userId"] = this.userId;
-        data["firstName"] = this.firstName;
-        data["lastName"] = this.lastName;
-        data["gender"] = this.gender;
-        data["age"] = this.age ? this.age.toJSON() : <any>undefined;
-        data["ethnicity"] = this.ethnicity;
-        if (Array.isArray(this.addresses)) {
-            data["addresses"] = [];
-            for (let item of this.addresses)
-                data["addresses"].push(item.toJSON());
-        }
-        data["currentAddressId"] = this.currentAddressId;
-        if (Array.isArray(this.phoneNumbers)) {
-            data["phoneNumbers"] = [];
-            for (let item of this.phoneNumbers)
-                data["phoneNumbers"].push(item.toJSON());
-        }
-        data["preferredPhoneNumberId"] = this.preferredPhoneNumberId;
-        if (Array.isArray(this.emailAddresses)) {
-            data["emailAddresses"] = [];
-            for (let item of this.emailAddresses)
-                data["emailAddresses"].push(item.toJSON());
-        }
-        data["preferredEmailAddressId"] = this.preferredEmailAddressId;
-        data["concerns"] = this.concerns;
-        data["notes"] = this.notes;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface ICreatePerson extends IPersonCommand {
-    userId?: string | undefined;
-    firstName?: string;
-    lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
-    addresses?: Address[];
-    currentAddressId?: string | undefined;
-    phoneNumbers?: PhoneNumber[];
-    preferredPhoneNumberId?: string | undefined;
-    emailAddresses?: EmailAddress[];
-    preferredEmailAddressId?: string | undefined;
-    concerns?: string | undefined;
-    notes?: string | undefined;
-}
-
-export class UpdatePersonAddress extends PersonCommand implements IUpdatePersonAddress {
-    address?: Address;
-    isCurrentAddress?: boolean;
-
-    constructor(data?: IUpdatePersonAddress) {
-        super(data);
-        this._discriminator = "UpdatePersonAddress";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.address = _data["address"] ? Address.fromJS(_data["address"]) : <any>undefined;
-            this.isCurrentAddress = _data["isCurrentAddress"];
-        }
-    }
-
-    static fromJS(data: any): UpdatePersonAddress {
-        data = typeof data === 'object' ? data : {};
-        let result = new UpdatePersonAddress();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["address"] = this.address ? this.address.toJSON() : <any>undefined;
-        data["isCurrentAddress"] = this.isCurrentAddress;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IUpdatePersonAddress extends IPersonCommand {
-    address?: Address;
-    isCurrentAddress?: boolean;
-}
-
-export class UpdatePersonAge extends PersonCommand implements IUpdatePersonAge {
-    age?: Age;
-
-    constructor(data?: IUpdatePersonAge) {
-        super(data);
-        this._discriminator = "UpdatePersonAge";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): UpdatePersonAge {
-        data = typeof data === 'object' ? data : {};
-        let result = new UpdatePersonAge();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["age"] = this.age ? this.age.toJSON() : <any>undefined;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IUpdatePersonAge extends IPersonCommand {
-    age?: Age;
-}
-
-export class UpdatePersonConcerns extends PersonCommand implements IUpdatePersonConcerns {
-    concerns?: string | undefined;
-
-    constructor(data?: IUpdatePersonConcerns) {
-        super(data);
-        this._discriminator = "UpdatePersonConcerns";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.concerns = _data["concerns"];
-        }
-    }
-
-    static fromJS(data: any): UpdatePersonConcerns {
-        data = typeof data === 'object' ? data : {};
-        let result = new UpdatePersonConcerns();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["concerns"] = this.concerns;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IUpdatePersonConcerns extends IPersonCommand {
-    concerns?: string | undefined;
-}
-
-export class UpdatePersonEmailAddress extends PersonCommand implements IUpdatePersonEmailAddress {
-    emailAddress?: EmailAddress;
-    isPreferredEmailAddress?: boolean;
-
-    constructor(data?: IUpdatePersonEmailAddress) {
-        super(data);
-        this._discriminator = "UpdatePersonEmailAddress";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.emailAddress = _data["emailAddress"] ? EmailAddress.fromJS(_data["emailAddress"]) : <any>undefined;
-            this.isPreferredEmailAddress = _data["isPreferredEmailAddress"];
-        }
-    }
-
-    static fromJS(data: any): UpdatePersonEmailAddress {
-        data = typeof data === 'object' ? data : {};
-        let result = new UpdatePersonEmailAddress();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["emailAddress"] = this.emailAddress ? this.emailAddress.toJSON() : <any>undefined;
-        data["isPreferredEmailAddress"] = this.isPreferredEmailAddress;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IUpdatePersonEmailAddress extends IPersonCommand {
-    emailAddress?: EmailAddress;
-    isPreferredEmailAddress?: boolean;
-}
-
-export class UpdatePersonName extends PersonCommand implements IUpdatePersonName {
-    firstName?: string;
-    lastName?: string;
-
-    constructor(data?: IUpdatePersonName) {
-        super(data);
-        this._discriminator = "UpdatePersonName";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.firstName = _data["firstName"];
-            this.lastName = _data["lastName"];
-        }
-    }
-
-    static fromJS(data: any): UpdatePersonName {
-        data = typeof data === 'object' ? data : {};
-        let result = new UpdatePersonName();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["firstName"] = this.firstName;
-        data["lastName"] = this.lastName;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IUpdatePersonName extends IPersonCommand {
-    firstName?: string;
-    lastName?: string;
-}
-
-export class UpdatePersonNotes extends PersonCommand implements IUpdatePersonNotes {
-    notes?: string | undefined;
-
-    constructor(data?: IUpdatePersonNotes) {
-        super(data);
-        this._discriminator = "UpdatePersonNotes";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.notes = _data["notes"];
-        }
-    }
-
-    static fromJS(data: any): UpdatePersonNotes {
-        data = typeof data === 'object' ? data : {};
-        let result = new UpdatePersonNotes();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["notes"] = this.notes;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IUpdatePersonNotes extends IPersonCommand {
-    notes?: string | undefined;
-}
-
-export class UpdatePersonPhoneNumber extends PersonCommand implements IUpdatePersonPhoneNumber {
-    phoneNumber?: PhoneNumber;
-    isPreferredPhoneNumber?: boolean;
-
-    constructor(data?: IUpdatePersonPhoneNumber) {
-        super(data);
-        this._discriminator = "UpdatePersonPhoneNumber";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.phoneNumber = _data["phoneNumber"] ? PhoneNumber.fromJS(_data["phoneNumber"]) : <any>undefined;
-            this.isPreferredPhoneNumber = _data["isPreferredPhoneNumber"];
-        }
-    }
-
-    static fromJS(data: any): UpdatePersonPhoneNumber {
-        data = typeof data === 'object' ? data : {};
-        let result = new UpdatePersonPhoneNumber();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["phoneNumber"] = this.phoneNumber ? this.phoneNumber.toJSON() : <any>undefined;
-        data["isPreferredPhoneNumber"] = this.isPreferredPhoneNumber;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IUpdatePersonPhoneNumber extends IPersonCommand {
-    phoneNumber?: PhoneNumber;
-    isPreferredPhoneNumber?: boolean;
-}
-
-export class UpdatePersonUserLink extends PersonCommand implements IUpdatePersonUserLink {
-    userId?: string | undefined;
-
-    constructor(data?: IUpdatePersonUserLink) {
-        super(data);
-        this._discriminator = "UpdatePersonUserLink";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.userId = _data["userId"];
-        }
-    }
-
-    static fromJS(data: any): UpdatePersonUserLink {
-        data = typeof data === 'object' ? data : {};
-        let result = new UpdatePersonUserLink();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["userId"] = this.userId;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IUpdatePersonUserLink extends IPersonCommand {
-    userId?: string | undefined;
 }
 
 export class ApiException extends Error {

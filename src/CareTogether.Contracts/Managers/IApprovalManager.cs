@@ -23,24 +23,6 @@ namespace CareTogether.Managers
         ImmutableList<string> AvailableApplications,
         ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> IndividualRoleApprovals);
 
-    [JsonHierarchyBase]
-    public abstract partial record ApprovalCommand();
-    public sealed record CreateVolunteerFamilyWithNewAdultCommand(
-        string FirstName, string LastName, Gender Gender, Age Age, string Ethnicity,
-        FamilyAdultRelationshipInfo FamilyAdultRelationshipInfo, string? Concerns, string? Notes,
-        Address Address, PhoneNumber PhoneNumber, EmailAddress EmailAddress)
-        : ApprovalCommand;
-    public sealed record AddAdultToFamilyCommand(Guid FamilyId,
-        string FirstName, string LastName, Gender Gender, Age Age, string Ethnicity,
-        FamilyAdultRelationshipInfo FamilyAdultRelationshipInfo, string? Concerns, string? Notes,
-        Address? Address, PhoneNumber? PhoneNumber, EmailAddress? EmailAddress)
-        : ApprovalCommand;
-    public sealed record AddChildToFamilyCommand(Guid FamilyId,
-        string FirstName, string LastName, Gender Gender, Age Age, string Ethnicity,
-        List<CustodialRelationship> CustodialRelationships,
-        string? Concerns, string? Notes)
-        : ApprovalCommand;
-
     public interface IApprovalManager
     {
         Task<ImmutableList<VolunteerFamily>> ListVolunteerFamiliesAsync(
@@ -51,11 +33,5 @@ namespace CareTogether.Managers
 
         Task<VolunteerFamily> ExecuteVolunteerCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, VolunteerCommand command);
-
-        Task<VolunteerFamily> ExecuteApprovalCommandAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, ApprovalCommand command);
-
-        Task<VolunteerFamily> ExecutePersonCommandAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, Guid familyId, PersonCommand command);
     }
 }
