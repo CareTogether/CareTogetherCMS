@@ -19,12 +19,6 @@ namespace CareTogether.Resources
 
     public enum RoleApprovalStatus { Prospective, Approved, Onboarded };
 
-    public sealed record CompletedRequirementInfo(Guid UserId, DateTime TimestampUtc,
-        string RequirementName, DateTime CompletedAtUtc, Guid? UploadedDocumentId);
-
-    public sealed record UploadedDocumentInfo(Guid UserId, DateTime TimestampUtc,
-        Guid UploadedDocumentId, string UploadedFileName);
-
     [JsonHierarchyBase]
     public abstract partial record VolunteerFamilyCommand(Guid FamilyId);
     public sealed record CompleteVolunteerFamilyRequirement(Guid FamilyId,

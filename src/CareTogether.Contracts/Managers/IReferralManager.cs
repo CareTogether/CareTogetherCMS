@@ -10,17 +10,20 @@ namespace CareTogether.Managers
         Referral? OpenReferral,
         ImmutableList<Referral> ClosedReferrals);
 
-    public record Referral(Guid Id, string PolicyVersion,
+    public record Referral(Guid Id,
         DateTime CreatedUtc, ReferralCloseReason? CloseReason,
-        ImmutableList<FormUploadInfo> ReferralFormUploads, //TODO: Consolidate similar to how Volunteers was streamlined
-        ImmutableList<ActivityInfo> ReferralActivitiesPerformed, //TODO: Consolidate similar to how Volunteers was streamlined
+        ImmutableList<CompletedRequirementInfo> CompletedRequirements,
+        ImmutableList<UploadedDocumentInfo> UploadedDocuments,
+        ImmutableList<string> MissingRequirements,
         ImmutableList<Arrangement> Arrangements);
 
-    public record Arrangement(Guid Id, string PolicyVersion, string ArrangementType,
+    public record Arrangement(Guid Id, string ArrangementType,
         ArrangementState State,
-        ImmutableList<FormUploadInfo> ArrangementFormUploads, //TODO: Consolidate similar to how Volunteers was streamlined
-        ImmutableList<ActivityInfo> ArrangementActivitiesPerformed, //TODO: Consolidate similar to how Volunteers was streamlined
-        ImmutableList<VolunteerAssignment> VolunteerAssignments,
+        ImmutableList<CompletedRequirementInfo> CompletedRequirements,
+        ImmutableList<UploadedDocumentInfo> UploadedDocuments,
+        ImmutableList<string> MissingRequirements,
+        ImmutableList<IndividualVolunteerAssignment> IndividualVolunteerAssignments,
+        ImmutableList<FamilyVolunteerAssignment> FamilyVolunteerAssignments,
         ImmutableList<PartneringFamilyChildAssignment> PartneringFamilyChildAssignments,
         ImmutableList<ChildrenLocationHistoryEntry> ChildrenLocationHistory,
         ImmutableList<Note> Notes);
@@ -30,7 +33,7 @@ namespace CareTogether.Managers
 
     public interface IReferralManager
     {
-        Task<ImmutableList<Referral>> ListReferralsAsync(Guid organizationId, Guid locationId);
+        Task<ImmutableList<PartneringFamily>> ListPartneringFamiliesAsync(Guid organizationId, Guid locationId);
 
         Task<Referral> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, ReferralCommand command);

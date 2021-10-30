@@ -5,43 +5,33 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Resources
 {
-    public record ReferralEntry(Guid Id, string PolicyVersion,
+    public record ReferralEntry(Guid Id, Guid FamilyId,
         DateTime CreatedUtc, ReferralCloseReason? CloseReason,
-        Guid PartneringFamilyId,
-        ImmutableList<FormUploadInfo> ReferralFormUploads,
-        ImmutableList<ActivityInfo> ReferralActivitiesPerformed,
+        ImmutableList<CompletedRequirementInfo> CompletedRequirements,
+        ImmutableList<UploadedDocumentInfo> UploadedDocuments,
         ImmutableDictionary<Guid, ArrangementEntry> Arrangements);
 
-    public record ArrangementEntry(Guid Id, string PolicyVersion, string ArrangementType,
+    public record ArrangementEntry(Guid Id, string ArrangementType,
         ArrangementState State, DateTime? InitiatedAtUtc, DateTime? EndedAtUtc,
-        ImmutableList<FormUploadInfo> ArrangementFormUploads,
-        ImmutableList<ActivityInfo> ArrangementActivitiesPerformed,
-        ImmutableList<VolunteerAssignment> VolunteerAssignments,
+        ImmutableList<CompletedRequirementInfo> CompletedRequirements,
+        ImmutableList<UploadedDocumentInfo> UploadedDocuments,
+        ImmutableList<IndividualVolunteerAssignment> IndividualVolunteerAssignments,
+        ImmutableList<FamilyVolunteerAssignment> FamilyVolunteerAssignments,
         ImmutableList<PartneringFamilyChildAssignment> PartneringFamilyChildAssignments,
         ImmutableList<ChildrenLocationHistoryEntry> ChildrenLocationHistory,
         ImmutableDictionary<Guid, NoteEntry> Notes);
 
-    public enum ReferralCloseReason { NotAppropriate, Resourced, NoCapacity, NoLongerNeeded, NeedMet };
+    public enum ReferralCloseReason { NotAppropriate, NoCapacity, NoLongerNeeded, Resourced, NeedMet };
 
     public enum ArrangementState { Setup, Open, Closed };
 
-    public sealed record FormUploadInfo(Guid UserId, DateTime TimestampUtc,
-        DateTime CompletedAtUtc, string FormName, string OriginalFileName, Guid UploadedDocumentId);
-    public sealed record ActivityInfo(Guid UserId, DateTime TimestampUtc,
-        string ActivityName, DateTime PerformedAtUtc, Guid PerformedByPersonId);
-
-    [JsonHierarchyBase]
-    public abstract partial record VolunteerAssignment(string ArrangementFunction);
-    public sealed record IndividualVolunteerAssignment(Guid PersonId, string ArrangementFunction)
-        : VolunteerAssignment(ArrangementFunction);
-    public sealed record FamilyVolunteerAssignment(Guid FamilyId, string ArrangementFunction)
-        : VolunteerAssignment(ArrangementFunction);
-
+    public sealed record IndividualVolunteerAssignment(Guid FamilyId, Guid AdultId, string ArrangementFunction);
+    public sealed record FamilyVolunteerAssignment(Guid FamilyId, string ArrangementFunction);
     public sealed record PartneringFamilyChildAssignment(Guid PersonId);
     public sealed record ChildrenLocationHistoryEntry(Guid UserId, DateTime TimestampUtc,
-        ImmutableList<Guid> ChildrenIds, Guid FamilyId, ChildrenLocationPlan Plan, string AdditionalExplanation);
+        Guid ChildId, Guid ChildLocationFamilyId, ChildLocationPlan Plan, string AdditionalExplanation);
 
-    public enum ChildrenLocationPlan { OvernightHousing, DaytimeChildCare, ReturnToFamily }
+    public enum ChildLocationPlan { OvernightHousing, DaytimeChildCare, ReturnToFamily }
 
     public record NoteEntry(Guid Id, Guid AuthorId, DateTime LastEditTimestampUtc, NoteStatus Status,
         string? Contents, Guid? ApproverId, DateTime? ApprovedTimestampUtc);
@@ -50,43 +40,47 @@ namespace CareTogether.Resources
 
     [JsonHierarchyBase]
     public abstract partial record ReferralCommand(Guid ReferralId);
-    public sealed record CreateReferral(Guid ReferralId, Guid FamilyId, string PolicyVersion, DateTime OpenedAtUtc)
+    public sealed record CreateReferral(Guid ReferralId,
+        Guid FamilyId, DateTime OpenedAtUtc)
         : ReferralCommand(ReferralId);
-    public sealed record PerformReferralActivity(Guid ReferralId, string ActivityName, DateTime PerformedAtUtc,
-        Guid PerformedByPersonId)
+    public sealed record CompleteReferralRequirement(Guid ReferralId,
+        string RequirementName, DateTime CompletedAtUtc, Guid? UploadedDocumentId)
         : ReferralCommand(ReferralId);
-    public sealed record UploadReferralForm(Guid ReferralId,
-        DateTime CompletedAtUtc, string FormName, string UploadedFileName, Guid UploadedDocumentId)
+    public sealed record UploadReferralDocument(Guid ReferralId,
+        Guid UploadedDocumentId, string UploadedFileName)
         : ReferralCommand(ReferralId);
-    public sealed record CloseReferral(Guid ReferralId, ReferralCloseReason CloseReason)
+    public sealed record CloseReferral(Guid ReferralId,
+        ReferralCloseReason CloseReason)
         : ReferralCommand(ReferralId);
 
     [JsonHierarchyBase]
     public abstract partial record ArrangementCommand(Guid ReferralId, Guid ArrangementId);
     public sealed record CreateArrangement(Guid ReferralId, Guid ArrangementId,
-        string PolicyVersion, string ArrangementType)
+        string ArrangementType)
         : ArrangementCommand(ReferralId, ArrangementId);
     public sealed record AssignIndividualVolunteer(Guid ReferralId, Guid ArrangementId,
-        Guid PersonId, string ArrangementFunction)
+        Guid VolunteerFamilyId, Guid AdultId, string ArrangementFunction)
         : ArrangementCommand(ReferralId, ArrangementId);
     public sealed record AssignVolunteerFamily(Guid ReferralId, Guid ArrangementId,
-        Guid FamilyId, string ArrangementFunction)
+        Guid VolunteerFamilyId, string ArrangementFunction)
         : ArrangementCommand(ReferralId, ArrangementId);
     public sealed record AssignPartneringFamilyChildren(Guid ReferralId, Guid ArrangementId,
         ImmutableList<Guid> ChildrenIds)
         : ArrangementCommand(ReferralId, ArrangementId);
-    public sealed record InitiateArrangement(Guid ReferralId, Guid ArrangementId, DateTime InitiatedAtUtc)
+    public sealed record StartArrangement(Guid ReferralId, Guid ArrangementId,
+        DateTime StartedAtUtc)
         : ArrangementCommand(ReferralId, ArrangementId);
-    public sealed record UploadArrangementForm(Guid ReferralId, Guid ArrangementId,
-        DateTime CompletedAtUtc, string FormName, string FormVersion, string UploadedFileName, Guid UploadedDocumentId)
+    public sealed record CompleteArrangementRequirement(Guid ReferralId, Guid ArrangementId,
+        string RequirementName, DateTime CompletedAtUtc, Guid? UploadedDocumentId)
         : ArrangementCommand(ReferralId, ArrangementId);
-    public sealed record PerformArrangementActivity(Guid ReferralId, Guid ArrangementId,
-        string ActivityName, DateTime PerformedAtUtc, Guid PerformedByPersonId)
+    public sealed record UploadArrangementDocument(Guid ReferralId, Guid ArrangementId,
+        Guid UploadedDocumentId, string UploadedFileName)
         : ArrangementCommand(ReferralId, ArrangementId);
-    public sealed record TrackChildrenLocationChange(Guid ReferralId, Guid ArrangementId, DateTime ChangedAtUtc,
-        ImmutableList<Guid> ChildrenIds, Guid FamilyId, ChildrenLocationPlan Plan, string AdditionalExplanation)
+    public sealed record TrackChildLocationChange(Guid ReferralId, Guid ArrangementId,
+        DateTime ChangedAtUtc, Guid ChildId, Guid ChildLocationFamilyId, ChildLocationPlan Plan, string AdditionalExplanation)
         : ArrangementCommand(ReferralId, ArrangementId);
-    public sealed record EndArrangement(Guid ReferralId, Guid ArrangementId, DateTime EndedAtUtc)
+    public sealed record EndArrangement(Guid ReferralId, Guid ArrangementId,
+        DateTime EndedAtUtc)
         : ArrangementCommand(ReferralId, ArrangementId);
 
     [JsonHierarchyBase]
