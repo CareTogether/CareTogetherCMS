@@ -70,9 +70,9 @@ namespace CareTogether.Resources.Models
             var referralEntryToUpsert = command switch
             {
                 //TODO: Validate policy version and enforce any other invariants
-                CreateReferral c => new ReferralEntry(c.ReferralId, c.PolicyVersion,
-                    c.OpenedAtUtc, CloseReason: null, c.FamilyId,
-                    ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty,
+                CreateReferral c => new ReferralEntry(c.ReferralId, c.FamilyId,
+                    c.OpenedAtUtc, CloseReason: null,
+                    ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<UploadedDocumentInfo>.Empty,
                     ImmutableDictionary<Guid, ArrangementEntry>.Empty),
                 _ => referrals.TryGetValue(command.ReferralId, out var referralEntry)
                     ? command switch
@@ -80,16 +80,15 @@ namespace CareTogether.Resources.Models
                         //TODO: Enforce any business rules dynamically via the policy evaluation engine.
                         //      This involves returning "allowed actions" with the rendered Referral state
                         //      and failing any attempted actions that are not allowed.
-                        PerformReferralActivity c => referralEntry with
+                        CompleteReferralRequirement c => referralEntry with
                         {
-                            ReferralActivitiesPerformed = referralEntry.ReferralActivitiesPerformed.Add(
-                                new ActivityInfo(userId, timestampUtc, c.ActivityName, c.PerformedAtUtc, c.PerformedByPersonId))
+                            CompletedRequirements = referralEntry.CompletedRequirements.Add(
+                                new CompletedRequirementInfo(userId, timestampUtc, c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId))
                         },
-                        UploadReferralForm c => referralEntry with
+                        UploadReferralDocument c => referralEntry with
                         {
-                            ReferralFormUploads = referralEntry.ReferralFormUploads.Add(
-                                new FormUploadInfo(userId, timestampUtc, c.CompletedAtUtc, c.FormName,
-                                    c.UploadedFileName, c.UploadedDocumentId))
+                            UploadedDocuments = referralEntry.UploadedDocuments.Add(
+                                new UploadedDocumentInfo(userId, timestampUtc, c.UploadedDocumentId, c.UploadedFileName))
                         },
                         CloseReferral c => referralEntry with
                         {
@@ -121,9 +120,10 @@ namespace CareTogether.Resources.Models
             var arrangementEntryToUpsert = command switch
             {
                 //TODO: Validate policy version and enforce any other invariants
-                CreateArrangement c => new ArrangementEntry(c.ArrangementId, c.PolicyVersion, c.ArrangementType,
+                CreateArrangement c => new ArrangementEntry(c.ArrangementId, c.ArrangementType,
                     ArrangementState.Setup, InitiatedAtUtc: null, EndedAtUtc: null,
-                    ImmutableList<FormUploadInfo>.Empty, ImmutableList<ActivityInfo>.Empty, ImmutableList<VolunteerAssignment>.Empty,
+                    ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<UploadedDocumentInfo>.Empty,
+                    ImmutableList<IndividualVolunteerAssignment>.Empty, ImmutableList<FamilyVolunteerAssignment>.Empty,
                     ImmutableList<PartneringFamilyChildAssignment>.Empty, ImmutableList<ChildrenLocationHistoryEntry>.Empty,
                     ImmutableDictionary<Guid, NoteEntry>.Empty),
                 _ => referralEntry.Arrangements.TryGetValue(command.ArrangementId, out var arrangementEntry)
@@ -134,40 +134,39 @@ namespace CareTogether.Resources.Models
                         //      and failing any attempted actions that are not allowed.
                         AssignIndividualVolunteer c => arrangementEntry with
                         {
-                            VolunteerAssignments = arrangementEntry.VolunteerAssignments.Add(
-                                new IndividualVolunteerAssignment(c.PersonId, c.ArrangementFunction))
+                            IndividualVolunteerAssignments = arrangementEntry.IndividualVolunteerAssignments.Add(
+                                new IndividualVolunteerAssignment(c.VolunteerFamilyId, c.AdultId, c.ArrangementFunction))
                         },
                         AssignVolunteerFamily c => arrangementEntry with
                         {
-                            VolunteerAssignments = arrangementEntry.VolunteerAssignments.Add(
-                                new FamilyVolunteerAssignment(c.FamilyId, c.ArrangementFunction))
+                            FamilyVolunteerAssignments = arrangementEntry.FamilyVolunteerAssignments.Add(
+                                new FamilyVolunteerAssignment(c.VolunteerFamilyId, c.ArrangementFunction))
                         },
                         AssignPartneringFamilyChildren c => arrangementEntry with
                         {
                             PartneringFamilyChildAssignments = arrangementEntry.PartneringFamilyChildAssignments.AddRange(
                                 c.ChildrenIds.Select(c => new PartneringFamilyChildAssignment(c)))
                         },
-                        InitiateArrangement c => arrangementEntry with
+                        StartArrangement c => arrangementEntry with
                         {
                             State = ArrangementState.Open,
-                            InitiatedAtUtc = c.InitiatedAtUtc
+                            InitiatedAtUtc = c.StartedAtUtc
                         },
-                        UploadArrangementForm c => arrangementEntry with
+                        CompleteArrangementRequirement c => arrangementEntry with
                         {
-                            ArrangementFormUploads = arrangementEntry.ArrangementFormUploads.Add(
-                                new FormUploadInfo(userId, timestampUtc, c.CompletedAtUtc, c.FormName,
-                                    c.UploadedFileName, c.UploadedDocumentId))
+                            CompletedRequirements = arrangementEntry.CompletedRequirements.Add(
+                                new CompletedRequirementInfo(userId, timestampUtc, c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId))
                         },
-                        PerformArrangementActivity c => arrangementEntry with
+                        UploadArrangementDocument c => arrangementEntry with
                         {
-                            ArrangementActivitiesPerformed = arrangementEntry.ArrangementActivitiesPerformed.Add(
-                                new ActivityInfo(userId, timestampUtc, c.ActivityName, c.PerformedAtUtc, c.PerformedByPersonId))
+                            UploadedDocuments = arrangementEntry.UploadedDocuments.Add(
+                                new UploadedDocumentInfo(userId, timestampUtc, c.UploadedDocumentId, c.UploadedFileName))
                         },
-                        TrackChildrenLocationChange c => arrangementEntry with
+                        TrackChildLocationChange c => arrangementEntry with
                         {
                             ChildrenLocationHistory = arrangementEntry.ChildrenLocationHistory.Add(
                                 new ChildrenLocationHistoryEntry(userId, c.ChangedAtUtc,
-                                    c.ChildrenIds, c.FamilyId, c.Plan, c.AdditionalExplanation))
+                                    c.ChildId, c.ChildLocationFamilyId, c.Plan, c.AdditionalExplanation))
                         },
                         EndArrangement c => arrangementEntry with
                         {
