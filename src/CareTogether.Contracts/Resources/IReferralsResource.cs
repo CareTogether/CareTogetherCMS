@@ -12,23 +12,23 @@ namespace CareTogether.Resources
         ImmutableDictionary<Guid, ArrangementEntry> Arrangements);
 
     public record ArrangementEntry(Guid Id, string ArrangementType,
-        ArrangementState State, DateTime? InitiatedAtUtc, DateTime? EndedAtUtc,
+        ArrangementState State, DateTime? StartedAtUtc, DateTime? EndedAtUtc,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<UploadedDocumentInfo> UploadedDocuments,
         ImmutableList<IndividualVolunteerAssignment> IndividualVolunteerAssignments,
         ImmutableList<FamilyVolunteerAssignment> FamilyVolunteerAssignments,
         ImmutableList<PartneringFamilyChildAssignment> PartneringFamilyChildAssignments,
-        ImmutableList<ChildrenLocationHistoryEntry> ChildrenLocationHistory,
+        ImmutableList<ChildLocationHistoryEntry> ChildrenLocationHistory,
         ImmutableDictionary<Guid, NoteEntry> Notes);
 
     public enum ReferralCloseReason { NotAppropriate, NoCapacity, NoLongerNeeded, Resourced, NeedMet };
 
     public enum ArrangementState { Setup, Open, Closed };
 
-    public sealed record IndividualVolunteerAssignment(Guid FamilyId, Guid AdultId, string ArrangementFunction);
+    public sealed record IndividualVolunteerAssignment(Guid FamilyId, Guid PersonId, string ArrangementFunction);
     public sealed record FamilyVolunteerAssignment(Guid FamilyId, string ArrangementFunction);
     public sealed record PartneringFamilyChildAssignment(Guid PersonId);
-    public sealed record ChildrenLocationHistoryEntry(Guid UserId, DateTime TimestampUtc,
+    public sealed record ChildLocationHistoryEntry(Guid UserId, DateTime TimestampUtc,
         Guid ChildId, Guid ChildLocationFamilyId, ChildLocationPlan Plan, string AdditionalExplanation);
 
     public enum ChildLocationPlan { OvernightHousing, DaytimeChildCare, ReturnToFamily }
@@ -59,7 +59,7 @@ namespace CareTogether.Resources
         string ArrangementType)
         : ArrangementCommand(ReferralId, ArrangementId);
     public sealed record AssignIndividualVolunteer(Guid ReferralId, Guid ArrangementId,
-        Guid VolunteerFamilyId, Guid AdultId, string ArrangementFunction)
+        Guid VolunteerFamilyId, Guid PersonId, string ArrangementFunction)
         : ArrangementCommand(ReferralId, ArrangementId);
     public sealed record AssignVolunteerFamily(Guid ReferralId, Guid ArrangementId,
         Guid VolunteerFamilyId, string ArrangementFunction)

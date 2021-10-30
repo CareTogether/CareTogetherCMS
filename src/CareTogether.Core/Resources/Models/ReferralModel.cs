@@ -121,10 +121,10 @@ namespace CareTogether.Resources.Models
             {
                 //TODO: Validate policy version and enforce any other invariants
                 CreateArrangement c => new ArrangementEntry(c.ArrangementId, c.ArrangementType,
-                    ArrangementState.Setup, InitiatedAtUtc: null, EndedAtUtc: null,
+                    ArrangementState.Setup, StartedAtUtc: null, EndedAtUtc: null,
                     ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<UploadedDocumentInfo>.Empty,
                     ImmutableList<IndividualVolunteerAssignment>.Empty, ImmutableList<FamilyVolunteerAssignment>.Empty,
-                    ImmutableList<PartneringFamilyChildAssignment>.Empty, ImmutableList<ChildrenLocationHistoryEntry>.Empty,
+                    ImmutableList<PartneringFamilyChildAssignment>.Empty, ImmutableList<ChildLocationHistoryEntry>.Empty,
                     ImmutableDictionary<Guid, NoteEntry>.Empty),
                 _ => referralEntry.Arrangements.TryGetValue(command.ArrangementId, out var arrangementEntry)
                     ? command switch
@@ -135,7 +135,7 @@ namespace CareTogether.Resources.Models
                         AssignIndividualVolunteer c => arrangementEntry with
                         {
                             IndividualVolunteerAssignments = arrangementEntry.IndividualVolunteerAssignments.Add(
-                                new IndividualVolunteerAssignment(c.VolunteerFamilyId, c.AdultId, c.ArrangementFunction))
+                                new IndividualVolunteerAssignment(c.VolunteerFamilyId, c.PersonId, c.ArrangementFunction))
                         },
                         AssignVolunteerFamily c => arrangementEntry with
                         {
@@ -150,7 +150,7 @@ namespace CareTogether.Resources.Models
                         StartArrangement c => arrangementEntry with
                         {
                             State = ArrangementState.Open,
-                            InitiatedAtUtc = c.StartedAtUtc
+                            StartedAtUtc = c.StartedAtUtc
                         },
                         CompleteArrangementRequirement c => arrangementEntry with
                         {
@@ -165,7 +165,7 @@ namespace CareTogether.Resources.Models
                         TrackChildLocationChange c => arrangementEntry with
                         {
                             ChildrenLocationHistory = arrangementEntry.ChildrenLocationHistory.Add(
-                                new ChildrenLocationHistoryEntry(userId, c.ChangedAtUtc,
+                                new ChildLocationHistoryEntry(userId, c.ChangedAtUtc,
                                     c.ChildId, c.ChildLocationFamilyId, c.Plan, c.AdditionalExplanation))
                         },
                         EndArrangement c => arrangementEntry with

@@ -25,7 +25,7 @@ namespace CareTogether.Managers
         ImmutableList<IndividualVolunteerAssignment> IndividualVolunteerAssignments,
         ImmutableList<FamilyVolunteerAssignment> FamilyVolunteerAssignments,
         ImmutableList<PartneringFamilyChildAssignment> PartneringFamilyChildAssignments,
-        ImmutableList<ChildrenLocationHistoryEntry> ChildrenLocationHistory,
+        ImmutableList<ChildLocationHistoryEntry> ChildrenLocationHistory,
         ImmutableList<Note> Notes);
 
     public record Note(Guid Id, Guid AuthorId, DateTime TimestampUtc,
