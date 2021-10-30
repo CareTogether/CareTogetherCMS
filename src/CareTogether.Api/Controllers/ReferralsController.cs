@@ -24,9 +24,9 @@ namespace CareTogether.Api.Controllers
 
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Referral>>> ListAllReferralsAsync(Guid organizationId, Guid locationId)
+        public async Task<ActionResult<IEnumerable<PartneringFamily>>> ListAllPartneringFamiliesAsync(Guid organizationId, Guid locationId)
         {
-            var referrals = await referralManager.ListReferralsAsync(organizationId, locationId);
+            var referrals = await referralManager.ListPartneringFamiliesAsync(organizationId, locationId);
 
             return Ok(referrals);
         }
