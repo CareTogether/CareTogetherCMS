@@ -36,7 +36,7 @@ function Referrals() {
             </thead>
             <tbody>
               {referrals.map(referral => (
-                <tr key={referral.id}>
+                <tr key={referral.family!.id}>
                   <td>{JSON.stringify(referral)}<br />================</td>
                 </tr>
               ))}

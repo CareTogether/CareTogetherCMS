@@ -17,7 +17,7 @@ export const referralsData = selector({
     const organizationId = get(currentOrganizationState);
     const locationId = get(currentLocationState);
     const referralsClient = new ReferralsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-    const dataResponse = await referralsClient.listAllReferrals(organizationId, locationId);
+    const dataResponse = await referralsClient.listAllPartneringFamilies(organizationId, locationId);
     return dataResponse;
   },
 });

@@ -1,5 +1,5 @@
 import { atom, useRecoilCallback } from "recoil";
-import { ActionRequirement, AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, ApprovalCommand, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, UploadVolunteerFamilyDocument, VolunteerCommand, VolunteersClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
+import { ActionRequirement, AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, DirectoryCommand, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, UploadVolunteerFamilyDocument, VolunteerCommand, VolunteersClient, VolunteerFamily, VolunteerFamilyCommand, DirectoryClient } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 
@@ -73,7 +73,7 @@ function usePersonCommandCallback<T extends unknown[]>(
 
       const command = await callback(volunteerFamilyId, personId, ...args);
 
-      const client = new VolunteersClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+      const client = new DirectoryClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
       const updatedFamily = await client.submitPersonCommand(organizationId, locationId, volunteerFamilyId, command);
 
       set(volunteerFamiliesData, current =>
@@ -90,7 +90,7 @@ function usePersonCommandCallback<T extends unknown[]>(
 }
 
 function useApprovalCommandCallback<T extends unknown[]>(
-  callback: (volunteerFamilyId: string, personId: string, ...args: T) => Promise<ApprovalCommand>) {
+  callback: (volunteerFamilyId: string, personId: string, ...args: T) => Promise<DirectoryCommand>) {
   return useRecoilCallback(({snapshot, set}) => {
     const asyncCallback = async (volunteerFamilyId: string, personId: string, ...args: T) => {
       const organizationId = await snapshot.getPromise(currentOrganizationState);
@@ -98,8 +98,8 @@ function useApprovalCommandCallback<T extends unknown[]>(
 
       const command = await callback(volunteerFamilyId, personId, ...args);
 
-      const client = new VolunteersClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedFamily = await client.submitApprovalCommand(organizationId, locationId, command);
+      const client = new DirectoryClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+      const updatedFamily = await client.submitDirectoryCommand(organizationId, locationId, volunteerFamilyId, command);
 
       set(volunteerFamiliesData, current =>
         current.some(currentEntry => currentEntry.family?.id === volunteerFamilyId)
