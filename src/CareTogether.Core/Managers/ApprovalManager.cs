@@ -27,7 +27,7 @@ namespace CareTogether.Managers
         }
 
 
-        public async Task<ImmutableList<VolunteerFamily>> ListVolunteerFamiliesAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId)
+        public async Task<ImmutableList<CombinedFamilyInfo>> ListVolunteerFamiliesAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId)
         {
             var families = (await directoryResource.ListFamiliesAsync(organizationId, locationId)).ToImmutableDictionary(x => x.Id);
             var volunteerFamilies = await approvalsResource.ListVolunteerFamiliesAsync(organizationId, locationId);
@@ -37,7 +37,7 @@ namespace CareTogether.Managers
             return result.ToImmutableList();
         }
 
-        public async Task<VolunteerFamily> ExecuteVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
+        public async Task<CombinedFamilyInfo> ExecuteVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, VolunteerFamilyCommand command)
         {
             var volunteerFamilyEntry = await approvalsResource.GetVolunteerFamilyAsync(organizationId, locationId, command.FamilyId);
@@ -51,12 +51,12 @@ namespace CareTogether.Managers
             
             var volunteerFamily = await approvalsResource.ExecuteVolunteerFamilyCommandAsync(organizationId, locationId, command, user.UserId());
                 
-            var disclosedVolunteerFamily = await authorizationEngine.DiscloseVolunteerFamilyAsync(user,
+            var disclosedVolunteerFamily = await authorizationEngine.DiscloseVolunteerFamilyInfoAsync(user,
                 await ToVolunteerFamilyAsync(organizationId, locationId, volunteerFamily, families));
             return disclosedVolunteerFamily;
         }
 
-        public async Task<VolunteerFamily> ExecuteVolunteerCommandAsync(Guid organizationId, Guid locationId,
+        public async Task<CombinedFamilyInfo> ExecuteVolunteerCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, VolunteerCommand command)
         {
             var volunteerFamilyEntry = await approvalsResource.GetVolunteerFamilyAsync(organizationId, locationId, command.FamilyId);
@@ -70,40 +70,9 @@ namespace CareTogether.Managers
             
             var volunteerFamily = await approvalsResource.ExecuteVolunteerCommandAsync(organizationId, locationId, command, user.UserId());
             
-            var disclosedVolunteerFamily = await authorizationEngine.DiscloseVolunteerFamilyAsync(user,
+            var disclosedVolunteerFamily = await authorizationEngine.DiscloseVolunteerFamilyInfoAsync(user,
                 await ToVolunteerFamilyAsync(organizationId, locationId, volunteerFamily, families));
             return disclosedVolunteerFamily;
-        }
-
-        private async Task<VolunteerFamily> ToVolunteerFamilyAsync(Guid organizationId, Guid locationId,
-            VolunteerFamilyEntry entry,
-            ImmutableDictionary<Guid, Family> families)
-        {
-            var family = families[entry.FamilyId];
-            var completedIndividualRequirements = entry.IndividualEntries.ToImmutableDictionary(
-                x => x.Key,
-                x => x.Value.CompletedRequirements);
-
-            var volunteerFamilyApprovalStatus = await policyEvaluationEngine.CalculateVolunteerFamilyApprovalStatusAsync(
-                organizationId, locationId, family, entry.CompletedRequirements, completedIndividualRequirements);
-
-            return new VolunteerFamily(family,
-                entry.CompletedRequirements, entry.UploadedDocuments,
-                volunteerFamilyApprovalStatus.MissingFamilyRequirements,
-                volunteerFamilyApprovalStatus.AvailableFamilyApplications,
-                volunteerFamilyApprovalStatus.FamilyRoleApprovals,
-                volunteerFamilyApprovalStatus.IndividualVolunteers.ToImmutableDictionary(
-                    x => x.Key,
-                    x =>
-                    {
-                        var hasEntry = entry.IndividualEntries.TryGetValue(x.Key, out var individualEntry);
-                        var result = hasEntry
-                            ? new Volunteer(individualEntry!.CompletedRequirements, x.Value.MissingIndividualRequirements,
-                                x.Value.AvailableIndividualApplications, x.Value.IndividualRoleApprovals)
-                            : new Volunteer(ImmutableList<CompletedRequirementInfo>.Empty, x.Value.MissingIndividualRequirements,
-                                x.Value.AvailableIndividualApplications, x.Value.IndividualRoleApprovals);
-                        return result;
-                    }));
         }
     }
 }

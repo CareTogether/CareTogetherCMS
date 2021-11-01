@@ -24,7 +24,7 @@ namespace CareTogether.Managers
         }
 
 
-        public async Task<Family> ExecuteDirectoryCommandAsync(Guid organizationId, Guid locationId,
+        public async Task<CombinedFamilyInfo> ExecuteDirectoryCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, DirectoryCommand command)
         {
             switch (command)
@@ -121,7 +121,7 @@ namespace CareTogether.Managers
             }
         }
 
-        public async Task<Family> ExecutePersonCommandAsync(Guid organizationId, Guid locationId,
+        public async Task<CombinedFamilyInfo> ExecutePersonCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, Guid familyId, PersonCommand command)
         {
             //var authorizationResult = await policyEvaluationEngine.AuthorizePersonCommandAsync(

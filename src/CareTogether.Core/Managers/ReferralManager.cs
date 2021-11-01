@@ -26,7 +26,7 @@ namespace CareTogether.Managers
         }
 
 
-        public async Task<Referral> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId,
+        public async Task<CombinedFamilyInfo> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, ReferralCommand command)
         {
             command = command switch
@@ -41,7 +41,7 @@ namespace CareTogether.Managers
             var referral = ToReferral(referralEntry, families);
 
             var authorizationResult = await authorizationEngine.AuthorizeReferralCommandAsync(
-                organizationId, locationId, user, command, referral);
+                organizationId, locationId, user, command);
             
             referralEntry = await referralsResource.ExecuteReferralCommandAsync(organizationId, locationId, command, user.UserId());
                 
@@ -50,7 +50,7 @@ namespace CareTogether.Managers
             return disclosedReferral;
         }
 
-        public async Task<Referral> ExecuteArrangementCommandAsync(Guid organizationId, Guid locationId,
+        public async Task<CombinedFamilyInfo> ExecuteArrangementCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, ArrangementCommand command)
         {
             command = command switch
@@ -65,7 +65,7 @@ namespace CareTogether.Managers
             var referral = ToReferral(referralEntry, families);
 
             var authorizationResult = await authorizationEngine.AuthorizeArrangementCommandAsync(
-                organizationId, locationId, user, command, referral);
+                organizationId, locationId, user, command);
             
             referralEntry = await referralsResource.ExecuteArrangementCommandAsync(organizationId, locationId, command, user.UserId());
 
@@ -74,7 +74,7 @@ namespace CareTogether.Managers
             return disclosedReferral;
         }
 
-        public async Task<Referral> ExecuteArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
+        public async Task<CombinedFamilyInfo> ExecuteArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, ArrangementNoteCommand command)
         {
             command = command switch
@@ -89,7 +89,7 @@ namespace CareTogether.Managers
             var referral = ToReferral(referralEntry, families);
 
             var authorizationResult = await authorizationEngine.AuthorizeArrangementNoteCommandAsync(
-                organizationId, locationId, user, command, referral);
+                organizationId, locationId, user, command);
             
             referralEntry = await referralsResource.ExecuteArrangementNoteCommandAsync(organizationId, locationId, command, user.UserId());
                 
@@ -98,7 +98,7 @@ namespace CareTogether.Managers
             return disclosedReferral;
         }
 
-        public async Task<ImmutableList<PartneringFamily>> ListPartneringFamiliesAsync(Guid organizationId, Guid locationId)
+        public async Task<ImmutableList<CombinedFamilyInfo>> ListPartneringFamiliesAsync(Guid organizationId, Guid locationId)
         {
             var families = (await directoryResource.ListFamiliesAsync(organizationId, locationId)).ToImmutableDictionary(x => x.Id);
             var referrals = await referralsResource.ListReferralsAsync(organizationId, locationId);

@@ -18,35 +18,35 @@ namespace CareTogether.Engines
 
 
         public async Task<bool> AuthorizeReferralCommandAsync(
-            Guid organizationId, Guid locationId, ClaimsPrincipal user, ReferralCommand command, Referral referral)
+            Guid organizationId, Guid locationId, ClaimsPrincipal user, ReferralCommand command)
         {
             await Task.Yield();
             return true;
         }
 
         public async Task<bool> AuthorizeArrangementCommandAsync(
-            Guid organizationId, Guid locationId, ClaimsPrincipal user, ArrangementCommand command, Referral referral)
+            Guid organizationId, Guid locationId, ClaimsPrincipal user, ArrangementCommand command)
         {
             await Task.Yield();
             return true;
         }
 
         public async Task<bool> AuthorizeArrangementNoteCommandAsync(
-            Guid organizationId, Guid locationId, ClaimsPrincipal user, ArrangementNoteCommand command, Referral referral)
+            Guid organizationId, Guid locationId, ClaimsPrincipal user, ArrangementNoteCommand command)
         {
             await Task.Yield();
             return true;
         }
 
         public async Task<bool> AuthorizeVolunteerFamilyCommandAsync(
-            Guid organizationId, Guid locationId, ClaimsPrincipal user, VolunteerFamilyCommand command, VolunteerFamily volunteerFamily)
+            Guid organizationId, Guid locationId, ClaimsPrincipal user, VolunteerFamilyCommand command)
         {
             await Task.Yield();
             return true;
         }
 
         public async Task<bool> AuthorizeVolunteerCommandAsync(
-            Guid organizationId, Guid locationId, ClaimsPrincipal user, VolunteerCommand command, VolunteerFamily volunteerFamily)
+            Guid organizationId, Guid locationId, ClaimsPrincipal user, VolunteerCommand command)
         {
             await Task.Yield();
             return true;
@@ -64,10 +64,10 @@ namespace CareTogether.Engines
             return arrangement;
         }
 
-        public async Task<VolunteerFamily> DiscloseVolunteerFamilyAsync(ClaimsPrincipal user, VolunteerFamily volunteerFamily)
+        public async Task<VolunteerFamilyInfo> DiscloseVolunteerFamilyInfoAsync(ClaimsPrincipal user, VolunteerFamilyInfo volunteerFamilyInfo)
         {
             await Task.Yield();
-            return volunteerFamily;
+            return volunteerFamilyInfo;
         }
 
         public async Task<Family> DiscloseFamilyAsync(ClaimsPrincipal user, Family family)

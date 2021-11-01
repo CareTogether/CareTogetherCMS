@@ -27,10 +27,10 @@ namespace CareTogether.Managers
 
     public interface IDirectoryManager
     {
-        Task<Family> ExecuteDirectoryCommandAsync(Guid organizationId, Guid locationId,
+        Task<CombinedFamilyInfo> ExecuteDirectoryCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, DirectoryCommand command); //TODO: Replace these with regular FamilyCommand primitives?
 
-        Task<Family> ExecutePersonCommandAsync(Guid organizationId, Guid locationId,
+        Task<CombinedFamilyInfo> ExecutePersonCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, Guid familyId, PersonCommand command);
     }
 }
