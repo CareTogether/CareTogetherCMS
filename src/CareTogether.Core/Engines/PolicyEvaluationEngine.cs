@@ -1,12 +1,8 @@
-using CareTogether.Managers;
 using CareTogether.Resources;
-using OneOf;
-using OneOf.Types;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace CareTogether.Engines
@@ -19,47 +15,6 @@ namespace CareTogether.Engines
         public PolicyEvaluationEngine(IPoliciesResource policiesResource)
         {
             this.policiesResource = policiesResource;
-        }
-
-
-        public async Task<bool> AuthorizeArrangementCommandAsync(
-            Guid organizationId, Guid locationId, ClaimsPrincipal user, ArrangementCommand command, Referral referral)
-        {
-            await Task.Yield();
-            return true;
-            //throw new NotImplementedException();
-        }
-
-        public async Task<bool> AuthorizeArrangementNoteCommandAsync(
-            Guid organizationId, Guid locationId, ClaimsPrincipal user, ArrangementNoteCommand command, Referral referral)
-        {
-            await Task.Yield();
-            return true;
-            //throw new NotImplementedException();
-        }
-
-        public async Task<bool> AuthorizeReferralCommandAsync(
-            Guid organizationId, Guid locationId, ClaimsPrincipal user, ReferralCommand command, Referral referral)
-        {
-            await Task.Yield();
-            return true;
-            //throw new NotImplementedException();
-        }
-
-        public async Task<bool> AuthorizeVolunteerCommandAsync(
-            Guid organizationId, Guid locationId, ClaimsPrincipal user, VolunteerCommand command, VolunteerFamily volunteerFamily)
-        {
-            await Task.Yield();
-            return true;
-            //throw new NotImplementedException();
-        }
-
-        public async Task<bool> AuthorizeVolunteerFamilyCommandAsync(
-            Guid organizationId, Guid locationId, ClaimsPrincipal user, VolunteerFamilyCommand command, VolunteerFamily volunteerFamily)
-        {
-            await Task.Yield();
-            return true;
-            //throw new NotImplementedException();
         }
 
 
@@ -222,41 +177,6 @@ namespace CareTogether.Engines
                 individualVolunteerRoles.ToImmutableDictionary(
                     x => x.Key,
                     x => x.Value with { MissingIndividualRequirements = missingIndividualRequirements[x.Key].ToImmutableList() }));
-        }
-
-        public async Task<Arrangement> DiscloseArrangementAsync(ClaimsPrincipal user, Arrangement arrangement)
-        {
-            await Task.Yield();
-            return arrangement;
-            //throw new NotImplementedException();
-        }
-
-        public async Task<Family> DiscloseFamilyAsync(ClaimsPrincipal user, Family family)
-        {
-            await Task.Yield();
-            return family;
-            //throw new NotImplementedException();
-        }
-
-        public async Task<Person> DisclosePersonAsync(ClaimsPrincipal user, Person person)
-        {
-            await Task.Yield();
-            return person;
-            //throw new NotImplementedException();
-        }
-
-        public async Task<Referral> DiscloseReferralAsync(ClaimsPrincipal user, Referral referral)
-        {
-            await Task.Yield();
-            return referral;
-            //throw new NotImplementedException();
-        }
-
-        public async Task<VolunteerFamily> DiscloseVolunteerFamilyAsync(ClaimsPrincipal user, VolunteerFamily volunteerFamily)
-        {
-            await Task.Yield();
-            return volunteerFamily;
-            //throw new NotImplementedException();
         }
     }
 }

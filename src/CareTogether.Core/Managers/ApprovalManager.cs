@@ -12,16 +12,18 @@ namespace CareTogether.Managers
     public sealed class ApprovalManager : IApprovalManager
     {
         private readonly IApprovalsResource approvalsResource;
+        private readonly IAuthorizationEngine authorizationEngine;
         private readonly IPolicyEvaluationEngine policyEvaluationEngine;
         private readonly IDirectoryResource directoryResource;
 
 
         public ApprovalManager(IApprovalsResource approvalsResource, IPolicyEvaluationEngine policyEvaluationEngine,
-            IDirectoryResource directoryResource)
+            IDirectoryResource directoryResource, IAuthorizationEngine authorizationEngine)
         {
             this.approvalsResource = approvalsResource;
             this.policyEvaluationEngine = policyEvaluationEngine;
             this.directoryResource = directoryResource;
+            this.authorizationEngine = authorizationEngine;
         }
 
 
@@ -44,12 +46,12 @@ namespace CareTogether.Managers
             var referral = await ToVolunteerFamilyAsync(
                 organizationId, locationId, volunteerFamilyEntry, families);
 
-            var authorizationResult = await policyEvaluationEngine.AuthorizeVolunteerFamilyCommandAsync(
+            var authorizationResult = await authorizationEngine.AuthorizeVolunteerFamilyCommandAsync(
                 organizationId, locationId, user, command, referral);
             
             var volunteerFamily = await approvalsResource.ExecuteVolunteerFamilyCommandAsync(organizationId, locationId, command, user.UserId());
                 
-            var disclosedVolunteerFamily = await policyEvaluationEngine.DiscloseVolunteerFamilyAsync(user,
+            var disclosedVolunteerFamily = await authorizationEngine.DiscloseVolunteerFamilyAsync(user,
                 await ToVolunteerFamilyAsync(organizationId, locationId, volunteerFamily, families));
             return disclosedVolunteerFamily;
         }
@@ -63,12 +65,12 @@ namespace CareTogether.Managers
             var referral = await ToVolunteerFamilyAsync(
                 organizationId, locationId, volunteerFamilyEntry, families);
 
-            var authorizationResult = await policyEvaluationEngine.AuthorizeVolunteerCommandAsync(
+            var authorizationResult = await authorizationEngine.AuthorizeVolunteerCommandAsync(
                 organizationId, locationId, user, command, referral);
             
             var volunteerFamily = await approvalsResource.ExecuteVolunteerCommandAsync(organizationId, locationId, command, user.UserId());
             
-            var disclosedVolunteerFamily = await policyEvaluationEngine.DiscloseVolunteerFamilyAsync(user,
+            var disclosedVolunteerFamily = await authorizationEngine.DiscloseVolunteerFamilyAsync(user,
                 await ToVolunteerFamilyAsync(organizationId, locationId, volunteerFamily, families));
             return disclosedVolunteerFamily;
         }

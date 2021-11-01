@@ -10,14 +10,16 @@ namespace CareTogether.Managers
 {
     public sealed class DirectoryManager : IDirectoryManager
     {
+        private readonly IAuthorizationEngine authorizationEngine;
         private readonly IPolicyEvaluationEngine policyEvaluationEngine;
         private readonly IDirectoryResource directoryResource;
 
 
-        public DirectoryManager(IPolicyEvaluationEngine policyEvaluationEngine,
+        public DirectoryManager(IPolicyEvaluationEngine policyEvaluationEngine, IAuthorizationEngine authorizationEngine,
             IDirectoryResource directoryResource)
         {
             this.policyEvaluationEngine = policyEvaluationEngine;
+            this.authorizationEngine = authorizationEngine;
             this.directoryResource = directoryResource;
         }
 
@@ -53,7 +55,7 @@ namespace CareTogether.Managers
                         var family = await directoryResource.ExecuteFamilyCommandAsync(organizationId, locationId,
                             addAdultToFamilySubcommand, user.UserId());
 
-                        var disclosedFamily = await policyEvaluationEngine.DiscloseFamilyAsync(user, family);
+                        var disclosedFamily = await authorizationEngine.DiscloseFamilyAsync(user, family);
                         return disclosedFamily;
                     }
                 case AddChildToFamilyCommand c:
@@ -76,7 +78,7 @@ namespace CareTogether.Managers
                         var family = await directoryResource.ExecuteFamilyCommandAsync(organizationId, locationId,
                             addChildToFamilySubcommand, user.UserId());
 
-                        var disclosedFamily = await policyEvaluationEngine.DiscloseFamilyAsync(user, family);
+                        var disclosedFamily = await authorizationEngine.DiscloseFamilyAsync(user, family);
                         return disclosedFamily;
                     }
                 case CreateVolunteerFamilyWithNewAdultCommand c:
@@ -110,7 +112,7 @@ namespace CareTogether.Managers
                         var family = await directoryResource.ExecuteFamilyCommandAsync(organizationId, locationId,
                             createFamilySubcommand, user.UserId());
 
-                        var disclosedFamily = await policyEvaluationEngine.DiscloseFamilyAsync(user, family);
+                        var disclosedFamily = await authorizationEngine.DiscloseFamilyAsync(user, family);
                         return disclosedFamily;
                     }
                 default:
@@ -137,7 +139,7 @@ namespace CareTogether.Managers
 
             var family = await directoryResource.FindFamilyAsync(organizationId, locationId, familyId);
 
-            var disclosedFamily = await policyEvaluationEngine.DiscloseFamilyAsync(user, family);
+            var disclosedFamily = await authorizationEngine.DiscloseFamilyAsync(user, family);
             return disclosedFamily;
         }
     }

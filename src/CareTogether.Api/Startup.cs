@@ -88,11 +88,12 @@ namespace CareTogether.Api
             services.AddSingleton<IAccountsResource>(accountsResource);
 
             // Engine services
+            var authorizationEngine = new AuthorizationEngine(policiesResource);
             var policyEvaluationEngine = new PolicyEvaluationEngine(policiesResource);
 
             // Manager services
-            services.AddSingleton<IReferralManager>(new ReferralManager(policyEvaluationEngine, directoryResource, referralsResource));
-            services.AddSingleton<IApprovalManager>(new ApprovalManager(approvalsResource, policyEvaluationEngine, directoryResource));
+            services.AddSingleton<IReferralManager>(new ReferralManager(policyEvaluationEngine, authorizationEngine, directoryResource, referralsResource));
+            services.AddSingleton<IApprovalManager>(new ApprovalManager(approvalsResource, policyEvaluationEngine, directoryResource, authorizationEngine));
 
             // Utility providers
             services.AddSingleton<IFileStore>(new BlobFileStore(blobServiceClient, "Uploads"));
