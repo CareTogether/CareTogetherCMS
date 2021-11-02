@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, Grid, InputLabel, Link, MenuItem, Select } from '@material-ui/core';
 import { VolunteerFamily, ActionRequirement, Person, DocumentLinkRequirement } from '../../GeneratedClient';
-import { DateTimePicker } from '@material-ui/pickers';
+import { KeyboardDatePicker } from '@material-ui/pickers';
 import { useVolunteersModel } from '../../Model/VolunteersModel';
 import { uploadFileToTenant } from "../../Model/FilesModel";
 import { currentLocationState, currentOrganizationState } from '../../Model/SessionModel';
@@ -67,10 +67,10 @@ export function RecordVolunteerAdultStepDialog({requirementName, stepActionRequi
         <br />
         <Grid container spacing={2}>
           <Grid item xs={12}>
-            <DateTimePicker
+            <KeyboardDatePicker
               label="When was this requirement completed?"
               value={completedAtLocal} fullWidth required
-              disableFuture format="MM/dd/yyyy hh:mm aa"
+              disableFuture format="MM/dd/yyyy"
               onChange={(date) => date && setCompletedAtLocal(date)}
               showTodayButton />
           </Grid>
