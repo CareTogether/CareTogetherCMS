@@ -1725,6 +1725,7 @@ export interface IVolunteerFamilyApprovalRequirement {
 export enum VolunteerFamilyRequirementScope {
     OncePerFamily = 0,
     AllAdultsInTheFamily = 1,
+    AllParticipatingAdultsInTheFamily = 2,
 }
 
 export class CurrentFeatureFlags implements ICurrentFeatureFlags {
