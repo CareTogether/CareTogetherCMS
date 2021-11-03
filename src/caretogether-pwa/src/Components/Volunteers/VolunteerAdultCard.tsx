@@ -18,6 +18,7 @@ import { VolunteerRoleApprovalStatusChip } from "./VolunteerRoleApprovalStatusCh
 import { UpdatePhoneDialog } from "./UpdatePhoneDialog";
 import { UpdateEmailDialog } from "./UpdateEmailDialog";
 import { UpdateAddressDialog } from "./UpdateAddressDialog";
+import { RemoveIndividualRoleDialog } from "./RemoveIndividualRoleDialog";
 
 const useStyles = makeStyles((theme) => ({
   sectionChips: {
@@ -105,6 +106,11 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
   function selectUpdateAddress(adult: Person) {
     setAdultMoreMenuAnchor(null);
     setUpdateAddressParameter({volunteerFamilyId, person: adult});
+  }
+  const [removeRoleParameter, setRemoveRoleParameter] = useState<{volunteerFamilyId: string, person: Person, role: string} | null>(null);
+  function selectRemoveRole(adult: Person, role: string) {
+    setAdultMoreMenuAnchor(null);
+    setRemoveRoleParameter({volunteerFamilyId, person: adult, role: role});
   }
   
   const theme = useTheme();
@@ -213,6 +219,12 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectUpdateAddress(adultMoreMenuAnchor.adult)}>
           <ListItemText primary="Update address" />
         </MenuItem>
+        {Object.entries(volunteerFamily.familyRoleApprovals || {}).length > 0 && <Divider />}
+        {Object.entries(volunteerFamily.familyRoleApprovals || {}).flatMap(([role, roleVersionApprovals]) => (
+          <MenuItem key={role} onClick={() => adultMoreMenuAnchor?.adult && selectRemoveRole(adultMoreMenuAnchor.adult, role)}>
+            <ListItemText primary={`Remove from ${role} role`} />
+          </MenuItem>
+        ))}
       </Menu>
       {(renamePersonParameter && <RenamePersonDialog volunteerFamilyId={volunteerFamilyId} person={renamePersonParameter.person}
         onClose={() => setRenamePersonParameter(null)} />) || null}
@@ -225,6 +237,8 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
       {(updateEmailParameter && <UpdateEmailDialog volunteerFamilyId={volunteerFamilyId} person={updateEmailParameter.person}
         onClose={() => setUpdateEmailParameter(null)} />) || null}
       {(updateAddressParameter && <UpdateAddressDialog volunteerFamilyId={volunteerFamilyId} person={updateAddressParameter.person}
+        onClose={() => setUpdateAddressParameter(null)} />) || null}
+      {(removeRoleParameter && <RemoveIndividualRoleDialog volunteerFamilyId={volunteerFamilyId} person={removeRoleParameter.person} role={removeRoleParameter.role}
         onClose={() => setUpdateAddressParameter(null)} />) || null}
     </Card>}</>);
 }
