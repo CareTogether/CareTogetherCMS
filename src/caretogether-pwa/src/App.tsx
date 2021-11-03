@@ -37,6 +37,7 @@ function Copyright() {
 }
 
 const drawerWidth = 200;
+const footerHeight = 56;
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -85,7 +86,12 @@ const useStyles = makeStyles((theme) => ({
     flexGrow: 1,
     height: '100vh',
     overflow: 'auto',
-  }
+  },
+  mobileContent: {
+    flexGrow: 1,
+    height: `calc(100vh - ${footerHeight}px)`,
+    overflow: 'auto',
+  },
 }));
 
 const mainListItems = (flags: CurrentFeatureFlags) => (
@@ -148,7 +154,7 @@ function App() {
             <Divider />
             {open && <Copyright />}
           </Drawer>}
-        <main className={classes.content}>
+        <main className={isMobile ? classes.mobileContent : classes.content}>
           <div className={classes.appBarSpacer} />
           <React.Suspense fallback={<div>Loading...</div>}>
             <Switch>
@@ -169,8 +175,8 @@ function App() {
               </Route>
             </Switch>
           </React.Suspense>
-          {isMobile && <Footer></Footer>}
         </main>
+        {isMobile && <Footer></Footer>}
       </Router>
     </div>
   );
