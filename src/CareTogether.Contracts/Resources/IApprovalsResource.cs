@@ -14,14 +14,14 @@ namespace CareTogether.Resources
 
     public enum VolunteerFamilyStatus { Active, Inactive } //TODO: Remove this
 
-    public record RemovedRole(string RoleName, string? AdditionalComments);
+    public record RemovedRole(string RoleName, RoleRemovalReason Reason, string? AdditionalComments);
+
+    public enum RoleRemovalReason { Inactive, OptOut, Denied };
 
     public record VolunteerEntry(Guid PersonId,
         bool Active, string Note,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<RemovedRole> RemovedRoles);
-
-    public enum RoleApprovalStatus { Prospective, Approved, Onboarded };
 
     public sealed record CompletedRequirementInfo(Guid UserId, DateTime TimestampUtc,
         string RequirementName, DateTime CompletedAtUtc, Guid? UploadedDocumentId);
@@ -49,10 +49,8 @@ namespace CareTogether.Resources
         string RoleName, RoleRemovalReason Reason, string? AdditionalComments)
         : VolunteerFamilyCommand(FamilyId);
     public sealed record ResetVolunteerFamilyRole(Guid FamilyId,
-        string RoleName, string? AdditionalComments)
+        string RoleName)
         : VolunteerFamilyCommand(FamilyId);
-
-    public enum RoleRemovalReason { Inactive, OptOut, Denied };
 
     [JsonHierarchyBase]
     public abstract partial record VolunteerCommand(Guid FamilyId, Guid PersonId);
@@ -66,8 +64,8 @@ namespace CareTogether.Resources
     public sealed record RemoveVolunteerRole(Guid FamilyId, Guid PersonId,
         string RoleName, RoleRemovalReason Reason, string? AdditionalComments)
         : VolunteerCommand(FamilyId, PersonId);
-    public sealed record ReinstateVolunteerRole(Guid FamilyId, Guid PersonId,
-        string RoleName, string? AdditionalComments)
+    public sealed record ResetVolunteerRole(Guid FamilyId, Guid PersonId,
+        string RoleName)
         : VolunteerCommand(FamilyId, PersonId);
     public sealed record SetVolunteerNote(Guid FamilyId, Guid PersonId,
         string Note) : VolunteerCommand(FamilyId, PersonId);

@@ -9,16 +9,20 @@ namespace CareTogether.Engines
 {
     public sealed record VolunteerFamilyApprovalStatus(
         ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> FamilyRoleApprovals,
+        ImmutableList<RemovedRole> RemovedFamilyRoles,
         ImmutableList<string> MissingFamilyRequirements,
         ImmutableList<string> AvailableFamilyApplications,
         ImmutableDictionary<Guid, VolunteerApprovalStatus> IndividualVolunteers);
 
     public sealed record VolunteerApprovalStatus(
         ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> IndividualRoleApprovals,
+        ImmutableList<RemovedRole> RemovedIndividualRoles,
         ImmutableList<string> MissingIndividualRequirements,
         ImmutableList<string> AvailableIndividualApplications);
 
     public sealed record RoleVersionApproval(string Version, RoleApprovalStatus ApprovalStatus);
+
+    public enum RoleApprovalStatus { Prospective, Approved, Onboarded };
 
     public interface IPolicyEvaluationEngine
     {
@@ -38,10 +42,12 @@ namespace CareTogether.Engines
             ClaimsPrincipal user, VolunteerCommand command, VolunteerFamily volunteerFamily);
 
 
-        Task<VolunteerFamilyApprovalStatus> CalculateVolunteerFamilyApprovalStatusAsync(
+        Task<VolunteerFamilyApprovalStatus> CalculateVolunteerFamilyApprovalStatusAsync( //TODO: Should this fetch its own data?
             Guid organizationId, Guid locationId, Family family,
             ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
-            ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements);
+            ImmutableList<RemovedRole> removedFamilyRoles,
+            ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements,
+            ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles);
 
 
         Task<Referral> DiscloseReferralAsync(ClaimsPrincipal user, Referral referral);
