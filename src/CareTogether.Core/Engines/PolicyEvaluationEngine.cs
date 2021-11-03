@@ -160,9 +160,11 @@ namespace CareTogether.Engines
                             VolunteerFamilyRequirementScope.AllAdultsInTheFamily => family.Adults.All(a =>
                             {
                                 var (person, familyRelationship) = a;
-                                return completedIndividualRequirements.TryGetValue(person.Id, out var completedRequirements)
-                                    && completedRequirements.Any(x => x.RequirementName == requirement.ActionName &&
-                                    (supersededAtUtc == null || x.CompletedAtUtc < supersededAtUtc));
+                                return (removedIndividualRoles.TryGetValue(person.Id, out var removedRoles)
+                                        && removedRoles.Any(x => x.RoleName == roleName)) ||
+                                    (completedIndividualRequirements.TryGetValue(person.Id, out var completedRequirements)
+                                        && completedRequirements.Any(x => x.RequirementName == requirement.ActionName &&
+                                        (supersededAtUtc == null || x.CompletedAtUtc < supersededAtUtc)));
                             }),
                             VolunteerFamilyRequirementScope.OncePerFamily => completedFamilyRequirements.Any(x =>
                                 x.RequirementName == requirement.ActionName &&
@@ -174,9 +176,11 @@ namespace CareTogether.Engines
                             VolunteerFamilyRequirementScope.AllAdultsInTheFamily => family.Adults.Where(a =>
                             {
                                 var (person, familyRelationship) = a;
-                                return !completedIndividualRequirements.TryGetValue(person.Id, out var completedRequirements)
-                                    || !completedRequirements.Any(x => x.RequirementName == requirement.ActionName &&
-                                    (supersededAtUtc == null || x.CompletedAtUtc < supersededAtUtc));
+                                return (removedIndividualRoles.TryGetValue(person.Id, out var removedRoles)
+                                        && removedRoles.Any(x => x.RoleName == roleName)) ||
+                                    (!completedIndividualRequirements.TryGetValue(person.Id, out var completedRequirements)
+                                        || !completedRequirements.Any(x => x.RequirementName == requirement.ActionName &&
+                                        (supersededAtUtc == null || x.CompletedAtUtc < supersededAtUtc)));
                             }).Select(a => a.Item1.Id).ToList(),
                             VolunteerFamilyRequirementScope.OncePerFamily => new List<Guid>(),
                             _ => throw new NotImplementedException(
