@@ -227,8 +227,15 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectUpdateAddress(adultMoreMenuAnchor.adult)}>
           <ListItemText primary="Update address" />
         </MenuItem>
-        {Object.entries(volunteerFamily.familyRoleApprovals || {}).length > 0 && <Divider />}
+        {(Object.entries(volunteerFamily.familyRoleApprovals || {}).length > 0 ||
+          Object.entries(volunteerFamily.individualVolunteers?.[personId]?.individualRoleApprovals || {}).length > 0) && <Divider />}
         {Object.entries(volunteerFamily.familyRoleApprovals || {}).filter(([role, ]) =>
+          !volunteerFamily.individualVolunteers?.[personId]?.removedRoles?.find(x => x.roleName === role)).flatMap(([role, ]) => (
+          <MenuItem key={role} onClick={() => adultMoreMenuAnchor?.adult && selectRemoveRole(adultMoreMenuAnchor.adult, role)}>
+            <ListItemText primary={`Remove from ${role} role`} />
+          </MenuItem>
+        ))}
+        {Object.entries(volunteerFamily.individualVolunteers?.[personId]?.individualRoleApprovals || {}).filter(([role, ]) =>
           !volunteerFamily.individualVolunteers?.[personId]?.removedRoles?.find(x => x.roleName === role)).flatMap(([role, ]) => (
           <MenuItem key={role} onClick={() => adultMoreMenuAnchor?.adult && selectRemoveRole(adultMoreMenuAnchor.adult, role)}>
             <ListItemText primary={`Remove from ${role} role`} />
