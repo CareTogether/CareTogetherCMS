@@ -230,13 +230,13 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         {Object.entries(volunteerFamily.familyRoleApprovals || {}).length > 0 && <Divider />}
         {Object.entries(volunteerFamily.familyRoleApprovals || {}).filter(([role, ]) =>
           !volunteerFamily.individualVolunteers?.[personId]?.removedRoles?.find(x => x.roleName === role)).flatMap(([role, ]) => (
-          <MenuItem key={`remove-${role}`} onClick={() => adultMoreMenuAnchor?.adult && selectRemoveRole(adultMoreMenuAnchor.adult, role)}>
+          <MenuItem key={role} onClick={() => adultMoreMenuAnchor?.adult && selectRemoveRole(adultMoreMenuAnchor.adult, role)}>
             <ListItemText primary={`Remove from ${role} role`} />
           </MenuItem>
         ))}
         {(volunteerFamily.individualVolunteers?.[personId]?.removedRoles || []).length > 0 && <Divider />}
         {(volunteerFamily.individualVolunteers?.[personId]?.removedRoles || []).map(removedRole => (
-          <MenuItem key={`reset-${removedRole.roleName}`}
+          <MenuItem key={removedRole.roleName}
             onClick={() => adultMoreMenuAnchor?.adult && selectResetRole(adultMoreMenuAnchor.adult, removedRole.roleName!, removedRole.reason!, removedRole.additionalComments!)}>
             <ListItemText primary={`Reset ${removedRole.roleName} participation`} />
           </MenuItem>
