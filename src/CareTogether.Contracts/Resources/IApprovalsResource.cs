@@ -1,4 +1,4 @@
-﻿using JsonPolymorph;
+using JsonPolymorph;
 using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
@@ -9,15 +9,19 @@ namespace CareTogether.Resources
         VolunteerFamilyStatus Status, string Note,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<UploadedDocumentInfo> UploadedDocuments,
+        ImmutableList<RemovedRole> RemovedRoles,
         ImmutableDictionary<Guid, VolunteerEntry> IndividualEntries);
 
-    public enum VolunteerFamilyStatus { Active, Inactive }
+    public enum VolunteerFamilyStatus { Active, Inactive } //TODO: Remove this
+
+    public record RemovedRole(string RoleName, RoleRemovalReason Reason, string? AdditionalComments);
+
+    public enum RoleRemovalReason { Inactive, OptOut, Denied };
 
     public record VolunteerEntry(Guid PersonId,
         bool Active, string Note,
-        ImmutableList<CompletedRequirementInfo> CompletedRequirements);
-
-    public enum RoleApprovalStatus { Prospective, Approved, Onboarded };
+        ImmutableList<CompletedRequirementInfo> CompletedRequirements,
+        ImmutableList<RemovedRole> RemovedRoles);
 
     public sealed record CompletedRequirementInfo(Guid UserId, DateTime TimestampUtc,
         string RequirementName, DateTime CompletedAtUtc, Guid? UploadedDocumentId);
@@ -33,13 +37,19 @@ namespace CareTogether.Resources
     public sealed record UploadVolunteerFamilyDocument(Guid FamilyId,
         Guid UploadedDocumentId, string UploadedFileName)
         : VolunteerFamilyCommand(FamilyId);
-    public sealed record DeactivateVolunteerFamily(Guid FamilyId,
+    public sealed record DeactivateVolunteerFamily(Guid FamilyId, //TODO: Remove this
         string Reason)
         : VolunteerFamilyCommand(FamilyId);
-    public sealed record ActivateVolunteerFamily(Guid FamilyId)
+    public sealed record ActivateVolunteerFamily(Guid FamilyId) //TODO: Remove this
         : VolunteerFamilyCommand(FamilyId);
-    public sealed record SetVolunteerFamilyNote(Guid FamilyId,
+    public sealed record SetVolunteerFamilyNote(Guid FamilyId, //TODO: Remove this
         string Note)
+        : VolunteerFamilyCommand(FamilyId);
+    public sealed record RemoveVolunteerFamilyRole(Guid FamilyId,
+        string RoleName, RoleRemovalReason Reason, string? AdditionalComments)
+        : VolunteerFamilyCommand(FamilyId);
+    public sealed record ResetVolunteerFamilyRole(Guid FamilyId,
+        string RoleName)
         : VolunteerFamilyCommand(FamilyId);
 
     [JsonHierarchyBase]
@@ -47,9 +57,15 @@ namespace CareTogether.Resources
     public sealed record CompleteVolunteerRequirement(Guid FamilyId, Guid PersonId,
         string RequirementName,  DateTime CompletedAtUtc, Guid? UploadedDocumentId)
         : VolunteerCommand(FamilyId, PersonId);
-    public sealed record DeactivateVolunteer(Guid FamilyId, Guid PersonId,
+    public sealed record DeactivateVolunteer(Guid FamilyId, Guid PersonId, //TODO: Remove this
         string Reason) : VolunteerCommand(FamilyId, PersonId);
-    public sealed record ReactivateVolunteer(Guid FamilyId, Guid PersonId)
+    public sealed record ReactivateVolunteer(Guid FamilyId, Guid PersonId) //TODO: Remove this
+        : VolunteerCommand(FamilyId, PersonId);
+    public sealed record RemoveVolunteerRole(Guid FamilyId, Guid PersonId,
+        string RoleName, RoleRemovalReason Reason, string? AdditionalComments)
+        : VolunteerCommand(FamilyId, PersonId);
+    public sealed record ResetVolunteerRole(Guid FamilyId, Guid PersonId,
+        string RoleName)
         : VolunteerCommand(FamilyId, PersonId);
     public sealed record SetVolunteerNote(Guid FamilyId, Guid PersonId,
         string Note) : VolunteerCommand(FamilyId, PersonId);

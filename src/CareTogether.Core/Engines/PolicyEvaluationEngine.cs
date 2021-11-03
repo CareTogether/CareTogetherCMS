@@ -65,7 +65,9 @@ namespace CareTogether.Engines
 
         public async Task<VolunteerFamilyApprovalStatus> CalculateVolunteerFamilyApprovalStatusAsync(Guid organizationId, Guid locationId,
             Family family, ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
-            ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements)
+            ImmutableList<RemovedRole> removedFamilyRoles,
+            ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements,
+            ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles)
         {
             static void AddToEntryList<T, U>(Dictionary<T, ImmutableList<U>> dictionary, T key, U value)
                 where T : notnull
@@ -91,8 +93,13 @@ namespace CareTogether.Engines
                 ImmutableList<CompletedRequirementInfo>? completedRequirements;
                 if (!completedIndividualRequirements.TryGetValue(person.Id, out completedRequirements))
                     completedRequirements = ImmutableList<CompletedRequirementInfo>.Empty;
-                
-                foreach (var (roleName, rolePolicy) in policy.VolunteerPolicy.VolunteerRoles)
+
+                ImmutableList<RemovedRole>? removedRoles;
+                if (!removedIndividualRoles.TryGetValue(person.Id, out removedRoles))
+                    removedRoles = ImmutableList<RemovedRole>.Empty;
+
+                foreach (var (roleName, rolePolicy) in policy.VolunteerPolicy.VolunteerRoles
+                    .Where(role => !removedRoles.Any(x => x.RoleName == role.Key)))
                 {
                     foreach (var policyVersion in rolePolicy.PolicyVersions)
                     {
@@ -135,11 +142,12 @@ namespace CareTogether.Engines
                 }
                 missingIndividualRequirements[person.Id] = missingRequirements;
                 return (person.Id, new VolunteerApprovalStatus(individualRoles.ToImmutableDictionary(),
-                    ImmutableList<string>.Empty, availableApplications.ToImmutableList()));
+                    removedRoles, ImmutableList<string>.Empty, availableApplications.ToImmutableList()));
             }).ToImmutableDictionary(x => x.Item1, x => x.Item2);
 
             var familyRoles = new Dictionary<string, ImmutableList<RoleVersionApproval>>();
-            foreach (var (roleName, rolePolicy) in policy.VolunteerPolicy.VolunteerFamilyRoles)
+            foreach (var (roleName, rolePolicy) in policy.VolunteerPolicy.VolunteerFamilyRoles
+                .Where(role => !removedFamilyRoles.Any(x => x.RoleName == role.Key)))
             {
                 foreach (var policyVersion in rolePolicy.PolicyVersions)
                 {
@@ -152,9 +160,11 @@ namespace CareTogether.Engines
                             VolunteerFamilyRequirementScope.AllAdultsInTheFamily => family.Adults.All(a =>
                             {
                                 var (person, familyRelationship) = a;
-                                return completedIndividualRequirements.TryGetValue(person.Id, out var completedRequirements)
-                                    && completedRequirements.Any(x => x.RequirementName == requirement.ActionName &&
-                                    (supersededAtUtc == null || x.CompletedAtUtc < supersededAtUtc));
+                                return (removedIndividualRoles.TryGetValue(person.Id, out var removedRoles)
+                                        && removedRoles.Any(x => x.RoleName == roleName)) ||
+                                    (completedIndividualRequirements.TryGetValue(person.Id, out var completedRequirements)
+                                        && completedRequirements.Any(x => x.RequirementName == requirement.ActionName &&
+                                        (supersededAtUtc == null || x.CompletedAtUtc < supersededAtUtc)));
                             }),
                             VolunteerFamilyRequirementScope.OncePerFamily => completedFamilyRequirements.Any(x =>
                                 x.RequirementName == requirement.ActionName &&
@@ -166,9 +176,11 @@ namespace CareTogether.Engines
                             VolunteerFamilyRequirementScope.AllAdultsInTheFamily => family.Adults.Where(a =>
                             {
                                 var (person, familyRelationship) = a;
-                                return !completedIndividualRequirements.TryGetValue(person.Id, out var completedRequirements)
-                                    || !completedRequirements.Any(x => x.RequirementName == requirement.ActionName &&
-                                    (supersededAtUtc == null || x.CompletedAtUtc < supersededAtUtc));
+                                return !(removedIndividualRoles.TryGetValue(person.Id, out var removedRoles)
+                                        && removedRoles.Any(x => x.RoleName == roleName)) &&
+                                    (!completedIndividualRequirements.TryGetValue(person.Id, out var completedRequirements)
+                                        || !completedRequirements.Any(x => x.RequirementName == requirement.ActionName &&
+                                        (supersededAtUtc == null || x.CompletedAtUtc < supersededAtUtc)));
                             }).Select(a => a.Item1.Id).ToList(),
                             VolunteerFamilyRequirementScope.OncePerFamily => new List<Guid>(),
                             _ => throw new NotImplementedException(
@@ -217,6 +229,7 @@ namespace CareTogether.Engines
 
             return new VolunteerFamilyApprovalStatus(
                 familyRoles.ToImmutableDictionary(),
+                removedFamilyRoles,
                 missingFamilyRequirements.ToImmutableList(),
                 availableFamilyApplications.ToImmutableList(),
                 individualVolunteerRoles.ToImmutableDictionary(

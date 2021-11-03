@@ -223,12 +223,16 @@ namespace CareTogether.Managers
             var completedIndividualRequirements = entry.IndividualEntries.ToImmutableDictionary(
                 x => x.Key,
                 x => x.Value.CompletedRequirements);
+            var removedIndividualRoles = entry.IndividualEntries.ToImmutableDictionary(
+                x => x.Key,
+                x => x.Value.RemovedRoles);
 
             var volunteerFamilyApprovalStatus = await policyEvaluationEngine.CalculateVolunteerFamilyApprovalStatusAsync(
-                organizationId, locationId, family, entry.CompletedRequirements, completedIndividualRequirements);
+                organizationId, locationId, family, entry.CompletedRequirements, entry.RemovedRoles,
+                completedIndividualRequirements, removedIndividualRoles);
 
             return new VolunteerFamily(family,
-                entry.CompletedRequirements, entry.UploadedDocuments,
+                entry.CompletedRequirements, entry.UploadedDocuments, entry.RemovedRoles,
                 volunteerFamilyApprovalStatus.MissingFamilyRequirements,
                 volunteerFamilyApprovalStatus.AvailableFamilyApplications,
                 volunteerFamilyApprovalStatus.FamilyRoleApprovals,
@@ -238,10 +242,10 @@ namespace CareTogether.Managers
                     {
                         var hasEntry = entry.IndividualEntries.TryGetValue(x.Key, out var individualEntry);
                         var result = hasEntry
-                            ? new Volunteer(individualEntry!.CompletedRequirements, x.Value.MissingIndividualRequirements,
-                                x.Value.AvailableIndividualApplications, x.Value.IndividualRoleApprovals)
-                            : new Volunteer(ImmutableList<CompletedRequirementInfo>.Empty, x.Value.MissingIndividualRequirements,
-                                x.Value.AvailableIndividualApplications, x.Value.IndividualRoleApprovals);
+                            ? new Volunteer(individualEntry!.CompletedRequirements, individualEntry!.RemovedRoles,
+                                x.Value.MissingIndividualRequirements, x.Value.AvailableIndividualApplications, x.Value.IndividualRoleApprovals)
+                            : new Volunteer(ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<RemovedRole>.Empty,
+                                x.Value.MissingIndividualRequirements, x.Value.AvailableIndividualApplications, x.Value.IndividualRoleApprovals);
                         return result;
                     }));
         }

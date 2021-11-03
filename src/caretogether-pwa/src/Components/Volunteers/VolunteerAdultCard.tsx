@@ -1,7 +1,7 @@
 import { Card, CardHeader, IconButton, CardContent, Typography, Chip, CardActions, makeStyles, Divider, ListItemText, Menu, MenuItem, MenuList, useMediaQuery, useTheme } from "@material-ui/core";
 import { format } from 'date-fns';
 import { useState } from "react";
-import { ActionRequirement, Gender, Person, VolunteerFamily } from "../../GeneratedClient";
+import { ActionRequirement, Gender, Person, VolunteerFamily, RoleRemovalReason } from "../../GeneratedClient";
 import { AgeText } from "../AgeText";
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
@@ -18,6 +18,8 @@ import { VolunteerRoleApprovalStatusChip } from "./VolunteerRoleApprovalStatusCh
 import { UpdatePhoneDialog } from "./UpdatePhoneDialog";
 import { UpdateEmailDialog } from "./UpdateEmailDialog";
 import { UpdateAddressDialog } from "./UpdateAddressDialog";
+import { RemoveIndividualRoleDialog } from "./RemoveIndividualRoleDialog";
+import { ResetIndividualRoleDialog } from "./ResetIndividualRoleDialog";
 
 const useStyles = makeStyles((theme) => ({
   sectionChips: {
@@ -106,6 +108,16 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
     setAdultMoreMenuAnchor(null);
     setUpdateAddressParameter({volunteerFamilyId, person: adult});
   }
+  const [removeRoleParameter, setRemoveRoleParameter] = useState<{volunteerFamilyId: string, person: Person, role: string} | null>(null);
+  function selectRemoveRole(adult: Person, role: string) {
+    setAdultMoreMenuAnchor(null);
+    setRemoveRoleParameter({volunteerFamilyId, person: adult, role: role});
+  }
+  const [resetRoleParameter, setResetRoleParameter] = useState<{volunteerFamilyId: string, person: Person, role: string, removalReason: RoleRemovalReason, removalAdditionalComments: string} | null>(null);
+  function selectResetRole(adult: Person, role: string, removalReason: RoleRemovalReason, removalAdditionalComments: string) {
+    setAdultMoreMenuAnchor(null);
+    setResetRoleParameter({volunteerFamilyId, person: adult, role: role, removalReason: removalReason, removalAdditionalComments: removalAdditionalComments});
+  }
   
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
@@ -126,6 +138,8 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         <Typography color="textSecondary" className={classes.sectionChips} component="div">
           {Object.entries(volunteerFamily.individualVolunteers?.[adult.item1.id].individualRoleApprovals || {}).map(([role, roleVersionApprovals]) =>
             <VolunteerRoleApprovalStatusChip key={role} roleName={role} roleVersionApprovals={roleVersionApprovals} />)}
+          {(volunteerFamily.individualVolunteers?.[personId]?.removedRoles || []).map(removedRole =>
+            <Chip key={removedRole.roleName} size="small" label={`${removedRole.roleName} - ${RoleRemovalReason[removedRole.reason!]} - ${removedRole.additionalComments}`} />)}
           {(adult.item2.relationshipToFamily && <Chip size="small" label={adult.item2.relationshipToFamily} />) || null}
           {adult.item2.isInHousehold && <Chip size="small" label="In Household" />}
         </Typography>
@@ -213,6 +227,27 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectUpdateAddress(adultMoreMenuAnchor.adult)}>
           <ListItemText primary="Update address" />
         </MenuItem>
+        {(Object.entries(volunteerFamily.familyRoleApprovals || {}).length > 0 ||
+          Object.entries(volunteerFamily.individualVolunteers?.[personId]?.individualRoleApprovals || {}).length > 0 ||
+          (volunteerFamily.individualVolunteers?.[personId]?.removedRoles || []).length > 0) && <Divider />}
+        {Object.entries(volunteerFamily.familyRoleApprovals || {}).filter(([role, ]) =>
+          !volunteerFamily.individualVolunteers?.[personId]?.removedRoles?.find(x => x.roleName === role)).flatMap(([role, ]) => (
+          <MenuItem key={role} onClick={() => adultMoreMenuAnchor?.adult && selectRemoveRole(adultMoreMenuAnchor.adult, role)}>
+            <ListItemText primary={`Remove from ${role} role`} />
+          </MenuItem>
+        ))}
+        {Object.entries(volunteerFamily.individualVolunteers?.[personId]?.individualRoleApprovals || {}).filter(([role, ]) =>
+          !volunteerFamily.individualVolunteers?.[personId]?.removedRoles?.find(x => x.roleName === role)).flatMap(([role, ]) => (
+          <MenuItem key={role} onClick={() => adultMoreMenuAnchor?.adult && selectRemoveRole(adultMoreMenuAnchor.adult, role)}>
+            <ListItemText primary={`Remove from ${role} role`} />
+          </MenuItem>
+        ))}
+        {(volunteerFamily.individualVolunteers?.[personId]?.removedRoles || []).map(removedRole => (
+          <MenuItem key={removedRole.roleName}
+            onClick={() => adultMoreMenuAnchor?.adult && selectResetRole(adultMoreMenuAnchor.adult, removedRole.roleName!, removedRole.reason!, removedRole.additionalComments!)}>
+            <ListItemText primary={`Reset ${removedRole.roleName} participation`} />
+          </MenuItem>
+        ))}
       </Menu>
       {(renamePersonParameter && <RenamePersonDialog volunteerFamilyId={volunteerFamilyId} person={renamePersonParameter.person}
         onClose={() => setRenamePersonParameter(null)} />) || null}
@@ -226,5 +261,10 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         onClose={() => setUpdateEmailParameter(null)} />) || null}
       {(updateAddressParameter && <UpdateAddressDialog volunteerFamilyId={volunteerFamilyId} person={updateAddressParameter.person}
         onClose={() => setUpdateAddressParameter(null)} />) || null}
+      {(removeRoleParameter && <RemoveIndividualRoleDialog volunteerFamilyId={volunteerFamilyId} person={removeRoleParameter.person} role={removeRoleParameter.role}
+        onClose={() => setRemoveRoleParameter(null)} />) || null}
+      {(resetRoleParameter && <ResetIndividualRoleDialog volunteerFamilyId={volunteerFamilyId} person={resetRoleParameter.person} role={resetRoleParameter.role}
+        removalReason={resetRoleParameter.removalReason} removalAdditionalComments={resetRoleParameter.removalAdditionalComments}
+        onClose={() => setResetRoleParameter(null)} />) || null}
     </Card>}</>);
 }

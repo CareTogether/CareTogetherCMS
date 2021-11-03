@@ -2294,6 +2294,12 @@
               "$ref": "#/components/schemas/UploadedDocumentInfo"
             }
           },
+          "removedRoles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RemovedRole"
+            }
+          },
           "missingRequirements": {
             "type": "array",
             "items": {
@@ -2370,6 +2376,36 @@
           }
         }
       },
+      "RemovedRole": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "roleName": {
+            "type": "string"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/RoleRemovalReason"
+          },
+          "additionalComments": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "RoleRemovalReason": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Inactive",
+          "OptOut",
+          "Denied"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
       "RoleVersionApproval": {
         "type": "object",
         "additionalProperties": false,
@@ -2406,6 +2442,12 @@
               "$ref": "#/components/schemas/CompletedRequirementInfo"
             }
           },
+          "removedRoles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RemovedRole"
+            }
+          },
           "missingRequirements": {
             "type": "array",
             "items": {
@@ -2437,6 +2479,8 @@
             "ActivateVolunteerFamily": "#/components/schemas/ActivateVolunteerFamily",
             "CompleteVolunteerFamilyRequirement": "#/components/schemas/CompleteVolunteerFamilyRequirement",
             "DeactivateVolunteerFamily": "#/components/schemas/DeactivateVolunteerFamily",
+            "RemoveVolunteerFamilyRole": "#/components/schemas/RemoveVolunteerFamilyRole",
+            "ResetVolunteerFamilyRole": "#/components/schemas/ResetVolunteerFamilyRole",
             "SetVolunteerFamilyNote": "#/components/schemas/SetVolunteerFamilyNote",
             "UploadVolunteerFamilyDocument": "#/components/schemas/UploadVolunteerFamilyDocument"
           }
@@ -2508,6 +2552,45 @@
           }
         ]
       },
+      "RemoveVolunteerFamilyRole": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerFamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "roleName": {
+                "type": "string"
+              },
+              "reason": {
+                "$ref": "#/components/schemas/RoleRemovalReason"
+              },
+              "additionalComments": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "ResetVolunteerFamilyRole": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerFamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "roleName": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
       "SetVolunteerFamilyNote": {
         "allOf": [
           {
@@ -2552,6 +2635,8 @@
             "CompleteVolunteerRequirement": "#/components/schemas/CompleteVolunteerRequirement",
             "DeactivateVolunteer": "#/components/schemas/DeactivateVolunteer",
             "ReactivateVolunteer": "#/components/schemas/ReactivateVolunteer",
+            "RemoveVolunteerRole": "#/components/schemas/RemoveVolunteerRole",
+            "ResetVolunteerRole": "#/components/schemas/ResetVolunteerRole",
             "SetVolunteerNote": "#/components/schemas/SetVolunteerNote"
           }
         },
@@ -2623,6 +2708,45 @@
           {
             "type": "object",
             "additionalProperties": false
+          }
+        ]
+      },
+      "RemoveVolunteerRole": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "roleName": {
+                "type": "string"
+              },
+              "reason": {
+                "$ref": "#/components/schemas/RoleRemovalReason"
+              },
+              "additionalComments": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "ResetVolunteerRole": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "roleName": {
+                "type": "string"
+              }
+            }
           }
         ]
       },
