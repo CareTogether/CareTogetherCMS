@@ -139,7 +139,7 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
           {Object.entries(volunteerFamily.individualVolunteers?.[adult.item1.id].individualRoleApprovals || {}).map(([role, roleVersionApprovals]) =>
             <VolunteerRoleApprovalStatusChip key={role} roleName={role} roleVersionApprovals={roleVersionApprovals} />)}
           {(volunteerFamily.individualVolunteers?.[personId]?.removedRoles || []).map(removedRole =>
-            <Chip size="small" label={`${removedRole.roleName} - ${RoleRemovalReason[removedRole.reason!]} - ${removedRole.additionalComments}`} />)}
+            <Chip key={removedRole.roleName} size="small" label={`${removedRole.roleName} - ${RoleRemovalReason[removedRole.reason!]} - ${removedRole.additionalComments}`} />)}
           {(adult.item2.relationshipToFamily && <Chip size="small" label={adult.item2.relationshipToFamily} />) || null}
           {adult.item2.isInHousehold && <Chip size="small" label="In Household" />}
         </Typography>
