@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Container, Toolbar, Button, Menu, MenuItem, Grid, useMediaQuery, useTheme, MenuList, Divider } from '@material-ui/core';
-import { VolunteerFamily, ActionRequirement } from '../../GeneratedClient';
+import { Container, Toolbar, Button, Menu, MenuItem, Grid, useMediaQuery, useTheme, MenuList, Divider, IconButton, ListItemText, Chip } from '@material-ui/core';
+import { VolunteerFamily, ActionRequirement, RoleRemovalReason } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../../Model/ConfigurationModel';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
+import MoreVertIcon from '@material-ui/icons/MoreVert';
 import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import { RecordVolunteerFamilyStepDialog } from './RecordVolunteerFamilyStepDialog';
@@ -19,6 +20,8 @@ import { UploadVolunteerFamilyDocumentDialog } from './UploadVolunteerFamilyDocu
 import { downloadFile } from '../../Model/FilesModel';
 import { currentOrganizationState, currentLocationState } from '../../Model/SessionModel';
 import { VolunteerRoleApprovalStatusChip } from './VolunteerRoleApprovalStatusChip';
+import { RemoveFamilyRoleDialog } from './RemoveFamilyRoleDialog';
+import { ResetFamilyRoleDialog } from './ResetFamilyRoleDialog';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -90,6 +93,19 @@ export function VolunteerFamilyScreen() {
   const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] = useState(false);
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
   const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
+
+  const [familyMoreMenuAnchor, setFamilyMoreMenuAnchor] = useState<Element | null>(null);
+
+  const [removeRoleParameter, setRemoveRoleParameter] = useState<{volunteerFamilyId: string, role: string} | null>(null);
+  function selectRemoveRole(role: string) {
+    setFamilyMoreMenuAnchor(null);
+    setRemoveRoleParameter({volunteerFamilyId, role: role});
+  }
+  const [resetRoleParameter, setResetRoleParameter] = useState<{volunteerFamilyId: string, role: string, removalReason: RoleRemovalReason, removalAdditionalComments: string} | null>(null);
+  function selectResetRole(role: string, removalReason: RoleRemovalReason, removalAdditionalComments: string) {
+    setFamilyMoreMenuAnchor(null);
+    setResetRoleParameter({volunteerFamilyId, role: role, removalReason: removalReason, removalAdditionalComments: removalAdditionalComments});
+  }
   
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
@@ -121,6 +137,10 @@ export function VolunteerFamilyScreen() {
         startIcon={<AddCircleIcon />}>
         Child
       </Button>
+      <IconButton
+        onClick={(event) => setFamilyMoreMenuAnchor(event.currentTarget)}>
+        <MoreVertIcon />
+      </IconButton>
       <Menu id="family-record-menu"
         anchorEl={familyRecordMenuAnchor}
         keepMounted
@@ -136,6 +156,26 @@ export function VolunteerFamilyScreen() {
           ))}
         </MenuList>
       </Menu>
+      <Menu id="family-more-menu"
+        anchorEl={familyMoreMenuAnchor}
+        keepMounted
+        open={Boolean(familyMoreMenuAnchor)}
+        onClose={() => setFamilyMoreMenuAnchor(null)}>
+        <MenuList dense={isMobile}>
+          {Object.entries(volunteerFamily.familyRoleApprovals || {}).filter(([role, ]) =>
+            !volunteerFamily.removedRoles?.find(x => x.roleName === role)).flatMap(([role, ]) => (
+            <MenuItem key={role} onClick={() => selectRemoveRole(role)}>
+              <ListItemText primary={`Remove from ${role} role`} />
+            </MenuItem>
+          ))}
+          {(volunteerFamily.removedRoles || []).map(removedRole => (
+            <MenuItem key={removedRole.roleName}
+              onClick={() => selectResetRole(removedRole.roleName!, removedRole.reason!, removedRole.additionalComments!)}>
+              <ListItemText primary={`Reset ${removedRole.roleName} participation`} />
+            </MenuItem>
+          ))}
+        </MenuList>
+      </Menu>
       {recordFamilyStepParameter && <RecordVolunteerFamilyStepDialog volunteerFamily={volunteerFamily}
         requirementName={recordFamilyStepParameter.requirementName} stepActionRequirement={recordFamilyStepParameter.requirementInfo}
         onClose={() => setRecordFamilyStepParameter(null)} />}
@@ -143,6 +183,11 @@ export function VolunteerFamilyScreen() {
         onClose={() => setUploadDocumentDialogOpen(false)} />}
       {addAdultDialogOpen && <AddAdultDialog onClose={() => setAddAdultDialogOpen(false)} />}
       {addChildDialogOpen && <AddChildDialog onClose={() => setAddChildDialogOpen(false)} />}
+      {(removeRoleParameter && <RemoveFamilyRoleDialog volunteerFamilyId={volunteerFamilyId} role={removeRoleParameter.role}
+        onClose={() => setRemoveRoleParameter(null)} />) || null}
+      {(resetRoleParameter && <ResetFamilyRoleDialog volunteerFamilyId={volunteerFamilyId} role={resetRoleParameter.role}
+        removalReason={resetRoleParameter.removalReason} removalAdditionalComments={resetRoleParameter.removalAdditionalComments}
+        onClose={() => setResetRoleParameter(null)} />) || null}
     </Toolbar>
     <Grid container spacing={0}>
       <Grid item xs={12}>
@@ -152,6 +197,8 @@ export function VolunteerFamilyScreen() {
         <div className={classes.sectionChips}>
           {Object.entries(volunteerFamily.familyRoleApprovals || {}).flatMap(([role, roleVersionApprovals]) =>
             <VolunteerRoleApprovalStatusChip key={role} roleName={role} roleVersionApprovals={roleVersionApprovals} />)}
+          {(volunteerFamily.removedRoles || []).map(removedRole =>
+            <Chip key={removedRole.roleName} size="small" label={`${removedRole.roleName} - ${RoleRemovalReason[removedRole.reason!]} - ${removedRole.additionalComments}`} />)}
         </div>
       </Grid>
       <Grid item xs={12} sm={6} md={4}>
