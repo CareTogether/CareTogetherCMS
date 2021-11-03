@@ -4321,6 +4321,16 @@ export abstract class VolunteerFamilyCommand implements IVolunteerFamilyCommand 
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "RemoveVolunteerFamilyRole") {
+            let result = new RemoveVolunteerFamilyRole();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "ResetVolunteerFamilyRole") {
+            let result = new ResetVolunteerFamilyRole();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "SetVolunteerFamilyNote") {
             let result = new SetVolunteerFamilyNote();
             result.init(data);
@@ -4450,6 +4460,88 @@ export interface IDeactivateVolunteerFamily extends IVolunteerFamilyCommand {
     reason?: string;
 }
 
+export class RemoveVolunteerFamilyRole extends VolunteerFamilyCommand implements IRemoveVolunteerFamilyRole {
+    roleName?: string;
+    reason?: RoleRemovalReason;
+    additionalComments?: string | undefined;
+
+    constructor(data?: IRemoveVolunteerFamilyRole) {
+        super(data);
+        this._discriminator = "RemoveVolunteerFamilyRole";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.roleName = _data["roleName"];
+            this.reason = _data["reason"];
+            this.additionalComments = _data["additionalComments"];
+        }
+    }
+
+    static fromJS(data: any): RemoveVolunteerFamilyRole {
+        data = typeof data === 'object' ? data : {};
+        let result = new RemoveVolunteerFamilyRole();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["roleName"] = this.roleName;
+        data["reason"] = this.reason;
+        data["additionalComments"] = this.additionalComments;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IRemoveVolunteerFamilyRole extends IVolunteerFamilyCommand {
+    roleName?: string;
+    reason?: RoleRemovalReason;
+    additionalComments?: string | undefined;
+}
+
+export enum RoleRemovalReason {
+    Inactive = 0,
+    OptOut = 1,
+    Denied = 2,
+}
+
+export class ResetVolunteerFamilyRole extends VolunteerFamilyCommand implements IResetVolunteerFamilyRole {
+    roleName?: string;
+
+    constructor(data?: IResetVolunteerFamilyRole) {
+        super(data);
+        this._discriminator = "ResetVolunteerFamilyRole";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.roleName = _data["roleName"];
+        }
+    }
+
+    static fromJS(data: any): ResetVolunteerFamilyRole {
+        data = typeof data === 'object' ? data : {};
+        let result = new ResetVolunteerFamilyRole();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["roleName"] = this.roleName;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IResetVolunteerFamilyRole extends IVolunteerFamilyCommand {
+    roleName?: string;
+}
+
 export class SetVolunteerFamilyNote extends VolunteerFamilyCommand implements ISetVolunteerFamilyNote {
     note?: string;
 
@@ -4559,6 +4651,16 @@ export abstract class VolunteerCommand implements IVolunteerCommand {
         }
         if (data["discriminator"] === "ReactivateVolunteer") {
             let result = new ReactivateVolunteer();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "RemoveVolunteerRole") {
+            let result = new RemoveVolunteerRole();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "ResetVolunteerRole") {
+            let result = new ResetVolunteerRole();
             result.init(data);
             return result;
         }
@@ -4686,6 +4788,82 @@ export class ReactivateVolunteer extends VolunteerCommand implements IReactivate
 }
 
 export interface IReactivateVolunteer extends IVolunteerCommand {
+}
+
+export class RemoveVolunteerRole extends VolunteerCommand implements IRemoveVolunteerRole {
+    roleName?: string;
+    reason?: RoleRemovalReason;
+    additionalComments?: string | undefined;
+
+    constructor(data?: IRemoveVolunteerRole) {
+        super(data);
+        this._discriminator = "RemoveVolunteerRole";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.roleName = _data["roleName"];
+            this.reason = _data["reason"];
+            this.additionalComments = _data["additionalComments"];
+        }
+    }
+
+    static fromJS(data: any): RemoveVolunteerRole {
+        data = typeof data === 'object' ? data : {};
+        let result = new RemoveVolunteerRole();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["roleName"] = this.roleName;
+        data["reason"] = this.reason;
+        data["additionalComments"] = this.additionalComments;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IRemoveVolunteerRole extends IVolunteerCommand {
+    roleName?: string;
+    reason?: RoleRemovalReason;
+    additionalComments?: string | undefined;
+}
+
+export class ResetVolunteerRole extends VolunteerCommand implements IResetVolunteerRole {
+    roleName?: string;
+
+    constructor(data?: IResetVolunteerRole) {
+        super(data);
+        this._discriminator = "ResetVolunteerRole";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.roleName = _data["roleName"];
+        }
+    }
+
+    static fromJS(data: any): ResetVolunteerRole {
+        data = typeof data === 'object' ? data : {};
+        let result = new ResetVolunteerRole();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["roleName"] = this.roleName;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IResetVolunteerRole extends IVolunteerCommand {
+    roleName?: string;
 }
 
 export class SetVolunteerNote extends VolunteerCommand implements ISetVolunteerNote {
