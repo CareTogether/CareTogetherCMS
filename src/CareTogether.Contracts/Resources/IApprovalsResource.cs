@@ -9,13 +9,17 @@ namespace CareTogether.Resources
         VolunteerFamilyStatus Status, string Note,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<UploadedDocumentInfo> UploadedDocuments,
+        ImmutableList<RemovedRole> RemovedRoles,
         ImmutableDictionary<Guid, VolunteerEntry> IndividualEntries);
 
     public enum VolunteerFamilyStatus { Active, Inactive } //TODO: Remove this
 
+    public record RemovedRole(string RoleName, string? AdditionalComments);
+
     public record VolunteerEntry(Guid PersonId,
         bool Active, string Note,
-        ImmutableList<CompletedRequirementInfo> CompletedRequirements);
+        ImmutableList<CompletedRequirementInfo> CompletedRequirements,
+        ImmutableList<RemovedRole> RemovedRoles);
 
     public enum RoleApprovalStatus { Prospective, Approved, Onboarded };
 
