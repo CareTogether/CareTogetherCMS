@@ -2294,6 +2294,12 @@
               "$ref": "#/components/schemas/UploadedDocumentInfo"
             }
           },
+          "removedRoles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RemovedRole"
+            }
+          },
           "missingRequirements": {
             "type": "array",
             "items": {
@@ -2370,6 +2376,36 @@
           }
         }
       },
+      "RemovedRole": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "roleName": {
+            "type": "string"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/RoleRemovalReason"
+          },
+          "additionalComments": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "RoleRemovalReason": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Inactive",
+          "OptOut",
+          "Denied"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
       "RoleVersionApproval": {
         "type": "object",
         "additionalProperties": false,
@@ -2404,6 +2440,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CompletedRequirementInfo"
+            }
+          },
+          "removedRoles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RemovedRole"
             }
           },
           "missingRequirements": {
@@ -2531,20 +2573,6 @@
               }
             }
           }
-        ]
-      },
-      "RoleRemovalReason": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "Inactive",
-          "OptOut",
-          "Denied"
-        ],
-        "enum": [
-          0,
-          1,
-          2
         ]
       },
       "ResetVolunteerFamilyRole": {

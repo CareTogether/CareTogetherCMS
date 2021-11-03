@@ -176,8 +176,8 @@ namespace CareTogether.Engines
                             VolunteerFamilyRequirementScope.AllAdultsInTheFamily => family.Adults.Where(a =>
                             {
                                 var (person, familyRelationship) = a;
-                                return (removedIndividualRoles.TryGetValue(person.Id, out var removedRoles)
-                                        && removedRoles.Any(x => x.RoleName == roleName)) ||
+                                return !(removedIndividualRoles.TryGetValue(person.Id, out var removedRoles)
+                                        && removedRoles.Any(x => x.RoleName == roleName)) &&
                                     (!completedIndividualRequirements.TryGetValue(person.Id, out var completedRequirements)
                                         || !completedRequirements.Any(x => x.RequirementName == requirement.ActionName &&
                                         (supersededAtUtc == null || x.CompletedAtUtc < supersededAtUtc)));

@@ -1,5 +1,5 @@
 import { atom, useRecoilCallback } from "recoil";
-import { ActionRequirement, AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, ApprovalCommand, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, UploadVolunteerFamilyDocument, VolunteerCommand, VolunteersClient, VolunteerFamily, VolunteerFamilyCommand } from "../GeneratedClient";
+import { ActionRequirement, AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, ApprovalCommand, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, UploadVolunteerFamilyDocument, VolunteerCommand, VolunteersClient, VolunteerFamily, VolunteerFamilyCommand, RoleRemovalReason, RemoveVolunteerRole, ResetVolunteerRole } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 
@@ -147,6 +147,30 @@ export function useVolunteersModel() {
       command.completedAtUtc = completedAtLocal;
       if (documentId != null)
         command.uploadedDocumentId = documentId;
+      return command;
+    });
+  const removeIndividualRole = useVolunteerCommandCallbackWithLocation(
+    async (organizationId, locationId, volunteerFamilyId, personId,
+      role: string, reason: RoleRemovalReason, additionalComments: string) =>
+    {
+      const command = new RemoveVolunteerRole({
+        familyId: volunteerFamilyId,
+        personId: personId
+      });
+      command.roleName = role;
+      command.reason = reason;
+      command.additionalComments = additionalComments;
+      return command;
+    });
+  const resetIndividualRole = useVolunteerCommandCallbackWithLocation(
+    async (organizationId, locationId, volunteerFamilyId, personId,
+      role: string) =>
+    {
+      const command = new ResetVolunteerRole({
+        familyId: volunteerFamilyId,
+        personId: personId
+      });
+      command.roleName = role;
       return command;
     });
   const updatePersonName = usePersonCommandCallback(
@@ -321,6 +345,8 @@ export function useVolunteersModel() {
     uploadDocument,
     completeFamilyRequirement,
     completeIndividualRequirement,
+    removeIndividualRole,
+    resetIndividualRole,
     updatePersonName,
     updatePersonConcerns,
     updatePersonNotes,

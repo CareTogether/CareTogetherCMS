@@ -3941,6 +3941,7 @@ export class VolunteerFamily implements IVolunteerFamily {
     family?: Family;
     completedRequirements?: CompletedRequirementInfo[];
     uploadedDocuments?: UploadedDocumentInfo[];
+    removedRoles?: RemovedRole[];
     missingRequirements?: string[];
     availableApplications?: string[];
     familyRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
@@ -3967,6 +3968,11 @@ export class VolunteerFamily implements IVolunteerFamily {
                 this.uploadedDocuments = [] as any;
                 for (let item of _data["uploadedDocuments"])
                     this.uploadedDocuments!.push(UploadedDocumentInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["removedRoles"])) {
+                this.removedRoles = [] as any;
+                for (let item of _data["removedRoles"])
+                    this.removedRoles!.push(RemovedRole.fromJS(item));
             }
             if (Array.isArray(_data["missingRequirements"])) {
                 this.missingRequirements = [] as any;
@@ -4015,6 +4021,11 @@ export class VolunteerFamily implements IVolunteerFamily {
             for (let item of this.uploadedDocuments)
                 data["uploadedDocuments"].push(item.toJSON());
         }
+        if (Array.isArray(this.removedRoles)) {
+            data["removedRoles"] = [];
+            for (let item of this.removedRoles)
+                data["removedRoles"].push(item.toJSON());
+        }
         if (Array.isArray(this.missingRequirements)) {
             data["missingRequirements"] = [];
             for (let item of this.missingRequirements)
@@ -4047,6 +4058,7 @@ export interface IVolunteerFamily {
     family?: Family;
     completedRequirements?: CompletedRequirementInfo[];
     uploadedDocuments?: UploadedDocumentInfo[];
+    removedRoles?: RemovedRole[];
     missingRequirements?: string[];
     availableApplications?: string[];
     familyRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
@@ -4153,6 +4165,56 @@ export interface IUploadedDocumentInfo {
     uploadedFileName?: string;
 }
 
+export class RemovedRole implements IRemovedRole {
+    roleName?: string;
+    reason?: RoleRemovalReason;
+    additionalComments?: string | undefined;
+
+    constructor(data?: IRemovedRole) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.roleName = _data["roleName"];
+            this.reason = _data["reason"];
+            this.additionalComments = _data["additionalComments"];
+        }
+    }
+
+    static fromJS(data: any): RemovedRole {
+        data = typeof data === 'object' ? data : {};
+        let result = new RemovedRole();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["roleName"] = this.roleName;
+        data["reason"] = this.reason;
+        data["additionalComments"] = this.additionalComments;
+        return data; 
+    }
+}
+
+export interface IRemovedRole {
+    roleName?: string;
+    reason?: RoleRemovalReason;
+    additionalComments?: string | undefined;
+}
+
+export enum RoleRemovalReason {
+    Inactive = 0,
+    OptOut = 1,
+    Denied = 2,
+}
+
 export class RoleVersionApproval implements IRoleVersionApproval {
     version?: string;
     approvalStatus?: RoleApprovalStatus;
@@ -4201,6 +4263,7 @@ export enum RoleApprovalStatus {
 
 export class Volunteer implements IVolunteer {
     completedRequirements?: CompletedRequirementInfo[];
+    removedRoles?: RemovedRole[];
     missingRequirements?: string[];
     availableApplications?: string[];
     individualRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
@@ -4220,6 +4283,11 @@ export class Volunteer implements IVolunteer {
                 this.completedRequirements = [] as any;
                 for (let item of _data["completedRequirements"])
                     this.completedRequirements!.push(CompletedRequirementInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["removedRoles"])) {
+                this.removedRoles = [] as any;
+                for (let item of _data["removedRoles"])
+                    this.removedRoles!.push(RemovedRole.fromJS(item));
             }
             if (Array.isArray(_data["missingRequirements"])) {
                 this.missingRequirements = [] as any;
@@ -4255,6 +4323,11 @@ export class Volunteer implements IVolunteer {
             for (let item of this.completedRequirements)
                 data["completedRequirements"].push(item.toJSON());
         }
+        if (Array.isArray(this.removedRoles)) {
+            data["removedRoles"] = [];
+            for (let item of this.removedRoles)
+                data["removedRoles"].push(item.toJSON());
+        }
         if (Array.isArray(this.missingRequirements)) {
             data["missingRequirements"] = [];
             for (let item of this.missingRequirements)
@@ -4278,6 +4351,7 @@ export class Volunteer implements IVolunteer {
 
 export interface IVolunteer {
     completedRequirements?: CompletedRequirementInfo[];
+    removedRoles?: RemovedRole[];
     missingRequirements?: string[];
     availableApplications?: string[];
     individualRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
@@ -4500,12 +4574,6 @@ export interface IRemoveVolunteerFamilyRole extends IVolunteerFamilyCommand {
     roleName?: string;
     reason?: RoleRemovalReason;
     additionalComments?: string | undefined;
-}
-
-export enum RoleRemovalReason {
-    Inactive = 0,
-    OptOut = 1,
-    Denied = 2,
 }
 
 export class ResetVolunteerFamilyRole extends VolunteerFamilyCommand implements IResetVolunteerFamilyRole {

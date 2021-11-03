@@ -12,6 +12,7 @@ namespace CareTogether.Managers
     public sealed record VolunteerFamily(Family Family,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<UploadedDocumentInfo> UploadedDocuments,
+        ImmutableList<RemovedRole> RemovedRoles,
         ImmutableList<string> MissingRequirements,
         ImmutableList<string> AvailableApplications,
         ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> FamilyRoleApprovals,
@@ -19,6 +20,7 @@ namespace CareTogether.Managers
 
     public sealed record Volunteer(
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
+        ImmutableList<RemovedRole> RemovedRoles,
         ImmutableList<string> MissingRequirements,
         ImmutableList<string> AvailableApplications,
         ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> IndividualRoleApprovals);

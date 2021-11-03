@@ -20,8 +20,8 @@ export function RemoveIndividualRoleDialog({volunteerFamilyId, person, role, onC
   const { reason, additionalComments } = fields;
 
   async function save() {
-    // await volunteerFamiliesModel.removeIndividualRole(volunteerFamilyId, person.id as string,
-    //   reason, additionalComments);
+    await volunteerFamiliesModel.removeIndividualRole(volunteerFamilyId, person.id as string,
+      role, reason, additionalComments);
   }
 
   return (
