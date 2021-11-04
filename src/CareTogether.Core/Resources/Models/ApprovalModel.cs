@@ -40,7 +40,8 @@ namespace CareTogether.Resources.Models
         {
             if (!volunteerFamilies.TryGetValue(command.FamilyId, out var volunteerFamilyEntry))
                 volunteerFamilyEntry = new VolunteerFamilyEntry(command.FamilyId, VolunteerFamilyStatus.Inactive, "",
-                    ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<UploadedDocumentInfo>.Empty, ImmutableDictionary<Guid, VolunteerEntry>.Empty);
+                    ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<UploadedDocumentInfo>.Empty,
+                    ImmutableList<RemovedRole>.Empty, ImmutableDictionary<Guid, VolunteerEntry>.Empty);
 
             var volunteerFamilyEntryToUpsert = command switch
             {
@@ -69,6 +70,15 @@ namespace CareTogether.Resources.Models
                 {
                     Note = c.Note
                 },
+                RemoveVolunteerFamilyRole c => volunteerFamilyEntry with
+                {
+                    RemovedRoles = volunteerFamilyEntry.RemovedRoles.Add(
+                        new RemovedRole(c.RoleName, c.Reason, c.AdditionalComments))
+                },
+                ResetVolunteerFamilyRole c => volunteerFamilyEntry with
+                {
+                    RemovedRoles = volunteerFamilyEntry.RemovedRoles.RemoveAll(x => x.RoleName == c.RoleName)
+                },
                 _ => throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented.")
             };
@@ -89,11 +99,12 @@ namespace CareTogether.Resources.Models
         {
             if (!volunteerFamilies.TryGetValue(command.FamilyId, out var volunteerFamilyEntry))
                 volunteerFamilyEntry = new VolunteerFamilyEntry(command.FamilyId, VolunteerFamilyStatus.Active, "",
-                    ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<UploadedDocumentInfo>.Empty, ImmutableDictionary<Guid, VolunteerEntry>.Empty);
+                    ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<UploadedDocumentInfo>.Empty,
+                    ImmutableList<RemovedRole>.Empty, ImmutableDictionary<Guid, VolunteerEntry>.Empty);
 
             if (!volunteerFamilyEntry.IndividualEntries.TryGetValue(command.PersonId, out var volunteerEntry))
                 volunteerEntry = new VolunteerEntry(command.PersonId, true, "",
-                    ImmutableList<CompletedRequirementInfo>.Empty);
+                    ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<RemovedRole>.Empty);
 
             var volunteerEntryToUpsert = command switch
             {
@@ -116,6 +127,15 @@ namespace CareTogether.Resources.Models
                 SetVolunteerNote c => volunteerEntry with
                 {
                     Note = c.Note
+                },
+                RemoveVolunteerRole c => volunteerEntry with
+                {
+                    RemovedRoles = volunteerEntry.RemovedRoles.Add(
+                        new RemovedRole(c.RoleName, c.Reason, c.AdditionalComments))
+                },
+                ResetVolunteerRole c => volunteerEntry with
+                {
+                    RemovedRoles = volunteerEntry.RemovedRoles.RemoveAll(x => x.RoleName == c.RoleName)
                 },
                 _ => throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented.")

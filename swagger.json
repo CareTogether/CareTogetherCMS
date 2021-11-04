@@ -1138,11 +1138,13 @@
         "description": "",
         "x-enumNames": [
           "OncePerFamily",
-          "AllAdultsInTheFamily"
+          "AllAdultsInTheFamily",
+          "AllParticipatingAdultsInTheFamily"
         ],
         "enum": [
           0,
-          1
+          1,
+          2
         ]
       },
       "CurrentFeatureFlags": {
@@ -2770,6 +2772,12 @@
               "$ref": "#/components/schemas/UploadedDocumentInfo"
             }
           },
+          "removedRoles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RemovedRole"
+            }
+          },
           "missingRequirements": {
             "type": "array",
             "items": {
@@ -2798,6 +2806,83 @@
             }
           }
         }
+      },
+      "CompletedRequirementInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "timestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "requirementName": {
+            "type": "string"
+          },
+          "completedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "uploadedDocumentId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          }
+        }
+      },
+      "UploadedDocumentInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "timestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "uploadedDocumentId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "uploadedFileName": {
+            "type": "string"
+          }
+        }
+      },
+      "RemovedRole": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "roleName": {
+            "type": "string"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/RoleRemovalReason"
+          },
+          "additionalComments": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "RoleRemovalReason": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Inactive",
+          "OptOut",
+          "Denied"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
       },
       "RoleVersionApproval": {
         "type": "object",
@@ -2835,6 +2920,12 @@
               "$ref": "#/components/schemas/CompletedRequirementInfo"
             }
           },
+          "removedRoles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RemovedRole"
+            }
+          },
           "missingRequirements": {
             "type": "array",
             "items": {
@@ -2866,6 +2957,8 @@
             "ActivateVolunteerFamily": "#/components/schemas/ActivateVolunteerFamily",
             "CompleteVolunteerFamilyRequirement": "#/components/schemas/CompleteVolunteerFamilyRequirement",
             "DeactivateVolunteerFamily": "#/components/schemas/DeactivateVolunteerFamily",
+            "RemoveVolunteerFamilyRole": "#/components/schemas/RemoveVolunteerFamilyRole",
+            "ResetVolunteerFamilyRole": "#/components/schemas/ResetVolunteerFamilyRole",
             "SetVolunteerFamilyNote": "#/components/schemas/SetVolunteerFamilyNote",
             "UploadVolunteerFamilyDocument": "#/components/schemas/UploadVolunteerFamilyDocument"
           }
@@ -2937,6 +3030,45 @@
           }
         ]
       },
+      "RemoveVolunteerFamilyRole": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerFamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "roleName": {
+                "type": "string"
+              },
+              "reason": {
+                "$ref": "#/components/schemas/RoleRemovalReason"
+              },
+              "additionalComments": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "ResetVolunteerFamilyRole": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerFamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "roleName": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
       "SetVolunteerFamilyNote": {
         "allOf": [
           {
@@ -2981,6 +3113,8 @@
             "CompleteVolunteerRequirement": "#/components/schemas/CompleteVolunteerRequirement",
             "DeactivateVolunteer": "#/components/schemas/DeactivateVolunteer",
             "ReactivateVolunteer": "#/components/schemas/ReactivateVolunteer",
+            "RemoveVolunteerRole": "#/components/schemas/RemoveVolunteerRole",
+            "ResetVolunteerRole": "#/components/schemas/ResetVolunteerRole",
             "SetVolunteerNote": "#/components/schemas/SetVolunteerNote"
           }
         },
@@ -3052,6 +3186,45 @@
           {
             "type": "object",
             "additionalProperties": false
+          }
+        ]
+      },
+      "RemoveVolunteerRole": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "roleName": {
+                "type": "string"
+              },
+              "reason": {
+                "$ref": "#/components/schemas/RoleRemovalReason"
+              },
+              "additionalComments": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "ResetVolunteerRole": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "roleName": {
+                "type": "string"
+              }
+            }
           }
         ]
       },

@@ -77,7 +77,7 @@ namespace CareTogether.Resources
     public sealed record VolunteerFamilyApprovalRequirement(
         RequirementStage Stage, string ActionName, VolunteerFamilyRequirementScope Scope);
 
-    public enum VolunteerFamilyRequirementScope { OncePerFamily, AllAdultsInTheFamily };
+    public enum VolunteerFamilyRequirementScope { OncePerFamily, AllAdultsInTheFamily, AllParticipatingAdultsInTheFamily };
 
 
     /// <summary>

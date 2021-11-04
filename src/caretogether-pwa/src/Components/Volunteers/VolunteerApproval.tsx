@@ -1,6 +1,6 @@
 import { makeStyles } from '@material-ui/core/styles';
 import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab } from '@material-ui/core';
-import { Gender, ExactAge, AgeInYears, RoleVersionApproval, VolunteerFamily } from '../../GeneratedClient';
+import { Gender, ExactAge, AgeInYears, RoleVersionApproval, VolunteerFamily, RemovedRole, RoleRemovalReason } from '../../GeneratedClient';
 import { differenceInYears } from 'date-fns';
 import { useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../../Model/VolunteersModel';
@@ -42,8 +42,10 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-function approvalStatus(roleVersionApprovals: RoleVersionApproval[] | undefined) {
-  return !roleVersionApprovals
+function approvalStatus(roleVersionApprovals: RoleVersionApproval[] | undefined, roleRemoval: RemovedRole | undefined) {
+  return typeof roleRemoval !== 'undefined'
+    ? RoleRemovalReason[roleRemoval.reason!]
+    : !roleVersionApprovals
     ? "-"
     : roleVersionApprovals.some(x => x.approvalStatus === RoleApprovalStatus.Onboarded)
     ? "Onboarded"
@@ -106,7 +108,7 @@ function VolunteerApproval() {
                     }</TableCell>
                     { volunteerFamilyRoleNames.map(roleName =>
                       (<TableCell key={roleName}>{
-                        approvalStatus(volunteerFamily.familyRoleApprovals?.[roleName])
+                        approvalStatus(volunteerFamily.familyRoleApprovals?.[roleName], volunteerFamily.removedRoles?.find(x => x.roleName === roleName))
                       }</TableCell>))}
                     <TableCell colSpan={volunteerRoleNames.length} />
                   </TableRow>
@@ -127,7 +129,8 @@ function VolunteerApproval() {
                       <TableCell colSpan={volunteerFamilyRoleNames.length} />
                       { volunteerRoleNames.map(roleName =>
                         (<TableCell key={roleName}>{
-                          approvalStatus(volunteerFamily.individualVolunteers?.[adult.item1?.id || '']?.individualRoleApprovals?.[roleName])
+                          approvalStatus(volunteerFamily.individualVolunteers?.[adult.item1?.id || '']?.individualRoleApprovals?.[roleName],
+                            volunteerFamily.individualVolunteers?.[adult.item1?.id || '']?.removedRoles?.find(x => x.roleName === roleName))
                         }</TableCell>))}
                     </TableRow>
                   ))}

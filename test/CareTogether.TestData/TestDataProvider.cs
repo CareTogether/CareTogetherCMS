@@ -306,6 +306,8 @@ namespace CareTogether.TestData
                     ["Interview with Family Coach Supervisor"] = new ActionRequirement(DocumentLinkRequirement.Allowed, null, null),
                     ["Host Family Application"] = new ActionRequirement(DocumentLinkRequirement.Required,
                         null, new Uri("http://example.com/forms/app-hf")),
+                    ["Host Family Training"] = new ActionRequirement(DocumentLinkRequirement.None,
+                        null, new Uri("http://example.com/training/hf")),
                     ["Home Screening Checklist"] = new ActionRequirement(DocumentLinkRequirement.Required,
                         "Must be filled out by an approved home screener", new Uri("http://example.com/forms/hscheck")),
                     ["Host Family Interview"] = new ActionRequirement(DocumentLinkRequirement.Allowed, null, null),
@@ -470,6 +472,7 @@ namespace CareTogether.TestData
                             {
                                 new VolunteerFamilyApprovalRequirement(RequirementStage.Application, "Host Family Application", VolunteerFamilyRequirementScope.OncePerFamily),
                                 new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Background Check", VolunteerFamilyRequirementScope.AllAdultsInTheFamily),
+                                new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Host Family Training", VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily),
                                 new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Home Screening Checklist", VolunteerFamilyRequirementScope.OncePerFamily),
                                 new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Host Family Interview", VolunteerFamilyRequirementScope.OncePerFamily),
                                 new VolunteerFamilyApprovalRequirement(RequirementStage.Onboarding, "Meet & Greet", VolunteerFamilyRequirementScope.OncePerFamily)
@@ -478,6 +481,7 @@ namespace CareTogether.TestData
                             {
                                 new VolunteerFamilyApprovalRequirement(RequirementStage.Application, "Host Family Application", VolunteerFamilyRequirementScope.OncePerFamily),
                                 new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Comprehensive Background Check", VolunteerFamilyRequirementScope.AllAdultsInTheFamily),
+                                new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Host Family Training", VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily),
                                 new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Home Screening Checklist", VolunteerFamilyRequirementScope.OncePerFamily),
                                 new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Host Family Interview", VolunteerFamilyRequirementScope.OncePerFamily),
                                 new VolunteerFamilyApprovalRequirement(RequirementStage.Onboarding, "Meet & Greet", VolunteerFamilyRequirementScope.OncePerFamily)
