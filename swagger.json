@@ -1129,11 +1129,13 @@
         "description": "",
         "x-enumNames": [
           "OncePerFamily",
-          "AllAdultsInTheFamily"
+          "AllAdultsInTheFamily",
+          "AllParticipatingAdultsInTheFamily"
         ],
         "enum": [
           0,
-          1
+          1,
+          2
         ]
       },
       "CurrentFeatureFlags": {
