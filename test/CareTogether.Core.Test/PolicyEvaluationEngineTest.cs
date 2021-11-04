@@ -178,11 +178,14 @@ namespace CareTogether.Core.Test
                 new Dictionary<Guid, ImmutableList<CompletedRequirementInfo>>
                 {
                     [guid1] = ImmutableList<CompletedRequirementInfo>.Empty
-                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 14), "Background Check", new DateTime(2021, 7, 12), Guid.Empty)),
+                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 14), "Background Check", new DateTime(2021, 7, 12), Guid.Empty))
+                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 20), "Host Family Training", new DateTime(2021, 7, 20), Guid.Empty)),
                     [guid2] = ImmutableList<CompletedRequirementInfo>.Empty
-                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 15), "Background Check", new DateTime(2021, 7, 13), Guid.Empty)),
+                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 15), "Background Check", new DateTime(2021, 7, 13), Guid.Empty))
+                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 20), "Host Family Training", new DateTime(2021, 7, 20), Guid.Empty)),
                     [guid3] = ImmutableList<CompletedRequirementInfo>.Empty
-                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 15), "Background Check", new DateTime(2021, 7, 13), Guid.Empty)),
+                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 15), "Background Check", new DateTime(2021, 7, 13), Guid.Empty))
+                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 20), "Host Family Training", new DateTime(2021, 7, 20), Guid.Empty)),
                 }.ToImmutableDictionary(),
                 new Dictionary<Guid, ImmutableList<RemovedRole>>
                 {
@@ -215,9 +218,12 @@ namespace CareTogether.Core.Test
                 new Dictionary<Guid, ImmutableList<CompletedRequirementInfo>>
                 {
                     [guid1] = ImmutableList<CompletedRequirementInfo>.Empty
+                        .Add(new CompletedRequirementInfo(guid1, new DateTime(2021, 7, 14), "Background Check", new DateTime(2021, 7, 12), Guid.Empty))
+                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 20), "Host Family Training", new DateTime(2021, 7, 20), Guid.Empty)),
+                    [guid2] = ImmutableList<CompletedRequirementInfo>.Empty
                         .Add(new CompletedRequirementInfo(guid1, new DateTime(2021, 7, 14), "Background Check", new DateTime(2021, 7, 12), Guid.Empty)),
-                    [guid2] = ImmutableList<CompletedRequirementInfo>.Empty,
                     [guid3] = ImmutableList<CompletedRequirementInfo>.Empty
+                        .Add(new CompletedRequirementInfo(guid1, new DateTime(2021, 7, 14), "Background Check", new DateTime(2021, 7, 12), Guid.Empty))
                 }.ToImmutableDictionary(),
                 new Dictionary<Guid, ImmutableList<RemovedRole>>
                 {
@@ -231,6 +237,45 @@ namespace CareTogether.Core.Test
             Assert.AreEqual(1, result.FamilyRoleApprovals.Count);
             Assert.AreEqual(2, result.FamilyRoleApprovals["Host Family"].Count);
             Assert.AreEqual(new RoleVersionApproval("v1", RoleApprovalStatus.Approved), result.FamilyRoleApprovals["Host Family"].Single(x => x.Version == "v1"));
+            Assert.AreEqual(new RoleVersionApproval("v2", RoleApprovalStatus.Prospective), result.FamilyRoleApprovals["Host Family"].Single(x => x.Version == "v2"));
+            Assert.AreEqual(3, result.IndividualVolunteers.Count);
+            Assert.AreEqual(0, result.IndividualVolunteers[guid1].IndividualRoleApprovals.Count);
+            Assert.AreEqual(0, result.IndividualVolunteers[guid2].IndividualRoleApprovals.Count);
+            Assert.AreEqual(0, result.IndividualVolunteers[guid3].IndividualRoleApprovals.Count);
+        }
+
+        [TestMethod]
+        public async Task TestCalculateVolunteerFamilyApprovalStatusWithMissingMandatoryStepsBasedOnOptOuts()
+        {
+            var result = await dut.CalculateVolunteerFamilyApprovalStatusAsync(guid1, guid2, volunteerFamily,
+                new List<CompletedRequirementInfo>
+                {
+                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 1), "Host Family Application", new DateTime(2021, 7, 1), Guid.Empty),
+                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 10), "Home Screening Checklist", new DateTime(2021, 7, 8), Guid.Empty),
+                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 10), "Host Family Interview", new DateTime(2021, 7, 10), Guid.Empty)
+                }.ToImmutableList(),
+                ImmutableList<RemovedRole>.Empty,
+                new Dictionary<Guid, ImmutableList<CompletedRequirementInfo>>
+                {
+                    [guid1] = ImmutableList<CompletedRequirementInfo>.Empty
+                        .Add(new CompletedRequirementInfo(guid1, new DateTime(2021, 7, 14), "Background Check", new DateTime(2021, 7, 12), Guid.Empty))
+                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 20), "Host Family Training", new DateTime(2021, 7, 20), Guid.Empty)),
+                    [guid2] = ImmutableList<CompletedRequirementInfo>.Empty
+                        .Add(new CompletedRequirementInfo(guid1, new DateTime(2021, 7, 14), "Background Check", new DateTime(2021, 7, 12), Guid.Empty)),
+                    [guid3] = ImmutableList<CompletedRequirementInfo>.Empty
+                }.ToImmutableDictionary(),
+                new Dictionary<Guid, ImmutableList<RemovedRole>>
+                {
+                    [guid1] = ImmutableList<RemovedRole>.Empty,
+                    [guid2] = ImmutableList<RemovedRole>.Empty
+                        .Add(new RemovedRole("Host Family", RoleRemovalReason.OptOut, "Not interested")),
+                    [guid3] = ImmutableList<RemovedRole>.Empty
+                        .Add(new RemovedRole("Host Family", RoleRemovalReason.Inactive, "No longer planning to volunteer"))
+                }.ToImmutableDictionary());
+
+            Assert.AreEqual(1, result.FamilyRoleApprovals.Count);
+            Assert.AreEqual(2, result.FamilyRoleApprovals["Host Family"].Count);
+            Assert.AreEqual(new RoleVersionApproval("v1", RoleApprovalStatus.Prospective), result.FamilyRoleApprovals["Host Family"].Single(x => x.Version == "v1"));
             Assert.AreEqual(new RoleVersionApproval("v2", RoleApprovalStatus.Prospective), result.FamilyRoleApprovals["Host Family"].Single(x => x.Version == "v2"));
             Assert.AreEqual(3, result.IndividualVolunteers.Count);
             Assert.AreEqual(0, result.IndividualVolunteers[guid1].IndividualRoleApprovals.Count);
