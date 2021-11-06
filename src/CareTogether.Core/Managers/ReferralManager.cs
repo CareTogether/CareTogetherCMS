@@ -112,22 +112,5 @@ namespace CareTogether.Managers
                     closedReferrals);
             }).ToImmutableList();
         }
-
-
-        private Referral ToReferral(ReferralEntry entry,
-            ImmutableDictionary<Guid, Family> families) =>
-            new(entry.Id, entry.CreatedUtc, entry.CloseReason,
-                entry.CompletedRequirements, entry.UploadedDocuments, ImmutableList<string>.Empty, //TODO: populate MissingRequirements
-                entry.Arrangements.Select(a => ToArrangement(a.Value)).ToImmutableList());
-
-        private Arrangement ToArrangement(ArrangementEntry entry) =>
-            new(entry.Id, entry.ArrangementType, entry.State,
-                entry.CompletedRequirements, entry.UploadedDocuments, ImmutableList<string>.Empty, //TODO: populate MissingRequirements
-                entry.IndividualVolunteerAssignments, entry.FamilyVolunteerAssignments,
-                entry.PartneringFamilyChildAssignments, entry.ChildrenLocationHistory,
-                entry.Notes.Values.Select(note =>
-                    new Note(note.Id, note.AuthorId, TimestampUtc: note.Status == NoteStatus.Approved
-                        ? note.ApprovedTimestampUtc!.Value
-                        : note.LastEditTimestampUtc, note.Contents, note.Status)).ToImmutableList());
     }
 }
