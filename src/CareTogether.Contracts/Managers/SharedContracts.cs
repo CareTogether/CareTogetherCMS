@@ -6,7 +6,7 @@ using System.Collections.Immutable;
 namespace CareTogether.Managers
 {
     public sealed record CombinedFamilyInfo(Family Family,
-        PartneringFamilyInfo PartneringFamilyInfo, VolunteerFamilyInfo VolunteerFamilyInfo);
+        PartneringFamilyInfo? PartneringFamilyInfo, VolunteerFamilyInfo? VolunteerFamilyInfo);
 
     public sealed record PartneringFamilyInfo(
         Referral? OpenReferral,

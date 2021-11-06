@@ -72,7 +72,7 @@ namespace CareTogether.Resources
     {
         Task<ImmutableList<VolunteerFamilyEntry>> ListVolunteerFamiliesAsync(Guid organizationId, Guid locationId);
 
-        Task<VolunteerFamilyEntry> GetVolunteerFamilyAsync(Guid organizationId, Guid locationId, Guid familyId);
+        Task<VolunteerFamilyEntry?> TryGetVolunteerFamilyAsync(Guid organizationId, Guid locationId, Guid familyId);
 
         Task<VolunteerFamilyEntry> ExecuteVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
             VolunteerFamilyCommand command, Guid userId);

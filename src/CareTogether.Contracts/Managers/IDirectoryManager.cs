@@ -2,6 +2,7 @@ using CareTogether.Resources;
 using JsonPolymorph;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -27,6 +28,9 @@ namespace CareTogether.Managers
 
     public interface IDirectoryManager
     {
+        Task<ImmutableList<CombinedFamilyInfo>> ListVisibleFamiliesAsync(
+            ClaimsPrincipal user, Guid organizationId, Guid locationId);
+
         Task<CombinedFamilyInfo> ExecuteDirectoryCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, DirectoryCommand command); //TODO: Replace these with regular FamilyCommand primitives?
 

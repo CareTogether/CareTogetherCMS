@@ -1,5 +1,6 @@
 ﻿using CareTogether.Engines;
 using CareTogether.Resources;
+using Nito.AsyncEx;
 using System;
 using System.Collections.Immutable;
 using System.Linq;
@@ -11,18 +12,28 @@ namespace CareTogether.Managers
     public sealed class DirectoryManager : IDirectoryManager
     {
         private readonly IAuthorizationEngine authorizationEngine;
-        private readonly IPolicyEvaluationEngine policyEvaluationEngine;
+        private readonly CombinedFamilyInfoFormatter combinedFamilyInfoFormatter;
         private readonly IDirectoryResource directoryResource;
 
 
-        public DirectoryManager(IPolicyEvaluationEngine policyEvaluationEngine, IAuthorizationEngine authorizationEngine,
-            IDirectoryResource directoryResource)
+        public DirectoryManager(IDirectoryResource directoryResource, IAuthorizationEngine authorizationEngine,
+            CombinedFamilyInfoFormatter combinedFamilyInfoFormatter)
         {
-            this.policyEvaluationEngine = policyEvaluationEngine;
-            this.authorizationEngine = authorizationEngine;
             this.directoryResource = directoryResource;
+            this.authorizationEngine = authorizationEngine;
+            this.combinedFamilyInfoFormatter = combinedFamilyInfoFormatter;
         }
 
+
+        public async Task<ImmutableList<CombinedFamilyInfo>> ListVisibleFamiliesAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId)
+        {
+            var families = await directoryResource.ListFamiliesAsync(organizationId, locationId);
+
+            var result = await families
+                .Select(family => combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, family.Id, user))
+                .WhenAll();
+            return result.ToImmutableList();
+        }
 
         public async Task<CombinedFamilyInfo> ExecuteDirectoryCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, DirectoryCommand command)
@@ -47,7 +58,13 @@ namespace CareTogether.Managers
                             c.Concerns, c.Notes);
                         var addAdultToFamilySubcommand = new AddAdultToFamily(c.FamilyId, adultPersonId, c.FamilyAdultRelationshipInfo);
 
-                        //TODO: Authorize the subcommands via the policy evaluation engine
+                        if (!await authorizationEngine.AuthorizePersonCommandAsync(
+                            organizationId, locationId, user, createPersonSubcommand))
+                            throw new Exception("The user is not authorized to perform this command.");
+
+                        if (!await authorizationEngine.AuthorizeFamilyCommandAsync(
+                            organizationId, locationId, user, addAdultToFamilySubcommand))
+                            throw new Exception("The user is not authorized to perform this command.");
 
                         var person = await directoryResource.ExecutePersonCommandAsync(organizationId, locationId,
                             createPersonSubcommand, user.UserId());
@@ -55,8 +72,8 @@ namespace CareTogether.Managers
                         var family = await directoryResource.ExecuteFamilyCommandAsync(organizationId, locationId,
                             addAdultToFamilySubcommand, user.UserId());
 
-                        var disclosedFamily = await authorizationEngine.DiscloseFamilyAsync(user, family);
-                        return disclosedFamily;
+                        var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, c.FamilyId, user);
+                        return familyResult;
                     }
                 case AddChildToFamilyCommand c:
                     {
@@ -70,7 +87,13 @@ namespace CareTogether.Managers
                         var addChildToFamilySubcommand = new AddChildToFamily(c.FamilyId, childPersonId, c.CustodialRelationships.Select(cr =>
                             cr with { ChildId = childPersonId }).ToImmutableList());
 
-                        //TODO: Authorize the subcommands via the policy evaluation engine
+                        if (!await authorizationEngine.AuthorizePersonCommandAsync(
+                            organizationId, locationId, user, createPersonSubcommand))
+                            throw new Exception("The user is not authorized to perform this command.");
+
+                        if (!await authorizationEngine.AuthorizeFamilyCommandAsync(
+                            organizationId, locationId, user, addChildToFamilySubcommand))
+                            throw new Exception("The user is not authorized to perform this command.");
 
                         var person = await directoryResource.ExecutePersonCommandAsync(organizationId, locationId,
                             createPersonSubcommand, user.UserId());
@@ -78,8 +101,8 @@ namespace CareTogether.Managers
                         var family = await directoryResource.ExecuteFamilyCommandAsync(organizationId, locationId,
                             addChildToFamilySubcommand, user.UserId());
 
-                        var disclosedFamily = await authorizationEngine.DiscloseFamilyAsync(user, family);
-                        return disclosedFamily;
+                        var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, c.FamilyId, user);
+                        return familyResult;
                     }
                 case CreateVolunteerFamilyWithNewAdultCommand c:
                     {
@@ -104,7 +127,13 @@ namespace CareTogether.Managers
                             ImmutableList<CustodialRelationship>.Empty);
                         var activateVolunteerFamilySubcommand = new ActivateVolunteerFamily(familyId);
 
-                        //TODO: Authorize the subcommands via the policy evaluation engine
+                        if (!await authorizationEngine.AuthorizePersonCommandAsync(
+                            organizationId, locationId, user, createPersonSubcommand))
+                            throw new Exception("The user is not authorized to perform this command.");
+
+                        if (!await authorizationEngine.AuthorizeFamilyCommandAsync(
+                            organizationId, locationId, user, createFamilySubcommand))
+                            throw new Exception("The user is not authorized to perform this command.");
 
                         var person = await directoryResource.ExecutePersonCommandAsync(organizationId, locationId,
                             createPersonSubcommand, user.UserId());
@@ -112,8 +141,8 @@ namespace CareTogether.Managers
                         var family = await directoryResource.ExecuteFamilyCommandAsync(organizationId, locationId,
                             createFamilySubcommand, user.UserId());
 
-                        var disclosedFamily = await authorizationEngine.DiscloseFamilyAsync(user, family);
-                        return disclosedFamily;
+                        var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, familyId, user);
+                        return familyResult;
                     }
                 default:
                     throw new NotImplementedException(
@@ -124,9 +153,6 @@ namespace CareTogether.Managers
         public async Task<CombinedFamilyInfo> ExecutePersonCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, Guid familyId, PersonCommand command)
         {
-            //var authorizationResult = await policyEvaluationEngine.AuthorizePersonCommandAsync(
-            //    organizationId, locationId, user, command, referral);
-
             command = command switch
             {
                 AddPersonPhoneNumber c => c with { PhoneNumber = c.PhoneNumber with { Id = Guid.NewGuid() } },
@@ -135,12 +161,14 @@ namespace CareTogether.Managers
                 _ => command
             };
 
-            var person = await directoryResource.ExecutePersonCommandAsync(organizationId, locationId, command, user.UserId());
+            if (!await authorizationEngine.AuthorizePersonCommandAsync(
+                organizationId, locationId, user, command))
+                throw new Exception("The user is not authorized to perform this command.");
 
-            var family = await directoryResource.FindFamilyAsync(organizationId, locationId, familyId);
+            _ = await directoryResource.ExecutePersonCommandAsync(organizationId, locationId, command, user.UserId());
 
-            var disclosedFamily = await authorizationEngine.DiscloseFamilyAsync(user, family);
-            return disclosedFamily;
+            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, familyId, user);
+            return familyResult;
         }
     }
 }

@@ -42,13 +42,17 @@ namespace CareTogether.Managers
         }
 
 
-        private async Task<PartneringFamilyInfo> RenderPartneringFamilyInfoAsync(Guid organizationId, Guid locationId,
+        private async Task<PartneringFamilyInfo?> RenderPartneringFamilyInfoAsync(Guid organizationId, Guid locationId,
             Family family, ClaimsPrincipal user)
         {
             var referrals = (await referralsResource.ListReferralsAsync(organizationId, locationId))
                 .Where(r => r.FamilyId == family.Id)
                 .Select(r => ToReferral(r))
                 .ToList();
+
+            if (referrals.Count == 0)
+                return null;
+
             var openReferral = referrals.SingleOrDefault(r => r.CloseReason == null);
             var closedReferrals = referrals.Where(r => r.CloseReason != null).ToImmutableList();
 
@@ -72,10 +76,13 @@ namespace CareTogether.Managers
                             : note.LastEditTimestampUtc, note.Contents, note.Status)).ToImmutableList());
         }
 
-        private async Task<VolunteerFamilyInfo> RenderVolunteerFamilyInfoAsync(Guid organizationId, Guid locationId,
+        private async Task<VolunteerFamilyInfo?> RenderVolunteerFamilyInfoAsync(Guid organizationId, Guid locationId,
             Family family, ClaimsPrincipal user)
         {
-            var entry = await approvalsResource.GetVolunteerFamilyAsync(organizationId, locationId, family.Id);
+            var entry = await approvalsResource.TryGetVolunteerFamilyAsync(organizationId, locationId, family.Id);
+
+            if (entry == null)
+                return null;
 
             var completedIndividualRequirements = entry.IndividualEntries.ToImmutableDictionary(
                 x => x.Key,

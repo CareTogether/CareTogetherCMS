@@ -8,6 +8,12 @@ namespace CareTogether.Engines
 {
     public interface IAuthorizationEngine
     {
+        Task<bool> AuthorizeFamilyCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, FamilyCommand command);
+
+        Task<bool> AuthorizePersonCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, PersonCommand command);
+
         Task<bool> AuthorizeReferralCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, ReferralCommand command);
 

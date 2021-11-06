@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -163,7 +164,8 @@ namespace CareTogether.Resources.Models
                 .ToImmutableList();
         }
 
-        public VolunteerFamilyEntry GetVolunteerFamilyEntry(Guid familyId) => volunteerFamilies[familyId];
+        public VolunteerFamilyEntry? GetVolunteerFamilyEntry(Guid familyId) =>
+            volunteerFamilies.TryGetValue(familyId, out var volunteerFamilyEntry) ? volunteerFamilyEntry : null;
 
 
         private void ReplayEvent(ApprovalEvent domainEvent, long sequenceNumber)

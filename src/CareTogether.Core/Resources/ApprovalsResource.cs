@@ -46,7 +46,7 @@ namespace CareTogether.Resources
             }
         }
 
-        public async Task<VolunteerFamilyEntry> GetVolunteerFamilyAsync(Guid organizationId, Guid locationId, Guid familyId)
+        public async Task<VolunteerFamilyEntry?> TryGetVolunteerFamilyAsync(Guid organizationId, Guid locationId, Guid familyId)
         {
             using (var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId)))
             {

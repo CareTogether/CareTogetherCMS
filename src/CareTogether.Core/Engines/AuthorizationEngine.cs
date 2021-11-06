@@ -17,6 +17,20 @@ namespace CareTogether.Engines
         }
 
 
+        public async Task<bool> AuthorizeFamilyCommandAsync(
+            Guid organizationId, Guid locationId, ClaimsPrincipal user, FamilyCommand command)
+        {
+            await Task.Yield();
+            return true;
+        }
+
+        public async Task<bool> AuthorizePersonCommandAsync(
+            Guid organizationId, Guid locationId, ClaimsPrincipal user, PersonCommand command)
+        {
+            await Task.Yield();
+            return true;
+        }
+
         public async Task<bool> AuthorizeReferralCommandAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user, ReferralCommand command)
         {
