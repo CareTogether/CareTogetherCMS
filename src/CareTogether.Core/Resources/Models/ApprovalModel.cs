@@ -45,10 +45,8 @@ namespace CareTogether.Resources.Models
 
             var volunteerFamilyEntryToUpsert = command switch
             {
-                //TODO: Enforce any business rules dynamically via the policy evaluation engine.
-                //      This involves returning "allowed actions" with the rendered Approval state
-                //      and failing any attempted actions that are not allowed.
-                ActivateVolunteerFamily c => volunteerFamilyEntry, // This command is a no-op used to initialize the volunteer family entry
+                // This command is a no-op used to initialize the volunteer family entry
+                ActivateVolunteerFamily c => volunteerFamilyEntry,
                 CompleteVolunteerFamilyRequirement c => volunteerFamilyEntry with
                 {
                     CompletedRequirements = volunteerFamilyEntry.CompletedRequirements.Add(
@@ -97,9 +95,6 @@ namespace CareTogether.Resources.Models
 
             var volunteerEntryToUpsert = command switch
             {
-                //TODO: Enforce any business rules dynamically via the policy evaluation engine.
-                //      This involves returning "allowed actions" with the rendered Approval state
-                //      and failing any attempted actions that are not allowed.
                 CompleteVolunteerRequirement c => volunteerEntry with
                 {
                     CompletedRequirements = volunteerEntry.CompletedRequirements.Add(

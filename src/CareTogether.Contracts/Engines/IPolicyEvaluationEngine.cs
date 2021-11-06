@@ -24,7 +24,8 @@ namespace CareTogether.Engines
 
     public interface IPolicyEvaluationEngine
     {
-        Task<VolunteerFamilyApprovalStatus> CalculateVolunteerFamilyApprovalStatusAsync( //TODO: Should this fetch its own data?
+        //TODO: Merge this with the CombinedFamilyInfoFormatter logic
+        Task<VolunteerFamilyApprovalStatus> CalculateVolunteerFamilyApprovalStatusAsync(
             Guid organizationId, Guid locationId, Family family,
             ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
             ImmutableList<RemovedRole> removedFamilyRoles,

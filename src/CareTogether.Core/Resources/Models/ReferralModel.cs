@@ -69,7 +69,6 @@ namespace CareTogether.Resources.Models
         {
             var referralEntryToUpsert = command switch
             {
-                //TODO: Validate policy version and enforce any other invariants
                 CreateReferral c => new ReferralEntry(c.ReferralId, c.FamilyId,
                     c.OpenedAtUtc, CloseReason: null,
                     ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<UploadedDocumentInfo>.Empty,
@@ -77,9 +76,6 @@ namespace CareTogether.Resources.Models
                 _ => referrals.TryGetValue(command.ReferralId, out var referralEntry)
                     ? command switch
                     {
-                        //TODO: Enforce any business rules dynamically via the policy evaluation engine.
-                        //      This involves returning "allowed actions" with the rendered Referral state
-                        //      and failing any attempted actions that are not allowed.
                         CompleteReferralRequirement c => referralEntry with
                         {
                             CompletedRequirements = referralEntry.CompletedRequirements.Add(
@@ -119,7 +115,6 @@ namespace CareTogether.Resources.Models
 
             var arrangementEntryToUpsert = command switch
             {
-                //TODO: Validate policy version and enforce any other invariants
                 CreateArrangement c => new ArrangementEntry(c.ArrangementId, c.ArrangementType,
                     ArrangementState.Setup, StartedAtUtc: null, EndedAtUtc: null,
                     ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<UploadedDocumentInfo>.Empty,
@@ -129,9 +124,6 @@ namespace CareTogether.Resources.Models
                 _ => referralEntry.Arrangements.TryGetValue(command.ArrangementId, out var arrangementEntry)
                     ? command switch
                     {
-                        //TODO: Enforce any business rules dynamically via the policy evaluation engine.
-                        //      This involves returning "allowed actions" with the rendered Referral state
-                        //      and failing any attempted actions that are not allowed.
                         AssignIndividualVolunteer c => arrangementEntry with
                         {
                             IndividualVolunteerAssignments = arrangementEntry.IndividualVolunteerAssignments.Add(
@@ -205,16 +197,12 @@ namespace CareTogether.Resources.Models
 
             var noteEntryToUpsert = command switch
             {
-                //TODO: Validate policy version and enforce any other invariants
                 CreateDraftArrangementNote c => new NoteEntry(c.NoteId, userId, timestampUtc, NoteStatus.Draft,
                     c.DraftNoteContents, ApproverId: null, ApprovedTimestampUtc: null),
                 DiscardDraftArrangementNote c => null,
                 _ => arrangementEntry.Notes.TryGetValue(command.NoteId, out var noteEntry)
                     ? command switch
                     {
-                        //TODO: Enforce any business rules dynamically via the policy evaluation engine.
-                        //      This involves returning "allowed actions" with the rendered Referral state
-                        //      and failing any attempted actions that are not allowed.
                         //TODO: Invariants need to be enforced in the model - e.g., no edits or deletes to approved notes.
                         EditDraftArrangementNote c => noteEntry with
                         {
@@ -252,8 +240,6 @@ namespace CareTogether.Resources.Models
                     LastKnownSequenceNumber++;
                     referrals = referrals.SetItem(referralEntryToUpsert.Id, referralEntryToUpsert);
                 });
-                //TODO: Implement -- requires coordination with underlying resource service via emitting IFormsResource commands
-                //      (which are not executed by the ReferralModel but by its caller, the ReferralManager, in non-replay scenarios).
         }
 
         public ImmutableList<ReferralEntry> FindReferralEntries(Func<ReferralEntry, bool> predicate)
