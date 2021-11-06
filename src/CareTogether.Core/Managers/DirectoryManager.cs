@@ -12,15 +12,15 @@ namespace CareTogether.Managers
     public sealed class DirectoryManager : IDirectoryManager
     {
         private readonly IAuthorizationEngine authorizationEngine;
-        private readonly CombinedFamilyInfoFormatter combinedFamilyInfoFormatter;
         private readonly IDirectoryResource directoryResource;
+        private readonly CombinedFamilyInfoFormatter combinedFamilyInfoFormatter;
 
 
-        public DirectoryManager(IDirectoryResource directoryResource, IAuthorizationEngine authorizationEngine,
+        public DirectoryManager(IAuthorizationEngine authorizationEngine, IDirectoryResource directoryResource,
             CombinedFamilyInfoFormatter combinedFamilyInfoFormatter)
         {
-            this.directoryResource = directoryResource;
             this.authorizationEngine = authorizationEngine;
+            this.directoryResource = directoryResource;
             this.combinedFamilyInfoFormatter = combinedFamilyInfoFormatter;
         }
 

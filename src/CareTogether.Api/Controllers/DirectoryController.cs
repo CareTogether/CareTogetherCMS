@@ -3,6 +3,7 @@ using CareTogether.Resources;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace CareTogether.Api.Controllers
@@ -20,8 +21,16 @@ namespace CareTogether.Api.Controllers
         }
 
 
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<CombinedFamilyInfo>>> ListVisibleFamiliesAsync(Guid organizationId, Guid locationId)
+        {
+            var referrals = await directoryManager.ListVisibleFamiliesAsync(User, organizationId, locationId);
+
+            return Ok(referrals);
+        }
+
         [HttpPost("directoryCommand")]
-        public async Task<ActionResult<Family>> SubmitDirectoryCommandAsync(Guid organizationId, Guid locationId,
+        public async Task<ActionResult<CombinedFamilyInfo>> SubmitDirectoryCommandAsync(Guid organizationId, Guid locationId,
             Guid familyId, [FromBody] DirectoryCommand command)
         {
             var result = await directoryManager.ExecuteDirectoryCommandAsync(organizationId, locationId, User, command);
@@ -29,7 +38,7 @@ namespace CareTogether.Api.Controllers
         }
 
         [HttpPost("personCommand")]
-        public async Task<ActionResult<Family>> SubmitPersonCommandAsync(Guid organizationId, Guid locationId,
+        public async Task<ActionResult<CombinedFamilyInfo>> SubmitPersonCommandAsync(Guid organizationId, Guid locationId,
             Guid familyId, [FromBody] PersonCommand command)
         {
             var result = await directoryManager.ExecutePersonCommandAsync(organizationId, locationId, User, familyId, command);
