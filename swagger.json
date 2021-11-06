@@ -130,6 +130,51 @@
         }
       }
     },
+    "/api/{organizationId}/{locationId}/Directory": {
+      "get": {
+        "tags": [
+          "Directory"
+        ],
+        "operationId": "Directory_ListVisibleFamilies",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CombinedFamilyInfo"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/{organizationId}/{locationId}/Directory/directoryCommand": {
       "post": {
         "tags": [
@@ -185,7 +230,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Family"
+                  "$ref": "#/components/schemas/CombinedFamilyInfo"
                 }
               }
             }
@@ -248,7 +293,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Family"
+                  "$ref": "#/components/schemas/CombinedFamilyInfo"
                 }
               }
             }
@@ -351,51 +396,6 @@
         }
       }
     },
-    "/api/{organizationId}/{locationId}/Referrals": {
-      "get": {
-        "tags": [
-          "Referrals"
-        ],
-        "operationId": "Referrals_ListAllPartneringFamilies",
-        "parameters": [
-          {
-            "name": "organizationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          },
-          {
-            "name": "locationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 2
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PartneringFamily"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/{organizationId}/{locationId}/Referrals/referralCommand": {
       "post": {
         "tags": [
@@ -442,7 +442,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Referral"
+                  "$ref": "#/components/schemas/CombinedFamilyInfo"
                 }
               }
             }
@@ -496,7 +496,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Referral"
+                  "$ref": "#/components/schemas/CombinedFamilyInfo"
                 }
               }
             }
@@ -550,7 +550,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Referral"
+                  "$ref": "#/components/schemas/CombinedFamilyInfo"
                 }
               }
             }
@@ -571,51 +571,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UserTenantAccessSummary"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/{organizationId}/{locationId}/Volunteers": {
-      "get": {
-        "tags": [
-          "Volunteers"
-        ],
-        "operationId": "Volunteers_ListAllVolunteerFamilies",
-        "parameters": [
-          {
-            "name": "organizationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          },
-          {
-            "name": "locationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 2
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/VolunteerFamily"
-                  }
                 }
               }
             }
@@ -669,7 +624,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/VolunteerFamily"
+                  "$ref": "#/components/schemas/CombinedFamilyInfo"
                 }
               }
             }
@@ -723,7 +678,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/VolunteerFamily"
+                  "$ref": "#/components/schemas/CombinedFamilyInfo"
                 }
               }
             }
@@ -1156,6 +1111,31 @@
           }
         }
       },
+      "CombinedFamilyInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "family": {
+            "$ref": "#/components/schemas/Family"
+          },
+          "partneringFamilyInfo": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/PartneringFamilyInfo"
+              }
+            ]
+          },
+          "volunteerFamilyInfo": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/VolunteerFamilyInfo"
+              }
+            ]
+          }
+        }
+      },
       "Family": {
         "type": "object",
         "additionalProperties": false,
@@ -1471,6 +1451,480 @@
           1,
           2
         ]
+      },
+      "PartneringFamilyInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "openReferral": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Referral"
+              }
+            ]
+          },
+          "closedReferrals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Referral"
+            }
+          }
+        }
+      },
+      "Referral": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
+          "createdUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "closeReason": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReferralCloseReason"
+              }
+            ]
+          },
+          "completedRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompletedRequirementInfo"
+            }
+          },
+          "uploadedDocuments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UploadedDocumentInfo"
+            }
+          },
+          "missingRequirements": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "arrangements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Arrangement"
+            }
+          }
+        }
+      },
+      "ReferralCloseReason": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "NotAppropriate",
+          "NoCapacity",
+          "NoLongerNeeded",
+          "Resourced",
+          "NeedMet"
+        ],
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      "CompletedRequirementInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "timestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "requirementName": {
+            "type": "string"
+          },
+          "completedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "uploadedDocumentId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          }
+        }
+      },
+      "UploadedDocumentInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "timestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "uploadedDocumentId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "uploadedFileName": {
+            "type": "string"
+          }
+        }
+      },
+      "Arrangement": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
+          "arrangementType": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/ArrangementState"
+          },
+          "completedRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompletedRequirementInfo"
+            }
+          },
+          "uploadedDocuments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UploadedDocumentInfo"
+            }
+          },
+          "missingRequirements": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "individualVolunteerAssignments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IndividualVolunteerAssignment"
+            }
+          },
+          "familyVolunteerAssignments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FamilyVolunteerAssignment"
+            }
+          },
+          "partneringFamilyChildAssignments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PartneringFamilyChildAssignment"
+            }
+          },
+          "childrenLocationHistory": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChildLocationHistoryEntry"
+            }
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Note"
+            }
+          }
+        }
+      },
+      "ArrangementState": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Setup",
+          "Open",
+          "Closed"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
+      "IndividualVolunteerAssignment": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "familyId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "personId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "arrangementFunction": {
+            "type": "string"
+          }
+        }
+      },
+      "FamilyVolunteerAssignment": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "familyId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "arrangementFunction": {
+            "type": "string"
+          }
+        }
+      },
+      "PartneringFamilyChildAssignment": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "personId": {
+            "type": "string",
+            "format": "guid"
+          }
+        }
+      },
+      "ChildLocationHistoryEntry": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "timestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "childId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "childLocationFamilyId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/ChildLocationPlan"
+          },
+          "additionalExplanation": {
+            "type": "string"
+          }
+        }
+      },
+      "ChildLocationPlan": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "OvernightHousing",
+          "DaytimeChildCare",
+          "ReturnToFamily"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
+      "Note": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
+          "authorId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "timestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "contents": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "$ref": "#/components/schemas/NoteStatus"
+          }
+        }
+      },
+      "NoteStatus": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Draft",
+          "Approved"
+        ],
+        "enum": [
+          0,
+          1
+        ]
+      },
+      "VolunteerFamilyInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "completedRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompletedRequirementInfo"
+            }
+          },
+          "uploadedDocuments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UploadedDocumentInfo"
+            }
+          },
+          "removedRoles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RemovedRole"
+            }
+          },
+          "missingRequirements": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "availableApplications": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "familyRoleApprovals": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/RoleVersionApproval"
+              }
+            }
+          },
+          "individualVolunteers": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/VolunteerInfo"
+            }
+          }
+        }
+      },
+      "RemovedRole": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "roleName": {
+            "type": "string"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/RoleRemovalReason"
+          },
+          "additionalComments": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "RoleRemovalReason": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Inactive",
+          "OptOut",
+          "Denied"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
+      "RoleVersionApproval": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "approvalStatus": {
+            "$ref": "#/components/schemas/RoleApprovalStatus"
+          }
+        }
+      },
+      "RoleApprovalStatus": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Prospective",
+          "Approved",
+          "Onboarded"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
+      "VolunteerInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "completedRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompletedRequirementInfo"
+            }
+          },
+          "removedRoles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RemovedRole"
+            }
+          },
+          "missingRequirements": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "availableApplications": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "individualRoleApprovals": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/RoleVersionApproval"
+              }
+            }
+          }
+        }
       },
       "DirectoryCommand": {
         "type": "object",
@@ -1977,337 +2431,6 @@
           }
         }
       },
-      "PartneringFamily": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "family": {
-            "$ref": "#/components/schemas/Family"
-          },
-          "openReferral": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/Referral"
-              }
-            ]
-          },
-          "closedReferrals": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Referral"
-            }
-          }
-        }
-      },
-      "Referral": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "guid"
-          },
-          "createdUtc": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "closeReason": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/ReferralCloseReason"
-              }
-            ]
-          },
-          "completedRequirements": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CompletedRequirementInfo"
-            }
-          },
-          "uploadedDocuments": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UploadedDocumentInfo"
-            }
-          },
-          "missingRequirements": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "arrangements": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Arrangement"
-            }
-          }
-        }
-      },
-      "ReferralCloseReason": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "NotAppropriate",
-          "NoCapacity",
-          "NoLongerNeeded",
-          "Resourced",
-          "NeedMet"
-        ],
-        "enum": [
-          0,
-          1,
-          2,
-          3,
-          4
-        ]
-      },
-      "CompletedRequirementInfo": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "userId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "timestampUtc": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "requirementName": {
-            "type": "string"
-          },
-          "completedAtUtc": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "uploadedDocumentId": {
-            "type": "string",
-            "format": "guid",
-            "nullable": true
-          }
-        }
-      },
-      "UploadedDocumentInfo": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "userId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "timestampUtc": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "uploadedDocumentId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "uploadedFileName": {
-            "type": "string"
-          }
-        }
-      },
-      "Arrangement": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "guid"
-          },
-          "arrangementType": {
-            "type": "string"
-          },
-          "state": {
-            "$ref": "#/components/schemas/ArrangementState"
-          },
-          "completedRequirements": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CompletedRequirementInfo"
-            }
-          },
-          "uploadedDocuments": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UploadedDocumentInfo"
-            }
-          },
-          "missingRequirements": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "individualVolunteerAssignments": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/IndividualVolunteerAssignment"
-            }
-          },
-          "familyVolunteerAssignments": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/FamilyVolunteerAssignment"
-            }
-          },
-          "partneringFamilyChildAssignments": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PartneringFamilyChildAssignment"
-            }
-          },
-          "childrenLocationHistory": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ChildLocationHistoryEntry"
-            }
-          },
-          "notes": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Note"
-            }
-          }
-        }
-      },
-      "ArrangementState": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "Setup",
-          "Open",
-          "Closed"
-        ],
-        "enum": [
-          0,
-          1,
-          2
-        ]
-      },
-      "IndividualVolunteerAssignment": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "familyId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "personId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "arrangementFunction": {
-            "type": "string"
-          }
-        }
-      },
-      "FamilyVolunteerAssignment": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "familyId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "arrangementFunction": {
-            "type": "string"
-          }
-        }
-      },
-      "PartneringFamilyChildAssignment": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "personId": {
-            "type": "string",
-            "format": "guid"
-          }
-        }
-      },
-      "ChildLocationHistoryEntry": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "userId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "timestampUtc": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "childId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "childLocationFamilyId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "plan": {
-            "$ref": "#/components/schemas/ChildLocationPlan"
-          },
-          "additionalExplanation": {
-            "type": "string"
-          }
-        }
-      },
-      "ChildLocationPlan": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "OvernightHousing",
-          "DaytimeChildCare",
-          "ReturnToFamily"
-        ],
-        "enum": [
-          0,
-          1,
-          2
-        ]
-      },
-      "Note": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "guid"
-          },
-          "authorId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "timestampUtc": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "contents": {
-            "type": "string",
-            "nullable": true
-          },
-          "status": {
-            "$ref": "#/components/schemas/NoteStatus"
-          }
-        }
-      },
-      "NoteStatus": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "Draft",
-          "Approved"
-        ],
-        "enum": [
-          0,
-          1
-        ]
-      },
       "ReferralCommand": {
         "type": "object",
         "discriminator": {
@@ -2325,6 +2448,10 @@
           "discriminator"
         ],
         "properties": {
+          "familyId": {
+            "type": "string",
+            "format": "guid"
+          },
           "referralId": {
             "type": "string",
             "format": "guid"
@@ -2384,10 +2511,6 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
-              "familyId": {
-                "type": "string",
-                "format": "guid"
-              },
               "openedAtUtc": {
                 "type": "string",
                 "format": "date-time"
@@ -2438,6 +2561,10 @@
           "discriminator"
         ],
         "properties": {
+          "familyId": {
+            "type": "string",
+            "format": "guid"
+          },
           "referralId": {
             "type": "string",
             "format": "guid"
@@ -2658,6 +2785,10 @@
           "discriminator"
         ],
         "properties": {
+          "familyId": {
+            "type": "string",
+            "format": "guid"
+          },
           "referralId": {
             "type": "string",
             "format": "guid"
@@ -2749,202 +2880,6 @@
             "items": {
               "type": "string",
               "format": "guid"
-            }
-          }
-        }
-      },
-      "VolunteerFamily": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "family": {
-            "$ref": "#/components/schemas/Family"
-          },
-          "completedRequirements": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CompletedRequirementInfo"
-            }
-          },
-          "uploadedDocuments": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UploadedDocumentInfo"
-            }
-          },
-          "removedRoles": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/RemovedRole"
-            }
-          },
-          "missingRequirements": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "availableApplications": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "familyRoleApprovals": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/RoleVersionApproval"
-              }
-            }
-          },
-          "individualVolunteers": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/Volunteer"
-            }
-          }
-        }
-      },
-      "CompletedRequirementInfo": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "userId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "timestampUtc": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "requirementName": {
-            "type": "string"
-          },
-          "completedAtUtc": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "uploadedDocumentId": {
-            "type": "string",
-            "format": "guid",
-            "nullable": true
-          }
-        }
-      },
-      "UploadedDocumentInfo": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "userId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "timestampUtc": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "uploadedDocumentId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "uploadedFileName": {
-            "type": "string"
-          }
-        }
-      },
-      "RemovedRole": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "roleName": {
-            "type": "string"
-          },
-          "reason": {
-            "$ref": "#/components/schemas/RoleRemovalReason"
-          },
-          "additionalComments": {
-            "type": "string",
-            "nullable": true
-          }
-        }
-      },
-      "RoleRemovalReason": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "Inactive",
-          "OptOut",
-          "Denied"
-        ],
-        "enum": [
-          0,
-          1,
-          2
-        ]
-      },
-      "RoleVersionApproval": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "version": {
-            "type": "string"
-          },
-          "approvalStatus": {
-            "$ref": "#/components/schemas/RoleApprovalStatus"
-          }
-        }
-      },
-      "RoleApprovalStatus": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "Prospective",
-          "Approved",
-          "Onboarded"
-        ],
-        "enum": [
-          0,
-          1,
-          2
-        ]
-      },
-      "Volunteer": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "completedRequirements": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CompletedRequirementInfo"
-            }
-          },
-          "removedRoles": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/RemovedRole"
-            }
-          },
-          "missingRequirements": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "availableApplications": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "individualRoleApprovals": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/RoleVersionApproval"
-              }
             }
           }
         }
