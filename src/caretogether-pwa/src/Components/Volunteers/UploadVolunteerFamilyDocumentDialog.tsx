@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@material-ui/core';
-import { VolunteerFamily } from '../../GeneratedClient';
+import { CombinedFamilyInfo } from '../../GeneratedClient';
 import { useVolunteersModel } from '../../Model/VolunteersModel';
 import { uploadFileToTenant } from '../../Model/FilesModel';
 import { useRecoilValue } from 'recoil';
@@ -14,7 +14,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 interface UploadVolunteerFamilyDocumentDialogProps {
-  volunteerFamily: VolunteerFamily,
+  volunteerFamily: CombinedFamilyInfo,
   onClose: () => void
 }
 

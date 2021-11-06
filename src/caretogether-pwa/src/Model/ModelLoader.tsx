@@ -1,9 +1,13 @@
 import { useState, useEffect } from "react";
-import { useRecoilState, useSetRecoilState } from "recoil";
+import { atom, useRecoilState, useSetRecoilState } from "recoil";
 import { authenticatingFetch } from "../Auth";
-import { UsersClient, VolunteersClient } from "../GeneratedClient";
+import { CombinedFamilyInfo, DirectoryClient, UsersClient } from "../GeneratedClient";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
-import { volunteerFamiliesData } from "./VolunteersModel";
+
+export const visibleFamiliesData = atom<CombinedFamilyInfo[]>({
+  key: 'visibleFamiliesData',
+  default: []
+});
 
 interface ModelLoaderProps {
   children?: React.ReactNode
@@ -14,7 +18,7 @@ export function ModelLoader({children}: ModelLoaderProps) {
   const [locationId, setLocationId] = useRecoilState(currentLocationState);
   const [loaded, setLoaded] = useState(false);
   
-  const setVolunteerFamilies = useSetRecoilState(volunteerFamiliesData);
+  const setVisibleFamilies = useSetRecoilState(visibleFamiliesData);
 
   //TODO: Consider useRecoilSnapshot here instead
   useEffect(() => {
@@ -30,15 +34,15 @@ export function ModelLoader({children}: ModelLoaderProps) {
   useEffect(() => {
     const loadInitialData = async () => {
       if (organizationId.length > 0 && locationId.length > 0) {
-        const volunteerFamiliesClient = new VolunteersClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-        const dataResponse = await volunteerFamiliesClient.listAllVolunteerFamilies(organizationId, locationId);
-        setVolunteerFamilies(dataResponse);
+        const directoryClient = new DirectoryClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+        const dataResponse = await directoryClient.listVisibleFamilies(organizationId, locationId);
+        setVisibleFamilies(dataResponse);
 
         setLoaded(true);
       }
     }
     loadInitialData();
-  }, [organizationId, locationId, setVolunteerFamilies]);
+  }, [organizationId, locationId, setVisibleFamilies]);
 
   return loaded
     ? <>{children}</>

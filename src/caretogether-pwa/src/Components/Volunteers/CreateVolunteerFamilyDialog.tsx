@@ -93,7 +93,7 @@ export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDial
           (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
         //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
         //TODO: Retrieve the created volunteer family and return it through this onClose callback!
-        onClose(newFamily.family?.id);
+        onClose(newFamily.family!.id!);
       }
     });
   }

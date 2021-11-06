@@ -39,15 +39,14 @@ namespace CareTogether.Resources.Models
             ExecuteVolunteerFamilyCommand(VolunteerFamilyCommand command, Guid userId, DateTime timestampUtc)
         {
             if (!volunteerFamilies.TryGetValue(command.FamilyId, out var volunteerFamilyEntry))
-                volunteerFamilyEntry = new VolunteerFamilyEntry(command.FamilyId, VolunteerFamilyStatus.Inactive, "",
+                volunteerFamilyEntry = new VolunteerFamilyEntry(command.FamilyId,
                     ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<UploadedDocumentInfo>.Empty,
                     ImmutableList<RemovedRole>.Empty, ImmutableDictionary<Guid, VolunteerEntry>.Empty);
 
             var volunteerFamilyEntryToUpsert = command switch
             {
-                //TODO: Enforce any business rules dynamically via the policy evaluation engine.
-                //      This involves returning "allowed actions" with the rendered Approval state
-                //      and failing any attempted actions that are not allowed.
+                // This command is a no-op used to initialize the volunteer family entry
+                ActivateVolunteerFamily c => volunteerFamilyEntry,
                 CompleteVolunteerFamilyRequirement c => volunteerFamilyEntry with
                 {
                     CompletedRequirements = volunteerFamilyEntry.CompletedRequirements.Add(
@@ -57,18 +56,6 @@ namespace CareTogether.Resources.Models
                 {
                     UploadedDocuments = volunteerFamilyEntry.UploadedDocuments.Add(
                         new UploadedDocumentInfo(userId, timestampUtc, c.UploadedDocumentId, c.UploadedFileName))
-                },
-                DeactivateVolunteerFamily c => volunteerFamilyEntry with
-                {
-                    Status = VolunteerFamilyStatus.Inactive,
-                },
-                ActivateVolunteerFamily c => volunteerFamilyEntry with
-                {
-                    Status = VolunteerFamilyStatus.Active,
-                },
-                SetVolunteerFamilyNote c => volunteerFamilyEntry with
-                {
-                    Note = c.Note
                 },
                 RemoveVolunteerFamilyRole c => volunteerFamilyEntry with
                 {
@@ -98,7 +85,7 @@ namespace CareTogether.Resources.Models
             ExecuteVolunteerCommand(VolunteerCommand command, Guid userId, DateTime timestampUtc)
         {
             if (!volunteerFamilies.TryGetValue(command.FamilyId, out var volunteerFamilyEntry))
-                volunteerFamilyEntry = new VolunteerFamilyEntry(command.FamilyId, VolunteerFamilyStatus.Active, "",
+                volunteerFamilyEntry = new VolunteerFamilyEntry(command.FamilyId,
                     ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<UploadedDocumentInfo>.Empty,
                     ImmutableList<RemovedRole>.Empty, ImmutableDictionary<Guid, VolunteerEntry>.Empty);
 
@@ -108,25 +95,10 @@ namespace CareTogether.Resources.Models
 
             var volunteerEntryToUpsert = command switch
             {
-                //TODO: Enforce any business rules dynamically via the policy evaluation engine.
-                //      This involves returning "allowed actions" with the rendered Approval state
-                //      and failing any attempted actions that are not allowed.
                 CompleteVolunteerRequirement c => volunteerEntry with
                 {
                     CompletedRequirements = volunteerEntry.CompletedRequirements.Add(
                         new CompletedRequirementInfo(userId, timestampUtc, c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId))
-                },
-                DeactivateVolunteer c => volunteerEntry with
-                {
-                    Active = false,
-                },
-                ReactivateVolunteer c => volunteerEntry with
-                {
-                    Active = true,
-                },
-                SetVolunteerNote c => volunteerEntry with
-                {
-                    Note = c.Note
                 },
                 RemoveVolunteerRole c => volunteerEntry with
                 {
@@ -163,7 +135,8 @@ namespace CareTogether.Resources.Models
                 .ToImmutableList();
         }
 
-        public VolunteerFamilyEntry GetVolunteerFamilyEntry(Guid familyId) => volunteerFamilies[familyId];
+        public VolunteerFamilyEntry? GetVolunteerFamilyEntry(Guid familyId) =>
+            volunteerFamilies.TryGetValue(familyId, out var volunteerFamilyEntry) ? volunteerFamilyEntry : null;
 
 
         private void ReplayEvent(ApprovalEvent domainEvent, long sequenceNumber)

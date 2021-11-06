@@ -1,7 +1,7 @@
 import { Card, CardHeader, IconButton, CardContent, Typography, Chip, CardActions, makeStyles, Divider, ListItemText, Menu, MenuItem, MenuList, useMediaQuery, useTheme } from "@material-ui/core";
 import { format } from 'date-fns';
 import { useState } from "react";
-import { ActionRequirement, Gender, Person, VolunteerFamily, RoleRemovalReason } from "../../GeneratedClient";
+import { ActionRequirement, Gender, Person, CombinedFamilyInfo, RoleRemovalReason } from "../../GeneratedClient";
 import { AgeText } from "../AgeText";
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
@@ -66,7 +66,7 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
   const policy = useRecoilValue(policyData);
 
-  const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as VolunteerFamily;
+  const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as CombinedFamilyInfo;
   const adult = volunteerFamily.family?.adults?.find(x => x.item1?.id === personId);
 
   const [adultRecordMenuAnchor, setAdultRecordMenuAnchor] = useState<{anchor: Element, adult: Person} | null>(null);
@@ -136,9 +136,9 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
           </IconButton>} />
       <CardContent className={classes.cardContent}>
         <Typography color="textSecondary" className={classes.sectionChips} component="div">
-          {Object.entries(volunteerFamily.individualVolunteers?.[adult.item1.id].individualRoleApprovals || {}).map(([role, roleVersionApprovals]) =>
+          {Object.entries(volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].individualRoleApprovals || {}).map(([role, roleVersionApprovals]) =>
             <VolunteerRoleApprovalStatusChip key={role} roleName={role} roleVersionApprovals={roleVersionApprovals} />)}
-          {(volunteerFamily.individualVolunteers?.[personId]?.removedRoles || []).map(removedRole =>
+          {(volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles || []).map(removedRole =>
             <Chip key={removedRole.roleName} size="small" label={`${removedRole.roleName} - ${RoleRemovalReason[removedRole.reason!]} - ${removedRole.additionalComments}`} />)}
           {(adult.item2.relationshipToFamily && <Chip size="small" label={adult.item2.relationshipToFamily} />) || null}
           {adult.item2.isInHousehold && <Chip size="small" label="In Household" />}
@@ -150,7 +150,7 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         <Divider />
         <Typography variant="body2" component="div">
           <ul className={classes.cardList}>
-            {volunteerFamily.individualVolunteers?.[adult.item1.id].completedRequirements?.map((completed, i) => (
+            {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].completedRequirements?.map((completed, i) => (
               <li key={i}>
                 <CardInfoRow icon='✅'>
                   {completed.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -160,7 +160,7 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
             ))}
           </ul>
           <ul className={classes.cardList}>
-            {volunteerFamily.individualVolunteers?.[adult.item1.id].missingRequirements?.map((missingRequirementName, i) => (
+            {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].missingRequirements?.map((missingRequirementName, i) => (
               <li key={i}>
               <CardInfoRow icon='❌'>
                 {missingRequirementName}
@@ -186,14 +186,14 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         open={Boolean(adultRecordMenuAnchor)}
         onClose={() => setAdultRecordMenuAnchor(null)}>
         <MenuList dense={isMobile}>
-          {volunteerFamily.individualVolunteers?.[adult.item1.id].missingRequirements?.map(missingRequirementName =>
+          {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].missingRequirements?.map(missingRequirementName =>
             <MenuItem key={missingRequirementName} onClick={() =>
               adultRecordMenuAnchor?.adult && selectRecordAdultStep(missingRequirementName, adultRecordMenuAnchor.adult)}>
               <ListItemText primary={missingRequirementName} />
             </MenuItem>
           )}
           <Divider />
-          {volunteerFamily.individualVolunteers?.[adult.item1.id].availableApplications?.map(requirementName =>
+          {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].availableApplications?.map(requirementName =>
             <MenuItem key={requirementName} onClick={() =>
               adultRecordMenuAnchor?.adult && selectRecordAdultStep(requirementName, adultRecordMenuAnchor.adult)}>
               <ListItemText primary={requirementName} />
@@ -227,22 +227,22 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectUpdateAddress(adultMoreMenuAnchor.adult)}>
           <ListItemText primary="Update address" />
         </MenuItem>
-        {(Object.entries(volunteerFamily.familyRoleApprovals || {}).length > 0 ||
-          Object.entries(volunteerFamily.individualVolunteers?.[personId]?.individualRoleApprovals || {}).length > 0 ||
-          (volunteerFamily.individualVolunteers?.[personId]?.removedRoles || []).length > 0) && <Divider />}
-        {Object.entries(volunteerFamily.familyRoleApprovals || {}).filter(([role, ]) =>
-          !volunteerFamily.individualVolunteers?.[personId]?.removedRoles?.find(x => x.roleName === role)).flatMap(([role, ]) => (
+        {(Object.entries(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals || {}).length > 0 ||
+          Object.entries(volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.individualRoleApprovals || {}).length > 0 ||
+          (volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles || []).length > 0) && <Divider />}
+        {Object.entries(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals || {}).filter(([role, ]) =>
+          !volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles?.find(x => x.roleName === role)).flatMap(([role, ]) => (
           <MenuItem key={role} onClick={() => adultMoreMenuAnchor?.adult && selectRemoveRole(adultMoreMenuAnchor.adult, role)}>
             <ListItemText primary={`Remove from ${role} role`} />
           </MenuItem>
         ))}
-        {Object.entries(volunteerFamily.individualVolunteers?.[personId]?.individualRoleApprovals || {}).filter(([role, ]) =>
-          !volunteerFamily.individualVolunteers?.[personId]?.removedRoles?.find(x => x.roleName === role)).flatMap(([role, ]) => (
+        {Object.entries(volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.individualRoleApprovals || {}).filter(([role, ]) =>
+          !volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles?.find(x => x.roleName === role)).flatMap(([role, ]) => (
           <MenuItem key={role} onClick={() => adultMoreMenuAnchor?.adult && selectRemoveRole(adultMoreMenuAnchor.adult, role)}>
             <ListItemText primary={`Remove from ${role} role`} />
           </MenuItem>
         ))}
-        {(volunteerFamily.individualVolunteers?.[personId]?.removedRoles || []).map(removedRole => (
+        {(volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles || []).map(removedRole => (
           <MenuItem key={removedRole.roleName}
             onClick={() => adultMoreMenuAnchor?.adult && selectResetRole(adultMoreMenuAnchor.adult, removedRole.roleName!, removedRole.reason!, removedRole.additionalComments!)}>
             <ListItemText primary={`Reset ${removedRole.roleName} participation`} />

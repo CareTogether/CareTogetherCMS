@@ -135,6 +135,156 @@ export class ConfigurationClient {
     }
 }
 
+export class DirectoryClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : <any>window;
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
+    }
+
+    listVisibleFamilies(organizationId: string, locationId: string): Promise<CombinedFamilyInfo[]> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Directory";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (locationId === undefined || locationId === null)
+            throw new Error("The parameter 'locationId' must be defined.");
+        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ = <RequestInit>{
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processListVisibleFamilies(_response);
+        });
+    }
+
+    protected processListVisibleFamilies(response: Response): Promise<CombinedFamilyInfo[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(CombinedFamilyInfo.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<CombinedFamilyInfo[]>(<any>null);
+    }
+
+    submitDirectoryCommand(organizationId: string, locationId: string, command: DirectoryCommand): Promise<CombinedFamilyInfo> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Directory/directoryCommand";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (locationId === undefined || locationId === null)
+            throw new Error("The parameter 'locationId' must be defined.");
+        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(command);
+
+        let options_ = <RequestInit>{
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSubmitDirectoryCommand(_response);
+        });
+    }
+
+    protected processSubmitDirectoryCommand(response: Response): Promise<CombinedFamilyInfo> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = CombinedFamilyInfo.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<CombinedFamilyInfo>(<any>null);
+    }
+
+    submitPersonCommand(organizationId: string, locationId: string, familyId: string | undefined, command: PersonCommand): Promise<CombinedFamilyInfo> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Directory/personCommand?";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (locationId === undefined || locationId === null)
+            throw new Error("The parameter 'locationId' must be defined.");
+        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
+        if (familyId === null)
+            throw new Error("The parameter 'familyId' cannot be null.");
+        else if (familyId !== undefined)
+            url_ += "familyId=" + encodeURIComponent("" + familyId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(command);
+
+        let options_ = <RequestInit>{
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSubmitPersonCommand(_response);
+        });
+    }
+
+    protected processSubmitPersonCommand(response: Response): Promise<CombinedFamilyInfo> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = CombinedFamilyInfo.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<CombinedFamilyInfo>(<any>null);
+    }
+}
+
 export class FilesClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
@@ -239,54 +389,7 @@ export class ReferralsClient {
         this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
     }
 
-    listAllReferrals(organizationId: string, locationId: string): Promise<Referral[]> {
-        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Referrals";
-        if (organizationId === undefined || organizationId === null)
-            throw new Error("The parameter 'organizationId' must be defined.");
-        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
-        if (locationId === undefined || locationId === null)
-            throw new Error("The parameter 'locationId' must be defined.");
-        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_ = <RequestInit>{
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processListAllReferrals(_response);
-        });
-    }
-
-    protected processListAllReferrals(response: Response): Promise<Referral[]> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(Referral.fromJS(item));
-            }
-            else {
-                result200 = <any>null;
-            }
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<Referral[]>(<any>null);
-    }
-
-    submitReferralCommand(organizationId: string, locationId: string, command: ReferralCommand): Promise<Referral> {
+    submitReferralCommand(organizationId: string, locationId: string, command: ReferralCommand): Promise<CombinedFamilyInfo> {
         let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Referrals/referralCommand";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
@@ -312,14 +415,14 @@ export class ReferralsClient {
         });
     }
 
-    protected processSubmitReferralCommand(response: Response): Promise<Referral> {
+    protected processSubmitReferralCommand(response: Response): Promise<CombinedFamilyInfo> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = Referral.fromJS(resultData200);
+            result200 = CombinedFamilyInfo.fromJS(resultData200);
             return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -327,10 +430,10 @@ export class ReferralsClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<Referral>(<any>null);
+        return Promise.resolve<CombinedFamilyInfo>(<any>null);
     }
 
-    submitArrangementCommand(organizationId: string, locationId: string, command: ArrangementCommand): Promise<Referral> {
+    submitArrangementCommand(organizationId: string, locationId: string, command: ArrangementCommand): Promise<CombinedFamilyInfo> {
         let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Referrals/arrangementCommand";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
@@ -356,14 +459,14 @@ export class ReferralsClient {
         });
     }
 
-    protected processSubmitArrangementCommand(response: Response): Promise<Referral> {
+    protected processSubmitArrangementCommand(response: Response): Promise<CombinedFamilyInfo> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = Referral.fromJS(resultData200);
+            result200 = CombinedFamilyInfo.fromJS(resultData200);
             return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -371,10 +474,10 @@ export class ReferralsClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<Referral>(<any>null);
+        return Promise.resolve<CombinedFamilyInfo>(<any>null);
     }
 
-    submitArrangementNoteCommand(organizationId: string, locationId: string, command: ArrangementNoteCommand): Promise<Referral> {
+    submitArrangementNoteCommand(organizationId: string, locationId: string, command: ArrangementNoteCommand): Promise<CombinedFamilyInfo> {
         let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Referrals/arrangementNoteCommand";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
@@ -400,14 +503,14 @@ export class ReferralsClient {
         });
     }
 
-    protected processSubmitArrangementNoteCommand(response: Response): Promise<Referral> {
+    protected processSubmitArrangementNoteCommand(response: Response): Promise<CombinedFamilyInfo> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = Referral.fromJS(resultData200);
+            result200 = CombinedFamilyInfo.fromJS(resultData200);
             return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -415,7 +518,7 @@ export class ReferralsClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<Referral>(<any>null);
+        return Promise.resolve<CombinedFamilyInfo>(<any>null);
     }
 }
 
@@ -474,54 +577,7 @@ export class VolunteersClient {
         this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
     }
 
-    listAllVolunteerFamilies(organizationId: string, locationId: string): Promise<VolunteerFamily[]> {
-        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Volunteers";
-        if (organizationId === undefined || organizationId === null)
-            throw new Error("The parameter 'organizationId' must be defined.");
-        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
-        if (locationId === undefined || locationId === null)
-            throw new Error("The parameter 'locationId' must be defined.");
-        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_ = <RequestInit>{
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processListAllVolunteerFamilies(_response);
-        });
-    }
-
-    protected processListAllVolunteerFamilies(response: Response): Promise<VolunteerFamily[]> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(VolunteerFamily.fromJS(item));
-            }
-            else {
-                result200 = <any>null;
-            }
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<VolunteerFamily[]>(<any>null);
-    }
-
-    submitVolunteerFamilyCommand(organizationId: string, locationId: string, command: VolunteerFamilyCommand): Promise<VolunteerFamily> {
+    submitVolunteerFamilyCommand(organizationId: string, locationId: string, command: VolunteerFamilyCommand): Promise<CombinedFamilyInfo> {
         let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Volunteers/volunteerFamilyCommand";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
@@ -547,14 +603,14 @@ export class VolunteersClient {
         });
     }
 
-    protected processSubmitVolunteerFamilyCommand(response: Response): Promise<VolunteerFamily> {
+    protected processSubmitVolunteerFamilyCommand(response: Response): Promise<CombinedFamilyInfo> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = VolunteerFamily.fromJS(resultData200);
+            result200 = CombinedFamilyInfo.fromJS(resultData200);
             return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -562,10 +618,10 @@ export class VolunteersClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<VolunteerFamily>(<any>null);
+        return Promise.resolve<CombinedFamilyInfo>(<any>null);
     }
 
-    submitVolunteerCommand(organizationId: string, locationId: string, command: VolunteerCommand): Promise<VolunteerFamily> {
+    submitVolunteerCommand(organizationId: string, locationId: string, command: VolunteerCommand): Promise<CombinedFamilyInfo> {
         let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Volunteers/volunteerCommand";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
@@ -591,14 +647,14 @@ export class VolunteersClient {
         });
     }
 
-    protected processSubmitVolunteerCommand(response: Response): Promise<VolunteerFamily> {
+    protected processSubmitVolunteerCommand(response: Response): Promise<CombinedFamilyInfo> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = VolunteerFamily.fromJS(resultData200);
+            result200 = CombinedFamilyInfo.fromJS(resultData200);
             return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -606,99 +662,7 @@ export class VolunteersClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<VolunteerFamily>(<any>null);
-    }
-
-    submitApprovalCommand(organizationId: string, locationId: string, command: ApprovalCommand): Promise<VolunteerFamily> {
-        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Volunteers/addAdult";
-        if (organizationId === undefined || organizationId === null)
-            throw new Error("The parameter 'organizationId' must be defined.");
-        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
-        if (locationId === undefined || locationId === null)
-            throw new Error("The parameter 'locationId' must be defined.");
-        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(command);
-
-        let options_ = <RequestInit>{
-            body: content_,
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processSubmitApprovalCommand(_response);
-        });
-    }
-
-    protected processSubmitApprovalCommand(response: Response): Promise<VolunteerFamily> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = VolunteerFamily.fromJS(resultData200);
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<VolunteerFamily>(<any>null);
-    }
-
-    submitPersonCommand(organizationId: string, locationId: string, familyId: string | undefined, command: PersonCommand): Promise<VolunteerFamily> {
-        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Volunteers/personCommand?";
-        if (organizationId === undefined || organizationId === null)
-            throw new Error("The parameter 'organizationId' must be defined.");
-        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
-        if (locationId === undefined || locationId === null)
-            throw new Error("The parameter 'locationId' must be defined.");
-        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
-        if (familyId === null)
-            throw new Error("The parameter 'familyId' cannot be null.");
-        else if (familyId !== undefined)
-            url_ += "familyId=" + encodeURIComponent("" + familyId) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(command);
-
-        let options_ = <RequestInit>{
-            body: content_,
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processSubmitPersonCommand(_response);
-        });
-    }
-
-    protected processSubmitPersonCommand(response: Response): Promise<VolunteerFamily> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = VolunteerFamily.fromJS(resultData200);
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<VolunteerFamily>(<any>null);
+        return Promise.resolve<CombinedFamilyInfo>(<any>null);
     }
 }
 
@@ -1764,11 +1728,12 @@ export interface ICurrentFeatureFlags {
     viewReferrals?: boolean;
 }
 
-export class DocumentUploadInfo implements IDocumentUploadInfo {
-    documentId?: string;
-    valetUrl?: string;
+export class CombinedFamilyInfo implements ICombinedFamilyInfo {
+    family?: Family;
+    partneringFamilyInfo?: PartneringFamilyInfo | undefined;
+    volunteerFamilyInfo?: VolunteerFamilyInfo | undefined;
 
-    constructor(data?: IDocumentUploadInfo) {
+    constructor(data?: ICombinedFamilyInfo) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -1779,125 +1744,32 @@ export class DocumentUploadInfo implements IDocumentUploadInfo {
 
     init(_data?: any) {
         if (_data) {
-            this.documentId = _data["documentId"];
-            this.valetUrl = _data["valetUrl"];
+            this.family = _data["family"] ? Family.fromJS(_data["family"]) : <any>undefined;
+            this.partneringFamilyInfo = _data["partneringFamilyInfo"] ? PartneringFamilyInfo.fromJS(_data["partneringFamilyInfo"]) : <any>undefined;
+            this.volunteerFamilyInfo = _data["volunteerFamilyInfo"] ? VolunteerFamilyInfo.fromJS(_data["volunteerFamilyInfo"]) : <any>undefined;
         }
     }
 
-    static fromJS(data: any): DocumentUploadInfo {
+    static fromJS(data: any): CombinedFamilyInfo {
         data = typeof data === 'object' ? data : {};
-        let result = new DocumentUploadInfo();
+        let result = new CombinedFamilyInfo();
         result.init(data);
         return result;
     }
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["documentId"] = this.documentId;
-        data["valetUrl"] = this.valetUrl;
+        data["family"] = this.family ? this.family.toJSON() : <any>undefined;
+        data["partneringFamilyInfo"] = this.partneringFamilyInfo ? this.partneringFamilyInfo.toJSON() : <any>undefined;
+        data["volunteerFamilyInfo"] = this.volunteerFamilyInfo ? this.volunteerFamilyInfo.toJSON() : <any>undefined;
         return data; 
     }
 }
 
-export interface IDocumentUploadInfo {
-    documentId?: string;
-    valetUrl?: string;
-}
-
-export class Referral implements IReferral {
-    id?: string;
-    policyVersion?: string;
-    createdUtc?: Date;
-    closeReason?: ReferralCloseReason | undefined;
-    partneringFamily?: Family;
-    referralFormUploads?: FormUploadInfo[];
-    referralActivitiesPerformed?: ActivityInfo[];
-    arrangements?: Arrangement[];
-
-    constructor(data?: IReferral) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.id = _data["id"];
-            this.policyVersion = _data["policyVersion"];
-            this.createdUtc = _data["createdUtc"] ? new Date(_data["createdUtc"].toString()) : <any>undefined;
-            this.closeReason = _data["closeReason"];
-            this.partneringFamily = _data["partneringFamily"] ? Family.fromJS(_data["partneringFamily"]) : <any>undefined;
-            if (Array.isArray(_data["referralFormUploads"])) {
-                this.referralFormUploads = [] as any;
-                for (let item of _data["referralFormUploads"])
-                    this.referralFormUploads!.push(FormUploadInfo.fromJS(item));
-            }
-            if (Array.isArray(_data["referralActivitiesPerformed"])) {
-                this.referralActivitiesPerformed = [] as any;
-                for (let item of _data["referralActivitiesPerformed"])
-                    this.referralActivitiesPerformed!.push(ActivityInfo.fromJS(item));
-            }
-            if (Array.isArray(_data["arrangements"])) {
-                this.arrangements = [] as any;
-                for (let item of _data["arrangements"])
-                    this.arrangements!.push(Arrangement.fromJS(item));
-            }
-        }
-    }
-
-    static fromJS(data: any): Referral {
-        data = typeof data === 'object' ? data : {};
-        let result = new Referral();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["id"] = this.id;
-        data["policyVersion"] = this.policyVersion;
-        data["createdUtc"] = this.createdUtc ? this.createdUtc.toISOString() : <any>undefined;
-        data["closeReason"] = this.closeReason;
-        data["partneringFamily"] = this.partneringFamily ? this.partneringFamily.toJSON() : <any>undefined;
-        if (Array.isArray(this.referralFormUploads)) {
-            data["referralFormUploads"] = [];
-            for (let item of this.referralFormUploads)
-                data["referralFormUploads"].push(item.toJSON());
-        }
-        if (Array.isArray(this.referralActivitiesPerformed)) {
-            data["referralActivitiesPerformed"] = [];
-            for (let item of this.referralActivitiesPerformed)
-                data["referralActivitiesPerformed"].push(item.toJSON());
-        }
-        if (Array.isArray(this.arrangements)) {
-            data["arrangements"] = [];
-            for (let item of this.arrangements)
-                data["arrangements"].push(item.toJSON());
-        }
-        return data; 
-    }
-}
-
-export interface IReferral {
-    id?: string;
-    policyVersion?: string;
-    createdUtc?: Date;
-    closeReason?: ReferralCloseReason | undefined;
-    partneringFamily?: Family;
-    referralFormUploads?: FormUploadInfo[];
-    referralActivitiesPerformed?: ActivityInfo[];
-    arrangements?: Arrangement[];
-}
-
-export enum ReferralCloseReason {
-    NotAppropriate = 0,
-    Resourced = 1,
-    NoCapacity = 2,
-    NoLongerNeeded = 3,
-    NeedMet = 4,
+export interface ICombinedFamilyInfo {
+    family?: Family;
+    partneringFamilyInfo?: PartneringFamilyInfo | undefined;
+    volunteerFamilyInfo?: VolunteerFamilyInfo | undefined;
 }
 
 export class Family implements IFamily {
@@ -2498,15 +2370,11 @@ export enum CustodialRelationshipType {
     LegalGuardian = 2,
 }
 
-export class FormUploadInfo implements IFormUploadInfo {
-    userId?: string;
-    timestampUtc?: Date;
-    completedAtUtc?: Date;
-    formName?: string;
-    originalFileName?: string;
-    uploadedDocumentId?: string;
+export class PartneringFamilyInfo implements IPartneringFamilyInfo {
+    openReferral?: Referral | undefined;
+    closedReferrals?: Referral[];
 
-    constructor(data?: IFormUploadInfo) {
+    constructor(data?: IPartneringFamilyInfo) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -2517,1438 +2385,49 @@ export class FormUploadInfo implements IFormUploadInfo {
 
     init(_data?: any) {
         if (_data) {
-            this.userId = _data["userId"];
-            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
-            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
-            this.formName = _data["formName"];
-            this.originalFileName = _data["originalFileName"];
-            this.uploadedDocumentId = _data["uploadedDocumentId"];
-        }
-    }
-
-    static fromJS(data: any): FormUploadInfo {
-        data = typeof data === 'object' ? data : {};
-        let result = new FormUploadInfo();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["userId"] = this.userId;
-        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
-        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
-        data["formName"] = this.formName;
-        data["originalFileName"] = this.originalFileName;
-        data["uploadedDocumentId"] = this.uploadedDocumentId;
-        return data; 
-    }
-}
-
-export interface IFormUploadInfo {
-    userId?: string;
-    timestampUtc?: Date;
-    completedAtUtc?: Date;
-    formName?: string;
-    originalFileName?: string;
-    uploadedDocumentId?: string;
-}
-
-export class ActivityInfo implements IActivityInfo {
-    userId?: string;
-    timestampUtc?: Date;
-    activityName?: string;
-    performedAtUtc?: Date;
-    performedByPersonId?: string;
-
-    constructor(data?: IActivityInfo) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
+            this.openReferral = _data["openReferral"] ? Referral.fromJS(_data["openReferral"]) : <any>undefined;
+            if (Array.isArray(_data["closedReferrals"])) {
+                this.closedReferrals = [] as any;
+                for (let item of _data["closedReferrals"])
+                    this.closedReferrals!.push(Referral.fromJS(item));
             }
         }
     }
 
-    init(_data?: any) {
-        if (_data) {
-            this.userId = _data["userId"];
-            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
-            this.activityName = _data["activityName"];
-            this.performedAtUtc = _data["performedAtUtc"] ? new Date(_data["performedAtUtc"].toString()) : <any>undefined;
-            this.performedByPersonId = _data["performedByPersonId"];
-        }
-    }
-
-    static fromJS(data: any): ActivityInfo {
+    static fromJS(data: any): PartneringFamilyInfo {
         data = typeof data === 'object' ? data : {};
-        let result = new ActivityInfo();
+        let result = new PartneringFamilyInfo();
         result.init(data);
         return result;
     }
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["userId"] = this.userId;
-        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
-        data["activityName"] = this.activityName;
-        data["performedAtUtc"] = this.performedAtUtc ? this.performedAtUtc.toISOString() : <any>undefined;
-        data["performedByPersonId"] = this.performedByPersonId;
+        data["openReferral"] = this.openReferral ? this.openReferral.toJSON() : <any>undefined;
+        if (Array.isArray(this.closedReferrals)) {
+            data["closedReferrals"] = [];
+            for (let item of this.closedReferrals)
+                data["closedReferrals"].push(item.toJSON());
+        }
         return data; 
     }
 }
 
-export interface IActivityInfo {
-    userId?: string;
-    timestampUtc?: Date;
-    activityName?: string;
-    performedAtUtc?: Date;
-    performedByPersonId?: string;
+export interface IPartneringFamilyInfo {
+    openReferral?: Referral | undefined;
+    closedReferrals?: Referral[];
 }
 
-export class Arrangement implements IArrangement {
+export class Referral implements IReferral {
     id?: string;
-    policyVersion?: string;
-    arrangementType?: string;
-    state?: ArrangementState;
-    arrangementFormUploads?: FormUploadInfo[];
-    arrangementActivitiesPerformed?: ActivityInfo[];
-    volunteerAssignments?: VolunteerAssignment[];
-    partneringFamilyChildAssignments?: PartneringFamilyChildAssignment[];
-    childrenLocationHistory?: ChildrenLocationHistoryEntry[];
-    notes?: Note[];
-
-    constructor(data?: IArrangement) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.id = _data["id"];
-            this.policyVersion = _data["policyVersion"];
-            this.arrangementType = _data["arrangementType"];
-            this.state = _data["state"];
-            if (Array.isArray(_data["arrangementFormUploads"])) {
-                this.arrangementFormUploads = [] as any;
-                for (let item of _data["arrangementFormUploads"])
-                    this.arrangementFormUploads!.push(FormUploadInfo.fromJS(item));
-            }
-            if (Array.isArray(_data["arrangementActivitiesPerformed"])) {
-                this.arrangementActivitiesPerformed = [] as any;
-                for (let item of _data["arrangementActivitiesPerformed"])
-                    this.arrangementActivitiesPerformed!.push(ActivityInfo.fromJS(item));
-            }
-            if (Array.isArray(_data["volunteerAssignments"])) {
-                this.volunteerAssignments = [] as any;
-                for (let item of _data["volunteerAssignments"])
-                    this.volunteerAssignments!.push(VolunteerAssignment.fromJS(item));
-            }
-            if (Array.isArray(_data["partneringFamilyChildAssignments"])) {
-                this.partneringFamilyChildAssignments = [] as any;
-                for (let item of _data["partneringFamilyChildAssignments"])
-                    this.partneringFamilyChildAssignments!.push(PartneringFamilyChildAssignment.fromJS(item));
-            }
-            if (Array.isArray(_data["childrenLocationHistory"])) {
-                this.childrenLocationHistory = [] as any;
-                for (let item of _data["childrenLocationHistory"])
-                    this.childrenLocationHistory!.push(ChildrenLocationHistoryEntry.fromJS(item));
-            }
-            if (Array.isArray(_data["notes"])) {
-                this.notes = [] as any;
-                for (let item of _data["notes"])
-                    this.notes!.push(Note.fromJS(item));
-            }
-        }
-    }
-
-    static fromJS(data: any): Arrangement {
-        data = typeof data === 'object' ? data : {};
-        let result = new Arrangement();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["id"] = this.id;
-        data["policyVersion"] = this.policyVersion;
-        data["arrangementType"] = this.arrangementType;
-        data["state"] = this.state;
-        if (Array.isArray(this.arrangementFormUploads)) {
-            data["arrangementFormUploads"] = [];
-            for (let item of this.arrangementFormUploads)
-                data["arrangementFormUploads"].push(item.toJSON());
-        }
-        if (Array.isArray(this.arrangementActivitiesPerformed)) {
-            data["arrangementActivitiesPerformed"] = [];
-            for (let item of this.arrangementActivitiesPerformed)
-                data["arrangementActivitiesPerformed"].push(item.toJSON());
-        }
-        if (Array.isArray(this.volunteerAssignments)) {
-            data["volunteerAssignments"] = [];
-            for (let item of this.volunteerAssignments)
-                data["volunteerAssignments"].push(item.toJSON());
-        }
-        if (Array.isArray(this.partneringFamilyChildAssignments)) {
-            data["partneringFamilyChildAssignments"] = [];
-            for (let item of this.partneringFamilyChildAssignments)
-                data["partneringFamilyChildAssignments"].push(item.toJSON());
-        }
-        if (Array.isArray(this.childrenLocationHistory)) {
-            data["childrenLocationHistory"] = [];
-            for (let item of this.childrenLocationHistory)
-                data["childrenLocationHistory"].push(item.toJSON());
-        }
-        if (Array.isArray(this.notes)) {
-            data["notes"] = [];
-            for (let item of this.notes)
-                data["notes"].push(item.toJSON());
-        }
-        return data; 
-    }
-}
-
-export interface IArrangement {
-    id?: string;
-    policyVersion?: string;
-    arrangementType?: string;
-    state?: ArrangementState;
-    arrangementFormUploads?: FormUploadInfo[];
-    arrangementActivitiesPerformed?: ActivityInfo[];
-    volunteerAssignments?: VolunteerAssignment[];
-    partneringFamilyChildAssignments?: PartneringFamilyChildAssignment[];
-    childrenLocationHistory?: ChildrenLocationHistoryEntry[];
-    notes?: Note[];
-}
-
-export enum ArrangementState {
-    Setup = 0,
-    Open = 1,
-    Closed = 2,
-}
-
-export abstract class VolunteerAssignment implements IVolunteerAssignment {
-    arrangementFunction?: string;
-
-    protected _discriminator: string;
-
-    constructor(data?: IVolunteerAssignment) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-        this._discriminator = "VolunteerAssignment";
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.arrangementFunction = _data["arrangementFunction"];
-        }
-    }
-
-    static fromJS(data: any): VolunteerAssignment {
-        data = typeof data === 'object' ? data : {};
-        if (data["discriminator"] === "FamilyVolunteerAssignment") {
-            let result = new FamilyVolunteerAssignment();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "IndividualVolunteerAssignment") {
-            let result = new IndividualVolunteerAssignment();
-            result.init(data);
-            return result;
-        }
-        throw new Error("The abstract class 'VolunteerAssignment' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["discriminator"] = this._discriminator; 
-        data["arrangementFunction"] = this.arrangementFunction;
-        return data; 
-    }
-}
-
-export interface IVolunteerAssignment {
-    arrangementFunction?: string;
-}
-
-export class FamilyVolunteerAssignment extends VolunteerAssignment implements IFamilyVolunteerAssignment {
-    familyId?: string;
-
-    constructor(data?: IFamilyVolunteerAssignment) {
-        super(data);
-        this._discriminator = "FamilyVolunteerAssignment";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.familyId = _data["familyId"];
-        }
-    }
-
-    static fromJS(data: any): FamilyVolunteerAssignment {
-        data = typeof data === 'object' ? data : {};
-        let result = new FamilyVolunteerAssignment();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["familyId"] = this.familyId;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IFamilyVolunteerAssignment extends IVolunteerAssignment {
-    familyId?: string;
-}
-
-export class IndividualVolunteerAssignment extends VolunteerAssignment implements IIndividualVolunteerAssignment {
-    personId?: string;
-
-    constructor(data?: IIndividualVolunteerAssignment) {
-        super(data);
-        this._discriminator = "IndividualVolunteerAssignment";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.personId = _data["personId"];
-        }
-    }
-
-    static fromJS(data: any): IndividualVolunteerAssignment {
-        data = typeof data === 'object' ? data : {};
-        let result = new IndividualVolunteerAssignment();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["personId"] = this.personId;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IIndividualVolunteerAssignment extends IVolunteerAssignment {
-    personId?: string;
-}
-
-export class PartneringFamilyChildAssignment implements IPartneringFamilyChildAssignment {
-    personId?: string;
-
-    constructor(data?: IPartneringFamilyChildAssignment) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.personId = _data["personId"];
-        }
-    }
-
-    static fromJS(data: any): PartneringFamilyChildAssignment {
-        data = typeof data === 'object' ? data : {};
-        let result = new PartneringFamilyChildAssignment();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["personId"] = this.personId;
-        return data; 
-    }
-}
-
-export interface IPartneringFamilyChildAssignment {
-    personId?: string;
-}
-
-export class ChildrenLocationHistoryEntry implements IChildrenLocationHistoryEntry {
-    userId?: string;
-    timestampUtc?: Date;
-    childrenIds?: string[];
-    familyId?: string;
-    plan?: ChildrenLocationPlan;
-    additionalExplanation?: string;
-
-    constructor(data?: IChildrenLocationHistoryEntry) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.userId = _data["userId"];
-            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
-            if (Array.isArray(_data["childrenIds"])) {
-                this.childrenIds = [] as any;
-                for (let item of _data["childrenIds"])
-                    this.childrenIds!.push(item);
-            }
-            this.familyId = _data["familyId"];
-            this.plan = _data["plan"];
-            this.additionalExplanation = _data["additionalExplanation"];
-        }
-    }
-
-    static fromJS(data: any): ChildrenLocationHistoryEntry {
-        data = typeof data === 'object' ? data : {};
-        let result = new ChildrenLocationHistoryEntry();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["userId"] = this.userId;
-        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
-        if (Array.isArray(this.childrenIds)) {
-            data["childrenIds"] = [];
-            for (let item of this.childrenIds)
-                data["childrenIds"].push(item);
-        }
-        data["familyId"] = this.familyId;
-        data["plan"] = this.plan;
-        data["additionalExplanation"] = this.additionalExplanation;
-        return data; 
-    }
-}
-
-export interface IChildrenLocationHistoryEntry {
-    userId?: string;
-    timestampUtc?: Date;
-    childrenIds?: string[];
-    familyId?: string;
-    plan?: ChildrenLocationPlan;
-    additionalExplanation?: string;
-}
-
-export enum ChildrenLocationPlan {
-    OvernightHousing = 0,
-    DaytimeChildCare = 1,
-    ReturnToFamily = 2,
-}
-
-export class Note implements INote {
-    id?: string;
-    authorId?: string;
-    timestampUtc?: Date;
-    contents?: string | undefined;
-    status?: NoteStatus;
-
-    constructor(data?: INote) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.id = _data["id"];
-            this.authorId = _data["authorId"];
-            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
-            this.contents = _data["contents"];
-            this.status = _data["status"];
-        }
-    }
-
-    static fromJS(data: any): Note {
-        data = typeof data === 'object' ? data : {};
-        let result = new Note();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["id"] = this.id;
-        data["authorId"] = this.authorId;
-        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
-        data["contents"] = this.contents;
-        data["status"] = this.status;
-        return data; 
-    }
-}
-
-export interface INote {
-    id?: string;
-    authorId?: string;
-    timestampUtc?: Date;
-    contents?: string | undefined;
-    status?: NoteStatus;
-}
-
-export enum NoteStatus {
-    Draft = 0,
-    Approved = 1,
-}
-
-export abstract class ReferralCommand implements IReferralCommand {
-    referralId?: string;
-
-    protected _discriminator: string;
-
-    constructor(data?: IReferralCommand) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-        this._discriminator = "ReferralCommand";
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.referralId = _data["referralId"];
-        }
-    }
-
-    static fromJS(data: any): ReferralCommand {
-        data = typeof data === 'object' ? data : {};
-        if (data["discriminator"] === "CloseReferral") {
-            let result = new CloseReferral();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "CreateReferral") {
-            let result = new CreateReferral();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "PerformReferralActivity") {
-            let result = new PerformReferralActivity();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "UploadReferralForm") {
-            let result = new UploadReferralForm();
-            result.init(data);
-            return result;
-        }
-        throw new Error("The abstract class 'ReferralCommand' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["discriminator"] = this._discriminator; 
-        data["referralId"] = this.referralId;
-        return data; 
-    }
-}
-
-export interface IReferralCommand {
-    referralId?: string;
-}
-
-export class CloseReferral extends ReferralCommand implements ICloseReferral {
-    closeReason?: ReferralCloseReason;
-
-    constructor(data?: ICloseReferral) {
-        super(data);
-        this._discriminator = "CloseReferral";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.closeReason = _data["closeReason"];
-        }
-    }
-
-    static fromJS(data: any): CloseReferral {
-        data = typeof data === 'object' ? data : {};
-        let result = new CloseReferral();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["closeReason"] = this.closeReason;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface ICloseReferral extends IReferralCommand {
-    closeReason?: ReferralCloseReason;
-}
-
-export class CreateReferral extends ReferralCommand implements ICreateReferral {
-    familyId?: string;
-    policyVersion?: string;
-    openedAtUtc?: Date;
-
-    constructor(data?: ICreateReferral) {
-        super(data);
-        this._discriminator = "CreateReferral";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.familyId = _data["familyId"];
-            this.policyVersion = _data["policyVersion"];
-            this.openedAtUtc = _data["openedAtUtc"] ? new Date(_data["openedAtUtc"].toString()) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): CreateReferral {
-        data = typeof data === 'object' ? data : {};
-        let result = new CreateReferral();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["familyId"] = this.familyId;
-        data["policyVersion"] = this.policyVersion;
-        data["openedAtUtc"] = this.openedAtUtc ? this.openedAtUtc.toISOString() : <any>undefined;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface ICreateReferral extends IReferralCommand {
-    familyId?: string;
-    policyVersion?: string;
-    openedAtUtc?: Date;
-}
-
-export class PerformReferralActivity extends ReferralCommand implements IPerformReferralActivity {
-    activityName?: string;
-    performedAtUtc?: Date;
-    performedByPersonId?: string;
-
-    constructor(data?: IPerformReferralActivity) {
-        super(data);
-        this._discriminator = "PerformReferralActivity";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.activityName = _data["activityName"];
-            this.performedAtUtc = _data["performedAtUtc"] ? new Date(_data["performedAtUtc"].toString()) : <any>undefined;
-            this.performedByPersonId = _data["performedByPersonId"];
-        }
-    }
-
-    static fromJS(data: any): PerformReferralActivity {
-        data = typeof data === 'object' ? data : {};
-        let result = new PerformReferralActivity();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["activityName"] = this.activityName;
-        data["performedAtUtc"] = this.performedAtUtc ? this.performedAtUtc.toISOString() : <any>undefined;
-        data["performedByPersonId"] = this.performedByPersonId;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IPerformReferralActivity extends IReferralCommand {
-    activityName?: string;
-    performedAtUtc?: Date;
-    performedByPersonId?: string;
-}
-
-export class UploadReferralForm extends ReferralCommand implements IUploadReferralForm {
-    completedAtUtc?: Date;
-    formName?: string;
-    uploadedFileName?: string;
-    uploadedDocumentId?: string;
-
-    constructor(data?: IUploadReferralForm) {
-        super(data);
-        this._discriminator = "UploadReferralForm";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
-            this.formName = _data["formName"];
-            this.uploadedFileName = _data["uploadedFileName"];
-            this.uploadedDocumentId = _data["uploadedDocumentId"];
-        }
-    }
-
-    static fromJS(data: any): UploadReferralForm {
-        data = typeof data === 'object' ? data : {};
-        let result = new UploadReferralForm();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
-        data["formName"] = this.formName;
-        data["uploadedFileName"] = this.uploadedFileName;
-        data["uploadedDocumentId"] = this.uploadedDocumentId;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IUploadReferralForm extends IReferralCommand {
-    completedAtUtc?: Date;
-    formName?: string;
-    uploadedFileName?: string;
-    uploadedDocumentId?: string;
-}
-
-export abstract class ArrangementCommand implements IArrangementCommand {
-    referralId?: string;
-    arrangementId?: string;
-
-    protected _discriminator: string;
-
-    constructor(data?: IArrangementCommand) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-        this._discriminator = "ArrangementCommand";
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.referralId = _data["referralId"];
-            this.arrangementId = _data["arrangementId"];
-        }
-    }
-
-    static fromJS(data: any): ArrangementCommand {
-        data = typeof data === 'object' ? data : {};
-        if (data["discriminator"] === "AssignIndividualVolunteer") {
-            let result = new AssignIndividualVolunteer();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "AssignPartneringFamilyChildren") {
-            let result = new AssignPartneringFamilyChildren();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "AssignVolunteerFamily") {
-            let result = new AssignVolunteerFamily();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "CreateArrangement") {
-            let result = new CreateArrangement();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "EndArrangement") {
-            let result = new EndArrangement();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "InitiateArrangement") {
-            let result = new InitiateArrangement();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "PerformArrangementActivity") {
-            let result = new PerformArrangementActivity();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "TrackChildrenLocationChange") {
-            let result = new TrackChildrenLocationChange();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "UploadArrangementForm") {
-            let result = new UploadArrangementForm();
-            result.init(data);
-            return result;
-        }
-        throw new Error("The abstract class 'ArrangementCommand' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["discriminator"] = this._discriminator; 
-        data["referralId"] = this.referralId;
-        data["arrangementId"] = this.arrangementId;
-        return data; 
-    }
-}
-
-export interface IArrangementCommand {
-    referralId?: string;
-    arrangementId?: string;
-}
-
-export class AssignIndividualVolunteer extends ArrangementCommand implements IAssignIndividualVolunteer {
-    personId?: string;
-    arrangementFunction?: string;
-
-    constructor(data?: IAssignIndividualVolunteer) {
-        super(data);
-        this._discriminator = "AssignIndividualVolunteer";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.personId = _data["personId"];
-            this.arrangementFunction = _data["arrangementFunction"];
-        }
-    }
-
-    static fromJS(data: any): AssignIndividualVolunteer {
-        data = typeof data === 'object' ? data : {};
-        let result = new AssignIndividualVolunteer();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["personId"] = this.personId;
-        data["arrangementFunction"] = this.arrangementFunction;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IAssignIndividualVolunteer extends IArrangementCommand {
-    personId?: string;
-    arrangementFunction?: string;
-}
-
-export class AssignPartneringFamilyChildren extends ArrangementCommand implements IAssignPartneringFamilyChildren {
-    childrenIds?: string[];
-
-    constructor(data?: IAssignPartneringFamilyChildren) {
-        super(data);
-        this._discriminator = "AssignPartneringFamilyChildren";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            if (Array.isArray(_data["childrenIds"])) {
-                this.childrenIds = [] as any;
-                for (let item of _data["childrenIds"])
-                    this.childrenIds!.push(item);
-            }
-        }
-    }
-
-    static fromJS(data: any): AssignPartneringFamilyChildren {
-        data = typeof data === 'object' ? data : {};
-        let result = new AssignPartneringFamilyChildren();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        if (Array.isArray(this.childrenIds)) {
-            data["childrenIds"] = [];
-            for (let item of this.childrenIds)
-                data["childrenIds"].push(item);
-        }
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IAssignPartneringFamilyChildren extends IArrangementCommand {
-    childrenIds?: string[];
-}
-
-export class AssignVolunteerFamily extends ArrangementCommand implements IAssignVolunteerFamily {
-    familyId?: string;
-    arrangementFunction?: string;
-
-    constructor(data?: IAssignVolunteerFamily) {
-        super(data);
-        this._discriminator = "AssignVolunteerFamily";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.familyId = _data["familyId"];
-            this.arrangementFunction = _data["arrangementFunction"];
-        }
-    }
-
-    static fromJS(data: any): AssignVolunteerFamily {
-        data = typeof data === 'object' ? data : {};
-        let result = new AssignVolunteerFamily();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["familyId"] = this.familyId;
-        data["arrangementFunction"] = this.arrangementFunction;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IAssignVolunteerFamily extends IArrangementCommand {
-    familyId?: string;
-    arrangementFunction?: string;
-}
-
-export class CreateArrangement extends ArrangementCommand implements ICreateArrangement {
-    policyVersion?: string;
-    arrangementType?: string;
-
-    constructor(data?: ICreateArrangement) {
-        super(data);
-        this._discriminator = "CreateArrangement";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.policyVersion = _data["policyVersion"];
-            this.arrangementType = _data["arrangementType"];
-        }
-    }
-
-    static fromJS(data: any): CreateArrangement {
-        data = typeof data === 'object' ? data : {};
-        let result = new CreateArrangement();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["policyVersion"] = this.policyVersion;
-        data["arrangementType"] = this.arrangementType;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface ICreateArrangement extends IArrangementCommand {
-    policyVersion?: string;
-    arrangementType?: string;
-}
-
-export class EndArrangement extends ArrangementCommand implements IEndArrangement {
-    endedAtUtc?: Date;
-
-    constructor(data?: IEndArrangement) {
-        super(data);
-        this._discriminator = "EndArrangement";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.endedAtUtc = _data["endedAtUtc"] ? new Date(_data["endedAtUtc"].toString()) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): EndArrangement {
-        data = typeof data === 'object' ? data : {};
-        let result = new EndArrangement();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["endedAtUtc"] = this.endedAtUtc ? this.endedAtUtc.toISOString() : <any>undefined;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IEndArrangement extends IArrangementCommand {
-    endedAtUtc?: Date;
-}
-
-export class InitiateArrangement extends ArrangementCommand implements IInitiateArrangement {
-    initiatedAtUtc?: Date;
-
-    constructor(data?: IInitiateArrangement) {
-        super(data);
-        this._discriminator = "InitiateArrangement";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.initiatedAtUtc = _data["initiatedAtUtc"] ? new Date(_data["initiatedAtUtc"].toString()) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): InitiateArrangement {
-        data = typeof data === 'object' ? data : {};
-        let result = new InitiateArrangement();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["initiatedAtUtc"] = this.initiatedAtUtc ? this.initiatedAtUtc.toISOString() : <any>undefined;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IInitiateArrangement extends IArrangementCommand {
-    initiatedAtUtc?: Date;
-}
-
-export class PerformArrangementActivity extends ArrangementCommand implements IPerformArrangementActivity {
-    activityName?: string;
-    performedAtUtc?: Date;
-    performedByPersonId?: string;
-
-    constructor(data?: IPerformArrangementActivity) {
-        super(data);
-        this._discriminator = "PerformArrangementActivity";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.activityName = _data["activityName"];
-            this.performedAtUtc = _data["performedAtUtc"] ? new Date(_data["performedAtUtc"].toString()) : <any>undefined;
-            this.performedByPersonId = _data["performedByPersonId"];
-        }
-    }
-
-    static fromJS(data: any): PerformArrangementActivity {
-        data = typeof data === 'object' ? data : {};
-        let result = new PerformArrangementActivity();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["activityName"] = this.activityName;
-        data["performedAtUtc"] = this.performedAtUtc ? this.performedAtUtc.toISOString() : <any>undefined;
-        data["performedByPersonId"] = this.performedByPersonId;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IPerformArrangementActivity extends IArrangementCommand {
-    activityName?: string;
-    performedAtUtc?: Date;
-    performedByPersonId?: string;
-}
-
-export class TrackChildrenLocationChange extends ArrangementCommand implements ITrackChildrenLocationChange {
-    changedAtUtc?: Date;
-    childrenIds?: string[];
-    familyId?: string;
-    plan?: ChildrenLocationPlan;
-    additionalExplanation?: string;
-
-    constructor(data?: ITrackChildrenLocationChange) {
-        super(data);
-        this._discriminator = "TrackChildrenLocationChange";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.changedAtUtc = _data["changedAtUtc"] ? new Date(_data["changedAtUtc"].toString()) : <any>undefined;
-            if (Array.isArray(_data["childrenIds"])) {
-                this.childrenIds = [] as any;
-                for (let item of _data["childrenIds"])
-                    this.childrenIds!.push(item);
-            }
-            this.familyId = _data["familyId"];
-            this.plan = _data["plan"];
-            this.additionalExplanation = _data["additionalExplanation"];
-        }
-    }
-
-    static fromJS(data: any): TrackChildrenLocationChange {
-        data = typeof data === 'object' ? data : {};
-        let result = new TrackChildrenLocationChange();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["changedAtUtc"] = this.changedAtUtc ? this.changedAtUtc.toISOString() : <any>undefined;
-        if (Array.isArray(this.childrenIds)) {
-            data["childrenIds"] = [];
-            for (let item of this.childrenIds)
-                data["childrenIds"].push(item);
-        }
-        data["familyId"] = this.familyId;
-        data["plan"] = this.plan;
-        data["additionalExplanation"] = this.additionalExplanation;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface ITrackChildrenLocationChange extends IArrangementCommand {
-    changedAtUtc?: Date;
-    childrenIds?: string[];
-    familyId?: string;
-    plan?: ChildrenLocationPlan;
-    additionalExplanation?: string;
-}
-
-export class UploadArrangementForm extends ArrangementCommand implements IUploadArrangementForm {
-    completedAtUtc?: Date;
-    formName?: string;
-    formVersion?: string;
-    uploadedFileName?: string;
-    uploadedDocumentId?: string;
-
-    constructor(data?: IUploadArrangementForm) {
-        super(data);
-        this._discriminator = "UploadArrangementForm";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
-            this.formName = _data["formName"];
-            this.formVersion = _data["formVersion"];
-            this.uploadedFileName = _data["uploadedFileName"];
-            this.uploadedDocumentId = _data["uploadedDocumentId"];
-        }
-    }
-
-    static fromJS(data: any): UploadArrangementForm {
-        data = typeof data === 'object' ? data : {};
-        let result = new UploadArrangementForm();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
-        data["formName"] = this.formName;
-        data["formVersion"] = this.formVersion;
-        data["uploadedFileName"] = this.uploadedFileName;
-        data["uploadedDocumentId"] = this.uploadedDocumentId;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IUploadArrangementForm extends IArrangementCommand {
-    completedAtUtc?: Date;
-    formName?: string;
-    formVersion?: string;
-    uploadedFileName?: string;
-    uploadedDocumentId?: string;
-}
-
-export abstract class ArrangementNoteCommand implements IArrangementNoteCommand {
-    referralId?: string;
-    arrangementId?: string;
-    noteId?: string;
-
-    protected _discriminator: string;
-
-    constructor(data?: IArrangementNoteCommand) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-        this._discriminator = "ArrangementNoteCommand";
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.referralId = _data["referralId"];
-            this.arrangementId = _data["arrangementId"];
-            this.noteId = _data["noteId"];
-        }
-    }
-
-    static fromJS(data: any): ArrangementNoteCommand {
-        data = typeof data === 'object' ? data : {};
-        if (data["discriminator"] === "ApproveArrangementNote") {
-            let result = new ApproveArrangementNote();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "CreateDraftArrangementNote") {
-            let result = new CreateDraftArrangementNote();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "DiscardDraftArrangementNote") {
-            let result = new DiscardDraftArrangementNote();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "EditDraftArrangementNote") {
-            let result = new EditDraftArrangementNote();
-            result.init(data);
-            return result;
-        }
-        throw new Error("The abstract class 'ArrangementNoteCommand' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["discriminator"] = this._discriminator; 
-        data["referralId"] = this.referralId;
-        data["arrangementId"] = this.arrangementId;
-        data["noteId"] = this.noteId;
-        return data; 
-    }
-}
-
-export interface IArrangementNoteCommand {
-    referralId?: string;
-    arrangementId?: string;
-    noteId?: string;
-}
-
-export class ApproveArrangementNote extends ArrangementNoteCommand implements IApproveArrangementNote {
-    finalizedNoteContents?: string;
-
-    constructor(data?: IApproveArrangementNote) {
-        super(data);
-        this._discriminator = "ApproveArrangementNote";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.finalizedNoteContents = _data["finalizedNoteContents"];
-        }
-    }
-
-    static fromJS(data: any): ApproveArrangementNote {
-        data = typeof data === 'object' ? data : {};
-        let result = new ApproveArrangementNote();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["finalizedNoteContents"] = this.finalizedNoteContents;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IApproveArrangementNote extends IArrangementNoteCommand {
-    finalizedNoteContents?: string;
-}
-
-export class CreateDraftArrangementNote extends ArrangementNoteCommand implements ICreateDraftArrangementNote {
-    draftNoteContents?: string | undefined;
-
-    constructor(data?: ICreateDraftArrangementNote) {
-        super(data);
-        this._discriminator = "CreateDraftArrangementNote";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.draftNoteContents = _data["draftNoteContents"];
-        }
-    }
-
-    static fromJS(data: any): CreateDraftArrangementNote {
-        data = typeof data === 'object' ? data : {};
-        let result = new CreateDraftArrangementNote();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["draftNoteContents"] = this.draftNoteContents;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface ICreateDraftArrangementNote extends IArrangementNoteCommand {
-    draftNoteContents?: string | undefined;
-}
-
-export class DiscardDraftArrangementNote extends ArrangementNoteCommand implements IDiscardDraftArrangementNote {
-
-    constructor(data?: IDiscardDraftArrangementNote) {
-        super(data);
-        this._discriminator = "DiscardDraftArrangementNote";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-    }
-
-    static fromJS(data: any): DiscardDraftArrangementNote {
-        data = typeof data === 'object' ? data : {};
-        let result = new DiscardDraftArrangementNote();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IDiscardDraftArrangementNote extends IArrangementNoteCommand {
-}
-
-export class EditDraftArrangementNote extends ArrangementNoteCommand implements IEditDraftArrangementNote {
-    draftNoteContents?: string | undefined;
-
-    constructor(data?: IEditDraftArrangementNote) {
-        super(data);
-        this._discriminator = "EditDraftArrangementNote";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.draftNoteContents = _data["draftNoteContents"];
-        }
-    }
-
-    static fromJS(data: any): EditDraftArrangementNote {
-        data = typeof data === 'object' ? data : {};
-        let result = new EditDraftArrangementNote();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["draftNoteContents"] = this.draftNoteContents;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IEditDraftArrangementNote extends IArrangementNoteCommand {
-    draftNoteContents?: string | undefined;
-}
-
-export class UserTenantAccessSummary implements IUserTenantAccessSummary {
-    organizationId?: string;
-    locationIds?: string[];
-
-    constructor(data?: IUserTenantAccessSummary) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.organizationId = _data["organizationId"];
-            if (Array.isArray(_data["locationIds"])) {
-                this.locationIds = [] as any;
-                for (let item of _data["locationIds"])
-                    this.locationIds!.push(item);
-            }
-        }
-    }
-
-    static fromJS(data: any): UserTenantAccessSummary {
-        data = typeof data === 'object' ? data : {};
-        let result = new UserTenantAccessSummary();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["organizationId"] = this.organizationId;
-        if (Array.isArray(this.locationIds)) {
-            data["locationIds"] = [];
-            for (let item of this.locationIds)
-                data["locationIds"].push(item);
-        }
-        return data; 
-    }
-}
-
-export interface IUserTenantAccessSummary {
-    organizationId?: string;
-    locationIds?: string[];
-}
-
-export class VolunteerFamily implements IVolunteerFamily {
-    family?: Family;
+    createdUtc?: Date;
+    closeReason?: ReferralCloseReason | undefined;
     completedRequirements?: CompletedRequirementInfo[];
     uploadedDocuments?: UploadedDocumentInfo[];
-    removedRoles?: RemovedRole[];
     missingRequirements?: string[];
-    availableApplications?: string[];
-    familyRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
-    individualVolunteers?: { [key: string]: Volunteer; };
+    arrangements?: Arrangement[];
 
-    constructor(data?: IVolunteerFamily) {
+    constructor(data?: IReferral) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -3959,7 +2438,9 @@ export class VolunteerFamily implements IVolunteerFamily {
 
     init(_data?: any) {
         if (_data) {
-            this.family = _data["family"] ? Family.fromJS(_data["family"]) : <any>undefined;
+            this.id = _data["id"];
+            this.createdUtc = _data["createdUtc"] ? new Date(_data["createdUtc"].toString()) : <any>undefined;
+            this.closeReason = _data["closeReason"];
             if (Array.isArray(_data["completedRequirements"])) {
                 this.completedRequirements = [] as any;
                 for (let item of _data["completedRequirements"])
@@ -3970,48 +2451,31 @@ export class VolunteerFamily implements IVolunteerFamily {
                 for (let item of _data["uploadedDocuments"])
                     this.uploadedDocuments!.push(UploadedDocumentInfo.fromJS(item));
             }
-            if (Array.isArray(_data["removedRoles"])) {
-                this.removedRoles = [] as any;
-                for (let item of _data["removedRoles"])
-                    this.removedRoles!.push(RemovedRole.fromJS(item));
-            }
             if (Array.isArray(_data["missingRequirements"])) {
                 this.missingRequirements = [] as any;
                 for (let item of _data["missingRequirements"])
                     this.missingRequirements!.push(item);
             }
-            if (Array.isArray(_data["availableApplications"])) {
-                this.availableApplications = [] as any;
-                for (let item of _data["availableApplications"])
-                    this.availableApplications!.push(item);
-            }
-            if (_data["familyRoleApprovals"]) {
-                this.familyRoleApprovals = {} as any;
-                for (let key in _data["familyRoleApprovals"]) {
-                    if (_data["familyRoleApprovals"].hasOwnProperty(key))
-                        (<any>this.familyRoleApprovals)![key] = _data["familyRoleApprovals"][key] ? _data["familyRoleApprovals"][key].map((i: any) => RoleVersionApproval.fromJS(i)) : [];
-                }
-            }
-            if (_data["individualVolunteers"]) {
-                this.individualVolunteers = {} as any;
-                for (let key in _data["individualVolunteers"]) {
-                    if (_data["individualVolunteers"].hasOwnProperty(key))
-                        (<any>this.individualVolunteers)![key] = _data["individualVolunteers"][key] ? Volunteer.fromJS(_data["individualVolunteers"][key]) : new Volunteer();
-                }
+            if (Array.isArray(_data["arrangements"])) {
+                this.arrangements = [] as any;
+                for (let item of _data["arrangements"])
+                    this.arrangements!.push(Arrangement.fromJS(item));
             }
         }
     }
 
-    static fromJS(data: any): VolunteerFamily {
+    static fromJS(data: any): Referral {
         data = typeof data === 'object' ? data : {};
-        let result = new VolunteerFamily();
+        let result = new Referral();
         result.init(data);
         return result;
     }
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["family"] = this.family ? this.family.toJSON() : <any>undefined;
+        data["id"] = this.id;
+        data["createdUtc"] = this.createdUtc ? this.createdUtc.toISOString() : <any>undefined;
+        data["closeReason"] = this.closeReason;
         if (Array.isArray(this.completedRequirements)) {
             data["completedRequirements"] = [];
             for (let item of this.completedRequirements)
@@ -4022,48 +2486,36 @@ export class VolunteerFamily implements IVolunteerFamily {
             for (let item of this.uploadedDocuments)
                 data["uploadedDocuments"].push(item.toJSON());
         }
-        if (Array.isArray(this.removedRoles)) {
-            data["removedRoles"] = [];
-            for (let item of this.removedRoles)
-                data["removedRoles"].push(item.toJSON());
-        }
         if (Array.isArray(this.missingRequirements)) {
             data["missingRequirements"] = [];
             for (let item of this.missingRequirements)
                 data["missingRequirements"].push(item);
         }
-        if (Array.isArray(this.availableApplications)) {
-            data["availableApplications"] = [];
-            for (let item of this.availableApplications)
-                data["availableApplications"].push(item);
-        }
-        if (this.familyRoleApprovals) {
-            data["familyRoleApprovals"] = {};
-            for (let key in this.familyRoleApprovals) {
-                if (this.familyRoleApprovals.hasOwnProperty(key))
-                    (<any>data["familyRoleApprovals"])[key] = this.familyRoleApprovals[key];
-            }
-        }
-        if (this.individualVolunteers) {
-            data["individualVolunteers"] = {};
-            for (let key in this.individualVolunteers) {
-                if (this.individualVolunteers.hasOwnProperty(key))
-                    (<any>data["individualVolunteers"])[key] = this.individualVolunteers[key] ? this.individualVolunteers[key].toJSON() : <any>undefined;
-            }
+        if (Array.isArray(this.arrangements)) {
+            data["arrangements"] = [];
+            for (let item of this.arrangements)
+                data["arrangements"].push(item.toJSON());
         }
         return data; 
     }
 }
 
-export interface IVolunteerFamily {
-    family?: Family;
+export interface IReferral {
+    id?: string;
+    createdUtc?: Date;
+    closeReason?: ReferralCloseReason | undefined;
     completedRequirements?: CompletedRequirementInfo[];
     uploadedDocuments?: UploadedDocumentInfo[];
-    removedRoles?: RemovedRole[];
     missingRequirements?: string[];
-    availableApplications?: string[];
-    familyRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
-    individualVolunteers?: { [key: string]: Volunteer; };
+    arrangements?: Arrangement[];
+}
+
+export enum ReferralCloseReason {
+    NotAppropriate = 0,
+    NoCapacity = 1,
+    NoLongerNeeded = 2,
+    Resourced = 3,
+    NeedMet = 4,
 }
 
 export class CompletedRequirementInfo implements ICompletedRequirementInfo {
@@ -4166,6 +2618,515 @@ export interface IUploadedDocumentInfo {
     uploadedFileName?: string;
 }
 
+export class Arrangement implements IArrangement {
+    id?: string;
+    arrangementType?: string;
+    state?: ArrangementState;
+    completedRequirements?: CompletedRequirementInfo[];
+    uploadedDocuments?: UploadedDocumentInfo[];
+    missingRequirements?: string[];
+    individualVolunteerAssignments?: IndividualVolunteerAssignment[];
+    familyVolunteerAssignments?: FamilyVolunteerAssignment[];
+    partneringFamilyChildAssignments?: PartneringFamilyChildAssignment[];
+    childrenLocationHistory?: ChildLocationHistoryEntry[];
+    notes?: Note[];
+
+    constructor(data?: IArrangement) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.arrangementType = _data["arrangementType"];
+            this.state = _data["state"];
+            if (Array.isArray(_data["completedRequirements"])) {
+                this.completedRequirements = [] as any;
+                for (let item of _data["completedRequirements"])
+                    this.completedRequirements!.push(CompletedRequirementInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["uploadedDocuments"])) {
+                this.uploadedDocuments = [] as any;
+                for (let item of _data["uploadedDocuments"])
+                    this.uploadedDocuments!.push(UploadedDocumentInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["missingRequirements"])) {
+                this.missingRequirements = [] as any;
+                for (let item of _data["missingRequirements"])
+                    this.missingRequirements!.push(item);
+            }
+            if (Array.isArray(_data["individualVolunteerAssignments"])) {
+                this.individualVolunteerAssignments = [] as any;
+                for (let item of _data["individualVolunteerAssignments"])
+                    this.individualVolunteerAssignments!.push(IndividualVolunteerAssignment.fromJS(item));
+            }
+            if (Array.isArray(_data["familyVolunteerAssignments"])) {
+                this.familyVolunteerAssignments = [] as any;
+                for (let item of _data["familyVolunteerAssignments"])
+                    this.familyVolunteerAssignments!.push(FamilyVolunteerAssignment.fromJS(item));
+            }
+            if (Array.isArray(_data["partneringFamilyChildAssignments"])) {
+                this.partneringFamilyChildAssignments = [] as any;
+                for (let item of _data["partneringFamilyChildAssignments"])
+                    this.partneringFamilyChildAssignments!.push(PartneringFamilyChildAssignment.fromJS(item));
+            }
+            if (Array.isArray(_data["childrenLocationHistory"])) {
+                this.childrenLocationHistory = [] as any;
+                for (let item of _data["childrenLocationHistory"])
+                    this.childrenLocationHistory!.push(ChildLocationHistoryEntry.fromJS(item));
+            }
+            if (Array.isArray(_data["notes"])) {
+                this.notes = [] as any;
+                for (let item of _data["notes"])
+                    this.notes!.push(Note.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): Arrangement {
+        data = typeof data === 'object' ? data : {};
+        let result = new Arrangement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["arrangementType"] = this.arrangementType;
+        data["state"] = this.state;
+        if (Array.isArray(this.completedRequirements)) {
+            data["completedRequirements"] = [];
+            for (let item of this.completedRequirements)
+                data["completedRequirements"].push(item.toJSON());
+        }
+        if (Array.isArray(this.uploadedDocuments)) {
+            data["uploadedDocuments"] = [];
+            for (let item of this.uploadedDocuments)
+                data["uploadedDocuments"].push(item.toJSON());
+        }
+        if (Array.isArray(this.missingRequirements)) {
+            data["missingRequirements"] = [];
+            for (let item of this.missingRequirements)
+                data["missingRequirements"].push(item);
+        }
+        if (Array.isArray(this.individualVolunteerAssignments)) {
+            data["individualVolunteerAssignments"] = [];
+            for (let item of this.individualVolunteerAssignments)
+                data["individualVolunteerAssignments"].push(item.toJSON());
+        }
+        if (Array.isArray(this.familyVolunteerAssignments)) {
+            data["familyVolunteerAssignments"] = [];
+            for (let item of this.familyVolunteerAssignments)
+                data["familyVolunteerAssignments"].push(item.toJSON());
+        }
+        if (Array.isArray(this.partneringFamilyChildAssignments)) {
+            data["partneringFamilyChildAssignments"] = [];
+            for (let item of this.partneringFamilyChildAssignments)
+                data["partneringFamilyChildAssignments"].push(item.toJSON());
+        }
+        if (Array.isArray(this.childrenLocationHistory)) {
+            data["childrenLocationHistory"] = [];
+            for (let item of this.childrenLocationHistory)
+                data["childrenLocationHistory"].push(item.toJSON());
+        }
+        if (Array.isArray(this.notes)) {
+            data["notes"] = [];
+            for (let item of this.notes)
+                data["notes"].push(item.toJSON());
+        }
+        return data; 
+    }
+}
+
+export interface IArrangement {
+    id?: string;
+    arrangementType?: string;
+    state?: ArrangementState;
+    completedRequirements?: CompletedRequirementInfo[];
+    uploadedDocuments?: UploadedDocumentInfo[];
+    missingRequirements?: string[];
+    individualVolunteerAssignments?: IndividualVolunteerAssignment[];
+    familyVolunteerAssignments?: FamilyVolunteerAssignment[];
+    partneringFamilyChildAssignments?: PartneringFamilyChildAssignment[];
+    childrenLocationHistory?: ChildLocationHistoryEntry[];
+    notes?: Note[];
+}
+
+export enum ArrangementState {
+    Setup = 0,
+    Open = 1,
+    Closed = 2,
+}
+
+export class IndividualVolunteerAssignment implements IIndividualVolunteerAssignment {
+    familyId?: string;
+    personId?: string;
+    arrangementFunction?: string;
+
+    constructor(data?: IIndividualVolunteerAssignment) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.familyId = _data["familyId"];
+            this.personId = _data["personId"];
+            this.arrangementFunction = _data["arrangementFunction"];
+        }
+    }
+
+    static fromJS(data: any): IndividualVolunteerAssignment {
+        data = typeof data === 'object' ? data : {};
+        let result = new IndividualVolunteerAssignment();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["familyId"] = this.familyId;
+        data["personId"] = this.personId;
+        data["arrangementFunction"] = this.arrangementFunction;
+        return data; 
+    }
+}
+
+export interface IIndividualVolunteerAssignment {
+    familyId?: string;
+    personId?: string;
+    arrangementFunction?: string;
+}
+
+export class FamilyVolunteerAssignment implements IFamilyVolunteerAssignment {
+    familyId?: string;
+    arrangementFunction?: string;
+
+    constructor(data?: IFamilyVolunteerAssignment) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.familyId = _data["familyId"];
+            this.arrangementFunction = _data["arrangementFunction"];
+        }
+    }
+
+    static fromJS(data: any): FamilyVolunteerAssignment {
+        data = typeof data === 'object' ? data : {};
+        let result = new FamilyVolunteerAssignment();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["familyId"] = this.familyId;
+        data["arrangementFunction"] = this.arrangementFunction;
+        return data; 
+    }
+}
+
+export interface IFamilyVolunteerAssignment {
+    familyId?: string;
+    arrangementFunction?: string;
+}
+
+export class PartneringFamilyChildAssignment implements IPartneringFamilyChildAssignment {
+    personId?: string;
+
+    constructor(data?: IPartneringFamilyChildAssignment) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.personId = _data["personId"];
+        }
+    }
+
+    static fromJS(data: any): PartneringFamilyChildAssignment {
+        data = typeof data === 'object' ? data : {};
+        let result = new PartneringFamilyChildAssignment();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["personId"] = this.personId;
+        return data; 
+    }
+}
+
+export interface IPartneringFamilyChildAssignment {
+    personId?: string;
+}
+
+export class ChildLocationHistoryEntry implements IChildLocationHistoryEntry {
+    userId?: string;
+    timestampUtc?: Date;
+    childId?: string;
+    childLocationFamilyId?: string;
+    plan?: ChildLocationPlan;
+    additionalExplanation?: string;
+
+    constructor(data?: IChildLocationHistoryEntry) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
+            this.childId = _data["childId"];
+            this.childLocationFamilyId = _data["childLocationFamilyId"];
+            this.plan = _data["plan"];
+            this.additionalExplanation = _data["additionalExplanation"];
+        }
+    }
+
+    static fromJS(data: any): ChildLocationHistoryEntry {
+        data = typeof data === 'object' ? data : {};
+        let result = new ChildLocationHistoryEntry();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
+        data["childId"] = this.childId;
+        data["childLocationFamilyId"] = this.childLocationFamilyId;
+        data["plan"] = this.plan;
+        data["additionalExplanation"] = this.additionalExplanation;
+        return data; 
+    }
+}
+
+export interface IChildLocationHistoryEntry {
+    userId?: string;
+    timestampUtc?: Date;
+    childId?: string;
+    childLocationFamilyId?: string;
+    plan?: ChildLocationPlan;
+    additionalExplanation?: string;
+}
+
+export enum ChildLocationPlan {
+    OvernightHousing = 0,
+    DaytimeChildCare = 1,
+    ReturnToFamily = 2,
+}
+
+export class Note implements INote {
+    id?: string;
+    authorId?: string;
+    timestampUtc?: Date;
+    contents?: string | undefined;
+    status?: NoteStatus;
+
+    constructor(data?: INote) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.authorId = _data["authorId"];
+            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
+            this.contents = _data["contents"];
+            this.status = _data["status"];
+        }
+    }
+
+    static fromJS(data: any): Note {
+        data = typeof data === 'object' ? data : {};
+        let result = new Note();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["authorId"] = this.authorId;
+        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
+        data["contents"] = this.contents;
+        data["status"] = this.status;
+        return data; 
+    }
+}
+
+export interface INote {
+    id?: string;
+    authorId?: string;
+    timestampUtc?: Date;
+    contents?: string | undefined;
+    status?: NoteStatus;
+}
+
+export enum NoteStatus {
+    Draft = 0,
+    Approved = 1,
+}
+
+export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
+    completedRequirements?: CompletedRequirementInfo[];
+    uploadedDocuments?: UploadedDocumentInfo[];
+    removedRoles?: RemovedRole[];
+    missingRequirements?: string[];
+    availableApplications?: string[];
+    familyRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
+    individualVolunteers?: { [key: string]: VolunteerInfo; };
+
+    constructor(data?: IVolunteerFamilyInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["completedRequirements"])) {
+                this.completedRequirements = [] as any;
+                for (let item of _data["completedRequirements"])
+                    this.completedRequirements!.push(CompletedRequirementInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["uploadedDocuments"])) {
+                this.uploadedDocuments = [] as any;
+                for (let item of _data["uploadedDocuments"])
+                    this.uploadedDocuments!.push(UploadedDocumentInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["removedRoles"])) {
+                this.removedRoles = [] as any;
+                for (let item of _data["removedRoles"])
+                    this.removedRoles!.push(RemovedRole.fromJS(item));
+            }
+            if (Array.isArray(_data["missingRequirements"])) {
+                this.missingRequirements = [] as any;
+                for (let item of _data["missingRequirements"])
+                    this.missingRequirements!.push(item);
+            }
+            if (Array.isArray(_data["availableApplications"])) {
+                this.availableApplications = [] as any;
+                for (let item of _data["availableApplications"])
+                    this.availableApplications!.push(item);
+            }
+            if (_data["familyRoleApprovals"]) {
+                this.familyRoleApprovals = {} as any;
+                for (let key in _data["familyRoleApprovals"]) {
+                    if (_data["familyRoleApprovals"].hasOwnProperty(key))
+                        (<any>this.familyRoleApprovals)![key] = _data["familyRoleApprovals"][key] ? _data["familyRoleApprovals"][key].map((i: any) => RoleVersionApproval.fromJS(i)) : [];
+                }
+            }
+            if (_data["individualVolunteers"]) {
+                this.individualVolunteers = {} as any;
+                for (let key in _data["individualVolunteers"]) {
+                    if (_data["individualVolunteers"].hasOwnProperty(key))
+                        (<any>this.individualVolunteers)![key] = _data["individualVolunteers"][key] ? VolunteerInfo.fromJS(_data["individualVolunteers"][key]) : new VolunteerInfo();
+                }
+            }
+        }
+    }
+
+    static fromJS(data: any): VolunteerFamilyInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new VolunteerFamilyInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.completedRequirements)) {
+            data["completedRequirements"] = [];
+            for (let item of this.completedRequirements)
+                data["completedRequirements"].push(item.toJSON());
+        }
+        if (Array.isArray(this.uploadedDocuments)) {
+            data["uploadedDocuments"] = [];
+            for (let item of this.uploadedDocuments)
+                data["uploadedDocuments"].push(item.toJSON());
+        }
+        if (Array.isArray(this.removedRoles)) {
+            data["removedRoles"] = [];
+            for (let item of this.removedRoles)
+                data["removedRoles"].push(item.toJSON());
+        }
+        if (Array.isArray(this.missingRequirements)) {
+            data["missingRequirements"] = [];
+            for (let item of this.missingRequirements)
+                data["missingRequirements"].push(item);
+        }
+        if (Array.isArray(this.availableApplications)) {
+            data["availableApplications"] = [];
+            for (let item of this.availableApplications)
+                data["availableApplications"].push(item);
+        }
+        if (this.familyRoleApprovals) {
+            data["familyRoleApprovals"] = {};
+            for (let key in this.familyRoleApprovals) {
+                if (this.familyRoleApprovals.hasOwnProperty(key))
+                    (<any>data["familyRoleApprovals"])[key] = this.familyRoleApprovals[key];
+            }
+        }
+        if (this.individualVolunteers) {
+            data["individualVolunteers"] = {};
+            for (let key in this.individualVolunteers) {
+                if (this.individualVolunteers.hasOwnProperty(key))
+                    (<any>data["individualVolunteers"])[key] = this.individualVolunteers[key] ? this.individualVolunteers[key].toJSON() : <any>undefined;
+            }
+        }
+        return data; 
+    }
+}
+
+export interface IVolunteerFamilyInfo {
+    completedRequirements?: CompletedRequirementInfo[];
+    uploadedDocuments?: UploadedDocumentInfo[];
+    removedRoles?: RemovedRole[];
+    missingRequirements?: string[];
+    availableApplications?: string[];
+    familyRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
+    individualVolunteers?: { [key: string]: VolunteerInfo; };
+}
+
 export class RemovedRole implements IRemovedRole {
     roleName?: string;
     reason?: RoleRemovalReason;
@@ -4262,14 +3223,14 @@ export enum RoleApprovalStatus {
     Onboarded = 2,
 }
 
-export class Volunteer implements IVolunteer {
+export class VolunteerInfo implements IVolunteerInfo {
     completedRequirements?: CompletedRequirementInfo[];
     removedRoles?: RemovedRole[];
     missingRequirements?: string[];
     availableApplications?: string[];
     individualRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
 
-    constructor(data?: IVolunteer) {
+    constructor(data?: IVolunteerInfo) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -4310,9 +3271,9 @@ export class Volunteer implements IVolunteer {
         }
     }
 
-    static fromJS(data: any): Volunteer {
+    static fromJS(data: any): VolunteerInfo {
         data = typeof data === 'object' ? data : {};
-        let result = new Volunteer();
+        let result = new VolunteerInfo();
         result.init(data);
         return result;
     }
@@ -4350,7 +3311,7 @@ export class Volunteer implements IVolunteer {
     }
 }
 
-export interface IVolunteer {
+export interface IVolunteerInfo {
     completedRequirements?: CompletedRequirementInfo[];
     removedRoles?: RemovedRole[];
     missingRequirements?: string[];
@@ -4358,635 +3319,24 @@ export interface IVolunteer {
     individualRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
 }
 
-export abstract class VolunteerFamilyCommand implements IVolunteerFamilyCommand {
-    familyId?: string;
+export abstract class DirectoryCommand implements IDirectoryCommand {
 
     protected _discriminator: string;
 
-    constructor(data?: IVolunteerFamilyCommand) {
+    constructor(data?: IDirectoryCommand) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
                     (<any>this)[property] = (<any>data)[property];
             }
         }
-        this._discriminator = "VolunteerFamilyCommand";
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.familyId = _data["familyId"];
-        }
-    }
-
-    static fromJS(data: any): VolunteerFamilyCommand {
-        data = typeof data === 'object' ? data : {};
-        if (data["discriminator"] === "ActivateVolunteerFamily") {
-            let result = new ActivateVolunteerFamily();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "CompleteVolunteerFamilyRequirement") {
-            let result = new CompleteVolunteerFamilyRequirement();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "DeactivateVolunteerFamily") {
-            let result = new DeactivateVolunteerFamily();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "RemoveVolunteerFamilyRole") {
-            let result = new RemoveVolunteerFamilyRole();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "ResetVolunteerFamilyRole") {
-            let result = new ResetVolunteerFamilyRole();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "SetVolunteerFamilyNote") {
-            let result = new SetVolunteerFamilyNote();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "UploadVolunteerFamilyDocument") {
-            let result = new UploadVolunteerFamilyDocument();
-            result.init(data);
-            return result;
-        }
-        throw new Error("The abstract class 'VolunteerFamilyCommand' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["discriminator"] = this._discriminator; 
-        data["familyId"] = this.familyId;
-        return data; 
-    }
-}
-
-export interface IVolunteerFamilyCommand {
-    familyId?: string;
-}
-
-export class ActivateVolunteerFamily extends VolunteerFamilyCommand implements IActivateVolunteerFamily {
-
-    constructor(data?: IActivateVolunteerFamily) {
-        super(data);
-        this._discriminator = "ActivateVolunteerFamily";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-    }
-
-    static fromJS(data: any): ActivateVolunteerFamily {
-        data = typeof data === 'object' ? data : {};
-        let result = new ActivateVolunteerFamily();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IActivateVolunteerFamily extends IVolunteerFamilyCommand {
-}
-
-export class CompleteVolunteerFamilyRequirement extends VolunteerFamilyCommand implements ICompleteVolunteerFamilyRequirement {
-    requirementName?: string;
-    completedAtUtc?: Date;
-    uploadedDocumentId?: string | undefined;
-
-    constructor(data?: ICompleteVolunteerFamilyRequirement) {
-        super(data);
-        this._discriminator = "CompleteVolunteerFamilyRequirement";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.requirementName = _data["requirementName"];
-            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
-            this.uploadedDocumentId = _data["uploadedDocumentId"];
-        }
-    }
-
-    static fromJS(data: any): CompleteVolunteerFamilyRequirement {
-        data = typeof data === 'object' ? data : {};
-        let result = new CompleteVolunteerFamilyRequirement();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["requirementName"] = this.requirementName;
-        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
-        data["uploadedDocumentId"] = this.uploadedDocumentId;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface ICompleteVolunteerFamilyRequirement extends IVolunteerFamilyCommand {
-    requirementName?: string;
-    completedAtUtc?: Date;
-    uploadedDocumentId?: string | undefined;
-}
-
-export class DeactivateVolunteerFamily extends VolunteerFamilyCommand implements IDeactivateVolunteerFamily {
-    reason?: string;
-
-    constructor(data?: IDeactivateVolunteerFamily) {
-        super(data);
-        this._discriminator = "DeactivateVolunteerFamily";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.reason = _data["reason"];
-        }
-    }
-
-    static fromJS(data: any): DeactivateVolunteerFamily {
-        data = typeof data === 'object' ? data : {};
-        let result = new DeactivateVolunteerFamily();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["reason"] = this.reason;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IDeactivateVolunteerFamily extends IVolunteerFamilyCommand {
-    reason?: string;
-}
-
-export class RemoveVolunteerFamilyRole extends VolunteerFamilyCommand implements IRemoveVolunteerFamilyRole {
-    roleName?: string;
-    reason?: RoleRemovalReason;
-    additionalComments?: string | undefined;
-
-    constructor(data?: IRemoveVolunteerFamilyRole) {
-        super(data);
-        this._discriminator = "RemoveVolunteerFamilyRole";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.roleName = _data["roleName"];
-            this.reason = _data["reason"];
-            this.additionalComments = _data["additionalComments"];
-        }
-    }
-
-    static fromJS(data: any): RemoveVolunteerFamilyRole {
-        data = typeof data === 'object' ? data : {};
-        let result = new RemoveVolunteerFamilyRole();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["roleName"] = this.roleName;
-        data["reason"] = this.reason;
-        data["additionalComments"] = this.additionalComments;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IRemoveVolunteerFamilyRole extends IVolunteerFamilyCommand {
-    roleName?: string;
-    reason?: RoleRemovalReason;
-    additionalComments?: string | undefined;
-}
-
-export class ResetVolunteerFamilyRole extends VolunteerFamilyCommand implements IResetVolunteerFamilyRole {
-    roleName?: string;
-
-    constructor(data?: IResetVolunteerFamilyRole) {
-        super(data);
-        this._discriminator = "ResetVolunteerFamilyRole";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.roleName = _data["roleName"];
-        }
-    }
-
-    static fromJS(data: any): ResetVolunteerFamilyRole {
-        data = typeof data === 'object' ? data : {};
-        let result = new ResetVolunteerFamilyRole();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["roleName"] = this.roleName;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IResetVolunteerFamilyRole extends IVolunteerFamilyCommand {
-    roleName?: string;
-}
-
-export class SetVolunteerFamilyNote extends VolunteerFamilyCommand implements ISetVolunteerFamilyNote {
-    note?: string;
-
-    constructor(data?: ISetVolunteerFamilyNote) {
-        super(data);
-        this._discriminator = "SetVolunteerFamilyNote";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.note = _data["note"];
-        }
-    }
-
-    static fromJS(data: any): SetVolunteerFamilyNote {
-        data = typeof data === 'object' ? data : {};
-        let result = new SetVolunteerFamilyNote();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["note"] = this.note;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface ISetVolunteerFamilyNote extends IVolunteerFamilyCommand {
-    note?: string;
-}
-
-export class UploadVolunteerFamilyDocument extends VolunteerFamilyCommand implements IUploadVolunteerFamilyDocument {
-    uploadedDocumentId?: string;
-    uploadedFileName?: string;
-
-    constructor(data?: IUploadVolunteerFamilyDocument) {
-        super(data);
-        this._discriminator = "UploadVolunteerFamilyDocument";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.uploadedDocumentId = _data["uploadedDocumentId"];
-            this.uploadedFileName = _data["uploadedFileName"];
-        }
-    }
-
-    static fromJS(data: any): UploadVolunteerFamilyDocument {
-        data = typeof data === 'object' ? data : {};
-        let result = new UploadVolunteerFamilyDocument();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["uploadedDocumentId"] = this.uploadedDocumentId;
-        data["uploadedFileName"] = this.uploadedFileName;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IUploadVolunteerFamilyDocument extends IVolunteerFamilyCommand {
-    uploadedDocumentId?: string;
-    uploadedFileName?: string;
-}
-
-export abstract class VolunteerCommand implements IVolunteerCommand {
-    familyId?: string;
-    personId?: string;
-
-    protected _discriminator: string;
-
-    constructor(data?: IVolunteerCommand) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-        this._discriminator = "VolunteerCommand";
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.familyId = _data["familyId"];
-            this.personId = _data["personId"];
-        }
-    }
-
-    static fromJS(data: any): VolunteerCommand {
-        data = typeof data === 'object' ? data : {};
-        if (data["discriminator"] === "CompleteVolunteerRequirement") {
-            let result = new CompleteVolunteerRequirement();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "DeactivateVolunteer") {
-            let result = new DeactivateVolunteer();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "ReactivateVolunteer") {
-            let result = new ReactivateVolunteer();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "RemoveVolunteerRole") {
-            let result = new RemoveVolunteerRole();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "ResetVolunteerRole") {
-            let result = new ResetVolunteerRole();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "SetVolunteerNote") {
-            let result = new SetVolunteerNote();
-            result.init(data);
-            return result;
-        }
-        throw new Error("The abstract class 'VolunteerCommand' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["discriminator"] = this._discriminator; 
-        data["familyId"] = this.familyId;
-        data["personId"] = this.personId;
-        return data; 
-    }
-}
-
-export interface IVolunteerCommand {
-    familyId?: string;
-    personId?: string;
-}
-
-export class CompleteVolunteerRequirement extends VolunteerCommand implements ICompleteVolunteerRequirement {
-    requirementName?: string;
-    completedAtUtc?: Date;
-    uploadedDocumentId?: string | undefined;
-
-    constructor(data?: ICompleteVolunteerRequirement) {
-        super(data);
-        this._discriminator = "CompleteVolunteerRequirement";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.requirementName = _data["requirementName"];
-            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
-            this.uploadedDocumentId = _data["uploadedDocumentId"];
-        }
-    }
-
-    static fromJS(data: any): CompleteVolunteerRequirement {
-        data = typeof data === 'object' ? data : {};
-        let result = new CompleteVolunteerRequirement();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["requirementName"] = this.requirementName;
-        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
-        data["uploadedDocumentId"] = this.uploadedDocumentId;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface ICompleteVolunteerRequirement extends IVolunteerCommand {
-    requirementName?: string;
-    completedAtUtc?: Date;
-    uploadedDocumentId?: string | undefined;
-}
-
-export class DeactivateVolunteer extends VolunteerCommand implements IDeactivateVolunteer {
-    reason?: string;
-
-    constructor(data?: IDeactivateVolunteer) {
-        super(data);
-        this._discriminator = "DeactivateVolunteer";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.reason = _data["reason"];
-        }
-    }
-
-    static fromJS(data: any): DeactivateVolunteer {
-        data = typeof data === 'object' ? data : {};
-        let result = new DeactivateVolunteer();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["reason"] = this.reason;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IDeactivateVolunteer extends IVolunteerCommand {
-    reason?: string;
-}
-
-export class ReactivateVolunteer extends VolunteerCommand implements IReactivateVolunteer {
-
-    constructor(data?: IReactivateVolunteer) {
-        super(data);
-        this._discriminator = "ReactivateVolunteer";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-    }
-
-    static fromJS(data: any): ReactivateVolunteer {
-        data = typeof data === 'object' ? data : {};
-        let result = new ReactivateVolunteer();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IReactivateVolunteer extends IVolunteerCommand {
-}
-
-export class RemoveVolunteerRole extends VolunteerCommand implements IRemoveVolunteerRole {
-    roleName?: string;
-    reason?: RoleRemovalReason;
-    additionalComments?: string | undefined;
-
-    constructor(data?: IRemoveVolunteerRole) {
-        super(data);
-        this._discriminator = "RemoveVolunteerRole";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.roleName = _data["roleName"];
-            this.reason = _data["reason"];
-            this.additionalComments = _data["additionalComments"];
-        }
-    }
-
-    static fromJS(data: any): RemoveVolunteerRole {
-        data = typeof data === 'object' ? data : {};
-        let result = new RemoveVolunteerRole();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["roleName"] = this.roleName;
-        data["reason"] = this.reason;
-        data["additionalComments"] = this.additionalComments;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IRemoveVolunteerRole extends IVolunteerCommand {
-    roleName?: string;
-    reason?: RoleRemovalReason;
-    additionalComments?: string | undefined;
-}
-
-export class ResetVolunteerRole extends VolunteerCommand implements IResetVolunteerRole {
-    roleName?: string;
-
-    constructor(data?: IResetVolunteerRole) {
-        super(data);
-        this._discriminator = "ResetVolunteerRole";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.roleName = _data["roleName"];
-        }
-    }
-
-    static fromJS(data: any): ResetVolunteerRole {
-        data = typeof data === 'object' ? data : {};
-        let result = new ResetVolunteerRole();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["roleName"] = this.roleName;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IResetVolunteerRole extends IVolunteerCommand {
-    roleName?: string;
-}
-
-export class SetVolunteerNote extends VolunteerCommand implements ISetVolunteerNote {
-    note?: string;
-
-    constructor(data?: ISetVolunteerNote) {
-        super(data);
-        this._discriminator = "SetVolunteerNote";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.note = _data["note"];
-        }
-    }
-
-    static fromJS(data: any): SetVolunteerNote {
-        data = typeof data === 'object' ? data : {};
-        let result = new SetVolunteerNote();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["note"] = this.note;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface ISetVolunteerNote extends IVolunteerCommand {
-    note?: string;
-}
-
-export abstract class ApprovalCommand implements IApprovalCommand {
-
-    protected _discriminator: string;
-
-    constructor(data?: IApprovalCommand) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-        this._discriminator = "ApprovalCommand";
+        this._discriminator = "DirectoryCommand";
     }
 
     init(_data?: any) {
     }
 
-    static fromJS(data: any): ApprovalCommand {
+    static fromJS(data: any): DirectoryCommand {
         data = typeof data === 'object' ? data : {};
         if (data["discriminator"] === "AddAdultToFamilyCommand") {
             let result = new AddAdultToFamilyCommand();
@@ -5003,7 +3353,7 @@ export abstract class ApprovalCommand implements IApprovalCommand {
             result.init(data);
             return result;
         }
-        throw new Error("The abstract class 'ApprovalCommand' cannot be instantiated.");
+        throw new Error("The abstract class 'DirectoryCommand' cannot be instantiated.");
     }
 
     toJSON(data?: any) {
@@ -5013,10 +3363,10 @@ export abstract class ApprovalCommand implements IApprovalCommand {
     }
 }
 
-export interface IApprovalCommand {
+export interface IDirectoryCommand {
 }
 
-export class AddAdultToFamilyCommand extends ApprovalCommand implements IAddAdultToFamilyCommand {
+export class AddAdultToFamilyCommand extends DirectoryCommand implements IAddAdultToFamilyCommand {
     familyId?: string;
     firstName?: string;
     lastName?: string;
@@ -5079,7 +3429,7 @@ export class AddAdultToFamilyCommand extends ApprovalCommand implements IAddAdul
     }
 }
 
-export interface IAddAdultToFamilyCommand extends IApprovalCommand {
+export interface IAddAdultToFamilyCommand extends IDirectoryCommand {
     familyId?: string;
     firstName?: string;
     lastName?: string;
@@ -5094,7 +3444,7 @@ export interface IAddAdultToFamilyCommand extends IApprovalCommand {
     emailAddress?: EmailAddress | undefined;
 }
 
-export class AddChildToFamilyCommand extends ApprovalCommand implements IAddChildToFamilyCommand {
+export class AddChildToFamilyCommand extends DirectoryCommand implements IAddChildToFamilyCommand {
     familyId?: string;
     firstName?: string;
     lastName?: string;
@@ -5156,7 +3506,7 @@ export class AddChildToFamilyCommand extends ApprovalCommand implements IAddChil
     }
 }
 
-export interface IAddChildToFamilyCommand extends IApprovalCommand {
+export interface IAddChildToFamilyCommand extends IDirectoryCommand {
     familyId?: string;
     firstName?: string;
     lastName?: string;
@@ -5168,7 +3518,7 @@ export interface IAddChildToFamilyCommand extends IApprovalCommand {
     notes?: string | undefined;
 }
 
-export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand implements ICreateVolunteerFamilyWithNewAdultCommand {
+export class CreateVolunteerFamilyWithNewAdultCommand extends DirectoryCommand implements ICreateVolunteerFamilyWithNewAdultCommand {
     firstName?: string;
     lastName?: string;
     gender?: Gender;
@@ -5228,7 +3578,7 @@ export class CreateVolunteerFamilyWithNewAdultCommand extends ApprovalCommand im
     }
 }
 
-export interface ICreateVolunteerFamilyWithNewAdultCommand extends IApprovalCommand {
+export interface ICreateVolunteerFamilyWithNewAdultCommand extends IDirectoryCommand {
     firstName?: string;
     lastName?: string;
     gender?: Gender;
@@ -5850,6 +4200,1371 @@ export class UpdatePersonUserLink extends PersonCommand implements IUpdatePerson
 
 export interface IUpdatePersonUserLink extends IPersonCommand {
     userId?: string | undefined;
+}
+
+export class DocumentUploadInfo implements IDocumentUploadInfo {
+    documentId?: string;
+    valetUrl?: string;
+
+    constructor(data?: IDocumentUploadInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.documentId = _data["documentId"];
+            this.valetUrl = _data["valetUrl"];
+        }
+    }
+
+    static fromJS(data: any): DocumentUploadInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new DocumentUploadInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["documentId"] = this.documentId;
+        data["valetUrl"] = this.valetUrl;
+        return data; 
+    }
+}
+
+export interface IDocumentUploadInfo {
+    documentId?: string;
+    valetUrl?: string;
+}
+
+export abstract class ReferralCommand implements IReferralCommand {
+    familyId?: string;
+    referralId?: string;
+
+    protected _discriminator: string;
+
+    constructor(data?: IReferralCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        this._discriminator = "ReferralCommand";
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.familyId = _data["familyId"];
+            this.referralId = _data["referralId"];
+        }
+    }
+
+    static fromJS(data: any): ReferralCommand {
+        data = typeof data === 'object' ? data : {};
+        if (data["discriminator"] === "CloseReferral") {
+            let result = new CloseReferral();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "CompleteReferralRequirement") {
+            let result = new CompleteReferralRequirement();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "CreateReferral") {
+            let result = new CreateReferral();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UploadReferralDocument") {
+            let result = new UploadReferralDocument();
+            result.init(data);
+            return result;
+        }
+        throw new Error("The abstract class 'ReferralCommand' cannot be instantiated.");
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["discriminator"] = this._discriminator; 
+        data["familyId"] = this.familyId;
+        data["referralId"] = this.referralId;
+        return data; 
+    }
+}
+
+export interface IReferralCommand {
+    familyId?: string;
+    referralId?: string;
+}
+
+export class CloseReferral extends ReferralCommand implements ICloseReferral {
+    closeReason?: ReferralCloseReason;
+
+    constructor(data?: ICloseReferral) {
+        super(data);
+        this._discriminator = "CloseReferral";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.closeReason = _data["closeReason"];
+        }
+    }
+
+    static fromJS(data: any): CloseReferral {
+        data = typeof data === 'object' ? data : {};
+        let result = new CloseReferral();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["closeReason"] = this.closeReason;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface ICloseReferral extends IReferralCommand {
+    closeReason?: ReferralCloseReason;
+}
+
+export class CompleteReferralRequirement extends ReferralCommand implements ICompleteReferralRequirement {
+    requirementName?: string;
+    completedAtUtc?: Date;
+    uploadedDocumentId?: string | undefined;
+
+    constructor(data?: ICompleteReferralRequirement) {
+        super(data);
+        this._discriminator = "CompleteReferralRequirement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.requirementName = _data["requirementName"];
+            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
+        }
+    }
+
+    static fromJS(data: any): CompleteReferralRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new CompleteReferralRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["requirementName"] = this.requirementName;
+        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface ICompleteReferralRequirement extends IReferralCommand {
+    requirementName?: string;
+    completedAtUtc?: Date;
+    uploadedDocumentId?: string | undefined;
+}
+
+export class CreateReferral extends ReferralCommand implements ICreateReferral {
+    openedAtUtc?: Date;
+
+    constructor(data?: ICreateReferral) {
+        super(data);
+        this._discriminator = "CreateReferral";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.openedAtUtc = _data["openedAtUtc"] ? new Date(_data["openedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): CreateReferral {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateReferral();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["openedAtUtc"] = this.openedAtUtc ? this.openedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface ICreateReferral extends IReferralCommand {
+    openedAtUtc?: Date;
+}
+
+export class UploadReferralDocument extends ReferralCommand implements IUploadReferralDocument {
+    uploadedDocumentId?: string;
+    uploadedFileName?: string;
+
+    constructor(data?: IUploadReferralDocument) {
+        super(data);
+        this._discriminator = "UploadReferralDocument";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
+            this.uploadedFileName = _data["uploadedFileName"];
+        }
+    }
+
+    static fromJS(data: any): UploadReferralDocument {
+        data = typeof data === 'object' ? data : {};
+        let result = new UploadReferralDocument();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
+        data["uploadedFileName"] = this.uploadedFileName;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUploadReferralDocument extends IReferralCommand {
+    uploadedDocumentId?: string;
+    uploadedFileName?: string;
+}
+
+export abstract class ArrangementCommand implements IArrangementCommand {
+    familyId?: string;
+    referralId?: string;
+    arrangementId?: string;
+
+    protected _discriminator: string;
+
+    constructor(data?: IArrangementCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        this._discriminator = "ArrangementCommand";
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.familyId = _data["familyId"];
+            this.referralId = _data["referralId"];
+            this.arrangementId = _data["arrangementId"];
+        }
+    }
+
+    static fromJS(data: any): ArrangementCommand {
+        data = typeof data === 'object' ? data : {};
+        if (data["discriminator"] === "AssignIndividualVolunteer") {
+            let result = new AssignIndividualVolunteer();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "AssignPartneringFamilyChildren") {
+            let result = new AssignPartneringFamilyChildren();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "AssignVolunteerFamily") {
+            let result = new AssignVolunteerFamily();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "CompleteArrangementRequirement") {
+            let result = new CompleteArrangementRequirement();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "CreateArrangement") {
+            let result = new CreateArrangement();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "EndArrangement") {
+            let result = new EndArrangement();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "StartArrangement") {
+            let result = new StartArrangement();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "TrackChildLocationChange") {
+            let result = new TrackChildLocationChange();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UploadArrangementDocument") {
+            let result = new UploadArrangementDocument();
+            result.init(data);
+            return result;
+        }
+        throw new Error("The abstract class 'ArrangementCommand' cannot be instantiated.");
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["discriminator"] = this._discriminator; 
+        data["familyId"] = this.familyId;
+        data["referralId"] = this.referralId;
+        data["arrangementId"] = this.arrangementId;
+        return data; 
+    }
+}
+
+export interface IArrangementCommand {
+    familyId?: string;
+    referralId?: string;
+    arrangementId?: string;
+}
+
+export class AssignIndividualVolunteer extends ArrangementCommand implements IAssignIndividualVolunteer {
+    volunteerFamilyId?: string;
+    personId?: string;
+    arrangementFunction?: string;
+
+    constructor(data?: IAssignIndividualVolunteer) {
+        super(data);
+        this._discriminator = "AssignIndividualVolunteer";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.volunteerFamilyId = _data["volunteerFamilyId"];
+            this.personId = _data["personId"];
+            this.arrangementFunction = _data["arrangementFunction"];
+        }
+    }
+
+    static fromJS(data: any): AssignIndividualVolunteer {
+        data = typeof data === 'object' ? data : {};
+        let result = new AssignIndividualVolunteer();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["volunteerFamilyId"] = this.volunteerFamilyId;
+        data["personId"] = this.personId;
+        data["arrangementFunction"] = this.arrangementFunction;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IAssignIndividualVolunteer extends IArrangementCommand {
+    volunteerFamilyId?: string;
+    personId?: string;
+    arrangementFunction?: string;
+}
+
+export class AssignPartneringFamilyChildren extends ArrangementCommand implements IAssignPartneringFamilyChildren {
+    childrenIds?: string[];
+
+    constructor(data?: IAssignPartneringFamilyChildren) {
+        super(data);
+        this._discriminator = "AssignPartneringFamilyChildren";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            if (Array.isArray(_data["childrenIds"])) {
+                this.childrenIds = [] as any;
+                for (let item of _data["childrenIds"])
+                    this.childrenIds!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): AssignPartneringFamilyChildren {
+        data = typeof data === 'object' ? data : {};
+        let result = new AssignPartneringFamilyChildren();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.childrenIds)) {
+            data["childrenIds"] = [];
+            for (let item of this.childrenIds)
+                data["childrenIds"].push(item);
+        }
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IAssignPartneringFamilyChildren extends IArrangementCommand {
+    childrenIds?: string[];
+}
+
+export class AssignVolunteerFamily extends ArrangementCommand implements IAssignVolunteerFamily {
+    volunteerFamilyId?: string;
+    arrangementFunction?: string;
+
+    constructor(data?: IAssignVolunteerFamily) {
+        super(data);
+        this._discriminator = "AssignVolunteerFamily";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.volunteerFamilyId = _data["volunteerFamilyId"];
+            this.arrangementFunction = _data["arrangementFunction"];
+        }
+    }
+
+    static fromJS(data: any): AssignVolunteerFamily {
+        data = typeof data === 'object' ? data : {};
+        let result = new AssignVolunteerFamily();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["volunteerFamilyId"] = this.volunteerFamilyId;
+        data["arrangementFunction"] = this.arrangementFunction;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IAssignVolunteerFamily extends IArrangementCommand {
+    volunteerFamilyId?: string;
+    arrangementFunction?: string;
+}
+
+export class CompleteArrangementRequirement extends ArrangementCommand implements ICompleteArrangementRequirement {
+    requirementName?: string;
+    completedAtUtc?: Date;
+    uploadedDocumentId?: string | undefined;
+
+    constructor(data?: ICompleteArrangementRequirement) {
+        super(data);
+        this._discriminator = "CompleteArrangementRequirement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.requirementName = _data["requirementName"];
+            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
+        }
+    }
+
+    static fromJS(data: any): CompleteArrangementRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new CompleteArrangementRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["requirementName"] = this.requirementName;
+        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface ICompleteArrangementRequirement extends IArrangementCommand {
+    requirementName?: string;
+    completedAtUtc?: Date;
+    uploadedDocumentId?: string | undefined;
+}
+
+export class CreateArrangement extends ArrangementCommand implements ICreateArrangement {
+    arrangementType?: string;
+
+    constructor(data?: ICreateArrangement) {
+        super(data);
+        this._discriminator = "CreateArrangement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.arrangementType = _data["arrangementType"];
+        }
+    }
+
+    static fromJS(data: any): CreateArrangement {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateArrangement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["arrangementType"] = this.arrangementType;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface ICreateArrangement extends IArrangementCommand {
+    arrangementType?: string;
+}
+
+export class EndArrangement extends ArrangementCommand implements IEndArrangement {
+    endedAtUtc?: Date;
+
+    constructor(data?: IEndArrangement) {
+        super(data);
+        this._discriminator = "EndArrangement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.endedAtUtc = _data["endedAtUtc"] ? new Date(_data["endedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): EndArrangement {
+        data = typeof data === 'object' ? data : {};
+        let result = new EndArrangement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["endedAtUtc"] = this.endedAtUtc ? this.endedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IEndArrangement extends IArrangementCommand {
+    endedAtUtc?: Date;
+}
+
+export class StartArrangement extends ArrangementCommand implements IStartArrangement {
+    startedAtUtc?: Date;
+
+    constructor(data?: IStartArrangement) {
+        super(data);
+        this._discriminator = "StartArrangement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.startedAtUtc = _data["startedAtUtc"] ? new Date(_data["startedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): StartArrangement {
+        data = typeof data === 'object' ? data : {};
+        let result = new StartArrangement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["startedAtUtc"] = this.startedAtUtc ? this.startedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IStartArrangement extends IArrangementCommand {
+    startedAtUtc?: Date;
+}
+
+export class TrackChildLocationChange extends ArrangementCommand implements ITrackChildLocationChange {
+    changedAtUtc?: Date;
+    childId?: string;
+    childLocationFamilyId?: string;
+    plan?: ChildLocationPlan;
+    additionalExplanation?: string;
+
+    constructor(data?: ITrackChildLocationChange) {
+        super(data);
+        this._discriminator = "TrackChildLocationChange";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.changedAtUtc = _data["changedAtUtc"] ? new Date(_data["changedAtUtc"].toString()) : <any>undefined;
+            this.childId = _data["childId"];
+            this.childLocationFamilyId = _data["childLocationFamilyId"];
+            this.plan = _data["plan"];
+            this.additionalExplanation = _data["additionalExplanation"];
+        }
+    }
+
+    static fromJS(data: any): TrackChildLocationChange {
+        data = typeof data === 'object' ? data : {};
+        let result = new TrackChildLocationChange();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["changedAtUtc"] = this.changedAtUtc ? this.changedAtUtc.toISOString() : <any>undefined;
+        data["childId"] = this.childId;
+        data["childLocationFamilyId"] = this.childLocationFamilyId;
+        data["plan"] = this.plan;
+        data["additionalExplanation"] = this.additionalExplanation;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface ITrackChildLocationChange extends IArrangementCommand {
+    changedAtUtc?: Date;
+    childId?: string;
+    childLocationFamilyId?: string;
+    plan?: ChildLocationPlan;
+    additionalExplanation?: string;
+}
+
+export class UploadArrangementDocument extends ArrangementCommand implements IUploadArrangementDocument {
+    uploadedDocumentId?: string;
+    uploadedFileName?: string;
+
+    constructor(data?: IUploadArrangementDocument) {
+        super(data);
+        this._discriminator = "UploadArrangementDocument";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
+            this.uploadedFileName = _data["uploadedFileName"];
+        }
+    }
+
+    static fromJS(data: any): UploadArrangementDocument {
+        data = typeof data === 'object' ? data : {};
+        let result = new UploadArrangementDocument();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
+        data["uploadedFileName"] = this.uploadedFileName;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUploadArrangementDocument extends IArrangementCommand {
+    uploadedDocumentId?: string;
+    uploadedFileName?: string;
+}
+
+export abstract class ArrangementNoteCommand implements IArrangementNoteCommand {
+    familyId?: string;
+    referralId?: string;
+    arrangementId?: string;
+    noteId?: string;
+
+    protected _discriminator: string;
+
+    constructor(data?: IArrangementNoteCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        this._discriminator = "ArrangementNoteCommand";
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.familyId = _data["familyId"];
+            this.referralId = _data["referralId"];
+            this.arrangementId = _data["arrangementId"];
+            this.noteId = _data["noteId"];
+        }
+    }
+
+    static fromJS(data: any): ArrangementNoteCommand {
+        data = typeof data === 'object' ? data : {};
+        if (data["discriminator"] === "ApproveArrangementNote") {
+            let result = new ApproveArrangementNote();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "CreateDraftArrangementNote") {
+            let result = new CreateDraftArrangementNote();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "DiscardDraftArrangementNote") {
+            let result = new DiscardDraftArrangementNote();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "EditDraftArrangementNote") {
+            let result = new EditDraftArrangementNote();
+            result.init(data);
+            return result;
+        }
+        throw new Error("The abstract class 'ArrangementNoteCommand' cannot be instantiated.");
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["discriminator"] = this._discriminator; 
+        data["familyId"] = this.familyId;
+        data["referralId"] = this.referralId;
+        data["arrangementId"] = this.arrangementId;
+        data["noteId"] = this.noteId;
+        return data; 
+    }
+}
+
+export interface IArrangementNoteCommand {
+    familyId?: string;
+    referralId?: string;
+    arrangementId?: string;
+    noteId?: string;
+}
+
+export class ApproveArrangementNote extends ArrangementNoteCommand implements IApproveArrangementNote {
+    finalizedNoteContents?: string;
+
+    constructor(data?: IApproveArrangementNote) {
+        super(data);
+        this._discriminator = "ApproveArrangementNote";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.finalizedNoteContents = _data["finalizedNoteContents"];
+        }
+    }
+
+    static fromJS(data: any): ApproveArrangementNote {
+        data = typeof data === 'object' ? data : {};
+        let result = new ApproveArrangementNote();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["finalizedNoteContents"] = this.finalizedNoteContents;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IApproveArrangementNote extends IArrangementNoteCommand {
+    finalizedNoteContents?: string;
+}
+
+export class CreateDraftArrangementNote extends ArrangementNoteCommand implements ICreateDraftArrangementNote {
+    draftNoteContents?: string | undefined;
+
+    constructor(data?: ICreateDraftArrangementNote) {
+        super(data);
+        this._discriminator = "CreateDraftArrangementNote";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.draftNoteContents = _data["draftNoteContents"];
+        }
+    }
+
+    static fromJS(data: any): CreateDraftArrangementNote {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateDraftArrangementNote();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["draftNoteContents"] = this.draftNoteContents;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface ICreateDraftArrangementNote extends IArrangementNoteCommand {
+    draftNoteContents?: string | undefined;
+}
+
+export class DiscardDraftArrangementNote extends ArrangementNoteCommand implements IDiscardDraftArrangementNote {
+
+    constructor(data?: IDiscardDraftArrangementNote) {
+        super(data);
+        this._discriminator = "DiscardDraftArrangementNote";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+    }
+
+    static fromJS(data: any): DiscardDraftArrangementNote {
+        data = typeof data === 'object' ? data : {};
+        let result = new DiscardDraftArrangementNote();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IDiscardDraftArrangementNote extends IArrangementNoteCommand {
+}
+
+export class EditDraftArrangementNote extends ArrangementNoteCommand implements IEditDraftArrangementNote {
+    draftNoteContents?: string | undefined;
+
+    constructor(data?: IEditDraftArrangementNote) {
+        super(data);
+        this._discriminator = "EditDraftArrangementNote";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.draftNoteContents = _data["draftNoteContents"];
+        }
+    }
+
+    static fromJS(data: any): EditDraftArrangementNote {
+        data = typeof data === 'object' ? data : {};
+        let result = new EditDraftArrangementNote();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["draftNoteContents"] = this.draftNoteContents;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IEditDraftArrangementNote extends IArrangementNoteCommand {
+    draftNoteContents?: string | undefined;
+}
+
+export class UserTenantAccessSummary implements IUserTenantAccessSummary {
+    organizationId?: string;
+    locationIds?: string[];
+
+    constructor(data?: IUserTenantAccessSummary) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.organizationId = _data["organizationId"];
+            if (Array.isArray(_data["locationIds"])) {
+                this.locationIds = [] as any;
+                for (let item of _data["locationIds"])
+                    this.locationIds!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): UserTenantAccessSummary {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserTenantAccessSummary();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["organizationId"] = this.organizationId;
+        if (Array.isArray(this.locationIds)) {
+            data["locationIds"] = [];
+            for (let item of this.locationIds)
+                data["locationIds"].push(item);
+        }
+        return data; 
+    }
+}
+
+export interface IUserTenantAccessSummary {
+    organizationId?: string;
+    locationIds?: string[];
+}
+
+export abstract class VolunteerFamilyCommand implements IVolunteerFamilyCommand {
+    familyId?: string;
+
+    protected _discriminator: string;
+
+    constructor(data?: IVolunteerFamilyCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        this._discriminator = "VolunteerFamilyCommand";
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.familyId = _data["familyId"];
+        }
+    }
+
+    static fromJS(data: any): VolunteerFamilyCommand {
+        data = typeof data === 'object' ? data : {};
+        if (data["discriminator"] === "ActivateVolunteerFamily") {
+            let result = new ActivateVolunteerFamily();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "CompleteVolunteerFamilyRequirement") {
+            let result = new CompleteVolunteerFamilyRequirement();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "RemoveVolunteerFamilyRole") {
+            let result = new RemoveVolunteerFamilyRole();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "ResetVolunteerFamilyRole") {
+            let result = new ResetVolunteerFamilyRole();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UploadVolunteerFamilyDocument") {
+            let result = new UploadVolunteerFamilyDocument();
+            result.init(data);
+            return result;
+        }
+        throw new Error("The abstract class 'VolunteerFamilyCommand' cannot be instantiated.");
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["discriminator"] = this._discriminator; 
+        data["familyId"] = this.familyId;
+        return data; 
+    }
+}
+
+export interface IVolunteerFamilyCommand {
+    familyId?: string;
+}
+
+export class ActivateVolunteerFamily extends VolunteerFamilyCommand implements IActivateVolunteerFamily {
+
+    constructor(data?: IActivateVolunteerFamily) {
+        super(data);
+        this._discriminator = "ActivateVolunteerFamily";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+    }
+
+    static fromJS(data: any): ActivateVolunteerFamily {
+        data = typeof data === 'object' ? data : {};
+        let result = new ActivateVolunteerFamily();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IActivateVolunteerFamily extends IVolunteerFamilyCommand {
+}
+
+export class CompleteVolunteerFamilyRequirement extends VolunteerFamilyCommand implements ICompleteVolunteerFamilyRequirement {
+    requirementName?: string;
+    completedAtUtc?: Date;
+    uploadedDocumentId?: string | undefined;
+
+    constructor(data?: ICompleteVolunteerFamilyRequirement) {
+        super(data);
+        this._discriminator = "CompleteVolunteerFamilyRequirement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.requirementName = _data["requirementName"];
+            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
+        }
+    }
+
+    static fromJS(data: any): CompleteVolunteerFamilyRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new CompleteVolunteerFamilyRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["requirementName"] = this.requirementName;
+        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface ICompleteVolunteerFamilyRequirement extends IVolunteerFamilyCommand {
+    requirementName?: string;
+    completedAtUtc?: Date;
+    uploadedDocumentId?: string | undefined;
+}
+
+export class RemoveVolunteerFamilyRole extends VolunteerFamilyCommand implements IRemoveVolunteerFamilyRole {
+    roleName?: string;
+    reason?: RoleRemovalReason;
+    additionalComments?: string | undefined;
+
+    constructor(data?: IRemoveVolunteerFamilyRole) {
+        super(data);
+        this._discriminator = "RemoveVolunteerFamilyRole";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.roleName = _data["roleName"];
+            this.reason = _data["reason"];
+            this.additionalComments = _data["additionalComments"];
+        }
+    }
+
+    static fromJS(data: any): RemoveVolunteerFamilyRole {
+        data = typeof data === 'object' ? data : {};
+        let result = new RemoveVolunteerFamilyRole();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["roleName"] = this.roleName;
+        data["reason"] = this.reason;
+        data["additionalComments"] = this.additionalComments;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IRemoveVolunteerFamilyRole extends IVolunteerFamilyCommand {
+    roleName?: string;
+    reason?: RoleRemovalReason;
+    additionalComments?: string | undefined;
+}
+
+export class ResetVolunteerFamilyRole extends VolunteerFamilyCommand implements IResetVolunteerFamilyRole {
+    roleName?: string;
+
+    constructor(data?: IResetVolunteerFamilyRole) {
+        super(data);
+        this._discriminator = "ResetVolunteerFamilyRole";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.roleName = _data["roleName"];
+        }
+    }
+
+    static fromJS(data: any): ResetVolunteerFamilyRole {
+        data = typeof data === 'object' ? data : {};
+        let result = new ResetVolunteerFamilyRole();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["roleName"] = this.roleName;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IResetVolunteerFamilyRole extends IVolunteerFamilyCommand {
+    roleName?: string;
+}
+
+export class UploadVolunteerFamilyDocument extends VolunteerFamilyCommand implements IUploadVolunteerFamilyDocument {
+    uploadedDocumentId?: string;
+    uploadedFileName?: string;
+
+    constructor(data?: IUploadVolunteerFamilyDocument) {
+        super(data);
+        this._discriminator = "UploadVolunteerFamilyDocument";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
+            this.uploadedFileName = _data["uploadedFileName"];
+        }
+    }
+
+    static fromJS(data: any): UploadVolunteerFamilyDocument {
+        data = typeof data === 'object' ? data : {};
+        let result = new UploadVolunteerFamilyDocument();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
+        data["uploadedFileName"] = this.uploadedFileName;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUploadVolunteerFamilyDocument extends IVolunteerFamilyCommand {
+    uploadedDocumentId?: string;
+    uploadedFileName?: string;
+}
+
+export abstract class VolunteerCommand implements IVolunteerCommand {
+    familyId?: string;
+    personId?: string;
+
+    protected _discriminator: string;
+
+    constructor(data?: IVolunteerCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        this._discriminator = "VolunteerCommand";
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.familyId = _data["familyId"];
+            this.personId = _data["personId"];
+        }
+    }
+
+    static fromJS(data: any): VolunteerCommand {
+        data = typeof data === 'object' ? data : {};
+        if (data["discriminator"] === "CompleteVolunteerRequirement") {
+            let result = new CompleteVolunteerRequirement();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "RemoveVolunteerRole") {
+            let result = new RemoveVolunteerRole();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "ResetVolunteerRole") {
+            let result = new ResetVolunteerRole();
+            result.init(data);
+            return result;
+        }
+        throw new Error("The abstract class 'VolunteerCommand' cannot be instantiated.");
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["discriminator"] = this._discriminator; 
+        data["familyId"] = this.familyId;
+        data["personId"] = this.personId;
+        return data; 
+    }
+}
+
+export interface IVolunteerCommand {
+    familyId?: string;
+    personId?: string;
+}
+
+export class CompleteVolunteerRequirement extends VolunteerCommand implements ICompleteVolunteerRequirement {
+    requirementName?: string;
+    completedAtUtc?: Date;
+    uploadedDocumentId?: string | undefined;
+
+    constructor(data?: ICompleteVolunteerRequirement) {
+        super(data);
+        this._discriminator = "CompleteVolunteerRequirement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.requirementName = _data["requirementName"];
+            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
+        }
+    }
+
+    static fromJS(data: any): CompleteVolunteerRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new CompleteVolunteerRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["requirementName"] = this.requirementName;
+        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface ICompleteVolunteerRequirement extends IVolunteerCommand {
+    requirementName?: string;
+    completedAtUtc?: Date;
+    uploadedDocumentId?: string | undefined;
+}
+
+export class RemoveVolunteerRole extends VolunteerCommand implements IRemoveVolunteerRole {
+    roleName?: string;
+    reason?: RoleRemovalReason;
+    additionalComments?: string | undefined;
+
+    constructor(data?: IRemoveVolunteerRole) {
+        super(data);
+        this._discriminator = "RemoveVolunteerRole";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.roleName = _data["roleName"];
+            this.reason = _data["reason"];
+            this.additionalComments = _data["additionalComments"];
+        }
+    }
+
+    static fromJS(data: any): RemoveVolunteerRole {
+        data = typeof data === 'object' ? data : {};
+        let result = new RemoveVolunteerRole();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["roleName"] = this.roleName;
+        data["reason"] = this.reason;
+        data["additionalComments"] = this.additionalComments;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IRemoveVolunteerRole extends IVolunteerCommand {
+    roleName?: string;
+    reason?: RoleRemovalReason;
+    additionalComments?: string | undefined;
+}
+
+export class ResetVolunteerRole extends VolunteerCommand implements IResetVolunteerRole {
+    roleName?: string;
+
+    constructor(data?: IResetVolunteerRole) {
+        super(data);
+        this._discriminator = "ResetVolunteerRole";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.roleName = _data["roleName"];
+        }
+    }
+
+    static fromJS(data: any): ResetVolunteerRole {
+        data = typeof data === 'object' ? data : {};
+        let result = new ResetVolunteerRole();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["roleName"] = this.roleName;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IResetVolunteerRole extends IVolunteerCommand {
+    roleName?: string;
 }
 
 export class ApiException extends Error {

@@ -1,12 +1,15 @@
-import { atom, useRecoilCallback } from "recoil";
-import { ActionRequirement, AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, ApprovalCommand, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, UploadVolunteerFamilyDocument, VolunteerCommand, VolunteersClient, VolunteerFamily, VolunteerFamilyCommand, RoleRemovalReason, RemoveVolunteerRole, ResetVolunteerRole, RemoveVolunteerFamilyRole, ResetVolunteerFamilyRole } from "../GeneratedClient";
+import { selector, useRecoilCallback } from "recoil";
+import { ActionRequirement, AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, DirectoryCommand, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, UploadVolunteerFamilyDocument, VolunteerCommand, VolunteersClient, VolunteerFamilyCommand, DirectoryClient, RoleRemovalReason, RemoveVolunteerRole, ResetVolunteerRole, RemoveVolunteerFamilyRole, ResetVolunteerFamilyRole } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
+import { visibleFamiliesData } from "./ModelLoader";
 
-export const volunteerFamiliesData = atom<VolunteerFamily[]>({
+export const volunteerFamiliesData = selector({
   key: 'volunteerFamiliesData',
-  default: []
-});
+  get: ({get}) => {
+    const visibleFamilies = get(visibleFamiliesData);
+    return visibleFamilies.filter(f => f.volunteerFamilyInfo);
+  }});
 
 function useVolunteerFamilyCommandCallbackWithLocation<T extends unknown[]>(
   callback: (organizationId: string, locationId: string, volunteerFamilyId: string, ...args: T) => Promise<VolunteerFamilyCommand>) {
@@ -20,7 +23,7 @@ function useVolunteerFamilyCommandCallbackWithLocation<T extends unknown[]>(
       const client = new VolunteersClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
       const updatedFamily = await client.submitVolunteerFamilyCommand(organizationId, locationId, command);
 
-      set(volunteerFamiliesData, current => {
+      set(visibleFamiliesData, current => {
         return current.map(currentEntry => currentEntry.family?.id === volunteerFamilyId
           ? updatedFamily
           : currentEntry);
@@ -48,7 +51,7 @@ function useVolunteerCommandCallbackWithLocation<T extends unknown[]>(
       const client = new VolunteersClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
       const updatedFamily = await client.submitVolunteerCommand(organizationId, locationId, command);
 
-      set(volunteerFamiliesData, current => {
+      set(visibleFamiliesData, current => {
         return current.map(currentEntry => currentEntry.family?.id === volunteerFamilyId
           ? updatedFamily
           : currentEntry);
@@ -73,10 +76,10 @@ function usePersonCommandCallback<T extends unknown[]>(
 
       const command = await callback(volunteerFamilyId, personId, ...args);
 
-      const client = new VolunteersClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+      const client = new DirectoryClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
       const updatedFamily = await client.submitPersonCommand(organizationId, locationId, volunteerFamilyId, command);
 
-      set(volunteerFamiliesData, current =>
+      set(visibleFamiliesData, current =>
         current.some(currentEntry => currentEntry.family?.id === volunteerFamilyId)
         ? current.map(currentEntry => currentEntry.family?.id === volunteerFamilyId
           ? updatedFamily
@@ -89,8 +92,8 @@ function usePersonCommandCallback<T extends unknown[]>(
   })
 }
 
-function useApprovalCommandCallback<T extends unknown[]>(
-  callback: (volunteerFamilyId: string, personId: string, ...args: T) => Promise<ApprovalCommand>) {
+function useDirectoryCommandCallback<T extends unknown[]>(
+  callback: (volunteerFamilyId: string, personId: string, ...args: T) => Promise<DirectoryCommand>) {
   return useRecoilCallback(({snapshot, set}) => {
     const asyncCallback = async (volunteerFamilyId: string, personId: string, ...args: T) => {
       const organizationId = await snapshot.getPromise(currentOrganizationState);
@@ -98,10 +101,10 @@ function useApprovalCommandCallback<T extends unknown[]>(
 
       const command = await callback(volunteerFamilyId, personId, ...args);
 
-      const client = new VolunteersClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedFamily = await client.submitApprovalCommand(organizationId, locationId, command);
+      const client = new DirectoryClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+      const updatedFamily = await client.submitDirectoryCommand(organizationId, locationId, command);
 
-      set(volunteerFamiliesData, current =>
+      set(visibleFamiliesData, current =>
         current.some(currentEntry => currentEntry.family?.id === volunteerFamilyId)
         ? current.map(currentEntry => currentEntry.family?.id === volunteerFamilyId
           ? updatedFamily
@@ -275,7 +278,7 @@ export function useVolunteersModel() {
       command.isCurrentAddress = true;
       return command;
     });
-  const addAdult = useApprovalCommandCallback(
+  const addAdult = useDirectoryCommandCallback(
     async (volunteerFamilyId, firstName: string, lastName: string, gender: Gender, age: Age, ethnicity: string,
         isInHousehold: boolean, relationshipToFamily: string,
         addressLine1: string | null, addressLine2: string | null, city: string | null, state: string | null, postalCode: string | null, country: string | null,
@@ -314,7 +317,7 @@ export function useVolunteersModel() {
       }
       return command;
     });
-  const addChild = useApprovalCommandCallback(
+  const addChild = useDirectoryCommandCallback(
     async (volunteerFamilyId, firstName: string, lastName: string, gender: Gender, age: Age, ethnicity: string,
         custodialRelationships: CustodialRelationship[],
         notes?: string, concerns?: string) => {
@@ -330,7 +333,7 @@ export function useVolunteersModel() {
       command.notes = notes;
       return command;
     });
-  const createVolunteerFamilyWithNewAdult = useApprovalCommandCallback(
+  const createVolunteerFamilyWithNewAdult = useDirectoryCommandCallback(
     async (firstName: string, lastName: string, gender: Gender, age: Age, ethnicity: string,
       isInHousehold: boolean, relationshipToFamily: string,
       addressLine1: string, addressLine2: string | null, city: string, state: string, postalCode: string, country: string,

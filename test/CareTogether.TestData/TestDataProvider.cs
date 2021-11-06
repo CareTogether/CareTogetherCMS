@@ -11,6 +11,26 @@ namespace CareTogether.TestData
 {
     public static class TestDataProvider
     {
+        /* Families
+         * ======================
+         * Doe - guid1
+         *   John Doe - guid1 - UserID guid4
+         *   Jane Doe (Smith) - guid2 - UserID guid3
+         *   Eric Doe - guid3
+         * Coachworthy - guid4
+         *   Emily Coachworthy - guid4
+         * Skywalker - guid2
+         *   Han Solo - guid5
+         *   Leia Skywalker - guid6
+         *   Ben Solo - guid7
+         *   Luke Skywalker - guid0
+         * Riker - guid3
+         *   William Riker - 8
+         *   Deanna Riker - 9
+         */
+
+        #region Constructors & IDs
+
         private static Guid Id(char x) => Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
         static readonly Guid guid0 = Id('0');
         static readonly Guid guid1 = Id('1');
@@ -45,16 +65,17 @@ namespace CareTogether.TestData
             await PopulateUserTenantAccess(userTenantAccessStore);
         }
 
-        
+        #endregion
+
         public static async Task PopulateDirectoryEvents(IMultitenantEventLog<DirectoryEvent> directoryEventLog)
         {
             await directoryEventLog.AppendEventsAsync(guid1, guid2,
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(adminId, adminId, "System", "Administrator", Gender.Male, new ExactAge(new DateTime(2021, 7, 1)), "Ethnic",
-                ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, "Test", "ABC")),
+                    ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, "Test", "ABC")),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid1, null, "John", "Doe", Gender.Male, new ExactAge(new DateTime(1980, 7, 1)), "Ethnic",
-                ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, "DEF")),
+                    ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, "DEF")),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid2, guid3, "Jane", "Smith", Gender.Female, new AgeInYears(42, new DateTime(2021, 1, 1)), "Ethnic",
-                ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
+                    ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonName(guid2, "Jane", "Doe")),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonAge(guid1, new ExactAge(new DateTime(1975, 1, 1)))),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonAge(guid2, new ExactAge(new DateTime(1979, 7, 1)))),
@@ -64,7 +85,7 @@ namespace CareTogether.TestData
                     ImmutableList<Guid>.Empty, ImmutableList<CustodialRelationship>.Empty)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddAdultToFamily(guid1, guid2, new FamilyAdultRelationshipInfo("Mom", true))),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid3, null, "Eric", "Doe", Gender.Male, new AgeInYears(12, new DateTime(2021, 1, 1)), "Ethnic",
-                ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
+                    ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddChildToFamily(guid1, guid3, ImmutableList<CustodialRelationship>.Empty
                     .Add(new CustodialRelationship(guid3, guid1, CustodialRelationshipType.ParentWithCustody))
                     .Add(new CustodialRelationship(guid3, guid2, CustodialRelationshipType.ParentWithCustody)))),
@@ -73,18 +94,18 @@ namespace CareTogether.TestData
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdateCustodialRelationshipType(guid1, guid3, guid2, CustodialRelationshipType.ParentWithCourtAppointedCustody)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddCustodialRelationship(guid1, new CustodialRelationship(guid3, guid1, CustodialRelationshipType.ParentWithCourtAppointedCustody))),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid4, null, "Emily", "Coachworthy", Gender.Female, new ExactAge(new DateTime(1980, 3, 19)), "Caucasian",
-                ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
+                    ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid4, guid4,
                     ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty.Add((guid4, new FamilyAdultRelationshipInfo("Single", true))),
                     ImmutableList<Guid>.Empty, ImmutableList<CustodialRelationship>.Empty)),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid5, null, "Han", "Solo", Gender.Male, new AgeInYears(30, new DateTime(2021, 7, 1)), "Corellian",
-                ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, "Smuggler", null)),
+                    ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, "Smuggler", null)),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid6, null, "Leia", "Skywalker", Gender.Male, new AgeInYears(28, new DateTime(2021, 7, 1)), "Tatooinian",
-                ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, "Freedom fighter", "Uncertain claim to royalty")),
+                    ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, "Freedom fighter", "Uncertain claim to royalty")),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid7, null, "Ben", "Solo", Gender.Male, new AgeInYears(12, new DateTime(2021, 7, 1)), "Chandrilan",
-                ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
+                    ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid0, null, "Luke", "Skywalker", Gender.Male, new AgeInYears(28, new DateTime(2021, 7, 1)), "Tatooinian",
-                ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
+                    ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid2, guid6,
                     ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty
                         .Add((guid5, new FamilyAdultRelationshipInfo("Dad", true)))
@@ -94,9 +115,9 @@ namespace CareTogether.TestData
                         .Add(new CustodialRelationship(guid7, guid5, CustodialRelationshipType.ParentWithCustody))
                         .Add(new CustodialRelationship(guid7, guid6, CustodialRelationshipType.ParentWithCustody)))),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid8, null, "William", "Riker", Gender.Male, new ExactAge(new DateTime(1972, 1, 1)), "Alaskan",
-                ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
+                    ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid9, null, "Deanna", "Riker", Gender.Female, new ExactAge(new DateTime(1970, 1, 1)), "Betazoid",
-                ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
+                    ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid3, guid8,
                     ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty
                         .Add((guid8, new FamilyAdultRelationshipInfo("Dad", true)))
@@ -166,41 +187,43 @@ namespace CareTogether.TestData
         public static async Task PopulateReferralEvents(IMultitenantEventLog<ReferralEvent> referralsEventLog)
         {
             await referralsEventLog.AppendEventsAsync(guid1, guid2,
-                new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 5, 4, 10, 0), new CreateReferral(guid1, guid1, "v1", new DateTime(2020, 3, 5, 4, 10, 0))),
-                new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 5, 4, 15, 15), new UploadReferralForm(guid1, new DateTime(2020, 3, 5, 4, 12, 15), "Request for Help Form", "Jane Doe referral info.pdf", guid1)),
-                new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 6, 8, 45, 30), new PerformReferralActivity(guid1, "Intake Coordinator Screening Call", new DateTime(2020, 3, 6, 8, 45, 30), adminId)),
-                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 12, 13), new CreateArrangement(guid1, guid1, "v1", "Hosting")),
-                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 13, 14), new AssignIndividualVolunteer(guid1, guid1, guid4, "Family Coach")),
-                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 13, 55), new AssignVolunteerFamily(guid1, guid1, guid2, "Host Family")),
-                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 12, 22, 21), new AssignVolunteerFamily(guid1, guid1, guid3, "Host Family Friend")),
-                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 14, 32), new AssignPartneringFamilyChildren(guid1, guid1,
+                new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 5, 4, 10, 0), new CreateReferral(guid1, guid1, new DateTime(2020, 3, 5, 4, 10, 0))),
+                new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 5, 4, 15, 15), new UploadReferralDocument(guid1, guid1, guid1, "Jane Doe referral info.pdf")),
+                new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 5, 4, 15, 15), new CompleteReferralRequirement(guid1, guid1, "Request for Help Form", new DateTime(2020, 3, 5, 4, 12, 15), guid1)),
+                new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 6, 8, 45, 30), new CompleteReferralRequirement(guid1, guid1, "Intake Coordinator Screening Call", new DateTime(2020, 3, 6, 8, 45, 30), adminId)),
+                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 12, 13), new CreateArrangement(guid1, guid1, guid1, "Hosting")),
+                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 13, 14), new AssignIndividualVolunteer(guid1, guid1, guid1, guid4, guid4, "Family Coach")),
+                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 13, 55), new AssignVolunteerFamily(guid1, guid1, guid1, guid2, "Host Family")),
+                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 12, 22, 21), new AssignVolunteerFamily(guid1, guid1, guid1, guid3, "Host Family Friend")),
+                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 14, 32), new AssignPartneringFamilyChildren(guid1, guid1, guid1,
                     ImmutableList<Guid>.Empty.Add(guid3))),
-                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 12, 16, 55, 0), new InitiateArrangement(guid1, guid1, new DateTime(2020, 3, 12, 16, 55, 0))),
-                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 15, 8, 33, 34), new TrackChildrenLocationChange(guid1, guid1,
-                    new DateTime(2020, 3, 15, 8, 33, 34), ImmutableList<Guid>.Empty.Add(guid3), guid3, ChildrenLocationPlan.DaytimeChildCare, "Babysitting")),
-                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 15, 20, 40, 45), new TrackChildrenLocationChange(guid1, guid1,
-                        new DateTime(2020, 3, 15, 20, 40, 45), ImmutableList<Guid>.Empty.Add(guid3), guid2, ChildrenLocationPlan.DaytimeChildCare, "Dropped off with host parents after ☕ and 🍰")),
-                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 14, 10, 10, 10), new PerformArrangementActivity(guid1, guid1,
+                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 12, 16, 55, 0), new StartArrangement(guid1, guid1, guid1, new DateTime(2020, 3, 12, 16, 55, 0))),
+                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 15, 8, 33, 34), new TrackChildLocationChange(guid1, guid1, guid1,
+                    new DateTime(2020, 3, 15, 8, 33, 34), guid3, guid3, ChildLocationPlan.DaytimeChildCare, "Babysitting")),
+                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 15, 20, 40, 45), new TrackChildLocationChange(guid1, guid1, guid1,
+                        new DateTime(2020, 3, 15, 20, 40, 45), guid3, guid2, ChildLocationPlan.DaytimeChildCare, "Dropped off with host parents after ☕ and 🍰")),
+                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 14, 10, 10, 10), new CompleteArrangementRequirement(guid1, guid1, guid1,
                     "Family Coach Safety Visit", new DateTime(2020, 3, 14, 10, 10, 10), guid4)),
-                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 21, 11, 11, 11), new PerformArrangementActivity(guid1, guid1,
+                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 21, 11, 11, 11), new CompleteArrangementRequirement(guid1, guid1, guid1,
                     "Family Coach Supervision", new DateTime(2020, 3, 21, 11, 11, 11), adminId)),
-                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 22, 16, 30, 35), new TrackChildrenLocationChange(guid1, guid1,
-                    new DateTime(2020, 3, 22, 16, 30, 35), ImmutableList<Guid>.Empty.Add(guid3), guid1, ChildrenLocationPlan.OvernightHousing, "Weekend with parents, met at McDonald's near mom")),
-                new ArrangementNoteCommandExecuted(guid4, new DateTime(2020, 3, 22, 18, 0, 0), new CreateDraftArrangementNote(guid1, guid1, guid1, null)),
-                new ArrangementNoteCommandExecuted(guid4, new DateTime(2020, 3, 22, 19, 30, 0), new EditDraftArrangementNote(guid1, guid1, guid1, null)),
-                new ArrangementNoteCommandExecuted(adminId, new DateTime(2020, 3, 22, 19, 45, 0), new ApproveArrangementNote(guid1, guid1, guid1, "Eric and Ben liked the Play Place and didn't want to go home.")),
-                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 24, 8, 30, 35), new TrackChildrenLocationChange(guid1, guid1,
-                    new DateTime(2020, 3, 24, 8, 30, 35), ImmutableList<Guid>.Empty.Add(guid3), guid2, ChildrenLocationPlan.OvernightHousing, "Mom dropped off on way to work")),
-                new ArrangementNoteCommandExecuted(guid4, new DateTime(2020, 3, 24, 8, 45, 0), new CreateDraftArrangementNote(guid1, guid1, guid2, null)),
-                new ArrangementNoteCommandExecuted(guid4, new DateTime(2020, 3, 24, 8, 50, 0), new DiscardDraftArrangementNote(guid1, guid1, guid2)),
-                new ArrangementNoteCommandExecuted(guid4, new DateTime(2020, 3, 24, 8, 55, 0), new CreateDraftArrangementNote(guid1, guid1, guid3, null)),
-                new ArrangementNoteCommandExecuted(guid4, new DateTime(2020, 3, 24, 8, 57, 0), new EditDraftArrangementNote(guid1, guid1, guid3, null)),
-                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 30, 18, 18, 18), new TrackChildrenLocationChange(guid1, guid1,
-                    new DateTime(2020, 3, 30, 18, 18, 18), ImmutableList<Guid>.Empty.Add(guid3), guid1, ChildrenLocationPlan.ReturnToFamily, "Mom met us and picked him up at DQ")),
-                new ReferralCommandExecuted(adminId, new DateTime(2020, 10, 4, 12, 32, 55), new CloseReferral(guid1, ReferralCloseReason.NeedMet)),
-                new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 30, 45), new CreateReferral(guid2, guid1, "v1", new DateTime(2021, 7, 10, 19, 30, 45))),
-                new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 32, 0), new UploadReferralForm(guid2, new DateTime(2021, 7, 10, 18, 0, 0), "Request for Help Form", "Jane Doe second referral info.pdf", guid2)),
-                new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 32, 0), new PerformReferralActivity(guid2, "Intake Coordinator Screening Call",
+                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 22, 16, 30, 35), new TrackChildLocationChange(guid1, guid1, guid1,
+                    new DateTime(2020, 3, 22, 16, 30, 35), guid3, guid1, ChildLocationPlan.OvernightHousing, "Weekend with parents, met at McDonald's near mom")),
+                new ArrangementNoteCommandExecuted(guid4, new DateTime(2020, 3, 22, 18, 0, 0), new CreateDraftArrangementNote(guid1, guid1, guid1, guid1, null)),
+                new ArrangementNoteCommandExecuted(guid4, new DateTime(2020, 3, 22, 19, 30, 0), new EditDraftArrangementNote(guid1, guid1, guid1, guid1, null)),
+                new ArrangementNoteCommandExecuted(adminId, new DateTime(2020, 3, 22, 19, 45, 0), new ApproveArrangementNote(guid1, guid1, guid1, guid1, "Eric and Ben liked the Play Place and didn't want to go home.")),
+                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 24, 8, 30, 35), new TrackChildLocationChange(guid1, guid1, guid1,
+                    new DateTime(2020, 3, 24, 8, 30, 35), guid3, guid2, ChildLocationPlan.OvernightHousing, "Mom dropped off on way to work")),
+                new ArrangementNoteCommandExecuted(guid4, new DateTime(2020, 3, 24, 8, 45, 0), new CreateDraftArrangementNote(guid1, guid1, guid1, guid2, null)),
+                new ArrangementNoteCommandExecuted(guid4, new DateTime(2020, 3, 24, 8, 50, 0), new DiscardDraftArrangementNote(guid1, guid1, guid1, guid2)),
+                new ArrangementNoteCommandExecuted(guid4, new DateTime(2020, 3, 24, 8, 55, 0), new CreateDraftArrangementNote(guid1, guid1, guid1, guid3, null)),
+                new ArrangementNoteCommandExecuted(guid4, new DateTime(2020, 3, 24, 8, 57, 0), new EditDraftArrangementNote(guid1, guid1, guid1, guid3, null)),
+                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 30, 18, 18, 18), new TrackChildLocationChange(guid1, guid1, guid1,
+                    new DateTime(2020, 3, 30, 18, 18, 18), guid3, guid1, ChildLocationPlan.ReturnToFamily, "Mom met us and picked him up at DQ")),
+                new ReferralCommandExecuted(adminId, new DateTime(2020, 10, 4, 12, 32, 55), new CloseReferral(guid1, guid1, ReferralCloseReason.NeedMet)),
+                new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 30, 45), new CreateReferral(guid2, guid2, new DateTime(2021, 7, 10, 19, 30, 45))),
+                new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 32, 0), new UploadReferralDocument(guid2, guid2, guid2, "Jane Doe second referral info.pdf")),
+                new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 32, 0), new CompleteReferralRequirement(guid2, guid2, "Request for Help Form", new DateTime(2021, 7, 10, 18, 0, 0), guid2)),
+                new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 32, 0), new CompleteReferralRequirement(guid2, guid2, "Intake Coordinator Screening Call",
                     new DateTime(2021, 7, 10, 19, 32, 0), adminId)));
         }
 

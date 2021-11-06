@@ -88,11 +88,20 @@ namespace CareTogether.Api
             services.AddSingleton<IAccountsResource>(accountsResource);
 
             // Engine services
+            var authorizationEngine = new AuthorizationEngine(policiesResource);
             var policyEvaluationEngine = new PolicyEvaluationEngine(policiesResource);
 
+            // Shared family info formatting logic used by all manager services
+            var combinedFamilyInfoFormatter = new CombinedFamilyInfoFormatter(policyEvaluationEngine, authorizationEngine,
+                approvalsResource, referralsResource, directoryResource);
+
             // Manager services
-            services.AddSingleton<IReferralManager>(new ReferralManager(policyEvaluationEngine, directoryResource, referralsResource));
-            services.AddSingleton<IApprovalManager>(new ApprovalManager(approvalsResource, policyEvaluationEngine, directoryResource));
+            services.AddSingleton<IDirectoryManager>(new DirectoryManager(authorizationEngine, directoryResource,
+                approvalsResource, combinedFamilyInfoFormatter));
+            services.AddSingleton<IReferralManager>(new ReferralManager(authorizationEngine, referralsResource,
+                combinedFamilyInfoFormatter));
+            services.AddSingleton<IApprovalManager>(new ApprovalManager(authorizationEngine, approvalsResource,
+                combinedFamilyInfoFormatter));
 
             // Utility providers
             services.AddSingleton<IFileStore>(new BlobFileStore(blobServiceClient, "Uploads"));

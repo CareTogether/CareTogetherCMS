@@ -22,11 +22,10 @@ export default function ErrorBackdrop() {
       open={Boolean(errorInfo)}
       onClick={() => setErrorInfo(null)}>
       <div style={{backgroundColor: '#fff', padding: 20, borderStyle: 'solid', borderRadius: 20, borderColor: '#500', borderWidth: 3, maxWidth: 500 }}>
-        <h2>Ooops! Something went wrong.</h2>
-        <p>Please tell us about it! There might be some useful info below.</p>
-        <p>When sending an error report, please include as precise as possible a description of what you were doing,
-          along with a screenshot - and make sure to include your browser's address bar in the screenshot.</p>
-        <pre>{JSON.stringify(errorInfo)}</pre>
+        <h2>🤓 Ooops! Time to email tech support. 📧</h2>
+        <p>Looks like something went wrong! When you reach out for help, please include a screenshot and a description (as precise as possible) of the steps you took to get here.</p>
+        <pre>Error: {JSON.stringify(errorInfo)}</pre>
+        <pre>URL: {window.location.toString()}</pre>
       </div>
     </Backdrop>
   );

@@ -6,13 +6,10 @@ using System.Threading.Tasks;
 namespace CareTogether.Resources
 {
     public record VolunteerFamilyEntry(Guid FamilyId,
-        VolunteerFamilyStatus Status, string Note,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<UploadedDocumentInfo> UploadedDocuments,
         ImmutableList<RemovedRole> RemovedRoles,
         ImmutableDictionary<Guid, VolunteerEntry> IndividualEntries);
-
-    public enum VolunteerFamilyStatus { Active, Inactive } //TODO: Remove this
 
     public record RemovedRole(string RoleName, RoleRemovalReason Reason, string? AdditionalComments);
 
@@ -23,27 +20,15 @@ namespace CareTogether.Resources
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<RemovedRole> RemovedRoles);
 
-    public sealed record CompletedRequirementInfo(Guid UserId, DateTime TimestampUtc,
-        string RequirementName, DateTime CompletedAtUtc, Guid? UploadedDocumentId);
-
-    public sealed record UploadedDocumentInfo(Guid UserId, DateTime TimestampUtc,
-        Guid UploadedDocumentId, string UploadedFileName);
-
     [JsonHierarchyBase]
     public abstract partial record VolunteerFamilyCommand(Guid FamilyId);
+    public sealed record ActivateVolunteerFamily(Guid FamilyId)
+        : VolunteerFamilyCommand(FamilyId);
     public sealed record CompleteVolunteerFamilyRequirement(Guid FamilyId,
         string RequirementName, DateTime CompletedAtUtc, Guid? UploadedDocumentId)
         : VolunteerFamilyCommand(FamilyId);
     public sealed record UploadVolunteerFamilyDocument(Guid FamilyId,
         Guid UploadedDocumentId, string UploadedFileName)
-        : VolunteerFamilyCommand(FamilyId);
-    public sealed record DeactivateVolunteerFamily(Guid FamilyId, //TODO: Remove this
-        string Reason)
-        : VolunteerFamilyCommand(FamilyId);
-    public sealed record ActivateVolunteerFamily(Guid FamilyId) //TODO: Remove this
-        : VolunteerFamilyCommand(FamilyId);
-    public sealed record SetVolunteerFamilyNote(Guid FamilyId, //TODO: Remove this
-        string Note)
         : VolunteerFamilyCommand(FamilyId);
     public sealed record RemoveVolunteerFamilyRole(Guid FamilyId,
         string RoleName, RoleRemovalReason Reason, string? AdditionalComments)
@@ -57,18 +42,12 @@ namespace CareTogether.Resources
     public sealed record CompleteVolunteerRequirement(Guid FamilyId, Guid PersonId,
         string RequirementName,  DateTime CompletedAtUtc, Guid? UploadedDocumentId)
         : VolunteerCommand(FamilyId, PersonId);
-    public sealed record DeactivateVolunteer(Guid FamilyId, Guid PersonId, //TODO: Remove this
-        string Reason) : VolunteerCommand(FamilyId, PersonId);
-    public sealed record ReactivateVolunteer(Guid FamilyId, Guid PersonId) //TODO: Remove this
-        : VolunteerCommand(FamilyId, PersonId);
     public sealed record RemoveVolunteerRole(Guid FamilyId, Guid PersonId,
         string RoleName, RoleRemovalReason Reason, string? AdditionalComments)
         : VolunteerCommand(FamilyId, PersonId);
     public sealed record ResetVolunteerRole(Guid FamilyId, Guid PersonId,
         string RoleName)
         : VolunteerCommand(FamilyId, PersonId);
-    public sealed record SetVolunteerNote(Guid FamilyId, Guid PersonId,
-        string Note) : VolunteerCommand(FamilyId, PersonId);
 
     /// <summary>
     /// The <see cref="IApprovalsResource"/> models the lifecycle of people's approval status with CareTogether organizations,
@@ -78,7 +57,7 @@ namespace CareTogether.Resources
     {
         Task<ImmutableList<VolunteerFamilyEntry>> ListVolunteerFamiliesAsync(Guid organizationId, Guid locationId);
 
-        Task<VolunteerFamilyEntry> GetVolunteerFamilyAsync(Guid organizationId, Guid locationId, Guid familyId);
+        Task<VolunteerFamilyEntry?> TryGetVolunteerFamilyAsync(Guid organizationId, Guid locationId, Guid familyId);
 
         Task<VolunteerFamilyEntry> ExecuteVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
             VolunteerFamilyCommand command, Guid userId);

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@material-ui/core';
-import { VolunteerFamily, Age, ExactAge, AgeInYears, Gender, EmailAddressType, PhoneNumberType } from '../../GeneratedClient';
+import { Age, ExactAge, AgeInYears, Gender, EmailAddressType, PhoneNumberType, CombinedFamilyInfo } from '../../GeneratedClient';
 import { useVolunteersModel, volunteerFamiliesData } from '../../Model/VolunteersModel';
 import WarningIcon from '@material-ui/icons/Warning';
 import { KeyboardDatePicker } from '@material-ui/pickers';
@@ -32,7 +32,7 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
   const classes = useStyles();
   const { volunteerFamilyId } = useParams<{ volunteerFamilyId: string }>();
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
-  const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as VolunteerFamily;
+  const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as CombinedFamilyInfo;
 
   const [fields, setFields] = useState({
     firstName: '',
@@ -94,7 +94,7 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
           (age as AgeInYears).years = (ageInYears == null ? undefined : ageInYears);
           (age as AgeInYears).asOf = new Date();
         }
-        await volunteerFamiliesModel.addAdult(volunteerFamily.family?.id as string,
+        await volunteerFamiliesModel.addAdult(volunteerFamily.family!.id!,
           firstName, lastName, gender as Gender, age, ethnicity,
           isInHousehold, relationshipToFamily,
           optional(addressLine1), optional(addressLine2), optional(city), optional(state), optional(postalCode), optional(country),

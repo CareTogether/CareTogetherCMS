@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.FeatureManagement.Mvc;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace CareTogether.Api.Controllers
@@ -23,16 +22,8 @@ namespace CareTogether.Api.Controllers
         }
 
 
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Referral>>> ListAllReferralsAsync(Guid organizationId, Guid locationId)
-        {
-            var referrals = await referralManager.ListReferralsAsync(organizationId, locationId);
-
-            return Ok(referrals);
-        }
-
         [HttpPost("referralCommand")]
-        public async Task<ActionResult<Referral>> SubmitReferralCommandAsync(Guid organizationId, Guid locationId,
+        public async Task<ActionResult<CombinedFamilyInfo>> SubmitReferralCommandAsync(Guid organizationId, Guid locationId,
             [FromBody] ReferralCommand command)
         {
             var result = await referralManager.ExecuteReferralCommandAsync(organizationId, locationId, User, command);
@@ -40,7 +31,7 @@ namespace CareTogether.Api.Controllers
         }
 
         [HttpPost("arrangementCommand")]
-        public async Task<ActionResult<Referral>> SubmitArrangementCommandAsync(Guid organizationId, Guid locationId,
+        public async Task<ActionResult<CombinedFamilyInfo>> SubmitArrangementCommandAsync(Guid organizationId, Guid locationId,
             [FromBody] ArrangementCommand command)
         {
             var result = await referralManager.ExecuteArrangementCommandAsync(organizationId, locationId, User, command);
@@ -48,7 +39,7 @@ namespace CareTogether.Api.Controllers
         }
 
         [HttpPost("arrangementNoteCommand")]
-        public async Task<ActionResult<Referral>> SubmitArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
+        public async Task<ActionResult<CombinedFamilyInfo>> SubmitArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
             [FromBody] ArrangementNoteCommand command)
         {
             var result = await referralManager.ExecuteArrangementNoteCommandAsync(organizationId, locationId, User, command);

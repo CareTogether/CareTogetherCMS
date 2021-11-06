@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import AddIcon from '@material-ui/icons/Add';
 import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';
-import { VolunteerFamily } from '../../GeneratedClient';
+import { CombinedFamilyInfo } from '../../GeneratedClient';
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -38,7 +38,7 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-function familyLastName(family: VolunteerFamily) {
+function familyLastName(family: CombinedFamilyInfo) {
   return family.family!.adults?.filter(adult => family.family!.primaryFamilyContactPersonId === adult.item1?.id)[0]?.item1?.lastName || "";
 }
 
@@ -77,9 +77,9 @@ function VolunteerProgress() {
                     }</TableCell>
                     {allApprovalAndOnboardingRequirements.map(actionName =>
                       (<TableCell key={actionName}>{
-                        volunteerFamily.completedRequirements?.some(x => x.requirementName === actionName)
+                        volunteerFamily.volunteerFamilyInfo?.completedRequirements?.some(x => x.requirementName === actionName)
                         ? "✅"
-                        : volunteerFamily.missingRequirements?.some(x => x === actionName)
+                        : volunteerFamily.volunteerFamilyInfo?.missingRequirements?.some(x => x === actionName)
                         ? "❌"
                         : ""}</TableCell>))}
                   </TableRow>
@@ -91,9 +91,9 @@ function VolunteerProgress() {
                       <TableCell>{adult.item1.lastName}</TableCell>
                       {allApprovalAndOnboardingRequirements.map(actionName =>
                         (<TableCell key={actionName}>{
-                          volunteerFamily.individualVolunteers![adult.item1!.id!]!.completedRequirements?.some(x => x.requirementName === actionName)
+                          volunteerFamily.volunteerFamilyInfo?.individualVolunteers![adult.item1!.id!]!.completedRequirements?.some(x => x.requirementName === actionName)
                           ? "✅"
-                          : volunteerFamily.individualVolunteers![adult.item1!.id!]!.missingRequirements?.some(x => x === actionName)
+                          : volunteerFamily.volunteerFamilyInfo?.individualVolunteers![adult.item1!.id!]!.missingRequirements?.some(x => x === actionName)
                           ? "❌"
                           : ""}</TableCell>))}
                     </TableRow>
