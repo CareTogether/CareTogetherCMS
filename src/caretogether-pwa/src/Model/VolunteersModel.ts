@@ -1,12 +1,15 @@
-import { atom, useRecoilCallback } from "recoil";
-import { ActionRequirement, AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, DirectoryCommand, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, UploadVolunteerFamilyDocument, VolunteerCommand, VolunteersClient, VolunteerFamilyInfo, VolunteerFamilyCommand, DirectoryClient, RoleRemovalReason, RemoveVolunteerRole, ResetVolunteerRole, RemoveVolunteerFamilyRole, ResetVolunteerFamilyRole, CombinedFamilyInfo } from "../GeneratedClient";
+import { selector, useRecoilCallback } from "recoil";
+import { ActionRequirement, AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, DirectoryCommand, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, UploadVolunteerFamilyDocument, VolunteerCommand, VolunteersClient, VolunteerFamilyCommand, DirectoryClient, RoleRemovalReason, RemoveVolunteerRole, ResetVolunteerRole, RemoveVolunteerFamilyRole, ResetVolunteerFamilyRole } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
+import { visibleFamiliesData } from "./ModelLoader";
 
-export const volunteerFamiliesData = atom<CombinedFamilyInfo[]>({ //TODO: Store all ('visibleFamiliesData')
+export const volunteerFamiliesData = selector({
   key: 'volunteerFamiliesData',
-  default: []
-});
+  get: ({get}) => {
+    const visibleFamilies = get(visibleFamiliesData);
+    return visibleFamilies.filter(f => f.volunteerFamilyInfo);
+  }});
 
 function useVolunteerFamilyCommandCallbackWithLocation<T extends unknown[]>(
   callback: (organizationId: string, locationId: string, volunteerFamilyId: string, ...args: T) => Promise<VolunteerFamilyCommand>) {
@@ -20,7 +23,7 @@ function useVolunteerFamilyCommandCallbackWithLocation<T extends unknown[]>(
       const client = new VolunteersClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
       const updatedFamily = await client.submitVolunteerFamilyCommand(organizationId, locationId, command);
 
-      set(volunteerFamiliesData, current => {
+      set(visibleFamiliesData, current => {
         return current.map(currentEntry => currentEntry.family?.id === volunteerFamilyId
           ? updatedFamily
           : currentEntry);
@@ -48,7 +51,7 @@ function useVolunteerCommandCallbackWithLocation<T extends unknown[]>(
       const client = new VolunteersClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
       const updatedFamily = await client.submitVolunteerCommand(organizationId, locationId, command);
 
-      set(volunteerFamiliesData, current => {
+      set(visibleFamiliesData, current => {
         return current.map(currentEntry => currentEntry.family?.id === volunteerFamilyId
           ? updatedFamily
           : currentEntry);
@@ -76,7 +79,7 @@ function usePersonCommandCallback<T extends unknown[]>(
       const client = new DirectoryClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
       const updatedFamily = await client.submitPersonCommand(organizationId, locationId, volunteerFamilyId, command);
 
-      set(volunteerFamiliesData, current =>
+      set(visibleFamiliesData, current =>
         current.some(currentEntry => currentEntry.family?.id === volunteerFamilyId)
         ? current.map(currentEntry => currentEntry.family?.id === volunteerFamilyId
           ? updatedFamily
@@ -101,7 +104,7 @@ function useApprovalCommandCallback<T extends unknown[]>(
       const client = new DirectoryClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
       const updatedFamily = await client.submitDirectoryCommand(organizationId, locationId, volunteerFamilyId, command);
 
-      set(volunteerFamiliesData, current =>
+      set(visibleFamiliesData, current =>
         current.some(currentEntry => currentEntry.family?.id === volunteerFamilyId)
         ? current.map(currentEntry => currentEntry.family?.id === volunteerFamilyId
           ? updatedFamily

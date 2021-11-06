@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, Grid, InputLabel, Link, MenuItem, Select } from '@material-ui/core';
-import { VolunteerFamily, ActionRequirement, Person, DocumentLinkRequirement } from '../../GeneratedClient';
+import { CombinedFamilyInfo, ActionRequirement, Person, DocumentLinkRequirement } from '../../GeneratedClient';
 import { KeyboardDatePicker } from '@material-ui/pickers';
 import { useVolunteersModel } from '../../Model/VolunteersModel';
 import { uploadFileToTenant } from "../../Model/FilesModel";
@@ -17,7 +17,7 @@ const useStyles = makeStyles((theme) => ({
 interface RecordVolunteerAdultStepDialogProps {
   requirementName: string,
   stepActionRequirement: ActionRequirement,
-  volunteerFamily: VolunteerFamily,
+  volunteerFamily: CombinedFamilyInfo,
   adult: Person,
   onClose: () => void
 }
@@ -91,7 +91,7 @@ export function RecordVolunteerAdultStepDialog({requirementName, stepActionRequi
                         Upload new...
                       </MenuItem>
                       <Divider />
-                      {volunteerFamily.uploadedDocuments?.map(document =>
+                      {volunteerFamily.volunteerFamilyInfo?.uploadedDocuments?.map(document =>
                         <MenuItem key={document.uploadedDocumentId} value={document.uploadedDocumentId}>{document.uploadedFileName}</MenuItem>)}
                   </Select>
                 </FormControl>

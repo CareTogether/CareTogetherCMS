@@ -1,6 +1,6 @@
 import { Card, CardHeader, IconButton, CardContent, Typography, CardActions, makeStyles, ListItemText, Menu, MenuItem } from "@material-ui/core";
 import { useState } from "react";
-import { CustodialRelationshipType, Gender, Person, VolunteerFamily } from "../../GeneratedClient";
+import { CustodialRelationshipType, Gender, Person, CombinedFamilyInfo } from "../../GeneratedClient";
 import { AgeText } from "../AgeText";
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import { useRecoilValue } from "recoil";
@@ -53,7 +53,7 @@ export function VolunteerChildCard({volunteerFamilyId, personId}: VolunteerChild
 
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
 
-  const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as VolunteerFamily;
+  const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as CombinedFamilyInfo;
   const child = volunteerFamily.family?.children?.find(x => x.id === personId);
 
   const [childMoreMenuAnchor, setChildMoreMenuAnchor] = useState<{anchor: Element, child: Person} | null>(null);

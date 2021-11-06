@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import { Grid, Paper } from '@material-ui/core';
 import { useRecoilValue } from 'recoil';
-import { referralsData, useRefreshReferrals } from '../../Model/ReferralsModel';
+import { partneringFamiliesData } from '../../Model/ReferralsModel';
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -18,14 +18,13 @@ const useStyles = makeStyles((theme) => ({
 
 function Referrals() {
   const classes = useStyles();
-  const referrals = useRecoilValue(referralsData);
-  const refreshReferrals = useRefreshReferrals();
+  const partneringFamilies = useRecoilValue(partneringFamiliesData);
 
   return (
     <Grid container spacing={3}>
       <Grid item xs={12}>
         <Paper className={clsx(classes.paper)}>
-          <button onClick={refreshReferrals}>🔃 Refresh Referrals</button>
+          {/* <button onClick={refreshReferrals}>🔃 Refresh Referrals</button> */}
           <br />
           <table>
             <thead>
@@ -35,9 +34,9 @@ function Referrals() {
               </tr>
             </thead>
             <tbody>
-              {referrals.map(referral => (
-                <tr key={referral.family!.id}>
-                  <td>{JSON.stringify(referral)}<br />================</td>
+              {partneringFamilies.map(partneringFamily => (
+                <tr key={partneringFamily.family!.id}>
+                  <td>{JSON.stringify(partneringFamily.partneringFamilyInfo)}<br />================</td>
                 </tr>
               ))}
             </tbody>

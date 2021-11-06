@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Container, Toolbar, Button, Menu, MenuItem, Grid, useMediaQuery, useTheme, MenuList, Divider, IconButton, ListItemText, Chip } from '@material-ui/core';
-import { VolunteerFamily, ActionRequirement, RoleRemovalReason } from '../../GeneratedClient';
+import { CombinedFamilyInfo, ActionRequirement, RoleRemovalReason } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../../Model/ConfigurationModel';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
@@ -80,7 +80,7 @@ export function VolunteerFamilyScreen() {
   const organizationId = useRecoilValue(currentOrganizationState);
   const locationId = useRecoilValue(currentLocationState);
 
-  const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as VolunteerFamily;
+  const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as CombinedFamilyInfo;
   
   const [familyRecordMenuAnchor, setFamilyRecordMenuAnchor] = useState<Element | null>(null);
   const [recordFamilyStepParameter, setRecordFamilyStepParameter] = useState<{requirementName: string, requirementInfo: ActionRequirement} | null>(null);
@@ -147,11 +147,11 @@ export function VolunteerFamilyScreen() {
         open={Boolean(familyRecordMenuAnchor)}
         onClose={() => setFamilyRecordMenuAnchor(null)}>
         <MenuList dense={isMobile}>
-          {volunteerFamily.missingRequirements?.map(requirementName => (
+          {volunteerFamily.volunteerFamilyInfo?.missingRequirements?.map(requirementName => (
             <MenuItem key={requirementName} onClick={() => selectRecordFamilyStep(requirementName)}>{requirementName}</MenuItem>
           ))}
           <Divider />
-          {volunteerFamily.availableApplications?.map(requirementName => (
+          {volunteerFamily.volunteerFamilyInfo?.availableApplications?.map(requirementName => (
             <MenuItem key={requirementName} onClick={() => selectRecordFamilyStep(requirementName)}>{requirementName}</MenuItem>
           ))}
         </MenuList>
@@ -162,13 +162,13 @@ export function VolunteerFamilyScreen() {
         open={Boolean(familyMoreMenuAnchor)}
         onClose={() => setFamilyMoreMenuAnchor(null)}>
         <MenuList dense={isMobile}>
-          {Object.entries(volunteerFamily.familyRoleApprovals || {}).filter(([role, ]) =>
-            !volunteerFamily.removedRoles?.find(x => x.roleName === role)).flatMap(([role, ]) => (
+          {Object.entries(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals || {}).filter(([role, ]) =>
+            !volunteerFamily.volunteerFamilyInfo?.removedRoles?.find(x => x.roleName === role)).flatMap(([role, ]) => (
             <MenuItem key={role} onClick={() => selectRemoveRole(role)}>
               <ListItemText primary={`Remove from ${role} role`} />
             </MenuItem>
           ))}
-          {(volunteerFamily.removedRoles || []).map(removedRole => (
+          {(volunteerFamily.volunteerFamilyInfo?.removedRoles || []).map(removedRole => (
             <MenuItem key={removedRole.roleName}
               onClick={() => selectResetRole(removedRole.roleName!, removedRole.reason!, removedRole.additionalComments!)}>
               <ListItemText primary={`Reset ${removedRole.roleName} participation`} />
@@ -195,16 +195,16 @@ export function VolunteerFamilyScreen() {
       </Grid>
       <Grid item xs={12}>
         <div className={classes.sectionChips}>
-          {Object.entries(volunteerFamily.familyRoleApprovals || {}).flatMap(([role, roleVersionApprovals]) =>
+          {Object.entries(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals || {}).flatMap(([role, roleVersionApprovals]) =>
             <VolunteerRoleApprovalStatusChip key={role} roleName={role} roleVersionApprovals={roleVersionApprovals} />)}
-          {(volunteerFamily.removedRoles || []).map(removedRole =>
+          {(volunteerFamily.volunteerFamilyInfo?.removedRoles || []).map(removedRole =>
             <Chip key={removedRole.roleName} size="small" label={`${removedRole.roleName} - ${RoleRemovalReason[removedRole.reason!]} - ${removedRole.additionalComments}`} />)}
         </div>
       </Grid>
       <Grid item xs={12} sm={6} md={4}>
         <h3>Incomplete</h3>
         <ul className={classes.familyRequirementsList}>
-          {volunteerFamily.missingRequirements?.map((missingRequirementName, i) => (
+          {volunteerFamily.volunteerFamilyInfo?.missingRequirements?.map((missingRequirementName, i) => (
             <li key={i}>
               ❌ {missingRequirementName}
             </li>
@@ -214,7 +214,7 @@ export function VolunteerFamilyScreen() {
       <Grid item xs={12} sm={6} md={4}>
         <h3>Completed</h3>
         <ul className={classes.familyRequirementsList}>
-          {volunteerFamily.completedRequirements?.map((completed, i) => (
+          {volunteerFamily.volunteerFamilyInfo?.completedRequirements?.map((completed, i) => (
             <li key={i}>
               ✅ {completed.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               {completed.completedAtUtc && <span style={{float:'right',marginRight:20}}>{format(completed.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
@@ -225,7 +225,7 @@ export function VolunteerFamilyScreen() {
       <Grid item xs={12} sm={6} md={4}>
         <h3>Documents</h3>
         <ul className={classes.familyDocumentsList}>
-          {volunteerFamily.uploadedDocuments?.map((uploaded, i) => (
+          {volunteerFamily.volunteerFamilyInfo?.uploadedDocuments?.map((uploaded, i) => (
             <li key={i}
               onClick={() => downloadFile(organizationId, locationId, uploaded.uploadedDocumentId!)}>
               📃 {uploaded.uploadedFileName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
