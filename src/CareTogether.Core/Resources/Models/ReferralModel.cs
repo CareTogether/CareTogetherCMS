@@ -93,7 +93,7 @@ namespace CareTogether.Resources.Models
                         _ => throw new NotImplementedException(
                             $"The command type '{command.GetType().FullName}' has not been implemented.")
                     }
-                    : throw new KeyNotFoundException("A family with the specified ID does not exist.")
+                    : throw new KeyNotFoundException("A referral with the specified ID does not exist.")
             };
 
             return (
@@ -219,7 +219,7 @@ namespace CareTogether.Resources.Models
                         _ => throw new NotImplementedException(
                             $"The command type '{command.GetType().FullName}' has not been implemented.")
                     }
-                    : throw new KeyNotFoundException("An arrangement with the specified ID does not exist.")
+                    : throw new KeyNotFoundException("A note with the specified ID does not exist.")
             };
 
             var referralEntryToUpsert = referralEntry with
