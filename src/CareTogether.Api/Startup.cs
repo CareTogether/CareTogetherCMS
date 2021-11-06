@@ -96,9 +96,12 @@ namespace CareTogether.Api
                 approvalsResource, referralsResource, directoryResource);
 
             // Manager services
-            services.AddSingleton<IDirectoryManager>(new DirectoryManager(authorizationEngine, directoryResource, combinedFamilyInfoFormatter));
-            services.AddSingleton<IReferralManager>(new ReferralManager(authorizationEngine, referralsResource, combinedFamilyInfoFormatter));
-            services.AddSingleton<IApprovalManager>(new ApprovalManager(authorizationEngine, approvalsResource, combinedFamilyInfoFormatter));
+            services.AddSingleton<IDirectoryManager>(new DirectoryManager(authorizationEngine, directoryResource,
+                approvalsResource, combinedFamilyInfoFormatter));
+            services.AddSingleton<IReferralManager>(new ReferralManager(authorizationEngine, referralsResource,
+                combinedFamilyInfoFormatter));
+            services.AddSingleton<IApprovalManager>(new ApprovalManager(authorizationEngine, approvalsResource,
+                combinedFamilyInfoFormatter));
 
             // Utility providers
             services.AddSingleton<IFileStore>(new BlobFileStore(blobServiceClient, "Uploads"));

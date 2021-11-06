@@ -13,14 +13,16 @@ namespace CareTogether.Managers
     {
         private readonly IAuthorizationEngine authorizationEngine;
         private readonly IDirectoryResource directoryResource;
+        private readonly IApprovalsResource approvalsResource;
         private readonly CombinedFamilyInfoFormatter combinedFamilyInfoFormatter;
 
 
         public DirectoryManager(IAuthorizationEngine authorizationEngine, IDirectoryResource directoryResource,
-            CombinedFamilyInfoFormatter combinedFamilyInfoFormatter)
+            IApprovalsResource approvalsResource, CombinedFamilyInfoFormatter combinedFamilyInfoFormatter)
         {
             this.authorizationEngine = authorizationEngine;
             this.directoryResource = directoryResource;
+            this.approvalsResource = approvalsResource;
             this.combinedFamilyInfoFormatter = combinedFamilyInfoFormatter;
         }
 
@@ -66,10 +68,10 @@ namespace CareTogether.Managers
                             organizationId, locationId, user, addAdultToFamilySubcommand))
                             throw new Exception("The user is not authorized to perform this command.");
 
-                        var person = await directoryResource.ExecutePersonCommandAsync(organizationId, locationId,
+                        _ = await directoryResource.ExecutePersonCommandAsync(organizationId, locationId,
                             createPersonSubcommand, user.UserId());
 
-                        var family = await directoryResource.ExecuteFamilyCommandAsync(organizationId, locationId,
+                        _ = await directoryResource.ExecuteFamilyCommandAsync(organizationId, locationId,
                             addAdultToFamilySubcommand, user.UserId());
 
                         var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, c.FamilyId, user);
@@ -78,6 +80,7 @@ namespace CareTogether.Managers
                 case AddChildToFamilyCommand c:
                     {
                         var childPersonId = Guid.NewGuid();
+
                         var createPersonSubcommand = new CreatePerson(childPersonId, null, c.FirstName, c.LastName,
                             c.Gender, c.Age, c.Ethnicity,
                             ImmutableList<Address>.Empty, null,
@@ -95,10 +98,10 @@ namespace CareTogether.Managers
                             organizationId, locationId, user, addChildToFamilySubcommand))
                             throw new Exception("The user is not authorized to perform this command.");
 
-                        var person = await directoryResource.ExecutePersonCommandAsync(organizationId, locationId,
+                        _ = await directoryResource.ExecutePersonCommandAsync(organizationId, locationId,
                             createPersonSubcommand, user.UserId());
 
-                        var family = await directoryResource.ExecuteFamilyCommandAsync(organizationId, locationId,
+                        _ = await directoryResource.ExecuteFamilyCommandAsync(organizationId, locationId,
                             addChildToFamilySubcommand, user.UserId());
 
                         var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, c.FamilyId, user);
@@ -135,11 +138,18 @@ namespace CareTogether.Managers
                             organizationId, locationId, user, createFamilySubcommand))
                             throw new Exception("The user is not authorized to perform this command.");
 
-                        var person = await directoryResource.ExecutePersonCommandAsync(organizationId, locationId,
+                        if (!await authorizationEngine.AuthorizeVolunteerFamilyCommandAsync(
+                            organizationId, locationId, user, activateVolunteerFamilySubcommand))
+                            throw new Exception("The user is not authorized to perform this command.");
+
+                        _ = await directoryResource.ExecutePersonCommandAsync(organizationId, locationId,
                             createPersonSubcommand, user.UserId());
 
-                        var family = await directoryResource.ExecuteFamilyCommandAsync(organizationId, locationId,
+                        _ = await directoryResource.ExecuteFamilyCommandAsync(organizationId, locationId,
                             createFamilySubcommand, user.UserId());
+
+                        _ = await approvalsResource.ExecuteVolunteerFamilyCommandAsync(organizationId, locationId,
+                            activateVolunteerFamilySubcommand, user.UserId());
 
                         var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, familyId, user);
                         return familyResult;
