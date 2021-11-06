@@ -5182,11 +5182,6 @@ export abstract class VolunteerFamilyCommand implements IVolunteerFamilyCommand 
             result.init(data);
             return result;
         }
-        if (data["discriminator"] === "DeactivateVolunteerFamily") {
-            let result = new DeactivateVolunteerFamily();
-            result.init(data);
-            return result;
-        }
         if (data["discriminator"] === "RemoveVolunteerFamilyRole") {
             let result = new RemoveVolunteerFamilyRole();
             result.init(data);
@@ -5194,11 +5189,6 @@ export abstract class VolunteerFamilyCommand implements IVolunteerFamilyCommand 
         }
         if (data["discriminator"] === "ResetVolunteerFamilyRole") {
             let result = new ResetVolunteerFamilyRole();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "SetVolunteerFamilyNote") {
-            let result = new SetVolunteerFamilyNote();
             result.init(data);
             return result;
         }
@@ -5292,40 +5282,6 @@ export interface ICompleteVolunteerFamilyRequirement extends IVolunteerFamilyCom
     uploadedDocumentId?: string | undefined;
 }
 
-export class DeactivateVolunteerFamily extends VolunteerFamilyCommand implements IDeactivateVolunteerFamily {
-    reason?: string;
-
-    constructor(data?: IDeactivateVolunteerFamily) {
-        super(data);
-        this._discriminator = "DeactivateVolunteerFamily";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.reason = _data["reason"];
-        }
-    }
-
-    static fromJS(data: any): DeactivateVolunteerFamily {
-        data = typeof data === 'object' ? data : {};
-        let result = new DeactivateVolunteerFamily();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["reason"] = this.reason;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IDeactivateVolunteerFamily extends IVolunteerFamilyCommand {
-    reason?: string;
-}
-
 export class RemoveVolunteerFamilyRole extends VolunteerFamilyCommand implements IRemoveVolunteerFamilyRole {
     roleName?: string;
     reason?: RoleRemovalReason;
@@ -5402,40 +5358,6 @@ export interface IResetVolunteerFamilyRole extends IVolunteerFamilyCommand {
     roleName?: string;
 }
 
-export class SetVolunteerFamilyNote extends VolunteerFamilyCommand implements ISetVolunteerFamilyNote {
-    note?: string;
-
-    constructor(data?: ISetVolunteerFamilyNote) {
-        super(data);
-        this._discriminator = "SetVolunteerFamilyNote";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.note = _data["note"];
-        }
-    }
-
-    static fromJS(data: any): SetVolunteerFamilyNote {
-        data = typeof data === 'object' ? data : {};
-        let result = new SetVolunteerFamilyNote();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["note"] = this.note;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface ISetVolunteerFamilyNote extends IVolunteerFamilyCommand {
-    note?: string;
-}
-
 export class UploadVolunteerFamilyDocument extends VolunteerFamilyCommand implements IUploadVolunteerFamilyDocument {
     uploadedDocumentId?: string;
     uploadedFileName?: string;
@@ -5504,16 +5426,6 @@ export abstract class VolunteerCommand implements IVolunteerCommand {
             result.init(data);
             return result;
         }
-        if (data["discriminator"] === "DeactivateVolunteer") {
-            let result = new DeactivateVolunteer();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "ReactivateVolunteer") {
-            let result = new ReactivateVolunteer();
-            result.init(data);
-            return result;
-        }
         if (data["discriminator"] === "RemoveVolunteerRole") {
             let result = new RemoveVolunteerRole();
             result.init(data);
@@ -5521,11 +5433,6 @@ export abstract class VolunteerCommand implements IVolunteerCommand {
         }
         if (data["discriminator"] === "ResetVolunteerRole") {
             let result = new ResetVolunteerRole();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "SetVolunteerNote") {
-            let result = new SetVolunteerNote();
             result.init(data);
             return result;
         }
@@ -5586,68 +5493,6 @@ export interface ICompleteVolunteerRequirement extends IVolunteerCommand {
     requirementName?: string;
     completedAtUtc?: Date;
     uploadedDocumentId?: string | undefined;
-}
-
-export class DeactivateVolunteer extends VolunteerCommand implements IDeactivateVolunteer {
-    reason?: string;
-
-    constructor(data?: IDeactivateVolunteer) {
-        super(data);
-        this._discriminator = "DeactivateVolunteer";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.reason = _data["reason"];
-        }
-    }
-
-    static fromJS(data: any): DeactivateVolunteer {
-        data = typeof data === 'object' ? data : {};
-        let result = new DeactivateVolunteer();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["reason"] = this.reason;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IDeactivateVolunteer extends IVolunteerCommand {
-    reason?: string;
-}
-
-export class ReactivateVolunteer extends VolunteerCommand implements IReactivateVolunteer {
-
-    constructor(data?: IReactivateVolunteer) {
-        super(data);
-        this._discriminator = "ReactivateVolunteer";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-    }
-
-    static fromJS(data: any): ReactivateVolunteer {
-        data = typeof data === 'object' ? data : {};
-        let result = new ReactivateVolunteer();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IReactivateVolunteer extends IVolunteerCommand {
 }
 
 export class RemoveVolunteerRole extends VolunteerCommand implements IRemoveVolunteerRole {
@@ -5724,40 +5569,6 @@ export class ResetVolunteerRole extends VolunteerCommand implements IResetVolunt
 
 export interface IResetVolunteerRole extends IVolunteerCommand {
     roleName?: string;
-}
-
-export class SetVolunteerNote extends VolunteerCommand implements ISetVolunteerNote {
-    note?: string;
-
-    constructor(data?: ISetVolunteerNote) {
-        super(data);
-        this._discriminator = "SetVolunteerNote";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.note = _data["note"];
-        }
-    }
-
-    static fromJS(data: any): SetVolunteerNote {
-        data = typeof data === 'object' ? data : {};
-        let result = new SetVolunteerNote();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["note"] = this.note;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface ISetVolunteerNote extends IVolunteerCommand {
-    note?: string;
 }
 
 export class ApiException extends Error {

@@ -2891,10 +2891,8 @@
           "mapping": {
             "ActivateVolunteerFamily": "#/components/schemas/ActivateVolunteerFamily",
             "CompleteVolunteerFamilyRequirement": "#/components/schemas/CompleteVolunteerFamilyRequirement",
-            "DeactivateVolunteerFamily": "#/components/schemas/DeactivateVolunteerFamily",
             "RemoveVolunteerFamilyRole": "#/components/schemas/RemoveVolunteerFamilyRole",
             "ResetVolunteerFamilyRole": "#/components/schemas/ResetVolunteerFamilyRole",
-            "SetVolunteerFamilyNote": "#/components/schemas/SetVolunteerFamilyNote",
             "UploadVolunteerFamilyDocument": "#/components/schemas/UploadVolunteerFamilyDocument"
           }
         },
@@ -2949,22 +2947,6 @@
           }
         ]
       },
-      "DeactivateVolunteerFamily": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/VolunteerFamilyCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "reason": {
-                "type": "string"
-              }
-            }
-          }
-        ]
-      },
       "RemoveVolunteerFamilyRole": {
         "allOf": [
           {
@@ -3004,22 +2986,6 @@
           }
         ]
       },
-      "SetVolunteerFamilyNote": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/VolunteerFamilyCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "note": {
-                "type": "string"
-              }
-            }
-          }
-        ]
-      },
       "UploadVolunteerFamilyDocument": {
         "allOf": [
           {
@@ -3046,11 +3012,8 @@
           "propertyName": "discriminator",
           "mapping": {
             "CompleteVolunteerRequirement": "#/components/schemas/CompleteVolunteerRequirement",
-            "DeactivateVolunteer": "#/components/schemas/DeactivateVolunteer",
-            "ReactivateVolunteer": "#/components/schemas/ReactivateVolunteer",
             "RemoveVolunteerRole": "#/components/schemas/RemoveVolunteerRole",
-            "ResetVolunteerRole": "#/components/schemas/ResetVolunteerRole",
-            "SetVolunteerNote": "#/components/schemas/SetVolunteerNote"
+            "ResetVolunteerRole": "#/components/schemas/ResetVolunteerRole"
           }
         },
         "x-abstract": true,
@@ -3097,33 +3060,6 @@
           }
         ]
       },
-      "DeactivateVolunteer": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/VolunteerCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "reason": {
-                "type": "string"
-              }
-            }
-          }
-        ]
-      },
-      "ReactivateVolunteer": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/VolunteerCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false
-          }
-        ]
-      },
       "RemoveVolunteerRole": {
         "allOf": [
           {
@@ -3157,22 +3093,6 @@
             "additionalProperties": false,
             "properties": {
               "roleName": {
-                "type": "string"
-              }
-            }
-          }
-        ]
-      },
-      "SetVolunteerNote": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/VolunteerCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "note": {
                 "type": "string"
               }
             }
