@@ -31,7 +31,7 @@ namespace CareTogether.Api.Controllers
 
         [HttpPost("directoryCommand")]
         public async Task<ActionResult<CombinedFamilyInfo>> SubmitDirectoryCommandAsync(Guid organizationId, Guid locationId,
-            Guid familyId, [FromBody] DirectoryCommand command)
+            [FromBody] DirectoryCommand command)
         {
             var result = await directoryManager.ExecuteDirectoryCommandAsync(organizationId, locationId, User, command);
             return result;

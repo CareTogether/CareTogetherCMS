@@ -92,7 +92,7 @@ function usePersonCommandCallback<T extends unknown[]>(
   })
 }
 
-function useApprovalCommandCallback<T extends unknown[]>(
+function useDirectoryCommandCallback<T extends unknown[]>(
   callback: (volunteerFamilyId: string, personId: string, ...args: T) => Promise<DirectoryCommand>) {
   return useRecoilCallback(({snapshot, set}) => {
     const asyncCallback = async (volunteerFamilyId: string, personId: string, ...args: T) => {
@@ -102,7 +102,7 @@ function useApprovalCommandCallback<T extends unknown[]>(
       const command = await callback(volunteerFamilyId, personId, ...args);
 
       const client = new DirectoryClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedFamily = await client.submitDirectoryCommand(organizationId, locationId, volunteerFamilyId, command);
+      const updatedFamily = await client.submitDirectoryCommand(organizationId, locationId, command);
 
       set(visibleFamiliesData, current =>
         current.some(currentEntry => currentEntry.family?.id === volunteerFamilyId)
@@ -278,7 +278,7 @@ export function useVolunteersModel() {
       command.isCurrentAddress = true;
       return command;
     });
-  const addAdult = useApprovalCommandCallback(
+  const addAdult = useDirectoryCommandCallback(
     async (volunteerFamilyId, firstName: string, lastName: string, gender: Gender, age: Age, ethnicity: string,
         isInHousehold: boolean, relationshipToFamily: string,
         addressLine1: string | null, addressLine2: string | null, city: string | null, state: string | null, postalCode: string | null, country: string | null,
@@ -317,7 +317,7 @@ export function useVolunteersModel() {
       }
       return command;
     });
-  const addChild = useApprovalCommandCallback(
+  const addChild = useDirectoryCommandCallback(
     async (volunteerFamilyId, firstName: string, lastName: string, gender: Gender, age: Age, ethnicity: string,
         custodialRelationships: CustodialRelationship[],
         notes?: string, concerns?: string) => {
@@ -333,7 +333,7 @@ export function useVolunteersModel() {
       command.notes = notes;
       return command;
     });
-  const createVolunteerFamilyWithNewAdult = useApprovalCommandCallback(
+  const createVolunteerFamilyWithNewAdult = useDirectoryCommandCallback(
     async (firstName: string, lastName: string, gender: Gender, age: Age, ethnicity: string,
       isInHousehold: boolean, relationshipToFamily: string,
       addressLine1: string, addressLine2: string | null, city: string, state: string, postalCode: string, country: string,

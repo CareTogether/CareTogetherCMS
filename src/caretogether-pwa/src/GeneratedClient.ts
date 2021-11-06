@@ -192,18 +192,14 @@ export class DirectoryClient {
         return Promise.resolve<CombinedFamilyInfo[]>(<any>null);
     }
 
-    submitDirectoryCommand(organizationId: string, locationId: string, familyId: string | undefined, command: DirectoryCommand): Promise<CombinedFamilyInfo> {
-        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Directory/directoryCommand?";
+    submitDirectoryCommand(organizationId: string, locationId: string, command: DirectoryCommand): Promise<CombinedFamilyInfo> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Directory/directoryCommand";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
         url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
         if (locationId === undefined || locationId === null)
             throw new Error("The parameter 'locationId' must be defined.");
         url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
-        if (familyId === null)
-            throw new Error("The parameter 'familyId' cannot be null.");
-        else if (familyId !== undefined)
-            url_ += "familyId=" + encodeURIComponent("" + familyId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         const content_ = JSON.stringify(command);
