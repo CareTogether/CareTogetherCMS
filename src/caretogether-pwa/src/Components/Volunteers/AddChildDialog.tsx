@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@material-ui/core';
 import { CombinedFamilyInfo, Age, ExactAge, AgeInYears, Gender, CustodialRelationshipType, CustodialRelationship } from '../../GeneratedClient';
-import { useVolunteersModel, volunteerFamiliesData } from '../../Model/VolunteersModel';
+import { volunteerFamiliesData } from '../../Model/VolunteersModel';
+import { useDirectoryModel } from '../../Model/DirectoryModel';
 import WarningIcon from '@material-ui/icons/Warning';
 import { KeyboardDatePicker } from '@material-ui/pickers';
 import { useRecoilValue } from 'recoil';
@@ -47,7 +48,7 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
     custodialRelationships,
     notes, concerns } = fields;
   const [ageType, setAgeType] = useState<'exact' | 'inYears'>('exact');
-  const volunteerFamiliesModel = useVolunteersModel();
+  const directoryModel = useDirectoryModel();
 
   const ethnicities = useRecoilValue(ethnicitiesData);
   
@@ -75,7 +76,7 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
           (age as AgeInYears).years = (ageInYears == null ? undefined : ageInYears);
           (age as AgeInYears).asOf = new Date();
         }
-        await volunteerFamiliesModel.addChild(volunteerFamily.family?.id as string,
+        await directoryModel.addChild(volunteerFamily.family?.id as string,
           firstName, lastName, gender as Gender, age, ethnicity,
           custodialRelationships.filter(cr => cr.relationship !== -1).map(cr => {
             const result = new CustodialRelationship();

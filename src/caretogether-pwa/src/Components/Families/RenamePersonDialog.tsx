@@ -1,29 +1,29 @@
 import { useState } from 'react';
 import { Grid, TextField } from '@material-ui/core';
 import { Person } from '../../GeneratedClient';
-import { useVolunteersModel } from '../../Model/VolunteersModel';
+import { useDirectoryModel } from '../../Model/DirectoryModel';
 import { UpdateDialog } from '../UpdateDialog';
 
 interface RenamePersonProps {
-  volunteerFamilyId: string,
+  familyId: string,
   person: Person,
   onClose: () => void
 }
 
-export function RenamePersonDialog({volunteerFamilyId, person, onClose}: RenamePersonProps) {
+export function RenamePersonDialog({familyId, person, onClose}: RenamePersonProps) {
   const [fields, setFields] = useState({
     firstName: person.firstName as string,
     lastName: person.lastName as string
   });
   const {
     firstName, lastName } = fields;
-  const volunteerFamiliesModel = useVolunteersModel();
+  const directoryModel = useDirectoryModel();
 
   async function renamePerson() {
     if (firstName.length <= 0 || lastName.length <= 0) {
       alert("First and last name are required. Try again.");
     } else {
-      await volunteerFamiliesModel.updatePersonName(volunteerFamilyId, person.id as string,
+      await directoryModel.updatePersonName(familyId, person.id as string,
         firstName, lastName);
     }
   }

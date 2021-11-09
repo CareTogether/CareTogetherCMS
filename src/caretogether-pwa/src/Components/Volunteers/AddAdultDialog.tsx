@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@material-ui/core';
 import { Age, ExactAge, AgeInYears, Gender, EmailAddressType, PhoneNumberType, CombinedFamilyInfo } from '../../GeneratedClient';
-import { useVolunteersModel, volunteerFamiliesData } from '../../Model/VolunteersModel';
+import { volunteerFamiliesData } from '../../Model/VolunteersModel';
+import { useDirectoryModel } from '../../Model/DirectoryModel';
 import WarningIcon from '@material-ui/icons/Warning';
 import { KeyboardDatePicker } from '@material-ui/pickers';
 import { useRecoilValue } from 'recoil';
@@ -63,7 +64,7 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
     phoneNumber, phoneType, emailAddress, emailType,
     notes, concerns } = fields;
   const [ageType, setAgeType] = useState<'exact' | 'inYears'>('exact');
-  const volunteerFamiliesModel = useVolunteersModel();
+  const directoryModel = useDirectoryModel();
 
   const relationshipTypes = useRecoilValue(adultFamilyRelationshipsData);
   const ethnicities = useRecoilValue(ethnicitiesData);
@@ -94,7 +95,7 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
           (age as AgeInYears).years = (ageInYears == null ? undefined : ageInYears);
           (age as AgeInYears).asOf = new Date();
         }
-        await volunteerFamiliesModel.addAdult(volunteerFamily.family!.id!,
+        await directoryModel.addAdult(volunteerFamily.family!.id!,
           firstName, lastName, gender as Gender, age, ethnicity,
           isInHousehold, relationshipToFamily,
           optional(addressLine1), optional(addressLine2), optional(city), optional(state), optional(postalCode), optional(country),
