@@ -56,14 +56,14 @@ import { PartneringChildCard } from './PartneringChildCard';
 
 export function PartneringFamilyScreen() {
   //const classes = useStyles();
-  const { partneringFamilyId } = useParams<{ partneringFamilyId: string }>();
+  const { familyId } = useParams<{ familyId: string }>();
 
   const partneringFamilies = useRecoilValue(partneringFamiliesData);
   //const policy = useRecoilValue(policyData);
   //const organizationId = useRecoilValue(currentOrganizationState);
   //const locationId = useRecoilValue(currentLocationState);
 
-  const partneringFamily = partneringFamilies.find(x => x.family?.id === partneringFamilyId) as CombinedFamilyInfo;
+  const partneringFamily = partneringFamilies.find(x => x.family?.id === familyId) as CombinedFamilyInfo;
   
   // const [familyRecordMenuAnchor, setFamilyRecordMenuAnchor] = useState<Element | null>(null);
   // const [recordFamilyStepParameter, setRecordFamilyStepParameter] = useState<{requirementName: string, requirementInfo: ActionRequirement} | null>(null);
@@ -221,12 +221,12 @@ export function PartneringFamilyScreen() {
     <Grid container spacing={2}>
       {partneringFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item2 && (
         <Grid item key={adult.item1.id}>
-          <PartneringAdultCard partneringFamilyId={partneringFamilyId} personId={adult.item1.id} />
+          <PartneringAdultCard partneringFamilyId={familyId} personId={adult.item1.id} />
         </Grid>
       ))}
       {partneringFamily.family?.children?.map(child => (
         <Grid item key={child.id!}>
-          <PartneringChildCard partneringFamilyId={partneringFamilyId} personId={child.id!} />
+          <PartneringChildCard partneringFamilyId={familyId} personId={child.id!} />
         </Grid>
       ))}
     </Grid>

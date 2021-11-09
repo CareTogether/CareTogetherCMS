@@ -19,7 +19,7 @@ function Volunteers() {
         <Route path={`${match.path}/progress`}>
           <VolunteerProgress />
         </Route>
-        <Route path={`${match.path}/family/:volunteerFamilyId`}>
+        <Route path={`${match.path}/family/:familyId`}>
           <VolunteerFamilyScreen />
         </Route>
         <Route>

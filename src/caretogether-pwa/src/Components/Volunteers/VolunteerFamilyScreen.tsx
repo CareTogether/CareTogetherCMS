@@ -73,14 +73,14 @@ const useStyles = makeStyles((theme) => ({
 
 export function VolunteerFamilyScreen() {
   const classes = useStyles();
-  const { volunteerFamilyId } = useParams<{ volunteerFamilyId: string }>();
+  const { familyId } = useParams<{ familyId: string }>();
 
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
   const policy = useRecoilValue(policyData);
   const organizationId = useRecoilValue(currentOrganizationState);
   const locationId = useRecoilValue(currentLocationState);
 
-  const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as CombinedFamilyInfo;
+  const volunteerFamily = volunteerFamilies.find(x => x.family?.id === familyId) as CombinedFamilyInfo;
   
   const [familyRecordMenuAnchor, setFamilyRecordMenuAnchor] = useState<Element | null>(null);
   const [recordFamilyStepParameter, setRecordFamilyStepParameter] = useState<{requirementName: string, requirementInfo: ActionRequirement} | null>(null);
@@ -99,12 +99,12 @@ export function VolunteerFamilyScreen() {
   const [removeRoleParameter, setRemoveRoleParameter] = useState<{volunteerFamilyId: string, role: string} | null>(null);
   function selectRemoveRole(role: string) {
     setFamilyMoreMenuAnchor(null);
-    setRemoveRoleParameter({volunteerFamilyId, role: role});
+    setRemoveRoleParameter({volunteerFamilyId: familyId, role: role});
   }
   const [resetRoleParameter, setResetRoleParameter] = useState<{volunteerFamilyId: string, role: string, removalReason: RoleRemovalReason, removalAdditionalComments: string} | null>(null);
   function selectResetRole(role: string, removalReason: RoleRemovalReason, removalAdditionalComments: string) {
     setFamilyMoreMenuAnchor(null);
-    setResetRoleParameter({volunteerFamilyId, role: role, removalReason: removalReason, removalAdditionalComments: removalAdditionalComments});
+    setResetRoleParameter({volunteerFamilyId: familyId, role: role, removalReason: removalReason, removalAdditionalComments: removalAdditionalComments});
   }
   
   const theme = useTheme();
@@ -183,9 +183,9 @@ export function VolunteerFamilyScreen() {
         onClose={() => setUploadDocumentDialogOpen(false)} />}
       {addAdultDialogOpen && <AddAdultDialog onClose={() => setAddAdultDialogOpen(false)} />}
       {addChildDialogOpen && <AddChildDialog onClose={() => setAddChildDialogOpen(false)} />}
-      {(removeRoleParameter && <RemoveFamilyRoleDialog volunteerFamilyId={volunteerFamilyId} role={removeRoleParameter.role}
+      {(removeRoleParameter && <RemoveFamilyRoleDialog volunteerFamilyId={familyId} role={removeRoleParameter.role}
         onClose={() => setRemoveRoleParameter(null)} />) || null}
-      {(resetRoleParameter && <ResetFamilyRoleDialog volunteerFamilyId={volunteerFamilyId} role={resetRoleParameter.role}
+      {(resetRoleParameter && <ResetFamilyRoleDialog volunteerFamilyId={familyId} role={resetRoleParameter.role}
         removalReason={resetRoleParameter.removalReason} removalAdditionalComments={resetRoleParameter.removalAdditionalComments}
         onClose={() => setResetRoleParameter(null)} />) || null}
     </Toolbar>
@@ -238,12 +238,12 @@ export function VolunteerFamilyScreen() {
     <Grid container spacing={2}>
       {volunteerFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item2 && (
         <Grid item key={adult.item1.id}>
-          <VolunteerAdultCard volunteerFamilyId={volunteerFamilyId} personId={adult.item1.id} />
+          <VolunteerAdultCard volunteerFamilyId={familyId} personId={adult.item1.id} />
         </Grid>
       ))}
       {volunteerFamily.family?.children?.map(child => (
         <Grid item key={child.id!}>
-          <VolunteerChildCard volunteerFamilyId={volunteerFamilyId} personId={child.id!} />
+          <VolunteerChildCard volunteerFamilyId={familyId} personId={child.id!} />
         </Grid>
       ))}
     </Grid>

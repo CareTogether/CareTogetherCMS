@@ -31,9 +31,9 @@ function optional(arg: string) {
 
 export function AddAdultDialog({onClose}: AddAdultDialogProps) {
   const classes = useStyles();
-  const { volunteerFamilyId } = useParams<{ volunteerFamilyId: string }>();
+  const { familyId } = useParams<{ familyId: string }>();
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
-  const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as CombinedFamilyInfo;
+  const volunteerFamily = volunteerFamilies.find(x => x.family?.id === familyId) as CombinedFamilyInfo;
 
   const [fields, setFields] = useState({
     firstName: '',
