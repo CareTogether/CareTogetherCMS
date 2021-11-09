@@ -21,7 +21,7 @@ function Footer(props: any) {
   
   const featureFlags = useFeatureFlags();
 
-  const links = ['/dashboard', '/referrals', '/volunteers'];
+  const links = [/*'/dashboard',*/ '/referrals', '/volunteers'];
   const selectedLink = links.findIndex(link => location.pathname.startsWith(link));
 
   return (
