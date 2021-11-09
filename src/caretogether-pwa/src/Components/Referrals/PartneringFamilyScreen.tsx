@@ -1,61 +1,68 @@
-import { Container, Toolbar, Grid } from '@material-ui/core';
+import { Container, Toolbar, Grid, Button } from '@material-ui/core';
+import { makeStyles } from '@material-ui/core/styles';
 import { CombinedFamilyInfo } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { useParams } from 'react-router';
+import AddCircleIcon from '@material-ui/icons/AddCircle';
+// import MoreVertIcon from '@material-ui/icons/MoreVert';
+// import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
+// import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import { PartneringAdultCard } from './PartneringAdultCard';
 import { PartneringChildCard } from './PartneringChildCard';
+import { useState } from 'react';
+import { AddAdultDialog } from '../Families/AddAdultDialog';
 
-// const useStyles = makeStyles((theme) => ({
-//   sectionHeading: {
-//   },
-//   sectionChips: {
-//     '& > div:first-child': {
-//       marginLeft: 0
-//     },
-//     '& > *': {
-//       margin: theme.spacing(0.5),
-//     }
-//   },
-//   button: {
-//     margin: theme.spacing(1),
-//   },
-//   familyRequirementsList: {
-//     listStyle: 'none',
-//     paddingLeft: 22,
-//     textIndent: -22
-//   },
-//   familyDocumentsList: {
-//     listStyle: 'none',
-//     paddingLeft: 22,
-//     textIndent: -22
-//   },
-//   card: {
-//     minWidth: 275,
-//   },
-//   cardHeader: {
-//     paddingBottom: 0
-//   },
-//   cardContent: {
-//     paddingTop: 8,
-//     paddingBottom: 8
-//   },
-//   cardList: {
-//     padding: 0,
-//     margin: 0,
-//     marginTop: 8,
-//     listStyle: 'none',
-//     '& > li': {
-//       marginTop: 4
-//     }
-//   },
-//   rightCardAction: {
-//     marginLeft: 'auto !important'
-//   }
-// }));
+const useStyles = makeStyles((theme) => ({
+  sectionHeading: {
+  },
+  sectionChips: {
+    '& > div:first-child': {
+      marginLeft: 0
+    },
+    '& > *': {
+      margin: theme.spacing(0.5),
+    }
+  },
+  button: {
+    margin: theme.spacing(1),
+  },
+  familyRequirementsList: {
+    listStyle: 'none',
+    paddingLeft: 22,
+    textIndent: -22
+  },
+  familyDocumentsList: {
+    listStyle: 'none',
+    paddingLeft: 22,
+    textIndent: -22
+  },
+  card: {
+    minWidth: 275,
+  },
+  cardHeader: {
+    paddingBottom: 0
+  },
+  cardContent: {
+    paddingTop: 8,
+    paddingBottom: 8
+  },
+  cardList: {
+    padding: 0,
+    margin: 0,
+    marginTop: 8,
+    listStyle: 'none',
+    '& > li': {
+      marginTop: 4
+    }
+  },
+  rightCardAction: {
+    marginLeft: 'auto !important'
+  }
+}));
 
 export function PartneringFamilyScreen() {
-  //const classes = useStyles();
+  const classes = useStyles();
   const { familyId } = useParams<{ familyId: string }>();
 
   const partneringFamilies = useRecoilValue(partneringFamiliesData);
@@ -74,7 +81,7 @@ export function PartneringFamilyScreen() {
   // }
   
   // const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] = useState(false);
-  // const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
+  const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
   // const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
 
   // const [familyMoreMenuAnchor, setFamilyMoreMenuAnchor] = useState<Element | null>(null);
@@ -108,12 +115,12 @@ export function PartneringFamilyScreen() {
         startIcon={<CloudUploadIcon />}>
         Upload
       </Button> */}
-      {/* <Button
+      <Button
         onClick={() => setAddAdultDialogOpen(true)}
         variant="contained" color="default" size="small" className={classes.button}
         startIcon={<AddCircleIcon />}>
         Adult
-      </Button> */}
+      </Button>
       {/* <Button
         onClick={() => setAddChildDialogOpen(true)}
         variant="contained" color="default" size="small" className={classes.button}
@@ -164,7 +171,7 @@ export function PartneringFamilyScreen() {
         onClose={() => setRecordFamilyStepParameter(null)} />} */}
       {/* {uploadDocumentDialogOpen && <UploadPartneringFamilyDocumentDialog partneringFamily={partneringFamily}
         onClose={() => setUploadDocumentDialogOpen(false)} />} */}
-      {/* {addAdultDialogOpen && <AddAdultDialog onClose={() => setAddAdultDialogOpen(false)} />} */}
+      {addAdultDialogOpen && <AddAdultDialog onClose={() => setAddAdultDialogOpen(false)} />}
       {/* {addChildDialogOpen && <AddChildDialog onClose={() => setAddChildDialogOpen(false)} />} */}
       {/* {(removeRoleParameter && <RemoveFamilyRoleDialog partneringFamilyId={partneringFamilyId} role={removeRoleParameter.role}
         onClose={() => setRemoveRoleParameter(null)} />) || null} */}
