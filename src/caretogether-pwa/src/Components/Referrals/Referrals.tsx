@@ -1,23 +1,15 @@
-import { Redirect, Route, Switch, useRouteMatch } from 'react-router-dom';
+import { Route, Routes, Navigate } from 'react-router-dom';
 import { PartneringFamilies } from './PartneringFamilies';
 import { PartneringFamilyScreen } from './PartneringFamilyScreen';
 
 function Referrals() {
-  const match = useRouteMatch();
-
   return (
     <>
-      <Switch>
-        <Route path={`${match.path}/family/:partneringFamilyId`}>
-          <PartneringFamilyScreen />
-        </Route>
-        <Route path={`${match.path}`}>
-          <PartneringFamilies />
-        </Route>
-        <Route>
-          <Redirect to={`${match.path}`} />
-        </Route>
-      </Switch>
+      <Routes>
+        <Route path='/' element={<PartneringFamilies />} />
+        <Route path='/family/:partneringFamilyId' element={<PartneringFamilyScreen />} />
+        <Route element={<Navigate to='/' />} />
+      </Routes>
     </>
   );
 }

@@ -2,8 +2,7 @@ import React from 'react';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
-import { useRouteMatch } from 'react-router';
-import { Link as RouterLink, LinkProps as RouterLinkProps } from 'react-router-dom';
+import { Link as RouterLink, LinkProps as RouterLinkProps, useMatch } from 'react-router-dom';
 import { Omit } from '@material-ui/types';
 
 // Reference: https://material-ui.com/guides/composition/
@@ -17,7 +16,7 @@ interface ListItemLinkProps {
 function ListItemLink(props: ListItemLinkProps) {
   const { icon, primary, to } = props;
 
-  const match = useRouteMatch({
+  const match = useMatch({
     path: to
   });
 

@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import { AppBar, Toolbar, IconButton, Typography, useMediaQuery, useTheme, Button, ButtonGroup } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 import MenuIcon from '@material-ui/icons/Menu';
-import { Link, useLocation, useRouteMatch, useHistory } from 'react-router-dom';
+import { Link, useLocation, useMatch, useNavigate } from 'react-router-dom';
 import { ArrowBack } from '@material-ui/icons';
 import { useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../Model/VolunteersModel';
@@ -61,24 +61,24 @@ function Header(props: HeaderProps) {
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const dashboardMatch = useRouteMatch({
+  const dashboardMatch = useMatch({
     path: '/dashboard',
   })
-  const referralsMatch = useRouteMatch({
+  const referralsMatch = useMatch({
     path: '/referrals',
   })
-  const volunteerListMatch = useRouteMatch({
+  const volunteerListMatch = useMatch({
     path: '/volunteers/:slug',
-    strict: true,
-    sensitive: true
+    end: true,
+    caseSensitive: true
   });
-  const volunteerFamilyMatch = useRouteMatch<{ volunteerFamilyId: string }>({
+  const volunteerFamilyMatch = useMatch({
     path: '/volunteers/family/:volunteerFamilyId',
-    strict: true,
-    sensitive: true
+    end: true,
+    caseSensitive: true
   });
   const location = useLocation();
-  const history = useHistory();
+  const navigate = useNavigate()
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
   const volunteerFamily = volunteerFamilyMatch && volunteerFamilies.find(x => x.family?.id === volunteerFamilyMatch.params.volunteerFamilyId);
 
@@ -102,11 +102,11 @@ function Header(props: HeaderProps) {
         {volunteerFamilyMatch && <Typography component="h1" variant="h6" color="inherit" noWrap className={classes.title}>
           <IconButton
             color="inherit"
-            onClick={() => history.goBack()}
+            onClick={() => navigate(-1)}
           >
             <ArrowBack />
           </IconButton>&nbsp;
-          {volunteerFamily?.family?.adults!.filter(adult => adult.item1!.id === volunteerFamily!.family!.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family
+          {volunteerFamily?.family?.adults!.filter((adult) => adult.item1!.id === volunteerFamily!.family!.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family
         </Typography>}
         {!volunteerFamilyMatch && volunteerListMatch && <ButtonGroup variant="text" color="inherit" aria-label="text inherit button group" className={classes.toggleGroup}>
           <Button color={location.pathname === "/volunteers/approval" ? 'default' : 'inherit'} component={Link} to={"/volunteers/approval"}>Approvals</Button>

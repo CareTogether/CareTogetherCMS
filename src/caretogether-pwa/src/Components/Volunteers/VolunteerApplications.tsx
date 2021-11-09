@@ -6,7 +6,7 @@ import { makeStyles } from '@material-ui/core/styles';
 // import { policyData } from '../Model/ConfigurationModel';
 // import { VolunteerFamilyRequirementScope } from '../GeneratedClient';
 // import React, { useState } from 'react';
-// import { useHistory } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -34,7 +34,7 @@ const useStyles = makeStyles((theme) => ({
 
 // function VolunteerApplications() {
 //   const classes = useStyles();
-//   const history = useHistory();
+//   const navigate = useNavigate();
 //   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
 //   const policy = useRecoilValue(policyData);
 
@@ -118,7 +118,7 @@ const useStyles = makeStyles((theme) => ({
 //       : previous, [] as ActivityRequirement[]);
 
 //   function openVolunteerFamily(volunteerFamilyId: string) {
-//     history.push(`/volunteers/family/${volunteerFamilyId}`);
+//     navigate(`/volunteers/family/${volunteerFamilyId}`, { replace: true });
 //   }
   
 //   const [drawerOpen, setDrawerOpen] = useState(false);

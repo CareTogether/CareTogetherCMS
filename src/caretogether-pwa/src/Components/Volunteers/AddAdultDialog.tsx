@@ -30,7 +30,7 @@ function optional(arg: string) {
 
 export function AddAdultDialog({onClose}: AddAdultDialogProps) {
   const classes = useStyles();
-  const { volunteerFamilyId } = useParams<{ volunteerFamilyId: string }>();
+  const { volunteerFamilyId } = useParams();
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
   const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as CombinedFamilyInfo;
 

@@ -26,7 +26,7 @@ interface AddChildDialogProps {
 
 export function AddChildDialog({onClose}: AddChildDialogProps) {
   const classes = useStyles();
-  const { volunteerFamilyId } = useParams<{ volunteerFamilyId: string }>();
+  const { volunteerFamilyId } = useParams();
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
   const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as CombinedFamilyInfo;
 

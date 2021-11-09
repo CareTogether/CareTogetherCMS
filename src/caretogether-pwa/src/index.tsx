@@ -1,5 +1,5 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
+import React, { StrictMode } from 'react';
+import { render } from 'react-dom';
 import { InteractionType } from "@azure/msal-browser";
 import { MsalProvider, useMsalAuthentication, useIsAuthenticated } from '@azure/msal-react';
 import { AppInsightsContext } from "@microsoft/applicationinsights-react-js";
@@ -50,8 +50,8 @@ function AuthWrapper() {
 
 // Telemetry is sent to Azure Application Insights. For customization instructions, see
 // https://docs.microsoft.com/en-us/azure/azure-monitor/app/javascript-react-plugin
-ReactDOM.render(
-  <React.StrictMode>
+render(
+  <StrictMode>
     <ThemeProvider theme={theme}>
       <AppInsightsContext.Provider value={aiReact}>
         <MsalProvider instance={globalMsalInstance}>
@@ -63,7 +63,7 @@ ReactDOM.render(
         </MsalProvider>
       </AppInsightsContext.Provider>
     </ThemeProvider>
-  </React.StrictMode>,
+  </StrictMode>,
   document.getElementById('root')
 );
 

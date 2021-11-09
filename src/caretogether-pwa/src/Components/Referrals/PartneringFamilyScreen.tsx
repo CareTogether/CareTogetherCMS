@@ -2,7 +2,7 @@ import { Container, Toolbar, Grid } from '@material-ui/core';
 import { CombinedFamilyInfo } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../../Model/ReferralsModel';
-import { useParams } from 'react-router';
+import { useParams } from 'react-router-dom';
 import { PartneringAdultCard } from './PartneringAdultCard';
 import { PartneringChildCard } from './PartneringChildCard';
 
@@ -56,7 +56,7 @@ import { PartneringChildCard } from './PartneringChildCard';
 
 export function PartneringFamilyScreen() {
   //const classes = useStyles();
-  const { partneringFamilyId } = useParams<{ partneringFamilyId: string }>();
+  const { partneringFamilyId } = useParams();
 
   const partneringFamilies = useRecoilValue(partneringFamiliesData);
   //const policy = useRecoilValue(policyData);
@@ -221,12 +221,12 @@ export function PartneringFamilyScreen() {
     <Grid container spacing={2}>
       {partneringFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item2 && (
         <Grid item key={adult.item1.id}>
-          <PartneringAdultCard partneringFamilyId={partneringFamilyId} personId={adult.item1.id} />
+          <PartneringAdultCard partneringFamilyId={partneringFamilyId as string} personId={adult.item1.id} />
         </Grid>
       ))}
       {partneringFamily.family?.children?.map(child => (
         <Grid item key={child.id!}>
-          <PartneringChildCard partneringFamilyId={partneringFamilyId} personId={child.id!} />
+          <PartneringChildCard partneringFamilyId={partneringFamilyId as string} personId={child.id!} />
         </Grid>
       ))}
     </Grid>

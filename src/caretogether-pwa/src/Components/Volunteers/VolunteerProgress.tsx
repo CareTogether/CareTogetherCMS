@@ -4,7 +4,7 @@ import { useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../../Model/VolunteersModel';
 import { allApprovalAndOnboardingRequirementsData } from '../../Model/ConfigurationModel';
 import React, { useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import AddIcon from '@material-ui/icons/Add';
 import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';
 import { CombinedFamilyInfo } from '../../GeneratedClient';
@@ -44,7 +44,7 @@ function familyLastName(family: CombinedFamilyInfo) {
 
 function VolunteerProgress() {
   const classes = useStyles();
-  const history = useHistory();
+  const navigate = useNavigate()
 
   // The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData).map(x => x).sort((a, b) =>
@@ -52,7 +52,7 @@ function VolunteerProgress() {
   const allApprovalAndOnboardingRequirements = useRecoilValue(allApprovalAndOnboardingRequirementsData);
 
   function openVolunteerFamily(volunteerFamilyId: string) {
-    history.push(`/volunteers/family/${volunteerFamilyId}`);
+    navigate(`/volunteers/family/${volunteerFamilyId}`, { replace: true });
   }
   const [createVolunteerFamilyDialogOpen, setCreateVolunteerFamilyDialogOpen] = useState(false);
   
@@ -109,7 +109,7 @@ function VolunteerProgress() {
         </Fab>
         {createVolunteerFamilyDialogOpen && <CreateVolunteerFamilyDialog onClose={(volunteerFamilyId) => {
           setCreateVolunteerFamilyDialogOpen(false);
-          volunteerFamilyId && history.push(`/volunteers/family/${volunteerFamilyId}`);
+          volunteerFamilyId && navigate(`/volunteers/family/${volunteerFamilyId}`, {replace: true});
         }} />}
       </Grid>
     </Grid>

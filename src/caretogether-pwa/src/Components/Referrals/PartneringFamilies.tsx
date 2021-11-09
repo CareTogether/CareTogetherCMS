@@ -5,7 +5,7 @@ import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { differenceInYears } from 'date-fns';
 import React from 'react';
 import { CombinedFamilyInfo, Gender, ExactAge, AgeInYears } from '../../GeneratedClient';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -44,12 +44,12 @@ function familyLastName(family: CombinedFamilyInfo) {
 
 function PartneringFamilies() {
   const classes = useStyles();
-  const history = useHistory();
+  const navigate = useNavigate()
 
   const partneringFamilies = useRecoilValue(partneringFamiliesData);
 
   function openPartneringFamily(partneringFamilyId: string) {
-    history.push(`/referrals/family/${partneringFamilyId}`);
+    navigate(`/referrals/family/${partneringFamilyId}`, {replace: true});
   }
 
   return (

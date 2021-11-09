@@ -6,7 +6,7 @@ import PermPhoneMsgIcon from '@material-ui/icons/PermPhoneMsg';
 import PeopleIcon from '@material-ui/icons/People';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 //import DashboardIcon from '@material-ui/icons/Dashboard';
-import { Route, Switch, Redirect, BrowserRouter as Router } from "react-router-dom";
+import { Route, Routes, BrowserRouter as Router, Navigate } from "react-router-dom";
 import { ListItemLink } from './Components/ListItemLink';
 import { Arrangements } from './Components/Referrals/Arrangements';
 import { Referrals } from './Components/Referrals/Referrals';
@@ -130,19 +130,21 @@ function App() {
       <CssBaseline />
       <Router>
         <Header open={open} handleDrawerOpen={handleDrawerOpen} />
-        {isMobile ? null :
+        {isMobile ? null : (
           <Drawer
-            variant="permanent"
+            variant='permanent'
             classes={{
               paper: clsx(classes.drawerPaper, !open && classes.drawerPaperClose),
             }}
             open={open}
           >
             <div className={classes.drawerHeader}>
-              {isMobile ? null : <header>
-                <p className={classes.drawerHeaderOrganization}>{organizationName}</p>
-                <p className={classes.drawerHeaderLocation}>{locationName}</p>
-              </header>}
+              {isMobile ? null : (
+                <header>
+                  <p className={classes.drawerHeaderOrganization}>{organizationName}</p>
+                  <p className={classes.drawerHeaderLocation}>{locationName}</p>
+                </header>
+              )}
               <IconButton onClick={handleDrawerClose}>
                 <ChevronLeftIcon />
               </IconButton>
@@ -153,30 +155,21 @@ function App() {
             {secondaryListItems(featureFlags)}
             <Divider />
             {open && <Copyright />}
-          </Drawer>}
+          </Drawer>
+        )}
         <main className={isMobile ? classes.mobileContent : classes.content}>
           <div className={classes.appBarSpacer} />
           <React.Suspense fallback={<div>Loading...</div>}>
-            <Switch>
-              <Route path="/dashboard">
-                <Dashboard />
-              </Route>
-              <Route path="/arrangements">
-                <Arrangements />
-              </Route>
-              <Route path="/referrals">
-                <Referrals />
-              </Route>
-              <Route path="/volunteers">
-                <Volunteers />
-              </Route>
-              <Route>
-                <Redirect to="/volunteers" />
-              </Route>
-            </Switch>
+            <Routes>
+              <Route path='/dashboard' element={<Dashboard />} />
+              <Route path='/arrangements' element={<Arrangements />} />
+              <Route path='/referrals/*' element={<Referrals />} />
+              <Route path='/volunteers/*' element={<Volunteers />} />
+              <Route element={<Navigate replace to='/volunteers' />} />
+            </Routes>
           </React.Suspense>
         </main>
-        {isMobile && <Footer></Footer>}
+        {isMobile && <Footer />}
       </Router>
     </div>
   );

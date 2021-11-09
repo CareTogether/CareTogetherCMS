@@ -13,7 +13,7 @@ import { volunteerFamiliesData } from '../../Model/VolunteersModel';
 import { AddAdultDialog } from './AddAdultDialog';
 import { format } from 'date-fns';
 import { AddChildDialog } from './AddChildDialog';
-import { useParams } from 'react-router';
+import { useParams } from 'react-router-dom';
 import { VolunteerAdultCard } from './VolunteerAdultCard';
 import { VolunteerChildCard } from './VolunteerChildCard';
 import { UploadVolunteerFamilyDocumentDialog } from './UploadVolunteerFamilyDocumentDialog';
@@ -73,7 +73,7 @@ const useStyles = makeStyles((theme) => ({
 
 export function VolunteerFamilyScreen() {
   const classes = useStyles();
-  const { volunteerFamilyId } = useParams<{ volunteerFamilyId: string }>();
+  const { volunteerFamilyId } = useParams();
 
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
   const policy = useRecoilValue(policyData);
@@ -99,12 +99,12 @@ export function VolunteerFamilyScreen() {
   const [removeRoleParameter, setRemoveRoleParameter] = useState<{volunteerFamilyId: string, role: string} | null>(null);
   function selectRemoveRole(role: string) {
     setFamilyMoreMenuAnchor(null);
-    setRemoveRoleParameter({volunteerFamilyId, role: role});
+    setRemoveRoleParameter({volunteerFamilyId: volunteerFamilyId as string, role: role});
   }
   const [resetRoleParameter, setResetRoleParameter] = useState<{volunteerFamilyId: string, role: string, removalReason: RoleRemovalReason, removalAdditionalComments: string} | null>(null);
   function selectResetRole(role: string, removalReason: RoleRemovalReason, removalAdditionalComments: string) {
     setFamilyMoreMenuAnchor(null);
-    setResetRoleParameter({volunteerFamilyId, role: role, removalReason: removalReason, removalAdditionalComments: removalAdditionalComments});
+    setResetRoleParameter({volunteerFamilyId: volunteerFamilyId as string, role: role, removalReason: removalReason, removalAdditionalComments: removalAdditionalComments});
   }
   
   const theme = useTheme();
@@ -183,9 +183,9 @@ export function VolunteerFamilyScreen() {
         onClose={() => setUploadDocumentDialogOpen(false)} />}
       {addAdultDialogOpen && <AddAdultDialog onClose={() => setAddAdultDialogOpen(false)} />}
       {addChildDialogOpen && <AddChildDialog onClose={() => setAddChildDialogOpen(false)} />}
-      {(removeRoleParameter && <RemoveFamilyRoleDialog volunteerFamilyId={volunteerFamilyId} role={removeRoleParameter.role}
+      {(removeRoleParameter && <RemoveFamilyRoleDialog volunteerFamilyId={volunteerFamilyId as string} role={removeRoleParameter.role}
         onClose={() => setRemoveRoleParameter(null)} />) || null}
-      {(resetRoleParameter && <ResetFamilyRoleDialog volunteerFamilyId={volunteerFamilyId} role={resetRoleParameter.role}
+      {(resetRoleParameter && <ResetFamilyRoleDialog volunteerFamilyId={volunteerFamilyId as string} role={resetRoleParameter.role}
         removalReason={resetRoleParameter.removalReason} removalAdditionalComments={resetRoleParameter.removalAdditionalComments}
         onClose={() => setResetRoleParameter(null)} />) || null}
     </Toolbar>
@@ -238,12 +238,12 @@ export function VolunteerFamilyScreen() {
     <Grid container spacing={2}>
       {volunteerFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item2 && (
         <Grid item key={adult.item1.id}>
-          <VolunteerAdultCard volunteerFamilyId={volunteerFamilyId} personId={adult.item1.id} />
+          <VolunteerAdultCard volunteerFamilyId={volunteerFamilyId as string} personId={adult.item1.id} />
         </Grid>
       ))}
       {volunteerFamily.family?.children?.map(child => (
         <Grid item key={child.id!}>
-          <VolunteerChildCard volunteerFamilyId={volunteerFamilyId} personId={child.id!} />
+          <VolunteerChildCard volunteerFamilyId={volunteerFamilyId as string} personId={child.id!} />
         </Grid>
       ))}
     </Grid>
