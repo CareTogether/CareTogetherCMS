@@ -4,10 +4,10 @@ import { Container, Toolbar, Button, Menu, MenuItem, Grid, useMediaQuery, useThe
 import { CombinedFamilyInfo, ActionRequirement, RoleRemovalReason } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../../Model/ConfigurationModel';
-import AddCircleIcon from '@material-ui/icons/AddCircle';
-import MoreVertIcon from '@material-ui/icons/MoreVert';
-import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
-import CloudUploadIcon from '@material-ui/icons/CloudUpload';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { RecordVolunteerFamilyStepDialog } from './RecordVolunteerFamilyStepDialog';
 import { volunteerFamiliesData } from '../../Model/VolunteersModel';
 import { AddAdultDialog } from './AddAdultDialog';

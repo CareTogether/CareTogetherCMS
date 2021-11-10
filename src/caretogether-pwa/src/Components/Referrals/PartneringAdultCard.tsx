@@ -2,7 +2,7 @@ import { Card, CardHeader, IconButton, CardContent, Typography, Chip, CardAction
 import { useState } from "react";
 import { Gender, Person, CombinedFamilyInfo } from "../../GeneratedClient";
 import { AgeText } from "../AgeText";
-import MoreVertIcon from '@material-ui/icons/MoreVert';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useRecoilValue } from "recoil";
 import { partneringFamiliesData } from "../../Model/ReferralsModel";
 import { ContactDisplay } from "../ContactDisplay";

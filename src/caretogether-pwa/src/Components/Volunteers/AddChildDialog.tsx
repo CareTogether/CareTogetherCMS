@@ -3,7 +3,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@material-ui/core';
 import { CombinedFamilyInfo, Age, ExactAge, AgeInYears, Gender, CustodialRelationshipType, CustodialRelationship } from '../../GeneratedClient';
 import { useVolunteersModel, volunteerFamiliesData } from '../../Model/VolunteersModel';
-import WarningIcon from '@material-ui/icons/Warning';
+import WarningIcon from '@mui/icons-material/Warning';
 import { KeyboardDatePicker } from '@material-ui/pickers';
 import { useRecoilValue } from 'recoil';
 import { ethnicitiesData } from '../../Model/ConfigurationModel';

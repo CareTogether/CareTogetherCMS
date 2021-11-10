@@ -2,7 +2,7 @@ import { Card, CardHeader, IconButton, CardContent, Typography, CardActions, mak
 import { useState } from "react";
 import { CustodialRelationshipType, Gender, Person, CombinedFamilyInfo } from "../../GeneratedClient";
 import { AgeText } from "../AgeText";
-import MoreVertIcon from '@material-ui/icons/MoreVert';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useRecoilValue } from "recoil";
 import { volunteerFamiliesData } from "../../Model/VolunteersModel";
 import { RenamePersonDialog } from "./RenamePersonDialog";

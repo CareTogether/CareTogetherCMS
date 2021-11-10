@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Grid, InputAdornment, TextField } from '@material-ui/core';
-import WarningIcon from '@material-ui/icons/Warning';
+import WarningIcon from '@mui/icons-material/Warning';
 import { Person } from '../../GeneratedClient';
 import { useVolunteersModel } from '../../Model/VolunteersModel';
 import { UpdateDialog } from '../UpdateDialog';

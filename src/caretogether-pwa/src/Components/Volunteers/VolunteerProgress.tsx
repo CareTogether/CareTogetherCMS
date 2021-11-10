@@ -5,7 +5,7 @@ import { volunteerFamiliesData } from '../../Model/VolunteersModel';
 import { allApprovalAndOnboardingRequirementsData } from '../../Model/ConfigurationModel';
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
-import AddIcon from '@material-ui/icons/Add';
+import AddIcon from '@mui/icons-material/Add';
 import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';
 import { CombinedFamilyInfo } from '../../GeneratedClient';
 
