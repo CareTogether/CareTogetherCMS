@@ -95,16 +95,6 @@ export function PartneringAdultCard({partneringFamilyId, personId}: PartneringAd
   //   setAdultMoreMenuAnchor(null);
   //   setUpdateAddressParameter({partneringFamilyId, person: adult});
   // }
-  // const [removeRoleParameter, setRemoveRoleParameter] = useState<{partneringFamilyId: string, person: Person, role: string} | null>(null);
-  // function selectRemoveRole(adult: Person, role: string) {
-  //   setAdultMoreMenuAnchor(null);
-  //   setRemoveRoleParameter({partneringFamilyId, person: adult, role: role});
-  // }
-  // const [resetRoleParameter, setResetRoleParameter] = useState<{partneringFamilyId: string, person: Person, role: string, removalReason: RoleRemovalReason, removalAdditionalComments: string} | null>(null);
-  // function selectResetRole(adult: Person, role: string, removalReason: RoleRemovalReason, removalAdditionalComments: string) {
-  //   setAdultMoreMenuAnchor(null);
-  //   setResetRoleParameter({partneringFamilyId, person: adult, role: role, removalReason: removalReason, removalAdditionalComments: removalAdditionalComments});
-  // }
   
   //const theme = useTheme();
   //const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
@@ -214,27 +204,6 @@ export function PartneringAdultCard({partneringFamilyId, personId}: PartneringAd
         <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectUpdateAddress(adultMoreMenuAnchor.adult)}>
           <ListItemText primary="Update address" />
         </MenuItem> */}
-        {/* {(Object.entries(partneringFamily.partneringFamilyInfo?.familyRoleApprovals || {}).length > 0 ||
-          Object.entries(partneringFamily.partneringFamilyInfo?.individualPartnerings?.[personId]?.individualRoleApprovals || {}).length > 0 ||
-          (partneringFamily.partneringFamilyInfo?.individualPartnerings?.[personId]?.removedRoles || []).length > 0) && <Divider />}
-        {Object.entries(partneringFamily.partneringFamilyInfo?.familyRoleApprovals || {}).filter(([role, ]) =>
-          !partneringFamily.partneringFamilyInfo?.individualPartnerings?.[personId]?.removedRoles?.find(x => x.roleName === role)).flatMap(([role, ]) => (
-          <MenuItem key={role} onClick={() => adultMoreMenuAnchor?.adult && selectRemoveRole(adultMoreMenuAnchor.adult, role)}>
-            <ListItemText primary={`Remove from ${role} role`} />
-          </MenuItem>
-        ))}
-        {Object.entries(partneringFamily.partneringFamilyInfo?.individualPartnerings?.[personId]?.individualRoleApprovals || {}).filter(([role, ]) =>
-          !partneringFamily.partneringFamilyInfo?.individualPartnerings?.[personId]?.removedRoles?.find(x => x.roleName === role)).flatMap(([role, ]) => (
-          <MenuItem key={role} onClick={() => adultMoreMenuAnchor?.adult && selectRemoveRole(adultMoreMenuAnchor.adult, role)}>
-            <ListItemText primary={`Remove from ${role} role`} />
-          </MenuItem>
-        ))}
-        {(partneringFamily.partneringFamilyInfo?.individualPartnerings?.[personId]?.removedRoles || []).map(removedRole => (
-          <MenuItem key={removedRole.roleName}
-            onClick={() => adultMoreMenuAnchor?.adult && selectResetRole(adultMoreMenuAnchor.adult, removedRole.roleName!, removedRole.reason!, removedRole.additionalComments!)}>
-            <ListItemText primary={`Reset ${removedRole.roleName} participation`} />
-          </MenuItem>
-        ))} */}
       </Menu>
       {/* {(renamePersonParameter && <RenamePersonDialog partneringFamilyId={partneringFamilyId} person={renamePersonParameter.person}
         onClose={() => setRenamePersonParameter(null)} />) || null} */}
@@ -248,10 +217,5 @@ export function PartneringAdultCard({partneringFamilyId, personId}: PartneringAd
         onClose={() => setUpdateEmailParameter(null)} />) || null} */}
       {/* {(updateAddressParameter && <UpdateAddressDialog partneringFamilyId={partneringFamilyId} person={updateAddressParameter.person}
         onClose={() => setUpdateAddressParameter(null)} />) || null} */}
-      {/* {(removeRoleParameter && <RemoveIndividualRoleDialog partneringFamilyId={partneringFamilyId} person={removeRoleParameter.person} role={removeRoleParameter.role}
-        onClose={() => setRemoveRoleParameter(null)} />) || null}
-      {(resetRoleParameter && <ResetIndividualRoleDialog partneringFamilyId={partneringFamilyId} person={resetRoleParameter.person} role={resetRoleParameter.role}
-        removalReason={resetRoleParameter.removalReason} removalAdditionalComments={resetRoleParameter.removalAdditionalComments}
-        onClose={() => setResetRoleParameter(null)} />) || null} */}
     </Card>}</>);
 }

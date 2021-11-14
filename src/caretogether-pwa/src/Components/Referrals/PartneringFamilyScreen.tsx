@@ -5,7 +5,6 @@ import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { useParams } from 'react-router';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
-// import MoreVertIcon from '@material-ui/icons/MoreVert';
 // import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
 // import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import { PartneringAdultCard } from './PartneringAdultCard';
@@ -84,19 +83,6 @@ export function PartneringFamilyScreen() {
   // const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] = useState(false);
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
   const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
-
-  // const [familyMoreMenuAnchor, setFamilyMoreMenuAnchor] = useState<Element | null>(null);
-
-  // const [removeRoleParameter, setRemoveRoleParameter] = useState<{partneringFamilyId: string, role: string} | null>(null);
-  // function selectRemoveRole(role: string) {
-  //   setFamilyMoreMenuAnchor(null);
-  //   setRemoveRoleParameter({partneringFamilyId, role: role});
-  // }
-  // const [resetRoleParameter, setResetRoleParameter] = useState<{partneringFamilyId: string, role: string, removalReason: RoleRemovalReason, removalAdditionalComments: string} | null>(null);
-  // function selectResetRole(role: string, removalReason: RoleRemovalReason, removalAdditionalComments: string) {
-  //   setFamilyMoreMenuAnchor(null);
-  //   setResetRoleParameter({partneringFamilyId, role: role, removalReason: removalReason, removalAdditionalComments: removalAdditionalComments});
-  // }
   
   //const theme = useTheme();
   //const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
@@ -147,26 +133,6 @@ export function PartneringFamilyScreen() {
           ))}
         </MenuList>
       </Menu> */}
-      {/* <Menu id="family-more-menu"
-        anchorEl={familyMoreMenuAnchor}
-        keepMounted
-        open={Boolean(familyMoreMenuAnchor)}
-        onClose={() => setFamilyMoreMenuAnchor(null)}>
-        <MenuList dense={isMobile}>
-          {Object.entries(partneringFamily.partneringFamilyInfo?.familyRoleApprovals || {}).filter(([role, ]) =>
-            !partneringFamily.partneringFamilyInfo?.removedRoles?.find(x => x.roleName === role)).flatMap(([role, ]) => (
-            <MenuItem key={role} onClick={() => selectRemoveRole(role)}>
-              <ListItemText primary={`Remove from ${role} role`} />
-            </MenuItem>
-          ))}
-          {(partneringFamily.partneringFamilyInfo?.removedRoles || []).map(removedRole => (
-            <MenuItem key={removedRole.roleName}
-              onClick={() => selectResetRole(removedRole.roleName!, removedRole.reason!, removedRole.additionalComments!)}>
-              <ListItemText primary={`Reset ${removedRole.roleName} participation`} />
-            </MenuItem>
-          ))}
-        </MenuList>
-      </Menu> */}
       {/* {recordFamilyStepParameter && <RecordPartneringFamilyStepDialog partneringFamily={partneringFamily}
         requirementName={recordFamilyStepParameter.requirementName} stepActionRequirement={recordFamilyStepParameter.requirementInfo}
         onClose={() => setRecordFamilyStepParameter(null)} />} */}
@@ -174,11 +140,6 @@ export function PartneringFamilyScreen() {
         onClose={() => setUploadDocumentDialogOpen(false)} />} */}
       {addAdultDialogOpen && <AddAdultDialog onClose={() => setAddAdultDialogOpen(false)} />}
       {addChildDialogOpen && <AddChildDialog onClose={() => setAddChildDialogOpen(false)} />}
-      {/* {(removeRoleParameter && <RemoveFamilyRoleDialog partneringFamilyId={partneringFamilyId} role={removeRoleParameter.role}
-        onClose={() => setRemoveRoleParameter(null)} />) || null} */}
-      {/* {(resetRoleParameter && <ResetFamilyRoleDialog partneringFamilyId={partneringFamilyId} role={resetRoleParameter.role}
-        removalReason={resetRoleParameter.removalReason} removalAdditionalComments={resetRoleParameter.removalAdditionalComments}
-        onClose={() => setResetRoleParameter(null)} />) || null} */}
     </Toolbar>
     <Grid container spacing={0}>
       <Grid item xs={12}>
