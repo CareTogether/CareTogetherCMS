@@ -1,8 +1,28 @@
-import { useRecoilCallback } from "recoil";
+import { useRecoilCallback, useRecoilValue } from "recoil";
 import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, DirectoryCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, DirectoryClient } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { visibleFamiliesData } from "./ModelLoader";
+
+export function usePersonLookup() {
+  const visibleFamilies = useRecoilValue(visibleFamiliesData);
+
+  return (familyId?: string, personId?: string) => {
+    const family = visibleFamilies.find(family => family.family!.id === familyId);
+    const adult = family?.family?.adults?.find(adult => adult.item1!.id === personId);
+    const person = adult?.item1 || family?.family?.children?.find(child => child.id === personId);
+    return person;
+  }
+}
+
+export function useFamilyLookup() {
+  const visibleFamilies = useRecoilValue(visibleFamiliesData);
+
+  return (familyId?: string) => {
+    const family = visibleFamilies.find(family => family.family!.id === familyId);
+    return family;
+  }
+}
 
 function usePersonCommandCallback<T extends unknown[]>(
   callback: (volunteerFamilyId: string, personId: string, ...args: T) => Promise<PersonCommand>) {
