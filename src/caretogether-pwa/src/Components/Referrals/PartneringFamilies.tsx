@@ -116,7 +116,7 @@ function PartneringFamilies() {
                                   <ul className={classes.cardList}>
                                     {/* TODO: Partnering family **individual adult** assignments (e.g., friending) */}
                                     {arrangement.partneringFamilyChildAssignments?.map(x => (
-                                      <li><PersonName person={personLookup(partneringFamily.family!.id, x.personId)} /> - Child</li>
+                                      <li><strong><PersonName person={personLookup(partneringFamily.family!.id, x.personId)} /></strong> - Child</li>
                                     ))}
                                     {arrangement.familyVolunteerAssignments?.map(x => (
                                       <li><FamilyName family={familyLookup(x.familyId)} /> - {x.arrangementFunction}</li>
