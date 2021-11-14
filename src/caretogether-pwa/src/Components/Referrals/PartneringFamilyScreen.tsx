@@ -12,6 +12,7 @@ import { PartneringChildCard } from './PartneringChildCard';
 import { useState } from 'react';
 import { AddAdultDialog } from '../Families/AddAdultDialog';
 import { AddChildDialog } from '../Families/AddChildDialog';
+import { ArrangementCard } from './ArrangementCard';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -153,6 +154,14 @@ export function PartneringFamilyScreen() {
             <Chip key={removedRole.roleName} size="small" label={`${removedRole.roleName} - ${RoleRemovalReason[removedRole.reason!]} - ${removedRole.additionalComments}`} />)}
         </div>
       </Grid> */}
+      <Grid item container spacing={2}>
+        {partneringFamily.partneringFamilyInfo?.openReferral?.arrangements?.map(arrangement => (
+          <Grid item key={arrangement.id}>
+            <ArrangementCard partneringFamily={partneringFamily} arrangement={arrangement} />
+          </Grid>
+        ))}
+      </Grid>
+      <Grid item xs={12} spacing={2}><br /></Grid>
       {/* <Grid item xs={12} sm={6} md={4}>
         <h3>Incomplete</h3>
         <ul className={classes.familyRequirementsList}>
