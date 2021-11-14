@@ -5,12 +5,12 @@ import { useDirectoryModel } from '../../Model/DirectoryModel';
 import { UpdateDialog } from '../UpdateDialog';
 
 interface UpdateEmailDialogProps {
-  volunteerFamilyId: string,
+  familyId: string,
   person: Person,
   onClose: () => void
 }
 
-export function UpdateEmailDialog({volunteerFamilyId, person, onClose}: UpdateEmailDialogProps) {
+export function UpdateEmailDialog({familyId, person, onClose}: UpdateEmailDialogProps) {
   const directoryModel = useDirectoryModel();
   const currentEmailAddress = person.emailAddresses?.find(x => x.id === person.preferredEmailAddressId);
   const [fields, setFields] = useState({
@@ -21,10 +21,10 @@ export function UpdateEmailDialog({volunteerFamilyId, person, onClose}: UpdateEm
 
   async function save() {
     if (currentEmailAddress)
-      await directoryModel.updatePersonEmailAddress(volunteerFamilyId, person.id as string,
+      await directoryModel.updatePersonEmailAddress(familyId, person.id as string,
         currentEmailAddress.id!, emailAddress, emailType);
     else
-      await directoryModel.addPersonEmailAddress(volunteerFamilyId, person.id as string,
+      await directoryModel.addPersonEmailAddress(familyId, person.id as string,
         emailAddress, emailType);
   }
 

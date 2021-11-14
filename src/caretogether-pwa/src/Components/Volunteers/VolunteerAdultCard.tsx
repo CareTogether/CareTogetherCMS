@@ -257,7 +257,7 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         onClose={() => setUpdateNotesParameter(null)} />) || null}
       {(updatePhoneParameter && <UpdatePhoneDialog familyId={volunteerFamilyId} person={updatePhoneParameter.person}
         onClose={() => setUpdatePhoneParameter(null)} />) || null}
-      {(updateEmailParameter && <UpdateEmailDialog volunteerFamilyId={volunteerFamilyId} person={updateEmailParameter.person}
+      {(updateEmailParameter && <UpdateEmailDialog familyId={volunteerFamilyId} person={updateEmailParameter.person}
         onClose={() => setUpdateEmailParameter(null)} />) || null}
       {(updateAddressParameter && <UpdateAddressDialog familyId={volunteerFamilyId} person={updateAddressParameter.person}
         onClose={() => setUpdateAddressParameter(null)} />) || null}

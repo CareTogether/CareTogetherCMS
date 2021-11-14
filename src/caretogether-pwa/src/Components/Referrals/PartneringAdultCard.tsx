@@ -1,4 +1,4 @@
-import { Card, CardHeader, IconButton, CardContent, Typography, Chip, CardActions, makeStyles, Divider, Menu } from "@material-ui/core";
+import { Card, CardHeader, IconButton, CardContent, Typography, Chip, CardActions, makeStyles, Divider, Menu, ListItemText, MenuItem } from "@material-ui/core";
 import { useState } from "react";
 import { Gender, Person, CombinedFamilyInfo } from "../../GeneratedClient";
 import { AgeText } from "../AgeText";
@@ -7,6 +7,12 @@ import { useRecoilValue } from "recoil";
 import { partneringFamiliesData } from "../../Model/ReferralsModel";
 import { ContactDisplay } from "../ContactDisplay";
 import { CardInfoRow } from "../CardInfoRow";
+import { RenamePersonDialog } from "../Families/RenamePersonDialog";
+import { UpdateAddressDialog } from "../Families/UpdateAddressDialog";
+import { UpdateConcernsDialog } from "../Families/UpdateConcernsDialog";
+import { UpdateEmailDialog } from "../Families/UpdateEmailDialog";
+import { UpdateNotesDialog } from "../Families/UpdateNotesDialog";
+import { UpdatePhoneDialog } from "../Families/UpdatePhoneDialog";
 
 const useStyles = makeStyles((theme) => ({
   sectionChips: {
@@ -65,36 +71,36 @@ export function PartneringAdultCard({partneringFamilyId, personId}: PartneringAd
   // }
 
   const [adultMoreMenuAnchor, setAdultMoreMenuAnchor] = useState<{anchor: Element, adult: Person} | null>(null);
-  // const [renamePersonParameter, setRenamePersonParameter] = useState<{partneringFamilyId: string, person: Person} | null>(null);
-  // function selectChangeName(adult: Person) {
-  //   setAdultMoreMenuAnchor(null);
-  //   setRenamePersonParameter({partneringFamilyId, person: adult});
-  // }
-  // const [updateConcernsParameter, setUpdateConcernsParameter] = useState<{partneringFamilyId: string, person: Person} | null>(null);
-  // function selectUpdateConcerns(adult: Person) {
-  //   setAdultMoreMenuAnchor(null);
-  //   setUpdateConcernsParameter({partneringFamilyId, person: adult});
-  // }
-  // const [updateNotesParameter, setUpdateNotesParameter] = useState<{partneringFamilyId: string, person: Person} | null>(null);
-  // function selectUpdateNotes(adult: Person) {
-  //   setAdultMoreMenuAnchor(null);
-  //   setUpdateNotesParameter({partneringFamilyId, person: adult});
-  // }
-  // const [updatePhoneParameter, setUpdatePhoneParameter] = useState<{partneringFamilyId: string, person: Person} | null>(null);
-  // function selectUpdatePhone(adult: Person) {
-  //   setAdultMoreMenuAnchor(null);
-  //   setUpdatePhoneParameter({partneringFamilyId, person: adult});
-  // }
-  // const [updateEmailParameter, setUpdateEmailParameter] = useState<{partneringFamilyId: string, person: Person} | null>(null);
-  // function selectUpdateEmail(adult: Person) {
-  //   setAdultMoreMenuAnchor(null);
-  //   setUpdateEmailParameter({partneringFamilyId, person: adult});
-  // }
-  // const [updateAddressParameter, setUpdateAddressParameter] = useState<{partneringFamilyId: string, person: Person} | null>(null);
-  // function selectUpdateAddress(adult: Person) {
-  //   setAdultMoreMenuAnchor(null);
-  //   setUpdateAddressParameter({partneringFamilyId, person: adult});
-  // }
+  const [renamePersonParameter, setRenamePersonParameter] = useState<{partneringFamilyId: string, person: Person} | null>(null);
+  function selectChangeName(adult: Person) {
+    setAdultMoreMenuAnchor(null);
+    setRenamePersonParameter({partneringFamilyId, person: adult});
+  }
+  const [updateConcernsParameter, setUpdateConcernsParameter] = useState<{partneringFamilyId: string, person: Person} | null>(null);
+  function selectUpdateConcerns(adult: Person) {
+    setAdultMoreMenuAnchor(null);
+    setUpdateConcernsParameter({partneringFamilyId, person: adult});
+  }
+  const [updateNotesParameter, setUpdateNotesParameter] = useState<{partneringFamilyId: string, person: Person} | null>(null);
+  function selectUpdateNotes(adult: Person) {
+    setAdultMoreMenuAnchor(null);
+    setUpdateNotesParameter({partneringFamilyId, person: adult});
+  }
+  const [updatePhoneParameter, setUpdatePhoneParameter] = useState<{partneringFamilyId: string, person: Person} | null>(null);
+  function selectUpdatePhone(adult: Person) {
+    setAdultMoreMenuAnchor(null);
+    setUpdatePhoneParameter({partneringFamilyId, person: adult});
+  }
+  const [updateEmailParameter, setUpdateEmailParameter] = useState<{partneringFamilyId: string, person: Person} | null>(null);
+  function selectUpdateEmail(adult: Person) {
+    setAdultMoreMenuAnchor(null);
+    setUpdateEmailParameter({partneringFamilyId, person: adult});
+  }
+  const [updateAddressParameter, setUpdateAddressParameter] = useState<{partneringFamilyId: string, person: Person} | null>(null);
+  function selectUpdateAddress(adult: Person) {
+    setAdultMoreMenuAnchor(null);
+    setUpdateAddressParameter({partneringFamilyId, person: adult});
+  }
   
   //const theme = useTheme();
   //const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
@@ -186,7 +192,7 @@ export function PartneringAdultCard({partneringFamilyId, personId}: PartneringAd
         keepMounted
         open={Boolean(adultMoreMenuAnchor)}
         onClose={() => setAdultMoreMenuAnchor(null)}>
-        {/* <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectChangeName(adultMoreMenuAnchor.adult)}>
+        <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectChangeName(adultMoreMenuAnchor.adult)}>
           <ListItemText primary="Change name" />
         </MenuItem>
         <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectUpdateConcerns(adultMoreMenuAnchor.adult)}>
@@ -203,19 +209,19 @@ export function PartneringAdultCard({partneringFamilyId, personId}: PartneringAd
         </MenuItem>
         <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectUpdateAddress(adultMoreMenuAnchor.adult)}>
           <ListItemText primary="Update address" />
-        </MenuItem> */}
+        </MenuItem>
       </Menu>
-      {/* {(renamePersonParameter && <RenamePersonDialog partneringFamilyId={partneringFamilyId} person={renamePersonParameter.person}
-        onClose={() => setRenamePersonParameter(null)} />) || null} */}
-      {/* {(updateConcernsParameter && <UpdateConcernsDialog partneringFamilyId={partneringFamilyId} person={updateConcernsParameter.person}
-        onClose={() => setUpdateConcernsParameter(null)} />) || null} */}
-      {/* {(updateNotesParameter && <UpdateNotesDialog partneringFamilyId={partneringFamilyId} person={updateNotesParameter.person}
-        onClose={() => setUpdateNotesParameter(null)} />) || null} */}
-      {/* {(updatePhoneParameter && <UpdatePhoneDialog partneringFamilyId={partneringFamilyId} person={updatePhoneParameter.person}
-        onClose={() => setUpdatePhoneParameter(null)} />) || null} */}
-      {/* {(updateEmailParameter && <UpdateEmailDialog partneringFamilyId={partneringFamilyId} person={updateEmailParameter.person}
-        onClose={() => setUpdateEmailParameter(null)} />) || null} */}
-      {/* {(updateAddressParameter && <UpdateAddressDialog partneringFamilyId={partneringFamilyId} person={updateAddressParameter.person}
-        onClose={() => setUpdateAddressParameter(null)} />) || null} */}
+      {(renamePersonParameter && <RenamePersonDialog familyId={partneringFamilyId} person={renamePersonParameter.person}
+        onClose={() => setRenamePersonParameter(null)} />) || null}
+      {(updateConcernsParameter && <UpdateConcernsDialog familyId={partneringFamilyId} person={updateConcernsParameter.person}
+        onClose={() => setUpdateConcernsParameter(null)} />) || null}
+      {(updateNotesParameter && <UpdateNotesDialog familyId={partneringFamilyId} person={updateNotesParameter.person}
+        onClose={() => setUpdateNotesParameter(null)} />) || null}
+      {(updatePhoneParameter && <UpdatePhoneDialog familyId={partneringFamilyId} person={updatePhoneParameter.person}
+        onClose={() => setUpdatePhoneParameter(null)} />) || null}
+      {(updateEmailParameter && <UpdateEmailDialog familyId={partneringFamilyId} person={updateEmailParameter.person}
+        onClose={() => setUpdateEmailParameter(null)} />) || null}
+      {(updateAddressParameter && <UpdateAddressDialog familyId={partneringFamilyId} person={updateAddressParameter.person}
+        onClose={() => setUpdateAddressParameter(null)} />) || null}
     </Card>}</>);
 }
