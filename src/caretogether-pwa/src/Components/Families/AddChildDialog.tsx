@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@material-ui/core';
 import { CombinedFamilyInfo, Age, ExactAge, AgeInYears, Gender, CustodialRelationshipType, CustodialRelationship } from '../../GeneratedClient';
-import { volunteerFamiliesData } from '../../Model/VolunteersModel';
+import { visibleFamiliesData } from '../../Model/ModelLoader';
 import { useDirectoryModel } from '../../Model/DirectoryModel';
 import WarningIcon from '@material-ui/icons/Warning';
 import { KeyboardDatePicker } from '@material-ui/pickers';
@@ -28,8 +28,8 @@ interface AddChildDialogProps {
 export function AddChildDialog({onClose}: AddChildDialogProps) {
   const classes = useStyles();
   const { familyId } = useParams<{ familyId: string }>();
-  const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
-  const volunteerFamily = volunteerFamilies.find(x => x.family?.id === familyId) as CombinedFamilyInfo;
+  const visibleFamilies = useRecoilValue(visibleFamiliesData);
+  const family = visibleFamilies.find(x => x.family?.id === familyId) as CombinedFamilyInfo;
 
   const [fields, setFields] = useState({
     firstName: '',
@@ -38,7 +38,7 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
     dateOfBirth: null as Date | null,
     ageInYears: null as number | null,
     ethnicity: '',
-    custodialRelationships: volunteerFamily.family!.adults!.map(adult =>
+    custodialRelationships: family.family!.adults!.map(adult =>
       ({ adult: adult.item1!, relationship: CustodialRelationshipType.ParentWithCustody as CustodialRelationshipType | -1 })),
     notes: null as string | null,
     concerns: null as string | null
@@ -76,7 +76,7 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
           (age as AgeInYears).years = (ageInYears == null ? undefined : ageInYears);
           (age as AgeInYears).asOf = new Date();
         }
-        await directoryModel.addChild(volunteerFamily.family?.id as string,
+        await directoryModel.addChild(family.family?.id as string,
           firstName, lastName, gender as Gender, age, ethnicity,
           custodialRelationships.filter(cr => cr.relationship !== -1).map(cr => {
             const result = new CustodialRelationship();
@@ -94,7 +94,7 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
   return (
     <Dialog open={true} onClose={onClose} scroll='body' aria-labelledby="add-child-title">
       <DialogTitle id="add-child-title">
-        Add Child to {volunteerFamily.family?.adults?.filter(adult => adult.item1?.id === volunteerFamily.family?.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family
+        Add Child to {family.family?.adults?.filter(adult => adult.item1?.id === family.family?.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family
       </DialogTitle>
       <DialogContent>
         {/* <DialogContentText>

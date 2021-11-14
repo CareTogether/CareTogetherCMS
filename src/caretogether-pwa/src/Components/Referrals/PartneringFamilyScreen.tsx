@@ -12,6 +12,7 @@ import { PartneringAdultCard } from './PartneringAdultCard';
 import { PartneringChildCard } from './PartneringChildCard';
 import { useState } from 'react';
 import { AddAdultDialog } from '../Families/AddAdultDialog';
+import { AddChildDialog } from '../Families/AddChildDialog';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -82,7 +83,7 @@ export function PartneringFamilyScreen() {
   
   // const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] = useState(false);
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
-  // const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
+  const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
 
   // const [familyMoreMenuAnchor, setFamilyMoreMenuAnchor] = useState<Element | null>(null);
 
@@ -121,12 +122,12 @@ export function PartneringFamilyScreen() {
         startIcon={<AddCircleIcon />}>
         Adult
       </Button>
-      {/* <Button
+      <Button
         onClick={() => setAddChildDialogOpen(true)}
         variant="contained" color="default" size="small" className={classes.button}
         startIcon={<AddCircleIcon />}>
         Child
-      </Button> */}
+      </Button>
       {/* <IconButton
         onClick={(event) => setFamilyMoreMenuAnchor(event.currentTarget)}>
         <MoreVertIcon />
@@ -172,7 +173,7 @@ export function PartneringFamilyScreen() {
       {/* {uploadDocumentDialogOpen && <UploadPartneringFamilyDocumentDialog partneringFamily={partneringFamily}
         onClose={() => setUploadDocumentDialogOpen(false)} />} */}
       {addAdultDialogOpen && <AddAdultDialog onClose={() => setAddAdultDialogOpen(false)} />}
-      {/* {addChildDialogOpen && <AddChildDialog onClose={() => setAddChildDialogOpen(false)} />} */}
+      {addChildDialogOpen && <AddChildDialog onClose={() => setAddChildDialogOpen(false)} />}
       {/* {(removeRoleParameter && <RemoveFamilyRoleDialog partneringFamilyId={partneringFamilyId} role={removeRoleParameter.role}
         onClose={() => setRemoveRoleParameter(null)} />) || null} */}
       {/* {(resetRoleParameter && <ResetFamilyRoleDialog partneringFamilyId={partneringFamilyId} role={resetRoleParameter.role}
