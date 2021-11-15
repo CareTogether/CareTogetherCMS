@@ -3348,6 +3348,11 @@ export abstract class DirectoryCommand implements IDirectoryCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "CreatePartneringFamilyWithNewAdultCommand") {
+            let result = new CreatePartneringFamilyWithNewAdultCommand();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "CreateVolunteerFamilyWithNewAdultCommand") {
             let result = new CreateVolunteerFamilyWithNewAdultCommand();
             result.init(data);
@@ -3516,6 +3521,84 @@ export interface IAddChildToFamilyCommand extends IDirectoryCommand {
     custodialRelationships?: CustodialRelationship[];
     concerns?: string | undefined;
     notes?: string | undefined;
+}
+
+export class CreatePartneringFamilyWithNewAdultCommand extends DirectoryCommand implements ICreatePartneringFamilyWithNewAdultCommand {
+    referralOpenedAtUtc?: Date;
+    firstName?: string;
+    lastName?: string;
+    gender?: Gender;
+    age?: Age;
+    ethnicity?: string;
+    familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
+    concerns?: string | undefined;
+    notes?: string | undefined;
+    address?: Address;
+    phoneNumber?: PhoneNumber;
+    emailAddress?: EmailAddress;
+
+    constructor(data?: ICreatePartneringFamilyWithNewAdultCommand) {
+        super(data);
+        this._discriminator = "CreatePartneringFamilyWithNewAdultCommand";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.referralOpenedAtUtc = _data["referralOpenedAtUtc"] ? new Date(_data["referralOpenedAtUtc"].toString()) : <any>undefined;
+            this.firstName = _data["firstName"];
+            this.lastName = _data["lastName"];
+            this.gender = _data["gender"];
+            this.age = _data["age"] ? Age.fromJS(_data["age"]) : <any>undefined;
+            this.ethnicity = _data["ethnicity"];
+            this.familyAdultRelationshipInfo = _data["familyAdultRelationshipInfo"] ? FamilyAdultRelationshipInfo.fromJS(_data["familyAdultRelationshipInfo"]) : <any>undefined;
+            this.concerns = _data["concerns"];
+            this.notes = _data["notes"];
+            this.address = _data["address"] ? Address.fromJS(_data["address"]) : <any>undefined;
+            this.phoneNumber = _data["phoneNumber"] ? PhoneNumber.fromJS(_data["phoneNumber"]) : <any>undefined;
+            this.emailAddress = _data["emailAddress"] ? EmailAddress.fromJS(_data["emailAddress"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): CreatePartneringFamilyWithNewAdultCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreatePartneringFamilyWithNewAdultCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["referralOpenedAtUtc"] = this.referralOpenedAtUtc ? this.referralOpenedAtUtc.toISOString() : <any>undefined;
+        data["firstName"] = this.firstName;
+        data["lastName"] = this.lastName;
+        data["gender"] = this.gender;
+        data["age"] = this.age ? this.age.toJSON() : <any>undefined;
+        data["ethnicity"] = this.ethnicity;
+        data["familyAdultRelationshipInfo"] = this.familyAdultRelationshipInfo ? this.familyAdultRelationshipInfo.toJSON() : <any>undefined;
+        data["concerns"] = this.concerns;
+        data["notes"] = this.notes;
+        data["address"] = this.address ? this.address.toJSON() : <any>undefined;
+        data["phoneNumber"] = this.phoneNumber ? this.phoneNumber.toJSON() : <any>undefined;
+        data["emailAddress"] = this.emailAddress ? this.emailAddress.toJSON() : <any>undefined;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface ICreatePartneringFamilyWithNewAdultCommand extends IDirectoryCommand {
+    referralOpenedAtUtc?: Date;
+    firstName?: string;
+    lastName?: string;
+    gender?: Gender;
+    age?: Age;
+    ethnicity?: string;
+    familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
+    concerns?: string | undefined;
+    notes?: string | undefined;
+    address?: Address;
+    phoneNumber?: PhoneNumber;
+    emailAddress?: EmailAddress;
 }
 
 export class CreateVolunteerFamilyWithNewAdultCommand extends DirectoryCommand implements ICreateVolunteerFamilyWithNewAdultCommand {

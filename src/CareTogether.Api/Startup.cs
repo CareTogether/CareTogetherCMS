@@ -100,7 +100,7 @@ namespace CareTogether.Api
 
             // Manager services
             services.AddSingleton<IDirectoryManager>(new DirectoryManager(authorizationEngine, directoryResource,
-                approvalsResource, notesResource, combinedFamilyInfoFormatter));
+                approvalsResource, referralsResource, notesResource, combinedFamilyInfoFormatter));
             services.AddSingleton<IReferralManager>(new ReferralManager(authorizationEngine, referralsResource,
                 combinedFamilyInfoFormatter));
             services.AddSingleton<IApprovalManager>(new ApprovalManager(authorizationEngine, approvalsResource,

@@ -14,16 +14,19 @@ namespace CareTogether.Managers
         private readonly IAuthorizationEngine authorizationEngine;
         private readonly IDirectoryResource directoryResource;
         private readonly IApprovalsResource approvalsResource;
+        private readonly IReferralsResource referralsResource;
         private readonly INotesResource notesResource;
         private readonly CombinedFamilyInfoFormatter combinedFamilyInfoFormatter;
 
 
         public DirectoryManager(IAuthorizationEngine authorizationEngine, IDirectoryResource directoryResource,
-            IApprovalsResource approvalsResource, INotesResource notesResource, CombinedFamilyInfoFormatter combinedFamilyInfoFormatter)
+            IApprovalsResource approvalsResource, IReferralsResource referralsResource, INotesResource notesResource,
+            CombinedFamilyInfoFormatter combinedFamilyInfoFormatter)
         {
             this.authorizationEngine = authorizationEngine;
             this.directoryResource = directoryResource;
             this.approvalsResource = approvalsResource;
+            this.referralsResource = referralsResource;
             this.notesResource = notesResource;
             this.combinedFamilyInfoFormatter = combinedFamilyInfoFormatter;
         }
@@ -152,6 +155,54 @@ namespace CareTogether.Managers
 
                         _ = await approvalsResource.ExecuteVolunteerFamilyCommandAsync(organizationId, locationId,
                             activateVolunteerFamilySubcommand, user.UserId());
+
+                        var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, familyId, user);
+                        return familyResult;
+                    }
+                case CreatePartneringFamilyWithNewAdultCommand c:
+                    {
+                        var adultPersonId = Guid.NewGuid();
+                        var familyId = Guid.NewGuid();
+                        var referralId = Guid.NewGuid();
+                        var address = c.Address == null ? null : c.Address with { Id = Guid.NewGuid() };
+                        var phoneNumber = c.PhoneNumber == null ? null : c.PhoneNumber with { Id = Guid.NewGuid() };
+                        var emailAddress = c.EmailAddress == null ? null : c.EmailAddress with { Id = Guid.NewGuid() };
+                        var addresses = address == null ? ImmutableList<Address>.Empty : ImmutableList<Address>.Empty.Add(address);
+                        var phoneNumbers = phoneNumber == null ? ImmutableList<PhoneNumber>.Empty : ImmutableList<PhoneNumber>.Empty.Add(phoneNumber);
+                        var emailAddresses = emailAddress == null ? ImmutableList<EmailAddress>.Empty : ImmutableList<EmailAddress>.Empty.Add(emailAddress);
+
+                        var createPersonSubcommand = new CreatePerson(adultPersonId, null, c.FirstName, c.LastName,
+                            c.Gender, c.Age, c.Ethnicity,
+                            addresses, address?.Id,
+                            phoneNumbers, phoneNumber?.Id,
+                            emailAddresses, emailAddress?.Id,
+                            c.Concerns, c.Notes);
+                        var createFamilySubcommand = new CreateFamily(familyId, adultPersonId,
+                            ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty.Add((adultPersonId, c.FamilyAdultRelationshipInfo)),
+                            ImmutableList<Guid>.Empty,
+                            ImmutableList<CustodialRelationship>.Empty);
+                        var createReferralSubcommand = new CreateReferral(familyId, referralId, c.ReferralOpenedAtUtc);
+
+                        if (!await authorizationEngine.AuthorizePersonCommandAsync(
+                            organizationId, locationId, user, createPersonSubcommand))
+                            throw new Exception("The user is not authorized to perform this command.");
+
+                        if (!await authorizationEngine.AuthorizeFamilyCommandAsync(
+                            organizationId, locationId, user, createFamilySubcommand))
+                            throw new Exception("The user is not authorized to perform this command.");
+
+                        if (!await authorizationEngine.AuthorizeReferralCommandAsync(
+                            organizationId, locationId, user, createReferralSubcommand))
+                            throw new Exception("The user is not authorized to perform this command.");
+
+                        _ = await directoryResource.ExecutePersonCommandAsync(organizationId, locationId,
+                            createPersonSubcommand, user.UserId());
+
+                        _ = await directoryResource.ExecuteFamilyCommandAsync(organizationId, locationId,
+                            createFamilySubcommand, user.UserId());
+
+                        _ = await referralsResource.ExecuteReferralCommandAsync(organizationId, locationId,
+                            createReferralSubcommand, user.UserId());
 
                         var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, familyId, user);
                         return familyResult;
