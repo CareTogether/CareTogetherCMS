@@ -146,7 +146,20 @@ export function PartneringFamilyScreen() {
     </Toolbar>
     <Grid container spacing={0}>
       <Grid item container xs={12} md={4} spacing={2}>
-        <p>TODO: Feed</p>
+        <Grid item xs={12}>
+          <p>TODO: Feed</p>
+        </Grid>
+        {(partneringFamily.partneringFamilyInfo!.closedReferrals?.length && (
+          <Grid item xs={12}>
+            <p>Previous Referrals:
+              <ul>
+                {partneringFamily.partneringFamilyInfo!.closedReferrals?.map(referral => (
+                  <li key={referral.id}>Referral closed - {ReferralCloseReason[partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closeReason!]}</li>
+                ))}
+              </ul>
+            </p>
+          </Grid>
+        )) || null}
       </Grid>
       <Grid item container xs={12} md={8} spacing={2}>
         <Grid item xs={12}>
