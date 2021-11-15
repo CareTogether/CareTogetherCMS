@@ -1,20 +1,26 @@
-import { Card, CardContent, CardHeader, makeStyles, Typography } from '@material-ui/core';
+import { Card, CardContent, CardHeader, CardActions, IconButton, Button, ListItemText, makeStyles, Menu, MenuItem, Typography } from '@material-ui/core';
 import { format } from 'date-fns';
-import React from 'react';
-import { Note } from '../../GeneratedClient';
+import React, { useState } from 'react';
+import { Note, NoteStatus } from '../../GeneratedClient';
 import { useUserLookup } from '../../Model/DirectoryModel';
 import { PersonName } from './PersonName';
+import MoreVertIcon from '@material-ui/icons/MoreVert';
+import CheckIcon from '@material-ui/icons/Check';
 
 const useStyles = makeStyles((theme) => ({
   card: {
-    minWidth: 275,
+    margin: 8
   },
   cardHeader: {
-    paddingBottom: 0
+    padding: 8
   },
   cardContent: {
-    paddingTop: 8,
-    paddingBottom: 8
+    padding: 8,
+    paddingTop: 0,
+    paddingBottom: 0
+  },
+  cardActions: {
+    paddingTop: 0
   },
   cardList: {
     padding: 0,
@@ -25,7 +31,8 @@ const useStyles = makeStyles((theme) => ({
       marginTop: 4
     }
   },
-  rightCardAction: {
+  rightCardActionButton: {
+    marginTop: 8,
     marginLeft: 'auto !important'
   }
 }));
@@ -39,18 +46,56 @@ export function NoteCard({ note }: NoteCardProps) {
 
   const userLookup = useUserLookup();
 
+  const [moreMenuAnchor, setMoreMenuAnchor] = useState<{anchor: Element} | null>(null);
+  const [showDiscardNoteDialog, setShowDiscardNoteDialog] = useState(false);
+  function selectDiscardDraftNote() {
+    setMoreMenuAnchor(null);
+    setShowDiscardNoteDialog(true);
+  }
+  
+  const [showApproveNoteDialog, setShowApproveNoteDialog] = useState(false);
+
   return (
-    <Card>
+    <Card className={classes.card}>
       <CardHeader className={classes.cardHeader}
         subheader={<>
           <PersonName person={userLookup(note.authorId)} /> -&nbsp;
           {format(note.timestampUtc!, "MM/dd/yyyy hh:mm aa")}
-        </>} />
+          {note.status === NoteStatus.Draft ? " - DRAFT" : ""}
+        </>}
+        action={
+          note.status === NoteStatus.Draft && (
+          <IconButton
+            onClick={(event) => setMoreMenuAnchor({anchor: event.currentTarget})}>
+            <MoreVertIcon />
+          </IconButton>
+        )} />
       <CardContent className={classes.cardContent}>
         <Typography variant="body2" component="p">
           {note.contents}
         </Typography>
       </CardContent>
+      <CardActions className={classes.cardActions}>
+        {note.status === NoteStatus.Draft && (
+          <Button
+            onClick={() => setShowApproveNoteDialog(true)}
+            variant="contained" color="default" size="small" className={classes.rightCardActionButton}
+            startIcon={<CheckIcon />}>
+            Approve
+          </Button>
+        )}
+      </CardActions>
+      <Menu id="note-more-menu"
+        anchorEl={moreMenuAnchor?.anchor}
+        keepMounted
+        open={Boolean(moreMenuAnchor)}
+        onClose={() => setMoreMenuAnchor(null)}>
+        {note.status === NoteStatus.Draft && (
+          <MenuItem onClick={selectDiscardDraftNote}>
+            <ListItemText primary="Discard draft note" />
+          </MenuItem>
+        )}
+      </Menu>
     </Card>
   );
 }
