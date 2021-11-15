@@ -15,6 +15,7 @@ import { AddChildDialog } from '../Families/AddChildDialog';
 import { ArrangementCard } from './ArrangementCard';
 import { PersonName } from '../Families/PersonName';
 import { format } from 'date-fns';
+import { NoteCard } from '../Families/NoteCard';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -147,7 +148,10 @@ export function PartneringFamilyScreen() {
     <Grid container spacing={0}>
       <Grid item container xs={12} md={4} spacing={2}>
         <Grid item xs={12}>
-          <p>TODO: Feed</p>
+          {partneringFamily.notes?.slice().sort((a, b) =>
+            a.timestampUtc! < b.timestampUtc! ? -1 : a.timestampUtc! > b.timestampUtc! ? 1 : 0).map(note => (
+            <NoteCard note={note} />
+          ))}
         </Grid>
         {(partneringFamily.partneringFamilyInfo!.closedReferrals?.length && (
           <Grid item xs={12}>

@@ -15,6 +15,15 @@ export function usePersonLookup() {
   }
 }
 
+export function useUserLookup() {
+  const visibleFamilies = useRecoilValue(visibleFamiliesData);
+
+  return (userId?: string) => {
+    const person = visibleFamilies.flatMap(family => family.family?.adults).find(adult => adult?.item1?.userId === userId)?.item1;
+    return person;
+  }
+}
+
 export function useFamilyLookup() {
   const visibleFamilies = useRecoilValue(visibleFamiliesData);
 
