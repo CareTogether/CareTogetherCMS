@@ -24,7 +24,7 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
     });
   }
   return (
-    <Dialog open={true} onClose={onClose} scroll='body' aria-labelledby="update-dialog-title">
+    <Dialog fullWidth open={true} onClose={onClose} scroll='body' aria-labelledby="update-dialog-title">
       <DialogTitle id="update-dialog-title">
         {title}
       </DialogTitle>

@@ -12,6 +12,7 @@ import { PartneringChildCard } from './PartneringChildCard';
 import { useState } from 'react';
 import { AddAdultDialog } from '../Families/AddAdultDialog';
 import { AddChildDialog } from '../Families/AddChildDialog';
+import { AddEditNoteDialog } from '../Families/AddEditNoteDialog';
 import { ArrangementCard } from './ArrangementCard';
 import { PersonName } from '../Families/PersonName';
 import { format } from 'date-fns';
@@ -87,6 +88,7 @@ export function PartneringFamilyScreen() {
   // const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] = useState(false);
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
   const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
+  const [addNoteDialogOpen, setAddNoteDialogOpen] = useState(false);
   
   //const theme = useTheme();
   //const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
@@ -118,6 +120,12 @@ export function PartneringFamilyScreen() {
         startIcon={<AddCircleIcon />}>
         Child
       </Button>
+      <Button
+        onClick={() => setAddNoteDialogOpen(true)}
+        variant="contained" color="default" size="small" className={classes.button}
+        startIcon={<AddCircleIcon />}>
+        Note
+      </Button>
       {/* <IconButton
         onClick={(event) => setFamilyMoreMenuAnchor(event.currentTarget)}>
         <MoreVertIcon />
@@ -144,6 +152,7 @@ export function PartneringFamilyScreen() {
         onClose={() => setUploadDocumentDialogOpen(false)} />} */}
       {addAdultDialogOpen && <AddAdultDialog onClose={() => setAddAdultDialogOpen(false)} />}
       {addChildDialogOpen && <AddChildDialog onClose={() => setAddChildDialogOpen(false)} />}
+      {addNoteDialogOpen && <AddEditNoteDialog noteId={null} familyId={partneringFamily.family!.id!} onClose={() => setAddNoteDialogOpen(false)} />}
     </Toolbar>
     <Grid container spacing={0}>
       <Grid item container xs={12} md={4} spacing={2}>
