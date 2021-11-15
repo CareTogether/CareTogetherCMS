@@ -21,7 +21,9 @@ const useStyles = makeStyles((theme) => ({
   cardContent: {
     padding: 8,
     paddingTop: 0,
-    paddingBottom: 0
+    paddingBottom: 0,
+    whiteSpace: 'pre-wrap',
+    overflowWrap: 'anywhere'
   },
   cardActions: {
     paddingTop: 0
