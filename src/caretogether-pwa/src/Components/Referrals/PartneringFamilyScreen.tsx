@@ -13,6 +13,7 @@ import { useState } from 'react';
 import { AddAdultDialog } from '../Families/AddAdultDialog';
 import { AddChildDialog } from '../Families/AddChildDialog';
 import { ArrangementCard } from './ArrangementCard';
+import { PersonName } from '../Families/PersonName';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -144,7 +145,7 @@ export function PartneringFamilyScreen() {
     </Toolbar>
     <Grid container spacing={0}>
       <Grid item xs={12}>
-        <span>Primary Contact: {partneringFamily.family?.adults?.filter(adult => adult.item1?.id === partneringFamily.family?.primaryFamilyContactPersonId)[0]?.item1?.firstName}</span>
+        <span>Primary Contact: <PersonName person={partneringFamily.family?.adults?.find(adult => adult.item1?.id === partneringFamily.family?.primaryFamilyContactPersonId)?.item1} /></span>
       </Grid>
       {/* <Grid item xs={12}>
         <div className={classes.sectionChips}>

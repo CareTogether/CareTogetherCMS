@@ -22,6 +22,7 @@ import { currentOrganizationState, currentLocationState } from '../../Model/Sess
 import { VolunteerRoleApprovalStatusChip } from './VolunteerRoleApprovalStatusChip';
 import { RemoveFamilyRoleDialog } from './RemoveFamilyRoleDialog';
 import { ResetFamilyRoleDialog } from './ResetFamilyRoleDialog';
+import { PersonName } from '../Families/PersonName';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -191,7 +192,7 @@ export function VolunteerFamilyScreen() {
     </Toolbar>
     <Grid container spacing={0}>
       <Grid item xs={12}>
-        <span>Primary Contact: {volunteerFamily.family?.adults?.filter(adult => adult.item1?.id === volunteerFamily.family?.primaryFamilyContactPersonId)[0]?.item1?.firstName}</span>
+        <span>Primary Contact: <PersonName person={volunteerFamily.family?.adults?.find(adult => adult.item1?.id === volunteerFamily.family?.primaryFamilyContactPersonId)?.item1} /></span>
       </Grid>
       <Grid item xs={12}>
         <div className={classes.sectionChips}>
