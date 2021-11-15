@@ -292,6 +292,60 @@
         }
       }
     },
+    "/api/{organizationId}/{locationId}/Directory/noteCommand": {
+      "post": {
+        "tags": [
+          "Directory"
+        ],
+        "operationId": "Directory_SubmitNoteCommand",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NoteCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 3
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CombinedFamilyInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/{organizationId}/{locationId}/Files/{documentId}": {
       "get": {
         "tags": [
@@ -475,60 +529,6 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ArrangementCommand"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 3
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CombinedFamilyInfo"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/{organizationId}/{locationId}/Referrals/arrangementNoteCommand": {
-      "post": {
-        "tags": [
-          "Referrals"
-        ],
-        "operationId": "Referrals_SubmitArrangementNoteCommand",
-        "parameters": [
-          {
-            "name": "organizationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          },
-          {
-            "name": "locationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 2
-          }
-        ],
-        "requestBody": {
-          "x-name": "command",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ArrangementNoteCommand"
               }
             }
           },
@@ -1124,6 +1124,12 @@
                 "$ref": "#/components/schemas/VolunteerFamilyInfo"
               }
             ]
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Note"
+            }
           }
         }
       },
@@ -1629,12 +1635,6 @@
             "items": {
               "$ref": "#/components/schemas/ChildLocationHistoryEntry"
             }
-          },
-          "notes": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Note"
-            }
           }
         }
       },
@@ -1732,43 +1732,6 @@
           0,
           1,
           2
-        ]
-      },
-      "Note": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "guid"
-          },
-          "authorId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "timestampUtc": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "contents": {
-            "type": "string",
-            "nullable": true
-          },
-          "status": {
-            "$ref": "#/components/schemas/NoteStatus"
-          }
-        }
-      },
-      "NoteStatus": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "Draft",
-          "Approved"
-        ],
-        "enum": [
-          0,
-          1
         ]
       },
       "VolunteerFamilyInfo": {
@@ -1916,6 +1879,43 @@
             }
           }
         }
+      },
+      "Note": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
+          "authorId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "timestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "contents": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "$ref": "#/components/schemas/NoteStatus"
+          }
+        }
+      },
+      "NoteStatus": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Draft",
+          "Approved"
+        ],
+        "enum": [
+          0,
+          1
+        ]
       },
       "DirectoryCommand": {
         "type": "object",
@@ -2408,6 +2408,97 @@
           }
         ]
       },
+      "NoteCommand": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "discriminator",
+          "mapping": {
+            "ApproveNote": "#/components/schemas/ApproveNote",
+            "CreateDraftNote": "#/components/schemas/CreateDraftNote",
+            "DiscardDraftNote": "#/components/schemas/DiscardDraftNote",
+            "EditDraftNote": "#/components/schemas/EditDraftNote"
+          }
+        },
+        "x-abstract": true,
+        "additionalProperties": false,
+        "required": [
+          "discriminator"
+        ],
+        "properties": {
+          "familyId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "noteId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "discriminator": {
+            "type": "string"
+          }
+        }
+      },
+      "ApproveNote": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/NoteCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "finalizedNoteContents": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "CreateDraftNote": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/NoteCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "draftNoteContents": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "DiscardDraftNote": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/NoteCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false
+          }
+        ]
+      },
+      "EditDraftNote": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/NoteCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "draftNoteContents": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
       "DocumentUploadInfo": {
         "type": "object",
         "additionalProperties": false,
@@ -2754,105 +2845,6 @@
               },
               "uploadedFileName": {
                 "type": "string"
-              }
-            }
-          }
-        ]
-      },
-      "ArrangementNoteCommand": {
-        "type": "object",
-        "discriminator": {
-          "propertyName": "discriminator",
-          "mapping": {
-            "ApproveArrangementNote": "#/components/schemas/ApproveArrangementNote",
-            "CreateDraftArrangementNote": "#/components/schemas/CreateDraftArrangementNote",
-            "DiscardDraftArrangementNote": "#/components/schemas/DiscardDraftArrangementNote",
-            "EditDraftArrangementNote": "#/components/schemas/EditDraftArrangementNote"
-          }
-        },
-        "x-abstract": true,
-        "additionalProperties": false,
-        "required": [
-          "discriminator"
-        ],
-        "properties": {
-          "familyId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "referralId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "arrangementId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "noteId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "discriminator": {
-            "type": "string"
-          }
-        }
-      },
-      "ApproveArrangementNote": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ArrangementNoteCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "finalizedNoteContents": {
-                "type": "string"
-              }
-            }
-          }
-        ]
-      },
-      "CreateDraftArrangementNote": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ArrangementNoteCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "draftNoteContents": {
-                "type": "string",
-                "nullable": true
-              }
-            }
-          }
-        ]
-      },
-      "DiscardDraftArrangementNote": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ArrangementNoteCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false
-          }
-        ]
-      },
-      "EditDraftArrangementNote": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ArrangementNoteCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "draftNoteContents": {
-                "type": "string",
-                "nullable": true
               }
             }
           }

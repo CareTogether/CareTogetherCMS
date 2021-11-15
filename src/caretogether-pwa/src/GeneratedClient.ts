@@ -283,6 +283,50 @@ export class DirectoryClient {
         }
         return Promise.resolve<CombinedFamilyInfo>(<any>null);
     }
+
+    submitNoteCommand(organizationId: string, locationId: string, command: NoteCommand): Promise<CombinedFamilyInfo> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Directory/noteCommand";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (locationId === undefined || locationId === null)
+            throw new Error("The parameter 'locationId' must be defined.");
+        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(command);
+
+        let options_ = <RequestInit>{
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSubmitNoteCommand(_response);
+        });
+    }
+
+    protected processSubmitNoteCommand(response: Response): Promise<CombinedFamilyInfo> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = CombinedFamilyInfo.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<CombinedFamilyInfo>(<any>null);
+    }
 }
 
 export class FilesClient {
@@ -460,50 +504,6 @@ export class ReferralsClient {
     }
 
     protected processSubmitArrangementCommand(response: Response): Promise<CombinedFamilyInfo> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = CombinedFamilyInfo.fromJS(resultData200);
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<CombinedFamilyInfo>(<any>null);
-    }
-
-    submitArrangementNoteCommand(organizationId: string, locationId: string, command: ArrangementNoteCommand): Promise<CombinedFamilyInfo> {
-        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Referrals/arrangementNoteCommand";
-        if (organizationId === undefined || organizationId === null)
-            throw new Error("The parameter 'organizationId' must be defined.");
-        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
-        if (locationId === undefined || locationId === null)
-            throw new Error("The parameter 'locationId' must be defined.");
-        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(command);
-
-        let options_ = <RequestInit>{
-            body: content_,
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processSubmitArrangementNoteCommand(_response);
-        });
-    }
-
-    protected processSubmitArrangementNoteCommand(response: Response): Promise<CombinedFamilyInfo> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -1732,6 +1732,7 @@ export class CombinedFamilyInfo implements ICombinedFamilyInfo {
     family?: Family;
     partneringFamilyInfo?: PartneringFamilyInfo | undefined;
     volunteerFamilyInfo?: VolunteerFamilyInfo | undefined;
+    notes?: Note[];
 
     constructor(data?: ICombinedFamilyInfo) {
         if (data) {
@@ -1747,6 +1748,11 @@ export class CombinedFamilyInfo implements ICombinedFamilyInfo {
             this.family = _data["family"] ? Family.fromJS(_data["family"]) : <any>undefined;
             this.partneringFamilyInfo = _data["partneringFamilyInfo"] ? PartneringFamilyInfo.fromJS(_data["partneringFamilyInfo"]) : <any>undefined;
             this.volunteerFamilyInfo = _data["volunteerFamilyInfo"] ? VolunteerFamilyInfo.fromJS(_data["volunteerFamilyInfo"]) : <any>undefined;
+            if (Array.isArray(_data["notes"])) {
+                this.notes = [] as any;
+                for (let item of _data["notes"])
+                    this.notes!.push(Note.fromJS(item));
+            }
         }
     }
 
@@ -1762,6 +1768,11 @@ export class CombinedFamilyInfo implements ICombinedFamilyInfo {
         data["family"] = this.family ? this.family.toJSON() : <any>undefined;
         data["partneringFamilyInfo"] = this.partneringFamilyInfo ? this.partneringFamilyInfo.toJSON() : <any>undefined;
         data["volunteerFamilyInfo"] = this.volunteerFamilyInfo ? this.volunteerFamilyInfo.toJSON() : <any>undefined;
+        if (Array.isArray(this.notes)) {
+            data["notes"] = [];
+            for (let item of this.notes)
+                data["notes"].push(item.toJSON());
+        }
         return data; 
     }
 }
@@ -1770,6 +1781,7 @@ export interface ICombinedFamilyInfo {
     family?: Family;
     partneringFamilyInfo?: PartneringFamilyInfo | undefined;
     volunteerFamilyInfo?: VolunteerFamilyInfo | undefined;
+    notes?: Note[];
 }
 
 export class Family implements IFamily {
@@ -2629,7 +2641,6 @@ export class Arrangement implements IArrangement {
     familyVolunteerAssignments?: FamilyVolunteerAssignment[];
     partneringFamilyChildAssignments?: PartneringFamilyChildAssignment[];
     childrenLocationHistory?: ChildLocationHistoryEntry[];
-    notes?: Note[];
 
     constructor(data?: IArrangement) {
         if (data) {
@@ -2679,11 +2690,6 @@ export class Arrangement implements IArrangement {
                 this.childrenLocationHistory = [] as any;
                 for (let item of _data["childrenLocationHistory"])
                     this.childrenLocationHistory!.push(ChildLocationHistoryEntry.fromJS(item));
-            }
-            if (Array.isArray(_data["notes"])) {
-                this.notes = [] as any;
-                for (let item of _data["notes"])
-                    this.notes!.push(Note.fromJS(item));
             }
         }
     }
@@ -2735,11 +2741,6 @@ export class Arrangement implements IArrangement {
             for (let item of this.childrenLocationHistory)
                 data["childrenLocationHistory"].push(item.toJSON());
         }
-        if (Array.isArray(this.notes)) {
-            data["notes"] = [];
-            for (let item of this.notes)
-                data["notes"].push(item.toJSON());
-        }
         return data; 
     }
 }
@@ -2755,7 +2756,6 @@ export interface IArrangement {
     familyVolunteerAssignments?: FamilyVolunteerAssignment[];
     partneringFamilyChildAssignments?: PartneringFamilyChildAssignment[];
     childrenLocationHistory?: ChildLocationHistoryEntry[];
-    notes?: Note[];
 }
 
 export enum ArrangementState {
@@ -2944,63 +2944,6 @@ export enum ChildLocationPlan {
     OvernightHousing = 0,
     DaytimeChildCare = 1,
     ReturnToFamily = 2,
-}
-
-export class Note implements INote {
-    id?: string;
-    authorId?: string;
-    timestampUtc?: Date;
-    contents?: string | undefined;
-    status?: NoteStatus;
-
-    constructor(data?: INote) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.id = _data["id"];
-            this.authorId = _data["authorId"];
-            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
-            this.contents = _data["contents"];
-            this.status = _data["status"];
-        }
-    }
-
-    static fromJS(data: any): Note {
-        data = typeof data === 'object' ? data : {};
-        let result = new Note();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["id"] = this.id;
-        data["authorId"] = this.authorId;
-        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
-        data["contents"] = this.contents;
-        data["status"] = this.status;
-        return data; 
-    }
-}
-
-export interface INote {
-    id?: string;
-    authorId?: string;
-    timestampUtc?: Date;
-    contents?: string | undefined;
-    status?: NoteStatus;
-}
-
-export enum NoteStatus {
-    Draft = 0,
-    Approved = 1,
 }
 
 export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
@@ -3317,6 +3260,63 @@ export interface IVolunteerInfo {
     missingRequirements?: string[];
     availableApplications?: string[];
     individualRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
+}
+
+export class Note implements INote {
+    id?: string;
+    authorId?: string;
+    timestampUtc?: Date;
+    contents?: string | undefined;
+    status?: NoteStatus;
+
+    constructor(data?: INote) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.authorId = _data["authorId"];
+            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
+            this.contents = _data["contents"];
+            this.status = _data["status"];
+        }
+    }
+
+    static fromJS(data: any): Note {
+        data = typeof data === 'object' ? data : {};
+        let result = new Note();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["authorId"] = this.authorId;
+        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
+        data["contents"] = this.contents;
+        data["status"] = this.status;
+        return data; 
+    }
+}
+
+export interface INote {
+    id?: string;
+    authorId?: string;
+    timestampUtc?: Date;
+    contents?: string | undefined;
+    status?: NoteStatus;
+}
+
+export enum NoteStatus {
+    Draft = 0,
+    Approved = 1,
 }
 
 export abstract class DirectoryCommand implements IDirectoryCommand {
@@ -4202,6 +4202,198 @@ export interface IUpdatePersonUserLink extends IPersonCommand {
     userId?: string | undefined;
 }
 
+export abstract class NoteCommand implements INoteCommand {
+    familyId?: string;
+    noteId?: string;
+
+    protected _discriminator: string;
+
+    constructor(data?: INoteCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        this._discriminator = "NoteCommand";
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.familyId = _data["familyId"];
+            this.noteId = _data["noteId"];
+        }
+    }
+
+    static fromJS(data: any): NoteCommand {
+        data = typeof data === 'object' ? data : {};
+        if (data["discriminator"] === "ApproveNote") {
+            let result = new ApproveNote();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "CreateDraftNote") {
+            let result = new CreateDraftNote();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "DiscardDraftNote") {
+            let result = new DiscardDraftNote();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "EditDraftNote") {
+            let result = new EditDraftNote();
+            result.init(data);
+            return result;
+        }
+        throw new Error("The abstract class 'NoteCommand' cannot be instantiated.");
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["discriminator"] = this._discriminator; 
+        data["familyId"] = this.familyId;
+        data["noteId"] = this.noteId;
+        return data; 
+    }
+}
+
+export interface INoteCommand {
+    familyId?: string;
+    noteId?: string;
+}
+
+export class ApproveNote extends NoteCommand implements IApproveNote {
+    finalizedNoteContents?: string;
+
+    constructor(data?: IApproveNote) {
+        super(data);
+        this._discriminator = "ApproveNote";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.finalizedNoteContents = _data["finalizedNoteContents"];
+        }
+    }
+
+    static fromJS(data: any): ApproveNote {
+        data = typeof data === 'object' ? data : {};
+        let result = new ApproveNote();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["finalizedNoteContents"] = this.finalizedNoteContents;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IApproveNote extends INoteCommand {
+    finalizedNoteContents?: string;
+}
+
+export class CreateDraftNote extends NoteCommand implements ICreateDraftNote {
+    draftNoteContents?: string | undefined;
+
+    constructor(data?: ICreateDraftNote) {
+        super(data);
+        this._discriminator = "CreateDraftNote";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.draftNoteContents = _data["draftNoteContents"];
+        }
+    }
+
+    static fromJS(data: any): CreateDraftNote {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateDraftNote();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["draftNoteContents"] = this.draftNoteContents;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface ICreateDraftNote extends INoteCommand {
+    draftNoteContents?: string | undefined;
+}
+
+export class DiscardDraftNote extends NoteCommand implements IDiscardDraftNote {
+
+    constructor(data?: IDiscardDraftNote) {
+        super(data);
+        this._discriminator = "DiscardDraftNote";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+    }
+
+    static fromJS(data: any): DiscardDraftNote {
+        data = typeof data === 'object' ? data : {};
+        let result = new DiscardDraftNote();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IDiscardDraftNote extends INoteCommand {
+}
+
+export class EditDraftNote extends NoteCommand implements IEditDraftNote {
+    draftNoteContents?: string | undefined;
+
+    constructor(data?: IEditDraftNote) {
+        super(data);
+        this._discriminator = "EditDraftNote";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.draftNoteContents = _data["draftNoteContents"];
+        }
+    }
+
+    static fromJS(data: any): EditDraftNote {
+        data = typeof data === 'object' ? data : {};
+        let result = new EditDraftNote();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["draftNoteContents"] = this.draftNoteContents;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IEditDraftNote extends INoteCommand {
+    draftNoteContents?: string | undefined;
+}
+
 export class DocumentUploadInfo implements IDocumentUploadInfo {
     documentId?: string;
     valetUrl?: string;
@@ -4895,206 +5087,6 @@ export class UploadArrangementDocument extends ArrangementCommand implements IUp
 export interface IUploadArrangementDocument extends IArrangementCommand {
     uploadedDocumentId?: string;
     uploadedFileName?: string;
-}
-
-export abstract class ArrangementNoteCommand implements IArrangementNoteCommand {
-    familyId?: string;
-    referralId?: string;
-    arrangementId?: string;
-    noteId?: string;
-
-    protected _discriminator: string;
-
-    constructor(data?: IArrangementNoteCommand) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-        this._discriminator = "ArrangementNoteCommand";
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.familyId = _data["familyId"];
-            this.referralId = _data["referralId"];
-            this.arrangementId = _data["arrangementId"];
-            this.noteId = _data["noteId"];
-        }
-    }
-
-    static fromJS(data: any): ArrangementNoteCommand {
-        data = typeof data === 'object' ? data : {};
-        if (data["discriminator"] === "ApproveArrangementNote") {
-            let result = new ApproveArrangementNote();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "CreateDraftArrangementNote") {
-            let result = new CreateDraftArrangementNote();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "DiscardDraftArrangementNote") {
-            let result = new DiscardDraftArrangementNote();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "EditDraftArrangementNote") {
-            let result = new EditDraftArrangementNote();
-            result.init(data);
-            return result;
-        }
-        throw new Error("The abstract class 'ArrangementNoteCommand' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["discriminator"] = this._discriminator; 
-        data["familyId"] = this.familyId;
-        data["referralId"] = this.referralId;
-        data["arrangementId"] = this.arrangementId;
-        data["noteId"] = this.noteId;
-        return data; 
-    }
-}
-
-export interface IArrangementNoteCommand {
-    familyId?: string;
-    referralId?: string;
-    arrangementId?: string;
-    noteId?: string;
-}
-
-export class ApproveArrangementNote extends ArrangementNoteCommand implements IApproveArrangementNote {
-    finalizedNoteContents?: string;
-
-    constructor(data?: IApproveArrangementNote) {
-        super(data);
-        this._discriminator = "ApproveArrangementNote";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.finalizedNoteContents = _data["finalizedNoteContents"];
-        }
-    }
-
-    static fromJS(data: any): ApproveArrangementNote {
-        data = typeof data === 'object' ? data : {};
-        let result = new ApproveArrangementNote();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["finalizedNoteContents"] = this.finalizedNoteContents;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IApproveArrangementNote extends IArrangementNoteCommand {
-    finalizedNoteContents?: string;
-}
-
-export class CreateDraftArrangementNote extends ArrangementNoteCommand implements ICreateDraftArrangementNote {
-    draftNoteContents?: string | undefined;
-
-    constructor(data?: ICreateDraftArrangementNote) {
-        super(data);
-        this._discriminator = "CreateDraftArrangementNote";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.draftNoteContents = _data["draftNoteContents"];
-        }
-    }
-
-    static fromJS(data: any): CreateDraftArrangementNote {
-        data = typeof data === 'object' ? data : {};
-        let result = new CreateDraftArrangementNote();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["draftNoteContents"] = this.draftNoteContents;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface ICreateDraftArrangementNote extends IArrangementNoteCommand {
-    draftNoteContents?: string | undefined;
-}
-
-export class DiscardDraftArrangementNote extends ArrangementNoteCommand implements IDiscardDraftArrangementNote {
-
-    constructor(data?: IDiscardDraftArrangementNote) {
-        super(data);
-        this._discriminator = "DiscardDraftArrangementNote";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-    }
-
-    static fromJS(data: any): DiscardDraftArrangementNote {
-        data = typeof data === 'object' ? data : {};
-        let result = new DiscardDraftArrangementNote();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IDiscardDraftArrangementNote extends IArrangementNoteCommand {
-}
-
-export class EditDraftArrangementNote extends ArrangementNoteCommand implements IEditDraftArrangementNote {
-    draftNoteContents?: string | undefined;
-
-    constructor(data?: IEditDraftArrangementNote) {
-        super(data);
-        this._discriminator = "EditDraftArrangementNote";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.draftNoteContents = _data["draftNoteContents"];
-        }
-    }
-
-    static fromJS(data: any): EditDraftArrangementNote {
-        data = typeof data === 'object' ? data : {};
-        let result = new EditDraftArrangementNote();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["draftNoteContents"] = this.draftNoteContents;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IEditDraftArrangementNote extends IArrangementNoteCommand {
-    draftNoteContents?: string | undefined;
 }
 
 export class UserTenantAccessSummary implements IUserTenantAccessSummary {
