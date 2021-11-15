@@ -1,5 +1,5 @@
 import { useRecoilCallback, useRecoilValue } from "recoil";
-import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, DirectoryCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, DirectoryClient } from "../GeneratedClient";
+import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, DirectoryCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, DirectoryClient, NoteCommand } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { visibleFamiliesData } from "./ModelLoader";
@@ -48,6 +48,31 @@ function usePersonCommandCallback<T extends unknown[]>(
       set(visibleFamiliesData, current =>
         current.some(currentEntry => currentEntry.family?.id === volunteerFamilyId)
         ? current.map(currentEntry => currentEntry.family?.id === volunteerFamilyId
+          ? updatedFamily
+          : currentEntry)
+        : current.concat(updatedFamily));
+      
+      return updatedFamily;
+    };
+    return asyncCallback;
+  })
+}
+
+function useNoteCommandCallback<T extends unknown[]>(
+  callback: (familyId: string, personId: string, ...args: T) => Promise<NoteCommand>) {
+  return useRecoilCallback(({snapshot, set}) => {
+    const asyncCallback = async (familyId: string, personId: string, ...args: T) => {
+      const organizationId = await snapshot.getPromise(currentOrganizationState);
+      const locationId = await snapshot.getPromise(currentLocationState);
+
+      const command = await callback(familyId, personId, ...args);
+
+      const client = new DirectoryClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+      const updatedFamily = await client.submitNoteCommand(organizationId, locationId, command);
+
+      set(visibleFamiliesData, current =>
+        current.some(currentEntry => currentEntry.family?.id === familyId)
+        ? current.map(currentEntry => currentEntry.family?.id === familyId
           ? updatedFamily
           : currentEntry)
         : current.concat(updatedFamily));
@@ -164,6 +189,13 @@ export function useDirectoryModel() {
       command.isCurrentAddress = true;
       return command;
     });
+  // const createDraftNote = useNoteCommandCallback(
+  //   async (familyId, personId, draftNoteContents: string) => {
+  //     const command = new CreateDraftNote({
+  //       familyId: familyId,
+
+  //     })
+  //   });
   const addAdult = useDirectoryCommandCallback(
     async (volunteerFamilyId, firstName: string, lastName: string, gender: Gender, age: Age, ethnicity: string,
         isInHousehold: boolean, relationshipToFamily: string,
