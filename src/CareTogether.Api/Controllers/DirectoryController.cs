@@ -44,5 +44,13 @@ namespace CareTogether.Api.Controllers
             var result = await directoryManager.ExecutePersonCommandAsync(organizationId, locationId, User, familyId, command);
             return result;
         }
+
+        [HttpPost("noteCommand")]
+        public async Task<ActionResult<CombinedFamilyInfo>> SubmitNoteCommandAsync(Guid organizationId, Guid locationId,
+            [FromBody] NoteCommand command)
+        {
+            var result = await directoryManager.ExecuteNoteCommandAsync(organizationId, locationId, User, command);
+            return result;
+        }
     }
 }

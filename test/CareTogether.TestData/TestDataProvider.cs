@@ -50,6 +50,7 @@ namespace CareTogether.TestData
             IMultitenantEventLog<GoalCommandExecutedEvent> goalsEventLog,
             IMultitenantEventLog<ReferralEvent> referralsEventLog,
             IMultitenantEventLog<ApprovalEvent> approvalsEventLog,
+            IMultitenantEventLog<NotesEvent> notesEventLog,
             IObjectStore<string?> draftNotesStore,
             IObjectStore<OrganizationConfiguration> configurationStore,
             IObjectStore<EffectiveLocationPolicy> policiesStore,
@@ -59,6 +60,7 @@ namespace CareTogether.TestData
             await PopulateGoalEvents(goalsEventLog);
             await PopulateReferralEvents(referralsEventLog);
             await PopulateApprovalEvents(approvalsEventLog);
+            await PopulateNoteEvents(notesEventLog);
             await PopulateDraftNotes(draftNotesStore);
             await PopulateConfigurations(configurationStore);
             await PopulatePolicies(policiesStore);
@@ -208,15 +210,8 @@ namespace CareTogether.TestData
                     "Family Coach Supervision", new DateTime(2020, 3, 21, 11, 11, 11), adminId)),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 22, 16, 30, 35), new TrackChildLocationChange(guid1, guid1, guid1,
                     new DateTime(2020, 3, 22, 16, 30, 35), guid3, guid1, ChildLocationPlan.OvernightHousing, "Weekend with parents, met at McDonald's near mom")),
-                new ArrangementNoteCommandExecuted(guid4, new DateTime(2020, 3, 22, 18, 0, 0), new CreateDraftArrangementNote(guid1, guid1, guid1, guid1, null)),
-                new ArrangementNoteCommandExecuted(guid4, new DateTime(2020, 3, 22, 19, 30, 0), new EditDraftArrangementNote(guid1, guid1, guid1, guid1, null)),
-                new ArrangementNoteCommandExecuted(adminId, new DateTime(2020, 3, 22, 19, 45, 0), new ApproveArrangementNote(guid1, guid1, guid1, guid1, "Eric and Ben liked the Play Place and didn't want to go home.")),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 24, 8, 30, 35), new TrackChildLocationChange(guid1, guid1, guid1,
                     new DateTime(2020, 3, 24, 8, 30, 35), guid3, guid2, ChildLocationPlan.OvernightHousing, "Mom dropped off on way to work")),
-                new ArrangementNoteCommandExecuted(guid4, new DateTime(2020, 3, 24, 8, 45, 0), new CreateDraftArrangementNote(guid1, guid1, guid1, guid2, null)),
-                new ArrangementNoteCommandExecuted(guid4, new DateTime(2020, 3, 24, 8, 50, 0), new DiscardDraftArrangementNote(guid1, guid1, guid1, guid2)),
-                new ArrangementNoteCommandExecuted(guid4, new DateTime(2020, 3, 24, 8, 55, 0), new CreateDraftArrangementNote(guid1, guid1, guid1, guid3, null)),
-                new ArrangementNoteCommandExecuted(guid4, new DateTime(2020, 3, 24, 8, 57, 0), new EditDraftArrangementNote(guid1, guid1, guid1, guid3, null)),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 30, 18, 18, 18), new TrackChildLocationChange(guid1, guid1, guid1,
                     new DateTime(2020, 3, 30, 18, 18, 18), guid3, guid1, ChildLocationPlan.ReturnToFamily, "Mom met us and picked him up at DQ"))/*,
                 new ReferralCommandExecuted(adminId, new DateTime(2020, 10, 4, 12, 32, 55), new CloseReferral(guid1, guid1, ReferralCloseReason.NeedMet)),
@@ -271,6 +266,18 @@ namespace CareTogether.TestData
                     new CompleteVolunteerRequirement(guid2, guid6, "Family Friend Application", new DateTime(2021, 8, 10), guid6)),
                 new VolunteerCommandExecuted(adminId, new DateTime(2021, 8, 11), //TODO: This is a workaround for a bug!
                     new CompleteVolunteerRequirement(guid2, guid5, "Family Friend Application", new DateTime(2021, 8, 11), guid7)));
+        }
+
+        public static async Task PopulateNoteEvents(IMultitenantEventLog<NotesEvent> referralsEventLog)
+        {
+            await referralsEventLog.AppendEventsAsync(guid1, guid2,
+                new NoteCommandExecuted(guid4, new DateTime(2020, 3, 22, 18, 0, 0), new CreateDraftNote(guid1, guid1, null)),
+                new NoteCommandExecuted(guid4, new DateTime(2020, 3, 22, 19, 30, 0), new EditDraftNote(guid1, guid1, null)),
+                new NoteCommandExecuted(adminId, new DateTime(2020, 3, 22, 19, 45, 0), new ApproveNote(guid1, guid1, "Eric and Ben liked the Play Place and didn't want to go home.")),
+                new NoteCommandExecuted(guid4, new DateTime(2020, 3, 24, 8, 45, 0), new CreateDraftNote(guid1, guid2, null)),
+                new NoteCommandExecuted(guid4, new DateTime(2020, 3, 24, 8, 50, 0), new DiscardDraftNote(guid1, guid2)),
+                new NoteCommandExecuted(guid4, new DateTime(2020, 3, 24, 8, 55, 0), new CreateDraftNote(guid1, guid3, null)),
+                new NoteCommandExecuted(guid4, new DateTime(2020, 3, 24, 8, 57, 0), new EditDraftNote(guid1, guid3, null)));
         }
 
         public static async Task PopulateDraftNotes(IObjectStore<string?> draftNotesStore)

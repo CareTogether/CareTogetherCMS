@@ -12,8 +12,5 @@ namespace CareTogether.Managers
 
         Task<CombinedFamilyInfo> ExecuteArrangementCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, ArrangementCommand command);
-
-        Task<CombinedFamilyInfo> ExecuteArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, ArrangementNoteCommand command);
     }
 }

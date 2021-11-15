@@ -45,8 +45,8 @@ namespace CareTogether.Engines
             return true;
         }
 
-        public async Task<bool> AuthorizeArrangementNoteCommandAsync(
-            Guid organizationId, Guid locationId, ClaimsPrincipal user, ArrangementNoteCommand command)
+        public async Task<bool> AuthorizeNoteCommandAsync(
+            Guid organizationId, Guid locationId, ClaimsPrincipal user, NoteCommand command)
         {
             await Task.Yield();
             return true;
@@ -94,6 +94,12 @@ namespace CareTogether.Engines
         {
             await Task.Yield();
             return person;
+        }
+
+        public async Task<bool> DiscloseNoteAsync(ClaimsPrincipal user, Guid familyId, Note note)
+        {
+            await Task.Yield();
+            return true;
         }
     }
 }

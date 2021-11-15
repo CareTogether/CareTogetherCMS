@@ -59,24 +59,5 @@ namespace CareTogether.Managers
             var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, command.FamilyId, user);
             return familyResult;
         }
-
-        public async Task<CombinedFamilyInfo> ExecuteArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, ArrangementNoteCommand command)
-        {
-            command = command switch
-            {
-                CreateDraftArrangementNote c => c with { NoteId = Guid.NewGuid() },
-                _ => command
-            };
-
-            if (!await authorizationEngine.AuthorizeArrangementNoteCommandAsync(
-                organizationId, locationId, user, command))
-                throw new Exception("The user is not authorized to perform this command.");
-            
-            _ = await referralsResource.ExecuteArrangementNoteCommandAsync(organizationId, locationId, command, user.UserId());
-
-            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, command.FamilyId, user);
-            return familyResult;
-        }
     }
 }

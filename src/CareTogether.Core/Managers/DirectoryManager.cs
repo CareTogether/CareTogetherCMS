@@ -14,15 +14,17 @@ namespace CareTogether.Managers
         private readonly IAuthorizationEngine authorizationEngine;
         private readonly IDirectoryResource directoryResource;
         private readonly IApprovalsResource approvalsResource;
+        private readonly INotesResource notesResource;
         private readonly CombinedFamilyInfoFormatter combinedFamilyInfoFormatter;
 
 
         public DirectoryManager(IAuthorizationEngine authorizationEngine, IDirectoryResource directoryResource,
-            IApprovalsResource approvalsResource, CombinedFamilyInfoFormatter combinedFamilyInfoFormatter)
+            IApprovalsResource approvalsResource, INotesResource notesResource, CombinedFamilyInfoFormatter combinedFamilyInfoFormatter)
         {
             this.authorizationEngine = authorizationEngine;
             this.directoryResource = directoryResource;
             this.approvalsResource = approvalsResource;
+            this.notesResource = notesResource;
             this.combinedFamilyInfoFormatter = combinedFamilyInfoFormatter;
         }
 
@@ -178,6 +180,25 @@ namespace CareTogether.Managers
             _ = await directoryResource.ExecutePersonCommandAsync(organizationId, locationId, command, user.UserId());
 
             var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, familyId, user);
+            return familyResult;
+        }
+
+        public async Task<CombinedFamilyInfo> ExecuteNoteCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, NoteCommand command)
+        {
+            command = command switch
+            {
+                CreateDraftNote c => c with { NoteId = Guid.NewGuid() },
+                _ => command
+            };
+
+            if (!await authorizationEngine.AuthorizeNoteCommandAsync(
+                organizationId, locationId, user, command))
+                throw new Exception("The user is not authorized to perform this command.");
+
+            _ = await notesResource.ExecuteNoteCommandAsync(organizationId, locationId, command, user.UserId());
+
+            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, command.FamilyId, user);
             return familyResult;
         }
     }

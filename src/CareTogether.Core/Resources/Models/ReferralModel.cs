@@ -1,5 +1,4 @@
 ﻿using JsonPolymorph;
-using Nito.AsyncEx;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -15,8 +14,6 @@ namespace CareTogether.Resources.Models
         ReferralCommand Command) : ReferralEvent(UserId, TimestampUtc);
     public sealed record ArrangementCommandExecuted(Guid UserId, DateTime TimestampUtc,
         ArrangementCommand Command) : ReferralEvent(UserId, TimestampUtc);
-    public sealed record ArrangementNoteCommandExecuted(Guid UserId, DateTime TimestampUtc,
-        ArrangementNoteCommand Command) : ReferralEvent(UserId, TimestampUtc);
 
     public sealed class ReferralModel
     {
@@ -27,38 +24,12 @@ namespace CareTogether.Resources.Models
 
 
         public static async Task<ReferralModel> InitializeAsync(
-            IAsyncEnumerable<(ReferralEvent DomainEvent, long SequenceNumber)> eventLog,
-            Func<Guid, Task<string?>> loadDraftNoteAsync)
+            IAsyncEnumerable<(ReferralEvent DomainEvent, long SequenceNumber)> eventLog)
         {
             var model = new ReferralModel();
 
             await foreach (var (domainEvent, sequenceNumber) in eventLog)
                 model.ReplayEvent(domainEvent, sequenceNumber);
-
-            // Since draft note contents are not stored in the immutable log, note command replays will result in 'null'
-            // contents for any notes that have not been approved (approved note contents are stored in the log). So, we
-            // need to load the contents for any draft notes.
-            model.referrals = (await model.referrals.Select(async referral =>
-            {
-                return (referral.Key, referral.Value with
-                {
-                    Arrangements = (await referral.Value.Arrangements.Select(async arrangement =>
-                    {
-                        return (arrangement.Key, arrangement.Value with
-                        {
-                            Notes = (await arrangement.Value.Notes.Select(async note =>
-                            {
-                                return (note.Key, note.Value with
-                                {
-                                    Contents = note.Value.Status == NoteStatus.Approved
-                                        ? note.Value.Contents
-                                        : await loadDraftNoteAsync(note.Key)
-                                });
-                            }).WhenAll()).ToImmutableDictionary(note => note.Key, note => note.Item2)
-                        });
-                    }).WhenAll()).ToImmutableDictionary(arrangement => arrangement.Key, arrangement => arrangement.Item2)
-                });
-            }).WhenAll()).ToImmutableDictionary(referral => referral.Key, referral => referral.Item2);
 
             return model;
         }
@@ -119,8 +90,7 @@ namespace CareTogether.Resources.Models
                     ArrangementState.Setup, StartedAtUtc: null, EndedAtUtc: null,
                     ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<UploadedDocumentInfo>.Empty,
                     ImmutableList<IndividualVolunteerAssignment>.Empty, ImmutableList<FamilyVolunteerAssignment>.Empty,
-                    ImmutableList<PartneringFamilyChildAssignment>.Empty, ImmutableList<ChildLocationHistoryEntry>.Empty,
-                    ImmutableDictionary<Guid, NoteEntry>.Empty),
+                    ImmutableList<PartneringFamilyChildAssignment>.Empty, ImmutableList<ChildLocationHistoryEntry>.Empty),
                 _ => referralEntry.Arrangements.TryGetValue(command.ArrangementId, out var arrangementEntry)
                     ? command switch
                     {
@@ -186,62 +156,6 @@ namespace CareTogether.Resources.Models
                 });
         }
 
-        public (ArrangementNoteCommandExecuted Event, long SequenceNumber, ReferralEntry ReferralEntry, Action OnCommit)
-            ExecuteArrangementNoteCommand(ArrangementNoteCommand command, Guid userId, DateTime timestampUtc)
-        {
-            if (!referrals.TryGetValue(command.ReferralId, out var referralEntry))
-                throw new KeyNotFoundException("A referral with the specified ID does not exist.");
-
-            if (!referralEntry.Arrangements.TryGetValue(command.ArrangementId, out var arrangementEntry))
-                throw new KeyNotFoundException("An arrangement with the specified ID does not exist.");
-
-            var noteEntryToUpsert = command switch
-            {
-                CreateDraftArrangementNote c => new NoteEntry(c.NoteId, userId, timestampUtc, NoteStatus.Draft,
-                    c.DraftNoteContents, ApproverId: null, ApprovedTimestampUtc: null),
-                DiscardDraftArrangementNote c => null,
-                _ => arrangementEntry.Notes.TryGetValue(command.NoteId, out var noteEntry)
-                    ? command switch
-                    {
-                        //TODO: Invariants need to be enforced in the model - e.g., no edits or deletes to approved notes.
-                        EditDraftArrangementNote c => noteEntry with
-                        {
-                            Contents = c.DraftNoteContents,
-                            LastEditTimestampUtc = timestampUtc
-                        },
-                        ApproveArrangementNote c => noteEntry with
-                        {
-                            Status = NoteStatus.Approved,
-                            Contents = c.FinalizedNoteContents,
-                            ApprovedTimestampUtc = timestampUtc,
-                            ApproverId = userId
-                        },
-                        _ => throw new NotImplementedException(
-                            $"The command type '{command.GetType().FullName}' has not been implemented.")
-                    }
-                    : throw new KeyNotFoundException("A note with the specified ID does not exist.")
-            };
-
-            var referralEntryToUpsert = referralEntry with
-            {
-                Arrangements = referralEntry.Arrangements.SetItem(command.ArrangementId, arrangementEntry with
-                {
-                    Notes = noteEntryToUpsert == null
-                        ? arrangementEntry.Notes.Remove(command.NoteId)
-                        : arrangementEntry.Notes.SetItem(command.NoteId, noteEntryToUpsert)
-                })
-            };
-            return (
-                Event: new ArrangementNoteCommandExecuted(userId, timestampUtc, command),
-                SequenceNumber: LastKnownSequenceNumber + 1,
-                ReferralEntry: referralEntryToUpsert,
-                OnCommit: () =>
-                {
-                    LastKnownSequenceNumber++;
-                    referrals = referrals.SetItem(referralEntryToUpsert.Id, referralEntryToUpsert);
-                });
-        }
-
         public ImmutableList<ReferralEntry> FindReferralEntries(Func<ReferralEntry, bool> predicate)
         {
             return referrals.Values
@@ -264,12 +178,6 @@ namespace CareTogether.Resources.Models
             {
                 var (_, _, _, onCommit) = ExecuteArrangementCommand(arrangementCommandExecuted.Command,
                     arrangementCommandExecuted.UserId, arrangementCommandExecuted.TimestampUtc);
-                onCommit();
-            }
-            else if (domainEvent is ArrangementNoteCommandExecuted arrangementNoteCommandExecuted)
-            {
-                var (_, _, _, onCommit) = ExecuteArrangementNoteCommand(arrangementNoteCommandExecuted.Command,
-                    arrangementNoteCommandExecuted.UserId, arrangementNoteCommandExecuted.TimestampUtc);
                 onCommit();
             }
             else

@@ -6,7 +6,8 @@ using System.Collections.Immutable;
 namespace CareTogether.Managers
 {
     public sealed record CombinedFamilyInfo(Family Family,
-        PartneringFamilyInfo? PartneringFamilyInfo, VolunteerFamilyInfo? VolunteerFamilyInfo);
+        PartneringFamilyInfo? PartneringFamilyInfo, VolunteerFamilyInfo? VolunteerFamilyInfo,
+        ImmutableList<Note> Notes);
 
     public sealed record PartneringFamilyInfo(
         Referral? OpenReferral,
@@ -27,8 +28,7 @@ namespace CareTogether.Managers
         ImmutableList<IndividualVolunteerAssignment> IndividualVolunteerAssignments,
         ImmutableList<FamilyVolunteerAssignment> FamilyVolunteerAssignments,
         ImmutableList<PartneringFamilyChildAssignment> PartneringFamilyChildAssignments,
-        ImmutableList<ChildLocationHistoryEntry> ChildrenLocationHistory,
-        ImmutableList<Note> Notes);
+        ImmutableList<ChildLocationHistoryEntry> ChildrenLocationHistory);
 
     public sealed record Note(Guid Id, Guid AuthorId, DateTime TimestampUtc,
         string? Contents, NoteStatus Status);

@@ -37,13 +37,5 @@ namespace CareTogether.Api.Controllers
             var result = await referralManager.ExecuteArrangementCommandAsync(organizationId, locationId, User, command);
             return result;
         }
-
-        [HttpPost("arrangementNoteCommand")]
-        public async Task<ActionResult<CombinedFamilyInfo>> SubmitArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
-            [FromBody] ArrangementNoteCommand command)
-        {
-            var result = await referralManager.ExecuteArrangementNoteCommandAsync(organizationId, locationId, User, command);
-            return result;
-        }
     }
 }
