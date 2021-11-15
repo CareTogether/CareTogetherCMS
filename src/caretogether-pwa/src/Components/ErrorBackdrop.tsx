@@ -7,17 +7,14 @@ const errorInfoData = atom<Error | null | undefined>({
   default: undefined
 });
 
-
 export default function ErrorBackdrop() {
   const [errorInfo, setErrorInfo] = useRecoilState(errorInfoData);
 
   useEffect(() => {
     window.onunhandledrejection = (e: PromiseRejectionEvent) => {
-      console.log("onunhandledrejection");
       setErrorInfo(e.reason);
     };
     window.onerror = (_event, _source, _lineno, _colno, error) => {
-      console.log("onerror");
       setErrorInfo(error);
     };
   }, [setErrorInfo]);
