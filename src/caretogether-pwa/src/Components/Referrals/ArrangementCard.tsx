@@ -53,13 +53,13 @@ export function ArrangementCard({ partneringFamily, arrangement }: ArrangementCa
           <ul className={classes.cardList}>
             {/* TODO: Partnering family **individual adult** assignments (e.g., friending) */}
             {arrangement.partneringFamilyChildAssignments?.map(x => (
-              <li><strong><PersonName person={personLookup(partneringFamily.family!.id, x.personId)} /></strong> - Child</li>
+              <li key={`child-${x.personId}`}><strong><PersonName person={personLookup(partneringFamily.family!.id, x.personId)} /></strong> - Child</li>
             ))}
             {arrangement.familyVolunteerAssignments?.map(x => (
-              <li><FamilyName family={familyLookup(x.familyId)} /> - {x.arrangementFunction}</li>
+              <li key={`famVol-${x.familyId}`}><FamilyName family={familyLookup(x.familyId)} /> - {x.arrangementFunction}</li>
             ))}
             {arrangement.individualVolunteerAssignments?.map(x => (
-              <li><PersonName person={personLookup(x.familyId, x.personId)} /> - {x.arrangementFunction}</li>
+              <li key={`indVol-${x.personId}`}><PersonName person={personLookup(x.familyId, x.personId)} /> - {x.arrangementFunction}</li>
             ))}
           </ul>
         </Typography>

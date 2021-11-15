@@ -1,6 +1,6 @@
 import { Container, Toolbar, Grid, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { CombinedFamilyInfo } from '../../GeneratedClient';
+import { CombinedFamilyInfo, ReferralCloseReason } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { useParams } from 'react-router';
@@ -14,6 +14,7 @@ import { AddAdultDialog } from '../Families/AddAdultDialog';
 import { AddChildDialog } from '../Families/AddChildDialog';
 import { ArrangementCard } from './ArrangementCard';
 import { PersonName } from '../Families/PersonName';
+import { format } from 'date-fns';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -144,70 +145,39 @@ export function PartneringFamilyScreen() {
       {addChildDialogOpen && <AddChildDialog onClose={() => setAddChildDialogOpen(false)} />}
     </Toolbar>
     <Grid container spacing={0}>
-      <Grid item xs={12}>
-        <span>Primary Contact: <PersonName person={partneringFamily.family?.adults?.find(adult => adult.item1?.id === partneringFamily.family?.primaryFamilyContactPersonId)?.item1} /></span>
+      <Grid item container xs={12} md={4} spacing={2}>
+        <p>TODO: Feed</p>
       </Grid>
-      {/* <Grid item xs={12}>
-        <div className={classes.sectionChips}>
-          {Object.entries(partneringFamily.partneringFamilyInfo?.familyRoleApprovals || {}).flatMap(([role, roleVersionApprovals]) =>
-            <VolunteerRoleApprovalStatusChip key={role} roleName={role} roleVersionApprovals={roleVersionApprovals} />)}
-          {(partneringFamily.partneringFamilyInfo?.removedRoles || []).map(removedRole =>
-            <Chip key={removedRole.roleName} size="small" label={`${removedRole.roleName} - ${RoleRemovalReason[removedRole.reason!]} - ${removedRole.additionalComments}`} />)}
-        </div>
-      </Grid> */}
-      <Grid item container spacing={2}>
-        {partneringFamily.partneringFamilyInfo?.openReferral?.arrangements?.map(arrangement => (
-          <Grid item key={arrangement.id}>
-            <ArrangementCard partneringFamily={partneringFamily} arrangement={arrangement} />
+      <Grid item container xs={12} md={8} spacing={2}>
+        <Grid item xs={12}>
+          <span>Primary Contact: <PersonName person={partneringFamily.family?.adults?.find(adult => adult.item1?.id === partneringFamily.family?.primaryFamilyContactPersonId)?.item1} /></span>
+        </Grid>
+        <Grid item container xs={12} spacing={2}>
+          {partneringFamily.partneringFamilyInfo?.openReferral?.arrangements?.map(arrangement => (
+            <Grid item key={arrangement.id}>
+              <ArrangementCard partneringFamily={partneringFamily} arrangement={arrangement} />
+            </Grid>
+          ))}
+        </Grid>
+        <Grid item xs={12}>
+          <p>{
+            partneringFamily.partneringFamilyInfo?.openReferral
+            ? "Referral open since " + format(partneringFamily.partneringFamilyInfo.openReferral.createdUtc!, "MM/dd/yyyy")
+            : "Referral closed - " + ReferralCloseReason[partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closeReason!]
+            //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closedUtc) -- needs a new calculated property
+          }</p>
+        </Grid>
+        {partneringFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item2 && (
+          <Grid item key={adult.item1.id}>
+            <PartneringAdultCard partneringFamilyId={familyId} personId={adult.item1.id} />
+          </Grid>
+        ))}
+        {partneringFamily.family?.children?.map(child => (
+          <Grid item key={child.id!}>
+            <PartneringChildCard partneringFamilyId={familyId} personId={child.id!} />
           </Grid>
         ))}
       </Grid>
-      <Grid item xs={12} spacing={2}><br /></Grid>
-      {/* <Grid item xs={12} sm={6} md={4}>
-        <h3>Incomplete</h3>
-        <ul className={classes.familyRequirementsList}>
-          {partneringFamily.partneringFamilyInfo?.missingRequirements?.map((missingRequirementName, i) => (
-            <li key={i}>
-              ❌ {missingRequirementName}
-            </li>
-          ))}
-        </ul>
-      </Grid> */}
-      {/* <Grid item xs={12} sm={6} md={4}>
-        <h3>Completed</h3>
-        <ul className={classes.familyRequirementsList}>
-          {partneringFamily.partneringFamilyInfo?.completedRequirements?.map((completed, i) => (
-            <li key={i}>
-              ✅ {completed.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-              {completed.completedAtUtc && <span style={{float:'right',marginRight:20}}>{format(completed.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
-            </li>
-          ))}
-        </ul>
-      </Grid> */}
-      {/* <Grid item xs={12} sm={6} md={4}>
-        <h3>Documents</h3>
-        <ul className={classes.familyDocumentsList}>
-          {partneringFamily.partneringFamilyInfo?.uploadedDocuments?.map((uploaded, i) => (
-            <li key={i}
-              onClick={() => downloadFile(organizationId, locationId, uploaded.uploadedDocumentId!)}>
-              📃 {uploaded.uploadedFileName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-              {uploaded.timestampUtc && <span style={{float:'right',marginRight:20}}>{format(uploaded.timestampUtc, "MM/dd/yyyy hh:mm aa")}</span>}
-            </li>
-          ))}
-        </ul>
-      </Grid> */}
-    </Grid>
-    <Grid container spacing={2}>
-      {partneringFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item2 && (
-        <Grid item key={adult.item1.id}>
-          <PartneringAdultCard partneringFamilyId={familyId} personId={adult.item1.id} />
-        </Grid>
-      ))}
-      {partneringFamily.family?.children?.map(child => (
-        <Grid item key={child.id!}>
-          <PartneringChildCard partneringFamilyId={familyId} personId={child.id!} />
-        </Grid>
-      ))}
     </Grid>
   </Container>);
 }
