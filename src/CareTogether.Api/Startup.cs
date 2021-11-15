@@ -52,6 +52,7 @@ namespace CareTogether.Api
             var goalsEventLog = new AppendBlobMultitenantEventLog<GoalCommandExecutedEvent>(blobServiceClient, "GoalsEventLog");
             var referralsEventLog = new AppendBlobMultitenantEventLog<ReferralEvent>(blobServiceClient, "ReferralsEventLog");
             var approvalsEventLog = new AppendBlobMultitenantEventLog<ApprovalEvent>(blobServiceClient, "ApprovalsEventLog");
+            var notesEventLog = new AppendBlobMultitenantEventLog<NotesEvent>(blobServiceClient, "NotesEventLog");
             var draftNotesStore = new JsonBlobObjectStore<string?>(blobServiceClient, "DraftNotes");
             var configurationStore = new JsonBlobObjectStore<OrganizationConfiguration>(blobServiceClient, "Configuration");
             var policiesStore = new JsonBlobObjectStore<EffectiveLocationPolicy>(blobServiceClient, "LocationPolicies");
@@ -68,6 +69,7 @@ namespace CareTogether.Api
                     goalsEventLog,
                     referralsEventLog,
                     approvalsEventLog,
+                    notesEventLog,
                     draftNotesStore,
                     configurationStore,
                     policiesStore,
@@ -81,7 +83,8 @@ namespace CareTogether.Api
             var goalsResource = new GoalsResource(goalsEventLog);
             var policiesResource = new PoliciesResource(configurationStore, policiesStore);
             var accountsResource = new AccountsResource(userTenantAccessStore);
-            var referralsResource = new ReferralsResource(referralsEventLog, draftNotesStore);
+            var referralsResource = new ReferralsResource(referralsEventLog);
+            var notesResource = new NotesResource(notesEventLog, draftNotesStore);
 
             //TODO: If we want to be strict about conventions, this should have a manager intermediary for authz.
             services.AddSingleton<IPoliciesResource>(policiesResource);
@@ -93,11 +96,11 @@ namespace CareTogether.Api
 
             // Shared family info formatting logic used by all manager services
             var combinedFamilyInfoFormatter = new CombinedFamilyInfoFormatter(policyEvaluationEngine, authorizationEngine,
-                approvalsResource, referralsResource, directoryResource);
+                approvalsResource, referralsResource, directoryResource, notesResource);
 
             // Manager services
             services.AddSingleton<IDirectoryManager>(new DirectoryManager(authorizationEngine, directoryResource,
-                approvalsResource, combinedFamilyInfoFormatter));
+                approvalsResource, notesResource, combinedFamilyInfoFormatter));
             services.AddSingleton<IReferralManager>(new ReferralManager(authorizationEngine, referralsResource,
                 combinedFamilyInfoFormatter));
             services.AddSingleton<IApprovalManager>(new ApprovalManager(authorizationEngine, approvalsResource,

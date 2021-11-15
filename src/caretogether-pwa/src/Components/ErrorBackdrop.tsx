@@ -31,9 +31,7 @@ export default function ErrorBackdrop() {
           please include a screenshot and a description (as precise as
           possible) of the steps you took to get here.</p>
         <pre style={{whiteSpace: 'pre-wrap', wordBreak: 'break-all'}}>URL: {window.location.toString()}</pre>
-        <pre style={{whiteSpace: 'pre-wrap', wordBreak: 'break-all'}}>Message: {errorInfo?.message}</pre>
-        <pre style={{whiteSpace: 'pre-wrap', wordBreak: 'break-all'}}>Error: {errorInfo?.name}</pre>
-        <pre style={{whiteSpace: 'pre-wrap', wordBreak: 'break-all'}}>Stack: {errorInfo?.stack}</pre>
+        <pre style={{whiteSpace: 'pre-wrap', wordBreak: 'break-all'}}>{errorInfo?.stack}</pre>
       </div>
     </Backdrop>
   );

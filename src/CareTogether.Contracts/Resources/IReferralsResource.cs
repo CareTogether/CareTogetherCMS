@@ -18,8 +18,7 @@ namespace CareTogether.Resources
         ImmutableList<IndividualVolunteerAssignment> IndividualVolunteerAssignments,
         ImmutableList<FamilyVolunteerAssignment> FamilyVolunteerAssignments,
         ImmutableList<PartneringFamilyChildAssignment> PartneringFamilyChildAssignments,
-        ImmutableList<ChildLocationHistoryEntry> ChildrenLocationHistory,
-        ImmutableDictionary<Guid, NoteEntry> Notes);
+        ImmutableList<ChildLocationHistoryEntry> ChildrenLocationHistory);
 
     public enum ReferralCloseReason { NotAppropriate, NoCapacity, NoLongerNeeded, Resourced, NeedMet };
 
@@ -32,11 +31,6 @@ namespace CareTogether.Resources
         Guid ChildId, Guid ChildLocationFamilyId, ChildLocationPlan Plan, string AdditionalExplanation);
 
     public enum ChildLocationPlan { OvernightHousing, DaytimeChildCare, ReturnToFamily }
-
-    public record NoteEntry(Guid Id, Guid AuthorId, DateTime LastEditTimestampUtc, NoteStatus Status,
-        string? Contents, Guid? ApproverId, DateTime? ApprovedTimestampUtc);
-
-    public enum NoteStatus { Draft, Approved };
 
     [JsonHierarchyBase]
     public abstract partial record ReferralCommand(Guid FamilyId, Guid ReferralId);
@@ -83,20 +77,6 @@ namespace CareTogether.Resources
         DateTime EndedAtUtc)
         : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
 
-    [JsonHierarchyBase]
-    public abstract partial record ArrangementNoteCommand(Guid FamilyId, Guid ReferralId, Guid ArrangementId, Guid NoteId);
-    public sealed record CreateDraftArrangementNote(Guid FamilyId, Guid ReferralId, Guid ArrangementId, Guid NoteId,
-        string? DraftNoteContents)
-        : ArrangementNoteCommand(FamilyId, ReferralId, ArrangementId, NoteId);
-    public sealed record EditDraftArrangementNote(Guid FamilyId, Guid ReferralId, Guid ArrangementId, Guid NoteId,
-        string? DraftNoteContents)
-        : ArrangementNoteCommand(FamilyId, ReferralId, ArrangementId, NoteId);
-    public sealed record DiscardDraftArrangementNote(Guid FamilyId, Guid ReferralId, Guid ArrangementId, Guid NoteId)
-        : ArrangementNoteCommand(FamilyId, ReferralId, ArrangementId, NoteId);
-    public sealed record ApproveArrangementNote(Guid FamilyId, Guid ReferralId, Guid ArrangementId, Guid NoteId,
-        string FinalizedNoteContents)
-        : ArrangementNoteCommand(FamilyId, ReferralId, ArrangementId, NoteId);
-
     /// <summary>
     /// The <see cref="IReferralsResource"/> models the lifecycle of people's referrals to CareTogether organizations,
     /// including various forms, arrangements, and policy changes, as well as authorizing related queries.
@@ -112,8 +92,5 @@ namespace CareTogether.Resources
 
         Task<ReferralEntry> ExecuteArrangementCommandAsync(Guid organizationId, Guid locationId,
             ArrangementCommand command, Guid userId);
-
-        Task<ReferralEntry> ExecuteArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
-            ArrangementNoteCommand command, Guid userId);
     }
 }

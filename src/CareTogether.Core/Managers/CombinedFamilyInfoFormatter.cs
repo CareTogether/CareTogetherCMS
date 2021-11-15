@@ -1,6 +1,7 @@
 ﻿using CareTogether.Engines;
 using CareTogether.Resources;
 using System;
+using Nito.AsyncEx;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Security.Claims;
@@ -15,16 +16,19 @@ namespace CareTogether.Managers
         private readonly IApprovalsResource approvalsResource;
         private readonly IReferralsResource referralsResource;
         private readonly IDirectoryResource directoryResource;
+        private readonly INotesResource notesResource;
 
 
         public CombinedFamilyInfoFormatter(IPolicyEvaluationEngine policyEvaluationEngine, IAuthorizationEngine authorizationEngine,
-            IApprovalsResource approvalsResource, IReferralsResource referralsResource, IDirectoryResource directoryResource)
+            IApprovalsResource approvalsResource, IReferralsResource referralsResource, IDirectoryResource directoryResource,
+            INotesResource notesResource)
         {
             this.policyEvaluationEngine = policyEvaluationEngine;
             this.authorizationEngine = authorizationEngine;
             this.approvalsResource = approvalsResource;
             this.referralsResource = referralsResource;
             this.directoryResource = directoryResource;
+            this.notesResource = notesResource;
         }
 
 
@@ -38,7 +42,19 @@ namespace CareTogether.Managers
 
             var volunteerFamilyInfo = await RenderVolunteerFamilyInfoAsync(organizationId, locationId, family, user);
 
-            return new CombinedFamilyInfo(disclosedFamily, partneringFamilyInfo, volunteerFamilyInfo);
+            var notes = await notesResource.ListFamilyNotesAsync(organizationId, locationId, familyId);
+            var disclosedNotes = (await notes
+                .Select(note => new Note(note.Id, note.AuthorId, TimestampUtc: note.Status == NoteStatus.Approved
+                    ? note.ApprovedTimestampUtc!.Value
+                    : note.LastEditTimestampUtc, note.Contents, note.Status))
+                .Select(async note =>
+                    (note, canDisclose: await authorizationEngine.DiscloseNoteAsync(user, familyId, note)))
+                .WhenAll())
+                .Where(result => result.canDisclose)
+                .Select(result => result.note)
+                .ToImmutableList();
+
+            return new CombinedFamilyInfo(disclosedFamily, partneringFamilyInfo, volunteerFamilyInfo, disclosedNotes);
         }
 
 
@@ -69,11 +85,7 @@ namespace CareTogether.Managers
                 new(entry.Id, entry.ArrangementType, entry.State,
                     entry.CompletedRequirements, entry.UploadedDocuments, ImmutableList<string>.Empty, //TODO: populate MissingRequirements
                     entry.IndividualVolunteerAssignments, entry.FamilyVolunteerAssignments,
-                    entry.PartneringFamilyChildAssignments, entry.ChildrenLocationHistory,
-                    entry.Notes.Values.Select(note =>
-                        new Note(note.Id, note.AuthorId, TimestampUtc: note.Status == NoteStatus.Approved
-                            ? note.ApprovedTimestampUtc!.Value
-                            : note.LastEditTimestampUtc, note.Contents, note.Status)).ToImmutableList());
+                    entry.PartneringFamilyChildAssignments, entry.ChildrenLocationHistory);
         }
 
         private async Task<VolunteerFamilyInfo?> RenderVolunteerFamilyInfoAsync(Guid organizationId, Guid locationId,

@@ -20,8 +20,8 @@ namespace CareTogether.Engines
         Task<bool> AuthorizeArrangementCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, ArrangementCommand command);
 
-        Task<bool> AuthorizeArrangementNoteCommandAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, ArrangementNoteCommand command);
+        Task<bool> AuthorizeNoteCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, NoteCommand command);
 
         Task<bool> AuthorizeVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, VolunteerFamilyCommand command);
@@ -38,5 +38,7 @@ namespace CareTogether.Engines
         Task<Family> DiscloseFamilyAsync(ClaimsPrincipal user, Family family);
 
         Task<Person> DisclosePersonAsync(ClaimsPrincipal user, Person person);
+
+        Task<bool> DiscloseNoteAsync(ClaimsPrincipal user, Guid familyId, Note note);
     }
 }

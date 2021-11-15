@@ -36,5 +36,8 @@ namespace CareTogether.Managers
 
         Task<CombinedFamilyInfo> ExecutePersonCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, Guid familyId, PersonCommand command);
+
+        Task<CombinedFamilyInfo> ExecuteNoteCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, NoteCommand command);
     }
 }

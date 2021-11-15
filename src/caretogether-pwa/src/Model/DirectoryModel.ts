@@ -1,5 +1,5 @@
 import { useRecoilCallback, useRecoilValue } from "recoil";
-import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, DirectoryCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, DirectoryClient } from "../GeneratedClient";
+import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, DirectoryCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, DirectoryClient, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { visibleFamiliesData } from "./ModelLoader";
@@ -11,6 +11,15 @@ export function usePersonLookup() {
     const family = visibleFamilies.find(family => family.family!.id === familyId);
     const adult = family?.family?.adults?.find(adult => adult.item1!.id === personId);
     const person = adult?.item1 || family?.family?.children?.find(child => child.id === personId);
+    return person;
+  }
+}
+
+export function useUserLookup() {
+  const visibleFamilies = useRecoilValue(visibleFamiliesData);
+
+  return (userId?: string) => {
+    const person = visibleFamilies.flatMap(family => family.family?.adults).find(adult => adult?.item1?.userId === userId)?.item1;
     return person;
   }
 }
@@ -64,6 +73,31 @@ function useDirectoryCommandCallback<T extends unknown[]>(
       set(visibleFamiliesData, current =>
         current.some(currentEntry => currentEntry.family?.id === volunteerFamilyId)
         ? current.map(currentEntry => currentEntry.family?.id === volunteerFamilyId
+          ? updatedFamily
+          : currentEntry)
+        : current.concat(updatedFamily));
+      
+      return updatedFamily;
+    };
+    return asyncCallback;
+  })
+}
+
+function useNoteCommandCallback<T extends unknown[]>(
+  callback: (familyId: string, ...args: T) => Promise<NoteCommand>) {
+  return useRecoilCallback(({snapshot, set}) => {
+    const asyncCallback = async (familyId: string, ...args: T) => {
+      const organizationId = await snapshot.getPromise(currentOrganizationState);
+      const locationId = await snapshot.getPromise(currentLocationState);
+
+      const command = await callback(familyId, ...args);
+
+      const client = new DirectoryClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+      const updatedFamily = await client.submitNoteCommand(organizationId, locationId, command);
+
+      set(visibleFamiliesData, current =>
+        current.some(currentEntry => currentEntry.family?.id === familyId)
+        ? current.map(currentEntry => currentEntry.family?.id === familyId
           ? updatedFamily
           : currentEntry)
         : current.concat(updatedFamily));
@@ -242,6 +276,40 @@ export function useDirectoryModel() {
       command.emailAddress.type = emailType;
       return command;
     });
+  const createDraftNote = useNoteCommandCallback(
+    async (familyId, draftNoteContents: string) => {
+      const command = new CreateDraftNote({
+        familyId: familyId
+      });
+      command.draftNoteContents = draftNoteContents;
+      return command;
+    });
+  const editDraftNote = useNoteCommandCallback(
+    async (familyId, noteId: string, draftNoteContents: string) => {
+      const command = new EditDraftNote({
+        familyId: familyId,
+        noteId: noteId
+      });
+      command.draftNoteContents = draftNoteContents;
+      return command;
+    });
+  const discardDraftNote = useNoteCommandCallback(
+    async (familyId, noteId: string) => {
+      const command = new DiscardDraftNote({
+        familyId: familyId,
+        noteId: noteId
+      });
+      return command;
+    });
+  const approveNote = useNoteCommandCallback(
+    async (familyId, noteId: string, finalizedNoteContents: string) => {
+      const command = new ApproveNote({
+        familyId: familyId,
+        noteId: noteId
+      });
+      command.finalizedNoteContents = finalizedNoteContents;
+      return command;
+    });
   
   return {
     updatePersonName,
@@ -255,6 +323,10 @@ export function useDirectoryModel() {
     updatePersonAddress,
     addAdult,
     addChild,
-    createVolunteerFamilyWithNewAdult
+    createVolunteerFamilyWithNewAdult,
+    createDraftNote,
+    editDraftNote,
+    discardDraftNote,
+    approveNote
   };
 }
