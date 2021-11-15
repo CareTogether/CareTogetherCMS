@@ -9,15 +9,15 @@ import { useRecoilValue } from "recoil";
 import { volunteerFamiliesData } from "../../Model/VolunteersModel";
 import { RecordVolunteerAdultStepDialog } from "./RecordVolunteerAdultStepDialog";
 import { policyData } from '../../Model/ConfigurationModel';
-import { RenamePersonDialog } from "./RenamePersonDialog";
-import { UpdateConcernsDialog } from "./UpdateConcernsDialog";
-import { UpdateNotesDialog } from "./UpdateNotesDialog";
+import { RenamePersonDialog } from "../Families/RenamePersonDialog";
+import { UpdateConcernsDialog } from "../Families/UpdateConcernsDialog";
+import { UpdateNotesDialog } from "../Families/UpdateNotesDialog";
 import { ContactDisplay } from "../ContactDisplay";
 import { CardInfoRow } from "../CardInfoRow";
 import { VolunteerRoleApprovalStatusChip } from "./VolunteerRoleApprovalStatusChip";
-import { UpdatePhoneDialog } from "./UpdatePhoneDialog";
-import { UpdateEmailDialog } from "./UpdateEmailDialog";
-import { UpdateAddressDialog } from "./UpdateAddressDialog";
+import { UpdatePhoneDialog } from "../Families/UpdatePhoneDialog";
+import { UpdateEmailDialog } from "../Families/UpdateEmailDialog";
+import { UpdateAddressDialog } from "../Families/UpdateAddressDialog";
 import { RemoveIndividualRoleDialog } from "./RemoveIndividualRoleDialog";
 import { ResetIndividualRoleDialog } from "./ResetIndividualRoleDialog";
 
@@ -249,17 +249,17 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
           </MenuItem>
         ))}
       </Menu>
-      {(renamePersonParameter && <RenamePersonDialog volunteerFamilyId={volunteerFamilyId} person={renamePersonParameter.person}
+      {(renamePersonParameter && <RenamePersonDialog familyId={volunteerFamilyId} person={renamePersonParameter.person}
         onClose={() => setRenamePersonParameter(null)} />) || null}
-      {(updateConcernsParameter && <UpdateConcernsDialog volunteerFamilyId={volunteerFamilyId} person={updateConcernsParameter.person}
+      {(updateConcernsParameter && <UpdateConcernsDialog familyId={volunteerFamilyId} person={updateConcernsParameter.person}
         onClose={() => setUpdateConcernsParameter(null)} />) || null}
-      {(updateNotesParameter && <UpdateNotesDialog volunteerFamilyId={volunteerFamilyId} person={updateNotesParameter.person}
+      {(updateNotesParameter && <UpdateNotesDialog familyId={volunteerFamilyId} person={updateNotesParameter.person}
         onClose={() => setUpdateNotesParameter(null)} />) || null}
-      {(updatePhoneParameter && <UpdatePhoneDialog volunteerFamilyId={volunteerFamilyId} person={updatePhoneParameter.person}
+      {(updatePhoneParameter && <UpdatePhoneDialog familyId={volunteerFamilyId} person={updatePhoneParameter.person}
         onClose={() => setUpdatePhoneParameter(null)} />) || null}
-      {(updateEmailParameter && <UpdateEmailDialog volunteerFamilyId={volunteerFamilyId} person={updateEmailParameter.person}
+      {(updateEmailParameter && <UpdateEmailDialog familyId={volunteerFamilyId} person={updateEmailParameter.person}
         onClose={() => setUpdateEmailParameter(null)} />) || null}
-      {(updateAddressParameter && <UpdateAddressDialog volunteerFamilyId={volunteerFamilyId} person={updateAddressParameter.person}
+      {(updateAddressParameter && <UpdateAddressDialog familyId={volunteerFamilyId} person={updateAddressParameter.person}
         onClose={() => setUpdateAddressParameter(null)} />) || null}
       {(removeRoleParameter && <RemoveIndividualRoleDialog volunteerFamilyId={volunteerFamilyId} person={removeRoleParameter.person} role={removeRoleParameter.role}
         onClose={() => setRemoveRoleParameter(null)} />) || null}

@@ -1,10 +1,13 @@
-import { Card, CardHeader, IconButton, CardContent, Typography, CardActions, makeStyles, Menu } from "@material-ui/core";
+import { Card, CardHeader, IconButton, CardContent, Typography, CardActions, makeStyles, Menu, ListItemText, MenuItem } from "@material-ui/core";
 import { useState } from "react";
 import { CustodialRelationshipType, Gender, Person, CombinedFamilyInfo } from "../../GeneratedClient";
 import { AgeText } from "../AgeText";
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import { useRecoilValue } from "recoil";
 import { partneringFamiliesData } from "../../Model/ReferralsModel";
+import { RenamePersonDialog } from "../Families/RenamePersonDialog";
+import { UpdateConcernsDialog } from "../Families/UpdateConcernsDialog";
+import { UpdateNotesDialog } from "../Families/UpdateNotesDialog";
 
 const useStyles = makeStyles((theme) => ({
   sectionChips: {
@@ -54,21 +57,21 @@ export function PartneringChildCard({partneringFamilyId, personId}: PartneringCh
   const child = partneringFamily.family?.children?.find(x => x.id === personId);
 
   const [childMoreMenuAnchor, setChildMoreMenuAnchor] = useState<{anchor: Element, child: Person} | null>(null);
-  // const [renamePersonParameter, setRenamePersonParameter] = useState<{partneringFamilyId: string, person: Person} | null>(null);
-  // function selectChangeName(child: Person) {
-  //   setChildMoreMenuAnchor(null);
-  //   setRenamePersonParameter({partneringFamilyId, person: child});
-  // }
-  // const [updateConcernsParameter, setUpdateConcernsParameter] = useState<{partneringFamilyId: string, person: Person} | null>(null);
-  // function selectUpdateConcerns(child: Person) {
-  //   setChildMoreMenuAnchor(null);
-  //   setUpdateConcernsParameter({partneringFamilyId, person: child});
-  // }
-  // const [updateNotesParameter, setUpdateNotesParameter] = useState<{partneringFamilyId: string, person: Person} | null>(null);
-  // function selectUpdateNotes(child: Person) {
-  //   setChildMoreMenuAnchor(null);
-  //   setUpdateNotesParameter({partneringFamilyId, person: child});
-  // }
+  const [renamePersonParameter, setRenamePersonParameter] = useState<{partneringFamilyId: string, person: Person} | null>(null);
+  function selectChangeName(child: Person) {
+    setChildMoreMenuAnchor(null);
+    setRenamePersonParameter({partneringFamilyId, person: child});
+  }
+  const [updateConcernsParameter, setUpdateConcernsParameter] = useState<{partneringFamilyId: string, person: Person} | null>(null);
+  function selectUpdateConcerns(child: Person) {
+    setChildMoreMenuAnchor(null);
+    setUpdateConcernsParameter({partneringFamilyId, person: child});
+  }
+  const [updateNotesParameter, setUpdateNotesParameter] = useState<{partneringFamilyId: string, person: Person} | null>(null);
+  function selectUpdateNotes(child: Person) {
+    setChildMoreMenuAnchor(null);
+    setUpdateNotesParameter({partneringFamilyId, person: child});
+  }
 
   return (<>{child &&
     <Card className={classes.card}>
@@ -112,7 +115,7 @@ export function PartneringChildCard({partneringFamilyId, personId}: PartneringCh
         keepMounted
         open={Boolean(childMoreMenuAnchor)}
         onClose={() => setChildMoreMenuAnchor(null)}>
-        {/* <MenuItem onClick={() => childMoreMenuAnchor?.child && selectChangeName(childMoreMenuAnchor.child)}>
+        <MenuItem onClick={() => childMoreMenuAnchor?.child && selectChangeName(childMoreMenuAnchor.child)}>
           <ListItemText primary="Change name" />
         </MenuItem>
         <MenuItem onClick={() => childMoreMenuAnchor?.child && selectUpdateConcerns(childMoreMenuAnchor.child)}>
@@ -120,13 +123,13 @@ export function PartneringChildCard({partneringFamilyId, personId}: PartneringCh
         </MenuItem>
         <MenuItem onClick={() => childMoreMenuAnchor?.child && selectUpdateNotes(childMoreMenuAnchor.child)}>
           <ListItemText primary="Update notes" />
-        </MenuItem> */}
+        </MenuItem>
       </Menu>
-      {/* {(renamePersonParameter && <RenamePersonDialog partneringFamilyId={partneringFamilyId} person={renamePersonParameter.person}
+      {(renamePersonParameter && <RenamePersonDialog familyId={partneringFamilyId} person={renamePersonParameter.person}
         onClose={() => setRenamePersonParameter(null)} />) || null}
-      {(updateConcernsParameter && <UpdateConcernsDialog partneringFamilyId={partneringFamilyId} person={updateConcernsParameter.person}
+      {(updateConcernsParameter && <UpdateConcernsDialog familyId={partneringFamilyId} person={updateConcernsParameter.person}
         onClose={() => setUpdateConcernsParameter(null)} />) || null}
-      {(updateNotesParameter && <UpdateNotesDialog partneringFamilyId={partneringFamilyId} person={updateNotesParameter.person}
-        onClose={() => setUpdateNotesParameter(null)} />) || null} */}
+      {(updateNotesParameter && <UpdateNotesDialog familyId={partneringFamilyId} person={updateNotesParameter.person}
+        onClose={() => setUpdateNotesParameter(null)} />) || null}
     </Card>}</>);
 }

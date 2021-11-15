@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import { Grid, TextField } from '@material-ui/core';
 import { Person } from '../../GeneratedClient';
-import { useVolunteersModel } from '../../Model/VolunteersModel';
+import { useDirectoryModel } from '../../Model/DirectoryModel';
 import { UpdateDialog } from '../UpdateDialog';
 
 interface UpdateAddressDialogProps {
-  volunteerFamilyId: string,
+  familyId: string,
   person: Person,
   onClose: () => void
 }
 
-export function UpdateAddressDialog({volunteerFamilyId, person, onClose}: UpdateAddressDialogProps) {
-  const volunteerFamiliesModel = useVolunteersModel();
+export function UpdateAddressDialog({familyId, person, onClose}: UpdateAddressDialogProps) {
+  const directoryModel = useDirectoryModel();
   const currentAddress = person.addresses?.find(x => x.id === person.currentAddressId);
   const [fields, setFields] = useState({
     line1: currentAddress?.line1 || "",
@@ -24,10 +24,10 @@ export function UpdateAddressDialog({volunteerFamilyId, person, onClose}: Update
 
   async function save() {
     if (currentAddress)
-      await volunteerFamiliesModel.updatePersonAddress(volunteerFamilyId, person.id as string,
+      await directoryModel.updatePersonAddress(familyId, person.id as string,
         currentAddress.id!, line1, line2, city, state, postalCode);
     else
-      await volunteerFamiliesModel.addPersonAddress(volunteerFamilyId, person.id as string,
+      await directoryModel.addPersonAddress(familyId, person.id as string,
         line1, line2, city, state, postalCode);
   }
 

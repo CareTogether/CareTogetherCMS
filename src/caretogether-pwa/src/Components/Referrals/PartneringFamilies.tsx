@@ -2,12 +2,14 @@ import { makeStyles } from '@material-ui/core/styles';
 import { Grid, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@material-ui/core';
 import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../../Model/ReferralsModel';
-import { differenceInYears } from 'date-fns';
+import { format } from 'date-fns';
 import React from 'react';
-import { CombinedFamilyInfo, Gender, ExactAge, AgeInYears } from '../../GeneratedClient';
+import { ReferralCloseReason, PartneringFamilyInfo, Arrangement } from '../../GeneratedClient';
 import { useHistory } from 'react-router-dom';
+import { FamilyName } from '../Families/FamilyName';
+import { ArrangementCard } from './ArrangementCard';
 
-const useStyles = makeStyles((theme) => ({
+export const useStyles = makeStyles((theme) => ({
   paper: {
     padding: theme.spacing(2),
     display: 'flex',
@@ -23,11 +25,7 @@ const useStyles = makeStyles((theme) => ({
   familyRow: {
     backgroundColor: '#eef'
   },
-  adultRow: {
-  },
-  childRow: {
-    color: 'ddd',
-    fontStyle: 'italic'
+  arrangementsRow: {
   },
   drawerPaper: {
   },
@@ -38,8 +36,11 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-function familyLastName(family: CombinedFamilyInfo) {
-  return family.family!.adults?.filter(adult => family.family!.primaryFamilyContactPersonId === adult.item1?.id)[0]?.item1?.lastName || "";
+function allArrangements(partneringFamilyInfo: PartneringFamilyInfo) {
+  const results = [] as Arrangement[];
+  partneringFamilyInfo.closedReferrals?.forEach(x => x.arrangements?.forEach(y => results.push(y)));
+  partneringFamilyInfo.openReferral?.arrangements?.forEach(x => results.push(x));
+  return results;
 }
 
 function PartneringFamilies() {
@@ -59,55 +60,34 @@ function PartneringFamilies() {
           <Table className={classes.table} size="small">
             <TableHead>
               <TableRow>
-                <TableCell>First Name</TableCell>
-                <TableCell>Last Name</TableCell>
-                <TableCell>Gender</TableCell>
-                <TableCell>Age</TableCell>
-                {/* TODO: Additional columns */}
+                <TableCell>Partnering Family</TableCell>
+                <TableCell>Referral Status</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {partneringFamilies.map((partneringFamily) => (
                 <React.Fragment key={partneringFamily.family?.id}>
                   <TableRow className={classes.familyRow} onClick={() => openPartneringFamily(partneringFamily.family!.id!)}>
-                    <TableCell key="1" colSpan={4}>{familyLastName(partneringFamily) + " Family"
-                    }</TableCell>
-                    {/* TODO: Additional columns */}
+                    <TableCell><FamilyName family={partneringFamily} /></TableCell>
+                    <TableCell>{
+                      partneringFamily.partneringFamilyInfo?.openReferral
+                      ? "Open since " + format(partneringFamily.partneringFamilyInfo.openReferral.createdUtc!, "MM/dd/yyyy")
+                      : "Closed - " + ReferralCloseReason[partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closeReason!]
+                      //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closedUtc) -- needs a new calculated property
+                      }</TableCell>
                   </TableRow>
-                  {partneringFamily.family?.adults?.map(adult => adult.item1 && (
-                    <TableRow key={partneringFamily.family?.id + ":" + adult.item1.id}
-                      onClick={() => openPartneringFamily(partneringFamily.family!.id!)}
-                      className={classes.adultRow}>
-                      <TableCell>{adult.item1.firstName}</TableCell>
-                      <TableCell>{adult.item1.lastName}</TableCell>
-                      <TableCell>{typeof(adult.item1.gender) === 'undefined' ? "" : Gender[adult.item1.gender]}</TableCell>
-                      <TableCell align="right">
-                        { adult.item1.age instanceof ExactAge
-                          ? adult.item1.age.dateOfBirth && differenceInYears(new Date(), adult.item1.age.dateOfBirth)
-                          : adult.item1.age instanceof AgeInYears
-                          ? adult.item1.age.years && adult.item1?.age.asOf && (adult.item1.age.years + differenceInYears(new Date(), adult.item1.age.asOf))
-                          : "⚠" }
-                      </TableCell>
-                      {/* TODO: Additional columns */}
-                    </TableRow>
-                  ))}
-                  {partneringFamily.family?.children?.map(child => (
-                    <TableRow key={partneringFamily.family?.id + ":" + child.id}
-                      onClick={() => openPartneringFamily(partneringFamily.family!.id!)}
-                      className={classes.childRow}>
-                      <TableCell>{child.firstName}</TableCell>
-                      <TableCell>{child.lastName}</TableCell>
-                      <TableCell>{typeof(child.gender) === 'undefined' ? "" : Gender[child.gender]}</TableCell>
-                      <TableCell align="right">
-                        { child.age instanceof ExactAge
-                          ? child.age.dateOfBirth && differenceInYears(new Date(), child.age.dateOfBirth)
-                          : child.age instanceof AgeInYears
-                          ? child.age.years && child.age.asOf && (child.age.years + differenceInYears(new Date(), child.age.asOf))
-                          : "⚠" }
-                      </TableCell>
-                      {/* TODO: Additional columns */}
-                    </TableRow>
-                  ))}
+                  <TableRow onClick={() => openPartneringFamily(partneringFamily.family!.id!)}
+                    className={classes.arrangementsRow}>
+                    <TableCell colSpan={2}>
+                      <Grid container spacing={2}>
+                        {allArrangements(partneringFamily.partneringFamilyInfo!).map(arrangement => (
+                          <Grid item key={arrangement.id}>
+                            <ArrangementCard partneringFamily={partneringFamily} arrangement={arrangement} />
+                          </Grid>
+                        ))}
+                      </Grid>
+                    </TableCell>
+                  </TableRow>
                 </React.Fragment>
               ))}
             </TableBody>

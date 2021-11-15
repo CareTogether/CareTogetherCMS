@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import { FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@material-ui/core';
 import { Person, PhoneNumberType } from '../../GeneratedClient';
-import { useVolunteersModel } from '../../Model/VolunteersModel';
+import { useDirectoryModel } from '../../Model/DirectoryModel';
 import { UpdateDialog } from '../UpdateDialog';
 
 interface UpdatePhoneDialogProps {
-  volunteerFamilyId: string,
+  familyId: string,
   person: Person,
   onClose: () => void
 }
 
-export function UpdatePhoneDialog({volunteerFamilyId, person, onClose}: UpdatePhoneDialogProps) {
-  const volunteerFamiliesModel = useVolunteersModel();
+export function UpdatePhoneDialog({familyId, person, onClose}: UpdatePhoneDialogProps) {
+  const directoryModel = useDirectoryModel();
   const currentPhoneNumber = person.phoneNumbers?.find(x => x.id === person.preferredPhoneNumberId);
   const [fields, setFields] = useState({
     phoneNumber: currentPhoneNumber?.number || "",
@@ -21,10 +21,10 @@ export function UpdatePhoneDialog({volunteerFamilyId, person, onClose}: UpdatePh
 
   async function save() {
     if (currentPhoneNumber)
-      await volunteerFamiliesModel.updatePersonPhoneNumber(volunteerFamilyId, person.id as string,
+      await directoryModel.updatePersonPhoneNumber(familyId, person.id as string,
         currentPhoneNumber.id!, phoneNumber, phoneType);
     else
-      await volunteerFamiliesModel.addPersonPhoneNumber(volunteerFamilyId, person.id as string,
+      await directoryModel.addPersonPhoneNumber(familyId, person.id as string,
         phoneNumber, phoneType);
   }
 

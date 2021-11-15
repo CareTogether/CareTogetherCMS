@@ -1,69 +1,79 @@
-import { Container, Toolbar, Grid } from '@material-ui/core';
-import { CombinedFamilyInfo } from '../../GeneratedClient';
+import { Container, Toolbar, Grid, Button } from '@material-ui/core';
+import { makeStyles } from '@material-ui/core/styles';
+import { CombinedFamilyInfo, ReferralCloseReason } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { useParams } from 'react-router';
+import AddCircleIcon from '@material-ui/icons/AddCircle';
+// import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
+// import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import { PartneringAdultCard } from './PartneringAdultCard';
 import { PartneringChildCard } from './PartneringChildCard';
+import { useState } from 'react';
+import { AddAdultDialog } from '../Families/AddAdultDialog';
+import { AddChildDialog } from '../Families/AddChildDialog';
+import { ArrangementCard } from './ArrangementCard';
+import { PersonName } from '../Families/PersonName';
+import { format } from 'date-fns';
 
-// const useStyles = makeStyles((theme) => ({
-//   sectionHeading: {
-//   },
-//   sectionChips: {
-//     '& > div:first-child': {
-//       marginLeft: 0
-//     },
-//     '& > *': {
-//       margin: theme.spacing(0.5),
-//     }
-//   },
-//   button: {
-//     margin: theme.spacing(1),
-//   },
-//   familyRequirementsList: {
-//     listStyle: 'none',
-//     paddingLeft: 22,
-//     textIndent: -22
-//   },
-//   familyDocumentsList: {
-//     listStyle: 'none',
-//     paddingLeft: 22,
-//     textIndent: -22
-//   },
-//   card: {
-//     minWidth: 275,
-//   },
-//   cardHeader: {
-//     paddingBottom: 0
-//   },
-//   cardContent: {
-//     paddingTop: 8,
-//     paddingBottom: 8
-//   },
-//   cardList: {
-//     padding: 0,
-//     margin: 0,
-//     marginTop: 8,
-//     listStyle: 'none',
-//     '& > li': {
-//       marginTop: 4
-//     }
-//   },
-//   rightCardAction: {
-//     marginLeft: 'auto !important'
-//   }
-// }));
+const useStyles = makeStyles((theme) => ({
+  sectionHeading: {
+  },
+  sectionChips: {
+    '& > div:first-child': {
+      marginLeft: 0
+    },
+    '& > *': {
+      margin: theme.spacing(0.5),
+    }
+  },
+  button: {
+    margin: theme.spacing(1),
+  },
+  familyRequirementsList: {
+    listStyle: 'none',
+    paddingLeft: 22,
+    textIndent: -22
+  },
+  familyDocumentsList: {
+    listStyle: 'none',
+    paddingLeft: 22,
+    textIndent: -22
+  },
+  card: {
+    minWidth: 275,
+  },
+  cardHeader: {
+    paddingBottom: 0
+  },
+  cardContent: {
+    paddingTop: 8,
+    paddingBottom: 8
+  },
+  cardList: {
+    padding: 0,
+    margin: 0,
+    marginTop: 8,
+    listStyle: 'none',
+    '& > li': {
+      marginTop: 4
+    }
+  },
+  rightCardAction: {
+    marginLeft: 'auto !important'
+  }
+}));
 
 export function PartneringFamilyScreen() {
-  //const classes = useStyles();
-  const { partneringFamilyId } = useParams<{ partneringFamilyId: string }>();
+  const classes = useStyles();
+  const { familyId } = useParams<{ familyId: string }>();
 
   const partneringFamilies = useRecoilValue(partneringFamiliesData);
   //const policy = useRecoilValue(policyData);
   //const organizationId = useRecoilValue(currentOrganizationState);
   //const locationId = useRecoilValue(currentLocationState);
 
-  const partneringFamily = partneringFamilies.find(x => x.family?.id === partneringFamilyId) as CombinedFamilyInfo;
+  const partneringFamily = partneringFamilies.find(x => x.family?.id === familyId) as CombinedFamilyInfo;
   
   // const [familyRecordMenuAnchor, setFamilyRecordMenuAnchor] = useState<Element | null>(null);
   // const [recordFamilyStepParameter, setRecordFamilyStepParameter] = useState<{requirementName: string, requirementInfo: ActionRequirement} | null>(null);
@@ -74,21 +84,8 @@ export function PartneringFamilyScreen() {
   // }
   
   // const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] = useState(false);
-  // const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
-  // const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
-
-  // const [familyMoreMenuAnchor, setFamilyMoreMenuAnchor] = useState<Element | null>(null);
-
-  // const [removeRoleParameter, setRemoveRoleParameter] = useState<{partneringFamilyId: string, role: string} | null>(null);
-  // function selectRemoveRole(role: string) {
-  //   setFamilyMoreMenuAnchor(null);
-  //   setRemoveRoleParameter({partneringFamilyId, role: role});
-  // }
-  // const [resetRoleParameter, setResetRoleParameter] = useState<{partneringFamilyId: string, role: string, removalReason: RoleRemovalReason, removalAdditionalComments: string} | null>(null);
-  // function selectResetRole(role: string, removalReason: RoleRemovalReason, removalAdditionalComments: string) {
-  //   setFamilyMoreMenuAnchor(null);
-  //   setResetRoleParameter({partneringFamilyId, role: role, removalReason: removalReason, removalAdditionalComments: removalAdditionalComments});
-  // }
+  const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
+  const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
   
   //const theme = useTheme();
   //const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
@@ -108,18 +105,18 @@ export function PartneringFamilyScreen() {
         startIcon={<CloudUploadIcon />}>
         Upload
       </Button> */}
-      {/* <Button
+      <Button
         onClick={() => setAddAdultDialogOpen(true)}
         variant="contained" color="default" size="small" className={classes.button}
         startIcon={<AddCircleIcon />}>
         Adult
-      </Button> */}
-      {/* <Button
+      </Button>
+      <Button
         onClick={() => setAddChildDialogOpen(true)}
         variant="contained" color="default" size="small" className={classes.button}
         startIcon={<AddCircleIcon />}>
         Child
-      </Button> */}
+      </Button>
       {/* <IconButton
         onClick={(event) => setFamilyMoreMenuAnchor(event.currentTarget)}>
         <MoreVertIcon />
@@ -139,96 +136,61 @@ export function PartneringFamilyScreen() {
           ))}
         </MenuList>
       </Menu> */}
-      {/* <Menu id="family-more-menu"
-        anchorEl={familyMoreMenuAnchor}
-        keepMounted
-        open={Boolean(familyMoreMenuAnchor)}
-        onClose={() => setFamilyMoreMenuAnchor(null)}>
-        <MenuList dense={isMobile}>
-          {Object.entries(partneringFamily.partneringFamilyInfo?.familyRoleApprovals || {}).filter(([role, ]) =>
-            !partneringFamily.partneringFamilyInfo?.removedRoles?.find(x => x.roleName === role)).flatMap(([role, ]) => (
-            <MenuItem key={role} onClick={() => selectRemoveRole(role)}>
-              <ListItemText primary={`Remove from ${role} role`} />
-            </MenuItem>
-          ))}
-          {(partneringFamily.partneringFamilyInfo?.removedRoles || []).map(removedRole => (
-            <MenuItem key={removedRole.roleName}
-              onClick={() => selectResetRole(removedRole.roleName!, removedRole.reason!, removedRole.additionalComments!)}>
-              <ListItemText primary={`Reset ${removedRole.roleName} participation`} />
-            </MenuItem>
-          ))}
-        </MenuList>
-      </Menu> */}
       {/* {recordFamilyStepParameter && <RecordPartneringFamilyStepDialog partneringFamily={partneringFamily}
         requirementName={recordFamilyStepParameter.requirementName} stepActionRequirement={recordFamilyStepParameter.requirementInfo}
         onClose={() => setRecordFamilyStepParameter(null)} />} */}
       {/* {uploadDocumentDialogOpen && <UploadPartneringFamilyDocumentDialog partneringFamily={partneringFamily}
         onClose={() => setUploadDocumentDialogOpen(false)} />} */}
-      {/* {addAdultDialogOpen && <AddAdultDialog onClose={() => setAddAdultDialogOpen(false)} />} */}
-      {/* {addChildDialogOpen && <AddChildDialog onClose={() => setAddChildDialogOpen(false)} />} */}
-      {/* {(removeRoleParameter && <RemoveFamilyRoleDialog partneringFamilyId={partneringFamilyId} role={removeRoleParameter.role}
-        onClose={() => setRemoveRoleParameter(null)} />) || null} */}
-      {/* {(resetRoleParameter && <ResetFamilyRoleDialog partneringFamilyId={partneringFamilyId} role={resetRoleParameter.role}
-        removalReason={resetRoleParameter.removalReason} removalAdditionalComments={resetRoleParameter.removalAdditionalComments}
-        onClose={() => setResetRoleParameter(null)} />) || null} */}
+      {addAdultDialogOpen && <AddAdultDialog onClose={() => setAddAdultDialogOpen(false)} />}
+      {addChildDialogOpen && <AddChildDialog onClose={() => setAddChildDialogOpen(false)} />}
     </Toolbar>
     <Grid container spacing={0}>
-      <Grid item xs={12}>
-        <span>Primary Contact: {partneringFamily.family?.adults?.filter(adult => adult.item1?.id === partneringFamily.family?.primaryFamilyContactPersonId)[0]?.item1?.firstName}</span>
+      <Grid item container xs={12} md={4} spacing={2}>
+        <Grid item xs={12}>
+          <p>TODO: Feed</p>
+        </Grid>
+        {(partneringFamily.partneringFamilyInfo!.closedReferrals?.length && (
+          <Grid item xs={12}>
+            <p>Previous Referrals:
+              <ul>
+                {partneringFamily.partneringFamilyInfo!.closedReferrals?.map(referral => (
+                  <li key={referral.id}>Referral closed - {ReferralCloseReason[partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closeReason!]}</li>
+                ))}
+              </ul>
+            </p>
+          </Grid>
+        )) || null}
       </Grid>
-      {/* <Grid item xs={12}>
-        <div className={classes.sectionChips}>
-          {Object.entries(partneringFamily.partneringFamilyInfo?.familyRoleApprovals || {}).flatMap(([role, roleVersionApprovals]) =>
-            <VolunteerRoleApprovalStatusChip key={role} roleName={role} roleVersionApprovals={roleVersionApprovals} />)}
-          {(partneringFamily.partneringFamilyInfo?.removedRoles || []).map(removedRole =>
-            <Chip key={removedRole.roleName} size="small" label={`${removedRole.roleName} - ${RoleRemovalReason[removedRole.reason!]} - ${removedRole.additionalComments}`} />)}
-        </div>
-      </Grid> */}
-      {/* <Grid item xs={12} sm={6} md={4}>
-        <h3>Incomplete</h3>
-        <ul className={classes.familyRequirementsList}>
-          {partneringFamily.partneringFamilyInfo?.missingRequirements?.map((missingRequirementName, i) => (
-            <li key={i}>
-              ❌ {missingRequirementName}
-            </li>
-          ))}
-        </ul>
-      </Grid> */}
-      {/* <Grid item xs={12} sm={6} md={4}>
-        <h3>Completed</h3>
-        <ul className={classes.familyRequirementsList}>
-          {partneringFamily.partneringFamilyInfo?.completedRequirements?.map((completed, i) => (
-            <li key={i}>
-              ✅ {completed.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-              {completed.completedAtUtc && <span style={{float:'right',marginRight:20}}>{format(completed.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
-            </li>
-          ))}
-        </ul>
-      </Grid> */}
-      {/* <Grid item xs={12} sm={6} md={4}>
-        <h3>Documents</h3>
-        <ul className={classes.familyDocumentsList}>
-          {partneringFamily.partneringFamilyInfo?.uploadedDocuments?.map((uploaded, i) => (
-            <li key={i}
-              onClick={() => downloadFile(organizationId, locationId, uploaded.uploadedDocumentId!)}>
-              📃 {uploaded.uploadedFileName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-              {uploaded.timestampUtc && <span style={{float:'right',marginRight:20}}>{format(uploaded.timestampUtc, "MM/dd/yyyy hh:mm aa")}</span>}
-            </li>
-          ))}
-        </ul>
-      </Grid> */}
-    </Grid>
-    <Grid container spacing={2}>
-      {partneringFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item2 && (
-        <Grid item key={adult.item1.id}>
-          <PartneringAdultCard partneringFamilyId={partneringFamilyId} personId={adult.item1.id} />
+      <Grid item container xs={12} md={8} spacing={2}>
+        <Grid item xs={12}>
+          <span>Primary Contact: <PersonName person={partneringFamily.family?.adults?.find(adult => adult.item1?.id === partneringFamily.family?.primaryFamilyContactPersonId)?.item1} /></span>
         </Grid>
-      ))}
-      {partneringFamily.family?.children?.map(child => (
-        <Grid item key={child.id!}>
-          <PartneringChildCard partneringFamilyId={partneringFamilyId} personId={child.id!} />
+        <Grid item container xs={12} spacing={2}>
+          {partneringFamily.partneringFamilyInfo?.openReferral?.arrangements?.map(arrangement => (
+            <Grid item key={arrangement.id}>
+              <ArrangementCard partneringFamily={partneringFamily} arrangement={arrangement} />
+            </Grid>
+          ))}
         </Grid>
-      ))}
+        <Grid item xs={12}>
+          <p>{
+            partneringFamily.partneringFamilyInfo?.openReferral
+            ? "Referral open since " + format(partneringFamily.partneringFamilyInfo.openReferral.createdUtc!, "MM/dd/yyyy")
+            : "Referral closed - " + ReferralCloseReason[partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closeReason!]
+            //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closedUtc) -- needs a new calculated property
+          }</p>
+        </Grid>
+        {partneringFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item2 && (
+          <Grid item key={adult.item1.id}>
+            <PartneringAdultCard partneringFamilyId={familyId} personId={adult.item1.id} />
+          </Grid>
+        ))}
+        {partneringFamily.family?.children?.map(child => (
+          <Grid item key={child.id!}>
+            <PartneringChildCard partneringFamilyId={familyId} personId={child.id!} />
+          </Grid>
+        ))}
+      </Grid>
     </Grid>
   </Container>);
 }

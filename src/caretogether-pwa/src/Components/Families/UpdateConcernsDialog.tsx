@@ -2,24 +2,24 @@ import { useState } from 'react';
 import { Grid, InputAdornment, TextField } from '@material-ui/core';
 import WarningIcon from '@material-ui/icons/Warning';
 import { Person } from '../../GeneratedClient';
-import { useVolunteersModel } from '../../Model/VolunteersModel';
+import { useDirectoryModel } from '../../Model/DirectoryModel';
 import { UpdateDialog } from '../UpdateDialog';
 
 interface UpdateConcernsDialogProps {
-  volunteerFamilyId: string,
+  familyId: string,
   person: Person,
   onClose: () => void
 }
 
-export function UpdateConcernsDialog({volunteerFamilyId, person, onClose}: UpdateConcernsDialogProps) {
+export function UpdateConcernsDialog({familyId, person, onClose}: UpdateConcernsDialogProps) {
   const [fields, setFields] = useState({
     concerns: person.concerns || ''
   });
   const { concerns } = fields;
-  const volunteerFamiliesModel = useVolunteersModel();
+  const directoryModel = useDirectoryModel();
 
   async function save() {
-    await volunteerFamiliesModel.updatePersonConcerns(volunteerFamilyId, person.id as string,
+    await directoryModel.updatePersonConcerns(familyId, person.id as string,
       concerns.length > 0 ? concerns : null);
   }
 

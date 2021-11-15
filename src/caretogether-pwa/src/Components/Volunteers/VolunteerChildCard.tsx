@@ -5,9 +5,9 @@ import { AgeText } from "../AgeText";
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import { useRecoilValue } from "recoil";
 import { volunteerFamiliesData } from "../../Model/VolunteersModel";
-import { RenamePersonDialog } from "./RenamePersonDialog";
-import { UpdateConcernsDialog } from "./UpdateConcernsDialog";
-import { UpdateNotesDialog } from "./UpdateNotesDialog";
+import { RenamePersonDialog } from "../Families/RenamePersonDialog";
+import { UpdateConcernsDialog } from "../Families/UpdateConcernsDialog";
+import { UpdateNotesDialog } from "../Families/UpdateNotesDialog";
 
 const useStyles = makeStyles((theme) => ({
   sectionChips: {
@@ -125,11 +125,11 @@ export function VolunteerChildCard({volunteerFamilyId, personId}: VolunteerChild
           <ListItemText primary="Update notes" />
         </MenuItem>
       </Menu>
-      {(renamePersonParameter && <RenamePersonDialog volunteerFamilyId={volunteerFamilyId} person={renamePersonParameter.person}
+      {(renamePersonParameter && <RenamePersonDialog familyId={volunteerFamilyId} person={renamePersonParameter.person}
         onClose={() => setRenamePersonParameter(null)} />) || null}
-      {(updateConcernsParameter && <UpdateConcernsDialog volunteerFamilyId={volunteerFamilyId} person={updateConcernsParameter.person}
+      {(updateConcernsParameter && <UpdateConcernsDialog familyId={volunteerFamilyId} person={updateConcernsParameter.person}
         onClose={() => setUpdateConcernsParameter(null)} />) || null}
-      {(updateNotesParameter && <UpdateNotesDialog volunteerFamilyId={volunteerFamilyId} person={updateNotesParameter.person}
+      {(updateNotesParameter && <UpdateNotesDialog familyId={volunteerFamilyId} person={updateNotesParameter.person}
         onClose={() => setUpdateNotesParameter(null)} />) || null}
     </Card>}</>);
 }

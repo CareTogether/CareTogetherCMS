@@ -65,7 +65,7 @@ namespace CareTogether.Core.Test
 
             var referralEvents = await referralsEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
 
-            Assert.AreEqual(29, referralEvents.Count);
+            Assert.AreEqual(24, referralEvents.Count);
             Assert.AreEqual(typeof(ArrangementCommandExecuted), referralEvents[8].DomainEvent.GetType());
         }
 

@@ -8,7 +8,7 @@ function Referrals() {
   return (
     <>
       <Switch>
-        <Route path={`${match.path}/family/:partneringFamilyId`}>
+        <Route path={`${match.path}/family/:familyId`}>
           <PartneringFamilyScreen />
         </Route>
         <Route path={`${match.path}`}>

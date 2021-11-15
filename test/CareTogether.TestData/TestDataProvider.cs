@@ -218,13 +218,13 @@ namespace CareTogether.TestData
                 new ArrangementNoteCommandExecuted(guid4, new DateTime(2020, 3, 24, 8, 55, 0), new CreateDraftArrangementNote(guid1, guid1, guid1, guid3, null)),
                 new ArrangementNoteCommandExecuted(guid4, new DateTime(2020, 3, 24, 8, 57, 0), new EditDraftArrangementNote(guid1, guid1, guid1, guid3, null)),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 30, 18, 18, 18), new TrackChildLocationChange(guid1, guid1, guid1,
-                    new DateTime(2020, 3, 30, 18, 18, 18), guid3, guid1, ChildLocationPlan.ReturnToFamily, "Mom met us and picked him up at DQ")),
+                    new DateTime(2020, 3, 30, 18, 18, 18), guid3, guid1, ChildLocationPlan.ReturnToFamily, "Mom met us and picked him up at DQ"))/*,
                 new ReferralCommandExecuted(adminId, new DateTime(2020, 10, 4, 12, 32, 55), new CloseReferral(guid1, guid1, ReferralCloseReason.NeedMet)),
                 new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 30, 45), new CreateReferral(guid2, guid2, new DateTime(2021, 7, 10, 19, 30, 45))),
                 new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 32, 0), new UploadReferralDocument(guid2, guid2, guid2, "Jane Doe second referral info.pdf")),
                 new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 32, 0), new CompleteReferralRequirement(guid2, guid2, "Request for Help Form", new DateTime(2021, 7, 10, 18, 0, 0), guid2)),
                 new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 32, 0), new CompleteReferralRequirement(guid2, guid2, "Intake Coordinator Screening Call",
-                    new DateTime(2021, 7, 10, 19, 32, 0), adminId)));
+                    new DateTime(2021, 7, 10, 19, 32, 0), adminId))*/);
         }
 
         public static async Task PopulateGoalEvents(IMultitenantEventLog<GoalCommandExecutedEvent> goalsEventLog)
