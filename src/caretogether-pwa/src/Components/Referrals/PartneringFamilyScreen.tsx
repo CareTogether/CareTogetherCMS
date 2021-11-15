@@ -152,14 +152,14 @@ export function PartneringFamilyScreen() {
         onClose={() => setUploadDocumentDialogOpen(false)} />} */}
       {addAdultDialogOpen && <AddAdultDialog onClose={() => setAddAdultDialogOpen(false)} />}
       {addChildDialogOpen && <AddChildDialog onClose={() => setAddChildDialogOpen(false)} />}
-      {addNoteDialogOpen && <AddEditNoteDialog noteId={null} familyId={partneringFamily.family!.id!} onClose={() => setAddNoteDialogOpen(false)} />}
+      {addNoteDialogOpen && <AddEditNoteDialog familyId={partneringFamily.family!.id!} onClose={() => setAddNoteDialogOpen(false)} />}
     </Toolbar>
     <Grid container spacing={0}>
       <Grid item container xs={12} md={4} spacing={2}>
         <Grid item xs={12}>
           {partneringFamily.notes?.slice().sort((a, b) =>
             a.timestampUtc! < b.timestampUtc! ? -1 : a.timestampUtc! > b.timestampUtc! ? 1 : 0).map(note => (
-            <NoteCard note={note} />
+            <NoteCard key={note.id} familyId={partneringFamily.family!.id!} note={note} />
           ))}
         </Grid>
         {(partneringFamily.partneringFamilyInfo!.closedReferrals?.length && (

@@ -6,6 +6,10 @@ import { useUserLookup } from '../../Model/DirectoryModel';
 import { PersonName } from './PersonName';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import CheckIcon from '@material-ui/icons/Check';
+import EditIcon from '@material-ui/icons/Edit';
+import { AddEditNoteDialog } from './AddEditNoteDialog';
+import { ApproveNoteDialog } from './ApproveNoteDialog';
+import { DiscardNoteDialog } from './DiscardNoteDialog';
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -38,10 +42,11 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 type NoteCardProps = {
+  familyId: string;
   note: Note;
 };
 
-export function NoteCard({ note }: NoteCardProps) {
+export function NoteCard({ familyId, note }: NoteCardProps) {
   const classes = useStyles();
 
   const userLookup = useUserLookup();
@@ -54,6 +59,7 @@ export function NoteCard({ note }: NoteCardProps) {
   }
   
   const [showApproveNoteDialog, setShowApproveNoteDialog] = useState(false);
+  const [showEditNoteDialog, setShowEditNoteDialog] = useState(false);
 
   return (
     <Card className={classes.card}>
@@ -78,6 +84,14 @@ export function NoteCard({ note }: NoteCardProps) {
       <CardActions className={classes.cardActions}>
         {note.status === NoteStatus.Draft && (
           <Button
+            onClick={() => setShowEditNoteDialog(true)}
+            variant="contained" color="default" size="small" className={classes.rightCardActionButton}
+            startIcon={<EditIcon />}>
+            Edit
+          </Button>
+        )}
+        {note.status === NoteStatus.Draft && (
+          <Button
             onClick={() => setShowApproveNoteDialog(true)}
             variant="contained" color="default" size="small" className={classes.rightCardActionButton}
             startIcon={<CheckIcon />}>
@@ -96,6 +110,12 @@ export function NoteCard({ note }: NoteCardProps) {
           </MenuItem>
         )}
       </Menu>
+      {(showDiscardNoteDialog && <DiscardNoteDialog familyId={familyId} note={note}
+        onClose={() => setShowDiscardNoteDialog(false)} />) || null}
+      {(showApproveNoteDialog && <ApproveNoteDialog familyId={familyId} note={note}
+        onClose={() => setShowApproveNoteDialog(false)} />) || null}
+      {(showEditNoteDialog && <AddEditNoteDialog familyId={familyId} note={note}
+        onClose={() => setShowEditNoteDialog(false)} />) || null}
     </Card>
   );
 }
