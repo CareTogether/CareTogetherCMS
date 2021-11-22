@@ -1,11 +1,10 @@
-import { Container, Toolbar, Grid, Button, Divider, Menu, MenuItem, MenuList, useMediaQuery, useTheme } from '@material-ui/core';
+import { Container, Toolbar, Grid, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { ActionRequirement, CombinedFamilyInfo, ReferralCloseReason } from '../../GeneratedClient';
+import { CombinedFamilyInfo, ReferralCloseReason } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { useParams } from 'react-router';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
-import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import { PartneringAdultCard } from './PartneringAdultCard';
 import { PartneringChildCard } from './PartneringChildCard';
@@ -17,7 +16,6 @@ import { ArrangementCard } from './ArrangementCard';
 import { PersonName } from '../Families/PersonName';
 import { format } from 'date-fns';
 import { NoteCard } from '../Families/NoteCard';
-import { policyData } from '../../Model/ConfigurationModel';
 import { UploadFamilyDocumentDialog } from '../Families/UploadFamilyDocumentDialog';
 import { downloadFile } from '../../Model/FilesModel';
 import { currentOrganizationState, currentLocationState } from '../../Model/SessionModel';
@@ -75,7 +73,7 @@ export function PartneringFamilyScreen() {
   const { familyId } = useParams<{ familyId: string }>();
 
   const partneringFamilies = useRecoilValue(partneringFamiliesData);
-  const policy = useRecoilValue(policyData);
+  //const policy = useRecoilValue(policyData);
   const organizationId = useRecoilValue(currentOrganizationState);
   const locationId = useRecoilValue(currentLocationState);
 
@@ -94,8 +92,8 @@ export function PartneringFamilyScreen() {
   const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
   const [addNoteDialogOpen, setAddNoteDialogOpen] = useState(false);
   
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
+  // const theme = useTheme();
+  // const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
 
   return (
   <Container>

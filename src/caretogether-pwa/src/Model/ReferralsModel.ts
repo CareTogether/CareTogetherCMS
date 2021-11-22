@@ -1,8 +1,5 @@
-import { selector, useRecoilCallback } from "recoil";
-import { authenticatingFetch } from "../Auth";
-import { ReferralCommand, ReferralsClient, ArrangementCommand } from "../GeneratedClient";
+import { selector } from "recoil";
 import { visibleFamiliesData } from "./ModelLoader";
-import { currentOrganizationState, currentLocationState } from "./SessionModel";
 
 export const partneringFamiliesData = selector({
   key: 'partneringFamiliesData',
@@ -11,27 +8,27 @@ export const partneringFamiliesData = selector({
     return visibleFamilies.filter(f => f.partneringFamilyInfo);
   }});
 
-function useReferralCommandCallbackWithLocation<T extends unknown[]>(
-  callback: (organizationId: string, locationId: string, partneringFamilyId: string, ...args: T) => Promise<ReferralCommand>) {
-  return useRecoilCallback(({snapshot, set}) => {
-    const asyncCallback = async (partneringFamilyId: string, ...args: T) => {
-      const organizationId = await snapshot.getPromise(currentOrganizationState);
-      const locationId = await snapshot.getPromise(currentLocationState);
+// function useReferralCommandCallbackWithLocation<T extends unknown[]>(
+//   callback: (organizationId: string, locationId: string, partneringFamilyId: string, ...args: T) => Promise<ReferralCommand>) {
+//   return useRecoilCallback(({snapshot, set}) => {
+//     const asyncCallback = async (partneringFamilyId: string, ...args: T) => {
+//       const organizationId = await snapshot.getPromise(currentOrganizationState);
+//       const locationId = await snapshot.getPromise(currentLocationState);
 
-      const command = await callback(organizationId, locationId, partneringFamilyId, ...args);
+//       const command = await callback(organizationId, locationId, partneringFamilyId, ...args);
 
-      const client = new ReferralsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedFamily = await client.submitReferralCommand(organizationId, locationId, command);
+//       const client = new ReferralsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+//       const updatedFamily = await client.submitReferralCommand(organizationId, locationId, command);
 
-      set(visibleFamiliesData, current => {
-        return current.map(currentEntry => currentEntry.family?.id === partneringFamilyId
-          ? updatedFamily
-          : currentEntry);
-      });
-    };
-    return asyncCallback;
-  })
-}
+//       set(visibleFamiliesData, current => {
+//         return current.map(currentEntry => currentEntry.family?.id === partneringFamilyId
+//           ? updatedFamily
+//           : currentEntry);
+//       });
+//     };
+//     return asyncCallback;
+//   })
+// }
 
 // function useReferralCommandCallback<T extends unknown[]>(
 //   callback: (partneringFamilyId: string, ...args: T) => Promise<ReferralCommand>) {
@@ -39,27 +36,27 @@ function useReferralCommandCallbackWithLocation<T extends unknown[]>(
 //     (_organizationId, _locationId, partneringFamilyId, ...args) => callback(partneringFamilyId, ...args));
 // }
 
-function useArrangementCommandCallbackWithLocation<T extends unknown[]>(
-  callback: (organizationId: string, locationId: string, partneringFamilyId: string, personId: string, ...args: T) => Promise<ArrangementCommand>) {
-  return useRecoilCallback(({snapshot, set}) => {
-    const asyncCallback = async (partneringFamilyId: string, personId: string, ...args: T) => {
-      const organizationId = await snapshot.getPromise(currentOrganizationState);
-      const locationId = await snapshot.getPromise(currentLocationState);
+// function useArrangementCommandCallbackWithLocation<T extends unknown[]>(
+//   callback: (organizationId: string, locationId: string, partneringFamilyId: string, personId: string, ...args: T) => Promise<ArrangementCommand>) {
+//   return useRecoilCallback(({snapshot, set}) => {
+//     const asyncCallback = async (partneringFamilyId: string, personId: string, ...args: T) => {
+//       const organizationId = await snapshot.getPromise(currentOrganizationState);
+//       const locationId = await snapshot.getPromise(currentLocationState);
 
-      const command = await callback(organizationId, locationId, partneringFamilyId, personId, ...args);
+//       const command = await callback(organizationId, locationId, partneringFamilyId, personId, ...args);
 
-      const client = new ReferralsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedFamily = await client.submitArrangementCommand(organizationId, locationId, command);
+//       const client = new ReferralsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+//       const updatedFamily = await client.submitArrangementCommand(organizationId, locationId, command);
 
-      set(visibleFamiliesData, current => {
-        return current.map(currentEntry => currentEntry.family?.id === partneringFamilyId
-          ? updatedFamily
-          : currentEntry);
-      });
-    };
-    return asyncCallback;
-  })
-}
+//       set(visibleFamiliesData, current => {
+//         return current.map(currentEntry => currentEntry.family?.id === partneringFamilyId
+//           ? updatedFamily
+//           : currentEntry);
+//       });
+//     };
+//     return asyncCallback;
+//   })
+// }
 
 // function useArrangementCommandCallback<T extends unknown[]>(
 //   callback: (partneringFamilyId: string, personId: string, ...args: T) => Promise<ArrangementCommand>) {
