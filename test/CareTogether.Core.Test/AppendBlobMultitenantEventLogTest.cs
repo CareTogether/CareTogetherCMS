@@ -59,13 +59,13 @@ namespace CareTogether.Core.Test
 
             var directoryEvents = await directoryEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
 
-            Assert.AreEqual(43, directoryEvents.Count);
-            Assert.AreEqual(typeof(FamilyCommandExecuted), directoryEvents[10].DomainEvent.GetType());
+            Assert.AreEqual(44, directoryEvents.Count);
+            Assert.AreEqual(typeof(FamilyCommandExecuted), directoryEvents[9].DomainEvent.GetType());
             Assert.AreEqual(typeof(PersonCommandExecuted), directoryEvents[38].DomainEvent.GetType());
 
             var referralEvents = await referralsEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
 
-            Assert.AreEqual(17, referralEvents.Count);
+            Assert.AreEqual(16, referralEvents.Count);
             Assert.AreEqual(typeof(ArrangementCommandExecuted), referralEvents[8].DomainEvent.GetType());
         }
 

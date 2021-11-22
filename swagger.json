@@ -2886,8 +2886,7 @@
           "mapping": {
             "CloseReferral": "#/components/schemas/CloseReferral",
             "CompleteReferralRequirement": "#/components/schemas/CompleteReferralRequirement",
-            "CreateReferral": "#/components/schemas/CreateReferral",
-            "UploadReferralDocument": "#/components/schemas/UploadReferralDocument"
+            "CreateReferral": "#/components/schemas/CreateReferral"
           }
         },
         "x-abstract": true,
@@ -2971,26 +2970,6 @@
           }
         ]
       },
-      "UploadReferralDocument": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ReferralCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "uploadedDocumentId": {
-                "type": "string",
-                "format": "guid"
-              },
-              "uploadedFileName": {
-                "type": "string"
-              }
-            }
-          }
-        ]
-      },
       "ArrangementCommand": {
         "type": "object",
         "discriminator": {
@@ -3003,8 +2982,7 @@
             "CreateArrangement": "#/components/schemas/CreateArrangement",
             "EndArrangement": "#/components/schemas/EndArrangement",
             "StartArrangement": "#/components/schemas/StartArrangement",
-            "TrackChildLocationChange": "#/components/schemas/TrackChildLocationChange",
-            "UploadArrangementDocument": "#/components/schemas/UploadArrangementDocument"
+            "TrackChildLocationChange": "#/components/schemas/TrackChildLocationChange"
           }
         },
         "x-abstract": true,
@@ -3198,26 +3176,6 @@
                 "$ref": "#/components/schemas/ChildLocationPlan"
               },
               "additionalExplanation": {
-                "type": "string"
-              }
-            }
-          }
-        ]
-      },
-      "UploadArrangementDocument": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ArrangementCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "uploadedDocumentId": {
-                "type": "string",
-                "format": "guid"
-              },
-              "uploadedFileName": {
                 "type": "string"
               }
             }

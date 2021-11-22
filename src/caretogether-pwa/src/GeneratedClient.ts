@@ -5096,11 +5096,6 @@ export abstract class ReferralCommand implements IReferralCommand {
             result.init(data);
             return result;
         }
-        if (data["discriminator"] === "UploadReferralDocument") {
-            let result = new UploadReferralDocument();
-            result.init(data);
-            return result;
-        }
         throw new Error("The abstract class 'ReferralCommand' cannot be instantiated.");
     }
 
@@ -5232,44 +5227,6 @@ export interface ICreateReferral extends IReferralCommand {
     openedAtUtc?: Date;
 }
 
-export class UploadReferralDocument extends ReferralCommand implements IUploadReferralDocument {
-    uploadedDocumentId?: string;
-    uploadedFileName?: string;
-
-    constructor(data?: IUploadReferralDocument) {
-        super(data);
-        this._discriminator = "UploadReferralDocument";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.uploadedDocumentId = _data["uploadedDocumentId"];
-            this.uploadedFileName = _data["uploadedFileName"];
-        }
-    }
-
-    static fromJS(data: any): UploadReferralDocument {
-        data = typeof data === 'object' ? data : {};
-        let result = new UploadReferralDocument();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["uploadedDocumentId"] = this.uploadedDocumentId;
-        data["uploadedFileName"] = this.uploadedFileName;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IUploadReferralDocument extends IReferralCommand {
-    uploadedDocumentId?: string;
-    uploadedFileName?: string;
-}
-
 export abstract class ArrangementCommand implements IArrangementCommand {
     familyId?: string;
     referralId?: string;
@@ -5334,11 +5291,6 @@ export abstract class ArrangementCommand implements IArrangementCommand {
         }
         if (data["discriminator"] === "TrackChildLocationChange") {
             let result = new TrackChildLocationChange();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "UploadArrangementDocument") {
-            let result = new UploadArrangementDocument();
             result.init(data);
             return result;
         }
@@ -5679,44 +5631,6 @@ export interface ITrackChildLocationChange extends IArrangementCommand {
     childLocationFamilyId?: string;
     plan?: ChildLocationPlan;
     additionalExplanation?: string;
-}
-
-export class UploadArrangementDocument extends ArrangementCommand implements IUploadArrangementDocument {
-    uploadedDocumentId?: string;
-    uploadedFileName?: string;
-
-    constructor(data?: IUploadArrangementDocument) {
-        super(data);
-        this._discriminator = "UploadArrangementDocument";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.uploadedDocumentId = _data["uploadedDocumentId"];
-            this.uploadedFileName = _data["uploadedFileName"];
-        }
-    }
-
-    static fromJS(data: any): UploadArrangementDocument {
-        data = typeof data === 'object' ? data : {};
-        let result = new UploadArrangementDocument();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["uploadedDocumentId"] = this.uploadedDocumentId;
-        data["uploadedFileName"] = this.uploadedFileName;
-        super.toJSON(data);
-        return data; 
-    }
-}
-
-export interface IUploadArrangementDocument extends IArrangementCommand {
-    uploadedDocumentId?: string;
-    uploadedFileName?: string;
 }
 
 export class UserTenantAccessSummary implements IUserTenantAccessSummary {

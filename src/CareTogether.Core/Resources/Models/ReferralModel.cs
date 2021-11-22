@@ -42,7 +42,7 @@ namespace CareTogether.Resources.Models
             {
                 CreateReferral c => new ReferralEntry(c.ReferralId, c.FamilyId,
                     OpenedAtUtc: c.OpenedAtUtc, ClosedAtUtc: null, CloseReason: null,
-                    ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<UploadedDocumentInfo>.Empty,
+                    ImmutableList<CompletedRequirementInfo>.Empty,
                     ImmutableDictionary<Guid, ArrangementEntry>.Empty),
                 _ => referrals.TryGetValue(command.ReferralId, out var referralEntry)
                     ? command switch
@@ -51,11 +51,6 @@ namespace CareTogether.Resources.Models
                         {
                             CompletedRequirements = referralEntry.CompletedRequirements.Add(
                                 new CompletedRequirementInfo(userId, timestampUtc, c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId))
-                        },
-                        UploadReferralDocument c => referralEntry with
-                        {
-                            UploadedDocuments = referralEntry.UploadedDocuments.Add(
-                                new UploadedDocumentInfo(userId, timestampUtc, c.UploadedDocumentId, c.UploadedFileName))
                         },
                         CloseReferral c => referralEntry with
                         {
@@ -89,7 +84,7 @@ namespace CareTogether.Resources.Models
             {
                 CreateArrangement c => new ArrangementEntry(c.ArrangementId, c.ArrangementType,
                     RequestedAtUtc: c.RequestedAtUtc, StartedAtUtc: null, EndedAtUtc: null,
-                    ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<UploadedDocumentInfo>.Empty,
+                    ImmutableList<CompletedRequirementInfo>.Empty,
                     ImmutableList<IndividualVolunteerAssignment>.Empty, ImmutableList<FamilyVolunteerAssignment>.Empty,
                     ImmutableList<PartneringFamilyChildAssignment>.Empty, ImmutableList<ChildLocationHistoryEntry>.Empty),
                 _ => referralEntry.Arrangements.TryGetValue(command.ArrangementId, out var arrangementEntry)
@@ -118,11 +113,6 @@ namespace CareTogether.Resources.Models
                         {
                             CompletedRequirements = arrangementEntry.CompletedRequirements.Add(
                                 new CompletedRequirementInfo(userId, timestampUtc, c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId))
-                        },
-                        UploadArrangementDocument c => arrangementEntry with
-                        {
-                            UploadedDocuments = arrangementEntry.UploadedDocuments.Add(
-                                new UploadedDocumentInfo(userId, timestampUtc, c.UploadedDocumentId, c.UploadedFileName))
                         },
                         TrackChildLocationChange c => arrangementEntry with
                         {

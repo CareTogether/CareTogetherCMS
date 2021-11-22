@@ -8,13 +8,11 @@ namespace CareTogether.Resources
     public record ReferralEntry(Guid Id, Guid FamilyId,
         DateTime OpenedAtUtc, DateTime? ClosedAtUtc, ReferralCloseReason? CloseReason,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
-        ImmutableList<UploadedDocumentInfo> UploadedDocuments,
         ImmutableDictionary<Guid, ArrangementEntry> Arrangements);
 
     public record ArrangementEntry(Guid Id, string ArrangementType,
         DateTime RequestedAtUtc, DateTime? StartedAtUtc, DateTime? EndedAtUtc,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
-        ImmutableList<UploadedDocumentInfo> UploadedDocuments,
         ImmutableList<IndividualVolunteerAssignment> IndividualVolunteerAssignments,
         ImmutableList<FamilyVolunteerAssignment> FamilyVolunteerAssignments,
         ImmutableList<PartneringFamilyChildAssignment> PartneringFamilyChildAssignments,
@@ -37,9 +35,6 @@ namespace CareTogether.Resources
         : ReferralCommand(FamilyId, ReferralId);
     public sealed record CompleteReferralRequirement(Guid FamilyId, Guid ReferralId,
         string RequirementName, DateTime CompletedAtUtc, Guid? UploadedDocumentId)
-        : ReferralCommand(FamilyId, ReferralId);
-    public sealed record UploadReferralDocument(Guid FamilyId, Guid ReferralId,
-        Guid UploadedDocumentId, string UploadedFileName)
         : ReferralCommand(FamilyId, ReferralId);
     public sealed record CloseReferral(Guid FamilyId, Guid ReferralId,
         ReferralCloseReason CloseReason, DateTime ClosedAtUtc)
@@ -64,9 +59,6 @@ namespace CareTogether.Resources
         : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
     public sealed record CompleteArrangementRequirement(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
         string RequirementName, DateTime CompletedAtUtc, Guid? UploadedDocumentId)
-        : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
-    public sealed record UploadArrangementDocument(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
-        Guid UploadedDocumentId, string UploadedFileName)
         : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
     public sealed record TrackChildLocationChange(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
         DateTime ChangedAtUtc, Guid ChildId, Guid ChildLocationFamilyId, ChildLocationPlan Plan, string AdditionalExplanation)
