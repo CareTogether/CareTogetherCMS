@@ -12,7 +12,7 @@ namespace CareTogether.Resources
         ImmutableDictionary<Guid, ArrangementEntry> Arrangements);
 
     public record ArrangementEntry(Guid Id, string ArrangementType,
-        ArrangementState State, DateTime? StartedAtUtc, DateTime? EndedAtUtc,
+        DateTime RequestedAtUtc, DateTime? StartedAtUtc, DateTime? EndedAtUtc,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<UploadedDocumentInfo> UploadedDocuments,
         ImmutableList<IndividualVolunteerAssignment> IndividualVolunteerAssignments,
@@ -21,8 +21,6 @@ namespace CareTogether.Resources
         ImmutableList<ChildLocationHistoryEntry> ChildrenLocationHistory);
 
     public enum ReferralCloseReason { NotAppropriate, NoCapacity, NoLongerNeeded, Resourced, NeedMet };
-
-    public enum ArrangementState { Setup, Open, Closed };
 
     public sealed record IndividualVolunteerAssignment(Guid FamilyId, Guid PersonId, string ArrangementFunction);
     public sealed record FamilyVolunteerAssignment(Guid FamilyId, string ArrangementFunction);

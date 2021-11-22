@@ -205,5 +205,51 @@ namespace CareTogether.Engines
                     x => x.Key,
                     x => x.Value with { MissingIndividualRequirements = missingIndividualRequirements[x.Key].ToImmutableList() }));
         }
+
+        public async Task<ReferralStatus> CalculateReferralStatusAsync(
+            Guid organizationId, Guid locationId, Family family,
+            ReferralEntry referralEntry)
+        {
+            var policy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
+
+            var missingIntakeRequirements = policy.ReferralPolicy.RequiredIntakeActionNames.Where(requiredAction =>
+                !referralEntry.CompletedRequirements.Any(completed => completed.RequirementName == requiredAction))
+                .ToImmutableList();
+
+            var individualArrangements = referralEntry.Arrangements.ToImmutableDictionary(
+                arrangement => arrangement.Key,
+                arrangement =>
+                {
+                    ArrangementPolicy arrangementPolicy = policy.ReferralPolicy.ArrangementPolicies
+                        .Single(p => p.ArrangementType == arrangement.Value.ArrangementType);
+
+                    var missingSetupRequirements = arrangementPolicy.RequiredSetupActionNames.Where(requiredAction =>
+                        !arrangement.Value.CompletedRequirements.Any(completed => completed.RequirementName == requiredAction))
+                        .ToImmutableList();
+
+                    var missingMonitoringRequirements = ImmutableList<string>.Empty;
+
+                    var missingCloseoutRequirements = arrangementPolicy.RequiredCloseoutActionNames.Where(requiredAction =>
+                        !arrangement.Value.CompletedRequirements.Any(completed => completed.RequirementName == requiredAction))
+                        .ToImmutableList();
+
+                    var phase = missingSetupRequirements.Count > 0
+                        ? ArrangementPhase.SettingUp
+                        : !arrangement.Value.StartedAtUtc.HasValue
+                        ? ArrangementPhase.ReadyToStart
+                        : !arrangement.Value.EndedAtUtc.HasValue
+                        ? ArrangementPhase.Started
+                        : ArrangementPhase.Ended;
+
+                    return new ArrangementStatus(phase,
+                        missingSetupRequirements,
+                        missingMonitoringRequirements,
+                        missingCloseoutRequirements);
+                });
+
+            return new ReferralStatus(
+                missingIntakeRequirements,
+                individualArrangements);
+        }
     }
 }
