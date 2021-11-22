@@ -19,13 +19,14 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-interface CreateVolunteerFamilyDialogProps {
-  onClose: (volunteerFamilyId?: string) => void
+interface CreatePartneringFamilyDialogProps {
+  onClose: (partneringFamilyId?: string) => void
 }
 
-export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDialogProps) {
+export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDialogProps) {
   const classes = useStyles();
   const [fields, setFields] = useState({
+    referralOpenedAtLocal: new Date(),
     firstName: '',
     lastName: '',
     gender: null as Gender | null,
@@ -48,6 +49,7 @@ export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDial
     concerns: null as string | null
   });
   const {
+    referralOpenedAtLocal,
     firstName, lastName, gender, dateOfBirth, ageInYears, ethnicity,
     isInHousehold, relationshipToFamily,
     addressLine1, addressLine2, city, state, postalCode, country,
@@ -85,14 +87,14 @@ export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDial
           (age as AgeInYears).years = (ageInYears == null ? undefined : ageInYears);
           (age as AgeInYears).asOf = new Date();
         }
-        const newFamily = await directoryModel.createVolunteerFamilyWithNewAdult("NEW",
-          firstName, lastName, gender as Gender, age, ethnicity,
+        const newFamily = await directoryModel.createPartneringFamilyWithNewAdult("NEW",
+          referralOpenedAtLocal, firstName, lastName, gender as Gender, age, ethnicity,
           isInHousehold, relationshipToFamily,
           addressLine1, addressLine2.length > 0 ? addressLine2 : null, city, state, postalCode, country,
           phoneNumber, phoneType, emailAddress, emailType,
           (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
         //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
-        //TODO: Retrieve the created volunteer family and return it through this onClose callback!
+        //TODO: Retrieve the created partnering family and return it through this onClose callback!
         onClose(newFamily.family!.id!);
       }
     });
@@ -101,9 +103,17 @@ export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDial
   return (
     <Dialog open={true} onClose={() => onClose()} scroll='body' aria-labelledby="create-family-title">
       <DialogTitle id="create-family-title">
-        Create Volunteer Family - First Adult
+        Create Partnering Family - First Adult
       </DialogTitle>
       <DialogContent>
+        <Grid item xs={12}>
+          <KeyboardDatePicker
+            label="When was this referral opened?"
+            value={referralOpenedAtLocal} fullWidth required
+            disableFuture format="MM/dd/yyyy"
+            onChange={(date) => date && setFields({...fields, referralOpenedAtLocal: date})}
+            showTodayButton />
+        </Grid>
         <DialogContentText>
           Provide the basic information needed for the first adult in the family.
         </DialogContentText>

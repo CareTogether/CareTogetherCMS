@@ -1,5 +1,5 @@
 import { useRecoilCallback, useRecoilValue } from "recoil";
-import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, DirectoryCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, DirectoryClient, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote } from "../GeneratedClient";
+import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, DirectoryCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, DirectoryClient, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { visibleFamiliesData } from "./ModelLoader";
@@ -34,20 +34,20 @@ export function useFamilyLookup() {
 }
 
 function usePersonCommandCallback<T extends unknown[]>(
-  callback: (volunteerFamilyId: string, personId: string, ...args: T) => Promise<PersonCommand>) {
+  callback: (familyId: string, personId: string, ...args: T) => Promise<PersonCommand>) {
   return useRecoilCallback(({snapshot, set}) => {
-    const asyncCallback = async (volunteerFamilyId: string, personId: string, ...args: T) => {
+    const asyncCallback = async (familyId: string, personId: string, ...args: T) => {
       const organizationId = await snapshot.getPromise(currentOrganizationState);
       const locationId = await snapshot.getPromise(currentLocationState);
 
-      const command = await callback(volunteerFamilyId, personId, ...args);
+      const command = await callback(familyId, personId, ...args);
 
       const client = new DirectoryClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedFamily = await client.submitPersonCommand(organizationId, locationId, volunteerFamilyId, command);
+      const updatedFamily = await client.submitPersonCommand(organizationId, locationId, familyId, command);
 
       set(visibleFamiliesData, current =>
-        current.some(currentEntry => currentEntry.family?.id === volunteerFamilyId)
-        ? current.map(currentEntry => currentEntry.family?.id === volunteerFamilyId
+        current.some(currentEntry => currentEntry.family?.id === familyId)
+        ? current.map(currentEntry => currentEntry.family?.id === familyId
           ? updatedFamily
           : currentEntry)
         : current.concat(updatedFamily));
@@ -59,20 +59,20 @@ function usePersonCommandCallback<T extends unknown[]>(
 }
 
 function useDirectoryCommandCallback<T extends unknown[]>(
-  callback: (volunteerFamilyId: string, personId: string, ...args: T) => Promise<DirectoryCommand>) {
+  callback: (familyId: string, ...args: T) => Promise<DirectoryCommand>) {
   return useRecoilCallback(({snapshot, set}) => {
-    const asyncCallback = async (volunteerFamilyId: string, personId: string, ...args: T) => {
+    const asyncCallback = async (familyId: string, ...args: T) => {
       const organizationId = await snapshot.getPromise(currentOrganizationState);
       const locationId = await snapshot.getPromise(currentLocationState);
 
-      const command = await callback(volunteerFamilyId, personId, ...args);
+      const command = await callback(familyId, ...args);
 
       const client = new DirectoryClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
       const updatedFamily = await client.submitDirectoryCommand(organizationId, locationId, command);
 
       set(visibleFamiliesData, current =>
-        current.some(currentEntry => currentEntry.family?.id === volunteerFamilyId)
-        ? current.map(currentEntry => currentEntry.family?.id === volunteerFamilyId
+        current.some(currentEntry => currentEntry.family?.id === familyId)
+        ? current.map(currentEntry => currentEntry.family?.id === familyId
           ? updatedFamily
           : currentEntry)
         : current.concat(updatedFamily));
@@ -110,7 +110,7 @@ function useNoteCommandCallback<T extends unknown[]>(
 
 export function useDirectoryModel() {
   const updatePersonName = usePersonCommandCallback(
-    async (volunteerFamilyId, personId, firstName: string, lastName: string) => {
+    async (familyId, personId, firstName: string, lastName: string) => {
       const command = new UpdatePersonName({
         personId: personId
       });
@@ -119,7 +119,7 @@ export function useDirectoryModel() {
       return command;
     });
   const updatePersonConcerns = usePersonCommandCallback(
-    async (volunteerFamilyId, personId, concerns: string | null) => {
+    async (familyId, personId, concerns: string | null) => {
       const command = new UpdatePersonConcerns({
         personId: personId
       });
@@ -127,7 +127,7 @@ export function useDirectoryModel() {
       return command;
     });
   const updatePersonNotes = usePersonCommandCallback(
-    async (volunteerFamilyId, personId, notes: string | null) => {
+    async (familyId, personId, notes: string | null) => {
       const command = new UpdatePersonNotes({
         personId: personId
       });
@@ -135,7 +135,7 @@ export function useDirectoryModel() {
       return command;
     });
   const addPersonPhoneNumber = usePersonCommandCallback(
-    async (volunteerFamilyId, personId, phoneNumber: string, phoneType: PhoneNumberType) => {
+    async (familyId, personId, phoneNumber: string, phoneType: PhoneNumberType) => {
       const command = new AddPersonPhoneNumber({
         personId: personId
       });
@@ -144,7 +144,7 @@ export function useDirectoryModel() {
       return command;
     });
   const updatePersonPhoneNumber = usePersonCommandCallback(
-    async (volunteerFamilyId, personId, phoneId: string, phoneNumber: string, phoneType: PhoneNumberType) => {
+    async (familyId, personId, phoneId: string, phoneNumber: string, phoneType: PhoneNumberType) => {
       const command = new UpdatePersonPhoneNumber({
         personId: personId
       });
@@ -153,7 +153,7 @@ export function useDirectoryModel() {
       return command;
     });
   const addPersonEmailAddress = usePersonCommandCallback(
-    async (volunteerFamilyId, personId, emailAddress: string, phoneType: EmailAddressType) => {
+    async (familyId, personId, emailAddress: string, phoneType: EmailAddressType) => {
       const command = new AddPersonEmailAddress({
         personId: personId
       });
@@ -162,7 +162,7 @@ export function useDirectoryModel() {
       return command;
     });
   const updatePersonEmailAddress = usePersonCommandCallback(
-    async (volunteerFamilyId, personId, phoneId: string, emailAddress: string, phoneType: EmailAddressType) => {
+    async (familyId, personId, phoneId: string, emailAddress: string, phoneType: EmailAddressType) => {
       const command = new UpdatePersonEmailAddress({
         personId: personId
       });
@@ -171,7 +171,7 @@ export function useDirectoryModel() {
       return command;
     });
   const addPersonAddress = usePersonCommandCallback(
-    async (volunteerFamilyId, personId, line1: string, line2: string, city: string, state: string, postalCode: string) => {
+    async (familyId, personId, line1: string, line2: string, city: string, state: string, postalCode: string) => {
       const command = new AddPersonAddress({
         personId: personId
       });
@@ -180,7 +180,7 @@ export function useDirectoryModel() {
       return command;
     });
   const updatePersonAddress = usePersonCommandCallback(
-    async (volunteerFamilyId, personId, addressId: string,
+    async (familyId, personId, addressId: string,
       line1: string, line2: string, city: string, state: string, postalCode: string) => {
       const command = new UpdatePersonAddress({
         personId: personId
@@ -190,13 +190,13 @@ export function useDirectoryModel() {
       return command;
     });
   const addAdult = useDirectoryCommandCallback(
-    async (volunteerFamilyId, firstName: string, lastName: string, gender: Gender, age: Age, ethnicity: string,
+    async (familyId, firstName: string, lastName: string, gender: Gender, age: Age, ethnicity: string,
         isInHousehold: boolean, relationshipToFamily: string,
         addressLine1: string | null, addressLine2: string | null, city: string | null, state: string | null, postalCode: string | null, country: string | null,
         phoneNumber: string | null, phoneType: PhoneNumberType | null, emailAddress: string | null, emailType: EmailAddressType | null,
         notes?: string, concerns?: string) => {
       const command = new AddAdultToFamilyCommand();
-      command.familyId = volunteerFamilyId;
+      command.familyId = familyId;
       command.firstName = firstName;
       command.lastName = lastName;
       command.gender = gender;
@@ -229,11 +229,11 @@ export function useDirectoryModel() {
       return command;
     });
   const addChild = useDirectoryCommandCallback(
-    async (volunteerFamilyId, firstName: string, lastName: string, gender: Gender, age: Age, ethnicity: string,
+    async (familyId, firstName: string, lastName: string, gender: Gender, age: Age, ethnicity: string,
         custodialRelationships: CustodialRelationship[],
         notes?: string, concerns?: string) => {
       const command = new AddChildToFamilyCommand();
-      command.familyId = volunteerFamilyId;
+      command.familyId = familyId;
       command.firstName = firstName;
       command.lastName = lastName;
       command.gender = gender;
@@ -245,12 +245,45 @@ export function useDirectoryModel() {
       return command;
     });
   const createVolunteerFamilyWithNewAdult = useDirectoryCommandCallback(
-    async (firstName: string, lastName: string, gender: Gender, age: Age, ethnicity: string,
+    async (familyId: string, firstName: string, lastName: string, gender: Gender, age: Age, ethnicity: string,
       isInHousehold: boolean, relationshipToFamily: string,
       addressLine1: string, addressLine2: string | null, city: string, state: string, postalCode: string, country: string,
       phoneNumber: string, phoneType: PhoneNumberType, emailAddress?: string, emailType?: EmailAddressType,
       notes?: string, concerns?: string) => {
       const command = new CreateVolunteerFamilyWithNewAdultCommand();
+      command.firstName = firstName;
+      command.lastName = lastName;
+      command.gender = gender
+      command.age = age;
+      command.ethnicity = ethnicity;
+      command.concerns = concerns;
+      command.notes = notes;
+      command.familyAdultRelationshipInfo = new FamilyAdultRelationshipInfo({
+        isInHousehold: isInHousehold,
+        relationshipToFamily: relationshipToFamily
+      });
+      command.address = new Address();
+      command.address.line1 = addressLine1;
+      command.address.line2 = addressLine2 === null ? undefined : addressLine2;
+      command.address.city = city;
+      command.address.state = state;
+      command.address.postalCode = postalCode;
+      command.phoneNumber = new PhoneNumber();
+      command.phoneNumber.number = phoneNumber;
+      command.phoneNumber.type = phoneType;
+      command.emailAddress = new EmailAddress();
+      command.emailAddress.address = emailAddress;
+      command.emailAddress.type = emailType;
+      return command;
+    });
+  const createPartneringFamilyWithNewAdult = useDirectoryCommandCallback(
+    async (familyId: string, referralOpenedAtUtc: Date, firstName: string, lastName: string, gender: Gender, age: Age, ethnicity: string,
+      isInHousehold: boolean, relationshipToFamily: string,
+      addressLine1: string, addressLine2: string | null, city: string, state: string, postalCode: string, country: string,
+      phoneNumber: string, phoneType: PhoneNumberType, emailAddress?: string, emailType?: EmailAddressType,
+      notes?: string, concerns?: string) => {
+      const command = new CreatePartneringFamilyWithNewAdultCommand();
+      command.referralOpenedAtUtc = referralOpenedAtUtc;
       command.firstName = firstName;
       command.lastName = lastName;
       command.gender = gender
@@ -324,6 +357,7 @@ export function useDirectoryModel() {
     addAdult,
     addChild,
     createVolunteerFamilyWithNewAdult,
+    createPartneringFamilyWithNewAdult,
     createDraftNote,
     editDraftNote,
     discardDraftNote,

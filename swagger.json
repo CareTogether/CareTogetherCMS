@@ -1924,6 +1924,7 @@
           "mapping": {
             "AddAdultToFamilyCommand": "#/components/schemas/AddAdultToFamilyCommand",
             "AddChildToFamilyCommand": "#/components/schemas/AddChildToFamilyCommand",
+            "CreatePartneringFamilyWithNewAdultCommand": "#/components/schemas/CreatePartneringFamilyWithNewAdultCommand",
             "CreateVolunteerFamilyWithNewAdultCommand": "#/components/schemas/CreateVolunteerFamilyWithNewAdultCommand"
           }
         },
@@ -2046,6 +2047,58 @@
               "notes": {
                 "type": "string",
                 "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "CreatePartneringFamilyWithNewAdultCommand": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/DirectoryCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "referralOpenedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "firstName": {
+                "type": "string"
+              },
+              "lastName": {
+                "type": "string"
+              },
+              "gender": {
+                "$ref": "#/components/schemas/Gender"
+              },
+              "age": {
+                "$ref": "#/components/schemas/Age"
+              },
+              "ethnicity": {
+                "type": "string"
+              },
+              "familyAdultRelationshipInfo": {
+                "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
+              },
+              "concerns": {
+                "type": "string",
+                "nullable": true
+              },
+              "notes": {
+                "type": "string",
+                "nullable": true
+              },
+              "address": {
+                "$ref": "#/components/schemas/Address"
+              },
+              "phoneNumber": {
+                "$ref": "#/components/schemas/PhoneNumber"
+              },
+              "emailAddress": {
+                "$ref": "#/components/schemas/EmailAddress"
               }
             }
           }
