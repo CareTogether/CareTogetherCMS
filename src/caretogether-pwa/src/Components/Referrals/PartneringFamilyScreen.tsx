@@ -180,13 +180,6 @@ export function PartneringFamilyScreen() {
         <Grid item xs={12}>
           <span>Primary Contact: <PersonName person={partneringFamily.family?.adults?.find(adult => adult.item1?.id === partneringFamily.family?.primaryFamilyContactPersonId)?.item1} /></span>
         </Grid>
-        <Grid item container xs={12} spacing={2}>
-          {partneringFamily.partneringFamilyInfo?.openReferral?.arrangements?.map(arrangement => (
-            <Grid item key={arrangement.id}>
-              <ArrangementCard partneringFamily={partneringFamily} arrangement={arrangement} />
-            </Grid>
-          ))}
-        </Grid>
         <Grid item xs={12}>
           <p>{
             partneringFamily.partneringFamilyInfo?.openReferral
@@ -194,6 +187,27 @@ export function PartneringFamilyScreen() {
             : "Referral closed - " + ReferralCloseReason[partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closeReason!]
             //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closedUtc) -- needs a new calculated property
           }</p>
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <h3>Incomplete</h3>
+          <ul className={classes.familyRequirementsList}>
+            {partneringFamily.partneringFamilyInfo?.openReferral?.missingIntakeRequirements?.map((missingRequirementName, i) => (
+              <li key={i}>
+                ❌ {missingRequirementName}
+              </li>
+            ))}
+          </ul>
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <h3>Completed</h3>
+          <ul className={classes.familyRequirementsList}>
+            {partneringFamily.partneringFamilyInfo?.openReferral?.completedRequirements?.map((completed, i) => (
+              <li key={i}>
+                ✅ {completed.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                {completed.completedAtUtc && <span style={{float:'right',marginRight:20}}>{format(completed.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
+              </li>
+            ))}
+          </ul>
         </Grid>
         <Grid item xs={12} sm={6} md={4}>
           <h3>Documents</h3>
@@ -206,6 +220,13 @@ export function PartneringFamilyScreen() {
               </li>
             ))}
           </ul>
+        </Grid>
+        <Grid item container xs={12} spacing={2}>
+          {partneringFamily.partneringFamilyInfo?.openReferral?.arrangements?.map(arrangement => (
+            <Grid item key={arrangement.id}>
+              <ArrangementCard partneringFamily={partneringFamily} arrangement={arrangement} />
+            </Grid>
+          ))}
         </Grid>
         {partneringFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item2 && (
           <Grid item key={adult.item1.id}>
