@@ -1477,9 +1477,14 @@
             "type": "string",
             "format": "guid"
           },
-          "createdUtc": {
+          "openedAtUtc": {
             "type": "string",
             "format": "date-time"
+          },
+          "closedAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           },
           "closeReason": {
             "nullable": true,
@@ -1501,7 +1506,7 @@
               "$ref": "#/components/schemas/UploadedDocumentInfo"
             }
           },
-          "missingRequirements": {
+          "missingIntakeRequirements": {
             "type": "array",
             "items": {
               "type": "string"
@@ -1591,8 +1596,22 @@
           "arrangementType": {
             "type": "string"
           },
-          "state": {
-            "$ref": "#/components/schemas/ArrangementState"
+          "phase": {
+            "$ref": "#/components/schemas/ArrangementPhase"
+          },
+          "requestedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "startedAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "endedAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           },
           "completedRequirements": {
             "type": "array",
@@ -1606,7 +1625,19 @@
               "$ref": "#/components/schemas/UploadedDocumentInfo"
             }
           },
-          "missingRequirements": {
+          "missingSetupRequirements": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "missingMonitoringRequirements": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "missingCloseoutRequirements": {
             "type": "array",
             "items": {
               "type": "string"
@@ -1638,18 +1669,20 @@
           }
         }
       },
-      "ArrangementState": {
+      "ArrangementPhase": {
         "type": "integer",
         "description": "",
         "x-enumNames": [
-          "Setup",
-          "Open",
-          "Closed"
+          "SettingUp",
+          "ReadyToStart",
+          "Started",
+          "Ended"
         ],
         "enum": [
           0,
           1,
-          2
+          2,
+          3
         ]
       },
       "IndividualVolunteerAssignment": {
@@ -2607,6 +2640,10 @@
             "properties": {
               "closeReason": {
                 "$ref": "#/components/schemas/ReferralCloseReason"
+              },
+              "closedAtUtc": {
+                "type": "string",
+                "format": "date-time"
               }
             }
           }
@@ -2813,6 +2850,10 @@
             "properties": {
               "arrangementType": {
                 "type": "string"
+              },
+              "requestedAtUtc": {
+                "type": "string",
+                "format": "date-time"
               }
             }
           }

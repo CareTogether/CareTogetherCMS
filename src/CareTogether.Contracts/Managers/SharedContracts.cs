@@ -14,7 +14,7 @@ namespace CareTogether.Managers
         ImmutableList<Referral> ClosedReferrals);
 
     public sealed record Referral(Guid Id,
-        DateTime OpenedAtUtc, ReferralCloseReason? CloseReason,
+        DateTime OpenedAtUtc, DateTime? ClosedAtUtc, ReferralCloseReason? CloseReason,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<UploadedDocumentInfo> UploadedDocuments,
         ImmutableList<string> MissingIntakeRequirements,

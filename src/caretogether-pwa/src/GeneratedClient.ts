@@ -2432,11 +2432,12 @@ export interface IPartneringFamilyInfo {
 
 export class Referral implements IReferral {
     id?: string;
-    createdUtc?: Date;
+    openedAtUtc?: Date;
+    closedAtUtc?: Date | undefined;
     closeReason?: ReferralCloseReason | undefined;
     completedRequirements?: CompletedRequirementInfo[];
     uploadedDocuments?: UploadedDocumentInfo[];
-    missingRequirements?: string[];
+    missingIntakeRequirements?: string[];
     arrangements?: Arrangement[];
 
     constructor(data?: IReferral) {
@@ -2451,7 +2452,8 @@ export class Referral implements IReferral {
     init(_data?: any) {
         if (_data) {
             this.id = _data["id"];
-            this.createdUtc = _data["createdUtc"] ? new Date(_data["createdUtc"].toString()) : <any>undefined;
+            this.openedAtUtc = _data["openedAtUtc"] ? new Date(_data["openedAtUtc"].toString()) : <any>undefined;
+            this.closedAtUtc = _data["closedAtUtc"] ? new Date(_data["closedAtUtc"].toString()) : <any>undefined;
             this.closeReason = _data["closeReason"];
             if (Array.isArray(_data["completedRequirements"])) {
                 this.completedRequirements = [] as any;
@@ -2463,10 +2465,10 @@ export class Referral implements IReferral {
                 for (let item of _data["uploadedDocuments"])
                     this.uploadedDocuments!.push(UploadedDocumentInfo.fromJS(item));
             }
-            if (Array.isArray(_data["missingRequirements"])) {
-                this.missingRequirements = [] as any;
-                for (let item of _data["missingRequirements"])
-                    this.missingRequirements!.push(item);
+            if (Array.isArray(_data["missingIntakeRequirements"])) {
+                this.missingIntakeRequirements = [] as any;
+                for (let item of _data["missingIntakeRequirements"])
+                    this.missingIntakeRequirements!.push(item);
             }
             if (Array.isArray(_data["arrangements"])) {
                 this.arrangements = [] as any;
@@ -2486,7 +2488,8 @@ export class Referral implements IReferral {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
-        data["createdUtc"] = this.createdUtc ? this.createdUtc.toISOString() : <any>undefined;
+        data["openedAtUtc"] = this.openedAtUtc ? this.openedAtUtc.toISOString() : <any>undefined;
+        data["closedAtUtc"] = this.closedAtUtc ? this.closedAtUtc.toISOString() : <any>undefined;
         data["closeReason"] = this.closeReason;
         if (Array.isArray(this.completedRequirements)) {
             data["completedRequirements"] = [];
@@ -2498,10 +2501,10 @@ export class Referral implements IReferral {
             for (let item of this.uploadedDocuments)
                 data["uploadedDocuments"].push(item.toJSON());
         }
-        if (Array.isArray(this.missingRequirements)) {
-            data["missingRequirements"] = [];
-            for (let item of this.missingRequirements)
-                data["missingRequirements"].push(item);
+        if (Array.isArray(this.missingIntakeRequirements)) {
+            data["missingIntakeRequirements"] = [];
+            for (let item of this.missingIntakeRequirements)
+                data["missingIntakeRequirements"].push(item);
         }
         if (Array.isArray(this.arrangements)) {
             data["arrangements"] = [];
@@ -2514,11 +2517,12 @@ export class Referral implements IReferral {
 
 export interface IReferral {
     id?: string;
-    createdUtc?: Date;
+    openedAtUtc?: Date;
+    closedAtUtc?: Date | undefined;
     closeReason?: ReferralCloseReason | undefined;
     completedRequirements?: CompletedRequirementInfo[];
     uploadedDocuments?: UploadedDocumentInfo[];
-    missingRequirements?: string[];
+    missingIntakeRequirements?: string[];
     arrangements?: Arrangement[];
 }
 
@@ -2633,10 +2637,15 @@ export interface IUploadedDocumentInfo {
 export class Arrangement implements IArrangement {
     id?: string;
     arrangementType?: string;
-    state?: ArrangementState;
+    phase?: ArrangementPhase;
+    requestedAtUtc?: Date;
+    startedAtUtc?: Date | undefined;
+    endedAtUtc?: Date | undefined;
     completedRequirements?: CompletedRequirementInfo[];
     uploadedDocuments?: UploadedDocumentInfo[];
-    missingRequirements?: string[];
+    missingSetupRequirements?: string[];
+    missingMonitoringRequirements?: string[];
+    missingCloseoutRequirements?: string[];
     individualVolunteerAssignments?: IndividualVolunteerAssignment[];
     familyVolunteerAssignments?: FamilyVolunteerAssignment[];
     partneringFamilyChildAssignments?: PartneringFamilyChildAssignment[];
@@ -2655,7 +2664,10 @@ export class Arrangement implements IArrangement {
         if (_data) {
             this.id = _data["id"];
             this.arrangementType = _data["arrangementType"];
-            this.state = _data["state"];
+            this.phase = _data["phase"];
+            this.requestedAtUtc = _data["requestedAtUtc"] ? new Date(_data["requestedAtUtc"].toString()) : <any>undefined;
+            this.startedAtUtc = _data["startedAtUtc"] ? new Date(_data["startedAtUtc"].toString()) : <any>undefined;
+            this.endedAtUtc = _data["endedAtUtc"] ? new Date(_data["endedAtUtc"].toString()) : <any>undefined;
             if (Array.isArray(_data["completedRequirements"])) {
                 this.completedRequirements = [] as any;
                 for (let item of _data["completedRequirements"])
@@ -2666,10 +2678,20 @@ export class Arrangement implements IArrangement {
                 for (let item of _data["uploadedDocuments"])
                     this.uploadedDocuments!.push(UploadedDocumentInfo.fromJS(item));
             }
-            if (Array.isArray(_data["missingRequirements"])) {
-                this.missingRequirements = [] as any;
-                for (let item of _data["missingRequirements"])
-                    this.missingRequirements!.push(item);
+            if (Array.isArray(_data["missingSetupRequirements"])) {
+                this.missingSetupRequirements = [] as any;
+                for (let item of _data["missingSetupRequirements"])
+                    this.missingSetupRequirements!.push(item);
+            }
+            if (Array.isArray(_data["missingMonitoringRequirements"])) {
+                this.missingMonitoringRequirements = [] as any;
+                for (let item of _data["missingMonitoringRequirements"])
+                    this.missingMonitoringRequirements!.push(item);
+            }
+            if (Array.isArray(_data["missingCloseoutRequirements"])) {
+                this.missingCloseoutRequirements = [] as any;
+                for (let item of _data["missingCloseoutRequirements"])
+                    this.missingCloseoutRequirements!.push(item);
             }
             if (Array.isArray(_data["individualVolunteerAssignments"])) {
                 this.individualVolunteerAssignments = [] as any;
@@ -2705,7 +2727,10 @@ export class Arrangement implements IArrangement {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
         data["arrangementType"] = this.arrangementType;
-        data["state"] = this.state;
+        data["phase"] = this.phase;
+        data["requestedAtUtc"] = this.requestedAtUtc ? this.requestedAtUtc.toISOString() : <any>undefined;
+        data["startedAtUtc"] = this.startedAtUtc ? this.startedAtUtc.toISOString() : <any>undefined;
+        data["endedAtUtc"] = this.endedAtUtc ? this.endedAtUtc.toISOString() : <any>undefined;
         if (Array.isArray(this.completedRequirements)) {
             data["completedRequirements"] = [];
             for (let item of this.completedRequirements)
@@ -2716,10 +2741,20 @@ export class Arrangement implements IArrangement {
             for (let item of this.uploadedDocuments)
                 data["uploadedDocuments"].push(item.toJSON());
         }
-        if (Array.isArray(this.missingRequirements)) {
-            data["missingRequirements"] = [];
-            for (let item of this.missingRequirements)
-                data["missingRequirements"].push(item);
+        if (Array.isArray(this.missingSetupRequirements)) {
+            data["missingSetupRequirements"] = [];
+            for (let item of this.missingSetupRequirements)
+                data["missingSetupRequirements"].push(item);
+        }
+        if (Array.isArray(this.missingMonitoringRequirements)) {
+            data["missingMonitoringRequirements"] = [];
+            for (let item of this.missingMonitoringRequirements)
+                data["missingMonitoringRequirements"].push(item);
+        }
+        if (Array.isArray(this.missingCloseoutRequirements)) {
+            data["missingCloseoutRequirements"] = [];
+            for (let item of this.missingCloseoutRequirements)
+                data["missingCloseoutRequirements"].push(item);
         }
         if (Array.isArray(this.individualVolunteerAssignments)) {
             data["individualVolunteerAssignments"] = [];
@@ -2748,20 +2783,26 @@ export class Arrangement implements IArrangement {
 export interface IArrangement {
     id?: string;
     arrangementType?: string;
-    state?: ArrangementState;
+    phase?: ArrangementPhase;
+    requestedAtUtc?: Date;
+    startedAtUtc?: Date | undefined;
+    endedAtUtc?: Date | undefined;
     completedRequirements?: CompletedRequirementInfo[];
     uploadedDocuments?: UploadedDocumentInfo[];
-    missingRequirements?: string[];
+    missingSetupRequirements?: string[];
+    missingMonitoringRequirements?: string[];
+    missingCloseoutRequirements?: string[];
     individualVolunteerAssignments?: IndividualVolunteerAssignment[];
     familyVolunteerAssignments?: FamilyVolunteerAssignment[];
     partneringFamilyChildAssignments?: PartneringFamilyChildAssignment[];
     childrenLocationHistory?: ChildLocationHistoryEntry[];
 }
 
-export enum ArrangementState {
-    Setup = 0,
-    Open = 1,
-    Closed = 2,
+export enum ArrangementPhase {
+    SettingUp = 0,
+    ReadyToStart = 1,
+    Started = 2,
+    Ended = 3,
 }
 
 export class IndividualVolunteerAssignment implements IIndividualVolunteerAssignment {
@@ -4581,6 +4622,7 @@ export interface IReferralCommand {
 
 export class CloseReferral extends ReferralCommand implements ICloseReferral {
     closeReason?: ReferralCloseReason;
+    closedAtUtc?: Date;
 
     constructor(data?: ICloseReferral) {
         super(data);
@@ -4591,6 +4633,7 @@ export class CloseReferral extends ReferralCommand implements ICloseReferral {
         super.init(_data);
         if (_data) {
             this.closeReason = _data["closeReason"];
+            this.closedAtUtc = _data["closedAtUtc"] ? new Date(_data["closedAtUtc"].toString()) : <any>undefined;
         }
     }
 
@@ -4604,6 +4647,7 @@ export class CloseReferral extends ReferralCommand implements ICloseReferral {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["closeReason"] = this.closeReason;
+        data["closedAtUtc"] = this.closedAtUtc ? this.closedAtUtc.toISOString() : <any>undefined;
         super.toJSON(data);
         return data; 
     }
@@ -4611,6 +4655,7 @@ export class CloseReferral extends ReferralCommand implements ICloseReferral {
 
 export interface ICloseReferral extends IReferralCommand {
     closeReason?: ReferralCloseReason;
+    closedAtUtc?: Date;
 }
 
 export class CompleteReferralRequirement extends ReferralCommand implements ICompleteReferralRequirement {
@@ -4984,6 +5029,7 @@ export interface ICompleteArrangementRequirement extends IArrangementCommand {
 
 export class CreateArrangement extends ArrangementCommand implements ICreateArrangement {
     arrangementType?: string;
+    requestedAtUtc?: Date;
 
     constructor(data?: ICreateArrangement) {
         super(data);
@@ -4994,6 +5040,7 @@ export class CreateArrangement extends ArrangementCommand implements ICreateArra
         super.init(_data);
         if (_data) {
             this.arrangementType = _data["arrangementType"];
+            this.requestedAtUtc = _data["requestedAtUtc"] ? new Date(_data["requestedAtUtc"].toString()) : <any>undefined;
         }
     }
 
@@ -5007,6 +5054,7 @@ export class CreateArrangement extends ArrangementCommand implements ICreateArra
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["arrangementType"] = this.arrangementType;
+        data["requestedAtUtc"] = this.requestedAtUtc ? this.requestedAtUtc.toISOString() : <any>undefined;
         super.toJSON(data);
         return data; 
     }
@@ -5014,6 +5062,7 @@ export class CreateArrangement extends ArrangementCommand implements ICreateArra
 
 export interface ICreateArrangement extends IArrangementCommand {
     arrangementType?: string;
+    requestedAtUtc?: Date;
 }
 
 export class EndArrangement extends ArrangementCommand implements IEndArrangement {

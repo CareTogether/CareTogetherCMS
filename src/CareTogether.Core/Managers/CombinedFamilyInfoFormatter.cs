@@ -61,29 +61,35 @@ namespace CareTogether.Managers
         private async Task<PartneringFamilyInfo?> RenderPartneringFamilyInfoAsync(Guid organizationId, Guid locationId,
             Family family, ClaimsPrincipal user)
         {
-            var referrals = (await referralsResource.ListReferralsAsync(organizationId, locationId))
+            var referrals = await (await referralsResource.ListReferralsAsync(organizationId, locationId))
                 .Where(r => r.FamilyId == family.Id)
-                .Select(r => ToReferral(r))
-                .ToList();
+                .Select(r => ToReferralAsync(r))
+                .WhenAll();
 
-            if (referrals.Count == 0)
+            if (referrals.Length == 0)
                 return null;
 
             var openReferral = referrals.SingleOrDefault(r => r.CloseReason == null);
             var closedReferrals = referrals.Where(r => r.CloseReason != null).ToImmutableList();
 
-            //TODO: CalculatePartneringFamilyReferralStatusAsync -- needs to be defined on PolicyEvaluationEngine
-
             return new PartneringFamilyInfo(openReferral, closedReferrals);
 
-            static Referral ToReferral(ReferralEntry entry) =>
-                new(entry.Id, entry.CreatedUtc, entry.CloseReason,
-                    entry.CompletedRequirements, entry.UploadedDocuments, ImmutableList<string>.Empty, //TODO: populate MissingRequirements
-                    entry.Arrangements.Select(a => ToArrangement(a.Value)).ToImmutableList());
+            async Task<Referral> ToReferralAsync(ReferralEntry entry)
+            {
+                var referralStatus = await policyEvaluationEngine.CalculateReferralStatusAsync(organizationId, locationId, family, entry);
 
-            static Arrangement ToArrangement(ArrangementEntry entry) =>
-                new(entry.Id, entry.ArrangementType, entry.State,
-                    entry.CompletedRequirements, entry.UploadedDocuments, ImmutableList<string>.Empty, //TODO: populate MissingRequirements
+                return new(entry.Id, entry.OpenedAtUtc, entry.ClosedAtUtc, entry.CloseReason,
+                    entry.CompletedRequirements, entry.UploadedDocuments, referralStatus.MissingIntakeRequirements,
+                    entry.Arrangements
+                        .Select(a => ToArrangement(a.Value, referralStatus.IndividualArrangements[a.Key]))
+                        .ToImmutableList());
+            }
+
+            static Arrangement ToArrangement(ArrangementEntry entry, ArrangementStatus status) =>
+                new(entry.Id, entry.ArrangementType, status.Phase,
+                    entry.RequestedAtUtc, entry.StartedAtUtc, entry.EndedAtUtc,
+                    entry.CompletedRequirements, entry.UploadedDocuments,
+                    status.MissingSetupRequirements, status.MissingMonitoringRequirements, status.MissingCloseoutRequirements,
                     entry.IndividualVolunteerAssignments, entry.FamilyVolunteerAssignments,
                     entry.PartneringFamilyChildAssignments, entry.ChildrenLocationHistory);
         }

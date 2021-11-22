@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace CareTogether.Resources
 {
     public record ReferralEntry(Guid Id, Guid FamilyId,
-        DateTime CreatedUtc, ReferralCloseReason? CloseReason,
+        DateTime OpenedAtUtc, DateTime? ClosedAtUtc, ReferralCloseReason? CloseReason,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<UploadedDocumentInfo> UploadedDocuments,
         ImmutableDictionary<Guid, ArrangementEntry> Arrangements);
@@ -42,13 +42,13 @@ namespace CareTogether.Resources
         Guid UploadedDocumentId, string UploadedFileName)
         : ReferralCommand(FamilyId, ReferralId);
     public sealed record CloseReferral(Guid FamilyId, Guid ReferralId,
-        ReferralCloseReason CloseReason)
+        ReferralCloseReason CloseReason, DateTime ClosedAtUtc)
         : ReferralCommand(FamilyId, ReferralId);
 
     [JsonHierarchyBase]
     public abstract partial record ArrangementCommand(Guid FamilyId, Guid ReferralId, Guid ArrangementId);
     public sealed record CreateArrangement(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
-        string ArrangementType)
+        string ArrangementType, DateTime RequestedAtUtc)
         : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
     public sealed record AssignIndividualVolunteer(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
         Guid VolunteerFamilyId, Guid PersonId, string ArrangementFunction)
