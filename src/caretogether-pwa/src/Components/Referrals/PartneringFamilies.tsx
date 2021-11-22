@@ -1,13 +1,15 @@
 import { makeStyles } from '@material-ui/core/styles';
-import { Grid, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@material-ui/core';
+import { Fab, Grid, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@material-ui/core';
 import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { format } from 'date-fns';
-import React from 'react';
+import React, { useState } from 'react';
+import AddIcon from '@material-ui/icons/Add';
 import { ReferralCloseReason, PartneringFamilyInfo, Arrangement } from '../../GeneratedClient';
 import { useHistory } from 'react-router-dom';
 import { FamilyName } from '../Families/FamilyName';
 import { ArrangementCard } from './ArrangementCard';
+import { CreatePartneringFamilyDialog } from './CreatePartneringFamilyDialog';
 
 export const useStyles = makeStyles((theme) => ({
   paper: {
@@ -52,6 +54,7 @@ function PartneringFamilies() {
   function openPartneringFamily(partneringFamilyId: string) {
     history.push(`/referrals/family/${partneringFamilyId}`);
   }
+  const [createPartneringFamilyDialogOpen, setCreatePartneringFamilyDialogOpen] = useState(false);
 
   return (
     <Grid container spacing={3}>
@@ -93,14 +96,14 @@ function PartneringFamilies() {
             </TableBody>
           </Table>
         </TableContainer>
-        {/* <Fab color="primary" aria-label="add" className={classes.fabAdd}
+        <Fab color="primary" aria-label="add" className={classes.fabAdd}
           onClick={() => setCreatePartneringFamilyDialogOpen(true)}>
           <AddIcon />
-        </Fab> */}
-        {/* {createPartneringFamilyDialogOpen && <CreatePartneringFamilyDialog onClose={(partneringFamilyId) => {
+        </Fab>
+        {createPartneringFamilyDialogOpen && <CreatePartneringFamilyDialog onClose={(partneringFamilyId) => {
           setCreatePartneringFamilyDialogOpen(false);
           partneringFamilyId && history.push(`/referrals/family/${partneringFamilyId}`);
-        }} />} */}
+        }} />}
       </Grid>
     </Grid>
   );
