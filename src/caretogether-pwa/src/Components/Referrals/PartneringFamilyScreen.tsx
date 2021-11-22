@@ -1,11 +1,12 @@
-import { Container, Toolbar, Grid, Button } from '@material-ui/core';
+import { Container, Toolbar, Grid, Button, Menu, MenuItem, MenuList, useMediaQuery, useTheme } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { CombinedFamilyInfo, ReferralCloseReason } from '../../GeneratedClient';
+import { ActionRequirement, CombinedFamilyInfo, ReferralCloseReason } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { useParams } from 'react-router';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
+import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
 import { PartneringAdultCard } from './PartneringAdultCard';
 import { PartneringChildCard } from './PartneringChildCard';
 import { useState } from 'react';
@@ -19,6 +20,8 @@ import { NoteCard } from '../Families/NoteCard';
 import { UploadFamilyDocumentDialog } from '../Families/UploadFamilyDocumentDialog';
 import { downloadFile } from '../../Model/FilesModel';
 import { currentOrganizationState, currentLocationState } from '../../Model/SessionModel';
+import { policyData } from '../../Model/ConfigurationModel';
+import { RecordReferralStepDialog } from './RecordReferralStepDialog';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -73,37 +76,37 @@ export function PartneringFamilyScreen() {
   const { familyId } = useParams<{ familyId: string }>();
 
   const partneringFamilies = useRecoilValue(partneringFamiliesData);
-  //const policy = useRecoilValue(policyData);
+  const policy = useRecoilValue(policyData);
   const organizationId = useRecoilValue(currentOrganizationState);
   const locationId = useRecoilValue(currentLocationState);
 
   const partneringFamily = partneringFamilies.find(x => x.family?.id === familyId) as CombinedFamilyInfo;
   
-  // const [familyRecordMenuAnchor, setFamilyRecordMenuAnchor] = useState<Element | null>(null);
-  // const [recordFamilyStepParameter, setRecordFamilyStepParameter] = useState<{requirementName: string, requirementInfo: ActionRequirement} | null>(null);
-  // function selectRecordFamilyStep(requirementName: string) {
-  //   setFamilyRecordMenuAnchor(null);
-  //   const requirementInfo = policy.actionDefinitions![requirementName];
-  //   setRecordFamilyStepParameter({requirementName, requirementInfo});
-  // }
+  const [familyRecordMenuAnchor, setFamilyRecordMenuAnchor] = useState<Element | null>(null);
+  const [recordReferralStepParameter, setRecordReferralStepParameter] = useState<{requirementName: string, requirementInfo: ActionRequirement} | null>(null);
+  function selectRecordReferralStep(requirementName: string) {
+    setFamilyRecordMenuAnchor(null);
+    const requirementInfo = policy.actionDefinitions![requirementName];
+    setRecordReferralStepParameter({requirementName, requirementInfo});
+  }
   
   const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] = useState(false);
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
   const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
   const [addNoteDialogOpen, setAddNoteDialogOpen] = useState(false);
   
-  // const theme = useTheme();
-  // const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
 
   return (
   <Container>
     <Toolbar variant="dense" disableGutters={true}>
-      {/* <Button aria-controls="family-record-menu" aria-haspopup="true"
+      <Button aria-controls="family-record-menu" aria-haspopup="true"
         variant="contained" color="default" size="small" className={classes.button}
         startIcon={<AssignmentTurnedInIcon />}
         onClick={(event) => setFamilyRecordMenuAnchor(event.currentTarget)}>
         Complete…
-      </Button> */}
+      </Button>
       <Button
         onClick={() => setUploadDocumentDialogOpen(true)}
         variant="contained" color="default" size="small" className={classes.button}
@@ -132,24 +135,24 @@ export function PartneringFamilyScreen() {
         onClick={(event) => setFamilyMoreMenuAnchor(event.currentTarget)}>
         <MoreVertIcon />
       </IconButton> */}
-      {/* <Menu id="family-record-menu"
+      <Menu id="family-record-menu"
         anchorEl={familyRecordMenuAnchor}
         keepMounted
         open={Boolean(familyRecordMenuAnchor)}
         onClose={() => setFamilyRecordMenuAnchor(null)}>
         <MenuList dense={isMobile}>
           {partneringFamily.partneringFamilyInfo?.openReferral?.missingIntakeRequirements?.map(requirementName => (
-            <MenuItem key={requirementName} onClick={() => selectRecordFamilyStep(requirementName)}>{requirementName}</MenuItem>
+            <MenuItem key={requirementName} onClick={() => selectRecordReferralStep(requirementName)}>{requirementName}</MenuItem>
           ))}
-          <Divider /> */}
+          {/* <Divider /> */}
           {/* {partneringFamily.partneringFamilyInfo?.availableApplications?.map(requirementName => (
             <MenuItem key={requirementName} onClick={() => selectRecordFamilyStep(requirementName)}>{requirementName}</MenuItem>
           ))} */}
-        {/* </MenuList>
-      </Menu> */}
-      {/* {recordFamilyStepParameter && <RecordPartneringFamilyStepDialog partneringFamily={partneringFamily}
-        requirementName={recordFamilyStepParameter.requirementName} stepActionRequirement={recordFamilyStepParameter.requirementInfo}
-        onClose={() => setRecordFamilyStepParameter(null)} />} */}
+        </MenuList>
+      </Menu>
+      {recordReferralStepParameter && <RecordReferralStepDialog partneringFamily={partneringFamily} referralId={partneringFamily.partneringFamilyInfo?.openReferral?.id!}
+        requirementName={recordReferralStepParameter.requirementName} stepActionRequirement={recordReferralStepParameter.requirementInfo}
+        onClose={() => setRecordReferralStepParameter(null)} />}
       {uploadDocumentDialogOpen && <UploadFamilyDocumentDialog family={partneringFamily}
         onClose={() => setUploadDocumentDialogOpen(false)} />}
       {addAdultDialogOpen && <AddAdultDialog onClose={() => setAddAdultDialogOpen(false)} />}
