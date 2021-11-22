@@ -5,8 +5,7 @@ import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { useParams } from 'react-router';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
-// import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
-// import CloudUploadIcon from '@material-ui/icons/CloudUpload';
+import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import { PartneringAdultCard } from './PartneringAdultCard';
 import { PartneringChildCard } from './PartneringChildCard';
 import { useState } from 'react';
@@ -17,6 +16,9 @@ import { ArrangementCard } from './ArrangementCard';
 import { PersonName } from '../Families/PersonName';
 import { format } from 'date-fns';
 import { NoteCard } from '../Families/NoteCard';
+import { UploadFamilyDocumentDialog } from '../Families/UploadFamilyDocumentDialog';
+import { downloadFile } from '../../Model/FilesModel';
+import { currentOrganizationState, currentLocationState } from '../../Model/SessionModel';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -72,8 +74,8 @@ export function PartneringFamilyScreen() {
 
   const partneringFamilies = useRecoilValue(partneringFamiliesData);
   //const policy = useRecoilValue(policyData);
-  //const organizationId = useRecoilValue(currentOrganizationState);
-  //const locationId = useRecoilValue(currentLocationState);
+  const organizationId = useRecoilValue(currentOrganizationState);
+  const locationId = useRecoilValue(currentLocationState);
 
   const partneringFamily = partneringFamilies.find(x => x.family?.id === familyId) as CombinedFamilyInfo;
   
@@ -85,13 +87,13 @@ export function PartneringFamilyScreen() {
   //   setRecordFamilyStepParameter({requirementName, requirementInfo});
   // }
   
-  // const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] = useState(false);
+  const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] = useState(false);
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
   const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
   const [addNoteDialogOpen, setAddNoteDialogOpen] = useState(false);
   
-  //const theme = useTheme();
-  //const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
+  // const theme = useTheme();
+  // const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
 
   return (
   <Container>
@@ -102,12 +104,12 @@ export function PartneringFamilyScreen() {
         onClick={(event) => setFamilyRecordMenuAnchor(event.currentTarget)}>
         Complete…
       </Button> */}
-      {/* <Button
+      <Button
         onClick={() => setUploadDocumentDialogOpen(true)}
         variant="contained" color="default" size="small" className={classes.button}
         startIcon={<CloudUploadIcon />}>
         Upload
-      </Button> */}
+      </Button>
       <Button
         onClick={() => setAddAdultDialogOpen(true)}
         variant="contained" color="default" size="small" className={classes.button}
@@ -136,20 +138,20 @@ export function PartneringFamilyScreen() {
         open={Boolean(familyRecordMenuAnchor)}
         onClose={() => setFamilyRecordMenuAnchor(null)}>
         <MenuList dense={isMobile}>
-          {partneringFamily.partneringFamilyInfo?.missingRequirements?.map(requirementName => (
+          {partneringFamily.partneringFamilyInfo?.openReferral?.missingIntakeRequirements?.map(requirementName => (
             <MenuItem key={requirementName} onClick={() => selectRecordFamilyStep(requirementName)}>{requirementName}</MenuItem>
           ))}
-          <Divider />
-          {partneringFamily.partneringFamilyInfo?.availableApplications?.map(requirementName => (
+          <Divider /> */}
+          {/* {partneringFamily.partneringFamilyInfo?.availableApplications?.map(requirementName => (
             <MenuItem key={requirementName} onClick={() => selectRecordFamilyStep(requirementName)}>{requirementName}</MenuItem>
-          ))}
-        </MenuList>
+          ))} */}
+        {/* </MenuList>
       </Menu> */}
       {/* {recordFamilyStepParameter && <RecordPartneringFamilyStepDialog partneringFamily={partneringFamily}
         requirementName={recordFamilyStepParameter.requirementName} stepActionRequirement={recordFamilyStepParameter.requirementInfo}
         onClose={() => setRecordFamilyStepParameter(null)} />} */}
-      {/* {uploadDocumentDialogOpen && <UploadPartneringFamilyDocumentDialog partneringFamily={partneringFamily}
-        onClose={() => setUploadDocumentDialogOpen(false)} />} */}
+      {uploadDocumentDialogOpen && <UploadFamilyDocumentDialog family={partneringFamily}
+        onClose={() => setUploadDocumentDialogOpen(false)} />}
       {addAdultDialogOpen && <AddAdultDialog onClose={() => setAddAdultDialogOpen(false)} />}
       {addChildDialogOpen && <AddChildDialog onClose={() => setAddChildDialogOpen(false)} />}
       {addNoteDialogOpen && <AddEditNoteDialog familyId={partneringFamily.family!.id!} onClose={() => setAddNoteDialogOpen(false)} />}
@@ -178,20 +180,53 @@ export function PartneringFamilyScreen() {
         <Grid item xs={12}>
           <span>Primary Contact: <PersonName person={partneringFamily.family?.adults?.find(adult => adult.item1?.id === partneringFamily.family?.primaryFamilyContactPersonId)?.item1} /></span>
         </Grid>
+        <Grid item xs={12}>
+          <p>{
+            partneringFamily.partneringFamilyInfo?.openReferral
+            ? "Referral open since " + format(partneringFamily.partneringFamilyInfo.openReferral.openedAtUtc!, "MM/dd/yyyy")
+            : "Referral closed - " + ReferralCloseReason[partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closeReason!]
+            //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closedUtc) -- needs a new calculated property
+          }</p>
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <h3>Incomplete</h3>
+          <ul className={classes.familyRequirementsList}>
+            {partneringFamily.partneringFamilyInfo?.openReferral?.missingIntakeRequirements?.map((missingRequirementName, i) => (
+              <li key={i}>
+                ❌ {missingRequirementName}
+              </li>
+            ))}
+          </ul>
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <h3>Completed</h3>
+          <ul className={classes.familyRequirementsList}>
+            {partneringFamily.partneringFamilyInfo?.openReferral?.completedRequirements?.map((completed, i) => (
+              <li key={i}>
+                ✅ {completed.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                {completed.completedAtUtc && <span style={{float:'right',marginRight:20}}>{format(completed.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
+              </li>
+            ))}
+          </ul>
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <h3>Documents</h3>
+          <ul className={classes.familyDocumentsList}>
+            {partneringFamily.uploadedDocuments?.map((uploaded, i) => (
+              <li key={i}
+                onClick={() => downloadFile(organizationId, locationId, uploaded.uploadedDocumentId!)}>
+                📃 {uploaded.uploadedFileName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                {uploaded.timestampUtc && <span style={{float:'right',marginRight:20}}>{format(uploaded.timestampUtc, "MM/dd/yyyy hh:mm aa")}</span>}
+              </li>
+            ))}
+          </ul>
+        </Grid>
         <Grid item container xs={12} spacing={2}>
           {partneringFamily.partneringFamilyInfo?.openReferral?.arrangements?.map(arrangement => (
             <Grid item key={arrangement.id}>
               <ArrangementCard partneringFamily={partneringFamily} arrangement={arrangement} />
             </Grid>
           ))}
-        </Grid>
-        <Grid item xs={12}>
-          <p>{
-            partneringFamily.partneringFamilyInfo?.openReferral
-            ? "Referral open since " + format(partneringFamily.partneringFamilyInfo.openReferral.createdUtc!, "MM/dd/yyyy")
-            : "Referral closed - " + ReferralCloseReason[partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closeReason!]
-            //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closedUtc) -- needs a new calculated property
-          }</p>
         </Grid>
         {partneringFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item2 && (
           <Grid item key={adult.item1.id}>

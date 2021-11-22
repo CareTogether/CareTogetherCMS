@@ -1,5 +1,5 @@
 import { selector, useRecoilCallback } from "recoil";
-import { ActionRequirement, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, UploadVolunteerFamilyDocument, VolunteerCommand, VolunteersClient, VolunteerFamilyCommand, RoleRemovalReason, RemoveVolunteerRole, ResetVolunteerRole, RemoveVolunteerFamilyRole, ResetVolunteerFamilyRole } from "../GeneratedClient";
+import { ActionRequirement, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, VolunteerCommand, VolunteersClient, VolunteerFamilyCommand, RoleRemovalReason, RemoveVolunteerRole, ResetVolunteerRole, RemoveVolunteerFamilyRole, ResetVolunteerFamilyRole } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { visibleFamiliesData } from "./ModelLoader";
@@ -68,15 +68,6 @@ function useVolunteerCommandCallbackWithLocation<T extends unknown[]>(
 // }
 
 export function useVolunteersModel() {
-  const uploadDocument = useVolunteerFamilyCommandCallbackWithLocation(
-    async (organizationId, locationId, volunteerFamilyId, uploadedDocumentId: string, uploadedFileName: string) => {
-      const command = new UploadVolunteerFamilyDocument({
-        familyId: volunteerFamilyId
-      });
-      command.uploadedDocumentId = uploadedDocumentId;
-      command.uploadedFileName = uploadedFileName;
-      return command;
-    });
   const completeFamilyRequirement = useVolunteerFamilyCommandCallbackWithLocation(
     async (organizationId, locationId, volunteerFamilyId, requirementName: string, requirement: ActionRequirement,
       completedAtLocal: Date, documentId: string | null) => {
@@ -150,7 +141,6 @@ export function useVolunteersModel() {
     });
   
   return {
-    uploadDocument,
     completeFamilyRequirement,
     removeFamilyRole,
     resetFamilyRole,

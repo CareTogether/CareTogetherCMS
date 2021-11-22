@@ -8,6 +8,7 @@ import { uploadFileToTenant } from "../../Model/FilesModel";
 import { currentLocationState, currentOrganizationState } from '../../Model/SessionModel';
 import { useRecoilValue } from 'recoil';
 import { useBackdrop } from '../RequestBackdrop';
+import { useDirectoryModel } from '../../Model/DirectoryModel';
 
 const useStyles = makeStyles((theme) => ({
   fileInput: {
@@ -29,6 +30,7 @@ export function RecordVolunteerAdultStepDialog({requirementName, stepActionRequi
   const [completedAtLocal, setCompletedAtLocal] = useState(new Date());
   const organizationId = useRecoilValue(currentOrganizationState);
   const locationId = useRecoilValue(currentLocationState);
+  const directoryModel = useDirectoryModel();
   const volunteerFamiliesModel = useVolunteersModel();
   const UPLOAD_NEW = "__uploadnew__";
   
@@ -44,7 +46,7 @@ export function RecordVolunteerAdultStepDialog({requirementName, stepActionRequi
         let document = documentId;
         if (documentId === UPLOAD_NEW) {
           document = await uploadFileToTenant(organizationId, locationId, documentFile!);
-          await volunteerFamiliesModel.uploadDocument(volunteerFamily.family!.id!, document, documentFile!.name);
+          await directoryModel.uploadFamilyDocument(volunteerFamily.family!.id!, document, documentFile!.name);
         }
         await volunteerFamiliesModel.completeIndividualRequirement(volunteerFamily.family?.id as string, adult.id as string,
           requirementName, stepActionRequirement, completedAtLocal, document === "" ? null : document);
@@ -91,7 +93,7 @@ export function RecordVolunteerAdultStepDialog({requirementName, stepActionRequi
                         Upload new...
                       </MenuItem>
                       <Divider />
-                      {volunteerFamily.volunteerFamilyInfo?.uploadedDocuments?.map(document =>
+                      {volunteerFamily.uploadedDocuments?.map(document =>
                         <MenuItem key={document.uploadedDocumentId} value={document.uploadedDocumentId}>{document.uploadedFileName}</MenuItem>)}
                   </Select>
                 </FormControl>

@@ -22,6 +22,18 @@ namespace CareTogether.Engines
 
     public enum RoleApprovalStatus { Prospective, Approved, Onboarded };
 
+    public sealed record ReferralStatus(
+        ImmutableList<string> MissingIntakeRequirements,
+        ImmutableDictionary<Guid, ArrangementStatus> IndividualArrangements);
+
+    public sealed record ArrangementStatus(
+        ArrangementPhase Phase,
+        ImmutableList<string> MissingSetupRequirements,
+        ImmutableList<string> MissingMonitoringRequirements,
+        ImmutableList<string> MissingCloseoutRequirements);
+
+    public enum ArrangementPhase { SettingUp, ReadyToStart, Started, Ended };
+
     public interface IPolicyEvaluationEngine
     {
         //TODO: Merge this with the CombinedFamilyInfoFormatter logic
@@ -31,5 +43,9 @@ namespace CareTogether.Engines
             ImmutableList<RemovedRole> removedFamilyRoles,
             ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles);
+
+        Task<ReferralStatus> CalculateReferralStatusAsync(
+            Guid organizationId, Guid locationId, Family family,
+            ReferralEntry referralEntry);
     }
 }

@@ -16,7 +16,7 @@ import { AddChildDialog } from '../Families/AddChildDialog';
 import { useParams } from 'react-router';
 import { VolunteerAdultCard } from './VolunteerAdultCard';
 import { VolunteerChildCard } from './VolunteerChildCard';
-import { UploadVolunteerFamilyDocumentDialog } from './UploadVolunteerFamilyDocumentDialog';
+import { UploadFamilyDocumentDialog } from '../Families/UploadFamilyDocumentDialog';
 import { downloadFile } from '../../Model/FilesModel';
 import { currentOrganizationState, currentLocationState } from '../../Model/SessionModel';
 import { VolunteerRoleApprovalStatusChip } from './VolunteerRoleApprovalStatusChip';
@@ -180,7 +180,7 @@ export function VolunteerFamilyScreen() {
       {recordFamilyStepParameter && <RecordVolunteerFamilyStepDialog volunteerFamily={volunteerFamily}
         requirementName={recordFamilyStepParameter.requirementName} stepActionRequirement={recordFamilyStepParameter.requirementInfo}
         onClose={() => setRecordFamilyStepParameter(null)} />}
-      {uploadDocumentDialogOpen && <UploadVolunteerFamilyDocumentDialog volunteerFamily={volunteerFamily}
+      {uploadDocumentDialogOpen && <UploadFamilyDocumentDialog family={volunteerFamily}
         onClose={() => setUploadDocumentDialogOpen(false)} />}
       {addAdultDialogOpen && <AddAdultDialog onClose={() => setAddAdultDialogOpen(false)} />}
       {addChildDialogOpen && <AddChildDialog onClose={() => setAddChildDialogOpen(false)} />}
@@ -226,7 +226,7 @@ export function VolunteerFamilyScreen() {
       <Grid item xs={12} sm={6} md={4}>
         <h3>Documents</h3>
         <ul className={classes.familyDocumentsList}>
-          {volunteerFamily.volunteerFamilyInfo?.uploadedDocuments?.map((uploaded, i) => (
+          {volunteerFamily.uploadedDocuments?.map((uploaded, i) => (
             <li key={i}
               onClick={() => downloadFile(organizationId, locationId, uploaded.uploadedDocumentId!)}>
               📃 {uploaded.uploadedFileName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;

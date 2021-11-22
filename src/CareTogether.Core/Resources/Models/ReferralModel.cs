@@ -41,7 +41,7 @@ namespace CareTogether.Resources.Models
             var referralEntryToUpsert = command switch
             {
                 CreateReferral c => new ReferralEntry(c.ReferralId, c.FamilyId,
-                    c.OpenedAtUtc, CloseReason: null,
+                    OpenedAtUtc: c.OpenedAtUtc, ClosedAtUtc: null, CloseReason: null,
                     ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<UploadedDocumentInfo>.Empty,
                     ImmutableDictionary<Guid, ArrangementEntry>.Empty),
                 _ => referrals.TryGetValue(command.ReferralId, out var referralEntry)
@@ -59,7 +59,8 @@ namespace CareTogether.Resources.Models
                         },
                         CloseReferral c => referralEntry with
                         {
-                            CloseReason = c.CloseReason
+                            CloseReason = c.CloseReason,
+                            ClosedAtUtc = c.ClosedAtUtc
                         },
                         _ => throw new NotImplementedException(
                             $"The command type '{command.GetType().FullName}' has not been implemented.")
@@ -87,7 +88,7 @@ namespace CareTogether.Resources.Models
             var arrangementEntryToUpsert = command switch
             {
                 CreateArrangement c => new ArrangementEntry(c.ArrangementId, c.ArrangementType,
-                    ArrangementState.Setup, StartedAtUtc: null, EndedAtUtc: null,
+                    RequestedAtUtc: c.RequestedAtUtc, StartedAtUtc: null, EndedAtUtc: null,
                     ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<UploadedDocumentInfo>.Empty,
                     ImmutableList<IndividualVolunteerAssignment>.Empty, ImmutableList<FamilyVolunteerAssignment>.Empty,
                     ImmutableList<PartneringFamilyChildAssignment>.Empty, ImmutableList<ChildLocationHistoryEntry>.Empty),
@@ -111,7 +112,6 @@ namespace CareTogether.Resources.Models
                         },
                         StartArrangement c => arrangementEntry with
                         {
-                            State = ArrangementState.Open,
                             StartedAtUtc = c.StartedAtUtc
                         },
                         CompleteArrangementRequirement c => arrangementEntry with
@@ -132,7 +132,6 @@ namespace CareTogether.Resources.Models
                         },
                         EndArrangement c => arrangementEntry with
                         {
-                            State = ArrangementState.Closed,
                             EndedAtUtc = c.EndedAtUtc
                         },
                         _ => throw new NotImplementedException(

@@ -9,7 +9,8 @@ namespace CareTogether.Resources
     public sealed record Family(Guid Id, Guid PrimaryFamilyContactPersonId,
         ImmutableList<(Person, FamilyAdultRelationshipInfo)> Adults,
         ImmutableList<Person> Children,
-        ImmutableList<CustodialRelationship> CustodialRelationships);
+        ImmutableList<CustodialRelationship> CustodialRelationships,
+        ImmutableList<UploadedDocumentInfo> UploadedDocuments);
     public sealed record Person(Guid Id, Guid? UserId,
         string FirstName, string LastName, Gender Gender, Age Age, string Ethnicity,
         ImmutableList<Address> Addresses, Guid? CurrentAddressId,
@@ -58,6 +59,9 @@ namespace CareTogether.Resources
         : FamilyCommand(FamilyId);
     public sealed record RemoveCustodialRelationship(Guid FamilyId,
         Guid ChildPersonId, Guid AdultPersonId)
+        : FamilyCommand(FamilyId);
+    public sealed record UploadFamilyDocument(Guid FamilyId,
+        Guid UploadedDocumentId, string UploadedFileName)
         : FamilyCommand(FamilyId);
 
     [JsonHierarchyBase]

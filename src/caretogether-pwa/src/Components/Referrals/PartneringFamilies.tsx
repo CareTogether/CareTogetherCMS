@@ -74,7 +74,7 @@ function PartneringFamilies() {
                     <TableCell><FamilyName family={partneringFamily} /></TableCell>
                     <TableCell>{
                       partneringFamily.partneringFamilyInfo?.openReferral
-                      ? "Open since " + format(partneringFamily.partneringFamilyInfo.openReferral.createdUtc!, "MM/dd/yyyy")
+                      ? "Open since " + format(partneringFamily.partneringFamilyInfo.openReferral.openedAtUtc!, "MM/dd/yyyy")
                       : "Closed - " + ReferralCloseReason[partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closeReason!]
                       //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closedUtc) -- needs a new calculated property
                       }</TableCell>

@@ -229,6 +229,69 @@
         }
       }
     },
+    "/api/{organizationId}/{locationId}/Directory/familyCommand": {
+      "post": {
+        "tags": [
+          "Directory"
+        ],
+        "operationId": "Directory_SubmitFamilyCommand",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          },
+          {
+            "name": "familyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 3
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FamilyCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 4
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CombinedFamilyInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/{organizationId}/{locationId}/Directory/personCommand": {
       "post": {
         "tags": [
@@ -1130,6 +1193,12 @@
             "items": {
               "$ref": "#/components/schemas/Note"
             }
+          },
+          "uploadedDocuments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UploadedDocumentInfo"
+            }
           }
         }
       },
@@ -1161,6 +1230,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CustodialRelationship"
+            }
+          },
+          "uploadedDocuments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UploadedDocumentInfo"
             }
           }
         }
@@ -1449,6 +1524,27 @@
           2
         ]
       },
+      "UploadedDocumentInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "timestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "uploadedDocumentId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "uploadedFileName": {
+            "type": "string"
+          }
+        }
+      },
       "PartneringFamilyInfo": {
         "type": "object",
         "additionalProperties": false,
@@ -1477,9 +1573,14 @@
             "type": "string",
             "format": "guid"
           },
-          "createdUtc": {
+          "openedAtUtc": {
             "type": "string",
             "format": "date-time"
+          },
+          "closedAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           },
           "closeReason": {
             "nullable": true,
@@ -1495,13 +1596,7 @@
               "$ref": "#/components/schemas/CompletedRequirementInfo"
             }
           },
-          "uploadedDocuments": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UploadedDocumentInfo"
-            }
-          },
-          "missingRequirements": {
+          "missingIntakeRequirements": {
             "type": "array",
             "items": {
               "type": "string"
@@ -1559,27 +1654,6 @@
           }
         }
       },
-      "UploadedDocumentInfo": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "userId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "timestampUtc": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "uploadedDocumentId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "uploadedFileName": {
-            "type": "string"
-          }
-        }
-      },
       "Arrangement": {
         "type": "object",
         "additionalProperties": false,
@@ -1591,8 +1665,22 @@
           "arrangementType": {
             "type": "string"
           },
-          "state": {
-            "$ref": "#/components/schemas/ArrangementState"
+          "phase": {
+            "$ref": "#/components/schemas/ArrangementPhase"
+          },
+          "requestedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "startedAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "endedAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           },
           "completedRequirements": {
             "type": "array",
@@ -1600,13 +1688,19 @@
               "$ref": "#/components/schemas/CompletedRequirementInfo"
             }
           },
-          "uploadedDocuments": {
+          "missingSetupRequirements": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/UploadedDocumentInfo"
+              "type": "string"
             }
           },
-          "missingRequirements": {
+          "missingMonitoringRequirements": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "missingCloseoutRequirements": {
             "type": "array",
             "items": {
               "type": "string"
@@ -1638,18 +1732,20 @@
           }
         }
       },
-      "ArrangementState": {
+      "ArrangementPhase": {
         "type": "integer",
         "description": "",
         "x-enumNames": [
-          "Setup",
-          "Open",
-          "Closed"
+          "SettingUp",
+          "ReadyToStart",
+          "Started",
+          "Ended"
         ],
         "enum": [
           0,
           1,
-          2
+          2,
+          3
         ]
       },
       "IndividualVolunteerAssignment": {
@@ -1742,12 +1838,6 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CompletedRequirementInfo"
-            }
-          },
-          "uploadedDocuments": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UploadedDocumentInfo"
             }
           },
           "removedRoles": {
@@ -2147,6 +2237,229 @@
               },
               "emailAddress": {
                 "$ref": "#/components/schemas/EmailAddress"
+              }
+            }
+          }
+        ]
+      },
+      "FamilyCommand": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "discriminator",
+          "mapping": {
+            "AddAdultToFamily": "#/components/schemas/AddAdultToFamily",
+            "AddChildToFamily": "#/components/schemas/AddChildToFamily",
+            "AddCustodialRelationship": "#/components/schemas/AddCustodialRelationship",
+            "CreateFamily": "#/components/schemas/CreateFamily",
+            "RemoveCustodialRelationship": "#/components/schemas/RemoveCustodialRelationship",
+            "UpdateAdultRelationshipToFamily": "#/components/schemas/UpdateAdultRelationshipToFamily",
+            "UpdateCustodialRelationshipType": "#/components/schemas/UpdateCustodialRelationshipType",
+            "UploadFamilyDocument": "#/components/schemas/UploadFamilyDocument"
+          }
+        },
+        "x-abstract": true,
+        "additionalProperties": false,
+        "required": [
+          "discriminator"
+        ],
+        "properties": {
+          "familyId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "discriminator": {
+            "type": "string"
+          }
+        }
+      },
+      "AddAdultToFamily": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/FamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "adultPersonId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "relationshipToFamily": {
+                "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
+              }
+            }
+          }
+        ]
+      },
+      "AddChildToFamily": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/FamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "childPersonId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "custodialRelationships": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CustodialRelationship"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "AddCustodialRelationship": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/FamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "custodialRelationship": {
+                "$ref": "#/components/schemas/CustodialRelationship"
+              }
+            }
+          }
+        ]
+      },
+      "CreateFamily": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/FamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "primaryFamilyContactPersonId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "adults": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ValueTupleOfGuidAndFamilyAdultRelationshipInfo"
+                }
+              },
+              "children": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "guid"
+                }
+              },
+              "custodialRelationships": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CustodialRelationship"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "ValueTupleOfGuidAndFamilyAdultRelationshipInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "item1": {
+            "type": "string",
+            "format": "guid"
+          },
+          "item2": {
+            "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
+          }
+        }
+      },
+      "RemoveCustodialRelationship": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/FamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "childPersonId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "adultPersonId": {
+                "type": "string",
+                "format": "guid"
+              }
+            }
+          }
+        ]
+      },
+      "UpdateAdultRelationshipToFamily": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/FamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "adultPersonId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "relationshipToFamily": {
+                "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
+              }
+            }
+          }
+        ]
+      },
+      "UpdateCustodialRelationshipType": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/FamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "childPersonId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "adultPersonId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "type": {
+                "$ref": "#/components/schemas/CustodialRelationshipType"
+              }
+            }
+          }
+        ]
+      },
+      "UploadFamilyDocument": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/FamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "uploadedDocumentId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "uploadedFileName": {
+                "type": "string"
               }
             }
           }
@@ -2607,6 +2920,10 @@
             "properties": {
               "closeReason": {
                 "$ref": "#/components/schemas/ReferralCloseReason"
+              },
+              "closedAtUtc": {
+                "type": "string",
+                "format": "date-time"
               }
             }
           }
@@ -2813,6 +3130,10 @@
             "properties": {
               "arrangementType": {
                 "type": "string"
+              },
+              "requestedAtUtc": {
+                "type": "string",
+                "format": "date-time"
               }
             }
           }

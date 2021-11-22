@@ -193,7 +193,7 @@ namespace CareTogether.TestData
                 new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 5, 4, 15, 15), new UploadReferralDocument(guid1, guid1, guid1, "Jane Doe referral info.pdf")),
                 new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 5, 4, 15, 15), new CompleteReferralRequirement(guid1, guid1, "Request for Help Form", new DateTime(2020, 3, 5, 4, 12, 15), guid1)),
                 new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 6, 8, 45, 30), new CompleteReferralRequirement(guid1, guid1, "Intake Coordinator Screening Call", new DateTime(2020, 3, 6, 8, 45, 30), adminId)),
-                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 12, 13), new CreateArrangement(guid1, guid1, guid1, "Hosting")),
+                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 12, 13), new CreateArrangement(guid1, guid1, guid1, "Hosting", new DateTime(2020, 3, 11))),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 13, 14), new AssignIndividualVolunteer(guid1, guid1, guid1, guid4, guid4, "Family Coach")),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 13, 55), new AssignVolunteerFamily(guid1, guid1, guid1, guid2, "Host Family")),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 11, 12, 22, 21), new AssignVolunteerFamily(guid1, guid1, guid1, guid3, "Host Family Friend")),

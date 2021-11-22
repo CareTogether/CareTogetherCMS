@@ -7,24 +7,24 @@ namespace CareTogether.Managers
 {
     public sealed record CombinedFamilyInfo(Family Family,
         PartneringFamilyInfo? PartneringFamilyInfo, VolunteerFamilyInfo? VolunteerFamilyInfo,
-        ImmutableList<Note> Notes);
+        ImmutableList<Note> Notes, ImmutableList<UploadedDocumentInfo> UploadedDocuments);
 
     public sealed record PartneringFamilyInfo(
         Referral? OpenReferral,
         ImmutableList<Referral> ClosedReferrals);
 
     public sealed record Referral(Guid Id,
-        DateTime CreatedUtc, ReferralCloseReason? CloseReason,
+        DateTime OpenedAtUtc, DateTime? ClosedAtUtc, ReferralCloseReason? CloseReason,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
-        ImmutableList<UploadedDocumentInfo> UploadedDocuments,
-        ImmutableList<string> MissingRequirements,
+        ImmutableList<string> MissingIntakeRequirements,
         ImmutableList<Arrangement> Arrangements);
 
     public sealed record Arrangement(Guid Id, string ArrangementType,
-        ArrangementState State,
+        ArrangementPhase Phase, DateTime RequestedAtUtc, DateTime? StartedAtUtc, DateTime? EndedAtUtc,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
-        ImmutableList<UploadedDocumentInfo> UploadedDocuments,
-        ImmutableList<string> MissingRequirements,
+        ImmutableList<string> MissingSetupRequirements,
+        ImmutableList<string> MissingMonitoringRequirements, //TODO: Better define this, especially when recurrence is involved
+        ImmutableList<string> MissingCloseoutRequirements,
         ImmutableList<IndividualVolunteerAssignment> IndividualVolunteerAssignments,
         ImmutableList<FamilyVolunteerAssignment> FamilyVolunteerAssignments,
         ImmutableList<PartneringFamilyChildAssignment> PartneringFamilyChildAssignments,
@@ -35,7 +35,6 @@ namespace CareTogether.Managers
 
     public sealed record VolunteerFamilyInfo(
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
-        ImmutableList<UploadedDocumentInfo> UploadedDocuments,
         ImmutableList<RemovedRole> RemovedRoles,
         ImmutableList<string> MissingRequirements,
         ImmutableList<string> AvailableApplications,

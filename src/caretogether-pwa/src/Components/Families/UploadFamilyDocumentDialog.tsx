@@ -2,28 +2,28 @@ import { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@material-ui/core';
 import { CombinedFamilyInfo } from '../../GeneratedClient';
-import { useVolunteersModel } from '../../Model/VolunteersModel';
 import { uploadFileToTenant } from '../../Model/FilesModel';
 import { useRecoilValue } from 'recoil';
 import { currentOrganizationState, currentLocationState } from '../../Model/SessionModel';
 import { useBackdrop } from '../RequestBackdrop';
+import { useDirectoryModel } from '../../Model/DirectoryModel';
 
 const useStyles = makeStyles((theme) => ({
   fileInput: {
   }
 }));
 
-interface UploadVolunteerFamilyDocumentDialogProps {
-  volunteerFamily: CombinedFamilyInfo,
+interface UploadFamilyDocumentDialogProps {
+  family: CombinedFamilyInfo,
   onClose: () => void
 }
 
-export function UploadVolunteerFamilyDocumentDialog({volunteerFamily, onClose}: UploadVolunteerFamilyDocumentDialogProps) {
+export function UploadFamilyDocumentDialog({family, onClose}: UploadFamilyDocumentDialogProps) {
   const classes = useStyles();
   const [documentFile, setDocumentFile] = useState<File>();
   const organizationId = useRecoilValue(currentOrganizationState);
   const locationId = useRecoilValue(currentLocationState);
-  const volunteerFamiliesModel = useVolunteersModel();
+  const directoryModel = useDirectoryModel();
 
   const withBackdrop = useBackdrop();
 
@@ -33,7 +33,7 @@ export function UploadVolunteerFamilyDocumentDialog({volunteerFamily, onClose}: 
         alert("No file was selected. Try again.");
       } else {
         const documentId = await uploadFileToTenant(organizationId, locationId, documentFile!);
-        await volunteerFamiliesModel.uploadDocument(volunteerFamily.family!.id!, documentId, documentFile!.name);
+        await directoryModel.uploadFamilyDocument(family.family!.id!, documentId, documentFile!.name);
         //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
         onClose();
       }
@@ -42,7 +42,7 @@ export function UploadVolunteerFamilyDocumentDialog({volunteerFamily, onClose}: 
 
   return (
     <Dialog open={true} onClose={onClose} aria-labelledby="upload-family-document-title">
-      <DialogTitle id="upload-family-document-title">Upload Volunteer Family Document</DialogTitle>
+      <DialogTitle id="upload-family-document-title">Upload Family Document</DialogTitle>
       <DialogContent>
         <DialogContentText>Do you want to upload a new document for this family?</DialogContentText>
         <input

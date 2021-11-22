@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 namespace CareTogether.Resources
 {
     public record ReferralEntry(Guid Id, Guid FamilyId,
-        DateTime CreatedUtc, ReferralCloseReason? CloseReason,
+        DateTime OpenedAtUtc, DateTime? ClosedAtUtc, ReferralCloseReason? CloseReason,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<UploadedDocumentInfo> UploadedDocuments,
         ImmutableDictionary<Guid, ArrangementEntry> Arrangements);
 
     public record ArrangementEntry(Guid Id, string ArrangementType,
-        ArrangementState State, DateTime? StartedAtUtc, DateTime? EndedAtUtc,
+        DateTime RequestedAtUtc, DateTime? StartedAtUtc, DateTime? EndedAtUtc,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<UploadedDocumentInfo> UploadedDocuments,
         ImmutableList<IndividualVolunteerAssignment> IndividualVolunteerAssignments,
@@ -21,8 +21,6 @@ namespace CareTogether.Resources
         ImmutableList<ChildLocationHistoryEntry> ChildrenLocationHistory);
 
     public enum ReferralCloseReason { NotAppropriate, NoCapacity, NoLongerNeeded, Resourced, NeedMet };
-
-    public enum ArrangementState { Setup, Open, Closed };
 
     public sealed record IndividualVolunteerAssignment(Guid FamilyId, Guid PersonId, string ArrangementFunction);
     public sealed record FamilyVolunteerAssignment(Guid FamilyId, string ArrangementFunction);
@@ -44,13 +42,13 @@ namespace CareTogether.Resources
         Guid UploadedDocumentId, string UploadedFileName)
         : ReferralCommand(FamilyId, ReferralId);
     public sealed record CloseReferral(Guid FamilyId, Guid ReferralId,
-        ReferralCloseReason CloseReason)
+        ReferralCloseReason CloseReason, DateTime ClosedAtUtc)
         : ReferralCommand(FamilyId, ReferralId);
 
     [JsonHierarchyBase]
     public abstract partial record ArrangementCommand(Guid FamilyId, Guid ReferralId, Guid ArrangementId);
     public sealed record CreateArrangement(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
-        string ArrangementType)
+        string ArrangementType, DateTime RequestedAtUtc)
         : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
     public sealed record AssignIndividualVolunteer(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
         Guid VolunteerFamilyId, Guid PersonId, string ArrangementFunction)

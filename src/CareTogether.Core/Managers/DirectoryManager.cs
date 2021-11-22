@@ -213,6 +213,19 @@ namespace CareTogether.Managers
             }
         }
 
+        public async Task<CombinedFamilyInfo> ExecuteFamilyCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, FamilyCommand command)
+        {
+            if (!await authorizationEngine.AuthorizeFamilyCommandAsync(
+                organizationId, locationId, user, command))
+                throw new Exception("The user is not authorized to perform this command.");
+
+            _ = await directoryResource.ExecuteFamilyCommandAsync(organizationId, locationId, command, user.UserId());
+
+            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, command.FamilyId, user);
+            return familyResult;
+        }
+
         public async Task<CombinedFamilyInfo> ExecutePersonCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, Guid familyId, PersonCommand command)
         {

@@ -40,7 +40,7 @@ namespace CareTogether.Managers
 
             var partneringFamilyInfo = await RenderPartneringFamilyInfoAsync(organizationId, locationId, family, user);
 
-            var volunteerFamilyInfo = await RenderVolunteerFamilyInfoAsync(organizationId, locationId, family, user);
+            var (volunteerFamilyInfo, uploadedApprovalDocuments) = await RenderVolunteerFamilyInfoAsync(organizationId, locationId, family, user);
 
             var notes = await notesResource.ListFamilyNotesAsync(organizationId, locationId, familyId);
             var disclosedNotes = (await notes
@@ -54,47 +54,63 @@ namespace CareTogether.Managers
                 .Select(result => result.note)
                 .ToImmutableList();
 
-            return new CombinedFamilyInfo(disclosedFamily, partneringFamilyInfo, volunteerFamilyInfo, disclosedNotes);
+            // COMPATIBILITY: This step is required to merge previously separated document upload info lists.
+            // The previous design had approval and partnering document upload lists stored separately in their respective resource services,
+            // but based on system use cases it makes more sense to standardize on storing these document upload lists centrally in the
+            // directory service. Since the referral resource service's side of document upload list functionality was never implemented,
+            // the go-forward implementation uses only the directory resource service and then merges in prior data from the approvals
+            // resource service. At some point a data migration could be run to convert the approvals events to directory events,
+            // at which point this compatibility step can then be removed.
+            var allUploadedDocuments = uploadedApprovalDocuments.Concat(disclosedFamily.UploadedDocuments).ToImmutableList();
+
+            return new CombinedFamilyInfo(disclosedFamily, partneringFamilyInfo, volunteerFamilyInfo, disclosedNotes,
+                allUploadedDocuments);
         }
 
 
         private async Task<PartneringFamilyInfo?> RenderPartneringFamilyInfoAsync(Guid organizationId, Guid locationId,
             Family family, ClaimsPrincipal user)
         {
-            var referrals = (await referralsResource.ListReferralsAsync(organizationId, locationId))
+            var referrals = await (await referralsResource.ListReferralsAsync(organizationId, locationId))
                 .Where(r => r.FamilyId == family.Id)
-                .Select(r => ToReferral(r))
-                .ToList();
+                .Select(r => ToReferralAsync(r))
+                .WhenAll();
 
-            if (referrals.Count == 0)
+            if (referrals.Length == 0)
                 return null;
 
             var openReferral = referrals.SingleOrDefault(r => r.CloseReason == null);
             var closedReferrals = referrals.Where(r => r.CloseReason != null).ToImmutableList();
 
-            //TODO: CalculatePartneringFamilyReferralStatusAsync -- needs to be defined on PolicyEvaluationEngine
-
             return new PartneringFamilyInfo(openReferral, closedReferrals);
 
-            static Referral ToReferral(ReferralEntry entry) =>
-                new(entry.Id, entry.CreatedUtc, entry.CloseReason,
-                    entry.CompletedRequirements, entry.UploadedDocuments, ImmutableList<string>.Empty, //TODO: populate MissingRequirements
-                    entry.Arrangements.Select(a => ToArrangement(a.Value)).ToImmutableList());
+            async Task<Referral> ToReferralAsync(ReferralEntry entry)
+            {
+                var referralStatus = await policyEvaluationEngine.CalculateReferralStatusAsync(organizationId, locationId, family, entry);
 
-            static Arrangement ToArrangement(ArrangementEntry entry) =>
-                new(entry.Id, entry.ArrangementType, entry.State,
-                    entry.CompletedRequirements, entry.UploadedDocuments, ImmutableList<string>.Empty, //TODO: populate MissingRequirements
+                return new(entry.Id, entry.OpenedAtUtc, entry.ClosedAtUtc, entry.CloseReason,
+                    entry.CompletedRequirements, referralStatus.MissingIntakeRequirements,
+                    entry.Arrangements
+                        .Select(a => ToArrangement(a.Value, referralStatus.IndividualArrangements[a.Key]))
+                        .ToImmutableList());
+            }
+
+            static Arrangement ToArrangement(ArrangementEntry entry, ArrangementStatus status) =>
+                new(entry.Id, entry.ArrangementType, status.Phase,
+                    entry.RequestedAtUtc, entry.StartedAtUtc, entry.EndedAtUtc,
+                    entry.CompletedRequirements,
+                    status.MissingSetupRequirements, status.MissingMonitoringRequirements, status.MissingCloseoutRequirements,
                     entry.IndividualVolunteerAssignments, entry.FamilyVolunteerAssignments,
                     entry.PartneringFamilyChildAssignments, entry.ChildrenLocationHistory);
         }
 
-        private async Task<VolunteerFamilyInfo?> RenderVolunteerFamilyInfoAsync(Guid organizationId, Guid locationId,
+        private async Task<(VolunteerFamilyInfo?, ImmutableList<UploadedDocumentInfo>)> RenderVolunteerFamilyInfoAsync(Guid organizationId, Guid locationId,
             Family family, ClaimsPrincipal user)
         {
             var entry = await approvalsResource.TryGetVolunteerFamilyAsync(organizationId, locationId, family.Id);
 
             if (entry == null)
-                return null;
+                return (null, ImmutableList<UploadedDocumentInfo>.Empty);
 
             var completedIndividualRequirements = entry.IndividualEntries.ToImmutableDictionary(
                 x => x.Key,
@@ -108,7 +124,7 @@ namespace CareTogether.Managers
                 completedIndividualRequirements, removedIndividualRoles);
 
             var volunteerFamilyInfo = new VolunteerFamilyInfo(
-                entry.CompletedRequirements, entry.UploadedDocuments, entry.RemovedRoles,
+                entry.CompletedRequirements, entry.RemovedRoles,
                 volunteerFamilyApprovalStatus.MissingFamilyRequirements,
                 volunteerFamilyApprovalStatus.AvailableFamilyApplications,
                 volunteerFamilyApprovalStatus.FamilyRoleApprovals,
@@ -126,7 +142,7 @@ namespace CareTogether.Managers
                     }));
 
             var disclosedVolunteerFamilyInfo = await authorizationEngine.DiscloseVolunteerFamilyInfoAsync(user, volunteerFamilyInfo);
-            return disclosedVolunteerFamilyInfo;
+            return (disclosedVolunteerFamilyInfo, entry.UploadedDocuments);
         }
     }
 }

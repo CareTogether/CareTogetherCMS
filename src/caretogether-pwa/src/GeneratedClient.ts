@@ -236,6 +236,54 @@ export class DirectoryClient {
         return Promise.resolve<CombinedFamilyInfo>(<any>null);
     }
 
+    submitFamilyCommand(organizationId: string, locationId: string, familyId: string | undefined, command: FamilyCommand): Promise<CombinedFamilyInfo> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Directory/familyCommand?";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (locationId === undefined || locationId === null)
+            throw new Error("The parameter 'locationId' must be defined.");
+        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
+        if (familyId === null)
+            throw new Error("The parameter 'familyId' cannot be null.");
+        else if (familyId !== undefined)
+            url_ += "familyId=" + encodeURIComponent("" + familyId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(command);
+
+        let options_ = <RequestInit>{
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSubmitFamilyCommand(_response);
+        });
+    }
+
+    protected processSubmitFamilyCommand(response: Response): Promise<CombinedFamilyInfo> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = CombinedFamilyInfo.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<CombinedFamilyInfo>(<any>null);
+    }
+
     submitPersonCommand(organizationId: string, locationId: string, familyId: string | undefined, command: PersonCommand): Promise<CombinedFamilyInfo> {
         let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Directory/personCommand?";
         if (organizationId === undefined || organizationId === null)
@@ -1733,6 +1781,7 @@ export class CombinedFamilyInfo implements ICombinedFamilyInfo {
     partneringFamilyInfo?: PartneringFamilyInfo | undefined;
     volunteerFamilyInfo?: VolunteerFamilyInfo | undefined;
     notes?: Note[];
+    uploadedDocuments?: UploadedDocumentInfo[];
 
     constructor(data?: ICombinedFamilyInfo) {
         if (data) {
@@ -1752,6 +1801,11 @@ export class CombinedFamilyInfo implements ICombinedFamilyInfo {
                 this.notes = [] as any;
                 for (let item of _data["notes"])
                     this.notes!.push(Note.fromJS(item));
+            }
+            if (Array.isArray(_data["uploadedDocuments"])) {
+                this.uploadedDocuments = [] as any;
+                for (let item of _data["uploadedDocuments"])
+                    this.uploadedDocuments!.push(UploadedDocumentInfo.fromJS(item));
             }
         }
     }
@@ -1773,6 +1827,11 @@ export class CombinedFamilyInfo implements ICombinedFamilyInfo {
             for (let item of this.notes)
                 data["notes"].push(item.toJSON());
         }
+        if (Array.isArray(this.uploadedDocuments)) {
+            data["uploadedDocuments"] = [];
+            for (let item of this.uploadedDocuments)
+                data["uploadedDocuments"].push(item.toJSON());
+        }
         return data; 
     }
 }
@@ -1782,6 +1841,7 @@ export interface ICombinedFamilyInfo {
     partneringFamilyInfo?: PartneringFamilyInfo | undefined;
     volunteerFamilyInfo?: VolunteerFamilyInfo | undefined;
     notes?: Note[];
+    uploadedDocuments?: UploadedDocumentInfo[];
 }
 
 export class Family implements IFamily {
@@ -1790,6 +1850,7 @@ export class Family implements IFamily {
     adults?: ValueTupleOfPersonAndFamilyAdultRelationshipInfo[];
     children?: Person[];
     custodialRelationships?: CustodialRelationship[];
+    uploadedDocuments?: UploadedDocumentInfo[];
 
     constructor(data?: IFamily) {
         if (data) {
@@ -1818,6 +1879,11 @@ export class Family implements IFamily {
                 this.custodialRelationships = [] as any;
                 for (let item of _data["custodialRelationships"])
                     this.custodialRelationships!.push(CustodialRelationship.fromJS(item));
+            }
+            if (Array.isArray(_data["uploadedDocuments"])) {
+                this.uploadedDocuments = [] as any;
+                for (let item of _data["uploadedDocuments"])
+                    this.uploadedDocuments!.push(UploadedDocumentInfo.fromJS(item));
             }
         }
     }
@@ -1848,6 +1914,11 @@ export class Family implements IFamily {
             for (let item of this.custodialRelationships)
                 data["custodialRelationships"].push(item.toJSON());
         }
+        if (Array.isArray(this.uploadedDocuments)) {
+            data["uploadedDocuments"] = [];
+            for (let item of this.uploadedDocuments)
+                data["uploadedDocuments"].push(item.toJSON());
+        }
         return data; 
     }
 }
@@ -1858,6 +1929,7 @@ export interface IFamily {
     adults?: ValueTupleOfPersonAndFamilyAdultRelationshipInfo[];
     children?: Person[];
     custodialRelationships?: CustodialRelationship[];
+    uploadedDocuments?: UploadedDocumentInfo[];
 }
 
 export class ValueTupleOfPersonAndFamilyAdultRelationshipInfo implements IValueTupleOfPersonAndFamilyAdultRelationshipInfo {
@@ -2382,6 +2454,54 @@ export enum CustodialRelationshipType {
     LegalGuardian = 2,
 }
 
+export class UploadedDocumentInfo implements IUploadedDocumentInfo {
+    userId?: string;
+    timestampUtc?: Date;
+    uploadedDocumentId?: string;
+    uploadedFileName?: string;
+
+    constructor(data?: IUploadedDocumentInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
+            this.uploadedFileName = _data["uploadedFileName"];
+        }
+    }
+
+    static fromJS(data: any): UploadedDocumentInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new UploadedDocumentInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
+        data["uploadedFileName"] = this.uploadedFileName;
+        return data; 
+    }
+}
+
+export interface IUploadedDocumentInfo {
+    userId?: string;
+    timestampUtc?: Date;
+    uploadedDocumentId?: string;
+    uploadedFileName?: string;
+}
+
 export class PartneringFamilyInfo implements IPartneringFamilyInfo {
     openReferral?: Referral | undefined;
     closedReferrals?: Referral[];
@@ -2432,11 +2552,11 @@ export interface IPartneringFamilyInfo {
 
 export class Referral implements IReferral {
     id?: string;
-    createdUtc?: Date;
+    openedAtUtc?: Date;
+    closedAtUtc?: Date | undefined;
     closeReason?: ReferralCloseReason | undefined;
     completedRequirements?: CompletedRequirementInfo[];
-    uploadedDocuments?: UploadedDocumentInfo[];
-    missingRequirements?: string[];
+    missingIntakeRequirements?: string[];
     arrangements?: Arrangement[];
 
     constructor(data?: IReferral) {
@@ -2451,22 +2571,18 @@ export class Referral implements IReferral {
     init(_data?: any) {
         if (_data) {
             this.id = _data["id"];
-            this.createdUtc = _data["createdUtc"] ? new Date(_data["createdUtc"].toString()) : <any>undefined;
+            this.openedAtUtc = _data["openedAtUtc"] ? new Date(_data["openedAtUtc"].toString()) : <any>undefined;
+            this.closedAtUtc = _data["closedAtUtc"] ? new Date(_data["closedAtUtc"].toString()) : <any>undefined;
             this.closeReason = _data["closeReason"];
             if (Array.isArray(_data["completedRequirements"])) {
                 this.completedRequirements = [] as any;
                 for (let item of _data["completedRequirements"])
                     this.completedRequirements!.push(CompletedRequirementInfo.fromJS(item));
             }
-            if (Array.isArray(_data["uploadedDocuments"])) {
-                this.uploadedDocuments = [] as any;
-                for (let item of _data["uploadedDocuments"])
-                    this.uploadedDocuments!.push(UploadedDocumentInfo.fromJS(item));
-            }
-            if (Array.isArray(_data["missingRequirements"])) {
-                this.missingRequirements = [] as any;
-                for (let item of _data["missingRequirements"])
-                    this.missingRequirements!.push(item);
+            if (Array.isArray(_data["missingIntakeRequirements"])) {
+                this.missingIntakeRequirements = [] as any;
+                for (let item of _data["missingIntakeRequirements"])
+                    this.missingIntakeRequirements!.push(item);
             }
             if (Array.isArray(_data["arrangements"])) {
                 this.arrangements = [] as any;
@@ -2486,22 +2602,18 @@ export class Referral implements IReferral {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
-        data["createdUtc"] = this.createdUtc ? this.createdUtc.toISOString() : <any>undefined;
+        data["openedAtUtc"] = this.openedAtUtc ? this.openedAtUtc.toISOString() : <any>undefined;
+        data["closedAtUtc"] = this.closedAtUtc ? this.closedAtUtc.toISOString() : <any>undefined;
         data["closeReason"] = this.closeReason;
         if (Array.isArray(this.completedRequirements)) {
             data["completedRequirements"] = [];
             for (let item of this.completedRequirements)
                 data["completedRequirements"].push(item.toJSON());
         }
-        if (Array.isArray(this.uploadedDocuments)) {
-            data["uploadedDocuments"] = [];
-            for (let item of this.uploadedDocuments)
-                data["uploadedDocuments"].push(item.toJSON());
-        }
-        if (Array.isArray(this.missingRequirements)) {
-            data["missingRequirements"] = [];
-            for (let item of this.missingRequirements)
-                data["missingRequirements"].push(item);
+        if (Array.isArray(this.missingIntakeRequirements)) {
+            data["missingIntakeRequirements"] = [];
+            for (let item of this.missingIntakeRequirements)
+                data["missingIntakeRequirements"].push(item);
         }
         if (Array.isArray(this.arrangements)) {
             data["arrangements"] = [];
@@ -2514,11 +2626,11 @@ export class Referral implements IReferral {
 
 export interface IReferral {
     id?: string;
-    createdUtc?: Date;
+    openedAtUtc?: Date;
+    closedAtUtc?: Date | undefined;
     closeReason?: ReferralCloseReason | undefined;
     completedRequirements?: CompletedRequirementInfo[];
-    uploadedDocuments?: UploadedDocumentInfo[];
-    missingRequirements?: string[];
+    missingIntakeRequirements?: string[];
     arrangements?: Arrangement[];
 }
 
@@ -2582,61 +2694,17 @@ export interface ICompletedRequirementInfo {
     uploadedDocumentId?: string | undefined;
 }
 
-export class UploadedDocumentInfo implements IUploadedDocumentInfo {
-    userId?: string;
-    timestampUtc?: Date;
-    uploadedDocumentId?: string;
-    uploadedFileName?: string;
-
-    constructor(data?: IUploadedDocumentInfo) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.userId = _data["userId"];
-            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
-            this.uploadedDocumentId = _data["uploadedDocumentId"];
-            this.uploadedFileName = _data["uploadedFileName"];
-        }
-    }
-
-    static fromJS(data: any): UploadedDocumentInfo {
-        data = typeof data === 'object' ? data : {};
-        let result = new UploadedDocumentInfo();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["userId"] = this.userId;
-        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
-        data["uploadedDocumentId"] = this.uploadedDocumentId;
-        data["uploadedFileName"] = this.uploadedFileName;
-        return data; 
-    }
-}
-
-export interface IUploadedDocumentInfo {
-    userId?: string;
-    timestampUtc?: Date;
-    uploadedDocumentId?: string;
-    uploadedFileName?: string;
-}
-
 export class Arrangement implements IArrangement {
     id?: string;
     arrangementType?: string;
-    state?: ArrangementState;
+    phase?: ArrangementPhase;
+    requestedAtUtc?: Date;
+    startedAtUtc?: Date | undefined;
+    endedAtUtc?: Date | undefined;
     completedRequirements?: CompletedRequirementInfo[];
-    uploadedDocuments?: UploadedDocumentInfo[];
-    missingRequirements?: string[];
+    missingSetupRequirements?: string[];
+    missingMonitoringRequirements?: string[];
+    missingCloseoutRequirements?: string[];
     individualVolunteerAssignments?: IndividualVolunteerAssignment[];
     familyVolunteerAssignments?: FamilyVolunteerAssignment[];
     partneringFamilyChildAssignments?: PartneringFamilyChildAssignment[];
@@ -2655,21 +2723,29 @@ export class Arrangement implements IArrangement {
         if (_data) {
             this.id = _data["id"];
             this.arrangementType = _data["arrangementType"];
-            this.state = _data["state"];
+            this.phase = _data["phase"];
+            this.requestedAtUtc = _data["requestedAtUtc"] ? new Date(_data["requestedAtUtc"].toString()) : <any>undefined;
+            this.startedAtUtc = _data["startedAtUtc"] ? new Date(_data["startedAtUtc"].toString()) : <any>undefined;
+            this.endedAtUtc = _data["endedAtUtc"] ? new Date(_data["endedAtUtc"].toString()) : <any>undefined;
             if (Array.isArray(_data["completedRequirements"])) {
                 this.completedRequirements = [] as any;
                 for (let item of _data["completedRequirements"])
                     this.completedRequirements!.push(CompletedRequirementInfo.fromJS(item));
             }
-            if (Array.isArray(_data["uploadedDocuments"])) {
-                this.uploadedDocuments = [] as any;
-                for (let item of _data["uploadedDocuments"])
-                    this.uploadedDocuments!.push(UploadedDocumentInfo.fromJS(item));
+            if (Array.isArray(_data["missingSetupRequirements"])) {
+                this.missingSetupRequirements = [] as any;
+                for (let item of _data["missingSetupRequirements"])
+                    this.missingSetupRequirements!.push(item);
             }
-            if (Array.isArray(_data["missingRequirements"])) {
-                this.missingRequirements = [] as any;
-                for (let item of _data["missingRequirements"])
-                    this.missingRequirements!.push(item);
+            if (Array.isArray(_data["missingMonitoringRequirements"])) {
+                this.missingMonitoringRequirements = [] as any;
+                for (let item of _data["missingMonitoringRequirements"])
+                    this.missingMonitoringRequirements!.push(item);
+            }
+            if (Array.isArray(_data["missingCloseoutRequirements"])) {
+                this.missingCloseoutRequirements = [] as any;
+                for (let item of _data["missingCloseoutRequirements"])
+                    this.missingCloseoutRequirements!.push(item);
             }
             if (Array.isArray(_data["individualVolunteerAssignments"])) {
                 this.individualVolunteerAssignments = [] as any;
@@ -2705,21 +2781,29 @@ export class Arrangement implements IArrangement {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
         data["arrangementType"] = this.arrangementType;
-        data["state"] = this.state;
+        data["phase"] = this.phase;
+        data["requestedAtUtc"] = this.requestedAtUtc ? this.requestedAtUtc.toISOString() : <any>undefined;
+        data["startedAtUtc"] = this.startedAtUtc ? this.startedAtUtc.toISOString() : <any>undefined;
+        data["endedAtUtc"] = this.endedAtUtc ? this.endedAtUtc.toISOString() : <any>undefined;
         if (Array.isArray(this.completedRequirements)) {
             data["completedRequirements"] = [];
             for (let item of this.completedRequirements)
                 data["completedRequirements"].push(item.toJSON());
         }
-        if (Array.isArray(this.uploadedDocuments)) {
-            data["uploadedDocuments"] = [];
-            for (let item of this.uploadedDocuments)
-                data["uploadedDocuments"].push(item.toJSON());
+        if (Array.isArray(this.missingSetupRequirements)) {
+            data["missingSetupRequirements"] = [];
+            for (let item of this.missingSetupRequirements)
+                data["missingSetupRequirements"].push(item);
         }
-        if (Array.isArray(this.missingRequirements)) {
-            data["missingRequirements"] = [];
-            for (let item of this.missingRequirements)
-                data["missingRequirements"].push(item);
+        if (Array.isArray(this.missingMonitoringRequirements)) {
+            data["missingMonitoringRequirements"] = [];
+            for (let item of this.missingMonitoringRequirements)
+                data["missingMonitoringRequirements"].push(item);
+        }
+        if (Array.isArray(this.missingCloseoutRequirements)) {
+            data["missingCloseoutRequirements"] = [];
+            for (let item of this.missingCloseoutRequirements)
+                data["missingCloseoutRequirements"].push(item);
         }
         if (Array.isArray(this.individualVolunteerAssignments)) {
             data["individualVolunteerAssignments"] = [];
@@ -2748,20 +2832,25 @@ export class Arrangement implements IArrangement {
 export interface IArrangement {
     id?: string;
     arrangementType?: string;
-    state?: ArrangementState;
+    phase?: ArrangementPhase;
+    requestedAtUtc?: Date;
+    startedAtUtc?: Date | undefined;
+    endedAtUtc?: Date | undefined;
     completedRequirements?: CompletedRequirementInfo[];
-    uploadedDocuments?: UploadedDocumentInfo[];
-    missingRequirements?: string[];
+    missingSetupRequirements?: string[];
+    missingMonitoringRequirements?: string[];
+    missingCloseoutRequirements?: string[];
     individualVolunteerAssignments?: IndividualVolunteerAssignment[];
     familyVolunteerAssignments?: FamilyVolunteerAssignment[];
     partneringFamilyChildAssignments?: PartneringFamilyChildAssignment[];
     childrenLocationHistory?: ChildLocationHistoryEntry[];
 }
 
-export enum ArrangementState {
-    Setup = 0,
-    Open = 1,
-    Closed = 2,
+export enum ArrangementPhase {
+    SettingUp = 0,
+    ReadyToStart = 1,
+    Started = 2,
+    Ended = 3,
 }
 
 export class IndividualVolunteerAssignment implements IIndividualVolunteerAssignment {
@@ -2948,7 +3037,6 @@ export enum ChildLocationPlan {
 
 export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
     completedRequirements?: CompletedRequirementInfo[];
-    uploadedDocuments?: UploadedDocumentInfo[];
     removedRoles?: RemovedRole[];
     missingRequirements?: string[];
     availableApplications?: string[];
@@ -2970,11 +3058,6 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
                 this.completedRequirements = [] as any;
                 for (let item of _data["completedRequirements"])
                     this.completedRequirements!.push(CompletedRequirementInfo.fromJS(item));
-            }
-            if (Array.isArray(_data["uploadedDocuments"])) {
-                this.uploadedDocuments = [] as any;
-                for (let item of _data["uploadedDocuments"])
-                    this.uploadedDocuments!.push(UploadedDocumentInfo.fromJS(item));
             }
             if (Array.isArray(_data["removedRoles"])) {
                 this.removedRoles = [] as any;
@@ -3022,11 +3105,6 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
             for (let item of this.completedRequirements)
                 data["completedRequirements"].push(item.toJSON());
         }
-        if (Array.isArray(this.uploadedDocuments)) {
-            data["uploadedDocuments"] = [];
-            for (let item of this.uploadedDocuments)
-                data["uploadedDocuments"].push(item.toJSON());
-        }
         if (Array.isArray(this.removedRoles)) {
             data["removedRoles"] = [];
             for (let item of this.removedRoles)
@@ -3062,7 +3140,6 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
 
 export interface IVolunteerFamilyInfo {
     completedRequirements?: CompletedRequirementInfo[];
-    uploadedDocuments?: UploadedDocumentInfo[];
     removedRoles?: RemovedRole[];
     missingRequirements?: string[];
     availableApplications?: string[];
@@ -3673,6 +3750,468 @@ export interface ICreateVolunteerFamilyWithNewAdultCommand extends IDirectoryCom
     address?: Address;
     phoneNumber?: PhoneNumber;
     emailAddress?: EmailAddress;
+}
+
+export abstract class FamilyCommand implements IFamilyCommand {
+    familyId?: string;
+
+    protected _discriminator: string;
+
+    constructor(data?: IFamilyCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        this._discriminator = "FamilyCommand";
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.familyId = _data["familyId"];
+        }
+    }
+
+    static fromJS(data: any): FamilyCommand {
+        data = typeof data === 'object' ? data : {};
+        if (data["discriminator"] === "AddAdultToFamily") {
+            let result = new AddAdultToFamily();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "AddChildToFamily") {
+            let result = new AddChildToFamily();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "AddCustodialRelationship") {
+            let result = new AddCustodialRelationship();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "CreateFamily") {
+            let result = new CreateFamily();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "RemoveCustodialRelationship") {
+            let result = new RemoveCustodialRelationship();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UpdateAdultRelationshipToFamily") {
+            let result = new UpdateAdultRelationshipToFamily();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UpdateCustodialRelationshipType") {
+            let result = new UpdateCustodialRelationshipType();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UploadFamilyDocument") {
+            let result = new UploadFamilyDocument();
+            result.init(data);
+            return result;
+        }
+        throw new Error("The abstract class 'FamilyCommand' cannot be instantiated.");
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["discriminator"] = this._discriminator; 
+        data["familyId"] = this.familyId;
+        return data; 
+    }
+}
+
+export interface IFamilyCommand {
+    familyId?: string;
+}
+
+export class AddAdultToFamily extends FamilyCommand implements IAddAdultToFamily {
+    adultPersonId?: string;
+    relationshipToFamily?: FamilyAdultRelationshipInfo;
+
+    constructor(data?: IAddAdultToFamily) {
+        super(data);
+        this._discriminator = "AddAdultToFamily";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.adultPersonId = _data["adultPersonId"];
+            this.relationshipToFamily = _data["relationshipToFamily"] ? FamilyAdultRelationshipInfo.fromJS(_data["relationshipToFamily"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): AddAdultToFamily {
+        data = typeof data === 'object' ? data : {};
+        let result = new AddAdultToFamily();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["adultPersonId"] = this.adultPersonId;
+        data["relationshipToFamily"] = this.relationshipToFamily ? this.relationshipToFamily.toJSON() : <any>undefined;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IAddAdultToFamily extends IFamilyCommand {
+    adultPersonId?: string;
+    relationshipToFamily?: FamilyAdultRelationshipInfo;
+}
+
+export class AddChildToFamily extends FamilyCommand implements IAddChildToFamily {
+    childPersonId?: string;
+    custodialRelationships?: CustodialRelationship[];
+
+    constructor(data?: IAddChildToFamily) {
+        super(data);
+        this._discriminator = "AddChildToFamily";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.childPersonId = _data["childPersonId"];
+            if (Array.isArray(_data["custodialRelationships"])) {
+                this.custodialRelationships = [] as any;
+                for (let item of _data["custodialRelationships"])
+                    this.custodialRelationships!.push(CustodialRelationship.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): AddChildToFamily {
+        data = typeof data === 'object' ? data : {};
+        let result = new AddChildToFamily();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["childPersonId"] = this.childPersonId;
+        if (Array.isArray(this.custodialRelationships)) {
+            data["custodialRelationships"] = [];
+            for (let item of this.custodialRelationships)
+                data["custodialRelationships"].push(item.toJSON());
+        }
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IAddChildToFamily extends IFamilyCommand {
+    childPersonId?: string;
+    custodialRelationships?: CustodialRelationship[];
+}
+
+export class AddCustodialRelationship extends FamilyCommand implements IAddCustodialRelationship {
+    custodialRelationship?: CustodialRelationship;
+
+    constructor(data?: IAddCustodialRelationship) {
+        super(data);
+        this._discriminator = "AddCustodialRelationship";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.custodialRelationship = _data["custodialRelationship"] ? CustodialRelationship.fromJS(_data["custodialRelationship"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): AddCustodialRelationship {
+        data = typeof data === 'object' ? data : {};
+        let result = new AddCustodialRelationship();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["custodialRelationship"] = this.custodialRelationship ? this.custodialRelationship.toJSON() : <any>undefined;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IAddCustodialRelationship extends IFamilyCommand {
+    custodialRelationship?: CustodialRelationship;
+}
+
+export class CreateFamily extends FamilyCommand implements ICreateFamily {
+    primaryFamilyContactPersonId?: string;
+    adults?: ValueTupleOfGuidAndFamilyAdultRelationshipInfo[];
+    children?: string[];
+    custodialRelationships?: CustodialRelationship[];
+
+    constructor(data?: ICreateFamily) {
+        super(data);
+        this._discriminator = "CreateFamily";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.primaryFamilyContactPersonId = _data["primaryFamilyContactPersonId"];
+            if (Array.isArray(_data["adults"])) {
+                this.adults = [] as any;
+                for (let item of _data["adults"])
+                    this.adults!.push(ValueTupleOfGuidAndFamilyAdultRelationshipInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["children"])) {
+                this.children = [] as any;
+                for (let item of _data["children"])
+                    this.children!.push(item);
+            }
+            if (Array.isArray(_data["custodialRelationships"])) {
+                this.custodialRelationships = [] as any;
+                for (let item of _data["custodialRelationships"])
+                    this.custodialRelationships!.push(CustodialRelationship.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): CreateFamily {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateFamily();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["primaryFamilyContactPersonId"] = this.primaryFamilyContactPersonId;
+        if (Array.isArray(this.adults)) {
+            data["adults"] = [];
+            for (let item of this.adults)
+                data["adults"].push(item.toJSON());
+        }
+        if (Array.isArray(this.children)) {
+            data["children"] = [];
+            for (let item of this.children)
+                data["children"].push(item);
+        }
+        if (Array.isArray(this.custodialRelationships)) {
+            data["custodialRelationships"] = [];
+            for (let item of this.custodialRelationships)
+                data["custodialRelationships"].push(item.toJSON());
+        }
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface ICreateFamily extends IFamilyCommand {
+    primaryFamilyContactPersonId?: string;
+    adults?: ValueTupleOfGuidAndFamilyAdultRelationshipInfo[];
+    children?: string[];
+    custodialRelationships?: CustodialRelationship[];
+}
+
+export class ValueTupleOfGuidAndFamilyAdultRelationshipInfo implements IValueTupleOfGuidAndFamilyAdultRelationshipInfo {
+    item1?: string;
+    item2?: FamilyAdultRelationshipInfo;
+
+    constructor(data?: IValueTupleOfGuidAndFamilyAdultRelationshipInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.item1 = _data["item1"];
+            this.item2 = _data["item2"] ? FamilyAdultRelationshipInfo.fromJS(_data["item2"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ValueTupleOfGuidAndFamilyAdultRelationshipInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new ValueTupleOfGuidAndFamilyAdultRelationshipInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["item1"] = this.item1;
+        data["item2"] = this.item2 ? this.item2.toJSON() : <any>undefined;
+        return data; 
+    }
+}
+
+export interface IValueTupleOfGuidAndFamilyAdultRelationshipInfo {
+    item1?: string;
+    item2?: FamilyAdultRelationshipInfo;
+}
+
+export class RemoveCustodialRelationship extends FamilyCommand implements IRemoveCustodialRelationship {
+    childPersonId?: string;
+    adultPersonId?: string;
+
+    constructor(data?: IRemoveCustodialRelationship) {
+        super(data);
+        this._discriminator = "RemoveCustodialRelationship";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.childPersonId = _data["childPersonId"];
+            this.adultPersonId = _data["adultPersonId"];
+        }
+    }
+
+    static fromJS(data: any): RemoveCustodialRelationship {
+        data = typeof data === 'object' ? data : {};
+        let result = new RemoveCustodialRelationship();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["childPersonId"] = this.childPersonId;
+        data["adultPersonId"] = this.adultPersonId;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IRemoveCustodialRelationship extends IFamilyCommand {
+    childPersonId?: string;
+    adultPersonId?: string;
+}
+
+export class UpdateAdultRelationshipToFamily extends FamilyCommand implements IUpdateAdultRelationshipToFamily {
+    adultPersonId?: string;
+    relationshipToFamily?: FamilyAdultRelationshipInfo;
+
+    constructor(data?: IUpdateAdultRelationshipToFamily) {
+        super(data);
+        this._discriminator = "UpdateAdultRelationshipToFamily";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.adultPersonId = _data["adultPersonId"];
+            this.relationshipToFamily = _data["relationshipToFamily"] ? FamilyAdultRelationshipInfo.fromJS(_data["relationshipToFamily"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): UpdateAdultRelationshipToFamily {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateAdultRelationshipToFamily();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["adultPersonId"] = this.adultPersonId;
+        data["relationshipToFamily"] = this.relationshipToFamily ? this.relationshipToFamily.toJSON() : <any>undefined;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUpdateAdultRelationshipToFamily extends IFamilyCommand {
+    adultPersonId?: string;
+    relationshipToFamily?: FamilyAdultRelationshipInfo;
+}
+
+export class UpdateCustodialRelationshipType extends FamilyCommand implements IUpdateCustodialRelationshipType {
+    childPersonId?: string;
+    adultPersonId?: string;
+    type?: CustodialRelationshipType;
+
+    constructor(data?: IUpdateCustodialRelationshipType) {
+        super(data);
+        this._discriminator = "UpdateCustodialRelationshipType";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.childPersonId = _data["childPersonId"];
+            this.adultPersonId = _data["adultPersonId"];
+            this.type = _data["type"];
+        }
+    }
+
+    static fromJS(data: any): UpdateCustodialRelationshipType {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateCustodialRelationshipType();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["childPersonId"] = this.childPersonId;
+        data["adultPersonId"] = this.adultPersonId;
+        data["type"] = this.type;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUpdateCustodialRelationshipType extends IFamilyCommand {
+    childPersonId?: string;
+    adultPersonId?: string;
+    type?: CustodialRelationshipType;
+}
+
+export class UploadFamilyDocument extends FamilyCommand implements IUploadFamilyDocument {
+    uploadedDocumentId?: string;
+    uploadedFileName?: string;
+
+    constructor(data?: IUploadFamilyDocument) {
+        super(data);
+        this._discriminator = "UploadFamilyDocument";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
+            this.uploadedFileName = _data["uploadedFileName"];
+        }
+    }
+
+    static fromJS(data: any): UploadFamilyDocument {
+        data = typeof data === 'object' ? data : {};
+        let result = new UploadFamilyDocument();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
+        data["uploadedFileName"] = this.uploadedFileName;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUploadFamilyDocument extends IFamilyCommand {
+    uploadedDocumentId?: string;
+    uploadedFileName?: string;
 }
 
 export abstract class PersonCommand implements IPersonCommand {
@@ -4581,6 +5120,7 @@ export interface IReferralCommand {
 
 export class CloseReferral extends ReferralCommand implements ICloseReferral {
     closeReason?: ReferralCloseReason;
+    closedAtUtc?: Date;
 
     constructor(data?: ICloseReferral) {
         super(data);
@@ -4591,6 +5131,7 @@ export class CloseReferral extends ReferralCommand implements ICloseReferral {
         super.init(_data);
         if (_data) {
             this.closeReason = _data["closeReason"];
+            this.closedAtUtc = _data["closedAtUtc"] ? new Date(_data["closedAtUtc"].toString()) : <any>undefined;
         }
     }
 
@@ -4604,6 +5145,7 @@ export class CloseReferral extends ReferralCommand implements ICloseReferral {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["closeReason"] = this.closeReason;
+        data["closedAtUtc"] = this.closedAtUtc ? this.closedAtUtc.toISOString() : <any>undefined;
         super.toJSON(data);
         return data; 
     }
@@ -4611,6 +5153,7 @@ export class CloseReferral extends ReferralCommand implements ICloseReferral {
 
 export interface ICloseReferral extends IReferralCommand {
     closeReason?: ReferralCloseReason;
+    closedAtUtc?: Date;
 }
 
 export class CompleteReferralRequirement extends ReferralCommand implements ICompleteReferralRequirement {
@@ -4984,6 +5527,7 @@ export interface ICompleteArrangementRequirement extends IArrangementCommand {
 
 export class CreateArrangement extends ArrangementCommand implements ICreateArrangement {
     arrangementType?: string;
+    requestedAtUtc?: Date;
 
     constructor(data?: ICreateArrangement) {
         super(data);
@@ -4994,6 +5538,7 @@ export class CreateArrangement extends ArrangementCommand implements ICreateArra
         super.init(_data);
         if (_data) {
             this.arrangementType = _data["arrangementType"];
+            this.requestedAtUtc = _data["requestedAtUtc"] ? new Date(_data["requestedAtUtc"].toString()) : <any>undefined;
         }
     }
 
@@ -5007,6 +5552,7 @@ export class CreateArrangement extends ArrangementCommand implements ICreateArra
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["arrangementType"] = this.arrangementType;
+        data["requestedAtUtc"] = this.requestedAtUtc ? this.requestedAtUtc.toISOString() : <any>undefined;
         super.toJSON(data);
         return data; 
     }
@@ -5014,6 +5560,7 @@ export class CreateArrangement extends ArrangementCommand implements ICreateArra
 
 export interface ICreateArrangement extends IArrangementCommand {
     arrangementType?: string;
+    requestedAtUtc?: Date;
 }
 
 export class EndArrangement extends ArrangementCommand implements IEndArrangement {
