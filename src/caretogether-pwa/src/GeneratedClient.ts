@@ -1733,6 +1733,7 @@ export class CombinedFamilyInfo implements ICombinedFamilyInfo {
     partneringFamilyInfo?: PartneringFamilyInfo | undefined;
     volunteerFamilyInfo?: VolunteerFamilyInfo | undefined;
     notes?: Note[];
+    uploadedDocuments?: UploadedDocumentInfo[];
 
     constructor(data?: ICombinedFamilyInfo) {
         if (data) {
@@ -1752,6 +1753,11 @@ export class CombinedFamilyInfo implements ICombinedFamilyInfo {
                 this.notes = [] as any;
                 for (let item of _data["notes"])
                     this.notes!.push(Note.fromJS(item));
+            }
+            if (Array.isArray(_data["uploadedDocuments"])) {
+                this.uploadedDocuments = [] as any;
+                for (let item of _data["uploadedDocuments"])
+                    this.uploadedDocuments!.push(UploadedDocumentInfo.fromJS(item));
             }
         }
     }
@@ -1773,6 +1779,11 @@ export class CombinedFamilyInfo implements ICombinedFamilyInfo {
             for (let item of this.notes)
                 data["notes"].push(item.toJSON());
         }
+        if (Array.isArray(this.uploadedDocuments)) {
+            data["uploadedDocuments"] = [];
+            for (let item of this.uploadedDocuments)
+                data["uploadedDocuments"].push(item.toJSON());
+        }
         return data; 
     }
 }
@@ -1782,6 +1793,7 @@ export interface ICombinedFamilyInfo {
     partneringFamilyInfo?: PartneringFamilyInfo | undefined;
     volunteerFamilyInfo?: VolunteerFamilyInfo | undefined;
     notes?: Note[];
+    uploadedDocuments?: UploadedDocumentInfo[];
 }
 
 export class Family implements IFamily {
@@ -2496,7 +2508,6 @@ export class Referral implements IReferral {
     closedAtUtc?: Date | undefined;
     closeReason?: ReferralCloseReason | undefined;
     completedRequirements?: CompletedRequirementInfo[];
-    uploadedDocuments?: UploadedDocumentInfo[];
     missingIntakeRequirements?: string[];
     arrangements?: Arrangement[];
 
@@ -2519,11 +2530,6 @@ export class Referral implements IReferral {
                 this.completedRequirements = [] as any;
                 for (let item of _data["completedRequirements"])
                     this.completedRequirements!.push(CompletedRequirementInfo.fromJS(item));
-            }
-            if (Array.isArray(_data["uploadedDocuments"])) {
-                this.uploadedDocuments = [] as any;
-                for (let item of _data["uploadedDocuments"])
-                    this.uploadedDocuments!.push(UploadedDocumentInfo.fromJS(item));
             }
             if (Array.isArray(_data["missingIntakeRequirements"])) {
                 this.missingIntakeRequirements = [] as any;
@@ -2556,11 +2562,6 @@ export class Referral implements IReferral {
             for (let item of this.completedRequirements)
                 data["completedRequirements"].push(item.toJSON());
         }
-        if (Array.isArray(this.uploadedDocuments)) {
-            data["uploadedDocuments"] = [];
-            for (let item of this.uploadedDocuments)
-                data["uploadedDocuments"].push(item.toJSON());
-        }
         if (Array.isArray(this.missingIntakeRequirements)) {
             data["missingIntakeRequirements"] = [];
             for (let item of this.missingIntakeRequirements)
@@ -2581,7 +2582,6 @@ export interface IReferral {
     closedAtUtc?: Date | undefined;
     closeReason?: ReferralCloseReason | undefined;
     completedRequirements?: CompletedRequirementInfo[];
-    uploadedDocuments?: UploadedDocumentInfo[];
     missingIntakeRequirements?: string[];
     arrangements?: Arrangement[];
 }
@@ -2654,7 +2654,6 @@ export class Arrangement implements IArrangement {
     startedAtUtc?: Date | undefined;
     endedAtUtc?: Date | undefined;
     completedRequirements?: CompletedRequirementInfo[];
-    uploadedDocuments?: UploadedDocumentInfo[];
     missingSetupRequirements?: string[];
     missingMonitoringRequirements?: string[];
     missingCloseoutRequirements?: string[];
@@ -2684,11 +2683,6 @@ export class Arrangement implements IArrangement {
                 this.completedRequirements = [] as any;
                 for (let item of _data["completedRequirements"])
                     this.completedRequirements!.push(CompletedRequirementInfo.fromJS(item));
-            }
-            if (Array.isArray(_data["uploadedDocuments"])) {
-                this.uploadedDocuments = [] as any;
-                for (let item of _data["uploadedDocuments"])
-                    this.uploadedDocuments!.push(UploadedDocumentInfo.fromJS(item));
             }
             if (Array.isArray(_data["missingSetupRequirements"])) {
                 this.missingSetupRequirements = [] as any;
@@ -2748,11 +2742,6 @@ export class Arrangement implements IArrangement {
             for (let item of this.completedRequirements)
                 data["completedRequirements"].push(item.toJSON());
         }
-        if (Array.isArray(this.uploadedDocuments)) {
-            data["uploadedDocuments"] = [];
-            for (let item of this.uploadedDocuments)
-                data["uploadedDocuments"].push(item.toJSON());
-        }
         if (Array.isArray(this.missingSetupRequirements)) {
             data["missingSetupRequirements"] = [];
             for (let item of this.missingSetupRequirements)
@@ -2800,7 +2789,6 @@ export interface IArrangement {
     startedAtUtc?: Date | undefined;
     endedAtUtc?: Date | undefined;
     completedRequirements?: CompletedRequirementInfo[];
-    uploadedDocuments?: UploadedDocumentInfo[];
     missingSetupRequirements?: string[];
     missingMonitoringRequirements?: string[];
     missingCloseoutRequirements?: string[];
@@ -3001,7 +2989,6 @@ export enum ChildLocationPlan {
 
 export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
     completedRequirements?: CompletedRequirementInfo[];
-    uploadedDocuments?: UploadedDocumentInfo[];
     removedRoles?: RemovedRole[];
     missingRequirements?: string[];
     availableApplications?: string[];
@@ -3023,11 +3010,6 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
                 this.completedRequirements = [] as any;
                 for (let item of _data["completedRequirements"])
                     this.completedRequirements!.push(CompletedRequirementInfo.fromJS(item));
-            }
-            if (Array.isArray(_data["uploadedDocuments"])) {
-                this.uploadedDocuments = [] as any;
-                for (let item of _data["uploadedDocuments"])
-                    this.uploadedDocuments!.push(UploadedDocumentInfo.fromJS(item));
             }
             if (Array.isArray(_data["removedRoles"])) {
                 this.removedRoles = [] as any;
@@ -3075,11 +3057,6 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
             for (let item of this.completedRequirements)
                 data["completedRequirements"].push(item.toJSON());
         }
-        if (Array.isArray(this.uploadedDocuments)) {
-            data["uploadedDocuments"] = [];
-            for (let item of this.uploadedDocuments)
-                data["uploadedDocuments"].push(item.toJSON());
-        }
         if (Array.isArray(this.removedRoles)) {
             data["removedRoles"] = [];
             for (let item of this.removedRoles)
@@ -3115,7 +3092,6 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
 
 export interface IVolunteerFamilyInfo {
     completedRequirements?: CompletedRequirementInfo[];
-    uploadedDocuments?: UploadedDocumentInfo[];
     removedRoles?: RemovedRole[];
     missingRequirements?: string[];
     availableApplications?: string[];

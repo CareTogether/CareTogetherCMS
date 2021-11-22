@@ -1130,6 +1130,12 @@
             "items": {
               "$ref": "#/components/schemas/Note"
             }
+          },
+          "uploadedDocuments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UploadedDocumentInfo"
+            }
           }
         }
       },
@@ -1527,12 +1533,6 @@
               "$ref": "#/components/schemas/CompletedRequirementInfo"
             }
           },
-          "uploadedDocuments": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UploadedDocumentInfo"
-            }
-          },
           "missingIntakeRequirements": {
             "type": "array",
             "items": {
@@ -1623,12 +1623,6 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CompletedRequirementInfo"
-            }
-          },
-          "uploadedDocuments": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UploadedDocumentInfo"
             }
           },
           "missingSetupRequirements": {
@@ -1781,12 +1775,6 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CompletedRequirementInfo"
-            }
-          },
-          "uploadedDocuments": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UploadedDocumentInfo"
             }
           },
           "removedRoles": {
