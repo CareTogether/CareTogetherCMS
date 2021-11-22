@@ -1,12 +1,12 @@
-import { Container, Toolbar, Grid, Button } from '@material-ui/core';
+import { Container, Toolbar, Grid, Button, Divider, Menu, MenuItem, MenuList, useMediaQuery, useTheme } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { CombinedFamilyInfo, ReferralCloseReason } from '../../GeneratedClient';
+import { ActionRequirement, CombinedFamilyInfo, ReferralCloseReason } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { useParams } from 'react-router';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
-// import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
-// import CloudUploadIcon from '@material-ui/icons/CloudUpload';
+import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
+import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import { PartneringAdultCard } from './PartneringAdultCard';
 import { PartneringChildCard } from './PartneringChildCard';
 import { useState } from 'react';
@@ -17,6 +17,8 @@ import { ArrangementCard } from './ArrangementCard';
 import { PersonName } from '../Families/PersonName';
 import { format } from 'date-fns';
 import { NoteCard } from '../Families/NoteCard';
+import { policyData } from '../../Model/ConfigurationModel';
+import { UploadPartneringFamilyDocumentDialog } from './UploadPartneringFamilyDocumentDialog';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -71,7 +73,7 @@ export function PartneringFamilyScreen() {
   const { familyId } = useParams<{ familyId: string }>();
 
   const partneringFamilies = useRecoilValue(partneringFamiliesData);
-  //const policy = useRecoilValue(policyData);
+  const policy = useRecoilValue(policyData);
   //const organizationId = useRecoilValue(currentOrganizationState);
   //const locationId = useRecoilValue(currentLocationState);
 
@@ -85,13 +87,13 @@ export function PartneringFamilyScreen() {
   //   setRecordFamilyStepParameter({requirementName, requirementInfo});
   // }
   
-  // const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] = useState(false);
+  const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] = useState(false);
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
   const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
   const [addNoteDialogOpen, setAddNoteDialogOpen] = useState(false);
   
-  //const theme = useTheme();
-  //const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
 
   return (
   <Container>
@@ -102,12 +104,12 @@ export function PartneringFamilyScreen() {
         onClick={(event) => setFamilyRecordMenuAnchor(event.currentTarget)}>
         Complete…
       </Button> */}
-      {/* <Button
+      <Button
         onClick={() => setUploadDocumentDialogOpen(true)}
         variant="contained" color="default" size="small" className={classes.button}
         startIcon={<CloudUploadIcon />}>
         Upload
-      </Button> */}
+      </Button>
       <Button
         onClick={() => setAddAdultDialogOpen(true)}
         variant="contained" color="default" size="small" className={classes.button}
@@ -136,20 +138,20 @@ export function PartneringFamilyScreen() {
         open={Boolean(familyRecordMenuAnchor)}
         onClose={() => setFamilyRecordMenuAnchor(null)}>
         <MenuList dense={isMobile}>
-          {partneringFamily.partneringFamilyInfo?.missingRequirements?.map(requirementName => (
+          {partneringFamily.partneringFamilyInfo?.openReferral?.missingIntakeRequirements?.map(requirementName => (
             <MenuItem key={requirementName} onClick={() => selectRecordFamilyStep(requirementName)}>{requirementName}</MenuItem>
           ))}
-          <Divider />
-          {partneringFamily.partneringFamilyInfo?.availableApplications?.map(requirementName => (
+          <Divider /> */}
+          {/* {partneringFamily.partneringFamilyInfo?.availableApplications?.map(requirementName => (
             <MenuItem key={requirementName} onClick={() => selectRecordFamilyStep(requirementName)}>{requirementName}</MenuItem>
-          ))}
-        </MenuList>
+          ))} */}
+        {/* </MenuList>
       </Menu> */}
       {/* {recordFamilyStepParameter && <RecordPartneringFamilyStepDialog partneringFamily={partneringFamily}
         requirementName={recordFamilyStepParameter.requirementName} stepActionRequirement={recordFamilyStepParameter.requirementInfo}
         onClose={() => setRecordFamilyStepParameter(null)} />} */}
-      {/* {uploadDocumentDialogOpen && <UploadPartneringFamilyDocumentDialog partneringFamily={partneringFamily}
-        onClose={() => setUploadDocumentDialogOpen(false)} />} */}
+      {uploadDocumentDialogOpen && <UploadPartneringFamilyDocumentDialog partneringFamily={partneringFamily}
+        onClose={() => setUploadDocumentDialogOpen(false)} />}
       {addAdultDialogOpen && <AddAdultDialog onClose={() => setAddAdultDialogOpen(false)} />}
       {addChildDialogOpen && <AddChildDialog onClose={() => setAddChildDialogOpen(false)} />}
       {addNoteDialogOpen && <AddEditNoteDialog familyId={partneringFamily.family!.id!} onClose={() => setAddNoteDialogOpen(false)} />}
