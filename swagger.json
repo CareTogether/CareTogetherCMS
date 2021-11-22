@@ -1162,6 +1162,12 @@
             "items": {
               "$ref": "#/components/schemas/CustodialRelationship"
             }
+          },
+          "uploadedDocuments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UploadedDocumentInfo"
+            }
           }
         }
       },
@@ -1449,6 +1455,27 @@
           2
         ]
       },
+      "UploadedDocumentInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "timestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "uploadedDocumentId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "uploadedFileName": {
+            "type": "string"
+          }
+        }
+      },
       "PartneringFamilyInfo": {
         "type": "object",
         "additionalProperties": false,
@@ -1561,27 +1588,6 @@
             "type": "string",
             "format": "guid",
             "nullable": true
-          }
-        }
-      },
-      "UploadedDocumentInfo": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "userId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "timestampUtc": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "uploadedDocumentId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "uploadedFileName": {
-            "type": "string"
           }
         }
       },

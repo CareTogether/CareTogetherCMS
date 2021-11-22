@@ -1790,6 +1790,7 @@ export class Family implements IFamily {
     adults?: ValueTupleOfPersonAndFamilyAdultRelationshipInfo[];
     children?: Person[];
     custodialRelationships?: CustodialRelationship[];
+    uploadedDocuments?: UploadedDocumentInfo[];
 
     constructor(data?: IFamily) {
         if (data) {
@@ -1818,6 +1819,11 @@ export class Family implements IFamily {
                 this.custodialRelationships = [] as any;
                 for (let item of _data["custodialRelationships"])
                     this.custodialRelationships!.push(CustodialRelationship.fromJS(item));
+            }
+            if (Array.isArray(_data["uploadedDocuments"])) {
+                this.uploadedDocuments = [] as any;
+                for (let item of _data["uploadedDocuments"])
+                    this.uploadedDocuments!.push(UploadedDocumentInfo.fromJS(item));
             }
         }
     }
@@ -1848,6 +1854,11 @@ export class Family implements IFamily {
             for (let item of this.custodialRelationships)
                 data["custodialRelationships"].push(item.toJSON());
         }
+        if (Array.isArray(this.uploadedDocuments)) {
+            data["uploadedDocuments"] = [];
+            for (let item of this.uploadedDocuments)
+                data["uploadedDocuments"].push(item.toJSON());
+        }
         return data; 
     }
 }
@@ -1858,6 +1869,7 @@ export interface IFamily {
     adults?: ValueTupleOfPersonAndFamilyAdultRelationshipInfo[];
     children?: Person[];
     custodialRelationships?: CustodialRelationship[];
+    uploadedDocuments?: UploadedDocumentInfo[];
 }
 
 export class ValueTupleOfPersonAndFamilyAdultRelationshipInfo implements IValueTupleOfPersonAndFamilyAdultRelationshipInfo {
@@ -2382,6 +2394,54 @@ export enum CustodialRelationshipType {
     LegalGuardian = 2,
 }
 
+export class UploadedDocumentInfo implements IUploadedDocumentInfo {
+    userId?: string;
+    timestampUtc?: Date;
+    uploadedDocumentId?: string;
+    uploadedFileName?: string;
+
+    constructor(data?: IUploadedDocumentInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
+            this.uploadedFileName = _data["uploadedFileName"];
+        }
+    }
+
+    static fromJS(data: any): UploadedDocumentInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new UploadedDocumentInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
+        data["uploadedFileName"] = this.uploadedFileName;
+        return data; 
+    }
+}
+
+export interface IUploadedDocumentInfo {
+    userId?: string;
+    timestampUtc?: Date;
+    uploadedDocumentId?: string;
+    uploadedFileName?: string;
+}
+
 export class PartneringFamilyInfo implements IPartneringFamilyInfo {
     openReferral?: Referral | undefined;
     closedReferrals?: Referral[];
@@ -2584,54 +2644,6 @@ export interface ICompletedRequirementInfo {
     requirementName?: string;
     completedAtUtc?: Date;
     uploadedDocumentId?: string | undefined;
-}
-
-export class UploadedDocumentInfo implements IUploadedDocumentInfo {
-    userId?: string;
-    timestampUtc?: Date;
-    uploadedDocumentId?: string;
-    uploadedFileName?: string;
-
-    constructor(data?: IUploadedDocumentInfo) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.userId = _data["userId"];
-            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
-            this.uploadedDocumentId = _data["uploadedDocumentId"];
-            this.uploadedFileName = _data["uploadedFileName"];
-        }
-    }
-
-    static fromJS(data: any): UploadedDocumentInfo {
-        data = typeof data === 'object' ? data : {};
-        let result = new UploadedDocumentInfo();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["userId"] = this.userId;
-        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
-        data["uploadedDocumentId"] = this.uploadedDocumentId;
-        data["uploadedFileName"] = this.uploadedFileName;
-        return data; 
-    }
-}
-
-export interface IUploadedDocumentInfo {
-    userId?: string;
-    timestampUtc?: Date;
-    uploadedDocumentId?: string;
-    uploadedFileName?: string;
 }
 
 export class Arrangement implements IArrangement {

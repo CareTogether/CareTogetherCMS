@@ -133,7 +133,8 @@ namespace CareTogether.Core.Test
                         ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null,null, null)),
                 ImmutableList<CustodialRelationship>.Empty
                     .Add(new CustodialRelationship(guid6, guid2, CustodialRelationshipType.ParentWithCourtAppointedCustody))
-                    .Add(new CustodialRelationship(guid6, guid1, CustodialRelationshipType.ParentWithCourtAppointedCustody)));
+                    .Add(new CustodialRelationship(guid6, guid1, CustodialRelationshipType.ParentWithCourtAppointedCustody)),
+                ImmutableList<UploadedDocumentInfo>.Empty);
             Assert.AreEqual(expectedFamily.Id, actualFamily.Id);
             Assert.AreEqual(expectedFamily.Adults.Count, actualFamily.Adults.Count);
             Assert.AreEqual(expectedFamily.Adults[0], actualFamily.Adults[0]);

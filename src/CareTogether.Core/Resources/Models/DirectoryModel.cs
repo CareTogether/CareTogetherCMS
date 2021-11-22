@@ -20,13 +20,15 @@ namespace CareTogether.Resources.Models
         internal record FamilyEntry(Guid Id, Guid PrimaryFamilyContactPersonId,
             ImmutableDictionary<Guid, FamilyAdultRelationshipInfo> AdultRelationships,
             ImmutableList<Guid> Children,
-            ImmutableDictionary<(Guid ChildId, Guid AdultId), CustodialRelationshipType> CustodialRelationships)
+            ImmutableDictionary<(Guid ChildId, Guid AdultId), CustodialRelationshipType> CustodialRelationships,
+            ImmutableList<UploadedDocumentInfo> UploadedDocuments)
         {
             internal Family ToFamily(ImmutableDictionary<Guid, PersonEntry> people) =>
                 new(Id, PrimaryFamilyContactPersonId,
                     AdultRelationships.Select(ar => (people[ar.Key].ToPerson(), ar.Value)).ToImmutableList(),
                     Children.Select(c => people[c].ToPerson()).ToImmutableList(),
-                    CustodialRelationships.Select(cr => new CustodialRelationship(cr.Key.ChildId, cr.Key.AdultId, cr.Value)).ToImmutableList());
+                    CustodialRelationships.Select(cr => new CustodialRelationship(cr.Key.ChildId, cr.Key.AdultId, cr.Value)).ToImmutableList(),
+                    UploadedDocuments);
         }
 
         internal record PersonEntry(Guid Id, Guid? UserId, string FirstName, string LastName,
@@ -77,7 +79,8 @@ namespace CareTogether.Resources.Models
                     CustodialRelationships: ImmutableDictionary<(Guid ChildId, Guid AdultId), CustodialRelationshipType>.Empty.AddRange(
                         c.CustodialRelationships?.Select(cr =>
                             new KeyValuePair<(Guid ChildId, Guid AdultId), CustodialRelationshipType>((cr.ChildId, cr.PersonId), cr.Type))
-                        ?? new List<KeyValuePair<(Guid ChildId, Guid AdultId), CustodialRelationshipType>>())),
+                        ?? new List<KeyValuePair<(Guid ChildId, Guid AdultId), CustodialRelationshipType>>()),
+                        ImmutableList<UploadedDocumentInfo>.Empty),
                 _ => families.TryGetValue(command.FamilyId, out var familyEntry)
                     ? command switch
                     {
@@ -116,6 +119,11 @@ namespace CareTogether.Resources.Models
                         RemoveCustodialRelationship c => familyEntry with
                         {
                             CustodialRelationships = familyEntry.CustodialRelationships.Remove((c.ChildPersonId, c.AdultPersonId))
+                        },
+                        UploadFamilyDocument c => familyEntry with
+                        {
+                            UploadedDocuments = familyEntry.UploadedDocuments.Add(
+                                new UploadedDocumentInfo(userId, timestampUtc, c.UploadedDocumentId, c.UploadedFileName))
                         },
                         _ => throw new NotImplementedException(
                             $"The command type '{command.GetType().FullName}' has not been implemented.")
