@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, makeStyles, Typography } from '@material-ui/core';
 import React from 'react';
-import { ArrangementState, Arrangement, CombinedFamilyInfo } from '../../GeneratedClient';
+import { ArrangementPhase, Arrangement, CombinedFamilyInfo } from '../../GeneratedClient';
 import { useFamilyLookup, usePersonLookup } from '../../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
 import { FamilyName } from '../Families/FamilyName';
@@ -46,7 +46,7 @@ export function ArrangementCard({ partneringFamily, arrangement }: ArrangementCa
       <CardHeader className={classes.cardHeader}
         subheader={<>
           {arrangement.arrangementType} -&nbsp;
-          {ArrangementState[arrangement.state!]}
+          {ArrangementPhase[arrangement.phase!]}
         </>} />
       <CardContent className={classes.cardContent}>
         <Typography variant="body2" component="div">
