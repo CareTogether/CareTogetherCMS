@@ -236,6 +236,54 @@ export class DirectoryClient {
         return Promise.resolve<CombinedFamilyInfo>(<any>null);
     }
 
+    submitFamilyCommand(organizationId: string, locationId: string, familyId: string | undefined, command: FamilyCommand): Promise<CombinedFamilyInfo> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Directory/familyCommand?";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (locationId === undefined || locationId === null)
+            throw new Error("The parameter 'locationId' must be defined.");
+        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
+        if (familyId === null)
+            throw new Error("The parameter 'familyId' cannot be null.");
+        else if (familyId !== undefined)
+            url_ += "familyId=" + encodeURIComponent("" + familyId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(command);
+
+        let options_ = <RequestInit>{
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSubmitFamilyCommand(_response);
+        });
+    }
+
+    protected processSubmitFamilyCommand(response: Response): Promise<CombinedFamilyInfo> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = CombinedFamilyInfo.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<CombinedFamilyInfo>(<any>null);
+    }
+
     submitPersonCommand(organizationId: string, locationId: string, familyId: string | undefined, command: PersonCommand): Promise<CombinedFamilyInfo> {
         let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Directory/personCommand?";
         if (organizationId === undefined || organizationId === null)
@@ -3702,6 +3750,468 @@ export interface ICreateVolunteerFamilyWithNewAdultCommand extends IDirectoryCom
     address?: Address;
     phoneNumber?: PhoneNumber;
     emailAddress?: EmailAddress;
+}
+
+export abstract class FamilyCommand implements IFamilyCommand {
+    familyId?: string;
+
+    protected _discriminator: string;
+
+    constructor(data?: IFamilyCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        this._discriminator = "FamilyCommand";
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.familyId = _data["familyId"];
+        }
+    }
+
+    static fromJS(data: any): FamilyCommand {
+        data = typeof data === 'object' ? data : {};
+        if (data["discriminator"] === "AddAdultToFamily") {
+            let result = new AddAdultToFamily();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "AddChildToFamily") {
+            let result = new AddChildToFamily();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "AddCustodialRelationship") {
+            let result = new AddCustodialRelationship();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "CreateFamily") {
+            let result = new CreateFamily();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "RemoveCustodialRelationship") {
+            let result = new RemoveCustodialRelationship();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UpdateAdultRelationshipToFamily") {
+            let result = new UpdateAdultRelationshipToFamily();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UpdateCustodialRelationshipType") {
+            let result = new UpdateCustodialRelationshipType();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UploadFamilyDocument") {
+            let result = new UploadFamilyDocument();
+            result.init(data);
+            return result;
+        }
+        throw new Error("The abstract class 'FamilyCommand' cannot be instantiated.");
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["discriminator"] = this._discriminator; 
+        data["familyId"] = this.familyId;
+        return data; 
+    }
+}
+
+export interface IFamilyCommand {
+    familyId?: string;
+}
+
+export class AddAdultToFamily extends FamilyCommand implements IAddAdultToFamily {
+    adultPersonId?: string;
+    relationshipToFamily?: FamilyAdultRelationshipInfo;
+
+    constructor(data?: IAddAdultToFamily) {
+        super(data);
+        this._discriminator = "AddAdultToFamily";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.adultPersonId = _data["adultPersonId"];
+            this.relationshipToFamily = _data["relationshipToFamily"] ? FamilyAdultRelationshipInfo.fromJS(_data["relationshipToFamily"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): AddAdultToFamily {
+        data = typeof data === 'object' ? data : {};
+        let result = new AddAdultToFamily();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["adultPersonId"] = this.adultPersonId;
+        data["relationshipToFamily"] = this.relationshipToFamily ? this.relationshipToFamily.toJSON() : <any>undefined;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IAddAdultToFamily extends IFamilyCommand {
+    adultPersonId?: string;
+    relationshipToFamily?: FamilyAdultRelationshipInfo;
+}
+
+export class AddChildToFamily extends FamilyCommand implements IAddChildToFamily {
+    childPersonId?: string;
+    custodialRelationships?: CustodialRelationship[];
+
+    constructor(data?: IAddChildToFamily) {
+        super(data);
+        this._discriminator = "AddChildToFamily";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.childPersonId = _data["childPersonId"];
+            if (Array.isArray(_data["custodialRelationships"])) {
+                this.custodialRelationships = [] as any;
+                for (let item of _data["custodialRelationships"])
+                    this.custodialRelationships!.push(CustodialRelationship.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): AddChildToFamily {
+        data = typeof data === 'object' ? data : {};
+        let result = new AddChildToFamily();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["childPersonId"] = this.childPersonId;
+        if (Array.isArray(this.custodialRelationships)) {
+            data["custodialRelationships"] = [];
+            for (let item of this.custodialRelationships)
+                data["custodialRelationships"].push(item.toJSON());
+        }
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IAddChildToFamily extends IFamilyCommand {
+    childPersonId?: string;
+    custodialRelationships?: CustodialRelationship[];
+}
+
+export class AddCustodialRelationship extends FamilyCommand implements IAddCustodialRelationship {
+    custodialRelationship?: CustodialRelationship;
+
+    constructor(data?: IAddCustodialRelationship) {
+        super(data);
+        this._discriminator = "AddCustodialRelationship";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.custodialRelationship = _data["custodialRelationship"] ? CustodialRelationship.fromJS(_data["custodialRelationship"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): AddCustodialRelationship {
+        data = typeof data === 'object' ? data : {};
+        let result = new AddCustodialRelationship();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["custodialRelationship"] = this.custodialRelationship ? this.custodialRelationship.toJSON() : <any>undefined;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IAddCustodialRelationship extends IFamilyCommand {
+    custodialRelationship?: CustodialRelationship;
+}
+
+export class CreateFamily extends FamilyCommand implements ICreateFamily {
+    primaryFamilyContactPersonId?: string;
+    adults?: ValueTupleOfGuidAndFamilyAdultRelationshipInfo[];
+    children?: string[];
+    custodialRelationships?: CustodialRelationship[];
+
+    constructor(data?: ICreateFamily) {
+        super(data);
+        this._discriminator = "CreateFamily";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.primaryFamilyContactPersonId = _data["primaryFamilyContactPersonId"];
+            if (Array.isArray(_data["adults"])) {
+                this.adults = [] as any;
+                for (let item of _data["adults"])
+                    this.adults!.push(ValueTupleOfGuidAndFamilyAdultRelationshipInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["children"])) {
+                this.children = [] as any;
+                for (let item of _data["children"])
+                    this.children!.push(item);
+            }
+            if (Array.isArray(_data["custodialRelationships"])) {
+                this.custodialRelationships = [] as any;
+                for (let item of _data["custodialRelationships"])
+                    this.custodialRelationships!.push(CustodialRelationship.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): CreateFamily {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateFamily();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["primaryFamilyContactPersonId"] = this.primaryFamilyContactPersonId;
+        if (Array.isArray(this.adults)) {
+            data["adults"] = [];
+            for (let item of this.adults)
+                data["adults"].push(item.toJSON());
+        }
+        if (Array.isArray(this.children)) {
+            data["children"] = [];
+            for (let item of this.children)
+                data["children"].push(item);
+        }
+        if (Array.isArray(this.custodialRelationships)) {
+            data["custodialRelationships"] = [];
+            for (let item of this.custodialRelationships)
+                data["custodialRelationships"].push(item.toJSON());
+        }
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface ICreateFamily extends IFamilyCommand {
+    primaryFamilyContactPersonId?: string;
+    adults?: ValueTupleOfGuidAndFamilyAdultRelationshipInfo[];
+    children?: string[];
+    custodialRelationships?: CustodialRelationship[];
+}
+
+export class ValueTupleOfGuidAndFamilyAdultRelationshipInfo implements IValueTupleOfGuidAndFamilyAdultRelationshipInfo {
+    item1?: string;
+    item2?: FamilyAdultRelationshipInfo;
+
+    constructor(data?: IValueTupleOfGuidAndFamilyAdultRelationshipInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.item1 = _data["item1"];
+            this.item2 = _data["item2"] ? FamilyAdultRelationshipInfo.fromJS(_data["item2"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ValueTupleOfGuidAndFamilyAdultRelationshipInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new ValueTupleOfGuidAndFamilyAdultRelationshipInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["item1"] = this.item1;
+        data["item2"] = this.item2 ? this.item2.toJSON() : <any>undefined;
+        return data; 
+    }
+}
+
+export interface IValueTupleOfGuidAndFamilyAdultRelationshipInfo {
+    item1?: string;
+    item2?: FamilyAdultRelationshipInfo;
+}
+
+export class RemoveCustodialRelationship extends FamilyCommand implements IRemoveCustodialRelationship {
+    childPersonId?: string;
+    adultPersonId?: string;
+
+    constructor(data?: IRemoveCustodialRelationship) {
+        super(data);
+        this._discriminator = "RemoveCustodialRelationship";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.childPersonId = _data["childPersonId"];
+            this.adultPersonId = _data["adultPersonId"];
+        }
+    }
+
+    static fromJS(data: any): RemoveCustodialRelationship {
+        data = typeof data === 'object' ? data : {};
+        let result = new RemoveCustodialRelationship();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["childPersonId"] = this.childPersonId;
+        data["adultPersonId"] = this.adultPersonId;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IRemoveCustodialRelationship extends IFamilyCommand {
+    childPersonId?: string;
+    adultPersonId?: string;
+}
+
+export class UpdateAdultRelationshipToFamily extends FamilyCommand implements IUpdateAdultRelationshipToFamily {
+    adultPersonId?: string;
+    relationshipToFamily?: FamilyAdultRelationshipInfo;
+
+    constructor(data?: IUpdateAdultRelationshipToFamily) {
+        super(data);
+        this._discriminator = "UpdateAdultRelationshipToFamily";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.adultPersonId = _data["adultPersonId"];
+            this.relationshipToFamily = _data["relationshipToFamily"] ? FamilyAdultRelationshipInfo.fromJS(_data["relationshipToFamily"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): UpdateAdultRelationshipToFamily {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateAdultRelationshipToFamily();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["adultPersonId"] = this.adultPersonId;
+        data["relationshipToFamily"] = this.relationshipToFamily ? this.relationshipToFamily.toJSON() : <any>undefined;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUpdateAdultRelationshipToFamily extends IFamilyCommand {
+    adultPersonId?: string;
+    relationshipToFamily?: FamilyAdultRelationshipInfo;
+}
+
+export class UpdateCustodialRelationshipType extends FamilyCommand implements IUpdateCustodialRelationshipType {
+    childPersonId?: string;
+    adultPersonId?: string;
+    type?: CustodialRelationshipType;
+
+    constructor(data?: IUpdateCustodialRelationshipType) {
+        super(data);
+        this._discriminator = "UpdateCustodialRelationshipType";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.childPersonId = _data["childPersonId"];
+            this.adultPersonId = _data["adultPersonId"];
+            this.type = _data["type"];
+        }
+    }
+
+    static fromJS(data: any): UpdateCustodialRelationshipType {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateCustodialRelationshipType();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["childPersonId"] = this.childPersonId;
+        data["adultPersonId"] = this.adultPersonId;
+        data["type"] = this.type;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUpdateCustodialRelationshipType extends IFamilyCommand {
+    childPersonId?: string;
+    adultPersonId?: string;
+    type?: CustodialRelationshipType;
+}
+
+export class UploadFamilyDocument extends FamilyCommand implements IUploadFamilyDocument {
+    uploadedDocumentId?: string;
+    uploadedFileName?: string;
+
+    constructor(data?: IUploadFamilyDocument) {
+        super(data);
+        this._discriminator = "UploadFamilyDocument";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
+            this.uploadedFileName = _data["uploadedFileName"];
+        }
+    }
+
+    static fromJS(data: any): UploadFamilyDocument {
+        data = typeof data === 'object' ? data : {};
+        let result = new UploadFamilyDocument();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
+        data["uploadedFileName"] = this.uploadedFileName;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUploadFamilyDocument extends IFamilyCommand {
+    uploadedDocumentId?: string;
+    uploadedFileName?: string;
 }
 
 export abstract class PersonCommand implements IPersonCommand {

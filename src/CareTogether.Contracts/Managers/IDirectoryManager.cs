@@ -39,6 +39,9 @@ namespace CareTogether.Managers
         Task<CombinedFamilyInfo> ExecuteDirectoryCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, DirectoryCommand command); //TODO: Replace these with regular FamilyCommand primitives?
 
+        Task<CombinedFamilyInfo> ExecuteFamilyCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, FamilyCommand command);
+
         Task<CombinedFamilyInfo> ExecutePersonCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, Guid familyId, PersonCommand command);
 
