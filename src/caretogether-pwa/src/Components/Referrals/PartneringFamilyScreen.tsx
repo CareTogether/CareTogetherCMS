@@ -19,6 +19,8 @@ import { format } from 'date-fns';
 import { NoteCard } from '../Families/NoteCard';
 import { policyData } from '../../Model/ConfigurationModel';
 import { UploadFamilyDocumentDialog } from '../Families/UploadFamilyDocumentDialog';
+import { downloadFile } from '../../Model/FilesModel';
+import { currentOrganizationState, currentLocationState } from '../../Model/SessionModel';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -74,8 +76,8 @@ export function PartneringFamilyScreen() {
 
   const partneringFamilies = useRecoilValue(partneringFamiliesData);
   const policy = useRecoilValue(policyData);
-  //const organizationId = useRecoilValue(currentOrganizationState);
-  //const locationId = useRecoilValue(currentLocationState);
+  const organizationId = useRecoilValue(currentOrganizationState);
+  const locationId = useRecoilValue(currentLocationState);
 
   const partneringFamily = partneringFamilies.find(x => x.family?.id === familyId) as CombinedFamilyInfo;
   
@@ -194,6 +196,18 @@ export function PartneringFamilyScreen() {
             : "Referral closed - " + ReferralCloseReason[partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closeReason!]
             //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closedUtc) -- needs a new calculated property
           }</p>
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <h3>Documents</h3>
+          <ul className={classes.familyDocumentsList}>
+            {partneringFamily.uploadedDocuments?.map((uploaded, i) => (
+              <li key={i}
+                onClick={() => downloadFile(organizationId, locationId, uploaded.uploadedDocumentId!)}>
+                📃 {uploaded.uploadedFileName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                {uploaded.timestampUtc && <span style={{float:'right',marginRight:20}}>{format(uploaded.timestampUtc, "MM/dd/yyyy hh:mm aa")}</span>}
+              </li>
+            ))}
+          </ul>
         </Grid>
         {partneringFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item2 && (
           <Grid item key={adult.item1.id}>
