@@ -18,7 +18,7 @@ import { PersonName } from '../Families/PersonName';
 import { format } from 'date-fns';
 import { NoteCard } from '../Families/NoteCard';
 import { policyData } from '../../Model/ConfigurationModel';
-import { UploadPartneringFamilyDocumentDialog } from './UploadPartneringFamilyDocumentDialog';
+import { UploadFamilyDocumentDialog } from '../Families/UploadFamilyDocumentDialog';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -150,7 +150,7 @@ export function PartneringFamilyScreen() {
       {/* {recordFamilyStepParameter && <RecordPartneringFamilyStepDialog partneringFamily={partneringFamily}
         requirementName={recordFamilyStepParameter.requirementName} stepActionRequirement={recordFamilyStepParameter.requirementInfo}
         onClose={() => setRecordFamilyStepParameter(null)} />} */}
-      {uploadDocumentDialogOpen && <UploadPartneringFamilyDocumentDialog partneringFamily={partneringFamily}
+      {uploadDocumentDialogOpen && <UploadFamilyDocumentDialog family={partneringFamily}
         onClose={() => setUploadDocumentDialogOpen(false)} />}
       {addAdultDialogOpen && <AddAdultDialog onClose={() => setAddAdultDialogOpen(false)} />}
       {addChildDialogOpen && <AddChildDialog onClose={() => setAddChildDialogOpen(false)} />}

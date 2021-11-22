@@ -1,6 +1,6 @@
 import { selector, useRecoilCallback } from "recoil";
 import { authenticatingFetch } from "../Auth";
-import { ReferralCommand, ReferralsClient, UploadPartneringFamilyDocument, ArrangementCommand } from "../GeneratedClient";
+import { ReferralCommand, ReferralsClient, ArrangementCommand } from "../GeneratedClient";
 import { visibleFamiliesData } from "./ModelLoader";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 
@@ -68,15 +68,15 @@ function useArrangementCommandCallbackWithLocation<T extends unknown[]>(
 // }
 
 export function useReferralsModel() {
-  const uploadDocument = useReferralCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, uploadedDocumentId: string, uploadedFileName: string) => {
-      const command = new UploadPartneringFamilyDocument({
-        familyId: partneringFamilyId
-      });
-      command.uploadedDocumentId = uploadedDocumentId;
-      command.uploadedFileName = uploadedFileName;
-      return command;
-    });
+  // const uploadDocument = useReferralCommandCallbackWithLocation(
+  //   async (organizationId, locationId, partneringFamilyId, uploadedDocumentId: string, uploadedFileName: string) => {
+  //     const command = new UploadPartneringFamilyDocument({
+  //       familyId: partneringFamilyId
+  //     });
+  //     command.uploadedDocumentId = uploadedDocumentId;
+  //     command.uploadedFileName = uploadedFileName;
+  //     return command;
+  //   });
   // const completeFamilyRequirement = useReferralCommandCallbackWithLocation(
   //   async (organizationId, locationId, partneringFamilyId, requirementName: string, requirement: ActionRequirement,
   //     completedAtLocal: Date, documentId: string | null) => {
@@ -150,7 +150,7 @@ export function useReferralsModel() {
   //   });
   
   return {
-    uploadPartneringFamilyDocument,
+    //uploadPartneringFamilyDocument,
     // completeFamilyRequirement,
     // removeFamilyRole,
     // resetFamilyRole,

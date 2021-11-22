@@ -68,15 +68,6 @@ function useVolunteerCommandCallbackWithLocation<T extends unknown[]>(
 // }
 
 export function useVolunteersModel() {
-  const uploadDocument = useVolunteerFamilyCommandCallbackWithLocation(
-    async (organizationId, locationId, volunteerFamilyId, uploadedDocumentId: string, uploadedFileName: string) => {
-      const command = new UploadVolunteerFamilyDocument({
-        familyId: volunteerFamilyId
-      });
-      command.uploadedDocumentId = uploadedDocumentId;
-      command.uploadedFileName = uploadedFileName;
-      return command;
-    });
   const completeFamilyRequirement = useVolunteerFamilyCommandCallbackWithLocation(
     async (organizationId, locationId, volunteerFamilyId, requirementName: string, requirement: ActionRequirement,
       completedAtLocal: Date, documentId: string | null) => {
@@ -150,7 +141,6 @@ export function useVolunteersModel() {
     });
   
   return {
-    uploadDocument,
     completeFamilyRequirement,
     removeFamilyRole,
     resetFamilyRole,
