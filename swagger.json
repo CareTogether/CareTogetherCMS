@@ -1665,6 +1665,10 @@
           "arrangementType": {
             "type": "string"
           },
+          "partneringFamilyPersonId": {
+            "type": "string",
+            "format": "guid"
+          },
           "phase": {
             "$ref": "#/components/schemas/ArrangementPhase"
           },
@@ -1716,12 +1720,6 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/FamilyVolunteerAssignment"
-            }
-          },
-          "partneringFamilyChildAssignments": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PartneringFamilyChildAssignment"
             }
           },
           "childrenLocationHistory": {
@@ -1778,16 +1776,6 @@
           }
         }
       },
-      "PartneringFamilyChildAssignment": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "personId": {
-            "type": "string",
-            "format": "guid"
-          }
-        }
-      },
       "ChildLocationHistoryEntry": {
         "type": "object",
         "additionalProperties": false,
@@ -1799,10 +1787,6 @@
           "timestampUtc": {
             "type": "string",
             "format": "date-time"
-          },
-          "childId": {
-            "type": "string",
-            "format": "guid"
           },
           "childLocationFamilyId": {
             "type": "string",
@@ -2886,8 +2870,7 @@
           "mapping": {
             "CloseReferral": "#/components/schemas/CloseReferral",
             "CompleteReferralRequirement": "#/components/schemas/CompleteReferralRequirement",
-            "CreateReferral": "#/components/schemas/CreateReferral",
-            "UploadReferralDocument": "#/components/schemas/UploadReferralDocument"
+            "CreateReferral": "#/components/schemas/CreateReferral"
           }
         },
         "x-abstract": true,
@@ -2971,40 +2954,18 @@
           }
         ]
       },
-      "UploadReferralDocument": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ReferralCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "uploadedDocumentId": {
-                "type": "string",
-                "format": "guid"
-              },
-              "uploadedFileName": {
-                "type": "string"
-              }
-            }
-          }
-        ]
-      },
       "ArrangementCommand": {
         "type": "object",
         "discriminator": {
           "propertyName": "discriminator",
           "mapping": {
             "AssignIndividualVolunteer": "#/components/schemas/AssignIndividualVolunteer",
-            "AssignPartneringFamilyChildren": "#/components/schemas/AssignPartneringFamilyChildren",
             "AssignVolunteerFamily": "#/components/schemas/AssignVolunteerFamily",
             "CompleteArrangementRequirement": "#/components/schemas/CompleteArrangementRequirement",
             "CreateArrangement": "#/components/schemas/CreateArrangement",
             "EndArrangement": "#/components/schemas/EndArrangement",
             "StartArrangement": "#/components/schemas/StartArrangement",
-            "TrackChildLocationChange": "#/components/schemas/TrackChildLocationChange",
-            "UploadArrangementDocument": "#/components/schemas/UploadArrangementDocument"
+            "TrackChildLocationChange": "#/components/schemas/TrackChildLocationChange"
           }
         },
         "x-abstract": true,
@@ -3049,26 +3010,6 @@
               },
               "arrangementFunction": {
                 "type": "string"
-              }
-            }
-          }
-        ]
-      },
-      "AssignPartneringFamilyChildren": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ArrangementCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "childrenIds": {
-                "type": "array",
-                "items": {
-                  "type": "string",
-                  "format": "guid"
-                }
               }
             }
           }
@@ -3134,6 +3075,10 @@
               "requestedAtUtc": {
                 "type": "string",
                 "format": "date-time"
+              },
+              "partneringFamilyPersonId": {
+                "type": "string",
+                "format": "guid"
               }
             }
           }
@@ -3186,10 +3131,6 @@
                 "type": "string",
                 "format": "date-time"
               },
-              "childId": {
-                "type": "string",
-                "format": "guid"
-              },
               "childLocationFamilyId": {
                 "type": "string",
                 "format": "guid"
@@ -3198,26 +3139,6 @@
                 "$ref": "#/components/schemas/ChildLocationPlan"
               },
               "additionalExplanation": {
-                "type": "string"
-              }
-            }
-          }
-        ]
-      },
-      "UploadArrangementDocument": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ArrangementCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "uploadedDocumentId": {
-                "type": "string",
-                "format": "guid"
-              },
-              "uploadedFileName": {
                 "type": "string"
               }
             }

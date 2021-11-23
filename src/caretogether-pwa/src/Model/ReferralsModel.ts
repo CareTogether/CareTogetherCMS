@@ -1,5 +1,8 @@
-import { selector } from "recoil";
+import { selector, useRecoilCallback } from "recoil";
+import { authenticatingFetch } from "../Auth";
+import { ReferralCommand, ReferralsClient, ArrangementCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement } from "../GeneratedClient";
 import { visibleFamiliesData } from "./ModelLoader";
+import { currentOrganizationState, currentLocationState } from "./SessionModel";
 
 export const partneringFamiliesData = selector({
   key: 'partneringFamiliesData',
@@ -8,27 +11,27 @@ export const partneringFamiliesData = selector({
     return visibleFamilies.filter(f => f.partneringFamilyInfo);
   }});
 
-// function useReferralCommandCallbackWithLocation<T extends unknown[]>(
-//   callback: (organizationId: string, locationId: string, partneringFamilyId: string, ...args: T) => Promise<ReferralCommand>) {
-//   return useRecoilCallback(({snapshot, set}) => {
-//     const asyncCallback = async (partneringFamilyId: string, ...args: T) => {
-//       const organizationId = await snapshot.getPromise(currentOrganizationState);
-//       const locationId = await snapshot.getPromise(currentLocationState);
+function useReferralCommandCallbackWithLocation<T extends unknown[]>(
+  callback: (organizationId: string, locationId: string, partneringFamilyId: string, ...args: T) => Promise<ReferralCommand>) {
+  return useRecoilCallback(({snapshot, set}) => {
+    const asyncCallback = async (partneringFamilyId: string, ...args: T) => {
+      const organizationId = await snapshot.getPromise(currentOrganizationState);
+      const locationId = await snapshot.getPromise(currentLocationState);
 
-//       const command = await callback(organizationId, locationId, partneringFamilyId, ...args);
+      const command = await callback(organizationId, locationId, partneringFamilyId, ...args);
 
-//       const client = new ReferralsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-//       const updatedFamily = await client.submitReferralCommand(organizationId, locationId, command);
+      const client = new ReferralsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+      const updatedFamily = await client.submitReferralCommand(organizationId, locationId, command);
 
-//       set(visibleFamiliesData, current => {
-//         return current.map(currentEntry => currentEntry.family?.id === partneringFamilyId
-//           ? updatedFamily
-//           : currentEntry);
-//       });
-//     };
-//     return asyncCallback;
-//   })
-// }
+      set(visibleFamiliesData, current => {
+        return current.map(currentEntry => currentEntry.family?.id === partneringFamilyId
+          ? updatedFamily
+          : currentEntry);
+      });
+    };
+    return asyncCallback;
+  })
+}
 
 // function useReferralCommandCallback<T extends unknown[]>(
 //   callback: (partneringFamilyId: string, ...args: T) => Promise<ReferralCommand>) {
@@ -36,27 +39,27 @@ export const partneringFamiliesData = selector({
 //     (_organizationId, _locationId, partneringFamilyId, ...args) => callback(partneringFamilyId, ...args));
 // }
 
-// function useArrangementCommandCallbackWithLocation<T extends unknown[]>(
-//   callback: (organizationId: string, locationId: string, partneringFamilyId: string, personId: string, ...args: T) => Promise<ArrangementCommand>) {
-//   return useRecoilCallback(({snapshot, set}) => {
-//     const asyncCallback = async (partneringFamilyId: string, personId: string, ...args: T) => {
-//       const organizationId = await snapshot.getPromise(currentOrganizationState);
-//       const locationId = await snapshot.getPromise(currentLocationState);
+function useArrangementCommandCallbackWithLocation<T extends unknown[]>(
+  callback: (organizationId: string, locationId: string, partneringFamilyId: string, personId: string, ...args: T) => Promise<ArrangementCommand>) {
+  return useRecoilCallback(({snapshot, set}) => {
+    const asyncCallback = async (partneringFamilyId: string, personId: string, ...args: T) => {
+      const organizationId = await snapshot.getPromise(currentOrganizationState);
+      const locationId = await snapshot.getPromise(currentLocationState);
 
-//       const command = await callback(organizationId, locationId, partneringFamilyId, personId, ...args);
+      const command = await callback(organizationId, locationId, partneringFamilyId, personId, ...args);
 
-//       const client = new ReferralsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-//       const updatedFamily = await client.submitArrangementCommand(organizationId, locationId, command);
+      const client = new ReferralsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+      const updatedFamily = await client.submitArrangementCommand(organizationId, locationId, command);
 
-//       set(visibleFamiliesData, current => {
-//         return current.map(currentEntry => currentEntry.family?.id === partneringFamilyId
-//           ? updatedFamily
-//           : currentEntry);
-//       });
-//     };
-//     return asyncCallback;
-//   })
-// }
+      set(visibleFamiliesData, current => {
+        return current.map(currentEntry => currentEntry.family?.id === partneringFamilyId
+          ? updatedFamily
+          : currentEntry);
+      });
+    };
+    return asyncCallback;
+  })
+}
 
 // function useArrangementCommandCallback<T extends unknown[]>(
 //   callback: (partneringFamilyId: string, personId: string, ...args: T) => Promise<ArrangementCommand>) {
@@ -65,27 +68,31 @@ export const partneringFamiliesData = selector({
 // }
 
 export function useReferralsModel() {
-  // const uploadDocument = useReferralCommandCallbackWithLocation(
-  //   async (organizationId, locationId, partneringFamilyId, uploadedDocumentId: string, uploadedFileName: string) => {
-  //     const command = new UploadPartneringFamilyDocument({
-  //       familyId: partneringFamilyId
-  //     });
-  //     command.uploadedDocumentId = uploadedDocumentId;
-  //     command.uploadedFileName = uploadedFileName;
-  //     return command;
-  //   });
-  // const completeFamilyRequirement = useReferralCommandCallbackWithLocation(
-  //   async (organizationId, locationId, partneringFamilyId, requirementName: string, requirement: ActionRequirement,
-  //     completedAtLocal: Date, documentId: string | null) => {
-  //     const command = new CompletePartneringFamilyRequirement({
-  //       familyId: partneringFamilyId
-  //     });
-  //     command.requirementName = requirementName;
-  //     command.completedAtUtc = completedAtLocal;
-  //     if (documentId != null)
-  //       command.uploadedDocumentId = documentId;
-  //     return command;
-  //   });
+  const completeReferralRequirement = useReferralCommandCallbackWithLocation(
+    async (organizationId, locationId, partneringFamilyId, referralId: string, requirementName: string, requirement: ActionRequirement,
+      completedAtLocal: Date, documentId: string | null) => {
+      const command = new CompleteReferralRequirement({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+      });
+      command.requirementName = requirementName;
+      command.completedAtUtc = completedAtLocal;
+      if (documentId != null)
+        command.uploadedDocumentId = documentId;
+      return command;
+    });
+  const createArrangement = useArrangementCommandCallbackWithLocation(
+    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementType: string,
+      requestedAtLocal: Date, partneringFamilyPersonId: string) => {
+      const command = new CreateArrangement({
+        familyId: partneringFamilyId,
+        referralId: referralId
+      });
+      command.arrangementType = arrangementType;
+      command.requestedAtUtc = requestedAtLocal;
+      command.partneringFamilyPersonId = partneringFamilyPersonId;
+      return command;
+    });
   // const removeFamilyRole = useReferralCommandCallbackWithLocation(
   //   async (organizationId, locationId, partneringFamilyId,
   //     role: string, reason: RoleRemovalReason, additionalComments: string) =>
@@ -147,7 +154,8 @@ export function useReferralsModel() {
   //   });
   
   return {
-    //uploadPartneringFamilyDocument,
+    completeReferralRequirement,
+    createArrangement
     // completeFamilyRequirement,
     // removeFamilyRole,
     // resetFamilyRole,

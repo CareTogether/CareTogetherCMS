@@ -7,6 +7,8 @@ namespace CareTogether.Resources
 {
     public record VolunteerFamilyEntry(Guid FamilyId,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
+        // COMPATIBILITY: This UploadedDocuments property is only used for backwards compatibility.
+        // It should not be referenced directly.
         ImmutableList<UploadedDocumentInfo> UploadedDocuments,
         ImmutableList<RemovedRole> RemovedRoles,
         ImmutableDictionary<Guid, VolunteerEntry> IndividualEntries);

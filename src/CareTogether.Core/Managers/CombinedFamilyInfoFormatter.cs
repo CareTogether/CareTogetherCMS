@@ -96,12 +96,12 @@ namespace CareTogether.Managers
             }
 
             static Arrangement ToArrangement(ArrangementEntry entry, ArrangementStatus status) =>
-                new(entry.Id, entry.ArrangementType, status.Phase,
+                new(entry.Id, entry.ArrangementType, entry.PartneringFamilyPersonId, status.Phase,
                     entry.RequestedAtUtc, entry.StartedAtUtc, entry.EndedAtUtc,
                     entry.CompletedRequirements,
                     status.MissingSetupRequirements, status.MissingMonitoringRequirements, status.MissingCloseoutRequirements,
                     entry.IndividualVolunteerAssignments, entry.FamilyVolunteerAssignments,
-                    entry.PartneringFamilyChildAssignments, entry.ChildrenLocationHistory);
+                    entry.ChildrenLocationHistory);
         }
 
         private async Task<(VolunteerFamilyInfo?, ImmutableList<UploadedDocumentInfo>)> RenderVolunteerFamilyInfoAsync(Guid organizationId, Guid locationId,

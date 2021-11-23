@@ -51,10 +51,7 @@ export function ArrangementCard({ partneringFamily, arrangement }: ArrangementCa
       <CardContent className={classes.cardContent}>
         <Typography variant="body2" component="div">
           <ul className={classes.cardList}>
-            {/* TODO: Partnering family **individual adult** assignments (e.g., friending) */}
-            {arrangement.partneringFamilyChildAssignments?.map(x => (
-              <li key={`child-${x.personId}`}><strong><PersonName person={personLookup(partneringFamily.family!.id, x.personId)} /></strong> - Child</li>
-            ))}
+            <li><strong><PersonName person={personLookup(partneringFamily.family!.id, arrangement.partneringFamilyPersonId)} /></strong></li>
             {arrangement.familyVolunteerAssignments?.map(x => (
               <li key={`famVol-${x.familyId}`}><FamilyName family={familyLookup(x.familyId)} /> - {x.arrangementFunction}</li>
             ))}
