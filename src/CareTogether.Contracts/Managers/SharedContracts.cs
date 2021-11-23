@@ -19,7 +19,7 @@ namespace CareTogether.Managers
         ImmutableList<string> MissingIntakeRequirements,
         ImmutableList<Arrangement> Arrangements);
 
-    public sealed record Arrangement(Guid Id, string ArrangementType,
+    public sealed record Arrangement(Guid Id, string ArrangementType, Guid PartneringFamilyPersonId,
         ArrangementPhase Phase, DateTime RequestedAtUtc, DateTime? StartedAtUtc, DateTime? EndedAtUtc,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<string> MissingSetupRequirements,
@@ -27,7 +27,6 @@ namespace CareTogether.Managers
         ImmutableList<string> MissingCloseoutRequirements,
         ImmutableList<IndividualVolunteerAssignment> IndividualVolunteerAssignments,
         ImmutableList<FamilyVolunteerAssignment> FamilyVolunteerAssignments,
-        ImmutableList<PartneringFamilyChildAssignment> PartneringFamilyChildAssignments,
         ImmutableList<ChildLocationHistoryEntry> ChildrenLocationHistory);
 
     public sealed record Note(Guid Id, Guid AuthorId, DateTime TimestampUtc,

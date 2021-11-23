@@ -1,6 +1,6 @@
 import { Container, Toolbar, Grid, Button, Menu, MenuItem, MenuList, useMediaQuery, useTheme } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { ActionRequirement, CombinedFamilyInfo, ReferralCloseReason } from '../../GeneratedClient';
+import { ActionRequirement, ArrangementPolicy, CombinedFamilyInfo, ReferralCloseReason } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { useParams } from 'react-router';
@@ -22,6 +22,7 @@ import { downloadFile } from '../../Model/FilesModel';
 import { currentOrganizationState, currentLocationState } from '../../Model/SessionModel';
 import { policyData } from '../../Model/ConfigurationModel';
 import { RecordReferralStepDialog } from './RecordReferralStepDialog';
+import { CreateArrangementDialog } from './CreateArrangementDialog';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -94,6 +95,8 @@ export function PartneringFamilyScreen() {
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
   const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
   const [addNoteDialogOpen, setAddNoteDialogOpen] = useState(false);
+
+  const [createArrangementDialogParameter, setCreateArrangementDialogParameter] = useState<ArrangementPolicy | null>(null);
   
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
@@ -230,6 +233,21 @@ export function PartneringFamilyScreen() {
               <ArrangementCard partneringFamily={partneringFamily} arrangement={arrangement} />
             </Grid>
           ))}
+          {policy.referralPolicy?.arrangementPolicies?.map(arrangementPolicy => (
+            <Grid item key={arrangementPolicy.arrangementType}>
+              <Button
+                onClick={() => setCreateArrangementDialogParameter(arrangementPolicy)}
+                variant="contained" color="default" size="small" className={classes.button}
+                startIcon={<AddCircleIcon />}>
+                {arrangementPolicy.arrangementType}
+              </Button>
+            </Grid>
+          ))}
+          {partneringFamily.partneringFamilyInfo?.openReferral && createArrangementDialogParameter &&
+            <CreateArrangementDialog
+              referralId={partneringFamily.partneringFamilyInfo.openReferral.id!}
+              arrangementPolicy={createArrangementDialogParameter}
+              onClose={() => setCreateArrangementDialogParameter(null)} />}
         </Grid>
         {partneringFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item2 && (
           <Grid item key={adult.item1.id}>

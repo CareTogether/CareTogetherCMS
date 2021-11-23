@@ -1,6 +1,6 @@
 import { selector, useRecoilCallback } from "recoil";
 import { authenticatingFetch } from "../Auth";
-import { ReferralCommand, ReferralsClient, ArrangementCommand, ActionRequirement, CompleteReferralRequirement } from "../GeneratedClient";
+import { ReferralCommand, ReferralsClient, ArrangementCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement } from "../GeneratedClient";
 import { visibleFamiliesData } from "./ModelLoader";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 
@@ -39,27 +39,27 @@ function useReferralCommandCallbackWithLocation<T extends unknown[]>(
 //     (_organizationId, _locationId, partneringFamilyId, ...args) => callback(partneringFamilyId, ...args));
 // }
 
-// function useArrangementCommandCallbackWithLocation<T extends unknown[]>(
-//   callback: (organizationId: string, locationId: string, partneringFamilyId: string, personId: string, ...args: T) => Promise<ArrangementCommand>) {
-//   return useRecoilCallback(({snapshot, set}) => {
-//     const asyncCallback = async (partneringFamilyId: string, personId: string, ...args: T) => {
-//       const organizationId = await snapshot.getPromise(currentOrganizationState);
-//       const locationId = await snapshot.getPromise(currentLocationState);
+function useArrangementCommandCallbackWithLocation<T extends unknown[]>(
+  callback: (organizationId: string, locationId: string, partneringFamilyId: string, personId: string, ...args: T) => Promise<ArrangementCommand>) {
+  return useRecoilCallback(({snapshot, set}) => {
+    const asyncCallback = async (partneringFamilyId: string, personId: string, ...args: T) => {
+      const organizationId = await snapshot.getPromise(currentOrganizationState);
+      const locationId = await snapshot.getPromise(currentLocationState);
 
-//       const command = await callback(organizationId, locationId, partneringFamilyId, personId, ...args);
+      const command = await callback(organizationId, locationId, partneringFamilyId, personId, ...args);
 
-//       const client = new ReferralsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-//       const updatedFamily = await client.submitArrangementCommand(organizationId, locationId, command);
+      const client = new ReferralsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+      const updatedFamily = await client.submitArrangementCommand(organizationId, locationId, command);
 
-//       set(visibleFamiliesData, current => {
-//         return current.map(currentEntry => currentEntry.family?.id === partneringFamilyId
-//           ? updatedFamily
-//           : currentEntry);
-//       });
-//     };
-//     return asyncCallback;
-//   })
-// }
+      set(visibleFamiliesData, current => {
+        return current.map(currentEntry => currentEntry.family?.id === partneringFamilyId
+          ? updatedFamily
+          : currentEntry);
+      });
+    };
+    return asyncCallback;
+  })
+}
 
 // function useArrangementCommandCallback<T extends unknown[]>(
 //   callback: (partneringFamilyId: string, personId: string, ...args: T) => Promise<ArrangementCommand>) {
@@ -79,6 +79,18 @@ export function useReferralsModel() {
       command.completedAtUtc = completedAtLocal;
       if (documentId != null)
         command.uploadedDocumentId = documentId;
+      return command;
+    });
+  const createArrangement = useArrangementCommandCallbackWithLocation(
+    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementType: string,
+      requestedAtLocal: Date, partneringFamilyPersonId: string) => {
+      const command = new CreateArrangement({
+        familyId: partneringFamilyId,
+        referralId: referralId
+      });
+      command.arrangementType = arrangementType;
+      command.requestedAtUtc = requestedAtLocal;
+      command.partneringFamilyPersonId = partneringFamilyPersonId;
       return command;
     });
   // const removeFamilyRole = useReferralCommandCallbackWithLocation(
@@ -142,7 +154,8 @@ export function useReferralsModel() {
   //   });
   
   return {
-    completeReferralRequirement
+    completeReferralRequirement,
+    createArrangement
     // completeFamilyRequirement,
     // removeFamilyRole,
     // resetFamilyRole,

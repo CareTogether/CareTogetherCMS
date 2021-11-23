@@ -84,9 +84,10 @@ namespace CareTogether.Resources.Models
             {
                 CreateArrangement c => new ArrangementEntry(c.ArrangementId, c.ArrangementType,
                     RequestedAtUtc: c.RequestedAtUtc, StartedAtUtc: null, EndedAtUtc: null,
+                    c.PartneringFamilyPersonId,
                     ImmutableList<CompletedRequirementInfo>.Empty,
                     ImmutableList<IndividualVolunteerAssignment>.Empty, ImmutableList<FamilyVolunteerAssignment>.Empty,
-                    ImmutableList<PartneringFamilyChildAssignment>.Empty, ImmutableList<ChildLocationHistoryEntry>.Empty),
+                    ImmutableList<ChildLocationHistoryEntry>.Empty),
                 _ => referralEntry.Arrangements.TryGetValue(command.ArrangementId, out var arrangementEntry)
                     ? command switch
                     {
@@ -99,11 +100,6 @@ namespace CareTogether.Resources.Models
                         {
                             FamilyVolunteerAssignments = arrangementEntry.FamilyVolunteerAssignments.Add(
                                 new FamilyVolunteerAssignment(c.VolunteerFamilyId, c.ArrangementFunction))
-                        },
-                        AssignPartneringFamilyChildren c => arrangementEntry with
-                        {
-                            PartneringFamilyChildAssignments = arrangementEntry.PartneringFamilyChildAssignments.AddRange(
-                                c.ChildrenIds.Select(c => new PartneringFamilyChildAssignment(c)))
                         },
                         StartArrangement c => arrangementEntry with
                         {
@@ -118,7 +114,7 @@ namespace CareTogether.Resources.Models
                         {
                             ChildrenLocationHistory = arrangementEntry.ChildrenLocationHistory.Add(
                                 new ChildLocationHistoryEntry(userId, c.ChangedAtUtc,
-                                    c.ChildId, c.ChildLocationFamilyId, c.Plan, c.AdditionalExplanation))
+                                    c.ChildLocationFamilyId, c.Plan, c.AdditionalExplanation))
                         },
                         EndArrangement c => arrangementEntry with
                         {

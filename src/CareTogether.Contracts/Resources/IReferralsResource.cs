@@ -12,19 +12,18 @@ namespace CareTogether.Resources
 
     public record ArrangementEntry(Guid Id, string ArrangementType,
         DateTime RequestedAtUtc, DateTime? StartedAtUtc, DateTime? EndedAtUtc,
+        Guid PartneringFamilyPersonId,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<IndividualVolunteerAssignment> IndividualVolunteerAssignments,
         ImmutableList<FamilyVolunteerAssignment> FamilyVolunteerAssignments,
-        ImmutableList<PartneringFamilyChildAssignment> PartneringFamilyChildAssignments,
         ImmutableList<ChildLocationHistoryEntry> ChildrenLocationHistory);
 
     public enum ReferralCloseReason { NotAppropriate, NoCapacity, NoLongerNeeded, Resourced, NeedMet };
 
     public sealed record IndividualVolunteerAssignment(Guid FamilyId, Guid PersonId, string ArrangementFunction);
     public sealed record FamilyVolunteerAssignment(Guid FamilyId, string ArrangementFunction);
-    public sealed record PartneringFamilyChildAssignment(Guid PersonId);
     public sealed record ChildLocationHistoryEntry(Guid UserId, DateTime TimestampUtc,
-        Guid ChildId, Guid ChildLocationFamilyId, ChildLocationPlan Plan, string AdditionalExplanation);
+        Guid ChildLocationFamilyId, ChildLocationPlan Plan, string AdditionalExplanation);
 
     public enum ChildLocationPlan { OvernightHousing, DaytimeChildCare, ReturnToFamily }
 
@@ -43,16 +42,13 @@ namespace CareTogether.Resources
     [JsonHierarchyBase]
     public abstract partial record ArrangementCommand(Guid FamilyId, Guid ReferralId, Guid ArrangementId);
     public sealed record CreateArrangement(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
-        string ArrangementType, DateTime RequestedAtUtc)
+        string ArrangementType, DateTime RequestedAtUtc, Guid PartneringFamilyPersonId)
         : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
     public sealed record AssignIndividualVolunteer(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
         Guid VolunteerFamilyId, Guid PersonId, string ArrangementFunction)
         : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
     public sealed record AssignVolunteerFamily(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
         Guid VolunteerFamilyId, string ArrangementFunction)
-        : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
-    public sealed record AssignPartneringFamilyChildren(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
-        ImmutableList<Guid> ChildrenIds)
         : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
     public sealed record StartArrangement(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
         DateTime StartedAtUtc)
@@ -61,7 +57,7 @@ namespace CareTogether.Resources
         string RequirementName, DateTime CompletedAtUtc, Guid? UploadedDocumentId)
         : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
     public sealed record TrackChildLocationChange(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
-        DateTime ChangedAtUtc, Guid ChildId, Guid ChildLocationFamilyId, ChildLocationPlan Plan, string AdditionalExplanation)
+        DateTime ChangedAtUtc, Guid ChildLocationFamilyId, ChildLocationPlan Plan, string AdditionalExplanation)
         : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
     public sealed record EndArrangement(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
         DateTime EndedAtUtc)
