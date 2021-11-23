@@ -2556,7 +2556,7 @@ export class Referral implements IReferral {
     closedAtUtc?: Date | undefined;
     closeReason?: ReferralCloseReason | undefined;
     completedRequirements?: CompletedRequirementInfo[];
-    missingIntakeRequirements?: string[];
+    missingRequirements?: string[];
     arrangements?: Arrangement[];
 
     constructor(data?: IReferral) {
@@ -2579,10 +2579,10 @@ export class Referral implements IReferral {
                 for (let item of _data["completedRequirements"])
                     this.completedRequirements!.push(CompletedRequirementInfo.fromJS(item));
             }
-            if (Array.isArray(_data["missingIntakeRequirements"])) {
-                this.missingIntakeRequirements = [] as any;
-                for (let item of _data["missingIntakeRequirements"])
-                    this.missingIntakeRequirements!.push(item);
+            if (Array.isArray(_data["missingRequirements"])) {
+                this.missingRequirements = [] as any;
+                for (let item of _data["missingRequirements"])
+                    this.missingRequirements!.push(item);
             }
             if (Array.isArray(_data["arrangements"])) {
                 this.arrangements = [] as any;
@@ -2610,10 +2610,10 @@ export class Referral implements IReferral {
             for (let item of this.completedRequirements)
                 data["completedRequirements"].push(item.toJSON());
         }
-        if (Array.isArray(this.missingIntakeRequirements)) {
-            data["missingIntakeRequirements"] = [];
-            for (let item of this.missingIntakeRequirements)
-                data["missingIntakeRequirements"].push(item);
+        if (Array.isArray(this.missingRequirements)) {
+            data["missingRequirements"] = [];
+            for (let item of this.missingRequirements)
+                data["missingRequirements"].push(item);
         }
         if (Array.isArray(this.arrangements)) {
             data["arrangements"] = [];
@@ -2630,7 +2630,7 @@ export interface IReferral {
     closedAtUtc?: Date | undefined;
     closeReason?: ReferralCloseReason | undefined;
     completedRequirements?: CompletedRequirementInfo[];
-    missingIntakeRequirements?: string[];
+    missingRequirements?: string[];
     arrangements?: Arrangement[];
 }
 
@@ -2703,9 +2703,7 @@ export class Arrangement implements IArrangement {
     startedAtUtc?: Date | undefined;
     endedAtUtc?: Date | undefined;
     completedRequirements?: CompletedRequirementInfo[];
-    missingSetupRequirements?: string[];
-    missingMonitoringRequirements?: string[];
-    missingCloseoutRequirements?: string[];
+    missingRequirements?: string[];
     individualVolunteerAssignments?: IndividualVolunteerAssignment[];
     familyVolunteerAssignments?: FamilyVolunteerAssignment[];
     childrenLocationHistory?: ChildLocationHistoryEntry[];
@@ -2733,20 +2731,10 @@ export class Arrangement implements IArrangement {
                 for (let item of _data["completedRequirements"])
                     this.completedRequirements!.push(CompletedRequirementInfo.fromJS(item));
             }
-            if (Array.isArray(_data["missingSetupRequirements"])) {
-                this.missingSetupRequirements = [] as any;
-                for (let item of _data["missingSetupRequirements"])
-                    this.missingSetupRequirements!.push(item);
-            }
-            if (Array.isArray(_data["missingMonitoringRequirements"])) {
-                this.missingMonitoringRequirements = [] as any;
-                for (let item of _data["missingMonitoringRequirements"])
-                    this.missingMonitoringRequirements!.push(item);
-            }
-            if (Array.isArray(_data["missingCloseoutRequirements"])) {
-                this.missingCloseoutRequirements = [] as any;
-                for (let item of _data["missingCloseoutRequirements"])
-                    this.missingCloseoutRequirements!.push(item);
+            if (Array.isArray(_data["missingRequirements"])) {
+                this.missingRequirements = [] as any;
+                for (let item of _data["missingRequirements"])
+                    this.missingRequirements!.push(item);
             }
             if (Array.isArray(_data["individualVolunteerAssignments"])) {
                 this.individualVolunteerAssignments = [] as any;
@@ -2787,20 +2775,10 @@ export class Arrangement implements IArrangement {
             for (let item of this.completedRequirements)
                 data["completedRequirements"].push(item.toJSON());
         }
-        if (Array.isArray(this.missingSetupRequirements)) {
-            data["missingSetupRequirements"] = [];
-            for (let item of this.missingSetupRequirements)
-                data["missingSetupRequirements"].push(item);
-        }
-        if (Array.isArray(this.missingMonitoringRequirements)) {
-            data["missingMonitoringRequirements"] = [];
-            for (let item of this.missingMonitoringRequirements)
-                data["missingMonitoringRequirements"].push(item);
-        }
-        if (Array.isArray(this.missingCloseoutRequirements)) {
-            data["missingCloseoutRequirements"] = [];
-            for (let item of this.missingCloseoutRequirements)
-                data["missingCloseoutRequirements"].push(item);
+        if (Array.isArray(this.missingRequirements)) {
+            data["missingRequirements"] = [];
+            for (let item of this.missingRequirements)
+                data["missingRequirements"].push(item);
         }
         if (Array.isArray(this.individualVolunteerAssignments)) {
             data["individualVolunteerAssignments"] = [];
@@ -2830,9 +2808,7 @@ export interface IArrangement {
     startedAtUtc?: Date | undefined;
     endedAtUtc?: Date | undefined;
     completedRequirements?: CompletedRequirementInfo[];
-    missingSetupRequirements?: string[];
-    missingMonitoringRequirements?: string[];
-    missingCloseoutRequirements?: string[];
+    missingRequirements?: string[];
     individualVolunteerAssignments?: IndividualVolunteerAssignment[];
     familyVolunteerAssignments?: FamilyVolunteerAssignment[];
     childrenLocationHistory?: ChildLocationHistoryEntry[];

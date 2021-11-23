@@ -1596,7 +1596,7 @@
               "$ref": "#/components/schemas/CompletedRequirementInfo"
             }
           },
-          "missingIntakeRequirements": {
+          "missingRequirements": {
             "type": "array",
             "items": {
               "type": "string"
@@ -1692,19 +1692,7 @@
               "$ref": "#/components/schemas/CompletedRequirementInfo"
             }
           },
-          "missingSetupRequirements": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "missingMonitoringRequirements": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "missingCloseoutRequirements": {
+          "missingRequirements": {
             "type": "array",
             "items": {
               "type": "string"

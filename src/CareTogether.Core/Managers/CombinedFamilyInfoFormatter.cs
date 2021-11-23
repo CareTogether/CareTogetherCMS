@@ -99,7 +99,7 @@ namespace CareTogether.Managers
                 new(entry.Id, entry.ArrangementType, entry.PartneringFamilyPersonId, status.Phase,
                     entry.RequestedAtUtc, entry.StartedAtUtc, entry.EndedAtUtc,
                     entry.CompletedRequirements,
-                    status.MissingSetupRequirements, status.MissingMonitoringRequirements, status.MissingCloseoutRequirements,
+                    status.MissingSetupRequirements.AddRange(status.MissingMonitoringRequirements).AddRange(status.MissingCloseoutRequirements),
                     entry.IndividualVolunteerAssignments, entry.FamilyVolunteerAssignments,
                     entry.ChildrenLocationHistory);
         }

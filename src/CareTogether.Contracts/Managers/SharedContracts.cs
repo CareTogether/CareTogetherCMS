@@ -16,15 +16,13 @@ namespace CareTogether.Managers
     public sealed record Referral(Guid Id,
         DateTime OpenedAtUtc, DateTime? ClosedAtUtc, ReferralCloseReason? CloseReason,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
-        ImmutableList<string> MissingIntakeRequirements,
+        ImmutableList<string> MissingRequirements,
         ImmutableList<Arrangement> Arrangements);
 
     public sealed record Arrangement(Guid Id, string ArrangementType, Guid PartneringFamilyPersonId,
         ArrangementPhase Phase, DateTime RequestedAtUtc, DateTime? StartedAtUtc, DateTime? EndedAtUtc,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
-        ImmutableList<string> MissingSetupRequirements,
-        ImmutableList<string> MissingMonitoringRequirements, //TODO: Better define this, especially when recurrence is involved
-        ImmutableList<string> MissingCloseoutRequirements,
+        ImmutableList<string> MissingRequirements,
         ImmutableList<IndividualVolunteerAssignment> IndividualVolunteerAssignments,
         ImmutableList<FamilyVolunteerAssignment> FamilyVolunteerAssignments,
         ImmutableList<ChildLocationHistoryEntry> ChildrenLocationHistory);
