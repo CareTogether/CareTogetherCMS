@@ -53,11 +53,13 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
   
   const [arrangementRecordMenuAnchor, setArrangementRecordMenuAnchor] = useState<{anchor: Element, arrangement: Arrangement} | null>(null);
   const [recordArrangementStepParameter, setRecordArrangementStepParameter] = useState<{requirementName: string, requirementInfo: ActionRequirement, arrangement: Person} | null>(null);
-  function selectRecordArrangementStep(requirementName: string, arrangement: Arrangement) {
+  function selectRecordArrangementStep(requirementName: string) {
     setArrangementRecordMenuAnchor(null);
     const requirementInfo = policy.actionDefinitions![requirementName];
     setRecordArrangementStepParameter({requirementName, requirementInfo, arrangement});
   }
+  const [showStartArrangementDialog, setShowStartArrangementDialog] = useState(false);
+  const [showEndArrangementDialog, setShowEndArrangementDialog] = useState(false);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
@@ -123,9 +125,18 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
         onClose={() => setArrangementRecordMenuAnchor(null)}>
         <MenuList dense={isMobile}>
           {arrangement.missingRequirements?.map(missingRequirementName =>
-            <MenuItem key={missingRequirementName} onClick={() =>
-              arrangementRecordMenuAnchor?.arrangement && selectRecordArrangementStep(missingRequirementName, arrangementRecordMenuAnchor.arrangement)}>
+            <MenuItem key={missingRequirementName} onClick={() => selectRecordArrangementStep(missingRequirementName)}>
               <ListItemText primary={missingRequirementName} />
+            </MenuItem>
+          )}
+          {arrangement.phase === ArrangementPhase.ReadyToStart && (
+            <MenuItem onClick={() => setShowStartArrangementDialog(true)}>
+              <ListItemText primary="Start" />
+            </MenuItem>
+          )}
+          {arrangement.phase === ArrangementPhase.Started && (
+            <MenuItem onClick={() => setShowEndArrangementDialog(true)}>
+              <ListItemText primary="End" />
             </MenuItem>
           )}
         </MenuList>
