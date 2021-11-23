@@ -230,7 +230,7 @@ export function PartneringFamilyScreen() {
         <Grid item container xs={12} spacing={2}>
           {partneringFamily.partneringFamilyInfo?.openReferral?.arrangements?.map(arrangement => (
             <Grid item key={arrangement.id}>
-              <ArrangementCard partneringFamily={partneringFamily} arrangement={arrangement} />
+              <ArrangementCard partneringFamily={partneringFamily} referralId={partneringFamily.partneringFamilyInfo!.openReferral!.id!} arrangement={arrangement} />
             </Grid>
           ))}
           {policy.referralPolicy?.arrangementPolicies?.map(arrangementPolicy => (

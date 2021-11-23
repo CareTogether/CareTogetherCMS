@@ -85,7 +85,8 @@ function PartneringFamilies() {
                       <Grid container spacing={2}>
                         {allArrangements(partneringFamily.partneringFamilyInfo!).map(arrangement => (
                           <Grid item key={arrangement.id}>
-                            <ArrangementCard partneringFamily={partneringFamily} arrangement={arrangement} />
+                            <ArrangementCard summaryOnly
+                              partneringFamily={partneringFamily} referralId={partneringFamily.partneringFamilyInfo!.openReferral!.id!} arrangement={arrangement} />
                           </Grid>
                         ))}
                       </Grid>

@@ -1,6 +1,6 @@
 import { selector, useRecoilCallback } from "recoil";
 import { authenticatingFetch } from "../Auth";
-import { ReferralCommand, ReferralsClient, ArrangementCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement } from "../GeneratedClient";
+import { ReferralCommand, ReferralsClient, ArrangementCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement } from "../GeneratedClient";
 import { visibleFamiliesData } from "./ModelLoader";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 
@@ -74,6 +74,20 @@ export function useReferralsModel() {
       const command = new CompleteReferralRequirement({
         familyId: partneringFamilyId,
         referralId: referralId,
+      });
+      command.requirementName = requirementName;
+      command.completedAtUtc = completedAtLocal;
+      if (documentId != null)
+        command.uploadedDocumentId = documentId;
+      return command;
+    });
+  const completeArrangementRequirement = useArrangementCommandCallbackWithLocation(
+    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string, requirementName: string, requirement: ActionRequirement,
+      completedAtLocal: Date, documentId: string | null) => {
+      const command = new CompleteArrangementRequirement({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementId: arrangementId
       });
       command.requirementName = requirementName;
       command.completedAtUtc = completedAtLocal;
@@ -155,6 +169,7 @@ export function useReferralsModel() {
   
   return {
     completeReferralRequirement,
+    completeArrangementRequirement,
     createArrangement
     // completeFamilyRequirement,
     // removeFamilyRole,
