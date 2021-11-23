@@ -144,7 +144,7 @@ export function PartneringFamilyScreen() {
         open={Boolean(familyRecordMenuAnchor)}
         onClose={() => setFamilyRecordMenuAnchor(null)}>
         <MenuList dense={isMobile}>
-          {partneringFamily.partneringFamilyInfo?.openReferral?.missingIntakeRequirements?.map(requirementName => (
+          {partneringFamily.partneringFamilyInfo?.openReferral?.missingRequirements?.map(requirementName => (
             <MenuItem key={requirementName} onClick={() => selectRecordReferralStep(requirementName)}>{requirementName}</MenuItem>
           ))}
           {/* <Divider /> */}
@@ -197,7 +197,7 @@ export function PartneringFamilyScreen() {
         <Grid item xs={12} sm={6} md={4}>
           <h3>Incomplete</h3>
           <ul className={classes.familyRequirementsList}>
-            {partneringFamily.partneringFamilyInfo?.openReferral?.missingIntakeRequirements?.map((missingRequirementName, i) => (
+            {partneringFamily.partneringFamilyInfo?.openReferral?.missingRequirements?.map((missingRequirementName, i) => (
               <li key={i}>
                 ❌ {missingRequirementName}
               </li>
