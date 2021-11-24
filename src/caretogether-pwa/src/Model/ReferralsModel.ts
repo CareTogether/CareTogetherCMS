@@ -1,6 +1,6 @@
 import { selector, useRecoilCallback } from "recoil";
 import { authenticatingFetch } from "../Auth";
-import { ReferralCommand, ReferralsClient, ArrangementCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement } from "../GeneratedClient";
+import { ReferralCommand, ReferralsClient, ArrangementCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement, StartArrangement, EndArrangement } from "../GeneratedClient";
 import { visibleFamiliesData } from "./ModelLoader";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 
@@ -107,76 +107,35 @@ export function useReferralsModel() {
       command.partneringFamilyPersonId = partneringFamilyPersonId;
       return command;
     });
-  // const removeFamilyRole = useReferralCommandCallbackWithLocation(
-  //   async (organizationId, locationId, partneringFamilyId,
-  //     role: string, reason: RoleRemovalReason, additionalComments: string) =>
-  //   {
-  //     const command = new RemovePartneringFamilyRole({
-  //       familyId: partneringFamilyId
-  //     });
-  //     command.roleName = role;
-  //     command.reason = reason;
-  //     command.additionalComments = additionalComments;
-  //     return command;
-  //   });
-  // const resetFamilyRole = useReferralCommandCallbackWithLocation(
-  //   async (organizationId, locationId, partneringFamilyId,
-  //     role: string) =>
-  //   {
-  //     const command = new ResetPartneringFamilyRole({
-  //       familyId: partneringFamilyId
-  //     });
-  //     command.roleName = role;
-  //     return command;
-  //   });
-  // const completeIndividualRequirement = useArrangementCommandCallbackWithLocation(
-  //   async (organizationId, locationId, partneringFamilyId, personId, requirementName: string, requirement: ActionRequirement,
-  //     completedAtLocal: Date, documentId: string | null) => {
-  //     const command = new CompletePartneringRequirement({
-  //       familyId: partneringFamilyId,
-  //       personId: personId
-  //     });
-  //     command.requirementName = requirementName;
-  //     command.completedAtUtc = completedAtLocal;
-  //     if (documentId != null)
-  //       command.uploadedDocumentId = documentId;
-  //     return command;
-  //   });
-  // const removeIndividualRole = useArrangementCommandCallbackWithLocation(
-  //   async (organizationId, locationId, partneringFamilyId, personId,
-  //     role: string, reason: RoleRemovalReason, additionalComments: string) =>
-  //   {
-  //     const command = new RemovePartneringRole({
-  //       familyId: partneringFamilyId,
-  //       personId: personId
-  //     });
-  //     command.roleName = role;
-  //     command.reason = reason;
-  //     command.additionalComments = additionalComments;
-  //     return command;
-  //   });
-  // const resetIndividualRole = useArrangementCommandCallbackWithLocation(
-  //   async (organizationId, locationId, partneringFamilyId, personId,
-  //     role: string) =>
-  //   {
-  //     const command = new ResetPartneringRole({
-  //       familyId: partneringFamilyId,
-  //       personId: personId
-  //     });
-  //     command.roleName = role;
-  //     return command;
-  //   });
+  const startArrangement = useArrangementCommandCallbackWithLocation(
+    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
+      startedAtLocal: Date) => {
+      const command = new StartArrangement({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementId: arrangementId
+      });
+      command.startedAtUtc = startedAtLocal;
+      return command;
+    });
+  const endArrangement = useArrangementCommandCallbackWithLocation(
+    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
+      endedAtLocal: Date) => {
+      const command = new EndArrangement({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementId: arrangementId
+      });
+      command.endedAtUtc = endedAtLocal;
+      return command;
+    });
   
   return {
     completeReferralRequirement,
     completeArrangementRequirement,
-    createArrangement
-    // completeFamilyRequirement,
-    // removeFamilyRole,
-    // resetFamilyRole,
-    // completeIndividualRequirement,
-    // removeIndividualRole,
-    // resetIndividualRole
+    createArrangement,
+    startArrangement,
+    endArrangement
   };
 }
   
