@@ -241,10 +241,17 @@ namespace CareTogether.Engines
                         ? ArrangementPhase.Started
                         : ArrangementPhase.Ended;
 
+                    var missingRequirements = phase switch
+                    {
+                        ArrangementPhase.SettingUp => missingSetupRequirements,
+                        ArrangementPhase.ReadyToStart => ImmutableList<string>.Empty,
+                        ArrangementPhase.Started => missingMonitoringRequirements,
+                        ArrangementPhase.Ended => missingCloseoutRequirements,
+                        _ => throw new NotImplementedException($"The arrangement phase '{phase}' has not been implemented.")
+                    };
+
                     return new ArrangementStatus(phase,
-                        missingSetupRequirements,
-                        missingMonitoringRequirements,
-                        missingCloseoutRequirements);
+                        missingRequirements);
                 });
 
             return new ReferralStatus(

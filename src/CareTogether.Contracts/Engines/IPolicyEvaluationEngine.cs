@@ -28,9 +28,7 @@ namespace CareTogether.Engines
 
     public sealed record ArrangementStatus(
         ArrangementPhase Phase,
-        ImmutableList<string> MissingSetupRequirements,
-        ImmutableList<string> MissingMonitoringRequirements,
-        ImmutableList<string> MissingCloseoutRequirements);
+        ImmutableList<string> MissingRequirements);
 
     public enum ArrangementPhase { SettingUp, ReadyToStart, Started, Ended };
 
