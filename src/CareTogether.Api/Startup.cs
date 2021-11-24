@@ -58,11 +58,9 @@ namespace CareTogether.Api
             var policiesStore = new JsonBlobObjectStore<EffectiveLocationPolicy>(blobServiceClient, "LocationPolicies");
             var userTenantAccessStore = new JsonBlobObjectStore<UserTenantAccessSummary>(blobServiceClient, "UserTenantAccess");
 
-//#if DEBUG
-//            if (HostEnvironment.IsDevelopment())
-//            {
-                // Reset and populate test data for debugging. The test data project dependency (and this call) is not included in release builds.
-                // Note that this will not reset data (storage containers) for tenants other than the test tenant used by the TestData project.
+            if (HostEnvironment.EnvironmentName != "OpenApiGen")
+            {
+                // Reset and populate data in the test tenant for debugging. Note that this will not affect other tenants.
                 TestData.TestStorageHelper.ResetTestTenantData(blobServiceClient);
                 TestData.TestDataProvider.PopulateTestDataAsync(
                     directoryEventLog,
@@ -74,8 +72,7 @@ namespace CareTogether.Api
                     configurationStore,
                     policiesStore,
                     userTenantAccessStore).Wait();
-//            }
-//#endif
+            }
 
             // Resource services
             var approvalsResource = new ApprovalsResource(approvalsEventLog);

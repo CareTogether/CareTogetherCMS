@@ -26,7 +26,6 @@
     <ProjectReference Include="..\CareTogether.Contracts\CareTogether.Contracts.csproj" />
     <ProjectReference Include="..\CareTogether.Core\CareTogether.Core.csproj" />
     <ProjectReference Include="..\..\test\CareTogether.TestData\CareTogether.TestData.csproj" />
-    <!--<ProjectReference Include="..\..\test\CareTogether.TestData\CareTogether.TestData.csproj" Condition="'$(Configuration)' == 'Debug'" />-->
   </ItemGroup>
 
   <PropertyGroup>
@@ -34,7 +33,7 @@
   </PropertyGroup>
 
   <Target Name="NSwag" AfterTargets="PostBuildEvent" Condition="'$(Configuration)' == 'Debug'">
-    <Exec Command="$(NSwagExe_Net50) aspnetcore2openapi /assembly:$(TargetPath) /output:$(SolutionDir)swagger.json" EnvironmentVariables="ASPNETCORE_ENVIRONMENT=Development" />
+    <Exec Command="$(NSwagExe_Net50) aspnetcore2openapi /assembly:$(TargetPath) /output:$(SolutionDir)swagger.json" EnvironmentVariables="ASPNETCORE_ENVIRONMENT=OpenApiGen" />
     <Exec Command="$(NSwagExe_Net50) openapi2tsclient /input:$(SolutionDir)swagger.json /output:$(SolutionDir)src\caretogether-pwa\src\GeneratedClient.ts" />
   </Target>
 
