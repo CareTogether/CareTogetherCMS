@@ -7,9 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ExRam.Gremlinq.Core" Version="8.6.0" />
     <PackageReference Include="JsonPolymorph" Version="1.0.1" />
-    <PackageReference Include="OneOf" Version="3.0.190" />
   </ItemGroup>
 
   <ItemGroup>
