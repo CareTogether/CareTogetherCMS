@@ -121,6 +121,7 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
         )}
       </CardContent>
       {!summaryOnly && (
+        arrangement.missingRequirements?.length || arrangement.phase === ArrangementPhase.ReadyToStart || arrangement.phase === ArrangementPhase.Started) && (
         <CardActions>
           <IconButton size="small" className={classes.rightCardAction}
             onClick={(event) => setArrangementRecordMenuAnchor({anchor: event.currentTarget, arrangement: arrangement})}>
