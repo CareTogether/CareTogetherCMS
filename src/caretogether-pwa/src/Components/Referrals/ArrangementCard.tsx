@@ -10,6 +10,8 @@ import { useRecoilValue } from 'recoil';
 import { policyData } from '../../Model/ConfigurationModel';
 import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
 import { RecordArrangementStepDialog } from './RecordArrangementStepDialog';
+import { StartArrangementDialog } from './StartArrangementDialog';
+import { EndArrangementDialog } from './EndArrangementDialog';
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -59,7 +61,15 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
     setRecordArrangementStepParameter({requirementName, requirementInfo, arrangement});
   }
   const [showStartArrangementDialog, setShowStartArrangementDialog] = useState(false);
+  function closeStartArrangementDialog() {
+    setArrangementRecordMenuAnchor(null);
+    setShowStartArrangementDialog(false);
+  }
   const [showEndArrangementDialog, setShowEndArrangementDialog] = useState(false);
+  function closeEndArrangementDialog() {
+    setArrangementRecordMenuAnchor(null);
+    setShowEndArrangementDialog(false);
+  }
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
@@ -144,6 +154,10 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
       {(recordArrangementStepParameter && <RecordArrangementStepDialog partneringFamily={partneringFamily} referralId={referralId} arrangementId={arrangement.id!}
         requirementName={recordArrangementStepParameter.requirementName} stepActionRequirement={recordArrangementStepParameter.requirementInfo}
         onClose={() => setRecordArrangementStepParameter(null)} />) || null}
+      {(showStartArrangementDialog && <StartArrangementDialog referralId={referralId} arrangement={arrangement}
+        onClose={() => closeStartArrangementDialog()} />) || null}
+      {(showEndArrangementDialog && <EndArrangementDialog referralId={referralId} arrangement={arrangement}
+        onClose={() => closeEndArrangementDialog()} />) || null}
     </Card>
   );
 }
