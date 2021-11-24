@@ -1,5 +1,5 @@
 import { Grid } from '@material-ui/core';
-import { KeyboardDatePicker } from '@material-ui/pickers';
+import { KeyboardDateTimePicker } from '@material-ui/pickers';
 import { useState } from 'react';
 import { useParams } from 'react-router';
 import { Arrangement, Person } from '../../GeneratedClient';
@@ -35,10 +35,10 @@ export function EndArrangementDialog({referralId, arrangement, onClose}: EndArra
       onSave={save}>
       <Grid container spacing={2}>
         <Grid item xs={12}>
-          <KeyboardDatePicker
+          <KeyboardDateTimePicker
             label="When was this arrangement ended?"
             value={endedAtLocal} fullWidth required
-            disableFuture format="MM/dd/yyyy"
+            disableFuture format="MM/dd/yyyy hh:mm a"
             onChange={(date) => date && setFields({ ...fields, endedAtLocal: date })}
             showTodayButton />
         </Grid>
