@@ -80,7 +80,7 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
   const arrangementPolicy = policy.referralPolicy?.arrangementPolicies?.find(a => a.arrangementType === arrangement.arrangementType);
   const missingVolunteerFunctions = arrangementPolicy?.volunteerFunctions?.filter(volunteerFunction =>
     !arrangement.familyVolunteerAssignments?.some(x => x.arrangementFunction === volunteerFunction.arrangementFunction) &&
-    !arrangement.familyVolunteerAssignments?.some(x => x.arrangementFunction === volunteerFunction.arrangementFunction));
+    !arrangement.individualVolunteerAssignments?.some(x => x.arrangementFunction === volunteerFunction.arrangementFunction));
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
