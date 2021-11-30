@@ -172,13 +172,12 @@ export function PartneringFamilyScreen() {
         </Grid>
         {(partneringFamily.partneringFamilyInfo!.closedReferrals?.length && (
           <Grid item xs={12}>
-            <p>Previous Referrals:
-              <ul>
-                {partneringFamily.partneringFamilyInfo!.closedReferrals?.map(referral => (
-                  <li key={referral.id}>Referral closed - {ReferralCloseReason[partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closeReason!]}</li>
-                ))}
-              </ul>
-            </p>
+            <p>Previous Referrals:</p>
+            <ul>
+              {partneringFamily.partneringFamilyInfo!.closedReferrals?.map(referral => (
+                <li key={referral.id}>Referral closed - {ReferralCloseReason[partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closeReason!]}</li>
+              ))}
+            </ul>
           </Grid>
         )) || null}
       </Grid>
@@ -233,7 +232,7 @@ export function PartneringFamilyScreen() {
               <ArrangementCard partneringFamily={partneringFamily} referralId={partneringFamily.partneringFamilyInfo!.openReferral!.id!} arrangement={arrangement} />
             </Grid>
           ))}
-          {policy.referralPolicy?.arrangementPolicies?.map(arrangementPolicy => (
+          {partneringFamily.partneringFamilyInfo?.openReferral && policy.referralPolicy?.arrangementPolicies?.map(arrangementPolicy => (
             <Grid item key={arrangementPolicy.arrangementType}>
               <Button
                 onClick={() => setCreateArrangementDialogParameter(arrangementPolicy)}
@@ -243,9 +242,9 @@ export function PartneringFamilyScreen() {
               </Button>
             </Grid>
           ))}
-          {partneringFamily.partneringFamilyInfo?.openReferral && createArrangementDialogParameter &&
+          {createArrangementDialogParameter &&
             <CreateArrangementDialog
-              referralId={partneringFamily.partneringFamilyInfo.openReferral.id!}
+              referralId={partneringFamily.partneringFamilyInfo!.openReferral!.id!}
               arrangementPolicy={createArrangementDialogParameter}
               onClose={() => setCreateArrangementDialogParameter(null)} />}
         </Grid>

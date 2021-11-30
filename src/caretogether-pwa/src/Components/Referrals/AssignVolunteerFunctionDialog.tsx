@@ -74,7 +74,6 @@ export function AssignVolunteerFunctionDialog({referralId, arrangement, arrangem
       };
     }
   });
-  console.log(candidateAssignees);
   
   const [fields, setFields] = useState({
     assigneeKey: ''

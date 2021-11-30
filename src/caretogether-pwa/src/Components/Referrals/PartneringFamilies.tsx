@@ -39,9 +39,9 @@ export const useStyles = makeStyles((theme) => ({
 }));
 
 function allArrangements(partneringFamilyInfo: PartneringFamilyInfo) {
-  const results = [] as Arrangement[];
-  partneringFamilyInfo.closedReferrals?.forEach(x => x.arrangements?.forEach(y => results.push(y)));
-  partneringFamilyInfo.openReferral?.arrangements?.forEach(x => results.push(x));
+  const results = [] as { referralId: string, arrangement: Arrangement }[];
+  partneringFamilyInfo.closedReferrals?.forEach(x => x.arrangements?.forEach(y => results.push({ referralId: x.id!, arrangement: y })));
+  partneringFamilyInfo.openReferral?.arrangements?.forEach(x => results.push({ referralId: partneringFamilyInfo.openReferral!.id!, arrangement: x }));
   return results;
 }
 
@@ -83,10 +83,10 @@ function PartneringFamilies() {
                     className={classes.arrangementsRow}>
                     <TableCell colSpan={2}>
                       <Grid container spacing={2}>
-                        {allArrangements(partneringFamily.partneringFamilyInfo!).map(arrangement => (
-                          <Grid item key={arrangement.id}>
+                        {allArrangements(partneringFamily.partneringFamilyInfo!).map(arrangementEntry => (
+                          <Grid item key={arrangementEntry.arrangement.id}>
                             <ArrangementCard summaryOnly
-                              partneringFamily={partneringFamily} referralId={partneringFamily.partneringFamilyInfo!.openReferral!.id!} arrangement={arrangement} />
+                              partneringFamily={partneringFamily} referralId={arrangementEntry.referralId} arrangement={arrangementEntry.arrangement} />
                           </Grid>
                         ))}
                       </Grid>
