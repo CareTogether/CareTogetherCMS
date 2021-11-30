@@ -185,7 +185,7 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
         onClose={() => closeEndArrangementDialog()} />) || null}
       {(assignVolunteerFunctionParameter && <AssignVolunteerFunctionDialog referralId={referralId} arrangement={arrangement} arrangementPolicy={arrangementPolicy!}
         volunteerFunction={assignVolunteerFunctionParameter}
-        onClose={() => selectAssignVolunteerFunction(null)} /> || null)}
+        onClose={() => selectAssignVolunteerFunction(null)} />) || null}
     </Card>
   );
 }

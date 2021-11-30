@@ -1,14 +1,12 @@
 import { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormLabel, Grid, InputLabel, MenuItem, Radio, RadioGroup, Select } from '@material-ui/core';
-import { CombinedFamilyInfo, ArrangementPolicy, ChildInvolvement, Arrangement, VolunteerFunction, RoleApprovalStatus, Person } from '../../GeneratedClient';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid, InputLabel, MenuItem, Select } from '@material-ui/core';
+import { ArrangementPolicy, Arrangement, VolunteerFunction, RoleApprovalStatus, Person } from '../../GeneratedClient';
 import { visibleFamiliesData } from '../../Model/ModelLoader';
-import { KeyboardDatePicker } from '@material-ui/pickers';
 import { useRecoilValue } from 'recoil';
 import { useParams } from 'react-router-dom';
 import { useBackdrop } from '../RequestBackdrop';
 import { useReferralsModel } from '../../Model/ReferralsModel';
-import { usePersonLookup } from '../../Model/DirectoryModel';
 
 const useStyles = makeStyles((theme) => ({
   form: {
@@ -133,7 +131,7 @@ export function AssignVolunteerFunctionDialog({referralId, arrangement, arrangem
           Cancel
         </Button>
         <Button onClick={save} variant="contained" color="primary"
-          disabled={assigneeKey?.length == 0}>
+          disabled={assigneeKey?.length === 0}>
           Assign
         </Button>
       </DialogActions>
