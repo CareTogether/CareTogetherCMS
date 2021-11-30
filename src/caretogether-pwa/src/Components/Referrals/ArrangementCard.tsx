@@ -168,7 +168,7 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
             </MenuItem>
           )}
           {arrangement.phase !== ArrangementPhase.Ended && <Divider />}
-          {arrangementPolicy?.volunteerFunctions?.map(volunteerFunction => (
+          {arrangement.phase !== ArrangementPhase.Ended && arrangementPolicy?.volunteerFunctions?.map(volunteerFunction => (
             <MenuItem key={volunteerFunction.arrangementFunction}
               onClick={() => selectAssignVolunteerFunction(volunteerFunction)}>
               <ListItemText primary={`Assign ${volunteerFunction.arrangementFunction}`} />
