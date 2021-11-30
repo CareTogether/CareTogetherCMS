@@ -1,6 +1,6 @@
 import { selector, useRecoilCallback } from "recoil";
 import { authenticatingFetch } from "../Auth";
-import { ReferralCommand, ReferralsClient, ArrangementCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement, StartArrangement, EndArrangement, AssignVolunteerFamily, AssignIndividualVolunteer } from "../GeneratedClient";
+import { ReferralCommand, ReferralsClient, ArrangementCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement, StartArrangement, EndArrangement, AssignVolunteerFamily, AssignIndividualVolunteer, ReferralCloseReason, CloseReferral } from "../GeneratedClient";
 import { visibleFamiliesData } from "./ModelLoader";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 
@@ -154,6 +154,17 @@ export function useReferralsModel() {
       command.arrangementFunction = arrangementFunction;
       return command;
     });
+  const closeReferral = useReferralCommandCallbackWithLocation(
+    async (organizationId, locationId, partneringFamilyId, referralId: string,
+      reason: ReferralCloseReason, closedAtLocal: Date) => {
+      const command = new CloseReferral({
+        familyId: partneringFamilyId,
+        referralId: referralId
+      });
+      command.closeReason = reason;
+      command.closedAtUtc = closedAtLocal;
+      return command;
+    });
   
   return {
     completeReferralRequirement,
@@ -162,7 +173,8 @@ export function useReferralsModel() {
     startArrangement,
     endArrangement,
     assignVolunteerFamily,
-    assignIndividualVolunteer
+    assignIndividualVolunteer,
+    closeReferral
   };
 }
   

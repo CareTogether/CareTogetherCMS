@@ -23,6 +23,7 @@ import { currentOrganizationState, currentLocationState } from '../../Model/Sess
 import { policyData } from '../../Model/ConfigurationModel';
 import { RecordReferralStepDialog } from './RecordReferralStepDialog';
 import { CreateArrangementDialog } from './CreateArrangementDialog';
+import { CloseReferralDialog } from './CloseReferralDialog';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -83,6 +84,10 @@ export function PartneringFamilyScreen() {
 
   const partneringFamily = partneringFamilies.find(x => x.family?.id === familyId) as CombinedFamilyInfo;
   
+  const canCloseReferral = partneringFamily.partneringFamilyInfo?.openReferral &&
+    !partneringFamily.partneringFamilyInfo.openReferral.closeReason &&
+    !partneringFamily.partneringFamilyInfo.openReferral.arrangements?.some(arrangement => !arrangement.endedAtUtc);
+
   const [familyRecordMenuAnchor, setFamilyRecordMenuAnchor] = useState<Element | null>(null);
   const [recordReferralStepParameter, setRecordReferralStepParameter] = useState<{requirementName: string, requirementInfo: ActionRequirement} | null>(null);
   function selectRecordReferralStep(requirementName: string) {
@@ -91,6 +96,7 @@ export function PartneringFamilyScreen() {
     setRecordReferralStepParameter({requirementName, requirementInfo});
   }
   
+  const [closeReferralDialogOpen, setCloseReferralDialogOpen] = useState(false);
   const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] = useState(false);
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
   const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
@@ -191,7 +197,18 @@ export function PartneringFamilyScreen() {
             ? "Referral open since " + format(partneringFamily.partneringFamilyInfo.openReferral.openedAtUtc!, "MM/dd/yyyy")
             : "Referral closed - " + ReferralCloseReason[partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closeReason!]
             //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closedUtc) -- needs a new calculated property
-          }</p>
+            }
+          </p>
+          {canCloseReferral && <Button
+            onClick={() => setCloseReferralDialogOpen(true)}
+            variant="contained" color="default" size="small" className={classes.button}>
+            Close Referral
+          </Button>}
+          {closeReferralDialogOpen && (
+            <CloseReferralDialog
+              partneringFamilyId={partneringFamily.family?.id!}
+              referralId={partneringFamily.partneringFamilyInfo!.openReferral!.id!}
+              onClose={() => setCloseReferralDialogOpen(false)} />)}
         </Grid>
         <Grid item xs={12} sm={6} md={4}>
           <h3>Incomplete</h3>
