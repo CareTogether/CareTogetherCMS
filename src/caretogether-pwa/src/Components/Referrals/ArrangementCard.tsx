@@ -1,6 +1,6 @@
 import { Card, CardActions, CardContent, CardHeader, Divider, IconButton, ListItemText, makeStyles, Menu, MenuItem, MenuList, Typography, useMediaQuery, useTheme } from '@material-ui/core';
 import React, { useState } from 'react';
-import { ArrangementPhase, Arrangement, CombinedFamilyInfo, ActionRequirement, Person } from '../../GeneratedClient';
+import { ArrangementPhase, Arrangement, CombinedFamilyInfo, ActionRequirement, Person, FunctionRequirement, VolunteerFunction } from '../../GeneratedClient';
 import { useFamilyLookup, usePersonLookup } from '../../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
 import { FamilyName } from '../Families/FamilyName';
@@ -12,6 +12,7 @@ import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
 import { RecordArrangementStepDialog } from './RecordArrangementStepDialog';
 import { StartArrangementDialog } from './StartArrangementDialog';
 import { EndArrangementDialog } from './EndArrangementDialog';
+import { AssignVolunteerFunctionDialog } from './AssignVolunteerFunctionDialog';
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -70,6 +71,16 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
     setArrangementRecordMenuAnchor(null);
     setShowEndArrangementDialog(false);
   }
+  const [assignVolunteerFunctionParameter, setAssignVolunteerFunctionParameter] = useState<VolunteerFunction | null>(null);
+  function selectAssignVolunteerFunction(volunteerFunction: VolunteerFunction | null) {
+    setArrangementRecordMenuAnchor(null);
+    setAssignVolunteerFunctionParameter(volunteerFunction);
+  }
+
+  const arrangementPolicy = policy.referralPolicy?.arrangementPolicies?.find(a => a.arrangementType === arrangement.arrangementType);
+  const missingVolunteerFunctions = arrangementPolicy?.volunteerFunctions?.filter(volunteerFunction =>
+    !arrangement.familyVolunteerAssignments?.some(x => x.arrangementFunction === volunteerFunction.arrangementFunction) &&
+    !arrangement.individualVolunteerAssignments?.some(x => x.arrangementFunction === volunteerFunction.arrangementFunction));
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
@@ -86,10 +97,17 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
           <ul className={classes.cardList}>
             <li><strong><PersonName person={personLookup(partneringFamily.family!.id, arrangement.partneringFamilyPersonId)} /></strong></li>
             {arrangement.familyVolunteerAssignments?.map(x => (
-              <li key={`famVol-${x.familyId}`}><FamilyName family={familyLookup(x.familyId)} /> - {x.arrangementFunction}</li>
+              <li key={`famVol-${x.arrangementFunction}-${x.familyId}`}><FamilyName family={familyLookup(x.familyId)} /> - {x.arrangementFunction}</li>
             ))}
             {arrangement.individualVolunteerAssignments?.map(x => (
-              <li key={`indVol-${x.personId}`}><PersonName person={personLookup(x.familyId, x.personId)} /> - {x.arrangementFunction}</li>
+              <li key={`indVol-${x.arrangementFunction}-${x.personId}`}><PersonName person={personLookup(x.familyId, x.personId)} /> - {x.arrangementFunction}</li>
+            ))}
+            {arrangement.phase !== ArrangementPhase.Ended && missingVolunteerFunctions?.map(x => (
+              <li key={`missing-${x.arrangementFunction}`}>
+                <CardInfoRow icon={x.requirement === FunctionRequirement.ZeroOrMore ? '⚠' : '❌'}>
+                  {x.arrangementFunction}
+                </CardInfoRow>
+              </li>
             ))}
           </ul>
         </Typography>
@@ -149,6 +167,13 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
               <ListItemText primary="End" />
             </MenuItem>
           )}
+          {arrangement.phase !== ArrangementPhase.Ended && <Divider />}
+          {arrangement.phase !== ArrangementPhase.Ended && arrangementPolicy?.volunteerFunctions?.map(volunteerFunction => (
+            <MenuItem key={volunteerFunction.arrangementFunction}
+              onClick={() => selectAssignVolunteerFunction(volunteerFunction)}>
+              <ListItemText primary={`Assign ${volunteerFunction.arrangementFunction}`} />
+            </MenuItem>
+          ))}
         </MenuList>
       </Menu>
       {(recordArrangementStepParameter && <RecordArrangementStepDialog partneringFamily={partneringFamily} referralId={referralId} arrangementId={arrangement.id!}
@@ -158,6 +183,9 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
         onClose={() => closeStartArrangementDialog()} />) || null}
       {(showEndArrangementDialog && <EndArrangementDialog referralId={referralId} arrangement={arrangement}
         onClose={() => closeEndArrangementDialog()} />) || null}
+      {(assignVolunteerFunctionParameter && <AssignVolunteerFunctionDialog referralId={referralId} arrangement={arrangement} arrangementPolicy={arrangementPolicy!}
+        volunteerFunction={assignVolunteerFunctionParameter}
+        onClose={() => selectAssignVolunteerFunction(null)} />) || null}
     </Card>
   );
 }

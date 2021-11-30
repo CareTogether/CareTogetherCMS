@@ -1,6 +1,6 @@
 import { selector, useRecoilCallback } from "recoil";
 import { authenticatingFetch } from "../Auth";
-import { ReferralCommand, ReferralsClient, ArrangementCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement, StartArrangement, EndArrangement } from "../GeneratedClient";
+import { ReferralCommand, ReferralsClient, ArrangementCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement, StartArrangement, EndArrangement, AssignVolunteerFamily, AssignIndividualVolunteer } from "../GeneratedClient";
 import { visibleFamiliesData } from "./ModelLoader";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 
@@ -129,13 +129,40 @@ export function useReferralsModel() {
       command.endedAtUtc = endedAtLocal;
       return command;
     });
+  const assignVolunteerFamily = useArrangementCommandCallbackWithLocation(
+    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
+      volunteerFamilyId: string, arrangementFunction: string) => {
+      const command = new AssignVolunteerFamily({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementId: arrangementId
+      });
+      command.volunteerFamilyId = volunteerFamilyId;
+      command.arrangementFunction = arrangementFunction;
+      return command;
+    });
+  const assignIndividualVolunteer = useArrangementCommandCallbackWithLocation(
+    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
+      volunteerFamilyId: string, personId: string, arrangementFunction: string) => {
+      const command = new AssignIndividualVolunteer({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementId: arrangementId
+      });
+      command.volunteerFamilyId = volunteerFamilyId;
+      command.personId = personId;
+      command.arrangementFunction = arrangementFunction;
+      return command;
+    });
   
   return {
     completeReferralRequirement,
     completeArrangementRequirement,
     createArrangement,
     startArrangement,
-    endArrangement
+    endArrangement,
+    assignVolunteerFamily,
+    assignIndividualVolunteer
   };
 }
   

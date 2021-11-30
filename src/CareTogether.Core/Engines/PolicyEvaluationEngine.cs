@@ -233,7 +233,13 @@ namespace CareTogether.Engines
                         !arrangement.Value.CompletedRequirements.Any(completed => completed.RequirementName == requiredAction))
                         .ToImmutableList();
 
-                    var phase = missingSetupRequirements.Count > 0
+                    var missingFunctionAssignments = arrangementPolicy.VolunteerFunctions
+                        .Where(vf => (vf.Requirement == FunctionRequirement.ExactlyOne || vf.Requirement == FunctionRequirement.OneOrMore) &&
+                            arrangement.Value.FamilyVolunteerAssignments.Where(fva => fva.ArrangementFunction == vf.ArrangementFunction).Count() == 0 &&
+                            arrangement.Value.IndividualVolunteerAssignments.Where(iva => iva.ArrangementFunction == vf.ArrangementFunction).Count() == 0)
+                        .ToImmutableList();
+
+                    var phase = missingSetupRequirements.Count > 0 || missingFunctionAssignments.Count > 0
                         ? ArrangementPhase.SettingUp
                         : !arrangement.Value.StartedAtUtc.HasValue
                         ? ArrangementPhase.ReadyToStart
