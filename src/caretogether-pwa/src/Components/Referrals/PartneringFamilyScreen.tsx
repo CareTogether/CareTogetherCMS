@@ -24,6 +24,7 @@ import { policyData } from '../../Model/ConfigurationModel';
 import { RecordReferralStepDialog } from './RecordReferralStepDialog';
 import { CreateArrangementDialog } from './CreateArrangementDialog';
 import { CloseReferralDialog } from './CloseReferralDialog';
+import { OpenNewReferralDialog } from './OpenNewReferralDialog';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -97,6 +98,7 @@ export function PartneringFamilyScreen() {
   }
   
   const [closeReferralDialogOpen, setCloseReferralDialogOpen] = useState(false);
+  const [openNewReferralDialogOpen, setOpenNewReferralDialogOpen] = useState(false);
   const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] = useState(false);
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
   const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
@@ -181,7 +183,7 @@ export function PartneringFamilyScreen() {
             <p>Previous Referrals:</p>
             <ul>
               {partneringFamily.partneringFamilyInfo!.closedReferrals?.map(referral => (
-                <li key={referral.id}>Referral closed - {ReferralCloseReason[partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closeReason!]}</li>
+                <li key={referral.id}>Referral closed - {ReferralCloseReason[referral.closeReason!]}</li>
               ))}
             </ul>
           </Grid>
@@ -195,7 +197,7 @@ export function PartneringFamilyScreen() {
           <p>{
             partneringFamily.partneringFamilyInfo?.openReferral
             ? "Referral open since " + format(partneringFamily.partneringFamilyInfo.openReferral.openedAtUtc!, "MM/dd/yyyy")
-            : "Referral closed - " + ReferralCloseReason[partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closeReason!]
+            : "Referral closed - " + ReferralCloseReason[partneringFamily.partneringFamilyInfo?.closedReferrals?.[partneringFamily.partneringFamilyInfo.closedReferrals.length-1]?.closeReason!]
             //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closedUtc) -- needs a new calculated property
             }
           </p>
@@ -204,11 +206,20 @@ export function PartneringFamilyScreen() {
             variant="contained" color="default" size="small" className={classes.button}>
             Close Referral
           </Button>}
+          {!partneringFamily.partneringFamilyInfo?.openReferral && <Button
+            onClick={() => setOpenNewReferralDialogOpen(true)}
+            variant="contained" color="default" size="small" className={classes.button}>
+            Open New Referral
+          </Button>}
           {closeReferralDialogOpen && (
             <CloseReferralDialog
               partneringFamilyId={partneringFamily.family?.id!}
               referralId={partneringFamily.partneringFamilyInfo!.openReferral!.id!}
               onClose={() => setCloseReferralDialogOpen(false)} />)}
+          {openNewReferralDialogOpen && (
+            <OpenNewReferralDialog
+              partneringFamilyId={partneringFamily.family?.id!}
+              onClose={() => setOpenNewReferralDialogOpen(false)} />)}
         </Grid>
         <Grid item xs={12} sm={6} md={4}>
           <h3>Incomplete</h3>
