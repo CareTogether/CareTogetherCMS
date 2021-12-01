@@ -183,7 +183,7 @@ export function PartneringFamilyScreen() {
             <p>Previous Referrals:</p>
             <ul>
               {partneringFamily.partneringFamilyInfo!.closedReferrals?.map(referral => (
-                <li key={referral.id}>Referral closed - {ReferralCloseReason[partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closeReason!]}</li>
+                <li key={referral.id}>Referral closed - {ReferralCloseReason[referral.closeReason!]}</li>
               ))}
             </ul>
           </Grid>
@@ -197,7 +197,7 @@ export function PartneringFamilyScreen() {
           <p>{
             partneringFamily.partneringFamilyInfo?.openReferral
             ? "Referral open since " + format(partneringFamily.partneringFamilyInfo.openReferral.openedAtUtc!, "MM/dd/yyyy")
-            : "Referral closed - " + ReferralCloseReason[partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closeReason!]
+            : "Referral closed - " + ReferralCloseReason[partneringFamily.partneringFamilyInfo?.closedReferrals?.[partneringFamily.partneringFamilyInfo.closedReferrals.length-1]?.closeReason!]
             //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closedUtc) -- needs a new calculated property
             }
           </p>
