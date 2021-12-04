@@ -11,7 +11,7 @@ namespace CareTogether.Resources
         ImmutableList<Person> Children,
         ImmutableList<CustodialRelationship> CustodialRelationships,
         ImmutableList<UploadedDocumentInfo> UploadedDocuments);
-    public sealed record Person(Guid Id, Guid? UserId,
+    public sealed record Person(Guid Id, Guid? UserId, bool Active,
         string FirstName, string LastName, Gender Gender, Age Age, string Ethnicity,
         ImmutableList<Address> Addresses, Guid? CurrentAddressId,
         ImmutableList<PhoneNumber> PhoneNumbers, Guid? PreferredPhoneNumberId,
@@ -72,6 +72,8 @@ namespace CareTogether.Resources
         ImmutableList<PhoneNumber> PhoneNumbers, Guid? PreferredPhoneNumberId,
         ImmutableList<EmailAddress> EmailAddresses, Guid? PreferredEmailAddressId,
         string? Concerns, string? Notes)
+        : PersonCommand(PersonId);
+    public sealed record UndoCreatePerson(Guid PersonId)
         : PersonCommand(PersonId);
     public sealed record UpdatePersonName(Guid PersonId, string FirstName, string LastName)
         : PersonCommand(PersonId);

@@ -237,12 +237,12 @@ export function VolunteerFamilyScreen() {
       </Grid>
     </Grid>
     <Grid container spacing={2}>
-      {volunteerFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item2 && (
+      {volunteerFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item1.active && adult.item2 && (
         <Grid item key={adult.item1.id}>
           <VolunteerAdultCard volunteerFamilyId={familyId} personId={adult.item1.id} />
         </Grid>
       ))}
-      {volunteerFamily.family?.children?.map(child => (
+      {volunteerFamily.family?.children?.map(child => child.active && (
         <Grid item key={child.id!}>
           <VolunteerChildCard volunteerFamilyId={familyId} personId={child.id!} />
         </Grid>

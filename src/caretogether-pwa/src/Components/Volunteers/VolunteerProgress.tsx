@@ -83,7 +83,7 @@ function VolunteerProgress() {
                         ? "❌"
                         : ""}</TableCell>))}
                   </TableRow>
-                  {volunteerFamily.family!.adults!.map(adult => adult.item1 && (
+                  {volunteerFamily.family!.adults!.map(adult => adult.item1 && adult.item1.active && (
                     <TableRow key={adult.item1.id}
                       onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}
                       className={classes.adultRow}>

@@ -1265,6 +1265,9 @@
             "format": "guid",
             "nullable": true
           },
+          "active": {
+            "type": "boolean"
+          },
           "firstName": {
             "type": "string"
           },
@@ -2446,6 +2449,7 @@
             "AddPersonEmailAddress": "#/components/schemas/AddPersonEmailAddress",
             "AddPersonPhoneNumber": "#/components/schemas/AddPersonPhoneNumber",
             "CreatePerson": "#/components/schemas/CreatePerson",
+            "UndoCreatePerson": "#/components/schemas/UndoCreatePerson",
             "UpdatePersonAddress": "#/components/schemas/UpdatePersonAddress",
             "UpdatePersonAge": "#/components/schemas/UpdatePersonAge",
             "UpdatePersonConcerns": "#/components/schemas/UpdatePersonConcerns",
@@ -2599,6 +2603,17 @@
                 "nullable": true
               }
             }
+          }
+        ]
+      },
+      "UndoCreatePerson": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false
           }
         ]
       },

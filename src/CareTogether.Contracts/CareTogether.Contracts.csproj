@@ -9,9 +9,5 @@
   <ItemGroup>
     <PackageReference Include="JsonPolymorph" Version="1.0.1" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Utilities\" />
-  </ItemGroup>
   
 </Project>

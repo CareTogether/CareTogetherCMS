@@ -1975,6 +1975,7 @@ export interface IValueTupleOfPersonAndFamilyAdultRelationshipInfo {
 export class Person implements IPerson {
     id?: string;
     userId?: string | undefined;
+    active?: boolean;
     firstName?: string;
     lastName?: string;
     gender?: Gender;
@@ -2002,6 +2003,7 @@ export class Person implements IPerson {
         if (_data) {
             this.id = _data["id"];
             this.userId = _data["userId"];
+            this.active = _data["active"];
             this.firstName = _data["firstName"];
             this.lastName = _data["lastName"];
             this.gender = _data["gender"];
@@ -2041,6 +2043,7 @@ export class Person implements IPerson {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
         data["userId"] = this.userId;
+        data["active"] = this.active;
         data["firstName"] = this.firstName;
         data["lastName"] = this.lastName;
         data["gender"] = this.gender;
@@ -2073,6 +2076,7 @@ export class Person implements IPerson {
 export interface IPerson {
     id?: string;
     userId?: string | undefined;
+    active?: boolean;
     firstName?: string;
     lastName?: string;
     gender?: Gender;
@@ -4185,6 +4189,11 @@ export abstract class PersonCommand implements IPersonCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "UndoCreatePerson") {
+            let result = new UndoCreatePerson();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "UpdatePersonAddress") {
             let result = new UpdatePersonAddress();
             result.init(data);
@@ -4462,6 +4471,34 @@ export interface ICreatePerson extends IPersonCommand {
     preferredEmailAddressId?: string | undefined;
     concerns?: string | undefined;
     notes?: string | undefined;
+}
+
+export class UndoCreatePerson extends PersonCommand implements IUndoCreatePerson {
+
+    constructor(data?: IUndoCreatePerson) {
+        super(data);
+        this._discriminator = "UndoCreatePerson";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+    }
+
+    static fromJS(data: any): UndoCreatePerson {
+        data = typeof data === 'object' ? data : {};
+        let result = new UndoCreatePerson();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUndoCreatePerson extends IPersonCommand {
 }
 
 export class UpdatePersonAddress extends PersonCommand implements IUpdatePersonAddress {

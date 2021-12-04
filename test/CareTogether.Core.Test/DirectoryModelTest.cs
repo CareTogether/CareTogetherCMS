@@ -112,24 +112,24 @@ namespace CareTogether.Core.Test
             var families = dut.FindFamilies(x => true);
             var people = dut.FindPeople(x => true);
             Assert.AreEqual(3, people.Count);
-            Assert.AreEqual(new Person(guid1, guid4, "John", "Doe", Gender.Male, new ExactAge(new DateTime(1975, 1, 1)), "Ethnic",
+            Assert.AreEqual(new Person(guid1, guid4, true, "John", "Doe", Gender.Male, new ExactAge(new DateTime(1975, 1, 1)), "Ethnic",
                 ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, "Test", "ABC"), people.Single(p => p.Id == guid1));
-            Assert.AreEqual(new Person(guid2, guid3, "Jane", "Doe", Gender.Female, new ExactAge(new DateTime(1979, 7, 1)), "Ethnic",
+            Assert.AreEqual(new Person(guid2, guid3, true, "Jane", "Doe", Gender.Female, new ExactAge(new DateTime(1979, 7, 1)), "Ethnic",
                 ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, "DEF"), people.Single(p => p.Id == guid2));
-            Assert.AreEqual(new Person(guid6, null, "Eric", "Doe", Gender.Male, new AgeInYears(12, new DateTime(2021, 1, 1)), "Ethnic",
+            Assert.AreEqual(new Person(guid6, null, true, "Eric", "Doe", Gender.Male, new AgeInYears(12, new DateTime(2021, 1, 1)), "Ethnic",
                 ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null), people.Single(p => p.Id == guid6));
             Assert.AreEqual(1, families.Count);
             var actualFamily = families[0];
             var expectedFamily = new Family(guid5, guid4,
                 ImmutableList<(Person, FamilyAdultRelationshipInfo)>.Empty
-                    .Add((new Person(guid1, guid4, "John", "Doe", Gender.Male, new ExactAge(new DateTime(1975, 1, 1)), "Ethnic",
+                    .Add((new Person(guid1, guid4, true, "John", "Doe", Gender.Male, new ExactAge(new DateTime(1975, 1, 1)), "Ethnic",
                         ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null,"Test", "ABC"),
                         new FamilyAdultRelationshipInfo("Dad", false)))
-                    .Add((new Person(guid2, guid3, "Jane", "Doe", Gender.Female, new ExactAge(new DateTime(1979, 7, 1)), "Ethnic",
+                    .Add((new Person(guid2, guid3, true, "Jane", "Doe", Gender.Female, new ExactAge(new DateTime(1979, 7, 1)), "Ethnic",
                         ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null,null, "DEF"),
                         new FamilyAdultRelationshipInfo("Mom", true))),
                 ImmutableList<Person>.Empty
-                    .Add(new Person(guid6, null, "Eric", "Doe", Gender.Male, new AgeInYears(12, new DateTime(2021, 1, 1)), "Ethnic",
+                    .Add(new Person(guid6, null, true, "Eric", "Doe", Gender.Male, new AgeInYears(12, new DateTime(2021, 1, 1)), "Ethnic",
                         ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null,null, null)),
                 ImmutableList<CustodialRelationship>.Empty
                     .Add(new CustodialRelationship(guid6, guid2, CustodialRelationshipType.ParentWithCourtAppointedCustody))

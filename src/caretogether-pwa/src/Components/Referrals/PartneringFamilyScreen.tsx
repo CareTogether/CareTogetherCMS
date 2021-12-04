@@ -276,12 +276,12 @@ export function PartneringFamilyScreen() {
               arrangementPolicy={createArrangementDialogParameter}
               onClose={() => setCreateArrangementDialogParameter(null)} />}
         </Grid>
-        {partneringFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item2 && (
+        {partneringFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item1.active && adult.item2 && (
           <Grid item key={adult.item1.id}>
             <PartneringAdultCard partneringFamilyId={familyId} personId={adult.item1.id} />
           </Grid>
         ))}
-        {partneringFamily.family?.children?.map(child => (
+        {partneringFamily.family?.children?.map(child => child.active && (
           <Grid item key={child.id!}>
             <PartneringChildCard partneringFamilyId={familyId} personId={child.id!} />
           </Grid>
