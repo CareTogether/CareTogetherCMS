@@ -76,7 +76,7 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
     await withBackdrop(async () => {
       if (firstName.length <= 0 || lastName.length <= 0) {
         alert("First and last name are required. Try again.");
-      } else if (typeof(gender) === 'undefined') {
+      } else if (gender == null) {
         alert("Gender was not selected. Try again.");
       } else if (ageType === 'exact' && dateOfBirth == null) {
         alert("Date of birth was not specified. Try again.");
