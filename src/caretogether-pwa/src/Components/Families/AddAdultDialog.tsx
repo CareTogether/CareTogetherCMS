@@ -10,6 +10,7 @@ import { adultFamilyRelationshipsData, ethnicitiesData } from '../../Model/Confi
 import { useParams } from 'react-router-dom';
 import { useBackdrop } from '../RequestBackdrop';
 import { visibleFamiliesData } from '../../Model/ModelLoader';
+import { subYears } from 'date-fns';
 
 const useStyles = makeStyles((theme) => ({
   form: {
@@ -151,7 +152,7 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
               <Grid item>
                 <KeyboardDatePicker
                   label="Date of birth" size="small" variant="inline"
-                  value={dateOfBirth} maxDate={new Date()} openTo="year"
+                  value={dateOfBirth} maxDate={subYears(new Date(), 18)} openTo="year"
                   required disabled={ageType !== 'exact'} format="MM/dd/yyyy"
                   onChange={(date) => date && setFields({...fields, dateOfBirth: date})}
                   />

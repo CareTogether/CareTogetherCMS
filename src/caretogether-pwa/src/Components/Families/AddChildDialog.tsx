@@ -10,6 +10,7 @@ import { useRecoilValue } from 'recoil';
 import { ethnicitiesData } from '../../Model/ConfigurationModel';
 import { useParams } from 'react-router-dom';
 import { useBackdrop } from '../RequestBackdrop';
+import { subYears, addDays } from 'date-fns';
 
 const useStyles = makeStyles((theme) => ({
   form: {
@@ -135,7 +136,7 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
               <Grid item>
                 <KeyboardDatePicker
                   label="Date of birth" size="small" variant="inline"
-                  value={dateOfBirth} maxDate={new Date()} openTo="year"
+                  value={dateOfBirth} minDate={addDays(subYears(new Date(), 18), 1)} maxDate={new Date()} openTo="year"
                   required disabled={ageType !== 'exact'} format="MM/dd/yyyy"
                   onChange={(date) => date && setFields({...fields, dateOfBirth: date})}
                   />

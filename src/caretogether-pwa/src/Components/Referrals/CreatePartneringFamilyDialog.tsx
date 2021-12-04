@@ -8,6 +8,7 @@ import { KeyboardDatePicker } from '@material-ui/pickers';
 import { useRecoilValue } from 'recoil';
 import { adultFamilyRelationshipsData, ethnicitiesData } from '../../Model/ConfigurationModel';
 import { useBackdrop } from '../RequestBackdrop';
+import { subYears } from 'date-fns';
 
 const useStyles = makeStyles((theme) => ({
   form: {
@@ -152,7 +153,7 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
               <Grid item>
                 <KeyboardDatePicker
                   label="Date of birth" size="small" variant="inline"
-                  value={dateOfBirth} maxDate={new Date()} openTo="year"
+                  value={dateOfBirth} maxDate={subYears(new Date(), 18)} openTo="year"
                   required disabled={ageType !== 'exact'} format="MM/dd/yyyy"
                   onChange={(date) => date && setFields({...fields, dateOfBirth: date})}
                   />
