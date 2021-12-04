@@ -112,14 +112,14 @@ namespace CareTogether.Engines
                     var requirementsMet = policyVersion.Requirements.Select(requirement =>
                         (requirement.ActionName, requirement.Stage, requirement.Scope, RequirementMet: requirement.Scope switch
                         {
-                            VolunteerFamilyRequirementScope.AllAdultsInTheFamily => family.Adults.All(a =>
+                            VolunteerFamilyRequirementScope.AllAdultsInTheFamily => family.Adults.Where(a => a.Item1.Active).All(a =>
                             {
                                 var (person, familyRelationship) = a;
                                 return completedIndividualRequirements.TryGetValue(person.Id, out var completedRequirements)
                                     && completedRequirements.Any(x => x.RequirementName == requirement.ActionName &&
                                     (supersededAtUtc == null || x.CompletedAtUtc < supersededAtUtc));
                             }),
-                            VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily => family.Adults.All(a =>
+                            VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily => family.Adults.Where(a => a.Item1.Active).All(a =>
                             {
                                 var (person, familyRelationship) = a;
                                 return (removedIndividualRoles.TryGetValue(person.Id, out var removedRoles)
@@ -135,14 +135,14 @@ namespace CareTogether.Engines
                                 $"The volunteer family requirement scope '{requirement.Scope}' has not been implemented.")
                         }, RequirementMissingForIndividuals: requirement.Scope switch
                         {
-                            VolunteerFamilyRequirementScope.AllAdultsInTheFamily => family.Adults.Where(a =>
+                            VolunteerFamilyRequirementScope.AllAdultsInTheFamily => family.Adults.Where(a => a.Item1.Active).Where(a =>
                             {
                                 var (person, familyRelationship) = a;
                                 return !completedIndividualRequirements.TryGetValue(person.Id, out var completedRequirements)
                                     || !completedRequirements.Any(x => x.RequirementName == requirement.ActionName &&
                                     (supersededAtUtc == null || x.CompletedAtUtc < supersededAtUtc));
                             }).Select(a => a.Item1.Id).ToList(),
-                            VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily => family.Adults.Where(a =>
+                            VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily => family.Adults.Where(a => a.Item1.Active).Where(a =>
                             {
                                 var (person, familyRelationship) = a;
                                 return !(removedIndividualRoles.TryGetValue(person.Id, out var removedRoles)

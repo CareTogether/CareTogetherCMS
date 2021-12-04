@@ -33,7 +33,7 @@ export function CreateArrangementDialog({referralId, arrangementPolicy, onClose}
 
   // An arrangement is always either for one adult or one child in the partnering family.
   const applicableFamilyMembers = arrangementPolicy.childInvolvement === ChildInvolvement.NoChildInvolvement
-    ? family.family!.adults!.map(adult => adult.item1!)
+    ? family.family!.adults!.filter(adult => adult.item1!.active).map(adult => adult.item1!)
     : family.family!.children!;
 
   const [fields, setFields] = useState({

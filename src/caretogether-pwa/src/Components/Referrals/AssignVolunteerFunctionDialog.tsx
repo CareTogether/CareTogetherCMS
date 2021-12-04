@@ -33,7 +33,8 @@ export function AssignVolunteerFunctionDialog({referralId, arrangement, arrangem
 
   const candidateIndividualAssignees = volunteerFunction.eligibleIndividualVolunteerRoles
     ? visibleFamilies.flatMap(f => f.volunteerFamilyInfo?.individualVolunteers
-      ? Object.entries(f.volunteerFamilyInfo?.individualVolunteers).flatMap(([volunteerId, volunteerInfo]) => volunteerInfo.individualRoleApprovals
+      ? Object.entries(f.volunteerFamilyInfo?.individualVolunteers).filter(([volunteerId, _]) =>
+        f.family!.adults!.find(a => a.item1!.id === volunteerId)!.item1!.active).flatMap(([volunteerId, volunteerInfo]) => volunteerInfo.individualRoleApprovals
         ? Object.entries(volunteerInfo.individualRoleApprovals).flatMap(([roleName, roleVersionApproval]) =>
           volunteerFunction.eligibleIndividualVolunteerRoles!.find(x => x === roleName) &&
           roleVersionApproval.find(rva => rva.approvalStatus === RoleApprovalStatus.Approved || rva.approvalStatus === RoleApprovalStatus.Onboarded) &&
