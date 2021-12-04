@@ -72,12 +72,12 @@ export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDial
         alert("Date of birth was not specified. Try again.");
       } else if (ageType === 'inYears' && ageInYears == null) {
         alert("Age in years was not specified. Try again.");
+      } else if (ageType === 'inYears' && ageInYears != null && ageInYears < 18) {
+        alert("Age in years must be at least 18. Try again.");
       } else if (ethnicity === '') {
         alert("Ethnicity was not selected. Try again.");
       } else if (relationshipToFamily === '') { //TODO: Actual validation!
         alert("Family relationship was not selected. Try again.");
-      } else if (ageType === 'inYears' && ageInYears != null && ageInYears < 18) {
-        alert("Age in years must be at least 18. Try again.");
       } else {
         let age: Age;
         if (ageType === 'exact') {
