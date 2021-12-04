@@ -31,7 +31,7 @@ namespace CareTogether.Resources.Models
                     UploadedDocuments);
         }
 
-        internal record PersonEntry(Guid Id, Guid? UserId, string FirstName, string LastName,
+        internal record PersonEntry(Guid Id, Guid? UserId, bool Active, string FirstName, string LastName,
             Gender Gender, Age Age, string Ethnicity,
             ImmutableList<Address> Addresses, Guid? CurrentAddressId,
             ImmutableList<PhoneNumber> PhoneNumbers, Guid? PreferredPhoneNumberId,
@@ -39,7 +39,7 @@ namespace CareTogether.Resources.Models
             string? Concerns, string? Notes)
         {
             internal Person ToPerson() =>
-                new(Id, UserId, FirstName, LastName, Gender, Age, Ethnicity,
+                new(Id, UserId, Active, FirstName, LastName, Gender, Age, Ethnicity,
                     Addresses, CurrentAddressId,
                     PhoneNumbers, PreferredPhoneNumberId,
                     EmailAddresses, PreferredEmailAddressId,
@@ -147,7 +147,7 @@ namespace CareTogether.Resources.Models
         {
             var personEntryToUpsert = command switch
             {
-                CreatePerson c => new PersonEntry(c.PersonId, c.UserId, c.FirstName, c.LastName,
+                CreatePerson c => new PersonEntry(c.PersonId, c.UserId, Active: true, c.FirstName, c.LastName,
                     c.Gender, c.Age, c.Ethnicity,
                     c.Addresses, c.CurrentAddressId,
                     c.PhoneNumbers, c.PreferredPhoneNumberId,
@@ -156,6 +156,7 @@ namespace CareTogether.Resources.Models
                 _ => people.TryGetValue(command.PersonId, out var personEntry)
                     ? command switch
                     {
+                        UndoCreatePerson c => personEntry with { Active = false },
                         UpdatePersonName c => personEntry with { FirstName = c.FirstName, LastName = c.LastName },
                         UpdatePersonAge c => personEntry with { Age = c.Age },
                         UpdatePersonUserLink c => personEntry with { UserId = c.UserId },

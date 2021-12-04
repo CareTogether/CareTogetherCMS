@@ -105,7 +105,7 @@ namespace CareTogether.Core.Test
             await Assert.ThrowsExceptionAsync<KeyNotFoundException>(() => dut.ExecutePersonCommandAsync(guid1, guid2, new UpdatePersonAge(guid5, new ExactAge(new DateTime(2021, 7, 2))), guid0));
             await Assert.ThrowsExceptionAsync<KeyNotFoundException>(() => dut.ExecutePersonCommandAsync(guid2, guid1, new UpdatePersonAge(guid6, new ExactAge(new DateTime(2021, 7, 3))), guid0));
 
-            Assert.AreEqual(new Person(guid6, null, "Eric", "Doe", Gender.Male, new ExactAge(new DateTime(2021, 7, 1)), "Ethnic",
+            Assert.AreEqual(new Person(guid6, null, true, "Eric", "Doe", Gender.Male, new ExactAge(new DateTime(2021, 7, 1)), "Ethnic",
                 ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null), result1);
         }
 
