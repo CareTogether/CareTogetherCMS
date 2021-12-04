@@ -20,6 +20,7 @@ import { UpdateEmailDialog } from "../Families/UpdateEmailDialog";
 import { UpdateAddressDialog } from "../Families/UpdateAddressDialog";
 import { RemoveIndividualRoleDialog } from "./RemoveIndividualRoleDialog";
 import { ResetIndividualRoleDialog } from "./ResetIndividualRoleDialog";
+import { DeletePersonDialog } from "../Families/DeletePersonDialog";
 
 const useStyles = makeStyles((theme) => ({
   sectionChips: {
@@ -82,6 +83,11 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
   function selectChangeName(adult: Person) {
     setAdultMoreMenuAnchor(null);
     setRenamePersonParameter({volunteerFamilyId, person: adult});
+  }
+  const [deleteParameter, setDeleteParameter] = useState<{familyId: string, person: Person} | null>(null);
+  function selectDelete(adult: Person) {
+    setAdultMoreMenuAnchor(null);
+    setDeleteParameter({familyId: volunteerFamilyId, person: adult});
   }
   const [updateConcernsParameter, setUpdateConcernsParameter] = useState<{volunteerFamilyId: string, person: Person} | null>(null);
   function selectUpdateConcerns(adult: Person) {
@@ -212,6 +218,9 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectChangeName(adultMoreMenuAnchor.adult)}>
           <ListItemText primary="Change name" />
         </MenuItem>
+        <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectDelete(adultMoreMenuAnchor.adult)}>
+          <ListItemText primary="Delete" />
+        </MenuItem>
         <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectUpdateConcerns(adultMoreMenuAnchor.adult)}>
           <ListItemText primary="Update concerns" />
         </MenuItem>
@@ -251,6 +260,8 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
       </Menu>
       {(renamePersonParameter && <RenamePersonDialog familyId={volunteerFamilyId} person={renamePersonParameter.person}
         onClose={() => setRenamePersonParameter(null)} />) || null}
+      {(deleteParameter && <DeletePersonDialog familyId={deleteParameter.familyId} person={deleteParameter.person}
+        onClose={() => setDeleteParameter(null)} />) || null}
       {(updateConcernsParameter && <UpdateConcernsDialog familyId={volunteerFamilyId} person={updateConcernsParameter.person}
         onClose={() => setUpdateConcernsParameter(null)} />) || null}
       {(updateNotesParameter && <UpdateNotesDialog familyId={volunteerFamilyId} person={updateNotesParameter.person}
