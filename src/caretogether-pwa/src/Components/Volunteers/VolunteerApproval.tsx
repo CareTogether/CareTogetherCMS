@@ -112,7 +112,7 @@ function VolunteerApproval() {
                       }</TableCell>))}
                     <TableCell colSpan={volunteerRoleNames.length} />
                   </TableRow>
-                  {volunteerFamily.family?.adults?.map(adult => adult.item1 && (
+                  {volunteerFamily.family?.adults?.map(adult => adult.item1 && adult.item1.active && (
                     <TableRow key={volunteerFamily.family?.id + ":" + adult.item1.id}
                       onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}
                       className={classes.adultRow}>
@@ -134,7 +134,7 @@ function VolunteerApproval() {
                         }</TableCell>))}
                     </TableRow>
                   ))}
-                  {volunteerFamily.family?.children?.map(child => (
+                  {volunteerFamily.family?.children?.map(child => child.active && (
                     <TableRow key={volunteerFamily.family?.id + ":" + child.id}
                       onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}
                       className={classes.childRow}>

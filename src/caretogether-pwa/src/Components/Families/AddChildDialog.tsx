@@ -38,7 +38,7 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
     dateOfBirth: null as Date | null,
     ageInYears: null as number | null,
     ethnicity: '',
-    custodialRelationships: family.family!.adults!.map(adult =>
+    custodialRelationships: family.family!.adults!.filter(adult => adult.item1!.active).map(adult =>
       ({ adult: adult.item1!, relationship: CustodialRelationshipType.ParentWithCustody as CustodialRelationshipType | -1 })),
     notes: null as string | null,
     concerns: null as string | null
