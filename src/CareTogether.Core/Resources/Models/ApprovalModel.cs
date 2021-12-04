@@ -52,6 +52,11 @@ namespace CareTogether.Resources.Models
                     CompletedRequirements = volunteerFamilyEntry.CompletedRequirements.Add(
                         new CompletedRequirementInfo(userId, timestampUtc, c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId))
                 },
+                MarkVolunteerFamilyRequirementIncomplete c => volunteerFamilyEntry with
+                {
+                    CompletedRequirements = volunteerFamilyEntry.CompletedRequirements.RemoveAll(x =>
+                        x.RequirementName == c.RequirementName && x.CompletedAtUtc == c.CompletedAtUtc),
+                },
                 UploadVolunteerFamilyDocument c => volunteerFamilyEntry with
                 {
                     UploadedDocuments = volunteerFamilyEntry.UploadedDocuments.Add(
@@ -99,6 +104,11 @@ namespace CareTogether.Resources.Models
                 {
                     CompletedRequirements = volunteerEntry.CompletedRequirements.Add(
                         new CompletedRequirementInfo(userId, timestampUtc, c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId))
+                },
+                MarkVolunteerRequirementIncomplete c => volunteerEntry with
+                {
+                    CompletedRequirements = volunteerEntry.CompletedRequirements.RemoveAll(x =>
+                        x.RequirementName == c.RequirementName && x.CompletedAtUtc == c.CompletedAtUtc),
                 },
                 RemoveVolunteerRole c => volunteerEntry with
                 {

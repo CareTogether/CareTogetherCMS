@@ -29,6 +29,9 @@ namespace CareTogether.Resources
     public sealed record CompleteVolunteerFamilyRequirement(Guid FamilyId,
         string RequirementName, DateTime CompletedAtUtc, Guid? UploadedDocumentId)
         : VolunteerFamilyCommand(FamilyId);
+    public sealed record MarkVolunteerFamilyRequirementIncomplete(Guid FamilyId,
+        string RequirementName, DateTime CompletedAtUtc)
+        : VolunteerFamilyCommand(FamilyId);
     public sealed record UploadVolunteerFamilyDocument(Guid FamilyId,
         Guid UploadedDocumentId, string UploadedFileName)
         : VolunteerFamilyCommand(FamilyId);
@@ -43,6 +46,9 @@ namespace CareTogether.Resources
     public abstract partial record VolunteerCommand(Guid FamilyId, Guid PersonId);
     public sealed record CompleteVolunteerRequirement(Guid FamilyId, Guid PersonId,
         string RequirementName,  DateTime CompletedAtUtc, Guid? UploadedDocumentId)
+        : VolunteerCommand(FamilyId, PersonId);
+    public sealed record MarkVolunteerRequirementIncomplete(Guid FamilyId, Guid PersonId,
+        string RequirementName, DateTime CompletedAtUtc)
         : VolunteerCommand(FamilyId, PersonId);
     public sealed record RemoveVolunteerRole(Guid FamilyId, Guid PersonId,
         string RoleName, RoleRemovalReason Reason, string? AdditionalComments)

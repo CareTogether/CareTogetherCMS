@@ -3197,6 +3197,7 @@
           "mapping": {
             "ActivateVolunteerFamily": "#/components/schemas/ActivateVolunteerFamily",
             "CompleteVolunteerFamilyRequirement": "#/components/schemas/CompleteVolunteerFamilyRequirement",
+            "MarkVolunteerFamilyRequirementIncomplete": "#/components/schemas/MarkVolunteerFamilyRequirementIncomplete",
             "RemoveVolunteerFamilyRole": "#/components/schemas/RemoveVolunteerFamilyRole",
             "ResetVolunteerFamilyRole": "#/components/schemas/ResetVolunteerFamilyRole",
             "UploadVolunteerFamilyDocument": "#/components/schemas/UploadVolunteerFamilyDocument"
@@ -3248,6 +3249,26 @@
                 "type": "string",
                 "format": "guid",
                 "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "MarkVolunteerFamilyRequirementIncomplete": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerFamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "requirementName": {
+                "type": "string"
+              },
+              "completedAtUtc": {
+                "type": "string",
+                "format": "date-time"
               }
             }
           }
@@ -3318,6 +3339,7 @@
           "propertyName": "discriminator",
           "mapping": {
             "CompleteVolunteerRequirement": "#/components/schemas/CompleteVolunteerRequirement",
+            "MarkVolunteerRequirementIncomplete": "#/components/schemas/MarkVolunteerRequirementIncomplete",
             "RemoveVolunteerRole": "#/components/schemas/RemoveVolunteerRole",
             "ResetVolunteerRole": "#/components/schemas/ResetVolunteerRole"
           }
@@ -3361,6 +3383,26 @@
                 "type": "string",
                 "format": "guid",
                 "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "MarkVolunteerRequirementIncomplete": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "requirementName": {
+                "type": "string"
+              },
+              "completedAtUtc": {
+                "type": "string",
+                "format": "date-time"
               }
             }
           }

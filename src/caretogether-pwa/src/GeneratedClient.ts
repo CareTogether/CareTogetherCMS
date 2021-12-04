@@ -5683,6 +5683,11 @@ export abstract class VolunteerFamilyCommand implements IVolunteerFamilyCommand 
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "MarkVolunteerFamilyRequirementIncomplete") {
+            let result = new MarkVolunteerFamilyRequirementIncomplete();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "RemoveVolunteerFamilyRole") {
             let result = new RemoveVolunteerFamilyRole();
             result.init(data);
@@ -5781,6 +5786,44 @@ export interface ICompleteVolunteerFamilyRequirement extends IVolunteerFamilyCom
     requirementName?: string;
     completedAtUtc?: Date;
     uploadedDocumentId?: string | undefined;
+}
+
+export class MarkVolunteerFamilyRequirementIncomplete extends VolunteerFamilyCommand implements IMarkVolunteerFamilyRequirementIncomplete {
+    requirementName?: string;
+    completedAtUtc?: Date;
+
+    constructor(data?: IMarkVolunteerFamilyRequirementIncomplete) {
+        super(data);
+        this._discriminator = "MarkVolunteerFamilyRequirementIncomplete";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.requirementName = _data["requirementName"];
+            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): MarkVolunteerFamilyRequirementIncomplete {
+        data = typeof data === 'object' ? data : {};
+        let result = new MarkVolunteerFamilyRequirementIncomplete();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["requirementName"] = this.requirementName;
+        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IMarkVolunteerFamilyRequirementIncomplete extends IVolunteerFamilyCommand {
+    requirementName?: string;
+    completedAtUtc?: Date;
 }
 
 export class RemoveVolunteerFamilyRole extends VolunteerFamilyCommand implements IRemoveVolunteerFamilyRole {
@@ -5927,6 +5970,11 @@ export abstract class VolunteerCommand implements IVolunteerCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "MarkVolunteerRequirementIncomplete") {
+            let result = new MarkVolunteerRequirementIncomplete();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "RemoveVolunteerRole") {
             let result = new RemoveVolunteerRole();
             result.init(data);
@@ -5994,6 +6042,44 @@ export interface ICompleteVolunteerRequirement extends IVolunteerCommand {
     requirementName?: string;
     completedAtUtc?: Date;
     uploadedDocumentId?: string | undefined;
+}
+
+export class MarkVolunteerRequirementIncomplete extends VolunteerCommand implements IMarkVolunteerRequirementIncomplete {
+    requirementName?: string;
+    completedAtUtc?: Date;
+
+    constructor(data?: IMarkVolunteerRequirementIncomplete) {
+        super(data);
+        this._discriminator = "MarkVolunteerRequirementIncomplete";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.requirementName = _data["requirementName"];
+            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): MarkVolunteerRequirementIncomplete {
+        data = typeof data === 'object' ? data : {};
+        let result = new MarkVolunteerRequirementIncomplete();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["requirementName"] = this.requirementName;
+        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IMarkVolunteerRequirementIncomplete extends IVolunteerCommand {
+    requirementName?: string;
+    completedAtUtc?: Date;
 }
 
 export class RemoveVolunteerRole extends VolunteerCommand implements IRemoveVolunteerRole {
