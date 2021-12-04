@@ -42,7 +42,7 @@ namespace CareTogether.Core.Test
                 .Add(new CustodialRelationship(guid4, guid2, CustodialRelationshipType.ParentWithCustody))
                 .Add(new CustodialRelationship(guid5, guid1, CustodialRelationshipType.LegalGuardian))
                 .Add(new CustodialRelationship(guid5, guid2, CustodialRelationshipType.LegalGuardian)),
-            ImmutableList<UploadedDocumentInfo>.Empty);
+            ImmutableList<UploadedDocumentInfo>.Empty, ImmutableList<Guid>.Empty);
 
 #nullable disable
         private PolicyEvaluationEngine dut;

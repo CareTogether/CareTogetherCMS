@@ -1851,6 +1851,7 @@ export class Family implements IFamily {
     children?: Person[];
     custodialRelationships?: CustodialRelationship[];
     uploadedDocuments?: UploadedDocumentInfo[];
+    deletedDocuments?: string[];
 
     constructor(data?: IFamily) {
         if (data) {
@@ -1884,6 +1885,11 @@ export class Family implements IFamily {
                 this.uploadedDocuments = [] as any;
                 for (let item of _data["uploadedDocuments"])
                     this.uploadedDocuments!.push(UploadedDocumentInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["deletedDocuments"])) {
+                this.deletedDocuments = [] as any;
+                for (let item of _data["deletedDocuments"])
+                    this.deletedDocuments!.push(item);
             }
         }
     }
@@ -1919,6 +1925,11 @@ export class Family implements IFamily {
             for (let item of this.uploadedDocuments)
                 data["uploadedDocuments"].push(item.toJSON());
         }
+        if (Array.isArray(this.deletedDocuments)) {
+            data["deletedDocuments"] = [];
+            for (let item of this.deletedDocuments)
+                data["deletedDocuments"].push(item);
+        }
         return data; 
     }
 }
@@ -1930,6 +1941,7 @@ export interface IFamily {
     children?: Person[];
     custodialRelationships?: CustodialRelationship[];
     uploadedDocuments?: UploadedDocumentInfo[];
+    deletedDocuments?: string[];
 }
 
 export class ValueTupleOfPersonAndFamilyAdultRelationshipInfo implements IValueTupleOfPersonAndFamilyAdultRelationshipInfo {
@@ -3727,6 +3739,11 @@ export abstract class FamilyCommand implements IFamilyCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "DeleteUploadedFamilyDocument") {
+            let result = new DeleteUploadedFamilyDocument();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "RemoveCustodialRelationship") {
             let result = new RemoveCustodialRelationship();
             result.init(data);
@@ -3988,6 +4005,40 @@ export class ValueTupleOfGuidAndFamilyAdultRelationshipInfo implements IValueTup
 export interface IValueTupleOfGuidAndFamilyAdultRelationshipInfo {
     item1?: string;
     item2?: FamilyAdultRelationshipInfo;
+}
+
+export class DeleteUploadedFamilyDocument extends FamilyCommand implements IDeleteUploadedFamilyDocument {
+    uploadedDocumentId?: string;
+
+    constructor(data?: IDeleteUploadedFamilyDocument) {
+        super(data);
+        this._discriminator = "DeleteUploadedFamilyDocument";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
+        }
+    }
+
+    static fromJS(data: any): DeleteUploadedFamilyDocument {
+        data = typeof data === 'object' ? data : {};
+        let result = new DeleteUploadedFamilyDocument();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IDeleteUploadedFamilyDocument extends IFamilyCommand {
+    uploadedDocumentId?: string;
 }
 
 export class RemoveCustodialRelationship extends FamilyCommand implements IRemoveCustodialRelationship {

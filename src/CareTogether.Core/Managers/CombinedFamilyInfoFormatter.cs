@@ -61,7 +61,10 @@ namespace CareTogether.Managers
             // the go-forward implementation uses only the directory resource service and then merges in prior data from the approvals
             // resource service. At some point a data migration could be run to convert the approvals events to directory events,
             // at which point this compatibility step can then be removed.
-            var allUploadedDocuments = uploadedApprovalDocuments.Concat(disclosedFamily.UploadedDocuments).ToImmutableList();
+            var allUploadedDocuments = uploadedApprovalDocuments
+                .Concat(disclosedFamily.UploadedDocuments)
+                .Where(udi => !family.DeletedDocuments.Contains(udi.UploadedDocumentId))
+                .ToImmutableList();
 
             return new CombinedFamilyInfo(disclosedFamily, partneringFamilyInfo, volunteerFamilyInfo, disclosedNotes,
                 allUploadedDocuments);

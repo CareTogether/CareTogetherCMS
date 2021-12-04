@@ -21,14 +21,15 @@ namespace CareTogether.Resources.Models
             ImmutableDictionary<Guid, FamilyAdultRelationshipInfo> AdultRelationships,
             ImmutableList<Guid> Children,
             ImmutableDictionary<(Guid ChildId, Guid AdultId), CustodialRelationshipType> CustodialRelationships,
-            ImmutableList<UploadedDocumentInfo> UploadedDocuments)
+            ImmutableList<UploadedDocumentInfo> UploadedDocuments,
+            ImmutableList<Guid> DeletedDocuments)
         {
             internal Family ToFamily(ImmutableDictionary<Guid, PersonEntry> people) =>
                 new(Id, PrimaryFamilyContactPersonId,
                     AdultRelationships.Select(ar => (people[ar.Key].ToPerson(), ar.Value)).ToImmutableList(),
                     Children.Select(c => people[c].ToPerson()).ToImmutableList(),
                     CustodialRelationships.Select(cr => new CustodialRelationship(cr.Key.ChildId, cr.Key.AdultId, cr.Value)).ToImmutableList(),
-                    UploadedDocuments);
+                    UploadedDocuments, DeletedDocuments);
         }
 
         internal record PersonEntry(Guid Id, Guid? UserId, bool Active, string FirstName, string LastName,
@@ -80,7 +81,7 @@ namespace CareTogether.Resources.Models
                         c.CustodialRelationships?.Select(cr =>
                             new KeyValuePair<(Guid ChildId, Guid AdultId), CustodialRelationshipType>((cr.ChildId, cr.PersonId), cr.Type))
                         ?? new List<KeyValuePair<(Guid ChildId, Guid AdultId), CustodialRelationshipType>>()),
-                        ImmutableList<UploadedDocumentInfo>.Empty),
+                        ImmutableList<UploadedDocumentInfo>.Empty, DeletedDocuments: ImmutableList<Guid>.Empty),
                 _ => families.TryGetValue(command.FamilyId, out var familyEntry)
                     ? command switch
                     {
@@ -124,6 +125,12 @@ namespace CareTogether.Resources.Models
                         {
                             UploadedDocuments = familyEntry.UploadedDocuments.Add(
                                 new UploadedDocumentInfo(userId, timestampUtc, c.UploadedDocumentId, c.UploadedFileName))
+                        },
+                        DeleteUploadedFamilyDocument c => familyEntry with
+                        {
+                            UploadedDocuments = familyEntry.UploadedDocuments.RemoveAll(udi =>
+                                udi.UploadedDocumentId == c.UploadedDocumentId),
+                            DeletedDocuments = familyEntry.DeletedDocuments.Add(c.UploadedDocumentId)
                         },
                         _ => throw new NotImplementedException(
                             $"The command type '{command.GetType().FullName}' has not been implemented.")
