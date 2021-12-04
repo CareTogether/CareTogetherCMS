@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Container, Toolbar, Button, Menu, MenuItem, Grid, useMediaQuery, useTheme, MenuList, Divider, IconButton, ListItemText, Chip } from '@material-ui/core';
 import { CombinedFamilyInfo, ActionRequirement, RoleRemovalReason } from '../../GeneratedClient';
@@ -17,12 +17,11 @@ import { useParams } from 'react-router';
 import { VolunteerAdultCard } from './VolunteerAdultCard';
 import { VolunteerChildCard } from './VolunteerChildCard';
 import { UploadFamilyDocumentDialog } from '../Families/UploadFamilyDocumentDialog';
-import { downloadFile } from '../../Model/FilesModel';
-import { currentOrganizationState, currentLocationState } from '../../Model/SessionModel';
 import { VolunteerRoleApprovalStatusChip } from './VolunteerRoleApprovalStatusChip';
 import { RemoveFamilyRoleDialog } from './RemoveFamilyRoleDialog';
 import { ResetFamilyRoleDialog } from './ResetFamilyRoleDialog';
 import { PersonName } from '../Families/PersonName';
+import { FamilyDocuments } from '../Families/FamilyDocuments';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -78,8 +77,6 @@ export function VolunteerFamilyScreen() {
 
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
   const policy = useRecoilValue(policyData);
-  const organizationId = useRecoilValue(currentOrganizationState);
-  const locationId = useRecoilValue(currentLocationState);
 
   const volunteerFamily = volunteerFamilies.find(x => x.family?.id === familyId) as CombinedFamilyInfo;
   
@@ -225,15 +222,7 @@ export function VolunteerFamilyScreen() {
       </Grid>
       <Grid item xs={12} sm={6} md={4}>
         <h3>Documents</h3>
-        <ul className={classes.familyDocumentsList}>
-          {volunteerFamily.uploadedDocuments?.map((uploaded, i) => (
-            <li key={i}
-              onClick={() => downloadFile(organizationId, locationId, uploaded.uploadedDocumentId!)}>
-              📃 {uploaded.uploadedFileName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-              {uploaded.timestampUtc && <span style={{float:'right',marginRight:20}}>{format(uploaded.timestampUtc, "MM/dd/yyyy hh:mm aa")}</span>}
-            </li>
-          ))}
-        </ul>
+        <FamilyDocuments family={volunteerFamily} />
       </Grid>
     </Grid>
     <Grid container spacing={2}>

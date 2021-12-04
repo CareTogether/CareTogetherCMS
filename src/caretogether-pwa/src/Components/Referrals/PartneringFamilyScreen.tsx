@@ -18,13 +18,12 @@ import { PersonName } from '../Families/PersonName';
 import { format } from 'date-fns';
 import { NoteCard } from '../Families/NoteCard';
 import { UploadFamilyDocumentDialog } from '../Families/UploadFamilyDocumentDialog';
-import { downloadFile } from '../../Model/FilesModel';
-import { currentOrganizationState, currentLocationState } from '../../Model/SessionModel';
 import { policyData } from '../../Model/ConfigurationModel';
 import { RecordReferralStepDialog } from './RecordReferralStepDialog';
 import { CreateArrangementDialog } from './CreateArrangementDialog';
 import { CloseReferralDialog } from './CloseReferralDialog';
 import { OpenNewReferralDialog } from './OpenNewReferralDialog';
+import { FamilyDocuments } from '../Families/FamilyDocuments';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -80,8 +79,6 @@ export function PartneringFamilyScreen() {
 
   const partneringFamilies = useRecoilValue(partneringFamiliesData);
   const policy = useRecoilValue(policyData);
-  const organizationId = useRecoilValue(currentOrganizationState);
-  const locationId = useRecoilValue(currentLocationState);
 
   const partneringFamily = partneringFamilies.find(x => x.family?.id === familyId) as CombinedFamilyInfo;
   
@@ -244,15 +241,7 @@ export function PartneringFamilyScreen() {
         </Grid>
         <Grid item xs={12} sm={6} md={4}>
           <h3>Documents</h3>
-          <ul className={classes.familyDocumentsList}>
-            {partneringFamily.uploadedDocuments?.map((uploaded, i) => (
-              <li key={i}
-                onClick={() => downloadFile(organizationId, locationId, uploaded.uploadedDocumentId!)}>
-                📃 {uploaded.uploadedFileName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                {uploaded.timestampUtc && <span style={{float:'right',marginRight:20}}>{format(uploaded.timestampUtc, "MM/dd/yyyy hh:mm aa")}</span>}
-              </li>
-            ))}
-          </ul>
+          <FamilyDocuments family={partneringFamily} />
         </Grid>
         <Grid item container xs={12} spacing={2}>
           {partneringFamily.partneringFamilyInfo?.openReferral?.arrangements?.map(arrangement => (
