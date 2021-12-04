@@ -10,6 +10,7 @@ import { useRecoilValue } from 'recoil';
 import { ethnicitiesData } from '../../Model/ConfigurationModel';
 import { useParams } from 'react-router-dom';
 import { useBackdrop } from '../RequestBackdrop';
+import { subYears, addDays } from 'date-fns';
 
 const useStyles = makeStyles((theme) => ({
   form: {
@@ -58,12 +59,14 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
     await withBackdrop(async () => {
       if (firstName.length <= 0 || lastName.length <= 0) {
         alert("First and last name are required. Try again.");
-      } else if (typeof(gender) === 'undefined') {
+      } else if (gender == null) {
         alert("Gender was not selected. Try again.");
       } else if (ageType === 'exact' && dateOfBirth == null) {
         alert("Date of birth was not specified. Try again.");
       } else if (ageType === 'inYears' && ageInYears == null) {
         alert("Age in years was not specified. Try again.");
+      } else if (ageType === 'inYears' && ageInYears != null && ageInYears >= 18) {
+        alert("Age in years must be less than 18. Try again.");
       } else if (ethnicity === '') {
         alert("Ethnicity was not selected. Try again.");
       } else {
@@ -135,7 +138,7 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
               <Grid item>
                 <KeyboardDatePicker
                   label="Date of birth" size="small" variant="inline"
-                  value={dateOfBirth} maxDate={new Date()} openTo="year"
+                  value={dateOfBirth} minDate={addDays(subYears(new Date(), 18), 1)} maxDate={new Date()} openTo="year"
                   required disabled={ageType !== 'exact'} format="MM/dd/yyyy"
                   onChange={(date) => date && setFields({...fields, dateOfBirth: date})}
                   />
