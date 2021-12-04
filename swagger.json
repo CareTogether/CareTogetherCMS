@@ -1237,6 +1237,13 @@
             "items": {
               "$ref": "#/components/schemas/UploadedDocumentInfo"
             }
+          },
+          "deletedDocuments": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "guid"
+            }
           }
         }
       },
@@ -2226,6 +2233,7 @@
             "AddChildToFamily": "#/components/schemas/AddChildToFamily",
             "AddCustodialRelationship": "#/components/schemas/AddCustodialRelationship",
             "CreateFamily": "#/components/schemas/CreateFamily",
+            "DeleteUploadedFamilyDocument": "#/components/schemas/DeleteUploadedFamilyDocument",
             "RemoveCustodialRelationship": "#/components/schemas/RemoveCustodialRelationship",
             "UpdateAdultRelationshipToFamily": "#/components/schemas/UpdateAdultRelationshipToFamily",
             "UpdateCustodialRelationshipType": "#/components/schemas/UpdateCustodialRelationshipType",
@@ -2354,6 +2362,23 @@
             "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
           }
         }
+      },
+      "DeleteUploadedFamilyDocument": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/FamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "uploadedDocumentId": {
+                "type": "string",
+                "format": "guid"
+              }
+            }
+          }
+        ]
       },
       "RemoveCustodialRelationship": {
         "allOf": [
