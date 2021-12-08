@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Container, Toolbar, Button, Menu, MenuItem, Grid, useMediaQuery, useTheme, MenuList, Divider, IconButton, ListItemText, Chip } from '@material-ui/core';
-import { CombinedFamilyInfo, ActionRequirement, RoleRemovalReason } from '../../GeneratedClient';
+import { CombinedFamilyInfo, ActionRequirement, RoleRemovalReason, CompletedRequirementInfo } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../../Model/ConfigurationModel';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
@@ -22,6 +22,7 @@ import { RemoveFamilyRoleDialog } from './RemoveFamilyRoleDialog';
 import { ResetFamilyRoleDialog } from './ResetFamilyRoleDialog';
 import { PersonName } from '../Families/PersonName';
 import { FamilyDocuments } from '../Families/FamilyDocuments';
+import { MarkVolunteerFamilyStepIncompleteDialog } from './MarkVolunteerFamilyStepIncompleteDialog';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -105,6 +106,13 @@ export function VolunteerFamilyScreen() {
     setResetRoleParameter({volunteerFamilyId: familyId, role: role, removalReason: removalReason, removalAdditionalComments: removalAdditionalComments});
   }
   
+  const [requirementMoreMenuAnchor, setRequirementMoreMenuAnchor] = useState<{anchor: Element, completedRequirement: CompletedRequirementInfo} | null>(null);
+  const [markIncompleteParameter, setMarkIncompleteParameter] = useState<{familyId: string, completedRequirement: CompletedRequirementInfo} | null>(null);
+  function selectMarkIncomplete(completedRequirement: CompletedRequirementInfo) {
+    setRequirementMoreMenuAnchor(null);
+    setMarkIncompleteParameter({familyId: familyId, completedRequirement: completedRequirement});
+  }
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
 
@@ -213,12 +221,22 @@ export function VolunteerFamilyScreen() {
         <h3>Completed</h3>
         <ul className={classes.familyRequirementsList}>
           {volunteerFamily.volunteerFamilyInfo?.completedRequirements?.map((completed, i) => (
-            <li key={i}>
+            <li key={i}
+              onContextMenu={(e) => { e.preventDefault(); setRequirementMoreMenuAnchor({ anchor: e.currentTarget, completedRequirement: completed }); }}>
               ✅ {completed.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               {completed.completedAtUtc && <span style={{float:'right',marginRight:20}}>{format(completed.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
             </li>
           ))}
         </ul>
+        <Menu id="volunteerfamily-requirement-more-menu"
+          anchorEl={requirementMoreMenuAnchor?.anchor}
+          keepMounted
+          open={Boolean(requirementMoreMenuAnchor)}
+          onClose={() => setRequirementMoreMenuAnchor(null)}>
+          <MenuItem onClick={() => selectMarkIncomplete(requirementMoreMenuAnchor!.completedRequirement)}>Delete</MenuItem>
+        </Menu>
+        {(markIncompleteParameter && <MarkVolunteerFamilyStepIncompleteDialog volunteerFamily={volunteerFamily} completedRequirement={markIncompleteParameter.completedRequirement}
+          onClose={() => setMarkIncompleteParameter(null)} />) || null}
       </Grid>
       <Grid item xs={12} sm={6} md={4}>
         <h3>Documents</h3>
