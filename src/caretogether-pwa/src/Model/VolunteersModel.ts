@@ -1,5 +1,5 @@
 import { selector, useRecoilCallback } from "recoil";
-import { ActionRequirement, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, VolunteerCommand, VolunteersClient, VolunteerFamilyCommand, RoleRemovalReason, RemoveVolunteerRole, ResetVolunteerRole, RemoveVolunteerFamilyRole, ResetVolunteerFamilyRole, MarkVolunteerFamilyRequirementIncomplete, CompletedRequirementInfo } from "../GeneratedClient";
+import { ActionRequirement, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, VolunteerCommand, VolunteersClient, VolunteerFamilyCommand, RoleRemovalReason, RemoveVolunteerRole, ResetVolunteerRole, RemoveVolunteerFamilyRole, ResetVolunteerFamilyRole, MarkVolunteerFamilyRequirementIncomplete, CompletedRequirementInfo, MarkVolunteerRequirementIncomplete } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { visibleFamiliesData } from "./ModelLoader";
@@ -124,6 +124,16 @@ export function useVolunteersModel() {
         command.uploadedDocumentId = documentId;
       return command;
     });
+  const markIndividualRequirementIncomplete = useVolunteerCommandCallbackWithLocation(
+    async (organizationId, locationId, volunteerFamilyId, personId, completedRequirement: CompletedRequirementInfo) => {
+      const command = new MarkVolunteerRequirementIncomplete({
+        familyId: volunteerFamilyId,
+        personId: personId
+      });
+      command.requirementName = completedRequirement.requirementName;
+      command.completedRequirementId = completedRequirement.completedRequirementId;
+      return command;
+    });
   const removeIndividualRole = useVolunteerCommandCallbackWithLocation(
     async (organizationId, locationId, volunteerFamilyId, personId,
       role: string, reason: RoleRemovalReason, additionalComments: string) =>
@@ -155,6 +165,7 @@ export function useVolunteersModel() {
     removeFamilyRole,
     resetFamilyRole,
     completeIndividualRequirement,
+    markIndividualRequirementIncomplete,
     removeIndividualRole,
     resetIndividualRole
   };

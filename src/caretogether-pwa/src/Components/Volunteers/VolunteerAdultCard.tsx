@@ -1,7 +1,7 @@
 import { Card, CardHeader, IconButton, CardContent, Typography, Chip, CardActions, makeStyles, Divider, ListItemText, Menu, MenuItem, MenuList, useMediaQuery, useTheme } from "@material-ui/core";
 import { format } from 'date-fns';
 import { useState } from "react";
-import { ActionRequirement, Gender, Person, CombinedFamilyInfo, RoleRemovalReason } from "../../GeneratedClient";
+import { ActionRequirement, Gender, Person, CombinedFamilyInfo, RoleRemovalReason, CompletedRequirementInfo } from "../../GeneratedClient";
 import { AgeText } from "../AgeText";
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
@@ -21,6 +21,7 @@ import { UpdateAddressDialog } from "../Families/UpdateAddressDialog";
 import { RemoveIndividualRoleDialog } from "./RemoveIndividualRoleDialog";
 import { ResetIndividualRoleDialog } from "./ResetIndividualRoleDialog";
 import { DeletePersonDialog } from "../Families/DeletePersonDialog";
+import { MarkVolunteerStepIncompleteDialog } from "./MarkVolunteerStepIncompleteDialog";
 
 const useStyles = makeStyles((theme) => ({
   sectionChips: {
@@ -76,6 +77,13 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
     setAdultRecordMenuAnchor(null);
     const requirementInfo = policy.actionDefinitions![requirementName];
     setRecordAdultStepParameter({requirementName, requirementInfo, adult});
+  }
+  
+  const [requirementMoreMenuAnchor, setRequirementMoreMenuAnchor] = useState<{anchor: Element, completedRequirement: CompletedRequirementInfo} | null>(null);
+  const [markIncompleteParameter, setMarkIncompleteParameter] = useState<{familyId: string, personId: string, completedRequirement: CompletedRequirementInfo} | null>(null);
+  function selectMarkIncomplete(completedRequirement: CompletedRequirementInfo) {
+    setRequirementMoreMenuAnchor(null);
+    setMarkIncompleteParameter({familyId: volunteerFamilyId, personId: adult!.item1!.id!, completedRequirement: completedRequirement});
   }
 
   const [adultMoreMenuAnchor, setAdultMoreMenuAnchor] = useState<{anchor: Element, adult: Person} | null>(null);
@@ -157,7 +165,8 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         <Typography variant="body2" component="div">
           <ul className={classes.cardList}>
             {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].completedRequirements?.map((completed, i) => (
-              <li key={i}>
+              <li key={i}
+                onContextMenu={(e) => { e.preventDefault(); setRequirementMoreMenuAnchor({ anchor: e.currentTarget, completedRequirement: completed }); }}>
                 <CardInfoRow icon='✅'>
                   {completed.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                   {completed.completedAtUtc && <span style={{float:'right'}}>{format(completed.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
@@ -165,6 +174,15 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
               </li>
             ))}
           </ul>
+          <Menu id="volunteer-requirement-more-menu"
+            anchorEl={requirementMoreMenuAnchor?.anchor}
+            keepMounted
+            open={Boolean(requirementMoreMenuAnchor)}
+            onClose={() => setRequirementMoreMenuAnchor(null)}>
+            <MenuItem onClick={() => selectMarkIncomplete(requirementMoreMenuAnchor!.completedRequirement)}>Mark Incomplete</MenuItem>
+          </Menu>
+          {(markIncompleteParameter && <MarkVolunteerStepIncompleteDialog volunteerFamily={volunteerFamily} personId={markIncompleteParameter.personId} completedRequirement={markIncompleteParameter.completedRequirement}
+            onClose={() => setMarkIncompleteParameter(null)} />) || null}
           <ul className={classes.cardList}>
             {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].missingRequirements?.map((missingRequirementName, i) => (
               <li key={i}>
