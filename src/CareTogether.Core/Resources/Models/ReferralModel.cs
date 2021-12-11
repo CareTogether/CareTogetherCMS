@@ -50,7 +50,8 @@ namespace CareTogether.Resources.Models
                         CompleteReferralRequirement c => referralEntry with
                         {
                             CompletedRequirements = referralEntry.CompletedRequirements.Add(
-                                new CompletedRequirementInfo(userId, timestampUtc, c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId))
+                                new CompletedRequirementInfo(userId, timestampUtc, c.CompletedRequirementId,
+                                    c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId))
                         },
                         CloseReferral c => referralEntry with
                         {
@@ -108,7 +109,8 @@ namespace CareTogether.Resources.Models
                         CompleteArrangementRequirement c => arrangementEntry with
                         {
                             CompletedRequirements = arrangementEntry.CompletedRequirements.Add(
-                                new CompletedRequirementInfo(userId, timestampUtc, c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId))
+                                new CompletedRequirementInfo(userId, timestampUtc, c.CompletedRequirementId,
+                                    c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId))
                         },
                         TrackChildLocationChange c => arrangementEntry with
                         {

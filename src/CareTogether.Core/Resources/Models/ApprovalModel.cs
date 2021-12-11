@@ -50,12 +50,13 @@ namespace CareTogether.Resources.Models
                 CompleteVolunteerFamilyRequirement c => volunteerFamilyEntry with
                 {
                     CompletedRequirements = volunteerFamilyEntry.CompletedRequirements.Add(
-                        new CompletedRequirementInfo(userId, timestampUtc, c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId))
+                        new CompletedRequirementInfo(userId, timestampUtc, c.CompletedRequirementId, c.RequirementName,
+                            c.CompletedAtUtc, c.UploadedDocumentId))
                 },
                 MarkVolunteerFamilyRequirementIncomplete c => volunteerFamilyEntry with
                 {
                     CompletedRequirements = volunteerFamilyEntry.CompletedRequirements.RemoveAll(x =>
-                        x.RequirementName == c.RequirementName && x.CompletedAtUtc == c.CompletedAtUtc),
+                        x.RequirementName == c.RequirementName && x.CompletedRequirementId == c.CompletedRequirementId),
                 },
                 UploadVolunteerFamilyDocument c => volunteerFamilyEntry with
                 {
@@ -103,12 +104,12 @@ namespace CareTogether.Resources.Models
                 CompleteVolunteerRequirement c => volunteerEntry with
                 {
                     CompletedRequirements = volunteerEntry.CompletedRequirements.Add(
-                        new CompletedRequirementInfo(userId, timestampUtc, c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId))
+                        new CompletedRequirementInfo(userId, timestampUtc, c.CompletedRequirementId, c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId))
                 },
                 MarkVolunteerRequirementIncomplete c => volunteerEntry with
                 {
                     CompletedRequirements = volunteerEntry.CompletedRequirements.RemoveAll(x =>
-                        x.RequirementName == c.RequirementName && x.CompletedAtUtc == c.CompletedAtUtc),
+                        x.RequirementName == c.RequirementName && x.CompletedRequirementId == c.CompletedRequirementId),
                 },
                 RemoveVolunteerRole c => volunteerEntry with
                 {

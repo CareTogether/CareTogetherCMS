@@ -1650,6 +1650,10 @@
             "type": "string",
             "format": "date-time"
           },
+          "completedRequirementId": {
+            "type": "string",
+            "format": "guid"
+          },
           "requirementName": {
             "type": "string"
           },
@@ -2949,6 +2953,10 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+              "completedRequirementId": {
+                "type": "string",
+                "format": "guid"
+              },
               "requirementName": {
                 "type": "string"
               },
@@ -3072,6 +3080,10 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+              "completedRequirementId": {
+                "type": "string",
+                "format": "guid"
+              },
               "requirementName": {
                 "type": "string"
               },
@@ -3238,6 +3250,10 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+              "completedRequirementId": {
+                "type": "string",
+                "format": "guid"
+              },
               "requirementName": {
                 "type": "string"
               },
@@ -3263,12 +3279,12 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+              "completedRequirementId": {
+                "type": "string",
+                "format": "guid"
+              },
               "requirementName": {
                 "type": "string"
-              },
-              "completedAtUtc": {
-                "type": "string",
-                "format": "date-time"
               }
             }
           }
@@ -3372,6 +3388,10 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+              "completedRequirementId": {
+                "type": "string",
+                "format": "guid"
+              },
               "requirementName": {
                 "type": "string"
               },
@@ -3397,12 +3417,12 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+              "completedRequirementId": {
+                "type": "string",
+                "format": "guid"
+              },
               "requirementName": {
                 "type": "string"
-              },
-              "completedAtUtc": {
-                "type": "string",
-                "format": "date-time"
               }
             }
           }

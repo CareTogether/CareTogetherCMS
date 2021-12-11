@@ -2661,6 +2661,7 @@ export enum ReferralCloseReason {
 export class CompletedRequirementInfo implements ICompletedRequirementInfo {
     userId?: string;
     timestampUtc?: Date;
+    completedRequirementId?: string;
     requirementName?: string;
     completedAtUtc?: Date;
     uploadedDocumentId?: string | undefined;
@@ -2678,6 +2679,7 @@ export class CompletedRequirementInfo implements ICompletedRequirementInfo {
         if (_data) {
             this.userId = _data["userId"];
             this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
+            this.completedRequirementId = _data["completedRequirementId"];
             this.requirementName = _data["requirementName"];
             this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
             this.uploadedDocumentId = _data["uploadedDocumentId"];
@@ -2695,6 +2697,7 @@ export class CompletedRequirementInfo implements ICompletedRequirementInfo {
         data = typeof data === 'object' ? data : {};
         data["userId"] = this.userId;
         data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
+        data["completedRequirementId"] = this.completedRequirementId;
         data["requirementName"] = this.requirementName;
         data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
         data["uploadedDocumentId"] = this.uploadedDocumentId;
@@ -2705,6 +2708,7 @@ export class CompletedRequirementInfo implements ICompletedRequirementInfo {
 export interface ICompletedRequirementInfo {
     userId?: string;
     timestampUtc?: Date;
+    completedRequirementId?: string;
     requirementName?: string;
     completedAtUtc?: Date;
     uploadedDocumentId?: string | undefined;
@@ -5168,6 +5172,7 @@ export interface ICloseReferral extends IReferralCommand {
 }
 
 export class CompleteReferralRequirement extends ReferralCommand implements ICompleteReferralRequirement {
+    completedRequirementId?: string;
     requirementName?: string;
     completedAtUtc?: Date;
     uploadedDocumentId?: string | undefined;
@@ -5180,6 +5185,7 @@ export class CompleteReferralRequirement extends ReferralCommand implements ICom
     init(_data?: any) {
         super.init(_data);
         if (_data) {
+            this.completedRequirementId = _data["completedRequirementId"];
             this.requirementName = _data["requirementName"];
             this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
             this.uploadedDocumentId = _data["uploadedDocumentId"];
@@ -5195,6 +5201,7 @@ export class CompleteReferralRequirement extends ReferralCommand implements ICom
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
+        data["completedRequirementId"] = this.completedRequirementId;
         data["requirementName"] = this.requirementName;
         data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
         data["uploadedDocumentId"] = this.uploadedDocumentId;
@@ -5204,6 +5211,7 @@ export class CompleteReferralRequirement extends ReferralCommand implements ICom
 }
 
 export interface ICompleteReferralRequirement extends IReferralCommand {
+    completedRequirementId?: string;
     requirementName?: string;
     completedAtUtc?: Date;
     uploadedDocumentId?: string | undefined;
@@ -5405,6 +5413,7 @@ export interface IAssignVolunteerFamily extends IArrangementCommand {
 }
 
 export class CompleteArrangementRequirement extends ArrangementCommand implements ICompleteArrangementRequirement {
+    completedRequirementId?: string;
     requirementName?: string;
     completedAtUtc?: Date;
     uploadedDocumentId?: string | undefined;
@@ -5417,6 +5426,7 @@ export class CompleteArrangementRequirement extends ArrangementCommand implement
     init(_data?: any) {
         super.init(_data);
         if (_data) {
+            this.completedRequirementId = _data["completedRequirementId"];
             this.requirementName = _data["requirementName"];
             this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
             this.uploadedDocumentId = _data["uploadedDocumentId"];
@@ -5432,6 +5442,7 @@ export class CompleteArrangementRequirement extends ArrangementCommand implement
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
+        data["completedRequirementId"] = this.completedRequirementId;
         data["requirementName"] = this.requirementName;
         data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
         data["uploadedDocumentId"] = this.uploadedDocumentId;
@@ -5441,6 +5452,7 @@ export class CompleteArrangementRequirement extends ArrangementCommand implement
 }
 
 export interface ICompleteArrangementRequirement extends IArrangementCommand {
+    completedRequirementId?: string;
     requirementName?: string;
     completedAtUtc?: Date;
     uploadedDocumentId?: string | undefined;
@@ -5747,6 +5759,7 @@ export interface IActivateVolunteerFamily extends IVolunteerFamilyCommand {
 }
 
 export class CompleteVolunteerFamilyRequirement extends VolunteerFamilyCommand implements ICompleteVolunteerFamilyRequirement {
+    completedRequirementId?: string;
     requirementName?: string;
     completedAtUtc?: Date;
     uploadedDocumentId?: string | undefined;
@@ -5759,6 +5772,7 @@ export class CompleteVolunteerFamilyRequirement extends VolunteerFamilyCommand i
     init(_data?: any) {
         super.init(_data);
         if (_data) {
+            this.completedRequirementId = _data["completedRequirementId"];
             this.requirementName = _data["requirementName"];
             this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
             this.uploadedDocumentId = _data["uploadedDocumentId"];
@@ -5774,6 +5788,7 @@ export class CompleteVolunteerFamilyRequirement extends VolunteerFamilyCommand i
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
+        data["completedRequirementId"] = this.completedRequirementId;
         data["requirementName"] = this.requirementName;
         data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
         data["uploadedDocumentId"] = this.uploadedDocumentId;
@@ -5783,14 +5798,15 @@ export class CompleteVolunteerFamilyRequirement extends VolunteerFamilyCommand i
 }
 
 export interface ICompleteVolunteerFamilyRequirement extends IVolunteerFamilyCommand {
+    completedRequirementId?: string;
     requirementName?: string;
     completedAtUtc?: Date;
     uploadedDocumentId?: string | undefined;
 }
 
 export class MarkVolunteerFamilyRequirementIncomplete extends VolunteerFamilyCommand implements IMarkVolunteerFamilyRequirementIncomplete {
+    completedRequirementId?: string;
     requirementName?: string;
-    completedAtUtc?: Date;
 
     constructor(data?: IMarkVolunteerFamilyRequirementIncomplete) {
         super(data);
@@ -5800,8 +5816,8 @@ export class MarkVolunteerFamilyRequirementIncomplete extends VolunteerFamilyCom
     init(_data?: any) {
         super.init(_data);
         if (_data) {
+            this.completedRequirementId = _data["completedRequirementId"];
             this.requirementName = _data["requirementName"];
-            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
         }
     }
 
@@ -5814,16 +5830,16 @@ export class MarkVolunteerFamilyRequirementIncomplete extends VolunteerFamilyCom
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
+        data["completedRequirementId"] = this.completedRequirementId;
         data["requirementName"] = this.requirementName;
-        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
         super.toJSON(data);
         return data; 
     }
 }
 
 export interface IMarkVolunteerFamilyRequirementIncomplete extends IVolunteerFamilyCommand {
+    completedRequirementId?: string;
     requirementName?: string;
-    completedAtUtc?: Date;
 }
 
 export class RemoveVolunteerFamilyRole extends VolunteerFamilyCommand implements IRemoveVolunteerFamilyRole {
@@ -6003,6 +6019,7 @@ export interface IVolunteerCommand {
 }
 
 export class CompleteVolunteerRequirement extends VolunteerCommand implements ICompleteVolunteerRequirement {
+    completedRequirementId?: string;
     requirementName?: string;
     completedAtUtc?: Date;
     uploadedDocumentId?: string | undefined;
@@ -6015,6 +6032,7 @@ export class CompleteVolunteerRequirement extends VolunteerCommand implements IC
     init(_data?: any) {
         super.init(_data);
         if (_data) {
+            this.completedRequirementId = _data["completedRequirementId"];
             this.requirementName = _data["requirementName"];
             this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
             this.uploadedDocumentId = _data["uploadedDocumentId"];
@@ -6030,6 +6048,7 @@ export class CompleteVolunteerRequirement extends VolunteerCommand implements IC
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
+        data["completedRequirementId"] = this.completedRequirementId;
         data["requirementName"] = this.requirementName;
         data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
         data["uploadedDocumentId"] = this.uploadedDocumentId;
@@ -6039,14 +6058,15 @@ export class CompleteVolunteerRequirement extends VolunteerCommand implements IC
 }
 
 export interface ICompleteVolunteerRequirement extends IVolunteerCommand {
+    completedRequirementId?: string;
     requirementName?: string;
     completedAtUtc?: Date;
     uploadedDocumentId?: string | undefined;
 }
 
 export class MarkVolunteerRequirementIncomplete extends VolunteerCommand implements IMarkVolunteerRequirementIncomplete {
+    completedRequirementId?: string;
     requirementName?: string;
-    completedAtUtc?: Date;
 
     constructor(data?: IMarkVolunteerRequirementIncomplete) {
         super(data);
@@ -6056,8 +6076,8 @@ export class MarkVolunteerRequirementIncomplete extends VolunteerCommand impleme
     init(_data?: any) {
         super.init(_data);
         if (_data) {
+            this.completedRequirementId = _data["completedRequirementId"];
             this.requirementName = _data["requirementName"];
-            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
         }
     }
 
@@ -6070,16 +6090,16 @@ export class MarkVolunteerRequirementIncomplete extends VolunteerCommand impleme
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
+        data["completedRequirementId"] = this.completedRequirementId;
         data["requirementName"] = this.requirementName;
-        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
         super.toJSON(data);
         return data; 
     }
 }
 
 export interface IMarkVolunteerRequirementIncomplete extends IVolunteerCommand {
+    completedRequirementId?: string;
     requirementName?: string;
-    completedAtUtc?: Date;
 }
 
 export class RemoveVolunteerRole extends VolunteerCommand implements IRemoveVolunteerRole {

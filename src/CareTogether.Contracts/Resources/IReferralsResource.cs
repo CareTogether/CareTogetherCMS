@@ -33,7 +33,7 @@ namespace CareTogether.Resources
         DateTime OpenedAtUtc)
         : ReferralCommand(FamilyId, ReferralId);
     public sealed record CompleteReferralRequirement(Guid FamilyId, Guid ReferralId,
-        string RequirementName, DateTime CompletedAtUtc, Guid? UploadedDocumentId)
+        Guid CompletedRequirementId, string RequirementName, DateTime CompletedAtUtc, Guid? UploadedDocumentId)
         : ReferralCommand(FamilyId, ReferralId);
     public sealed record CloseReferral(Guid FamilyId, Guid ReferralId,
         ReferralCloseReason CloseReason, DateTime ClosedAtUtc)
@@ -54,7 +54,7 @@ namespace CareTogether.Resources
         DateTime StartedAtUtc)
         : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
     public sealed record CompleteArrangementRequirement(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
-        string RequirementName, DateTime CompletedAtUtc, Guid? UploadedDocumentId)
+        Guid CompletedRequirementId, string RequirementName, DateTime CompletedAtUtc, Guid? UploadedDocumentId)
         : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
     public sealed record TrackChildLocationChange(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
         DateTime ChangedAtUtc, Guid ChildLocationFamilyId, ChildLocationPlan Plan, string AdditionalExplanation)

@@ -19,6 +19,9 @@ namespace CareTogether.Core.Test
         static readonly Guid guid4 = Guid.Parse("44444444-4444-4444-4444-444444444444");
         static readonly Guid guid5 = Guid.Parse("55555555-5555-5555-5555-555555555555");
         static readonly Guid guid6 = Guid.Parse("66666666-6666-6666-6666-666666666666");
+        static readonly Guid guid7 = Guid.Parse("77777777-7777-7777-7777-777777777777");
+        static readonly Guid guid8 = Guid.Parse("88888888-8888-8888-8888-888888888888");
+        static readonly Guid guid9 = Guid.Parse("99999999-9999-9999-9999-999999999999");
 
         static readonly Family volunteerFamily = new Family(guid4, guid1,
             ImmutableList<(Person, FamilyAdultRelationshipInfo)>.Empty
@@ -92,16 +95,16 @@ namespace CareTogether.Core.Test
             var result = await dut.CalculateVolunteerFamilyApprovalStatusAsync(guid1, guid2, volunteerFamily,
                 new List<CompletedRequirementInfo>
                 {
-                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 1), "Host Family Application", new DateTime(2021, 7, 1), Guid.Empty)
+                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 1), guid1, "Host Family Application", new DateTime(2021, 7, 1), Guid.Empty)
                 }.ToImmutableList(),
                 ImmutableList<RemovedRole>.Empty,
                 new Dictionary<Guid, ImmutableList<CompletedRequirementInfo>>
                 {
                     [guid1] = ImmutableList<CompletedRequirementInfo>.Empty
-                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 1), "Family Friend Application", new DateTime(2021, 7, 1), Guid.Empty))
-                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 1), "Family Coach Application", new DateTime(2021, 7, 1), Guid.Empty)),
+                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 1), guid2, "Family Friend Application", new DateTime(2021, 7, 1), Guid.Empty))
+                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 1), guid3, "Family Coach Application", new DateTime(2021, 7, 1), Guid.Empty)),
                     [guid2] = ImmutableList<CompletedRequirementInfo>.Empty
-                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 1), "Family Friend Application", new DateTime(2021, 7, 1), Guid.Empty)),
+                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 1), guid4, "Family Friend Application", new DateTime(2021, 7, 1), Guid.Empty)),
                     [guid3] = ImmutableList<CompletedRequirementInfo>.Empty
                 }.ToImmutableDictionary(),
                 new Dictionary<Guid, ImmutableList<RemovedRole>>
@@ -136,15 +139,15 @@ namespace CareTogether.Core.Test
             var result = await dut.CalculateVolunteerFamilyApprovalStatusAsync(guid1, guid2, volunteerFamily,
                 new List<CompletedRequirementInfo>
                 {
-                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 1), "Host Family Application", new DateTime(2021, 7, 1), Guid.Empty),
-                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 10), "Home Screening Checklist", new DateTime(2021, 7, 8), Guid.Empty),
-                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 10), "Host Family Interview", new DateTime(2021, 7, 10), Guid.Empty)
+                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 1), guid1, "Host Family Application", new DateTime(2021, 7, 1), Guid.Empty),
+                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 10), guid2, "Home Screening Checklist", new DateTime(2021, 7, 8), Guid.Empty),
+                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 10), guid3, "Host Family Interview", new DateTime(2021, 7, 10), Guid.Empty)
                 }.ToImmutableList(),
                 ImmutableList<RemovedRole>.Empty,
                 new Dictionary<Guid, ImmutableList<CompletedRequirementInfo>>
                 {
                     [guid1] = ImmutableList<CompletedRequirementInfo>.Empty
-                        .Add(new CompletedRequirementInfo(guid1, new DateTime(2021, 7, 14), "Background Check", new DateTime(2021, 7, 12), Guid.Empty)),
+                        .Add(new CompletedRequirementInfo(guid1, new DateTime(2021, 7, 14), guid4, "Background Check", new DateTime(2021, 7, 12), Guid.Empty)),
                     [guid2] = ImmutableList<CompletedRequirementInfo>.Empty,
                     [guid3] = ImmutableList<CompletedRequirementInfo>.Empty
                 }.ToImmutableDictionary(),
@@ -171,22 +174,22 @@ namespace CareTogether.Core.Test
             var result = await dut.CalculateVolunteerFamilyApprovalStatusAsync(guid1, guid2, volunteerFamily,
                 new List<CompletedRequirementInfo>
                 {
-                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 1), "Host Family Application", new DateTime(2021, 7, 1), Guid.Empty),
-                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 10), "Home Screening Checklist", new DateTime(2021, 7, 8), Guid.Empty),
-                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 10), "Host Family Interview", new DateTime(2021, 7, 10), Guid.Empty)
+                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 1), guid1, "Host Family Application", new DateTime(2021, 7, 1), Guid.Empty),
+                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 10), guid2, "Home Screening Checklist", new DateTime(2021, 7, 8), Guid.Empty),
+                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 10), guid3, "Host Family Interview", new DateTime(2021, 7, 10), Guid.Empty)
                 }.ToImmutableList(),
                 ImmutableList<RemovedRole>.Empty,
                 new Dictionary<Guid, ImmutableList<CompletedRequirementInfo>>
                 {
                     [guid1] = ImmutableList<CompletedRequirementInfo>.Empty
-                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 14), "Background Check", new DateTime(2021, 7, 12), Guid.Empty))
-                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 20), "Host Family Training", new DateTime(2021, 7, 20), Guid.Empty)),
+                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 14), guid4, "Background Check", new DateTime(2021, 7, 12), Guid.Empty))
+                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 20), guid5, "Host Family Training", new DateTime(2021, 7, 20), Guid.Empty)),
                     [guid2] = ImmutableList<CompletedRequirementInfo>.Empty
-                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 15), "Background Check", new DateTime(2021, 7, 13), Guid.Empty))
-                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 20), "Host Family Training", new DateTime(2021, 7, 20), Guid.Empty)),
+                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 15), guid6, "Background Check", new DateTime(2021, 7, 13), Guid.Empty))
+                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 20), guid7, "Host Family Training", new DateTime(2021, 7, 20), Guid.Empty)),
                     [guid3] = ImmutableList<CompletedRequirementInfo>.Empty
-                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 15), "Background Check", new DateTime(2021, 7, 13), Guid.Empty))
-                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 20), "Host Family Training", new DateTime(2021, 7, 20), Guid.Empty)),
+                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 15), guid8, "Background Check", new DateTime(2021, 7, 13), Guid.Empty))
+                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 20), guid9, "Host Family Training", new DateTime(2021, 7, 20), Guid.Empty)),
                 }.ToImmutableDictionary(),
                 new Dictionary<Guid, ImmutableList<RemovedRole>>
                 {
@@ -211,20 +214,20 @@ namespace CareTogether.Core.Test
             var result = await dut.CalculateVolunteerFamilyApprovalStatusAsync(guid1, guid2, volunteerFamily,
                 new List<CompletedRequirementInfo>
                 {
-                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 1), "Host Family Application", new DateTime(2021, 7, 1), Guid.Empty),
-                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 10), "Home Screening Checklist", new DateTime(2021, 7, 8), Guid.Empty),
-                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 10), "Host Family Interview", new DateTime(2021, 7, 10), Guid.Empty)
+                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 1), guid1, "Host Family Application", new DateTime(2021, 7, 1), Guid.Empty),
+                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 10), guid2, "Home Screening Checklist", new DateTime(2021, 7, 8), Guid.Empty),
+                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 10), guid3, "Host Family Interview", new DateTime(2021, 7, 10), Guid.Empty)
                 }.ToImmutableList(),
                 ImmutableList<RemovedRole>.Empty,
                 new Dictionary<Guid, ImmutableList<CompletedRequirementInfo>>
                 {
                     [guid1] = ImmutableList<CompletedRequirementInfo>.Empty
-                        .Add(new CompletedRequirementInfo(guid1, new DateTime(2021, 7, 14), "Background Check", new DateTime(2021, 7, 12), Guid.Empty))
-                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 20), "Host Family Training", new DateTime(2021, 7, 20), Guid.Empty)),
+                        .Add(new CompletedRequirementInfo(guid1, new DateTime(2021, 7, 14), guid4, "Background Check", new DateTime(2021, 7, 12), Guid.Empty))
+                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 20), guid5, "Host Family Training", new DateTime(2021, 7, 20), Guid.Empty)),
                     [guid2] = ImmutableList<CompletedRequirementInfo>.Empty
-                        .Add(new CompletedRequirementInfo(guid1, new DateTime(2021, 7, 14), "Background Check", new DateTime(2021, 7, 12), Guid.Empty)),
+                        .Add(new CompletedRequirementInfo(guid1, new DateTime(2021, 7, 14), guid6, "Background Check", new DateTime(2021, 7, 12), Guid.Empty)),
                     [guid3] = ImmutableList<CompletedRequirementInfo>.Empty
-                        .Add(new CompletedRequirementInfo(guid1, new DateTime(2021, 7, 14), "Background Check", new DateTime(2021, 7, 12), Guid.Empty))
+                        .Add(new CompletedRequirementInfo(guid1, new DateTime(2021, 7, 14), guid7, "Background Check", new DateTime(2021, 7, 12), Guid.Empty))
                 }.ToImmutableDictionary(),
                 new Dictionary<Guid, ImmutableList<RemovedRole>>
                 {
@@ -251,18 +254,18 @@ namespace CareTogether.Core.Test
             var result = await dut.CalculateVolunteerFamilyApprovalStatusAsync(guid1, guid2, volunteerFamily,
                 new List<CompletedRequirementInfo>
                 {
-                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 1), "Host Family Application", new DateTime(2021, 7, 1), Guid.Empty),
-                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 10), "Home Screening Checklist", new DateTime(2021, 7, 8), Guid.Empty),
-                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 10), "Host Family Interview", new DateTime(2021, 7, 10), Guid.Empty)
+                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 1), guid1, "Host Family Application", new DateTime(2021, 7, 1), Guid.Empty),
+                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 10), guid2, "Home Screening Checklist", new DateTime(2021, 7, 8), Guid.Empty),
+                    new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 10), guid3, "Host Family Interview", new DateTime(2021, 7, 10), Guid.Empty)
                 }.ToImmutableList(),
                 ImmutableList<RemovedRole>.Empty,
                 new Dictionary<Guid, ImmutableList<CompletedRequirementInfo>>
                 {
                     [guid1] = ImmutableList<CompletedRequirementInfo>.Empty
-                        .Add(new CompletedRequirementInfo(guid1, new DateTime(2021, 7, 14), "Background Check", new DateTime(2021, 7, 12), Guid.Empty))
-                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 20), "Host Family Training", new DateTime(2021, 7, 20), Guid.Empty)),
+                        .Add(new CompletedRequirementInfo(guid1, new DateTime(2021, 7, 14), guid4, "Background Check", new DateTime(2021, 7, 12), Guid.Empty))
+                        .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 20), guid5, "Host Family Training", new DateTime(2021, 7, 20), Guid.Empty)),
                     [guid2] = ImmutableList<CompletedRequirementInfo>.Empty
-                        .Add(new CompletedRequirementInfo(guid1, new DateTime(2021, 7, 14), "Background Check", new DateTime(2021, 7, 12), Guid.Empty)),
+                        .Add(new CompletedRequirementInfo(guid1, new DateTime(2021, 7, 14), guid6, "Background Check", new DateTime(2021, 7, 12), Guid.Empty)),
                     [guid3] = ImmutableList<CompletedRequirementInfo>.Empty
                 }.ToImmutableDictionary(),
                 new Dictionary<Guid, ImmutableList<RemovedRole>>
