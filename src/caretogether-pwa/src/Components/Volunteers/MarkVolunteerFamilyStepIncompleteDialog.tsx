@@ -1,19 +1,7 @@
-import { useState } from 'react';
-import { makeStyles } from '@material-ui/core/styles';
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, Grid, InputLabel, Link, MenuItem, Select } from '@material-ui/core';
-import { CombinedFamilyInfo, ActionRequirement, DocumentLinkRequirement, CompletedRequirementInfo } from '../../GeneratedClient';
-import { KeyboardDatePicker } from '@material-ui/pickers';
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@material-ui/core';
+import { CombinedFamilyInfo, CompletedRequirementInfo } from '../../GeneratedClient';
 import { useVolunteersModel } from '../../Model/VolunteersModel';
-import { uploadFileToTenant } from "../../Model/FilesModel";
-import { currentLocationState, currentOrganizationState } from '../../Model/SessionModel';
-import { useRecoilValue } from 'recoil';
 import { useBackdrop } from '../RequestBackdrop';
-import { useDirectoryModel } from '../../Model/DirectoryModel';
-
-const useStyles = makeStyles((theme) => ({
-  fileInput: {
-  }
-}));
 
 interface MarkVolunteerFamilyStepIncompleteDialogProps {
   volunteerFamily: CombinedFamilyInfo,
@@ -22,19 +10,14 @@ interface MarkVolunteerFamilyStepIncompleteDialogProps {
 }
 
 export function MarkVolunteerFamilyStepIncompleteDialog({volunteerFamily, completedRequirement, onClose}: MarkVolunteerFamilyStepIncompleteDialogProps) {
-  const classes = useStyles();
-  const organizationId = useRecoilValue(currentOrganizationState);
-  const locationId = useRecoilValue(currentLocationState);
   const volunteerFamiliesModel = useVolunteersModel();
-  const directoryModel = useDirectoryModel();
-  const UPLOAD_NEW = "__uploadnew__";
 
   const withBackdrop = useBackdrop();
   
   async function save() {
     await withBackdrop(async () => {
-      // await volunteerFamiliesModel.completeFamilyRequirement(volunteerFamily.family?.id as string,
-      //   requirementName, stepActionRequirement, completedAtLocal, document === "" ? null : document);
+      await volunteerFamiliesModel.markFamilyRequirementIncomplete(volunteerFamily.family?.id as string,
+        completedRequirement);
       //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
       onClose();
     });

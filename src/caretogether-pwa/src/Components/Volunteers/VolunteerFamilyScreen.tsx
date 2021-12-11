@@ -233,7 +233,7 @@ export function VolunteerFamilyScreen() {
           keepMounted
           open={Boolean(requirementMoreMenuAnchor)}
           onClose={() => setRequirementMoreMenuAnchor(null)}>
-          <MenuItem onClick={() => selectMarkIncomplete(requirementMoreMenuAnchor!.completedRequirement)}>Delete</MenuItem>
+          <MenuItem onClick={() => selectMarkIncomplete(requirementMoreMenuAnchor!.completedRequirement)}>Mark Incomplete</MenuItem>
         </Menu>
         {(markIncompleteParameter && <MarkVolunteerFamilyStepIncompleteDialog volunteerFamily={volunteerFamily} completedRequirement={markIncompleteParameter.completedRequirement}
           onClose={() => setMarkIncompleteParameter(null)} />) || null}
