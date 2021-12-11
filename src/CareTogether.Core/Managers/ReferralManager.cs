@@ -28,6 +28,7 @@ namespace CareTogether.Managers
             command = command switch
             {
                 CreateReferral c => c with { ReferralId = Guid.NewGuid() },
+                CompleteReferralRequirement c => c with { CompletedRequirementId = Guid.NewGuid() },
                 _ => command
             };
 
@@ -47,6 +48,7 @@ namespace CareTogether.Managers
             command = command switch
             {
                 CreateArrangement c => c with { ArrangementId = Guid.NewGuid() },
+                CompleteArrangementRequirement c => c with { CompletedRequirementId = Guid.NewGuid() },
                 _ => command
             };
 
