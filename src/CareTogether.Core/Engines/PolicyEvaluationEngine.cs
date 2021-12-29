@@ -75,7 +75,8 @@ namespace CareTogether.Engines
                         .Where(x => x.Status != null)
                         .Select(x => new RoleVersionApproval(x.Version, x.Status!.Value))
                         .ToImmutableList();
-                    individualRoles[roleName] = roleApprovals;
+                    if (roleApprovals.Count > 0)
+                        individualRoles[roleName] = roleApprovals;
 
                     missingRequirements.UnionWith(policyVersionApprovalStatus.SelectMany(x => x.MissingRequirements));
                     availableApplications.UnionWith(policyVersionApprovalStatus.SelectMany(x => x.AvailableApplications));
