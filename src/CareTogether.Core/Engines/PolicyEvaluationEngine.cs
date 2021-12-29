@@ -97,6 +97,7 @@ namespace CareTogether.Engines
                         }
                     }
                 }
+                
                 missingIndividualRequirements[person.Id] = missingRequirements;
                 return (person.Id, new VolunteerApprovalStatus(individualRoles.ToImmutableDictionary(),
                     removedRoles, ImmutableList<string>.Empty, availableApplications.ToImmutableList()));
@@ -112,7 +113,8 @@ namespace CareTogether.Engines
                     var supersededAtUtc = policyVersion.SupersededAtUtc;
 
                     var requirementsMet = policyVersion.Requirements.Select(requirement =>
-                        (requirement.ActionName, requirement.Stage, requirement.Scope, RequirementMet: requirement.Scope switch
+                        (requirement.ActionName, requirement.Stage, requirement.Scope,
+                        RequirementMet: requirement.Scope switch
                         {
                             VolunteerFamilyRequirementScope.AllAdultsInTheFamily => family.Adults.Where(a => a.Item1.Active).All(a =>
                             {
@@ -135,7 +137,8 @@ namespace CareTogether.Engines
                                 (supersededAtUtc == null || x.CompletedAtUtc < supersededAtUtc)),
                             _ => throw new NotImplementedException(
                                 $"The volunteer family requirement scope '{requirement.Scope}' has not been implemented.")
-                        }, RequirementMissingForIndividuals: requirement.Scope switch
+                        },
+                        RequirementMissingForIndividuals: requirement.Scope switch
                         {
                             VolunteerFamilyRequirementScope.AllAdultsInTheFamily => family.Adults.Where(a => a.Item1.Active).Where(a =>
                             {
