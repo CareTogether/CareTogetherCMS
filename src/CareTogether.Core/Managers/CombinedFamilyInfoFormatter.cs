@@ -92,7 +92,7 @@ namespace CareTogether.Managers
                 var referralStatus = await policyEvaluationEngine.CalculateReferralStatusAsync(organizationId, locationId, family, entry);
 
                 return new(entry.Id, entry.OpenedAtUtc, entry.ClosedAtUtc, entry.CloseReason,
-                    entry.CompletedRequirements, referralStatus.MissingIntakeRequirements,
+                    entry.CompletedRequirements, entry.ExemptedRequirements, referralStatus.MissingIntakeRequirements,
                     entry.Arrangements
                         .Select(a => ToArrangement(a.Value, referralStatus.IndividualArrangements[a.Key]))
                         .ToImmutableList());
@@ -101,7 +101,7 @@ namespace CareTogether.Managers
             static Arrangement ToArrangement(ArrangementEntry entry, ArrangementStatus status) =>
                 new(entry.Id, entry.ArrangementType, entry.PartneringFamilyPersonId, status.Phase,
                     entry.RequestedAtUtc, entry.StartedAtUtc, entry.EndedAtUtc,
-                    entry.CompletedRequirements,
+                    entry.CompletedRequirements, entry.ExemptedRequirements,
                     status.MissingRequirements,
                     entry.IndividualVolunteerAssignments, entry.FamilyVolunteerAssignments,
                     entry.ChildrenLocationHistory);
@@ -127,7 +127,7 @@ namespace CareTogether.Managers
                 completedIndividualRequirements, removedIndividualRoles);
 
             var volunteerFamilyInfo = new VolunteerFamilyInfo(
-                entry.CompletedRequirements, entry.RemovedRoles,
+                entry.CompletedRequirements, entry.ExemptedRequirements, entry.RemovedRoles,
                 volunteerFamilyApprovalStatus.MissingFamilyRequirements,
                 volunteerFamilyApprovalStatus.AvailableFamilyApplications,
                 volunteerFamilyApprovalStatus.FamilyRoleApprovals,
@@ -137,9 +137,9 @@ namespace CareTogether.Managers
                     {
                         var hasEntry = entry.IndividualEntries.TryGetValue(x.Key, out var individualEntry);
                         var result = hasEntry
-                            ? new VolunteerInfo(individualEntry!.CompletedRequirements, individualEntry!.RemovedRoles,
+                            ? new VolunteerInfo(individualEntry!.CompletedRequirements, individualEntry!.ExemptedRequirements, individualEntry!.RemovedRoles,
                                 x.Value.MissingIndividualRequirements, x.Value.AvailableIndividualApplications, x.Value.IndividualRoleApprovals)
-                            : new VolunteerInfo(ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<RemovedRole>.Empty,
+                            : new VolunteerInfo(ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<ExemptedRequirementInfo>.Empty, ImmutableList<RemovedRole>.Empty,
                                 x.Value.MissingIndividualRequirements, x.Value.AvailableIndividualApplications, x.Value.IndividualRoleApprovals);
                         return result;
                     }));

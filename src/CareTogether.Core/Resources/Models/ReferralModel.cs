@@ -42,7 +42,7 @@ namespace CareTogether.Resources.Models
             {
                 CreateReferral c => new ReferralEntry(c.ReferralId, c.FamilyId,
                     OpenedAtUtc: c.OpenedAtUtc, ClosedAtUtc: null, CloseReason: null,
-                    ImmutableList<CompletedRequirementInfo>.Empty,
+                    ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<ExemptedRequirementInfo>.Empty,
                     ImmutableDictionary<Guid, ArrangementEntry>.Empty),
                 _ => referrals.TryGetValue(command.ReferralId, out var referralEntry)
                     ? command switch
@@ -86,7 +86,7 @@ namespace CareTogether.Resources.Models
                 CreateArrangement c => new ArrangementEntry(c.ArrangementId, c.ArrangementType,
                     RequestedAtUtc: c.RequestedAtUtc, StartedAtUtc: null, EndedAtUtc: null,
                     c.PartneringFamilyPersonId,
-                    ImmutableList<CompletedRequirementInfo>.Empty,
+                    ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<ExemptedRequirementInfo>.Empty,
                     ImmutableList<IndividualVolunteerAssignment>.Empty, ImmutableList<FamilyVolunteerAssignment>.Empty,
                     ImmutableList<ChildLocationHistoryEntry>.Empty),
                 _ => referralEntry.Arrangements.TryGetValue(command.ArrangementId, out var arrangementEntry)

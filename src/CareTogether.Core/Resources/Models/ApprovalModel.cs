@@ -40,7 +40,7 @@ namespace CareTogether.Resources.Models
         {
             if (!volunteerFamilies.TryGetValue(command.FamilyId, out var volunteerFamilyEntry))
                 volunteerFamilyEntry = new VolunteerFamilyEntry(command.FamilyId,
-                    ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<UploadedDocumentInfo>.Empty,
+                    ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<ExemptedRequirementInfo>.Empty, ImmutableList<UploadedDocumentInfo>.Empty,
                     ImmutableList<RemovedRole>.Empty, ImmutableDictionary<Guid, VolunteerEntry>.Empty);
 
             var volunteerFamilyEntryToUpsert = command switch
@@ -92,12 +92,12 @@ namespace CareTogether.Resources.Models
         {
             if (!volunteerFamilies.TryGetValue(command.FamilyId, out var volunteerFamilyEntry))
                 volunteerFamilyEntry = new VolunteerFamilyEntry(command.FamilyId,
-                    ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<UploadedDocumentInfo>.Empty,
+                    ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<ExemptedRequirementInfo>.Empty, ImmutableList<UploadedDocumentInfo>.Empty,
                     ImmutableList<RemovedRole>.Empty, ImmutableDictionary<Guid, VolunteerEntry>.Empty);
 
             if (!volunteerFamilyEntry.IndividualEntries.TryGetValue(command.PersonId, out var volunteerEntry))
                 volunteerEntry = new VolunteerEntry(command.PersonId, true, "",
-                    ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<RemovedRole>.Empty);
+                    ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<ExemptedRequirementInfo>.Empty, ImmutableList<RemovedRole>.Empty);
 
             var volunteerEntryToUpsert = command switch
             {
