@@ -36,13 +36,13 @@ namespace CareTogether.Engines
             var policy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
 
             var missingFamilyRequirements = new HashSet<string>();
-            var missingIndividualRequirements = new Dictionary<Guid, HashSet<string>>();
+            var allMissingIndividualRequirements = new Dictionary<Guid, HashSet<string>>();
             // We do not currently support family role application requirements with a scope of per-adult, so this only needs to track per-family.
             var availableFamilyApplications = new HashSet<string>();
 
-            var individualVolunteerRoles = family.Adults.Select(x =>
+            var individualVolunteerRoles = family.Adults.Select(adultFamilyEntry =>
             {
-                var (person, familyRelationship) = x;
+                var (person, familyRelationship) = adultFamilyEntry;
                 var individualRoles = new Dictionary<string, ImmutableList<RoleVersionApproval>>();
                 var missingRequirements = new HashSet<string>();
                 var availableApplications = new HashSet<string>();
@@ -51,6 +51,10 @@ namespace CareTogether.Engines
                 if (!completedIndividualRequirements.TryGetValue(person.Id, out completedRequirements))
                     completedRequirements = ImmutableList<CompletedRequirementInfo>.Empty;
 
+                ImmutableList<ExemptedRequirementInfo>? exemptedRequirements;
+                if (!exemptedIndividualRequirements.TryGetValue(person.Id, out exemptedRequirements))
+                    exemptedRequirements = ImmutableList<ExemptedRequirementInfo>.Empty;
+
                 ImmutableList<RemovedRole>? removedRoles;
                 if (!removedIndividualRoles.TryGetValue(person.Id, out removedRoles))
                     removedRoles = ImmutableList<RemovedRole>.Empty;
@@ -58,47 +62,26 @@ namespace CareTogether.Engines
                 foreach (var (roleName, rolePolicy) in policy.VolunteerPolicy.VolunteerRoles
                     .Where(role => !removedRoles.Any(x => x.RoleName == role.Key)))
                 {
-                    foreach (var policyVersion in rolePolicy.PolicyVersions)
-                    {
-                        var version = policyVersion.Version;
-                        var supersededAtUtc = policyVersion.SupersededAtUtc;
+                    var policyVersionApprovalStatus = rolePolicy.PolicyVersions
+                        .Select(policyVersion => CalculateIndividualVolunteerRoleApprovalStatus(
+                            policyVersion, DateTime.UtcNow, completedRequirements, exemptedRequirements));
 
-                        var requirementsMet = policyVersion.Requirements.Select(requirement =>
-                            (requirement.ActionName, requirement.Stage, RequirementMet: completedRequirements.Any(x =>
-                                x.RequirementName == requirement.ActionName &&
-                                (supersededAtUtc == null || x.CompletedAtUtc < supersededAtUtc))))
-                            .ToList();
+                    //TODO: Bugfix for where non-applicable policy versions are still showing incomplete requirements
+                    // var statusBasedOnFurthestApprovalReachedAmongVersions = policyVersionApprovalStatus
+                    //     .OrderByDescending(x => x.Status)
+                    //     .First();
 
-                        if (requirementsMet.All(x => x.RequirementMet))
-                            AddToEntryList(individualRoles, roleName, new RoleVersionApproval(version, RoleApprovalStatus.Onboarded));
-                        else if (requirementsMet
-                            .Where(x => x.Stage == RequirementStage.Application || x.Stage == RequirementStage.Approval)
-                            .All(x => x.RequirementMet))
-                        {
-                            AddToEntryList(individualRoles, roleName, new RoleVersionApproval(version, RoleApprovalStatus.Approved));
-                            missingRequirements.UnionWith(requirementsMet
-                                .Where(x => !x.RequirementMet && x.Stage == RequirementStage.Onboarding)
-                                .Select(x => x.ActionName));
-                        }
-                        else if (requirementsMet
-                            .Where(x => x.Stage == RequirementStage.Application)
-                            .All(x => x.RequirementMet))
-                        {
-                            AddToEntryList(individualRoles, roleName, new RoleVersionApproval(version, RoleApprovalStatus.Prospective));
-                            missingRequirements.UnionWith(requirementsMet
-                                .Where(x => !x.RequirementMet && x.Stage == RequirementStage.Approval)
-                                .Select(x => x.ActionName));
-                        }
-                        else
-                        {
-                            availableApplications.UnionWith(requirementsMet
-                                .Where(x => !x.RequirementMet && x.Stage == RequirementStage.Application)
-                                .Select(x => x.ActionName));
-                        }
-                    }
+                    var roleApprovals = policyVersionApprovalStatus
+                        .Where(x => x.Status != null)
+                        .Select(x => new RoleVersionApproval(x.Version, x.Status!.Value))
+                        .ToImmutableList();
+                    individualRoles[roleName] = roleApprovals;
+
+                    missingRequirements.UnionWith(policyVersionApprovalStatus.SelectMany(x => x.MissingRequirements));
+                    availableApplications.UnionWith(policyVersionApprovalStatus.SelectMany(x => x.AvailableApplications));
                 }
-                
-                missingIndividualRequirements[person.Id] = missingRequirements;
+
+                allMissingIndividualRequirements[person.Id] = missingRequirements;
                 return (person.Id, new VolunteerApprovalStatus(individualRoles.ToImmutableDictionary(),
                     removedRoles, ImmutableList<string>.Empty, availableApplications.ToImmutableList()));
             }).ToImmutableDictionary(x => x.Item1, x => x.Item2);
@@ -175,7 +158,7 @@ namespace CareTogether.Engines
                         foreach (var (PersonId, ActionName) in requirementsMet
                             .Where(x => x.Stage == RequirementStage.Onboarding)
                             .SelectMany(x => x.RequirementMissingForIndividuals.Select(y => (PersonId: y, x.ActionName))))
-                            missingIndividualRequirements[PersonId].Add(ActionName);
+                            allMissingIndividualRequirements[PersonId].Add(ActionName);
                     }
                     else if (requirementsMet
                         .Where(x => x.Stage == RequirementStage.Application)
@@ -189,7 +172,7 @@ namespace CareTogether.Engines
                         foreach (var (PersonId, ActionName) in requirementsMet
                             .Where(x => x.Stage == RequirementStage.Approval)
                             .SelectMany(x => x.RequirementMissingForIndividuals.Select(y => (PersonId: y, x.ActionName))))
-                            missingIndividualRequirements[PersonId].Add(ActionName);
+                            allMissingIndividualRequirements[PersonId].Add(ActionName);
                     }
                     else
                     {
@@ -208,7 +191,64 @@ namespace CareTogether.Engines
                 availableFamilyApplications.ToImmutableList(),
                 individualVolunteerRoles.ToImmutableDictionary(
                     x => x.Key,
-                    x => x.Value with { MissingIndividualRequirements = missingIndividualRequirements[x.Key].ToImmutableList() }));
+                    x => x.Value with { MissingIndividualRequirements = allMissingIndividualRequirements[x.Key].ToImmutableList() }));
+        }
+
+
+        public static
+            (string Version, RoleApprovalStatus? Status, ImmutableList<string> MissingRequirements, ImmutableList<string> AvailableApplications)
+            CalculateIndividualVolunteerRoleApprovalStatus(
+            VolunteerRolePolicyVersion policyVersion, DateTime utcNow,
+            ImmutableList<CompletedRequirementInfo> completedRequirements, ImmutableList<ExemptedRequirementInfo> exemptedRequirements)
+        {
+            var version = policyVersion.Version;
+            var supersededAtUtc = policyVersion.SupersededAtUtc;
+
+            var requirementCompletionStatus = policyVersion.Requirements.Select(requirement =>
+                (requirement.ActionName, requirement.Stage, RequirementMetOrExempted:
+                    completedRequirements.Any(x =>
+                        x.RequirementName == requirement.ActionName &&
+                        (supersededAtUtc == null || x.CompletedAtUtc < supersededAtUtc)) ||
+                    exemptedRequirements.Any(x =>
+                        x.RequirementName == requirement.ActionName &&
+                        (x.ExemptionExpiresAtUtc == null || x.ExemptionExpiresAtUtc > utcNow))))
+                .ToList();
+
+            if (requirementCompletionStatus.All(x => x.RequirementMetOrExempted))
+                return (version, RoleApprovalStatus.Onboarded,
+                    MissingRequirements: ImmutableList<string>.Empty,
+                    AvailableApplications: ImmutableList<string>.Empty);
+            else if (requirementCompletionStatus
+                .Where(x => x.Stage == RequirementStage.Application || x.Stage == RequirementStage.Approval)
+                .All(x => x.RequirementMetOrExempted))
+            {
+                return (version, RoleApprovalStatus.Approved,
+                    MissingRequirements: requirementCompletionStatus
+                        .Where(x => !x.RequirementMetOrExempted && x.Stage == RequirementStage.Onboarding)
+                        .Select(x => x.ActionName)
+                        .ToImmutableList(),
+                    AvailableApplications: ImmutableList<string>.Empty);
+            }
+            else if (requirementCompletionStatus
+                .Where(x => x.Stage == RequirementStage.Application)
+                .All(x => x.RequirementMetOrExempted))
+            {
+                return (version, RoleApprovalStatus.Prospective,
+                    MissingRequirements: requirementCompletionStatus
+                        .Where(x => !x.RequirementMetOrExempted && x.Stage == RequirementStage.Approval)
+                        .Select(x => x.ActionName)
+                        .ToImmutableList(),
+                    AvailableApplications: ImmutableList<string>.Empty);
+            }
+            else
+            {
+                return (version, Status: null,
+                    MissingRequirements: ImmutableList<string>.Empty,
+                    AvailableApplications: requirementCompletionStatus
+                        .Where(x => !x.RequirementMetOrExempted && x.Stage == RequirementStage.Application)
+                        .Select(x => x.ActionName)
+                        .ToImmutableList());
+            }
         }
 
         public async Task<ReferralStatus> CalculateReferralStatusAsync(

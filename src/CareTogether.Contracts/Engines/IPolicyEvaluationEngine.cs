@@ -20,7 +20,7 @@ namespace CareTogether.Engines
 
     public sealed record RoleVersionApproval(string Version, RoleApprovalStatus ApprovalStatus);
 
-    public enum RoleApprovalStatus { Prospective, Approved, Onboarded };
+    public enum RoleApprovalStatus { Prospective = 0, Approved = 1, Onboarded = 2 };
 
     public sealed record ReferralStatus(
         ImmutableList<string> MissingIntakeRequirements,
