@@ -20,8 +20,10 @@ namespace CareTogether.Engines
 
         public async Task<VolunteerFamilyApprovalStatus> CalculateVolunteerFamilyApprovalStatusAsync(Guid organizationId, Guid locationId,
             Family family, ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
+            ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
             ImmutableList<RemovedRole> removedFamilyRoles,
             ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements,
+            ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>> exemptedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles)
         {
             static void AddToEntryList<T, U>(Dictionary<T, ImmutableList<U>> dictionary, T key, U value)

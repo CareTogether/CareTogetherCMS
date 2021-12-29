@@ -118,13 +118,16 @@ namespace CareTogether.Managers
             var completedIndividualRequirements = entry.IndividualEntries.ToImmutableDictionary(
                 x => x.Key,
                 x => x.Value.CompletedRequirements);
+            var exemptedIndividualRequirements = entry.IndividualEntries.ToImmutableDictionary(
+                x => x.Key,
+                x => x.Value.ExemptedRequirements);
             var removedIndividualRoles = entry.IndividualEntries.ToImmutableDictionary(
                 x => x.Key,
                 x => x.Value.RemovedRoles);
 
             var volunteerFamilyApprovalStatus = await policyEvaluationEngine.CalculateVolunteerFamilyApprovalStatusAsync(
-                organizationId, locationId, family, entry.CompletedRequirements, entry.RemovedRoles,
-                completedIndividualRequirements, removedIndividualRoles);
+                organizationId, locationId, family, entry.CompletedRequirements, entry.ExemptedRequirements, entry.RemovedRoles,
+                completedIndividualRequirements, exemptedIndividualRequirements, removedIndividualRoles);
 
             var volunteerFamilyInfo = new VolunteerFamilyInfo(
                 entry.CompletedRequirements, entry.ExemptedRequirements, entry.RemovedRoles,

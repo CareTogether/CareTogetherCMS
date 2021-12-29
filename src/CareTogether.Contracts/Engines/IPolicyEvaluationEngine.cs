@@ -38,8 +38,10 @@ namespace CareTogether.Engines
         Task<VolunteerFamilyApprovalStatus> CalculateVolunteerFamilyApprovalStatusAsync(
             Guid organizationId, Guid locationId, Family family,
             ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
+            ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
             ImmutableList<RemovedRole> removedFamilyRoles,
             ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements,
+            ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>> exemptedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles);
 
         Task<ReferralStatus> CalculateReferralStatusAsync(
