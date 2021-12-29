@@ -53,6 +53,16 @@ namespace CareTogether.Resources.Models
                                 new CompletedRequirementInfo(userId, timestampUtc, c.CompletedRequirementId,
                                     c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId))
                         },
+                        ExemptReferralRequirement c => referralEntry with
+                        {
+                            ExemptedRequirements = referralEntry.ExemptedRequirements.Add(
+                                new ExemptedRequirementInfo(userId, timestampUtc, c.RequirementName, c.AdditionalComments, c.ExemptionExpiresAtUtc))
+                        },
+                        UnexemptReferralRequirement c => referralEntry with
+                        {
+                            ExemptedRequirements = referralEntry.ExemptedRequirements.RemoveAll(x =>
+                                x.RequirementName == c.RequirementName)
+                        },
                         CloseReferral c => referralEntry with
                         {
                             CloseReason = c.CloseReason,
@@ -111,6 +121,16 @@ namespace CareTogether.Resources.Models
                             CompletedRequirements = arrangementEntry.CompletedRequirements.Add(
                                 new CompletedRequirementInfo(userId, timestampUtc, c.CompletedRequirementId,
                                     c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId))
+                        },
+                        ExemptArrangementRequirement c => arrangementEntry with
+                        {
+                            ExemptedRequirements = arrangementEntry.ExemptedRequirements.Add(
+                                new ExemptedRequirementInfo(userId, timestampUtc, c.RequirementName, c.AdditionalComments, c.ExemptionExpiresAtUtc))
+                        },
+                        UnexemptArrangementRequirement c => arrangementEntry with
+                        {
+                            ExemptedRequirements = arrangementEntry.ExemptedRequirements.RemoveAll(x =>
+                                x.RequirementName == c.RequirementName)
                         },
                         TrackChildLocationChange c => arrangementEntry with
                         {

@@ -58,6 +58,16 @@ namespace CareTogether.Resources.Models
                     CompletedRequirements = volunteerFamilyEntry.CompletedRequirements.RemoveAll(x =>
                         x.RequirementName == c.RequirementName && x.CompletedRequirementId == c.CompletedRequirementId),
                 },
+                ExemptVolunteerFamilyRequirement c => volunteerFamilyEntry with
+                {
+                    ExemptedRequirements = volunteerFamilyEntry.ExemptedRequirements.Add(
+                        new ExemptedRequirementInfo(userId, timestampUtc, c.RequirementName, c.AdditionalComments, c.ExemptionExpiresAtUtc))
+                },
+                UnexemptVolunteerFamilyRequirement c => volunteerFamilyEntry with
+                {
+                    ExemptedRequirements = volunteerFamilyEntry.ExemptedRequirements.RemoveAll(x =>
+                        x.RequirementName == c.RequirementName)
+                },
                 UploadVolunteerFamilyDocument c => volunteerFamilyEntry with
                 {
                     UploadedDocuments = volunteerFamilyEntry.UploadedDocuments.Add(
@@ -110,6 +120,16 @@ namespace CareTogether.Resources.Models
                 {
                     CompletedRequirements = volunteerEntry.CompletedRequirements.RemoveAll(x =>
                         x.RequirementName == c.RequirementName && x.CompletedRequirementId == c.CompletedRequirementId),
+                },
+                ExemptVolunteerRequirement c => volunteerEntry with
+                {
+                    ExemptedRequirements = volunteerEntry.ExemptedRequirements.Add(
+                        new ExemptedRequirementInfo(userId, timestampUtc, c.RequirementName, c.AdditionalComments, c.ExemptionExpiresAtUtc))
+                },
+                UnexemptVolunteerRequirement c => volunteerEntry with
+                {
+                    ExemptedRequirements = volunteerEntry.ExemptedRequirements.RemoveAll(x =>
+                        x.RequirementName == c.RequirementName)
                 },
                 RemoveVolunteerRole c => volunteerEntry with
                 {
