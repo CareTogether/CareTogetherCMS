@@ -447,6 +447,7 @@ namespace CareTogether.TestData
                                 ("Family Coach Checkin",
                                     new RecurrencePolicy(new List<RecurrencePolicyStage>
                                     {
+                                        new RecurrencePolicyStage(TimeSpan.FromDays(2), 1),
                                         new RecurrencePolicyStage(TimeSpan.FromDays(7), null)
                                     }.ToImmutableList())),
                                 ("Family Coach Supervision",
