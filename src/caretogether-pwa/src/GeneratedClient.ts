@@ -2572,6 +2572,7 @@ export class Referral implements IReferral {
     closedAtUtc?: Date | undefined;
     closeReason?: ReferralCloseReason | undefined;
     completedRequirements?: CompletedRequirementInfo[];
+    exemptedRequirements?: ExemptedRequirementInfo[];
     missingRequirements?: string[];
     arrangements?: Arrangement[];
 
@@ -2594,6 +2595,11 @@ export class Referral implements IReferral {
                 this.completedRequirements = [] as any;
                 for (let item of _data["completedRequirements"])
                     this.completedRequirements!.push(CompletedRequirementInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["exemptedRequirements"])) {
+                this.exemptedRequirements = [] as any;
+                for (let item of _data["exemptedRequirements"])
+                    this.exemptedRequirements!.push(ExemptedRequirementInfo.fromJS(item));
             }
             if (Array.isArray(_data["missingRequirements"])) {
                 this.missingRequirements = [] as any;
@@ -2626,6 +2632,11 @@ export class Referral implements IReferral {
             for (let item of this.completedRequirements)
                 data["completedRequirements"].push(item.toJSON());
         }
+        if (Array.isArray(this.exemptedRequirements)) {
+            data["exemptedRequirements"] = [];
+            for (let item of this.exemptedRequirements)
+                data["exemptedRequirements"].push(item.toJSON());
+        }
         if (Array.isArray(this.missingRequirements)) {
             data["missingRequirements"] = [];
             for (let item of this.missingRequirements)
@@ -2646,6 +2657,7 @@ export interface IReferral {
     closedAtUtc?: Date | undefined;
     closeReason?: ReferralCloseReason | undefined;
     completedRequirements?: CompletedRequirementInfo[];
+    exemptedRequirements?: ExemptedRequirementInfo[];
     missingRequirements?: string[];
     arrangements?: Arrangement[];
 }
@@ -2714,6 +2726,58 @@ export interface ICompletedRequirementInfo {
     uploadedDocumentId?: string | undefined;
 }
 
+export class ExemptedRequirementInfo implements IExemptedRequirementInfo {
+    userId?: string;
+    timestampUtc?: Date;
+    requirementName?: string;
+    additionalComments?: string;
+    exemptionExpiresAtUtc?: Date | undefined;
+
+    constructor(data?: IExemptedRequirementInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
+            this.requirementName = _data["requirementName"];
+            this.additionalComments = _data["additionalComments"];
+            this.exemptionExpiresAtUtc = _data["exemptionExpiresAtUtc"] ? new Date(_data["exemptionExpiresAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ExemptedRequirementInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new ExemptedRequirementInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
+        data["requirementName"] = this.requirementName;
+        data["additionalComments"] = this.additionalComments;
+        data["exemptionExpiresAtUtc"] = this.exemptionExpiresAtUtc ? this.exemptionExpiresAtUtc.toISOString() : <any>undefined;
+        return data; 
+    }
+}
+
+export interface IExemptedRequirementInfo {
+    userId?: string;
+    timestampUtc?: Date;
+    requirementName?: string;
+    additionalComments?: string;
+    exemptionExpiresAtUtc?: Date | undefined;
+}
+
 export class Arrangement implements IArrangement {
     id?: string;
     arrangementType?: string;
@@ -2723,6 +2787,7 @@ export class Arrangement implements IArrangement {
     startedAtUtc?: Date | undefined;
     endedAtUtc?: Date | undefined;
     completedRequirements?: CompletedRequirementInfo[];
+    exemptedRequirements?: ExemptedRequirementInfo[];
     missingRequirements?: string[];
     individualVolunteerAssignments?: IndividualVolunteerAssignment[];
     familyVolunteerAssignments?: FamilyVolunteerAssignment[];
@@ -2750,6 +2815,11 @@ export class Arrangement implements IArrangement {
                 this.completedRequirements = [] as any;
                 for (let item of _data["completedRequirements"])
                     this.completedRequirements!.push(CompletedRequirementInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["exemptedRequirements"])) {
+                this.exemptedRequirements = [] as any;
+                for (let item of _data["exemptedRequirements"])
+                    this.exemptedRequirements!.push(ExemptedRequirementInfo.fromJS(item));
             }
             if (Array.isArray(_data["missingRequirements"])) {
                 this.missingRequirements = [] as any;
@@ -2795,6 +2865,11 @@ export class Arrangement implements IArrangement {
             for (let item of this.completedRequirements)
                 data["completedRequirements"].push(item.toJSON());
         }
+        if (Array.isArray(this.exemptedRequirements)) {
+            data["exemptedRequirements"] = [];
+            for (let item of this.exemptedRequirements)
+                data["exemptedRequirements"].push(item.toJSON());
+        }
         if (Array.isArray(this.missingRequirements)) {
             data["missingRequirements"] = [];
             for (let item of this.missingRequirements)
@@ -2828,6 +2903,7 @@ export interface IArrangement {
     startedAtUtc?: Date | undefined;
     endedAtUtc?: Date | undefined;
     completedRequirements?: CompletedRequirementInfo[];
+    exemptedRequirements?: ExemptedRequirementInfo[];
     missingRequirements?: string[];
     individualVolunteerAssignments?: IndividualVolunteerAssignment[];
     familyVolunteerAssignments?: FamilyVolunteerAssignment[];
@@ -2985,6 +3061,7 @@ export enum ChildLocationPlan {
 
 export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
     completedRequirements?: CompletedRequirementInfo[];
+    exemptedRequirements?: ExemptedRequirementInfo[];
     removedRoles?: RemovedRole[];
     missingRequirements?: string[];
     availableApplications?: string[];
@@ -3006,6 +3083,11 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
                 this.completedRequirements = [] as any;
                 for (let item of _data["completedRequirements"])
                     this.completedRequirements!.push(CompletedRequirementInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["exemptedRequirements"])) {
+                this.exemptedRequirements = [] as any;
+                for (let item of _data["exemptedRequirements"])
+                    this.exemptedRequirements!.push(ExemptedRequirementInfo.fromJS(item));
             }
             if (Array.isArray(_data["removedRoles"])) {
                 this.removedRoles = [] as any;
@@ -3053,6 +3135,11 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
             for (let item of this.completedRequirements)
                 data["completedRequirements"].push(item.toJSON());
         }
+        if (Array.isArray(this.exemptedRequirements)) {
+            data["exemptedRequirements"] = [];
+            for (let item of this.exemptedRequirements)
+                data["exemptedRequirements"].push(item.toJSON());
+        }
         if (Array.isArray(this.removedRoles)) {
             data["removedRoles"] = [];
             for (let item of this.removedRoles)
@@ -3088,6 +3175,7 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
 
 export interface IVolunteerFamilyInfo {
     completedRequirements?: CompletedRequirementInfo[];
+    exemptedRequirements?: ExemptedRequirementInfo[];
     removedRoles?: RemovedRole[];
     missingRequirements?: string[];
     availableApplications?: string[];
@@ -3193,6 +3281,7 @@ export enum RoleApprovalStatus {
 
 export class VolunteerInfo implements IVolunteerInfo {
     completedRequirements?: CompletedRequirementInfo[];
+    exemptedRequirements?: ExemptedRequirementInfo[];
     removedRoles?: RemovedRole[];
     missingRequirements?: string[];
     availableApplications?: string[];
@@ -3213,6 +3302,11 @@ export class VolunteerInfo implements IVolunteerInfo {
                 this.completedRequirements = [] as any;
                 for (let item of _data["completedRequirements"])
                     this.completedRequirements!.push(CompletedRequirementInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["exemptedRequirements"])) {
+                this.exemptedRequirements = [] as any;
+                for (let item of _data["exemptedRequirements"])
+                    this.exemptedRequirements!.push(ExemptedRequirementInfo.fromJS(item));
             }
             if (Array.isArray(_data["removedRoles"])) {
                 this.removedRoles = [] as any;
@@ -3253,6 +3347,11 @@ export class VolunteerInfo implements IVolunteerInfo {
             for (let item of this.completedRequirements)
                 data["completedRequirements"].push(item.toJSON());
         }
+        if (Array.isArray(this.exemptedRequirements)) {
+            data["exemptedRequirements"] = [];
+            for (let item of this.exemptedRequirements)
+                data["exemptedRequirements"].push(item.toJSON());
+        }
         if (Array.isArray(this.removedRoles)) {
             data["removedRoles"] = [];
             for (let item of this.removedRoles)
@@ -3281,6 +3380,7 @@ export class VolunteerInfo implements IVolunteerInfo {
 
 export interface IVolunteerInfo {
     completedRequirements?: CompletedRequirementInfo[];
+    exemptedRequirements?: ExemptedRequirementInfo[];
     removedRoles?: RemovedRole[];
     missingRequirements?: string[];
     availableApplications?: string[];
@@ -5116,6 +5216,16 @@ export abstract class ReferralCommand implements IReferralCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "ExemptReferralRequirement") {
+            let result = new ExemptReferralRequirement();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UnexemptReferralRequirement") {
+            let result = new UnexemptReferralRequirement();
+            result.init(data);
+            return result;
+        }
         throw new Error("The abstract class 'ReferralCommand' cannot be instantiated.");
     }
 
@@ -5251,6 +5361,82 @@ export interface ICreateReferral extends IReferralCommand {
     openedAtUtc?: Date;
 }
 
+export class ExemptReferralRequirement extends ReferralCommand implements IExemptReferralRequirement {
+    requirementName?: string;
+    additionalComments?: string;
+    exemptionExpiresAtUtc?: Date | undefined;
+
+    constructor(data?: IExemptReferralRequirement) {
+        super(data);
+        this._discriminator = "ExemptReferralRequirement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.requirementName = _data["requirementName"];
+            this.additionalComments = _data["additionalComments"];
+            this.exemptionExpiresAtUtc = _data["exemptionExpiresAtUtc"] ? new Date(_data["exemptionExpiresAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ExemptReferralRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new ExemptReferralRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["requirementName"] = this.requirementName;
+        data["additionalComments"] = this.additionalComments;
+        data["exemptionExpiresAtUtc"] = this.exemptionExpiresAtUtc ? this.exemptionExpiresAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IExemptReferralRequirement extends IReferralCommand {
+    requirementName?: string;
+    additionalComments?: string;
+    exemptionExpiresAtUtc?: Date | undefined;
+}
+
+export class UnexemptReferralRequirement extends ReferralCommand implements IUnexemptReferralRequirement {
+    requirementName?: string;
+
+    constructor(data?: IUnexemptReferralRequirement) {
+        super(data);
+        this._discriminator = "UnexemptReferralRequirement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.requirementName = _data["requirementName"];
+        }
+    }
+
+    static fromJS(data: any): UnexemptReferralRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new UnexemptReferralRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["requirementName"] = this.requirementName;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUnexemptReferralRequirement extends IReferralCommand {
+    requirementName?: string;
+}
+
 export abstract class ArrangementCommand implements IArrangementCommand {
     familyId?: string;
     referralId?: string;
@@ -5303,6 +5489,11 @@ export abstract class ArrangementCommand implements IArrangementCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "ExemptArrangementRequirement") {
+            let result = new ExemptArrangementRequirement();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "StartArrangement") {
             let result = new StartArrangement();
             result.init(data);
@@ -5310,6 +5501,11 @@ export abstract class ArrangementCommand implements IArrangementCommand {
         }
         if (data["discriminator"] === "TrackChildLocationChange") {
             let result = new TrackChildLocationChange();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UnexemptArrangementRequirement") {
+            let result = new UnexemptArrangementRequirement();
             result.init(data);
             return result;
         }
@@ -5534,6 +5730,48 @@ export interface IEndArrangement extends IArrangementCommand {
     endedAtUtc?: Date;
 }
 
+export class ExemptArrangementRequirement extends ArrangementCommand implements IExemptArrangementRequirement {
+    requirementName?: string;
+    additionalComments?: string;
+    exemptionExpiresAtUtc?: Date | undefined;
+
+    constructor(data?: IExemptArrangementRequirement) {
+        super(data);
+        this._discriminator = "ExemptArrangementRequirement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.requirementName = _data["requirementName"];
+            this.additionalComments = _data["additionalComments"];
+            this.exemptionExpiresAtUtc = _data["exemptionExpiresAtUtc"] ? new Date(_data["exemptionExpiresAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ExemptArrangementRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new ExemptArrangementRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["requirementName"] = this.requirementName;
+        data["additionalComments"] = this.additionalComments;
+        data["exemptionExpiresAtUtc"] = this.exemptionExpiresAtUtc ? this.exemptionExpiresAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IExemptArrangementRequirement extends IArrangementCommand {
+    requirementName?: string;
+    additionalComments?: string;
+    exemptionExpiresAtUtc?: Date | undefined;
+}
+
 export class StartArrangement extends ArrangementCommand implements IStartArrangement {
     startedAtUtc?: Date;
 
@@ -5612,6 +5850,40 @@ export interface ITrackChildLocationChange extends IArrangementCommand {
     childLocationFamilyId?: string;
     plan?: ChildLocationPlan;
     additionalExplanation?: string;
+}
+
+export class UnexemptArrangementRequirement extends ArrangementCommand implements IUnexemptArrangementRequirement {
+    requirementName?: string;
+
+    constructor(data?: IUnexemptArrangementRequirement) {
+        super(data);
+        this._discriminator = "UnexemptArrangementRequirement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.requirementName = _data["requirementName"];
+        }
+    }
+
+    static fromJS(data: any): UnexemptArrangementRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new UnexemptArrangementRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["requirementName"] = this.requirementName;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUnexemptArrangementRequirement extends IArrangementCommand {
+    requirementName?: string;
 }
 
 export class UserTenantAccessSummary implements IUserTenantAccessSummary {
@@ -5695,6 +5967,11 @@ export abstract class VolunteerFamilyCommand implements IVolunteerFamilyCommand 
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "ExemptVolunteerFamilyRequirement") {
+            let result = new ExemptVolunteerFamilyRequirement();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "MarkVolunteerFamilyRequirementIncomplete") {
             let result = new MarkVolunteerFamilyRequirementIncomplete();
             result.init(data);
@@ -5707,6 +5984,11 @@ export abstract class VolunteerFamilyCommand implements IVolunteerFamilyCommand 
         }
         if (data["discriminator"] === "ResetVolunteerFamilyRole") {
             let result = new ResetVolunteerFamilyRole();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UnexemptVolunteerFamilyRequirement") {
+            let result = new UnexemptVolunteerFamilyRequirement();
             result.init(data);
             return result;
         }
@@ -5802,6 +6084,48 @@ export interface ICompleteVolunteerFamilyRequirement extends IVolunteerFamilyCom
     requirementName?: string;
     completedAtUtc?: Date;
     uploadedDocumentId?: string | undefined;
+}
+
+export class ExemptVolunteerFamilyRequirement extends VolunteerFamilyCommand implements IExemptVolunteerFamilyRequirement {
+    requirementName?: string;
+    additionalComments?: string;
+    exemptionExpiresAtUtc?: Date | undefined;
+
+    constructor(data?: IExemptVolunteerFamilyRequirement) {
+        super(data);
+        this._discriminator = "ExemptVolunteerFamilyRequirement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.requirementName = _data["requirementName"];
+            this.additionalComments = _data["additionalComments"];
+            this.exemptionExpiresAtUtc = _data["exemptionExpiresAtUtc"] ? new Date(_data["exemptionExpiresAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ExemptVolunteerFamilyRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new ExemptVolunteerFamilyRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["requirementName"] = this.requirementName;
+        data["additionalComments"] = this.additionalComments;
+        data["exemptionExpiresAtUtc"] = this.exemptionExpiresAtUtc ? this.exemptionExpiresAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IExemptVolunteerFamilyRequirement extends IVolunteerFamilyCommand {
+    requirementName?: string;
+    additionalComments?: string;
+    exemptionExpiresAtUtc?: Date | undefined;
 }
 
 export class MarkVolunteerFamilyRequirementIncomplete extends VolunteerFamilyCommand implements IMarkVolunteerFamilyRequirementIncomplete {
@@ -5918,6 +6242,40 @@ export interface IResetVolunteerFamilyRole extends IVolunteerFamilyCommand {
     roleName?: string;
 }
 
+export class UnexemptVolunteerFamilyRequirement extends VolunteerFamilyCommand implements IUnexemptVolunteerFamilyRequirement {
+    requirementName?: string;
+
+    constructor(data?: IUnexemptVolunteerFamilyRequirement) {
+        super(data);
+        this._discriminator = "UnexemptVolunteerFamilyRequirement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.requirementName = _data["requirementName"];
+        }
+    }
+
+    static fromJS(data: any): UnexemptVolunteerFamilyRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new UnexemptVolunteerFamilyRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["requirementName"] = this.requirementName;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUnexemptVolunteerFamilyRequirement extends IVolunteerFamilyCommand {
+    requirementName?: string;
+}
+
 export class UploadVolunteerFamilyDocument extends VolunteerFamilyCommand implements IUploadVolunteerFamilyDocument {
     uploadedDocumentId?: string;
     uploadedFileName?: string;
@@ -5986,6 +6344,11 @@ export abstract class VolunteerCommand implements IVolunteerCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "ExemptVolunteerRequirement") {
+            let result = new ExemptVolunteerRequirement();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "MarkVolunteerRequirementIncomplete") {
             let result = new MarkVolunteerRequirementIncomplete();
             result.init(data);
@@ -5998,6 +6361,11 @@ export abstract class VolunteerCommand implements IVolunteerCommand {
         }
         if (data["discriminator"] === "ResetVolunteerRole") {
             let result = new ResetVolunteerRole();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UnexemptVolunteerRequirement") {
+            let result = new UnexemptVolunteerRequirement();
             result.init(data);
             return result;
         }
@@ -6062,6 +6430,48 @@ export interface ICompleteVolunteerRequirement extends IVolunteerCommand {
     requirementName?: string;
     completedAtUtc?: Date;
     uploadedDocumentId?: string | undefined;
+}
+
+export class ExemptVolunteerRequirement extends VolunteerCommand implements IExemptVolunteerRequirement {
+    requirementName?: string;
+    additionalComments?: string;
+    exemptionExpiresAtUtc?: Date | undefined;
+
+    constructor(data?: IExemptVolunteerRequirement) {
+        super(data);
+        this._discriminator = "ExemptVolunteerRequirement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.requirementName = _data["requirementName"];
+            this.additionalComments = _data["additionalComments"];
+            this.exemptionExpiresAtUtc = _data["exemptionExpiresAtUtc"] ? new Date(_data["exemptionExpiresAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ExemptVolunteerRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new ExemptVolunteerRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["requirementName"] = this.requirementName;
+        data["additionalComments"] = this.additionalComments;
+        data["exemptionExpiresAtUtc"] = this.exemptionExpiresAtUtc ? this.exemptionExpiresAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IExemptVolunteerRequirement extends IVolunteerCommand {
+    requirementName?: string;
+    additionalComments?: string;
+    exemptionExpiresAtUtc?: Date | undefined;
 }
 
 export class MarkVolunteerRequirementIncomplete extends VolunteerCommand implements IMarkVolunteerRequirementIncomplete {
@@ -6176,6 +6586,40 @@ export class ResetVolunteerRole extends VolunteerCommand implements IResetVolunt
 
 export interface IResetVolunteerRole extends IVolunteerCommand {
     roleName?: string;
+}
+
+export class UnexemptVolunteerRequirement extends VolunteerCommand implements IUnexemptVolunteerRequirement {
+    requirementName?: string;
+
+    constructor(data?: IUnexemptVolunteerRequirement) {
+        super(data);
+        this._discriminator = "UnexemptVolunteerRequirement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.requirementName = _data["requirementName"];
+        }
+    }
+
+    static fromJS(data: any): UnexemptVolunteerRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new UnexemptVolunteerRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["requirementName"] = this.requirementName;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IUnexemptVolunteerRequirement extends IVolunteerCommand {
+    requirementName?: string;
 }
 
 export class ApiException extends Error {

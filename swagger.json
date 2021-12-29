@@ -1606,6 +1606,12 @@
               "$ref": "#/components/schemas/CompletedRequirementInfo"
             }
           },
+          "exemptedRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExemptedRequirementInfo"
+            }
+          },
           "missingRequirements": {
             "type": "array",
             "items": {
@@ -1668,6 +1674,31 @@
           }
         }
       },
+      "ExemptedRequirementInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "timestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "requirementName": {
+            "type": "string"
+          },
+          "additionalComments": {
+            "type": "string"
+          },
+          "exemptionExpiresAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
       "Arrangement": {
         "type": "object",
         "additionalProperties": false,
@@ -1704,6 +1735,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CompletedRequirementInfo"
+            }
+          },
+          "exemptedRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExemptedRequirementInfo"
             }
           },
           "missingRequirements": {
@@ -1826,6 +1863,12 @@
               "$ref": "#/components/schemas/CompletedRequirementInfo"
             }
           },
+          "exemptedRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExemptedRequirementInfo"
+            }
+          },
           "removedRoles": {
             "type": "array",
             "items": {
@@ -1925,6 +1968,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CompletedRequirementInfo"
+            }
+          },
+          "exemptedRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExemptedRequirementInfo"
             }
           },
           "removedRoles": {
@@ -2902,7 +2951,9 @@
           "mapping": {
             "CloseReferral": "#/components/schemas/CloseReferral",
             "CompleteReferralRequirement": "#/components/schemas/CompleteReferralRequirement",
-            "CreateReferral": "#/components/schemas/CreateReferral"
+            "CreateReferral": "#/components/schemas/CreateReferral",
+            "ExemptReferralRequirement": "#/components/schemas/ExemptReferralRequirement",
+            "UnexemptReferralRequirement": "#/components/schemas/UnexemptReferralRequirement"
           }
         },
         "x-abstract": true,
@@ -2990,6 +3041,46 @@
           }
         ]
       },
+      "ExemptReferralRequirement": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "requirementName": {
+                "type": "string"
+              },
+              "additionalComments": {
+                "type": "string"
+              },
+              "exemptionExpiresAtUtc": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "UnexemptReferralRequirement": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "requirementName": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
       "ArrangementCommand": {
         "type": "object",
         "discriminator": {
@@ -3000,8 +3091,10 @@
             "CompleteArrangementRequirement": "#/components/schemas/CompleteArrangementRequirement",
             "CreateArrangement": "#/components/schemas/CreateArrangement",
             "EndArrangement": "#/components/schemas/EndArrangement",
+            "ExemptArrangementRequirement": "#/components/schemas/ExemptArrangementRequirement",
             "StartArrangement": "#/components/schemas/StartArrangement",
-            "TrackChildLocationChange": "#/components/schemas/TrackChildLocationChange"
+            "TrackChildLocationChange": "#/components/schemas/TrackChildLocationChange",
+            "UnexemptArrangementRequirement": "#/components/schemas/UnexemptArrangementRequirement"
           }
         },
         "x-abstract": true,
@@ -3141,6 +3234,30 @@
           }
         ]
       },
+      "ExemptArrangementRequirement": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "requirementName": {
+                "type": "string"
+              },
+              "additionalComments": {
+                "type": "string"
+              },
+              "exemptionExpiresAtUtc": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
       "StartArrangement": {
         "allOf": [
           {
@@ -3185,6 +3302,22 @@
           }
         ]
       },
+      "UnexemptArrangementRequirement": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "requirementName": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
       "UserTenantAccessSummary": {
         "type": "object",
         "additionalProperties": false,
@@ -3209,9 +3342,11 @@
           "mapping": {
             "ActivateVolunteerFamily": "#/components/schemas/ActivateVolunteerFamily",
             "CompleteVolunteerFamilyRequirement": "#/components/schemas/CompleteVolunteerFamilyRequirement",
+            "ExemptVolunteerFamilyRequirement": "#/components/schemas/ExemptVolunteerFamilyRequirement",
             "MarkVolunteerFamilyRequirementIncomplete": "#/components/schemas/MarkVolunteerFamilyRequirementIncomplete",
             "RemoveVolunteerFamilyRole": "#/components/schemas/RemoveVolunteerFamilyRole",
             "ResetVolunteerFamilyRole": "#/components/schemas/ResetVolunteerFamilyRole",
+            "UnexemptVolunteerFamilyRequirement": "#/components/schemas/UnexemptVolunteerFamilyRequirement",
             "UploadVolunteerFamilyDocument": "#/components/schemas/UploadVolunteerFamilyDocument"
           }
         },
@@ -3264,6 +3399,30 @@
               "uploadedDocumentId": {
                 "type": "string",
                 "format": "guid",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "ExemptVolunteerFamilyRequirement": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerFamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "requirementName": {
+                "type": "string"
+              },
+              "additionalComments": {
+                "type": "string"
+              },
+              "exemptionExpiresAtUtc": {
+                "type": "string",
+                "format": "date-time",
                 "nullable": true
               }
             }
@@ -3329,6 +3488,22 @@
           }
         ]
       },
+      "UnexemptVolunteerFamilyRequirement": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerFamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "requirementName": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
       "UploadVolunteerFamilyDocument": {
         "allOf": [
           {
@@ -3355,9 +3530,11 @@
           "propertyName": "discriminator",
           "mapping": {
             "CompleteVolunteerRequirement": "#/components/schemas/CompleteVolunteerRequirement",
+            "ExemptVolunteerRequirement": "#/components/schemas/ExemptVolunteerRequirement",
             "MarkVolunteerRequirementIncomplete": "#/components/schemas/MarkVolunteerRequirementIncomplete",
             "RemoveVolunteerRole": "#/components/schemas/RemoveVolunteerRole",
-            "ResetVolunteerRole": "#/components/schemas/ResetVolunteerRole"
+            "ResetVolunteerRole": "#/components/schemas/ResetVolunteerRole",
+            "UnexemptVolunteerRequirement": "#/components/schemas/UnexemptVolunteerRequirement"
           }
         },
         "x-abstract": true,
@@ -3402,6 +3579,30 @@
               "uploadedDocumentId": {
                 "type": "string",
                 "format": "guid",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "ExemptVolunteerRequirement": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "requirementName": {
+                "type": "string"
+              },
+              "additionalComments": {
+                "type": "string"
+              },
+              "exemptionExpiresAtUtc": {
+                "type": "string",
+                "format": "date-time",
                 "nullable": true
               }
             }
@@ -3461,6 +3662,22 @@
             "additionalProperties": false,
             "properties": {
               "roleName": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "UnexemptVolunteerRequirement": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "requirementName": {
                 "type": "string"
               }
             }
