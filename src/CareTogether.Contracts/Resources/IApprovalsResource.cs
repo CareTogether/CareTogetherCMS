@@ -7,6 +7,7 @@ namespace CareTogether.Resources
 {
     public record VolunteerFamilyEntry(Guid FamilyId,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
+        ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         // COMPATIBILITY: This UploadedDocuments property is only used for backwards compatibility.
         // It should not be referenced directly.
         ImmutableList<UploadedDocumentInfo> UploadedDocuments,
@@ -20,6 +21,7 @@ namespace CareTogether.Resources
     public record VolunteerEntry(Guid PersonId,
         bool Active, string Note,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
+        ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<RemovedRole> RemovedRoles);
 
     [JsonHierarchyBase]

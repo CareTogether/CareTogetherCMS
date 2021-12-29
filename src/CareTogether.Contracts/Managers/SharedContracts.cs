@@ -16,12 +16,14 @@ namespace CareTogether.Managers
     public sealed record Referral(Guid Id,
         DateTime OpenedAtUtc, DateTime? ClosedAtUtc, ReferralCloseReason? CloseReason,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
+        ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<string> MissingRequirements,
         ImmutableList<Arrangement> Arrangements);
 
     public sealed record Arrangement(Guid Id, string ArrangementType, Guid PartneringFamilyPersonId,
         ArrangementPhase Phase, DateTime RequestedAtUtc, DateTime? StartedAtUtc, DateTime? EndedAtUtc,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
+        ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<string> MissingRequirements,
         ImmutableList<IndividualVolunteerAssignment> IndividualVolunteerAssignments,
         ImmutableList<FamilyVolunteerAssignment> FamilyVolunteerAssignments,
@@ -32,6 +34,7 @@ namespace CareTogether.Managers
 
     public sealed record VolunteerFamilyInfo(
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
+        ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<RemovedRole> RemovedRoles,
         ImmutableList<string> MissingRequirements,
         ImmutableList<string> AvailableApplications,
@@ -40,6 +43,7 @@ namespace CareTogether.Managers
 
     public sealed record VolunteerInfo(
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
+        ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<RemovedRole> RemovedRoles,
         ImmutableList<string> MissingRequirements,
         ImmutableList<string> AvailableApplications,
