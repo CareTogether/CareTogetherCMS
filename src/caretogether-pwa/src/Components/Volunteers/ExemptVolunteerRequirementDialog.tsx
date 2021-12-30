@@ -40,8 +40,8 @@ export function ExemptVolunteerRequirementDialog({volunteerFamilyId, personId, r
           <Grid item xs={12}>
             <KeyboardDatePicker
               label="When does this exemption expire? (Default is never)"
-              value={exemptionExpiresAtLocal} fullWidth required
-              disableFuture format="MM/dd/yyyy"
+              value={exemptionExpiresAtLocal} fullWidth
+              format="MM/dd/yyyy"
               onChange={(date) => date && setFields({...fields, exemptionExpiresAtLocal: date })}
               showTodayButton />
           </Grid>

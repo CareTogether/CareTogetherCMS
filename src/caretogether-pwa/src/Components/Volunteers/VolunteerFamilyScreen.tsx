@@ -245,9 +245,9 @@ export function VolunteerFamilyScreen() {
               onContextMenu={(e) => { e.preventDefault(); setRequirementMoreMenuAnchor({ anchor: e.currentTarget, requirement: exempted }); }}>
               <>
                 <span>🚫 {exempted.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                {exempted.exemptionExpiresAtUtc && <span style={{float:'right',marginRight:20}}>until {format(exempted.exemptionExpiresAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
+                {exempted.exemptionExpiresAtUtc && <span style={{float:'right',marginRight:20}}>until {format(exempted.exemptionExpiresAtUtc, "MM/dd/yyyy")}</span>}
                 <br />
-                <span>{exempted.additionalComments}</span>
+                <span style={{lineHeight: '1.5em', paddingLeft:30, fontStyle: 'italic'}}>{exempted.additionalComments}</span>
               </>
             </li>
           ))}

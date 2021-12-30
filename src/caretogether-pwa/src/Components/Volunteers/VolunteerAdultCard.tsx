@@ -188,12 +188,12 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
             {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].exemptedRequirements?.map((exempted, i) => (
               <li key={i}
                 onContextMenu={(e) => { e.preventDefault(); setRequirementMoreMenuAnchor({ anchor: e.currentTarget, requirement: exempted }); }}>
-                <CardInfoRow icon='✅'>
+                <CardInfoRow icon='🚫'>
                   <>
-                    <span>🚫 {exempted.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                    {exempted.exemptionExpiresAtUtc && <span style={{float:'right',marginRight:20}}>until {format(exempted.exemptionExpiresAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
+                    <span>{exempted.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                    {exempted.exemptionExpiresAtUtc && <span style={{float:'right',marginRight:20}}>until {format(exempted.exemptionExpiresAtUtc, "MM/dd/yyyy")}</span>}
                     <br />
-                    <span>{exempted.additionalComments}</span>
+                    <span style={{lineHeight: '1.5em', paddingLeft:30, fontStyle: 'italic'}}>{exempted.additionalComments}</span>
                   </>
                 </CardInfoRow>
               </li>
@@ -214,13 +214,13 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
             keepMounted
             open={Boolean(requirementMoreMenuAnchor)}
             onClose={() => setRequirementMoreMenuAnchor(null)}>
-            { (requirementMoreMenuAnchor?.requirement as string) &&
+            { (typeof requirementMoreMenuAnchor?.requirement === 'string') &&
               <MenuItem onClick={() => selectExempt(requirementMoreMenuAnchor?.requirement as string)}>Exempt</MenuItem>
               }
-            { (requirementMoreMenuAnchor?.requirement as CompletedRequirementInfo) &&
+            { (requirementMoreMenuAnchor?.requirement instanceof CompletedRequirementInfo) &&
               <MenuItem onClick={() => selectMarkIncomplete(requirementMoreMenuAnchor?.requirement as CompletedRequirementInfo)}>Mark Incomplete</MenuItem>
               }
-            { (requirementMoreMenuAnchor?.requirement as ExemptedRequirementInfo) &&
+            { (requirementMoreMenuAnchor?.requirement instanceof ExemptedRequirementInfo) &&
               <MenuItem onClick={() => selectUnexempt(requirementMoreMenuAnchor?.requirement as ExemptedRequirementInfo)}>Unexempt</MenuItem>
               }
           </Menu>
