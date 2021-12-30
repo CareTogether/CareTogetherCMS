@@ -23,6 +23,8 @@ import { ResetFamilyRoleDialog } from './ResetFamilyRoleDialog';
 import { PersonName } from '../Families/PersonName';
 import { FamilyDocuments } from '../Families/FamilyDocuments';
 import { MarkVolunteerFamilyStepIncompleteDialog } from './MarkVolunteerFamilyStepIncompleteDialog';
+import { ExemptVolunteerFamilyRequirementDialog } from './ExemptVolunteerFamilyRequirementDialog';
+import { UnexemptVolunteerFamilyRequirementDialog } from './UnexemptVolunteerFamilyRequirementDialog';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -266,11 +268,11 @@ export function VolunteerFamilyScreen() {
           <MenuItem onClick={() => selectUnexempt(requirementMoreMenuAnchor?.requirement as ExemptedRequirementInfo)}>Unexempt</MenuItem>
           }
       </Menu>
-      {(exemptParameter && <ExemptVolunteerFamilyRequirementDialog volunteerFamily={volunteerFamily} requirementName={exemptParameter.requirementName}
+      {(exemptParameter && <ExemptVolunteerFamilyRequirementDialog volunteerFamilyId={volunteerFamily.family!.id!} requirementName={exemptParameter.requirementName}
         onClose={() => setExemptParameter(null)} />) || null}
       {(markIncompleteParameter && <MarkVolunteerFamilyStepIncompleteDialog volunteerFamily={volunteerFamily} completedRequirement={markIncompleteParameter.completedRequirement}
         onClose={() => setMarkIncompleteParameter(null)} />) || null}
-      {(unexemptParameter && <UnexemptVolunteerFamilyRequirementDialog volunteerFamily={volunteerFamily} exemptedRequirement={unexemptParameter.exemptedRequirement}
+      {(unexemptParameter && <UnexemptVolunteerFamilyRequirementDialog volunteerFamilyId={volunteerFamily.family!.id!} exemptedRequirement={unexemptParameter.exemptedRequirement}
         onClose={() => setUnexemptParameter(null)} />) || null}
       <Grid item xs={12} sm={6} md={4}>
         <h3>Documents</h3>
