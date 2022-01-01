@@ -17,6 +17,14 @@ namespace CareTogether
             return list.Select(x => predicate(x) ? valueToUpdate : x).ToImmutableList();
         }
 
+        public static ImmutableList<U> GetValueOrEmptyList<T, U>(this ImmutableDictionary<T, ImmutableList<U>> dictionary, T key)
+            where T : notnull
+        {
+            return dictionary.TryGetValue(key, out var value)
+                ? value
+                : ImmutableList<U>.Empty;
+        }
+
 
         public static Guid UserId(this ClaimsPrincipal principal)
         {
