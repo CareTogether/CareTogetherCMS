@@ -1,6 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Immutable;
-using System.Linq;
 
 namespace CareTogether.Core.Test
 {
@@ -12,10 +11,9 @@ namespace CareTogether.Core.Test
         {
             var dut = ImmutableList<int>.Empty.Add(1).Add(2).Add(3).Add(4);
 
-            var result = dut.With(3, x => x > 2);
+            var result = dut.With(5, x => x > 2);
 
-            Assert.AreEqual(4, result.Count);
-            Assert.IsTrue(Enumerable.Zip(result, new[] { 1, 2, 3, 3 }).All(tuple => tuple.First == tuple.Second));
+            AssertEx.SequenceIs(result, 1, 2, 5, 5);
         }
 
         [TestMethod]
@@ -27,8 +25,7 @@ namespace CareTogether.Core.Test
 
             var result = dut.GetValueOrEmptyList('b');
 
-            Assert.AreEqual(2, result.Count);
-            Assert.IsTrue(Enumerable.Zip(result, ImmutableList<int>.Empty.Add(3).Add(4)).All(tuple => tuple.First == tuple.Second));
+            AssertEx.SequenceIs(result, 3, 4);
         }
 
         [TestMethod]
@@ -40,7 +37,7 @@ namespace CareTogether.Core.Test
 
             var result = dut.GetValueOrEmptyList('c');
 
-            Assert.AreEqual(0, result.Count);
+            AssertEx.SequenceIs(result);
         }
     }
 }
