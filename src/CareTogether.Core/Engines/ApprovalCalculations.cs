@@ -57,7 +57,7 @@ namespace CareTogether.Engines
                         completedFamilyRequirements, exemptedFamilyRequirements, removedIndividualRoles,
                         activeAdults),
                 RequirementMissingForIndividuals: FamilyRequirementMissingForIndividuals(roleName, requirement, supersededAtUtc, utcNow,
-                    completedFamilyRequirements, exemptedFamilyRequirements, removedIndividualRoles,
+                    removedIndividualRoles,
                     activeAdults)))
                 .ToImmutableList();
 
@@ -213,8 +213,6 @@ namespace CareTogether.Engines
         internal static List<Guid> FamilyRequirementMissingForIndividuals(string roleName,
             VolunteerFamilyApprovalRequirement requirement,
             DateTime? supersededAtUtc, DateTime utcNow,
-            ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
-            ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
             ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles,
             ImmutableList<(Guid Id, ImmutableList<CompletedRequirementInfo> CompletedRequirements, ImmutableList<ExemptedRequirementInfo> ExemptedRequirements)> activeAdults) =>
             requirement.Scope switch
