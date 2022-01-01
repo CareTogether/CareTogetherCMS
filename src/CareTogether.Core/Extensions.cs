@@ -7,11 +7,6 @@ namespace CareTogether
 {
     public static class Extensions
     {
-        public static ImmutableList<T> With<T>(this ImmutableList<T> list, T valueToAdd)
-        {
-            return list.Add(valueToAdd);
-        }
-
         public static ImmutableList<T> With<T>(this ImmutableList<T> list, T valueToUpdate, Predicate<T> predicate)
         {
             return list.Select(x => predicate(x) ? valueToUpdate : x).ToImmutableList();

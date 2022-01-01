@@ -171,7 +171,7 @@ namespace CareTogether.Resources.Models
                         UpdatePersonNotes c => personEntry with { Notes = c.Notes },
                         AddPersonAddress c => personEntry with
                         {
-                            Addresses = personEntry.Addresses.With(c.Address),
+                            Addresses = personEntry.Addresses.Add(c.Address),
                             CurrentAddressId = c.IsCurrentAddress ? c.Address.Id : personEntry.CurrentAddressId
                         },
                         UpdatePersonAddress c => personEntry with
@@ -181,7 +181,7 @@ namespace CareTogether.Resources.Models
                         },
                         AddPersonPhoneNumber c => personEntry with
                         {
-                            PhoneNumbers = personEntry.PhoneNumbers.With(c.PhoneNumber),
+                            PhoneNumbers = personEntry.PhoneNumbers.Add(c.PhoneNumber),
                             PreferredPhoneNumberId = c.IsPreferredPhoneNumber ? c.PhoneNumber.Id : personEntry.PreferredPhoneNumberId
                         },
                         UpdatePersonPhoneNumber c => personEntry with
@@ -191,7 +191,7 @@ namespace CareTogether.Resources.Models
                         },
                         AddPersonEmailAddress c => personEntry with
                         {
-                            EmailAddresses = personEntry.EmailAddresses.With(c.EmailAddress),
+                            EmailAddresses = personEntry.EmailAddresses.Add(c.EmailAddress),
                             PreferredEmailAddressId = c.IsPreferredEmailAddress ? c.EmailAddress.Id : personEntry.PreferredEmailAddressId
                         },
                         UpdatePersonEmailAddress c => personEntry with
