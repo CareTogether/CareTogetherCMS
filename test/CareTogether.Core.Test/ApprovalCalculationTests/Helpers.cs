@@ -26,13 +26,36 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
             .ToImmutableList();
 
         public static
+            ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>>
+            CompletedIndividualRequirements(params (Guid, string, int)[] completedIndividualRequirements) =>
+            ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>>.Empty.AddRange(
+                completedIndividualRequirements
+                    .GroupBy(completed => completed.Item1, completed => (completed.Item2, new DateTime(2022, 1, completed.Item3)))
+                    .Select(completed => new KeyValuePair<Guid, ImmutableList<CompletedRequirementInfo>>(completed.Key,
+                        completed.Select(c => new CompletedRequirementInfo(Guid.Empty, DateTime.MinValue, new Guid(),
+                            c.Item1, c.Item2, null))
+                        .ToImmutableList())));
+
+        public static
+            ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>>
+            ExemptedIndividualRequirements(params (Guid, string, int?)[] exemptedIndividualRequirements) =>
+            ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>>.Empty.AddRange(
+                exemptedIndividualRequirements
+                    .GroupBy(exempted => exempted.Item1, exempted => exempted)
+                    .Select(exempted => new KeyValuePair<Guid, ImmutableList<ExemptedRequirementInfo>>(exempted.Key,
+                        exempted.Select(e => new ExemptedRequirementInfo(Guid.Empty, DateTime.MinValue,
+                            e.Item2, "", e.Item3.HasValue ? new DateTime(2022, 1, e.Item3.Value) : null))
+                            .ToImmutableList())));
+
+        public static
             ImmutableDictionary<Guid, ImmutableList<RemovedRole>>
             RemovedIndividualRoles(params (Guid, string)[] removedIndividualRoles) =>
             ImmutableDictionary<Guid, ImmutableList<RemovedRole>>.Empty.AddRange(
                 removedIndividualRoles
                     .GroupBy(removed => removed.Item1, removed => removed.Item2)
                     .Select(removed => new KeyValuePair<Guid, ImmutableList<RemovedRole>>(removed.Key,
-                        removed.Select(r => new RemovedRole(r, RoleRemovalReason.OptOut, AdditionalComments: null)).ToImmutableList())));
+                        removed.Select(r => new RemovedRole(r, RoleRemovalReason.OptOut, AdditionalComments: null))
+                        .ToImmutableList())));
 
         public static
             ImmutableList<(Guid Id, ImmutableList<CompletedRequirementInfo> CompletedRequirements, ImmutableList<ExemptedRequirementInfo> ExemptedRequirements)>
