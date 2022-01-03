@@ -8,11 +8,6 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
 {
     internal class Helpers
     {
-        public static ImmutableList<VolunteerApprovalRequirement> IndividualApprovalRequirements(params (RequirementStage, string)[] requirements) =>
-            requirements.Select(requirement =>
-                new VolunteerApprovalRequirement(requirement.Item1, requirement.Item2))
-            .ToImmutableList();
-
         public static ImmutableList<CompletedRequirementInfo> Completed(params (string, int)[] completionsWithDates) =>
             completionsWithDates.Select(completion =>
                 new CompletedRequirementInfo(Guid.Empty, DateTime.MinValue,
@@ -53,5 +48,15 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
             ImmutableList<(string ActionName, RequirementStage Stage, bool RequirementMetOrExempted)>
             IndividualRequirementsMet(params (string, RequirementStage, bool)[] requirementsMet) =>
             requirementsMet.ToImmutableList();
+
+        public static ImmutableList<VolunteerApprovalRequirement> IndividualApprovalRequirements(params (RequirementStage, string)[] requirements) =>
+            requirements.Select(requirement =>
+                new VolunteerApprovalRequirement(requirement.Item1, requirement.Item2))
+            .ToImmutableList();
+
+        public static ImmutableList<VolunteerFamilyApprovalRequirement> FamilyApprovalRequirements(params (RequirementStage, string, VolunteerFamilyRequirementScope)[] requirements) =>
+            requirements.Select(requirement =>
+                new VolunteerFamilyApprovalRequirement(requirement.Item1, requirement.Item2, requirement.Item3))
+            .ToImmutableList();
     }
 }

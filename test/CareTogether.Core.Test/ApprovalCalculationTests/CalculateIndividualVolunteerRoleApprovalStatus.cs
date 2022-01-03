@@ -2,24 +2,28 @@
 using CareTogether.Resources;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections.Immutable;
 
 namespace CareTogether.Core.Test.ApprovalCalculationTests
 {
     [TestClass]
     public class CalculateIndividualVolunteerRoleApprovalStatus
     {
+        static ImmutableList<VolunteerApprovalRequirement> requirements =
+            Helpers.IndividualApprovalRequirements(
+                (RequirementStage.Application, "A"),
+                (RequirementStage.Approval, "B"),
+                (RequirementStage.Approval, "C"),
+                (RequirementStage.Approval, "D"),
+                (RequirementStage.Onboarding, "E"),
+                (RequirementStage.Onboarding, "F"));
+
+
         [TestMethod]
         public void TestNotApplied()
         {
             var (status, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(
-                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: null,
-                    Helpers.IndividualApprovalRequirements(
-                    (RequirementStage.Application, "A"),
-                    (RequirementStage.Approval, "B"),
-                    (RequirementStage.Approval, "C"),
-                    (RequirementStage.Approval, "D"),
-                    (RequirementStage.Onboarding, "E"),
-                    (RequirementStage.Onboarding, "F"))),
+                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: null, requirements),
                 utcNow: new DateTime(2022, 1, 20),
                 Helpers.Completed(),
                 Helpers.Exempted());
@@ -33,14 +37,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public void TestNotAppliedWillBeSuperseded()
         {
             var (status, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(
-                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10),
-                    Helpers.IndividualApprovalRequirements(
-                    (RequirementStage.Application, "A"),
-                    (RequirementStage.Approval, "B"),
-                    (RequirementStage.Approval, "C"),
-                    (RequirementStage.Approval, "D"),
-                    (RequirementStage.Onboarding, "E"),
-                    (RequirementStage.Onboarding, "F"))),
+                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 5),
                 Helpers.Completed(),
                 Helpers.Exempted());
@@ -54,14 +51,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public void TestNotAppliedHasBeenSuperseded()
         {
             var (status, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(
-                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10),
-                    Helpers.IndividualApprovalRequirements(
-                    (RequirementStage.Application, "A"),
-                    (RequirementStage.Approval, "B"),
-                    (RequirementStage.Approval, "C"),
-                    (RequirementStage.Approval, "D"),
-                    (RequirementStage.Onboarding, "E"),
-                    (RequirementStage.Onboarding, "F"))),
+                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 20),
                 Helpers.Completed(),
                 Helpers.Exempted());
@@ -75,14 +65,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public void TestAppliedOnly()
         {
             var (status, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(
-                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: null,
-                    Helpers.IndividualApprovalRequirements(
-                    (RequirementStage.Application, "A"),
-                    (RequirementStage.Approval, "B"),
-                    (RequirementStage.Approval, "C"),
-                    (RequirementStage.Approval, "D"),
-                    (RequirementStage.Onboarding, "E"),
-                    (RequirementStage.Onboarding, "F"))),
+                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: null, requirements),
                 utcNow: new DateTime(2022, 1, 20),
                 Helpers.Completed(("A", 1)),
                 Helpers.Exempted());
@@ -96,14 +79,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public void TestAppliedOnlyWillBeSuperseded()
         {
             var (status, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(
-                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10),
-                    Helpers.IndividualApprovalRequirements(
-                    (RequirementStage.Application, "A"),
-                    (RequirementStage.Approval, "B"),
-                    (RequirementStage.Approval, "C"),
-                    (RequirementStage.Approval, "D"),
-                    (RequirementStage.Onboarding, "E"),
-                    (RequirementStage.Onboarding, "F"))),
+                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 5),
                 Helpers.Completed(("A", 1)),
                 Helpers.Exempted());
@@ -118,14 +94,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public void TestAppliedOnlyHasBeenSuperseded()
         {
             var (status, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(
-                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10),
-                    Helpers.IndividualApprovalRequirements(
-                    (RequirementStage.Application, "A"),
-                    (RequirementStage.Approval, "B"),
-                    (RequirementStage.Approval, "C"),
-                    (RequirementStage.Approval, "D"),
-                    (RequirementStage.Onboarding, "E"),
-                    (RequirementStage.Onboarding, "F"))),
+                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 20),
                 Helpers.Completed(("A", 1)),
                 Helpers.Exempted());
@@ -140,14 +109,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public void TestAppliedOnlyAfterSupersededDateWillBeSuperseded()
         {
             var (status, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(
-                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10),
-                    Helpers.IndividualApprovalRequirements(
-                    (RequirementStage.Application, "A"),
-                    (RequirementStage.Approval, "B"),
-                    (RequirementStage.Approval, "C"),
-                    (RequirementStage.Approval, "D"),
-                    (RequirementStage.Onboarding, "E"),
-                    (RequirementStage.Onboarding, "F"))),
+                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 5),
                 Helpers.Completed(("A", 15)),
                 Helpers.Exempted());
@@ -163,14 +125,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public void TestAppliedOnlyAfterSupersededDateHasBeenSuperseded()
         {
             var (status, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(
-                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10),
-                    Helpers.IndividualApprovalRequirements(
-                    (RequirementStage.Application, "A"),
-                    (RequirementStage.Approval, "B"),
-                    (RequirementStage.Approval, "C"),
-                    (RequirementStage.Approval, "D"),
-                    (RequirementStage.Onboarding, "E"),
-                    (RequirementStage.Onboarding, "F"))),
+                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 20),
                 Helpers.Completed(("A", 15)),
                 Helpers.Exempted());
@@ -186,14 +141,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public void TestPartiallyApprovedOnly()
         {
             var (status, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(
-                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: null,
-                    Helpers.IndividualApprovalRequirements(
-                    (RequirementStage.Application, "A"),
-                    (RequirementStage.Approval, "B"),
-                    (RequirementStage.Approval, "C"),
-                    (RequirementStage.Approval, "D"),
-                    (RequirementStage.Onboarding, "E"),
-                    (RequirementStage.Onboarding, "F"))),
+                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: null, requirements),
                 utcNow: new DateTime(2022, 1, 20),
                 Helpers.Completed(("A", 1), ("B", 2), ("C", 3)),
                 Helpers.Exempted());
@@ -207,14 +155,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public void TestPartiallyApprovedWillBeSuperseded()
         {
             var (status, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(
-                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10),
-                    Helpers.IndividualApprovalRequirements(
-                    (RequirementStage.Application, "A"),
-                    (RequirementStage.Approval, "B"),
-                    (RequirementStage.Approval, "C"),
-                    (RequirementStage.Approval, "D"),
-                    (RequirementStage.Onboarding, "E"),
-                    (RequirementStage.Onboarding, "F"))),
+                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 5),
                 Helpers.Completed(("A", 1), ("B", 2), ("C", 3)),
                 Helpers.Exempted());
@@ -228,14 +169,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public void TestPartiallyApprovedHasBeenSuperseded()
         {
             var (status, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(
-                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10),
-                    Helpers.IndividualApprovalRequirements(
-                    (RequirementStage.Application, "A"),
-                    (RequirementStage.Approval, "B"),
-                    (RequirementStage.Approval, "C"),
-                    (RequirementStage.Approval, "D"),
-                    (RequirementStage.Onboarding, "E"),
-                    (RequirementStage.Onboarding, "F"))),
+                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 20),
                 Helpers.Completed(("A", 1), ("B", 2), ("C", 3)),
                 Helpers.Exempted());
@@ -249,14 +183,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public void TestPartiallyApprovedAfterSupersededDateWillBeSuperseded()
         {
             var (status, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(
-                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10),
-                    Helpers.IndividualApprovalRequirements(
-                    (RequirementStage.Application, "A"),
-                    (RequirementStage.Approval, "B"),
-                    (RequirementStage.Approval, "C"),
-                    (RequirementStage.Approval, "D"),
-                    (RequirementStage.Onboarding, "E"),
-                    (RequirementStage.Onboarding, "F"))),
+                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 5),
                 Helpers.Completed(("A", 1), ("B", 12), ("C", 13)),
                 Helpers.Exempted());
@@ -271,14 +198,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public void TestPartiallyApprovedAfterSupersededDateHasBeenSuperseded()
         {
             var (status, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(
-                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10),
-                    Helpers.IndividualApprovalRequirements(
-                    (RequirementStage.Application, "A"),
-                    (RequirementStage.Approval, "B"),
-                    (RequirementStage.Approval, "C"),
-                    (RequirementStage.Approval, "D"),
-                    (RequirementStage.Onboarding, "E"),
-                    (RequirementStage.Onboarding, "F"))),
+                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 20),
                 Helpers.Completed(("A", 1), ("B", 12), ("C", 13)),
                 Helpers.Exempted());
@@ -293,14 +213,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public void TestApprovedOnly()
         {
             var (status, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(
-                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: null,
-                    Helpers.IndividualApprovalRequirements(
-                    (RequirementStage.Application, "A"),
-                    (RequirementStage.Approval, "B"),
-                    (RequirementStage.Approval, "C"),
-                    (RequirementStage.Approval, "D"),
-                    (RequirementStage.Onboarding, "E"),
-                    (RequirementStage.Onboarding, "F"))),
+                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: null, requirements),
                 utcNow: new DateTime(2022, 1, 20),
                 Helpers.Completed(("A", 1), ("B", 2), ("C", 3), ("D", 4)),
                 Helpers.Exempted());
@@ -314,14 +227,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public void TestApprovedOnlyByExemption()
         {
             var (status, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(
-                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: null,
-                    Helpers.IndividualApprovalRequirements(
-                    (RequirementStage.Application, "A"),
-                    (RequirementStage.Approval, "B"),
-                    (RequirementStage.Approval, "C"),
-                    (RequirementStage.Approval, "D"),
-                    (RequirementStage.Onboarding, "E"),
-                    (RequirementStage.Onboarding, "F"))),
+                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: null, requirements),
                 utcNow: new DateTime(2022, 1, 20),
                 Helpers.Completed(("A", 1), ("B", 2), ("C", 3)),
                 Helpers.Exempted(("D", 30)));
@@ -335,14 +241,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public void TestNotApprovedBecauseExemptionExpired()
         {
             var (status, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(
-                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: null,
-                    Helpers.IndividualApprovalRequirements(
-                    (RequirementStage.Application, "A"),
-                    (RequirementStage.Approval, "B"),
-                    (RequirementStage.Approval, "C"),
-                    (RequirementStage.Approval, "D"),
-                    (RequirementStage.Onboarding, "E"),
-                    (RequirementStage.Onboarding, "F"))),
+                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: null, requirements),
                 utcNow: new DateTime(2022, 1, 20),
                 Helpers.Completed(("A", 1), ("B", 2), ("C", 3), ("E", 10), ("F", 10)),
                 Helpers.Exempted(("D", 15)));
@@ -356,14 +255,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public void TestApprovedWillBeSuperseded()
         {
             var (status, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(
-                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10),
-                    Helpers.IndividualApprovalRequirements(
-                    (RequirementStage.Application, "A"),
-                    (RequirementStage.Approval, "B"),
-                    (RequirementStage.Approval, "C"),
-                    (RequirementStage.Approval, "D"),
-                    (RequirementStage.Onboarding, "E"),
-                    (RequirementStage.Onboarding, "F"))),
+                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 5),
                 Helpers.Completed(("A", 1), ("B", 2), ("C", 3), ("D", 4)),
                 Helpers.Exempted());
@@ -377,14 +269,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public void TestApprovedHasBeenSuperseded()
         {
             var (status, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(
-                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10),
-                    Helpers.IndividualApprovalRequirements(
-                    (RequirementStage.Application, "A"),
-                    (RequirementStage.Approval, "B"),
-                    (RequirementStage.Approval, "C"),
-                    (RequirementStage.Approval, "D"),
-                    (RequirementStage.Onboarding, "E"),
-                    (RequirementStage.Onboarding, "F"))),
+                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 20),
                 Helpers.Completed(("A", 1), ("B", 2), ("C", 3), ("D", 4)),
                 Helpers.Exempted());
@@ -398,14 +283,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public void TestApprovedAfterSupersededDateWillBeSuperseded()
         {
             var (status, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(
-                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10),
-                    Helpers.IndividualApprovalRequirements(
-                    (RequirementStage.Application, "A"),
-                    (RequirementStage.Approval, "B"),
-                    (RequirementStage.Approval, "C"),
-                    (RequirementStage.Approval, "D"),
-                    (RequirementStage.Onboarding, "E"),
-                    (RequirementStage.Onboarding, "F"))),
+                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 5),
                 Helpers.Completed(("A", 1), ("B", 2), ("C", 3), ("D", 14)),
                 Helpers.Exempted());
@@ -420,14 +298,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public void TestApprovedAfterSupersededDateHasBeenSuperseded()
         {
             var (status, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(
-                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10),
-                    Helpers.IndividualApprovalRequirements(
-                    (RequirementStage.Application, "A"),
-                    (RequirementStage.Approval, "B"),
-                    (RequirementStage.Approval, "C"),
-                    (RequirementStage.Approval, "D"),
-                    (RequirementStage.Onboarding, "E"),
-                    (RequirementStage.Onboarding, "F"))),
+                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 20),
                 Helpers.Completed(("A", 1), ("B", 2), ("C", 3), ("D", 14)),
                 Helpers.Exempted());
@@ -442,14 +313,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public void TestOnboardedOnly()
         {
             var (status, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(
-                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: null,
-                    Helpers.IndividualApprovalRequirements(
-                    (RequirementStage.Application, "A"),
-                    (RequirementStage.Approval, "B"),
-                    (RequirementStage.Approval, "C"),
-                    (RequirementStage.Approval, "D"),
-                    (RequirementStage.Onboarding, "E"),
-                    (RequirementStage.Onboarding, "F"))),
+                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: null, requirements),
                 utcNow: new DateTime(2022, 1, 20),
                 Helpers.Completed(("A", 1), ("B", 2), ("C", 3), ("D", 4), ("E", 5), ("F", 6)),
                 Helpers.Exempted());
@@ -463,14 +327,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public void TestOnboardedOnlyByExemption()
         {
             var (status, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(
-                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: null,
-                    Helpers.IndividualApprovalRequirements(
-                    (RequirementStage.Application, "A"),
-                    (RequirementStage.Approval, "B"),
-                    (RequirementStage.Approval, "C"),
-                    (RequirementStage.Approval, "D"),
-                    (RequirementStage.Onboarding, "E"),
-                    (RequirementStage.Onboarding, "F"))),
+                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: null, requirements),
                 utcNow: new DateTime(2022, 1, 20),
                 Helpers.Completed(("A", 1), ("B", 2), ("C", 3), ("E", 5)),
                 Helpers.Exempted(("D", null), ("F", 30)));
@@ -484,14 +341,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public void TestNotOnboardedBecauseExemptionExpired()
         {
             var (status, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(
-                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: null,
-                    Helpers.IndividualApprovalRequirements(
-                    (RequirementStage.Application, "A"),
-                    (RequirementStage.Approval, "B"),
-                    (RequirementStage.Approval, "C"),
-                    (RequirementStage.Approval, "D"),
-                    (RequirementStage.Onboarding, "E"),
-                    (RequirementStage.Onboarding, "F"))),
+                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: null, requirements),
                 utcNow: new DateTime(2022, 1, 20),
                 Helpers.Completed(("A", 1), ("B", 2), ("C", 3), ("E", 10)),
                 Helpers.Exempted(("D", null), ("F", 10)));
@@ -505,14 +355,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public void TestOnboardedWillBeSuperseded()
         {
             var (status, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(
-                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10),
-                    Helpers.IndividualApprovalRequirements(
-                    (RequirementStage.Application, "A"),
-                    (RequirementStage.Approval, "B"),
-                    (RequirementStage.Approval, "C"),
-                    (RequirementStage.Approval, "D"),
-                    (RequirementStage.Onboarding, "E"),
-                    (RequirementStage.Onboarding, "F"))),
+                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 5),
                 Helpers.Completed(("A", 1), ("B", 2), ("C", 3), ("D", 4), ("E", 5), ("F", 6)),
                 Helpers.Exempted());
@@ -526,14 +369,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public void TestOnboardedHasBeenSuperseded()
         {
             var (status, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(
-                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10),
-                    Helpers.IndividualApprovalRequirements(
-                    (RequirementStage.Application, "A"),
-                    (RequirementStage.Approval, "B"),
-                    (RequirementStage.Approval, "C"),
-                    (RequirementStage.Approval, "D"),
-                    (RequirementStage.Onboarding, "E"),
-                    (RequirementStage.Onboarding, "F"))),
+                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 20),
                 Helpers.Completed(("A", 1), ("B", 2), ("C", 3), ("D", 4), ("E", 5), ("F", 6)),
                 Helpers.Exempted());
@@ -547,14 +383,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public void TestOnboardedAfterSupersededDateWillBeSuperseded()
         {
             var (status, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(
-                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10),
-                    Helpers.IndividualApprovalRequirements(
-                    (RequirementStage.Application, "A"),
-                    (RequirementStage.Approval, "B"),
-                    (RequirementStage.Approval, "C"),
-                    (RequirementStage.Approval, "D"),
-                    (RequirementStage.Onboarding, "E"),
-                    (RequirementStage.Onboarding, "F"))),
+                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 5),
                 Helpers.Completed(("A", 1), ("B", 2), ("C", 3), ("D", 4), ("E", 5), ("F", 16)),
                 Helpers.Exempted());
@@ -569,14 +398,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public void TestOnboardedAfterSupersededDateHasBeenSuperseded()
         {
             var (status, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(
-                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10),
-                    Helpers.IndividualApprovalRequirements(
-                    (RequirementStage.Application, "A"),
-                    (RequirementStage.Approval, "B"),
-                    (RequirementStage.Approval, "C"),
-                    (RequirementStage.Approval, "D"),
-                    (RequirementStage.Onboarding, "E"),
-                    (RequirementStage.Onboarding, "F"))),
+                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 20),
                 Helpers.Completed(("A", 1), ("B", 2), ("C", 3), ("D", 4), ("E", 5), ("F", 16)),
                 Helpers.Exempted());
