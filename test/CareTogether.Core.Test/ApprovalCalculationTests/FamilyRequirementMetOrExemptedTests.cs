@@ -250,7 +250,6 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
             Assert.IsTrue(result);
         }
 
-
         [TestMethod]
         public void TestOncePerFamilyRequirementMetExpiredExemptionVariant()
         {
