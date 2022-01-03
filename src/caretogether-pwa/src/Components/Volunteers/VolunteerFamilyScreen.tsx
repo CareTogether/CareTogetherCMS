@@ -258,13 +258,13 @@ export function VolunteerFamilyScreen() {
         keepMounted
         open={Boolean(requirementMoreMenuAnchor)}
         onClose={() => setRequirementMoreMenuAnchor(null)}>
-        { (requirementMoreMenuAnchor?.requirement as string) &&
+        { (typeof requirementMoreMenuAnchor?.requirement === 'string') &&
           <MenuItem onClick={() => selectExempt(requirementMoreMenuAnchor?.requirement as string)}>Exempt</MenuItem>
           }
-        { (requirementMoreMenuAnchor?.requirement as CompletedRequirementInfo) &&
+        { (requirementMoreMenuAnchor?.requirement instanceof CompletedRequirementInfo) &&
           <MenuItem onClick={() => selectMarkIncomplete(requirementMoreMenuAnchor?.requirement as CompletedRequirementInfo)}>Mark Incomplete</MenuItem>
           }
-        { (requirementMoreMenuAnchor?.requirement as ExemptedRequirementInfo) &&
+        { (requirementMoreMenuAnchor?.requirement instanceof ExemptedRequirementInfo) &&
           <MenuItem onClick={() => selectUnexempt(requirementMoreMenuAnchor?.requirement as ExemptedRequirementInfo)}>Unexempt</MenuItem>
           }
       </Menu>
