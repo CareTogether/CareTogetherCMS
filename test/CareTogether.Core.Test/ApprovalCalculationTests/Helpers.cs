@@ -8,22 +8,10 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
 {
     internal class Helpers
     {
-        public static VolunteerRolePolicyVersion individualPolicyV1 = new VolunteerRolePolicyVersion("v1", new DateTime(2022, 1, 10),
-            ImmutableList<VolunteerApprovalRequirement>.Empty
-            .Add(new VolunteerApprovalRequirement(RequirementStage.Application, "Apply"))
-            .Add(new VolunteerApprovalRequirement(RequirementStage.Approval, "Background Check v1"))
-            .Add(new VolunteerApprovalRequirement(RequirementStage.Approval, "Training"))
-            .Add(new VolunteerApprovalRequirement(RequirementStage.Onboarding, "Add to Mailing List"))
-            .Add(new VolunteerApprovalRequirement(RequirementStage.Onboarding, "Activate")));
-
-        public static VolunteerRolePolicyVersion individualPolicyV2 = new VolunteerRolePolicyVersion("v2", null,
-            ImmutableList<VolunteerApprovalRequirement>.Empty
-            .Add(new VolunteerApprovalRequirement(RequirementStage.Application, "Apply"))
-            .Add(new VolunteerApprovalRequirement(RequirementStage.Approval, "Background Check v2"))
-            .Add(new VolunteerApprovalRequirement(RequirementStage.Approval, "Training"))
-            .Add(new VolunteerApprovalRequirement(RequirementStage.Onboarding, "Add to Mailing List"))
-            .Add(new VolunteerApprovalRequirement(RequirementStage.Onboarding, "Activate")));
-
+        public static ImmutableList<VolunteerApprovalRequirement> IndividualApprovalRequirements(params (RequirementStage, string)[] requirements) =>
+            requirements.Select(requirement =>
+                new VolunteerApprovalRequirement(requirement.Item1, requirement.Item2))
+            .ToImmutableList();
 
         public static ImmutableList<CompletedRequirementInfo> Completed(params (string, int)[] completionsWithDates) =>
             completionsWithDates.Select(completion =>
