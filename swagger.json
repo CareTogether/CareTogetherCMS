@@ -15,121 +15,6 @@
     "version": "v1"
   },
   "paths": {
-    "/api/{organizationId}/Configuration": {
-      "get": {
-        "tags": [
-          "Configuration"
-        ],
-        "operationId": "Configuration_GetOrganizationConfiguration",
-        "parameters": [
-          {
-            "name": "organizationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OrganizationConfiguration"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/{organizationId}/{locationId}/Configuration/policy": {
-      "get": {
-        "tags": [
-          "Configuration"
-        ],
-        "operationId": "Configuration_GetEffectiveLocationPolicy",
-        "parameters": [
-          {
-            "name": "organizationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          },
-          {
-            "name": "locationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 2
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EffectiveLocationPolicy"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/{organizationId}/{locationId}/Configuration/flags": {
-      "get": {
-        "tags": [
-          "Configuration"
-        ],
-        "operationId": "Configuration_GetLocationFlags",
-        "parameters": [
-          {
-            "name": "organizationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          },
-          {
-            "name": "locationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "x-position": 2
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CurrentFeatureFlags"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/{organizationId}/{locationId}/Directory": {
       "get": {
         "tags": [
@@ -409,6 +294,26 @@
         }
       }
     },
+    "/api/Users/me/tenantAccess": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "Users_GetUserTenantAccess",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserTenantAccessSummary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/{organizationId}/{locationId}/Files/{documentId}": {
       "get": {
         "tags": [
@@ -612,26 +517,6 @@
         }
       }
     },
-    "/api/Users/me/tenantAccess": {
-      "get": {
-        "tags": [
-          "Users"
-        ],
-        "operationId": "Users_GetUserTenantAccess",
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserTenantAccessSummary"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/{organizationId}/{locationId}/Volunteers/volunteerFamilyCommand": {
       "post": {
         "tags": [
@@ -739,432 +624,125 @@
           }
         }
       }
+    },
+    "/api/{organizationId}/Configuration": {
+      "get": {
+        "tags": [
+          "Configuration"
+        ],
+        "operationId": "Configuration_GetOrganizationConfiguration",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationConfiguration"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/{organizationId}/{locationId}/Configuration/policy": {
+      "get": {
+        "tags": [
+          "Configuration"
+        ],
+        "operationId": "Configuration_GetEffectiveLocationPolicy",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EffectiveLocationPolicy"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/{organizationId}/{locationId}/Configuration/flags": {
+      "get": {
+        "tags": [
+          "Configuration"
+        ],
+        "operationId": "Configuration_GetLocationFlags",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentFeatureFlags"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
-      "OrganizationConfiguration": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "organizationName": {
-            "type": "string"
-          },
-          "locations": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/LocationConfiguration"
-            }
-          },
-          "users": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/UserAccessConfiguration"
-            }
-          }
-        }
-      },
-      "LocationConfiguration": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "guid"
-          },
-          "name": {
-            "type": "string"
-          },
-          "ethnicities": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "adultFamilyRelationships": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "UserAccessConfiguration": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "personId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "locationRoles": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UserLocationRole"
-            }
-          }
-        }
-      },
-      "UserLocationRole": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "locationId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "roleName": {
-            "type": "string"
-          }
-        }
-      },
-      "EffectiveLocationPolicy": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "actionDefinitions": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/ActionRequirement"
-            }
-          },
-          "referralPolicy": {
-            "$ref": "#/components/schemas/ReferralPolicy"
-          },
-          "volunteerPolicy": {
-            "$ref": "#/components/schemas/VolunteerPolicy"
-          }
-        }
-      },
-      "ActionRequirement": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "documentLink": {
-            "$ref": "#/components/schemas/DocumentLinkRequirement"
-          },
-          "instructions": {
-            "type": "string",
-            "nullable": true
-          },
-          "infoLink": {
-            "type": "string",
-            "format": "uri",
-            "nullable": true
-          }
-        }
-      },
-      "DocumentLinkRequirement": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "None",
-          "Allowed",
-          "Required"
-        ],
-        "enum": [
-          0,
-          1,
-          2
-        ]
-      },
-      "ReferralPolicy": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "requiredIntakeActionNames": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "arrangementPolicies": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ArrangementPolicy"
-            }
-          }
-        }
-      },
-      "ArrangementPolicy": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "arrangementType": {
-            "type": "string"
-          },
-          "childInvolvement": {
-            "$ref": "#/components/schemas/ChildInvolvement"
-          },
-          "volunteerFunctions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/VolunteerFunction"
-            }
-          },
-          "requiredSetupActionNames": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "requiredMonitoringActionNames": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ValueTupleOfStringAndRecurrencePolicy"
-            }
-          },
-          "requiredCloseoutActionNames": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "ChildInvolvement": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "ChildHousing",
-          "DaytimeChildCareOnly",
-          "NoChildInvolvement"
-        ],
-        "enum": [
-          0,
-          1,
-          2
-        ]
-      },
-      "VolunteerFunction": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "arrangementFunction": {
-            "type": "string"
-          },
-          "requirement": {
-            "$ref": "#/components/schemas/FunctionRequirement"
-          },
-          "eligibleIndividualVolunteerRoles": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "eligibleVolunteerFamilyRoles": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "FunctionRequirement": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "ZeroOrMore",
-          "ExactlyOne",
-          "OneOrMore"
-        ],
-        "enum": [
-          0,
-          1,
-          2
-        ]
-      },
-      "ValueTupleOfStringAndRecurrencePolicy": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "item1": {
-            "type": "string"
-          },
-          "item2": {
-            "$ref": "#/components/schemas/RecurrencePolicy"
-          }
-        }
-      },
-      "RecurrencePolicy": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "stages": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/RecurrencePolicyStage"
-            }
-          }
-        }
-      },
-      "RecurrencePolicyStage": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "delay": {
-            "type": "string",
-            "format": "time-span"
-          },
-          "maxOccurrences": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          }
-        }
-      },
-      "VolunteerPolicy": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "volunteerRoles": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/VolunteerRolePolicy"
-            }
-          },
-          "volunteerFamilyRoles": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/VolunteerFamilyRolePolicy"
-            }
-          }
-        }
-      },
-      "VolunteerRolePolicy": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "volunteerRoleType": {
-            "type": "string"
-          },
-          "policyVersions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/VolunteerRolePolicyVersion"
-            }
-          }
-        }
-      },
-      "VolunteerRolePolicyVersion": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "version": {
-            "type": "string"
-          },
-          "supersededAtUtc": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "requirements": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/VolunteerApprovalRequirement"
-            }
-          }
-        }
-      },
-      "VolunteerApprovalRequirement": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "stage": {
-            "$ref": "#/components/schemas/RequirementStage"
-          },
-          "actionName": {
-            "type": "string"
-          }
-        }
-      },
-      "RequirementStage": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "Application",
-          "Approval",
-          "Onboarding"
-        ],
-        "enum": [
-          0,
-          1,
-          2
-        ]
-      },
-      "VolunteerFamilyRolePolicy": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "volunteerFamilyRoleType": {
-            "type": "string"
-          },
-          "policyVersions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/VolunteerFamilyRolePolicyVersion"
-            }
-          }
-        }
-      },
-      "VolunteerFamilyRolePolicyVersion": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "version": {
-            "type": "string"
-          },
-          "supersededAtUtc": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "requirements": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/VolunteerFamilyApprovalRequirement"
-            }
-          }
-        }
-      },
-      "VolunteerFamilyApprovalRequirement": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "stage": {
-            "$ref": "#/components/schemas/RequirementStage"
-          },
-          "actionName": {
-            "type": "string"
-          },
-          "scope": {
-            "$ref": "#/components/schemas/VolunteerFamilyRequirementScope"
-          }
-        }
-      },
-      "VolunteerFamilyRequirementScope": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "OncePerFamily",
-          "AllAdultsInTheFamily",
-          "AllParticipatingAdultsInTheFamily"
-        ],
-        "enum": [
-          0,
-          1,
-          2
-        ]
-      },
-      "CurrentFeatureFlags": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "viewReferrals": {
-            "type": "boolean"
-          }
-        }
-      },
       "CombinedFamilyInfo": {
         "type": "object",
         "additionalProperties": false,
@@ -2930,6 +2508,23 @@
           }
         ]
       },
+      "UserTenantAccessSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "organizationId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "locationIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "guid"
+            }
+          }
+        }
+      },
       "DocumentUploadInfo": {
         "type": "object",
         "additionalProperties": false,
@@ -3318,23 +2913,6 @@
           }
         ]
       },
-      "UserTenantAccessSummary": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "organizationId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "locationIds": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "guid"
-            }
-          }
-        }
-      },
       "VolunteerFamilyCommand": {
         "type": "object",
         "discriminator": {
@@ -3683,6 +3261,428 @@
             }
           }
         ]
+      },
+      "OrganizationConfiguration": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "organizationName": {
+            "type": "string"
+          },
+          "locations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LocationConfiguration"
+            }
+          },
+          "users": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/UserAccessConfiguration"
+            }
+          }
+        }
+      },
+      "LocationConfiguration": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "ethnicities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "adultFamilyRelationships": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "UserAccessConfiguration": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "personId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "locationRoles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserLocationRole"
+            }
+          }
+        }
+      },
+      "UserLocationRole": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "locationId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "roleName": {
+            "type": "string"
+          }
+        }
+      },
+      "EffectiveLocationPolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "actionDefinitions": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ActionRequirement"
+            }
+          },
+          "referralPolicy": {
+            "$ref": "#/components/schemas/ReferralPolicy"
+          },
+          "volunteerPolicy": {
+            "$ref": "#/components/schemas/VolunteerPolicy"
+          }
+        }
+      },
+      "ActionRequirement": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "documentLink": {
+            "$ref": "#/components/schemas/DocumentLinkRequirement"
+          },
+          "instructions": {
+            "type": "string",
+            "nullable": true
+          },
+          "infoLink": {
+            "type": "string",
+            "format": "uri",
+            "nullable": true
+          }
+        }
+      },
+      "DocumentLinkRequirement": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "None",
+          "Allowed",
+          "Required"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
+      "ReferralPolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "requiredIntakeActionNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "arrangementPolicies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArrangementPolicy"
+            }
+          }
+        }
+      },
+      "ArrangementPolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "arrangementType": {
+            "type": "string"
+          },
+          "childInvolvement": {
+            "$ref": "#/components/schemas/ChildInvolvement"
+          },
+          "volunteerFunctions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VolunteerFunction"
+            }
+          },
+          "requiredSetupActionNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "requiredMonitoringActionNames": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValueTupleOfStringAndRecurrencePolicy"
+            }
+          },
+          "requiredCloseoutActionNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ChildInvolvement": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "ChildHousing",
+          "DaytimeChildCareOnly",
+          "NoChildInvolvement"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
+      "VolunteerFunction": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "arrangementFunction": {
+            "type": "string"
+          },
+          "requirement": {
+            "$ref": "#/components/schemas/FunctionRequirement"
+          },
+          "eligibleIndividualVolunteerRoles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "eligibleVolunteerFamilyRoles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "FunctionRequirement": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "ZeroOrMore",
+          "ExactlyOne",
+          "OneOrMore"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
+      "ValueTupleOfStringAndRecurrencePolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "item1": {
+            "type": "string"
+          },
+          "item2": {
+            "$ref": "#/components/schemas/RecurrencePolicy"
+          }
+        }
+      },
+      "RecurrencePolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "stages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecurrencePolicyStage"
+            }
+          }
+        }
+      },
+      "RecurrencePolicyStage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "delay": {
+            "type": "string",
+            "format": "time-span"
+          },
+          "maxOccurrences": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        }
+      },
+      "VolunteerPolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "volunteerRoles": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/VolunteerRolePolicy"
+            }
+          },
+          "volunteerFamilyRoles": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/VolunteerFamilyRolePolicy"
+            }
+          }
+        }
+      },
+      "VolunteerRolePolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "volunteerRoleType": {
+            "type": "string"
+          },
+          "policyVersions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VolunteerRolePolicyVersion"
+            }
+          }
+        }
+      },
+      "VolunteerRolePolicyVersion": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "supersededAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "requirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VolunteerApprovalRequirement"
+            }
+          }
+        }
+      },
+      "VolunteerApprovalRequirement": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "stage": {
+            "$ref": "#/components/schemas/RequirementStage"
+          },
+          "actionName": {
+            "type": "string"
+          }
+        }
+      },
+      "RequirementStage": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Application",
+          "Approval",
+          "Onboarding"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
+      "VolunteerFamilyRolePolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "volunteerFamilyRoleType": {
+            "type": "string"
+          },
+          "policyVersions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VolunteerFamilyRolePolicyVersion"
+            }
+          }
+        }
+      },
+      "VolunteerFamilyRolePolicyVersion": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "supersededAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "requirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VolunteerFamilyApprovalRequirement"
+            }
+          }
+        }
+      },
+      "VolunteerFamilyApprovalRequirement": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "stage": {
+            "$ref": "#/components/schemas/RequirementStage"
+          },
+          "actionName": {
+            "type": "string"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/VolunteerFamilyRequirementScope"
+          }
+        }
+      },
+      "VolunteerFamilyRequirementScope": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "OncePerFamily",
+          "AllAdultsInTheFamily",
+          "AllParticipatingAdultsInTheFamily"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
+      "CurrentFeatureFlags": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "viewReferrals": {
+            "type": "boolean"
+          }
+        }
       }
     }
   }
