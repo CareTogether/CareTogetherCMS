@@ -139,6 +139,38 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         }
 
         [TestMethod]
+        public void TestAllParticipatingAdultsRequirementMetWithRoleRemoval()
+        {
+            var result = ApprovalCalculations.FamilyRequirementMetOrExempted("Role", "B",
+                VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily,
+                supersededAtUtc: null, utcNow: new DateTime(2022, 1, 2),
+                Helpers.Completed(),
+                Helpers.Exempted(),
+                Helpers.RemovedIndividualRoles((guid2, "Role")),
+                Helpers.ActiveAdults(
+                    (guid1, Helpers.Completed(("A", 1), ("B", 1)), Helpers.Exempted()),
+                    (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted())));
+
+            Assert.IsTrue(result);
+        }
+
+        [TestMethod]
+        public void TestAllParticipatingAdultsRequirementMetWithUnrelatedRoleRemoval()
+        {
+            var result = ApprovalCalculations.FamilyRequirementMetOrExempted("Role", "B",
+                VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily,
+                supersededAtUtc: null, utcNow: new DateTime(2022, 1, 2),
+                Helpers.Completed(),
+                Helpers.Exempted(),
+                Helpers.RemovedIndividualRoles((guid2, "Other Role")),
+                Helpers.ActiveAdults(
+                    (guid1, Helpers.Completed(("A", 1), ("B", 1)), Helpers.Exempted()),
+                    (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted())));
+
+            Assert.IsFalse(result);
+        }
+
+        [TestMethod]
         public void TestAllParticipatingAdultsRequirementMetWithExemption()
         {
             var result = ApprovalCalculations.FamilyRequirementMetOrExempted("Role", "B",
