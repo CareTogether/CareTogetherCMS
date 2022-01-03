@@ -1,39 +1,115 @@
 ﻿using CareTogether.Engines;
 using CareTogether.Resources;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
 
 namespace CareTogether.Core.Test.ApprovalCalculationTests
 {
     [TestClass]
     public class CalculateRoleApprovalStatusFromRequirementCompletions
     {
-        private static Guid Id(char x) => Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
-        static readonly Guid guid0 = Id('0');
-        static readonly Guid guid1 = Id('1');
-        static readonly Guid guid2 = Id('2');
-        static readonly Guid guid3 = Id('3');
-        static readonly Guid guid4 = Id('4');
-        static readonly Guid guid5 = Id('5');
-        static readonly Guid guid6 = Id('6');
+        [TestMethod]
+        public void TestNotApplied()
+        {
+            var result = ApprovalCalculations.CalculateRoleApprovalStatusFromRequirementCompletions(
+                Helpers.IndividualRequirementsMet(
+                    ("A", RequirementStage.Application, false),
+                    ("B", RequirementStage.Approval, false),
+                    ("C", RequirementStage.Approval, false),
+                    ("D", RequirementStage.Approval, false),
+                    ("E", RequirementStage.Onboarding, false),
+                    ("F", RequirementStage.Onboarding, false)));
 
+            Assert.AreEqual(null, result);
+        }
 
         [TestMethod]
-        public void Test___()
+        public void TestNotAppliedWithAllOthersCompleted()
         {
-            //var result = ApprovalCalculations.FamilyRequirementMetOrExempted("Role", "C",
-            //    VolunteerFamilyRequirementScope.OncePerFamily,
-            //    supersededAtUtc: null, utcNow: new DateTime(2022, 1, 2),
-            //    Helpers.Completed(("D", 1)),
-            //    Helpers.Exempted(("C", 10)),
-            //    Helpers.RemovedIndividualRoles(),
-            //    Helpers.ActiveAdults(
-            //        (guid1, Helpers.Completed(("A", 1), ("B", 1)), Helpers.Exempted()),
-            //        (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted())));
+            var result = ApprovalCalculations.CalculateRoleApprovalStatusFromRequirementCompletions(
+                Helpers.IndividualRequirementsMet(
+                    ("A", RequirementStage.Application, false),
+                    ("B", RequirementStage.Approval, true),
+                    ("C", RequirementStage.Approval, true),
+                    ("D", RequirementStage.Approval, true),
+                    ("E", RequirementStage.Onboarding, true),
+                    ("F", RequirementStage.Onboarding, true)));
 
-            //Assert.IsTrue(result);
+            Assert.AreEqual(null, result);
+        }
 
-            Assert.Inconclusive("Not implemented");
+        [TestMethod]
+        public void TestAppliedOnly()
+        {
+            var result = ApprovalCalculations.CalculateRoleApprovalStatusFromRequirementCompletions(
+                Helpers.IndividualRequirementsMet(
+                    ("A", RequirementStage.Application, true),
+                    ("B", RequirementStage.Approval, false),
+                    ("C", RequirementStage.Approval, false),
+                    ("D", RequirementStage.Approval, false),
+                    ("E", RequirementStage.Onboarding, false),
+                    ("F", RequirementStage.Onboarding, false)));
+
+            Assert.AreEqual(RoleApprovalStatus.Prospective, result);
+        }
+
+        [TestMethod]
+        public void TestPartiallyApproved()
+        {
+            var result = ApprovalCalculations.CalculateRoleApprovalStatusFromRequirementCompletions(
+                Helpers.IndividualRequirementsMet(
+                    ("A", RequirementStage.Application, true),
+                    ("B", RequirementStage.Approval, true),
+                    ("C", RequirementStage.Approval, true),
+                    ("D", RequirementStage.Approval, false),
+                    ("E", RequirementStage.Onboarding, false),
+                    ("F", RequirementStage.Onboarding, false)));
+
+            Assert.AreEqual(RoleApprovalStatus.Prospective, result);
+        }
+
+        [TestMethod]
+        public void TestApproved()
+        {
+            var result = ApprovalCalculations.CalculateRoleApprovalStatusFromRequirementCompletions(
+                Helpers.IndividualRequirementsMet(
+                    ("A", RequirementStage.Application, true),
+                    ("B", RequirementStage.Approval, true),
+                    ("C", RequirementStage.Approval, true),
+                    ("D", RequirementStage.Approval, true),
+                    ("E", RequirementStage.Onboarding, false),
+                    ("F", RequirementStage.Onboarding, false)));
+
+            Assert.AreEqual(RoleApprovalStatus.Approved, result);
+        }
+
+        [TestMethod]
+        public void TestPartiallyOnboarded()
+        {
+            var result = ApprovalCalculations.CalculateRoleApprovalStatusFromRequirementCompletions(
+                Helpers.IndividualRequirementsMet(
+                    ("A", RequirementStage.Application, true),
+                    ("B", RequirementStage.Approval, true),
+                    ("C", RequirementStage.Approval, true),
+                    ("D", RequirementStage.Approval, true),
+                    ("E", RequirementStage.Onboarding, true),
+                    ("F", RequirementStage.Onboarding, false)));
+
+            Assert.AreEqual(RoleApprovalStatus.Approved, result);
+        }
+
+        [TestMethod]
+        public void TestFullyOnboarded()
+        {
+            var result = ApprovalCalculations.CalculateRoleApprovalStatusFromRequirementCompletions(
+                Helpers.IndividualRequirementsMet(
+                    ("A", RequirementStage.Application, true),
+                    ("B", RequirementStage.Approval, true),
+                    ("C", RequirementStage.Approval, true),
+                    ("D", RequirementStage.Approval, true),
+                    ("E", RequirementStage.Onboarding, true),
+                    ("F", RequirementStage.Onboarding, true)));
+
+            Assert.AreEqual(RoleApprovalStatus.Onboarded, result);
         }
     }
 }

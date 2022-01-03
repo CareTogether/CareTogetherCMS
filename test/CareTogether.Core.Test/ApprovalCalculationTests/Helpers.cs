@@ -60,5 +60,10 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
             ImmutableList<(string ActionName, RequirementStage Stage, VolunteerFamilyRequirementScope Scope, bool RequirementMetOrExempted, List<Guid> RequirementMissingForIndividuals)>
             FamilyRequirementsMet(params (string, RequirementStage, VolunteerFamilyRequirementScope, bool, List<Guid>)[] requirementsMet) =>
             requirementsMet.ToImmutableList();
+
+        public static
+            ImmutableList<(string ActionName, RequirementStage Stage, bool RequirementMetOrExempted)>
+            IndividualRequirementsMet(params (string, RequirementStage, bool)[] requirementsMet) =>
+            requirementsMet.ToImmutableList();
     }
 }
