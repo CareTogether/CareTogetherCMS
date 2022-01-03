@@ -17,7 +17,6 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
             // CalculateMissingFamilyRequirementsFromRequirementCompletion
             // CalculateAvailableFamilyApplicationsFromRequirementCompletion
             // CalculateMissingFamilyIndividualRequirementsFromRequirementCompletion
-            // FamilyRequirementMetOrExempted
             // ... referral calculation tests
             // Clean up the policy evaluation engine tests (?)
 

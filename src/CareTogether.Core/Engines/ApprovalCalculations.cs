@@ -53,7 +53,7 @@ namespace CareTogether.Engines
 
             var requirementsMet = policyVersion.Requirements.Select(requirement =>
                 (requirement.ActionName, requirement.Stage, requirement.Scope,
-                    RequirementMetOrExempted: FamilyRequirementMetOrExempted(roleName, requirement, supersededAtUtc, utcNow,
+                    RequirementMetOrExempted: FamilyRequirementMetOrExempted(roleName, requirement.ActionName, requirement.Scope, supersededAtUtc, utcNow,
                         completedFamilyRequirements, exemptedFamilyRequirements, removedIndividualRoles,
                         activeAdults),
                 RequirementMissingForIndividuals: FamilyRequirementMissingForIndividuals(roleName, requirement, supersededAtUtc, utcNow,
@@ -187,27 +187,27 @@ namespace CareTogether.Engines
         }
 
         internal static bool FamilyRequirementMetOrExempted(string roleName,
-            VolunteerFamilyApprovalRequirement requirement,
+            string requirementActionName, VolunteerFamilyRequirementScope requirementScope,
             DateTime? supersededAtUtc, DateTime utcNow,
             ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
             ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
             ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles,
             ImmutableList<(Guid Id, ImmutableList<CompletedRequirementInfo> CompletedRequirements, ImmutableList<ExemptedRequirementInfo> ExemptedRequirements)> activeAdults) =>
-            requirement.Scope switch
+            activeAdults.Count > 0 && requirementScope switch
             {
                 VolunteerFamilyRequirementScope.AllAdultsInTheFamily => activeAdults.All(a =>
-                    RequirementMetOrExempted(requirement.ActionName, supersededAtUtc, utcNow,
+                    RequirementMetOrExempted(requirementActionName, supersededAtUtc, utcNow,
                         a.CompletedRequirements, a.ExemptedRequirements)),
                 VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily => activeAdults.All(a =>
                     (removedIndividualRoles.TryGetValue(a.Id, out var removedRoles)
                             && removedRoles.Any(x => x.RoleName == roleName)) ||
-                    RequirementMetOrExempted(requirement.ActionName, supersededAtUtc, utcNow,
+                    RequirementMetOrExempted(requirementActionName, supersededAtUtc, utcNow,
                         a.CompletedRequirements, a.ExemptedRequirements)),
                 VolunteerFamilyRequirementScope.OncePerFamily =>
-                    RequirementMetOrExempted(requirement.ActionName, supersededAtUtc, utcNow,
+                    RequirementMetOrExempted(requirementActionName, supersededAtUtc, utcNow,
                         completedFamilyRequirements, exemptedFamilyRequirements),
                 _ => throw new NotImplementedException(
-                    $"The volunteer family requirement scope '{requirement.Scope}' has not been implemented.")
+                    $"The volunteer family requirement scope '{requirementScope}' has not been implemented.")
             };
 
         internal static List<Guid> FamilyRequirementMissingForIndividuals(string roleName,
