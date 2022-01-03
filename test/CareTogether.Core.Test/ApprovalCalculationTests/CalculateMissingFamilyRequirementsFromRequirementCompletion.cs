@@ -2,6 +2,7 @@
 using CareTogether.Resources;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections.Generic;
 
 namespace CareTogether.Core.Test.ApprovalCalculationTests
 {
@@ -19,21 +20,131 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
 
 
         [TestMethod]
-        public void Test___()
+        public void TestNoStatusNoneMissing()
         {
-            //var result = ApprovalCalculations.FamilyRequirementMetOrExempted("Role", "C",
-            //    VolunteerFamilyRequirementScope.OncePerFamily,
-            //    supersededAtUtc: null, utcNow: new DateTime(2022, 1, 2),
-            //    Helpers.Completed(("D", 1)),
-            //    Helpers.Exempted(("C", 10)),
-            //    Helpers.RemovedIndividualRoles(),
-            //    Helpers.ActiveAdults(
-            //        (guid1, Helpers.Completed(("A", 1), ("B", 1)), Helpers.Exempted()),
-            //        (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted())));
+            var result = ApprovalCalculations.CalculateMissingFamilyRequirementsFromRequirementCompletion(
+                status: null,
+                Helpers.FamilyRequirementsMet(
+                    ("A", RequirementStage.Application, VolunteerFamilyRequirementScope.OncePerFamily, true, new List<Guid>() { }),
+                    ("B", RequirementStage.Approval, VolunteerFamilyRequirementScope.OncePerFamily, true, new List<Guid>() { }),
+                    ("C", RequirementStage.Approval, VolunteerFamilyRequirementScope.AllAdultsInTheFamily, true, new List<Guid>() { }),
+                    ("D", RequirementStage.Approval, VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily, true, new List<Guid>() { }),
+                    ("E", RequirementStage.Onboarding, VolunteerFamilyRequirementScope.OncePerFamily, true, new List<Guid>() { }),
+                    ("F", RequirementStage.Onboarding, VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily, true, new List<Guid>() { })));
 
-            //Assert.IsTrue(result);
+            AssertEx.SequenceIs(result);
+        }
 
-            Assert.Inconclusive("Not implemented");
+        [TestMethod]
+        public void TestNoStatusAllMissing()
+        {
+            var result = ApprovalCalculations.CalculateMissingFamilyRequirementsFromRequirementCompletion(
+                status: null,
+                Helpers.FamilyRequirementsMet(
+                    ("A", RequirementStage.Application, VolunteerFamilyRequirementScope.OncePerFamily, false, new List<Guid>() { }),
+                    ("B", RequirementStage.Approval, VolunteerFamilyRequirementScope.OncePerFamily, false, new List<Guid>() { }),
+                    ("C", RequirementStage.Approval, VolunteerFamilyRequirementScope.AllAdultsInTheFamily, false, new List<Guid>() { guid1, guid2 }),
+                    ("D", RequirementStage.Approval, VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily, false, new List<Guid>() { guid1 }),
+                    ("E", RequirementStage.Onboarding, VolunteerFamilyRequirementScope.OncePerFamily, false, new List<Guid>() { }),
+                    ("F", RequirementStage.Onboarding, VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily, false, new List<Guid>() { guid1 })));
+
+            AssertEx.SequenceIs(result);
+        }
+
+        [TestMethod]
+        public void TestProspectiveNoneMissing()
+        {
+            var result = ApprovalCalculations.CalculateMissingFamilyRequirementsFromRequirementCompletion(
+                status: RoleApprovalStatus.Prospective,
+                Helpers.FamilyRequirementsMet(
+                    ("A", RequirementStage.Application, VolunteerFamilyRequirementScope.OncePerFamily, true, new List<Guid>() { }),
+                    ("B", RequirementStage.Approval, VolunteerFamilyRequirementScope.OncePerFamily, true, new List<Guid>() { }),
+                    ("C", RequirementStage.Approval, VolunteerFamilyRequirementScope.AllAdultsInTheFamily, true, new List<Guid>() { }),
+                    ("D", RequirementStage.Approval, VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily, true, new List<Guid>() { }),
+                    ("E", RequirementStage.Onboarding, VolunteerFamilyRequirementScope.OncePerFamily, true, new List<Guid>() { }),
+                    ("F", RequirementStage.Onboarding, VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily, true, new List<Guid>() { })));
+
+            AssertEx.SequenceIs(result);
+        }
+
+        [TestMethod]
+        public void TestProspectiveAllMissing()
+        {
+            var result = ApprovalCalculations.CalculateMissingFamilyRequirementsFromRequirementCompletion(
+                status: RoleApprovalStatus.Prospective,
+                Helpers.FamilyRequirementsMet(
+                    ("A", RequirementStage.Application, VolunteerFamilyRequirementScope.OncePerFamily, false, new List<Guid>() { }),
+                    ("B", RequirementStage.Approval, VolunteerFamilyRequirementScope.OncePerFamily, false, new List<Guid>() { }),
+                    ("C", RequirementStage.Approval, VolunteerFamilyRequirementScope.AllAdultsInTheFamily, false, new List<Guid>() { guid1, guid2 }),
+                    ("D", RequirementStage.Approval, VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily, false, new List<Guid>() { guid1 }),
+                    ("E", RequirementStage.Onboarding, VolunteerFamilyRequirementScope.OncePerFamily, false, new List<Guid>() { }),
+                    ("F", RequirementStage.Onboarding, VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily, false, new List<Guid>() { guid1 })));
+
+            AssertEx.SequenceIs(result, "B");
+        }
+
+        [TestMethod]
+        public void TestApprovedNoneMissing()
+        {
+            var result = ApprovalCalculations.CalculateMissingFamilyRequirementsFromRequirementCompletion(
+                status: RoleApprovalStatus.Approved,
+                Helpers.FamilyRequirementsMet(
+                    ("A", RequirementStage.Application, VolunteerFamilyRequirementScope.OncePerFamily, true, new List<Guid>() { }),
+                    ("B", RequirementStage.Approval, VolunteerFamilyRequirementScope.OncePerFamily, true, new List<Guid>() { }),
+                    ("C", RequirementStage.Approval, VolunteerFamilyRequirementScope.AllAdultsInTheFamily, true, new List<Guid>() { }),
+                    ("D", RequirementStage.Approval, VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily, true, new List<Guid>() { }),
+                    ("E", RequirementStage.Onboarding, VolunteerFamilyRequirementScope.OncePerFamily, true, new List<Guid>() { }),
+                    ("F", RequirementStage.Onboarding, VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily, true, new List<Guid>() { })));
+
+            AssertEx.SequenceIs(result);
+        }
+
+        [TestMethod]
+        public void TestApprovedAllMissing()
+        {
+            var result = ApprovalCalculations.CalculateMissingFamilyRequirementsFromRequirementCompletion(
+                status: RoleApprovalStatus.Approved,
+                Helpers.FamilyRequirementsMet(
+                    ("A", RequirementStage.Application, VolunteerFamilyRequirementScope.OncePerFamily, false, new List<Guid>() { }),
+                    ("B", RequirementStage.Approval, VolunteerFamilyRequirementScope.OncePerFamily, false, new List<Guid>() { }),
+                    ("C", RequirementStage.Approval, VolunteerFamilyRequirementScope.AllAdultsInTheFamily, false, new List<Guid>() { guid1, guid2 }),
+                    ("D", RequirementStage.Approval, VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily, false, new List<Guid>() { guid1 }),
+                    ("E", RequirementStage.Onboarding, VolunteerFamilyRequirementScope.OncePerFamily, false, new List<Guid>() { }),
+                    ("F", RequirementStage.Onboarding, VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily, false, new List<Guid>() { guid1 })));
+
+            AssertEx.SequenceIs(result, "E");
+        }
+
+        [TestMethod]
+        public void TestOnboardedNoneMissing()
+        {
+            var result = ApprovalCalculations.CalculateMissingFamilyRequirementsFromRequirementCompletion(
+                status: RoleApprovalStatus.Onboarded,
+                Helpers.FamilyRequirementsMet(
+                    ("A", RequirementStage.Application, VolunteerFamilyRequirementScope.OncePerFamily, true, new List<Guid>() { }),
+                    ("B", RequirementStage.Approval, VolunteerFamilyRequirementScope.OncePerFamily, true, new List<Guid>() { }),
+                    ("C", RequirementStage.Approval, VolunteerFamilyRequirementScope.AllAdultsInTheFamily, true, new List<Guid>() { }),
+                    ("D", RequirementStage.Approval, VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily, true, new List<Guid>() { }),
+                    ("E", RequirementStage.Onboarding, VolunteerFamilyRequirementScope.OncePerFamily, true, new List<Guid>() { }),
+                    ("F", RequirementStage.Onboarding, VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily, true, new List<Guid>() { })));
+
+            AssertEx.SequenceIs(result);
+        }
+
+        [TestMethod]
+        public void TestOnboardedAllMissing()
+        {
+            var result = ApprovalCalculations.CalculateMissingFamilyRequirementsFromRequirementCompletion(
+                status: RoleApprovalStatus.Onboarded,
+                Helpers.FamilyRequirementsMet(
+                    ("A", RequirementStage.Application, VolunteerFamilyRequirementScope.OncePerFamily, false, new List<Guid>() { }),
+                    ("B", RequirementStage.Approval, VolunteerFamilyRequirementScope.OncePerFamily, false, new List<Guid>() { }),
+                    ("C", RequirementStage.Approval, VolunteerFamilyRequirementScope.AllAdultsInTheFamily, false, new List<Guid>() { guid1, guid2 }),
+                    ("D", RequirementStage.Approval, VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily, false, new List<Guid>() { guid1 }),
+                    ("E", RequirementStage.Onboarding, VolunteerFamilyRequirementScope.OncePerFamily, false, new List<Guid>() { }),
+                    ("F", RequirementStage.Onboarding, VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily, false, new List<Guid>() { guid1 })));
+
+            AssertEx.SequenceIs(result);
         }
     }
 }

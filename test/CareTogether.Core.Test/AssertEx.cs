@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace CareTogether.Core.Test
@@ -24,6 +25,19 @@ namespace CareTogether.Core.Test
         {
             Assert.AreEqual(expected.Length, actual.Count);
             Assert.IsTrue(Enumerable.Zip(actual, expected).All(tuple => tuple.First == tuple.Second));
+        }
+
+        public static void DictionaryIs<TKey, TValue>(IDictionary<TKey, ImmutableList<TValue>> actual, params (TKey, TValue[])[] expected)
+            where TValue : class
+        {
+            Assert.AreEqual(expected.Length, actual.Count);
+            Assert.IsTrue(expected.All(e =>
+            {
+                var a = actual[e.Item1];
+                Assert.AreEqual(e.Item2.Length, a.Count);
+                Assert.IsTrue(Enumerable.Zip(a, e.Item2).All(tuple => tuple.First == tuple.Second));
+                return true;
+            }));
         }
     }
 }
