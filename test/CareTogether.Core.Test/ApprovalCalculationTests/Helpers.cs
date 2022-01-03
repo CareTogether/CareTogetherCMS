@@ -1,5 +1,6 @@
 ﻿using CareTogether.Resources;
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 
@@ -40,5 +41,19 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
             removedRoles.Select(removed =>
                 new RemovedRole(removed, RoleRemovalReason.OptOut, null))
             .ToImmutableList();
+
+        public static
+            ImmutableDictionary<Guid, ImmutableList<RemovedRole>>
+            RemovedIndividualRoles(params (Guid, string)[] removedIndividualRoles) =>
+            ImmutableDictionary<Guid, ImmutableList<RemovedRole>>.Empty.AddRange(
+                removedIndividualRoles
+                    .GroupBy(removed => removed.Item1, removed => removed.Item2)
+                    .Select(removed => new KeyValuePair<Guid, ImmutableList<RemovedRole>>(removed.Key,
+                        removed.Select(r => new RemovedRole(r, RoleRemovalReason.OptOut, AdditionalComments: null)).ToImmutableList())));
+
+        public static
+            ImmutableList<(Guid Id, ImmutableList<CompletedRequirementInfo> CompletedRequirements, ImmutableList<ExemptedRequirementInfo> ExemptedRequirements)>
+            ActiveAdults(params (Guid, ImmutableList<CompletedRequirementInfo>, ImmutableList<ExemptedRequirementInfo>)[] activeAdults) =>
+                activeAdults.ToImmutableList();
     }
 }

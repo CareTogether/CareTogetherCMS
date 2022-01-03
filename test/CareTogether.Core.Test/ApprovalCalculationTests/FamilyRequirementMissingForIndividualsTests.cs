@@ -2,7 +2,6 @@
 using CareTogether.Resources;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections.Immutable;
 
 namespace CareTogether.Core.Test.ApprovalCalculationTests
 {
@@ -26,14 +25,13 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "B", VolunteerFamilyRequirementScope.AllAdultsInTheFamily),
                 supersededAtUtc: null, utcNow: new DateTime(2022, 1, 20),
                 removedIndividualRoles:
-                    ImmutableDictionary<Guid, ImmutableList<RemovedRole>>.Empty
-                    .Add(guid1, Helpers.Removed("Tester")),
+                    Helpers.RemovedIndividualRoles((guid1, "Tester")),
                 activeAdults:
-                    ImmutableList<(Guid Id, ImmutableList<CompletedRequirementInfo> CompletedRequirements, ImmutableList<ExemptedRequirementInfo> ExemptedRequirements)>.Empty
-                    .Add((guid0, Helpers.Completed(("A", 1), ("B", 2)), Helpers.Exempted(("C", 10))))
-                    .Add((guid1, Helpers.Completed(("A", 1)), Helpers.Exempted(("B", 10))))
-                    .Add((guid2, Helpers.Completed(("A", 1)), Helpers.Exempted(("B", 30))))
-                    .Add((guid3, Helpers.Completed(("A", 1), ("B", 4), ("B", 8)), Helpers.Exempted())));
+                    Helpers.ActiveAdults(
+                        (guid0, Helpers.Completed(("A", 1), ("B", 2)), Helpers.Exempted(("C", 10))),
+                        (guid1, Helpers.Completed(("A", 1)), Helpers.Exempted(("B", 10))),
+                        (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted(("B", 30))),
+                        (guid3, Helpers.Completed(("A", 1), ("B", 4), ("B", 8)), Helpers.Exempted())));
 
             AssertEx.SequenceIs(result, guid1);
         }
@@ -45,14 +43,13 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "B", VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily),
                 supersededAtUtc: null, utcNow: new DateTime(2022, 1, 20),
                 removedIndividualRoles:
-                    ImmutableDictionary<Guid, ImmutableList<RemovedRole>>.Empty
-                    .Add(guid1, Helpers.Removed("Tester")),
+                    Helpers.RemovedIndividualRoles((guid1, "Tester")),
                 activeAdults:
-                    ImmutableList<(Guid Id, ImmutableList<CompletedRequirementInfo> CompletedRequirements, ImmutableList<ExemptedRequirementInfo> ExemptedRequirements)>.Empty
-                    .Add((guid0, Helpers.Completed(("A", 1), ("B", 2)), Helpers.Exempted(("C", 10))))
-                    .Add((guid1, Helpers.Completed(("A", 1)), Helpers.Exempted(("B", 10))))
-                    .Add((guid2, Helpers.Completed(("A", 1)), Helpers.Exempted(("B", 30))))
-                    .Add((guid3, Helpers.Completed(("A", 1), ("B", 4), ("B", 8)), Helpers.Exempted())));
+                    Helpers.ActiveAdults(
+                        (guid0, Helpers.Completed(("A", 1), ("B", 2)), Helpers.Exempted(("C", 10))),
+                        (guid1, Helpers.Completed(("A", 1)), Helpers.Exempted(("B", 10))),
+                        (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted(("B", 30))),
+                        (guid3, Helpers.Completed(("A", 1), ("B", 4), ("B", 8)), Helpers.Exempted())));
 
             AssertEx.SequenceIs(result);
         }
@@ -64,13 +61,13 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "B", VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily),
                 supersededAtUtc: null, utcNow: new DateTime(2022, 1, 20),
                 removedIndividualRoles:
-                    ImmutableDictionary<Guid, ImmutableList<RemovedRole>>.Empty,
+                    Helpers.RemovedIndividualRoles(),
                 activeAdults:
-                    ImmutableList<(Guid Id, ImmutableList<CompletedRequirementInfo> CompletedRequirements, ImmutableList<ExemptedRequirementInfo> ExemptedRequirements)>.Empty
-                    .Add((guid0, Helpers.Completed(("A", 1), ("B", 2)), Helpers.Exempted(("C", 10))))
-                    .Add((guid1, Helpers.Completed(("A", 1)), Helpers.Exempted(("B", 10))))
-                    .Add((guid2, Helpers.Completed(("A", 1)), Helpers.Exempted(("B", 30))))
-                    .Add((guid3, Helpers.Completed(("A", 1), ("B", 4), ("B", 8)), Helpers.Exempted())));
+                    Helpers.ActiveAdults(
+                        (guid0, Helpers.Completed(("A", 1), ("B", 2)), Helpers.Exempted(("C", 10))),
+                        (guid1, Helpers.Completed(("A", 1)), Helpers.Exempted(("B", 10))),
+                        (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted(("B", 30))),
+                        (guid3, Helpers.Completed(("A", 1), ("B", 4), ("B", 8)), Helpers.Exempted())));
 
             AssertEx.SequenceIs(result, guid1);
         }
@@ -82,13 +79,13 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "B", VolunteerFamilyRequirementScope.OncePerFamily),
                 supersededAtUtc: null, utcNow: new DateTime(2022, 1, 20),
                 removedIndividualRoles:
-                    ImmutableDictionary<Guid, ImmutableList<RemovedRole>>.Empty,
+                    Helpers.RemovedIndividualRoles(),
                 activeAdults:
-                    ImmutableList<(Guid Id, ImmutableList<CompletedRequirementInfo> CompletedRequirements, ImmutableList<ExemptedRequirementInfo> ExemptedRequirements)>.Empty
-                    .Add((guid0, Helpers.Completed(("A", 1), ("B", 2)), Helpers.Exempted(("C", 10))))
-                    .Add((guid1, Helpers.Completed(("A", 1)), Helpers.Exempted(("B", 10))))
-                    .Add((guid2, Helpers.Completed(("A", 1)), Helpers.Exempted(("B", 30))))
-                    .Add((guid3, Helpers.Completed(("A", 1), ("B", 4), ("B", 8)), Helpers.Exempted())));
+                    Helpers.ActiveAdults(
+                        (guid0, Helpers.Completed(("A", 1), ("B", 2)), Helpers.Exempted(("C", 10))),
+                        (guid1, Helpers.Completed(("A", 1)), Helpers.Exempted(("B", 10))),
+                        (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted(("B", 30))),
+                        (guid3, Helpers.Completed(("A", 1), ("B", 4), ("B", 8)), Helpers.Exempted())));
 
             AssertEx.SequenceIs(result);
         }
