@@ -139,12 +139,13 @@ namespace CareTogether.Managers
                     x =>
                     {
                         var hasEntry = entry.IndividualEntries.TryGetValue(x.Key, out var individualEntry);
-                        var result = hasEntry
-                            ? new VolunteerInfo(individualEntry!.CompletedRequirements, individualEntry!.ExemptedRequirements, individualEntry!.RemovedRoles,
-                                x.Value.MissingIndividualRequirements, x.Value.AvailableIndividualApplications, x.Value.IndividualRoleApprovals)
-                            : new VolunteerInfo(ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<ExemptedRequirementInfo>.Empty, ImmutableList<RemovedRole>.Empty,
-                                x.Value.MissingIndividualRequirements, x.Value.AvailableIndividualApplications, x.Value.IndividualRoleApprovals);
-                        return result;
+                        return new VolunteerInfo(
+                            individualEntry?.CompletedRequirements ?? ImmutableList<CompletedRequirementInfo>.Empty,
+                            individualEntry?.ExemptedRequirements ?? ImmutableList<ExemptedRequirementInfo>.Empty,
+                            individualEntry?.RemovedRoles ?? ImmutableList<RemovedRole>.Empty,
+                            x.Value.MissingIndividualRequirements,
+                            x.Value.AvailableIndividualApplications,
+                            x.Value.IndividualRoleApprovals);
                     }));
 
             var disclosedVolunteerFamilyInfo = await authorizationEngine.DiscloseVolunteerFamilyInfoAsync(user, volunteerFamilyInfo);
