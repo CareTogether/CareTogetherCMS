@@ -8,7 +8,171 @@ namespace CareTogether.Engines
 {
     internal static class ApprovalCalculations
     {
-        public static
+        public static VolunteerFamilyApprovalStatus CalculateVolunteerFamilyApprovalStatus(
+            VolunteerPolicy volunteerPolicy, Family family,
+            ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
+            ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
+            ImmutableList<RemovedRole> removedFamilyRoles,
+            ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements,
+            ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>> exemptedIndividualRequirements,
+            ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles)
+        {
+            var individualResults = CalculateCombinedIndividualRoleStatusForFamilyMembers(
+                volunteerPolicy, family, DateTime.UtcNow,
+                completedIndividualRequirements, exemptedIndividualRequirements, removedIndividualRoles);
+
+            var familyResult = CalculateCombinedFamilyRoleStatusForFamily(
+                volunteerPolicy, family, DateTime.UtcNow,
+                completedFamilyRequirements, exemptedFamilyRequirements, removedFamilyRoles,
+                completedIndividualRequirements, exemptedIndividualRequirements, removedIndividualRoles);
+
+            return new VolunteerFamilyApprovalStatus(
+                familyResult.FamilyRoleVersionApprovals,
+                familyResult.RemovedFamilyRoles,
+                familyResult.MissingFamilyRequirements,
+                familyResult.AvailableFamilyApplications,
+                family.Adults.Select(adultFamilyEntry =>
+                {
+                    var (person, familyRelationship) = adultFamilyEntry;
+                    var individualResult = individualResults.TryGetValue(person.Id, out var result)
+                        ? result :
+                        (IndividualRoleVersionApprovals: ImmutableDictionary<string, ImmutableList<RoleVersionApproval>>.Empty,
+                        RemovedIndividualRoles: ImmutableList<RemovedRole>.Empty,
+                        MissingIndividualRequirements: ImmutableList<string>.Empty,
+                        AvailableIndividualApplications: ImmutableList<string>.Empty);
+
+                    var mergedMissingIndividualRequirements = individualResult.MissingIndividualRequirements
+                        .Concat(familyResult.MissingIndividualRequirementsForFamilyRoles.TryGetValue(person.Id, out var missing)
+                            ? missing : ImmutableList<string>.Empty)
+                        .Distinct()
+                        .ToImmutableList();
+
+                    return new KeyValuePair<Guid, VolunteerApprovalStatus>(person.Id, new VolunteerApprovalStatus(
+                        IndividualRoleApprovals: individualResult.IndividualRoleVersionApprovals,
+                        RemovedIndividualRoles: individualResult.RemovedIndividualRoles,
+                        MissingIndividualRequirements: mergedMissingIndividualRequirements,
+                        AvailableIndividualApplications: individualResult.AvailableIndividualApplications));
+                }).ToImmutableDictionary());
+        }
+
+
+        internal static ImmutableDictionary<Guid,
+            (ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> IndividualRoleVersionApprovals,
+            ImmutableList<RemovedRole> RemovedIndividualRoles,
+            ImmutableList<string> MissingIndividualRequirements,
+            ImmutableList<string> AvailableIndividualApplications)>
+            CalculateCombinedIndividualRoleStatusForFamilyMembers(
+            VolunteerPolicy volunteerPolicy, Family family, DateTime utcNow,
+            ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements,
+            ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>> exemptedIndividualRequirements,
+            ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles)
+        {
+            var allAdultsVolunteerApprovalStatus = family.Adults.Select(adultFamilyEntry =>
+            {
+                var (person, familyRelationship) = adultFamilyEntry;
+
+                var completedRequirements = completedIndividualRequirements.GetValueOrEmptyList(person.Id);
+                var exemptedRequirements = exemptedIndividualRequirements.GetValueOrEmptyList(person.Id);
+                var removedRoles = removedIndividualRoles.GetValueOrEmptyList(person.Id);
+
+                var allIndividualRoleApprovals = volunteerPolicy.VolunteerRoles
+                    .Where(rolePolicy => !removedRoles.Any(x => x.RoleName == rolePolicy.Key))
+                    .Select(rolePolicy => (RoleName: rolePolicy.Key,
+                        StatusByVersions: rolePolicy.Value.PolicyVersions.Select(policyVersion =>
+                        {
+                            var (Status, MissingRequirements, AvailableApplications) =
+                                CalculateIndividualVolunteerRoleApprovalStatus(
+                                    policyVersion, utcNow, completedRequirements, exemptedRequirements);
+                            return (PolicyVersion: policyVersion, Status, MissingRequirements, AvailableApplications);
+                        })
+                        .ToImmutableList()))
+                    .ToImmutableList();
+
+                var volunteerApprovalStatus = (person.Id, (
+                    IndividualRoleVersionApprovals: allIndividualRoleApprovals.ToImmutableDictionary(
+                        x => x.RoleName,
+                        x => x.StatusByVersions
+                            .Where(y => y.Status.HasValue)
+                            .Select(y => new RoleVersionApproval(y.PolicyVersion.Version, y.Status!.Value))
+                            .ToImmutableList()),
+                    RemovedIndividualRoles: removedRoles,
+                    MissingIndividualRequirements: allIndividualRoleApprovals
+                        .SelectMany(x => x.StatusByVersions.SelectMany(y => y.MissingRequirements))
+                        .Distinct()
+                        .ToImmutableList(),
+                    AvailableIndividualApplications: allIndividualRoleApprovals
+                        .SelectMany(x => x.StatusByVersions.SelectMany(y => y.AvailableApplications))
+                        .Distinct()
+                        .ToImmutableList()));
+
+                return volunteerApprovalStatus;
+            }).ToImmutableDictionary(x => x.Id, x => x.Item2);
+            return allAdultsVolunteerApprovalStatus;
+        }
+
+        internal static
+            (ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> FamilyRoleVersionApprovals,
+            ImmutableList<RemovedRole> RemovedFamilyRoles,
+            ImmutableList<string> MissingFamilyRequirements,
+            ImmutableList<string> AvailableFamilyApplications,
+            ImmutableDictionary<Guid, ImmutableList<string>> MissingIndividualRequirementsForFamilyRoles)
+            CalculateCombinedFamilyRoleStatusForFamily(
+            VolunteerPolicy volunteerPolicy, Family family, DateTime utcNow,
+            ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
+            ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
+            ImmutableList<RemovedRole> removedFamilyRoles,
+            ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements,
+            ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>> exemptedIndividualRequirements,
+            ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles)
+        {
+            var allFamilyRoleApprovals = volunteerPolicy.VolunteerFamilyRoles
+                .Where(rolePolicy => !removedFamilyRoles.Any(x => x.RoleName == rolePolicy.Key))
+                .Select(rolePolicy => (RoleName: rolePolicy.Key,
+                    StatusByVersions: rolePolicy.Value.PolicyVersions.Select(policyVersion =>
+                    {
+                        var (Status, MissingRequirements, AvailableApplications, MissingIndividualRequirements) =
+                            CalculateFamilyVolunteerRoleApprovalStatus(
+                                rolePolicy.Key, policyVersion, utcNow, family,
+                                completedFamilyRequirements, exemptedFamilyRequirements,
+                                completedIndividualRequirements, exemptedIndividualRequirements,
+                                removedIndividualRoles);
+                        return (PolicyVersion: policyVersion, Status, MissingRequirements, AvailableApplications, MissingIndividualRequirements);
+                    })
+                    .ToImmutableList()))
+                .ToImmutableList();
+
+            var volunteerFamilyApprovalStatus = (
+                FamilyRoleVersionApprovals: allFamilyRoleApprovals
+                    .Where(x => x.StatusByVersions.Any(y => y.Status.HasValue))
+                    .ToImmutableDictionary(
+                        x => x.RoleName,
+                        x => x.StatusByVersions
+                            .Where(y => y.Status.HasValue)
+                            .Select(y => new RoleVersionApproval(y.PolicyVersion.Version, y.Status!.Value))
+                            .ToImmutableList()),
+                RemovedFamilyRoles: removedFamilyRoles,
+                MissingFamilyRequirements: allFamilyRoleApprovals
+                        .SelectMany(x => x.StatusByVersions.SelectMany(y => y.MissingRequirements))
+                        .Distinct()
+                        .ToImmutableList(),
+                AvailableFamilyApplications: allFamilyRoleApprovals
+                        .SelectMany(x => x.StatusByVersions.SelectMany(y => y.AvailableApplications))
+                        .Distinct()
+                        .ToImmutableList(),
+                MissingIndividualRequirementsForFamilyRoles: allFamilyRoleApprovals
+                        .SelectMany(x => x.StatusByVersions
+                            .SelectMany(y => y.MissingIndividualRequirements
+                                .SelectMany(z => z.Value
+                                    .Select(q => (PersonId: z.Key, MissingRequirement: q)))))
+                        .GroupBy(x => x.PersonId)
+                        .ToImmutableDictionary(
+                            x => x.Key,
+                            x => x.Select(y => y.MissingRequirement).ToImmutableList()));
+
+            return volunteerFamilyApprovalStatus;
+        }
+
+        internal static
             (RoleApprovalStatus? Status, ImmutableList<string> MissingRequirements, ImmutableList<string> AvailableApplications)
             CalculateIndividualVolunteerRoleApprovalStatus(
             VolunteerRolePolicyVersion policyVersion, DateTime utcNow,
@@ -28,7 +192,7 @@ namespace CareTogether.Engines
             return (Status: status, MissingRequirements: missingRequirements, AvailableApplications: availableApplications);
         }
 
-        public static
+        internal static
             (RoleApprovalStatus? Status, ImmutableList<string> MissingRequirements, ImmutableList<string> AvailableApplications,
             ImmutableDictionary<Guid, ImmutableList<string>> MissingIndividualRequirements)
             CalculateFamilyVolunteerRoleApprovalStatus
@@ -72,7 +236,6 @@ namespace CareTogether.Engines
                 AvailableApplications: availableApplications,
                 MissingIndividualRequirements: missingIndividualRequirements);
         }
-
 
         internal static RoleApprovalStatus? CalculateRoleApprovalStatusFromRequirementCompletions(
             ImmutableList<(string ActionName, RequirementStage Stage, bool RequirementMetOrExempted)> requirementCompletionStatus)
