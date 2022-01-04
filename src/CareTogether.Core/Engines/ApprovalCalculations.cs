@@ -18,7 +18,7 @@ namespace CareTogether.Engines
             ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles)
         {
             var individualResults = CalculateCombinedIndividualRoleStatusForFamilyMembers(
-                volunteerPolicy, family, DateTime.UtcNow,
+                volunteerPolicy.VolunteerRoles, family, DateTime.UtcNow,
                 completedIndividualRequirements, exemptedIndividualRequirements, removedIndividualRoles);
 
             var familyResult = CalculateCombinedFamilyRoleStatusForFamily(
@@ -62,7 +62,7 @@ namespace CareTogether.Engines
             ImmutableList<string> MissingIndividualRequirements,
             ImmutableList<string> AvailableIndividualApplications)>
             CalculateCombinedIndividualRoleStatusForFamilyMembers(
-            VolunteerPolicy volunteerPolicy, Family family, DateTime utcNow,
+            ImmutableDictionary<string, VolunteerRolePolicy> volunteerRoles, Family family, DateTime utcNow,
             ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>> exemptedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles)
@@ -75,7 +75,7 @@ namespace CareTogether.Engines
                 var exemptedRequirements = exemptedIndividualRequirements.GetValueOrEmptyList(person.Id);
                 var removedRoles = removedIndividualRoles.GetValueOrEmptyList(person.Id);
 
-                var allIndividualRoleApprovals = volunteerPolicy.VolunteerRoles
+                var allIndividualRoleApprovals = volunteerRoles
                     .Where(rolePolicy => !removedRoles.Any(x => x.RoleName == rolePolicy.Key))
                     .Select(rolePolicy => (RoleName: rolePolicy.Key,
                         StatusByVersions: rolePolicy.Value.PolicyVersions.Select(policyVersion =>
@@ -89,12 +89,14 @@ namespace CareTogether.Engines
                     .ToImmutableList();
 
                 var volunteerApprovalStatus = (person.Id, (
-                    IndividualRoleVersionApprovals: allIndividualRoleApprovals.ToImmutableDictionary(
-                        x => x.RoleName,
-                        x => x.StatusByVersions
-                            .Where(y => y.Status.HasValue)
-                            .Select(y => new RoleVersionApproval(y.PolicyVersion.Version, y.Status!.Value))
-                            .ToImmutableList()),
+                    IndividualRoleVersionApprovals: allIndividualRoleApprovals
+                        .Where(x => x.StatusByVersions.Any(y => y.Status.HasValue))
+                        .ToImmutableDictionary(
+                            x => x.RoleName,
+                            x => x.StatusByVersions
+                                .Where(y => y.Status.HasValue)
+                                .Select(y => new RoleVersionApproval(y.PolicyVersion.Version, y.Status!.Value))
+                                .ToImmutableList()),
                     RemovedIndividualRoles: removedRoles,
                     MissingIndividualRequirements: allIndividualRoleApprovals
                         .SelectMany(x => x.StatusByVersions.SelectMany(y => y.MissingRequirements))
