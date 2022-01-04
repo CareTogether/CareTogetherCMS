@@ -92,7 +92,7 @@ namespace CareTogether.Managers
                 var referralStatus = await policyEvaluationEngine.CalculateReferralStatusAsync(organizationId, locationId, family, entry);
 
                 return new(entry.Id, entry.OpenedAtUtc, entry.ClosedAtUtc, entry.CloseReason,
-                    entry.CompletedRequirements, referralStatus.MissingIntakeRequirements,
+                    entry.CompletedRequirements, entry.ExemptedRequirements, referralStatus.MissingIntakeRequirements,
                     entry.Arrangements
                         .Select(a => ToArrangement(a.Value, referralStatus.IndividualArrangements[a.Key]))
                         .ToImmutableList());
@@ -101,7 +101,7 @@ namespace CareTogether.Managers
             static Arrangement ToArrangement(ArrangementEntry entry, ArrangementStatus status) =>
                 new(entry.Id, entry.ArrangementType, entry.PartneringFamilyPersonId, status.Phase,
                     entry.RequestedAtUtc, entry.StartedAtUtc, entry.EndedAtUtc,
-                    entry.CompletedRequirements,
+                    entry.CompletedRequirements, entry.ExemptedRequirements,
                     status.MissingRequirements,
                     entry.IndividualVolunteerAssignments, entry.FamilyVolunteerAssignments,
                     entry.ChildrenLocationHistory);
@@ -118,16 +118,19 @@ namespace CareTogether.Managers
             var completedIndividualRequirements = entry.IndividualEntries.ToImmutableDictionary(
                 x => x.Key,
                 x => x.Value.CompletedRequirements);
+            var exemptedIndividualRequirements = entry.IndividualEntries.ToImmutableDictionary(
+                x => x.Key,
+                x => x.Value.ExemptedRequirements);
             var removedIndividualRoles = entry.IndividualEntries.ToImmutableDictionary(
                 x => x.Key,
                 x => x.Value.RemovedRoles);
 
             var volunteerFamilyApprovalStatus = await policyEvaluationEngine.CalculateVolunteerFamilyApprovalStatusAsync(
-                organizationId, locationId, family, entry.CompletedRequirements, entry.RemovedRoles,
-                completedIndividualRequirements, removedIndividualRoles);
+                organizationId, locationId, family, entry.CompletedRequirements, entry.ExemptedRequirements, entry.RemovedRoles,
+                completedIndividualRequirements, exemptedIndividualRequirements, removedIndividualRoles);
 
             var volunteerFamilyInfo = new VolunteerFamilyInfo(
-                entry.CompletedRequirements, entry.RemovedRoles,
+                entry.CompletedRequirements, entry.ExemptedRequirements, entry.RemovedRoles,
                 volunteerFamilyApprovalStatus.MissingFamilyRequirements,
                 volunteerFamilyApprovalStatus.AvailableFamilyApplications,
                 volunteerFamilyApprovalStatus.FamilyRoleApprovals,
@@ -136,12 +139,13 @@ namespace CareTogether.Managers
                     x =>
                     {
                         var hasEntry = entry.IndividualEntries.TryGetValue(x.Key, out var individualEntry);
-                        var result = hasEntry
-                            ? new VolunteerInfo(individualEntry!.CompletedRequirements, individualEntry!.RemovedRoles,
-                                x.Value.MissingIndividualRequirements, x.Value.AvailableIndividualApplications, x.Value.IndividualRoleApprovals)
-                            : new VolunteerInfo(ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<RemovedRole>.Empty,
-                                x.Value.MissingIndividualRequirements, x.Value.AvailableIndividualApplications, x.Value.IndividualRoleApprovals);
-                        return result;
+                        return new VolunteerInfo(
+                            individualEntry?.CompletedRequirements ?? ImmutableList<CompletedRequirementInfo>.Empty,
+                            individualEntry?.ExemptedRequirements ?? ImmutableList<ExemptedRequirementInfo>.Empty,
+                            individualEntry?.RemovedRoles ?? ImmutableList<RemovedRole>.Empty,
+                            x.Value.MissingIndividualRequirements,
+                            x.Value.AvailableIndividualApplications,
+                            x.Value.IndividualRoleApprovals);
                     }));
 
             var disclosedVolunteerFamilyInfo = await authorizationEngine.DiscloseVolunteerFamilyInfoAsync(user, volunteerFamilyInfo);

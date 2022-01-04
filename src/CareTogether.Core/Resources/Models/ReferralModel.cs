@@ -42,7 +42,7 @@ namespace CareTogether.Resources.Models
             {
                 CreateReferral c => new ReferralEntry(c.ReferralId, c.FamilyId,
                     OpenedAtUtc: c.OpenedAtUtc, ClosedAtUtc: null, CloseReason: null,
-                    ImmutableList<CompletedRequirementInfo>.Empty,
+                    ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<ExemptedRequirementInfo>.Empty,
                     ImmutableDictionary<Guid, ArrangementEntry>.Empty),
                 _ => referrals.TryGetValue(command.ReferralId, out var referralEntry)
                     ? command switch
@@ -52,6 +52,16 @@ namespace CareTogether.Resources.Models
                             CompletedRequirements = referralEntry.CompletedRequirements.Add(
                                 new CompletedRequirementInfo(userId, timestampUtc, c.CompletedRequirementId,
                                     c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId))
+                        },
+                        ExemptReferralRequirement c => referralEntry with
+                        {
+                            ExemptedRequirements = referralEntry.ExemptedRequirements.Add(
+                                new ExemptedRequirementInfo(userId, timestampUtc, c.RequirementName, c.AdditionalComments, c.ExemptionExpiresAtUtc))
+                        },
+                        UnexemptReferralRequirement c => referralEntry with
+                        {
+                            ExemptedRequirements = referralEntry.ExemptedRequirements.RemoveAll(x =>
+                                x.RequirementName == c.RequirementName)
                         },
                         CloseReferral c => referralEntry with
                         {
@@ -86,7 +96,7 @@ namespace CareTogether.Resources.Models
                 CreateArrangement c => new ArrangementEntry(c.ArrangementId, c.ArrangementType,
                     RequestedAtUtc: c.RequestedAtUtc, StartedAtUtc: null, EndedAtUtc: null,
                     c.PartneringFamilyPersonId,
-                    ImmutableList<CompletedRequirementInfo>.Empty,
+                    ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<ExemptedRequirementInfo>.Empty,
                     ImmutableList<IndividualVolunteerAssignment>.Empty, ImmutableList<FamilyVolunteerAssignment>.Empty,
                     ImmutableList<ChildLocationHistoryEntry>.Empty),
                 _ => referralEntry.Arrangements.TryGetValue(command.ArrangementId, out var arrangementEntry)
@@ -111,6 +121,16 @@ namespace CareTogether.Resources.Models
                             CompletedRequirements = arrangementEntry.CompletedRequirements.Add(
                                 new CompletedRequirementInfo(userId, timestampUtc, c.CompletedRequirementId,
                                     c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId))
+                        },
+                        ExemptArrangementRequirement c => arrangementEntry with
+                        {
+                            ExemptedRequirements = arrangementEntry.ExemptedRequirements.Add(
+                                new ExemptedRequirementInfo(userId, timestampUtc, c.RequirementName, c.AdditionalComments, c.ExemptionExpiresAtUtc))
+                        },
+                        UnexemptArrangementRequirement c => arrangementEntry with
+                        {
+                            ExemptedRequirements = arrangementEntry.ExemptedRequirements.RemoveAll(x =>
+                                x.RequirementName == c.RequirementName)
                         },
                         TrackChildLocationChange c => arrangementEntry with
                         {

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Container, Toolbar, Button, Menu, MenuItem, Grid, useMediaQuery, useTheme, MenuList, Divider, IconButton, ListItemText, Chip } from '@material-ui/core';
-import { CombinedFamilyInfo, ActionRequirement, RoleRemovalReason, CompletedRequirementInfo } from '../../GeneratedClient';
+import { CombinedFamilyInfo, ActionRequirement, RoleRemovalReason, CompletedRequirementInfo, ExemptedRequirementInfo } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../../Model/ConfigurationModel';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
@@ -23,6 +23,8 @@ import { ResetFamilyRoleDialog } from './ResetFamilyRoleDialog';
 import { PersonName } from '../Families/PersonName';
 import { FamilyDocuments } from '../Families/FamilyDocuments';
 import { MarkVolunteerFamilyStepIncompleteDialog } from './MarkVolunteerFamilyStepIncompleteDialog';
+import { ExemptVolunteerFamilyRequirementDialog } from './ExemptVolunteerFamilyRequirementDialog';
+import { UnexemptVolunteerFamilyRequirementDialog } from './UnexemptVolunteerFamilyRequirementDialog';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -106,11 +108,21 @@ export function VolunteerFamilyScreen() {
     setResetRoleParameter({volunteerFamilyId: familyId, role: role, removalReason: removalReason, removalAdditionalComments: removalAdditionalComments});
   }
   
-  const [requirementMoreMenuAnchor, setRequirementMoreMenuAnchor] = useState<{anchor: Element, completedRequirement: CompletedRequirementInfo} | null>(null);
-  const [markIncompleteParameter, setMarkIncompleteParameter] = useState<{familyId: string, completedRequirement: CompletedRequirementInfo} | null>(null);
+  const [requirementMoreMenuAnchor, setRequirementMoreMenuAnchor] = useState<{anchor: Element, requirement: string | CompletedRequirementInfo | ExemptedRequirementInfo } | null>(null);
+  const [exemptParameter, setExemptParameter] = useState<{requirementName: string} | null>(null);
+  function selectExempt(requirementName: string) {
+    setRequirementMoreMenuAnchor(null);
+    setExemptParameter({requirementName: requirementName});
+  }
+  const [markIncompleteParameter, setMarkIncompleteParameter] = useState<{completedRequirement: CompletedRequirementInfo} | null>(null);
   function selectMarkIncomplete(completedRequirement: CompletedRequirementInfo) {
     setRequirementMoreMenuAnchor(null);
-    setMarkIncompleteParameter({familyId: familyId, completedRequirement: completedRequirement});
+    setMarkIncompleteParameter({completedRequirement: completedRequirement});
+  }
+  const [unexemptParameter, setUnexemptParameter] = useState<{exemptedRequirement: ExemptedRequirementInfo} | null>(null);
+  function selectUnexempt(exemptedRequirement: ExemptedRequirementInfo) {
+    setRequirementMoreMenuAnchor(null);
+    setUnexemptParameter({exemptedRequirement: exemptedRequirement});
   }
 
   const theme = useTheme();
@@ -211,7 +223,8 @@ export function VolunteerFamilyScreen() {
         <h3>Incomplete</h3>
         <ul className={classes.familyRequirementsList}>
           {volunteerFamily.volunteerFamilyInfo?.missingRequirements?.map((missingRequirementName, i) => (
-            <li key={i}>
+            <li key={i}
+              onContextMenu={(e) => { e.preventDefault(); setRequirementMoreMenuAnchor({ anchor: e.currentTarget, requirement: missingRequirementName }); }}>
               ❌ {missingRequirementName}
             </li>
           ))}
@@ -222,22 +235,45 @@ export function VolunteerFamilyScreen() {
         <ul className={classes.familyRequirementsList}>
           {volunteerFamily.volunteerFamilyInfo?.completedRequirements?.map((completed, i) => (
             <li key={i}
-              onContextMenu={(e) => { e.preventDefault(); setRequirementMoreMenuAnchor({ anchor: e.currentTarget, completedRequirement: completed }); }}>
+              onContextMenu={(e) => { e.preventDefault(); setRequirementMoreMenuAnchor({ anchor: e.currentTarget, requirement: completed }); }}>
               ✅ {completed.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               {completed.completedAtUtc && <span style={{float:'right',marginRight:20}}>{format(completed.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
             </li>
           ))}
+          {volunteerFamily.volunteerFamilyInfo?.exemptedRequirements?.map((exempted, i) => (
+            <li key={i}
+              onContextMenu={(e) => { e.preventDefault(); setRequirementMoreMenuAnchor({ anchor: e.currentTarget, requirement: exempted }); }}>
+              <>
+                <span>🚫 {exempted.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                {exempted.exemptionExpiresAtUtc && <span style={{float:'right',marginRight:20}}>until {format(exempted.exemptionExpiresAtUtc, "MM/dd/yyyy")}</span>}
+                <br />
+                <span style={{lineHeight: '1.5em', paddingLeft:30, fontStyle: 'italic'}}>{exempted.additionalComments}</span>
+              </>
+            </li>
+          ))}
         </ul>
-        <Menu id="volunteerfamily-requirement-more-menu"
-          anchorEl={requirementMoreMenuAnchor?.anchor}
-          keepMounted
-          open={Boolean(requirementMoreMenuAnchor)}
-          onClose={() => setRequirementMoreMenuAnchor(null)}>
-          <MenuItem onClick={() => selectMarkIncomplete(requirementMoreMenuAnchor!.completedRequirement)}>Mark Incomplete</MenuItem>
-        </Menu>
-        {(markIncompleteParameter && <MarkVolunteerFamilyStepIncompleteDialog volunteerFamily={volunteerFamily} completedRequirement={markIncompleteParameter.completedRequirement}
-          onClose={() => setMarkIncompleteParameter(null)} />) || null}
       </Grid>
+      <Menu id="volunteerfamily-requirement-more-menu"
+        anchorEl={requirementMoreMenuAnchor?.anchor}
+        keepMounted
+        open={Boolean(requirementMoreMenuAnchor)}
+        onClose={() => setRequirementMoreMenuAnchor(null)}>
+        { (typeof requirementMoreMenuAnchor?.requirement === 'string') &&
+          <MenuItem onClick={() => selectExempt(requirementMoreMenuAnchor?.requirement as string)}>Exempt</MenuItem>
+          }
+        { (requirementMoreMenuAnchor?.requirement instanceof CompletedRequirementInfo) &&
+          <MenuItem onClick={() => selectMarkIncomplete(requirementMoreMenuAnchor?.requirement as CompletedRequirementInfo)}>Mark Incomplete</MenuItem>
+          }
+        { (requirementMoreMenuAnchor?.requirement instanceof ExemptedRequirementInfo) &&
+          <MenuItem onClick={() => selectUnexempt(requirementMoreMenuAnchor?.requirement as ExemptedRequirementInfo)}>Unexempt</MenuItem>
+          }
+      </Menu>
+      {(exemptParameter && <ExemptVolunteerFamilyRequirementDialog volunteerFamilyId={familyId} requirementName={exemptParameter.requirementName}
+        onClose={() => setExemptParameter(null)} />) || null}
+      {(markIncompleteParameter && <MarkVolunteerFamilyStepIncompleteDialog volunteerFamily={volunteerFamily} completedRequirement={markIncompleteParameter.completedRequirement}
+        onClose={() => setMarkIncompleteParameter(null)} />) || null}
+      {(unexemptParameter && <UnexemptVolunteerFamilyRequirementDialog volunteerFamilyId={familyId} exemptedRequirement={unexemptParameter.exemptedRequirement}
+        onClose={() => setUnexemptParameter(null)} />) || null}
       <Grid item xs={12} sm={6} md={4}>
         <h3>Documents</h3>
         <FamilyDocuments family={volunteerFamily} />

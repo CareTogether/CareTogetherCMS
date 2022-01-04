@@ -1,5 +1,5 @@
 import { selector, useRecoilCallback } from "recoil";
-import { ActionRequirement, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, VolunteerCommand, VolunteersClient, VolunteerFamilyCommand, RoleRemovalReason, RemoveVolunteerRole, ResetVolunteerRole, RemoveVolunteerFamilyRole, ResetVolunteerFamilyRole, MarkVolunteerFamilyRequirementIncomplete, CompletedRequirementInfo, MarkVolunteerRequirementIncomplete } from "../GeneratedClient";
+import { ActionRequirement, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, VolunteerCommand, VolunteersClient, VolunteerFamilyCommand, RoleRemovalReason, RemoveVolunteerRole, ResetVolunteerRole, RemoveVolunteerFamilyRole, ResetVolunteerFamilyRole, MarkVolunteerFamilyRequirementIncomplete, CompletedRequirementInfo, MarkVolunteerRequirementIncomplete, ExemptVolunteerRequirement, UnexemptVolunteerRequirement, ExemptVolunteerFamilyRequirement, UnexemptVolunteerFamilyRequirement } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { visibleFamiliesData } from "./ModelLoader";
@@ -89,6 +89,25 @@ export function useVolunteersModel() {
       command.completedRequirementId = completedRequirement.completedRequirementId;
       return command;
     });
+  const exemptVolunteerFamilyRequirement = useVolunteerFamilyCommandCallbackWithLocation(
+    async (organizationId, locationId, volunteerFamilyId, requirementName: string,
+      additionalComments: string, exemptionExpiresAtLocal: Date | null) => {
+      const command = new ExemptVolunteerFamilyRequirement({
+        familyId: volunteerFamilyId
+      });
+      command.requirementName = requirementName;
+      command.additionalComments = additionalComments;
+      command.exemptionExpiresAtUtc = exemptionExpiresAtLocal ?? undefined;
+      return command;
+    });
+  const unexemptVolunteerFamilyRequirement = useVolunteerFamilyCommandCallbackWithLocation(
+    async (organizationId, locationId, volunteerFamilyId, requirementName: string) => {
+      const command = new UnexemptVolunteerFamilyRequirement({
+        familyId: volunteerFamilyId
+      });
+      command.requirementName = requirementName;
+      return command;
+    });
   const removeFamilyRole = useVolunteerFamilyCommandCallbackWithLocation(
     async (organizationId, locationId, volunteerFamilyId,
       role: string, reason: RoleRemovalReason, additionalComments: string) =>
@@ -134,6 +153,27 @@ export function useVolunteersModel() {
       command.completedRequirementId = completedRequirement.completedRequirementId;
       return command;
     });
+  const exemptVolunteerRequirement = useVolunteerCommandCallbackWithLocation(
+    async (organizationId, locationId, volunteerFamilyId, personId, requirementName: string,
+      additionalComments: string, exemptionExpiresAtLocal: Date | null) => {
+      const command = new ExemptVolunteerRequirement({
+        familyId: volunteerFamilyId,
+        personId: personId
+      });
+      command.requirementName = requirementName;
+      command.additionalComments = additionalComments;
+      command.exemptionExpiresAtUtc = exemptionExpiresAtLocal ?? undefined;
+      return command;
+    });
+  const unexemptVolunteerRequirement = useVolunteerCommandCallbackWithLocation(
+    async (organizationId, locationId, volunteerFamilyId, personId, requirementName: string) => {
+      const command = new UnexemptVolunteerRequirement({
+        familyId: volunteerFamilyId,
+        personId: personId
+      });
+      command.requirementName = requirementName;
+      return command;
+    });
   const removeIndividualRole = useVolunteerCommandCallbackWithLocation(
     async (organizationId, locationId, volunteerFamilyId, personId,
       role: string, reason: RoleRemovalReason, additionalComments: string) =>
@@ -162,10 +202,14 @@ export function useVolunteersModel() {
   return {
     completeFamilyRequirement,
     markFamilyRequirementIncomplete,
+    exemptVolunteerFamilyRequirement,
+    unexemptVolunteerFamilyRequirement,
     removeFamilyRole,
     resetFamilyRole,
     completeIndividualRequirement,
     markIndividualRequirementIncomplete,
+    exemptVolunteerRequirement,
+    unexemptVolunteerRequirement,
     removeIndividualRole,
     resetIndividualRole
   };

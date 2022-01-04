@@ -61,6 +61,13 @@ namespace CareTogether.Core.Test
             dut = new PolicyEvaluationEngine(policiesResource);
         }
 
+
+        [TestMethod]
+        public void ReviewAndPossiblyCleanUpTestsReminder()
+        {
+            Assert.Inconclusive("After the calculation refactoring, these tests should be reviewed.");
+        }
+
         [TestMethod]
         public async Task TestCalculateVolunteerFamilyApprovalStatusWithNoActions()
         {
@@ -68,6 +75,7 @@ namespace CareTogether.Core.Test
                 new List<CompletedRequirementInfo>
                 {
                 }.ToImmutableList(),
+                ImmutableList<ExemptedRequirementInfo>.Empty,
                 ImmutableList<RemovedRole>.Empty,
                 new Dictionary<Guid, ImmutableList<CompletedRequirementInfo>>
                 {
@@ -75,6 +83,7 @@ namespace CareTogether.Core.Test
                     [guid2] = ImmutableList<CompletedRequirementInfo>.Empty,
                     [guid3] = ImmutableList<CompletedRequirementInfo>.Empty
                 }.ToImmutableDictionary(),
+                ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>>.Empty,
                 new Dictionary<Guid, ImmutableList<RemovedRole>>
                 {
                     [guid1] = ImmutableList<RemovedRole>.Empty,
@@ -97,6 +106,7 @@ namespace CareTogether.Core.Test
                 {
                     new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 1), guid1, "Host Family Application", new DateTime(2021, 7, 1), Guid.Empty)
                 }.ToImmutableList(),
+                ImmutableList<ExemptedRequirementInfo>.Empty,
                 ImmutableList<RemovedRole>.Empty,
                 new Dictionary<Guid, ImmutableList<CompletedRequirementInfo>>
                 {
@@ -107,6 +117,7 @@ namespace CareTogether.Core.Test
                         .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 1), guid4, "Family Friend Application", new DateTime(2021, 7, 1), Guid.Empty)),
                     [guid3] = ImmutableList<CompletedRequirementInfo>.Empty
                 }.ToImmutableDictionary(),
+                ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>>.Empty,
                 new Dictionary<Guid, ImmutableList<RemovedRole>>
                 {
                     [guid1] = ImmutableList<RemovedRole>.Empty,
@@ -143,6 +154,7 @@ namespace CareTogether.Core.Test
                     new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 10), guid2, "Home Screening Checklist", new DateTime(2021, 7, 8), Guid.Empty),
                     new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 10), guid3, "Host Family Interview", new DateTime(2021, 7, 10), Guid.Empty)
                 }.ToImmutableList(),
+                ImmutableList<ExemptedRequirementInfo>.Empty,
                 ImmutableList<RemovedRole>.Empty,
                 new Dictionary<Guid, ImmutableList<CompletedRequirementInfo>>
                 {
@@ -151,6 +163,7 @@ namespace CareTogether.Core.Test
                     [guid2] = ImmutableList<CompletedRequirementInfo>.Empty,
                     [guid3] = ImmutableList<CompletedRequirementInfo>.Empty
                 }.ToImmutableDictionary(),
+                ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>>.Empty,
                 new Dictionary<Guid, ImmutableList<RemovedRole>>
                 {
                     [guid1] = ImmutableList<RemovedRole>.Empty,
@@ -178,6 +191,7 @@ namespace CareTogether.Core.Test
                     new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 10), guid2, "Home Screening Checklist", new DateTime(2021, 7, 8), Guid.Empty),
                     new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 10), guid3, "Host Family Interview", new DateTime(2021, 7, 10), Guid.Empty)
                 }.ToImmutableList(),
+                ImmutableList<ExemptedRequirementInfo>.Empty,
                 ImmutableList<RemovedRole>.Empty,
                 new Dictionary<Guid, ImmutableList<CompletedRequirementInfo>>
                 {
@@ -191,6 +205,7 @@ namespace CareTogether.Core.Test
                         .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 15), guid8, "Background Check", new DateTime(2021, 7, 13), Guid.Empty))
                         .Add(new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 20), guid9, "Host Family Training", new DateTime(2021, 7, 20), Guid.Empty)),
                 }.ToImmutableDictionary(),
+                ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>>.Empty,
                 new Dictionary<Guid, ImmutableList<RemovedRole>>
                 {
                     [guid1] = ImmutableList<RemovedRole>.Empty,
@@ -218,6 +233,7 @@ namespace CareTogether.Core.Test
                     new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 10), guid2, "Home Screening Checklist", new DateTime(2021, 7, 8), Guid.Empty),
                     new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 10), guid3, "Host Family Interview", new DateTime(2021, 7, 10), Guid.Empty)
                 }.ToImmutableList(),
+                ImmutableList<ExemptedRequirementInfo>.Empty,
                 ImmutableList<RemovedRole>.Empty,
                 new Dictionary<Guid, ImmutableList<CompletedRequirementInfo>>
                 {
@@ -229,6 +245,7 @@ namespace CareTogether.Core.Test
                     [guid3] = ImmutableList<CompletedRequirementInfo>.Empty
                         .Add(new CompletedRequirementInfo(guid1, new DateTime(2021, 7, 14), guid7, "Background Check", new DateTime(2021, 7, 12), Guid.Empty))
                 }.ToImmutableDictionary(),
+                ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>>.Empty,
                 new Dictionary<Guid, ImmutableList<RemovedRole>>
                 {
                     [guid1] = ImmutableList<RemovedRole>.Empty,
@@ -258,6 +275,7 @@ namespace CareTogether.Core.Test
                     new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 10), guid2, "Home Screening Checklist", new DateTime(2021, 7, 8), Guid.Empty),
                     new CompletedRequirementInfo(guid6, new DateTime(2021, 7, 10), guid3, "Host Family Interview", new DateTime(2021, 7, 10), Guid.Empty)
                 }.ToImmutableList(),
+                ImmutableList<ExemptedRequirementInfo>.Empty,
                 ImmutableList<RemovedRole>.Empty,
                 new Dictionary<Guid, ImmutableList<CompletedRequirementInfo>>
                 {
@@ -268,6 +286,7 @@ namespace CareTogether.Core.Test
                         .Add(new CompletedRequirementInfo(guid1, new DateTime(2021, 7, 14), guid6, "Background Check", new DateTime(2021, 7, 12), Guid.Empty)),
                     [guid3] = ImmutableList<CompletedRequirementInfo>.Empty
                 }.ToImmutableDictionary(),
+                ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>>.Empty,
                 new Dictionary<Guid, ImmutableList<RemovedRole>>
                 {
                     [guid1] = ImmutableList<RemovedRole>.Empty,

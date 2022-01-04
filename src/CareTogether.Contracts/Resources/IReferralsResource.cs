@@ -8,12 +8,14 @@ namespace CareTogether.Resources
     public record ReferralEntry(Guid Id, Guid FamilyId,
         DateTime OpenedAtUtc, DateTime? ClosedAtUtc, ReferralCloseReason? CloseReason,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
+        ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableDictionary<Guid, ArrangementEntry> Arrangements);
 
     public record ArrangementEntry(Guid Id, string ArrangementType,
         DateTime RequestedAtUtc, DateTime? StartedAtUtc, DateTime? EndedAtUtc,
         Guid PartneringFamilyPersonId,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
+        ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<IndividualVolunteerAssignment> IndividualVolunteerAssignments,
         ImmutableList<FamilyVolunteerAssignment> FamilyVolunteerAssignments,
         ImmutableList<ChildLocationHistoryEntry> ChildrenLocationHistory);
@@ -35,6 +37,12 @@ namespace CareTogether.Resources
     public sealed record CompleteReferralRequirement(Guid FamilyId, Guid ReferralId,
         Guid CompletedRequirementId, string RequirementName, DateTime CompletedAtUtc, Guid? UploadedDocumentId)
         : ReferralCommand(FamilyId, ReferralId);
+    public sealed record ExemptReferralRequirement(Guid FamilyId, Guid ReferralId,
+        string RequirementName, string AdditionalComments, DateTime? ExemptionExpiresAtUtc)
+        : ReferralCommand(FamilyId, ReferralId);
+    public sealed record UnexemptReferralRequirement(Guid FamilyId, Guid ReferralId,
+        string RequirementName)
+        : ReferralCommand(FamilyId, ReferralId);
     public sealed record CloseReferral(Guid FamilyId, Guid ReferralId,
         ReferralCloseReason CloseReason, DateTime ClosedAtUtc)
         : ReferralCommand(FamilyId, ReferralId);
@@ -55,6 +63,12 @@ namespace CareTogether.Resources
         : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
     public sealed record CompleteArrangementRequirement(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
         Guid CompletedRequirementId, string RequirementName, DateTime CompletedAtUtc, Guid? UploadedDocumentId)
+        : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
+    public sealed record ExemptArrangementRequirement(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
+        string RequirementName, string AdditionalComments, DateTime? ExemptionExpiresAtUtc)
+        : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
+    public sealed record UnexemptArrangementRequirement(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
+        string RequirementName)
         : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
     public sealed record TrackChildLocationChange(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
         DateTime ChangedAtUtc, Guid ChildLocationFamilyId, ChildLocationPlan Plan, string AdditionalExplanation)

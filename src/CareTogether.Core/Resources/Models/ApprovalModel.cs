@@ -40,7 +40,7 @@ namespace CareTogether.Resources.Models
         {
             if (!volunteerFamilies.TryGetValue(command.FamilyId, out var volunteerFamilyEntry))
                 volunteerFamilyEntry = new VolunteerFamilyEntry(command.FamilyId,
-                    ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<UploadedDocumentInfo>.Empty,
+                    ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<ExemptedRequirementInfo>.Empty, ImmutableList<UploadedDocumentInfo>.Empty,
                     ImmutableList<RemovedRole>.Empty, ImmutableDictionary<Guid, VolunteerEntry>.Empty);
 
             var volunteerFamilyEntryToUpsert = command switch
@@ -57,6 +57,16 @@ namespace CareTogether.Resources.Models
                 {
                     CompletedRequirements = volunteerFamilyEntry.CompletedRequirements.RemoveAll(x =>
                         x.RequirementName == c.RequirementName && x.CompletedRequirementId == c.CompletedRequirementId),
+                },
+                ExemptVolunteerFamilyRequirement c => volunteerFamilyEntry with
+                {
+                    ExemptedRequirements = volunteerFamilyEntry.ExemptedRequirements.Add(
+                        new ExemptedRequirementInfo(userId, timestampUtc, c.RequirementName, c.AdditionalComments, c.ExemptionExpiresAtUtc))
+                },
+                UnexemptVolunteerFamilyRequirement c => volunteerFamilyEntry with
+                {
+                    ExemptedRequirements = volunteerFamilyEntry.ExemptedRequirements.RemoveAll(x =>
+                        x.RequirementName == c.RequirementName)
                 },
                 UploadVolunteerFamilyDocument c => volunteerFamilyEntry with
                 {
@@ -92,12 +102,12 @@ namespace CareTogether.Resources.Models
         {
             if (!volunteerFamilies.TryGetValue(command.FamilyId, out var volunteerFamilyEntry))
                 volunteerFamilyEntry = new VolunteerFamilyEntry(command.FamilyId,
-                    ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<UploadedDocumentInfo>.Empty,
+                    ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<ExemptedRequirementInfo>.Empty, ImmutableList<UploadedDocumentInfo>.Empty,
                     ImmutableList<RemovedRole>.Empty, ImmutableDictionary<Guid, VolunteerEntry>.Empty);
 
             if (!volunteerFamilyEntry.IndividualEntries.TryGetValue(command.PersonId, out var volunteerEntry))
                 volunteerEntry = new VolunteerEntry(command.PersonId, true, "",
-                    ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<RemovedRole>.Empty);
+                    ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<ExemptedRequirementInfo>.Empty, ImmutableList<RemovedRole>.Empty);
 
             var volunteerEntryToUpsert = command switch
             {
@@ -110,6 +120,16 @@ namespace CareTogether.Resources.Models
                 {
                     CompletedRequirements = volunteerEntry.CompletedRequirements.RemoveAll(x =>
                         x.RequirementName == c.RequirementName && x.CompletedRequirementId == c.CompletedRequirementId),
+                },
+                ExemptVolunteerRequirement c => volunteerEntry with
+                {
+                    ExemptedRequirements = volunteerEntry.ExemptedRequirements.Add(
+                        new ExemptedRequirementInfo(userId, timestampUtc, c.RequirementName, c.AdditionalComments, c.ExemptionExpiresAtUtc))
+                },
+                UnexemptVolunteerRequirement c => volunteerEntry with
+                {
+                    ExemptedRequirements = volunteerEntry.ExemptedRequirements.RemoveAll(x =>
+                        x.RequirementName == c.RequirementName)
                 },
                 RemoveVolunteerRole c => volunteerEntry with
                 {

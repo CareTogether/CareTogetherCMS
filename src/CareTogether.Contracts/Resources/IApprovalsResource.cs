@@ -7,6 +7,7 @@ namespace CareTogether.Resources
 {
     public record VolunteerFamilyEntry(Guid FamilyId,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
+        ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         // COMPATIBILITY: This UploadedDocuments property is only used for backwards compatibility.
         // It should not be referenced directly.
         ImmutableList<UploadedDocumentInfo> UploadedDocuments,
@@ -20,6 +21,7 @@ namespace CareTogether.Resources
     public record VolunteerEntry(Guid PersonId,
         bool Active, string Note,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
+        ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<RemovedRole> RemovedRoles);
 
     [JsonHierarchyBase]
@@ -31,6 +33,12 @@ namespace CareTogether.Resources
         : VolunteerFamilyCommand(FamilyId);
     public sealed record MarkVolunteerFamilyRequirementIncomplete(Guid FamilyId,
         Guid CompletedRequirementId, string RequirementName)
+        : VolunteerFamilyCommand(FamilyId);
+    public sealed record ExemptVolunteerFamilyRequirement(Guid FamilyId,
+        string RequirementName, string AdditionalComments, DateTime? ExemptionExpiresAtUtc)
+        : VolunteerFamilyCommand(FamilyId);
+    public sealed record UnexemptVolunteerFamilyRequirement(Guid FamilyId,
+        string RequirementName)
         : VolunteerFamilyCommand(FamilyId);
     public sealed record UploadVolunteerFamilyDocument(Guid FamilyId,
         Guid UploadedDocumentId, string UploadedFileName)
@@ -49,6 +57,12 @@ namespace CareTogether.Resources
         : VolunteerCommand(FamilyId, PersonId);
     public sealed record MarkVolunteerRequirementIncomplete(Guid FamilyId, Guid PersonId,
         Guid CompletedRequirementId, string RequirementName)
+        : VolunteerCommand(FamilyId, PersonId);
+    public sealed record ExemptVolunteerRequirement(Guid FamilyId, Guid PersonId,
+        string RequirementName, string AdditionalComments, DateTime? ExemptionExpiresAtUtc)
+        : VolunteerCommand(FamilyId, PersonId);
+    public sealed record UnexemptVolunteerRequirement(Guid FamilyId, Guid PersonId,
+        string RequirementName)
         : VolunteerCommand(FamilyId, PersonId);
     public sealed record RemoveVolunteerRole(Guid FamilyId, Guid PersonId,
         string RoleName, RoleRemovalReason Reason, string? AdditionalComments)

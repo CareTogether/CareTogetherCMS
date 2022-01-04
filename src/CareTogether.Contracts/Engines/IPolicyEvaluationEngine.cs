@@ -20,7 +20,7 @@ namespace CareTogether.Engines
 
     public sealed record RoleVersionApproval(string Version, RoleApprovalStatus ApprovalStatus);
 
-    public enum RoleApprovalStatus { Prospective, Approved, Onboarded };
+    public enum RoleApprovalStatus { Prospective = 0, Approved = 1, Onboarded = 2 };
 
     public sealed record ReferralStatus(
         ImmutableList<string> MissingIntakeRequirements,
@@ -38,8 +38,10 @@ namespace CareTogether.Engines
         Task<VolunteerFamilyApprovalStatus> CalculateVolunteerFamilyApprovalStatusAsync(
             Guid organizationId, Guid locationId, Family family,
             ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
+            ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
             ImmutableList<RemovedRole> removedFamilyRoles,
             ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements,
+            ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>> exemptedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles);
 
         Task<ReferralStatus> CalculateReferralStatusAsync(

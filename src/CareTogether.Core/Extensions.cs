@@ -7,14 +7,17 @@ namespace CareTogether
 {
     public static class Extensions
     {
-        public static ImmutableList<T> With<T>(this ImmutableList<T> list, T valueToAdd)
-        {
-            return list.Add(valueToAdd);
-        }
-
         public static ImmutableList<T> With<T>(this ImmutableList<T> list, T valueToUpdate, Predicate<T> predicate)
         {
             return list.Select(x => predicate(x) ? valueToUpdate : x).ToImmutableList();
+        }
+
+        public static ImmutableList<U> GetValueOrEmptyList<T, U>(this ImmutableDictionary<T, ImmutableList<U>> dictionary, T key)
+            where T : notnull
+        {
+            return dictionary.TryGetValue(key, out var value)
+                ? value
+                : ImmutableList<U>.Empty;
         }
 
 
