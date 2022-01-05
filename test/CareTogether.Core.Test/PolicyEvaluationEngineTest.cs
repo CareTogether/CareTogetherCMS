@@ -63,12 +63,6 @@ namespace CareTogether.Core.Test
 
 
         [TestMethod]
-        public void ReviewAndPossiblyCleanUpTestsReminder()
-        {
-            Assert.Inconclusive("After the calculation refactoring, these tests should be reviewed.");
-        }
-
-        [TestMethod]
         public async Task TestCalculateVolunteerFamilyApprovalStatusWithNoActions()
         {
             var result = await dut.CalculateVolunteerFamilyApprovalStatusAsync(guid1, guid2, volunteerFamily,

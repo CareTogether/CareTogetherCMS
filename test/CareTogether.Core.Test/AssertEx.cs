@@ -42,6 +42,20 @@ namespace CareTogether.Core.Test
                 .All(tuple => tuple.First == tuple.Second));
         }
 
+        public static void DictionaryIs(IDictionary<Guid, ImmutableList<string>> actual, params (Guid, string[])[] expected)
+        {
+            Assert.AreEqual(expected.Length, actual.Count);
+            Assert.IsTrue(expected.All(e =>
+            {
+                var a = actual[e.Item1];
+                Assert.AreEqual(e.Item2.Length, a.Count);
+                Assert.IsTrue(Enumerable
+                    .Zip(a.ToImmutableSortedSet(), e.Item2.ToImmutableSortedSet())
+                    .All(tuple => tuple.First == tuple.Second));
+                return true;
+            }));
+        }
+
         public static void DictionaryIs(IDictionary<string, ImmutableList<RoleVersionApproval>> actual, params (string, RoleVersionApproval[])[] expected)
         {
             Assert.AreEqual(expected.Length, actual.Count);
@@ -49,20 +63,9 @@ namespace CareTogether.Core.Test
             {
                 var a = actual[e.Item1];
                 Assert.AreEqual(e.Item2.Length, a.Count);
-                Assert.IsTrue(Enumerable.Zip(a, e.Item2).All(tuple => tuple.First == tuple.Second));
-                return true;
-            }));
-        }
-
-        public static void DictionaryIs<TKey, TValue>(IDictionary<TKey, ImmutableList<TValue>> actual, params (TKey, TValue[])[] expected)
-            where TValue : class
-        {
-            Assert.AreEqual(expected.Length, actual.Count);
-            Assert.IsTrue(expected.All(e =>
-            {
-                var a = actual[e.Item1];
-                Assert.AreEqual(e.Item2.Length, a.Count);
-                Assert.IsTrue(Enumerable.Zip(a, e.Item2).All(tuple => tuple.First == tuple.Second));
+                Assert.IsTrue(Enumerable
+                    .Zip(a, e.Item2)
+                    .All(tuple => tuple.First == tuple.Second));
                 return true;
             }));
         }

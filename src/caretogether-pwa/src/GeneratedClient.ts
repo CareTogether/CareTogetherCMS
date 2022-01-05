@@ -7,6 +7,134 @@
 //----------------------
 // ReSharper disable InconsistentNaming
 
+export class ConfigurationClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : <any>window;
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
+    }
+
+    getOrganizationConfiguration(organizationId: string): Promise<OrganizationConfiguration> {
+        let url_ = this.baseUrl + "/api/{organizationId}/Configuration";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ = <RequestInit>{
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetOrganizationConfiguration(_response);
+        });
+    }
+
+    protected processGetOrganizationConfiguration(response: Response): Promise<OrganizationConfiguration> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = OrganizationConfiguration.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<OrganizationConfiguration>(<any>null);
+    }
+
+    getEffectiveLocationPolicy(organizationId: string, locationId: string): Promise<EffectiveLocationPolicy> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Configuration/policy";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (locationId === undefined || locationId === null)
+            throw new Error("The parameter 'locationId' must be defined.");
+        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ = <RequestInit>{
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetEffectiveLocationPolicy(_response);
+        });
+    }
+
+    protected processGetEffectiveLocationPolicy(response: Response): Promise<EffectiveLocationPolicy> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = EffectiveLocationPolicy.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<EffectiveLocationPolicy>(<any>null);
+    }
+
+    getLocationFlags(organizationId: string, locationId: string): Promise<CurrentFeatureFlags> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Configuration/flags";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (locationId === undefined || locationId === null)
+            throw new Error("The parameter 'locationId' must be defined.");
+        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ = <RequestInit>{
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetLocationFlags(_response);
+        });
+    }
+
+    protected processGetLocationFlags(response: Response): Promise<CurrentFeatureFlags> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = CurrentFeatureFlags.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<CurrentFeatureFlags>(<any>null);
+    }
+}
+
 export class DirectoryClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
@@ -249,51 +377,6 @@ export class DirectoryClient {
     }
 }
 
-export class UsersClient {
-    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
-    private baseUrl: string;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
-        this.http = http ? http : <any>window;
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
-    }
-
-    getUserTenantAccess(): Promise<UserTenantAccessSummary> {
-        let url_ = this.baseUrl + "/api/Users/me/tenantAccess";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_ = <RequestInit>{
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetUserTenantAccess(_response);
-        });
-    }
-
-    protected processGetUserTenantAccess(response: Response): Promise<UserTenantAccessSummary> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = UserTenantAccessSummary.fromJS(resultData200);
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<UserTenantAccessSummary>(<any>null);
-    }
-}
-
 export class FilesClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
@@ -487,6 +570,51 @@ export class ReferralsClient {
     }
 }
 
+export class UsersClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : <any>window;
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
+    }
+
+    getUserTenantAccess(): Promise<UserTenantAccessSummary> {
+        let url_ = this.baseUrl + "/api/Users/me/tenantAccess";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ = <RequestInit>{
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetUserTenantAccess(_response);
+        });
+    }
+
+    protected processGetUserTenantAccess(response: Response): Promise<UserTenantAccessSummary> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = UserTenantAccessSummary.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<UserTenantAccessSummary>(<any>null);
+    }
+}
+
 export class VolunteersClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
@@ -586,132 +714,1066 @@ export class VolunteersClient {
     }
 }
 
-export class ConfigurationClient {
-    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
-    private baseUrl: string;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+export class OrganizationConfiguration implements IOrganizationConfiguration {
+    organizationName?: string;
+    locations?: LocationConfiguration[];
+    users?: { [key: string]: UserAccessConfiguration; };
 
-    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
-        this.http = http ? http : <any>window;
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
-    }
-
-    getOrganizationConfiguration(organizationId: string): Promise<OrganizationConfiguration> {
-        let url_ = this.baseUrl + "/api/{organizationId}/Configuration";
-        if (organizationId === undefined || organizationId === null)
-            throw new Error("The parameter 'organizationId' must be defined.");
-        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_ = <RequestInit>{
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
+    constructor(data?: IOrganizationConfiguration) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
             }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetOrganizationConfiguration(_response);
-        });
-    }
-
-    protected processGetOrganizationConfiguration(response: Response): Promise<OrganizationConfiguration> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = OrganizationConfiguration.fromJS(resultData200);
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
         }
-        return Promise.resolve<OrganizationConfiguration>(<any>null);
     }
 
-    getEffectiveLocationPolicy(organizationId: string, locationId: string): Promise<EffectiveLocationPolicy> {
-        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Configuration/policy";
-        if (organizationId === undefined || organizationId === null)
-            throw new Error("The parameter 'organizationId' must be defined.");
-        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
-        if (locationId === undefined || locationId === null)
-            throw new Error("The parameter 'locationId' must be defined.");
-        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_ = <RequestInit>{
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
+    init(_data?: any) {
+        if (_data) {
+            this.organizationName = _data["organizationName"];
+            if (Array.isArray(_data["locations"])) {
+                this.locations = [] as any;
+                for (let item of _data["locations"])
+                    this.locations!.push(LocationConfiguration.fromJS(item));
             }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetEffectiveLocationPolicy(_response);
-        });
-    }
-
-    protected processGetEffectiveLocationPolicy(response: Response): Promise<EffectiveLocationPolicy> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = EffectiveLocationPolicy.fromJS(resultData200);
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<EffectiveLocationPolicy>(<any>null);
-    }
-
-    getLocationFlags(organizationId: string, locationId: string): Promise<CurrentFeatureFlags> {
-        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Configuration/flags";
-        if (organizationId === undefined || organizationId === null)
-            throw new Error("The parameter 'organizationId' must be defined.");
-        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
-        if (locationId === undefined || locationId === null)
-            throw new Error("The parameter 'locationId' must be defined.");
-        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_ = <RequestInit>{
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
+            if (_data["users"]) {
+                this.users = {} as any;
+                for (let key in _data["users"]) {
+                    if (_data["users"].hasOwnProperty(key))
+                        (<any>this.users)![key] = _data["users"][key] ? UserAccessConfiguration.fromJS(_data["users"][key]) : new UserAccessConfiguration();
+                }
             }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetLocationFlags(_response);
-        });
-    }
-
-    protected processGetLocationFlags(response: Response): Promise<CurrentFeatureFlags> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = CurrentFeatureFlags.fromJS(resultData200);
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
         }
-        return Promise.resolve<CurrentFeatureFlags>(<any>null);
     }
+
+    static fromJS(data: any): OrganizationConfiguration {
+        data = typeof data === 'object' ? data : {};
+        let result = new OrganizationConfiguration();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["organizationName"] = this.organizationName;
+        if (Array.isArray(this.locations)) {
+            data["locations"] = [];
+            for (let item of this.locations)
+                data["locations"].push(item.toJSON());
+        }
+        if (this.users) {
+            data["users"] = {};
+            for (let key in this.users) {
+                if (this.users.hasOwnProperty(key))
+                    (<any>data["users"])[key] = this.users[key] ? this.users[key].toJSON() : <any>undefined;
+            }
+        }
+        return data; 
+    }
+}
+
+export interface IOrganizationConfiguration {
+    organizationName?: string;
+    locations?: LocationConfiguration[];
+    users?: { [key: string]: UserAccessConfiguration; };
+}
+
+export class LocationConfiguration implements ILocationConfiguration {
+    id?: string;
+    name?: string;
+    ethnicities?: string[];
+    adultFamilyRelationships?: string[];
+
+    constructor(data?: ILocationConfiguration) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            if (Array.isArray(_data["ethnicities"])) {
+                this.ethnicities = [] as any;
+                for (let item of _data["ethnicities"])
+                    this.ethnicities!.push(item);
+            }
+            if (Array.isArray(_data["adultFamilyRelationships"])) {
+                this.adultFamilyRelationships = [] as any;
+                for (let item of _data["adultFamilyRelationships"])
+                    this.adultFamilyRelationships!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): LocationConfiguration {
+        data = typeof data === 'object' ? data : {};
+        let result = new LocationConfiguration();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        if (Array.isArray(this.ethnicities)) {
+            data["ethnicities"] = [];
+            for (let item of this.ethnicities)
+                data["ethnicities"].push(item);
+        }
+        if (Array.isArray(this.adultFamilyRelationships)) {
+            data["adultFamilyRelationships"] = [];
+            for (let item of this.adultFamilyRelationships)
+                data["adultFamilyRelationships"].push(item);
+        }
+        return data; 
+    }
+}
+
+export interface ILocationConfiguration {
+    id?: string;
+    name?: string;
+    ethnicities?: string[];
+    adultFamilyRelationships?: string[];
+}
+
+export class UserAccessConfiguration implements IUserAccessConfiguration {
+    personId?: string;
+    locationRoles?: UserLocationRole[];
+
+    constructor(data?: IUserAccessConfiguration) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.personId = _data["personId"];
+            if (Array.isArray(_data["locationRoles"])) {
+                this.locationRoles = [] as any;
+                for (let item of _data["locationRoles"])
+                    this.locationRoles!.push(UserLocationRole.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): UserAccessConfiguration {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserAccessConfiguration();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["personId"] = this.personId;
+        if (Array.isArray(this.locationRoles)) {
+            data["locationRoles"] = [];
+            for (let item of this.locationRoles)
+                data["locationRoles"].push(item.toJSON());
+        }
+        return data; 
+    }
+}
+
+export interface IUserAccessConfiguration {
+    personId?: string;
+    locationRoles?: UserLocationRole[];
+}
+
+export class UserLocationRole implements IUserLocationRole {
+    locationId?: string;
+    roleName?: string;
+
+    constructor(data?: IUserLocationRole) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.locationId = _data["locationId"];
+            this.roleName = _data["roleName"];
+        }
+    }
+
+    static fromJS(data: any): UserLocationRole {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserLocationRole();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["locationId"] = this.locationId;
+        data["roleName"] = this.roleName;
+        return data; 
+    }
+}
+
+export interface IUserLocationRole {
+    locationId?: string;
+    roleName?: string;
+}
+
+export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
+    actionDefinitions?: { [key: string]: ActionRequirement; };
+    referralPolicy?: ReferralPolicy;
+    volunteerPolicy?: VolunteerPolicy;
+
+    constructor(data?: IEffectiveLocationPolicy) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (_data["actionDefinitions"]) {
+                this.actionDefinitions = {} as any;
+                for (let key in _data["actionDefinitions"]) {
+                    if (_data["actionDefinitions"].hasOwnProperty(key))
+                        (<any>this.actionDefinitions)![key] = _data["actionDefinitions"][key] ? ActionRequirement.fromJS(_data["actionDefinitions"][key]) : new ActionRequirement();
+                }
+            }
+            this.referralPolicy = _data["referralPolicy"] ? ReferralPolicy.fromJS(_data["referralPolicy"]) : <any>undefined;
+            this.volunteerPolicy = _data["volunteerPolicy"] ? VolunteerPolicy.fromJS(_data["volunteerPolicy"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): EffectiveLocationPolicy {
+        data = typeof data === 'object' ? data : {};
+        let result = new EffectiveLocationPolicy();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (this.actionDefinitions) {
+            data["actionDefinitions"] = {};
+            for (let key in this.actionDefinitions) {
+                if (this.actionDefinitions.hasOwnProperty(key))
+                    (<any>data["actionDefinitions"])[key] = this.actionDefinitions[key] ? this.actionDefinitions[key].toJSON() : <any>undefined;
+            }
+        }
+        data["referralPolicy"] = this.referralPolicy ? this.referralPolicy.toJSON() : <any>undefined;
+        data["volunteerPolicy"] = this.volunteerPolicy ? this.volunteerPolicy.toJSON() : <any>undefined;
+        return data; 
+    }
+}
+
+export interface IEffectiveLocationPolicy {
+    actionDefinitions?: { [key: string]: ActionRequirement; };
+    referralPolicy?: ReferralPolicy;
+    volunteerPolicy?: VolunteerPolicy;
+}
+
+export class ActionRequirement implements IActionRequirement {
+    documentLink?: DocumentLinkRequirement;
+    instructions?: string | undefined;
+    infoLink?: string | undefined;
+
+    constructor(data?: IActionRequirement) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.documentLink = _data["documentLink"];
+            this.instructions = _data["instructions"];
+            this.infoLink = _data["infoLink"];
+        }
+    }
+
+    static fromJS(data: any): ActionRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new ActionRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["documentLink"] = this.documentLink;
+        data["instructions"] = this.instructions;
+        data["infoLink"] = this.infoLink;
+        return data; 
+    }
+}
+
+export interface IActionRequirement {
+    documentLink?: DocumentLinkRequirement;
+    instructions?: string | undefined;
+    infoLink?: string | undefined;
+}
+
+export enum DocumentLinkRequirement {
+    None = 0,
+    Allowed = 1,
+    Required = 2,
+}
+
+export class ReferralPolicy implements IReferralPolicy {
+    requiredIntakeActionNames?: string[];
+    arrangementPolicies?: ArrangementPolicy[];
+
+    constructor(data?: IReferralPolicy) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["requiredIntakeActionNames"])) {
+                this.requiredIntakeActionNames = [] as any;
+                for (let item of _data["requiredIntakeActionNames"])
+                    this.requiredIntakeActionNames!.push(item);
+            }
+            if (Array.isArray(_data["arrangementPolicies"])) {
+                this.arrangementPolicies = [] as any;
+                for (let item of _data["arrangementPolicies"])
+                    this.arrangementPolicies!.push(ArrangementPolicy.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): ReferralPolicy {
+        data = typeof data === 'object' ? data : {};
+        let result = new ReferralPolicy();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.requiredIntakeActionNames)) {
+            data["requiredIntakeActionNames"] = [];
+            for (let item of this.requiredIntakeActionNames)
+                data["requiredIntakeActionNames"].push(item);
+        }
+        if (Array.isArray(this.arrangementPolicies)) {
+            data["arrangementPolicies"] = [];
+            for (let item of this.arrangementPolicies)
+                data["arrangementPolicies"].push(item.toJSON());
+        }
+        return data; 
+    }
+}
+
+export interface IReferralPolicy {
+    requiredIntakeActionNames?: string[];
+    arrangementPolicies?: ArrangementPolicy[];
+}
+
+export class ArrangementPolicy implements IArrangementPolicy {
+    arrangementType?: string;
+    childInvolvement?: ChildInvolvement;
+    volunteerFunctions?: VolunteerFunction[];
+    requiredSetupActionNames?: string[];
+    requiredMonitoringActionNames?: ValueTupleOfStringAndRecurrencePolicy[];
+    requiredCloseoutActionNames?: string[];
+
+    constructor(data?: IArrangementPolicy) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.arrangementType = _data["arrangementType"];
+            this.childInvolvement = _data["childInvolvement"];
+            if (Array.isArray(_data["volunteerFunctions"])) {
+                this.volunteerFunctions = [] as any;
+                for (let item of _data["volunteerFunctions"])
+                    this.volunteerFunctions!.push(VolunteerFunction.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredSetupActionNames"])) {
+                this.requiredSetupActionNames = [] as any;
+                for (let item of _data["requiredSetupActionNames"])
+                    this.requiredSetupActionNames!.push(item);
+            }
+            if (Array.isArray(_data["requiredMonitoringActionNames"])) {
+                this.requiredMonitoringActionNames = [] as any;
+                for (let item of _data["requiredMonitoringActionNames"])
+                    this.requiredMonitoringActionNames!.push(ValueTupleOfStringAndRecurrencePolicy.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredCloseoutActionNames"])) {
+                this.requiredCloseoutActionNames = [] as any;
+                for (let item of _data["requiredCloseoutActionNames"])
+                    this.requiredCloseoutActionNames!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): ArrangementPolicy {
+        data = typeof data === 'object' ? data : {};
+        let result = new ArrangementPolicy();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["arrangementType"] = this.arrangementType;
+        data["childInvolvement"] = this.childInvolvement;
+        if (Array.isArray(this.volunteerFunctions)) {
+            data["volunteerFunctions"] = [];
+            for (let item of this.volunteerFunctions)
+                data["volunteerFunctions"].push(item.toJSON());
+        }
+        if (Array.isArray(this.requiredSetupActionNames)) {
+            data["requiredSetupActionNames"] = [];
+            for (let item of this.requiredSetupActionNames)
+                data["requiredSetupActionNames"].push(item);
+        }
+        if (Array.isArray(this.requiredMonitoringActionNames)) {
+            data["requiredMonitoringActionNames"] = [];
+            for (let item of this.requiredMonitoringActionNames)
+                data["requiredMonitoringActionNames"].push(item.toJSON());
+        }
+        if (Array.isArray(this.requiredCloseoutActionNames)) {
+            data["requiredCloseoutActionNames"] = [];
+            for (let item of this.requiredCloseoutActionNames)
+                data["requiredCloseoutActionNames"].push(item);
+        }
+        return data; 
+    }
+}
+
+export interface IArrangementPolicy {
+    arrangementType?: string;
+    childInvolvement?: ChildInvolvement;
+    volunteerFunctions?: VolunteerFunction[];
+    requiredSetupActionNames?: string[];
+    requiredMonitoringActionNames?: ValueTupleOfStringAndRecurrencePolicy[];
+    requiredCloseoutActionNames?: string[];
+}
+
+export enum ChildInvolvement {
+    ChildHousing = 0,
+    DaytimeChildCareOnly = 1,
+    NoChildInvolvement = 2,
+}
+
+export class VolunteerFunction implements IVolunteerFunction {
+    arrangementFunction?: string;
+    requirement?: FunctionRequirement;
+    eligibleIndividualVolunteerRoles?: string[];
+    eligibleVolunteerFamilyRoles?: string[];
+
+    constructor(data?: IVolunteerFunction) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.arrangementFunction = _data["arrangementFunction"];
+            this.requirement = _data["requirement"];
+            if (Array.isArray(_data["eligibleIndividualVolunteerRoles"])) {
+                this.eligibleIndividualVolunteerRoles = [] as any;
+                for (let item of _data["eligibleIndividualVolunteerRoles"])
+                    this.eligibleIndividualVolunteerRoles!.push(item);
+            }
+            if (Array.isArray(_data["eligibleVolunteerFamilyRoles"])) {
+                this.eligibleVolunteerFamilyRoles = [] as any;
+                for (let item of _data["eligibleVolunteerFamilyRoles"])
+                    this.eligibleVolunteerFamilyRoles!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): VolunteerFunction {
+        data = typeof data === 'object' ? data : {};
+        let result = new VolunteerFunction();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["arrangementFunction"] = this.arrangementFunction;
+        data["requirement"] = this.requirement;
+        if (Array.isArray(this.eligibleIndividualVolunteerRoles)) {
+            data["eligibleIndividualVolunteerRoles"] = [];
+            for (let item of this.eligibleIndividualVolunteerRoles)
+                data["eligibleIndividualVolunteerRoles"].push(item);
+        }
+        if (Array.isArray(this.eligibleVolunteerFamilyRoles)) {
+            data["eligibleVolunteerFamilyRoles"] = [];
+            for (let item of this.eligibleVolunteerFamilyRoles)
+                data["eligibleVolunteerFamilyRoles"].push(item);
+        }
+        return data; 
+    }
+}
+
+export interface IVolunteerFunction {
+    arrangementFunction?: string;
+    requirement?: FunctionRequirement;
+    eligibleIndividualVolunteerRoles?: string[];
+    eligibleVolunteerFamilyRoles?: string[];
+}
+
+export enum FunctionRequirement {
+    ZeroOrMore = 0,
+    ExactlyOne = 1,
+    OneOrMore = 2,
+}
+
+export class ValueTupleOfStringAndRecurrencePolicy implements IValueTupleOfStringAndRecurrencePolicy {
+    item1?: string;
+    item2?: RecurrencePolicy;
+
+    constructor(data?: IValueTupleOfStringAndRecurrencePolicy) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.item1 = _data["item1"];
+            this.item2 = _data["item2"] ? RecurrencePolicy.fromJS(_data["item2"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ValueTupleOfStringAndRecurrencePolicy {
+        data = typeof data === 'object' ? data : {};
+        let result = new ValueTupleOfStringAndRecurrencePolicy();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["item1"] = this.item1;
+        data["item2"] = this.item2 ? this.item2.toJSON() : <any>undefined;
+        return data; 
+    }
+}
+
+export interface IValueTupleOfStringAndRecurrencePolicy {
+    item1?: string;
+    item2?: RecurrencePolicy;
+}
+
+export class RecurrencePolicy implements IRecurrencePolicy {
+    stages?: RecurrencePolicyStage[];
+
+    constructor(data?: IRecurrencePolicy) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["stages"])) {
+                this.stages = [] as any;
+                for (let item of _data["stages"])
+                    this.stages!.push(RecurrencePolicyStage.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): RecurrencePolicy {
+        data = typeof data === 'object' ? data : {};
+        let result = new RecurrencePolicy();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.stages)) {
+            data["stages"] = [];
+            for (let item of this.stages)
+                data["stages"].push(item.toJSON());
+        }
+        return data; 
+    }
+}
+
+export interface IRecurrencePolicy {
+    stages?: RecurrencePolicyStage[];
+}
+
+export class RecurrencePolicyStage implements IRecurrencePolicyStage {
+    delay?: string;
+    maxOccurrences?: number | undefined;
+
+    constructor(data?: IRecurrencePolicyStage) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.delay = _data["delay"];
+            this.maxOccurrences = _data["maxOccurrences"];
+        }
+    }
+
+    static fromJS(data: any): RecurrencePolicyStage {
+        data = typeof data === 'object' ? data : {};
+        let result = new RecurrencePolicyStage();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["delay"] = this.delay;
+        data["maxOccurrences"] = this.maxOccurrences;
+        return data; 
+    }
+}
+
+export interface IRecurrencePolicyStage {
+    delay?: string;
+    maxOccurrences?: number | undefined;
+}
+
+export class VolunteerPolicy implements IVolunteerPolicy {
+    volunteerRoles?: { [key: string]: VolunteerRolePolicy; };
+    volunteerFamilyRoles?: { [key: string]: VolunteerFamilyRolePolicy; };
+
+    constructor(data?: IVolunteerPolicy) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (_data["volunteerRoles"]) {
+                this.volunteerRoles = {} as any;
+                for (let key in _data["volunteerRoles"]) {
+                    if (_data["volunteerRoles"].hasOwnProperty(key))
+                        (<any>this.volunteerRoles)![key] = _data["volunteerRoles"][key] ? VolunteerRolePolicy.fromJS(_data["volunteerRoles"][key]) : new VolunteerRolePolicy();
+                }
+            }
+            if (_data["volunteerFamilyRoles"]) {
+                this.volunteerFamilyRoles = {} as any;
+                for (let key in _data["volunteerFamilyRoles"]) {
+                    if (_data["volunteerFamilyRoles"].hasOwnProperty(key))
+                        (<any>this.volunteerFamilyRoles)![key] = _data["volunteerFamilyRoles"][key] ? VolunteerFamilyRolePolicy.fromJS(_data["volunteerFamilyRoles"][key]) : new VolunteerFamilyRolePolicy();
+                }
+            }
+        }
+    }
+
+    static fromJS(data: any): VolunteerPolicy {
+        data = typeof data === 'object' ? data : {};
+        let result = new VolunteerPolicy();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (this.volunteerRoles) {
+            data["volunteerRoles"] = {};
+            for (let key in this.volunteerRoles) {
+                if (this.volunteerRoles.hasOwnProperty(key))
+                    (<any>data["volunteerRoles"])[key] = this.volunteerRoles[key] ? this.volunteerRoles[key].toJSON() : <any>undefined;
+            }
+        }
+        if (this.volunteerFamilyRoles) {
+            data["volunteerFamilyRoles"] = {};
+            for (let key in this.volunteerFamilyRoles) {
+                if (this.volunteerFamilyRoles.hasOwnProperty(key))
+                    (<any>data["volunteerFamilyRoles"])[key] = this.volunteerFamilyRoles[key] ? this.volunteerFamilyRoles[key].toJSON() : <any>undefined;
+            }
+        }
+        return data; 
+    }
+}
+
+export interface IVolunteerPolicy {
+    volunteerRoles?: { [key: string]: VolunteerRolePolicy; };
+    volunteerFamilyRoles?: { [key: string]: VolunteerFamilyRolePolicy; };
+}
+
+export class VolunteerRolePolicy implements IVolunteerRolePolicy {
+    volunteerRoleType?: string;
+    policyVersions?: VolunteerRolePolicyVersion[];
+
+    constructor(data?: IVolunteerRolePolicy) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.volunteerRoleType = _data["volunteerRoleType"];
+            if (Array.isArray(_data["policyVersions"])) {
+                this.policyVersions = [] as any;
+                for (let item of _data["policyVersions"])
+                    this.policyVersions!.push(VolunteerRolePolicyVersion.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): VolunteerRolePolicy {
+        data = typeof data === 'object' ? data : {};
+        let result = new VolunteerRolePolicy();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["volunteerRoleType"] = this.volunteerRoleType;
+        if (Array.isArray(this.policyVersions)) {
+            data["policyVersions"] = [];
+            for (let item of this.policyVersions)
+                data["policyVersions"].push(item.toJSON());
+        }
+        return data; 
+    }
+}
+
+export interface IVolunteerRolePolicy {
+    volunteerRoleType?: string;
+    policyVersions?: VolunteerRolePolicyVersion[];
+}
+
+export class VolunteerRolePolicyVersion implements IVolunteerRolePolicyVersion {
+    version?: string;
+    supersededAtUtc?: Date | undefined;
+    requirements?: VolunteerApprovalRequirement[];
+
+    constructor(data?: IVolunteerRolePolicyVersion) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.version = _data["version"];
+            this.supersededAtUtc = _data["supersededAtUtc"] ? new Date(_data["supersededAtUtc"].toString()) : <any>undefined;
+            if (Array.isArray(_data["requirements"])) {
+                this.requirements = [] as any;
+                for (let item of _data["requirements"])
+                    this.requirements!.push(VolunteerApprovalRequirement.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): VolunteerRolePolicyVersion {
+        data = typeof data === 'object' ? data : {};
+        let result = new VolunteerRolePolicyVersion();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["version"] = this.version;
+        data["supersededAtUtc"] = this.supersededAtUtc ? this.supersededAtUtc.toISOString() : <any>undefined;
+        if (Array.isArray(this.requirements)) {
+            data["requirements"] = [];
+            for (let item of this.requirements)
+                data["requirements"].push(item.toJSON());
+        }
+        return data; 
+    }
+}
+
+export interface IVolunteerRolePolicyVersion {
+    version?: string;
+    supersededAtUtc?: Date | undefined;
+    requirements?: VolunteerApprovalRequirement[];
+}
+
+export class VolunteerApprovalRequirement implements IVolunteerApprovalRequirement {
+    stage?: RequirementStage;
+    actionName?: string;
+
+    constructor(data?: IVolunteerApprovalRequirement) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.stage = _data["stage"];
+            this.actionName = _data["actionName"];
+        }
+    }
+
+    static fromJS(data: any): VolunteerApprovalRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new VolunteerApprovalRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["stage"] = this.stage;
+        data["actionName"] = this.actionName;
+        return data; 
+    }
+}
+
+export interface IVolunteerApprovalRequirement {
+    stage?: RequirementStage;
+    actionName?: string;
+}
+
+export enum RequirementStage {
+    Application = 0,
+    Approval = 1,
+    Onboarding = 2,
+}
+
+export class VolunteerFamilyRolePolicy implements IVolunteerFamilyRolePolicy {
+    volunteerFamilyRoleType?: string;
+    policyVersions?: VolunteerFamilyRolePolicyVersion[];
+
+    constructor(data?: IVolunteerFamilyRolePolicy) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.volunteerFamilyRoleType = _data["volunteerFamilyRoleType"];
+            if (Array.isArray(_data["policyVersions"])) {
+                this.policyVersions = [] as any;
+                for (let item of _data["policyVersions"])
+                    this.policyVersions!.push(VolunteerFamilyRolePolicyVersion.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): VolunteerFamilyRolePolicy {
+        data = typeof data === 'object' ? data : {};
+        let result = new VolunteerFamilyRolePolicy();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["volunteerFamilyRoleType"] = this.volunteerFamilyRoleType;
+        if (Array.isArray(this.policyVersions)) {
+            data["policyVersions"] = [];
+            for (let item of this.policyVersions)
+                data["policyVersions"].push(item.toJSON());
+        }
+        return data; 
+    }
+}
+
+export interface IVolunteerFamilyRolePolicy {
+    volunteerFamilyRoleType?: string;
+    policyVersions?: VolunteerFamilyRolePolicyVersion[];
+}
+
+export class VolunteerFamilyRolePolicyVersion implements IVolunteerFamilyRolePolicyVersion {
+    version?: string;
+    supersededAtUtc?: Date | undefined;
+    requirements?: VolunteerFamilyApprovalRequirement[];
+
+    constructor(data?: IVolunteerFamilyRolePolicyVersion) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.version = _data["version"];
+            this.supersededAtUtc = _data["supersededAtUtc"] ? new Date(_data["supersededAtUtc"].toString()) : <any>undefined;
+            if (Array.isArray(_data["requirements"])) {
+                this.requirements = [] as any;
+                for (let item of _data["requirements"])
+                    this.requirements!.push(VolunteerFamilyApprovalRequirement.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): VolunteerFamilyRolePolicyVersion {
+        data = typeof data === 'object' ? data : {};
+        let result = new VolunteerFamilyRolePolicyVersion();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["version"] = this.version;
+        data["supersededAtUtc"] = this.supersededAtUtc ? this.supersededAtUtc.toISOString() : <any>undefined;
+        if (Array.isArray(this.requirements)) {
+            data["requirements"] = [];
+            for (let item of this.requirements)
+                data["requirements"].push(item.toJSON());
+        }
+        return data; 
+    }
+}
+
+export interface IVolunteerFamilyRolePolicyVersion {
+    version?: string;
+    supersededAtUtc?: Date | undefined;
+    requirements?: VolunteerFamilyApprovalRequirement[];
+}
+
+export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyApprovalRequirement {
+    stage?: RequirementStage;
+    actionName?: string;
+    scope?: VolunteerFamilyRequirementScope;
+
+    constructor(data?: IVolunteerFamilyApprovalRequirement) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.stage = _data["stage"];
+            this.actionName = _data["actionName"];
+            this.scope = _data["scope"];
+        }
+    }
+
+    static fromJS(data: any): VolunteerFamilyApprovalRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new VolunteerFamilyApprovalRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["stage"] = this.stage;
+        data["actionName"] = this.actionName;
+        data["scope"] = this.scope;
+        return data; 
+    }
+}
+
+export interface IVolunteerFamilyApprovalRequirement {
+    stage?: RequirementStage;
+    actionName?: string;
+    scope?: VolunteerFamilyRequirementScope;
+}
+
+export enum VolunteerFamilyRequirementScope {
+    OncePerFamily = 0,
+    AllAdultsInTheFamily = 1,
+    AllParticipatingAdultsInTheFamily = 2,
+}
+
+export class CurrentFeatureFlags implements ICurrentFeatureFlags {
+    viewReferrals?: boolean;
+
+    constructor(data?: ICurrentFeatureFlags) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.viewReferrals = _data["viewReferrals"];
+        }
+    }
+
+    static fromJS(data: any): CurrentFeatureFlags {
+        data = typeof data === 'object' ? data : {};
+        let result = new CurrentFeatureFlags();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["viewReferrals"] = this.viewReferrals;
+        return data; 
+    }
+}
+
+export interface ICurrentFeatureFlags {
+    viewReferrals?: boolean;
 }
 
 export class CombinedFamilyInfo implements ICombinedFamilyInfo {
@@ -4074,54 +5136,6 @@ export interface IEditDraftNote extends INoteCommand {
     draftNoteContents?: string | undefined;
 }
 
-export class UserTenantAccessSummary implements IUserTenantAccessSummary {
-    organizationId?: string;
-    locationIds?: string[];
-
-    constructor(data?: IUserTenantAccessSummary) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.organizationId = _data["organizationId"];
-            if (Array.isArray(_data["locationIds"])) {
-                this.locationIds = [] as any;
-                for (let item of _data["locationIds"])
-                    this.locationIds!.push(item);
-            }
-        }
-    }
-
-    static fromJS(data: any): UserTenantAccessSummary {
-        data = typeof data === 'object' ? data : {};
-        let result = new UserTenantAccessSummary();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["organizationId"] = this.organizationId;
-        if (Array.isArray(this.locationIds)) {
-            data["locationIds"] = [];
-            for (let item of this.locationIds)
-                data["locationIds"].push(item);
-        }
-        return data; 
-    }
-}
-
-export interface IUserTenantAccessSummary {
-    organizationId?: string;
-    locationIds?: string[];
-}
-
 export class DocumentUploadInfo implements IDocumentUploadInfo {
     documentId?: string;
     valetUrl?: string;
@@ -4872,6 +5886,54 @@ export interface IUnexemptArrangementRequirement extends IArrangementCommand {
     requirementName?: string;
 }
 
+export class UserTenantAccessSummary implements IUserTenantAccessSummary {
+    organizationId?: string;
+    locationIds?: string[];
+
+    constructor(data?: IUserTenantAccessSummary) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.organizationId = _data["organizationId"];
+            if (Array.isArray(_data["locationIds"])) {
+                this.locationIds = [] as any;
+                for (let item of _data["locationIds"])
+                    this.locationIds!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): UserTenantAccessSummary {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserTenantAccessSummary();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["organizationId"] = this.organizationId;
+        if (Array.isArray(this.locationIds)) {
+            data["locationIds"] = [];
+            for (let item of this.locationIds)
+                data["locationIds"].push(item);
+        }
+        return data; 
+    }
+}
+
+export interface IUserTenantAccessSummary {
+    organizationId?: string;
+    locationIds?: string[];
+}
+
 export abstract class VolunteerFamilyCommand implements IVolunteerFamilyCommand {
     familyId?: string;
 
@@ -5558,1068 +6620,6 @@ export class UnexemptVolunteerRequirement extends VolunteerCommand implements IU
 
 export interface IUnexemptVolunteerRequirement extends IVolunteerCommand {
     requirementName?: string;
-}
-
-export class OrganizationConfiguration implements IOrganizationConfiguration {
-    organizationName?: string;
-    locations?: LocationConfiguration[];
-    users?: { [key: string]: UserAccessConfiguration; };
-
-    constructor(data?: IOrganizationConfiguration) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.organizationName = _data["organizationName"];
-            if (Array.isArray(_data["locations"])) {
-                this.locations = [] as any;
-                for (let item of _data["locations"])
-                    this.locations!.push(LocationConfiguration.fromJS(item));
-            }
-            if (_data["users"]) {
-                this.users = {} as any;
-                for (let key in _data["users"]) {
-                    if (_data["users"].hasOwnProperty(key))
-                        (<any>this.users)![key] = _data["users"][key] ? UserAccessConfiguration.fromJS(_data["users"][key]) : new UserAccessConfiguration();
-                }
-            }
-        }
-    }
-
-    static fromJS(data: any): OrganizationConfiguration {
-        data = typeof data === 'object' ? data : {};
-        let result = new OrganizationConfiguration();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["organizationName"] = this.organizationName;
-        if (Array.isArray(this.locations)) {
-            data["locations"] = [];
-            for (let item of this.locations)
-                data["locations"].push(item.toJSON());
-        }
-        if (this.users) {
-            data["users"] = {};
-            for (let key in this.users) {
-                if (this.users.hasOwnProperty(key))
-                    (<any>data["users"])[key] = this.users[key] ? this.users[key].toJSON() : <any>undefined;
-            }
-        }
-        return data; 
-    }
-}
-
-export interface IOrganizationConfiguration {
-    organizationName?: string;
-    locations?: LocationConfiguration[];
-    users?: { [key: string]: UserAccessConfiguration; };
-}
-
-export class LocationConfiguration implements ILocationConfiguration {
-    id?: string;
-    name?: string;
-    ethnicities?: string[];
-    adultFamilyRelationships?: string[];
-
-    constructor(data?: ILocationConfiguration) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.id = _data["id"];
-            this.name = _data["name"];
-            if (Array.isArray(_data["ethnicities"])) {
-                this.ethnicities = [] as any;
-                for (let item of _data["ethnicities"])
-                    this.ethnicities!.push(item);
-            }
-            if (Array.isArray(_data["adultFamilyRelationships"])) {
-                this.adultFamilyRelationships = [] as any;
-                for (let item of _data["adultFamilyRelationships"])
-                    this.adultFamilyRelationships!.push(item);
-            }
-        }
-    }
-
-    static fromJS(data: any): LocationConfiguration {
-        data = typeof data === 'object' ? data : {};
-        let result = new LocationConfiguration();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["id"] = this.id;
-        data["name"] = this.name;
-        if (Array.isArray(this.ethnicities)) {
-            data["ethnicities"] = [];
-            for (let item of this.ethnicities)
-                data["ethnicities"].push(item);
-        }
-        if (Array.isArray(this.adultFamilyRelationships)) {
-            data["adultFamilyRelationships"] = [];
-            for (let item of this.adultFamilyRelationships)
-                data["adultFamilyRelationships"].push(item);
-        }
-        return data; 
-    }
-}
-
-export interface ILocationConfiguration {
-    id?: string;
-    name?: string;
-    ethnicities?: string[];
-    adultFamilyRelationships?: string[];
-}
-
-export class UserAccessConfiguration implements IUserAccessConfiguration {
-    personId?: string;
-    locationRoles?: UserLocationRole[];
-
-    constructor(data?: IUserAccessConfiguration) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.personId = _data["personId"];
-            if (Array.isArray(_data["locationRoles"])) {
-                this.locationRoles = [] as any;
-                for (let item of _data["locationRoles"])
-                    this.locationRoles!.push(UserLocationRole.fromJS(item));
-            }
-        }
-    }
-
-    static fromJS(data: any): UserAccessConfiguration {
-        data = typeof data === 'object' ? data : {};
-        let result = new UserAccessConfiguration();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["personId"] = this.personId;
-        if (Array.isArray(this.locationRoles)) {
-            data["locationRoles"] = [];
-            for (let item of this.locationRoles)
-                data["locationRoles"].push(item.toJSON());
-        }
-        return data; 
-    }
-}
-
-export interface IUserAccessConfiguration {
-    personId?: string;
-    locationRoles?: UserLocationRole[];
-}
-
-export class UserLocationRole implements IUserLocationRole {
-    locationId?: string;
-    roleName?: string;
-
-    constructor(data?: IUserLocationRole) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.locationId = _data["locationId"];
-            this.roleName = _data["roleName"];
-        }
-    }
-
-    static fromJS(data: any): UserLocationRole {
-        data = typeof data === 'object' ? data : {};
-        let result = new UserLocationRole();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["locationId"] = this.locationId;
-        data["roleName"] = this.roleName;
-        return data; 
-    }
-}
-
-export interface IUserLocationRole {
-    locationId?: string;
-    roleName?: string;
-}
-
-export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
-    actionDefinitions?: { [key: string]: ActionRequirement; };
-    referralPolicy?: ReferralPolicy;
-    volunteerPolicy?: VolunteerPolicy;
-
-    constructor(data?: IEffectiveLocationPolicy) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            if (_data["actionDefinitions"]) {
-                this.actionDefinitions = {} as any;
-                for (let key in _data["actionDefinitions"]) {
-                    if (_data["actionDefinitions"].hasOwnProperty(key))
-                        (<any>this.actionDefinitions)![key] = _data["actionDefinitions"][key] ? ActionRequirement.fromJS(_data["actionDefinitions"][key]) : new ActionRequirement();
-                }
-            }
-            this.referralPolicy = _data["referralPolicy"] ? ReferralPolicy.fromJS(_data["referralPolicy"]) : <any>undefined;
-            this.volunteerPolicy = _data["volunteerPolicy"] ? VolunteerPolicy.fromJS(_data["volunteerPolicy"]) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): EffectiveLocationPolicy {
-        data = typeof data === 'object' ? data : {};
-        let result = new EffectiveLocationPolicy();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        if (this.actionDefinitions) {
-            data["actionDefinitions"] = {};
-            for (let key in this.actionDefinitions) {
-                if (this.actionDefinitions.hasOwnProperty(key))
-                    (<any>data["actionDefinitions"])[key] = this.actionDefinitions[key] ? this.actionDefinitions[key].toJSON() : <any>undefined;
-            }
-        }
-        data["referralPolicy"] = this.referralPolicy ? this.referralPolicy.toJSON() : <any>undefined;
-        data["volunteerPolicy"] = this.volunteerPolicy ? this.volunteerPolicy.toJSON() : <any>undefined;
-        return data; 
-    }
-}
-
-export interface IEffectiveLocationPolicy {
-    actionDefinitions?: { [key: string]: ActionRequirement; };
-    referralPolicy?: ReferralPolicy;
-    volunteerPolicy?: VolunteerPolicy;
-}
-
-export class ActionRequirement implements IActionRequirement {
-    documentLink?: DocumentLinkRequirement;
-    instructions?: string | undefined;
-    infoLink?: string | undefined;
-
-    constructor(data?: IActionRequirement) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.documentLink = _data["documentLink"];
-            this.instructions = _data["instructions"];
-            this.infoLink = _data["infoLink"];
-        }
-    }
-
-    static fromJS(data: any): ActionRequirement {
-        data = typeof data === 'object' ? data : {};
-        let result = new ActionRequirement();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["documentLink"] = this.documentLink;
-        data["instructions"] = this.instructions;
-        data["infoLink"] = this.infoLink;
-        return data; 
-    }
-}
-
-export interface IActionRequirement {
-    documentLink?: DocumentLinkRequirement;
-    instructions?: string | undefined;
-    infoLink?: string | undefined;
-}
-
-export enum DocumentLinkRequirement {
-    None = 0,
-    Allowed = 1,
-    Required = 2,
-}
-
-export class ReferralPolicy implements IReferralPolicy {
-    requiredIntakeActionNames?: string[];
-    arrangementPolicies?: ArrangementPolicy[];
-
-    constructor(data?: IReferralPolicy) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            if (Array.isArray(_data["requiredIntakeActionNames"])) {
-                this.requiredIntakeActionNames = [] as any;
-                for (let item of _data["requiredIntakeActionNames"])
-                    this.requiredIntakeActionNames!.push(item);
-            }
-            if (Array.isArray(_data["arrangementPolicies"])) {
-                this.arrangementPolicies = [] as any;
-                for (let item of _data["arrangementPolicies"])
-                    this.arrangementPolicies!.push(ArrangementPolicy.fromJS(item));
-            }
-        }
-    }
-
-    static fromJS(data: any): ReferralPolicy {
-        data = typeof data === 'object' ? data : {};
-        let result = new ReferralPolicy();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        if (Array.isArray(this.requiredIntakeActionNames)) {
-            data["requiredIntakeActionNames"] = [];
-            for (let item of this.requiredIntakeActionNames)
-                data["requiredIntakeActionNames"].push(item);
-        }
-        if (Array.isArray(this.arrangementPolicies)) {
-            data["arrangementPolicies"] = [];
-            for (let item of this.arrangementPolicies)
-                data["arrangementPolicies"].push(item.toJSON());
-        }
-        return data; 
-    }
-}
-
-export interface IReferralPolicy {
-    requiredIntakeActionNames?: string[];
-    arrangementPolicies?: ArrangementPolicy[];
-}
-
-export class ArrangementPolicy implements IArrangementPolicy {
-    arrangementType?: string;
-    childInvolvement?: ChildInvolvement;
-    volunteerFunctions?: VolunteerFunction[];
-    requiredSetupActionNames?: string[];
-    requiredMonitoringActionNames?: ValueTupleOfStringAndRecurrencePolicy[];
-    requiredCloseoutActionNames?: string[];
-
-    constructor(data?: IArrangementPolicy) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.arrangementType = _data["arrangementType"];
-            this.childInvolvement = _data["childInvolvement"];
-            if (Array.isArray(_data["volunteerFunctions"])) {
-                this.volunteerFunctions = [] as any;
-                for (let item of _data["volunteerFunctions"])
-                    this.volunteerFunctions!.push(VolunteerFunction.fromJS(item));
-            }
-            if (Array.isArray(_data["requiredSetupActionNames"])) {
-                this.requiredSetupActionNames = [] as any;
-                for (let item of _data["requiredSetupActionNames"])
-                    this.requiredSetupActionNames!.push(item);
-            }
-            if (Array.isArray(_data["requiredMonitoringActionNames"])) {
-                this.requiredMonitoringActionNames = [] as any;
-                for (let item of _data["requiredMonitoringActionNames"])
-                    this.requiredMonitoringActionNames!.push(ValueTupleOfStringAndRecurrencePolicy.fromJS(item));
-            }
-            if (Array.isArray(_data["requiredCloseoutActionNames"])) {
-                this.requiredCloseoutActionNames = [] as any;
-                for (let item of _data["requiredCloseoutActionNames"])
-                    this.requiredCloseoutActionNames!.push(item);
-            }
-        }
-    }
-
-    static fromJS(data: any): ArrangementPolicy {
-        data = typeof data === 'object' ? data : {};
-        let result = new ArrangementPolicy();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["arrangementType"] = this.arrangementType;
-        data["childInvolvement"] = this.childInvolvement;
-        if (Array.isArray(this.volunteerFunctions)) {
-            data["volunteerFunctions"] = [];
-            for (let item of this.volunteerFunctions)
-                data["volunteerFunctions"].push(item.toJSON());
-        }
-        if (Array.isArray(this.requiredSetupActionNames)) {
-            data["requiredSetupActionNames"] = [];
-            for (let item of this.requiredSetupActionNames)
-                data["requiredSetupActionNames"].push(item);
-        }
-        if (Array.isArray(this.requiredMonitoringActionNames)) {
-            data["requiredMonitoringActionNames"] = [];
-            for (let item of this.requiredMonitoringActionNames)
-                data["requiredMonitoringActionNames"].push(item.toJSON());
-        }
-        if (Array.isArray(this.requiredCloseoutActionNames)) {
-            data["requiredCloseoutActionNames"] = [];
-            for (let item of this.requiredCloseoutActionNames)
-                data["requiredCloseoutActionNames"].push(item);
-        }
-        return data; 
-    }
-}
-
-export interface IArrangementPolicy {
-    arrangementType?: string;
-    childInvolvement?: ChildInvolvement;
-    volunteerFunctions?: VolunteerFunction[];
-    requiredSetupActionNames?: string[];
-    requiredMonitoringActionNames?: ValueTupleOfStringAndRecurrencePolicy[];
-    requiredCloseoutActionNames?: string[];
-}
-
-export enum ChildInvolvement {
-    ChildHousing = 0,
-    DaytimeChildCareOnly = 1,
-    NoChildInvolvement = 2,
-}
-
-export class VolunteerFunction implements IVolunteerFunction {
-    arrangementFunction?: string;
-    requirement?: FunctionRequirement;
-    eligibleIndividualVolunteerRoles?: string[];
-    eligibleVolunteerFamilyRoles?: string[];
-
-    constructor(data?: IVolunteerFunction) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.arrangementFunction = _data["arrangementFunction"];
-            this.requirement = _data["requirement"];
-            if (Array.isArray(_data["eligibleIndividualVolunteerRoles"])) {
-                this.eligibleIndividualVolunteerRoles = [] as any;
-                for (let item of _data["eligibleIndividualVolunteerRoles"])
-                    this.eligibleIndividualVolunteerRoles!.push(item);
-            }
-            if (Array.isArray(_data["eligibleVolunteerFamilyRoles"])) {
-                this.eligibleVolunteerFamilyRoles = [] as any;
-                for (let item of _data["eligibleVolunteerFamilyRoles"])
-                    this.eligibleVolunteerFamilyRoles!.push(item);
-            }
-        }
-    }
-
-    static fromJS(data: any): VolunteerFunction {
-        data = typeof data === 'object' ? data : {};
-        let result = new VolunteerFunction();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["arrangementFunction"] = this.arrangementFunction;
-        data["requirement"] = this.requirement;
-        if (Array.isArray(this.eligibleIndividualVolunteerRoles)) {
-            data["eligibleIndividualVolunteerRoles"] = [];
-            for (let item of this.eligibleIndividualVolunteerRoles)
-                data["eligibleIndividualVolunteerRoles"].push(item);
-        }
-        if (Array.isArray(this.eligibleVolunteerFamilyRoles)) {
-            data["eligibleVolunteerFamilyRoles"] = [];
-            for (let item of this.eligibleVolunteerFamilyRoles)
-                data["eligibleVolunteerFamilyRoles"].push(item);
-        }
-        return data; 
-    }
-}
-
-export interface IVolunteerFunction {
-    arrangementFunction?: string;
-    requirement?: FunctionRequirement;
-    eligibleIndividualVolunteerRoles?: string[];
-    eligibleVolunteerFamilyRoles?: string[];
-}
-
-export enum FunctionRequirement {
-    ZeroOrMore = 0,
-    ExactlyOne = 1,
-    OneOrMore = 2,
-}
-
-export class ValueTupleOfStringAndRecurrencePolicy implements IValueTupleOfStringAndRecurrencePolicy {
-    item1?: string;
-    item2?: RecurrencePolicy;
-
-    constructor(data?: IValueTupleOfStringAndRecurrencePolicy) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.item1 = _data["item1"];
-            this.item2 = _data["item2"] ? RecurrencePolicy.fromJS(_data["item2"]) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): ValueTupleOfStringAndRecurrencePolicy {
-        data = typeof data === 'object' ? data : {};
-        let result = new ValueTupleOfStringAndRecurrencePolicy();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["item1"] = this.item1;
-        data["item2"] = this.item2 ? this.item2.toJSON() : <any>undefined;
-        return data; 
-    }
-}
-
-export interface IValueTupleOfStringAndRecurrencePolicy {
-    item1?: string;
-    item2?: RecurrencePolicy;
-}
-
-export class RecurrencePolicy implements IRecurrencePolicy {
-    stages?: RecurrencePolicyStage[];
-
-    constructor(data?: IRecurrencePolicy) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            if (Array.isArray(_data["stages"])) {
-                this.stages = [] as any;
-                for (let item of _data["stages"])
-                    this.stages!.push(RecurrencePolicyStage.fromJS(item));
-            }
-        }
-    }
-
-    static fromJS(data: any): RecurrencePolicy {
-        data = typeof data === 'object' ? data : {};
-        let result = new RecurrencePolicy();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        if (Array.isArray(this.stages)) {
-            data["stages"] = [];
-            for (let item of this.stages)
-                data["stages"].push(item.toJSON());
-        }
-        return data; 
-    }
-}
-
-export interface IRecurrencePolicy {
-    stages?: RecurrencePolicyStage[];
-}
-
-export class RecurrencePolicyStage implements IRecurrencePolicyStage {
-    delay?: string;
-    maxOccurrences?: number | undefined;
-
-    constructor(data?: IRecurrencePolicyStage) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.delay = _data["delay"];
-            this.maxOccurrences = _data["maxOccurrences"];
-        }
-    }
-
-    static fromJS(data: any): RecurrencePolicyStage {
-        data = typeof data === 'object' ? data : {};
-        let result = new RecurrencePolicyStage();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["delay"] = this.delay;
-        data["maxOccurrences"] = this.maxOccurrences;
-        return data; 
-    }
-}
-
-export interface IRecurrencePolicyStage {
-    delay?: string;
-    maxOccurrences?: number | undefined;
-}
-
-export class VolunteerPolicy implements IVolunteerPolicy {
-    volunteerRoles?: { [key: string]: VolunteerRolePolicy; };
-    volunteerFamilyRoles?: { [key: string]: VolunteerFamilyRolePolicy; };
-
-    constructor(data?: IVolunteerPolicy) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            if (_data["volunteerRoles"]) {
-                this.volunteerRoles = {} as any;
-                for (let key in _data["volunteerRoles"]) {
-                    if (_data["volunteerRoles"].hasOwnProperty(key))
-                        (<any>this.volunteerRoles)![key] = _data["volunteerRoles"][key] ? VolunteerRolePolicy.fromJS(_data["volunteerRoles"][key]) : new VolunteerRolePolicy();
-                }
-            }
-            if (_data["volunteerFamilyRoles"]) {
-                this.volunteerFamilyRoles = {} as any;
-                for (let key in _data["volunteerFamilyRoles"]) {
-                    if (_data["volunteerFamilyRoles"].hasOwnProperty(key))
-                        (<any>this.volunteerFamilyRoles)![key] = _data["volunteerFamilyRoles"][key] ? VolunteerFamilyRolePolicy.fromJS(_data["volunteerFamilyRoles"][key]) : new VolunteerFamilyRolePolicy();
-                }
-            }
-        }
-    }
-
-    static fromJS(data: any): VolunteerPolicy {
-        data = typeof data === 'object' ? data : {};
-        let result = new VolunteerPolicy();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        if (this.volunteerRoles) {
-            data["volunteerRoles"] = {};
-            for (let key in this.volunteerRoles) {
-                if (this.volunteerRoles.hasOwnProperty(key))
-                    (<any>data["volunteerRoles"])[key] = this.volunteerRoles[key] ? this.volunteerRoles[key].toJSON() : <any>undefined;
-            }
-        }
-        if (this.volunteerFamilyRoles) {
-            data["volunteerFamilyRoles"] = {};
-            for (let key in this.volunteerFamilyRoles) {
-                if (this.volunteerFamilyRoles.hasOwnProperty(key))
-                    (<any>data["volunteerFamilyRoles"])[key] = this.volunteerFamilyRoles[key] ? this.volunteerFamilyRoles[key].toJSON() : <any>undefined;
-            }
-        }
-        return data; 
-    }
-}
-
-export interface IVolunteerPolicy {
-    volunteerRoles?: { [key: string]: VolunteerRolePolicy; };
-    volunteerFamilyRoles?: { [key: string]: VolunteerFamilyRolePolicy; };
-}
-
-export class VolunteerRolePolicy implements IVolunteerRolePolicy {
-    volunteerRoleType?: string;
-    policyVersions?: VolunteerRolePolicyVersion[];
-
-    constructor(data?: IVolunteerRolePolicy) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.volunteerRoleType = _data["volunteerRoleType"];
-            if (Array.isArray(_data["policyVersions"])) {
-                this.policyVersions = [] as any;
-                for (let item of _data["policyVersions"])
-                    this.policyVersions!.push(VolunteerRolePolicyVersion.fromJS(item));
-            }
-        }
-    }
-
-    static fromJS(data: any): VolunteerRolePolicy {
-        data = typeof data === 'object' ? data : {};
-        let result = new VolunteerRolePolicy();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["volunteerRoleType"] = this.volunteerRoleType;
-        if (Array.isArray(this.policyVersions)) {
-            data["policyVersions"] = [];
-            for (let item of this.policyVersions)
-                data["policyVersions"].push(item.toJSON());
-        }
-        return data; 
-    }
-}
-
-export interface IVolunteerRolePolicy {
-    volunteerRoleType?: string;
-    policyVersions?: VolunteerRolePolicyVersion[];
-}
-
-export class VolunteerRolePolicyVersion implements IVolunteerRolePolicyVersion {
-    version?: string;
-    supersededAtUtc?: Date | undefined;
-    requirements?: VolunteerApprovalRequirement[];
-
-    constructor(data?: IVolunteerRolePolicyVersion) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.version = _data["version"];
-            this.supersededAtUtc = _data["supersededAtUtc"] ? new Date(_data["supersededAtUtc"].toString()) : <any>undefined;
-            if (Array.isArray(_data["requirements"])) {
-                this.requirements = [] as any;
-                for (let item of _data["requirements"])
-                    this.requirements!.push(VolunteerApprovalRequirement.fromJS(item));
-            }
-        }
-    }
-
-    static fromJS(data: any): VolunteerRolePolicyVersion {
-        data = typeof data === 'object' ? data : {};
-        let result = new VolunteerRolePolicyVersion();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["version"] = this.version;
-        data["supersededAtUtc"] = this.supersededAtUtc ? this.supersededAtUtc.toISOString() : <any>undefined;
-        if (Array.isArray(this.requirements)) {
-            data["requirements"] = [];
-            for (let item of this.requirements)
-                data["requirements"].push(item.toJSON());
-        }
-        return data; 
-    }
-}
-
-export interface IVolunteerRolePolicyVersion {
-    version?: string;
-    supersededAtUtc?: Date | undefined;
-    requirements?: VolunteerApprovalRequirement[];
-}
-
-export class VolunteerApprovalRequirement implements IVolunteerApprovalRequirement {
-    stage?: RequirementStage;
-    actionName?: string;
-
-    constructor(data?: IVolunteerApprovalRequirement) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.stage = _data["stage"];
-            this.actionName = _data["actionName"];
-        }
-    }
-
-    static fromJS(data: any): VolunteerApprovalRequirement {
-        data = typeof data === 'object' ? data : {};
-        let result = new VolunteerApprovalRequirement();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["stage"] = this.stage;
-        data["actionName"] = this.actionName;
-        return data; 
-    }
-}
-
-export interface IVolunteerApprovalRequirement {
-    stage?: RequirementStage;
-    actionName?: string;
-}
-
-export enum RequirementStage {
-    Application = 0,
-    Approval = 1,
-    Onboarding = 2,
-}
-
-export class VolunteerFamilyRolePolicy implements IVolunteerFamilyRolePolicy {
-    volunteerFamilyRoleType?: string;
-    policyVersions?: VolunteerFamilyRolePolicyVersion[];
-
-    constructor(data?: IVolunteerFamilyRolePolicy) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.volunteerFamilyRoleType = _data["volunteerFamilyRoleType"];
-            if (Array.isArray(_data["policyVersions"])) {
-                this.policyVersions = [] as any;
-                for (let item of _data["policyVersions"])
-                    this.policyVersions!.push(VolunteerFamilyRolePolicyVersion.fromJS(item));
-            }
-        }
-    }
-
-    static fromJS(data: any): VolunteerFamilyRolePolicy {
-        data = typeof data === 'object' ? data : {};
-        let result = new VolunteerFamilyRolePolicy();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["volunteerFamilyRoleType"] = this.volunteerFamilyRoleType;
-        if (Array.isArray(this.policyVersions)) {
-            data["policyVersions"] = [];
-            for (let item of this.policyVersions)
-                data["policyVersions"].push(item.toJSON());
-        }
-        return data; 
-    }
-}
-
-export interface IVolunteerFamilyRolePolicy {
-    volunteerFamilyRoleType?: string;
-    policyVersions?: VolunteerFamilyRolePolicyVersion[];
-}
-
-export class VolunteerFamilyRolePolicyVersion implements IVolunteerFamilyRolePolicyVersion {
-    version?: string;
-    supersededAtUtc?: Date | undefined;
-    requirements?: VolunteerFamilyApprovalRequirement[];
-
-    constructor(data?: IVolunteerFamilyRolePolicyVersion) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.version = _data["version"];
-            this.supersededAtUtc = _data["supersededAtUtc"] ? new Date(_data["supersededAtUtc"].toString()) : <any>undefined;
-            if (Array.isArray(_data["requirements"])) {
-                this.requirements = [] as any;
-                for (let item of _data["requirements"])
-                    this.requirements!.push(VolunteerFamilyApprovalRequirement.fromJS(item));
-            }
-        }
-    }
-
-    static fromJS(data: any): VolunteerFamilyRolePolicyVersion {
-        data = typeof data === 'object' ? data : {};
-        let result = new VolunteerFamilyRolePolicyVersion();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["version"] = this.version;
-        data["supersededAtUtc"] = this.supersededAtUtc ? this.supersededAtUtc.toISOString() : <any>undefined;
-        if (Array.isArray(this.requirements)) {
-            data["requirements"] = [];
-            for (let item of this.requirements)
-                data["requirements"].push(item.toJSON());
-        }
-        return data; 
-    }
-}
-
-export interface IVolunteerFamilyRolePolicyVersion {
-    version?: string;
-    supersededAtUtc?: Date | undefined;
-    requirements?: VolunteerFamilyApprovalRequirement[];
-}
-
-export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyApprovalRequirement {
-    stage?: RequirementStage;
-    actionName?: string;
-    scope?: VolunteerFamilyRequirementScope;
-
-    constructor(data?: IVolunteerFamilyApprovalRequirement) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.stage = _data["stage"];
-            this.actionName = _data["actionName"];
-            this.scope = _data["scope"];
-        }
-    }
-
-    static fromJS(data: any): VolunteerFamilyApprovalRequirement {
-        data = typeof data === 'object' ? data : {};
-        let result = new VolunteerFamilyApprovalRequirement();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["stage"] = this.stage;
-        data["actionName"] = this.actionName;
-        data["scope"] = this.scope;
-        return data; 
-    }
-}
-
-export interface IVolunteerFamilyApprovalRequirement {
-    stage?: RequirementStage;
-    actionName?: string;
-    scope?: VolunteerFamilyRequirementScope;
-}
-
-export enum VolunteerFamilyRequirementScope {
-    OncePerFamily = 0,
-    AllAdultsInTheFamily = 1,
-    AllParticipatingAdultsInTheFamily = 2,
-}
-
-export class CurrentFeatureFlags implements ICurrentFeatureFlags {
-    viewReferrals?: boolean;
-
-    constructor(data?: ICurrentFeatureFlags) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.viewReferrals = _data["viewReferrals"];
-        }
-    }
-
-    static fromJS(data: any): CurrentFeatureFlags {
-        data = typeof data === 'object' ? data : {};
-        let result = new CurrentFeatureFlags();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["viewReferrals"] = this.viewReferrals;
-        return data; 
-    }
-}
-
-export interface ICurrentFeatureFlags {
-    viewReferrals?: boolean;
 }
 
 export class ApiException extends Error {
