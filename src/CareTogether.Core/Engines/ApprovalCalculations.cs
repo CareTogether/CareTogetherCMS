@@ -166,6 +166,7 @@ namespace CareTogether.Engines
                             .SelectMany(y => y.MissingIndividualRequirements
                                 .SelectMany(z => z.Value
                                     .Select(q => (PersonId: z.Key, MissingRequirement: q)))))
+                        .Distinct()
                         .GroupBy(x => x.PersonId)
                         .ToImmutableDictionary(
                             x => x.Key,
