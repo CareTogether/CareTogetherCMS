@@ -1,4 +1,4 @@
-import { Container, Toolbar, Grid, Button, Menu, MenuItem, MenuList, useMediaQuery, useTheme } from '@material-ui/core';
+import { Container, Toolbar, Grid, Button, Menu, MenuItem, MenuList, useMediaQuery, useTheme, IconButton } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { ActionRequirement, ArrangementPolicy, CombinedFamilyInfo, ReferralCloseReason } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
@@ -25,6 +25,8 @@ import { CloseReferralDialog } from './CloseReferralDialog';
 import { OpenNewReferralDialog } from './OpenNewReferralDialog';
 import { FamilyDocuments } from '../Families/FamilyDocuments';
 import { HeaderContent, HeaderTitle } from '../Header';
+import { ArrowBack } from '@material-ui/icons';
+import { useHistory } from 'react-router-dom';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -105,12 +107,20 @@ export function PartneringFamilyScreen() {
   const [createArrangementDialogParameter, setCreateArrangementDialogParameter] = useState<ArrangementPolicy | null>(null);
   
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  const history = useHistory();
 
   return (
   <Container>
     <HeaderContent>
-      {!isMobile && <HeaderTitle>Referrals</HeaderTitle>}
+      <HeaderTitle>
+        <IconButton color="inherit" onClick={() => history.goBack()}>
+          <ArrowBack />
+        </IconButton>
+        &nbsp;
+        {partneringFamily?.family?.adults!.filter(adult => adult.item1!.id === partneringFamily!.family!.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family
+      </HeaderTitle>
     </HeaderContent>
     <Toolbar variant="dense" disableGutters={true}>
       <Button aria-controls="family-record-menu" aria-haspopup="true"
