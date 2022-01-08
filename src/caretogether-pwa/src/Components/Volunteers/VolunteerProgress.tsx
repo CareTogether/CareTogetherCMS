@@ -1,13 +1,14 @@
 import { makeStyles } from '@material-ui/core/styles';
-import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab } from '@material-ui/core';
+import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, Button, ButtonGroup, useMediaQuery, useTheme } from '@material-ui/core';
 import { useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../../Model/VolunteersModel';
 import { allApprovalAndOnboardingRequirementsData } from '../../Model/ConfigurationModel';
 import React, { useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { Link, useHistory, useLocation } from 'react-router-dom';
 import AddIcon from '@material-ui/icons/Add';
 import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';
 import { CombinedFamilyInfo } from '../../GeneratedClient';
+import { HeaderContent, HeaderTitle } from '../Header';
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -56,8 +57,19 @@ function VolunteerProgress() {
   }
   const [createVolunteerFamilyDialogOpen, setCreateVolunteerFamilyDialogOpen] = useState(false);
   
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const location = useLocation();
+  
   return (
     <Grid container spacing={3}>
+      <HeaderContent>
+        {!isMobile && <HeaderTitle>Volunteers</HeaderTitle>}
+        <ButtonGroup variant="text" color="inherit" aria-label="text inherit button group" style={{flexGrow: 1}}>
+          <Button color={location.pathname === "/volunteers/approval" ? 'default' : 'inherit'} component={Link} to={"/volunteers/approval"}>Approvals</Button>
+          <Button color={location.pathname === "/volunteers/progress" ? 'default' : 'inherit'} component={Link} to={"/volunteers/progress"}>Progress</Button>
+        </ButtonGroup>
+      </HeaderContent>
       <Grid item xs={12}>
         <TableContainer component={Paper}>
           <Table className={classes.table} size="small">

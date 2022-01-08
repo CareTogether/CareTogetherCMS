@@ -1,5 +1,5 @@
 import { makeStyles } from '@material-ui/core/styles';
-import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab } from '@material-ui/core';
+import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, useMediaQuery, useTheme, Button, ButtonGroup } from '@material-ui/core';
 import { Gender, ExactAge, AgeInYears, RoleVersionApproval, CombinedFamilyInfo, RemovedRole, RoleRemovalReason } from '../../GeneratedClient';
 import { differenceInYears } from 'date-fns';
 import { useRecoilValue } from 'recoil';
@@ -9,7 +9,8 @@ import { RoleApprovalStatus } from '../../GeneratedClient';
 import React, { useState } from 'react';
 import AddIcon from '@material-ui/icons/Add';
 import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';
-import { useHistory } from 'react-router-dom';
+import { Link, useHistory, useLocation } from 'react-router-dom';
+import { HeaderContent, HeaderTitle } from '../Header';
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -82,9 +83,20 @@ function VolunteerApproval() {
     history.push(`/volunteers/family/${volunteerFamilyId}`);
   }
   const [createVolunteerFamilyDialogOpen, setCreateVolunteerFamilyDialogOpen] = useState(false);
+  
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const location = useLocation();
 
   return (
     <Grid container spacing={3}>
+      <HeaderContent>
+        {!isMobile && <HeaderTitle>Volunteers</HeaderTitle>}
+        <ButtonGroup variant="text" color="inherit" aria-label="text inherit button group" style={{flexGrow: 1}}>
+          <Button color={location.pathname === "/volunteers/approval" ? 'default' : 'inherit'} component={Link} to={"/volunteers/approval"}>Approvals</Button>
+          <Button color={location.pathname === "/volunteers/progress" ? 'default' : 'inherit'} component={Link} to={"/volunteers/progress"}>Progress</Button>
+        </ButtonGroup>
+      </HeaderContent>
       <Grid item xs={12}>
         <TableContainer component={Paper}>
           <Table className={classes.table} size="small">

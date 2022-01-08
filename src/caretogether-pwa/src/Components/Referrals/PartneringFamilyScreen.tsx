@@ -24,6 +24,7 @@ import { CreateArrangementDialog } from './CreateArrangementDialog';
 import { CloseReferralDialog } from './CloseReferralDialog';
 import { OpenNewReferralDialog } from './OpenNewReferralDialog';
 import { FamilyDocuments } from '../Families/FamilyDocuments';
+import { HeaderContent, HeaderTitle } from '../Header';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -108,6 +109,9 @@ export function PartneringFamilyScreen() {
 
   return (
   <Container>
+    <HeaderContent>
+      {!isMobile && <HeaderTitle>Referrals</HeaderTitle>}
+    </HeaderContent>
     <Toolbar variant="dense" disableGutters={true}>
       <Button aria-controls="family-record-menu" aria-haspopup="true"
         variant="contained" color="default" size="small" className={classes.button}

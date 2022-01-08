@@ -1,12 +1,9 @@
 import React from 'react';
 import clsx from 'clsx';
-import { AppBar, Toolbar, IconButton, Typography, useMediaQuery, useTheme, Button, ButtonGroup } from "@material-ui/core";
+import { AppBar, Toolbar, IconButton, Typography, useMediaQuery, useTheme, Portal } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 import MenuIcon from '@material-ui/icons/Menu';
-import { Link, useLocation, useRouteMatch, useHistory, Route, Switch } from 'react-router-dom';
-import { ArrowBack } from '@material-ui/icons';
-import { useRecoilValue } from 'recoil';
-import { volunteerFamiliesData } from '../Model/VolunteersModel';
+import { HeaderContext } from './HeaderContext';
 
 const drawerWidth = 200;
 
@@ -16,28 +13,6 @@ export const HeaderTitle: React.FC<HeaderTitleProps> = ({ children }) => (
     {children}
   </Typography>
 );
-
-function VolunteerFamilyHeader() {
-  const history = useHistory();
-  
-  const volunteerFamilyMatch = useRouteMatch<{ volunteerFamilyId: string }>({
-    path: '/volunteers/family/:volunteerFamilyId',
-    strict: true,
-    sensitive: true
-  });
-  const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
-  const volunteerFamily = volunteerFamilyMatch && volunteerFamilies.find(x => x.family?.id === volunteerFamilyMatch.params.volunteerFamilyId);
-
-  return (
-    <HeaderTitle>
-      <IconButton color="inherit" onClick={() => history.goBack()}>
-        <ArrowBack />
-      </IconButton>
-      &nbsp;
-      {volunteerFamily?.family?.adults!.filter(adult => adult.item1!.id === volunteerFamily!.family!.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family
-    </HeaderTitle>
-  );
-}
 
 const useStyles = makeStyles((theme) => ({
   appBar: {
@@ -67,13 +42,22 @@ const useStyles = makeStyles((theme) => ({
   menuButtonHidden: {
     display: 'none',
   },
-  backButton: {
-    margin: theme.spacing(1),
-  },
-  toggleGroup: {
-    flexGrow: 1
+  appBarPortal: {
+    width: '100%',
+    height: '100%',
+    display: 'flex'
   }
 }));
+
+type HeaderContentProps = {}
+export const HeaderContent: React.FC<HeaderContentProps> = ({ children }) => (
+  <HeaderContext.Consumer>
+    {headerContainer =>
+      <Portal container={headerContainer?.current}>
+        {children}
+      </Portal>}
+  </HeaderContext.Consumer>
+);
 
 interface HeaderProps {
   open: boolean,
@@ -87,7 +71,6 @@ function Header(props: HeaderProps) {
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const location = useLocation();
 
   return (
     <AppBar position="absolute" className={clsx(classes.appBar, (open && !isMobile) && classes.appBarShift)}>
@@ -101,34 +84,9 @@ function Header(props: HeaderProps) {
         >
           <MenuIcon />
         </IconButton>}
-        <React.Suspense fallback={null}>
-          <Switch>
-            <Route path="/dashboard">
-              {!isMobile && <HeaderTitle>Dashboard</HeaderTitle>}
-            </Route>
-            <Route path="/arrangements">
-              {!isMobile && <HeaderTitle>Arrangements</HeaderTitle>}
-            </Route>
-            <Route path="/referrals">
-              {!isMobile && <HeaderTitle>Referrals</HeaderTitle>}
-            </Route>
-            <Route path="/volunteers">
-              <Switch>
-                <Route path={"/volunteers/family/:familyId"}>
-                  <VolunteerFamilyHeader />
-                </Route>
-                <Route>
-                  {!isMobile && <HeaderTitle>Volunteers</HeaderTitle>}
-                  <ButtonGroup variant="text" color="inherit" aria-label="text inherit button group" className={classes.toggleGroup}>
-                    <Button color={location.pathname === "/volunteers/approval" ? 'default' : 'inherit'} component={Link} to={"/volunteers/approval"}>Approvals</Button>
-                    {/* <Button color={location.pathname === "/volunteers/applications" ? 'default' : 'inherit'} component={Link} to={"/volunteers/applications"}>Applications</Button> */}
-                    <Button color={location.pathname === "/volunteers/progress" ? 'default' : 'inherit'} component={Link} to={"/volunteers/progress"}>Progress</Button>
-                  </ButtonGroup>
-                </Route>
-              </Switch>
-            </Route>
-          </Switch>
-        </React.Suspense>
+        <HeaderContext.Consumer>
+          {headerContainer => <div ref={headerContainer} className={classes.appBarPortal} />}
+        </HeaderContext.Consumer>
       </Toolbar>
     </AppBar>
   );
