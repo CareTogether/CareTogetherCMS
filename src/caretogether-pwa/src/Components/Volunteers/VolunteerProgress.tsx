@@ -80,7 +80,7 @@ function VolunteerProgress() {
         </ButtonGroup>
         <FormControlLabel
           control={<Switch checked={expandedView} onChange={(e) => setExpandedView(e.target.checked)} name="expandedView" />}
-          label="Expand"
+          label={isMobile ? "" : "Expand"}
         />
         <SearchBar value={filterText} onChange={setFilterText} />
       </HeaderContent>
