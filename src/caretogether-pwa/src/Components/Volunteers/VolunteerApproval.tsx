@@ -1,5 +1,5 @@
 import { makeStyles } from '@material-ui/core/styles';
-import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, useMediaQuery, useTheme, Button, ButtonGroup } from '@material-ui/core';
+import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, useMediaQuery, useTheme, Button, ButtonGroup, FormControlLabel, Switch } from '@material-ui/core';
 import { Gender, ExactAge, AgeInYears, RoleVersionApproval, CombinedFamilyInfo, RemovedRole, RoleRemovalReason } from '../../GeneratedClient';
 import { differenceInYears } from 'date-fns';
 import { useRecoilValue } from 'recoil';
@@ -43,6 +43,20 @@ const useStyles = makeStyles((theme) => ({
     bottom: '70px'
   }
 }));
+
+interface CombinedApprovalStatusProps {
+  summary: {Prospective:number,Approved:number,Onboarded:number}
+}
+function CombinedApprovalStatus(props: CombinedApprovalStatusProps) {
+  const { summary } = props;
+  const outputs = [];
+  summary.Onboarded && outputs.push(`${summary.Onboarded} onboarded`);
+  summary.Approved && outputs.push(`${summary.Approved} approved`);
+  summary.Prospective && outputs.push(`${summary.Prospective} prospective`);
+  return (
+    <span>{outputs.join(", ")}</span>
+  );
+}
 
 function approvalStatus(roleVersionApprovals: RoleVersionApproval[] | undefined, roleRemoval: RemovedRole | undefined) {
   return typeof roleRemoval !== 'undefined'
@@ -94,14 +108,20 @@ function VolunteerApproval() {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const location = useLocation();
 
+  const [expandedView, setExpandedView] = useState(true);
+
   return (
     <Grid container spacing={3}>
       <HeaderContent>
         {!isMobile && <HeaderTitle>Volunteers</HeaderTitle>}
         <ButtonGroup variant="text" color="inherit" aria-label="text inherit button group" style={{flexGrow: 1}}>
-          <Button color={location.pathname === "/volunteers/approval" ? 'default' : 'inherit'} component={Link} to={"/volunteers/approval"}>Approvals</Button>
-          <Button color={location.pathname === "/volunteers/progress" ? 'default' : 'inherit'} component={Link} to={"/volunteers/progress"}>Progress</Button>
+          <Button color={location.pathname === "/volunteers/approval" ? 'secondary' : 'inherit'} component={Link} to={"/volunteers/approval"}>Approvals</Button>
+          <Button color={location.pathname === "/volunteers/progress" ? 'secondary' : 'inherit'} component={Link} to={"/volunteers/progress"}>Progress</Button>
         </ButtonGroup>
+        <FormControlLabel
+          control={<Switch checked={expandedView} onChange={(e) => setExpandedView(e.target.checked)} name="expandedView" />}
+          label="Expand"
+        />
         <SearchBar value={filterText} onChange={setFilterText} />
       </HeaderContent>
       <Grid item xs={12}>
@@ -109,10 +129,14 @@ function VolunteerApproval() {
           <Table className={classes.table} size="small">
             <TableHead>
               <TableRow>
-                <TableCell>First Name</TableCell>
-                <TableCell>Last Name</TableCell>
-                <TableCell>Gender</TableCell>
-                <TableCell>Age</TableCell>
+                {expandedView
+                ? <>
+                    <TableCell>First Name</TableCell>
+                    <TableCell>Last Name</TableCell>
+                    <TableCell>Gender</TableCell>
+                    <TableCell>Age</TableCell>
+                  </>
+                : <TableCell>Family</TableCell>}
                 { volunteerFamilyRoleNames.map(roleName =>
                   (<TableCell key={roleName}>{roleName}</TableCell>))}
                 { volunteerRoleNames.map(roleName =>
@@ -123,15 +147,36 @@ function VolunteerApproval() {
               {filteredVolunteerFamilies.map((volunteerFamily) => (
                 <React.Fragment key={volunteerFamily.family?.id}>
                   <TableRow className={classes.familyRow} onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}>
-                    <TableCell key="1" colSpan={4}>{familyLastName(volunteerFamily) + " Family"
+                    <TableCell key="1" colSpan={expandedView ? 4 : 1}>{familyLastName(volunteerFamily) + " Family"
                     }</TableCell>
                     { volunteerFamilyRoleNames.map(roleName =>
                       (<TableCell key={roleName}>{
                         approvalStatus(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals?.[roleName], volunteerFamily.volunteerFamilyInfo?.removedRoles?.find(x => x.roleName === roleName))
                       }</TableCell>))}
-                    <TableCell colSpan={volunteerRoleNames.length} />
+                    { expandedView
+                      ? <TableCell colSpan={volunteerRoleNames.length} />
+                      : volunteerRoleNames.map(roleName =>
+                        (<TableCell key={roleName}>
+                          <CombinedApprovalStatus summary={
+                            ((volunteerFamily.volunteerFamilyInfo?.individualVolunteers &&
+                            Object.entries(volunteerFamily.volunteerFamilyInfo?.individualVolunteers).map(x => x[1]).flatMap(x =>
+                              (x.individualRoleApprovals && Object.entries(x.individualRoleApprovals).map(([role, approvals]) =>
+                                x.removedRoles?.some(r => r.roleName === role)
+                                ? { Prospective: 0, Approved: 0, Onboarded: 0 }
+                                : approvals.some(x => role === roleName && x.approvalStatus === RoleApprovalStatus.Onboarded)
+                                ? { Prospective: 0, Approved: 0, Onboarded: 1 }
+                                : approvals.some(x => role === roleName && x.approvalStatus === RoleApprovalStatus.Approved)
+                                ? { Prospective: 0, Approved: 1, Onboarded: 0 }
+                                : approvals.some(x => role === roleName && x.approvalStatus === RoleApprovalStatus.Prospective)
+                                ? { Prospective: 1, Approved: 0, Onboarded: 0 }
+                                : { Prospective: 0, Approved: 0, Onboarded: 0 })) || [])) || []).reduce((sum, x) =>
+                                  ({ Prospective: sum!.Prospective + x!.Prospective,
+                                    Approved: sum!.Approved + x!.Approved,
+                                    Onboarded: sum!.Onboarded + x!.Onboarded }),
+                                  { Prospective: 0, Approved: 0, Onboarded: 0 })} />
+                        </TableCell>))}
                   </TableRow>
-                  {volunteerFamily.family?.adults?.map(adult => adult.item1 && adult.item1.active && (
+                  {expandedView && volunteerFamily.family?.adults?.map(adult => adult.item1 && adult.item1.active && (
                     <TableRow key={volunteerFamily.family?.id + ":" + adult.item1.id}
                       onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}
                       className={classes.adultRow}>
@@ -153,7 +198,7 @@ function VolunteerApproval() {
                         }</TableCell>))}
                     </TableRow>
                   ))}
-                  {volunteerFamily.family?.children?.map(child => child.active && (
+                  {expandedView && volunteerFamily.family?.children?.map(child => child.active && (
                     <TableRow key={volunteerFamily.family?.id + ":" + child.id}
                       onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}
                       className={classes.childRow}>
