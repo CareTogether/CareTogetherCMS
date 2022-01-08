@@ -17,6 +17,7 @@ import Header from './Components/Header';
 import { Dashboard } from './Components/Dashboard';
 import Footer from './Components/Footer';
 import { CurrentFeatureFlags } from './GeneratedClient';
+import { HeaderContext } from './Components/HeaderContext';
 
 const copyrightStyles = makeStyles((theme) => ({
   copyright: {
@@ -125,59 +126,63 @@ function App() {
 
   const featureFlags = useFeatureFlags();
 
+  const headerContainer = React.useRef(null);
+
   return (
     <div className={classes.root}>
       <CssBaseline />
-      <Router>
-        <Header open={open} handleDrawerOpen={handleDrawerOpen} />
-        {isMobile ? null :
-          <Drawer
-            variant="permanent"
-            classes={{
-              paper: clsx(classes.drawerPaper, !open && classes.drawerPaperClose),
-            }}
-            open={open}
-          >
-            <div className={classes.drawerHeader}>
-              {isMobile ? null : <header>
-                <p className={classes.drawerHeaderOrganization}>{organizationName}</p>
-                <p className={classes.drawerHeaderLocation}>{locationName}</p>
-              </header>}
-              <IconButton onClick={handleDrawerClose}>
-                <ChevronLeftIcon />
-              </IconButton>
-            </div>
-            <Divider />
-            {mainListItems(featureFlags)}
-            <Divider />
-            {secondaryListItems(featureFlags)}
-            <Divider />
-            {open && <Copyright />}
-          </Drawer>}
-        <main className={isMobile ? classes.mobileContent : classes.content}>
-          <div className={classes.appBarSpacer} />
-          <React.Suspense fallback={<div>Loading...</div>}>
-            <Switch>
-              <Route path="/dashboard">
-                <Dashboard />
-              </Route>
-              <Route path="/arrangements">
-                <Arrangements />
-              </Route>
-              <Route path="/referrals">
-                <Referrals />
-              </Route>
-              <Route path="/volunteers">
-                <Volunteers />
-              </Route>
-              <Route>
-                <Redirect to="/volunteers" />
-              </Route>
-            </Switch>
-          </React.Suspense>
-        </main>
-        {isMobile && <Footer></Footer>}
-      </Router>
+      <HeaderContext.Provider value={headerContainer}>
+        <Router>
+          <Header open={open} handleDrawerOpen={handleDrawerOpen} />
+          {isMobile ? null :
+            <Drawer
+              variant="permanent"
+              classes={{
+                paper: clsx(classes.drawerPaper, !open && classes.drawerPaperClose),
+              }}
+              open={open}
+            >
+              <div className={classes.drawerHeader}>
+                {isMobile ? null : <header>
+                  <p className={classes.drawerHeaderOrganization}>{organizationName}</p>
+                  <p className={classes.drawerHeaderLocation}>{locationName}</p>
+                </header>}
+                <IconButton onClick={handleDrawerClose}>
+                  <ChevronLeftIcon />
+                </IconButton>
+              </div>
+              <Divider />
+              {mainListItems(featureFlags)}
+              <Divider />
+              {secondaryListItems(featureFlags)}
+              <Divider />
+              {open && <Copyright />}
+            </Drawer>}
+          <main className={isMobile ? classes.mobileContent : classes.content}>
+            <div className={classes.appBarSpacer} />
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <Switch>
+                <Route path="/dashboard">
+                  <Dashboard />
+                </Route>
+                <Route path="/arrangements">
+                  <Arrangements />
+                </Route>
+                <Route path="/referrals">
+                  <Referrals />
+                </Route>
+                <Route path="/volunteers">
+                  <Volunteers />
+                </Route>
+                <Route>
+                  <Redirect to="/volunteers" />
+                </Route>
+              </Switch>
+            </React.Suspense>
+          </main>
+          {isMobile && <Footer></Footer>}
+        </Router>
+      </HeaderContext.Provider>
     </div>
   );
 }

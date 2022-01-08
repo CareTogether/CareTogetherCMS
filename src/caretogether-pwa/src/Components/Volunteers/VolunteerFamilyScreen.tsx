@@ -25,6 +25,9 @@ import { FamilyDocuments } from '../Families/FamilyDocuments';
 import { MarkVolunteerFamilyStepIncompleteDialog } from './MarkVolunteerFamilyStepIncompleteDialog';
 import { ExemptVolunteerFamilyRequirementDialog } from './ExemptVolunteerFamilyRequirementDialog';
 import { UnexemptVolunteerFamilyRequirementDialog } from './UnexemptVolunteerFamilyRequirementDialog';
+import { HeaderContent, HeaderTitle } from '../Header';
+import { useHistory } from 'react-router-dom';
+import { ArrowBack } from '@material-ui/icons';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -127,9 +130,20 @@ export function VolunteerFamilyScreen() {
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
+  
+  const history = useHistory();
 
   return (
   <Container>
+    <HeaderContent>
+      <HeaderTitle>
+        <IconButton color="inherit" onClick={() => history.goBack()}>
+          <ArrowBack />
+        </IconButton>
+        &nbsp;
+        {volunteerFamily?.family?.adults!.filter(adult => adult.item1!.id === volunteerFamily!.family!.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family
+      </HeaderTitle>
+    </HeaderContent>
     <Toolbar variant="dense" disableGutters={true}>
       <Button aria-controls="family-record-menu" aria-haspopup="true"
         variant="contained" color="default" size="small" className={classes.button}

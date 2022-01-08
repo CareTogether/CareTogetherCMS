@@ -1,5 +1,5 @@
 import { makeStyles } from '@material-ui/core/styles';
-import { Fab, Grid, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@material-ui/core';
+import { Fab, Grid, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, useMediaQuery, useTheme } from '@material-ui/core';
 import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { format } from 'date-fns';
@@ -10,6 +10,7 @@ import { useHistory } from 'react-router-dom';
 import { FamilyName } from '../Families/FamilyName';
 import { ArrangementCard } from './ArrangementCard';
 import { CreatePartneringFamilyDialog } from './CreatePartneringFamilyDialog';
+import { HeaderContent, HeaderTitle } from '../Header';
 
 export const useStyles = makeStyles((theme) => ({
   paper: {
@@ -56,8 +57,14 @@ function PartneringFamilies() {
   }
   const [createPartneringFamilyDialogOpen, setCreatePartneringFamilyDialogOpen] = useState(false);
 
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   return (
     <Grid container spacing={3}>
+      <HeaderContent>
+        {!isMobile && <HeaderTitle>Referrals</HeaderTitle>}
+      </HeaderContent>
       <Grid item xs={12}>
         <TableContainer component={Paper}>
           <Table className={classes.table} size="small">
