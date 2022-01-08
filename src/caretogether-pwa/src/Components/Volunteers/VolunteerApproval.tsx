@@ -11,6 +11,7 @@ import AddIcon from '@material-ui/icons/Add';
 import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';
 import { Link, useHistory, useLocation } from 'react-router-dom';
 import { HeaderContent, HeaderTitle } from '../Header';
+import { SearchBar } from '../SearchBar';
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -70,6 +71,11 @@ function VolunteerApproval() {
     familyLastName(a) < familyLastName(b) ? -1 : familyLastName(a) > familyLastName(b) ? 1 : 0);
   const policy = useRecoilValue(policyData);
 
+  const [filterText, setFilterText] = useState("");
+  const filteredVolunteerFamilies = volunteerFamilies.filter(family => filterText.length === 0 ||
+    family.family?.adults?.some(adult => `${adult.item1?.firstName} ${adult.item1?.lastName}`.toLowerCase().includes(filterText)) ||
+    family.family?.children?.some(child => `${child?.firstName} ${child?.lastName}`.toLowerCase().includes(filterText)));
+
   const volunteerFamilyRoleNames =
     (policy.volunteerPolicy?.volunteerFamilyRoles &&
     Object.entries(policy.volunteerPolicy?.volunteerFamilyRoles).map(([key]) => key))
@@ -96,6 +102,7 @@ function VolunteerApproval() {
           <Button color={location.pathname === "/volunteers/approval" ? 'default' : 'inherit'} component={Link} to={"/volunteers/approval"}>Approvals</Button>
           <Button color={location.pathname === "/volunteers/progress" ? 'default' : 'inherit'} component={Link} to={"/volunteers/progress"}>Progress</Button>
         </ButtonGroup>
+        <SearchBar value={filterText} onChange={setFilterText} />
       </HeaderContent>
       <Grid item xs={12}>
         <TableContainer component={Paper}>
@@ -113,7 +120,7 @@ function VolunteerApproval() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {volunteerFamilies.map((volunteerFamily) => (
+              {filteredVolunteerFamilies.map((volunteerFamily) => (
                 <React.Fragment key={volunteerFamily.family?.id}>
                   <TableRow className={classes.familyRow} onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}>
                     <TableCell key="1" colSpan={4}>{familyLastName(volunteerFamily) + " Family"
