@@ -3,12 +3,19 @@ import clsx from 'clsx';
 import { AppBar, Toolbar, IconButton, Typography, useMediaQuery, useTheme, Button, ButtonGroup } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 import MenuIcon from '@material-ui/icons/Menu';
-import { Link, useLocation, useRouteMatch, useHistory } from 'react-router-dom';
+import { Link, useLocation, useRouteMatch, useHistory, Route, Switch } from 'react-router-dom';
 import { ArrowBack } from '@material-ui/icons';
 import { useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../Model/VolunteersModel';
 
 const drawerWidth = 200;
+
+type HeaderTitleProps = {}
+export const HeaderTitle: React.FC<HeaderTitleProps> = ({ children }) => (
+  <Typography component="h1" variant="h6" color="inherit" noWrap style={{flexGrow: 1}}>
+    {children}
+  </Typography>
+);
 
 const useStyles = makeStyles((theme) => ({
   appBar: {
@@ -41,9 +48,6 @@ const useStyles = makeStyles((theme) => ({
   backButton: {
     margin: theme.spacing(1),
   },
-  title: {
-    flexGrow: 1,
-  },
   toggleGroup: {
     flexGrow: 1
   }
@@ -61,12 +65,6 @@ function Header(props: HeaderProps) {
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const dashboardMatch = useRouteMatch({
-    path: '/dashboard',
-  })
-  const referralsMatch = useRouteMatch({
-    path: '/referrals',
-  })
   const volunteerListMatch = useRouteMatch({
     path: '/volunteers/:slug',
     strict: true,
@@ -94,25 +92,36 @@ function Header(props: HeaderProps) {
         >
           <MenuIcon />
         </IconButton>}
-        {!isMobile && !volunteerFamilyMatch && <Typography component="h1" variant="h6" color="inherit" noWrap className={classes.title}>
-          {dashboardMatch && "Dashboard"}
-          {referralsMatch && "Referrals"}
-          {!volunteerFamilyMatch && volunteerListMatch && "Volunteers"}
-        </Typography>}
-        {volunteerFamilyMatch && <Typography component="h1" variant="h6" color="inherit" noWrap className={classes.title}>
-          <IconButton
-            color="inherit"
-            onClick={() => history.goBack()}
-          >
-            <ArrowBack />
-          </IconButton>&nbsp;
-          {volunteerFamily?.family?.adults!.filter(adult => adult.item1!.id === volunteerFamily!.family!.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family
-        </Typography>}
-        {!volunteerFamilyMatch && volunteerListMatch && <ButtonGroup variant="text" color="inherit" aria-label="text inherit button group" className={classes.toggleGroup}>
-          <Button color={location.pathname === "/volunteers/approval" ? 'default' : 'inherit'} component={Link} to={"/volunteers/approval"}>Approvals</Button>
-          {/* <Button color={location.pathname === "/volunteers/applications" ? 'default' : 'inherit'} component={Link} to={"/volunteers/applications"}>Applications</Button> */}
-          <Button color={location.pathname === "/volunteers/progress" ? 'default' : 'inherit'} component={Link} to={"/volunteers/progress"}>Progress</Button>
-        </ButtonGroup>}
+        <React.Suspense fallback={null}>
+          <Switch>
+            <Route path="/dashboard">
+              {!isMobile && <HeaderTitle>Dashboard</HeaderTitle>}
+            </Route>
+            <Route path="/arrangements">
+              {!isMobile && <HeaderTitle>Arrangements</HeaderTitle>}
+            </Route>
+            <Route path="/referrals">
+              {!isMobile && <HeaderTitle>Referrals</HeaderTitle>}
+            </Route>
+            <Route path="/volunteers">
+              {!isMobile && !volunteerFamilyMatch && volunteerListMatch && <HeaderTitle>Volunteers</HeaderTitle>}
+              {volunteerFamilyMatch && <HeaderTitle>
+                <IconButton
+                  color="inherit"
+                  onClick={() => history.goBack()}
+                >
+                  <ArrowBack />
+                </IconButton>&nbsp;
+                {volunteerFamily?.family?.adults!.filter(adult => adult.item1!.id === volunteerFamily!.family!.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family
+              </HeaderTitle>}
+              {!volunteerFamilyMatch && volunteerListMatch && <ButtonGroup variant="text" color="inherit" aria-label="text inherit button group" className={classes.toggleGroup}>
+                <Button color={location.pathname === "/volunteers/approval" ? 'default' : 'inherit'} component={Link} to={"/volunteers/approval"}>Approvals</Button>
+                {/* <Button color={location.pathname === "/volunteers/applications" ? 'default' : 'inherit'} component={Link} to={"/volunteers/applications"}>Applications</Button> */}
+                <Button color={location.pathname === "/volunteers/progress" ? 'default' : 'inherit'} component={Link} to={"/volunteers/progress"}>Progress</Button>
+              </ButtonGroup>}
+            </Route>
+          </Switch>
+        </React.Suspense>
       </Toolbar>
     </AppBar>
   );
