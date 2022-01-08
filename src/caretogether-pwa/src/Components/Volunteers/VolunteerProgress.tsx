@@ -10,6 +10,7 @@ import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';
 import { CombinedFamilyInfo } from '../../GeneratedClient';
 import { HeaderContent, HeaderTitle } from '../Header';
 import { SearchBar } from '../SearchBar';
+import { useLocalStorage } from '../../useLocalStorage';
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -67,7 +68,7 @@ function VolunteerProgress() {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const location = useLocation();
   
-  const [expandedView, setExpandedView] = useState(true);
+  const [expandedView, setExpandedView] = useLocalStorage('volunteer-progress-expanded', true);
 
   return (
     <Grid container spacing={3}>

@@ -12,6 +12,7 @@ import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';
 import { Link, useHistory, useLocation } from 'react-router-dom';
 import { HeaderContent, HeaderTitle } from '../Header';
 import { SearchBar } from '../SearchBar';
+import { useLocalStorage } from '../../useLocalStorage';
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -108,7 +109,7 @@ function VolunteerApproval() {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const location = useLocation();
 
-  const [expandedView, setExpandedView] = useState(true);
+  const [expandedView, setExpandedView] = useLocalStorage('volunteer-approval-expanded', true);
 
   return (
     <Grid container spacing={3}>
