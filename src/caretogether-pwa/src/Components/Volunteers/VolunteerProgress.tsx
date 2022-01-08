@@ -1,5 +1,5 @@
 import { makeStyles } from '@material-ui/core/styles';
-import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, Button, ButtonGroup, useMediaQuery, useTheme } from '@material-ui/core';
+import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, Button, ButtonGroup, useMediaQuery, useTheme, FormControlLabel, Switch } from '@material-ui/core';
 import { useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../../Model/VolunteersModel';
 import { allApprovalAndOnboardingRequirementsData } from '../../Model/ConfigurationModel';
@@ -67,14 +67,20 @@ function VolunteerProgress() {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const location = useLocation();
   
+  const [expandedView, setExpandedView] = useState(true);
+
   return (
     <Grid container spacing={3}>
       <HeaderContent>
         {!isMobile && <HeaderTitle>Volunteers</HeaderTitle>}
         <ButtonGroup variant="text" color="inherit" aria-label="text inherit button group" style={{flexGrow: 1}}>
-          <Button color={location.pathname === "/volunteers/approval" ? 'default' : 'inherit'} component={Link} to={"/volunteers/approval"}>Approvals</Button>
-          <Button color={location.pathname === "/volunteers/progress" ? 'default' : 'inherit'} component={Link} to={"/volunteers/progress"}>Progress</Button>
+          <Button color={location.pathname === "/volunteers/approval" ? 'secondary' : 'inherit'} component={Link} to={"/volunteers/approval"}>Approvals</Button>
+          <Button color={location.pathname === "/volunteers/progress" ? 'secondary' : 'inherit'} component={Link} to={"/volunteers/progress"}>Progress</Button>
         </ButtonGroup>
+        <FormControlLabel
+          control={<Switch checked={expandedView} onChange={(e) => setExpandedView(e.target.checked)} name="expandedView" />}
+          label="Expand"
+        />
         <SearchBar value={filterText} onChange={setFilterText} />
       </HeaderContent>
       <Grid item xs={12}>
@@ -82,8 +88,12 @@ function VolunteerProgress() {
           <Table className={classes.table} size="small">
             <TableHead>
               <TableRow>
-                <TableCell>First Name</TableCell>
-                <TableCell>Last Name</TableCell>
+                {expandedView
+                ? <>
+                    <TableCell>First Name</TableCell>
+                    <TableCell>Last Name</TableCell>
+                  </>
+                : <TableCell>Family</TableCell>}
                 {allApprovalAndOnboardingRequirements.map(actionName =>
                   (<TableCell key={actionName}>{actionName}</TableCell>))}
               </TableRow>
@@ -92,17 +102,31 @@ function VolunteerProgress() {
               {filteredVolunteerFamilies.map(volunteerFamily => (
                 <React.Fragment key={volunteerFamily.family!.id!}>
                   <TableRow className={classes.familyRow} onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}>
-                    <TableCell key="1" colSpan={2}>{familyLastName(volunteerFamily) + " Family"
+                    <TableCell key="1" colSpan={expandedView ? 2 : 1}>{familyLastName(volunteerFamily) + " Family"
                     }</TableCell>
                     {allApprovalAndOnboardingRequirements.map(actionName =>
                       (<TableCell key={actionName}>{
-                        volunteerFamily.volunteerFamilyInfo?.completedRequirements?.some(x => x.requirementName === actionName)
-                        ? "✅"
-                        : volunteerFamily.volunteerFamilyInfo?.missingRequirements?.some(x => x === actionName)
-                        ? "❌"
-                        : ""}</TableCell>))}
+                        expandedView
+                        ? (volunteerFamily.volunteerFamilyInfo?.missingRequirements?.some(x => x === actionName)
+                          ? "❌"
+                          : volunteerFamily.volunteerFamilyInfo?.completedRequirements?.some(x => x.requirementName === actionName)
+                          ? "✅"
+                          : "")
+                        : (
+                          (volunteerFamily.volunteerFamilyInfo?.missingRequirements?.some(x => x === actionName) ||
+                            (volunteerFamily.volunteerFamilyInfo?.individualVolunteers &&
+                            Object.entries(volunteerFamily.volunteerFamilyInfo?.individualVolunteers).map(y => y[1]).some(y =>
+                              y.missingRequirements?.some(x => x === actionName))))
+                          ? "❌"
+                          : (volunteerFamily.volunteerFamilyInfo?.completedRequirements?.some(x => x.requirementName === actionName) ||
+                              (volunteerFamily.volunteerFamilyInfo?.individualVolunteers &&
+                              Object.entries(volunteerFamily.volunteerFamilyInfo?.individualVolunteers).map(y => y[1]).some(y =>
+                                y.completedRequirements?.some(x => x.requirementName === actionName))))
+                          ? "✅"
+                          : "")
+                        }</TableCell>))}
                   </TableRow>
-                  {volunteerFamily.family!.adults!.map(adult => adult.item1 && adult.item1.active && (
+                  {expandedView && volunteerFamily.family!.adults!.map(adult => adult.item1 && adult.item1.active && (
                     <TableRow key={adult.item1.id}
                       onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}
                       className={classes.adultRow}>
@@ -110,10 +134,10 @@ function VolunteerProgress() {
                       <TableCell>{adult.item1.lastName}</TableCell>
                       {allApprovalAndOnboardingRequirements.map(actionName =>
                         (<TableCell key={actionName}>{
-                          volunteerFamily.volunteerFamilyInfo?.individualVolunteers![adult.item1!.id!]!.completedRequirements?.some(x => x.requirementName === actionName)
-                          ? "✅"
-                          : volunteerFamily.volunteerFamilyInfo?.individualVolunteers![adult.item1!.id!]!.missingRequirements?.some(x => x === actionName)
+                          volunteerFamily.volunteerFamilyInfo?.individualVolunteers![adult.item1!.id!]!.missingRequirements?.some(x => x === actionName)
                           ? "❌"
+                          : volunteerFamily.volunteerFamilyInfo?.individualVolunteers![adult.item1!.id!]!.completedRequirements?.some(x => x.requirementName === actionName)
+                          ? "✅"
                           : ""}</TableCell>))}
                     </TableRow>
                   ))}
