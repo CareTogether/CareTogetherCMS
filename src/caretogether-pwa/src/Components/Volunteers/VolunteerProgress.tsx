@@ -45,6 +45,14 @@ function familyLastName(family: CombinedFamilyInfo) {
   return family.family!.adults?.filter(adult => family.family!.primaryFamilyContactPersonId === adult.item1?.id)[0]?.item1?.lastName || "";
 }
 
+function simplify(input: string) {
+  // Strip out common punctuation elements and excessive whitespace, and convert to lowercase
+  return input
+    .replace(/[.,/#!$%^&*;:{}=\-_`'"'‘’‚‛“”„‟′‵″‶`´~()]/g,"")
+    .replace(/\s{2,}/g," ")
+    .toLowerCase();
+}
+
 function VolunteerProgress() {
   const classes = useStyles();
   const history = useHistory();
@@ -56,8 +64,8 @@ function VolunteerProgress() {
 
   const [filterText, setFilterText] = useState("");
   const filteredVolunteerFamilies = volunteerFamilies.filter(family => filterText.length === 0 ||
-    family.family?.adults?.some(adult => `${adult.item1?.firstName} ${adult.item1?.lastName}`.toLowerCase().includes(filterText)) ||
-    family.family?.children?.some(child => `${child?.firstName} ${child?.lastName}`.toLowerCase().includes(filterText)));
+    family.family?.adults?.some(adult => simplify(`${adult.item1?.firstName} ${adult.item1?.lastName}`).includes(filterText)) ||
+    family.family?.children?.some(child => simplify(`${child?.firstName} ${child?.lastName}`).includes(filterText)));
 
   function openVolunteerFamily(volunteerFamilyId: string) {
     history.push(`/volunteers/family/${volunteerFamilyId}`);
