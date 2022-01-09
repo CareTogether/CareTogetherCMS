@@ -33,7 +33,7 @@ jobs:
       run: npm install -g azurite
     - name: Start Azurite blob endpoint
       shell: bash
-      run: azurite-blob &
+      run: azurite-blob --loose &
     - name: Restore .NET dependencies
       run: dotnet restore
     - name: Build .NET solution
