@@ -40,8 +40,13 @@ namespace CareTogether.Resources.Storage
             var objectStream = await objectBlob.DownloadStreamingAsync();
             var objectText = new StreamReader(objectStream.Value.Content).ReadToEnd();
             var objectValue = JsonConvert.DeserializeObject<T>(objectText);
-
-            return objectValue;
+            
+            return objectValue == null
+                ? throw new InvalidOperationException(
+                    $"Unexpected null object deserialized in organization {organizationId}, location {locationId}, " +
+                    $"object type {objectType}, object ID '{objectId}', blob '{objectBlob.Name}'. " +
+                    $"Expected type: {typeof(T).FullName}")
+                : objectValue;
         }
 
         public async Task UpsertAsync(Guid organizationId, Guid locationId, string objectId, T value)

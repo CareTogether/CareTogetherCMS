@@ -108,7 +108,12 @@ namespace CareTogether.Resources.Storage
 
                         var item = JsonConvert.DeserializeObject<T>(line);
 
-                        yield return (item, eventSequenceNumber);
+                        yield return item == null
+                            ? throw new InvalidOperationException(
+                                $"Unexpected null object deserialized in organization {organizationId}, location {locationId}, " +
+                                $"log type {_logType}, blob '{blob.Name}', event sequence # {eventSequenceNumber}. " +
+                                $"Expected type: {typeof(T).FullName}")
+                            : (item, eventSequenceNumber);
                     }
                 }
             }
