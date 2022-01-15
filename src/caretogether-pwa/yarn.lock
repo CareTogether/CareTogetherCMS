@@ -85,7 +85,7 @@
   dependencies:
     tslib "^2.2.0"
 
-"@azure/msal-browser@^2.15.0":
+"@azure/msal-browser@^2.21.0":
   version "2.21.0"
   resolved "https://registry.yarnpkg.com/@azure/msal-browser/-/msal-browser-2.21.0.tgz#2ebe4b0874a61d64009419d4cfef1f6bb5e226b3"
   integrity sha512-y+oAUJJ0m7gRUT505iGT4SDXktrRzOE3HZC0+nQyHDI+3O7BKK5NjQUwD/4V8FNNyrhxEtLk99iwJEo61epinQ==
@@ -99,12 +99,12 @@
   dependencies:
     debug "^4.1.1"
 
-"@azure/msal-react@^1.0.1":
+"@azure/msal-react@^1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@azure/msal-react/-/msal-react-1.2.0.tgz#94c7b109e970ef210fd6db7f375f9e806d558fe8"
   integrity sha512-4mOldymo7sLwrflwR04cojTx7X2HlS/h3tu4VKZaUV4Les91UG0V5CWtjWGDQnZCCW/EiJ0o3lYZsYKgSRoAKA==
 
-"@azure/storage-blob@^12.7.0":
+"@azure/storage-blob@^12.8.0":
   version "12.8.0"
   resolved "https://registry.yarnpkg.com/@azure/storage-blob/-/storage-blob-12.8.0.tgz#97b7ecc6c7b17bcbaf0281c79c16af6f512d6130"
   integrity sha512-c8+Wz19xauW0bGkTCoqZH4dYfbtBniPiGiRQOn1ca6G5jsjr4azwaTk9gwjVY8r3vY2Taf95eivLzipfIfiS4A==
@@ -1403,7 +1403,7 @@
     "@types/yargs" "^16.0.0"
     chalk "^4.0.0"
 
-"@material-ui/core@^4.11.4":
+"@material-ui/core@^4.12.3":
   version "4.12.3"
   resolved "https://registry.yarnpkg.com/@material-ui/core/-/core-4.12.3.tgz#80d665caf0f1f034e52355c5450c0e38b099d3ca"
   integrity sha512-sdpgI/PL56QVsEJldwEe4FFaFTLUqN+rd7sSZiRCdx2E/C7z5yK0y/khAWVBH24tXwto7I1hCzNWfJGZIYJKnw==
@@ -1543,7 +1543,7 @@
     "@microsoft/applicationinsights-shims" "2.0.0"
     "@microsoft/dynamicproto-js" "^1.1.4"
 
-"@microsoft/applicationinsights-react-js@^3.1.2":
+"@microsoft/applicationinsights-react-js@^3.2.2":
   version "3.2.2"
   resolved "https://registry.yarnpkg.com/@microsoft/applicationinsights-react-js/-/applicationinsights-react-js-3.2.2.tgz#21abbcaca334016af901d227bd164221ee054405"
   integrity sha512-m6ehv3dp6R0onWiO1EZKlhkpJxGlAuTAflTY9mOQYPXRhT1zDWoCxVEI4MzClseyC5jlW6sLkbT+3FQltNi8Dg==
@@ -1558,7 +1558,7 @@
   resolved "https://registry.yarnpkg.com/@microsoft/applicationinsights-shims/-/applicationinsights-shims-2.0.0.tgz#ee622588f14e58ae3c055b12431da8ed55d71991"
   integrity sha512-OaKew7f7acuNFgKYjMSPrRTRQi93xUyONWeeCeBlJSx7oRNJaL0TqbTvW6j5GHnSr3mhinPtAQ+rCQWASBnOrg==
 
-"@microsoft/applicationinsights-web@^2.6.2":
+"@microsoft/applicationinsights-web@^2.7.2":
   version "2.7.2"
   resolved "https://registry.yarnpkg.com/@microsoft/applicationinsights-web/-/applicationinsights-web-2.7.2.tgz#25baf741dfe187e127733442a937f488d2c9c976"
   integrity sha512-0tiuB38lqzARs81OV039H/x3pQFKN+llWz05TjukJ7K32x9syzx2Be6hGXbB4Q3a559s/N8ewn/82HtCVGGDOg==
@@ -7491,7 +7491,7 @@ react-refresh@^0.11.0:
   resolved "https://registry.yarnpkg.com/react-refresh/-/react-refresh-0.11.0.tgz#77198b944733f0f1f1a90e791de4541f9f074046"
   integrity sha512-F27qZr8uUqwhWZboondsPx8tnC3Ct3SxZA3V5WyEvujRyyNv0VYPhoBg1gZ8/MV5tubQp76Trw8lTv9hzRBa+A==
 
-react-router-dom@^5.2.0:
+react-router-dom@^5.3.0:
   version "5.3.0"
   resolved "https://registry.yarnpkg.com/react-router-dom/-/react-router-dom-5.3.0.tgz#da1bfb535a0e89a712a93b97dd76f47ad1f32363"
   integrity sha512-ObVBLjUZsphUUMVycibxgMdh5jJ1e3o+KpAZBVeHcNQZ4W+uUGGWsokurzlF4YOldQYRQL4y6yFRWM4m3svmuQ==
