@@ -16,7 +16,8 @@ on:
     branches: [ main ]
   pull_request:
     # The branches below must be a subset of the branches above
-    branches: [ main ]
+    # TODO: Reenable once the scan is running correctly and the scope is properly narrowed
+    # branches: [ main ]
   schedule:
     - cron: '39 3 * * 3'
 
