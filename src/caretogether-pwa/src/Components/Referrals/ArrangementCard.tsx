@@ -91,6 +91,8 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
         subheader={<>
           {arrangement.arrangementType} -&nbsp;
           {ArrangementPhase[arrangement.phase!]}
+          {arrangement.phase === ArrangementPhase.Started && (<span> -&nbsp;{format(arrangement.startedAtUtc!, "MM/dd/yyyy hh:mm aa")}</span>)}
+          {arrangement.phase === ArrangementPhase.Ended && (<span> -&nbsp;{format(arrangement.endedAtUtc!, "MM/dd/yyyy hh:mm aa")}</span>)}
         </>} />
       <CardContent className={classes.cardContent}>
         <Typography variant="body2" component="div">
@@ -126,12 +128,18 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
                 ))}
               </ul>
               <ul className={classes.cardList}>
-                {arrangement.missingRequirements?.map((missingRequirementName, i) => (
+                {arrangement.missingRequirements?.map((missingRequirement, i) => (
                   <li key={i}>
-                  <CardInfoRow icon='❌'>
-                    {missingRequirementName}
-                  </CardInfoRow>
-                </li>
+                    {missingRequirement.dueBy
+                      ? <CardInfoRow icon='📅'>
+                          {missingRequirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                          <span style={{float:'right'}}>{format(missingRequirement.dueBy, "MM/dd/yyyy hh:mm aa")}</span>
+                        </CardInfoRow>
+                      : <CardInfoRow icon='❌'>
+                          {missingRequirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                          {missingRequirement.pastDueSince && <span style={{float:'right'}}>{format(missingRequirement.pastDueSince, "MM/dd/yyyy hh:mm aa")}</span>}
+                        </CardInfoRow>}
+                  </li>
                 ))}
               </ul>
             </Typography>

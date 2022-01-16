@@ -137,10 +137,14 @@ namespace CareTogether.Engines
                     //  1. the first of the gap stages if this is the first requirement being calculated, or
                     //  2. the first of the gap stages that would end after this next requirement (self-referencing), or
                     //  3. the first of the gap stages that has no end date (i.e., the last stage).
-                    var applicableStage = gapStages.First(stage =>
+                    // TODO: An unknown issue is causing this to match no stages in some cases.
+                    //       Is it possible for 'gapStages' to have zero elements?
+                    var applicableStage = gapStages.FirstOrDefault(stage =>
                         nextDueDate == null ||
                         stage.endDate > nextDueDate + stage.incrementDelay ||
                         stage.endDate == null);
+                    if (applicableStage == default)
+                        break;
 
                     // Calculate the next requirement due date based on the applicable stage.
                     // If it falls within the current completion gap (& before the current time), it is a missing requirement.
