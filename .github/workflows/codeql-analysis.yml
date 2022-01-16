@@ -12,9 +12,9 @@
 name: "CodeQL"
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
+  # push:
+    # branches: [ main ]
+  # pull_request:
     # The branches below must be a subset of the branches above
     # TODO: Reenable once the scan is running correctly and the scope is properly narrowed
     # branches: [ main ]
