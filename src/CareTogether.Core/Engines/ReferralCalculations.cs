@@ -155,6 +155,7 @@ namespace CareTogether.Engines
                 // increment delays to apply.
                 var dueDatesInGap = new List<DateTime>();
                 var nextDueDate = null as DateTime?;
+                var endConditionExceeded = false;
                 do
                 {
                     if (nextDueDate != null)
@@ -172,8 +173,13 @@ namespace CareTogether.Engines
                     // Calculate the next requirement due date based on the applicable stage.
                     // If it falls within the current completion gap (& before the current time), it is a missing requirement.
                     nextDueDate = (nextDueDate ?? gap.start) + applicableStage.incrementDelay;
-                } while (nextDueDate < effectiveEnd);
-                //TODO: Include one more if this is the last gap and we want the next due-by date (not a missing requirement per se).
+
+                    // Include one more if this is the last gap and we want the next due-by date (not a missing requirement per se).
+                    // The end of the gap is a hard cut-off, but the current UTC date/time is a +1 cut-off (overshoot by one is needed).
+                    endConditionExceeded = gap.end != null
+                        ? nextDueDate < gap.end
+                        : nextDueDate - applicableStage.incrementDelay < utcNow;
+                } while (!endConditionExceeded);
 
                 return dueDatesInGap;
             }).ToImmutableList();
