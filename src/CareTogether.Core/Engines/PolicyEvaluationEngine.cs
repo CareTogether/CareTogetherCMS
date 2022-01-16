@@ -1,6 +1,5 @@
 using CareTogether.Resources;
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
@@ -28,7 +27,8 @@ namespace CareTogether.Engines
         {
             var policy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
 
-            return ApprovalCalculations.CalculateVolunteerFamilyApprovalStatus(policy.VolunteerPolicy, family,
+            return ApprovalCalculations.CalculateVolunteerFamilyApprovalStatus(
+                policy.VolunteerPolicy, family, DateTime.UtcNow,
                 completedFamilyRequirements, exemptedFamilyRequirements, removedFamilyRoles,
                 completedIndividualRequirements, exemptedIndividualRequirements, removedIndividualRoles);
         }
@@ -51,7 +51,8 @@ namespace CareTogether.Engines
                     ArrangementPolicy arrangementPolicy = policy.ReferralPolicy.ArrangementPolicies
                         .Single(p => p.ArrangementType == arrangement.Value.ArrangementType);
 
-                    return ReferralCalculations.CalculateArrangementStatus(arrangement.Value, arrangementPolicy);
+                    return ReferralCalculations.CalculateArrangementStatus(arrangement.Value,
+                        arrangementPolicy, DateTime.UtcNow);
                 });
 
             return new ReferralStatus(

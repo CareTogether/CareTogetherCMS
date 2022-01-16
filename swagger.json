@@ -1746,7 +1746,7 @@
           "missingRequirements": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/MissingArrangementRequirement"
             }
           },
           "individualVolunteerAssignments": {
@@ -1784,6 +1784,25 @@
           2,
           3
         ]
+      },
+      "MissingArrangementRequirement": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "actionName": {
+            "type": "string"
+          },
+          "dueBy": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "pastDueSince": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
       },
       "IndividualVolunteerAssignment": {
         "type": "object",

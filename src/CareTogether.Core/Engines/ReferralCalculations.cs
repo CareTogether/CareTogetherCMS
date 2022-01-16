@@ -26,20 +26,20 @@ namespace CareTogether.Engines
         }
 
 
-        internal static ImmutableList<string> SelectMissingRequirements(ArrangementPhase phase,
-            ImmutableList<string> missingSetupRequirements,
-            ImmutableList<string> missingMonitoringRequirements,
-            ImmutableList<string> missingCloseoutRequirements) => phase switch
+        internal static ImmutableList<MissingArrangementRequirement> SelectMissingRequirements(ArrangementPhase phase,
+            ImmutableList<MissingArrangementRequirement> missingSetupRequirements,
+            ImmutableList<MissingArrangementRequirement> missingMonitoringRequirements,
+            ImmutableList<MissingArrangementRequirement> missingCloseoutRequirements) => phase switch
             {
                 ArrangementPhase.SettingUp => missingSetupRequirements,
-                ArrangementPhase.ReadyToStart => ImmutableList<string>.Empty,
+                ArrangementPhase.ReadyToStart => ImmutableList<MissingArrangementRequirement>.Empty,
                 ArrangementPhase.Started => missingMonitoringRequirements,
                 ArrangementPhase.Ended => missingCloseoutRequirements,
                 _ => throw new NotImplementedException($"The arrangement phase '{phase}' has not been implemented.")
             };
 
         internal static ArrangementPhase CalculateArrangementPhase(ArrangementEntry arrangement,
-            ImmutableList<string> missingSetupRequirements,
+            ImmutableList<MissingArrangementRequirement> missingSetupRequirements,
             ImmutableList<VolunteerFunction> missingFunctionAssignments) =>
             missingSetupRequirements.Count > 0 || missingFunctionAssignments.Count > 0
                 ? ArrangementPhase.SettingUp
@@ -49,13 +49,14 @@ namespace CareTogether.Engines
                 ? ArrangementPhase.Started
                 : ArrangementPhase.Ended;
 
-        internal static ImmutableList<string> CalculateMissingSetupRequirements(ArrangementEntry arrangement,
+        internal static ImmutableList<MissingArrangementRequirement> CalculateMissingSetupRequirements(ArrangementEntry arrangement,
             ArrangementPolicy arrangementPolicy) =>
             arrangementPolicy.RequiredSetupActionNames.Where(requiredAction =>
                 !arrangement.CompletedRequirements.Any(completed => completed.RequirementName == requiredAction))
+                .Select(requiredAction => new MissingArrangementRequirement(requiredAction, null, null))
                 .ToImmutableList();
 
-        internal static ImmutableList<string> CalculateMissingMonitoringRequirements(ArrangementEntry arrangement,
+        internal static ImmutableList<MissingArrangementRequirement> CalculateMissingMonitoringRequirements(ArrangementEntry arrangement,
             ArrangementPolicy arrangementPolicy, DateTime utcNow) =>
             arrangementPolicy.RequiredMonitoringActionNames.SelectMany(monitoringRequirement =>
                 (arrangement.StartedAtUtc.HasValue
@@ -66,9 +67,10 @@ namespace CareTogether.Engines
                     .OrderBy(x => x).ToImmutableList(),
                     utcNow)
                 : ImmutableList<DateTime>.Empty)
-                .Select(missingDueDate => (monitoringRequirement.ActionName, DueDate: missingDueDate)))
-                .OrderBy(missingRequirement => missingRequirement.DueDate)
-                .Select(missingRequirement => missingRequirement.ActionName) //TODO: Remove this when the return type supports the date!
+                .Select(missingDueDate =>
+                    new MissingArrangementRequirement(monitoringRequirement.ActionName,
+                        DueBy: missingDueDate > utcNow ? missingDueDate : null,
+                        PastDueSince: missingDueDate <= utcNow ? missingDueDate : null)))
                 .ToImmutableList();
 
         internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementInstances(
@@ -157,10 +159,11 @@ namespace CareTogether.Engines
             return missingRequirements;
         }
 
-        internal static ImmutableList<string> CalculateMissingCloseoutRequirements(ArrangementEntry arrangement,
+        internal static ImmutableList<MissingArrangementRequirement> CalculateMissingCloseoutRequirements(ArrangementEntry arrangement,
             ArrangementPolicy arrangementPolicy) =>
             arrangementPolicy.RequiredCloseoutActionNames.Where(requiredAction =>
                 !arrangement.CompletedRequirements.Any(completed => completed.RequirementName == requiredAction))
+                .Select(requiredAction => new MissingArrangementRequirement(requiredAction, null, null))
                 .ToImmutableList();
 
         internal static ImmutableList<VolunteerFunction> CalculateMissingFunctionAssignments(ArrangementEntry arrangement,
