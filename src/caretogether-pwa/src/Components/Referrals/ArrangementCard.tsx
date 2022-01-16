@@ -152,9 +152,9 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
         open={Boolean(arrangementRecordMenuAnchor)}
         onClose={() => setArrangementRecordMenuAnchor(null)}>
         <MenuList dense={isMobile}>
-          {arrangement.missingRequirements?.map(missingRequirementName =>
-            <MenuItem key={missingRequirementName} onClick={() => selectRecordArrangementStep(missingRequirementName)}>
-              <ListItemText primary={missingRequirementName} />
+          {arrangement.missingRequirements?.map(missingRequirement =>
+            <MenuItem key={missingRequirement.actionName} onClick={() => selectRecordArrangementStep(missingRequirement.actionName!)}>
+              <ListItemText primary={missingRequirement.actionName} />
             </MenuItem>
           )}
           {arrangement.phase === ArrangementPhase.ReadyToStart && (
