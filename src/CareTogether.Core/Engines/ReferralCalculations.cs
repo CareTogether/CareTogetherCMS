@@ -55,8 +55,6 @@ namespace CareTogether.Engines
                 !arrangement.CompletedRequirements.Any(completed => completed.RequirementName == requiredAction))
                 .ToImmutableList();
 
-        //private sealed record MissingMonitoringRequirement(string ActionName, DateTime DueDate)
-
         internal static ImmutableList<string> CalculateMissingMonitoringRequirements(ArrangementEntry arrangement,
             ArrangementPolicy arrangementPolicy, DateTime utcNow) =>
             arrangementPolicy.RequiredMonitoringActionNames.SelectMany(monitoringRequirement =>
@@ -72,21 +70,6 @@ namespace CareTogether.Engines
                 .OrderBy(missingRequirement => missingRequirement.DueDate)
                 .Select(missingRequirement => missingRequirement.ActionName) //TODO: Remove this when the return type supports the date!
                 .ToImmutableList();
-
-        //internal class OrderDatesAscendingWithNullAtEnd : IComparer<DateTime?>
-        //{
-        //    public static readonly OrderDatesAscendingWithNullAtEnd Instance = new OrderDatesAscendingWithNullAtEnd();
-
-        //    public int Compare(DateTime? x, DateTime? y) => (x, y) switch
-        //    {
-        //        _ when x == y => 0,
-        //        _ when x == null => 1,
-        //        _ when y == null => -1,
-        //        _ when x > y => 1,
-        //        _ when x < y => -1,
-        //        (_, _) => throw new NotImplementedException("Unexpected date comparison condition")
-        //    };
-        //}
 
         internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementInstances(
             RecurrencePolicy recurrence, DateTime arrangementStartedAtUtc, ImmutableList<DateTime> completions, DateTime utcNow)
@@ -111,19 +94,6 @@ namespace CareTogether.Engines
                         endDate: priorStages.Count == 0
                         ? arrangementStartedAtUtc + stage.totalDuration
                         : priorStages.Last().endDate!.Value + stage.totalDuration)));
-            //var stageStartDates = new List<DateTime> { arrangementStartedAtUtc };
-
-            //// The null group represents the final stage, which won't have a max # of occurrences.
-            //var completionsByRecurrenceStage = completions
-            //    .GroupBy(completion => recurrenceStageEndDates
-            //        .Cast<DateTime?>().LastOrDefault(stageEndDate => stageEndDate > completion))
-            //    // The default comparer would put the 'null' value at the beginning.
-            //    .OrderBy(grouping => grouping.Key, OrderDatesAscendingWithNullAtEnd.Instance)
-            //    .ToImmutableList();
-
-            //var lastCompletionByRecurrenceStage = completionsByRecurrenceStage
-            //    .Select(grouping => (grouping.Key, grouping.Max()))
-            //    .ToImmutableList();
 
             // For each completion, find the time of the following completion (null in the case of the last completion).
             // This represents the set of gaps between completions in which there could be missing requirement due dates.
