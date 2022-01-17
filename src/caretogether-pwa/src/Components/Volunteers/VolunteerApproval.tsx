@@ -9,7 +9,7 @@ import { RoleApprovalStatus } from '../../GeneratedClient';
 import React, { useState } from 'react';
 import AddIcon from '@material-ui/icons/Add';
 import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';
-import { Link, useHistory, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { HeaderContent, HeaderTitle } from '../Header';
 import { SearchBar } from '../SearchBar';
 import { useLocalStorage } from '../../useLocalStorage';
@@ -87,7 +87,7 @@ function simplify(input: string) {
 
 function VolunteerApproval() {
   const classes = useStyles();
-  const history = useHistory();
+  const navigate = useNavigate();
 
   // The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData).map(x => x).sort((a, b) =>
@@ -109,7 +109,7 @@ function VolunteerApproval() {
     || [];
 
   function openVolunteerFamily(volunteerFamilyId: string) {
-    history.push(`/volunteers/family/${volunteerFamilyId}`);
+    navigate(`/volunteers/family/${volunteerFamilyId}`);
   }
   const [createVolunteerFamilyDialogOpen, setCreateVolunteerFamilyDialogOpen] = useState(false);
   
@@ -237,7 +237,7 @@ function VolunteerApproval() {
         </Fab>
         {createVolunteerFamilyDialogOpen && <CreateVolunteerFamilyDialog onClose={(volunteerFamilyId) => {
           setCreateVolunteerFamilyDialogOpen(false);
-          volunteerFamilyId && history.push(`/volunteers/family/${volunteerFamilyId}`);
+          volunteerFamilyId && navigate(`/volunteers/family/${volunteerFamilyId}`);
         }} />}
       </Grid>
     </Grid>

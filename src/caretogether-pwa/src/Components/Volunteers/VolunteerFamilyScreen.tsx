@@ -26,7 +26,7 @@ import { MarkVolunteerFamilyStepIncompleteDialog } from './MarkVolunteerFamilySt
 import { ExemptVolunteerFamilyRequirementDialog } from './ExemptVolunteerFamilyRequirementDialog';
 import { UnexemptVolunteerFamilyRequirementDialog } from './UnexemptVolunteerFamilyRequirementDialog';
 import { HeaderContent, HeaderTitle } from '../Header';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ArrowBack } from '@material-ui/icons';
 
 const useStyles = makeStyles((theme) => ({
@@ -131,13 +131,13 @@ export function VolunteerFamilyScreen() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
   
-  const history = useHistory();
+  const navigate = useNavigate();
 
   return (
   <Container>
     <HeaderContent>
       <HeaderTitle>
-        <IconButton color="inherit" onClick={() => history.goBack()}>
+        <IconButton color="inherit" onClick={() => navigate("..")}>
           <ArrowBack />
         </IconButton>
         &nbsp;
