@@ -97,17 +97,6 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void Test()
         {
             Assert.Inconclusive("Not implemented");
-            //var result = ApprovalCalculations.CalculateMissingFamilyRequirementsFromRequirementCompletion(
-            //    status: null,
-            //    Helpers.FamilyRequirementsMet(
-            //        ("A", RequirementStage.Application, VolunteerFamilyRequirementScope.OncePerFamily, true, new List<Guid>() { }),
-            //        ("B", RequirementStage.Approval, VolunteerFamilyRequirementScope.OncePerFamily, true, new List<Guid>() { }),
-            //        ("C", RequirementStage.Approval, VolunteerFamilyRequirementScope.AllAdultsInTheFamily, true, new List<Guid>() { }),
-            //        ("D", RequirementStage.Approval, VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily, true, new List<Guid>() { }),
-            //        ("E", RequirementStage.Onboarding, VolunteerFamilyRequirementScope.OncePerFamily, true, new List<Guid>() { }),
-            //        ("F", RequirementStage.Onboarding, VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily, true, new List<Guid>() { })));
-
-            //AssertEx.SequenceIs(result);
         }
     }
 }

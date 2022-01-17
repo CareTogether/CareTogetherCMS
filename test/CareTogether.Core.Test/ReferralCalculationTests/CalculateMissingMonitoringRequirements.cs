@@ -2,7 +2,6 @@
 using CareTogether.Resources;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace CareTogether.Core.Test.ReferralCalculationTests
@@ -10,31 +9,98 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
     [TestClass]
     public class CalculateMissingMonitoringRequirements
     {
-        private static Guid Id(char x) => Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
-        static readonly Guid guid0 = Id('0');
-        static readonly Guid guid1 = Id('1');
-        static readonly Guid guid2 = Id('2');
-        static readonly Guid guid3 = Id('3');
-        static readonly Guid guid4 = Id('4');
-        static readonly Guid guid5 = Id('5');
-        static readonly Guid guid6 = Id('6');
+        [TestMethod]
+        public void TestNotStarted()
+        {
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirements(
+                requiredMonitoringActionNames: ImmutableList<(string ActionName, RecurrencePolicy Recurrence)>.Empty
+                .Add(("A", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                    .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
+                    .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
+                    .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null)))))
+                .Add(("B", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                    .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null))))),
+                startedAtUtc: null,
+                Helpers.Completed(),
+                utcNow: new DateTime(2022, 1, 31));
 
+            AssertEx.SequenceIs(result);
+        }
 
         [TestMethod]
-        public void Test()
+        public void TestStartedNoCompletions()
         {
-            Assert.Inconclusive("Not implemented");
-            //var result = ApprovalCalculations.CalculateMissingFamilyRequirementsFromRequirementCompletion(
-            //    status: null,
-            //    Helpers.FamilyRequirementsMet(
-            //        ("A", RequirementStage.Application, VolunteerFamilyRequirementScope.OncePerFamily, true, new List<Guid>() { }),
-            //        ("B", RequirementStage.Approval, VolunteerFamilyRequirementScope.OncePerFamily, true, new List<Guid>() { }),
-            //        ("C", RequirementStage.Approval, VolunteerFamilyRequirementScope.AllAdultsInTheFamily, true, new List<Guid>() { }),
-            //        ("D", RequirementStage.Approval, VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily, true, new List<Guid>() { }),
-            //        ("E", RequirementStage.Onboarding, VolunteerFamilyRequirementScope.OncePerFamily, true, new List<Guid>() { }),
-            //        ("F", RequirementStage.Onboarding, VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily, true, new List<Guid>() { })));
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirements(
+                requiredMonitoringActionNames: ImmutableList<(string ActionName, RecurrencePolicy Recurrence)>.Empty
+                .Add(("A", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                    .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
+                    .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
+                    .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null)))))
+                .Add(("B", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                    .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null))))),
+                startedAtUtc: new DateTime(2022, 1, 1),
+                Helpers.Completed(),
+                utcNow: new DateTime(2022, 1, 31));
 
-            //AssertEx.SequenceIs(result);
+            AssertEx.SequenceIs(result,
+                new MissingArrangementRequirement("A", DueBy: null, PastDueSince: new DateTime(2022, 1, 3)),
+                new MissingArrangementRequirement("A", DueBy: null, PastDueSince: new DateTime(2022, 1, 10)),
+                new MissingArrangementRequirement("A", DueBy: null, PastDueSince: new DateTime(2022, 1, 17)),
+                new MissingArrangementRequirement("A", DueBy: null, PastDueSince: new DateTime(2022, 1, 24)),
+                new MissingArrangementRequirement("A", DueBy: null, PastDueSince: new DateTime(2022, 1, 31)),
+                new MissingArrangementRequirement("A", DueBy: new DateTime(2022, 2, 14), PastDueSince: null),
+                new MissingArrangementRequirement("B", DueBy: null, PastDueSince: new DateTime(2022, 1, 8)),
+                new MissingArrangementRequirement("B", DueBy: null, PastDueSince: new DateTime(2022, 1, 15)),
+                new MissingArrangementRequirement("B", DueBy: null, PastDueSince: new DateTime(2022, 1, 22)),
+                new MissingArrangementRequirement("B", DueBy: null, PastDueSince: new DateTime(2022, 1, 29)),
+                new MissingArrangementRequirement("B", DueBy: new DateTime(2022, 2, 5), PastDueSince: null));
+        }
+
+        [TestMethod]
+        public void TestStartedSomeCompletions()
+        {
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirements(
+                requiredMonitoringActionNames: ImmutableList<(string ActionName, RecurrencePolicy Recurrence)>.Empty
+                .Add(("A", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                    .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
+                    .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
+                    .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null)))))
+                .Add(("B", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                    .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null))))),
+                startedAtUtc: new DateTime(2022, 1, 1),
+                Helpers.Completed(("A", 3), ("B", 7)),
+                utcNow: new DateTime(2022, 1, 31));
+
+            AssertEx.SequenceIs(result,
+                new MissingArrangementRequirement("A", DueBy: null, PastDueSince: new DateTime(2022, 1, 10)),
+                new MissingArrangementRequirement("A", DueBy: null, PastDueSince: new DateTime(2022, 1, 17)),
+                new MissingArrangementRequirement("A", DueBy: null, PastDueSince: new DateTime(2022, 1, 24)),
+                new MissingArrangementRequirement("A", DueBy: null, PastDueSince: new DateTime(2022, 1, 31)),
+                new MissingArrangementRequirement("A", DueBy: new DateTime(2022, 2, 14), PastDueSince: null),
+                new MissingArrangementRequirement("B", DueBy: null, PastDueSince: new DateTime(2022, 1, 14)),
+                new MissingArrangementRequirement("B", DueBy: null, PastDueSince: new DateTime(2022, 1, 21)),
+                new MissingArrangementRequirement("B", DueBy: null, PastDueSince: new DateTime(2022, 1, 28)),
+                new MissingArrangementRequirement("B", DueBy: new DateTime(2022, 2, 4), PastDueSince: null));
+        }
+
+        [TestMethod]
+        public void TestStartedUpToDate()
+        {
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirements(
+                requiredMonitoringActionNames: ImmutableList<(string ActionName, RecurrencePolicy Recurrence)>.Empty
+                .Add(("A", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                    .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
+                    .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
+                    .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null)))))
+                .Add(("B", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                    .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null))))),
+                startedAtUtc: new DateTime(2022, 1, 1),
+                Helpers.Completed(("A", 3), ("B", 7)),
+                utcNow: new DateTime(2022, 1, 8));
+
+            AssertEx.SequenceIs(result,
+                new MissingArrangementRequirement("A", DueBy: new DateTime(2022, 1, 10), PastDueSince: null),
+                new MissingArrangementRequirement("B", DueBy: new DateTime(2022, 1, 14), PastDueSince: null));
         }
     }
 }
