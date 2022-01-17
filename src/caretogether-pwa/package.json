@@ -54,8 +54,5 @@
   },
   "devDependencies": {
     "@types/react-router-dom": "^5.1.7"
-  },
-  "resolutions": {
-    "mini-css-extract-plugin": "2.4.5"
   }
 }
