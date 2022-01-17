@@ -1,7 +1,6 @@
 using CareTogether.Resources;
 using System;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace CareTogether.Engines
@@ -40,24 +39,8 @@ namespace CareTogether.Engines
         {
             var policy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
 
-            var missingIntakeRequirements = policy.ReferralPolicy.RequiredIntakeActionNames.Where(requiredAction =>
-                !referralEntry.CompletedRequirements.Any(completed => completed.RequirementName == requiredAction))
-                .ToImmutableList();
-
-            var individualArrangements = referralEntry.Arrangements.ToImmutableDictionary(
-                arrangement => arrangement.Key,
-                arrangement =>
-                {
-                    ArrangementPolicy arrangementPolicy = policy.ReferralPolicy.ArrangementPolicies
-                        .Single(p => p.ArrangementType == arrangement.Value.ArrangementType);
-
-                    return ReferralCalculations.CalculateArrangementStatus(arrangement.Value,
-                        arrangementPolicy, DateTime.UtcNow);
-                });
-
-            return new ReferralStatus(
-                missingIntakeRequirements,
-                individualArrangements);
+            return ReferralCalculations.CalculateReferralStatus(
+                policy.ReferralPolicy, referralEntry, DateTime.UtcNow);
         }
     }
 }

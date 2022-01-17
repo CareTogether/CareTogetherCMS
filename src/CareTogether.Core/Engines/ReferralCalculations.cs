@@ -8,7 +8,31 @@ namespace CareTogether.Engines
 {
     internal static class ReferralCalculations
     {
-        public static ArrangementStatus CalculateArrangementStatus(ArrangementEntry arrangement, ArrangementPolicy arrangementPolicy,
+        public static ReferralStatus CalculateReferralStatus(
+            ReferralPolicy referralPolicy, ReferralEntry referralEntry, DateTime utcNow)
+        {
+            var missingIntakeRequirements = referralPolicy.RequiredIntakeActionNames.Where(requiredAction =>
+                !referralEntry.CompletedRequirements.Any(completed => completed.RequirementName == requiredAction))
+                .ToImmutableList();
+
+            var individualArrangements = referralEntry.Arrangements.ToImmutableDictionary(
+                arrangement => arrangement.Key,
+                arrangement =>
+                {
+                    ArrangementPolicy arrangementPolicy = referralPolicy.ArrangementPolicies
+                        .Single(p => p.ArrangementType == arrangement.Value.ArrangementType);
+
+                    return ReferralCalculations.CalculateArrangementStatus(arrangement.Value,
+                        arrangementPolicy, utcNow);
+                });
+
+            return new ReferralStatus(
+                missingIntakeRequirements,
+                individualArrangements);
+        }
+
+
+        internal static ArrangementStatus CalculateArrangementStatus(ArrangementEntry arrangement, ArrangementPolicy arrangementPolicy,
             DateTime utcNow)
         {
             var missingSetupRequirements = CalculateMissingSetupRequirements(arrangement, arrangementPolicy);
@@ -24,7 +48,6 @@ namespace CareTogether.Engines
             return new ArrangementStatus(phase,
                 missingRequirements);
         }
-
 
         internal static ImmutableList<MissingArrangementRequirement> SelectMissingRequirements(ArrangementPhase phase,
             ImmutableList<MissingArrangementRequirement> missingSetupRequirements,
