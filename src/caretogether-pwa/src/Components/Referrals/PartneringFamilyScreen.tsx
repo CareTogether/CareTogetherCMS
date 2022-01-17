@@ -78,7 +78,9 @@ const useStyles = makeStyles((theme) => ({
 
 export function PartneringFamilyScreen() {
   const classes = useStyles();
-  const { familyId } = useParams<{ familyId: string }>();
+  
+  const familyIdMaybe = useParams<{ familyId: string }>();
+  const familyId = familyIdMaybe.familyId as string;
 
   const partneringFamilies = useRecoilValue(partneringFamiliesData);
   const policy = useRecoilValue(policyData);

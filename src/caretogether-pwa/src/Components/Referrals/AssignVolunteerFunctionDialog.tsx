@@ -28,7 +28,10 @@ interface AssignVolunteerFunctionDialogProps {
 
 export function AssignVolunteerFunctionDialog({referralId, arrangement, arrangementPolicy, volunteerFunction, onClose}: AssignVolunteerFunctionDialogProps) {
   const classes = useStyles();
-  const { familyId } = useParams<{ familyId: string }>();
+  
+  const familyIdMaybe = useParams<{ familyId: string }>();
+  const familyId = familyIdMaybe.familyId as string;
+  
   const visibleFamilies = useRecoilValue(visibleFamiliesData);
 
   const candidateIndividualAssignees = volunteerFunction.eligibleIndividualVolunteerRoles

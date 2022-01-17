@@ -79,7 +79,9 @@ const useStyles = makeStyles((theme) => ({
 
 export function VolunteerFamilyScreen() {
   const classes = useStyles();
-  const { familyId } = useParams<{ familyId: string }>();
+  
+  const familyIdMaybe = useParams<{ familyId: string }>();
+  const familyId = familyIdMaybe.familyId as string;
 
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
   const policy = useRecoilValue(policyData);

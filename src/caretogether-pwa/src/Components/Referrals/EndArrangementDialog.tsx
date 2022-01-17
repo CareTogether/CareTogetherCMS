@@ -14,7 +14,8 @@ interface EndArrangementDialogProps {
 }
 
 export function EndArrangementDialog({referralId, arrangement, onClose}: EndArrangementDialogProps) {
-  const { familyId } = useParams<{ familyId: string }>();
+  const familyIdMaybe = useParams<{ familyId: string }>();
+  const familyId = familyIdMaybe.familyId as string;
   
   const referralsModel = useReferralsModel();
   const personLookup = usePersonLookup();
