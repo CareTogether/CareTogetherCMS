@@ -1,6 +1,6 @@
 import { makeStyles } from '@material-ui/core/styles';
 import { BottomNavigation, BottomNavigationAction } from '@material-ui/core';
-import { Link, useLocation, withRouter } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import PermPhoneMsgIcon from '@material-ui/icons/PermPhoneMsg';
 import PeopleIcon from '@material-ui/icons/People';
 import { useFeatureFlags } from '../Model/ConfigurationModel';
@@ -15,7 +15,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function Footer(props: any) {
+export function Footer(props: any) {
   const location = useLocation();
   const classes = useStyles();
   
@@ -36,5 +36,3 @@ function Footer(props: any) {
     </BottomNavigation>
   );
 }
-
-export default withRouter(Footer);

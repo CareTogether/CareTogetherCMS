@@ -26,7 +26,7 @@ import { OpenNewReferralDialog } from './OpenNewReferralDialog';
 import { FamilyDocuments } from '../Families/FamilyDocuments';
 import { HeaderContent, HeaderTitle } from '../Header';
 import { ArrowBack } from '@material-ui/icons';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -78,7 +78,9 @@ const useStyles = makeStyles((theme) => ({
 
 export function PartneringFamilyScreen() {
   const classes = useStyles();
-  const { familyId } = useParams<{ familyId: string }>();
+  
+  const familyIdMaybe = useParams<{ familyId: string }>();
+  const familyId = familyIdMaybe.familyId as string;
 
   const partneringFamilies = useRecoilValue(partneringFamiliesData);
   const policy = useRecoilValue(policyData);
@@ -109,13 +111,13 @@ export function PartneringFamilyScreen() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const history = useHistory();
+  const navigate = useNavigate();
 
   return (
   <Container>
     <HeaderContent>
       <HeaderTitle>
-        <IconButton color="inherit" onClick={() => history.goBack()}>
+        <IconButton color="inherit" onClick={() => navigate("..")}>
           <ArrowBack />
         </IconButton>
         &nbsp;

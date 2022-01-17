@@ -6,18 +6,15 @@ import PermPhoneMsgIcon from '@material-ui/icons/PermPhoneMsg';
 import PeopleIcon from '@material-ui/icons/People';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 //import DashboardIcon from '@material-ui/icons/Dashboard';
-import { Route, Switch, Redirect, BrowserRouter as Router } from "react-router-dom";
+import { BrowserRouter as Router } from "react-router-dom";
 import { ListItemLink } from './Components/ListItemLink';
-import { Arrangements } from './Components/Referrals/Arrangements';
-import { Referrals } from './Components/Referrals/Referrals';
 import { useRecoilValue } from 'recoil';
 import { locationNameData, organizationNameData, useFeatureFlags } from './Model/ConfigurationModel';
-import { Volunteers } from './Components/Volunteers/Volunteers';
 import Header from './Components/Header';
-import { Dashboard } from './Components/Dashboard';
-import Footer from './Components/Footer';
+import { Footer } from './Components/Footer';
 import { CurrentFeatureFlags } from './GeneratedClient';
 import { HeaderContext } from './Components/HeaderContext';
+import { AppRoutes } from './AppRoutes';
 
 const copyrightStyles = makeStyles((theme) => ({
   copyright: {
@@ -132,6 +129,7 @@ function App() {
     <div className={classes.root}>
       <CssBaseline />
       <HeaderContext.Provider value={headerContainer}>
+        {/* <Router> needs to be defined after the <HeaderContext.Provider> and before <Header> to link it correctly */}
         <Router>
           <Header open={open} handleDrawerOpen={handleDrawerOpen} />
           {isMobile ? null :
@@ -161,23 +159,7 @@ function App() {
           <main className={isMobile ? classes.mobileContent : classes.content}>
             <div className={classes.appBarSpacer} />
             <React.Suspense fallback={<div>Loading...</div>}>
-              <Switch>
-                <Route path="/dashboard">
-                  <Dashboard />
-                </Route>
-                <Route path="/arrangements">
-                  <Arrangements />
-                </Route>
-                <Route path="/referrals">
-                  <Referrals />
-                </Route>
-                <Route path="/volunteers">
-                  <Volunteers />
-                </Route>
-                <Route>
-                  <Redirect to="/volunteers" />
-                </Route>
-              </Switch>
+              <AppRoutes />
             </React.Suspense>
           </main>
           {isMobile && <Footer></Footer>}

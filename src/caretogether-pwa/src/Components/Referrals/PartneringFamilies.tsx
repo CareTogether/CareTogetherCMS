@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import React, { useState } from 'react';
 import AddIcon from '@material-ui/icons/Add';
 import { ReferralCloseReason, PartneringFamilyInfo, Arrangement } from '../../GeneratedClient';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { FamilyName } from '../Families/FamilyName';
 import { ArrangementCard } from './ArrangementCard';
 import { CreatePartneringFamilyDialog } from './CreatePartneringFamilyDialog';
@@ -48,12 +48,12 @@ function allArrangements(partneringFamilyInfo: PartneringFamilyInfo) {
 
 function PartneringFamilies() {
   const classes = useStyles();
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const partneringFamilies = useRecoilValue(partneringFamiliesData);
 
   function openPartneringFamily(partneringFamilyId: string) {
-    history.push(`/referrals/family/${partneringFamilyId}`);
+    navigate(`/referrals/family/${partneringFamilyId}`);
   }
   const [createPartneringFamilyDialogOpen, setCreatePartneringFamilyDialogOpen] = useState(false);
 
@@ -110,7 +110,7 @@ function PartneringFamilies() {
         </Fab>
         {createPartneringFamilyDialogOpen && <CreatePartneringFamilyDialog onClose={(partneringFamilyId) => {
           setCreatePartneringFamilyDialogOpen(false);
-          partneringFamilyId && history.push(`/referrals/family/${partneringFamilyId}`);
+          partneringFamilyId && navigate(`/referrals/family/${partneringFamilyId}`);
         }} />}
       </Grid>
     </Grid>
