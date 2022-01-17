@@ -16,5 +16,10 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
 
         public static ImmutableList<string> From(params string[] values) =>
             values.ToImmutableList();
+
+        public static VolunteerFunction FunctionWithoutEligibility(
+            string arrangementFunction, FunctionRequirement requirement) =>
+            new VolunteerFunction(arrangementFunction, requirement,
+                ImmutableList<string>.Empty, ImmutableList<string>.Empty);
     }
 }

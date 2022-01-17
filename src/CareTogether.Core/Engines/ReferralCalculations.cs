@@ -51,7 +51,7 @@ namespace CareTogether.Engines
                 missingSetupRequirements, missingMonitoringRequirements, missingCloseoutRequirements);
 
             return new ArrangementStatus(phase,
-                missingRequirements);
+                missingRequirements); //TODO: Shouldn't missing function assignments be returned as well?
         }
 
         internal static ImmutableList<MissingArrangementRequirement> SelectMissingRequirements(ArrangementPhase phase,
@@ -209,6 +209,10 @@ namespace CareTogether.Engines
             ImmutableList<VolunteerFunction> volunteerFunctions,
             ImmutableList<FamilyVolunteerAssignment> familyVolunteerAssignments,
             ImmutableList<IndividualVolunteerAssignment> individualVolunteerAssignments) =>
+            // NOTE: This calculation assumes that the current assignments are valid,
+            //       implying that the assignments were validated when they were made.
+            //TODO: Ensure assignments are validated (server-side) when they are made,
+            //      and decide whether to flag changes in validity here or elsewhere.
             volunteerFunctions
                 .Where(vf => (vf.Requirement == FunctionRequirement.ExactlyOne || vf.Requirement == FunctionRequirement.OneOrMore) &&
                     familyVolunteerAssignments.Where(fva => fva.ArrangementFunction == vf.ArrangementFunction).Count() == 0 &&
