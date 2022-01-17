@@ -15,7 +15,7 @@ import { locationNameData, organizationNameData, useFeatureFlags } from './Model
 import { Volunteers } from './Components/Volunteers/Volunteers';
 import Header from './Components/Header';
 import { Dashboard } from './Components/Dashboard';
-import Footer from './Components/Footer';
+import { Footer } from './Components/Footer';
 import { CurrentFeatureFlags } from './GeneratedClient';
 import { HeaderContext } from './Components/HeaderContext';
 
