@@ -191,9 +191,10 @@ namespace CareTogether.Engines
 
                 // Include one more if this is the last gap and we want the next due-by date (not a missing requirement per se).
                 // The end of the gap is a hard cut-off, but the current UTC date/time is a +1 cut-off (overshoot by one is needed).
-                endConditionExceeded = gapEnd != null
-                    ? nextDueDate < gapEnd
-                    : nextDueDate - applicableStage.incrementDelay < utcNow;
+                // Similarly, if the current UTC date/time falls before the end of the gap, use the +1 cut-off instead of the gap end.
+                endConditionExceeded = gapEnd == null || utcNow < gapEnd
+                    ? nextDueDate - applicableStage.incrementDelay > utcNow
+                    : nextDueDate >= gapEnd;
             } while (!endConditionExceeded);
 
             return dueDatesInGap.ToImmutableList();
