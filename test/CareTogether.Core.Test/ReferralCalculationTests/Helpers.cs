@@ -13,5 +13,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 new CompletedRequirementInfo(Guid.Empty, DateTime.MinValue,
                     Guid.Empty, completion.Item1, new DateTime(2022, 1, completion.Item2), null))
             .ToImmutableList();
+
+        public static ImmutableList<string> From(params string[] values) =>
+            values.ToImmutableList();
     }
 }

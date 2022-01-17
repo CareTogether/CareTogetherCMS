@@ -1,4 +1,4 @@
-using CareTogether.Engines;
+﻿using CareTogether.Engines;
 using CareTogether.Resources;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -18,6 +18,79 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         static readonly Guid guid4 = Id('4');
         static readonly Guid guid5 = Id('5');
         static readonly Guid guid6 = Id('6');
+
+        static ReferralPolicy referralPolicy = new ReferralPolicy(
+            RequiredIntakeActionNames: Helpers.From(),
+            ArrangementPolicies: ImmutableList<ArrangementPolicy>.Empty
+            .Add(new ArrangementPolicy("Overnight Hosting", ChildInvolvement.ChildHousing,
+                ImmutableList<VolunteerFunction>.Empty
+                .Add(new VolunteerFunction("Host Family", FunctionRequirement.OneOrMore,
+                    EligibleIndividualVolunteerRoles: Helpers.From(),
+                    EligibleVolunteerFamilyRoles: Helpers.From()))
+                .Add(new VolunteerFunction("Parent Ally", FunctionRequirement.ExactlyOne,
+                    EligibleIndividualVolunteerRoles: Helpers.From(),
+                    EligibleVolunteerFamilyRoles: Helpers.From()))
+                .Add(new VolunteerFunction("Family Coach", FunctionRequirement.OneOrMore,
+                    EligibleIndividualVolunteerRoles: Helpers.From(),
+                    EligibleVolunteerFamilyRoles: Helpers.From()))
+                .Add(new VolunteerFunction("Community Friend", FunctionRequirement.ZeroOrMore,
+                    EligibleIndividualVolunteerRoles: Helpers.From(),
+                    EligibleVolunteerFamilyRoles: Helpers.From())),
+                RequiredSetupActionNames: Helpers.From(),
+                RequiredMonitoringActionNames: ImmutableList<(string ActionName, RecurrencePolicy Recurrence)>.Empty,
+                RequiredCloseoutActionNames: Helpers.From()))
+            .Add(new ArrangementPolicy("Daytime Hosting", ChildInvolvement.DaytimeChildCareOnly,
+                ImmutableList<VolunteerFunction>.Empty
+                .Add(new VolunteerFunction("Host Family", FunctionRequirement.OneOrMore,
+                    EligibleIndividualVolunteerRoles: Helpers.From(),
+                    EligibleVolunteerFamilyRoles: Helpers.From()))
+                .Add(new VolunteerFunction("Parent Ally", FunctionRequirement.ExactlyOne,
+                    EligibleIndividualVolunteerRoles: Helpers.From(),
+                    EligibleVolunteerFamilyRoles: Helpers.From()))
+                .Add(new VolunteerFunction("Family Coach", FunctionRequirement.OneOrMore,
+                    EligibleIndividualVolunteerRoles: Helpers.From(),
+                    EligibleVolunteerFamilyRoles: Helpers.From()))
+                .Add(new VolunteerFunction("Community Friend", FunctionRequirement.ZeroOrMore,
+                    EligibleIndividualVolunteerRoles: Helpers.From(),
+                    EligibleVolunteerFamilyRoles: Helpers.From())),
+                RequiredSetupActionNames: Helpers.From(),
+                RequiredMonitoringActionNames: ImmutableList<(string ActionName, RecurrencePolicy Recurrence)>.Empty,
+                RequiredCloseoutActionNames: Helpers.From()))
+            .Add(new ArrangementPolicy("Friending", ChildInvolvement.NoChildInvolvement,
+                ImmutableList<VolunteerFunction>.Empty
+                .Add(new VolunteerFunction("Parent Ally", FunctionRequirement.ExactlyOne,
+                    EligibleIndividualVolunteerRoles: Helpers.From(),
+                    EligibleVolunteerFamilyRoles: Helpers.From()))
+                .Add(new VolunteerFunction("Community Friend", FunctionRequirement.ZeroOrMore,
+                    EligibleIndividualVolunteerRoles: Helpers.From(),
+                    EligibleVolunteerFamilyRoles: Helpers.From())),
+                RequiredSetupActionNames: Helpers.From(),
+                RequiredMonitoringActionNames: ImmutableList<(string ActionName, RecurrencePolicy Recurrence)>.Empty,
+                RequiredCloseoutActionNames: Helpers.From())));
+
+        static Person adult1 = new Person(guid1, null, true, "Bob", "Smith", Gender.Male, new ExactAge(new DateTime(2000, 1, 1)), "",
+            ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null);
+        static Person adult2 = new Person(guid2, null, true, "Jane", "Smith", Gender.Female, new ExactAge(new DateTime(2000, 1, 1)), "",
+            ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null);
+        static Person inactiveAdult3 = new Person(guid3, null, false, "BobDUPLICATE", "Smith", Gender.Male, new ExactAge(new DateTime(2000, 1, 1)), "",
+            ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null);
+        static Person brotherNotInHousehold4 = new Person(guid2, null, true, "Eric", "Smith", Gender.Male, new ExactAge(new DateTime(2000, 1, 1)), "",
+            ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null);
+        static Person child5 = new Person(guid5, null, true, "Wanda", "Smith", Gender.Female, new ExactAge(new DateTime(2022, 1, 1)), "",
+            ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null);
+
+        static Family family = new Family(guid0, guid1,
+            ImmutableList<(Person, FamilyAdultRelationshipInfo)>.Empty
+                .Add((adult1, new FamilyAdultRelationshipInfo("Dad", true)))
+                .Add((adult2, new FamilyAdultRelationshipInfo("Mom", true)))
+                /*.Add((inactiveAdult3, new FamilyAdultRelationshipInfo("Dad", true))) //TODO: Reenable
+                .Add((brotherNotInHousehold4, new FamilyAdultRelationshipInfo("Brother", false)))*/, //TODO: Reenable
+            ImmutableList<Person>.Empty
+                .Add(child5),
+            ImmutableList<CustodialRelationship>.Empty
+                .Add(new CustodialRelationship(guid5, guid1, CustodialRelationshipType.ParentWithCustody))
+                .Add(new CustodialRelationship(guid5, guid2, CustodialRelationshipType.ParentWithCustody)),
+            ImmutableList<UploadedDocumentInfo>.Empty, ImmutableList<Guid>.Empty);
 
 
         [TestMethod]
