@@ -24,7 +24,7 @@ namespace CareTogether.Managers
         ArrangementPhase Phase, DateTime RequestedAtUtc, DateTime? StartedAtUtc, DateTime? EndedAtUtc,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
-        ImmutableList<string> MissingRequirements,
+        ImmutableList<MissingArrangementRequirement> MissingRequirements,
         ImmutableList<IndividualVolunteerAssignment> IndividualVolunteerAssignments,
         ImmutableList<FamilyVolunteerAssignment> FamilyVolunteerAssignments,
         ImmutableList<ChildLocationHistoryEntry> ChildrenLocationHistory);

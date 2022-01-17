@@ -1,8 +1,6 @@
 using CareTogether.Resources;
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace CareTogether.Engines
@@ -28,7 +26,8 @@ namespace CareTogether.Engines
         {
             var policy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
 
-            return ApprovalCalculations.CalculateVolunteerFamilyApprovalStatus(policy.VolunteerPolicy, family,
+            return ApprovalCalculations.CalculateVolunteerFamilyApprovalStatus(
+                policy.VolunteerPolicy, family, DateTime.UtcNow,
                 completedFamilyRequirements, exemptedFamilyRequirements, removedFamilyRoles,
                 completedIndividualRequirements, exemptedIndividualRequirements, removedIndividualRoles);
         }
@@ -40,23 +39,8 @@ namespace CareTogether.Engines
         {
             var policy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
 
-            var missingIntakeRequirements = policy.ReferralPolicy.RequiredIntakeActionNames.Where(requiredAction =>
-                !referralEntry.CompletedRequirements.Any(completed => completed.RequirementName == requiredAction))
-                .ToImmutableList();
-
-            var individualArrangements = referralEntry.Arrangements.ToImmutableDictionary(
-                arrangement => arrangement.Key,
-                arrangement =>
-                {
-                    ArrangementPolicy arrangementPolicy = policy.ReferralPolicy.ArrangementPolicies
-                        .Single(p => p.ArrangementType == arrangement.Value.ArrangementType);
-
-                    return ReferralCalculations.CalculateArrangementStatus(arrangement.Value, arrangementPolicy);
-                });
-
-            return new ReferralStatus(
-                missingIntakeRequirements,
-                individualArrangements);
+            return ReferralCalculations.CalculateReferralStatus(
+                policy.ReferralPolicy, referralEntry, DateTime.UtcNow);
         }
     }
 }

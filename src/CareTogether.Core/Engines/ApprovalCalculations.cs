@@ -9,7 +9,7 @@ namespace CareTogether.Engines
     internal static class ApprovalCalculations
     {
         public static VolunteerFamilyApprovalStatus CalculateVolunteerFamilyApprovalStatus(
-            VolunteerPolicy volunteerPolicy, Family family,
+            VolunteerPolicy volunteerPolicy, Family family, DateTime utcNow,
             ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
             ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
             ImmutableList<RemovedRole> removedFamilyRoles,
@@ -18,11 +18,11 @@ namespace CareTogether.Engines
             ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles)
         {
             var individualResults = CalculateCombinedIndividualRoleStatusForFamilyMembers(
-                volunteerPolicy.VolunteerRoles, family, DateTime.UtcNow,
+                volunteerPolicy.VolunteerRoles, family, utcNow,
                 completedIndividualRequirements, exemptedIndividualRequirements, removedIndividualRoles);
 
             var familyResult = CalculateCombinedFamilyRoleStatusForFamily(
-                volunteerPolicy, family, DateTime.UtcNow,
+                volunteerPolicy, family, utcNow,
                 completedFamilyRequirements, exemptedFamilyRequirements, removedFamilyRoles,
                 completedIndividualRequirements, exemptedIndividualRequirements, removedIndividualRoles);
 

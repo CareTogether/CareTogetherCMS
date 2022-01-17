@@ -2789,7 +2789,7 @@ export class Arrangement implements IArrangement {
     endedAtUtc?: Date | undefined;
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
-    missingRequirements?: string[];
+    missingRequirements?: MissingArrangementRequirement[];
     individualVolunteerAssignments?: IndividualVolunteerAssignment[];
     familyVolunteerAssignments?: FamilyVolunteerAssignment[];
     childrenLocationHistory?: ChildLocationHistoryEntry[];
@@ -2825,7 +2825,7 @@ export class Arrangement implements IArrangement {
             if (Array.isArray(_data["missingRequirements"])) {
                 this.missingRequirements = [] as any;
                 for (let item of _data["missingRequirements"])
-                    this.missingRequirements!.push(item);
+                    this.missingRequirements!.push(MissingArrangementRequirement.fromJS(item));
             }
             if (Array.isArray(_data["individualVolunteerAssignments"])) {
                 this.individualVolunteerAssignments = [] as any;
@@ -2874,7 +2874,7 @@ export class Arrangement implements IArrangement {
         if (Array.isArray(this.missingRequirements)) {
             data["missingRequirements"] = [];
             for (let item of this.missingRequirements)
-                data["missingRequirements"].push(item);
+                data["missingRequirements"].push(item.toJSON());
         }
         if (Array.isArray(this.individualVolunteerAssignments)) {
             data["individualVolunteerAssignments"] = [];
@@ -2905,7 +2905,7 @@ export interface IArrangement {
     endedAtUtc?: Date | undefined;
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
-    missingRequirements?: string[];
+    missingRequirements?: MissingArrangementRequirement[];
     individualVolunteerAssignments?: IndividualVolunteerAssignment[];
     familyVolunteerAssignments?: FamilyVolunteerAssignment[];
     childrenLocationHistory?: ChildLocationHistoryEntry[];
@@ -2916,6 +2916,50 @@ export enum ArrangementPhase {
     ReadyToStart = 1,
     Started = 2,
     Ended = 3,
+}
+
+export class MissingArrangementRequirement implements IMissingArrangementRequirement {
+    actionName?: string;
+    dueBy?: Date | undefined;
+    pastDueSince?: Date | undefined;
+
+    constructor(data?: IMissingArrangementRequirement) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.actionName = _data["actionName"];
+            this.dueBy = _data["dueBy"] ? new Date(_data["dueBy"].toString()) : <any>undefined;
+            this.pastDueSince = _data["pastDueSince"] ? new Date(_data["pastDueSince"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): MissingArrangementRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new MissingArrangementRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["actionName"] = this.actionName;
+        data["dueBy"] = this.dueBy ? this.dueBy.toISOString() : <any>undefined;
+        data["pastDueSince"] = this.pastDueSince ? this.pastDueSince.toISOString() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IMissingArrangementRequirement {
+    actionName?: string;
+    dueBy?: Date | undefined;
+    pastDueSince?: Date | undefined;
 }
 
 export class IndividualVolunteerAssignment implements IIndividualVolunteerAssignment {
