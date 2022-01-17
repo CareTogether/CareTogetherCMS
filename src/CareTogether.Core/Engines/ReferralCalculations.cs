@@ -130,60 +130,66 @@ namespace CareTogether.Engines
 
             // Calculate all missing requirements within each completion gap (there may be none).
             var missingRequirements = completionGaps.SelectMany(gap =>
-            {
-                // Use the current date as the end value if either the gap has no end or if the
-                // current date is before the end of the gap.
-                var effectiveEnd = !gap.end.HasValue || utcNow <= gap.end ? utcNow : gap.end.Value;
-
-                // Determine which recurrence stages apply to the completion gap.
-                // One of three conditions makes a stage apply:
-                //  1. It begins during the gap.
-                //  2. It ends during the gap.
-                //  3. It begins before the gap and either ends after the gap or doesn't end.
-                var gapStages = arrangementStages.Where(stage =>
-                    (stage.startDate >= gap.start && stage.startDate <= effectiveEnd) ||
-                    (stage.endDate >= gap.start && stage.endDate <= effectiveEnd) ||
-                    (stage.startDate < gap.start && (stage.endDate > effectiveEnd || !stage.endDate.HasValue)))
-                    .ToImmutableList();
-
-                // Calculate all missing requirements within the gap, using the stages to determine the
-                // increment delays to apply.
-                var dueDatesInGap = new List<DateTime>();
-                var nextDueDate = null as DateTime?;
-                var endConditionExceeded = false;
-                do
-                {
-                    if (nextDueDate != null)
-                        dueDatesInGap.Add(nextDueDate.Value);
-
-                    // The applicable stage for this next requirement is either:
-                    //  1. the first of the gap stages if this is the first requirement being calculated, or
-                    //  2. the first of the gap stages that would end after this next requirement (self-referencing), or
-                    //  3. the first of the gap stages that has no end date (i.e., the last stage).
-                    // TODO: An unknown issue is causing this to match no stages in some cases.
-                    //       Is it possible for 'gapStages' to have zero elements?
-                    var applicableStage = gapStages.FirstOrDefault(stage =>
-                        nextDueDate == null ||
-                        stage.endDate > nextDueDate + stage.incrementDelay ||
-                        stage.endDate == null);
-                    if (applicableStage == default)
-                        break;
-
-                    // Calculate the next requirement due date based on the applicable stage.
-                    // If it falls within the current completion gap (& before the current time), it is a missing requirement.
-                    nextDueDate = (nextDueDate ?? gap.start) + applicableStage.incrementDelay;
-
-                    // Include one more if this is the last gap and we want the next due-by date (not a missing requirement per se).
-                    // The end of the gap is a hard cut-off, but the current UTC date/time is a +1 cut-off (overshoot by one is needed).
-                    endConditionExceeded = gap.end != null
-                        ? nextDueDate < gap.end
-                        : nextDueDate - applicableStage.incrementDelay < utcNow;
-                } while (!endConditionExceeded);
-
-                return dueDatesInGap;
-            }).ToImmutableList();
+                CalculateMissingMonitoringRequirementsWithinCompletionGap(utcNow, gap.start, gap.end, arrangementStages))
+                .ToImmutableList();
 
             return missingRequirements;
+        }
+
+        internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementsWithinCompletionGap(
+            DateTime utcNow, DateTime gapStart, DateTime? gapEnd,
+            ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)> arrangementStages)
+        {
+            // Use the current date as the end value if either the gap has no end or if the
+            // current date is before the end of the gap.
+            var effectiveEnd = !gapEnd.HasValue || utcNow <= gapEnd ? utcNow : gapEnd.Value;
+
+            // Determine which recurrence stages apply to the completion gap.
+            // One of three conditions makes a stage apply:
+            //  1. It begins during the gap.
+            //  2. It ends during the gap.
+            //  3. It begins before the gap and either ends after the gap or doesn't end.
+            var gapStages = arrangementStages.Where(stage =>
+                (stage.startDate >= gapStart && stage.startDate <= effectiveEnd) ||
+                (stage.endDate >= gapStart && stage.endDate <= effectiveEnd) ||
+                (stage.startDate < gapStart && (stage.endDate > effectiveEnd || !stage.endDate.HasValue)))
+                .ToImmutableList();
+
+            // Calculate all missing requirements within the gap, using the stages to determine the
+            // increment delays to apply.
+            var dueDatesInGap = new List<DateTime>();
+            var nextDueDate = null as DateTime?;
+            var endConditionExceeded = false;
+            do
+            {
+                if (nextDueDate != null)
+                    dueDatesInGap.Add(nextDueDate.Value);
+
+                // The applicable stage for this next requirement is either:
+                //  1. the first of the gap stages if this is the first requirement being calculated, or
+                //  2. the first of the gap stages that would end after this next requirement (self-referencing), or
+                //  3. the first of the gap stages that has no end date (i.e., the last stage).
+                // TODO: An unknown issue is causing this to match no stages in some cases.
+                //       Is it possible for 'gapStages' to have zero elements?
+                var applicableStage = gapStages.FirstOrDefault(stage =>
+                    nextDueDate == null ||
+                    stage.endDate > nextDueDate + stage.incrementDelay ||
+                    stage.endDate == null);
+                if (applicableStage == default)
+                    break;
+
+                // Calculate the next requirement due date based on the applicable stage.
+                // If it falls within the current completion gap (& before the current time), it is a missing requirement.
+                nextDueDate = (nextDueDate ?? gapStart) + applicableStage.incrementDelay;
+
+                // Include one more if this is the last gap and we want the next due-by date (not a missing requirement per se).
+                // The end of the gap is a hard cut-off, but the current UTC date/time is a +1 cut-off (overshoot by one is needed).
+                endConditionExceeded = gapEnd != null
+                    ? nextDueDate < gapEnd
+                    : nextDueDate - applicableStage.incrementDelay < utcNow;
+            } while (!endConditionExceeded);
+
+            return dueDatesInGap.ToImmutableList();
         }
 
         internal static ImmutableList<MissingArrangementRequirement> CalculateMissingCloseoutRequirements(ArrangementEntry arrangement,
