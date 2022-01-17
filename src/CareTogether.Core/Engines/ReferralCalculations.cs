@@ -47,14 +47,14 @@ namespace CareTogether.Engines
             var phase = CalculateArrangementPhase(arrangement.StartedAtUtc, arrangement.EndedAtUtc,
                 missingSetupRequirements, missingFunctionAssignments);
 
-            var missingRequirements = SelectMissingRequirements(phase,
+            var missingRequirements = SelectMissingRequirementsForStatus(phase,
                 missingSetupRequirements, missingMonitoringRequirements, missingCloseoutRequirements);
 
             return new ArrangementStatus(phase,
                 missingRequirements); //TODO: Shouldn't missing function assignments be returned as well?
         }
 
-        internal static ImmutableList<MissingArrangementRequirement> SelectMissingRequirements(ArrangementPhase phase,
+        internal static ImmutableList<MissingArrangementRequirement> SelectMissingRequirementsForStatus(ArrangementPhase phase,
             ImmutableList<MissingArrangementRequirement> missingSetupRequirements,
             ImmutableList<MissingArrangementRequirement> missingMonitoringRequirements,
             ImmutableList<MissingArrangementRequirement> missingCloseoutRequirements) => phase switch

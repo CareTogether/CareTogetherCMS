@@ -2,7 +2,6 @@
 using CareTogether.Resources;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace CareTogether.Core.Test.ReferralCalculationTests
@@ -10,31 +9,97 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
     [TestClass]
     public class CalculateArrangementPhase
     {
-        private static Guid Id(char x) => Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
-        static readonly Guid guid0 = Id('0');
-        static readonly Guid guid1 = Id('1');
-        static readonly Guid guid2 = Id('2');
-        static readonly Guid guid3 = Id('3');
-        static readonly Guid guid4 = Id('4');
-        static readonly Guid guid5 = Id('5');
-        static readonly Guid guid6 = Id('6');
+        [TestMethod]
+        public void TestNothingMissingNoDates()
+        {
+            var result = ReferralCalculations.CalculateArrangementPhase(
+                startedAtUtc: null,
+                endedAtUtc: null,
+                missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty,
+                missingFunctionAssignments: ImmutableList<VolunteerFunction>.Empty);
+            
+            Assert.AreEqual(ArrangementPhase.ReadyToStart, result);
+        }
+
+        [TestMethod]
+        public void TestNothingMissingStarted()
+        {
+            var result = ReferralCalculations.CalculateArrangementPhase(
+                startedAtUtc: DateTime.UtcNow,
+                endedAtUtc: null,
+                missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty,
+                missingFunctionAssignments: ImmutableList<VolunteerFunction>.Empty);
+
+            Assert.AreEqual(ArrangementPhase.Started, result);
+        }
+
+        [TestMethod]
+        public void TestNothingMissingStartedAndEnded()
+        {
+            var result = ReferralCalculations.CalculateArrangementPhase(
+                startedAtUtc: DateTime.UtcNow,
+                endedAtUtc: DateTime.UtcNow,
+                missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty,
+                missingFunctionAssignments: ImmutableList<VolunteerFunction>.Empty);
+
+            Assert.AreEqual(ArrangementPhase.Ended, result);
+        }
+
+        [TestMethod]
+        public void TestRequirementMissingNoDates()
+        {
+            var result = ReferralCalculations.CalculateArrangementPhase(
+                startedAtUtc: null,
+                endedAtUtc: null,
+                missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty
+                .Add(new MissingArrangementRequirement("A", null, null)),
+                missingFunctionAssignments: ImmutableList<VolunteerFunction>.Empty);
+
+            Assert.AreEqual(ArrangementPhase.SettingUp, result);
+        }
 
 
         [TestMethod]
-        public void Test()
+        public void TestFunctionMissingNoDates()
         {
-            Assert.Inconclusive("Not implemented");
-            //var result = ApprovalCalculations.CalculateMissingFamilyRequirementsFromRequirementCompletion(
-            //    status: null,
-            //    Helpers.FamilyRequirementsMet(
-            //        ("A", RequirementStage.Application, VolunteerFamilyRequirementScope.OncePerFamily, true, new List<Guid>() { }),
-            //        ("B", RequirementStage.Approval, VolunteerFamilyRequirementScope.OncePerFamily, true, new List<Guid>() { }),
-            //        ("C", RequirementStage.Approval, VolunteerFamilyRequirementScope.AllAdultsInTheFamily, true, new List<Guid>() { }),
-            //        ("D", RequirementStage.Approval, VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily, true, new List<Guid>() { }),
-            //        ("E", RequirementStage.Onboarding, VolunteerFamilyRequirementScope.OncePerFamily, true, new List<Guid>() { }),
-            //        ("F", RequirementStage.Onboarding, VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily, true, new List<Guid>() { })));
+            var result = ReferralCalculations.CalculateArrangementPhase(
+                startedAtUtc: null,
+                endedAtUtc: null,
+                missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty,
+                missingFunctionAssignments: ImmutableList<VolunteerFunction>.Empty
+                .Add(Helpers.FunctionWithoutEligibility("X", FunctionRequirement.OneOrMore)));
 
-            //AssertEx.SequenceIs(result);
+            Assert.AreEqual(ArrangementPhase.SettingUp, result);
+        }
+
+        [TestMethod]
+        public void TestRequirementsAndFunctionsMissingStarted()
+        {
+            // Not a valid state, but included for completeness.
+            var result = ReferralCalculations.CalculateArrangementPhase(
+                startedAtUtc: DateTime.UtcNow,
+                endedAtUtc: null,
+                missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty
+                .Add(new MissingArrangementRequirement("A", null, null)),
+                missingFunctionAssignments: ImmutableList<VolunteerFunction>.Empty
+                .Add(Helpers.FunctionWithoutEligibility("X", FunctionRequirement.OneOrMore)));
+
+            Assert.AreEqual(ArrangementPhase.SettingUp, result);
+        }
+
+        [TestMethod]
+        public void TestRequirementsAndFunctionsMissingStartedAndEnded()
+        {
+            // Not a valid state, but included for completeness.
+            var result = ReferralCalculations.CalculateArrangementPhase(
+                startedAtUtc: DateTime.UtcNow,
+                endedAtUtc: DateTime.UtcNow,
+                missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty
+                .Add(new MissingArrangementRequirement("A", null, null)),
+                missingFunctionAssignments: ImmutableList<VolunteerFunction>.Empty
+                .Add(Helpers.FunctionWithoutEligibility("X", FunctionRequirement.OneOrMore)));
+
+            Assert.AreEqual(ArrangementPhase.SettingUp, result);
         }
     }
 }
