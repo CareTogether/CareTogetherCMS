@@ -22,7 +22,7 @@ namespace CareTogether.Engines
                     ArrangementPolicy arrangementPolicy = referralPolicy.ArrangementPolicies
                         .Single(p => p.ArrangementType == arrangement.Value.ArrangementType);
 
-                    return ReferralCalculations.CalculateArrangementStatus(arrangement.Value,
+                    return CalculateArrangementStatus(arrangement.Value,
                         arrangementPolicy, utcNow);
                 });
 
@@ -35,12 +35,17 @@ namespace CareTogether.Engines
         internal static ArrangementStatus CalculateArrangementStatus(ArrangementEntry arrangement, ArrangementPolicy arrangementPolicy,
             DateTime utcNow)
         {
-            var missingSetupRequirements = CalculateMissingSetupRequirements(arrangement, arrangementPolicy);
-            var missingMonitoringRequirements = CalculateMissingMonitoringRequirements(arrangement, arrangementPolicy, utcNow);
-            var missingCloseoutRequirements = CalculateMissingCloseoutRequirements(arrangement, arrangementPolicy);
-            var missingFunctionAssignments = CalculateMissingFunctionAssignments(arrangement, arrangementPolicy);
+            var missingSetupRequirements = CalculateMissingSetupRequirements(arrangementPolicy.RequiredSetupActionNames,
+                arrangement.CompletedRequirements);
+            var missingMonitoringRequirements = CalculateMissingMonitoringRequirements(arrangementPolicy.RequiredMonitoringActionNames,
+                arrangement.StartedAtUtc, arrangement.CompletedRequirements, utcNow);
+            var missingCloseoutRequirements = CalculateMissingCloseoutRequirements(arrangementPolicy.RequiredCloseoutActionNames,
+                arrangement.CompletedRequirements);
+            var missingFunctionAssignments = CalculateMissingFunctionAssignments(arrangementPolicy.VolunteerFunctions,
+                arrangement.FamilyVolunteerAssignments, arrangement.IndividualVolunteerAssignments);
 
-            var phase = CalculateArrangementPhase(arrangement, missingSetupRequirements, missingFunctionAssignments);
+            var phase = CalculateArrangementPhase(arrangement.StartedAtUtc, arrangement.EndedAtUtc,
+                missingSetupRequirements, missingFunctionAssignments);
 
             var missingRequirements = SelectMissingRequirements(phase,
                 missingSetupRequirements, missingMonitoringRequirements, missingCloseoutRequirements);
@@ -61,30 +66,31 @@ namespace CareTogether.Engines
                 _ => throw new NotImplementedException($"The arrangement phase '{phase}' has not been implemented.")
             };
 
-        internal static ArrangementPhase CalculateArrangementPhase(ArrangementEntry arrangement,
+        internal static ArrangementPhase CalculateArrangementPhase(DateTime? startedAtUtc, DateTime? endedAtUtc,
             ImmutableList<MissingArrangementRequirement> missingSetupRequirements,
             ImmutableList<VolunteerFunction> missingFunctionAssignments) =>
             missingSetupRequirements.Count > 0 || missingFunctionAssignments.Count > 0
                 ? ArrangementPhase.SettingUp
-                : !arrangement.StartedAtUtc.HasValue
+                : !startedAtUtc.HasValue
                 ? ArrangementPhase.ReadyToStart
-                : !arrangement.EndedAtUtc.HasValue
+                : !endedAtUtc.HasValue
                 ? ArrangementPhase.Started
                 : ArrangementPhase.Ended;
 
-        internal static ImmutableList<MissingArrangementRequirement> CalculateMissingSetupRequirements(ArrangementEntry arrangement,
-            ArrangementPolicy arrangementPolicy) =>
-            arrangementPolicy.RequiredSetupActionNames.Where(requiredAction =>
-                !arrangement.CompletedRequirements.Any(completed => completed.RequirementName == requiredAction))
+        internal static ImmutableList<MissingArrangementRequirement> CalculateMissingSetupRequirements(
+            ImmutableList<string> requiredSetupActionNames, ImmutableList<CompletedRequirementInfo> completedRequirements) =>
+            requiredSetupActionNames.Where(requiredAction =>
+                !completedRequirements.Any(completed => completed.RequirementName == requiredAction))
                 .Select(requiredAction => new MissingArrangementRequirement(requiredAction, null, null))
                 .ToImmutableList();
 
-        internal static ImmutableList<MissingArrangementRequirement> CalculateMissingMonitoringRequirements(ArrangementEntry arrangement,
-            ArrangementPolicy arrangementPolicy, DateTime utcNow) =>
-            arrangementPolicy.RequiredMonitoringActionNames.SelectMany(monitoringRequirement =>
-                (arrangement.StartedAtUtc.HasValue
-                ? CalculateMissingMonitoringRequirementInstances(monitoringRequirement.Recurrence, arrangement.StartedAtUtc.Value,
-                    arrangement.CompletedRequirements
+        internal static ImmutableList<MissingArrangementRequirement> CalculateMissingMonitoringRequirements(
+            ImmutableList<(string ActionName, RecurrencePolicy Recurrence)> requiredMonitoringActionNames,
+            DateTime? startedAtUtc, ImmutableList<CompletedRequirementInfo> completedRequirements, DateTime utcNow) =>
+            requiredMonitoringActionNames.SelectMany(monitoringRequirement =>
+                (startedAtUtc.HasValue
+                ? CalculateMissingMonitoringRequirementInstances(monitoringRequirement.Recurrence, startedAtUtc.Value,
+                    completedRequirements
                     .Where(x => x.RequirementName == monitoringRequirement.ActionName)
                     .Select(x => x.CompletedAtUtc)
                     .OrderBy(x => x).ToImmutableList(),
@@ -192,19 +198,21 @@ namespace CareTogether.Engines
             return dueDatesInGap.ToImmutableList();
         }
 
-        internal static ImmutableList<MissingArrangementRequirement> CalculateMissingCloseoutRequirements(ArrangementEntry arrangement,
-            ArrangementPolicy arrangementPolicy) =>
-            arrangementPolicy.RequiredCloseoutActionNames.Where(requiredAction =>
-                !arrangement.CompletedRequirements.Any(completed => completed.RequirementName == requiredAction))
+        internal static ImmutableList<MissingArrangementRequirement> CalculateMissingCloseoutRequirements(
+            ImmutableList<string> requiredCloseoutActionNames, ImmutableList<CompletedRequirementInfo> completedRequirements) =>
+            requiredCloseoutActionNames.Where(requiredAction =>
+                !completedRequirements.Any(completed => completed.RequirementName == requiredAction))
                 .Select(requiredAction => new MissingArrangementRequirement(requiredAction, null, null))
                 .ToImmutableList();
 
-        internal static ImmutableList<VolunteerFunction> CalculateMissingFunctionAssignments(ArrangementEntry arrangement,
-            ArrangementPolicy arrangementPolicy) =>
-            arrangementPolicy.VolunteerFunctions
+        internal static ImmutableList<VolunteerFunction> CalculateMissingFunctionAssignments(
+            ImmutableList<VolunteerFunction> volunteerFunctions,
+            ImmutableList<FamilyVolunteerAssignment> familyVolunteerAssignments,
+            ImmutableList<IndividualVolunteerAssignment> individualVolunteerAssignments) =>
+            volunteerFunctions
                 .Where(vf => (vf.Requirement == FunctionRequirement.ExactlyOne || vf.Requirement == FunctionRequirement.OneOrMore) &&
-                    arrangement.FamilyVolunteerAssignments.Where(fva => fva.ArrangementFunction == vf.ArrangementFunction).Count() == 0 &&
-                    arrangement.IndividualVolunteerAssignments.Where(iva => iva.ArrangementFunction == vf.ArrangementFunction).Count() == 0)
+                    familyVolunteerAssignments.Where(fva => fva.ArrangementFunction == vf.ArrangementFunction).Count() == 0 &&
+                    individualVolunteerAssignments.Where(iva => iva.ArrangementFunction == vf.ArrangementFunction).Count() == 0)
                 .ToImmutableList();
     }
 }
