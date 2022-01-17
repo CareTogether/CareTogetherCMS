@@ -42,6 +42,15 @@ namespace CareTogether.Core.Test
                 .All(tuple => tuple.First == tuple.Second));
         }
 
+        public static void SequenceIs
+            (ICollection<MissingArrangementRequirement> actual, params MissingArrangementRequirement[] expected)
+        {
+            Assert.AreEqual(expected.Length, actual.Count);
+            Assert.IsTrue(Enumerable
+                .Zip(actual, expected)
+                .All(tuple => tuple.First == tuple.Second));
+        }
+
         public static void DictionaryIs(IDictionary<Guid, ImmutableList<string>> actual, params (Guid, string[])[] expected)
         {
             Assert.AreEqual(expected.Length, actual.Count);

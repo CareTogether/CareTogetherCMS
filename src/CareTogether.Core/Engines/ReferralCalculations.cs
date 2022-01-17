@@ -69,7 +69,7 @@ namespace CareTogether.Engines
         internal static ArrangementPhase CalculateArrangementPhase(DateTime? startedAtUtc, DateTime? endedAtUtc,
             ImmutableList<MissingArrangementRequirement> missingSetupRequirements,
             ImmutableList<VolunteerFunction> missingFunctionAssignments) =>
-            missingSetupRequirements.Count > 0 || missingFunctionAssignments.Count > 0
+            (missingSetupRequirements.Count > 0 || missingFunctionAssignments.Count > 0)
                 ? ArrangementPhase.SettingUp
                 : !startedAtUtc.HasValue
                 ? ArrangementPhase.ReadyToStart
@@ -79,8 +79,9 @@ namespace CareTogether.Engines
 
         internal static ImmutableList<MissingArrangementRequirement> CalculateMissingSetupRequirements(
             ImmutableList<string> requiredSetupActionNames, ImmutableList<CompletedRequirementInfo> completedRequirements) =>
-            requiredSetupActionNames.Where(requiredAction =>
-                !completedRequirements.Any(completed => completed.RequirementName == requiredAction))
+            requiredSetupActionNames
+                .Where(requiredAction =>
+                    !completedRequirements.Any(completed => completed.RequirementName == requiredAction))
                 .Select(requiredAction => new MissingArrangementRequirement(requiredAction, null, null))
                 .ToImmutableList();
 
@@ -200,8 +201,9 @@ namespace CareTogether.Engines
 
         internal static ImmutableList<MissingArrangementRequirement> CalculateMissingCloseoutRequirements(
             ImmutableList<string> requiredCloseoutActionNames, ImmutableList<CompletedRequirementInfo> completedRequirements) =>
-            requiredCloseoutActionNames.Where(requiredAction =>
-                !completedRequirements.Any(completed => completed.RequirementName == requiredAction))
+            requiredCloseoutActionNames
+                .Where(requiredAction =>
+                    !completedRequirements.Any(completed => completed.RequirementName == requiredAction))
                 .Select(requiredAction => new MissingArrangementRequirement(requiredAction, null, null))
                 .ToImmutableList();
 
