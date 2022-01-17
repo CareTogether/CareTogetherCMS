@@ -179,8 +179,7 @@ namespace CareTogether.Engines
                 // TODO: An unknown issue is causing this to match no stages in some cases.
                 //       Is it possible for 'gapStages' to have zero elements?
                 var applicableStage = gapStages.FirstOrDefault(stage =>
-                    nextDueDate == null ||
-                    stage.endDate > nextDueDate + stage.incrementDelay ||
+                    stage.endDate >= (nextDueDate ?? gapStart) + stage.incrementDelay ||
                     stage.endDate == null);
                 if (applicableStage == default)
                     break;

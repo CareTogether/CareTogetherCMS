@@ -99,6 +99,21 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
 
             AssertEx.SequenceIs(result,
                 new DateTime(2022, 1, 17),
+                new DateTime(2022, 1, 24),
+                new DateTime(2022, 1, 31));
+        }
+
+        [TestMethod]
+        public void TestOneStageEndingBeforeCurrentTimeOpenGapLongerInterval()
+        {
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
+                utcNow: new DateTime(2022, 1, 30),
+                gapStart: new DateTime(2022, 1, 10), gapEnd: null,
+                arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
+                .Add((TimeSpan.FromDays(7), startDate: new DateTime(2022, 1, 1), endDate: new DateTime(2022, 1, 28))));
+
+            AssertEx.SequenceIs(result,
+                new DateTime(2022, 1, 17),
                 new DateTime(2022, 1, 24));
         }
 
@@ -215,7 +230,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
 
             AssertEx.SequenceIs(result,
                 new DateTime(2022, 1, 17),
-                new DateTime(2022, 1, 24));
+                new DateTime(2022, 1, 24),
+                new DateTime(2022, 1, 31));
         }
 
         [TestMethod]

@@ -41,6 +41,14 @@ namespace CareTogether.Core.Test
                 Assert.AreEqual(First, Second);
         }
 
+        public static void SequenceIs(ICollection<DateTime> actual, ICollection<DateTime> expected)
+        {
+            Assert.AreEqual(expected.Count, actual.Count);
+            foreach (var (First, Second) in Enumerable
+                .Zip(expected.ToImmutableSortedSet(), actual.ToImmutableSortedSet()))
+                Assert.AreEqual(First, Second);
+        }
+
         public static void SequenceIs<T>(ICollection<T> actual, params T[] expected)
             where T : class
         {

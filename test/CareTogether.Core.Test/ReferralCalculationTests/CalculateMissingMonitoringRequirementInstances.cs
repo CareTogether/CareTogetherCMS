@@ -2,7 +2,6 @@
 using CareTogether.Resources;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace CareTogether.Core.Test.ReferralCalculationTests
@@ -10,31 +9,124 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
     [TestClass]
     public class CalculateMissingMonitoringRequirementInstances
     {
-        private static Guid Id(char x) => Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
-        static readonly Guid guid0 = Id('0');
-        static readonly Guid guid1 = Id('1');
-        static readonly Guid guid2 = Id('2');
-        static readonly Guid guid3 = Id('3');
-        static readonly Guid guid4 = Id('4');
-        static readonly Guid guid5 = Id('5');
-        static readonly Guid guid6 = Id('6');
+        [TestMethod]
+        public void TestNoCompletions()
+        {
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+                new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))),
+                arrangementStartedAtUtc: new DateTime(2022, 1, 1),
+                completions: Helpers.Dates(),
+                utcNow: new DateTime(2022, 2, 14));
 
+            AssertEx.SequenceIs(result, Helpers.Dates((1, 3), (1, 10), (1, 17), (1, 24), (1, 31), (2, 14), (2, 28)));
+        }
 
         [TestMethod]
-        public void Test()
+        public void TestOneCompletion()
         {
-            Assert.Inconclusive("Not implemented");
-            //var result = ApprovalCalculations.CalculateMissingFamilyRequirementsFromRequirementCompletion(
-            //    status: null,
-            //    Helpers.FamilyRequirementsMet(
-            //        ("A", RequirementStage.Application, VolunteerFamilyRequirementScope.OncePerFamily, true, new List<Guid>() { }),
-            //        ("B", RequirementStage.Approval, VolunteerFamilyRequirementScope.OncePerFamily, true, new List<Guid>() { }),
-            //        ("C", RequirementStage.Approval, VolunteerFamilyRequirementScope.AllAdultsInTheFamily, true, new List<Guid>() { }),
-            //        ("D", RequirementStage.Approval, VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily, true, new List<Guid>() { }),
-            //        ("E", RequirementStage.Onboarding, VolunteerFamilyRequirementScope.OncePerFamily, true, new List<Guid>() { }),
-            //        ("F", RequirementStage.Onboarding, VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily, true, new List<Guid>() { })));
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+                new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))),
+                arrangementStartedAtUtc: new DateTime(2022, 1, 1),
+                completions: Helpers.Dates((1, 2)),
+                utcNow: new DateTime(2022, 2, 14));
 
-            //AssertEx.SequenceIs(result);
+            AssertEx.SequenceIs(result, Helpers.Dates((1, 9), (1, 16), (1, 23), (1, 30), (2, 13), (2, 27)));
+        }
+
+        [TestMethod]
+        public void TestTwoCompletionsInFirstStage()
+        {
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+                new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))),
+                arrangementStartedAtUtc: new DateTime(2022, 1, 1),
+                completions: Helpers.Dates((1, 2), (1, 2)),
+                utcNow: new DateTime(2022, 2, 14));
+
+            AssertEx.SequenceIs(result, Helpers.Dates((1, 9), (1, 16), (1, 23), (1, 30), (2, 13), (2, 27)));
+        }
+
+        [TestMethod]
+        public void TestTwoCompletionsInFirstStageOnStageEndDate()
+        {
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+                new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))),
+                arrangementStartedAtUtc: new DateTime(2022, 1, 1),
+                completions: Helpers.Dates((1, 1), (1, 2)),
+                utcNow: new DateTime(2022, 2, 14));
+
+            AssertEx.SequenceIs(result, Helpers.Dates((1, 9), (1, 16), (1, 23), (1, 30), (2, 13), (2, 27)));
+        }
+
+        [TestMethod]
+        public void TestTwoCompletionsInFirstAndSecondStages()
+        {
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+                new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))),
+                arrangementStartedAtUtc: new DateTime(2022, 1, 1),
+                completions: Helpers.Dates((1, 2), (1, 9)),
+                utcNow: new DateTime(2022, 2, 14));
+
+            AssertEx.SequenceIs(result, Helpers.Dates((1, 16), (1, 23), (1, 30), (2, 13), (2, 27)));
+        }
+
+        [TestMethod]
+        public void TestTwoCompletionsInFirstAndSecondStagesOneMissedDate()
+        {
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+                new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))),
+                arrangementStartedAtUtc: new DateTime(2022, 1, 1),
+                completions: Helpers.Dates((1, 2), (1, 10)),
+                utcNow: new DateTime(2022, 2, 14));
+
+            AssertEx.SequenceIs(result, Helpers.Dates((1, 9), (1, 17), (1, 24), (1, 31), (2, 14), (2, 28)));
+        }
+
+        [TestMethod]
+        public void TestTwoCompletionsInFirstAndSecondStagesTwoMissedDates()
+        {
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+                new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))),
+                arrangementStartedAtUtc: new DateTime(2022, 1, 1),
+                completions: Helpers.Dates((1, 2), (1, 20)),
+                utcNow: new DateTime(2022, 2, 14));
+
+            AssertEx.SequenceIs(result, Helpers.Dates((1, 9), (1, 16), (1, 27), (2, 10), (2, 24)));
+        }
+
+        [TestMethod]
+        public void TestTwoCompletionsInFirstAndSecondStagesTwoGapsOfMissedDates()
+        {
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+                new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))),
+                arrangementStartedAtUtc: new DateTime(2022, 1, 1),
+                completions: Helpers.Dates((1, 2), (1, 20), (2, 9)),
+                utcNow: new DateTime(2022, 2, 14));
+
+            AssertEx.SequenceIs(result, Helpers.Dates((1, 9), (1, 16), (1, 27), (2, 23)));
         }
     }
 }
