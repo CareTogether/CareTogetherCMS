@@ -14,6 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.FeatureManagement;
+using Microsoft.FeatureManagement.FeatureFilters;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Logging;
 
@@ -33,7 +34,9 @@ namespace CareTogether.Api
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddFeatureManagement();
+            services.AddSingleton<ITargetingContextAccessor, UserTargetingContextAccessor>();
+            services.AddFeatureManagement()
+                .AddFeatureFilter<TargetingFilter>();
 
             services.AddApplicationInsightsTelemetry();
 

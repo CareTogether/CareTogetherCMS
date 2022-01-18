@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Configuration;
 
 namespace CareTogether.Api
 {
@@ -13,8 +14,15 @@ namespace CareTogether.Api
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                });
+                    webBuilder.ConfigureAppConfiguration(config =>
+                    {
+                        var settings = config.Build();
+                        if (settings.GetSection("AppConfigService").Exists())
+                        {
+                            var connection = settings["AppConfigService:ConnectionString"];
+                            config.AddAzureAppConfiguration(options =>
+                                options.Connect(connection).UseFeatureFlags());
+                        }
+                    }).UseStartup<Startup>());
     }
 }
