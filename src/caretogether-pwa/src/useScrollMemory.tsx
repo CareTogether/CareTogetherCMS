@@ -32,5 +32,5 @@ export function useScrollMemory() {
       const positionToSave = { x: mainElement.scrollLeft, y: mainElement.scrollTop } as ScrollPosition;
       setPagePosition(positionToSave);
     };
-  }, []);
+  }, [mainElement, pagePosition.x, pagePosition.y, setPagePosition]);
 }
