@@ -13,6 +13,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { HeaderContent, HeaderTitle } from '../Header';
 import { SearchBar } from '../SearchBar';
 import { useLocalStorage } from '../../useLocalStorage';
+import { useScrollMemory } from '../../useScrollMemory';
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -108,15 +109,17 @@ function VolunteerApproval() {
     Object.entries(policy.volunteerPolicy?.volunteerRoles).map(([key]) => key))
     || [];
 
+  useScrollMemory();
+  
   function openVolunteerFamily(volunteerFamilyId: string) {
-    navigate(`/volunteers/family/${volunteerFamilyId}`);
+    navigate(`../family/${volunteerFamilyId}`);
   }
   const [createVolunteerFamilyDialogOpen, setCreateVolunteerFamilyDialogOpen] = useState(false);
   
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const location = useLocation();
-
+    
   const [expandedView, setExpandedView] = useLocalStorage('volunteer-approval-expanded', true);
 
   return (
@@ -237,7 +240,7 @@ function VolunteerApproval() {
         </Fab>
         {createVolunteerFamilyDialogOpen && <CreateVolunteerFamilyDialog onClose={(volunteerFamilyId) => {
           setCreateVolunteerFamilyDialogOpen(false);
-          volunteerFamilyId && navigate(`/volunteers/family/${volunteerFamilyId}`);
+          volunteerFamilyId && openVolunteerFamily(volunteerFamilyId);
         }} />}
       </Grid>
     </Grid>

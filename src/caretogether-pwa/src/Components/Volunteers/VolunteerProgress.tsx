@@ -11,6 +11,7 @@ import { CombinedFamilyInfo } from '../../GeneratedClient';
 import { HeaderContent, HeaderTitle } from '../Header';
 import { SearchBar } from '../SearchBar';
 import { useLocalStorage } from '../../useLocalStorage';
+import { useScrollMemory } from '../../useScrollMemory';
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -66,6 +67,8 @@ function VolunteerProgress() {
   const filteredVolunteerFamilies = volunteerFamilies.filter(family => filterText.length === 0 ||
     family.family?.adults?.some(adult => simplify(`${adult.item1?.firstName} ${adult.item1?.lastName}`).includes(filterText)) ||
     family.family?.children?.some(child => simplify(`${child?.firstName} ${child?.lastName}`).includes(filterText)));
+
+  useScrollMemory();
 
   function openVolunteerFamily(volunteerFamilyId: string) {
     navigate(`/volunteers/family/${volunteerFamilyId}`);
@@ -161,7 +164,7 @@ function VolunteerProgress() {
         </Fab>
         {createVolunteerFamilyDialogOpen && <CreateVolunteerFamilyDialog onClose={(volunteerFamilyId) => {
           setCreateVolunteerFamilyDialogOpen(false);
-          volunteerFamilyId && navigate(`/volunteers/family/${volunteerFamilyId}`);
+          volunteerFamilyId && openVolunteerFamily(volunteerFamilyId);
         }} />}
       </Grid>
     </Grid>
