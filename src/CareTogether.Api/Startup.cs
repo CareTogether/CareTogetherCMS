@@ -34,10 +34,9 @@ namespace CareTogether.Api
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton<ITargetingContextAccessor, UserTargetingContextAccessor>();
             services.AddFeatureManagement()
                 .AddFeatureFilter<TargetingFilter>();
-
-            services.AddSingleton<ITargetingContextAccessor, TargetingContextAccessor>();
 
             services.AddApplicationInsightsTelemetry();
 

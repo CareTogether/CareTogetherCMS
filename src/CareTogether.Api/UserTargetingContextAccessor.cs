@@ -4,14 +4,14 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Api
 {
-    public sealed class TargetingContextAccessor : ITargetingContextAccessor
+    public sealed class UserTargetingContextAccessor : ITargetingContextAccessor
     {
         private const string TargetingContextLookup = "TargetingContextAccessor.TargetingContext";
 
         private readonly IHttpContextAccessor httpContextAccessor;
 
 
-        public TargetingContextAccessor(IHttpContextAccessor httpContextAccessor)
+        public UserTargetingContextAccessor(IHttpContextAccessor httpContextAccessor)
         {
             this.httpContextAccessor = httpContextAccessor;
         }
@@ -20,7 +20,6 @@ namespace CareTogether.Api
         public ValueTask<TargetingContext> GetContextAsync()
         {
             // Use the HttpContext to cache the result of this lookup
-            //TODO: Profile to see if this added complexity is actually useful
             var httpContext = httpContextAccessor.HttpContext!;
             if (httpContext.Items.TryGetValue(TargetingContextLookup, out var value))
                 return ValueTask.FromResult((TargetingContext)value!);
