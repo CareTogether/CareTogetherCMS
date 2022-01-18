@@ -117,7 +117,7 @@ export function PartneringFamilyScreen() {
   <Container>
     <HeaderContent>
       <HeaderTitle>
-        <IconButton color="inherit" onClick={() => navigate("..")}>
+        <IconButton color="inherit" onClick={() => navigate(-1)}>
           <ArrowBack />
         </IconButton>
         &nbsp;
