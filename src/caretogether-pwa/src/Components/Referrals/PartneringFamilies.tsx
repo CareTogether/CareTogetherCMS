@@ -11,6 +11,7 @@ import { FamilyName } from '../Families/FamilyName';
 import { ArrangementCard } from './ArrangementCard';
 import { CreatePartneringFamilyDialog } from './CreatePartneringFamilyDialog';
 import { HeaderContent, HeaderTitle } from '../Header';
+import { useScrollMemory } from '../../useScrollMemory';
 
 export const useStyles = makeStyles((theme) => ({
   paper: {
@@ -51,6 +52,8 @@ function PartneringFamilies() {
   const navigate = useNavigate();
 
   const partneringFamilies = useRecoilValue(partneringFamiliesData);
+
+  useScrollMemory();
 
   function openPartneringFamily(partneringFamilyId: string) {
     navigate(`/referrals/family/${partneringFamilyId}`);
@@ -110,7 +113,7 @@ function PartneringFamilies() {
         </Fab>
         {createPartneringFamilyDialogOpen && <CreatePartneringFamilyDialog onClose={(partneringFamilyId) => {
           setCreatePartneringFamilyDialogOpen(false);
-          partneringFamilyId && navigate(`/referrals/family/${partneringFamilyId}`);
+          partneringFamilyId && openPartneringFamily(partneringFamilyId);
         }} />}
       </Grid>
     </Grid>
