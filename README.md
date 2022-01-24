@@ -23,9 +23,9 @@ Finally, to run locally you will need a set of environment configuration files. 
    ```
    This will run Azurite with the default Blob service endpoint (we don't use the Queue or Table storage endpoints currently). Add a `--silent` parameter if you don't want to see individual requests logged to the terminal. The `--loose` parameter is currently required to support valet key access from the browser.
 3. Run the _CareTogether.Api_ project:
-   a. If using **Visual Studio**, you can open the _CareTogetherCMS.sln_ solution and hit F5 to start debugging.
-   b. If using **Visual Studio Code**, you may first need to perform a `dotnet build` before you can debug.
-   c. If you just want to run the API **from the command line**, run the following from the _CareTogether.Api_ directory:
+   - If using **Visual Studio**, you can open the _CareTogetherCMS.sln_ solution and hit F5 to start debugging.
+   - If using **Visual Studio Code**, you may first need to perform a `dotnet build` before you can debug.
+   - If you just want to run the API **from the command line**, run the following from the _CareTogether.Api_ directory:
    ```
    dotnet run SolutionDir=..
    ```
