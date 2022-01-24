@@ -102,10 +102,12 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
               <strong><PersonName person={personLookup(partneringFamily.family!.id, arrangement.partneringFamilyPersonId)} /></strong>
               {(arrangementPolicy?.childInvolvement === ChildInvolvement.ChildHousing || arrangementPolicy?.childInvolvement === ChildInvolvement.DaytimeChildCareOnly) && (
                 <>
-                  <IconButton size="small" style={{float: 'right', marginLeft: 4}}
-                    onClick={(event) => {}}>
-                    <PersonPinCircleIcon />
-                  </IconButton>
+                  {summaryOnly
+                    ? <PersonPinCircleIcon color='disabled' style={{float: 'right', marginLeft: 2, marginTop: 2}} />
+                    : <IconButton size="small" style={{float: 'right', marginLeft: 2}}
+                        onClick={(event) => {}}>
+                        <PersonPinCircleIcon />
+                      </IconButton>}
                   <span style={{float: 'right', paddingTop: 4}}>{
                     (arrangement.childrenLocationHistory && arrangement.childrenLocationHistory.length > 0)
                     ? <FamilyName family={familyLookup(arrangement.childrenLocationHistory[arrangement.childrenLocationHistory.length - 1].childLocationFamilyId)} />
