@@ -19,6 +19,8 @@ interface TrackChildLocationDialogProps {
 
 export function TrackChildLocationDialog({partneringFamily, referralId, arrangement, onClose}: TrackChildLocationDialogProps) {
   const policy = useRecoilValue(policyData);
+  const arrangementPolicy = policy.referralPolicy!.arrangementPolicies!.find(x => x.arrangementType === arrangement.arrangementType);
+  console.log(arrangementPolicy?.childInvolvement);
   
   const familyLookup = useFamilyLookup();
   const personLookup = usePersonLookup();
