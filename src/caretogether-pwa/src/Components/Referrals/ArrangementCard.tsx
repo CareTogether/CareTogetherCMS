@@ -9,6 +9,7 @@ import { CardInfoRow } from '../CardInfoRow';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../../Model/ConfigurationModel';
 import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
+import PersonPinCircleIcon from '@material-ui/icons/PersonPinCircle';
 import { RecordArrangementStepDialog } from './RecordArrangementStepDialog';
 import { StartArrangementDialog } from './StartArrangementDialog';
 import { EndArrangementDialog } from './EndArrangementDialog';
@@ -97,13 +98,20 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
       <CardContent className={classes.cardContent}>
         <Typography variant="body2" component="div">
           <ul className={classes.cardList}>
-            <li>
+            <li style={{paddingBottom: 12}}>
               <strong><PersonName person={personLookup(partneringFamily.family!.id, arrangement.partneringFamilyPersonId)} /></strong>
               {(arrangementPolicy?.childInvolvement === ChildInvolvement.ChildHousing || arrangementPolicy?.childInvolvement === ChildInvolvement.DaytimeChildCareOnly) && (
-                <span> -&nbsp;current location: {
-                  (arrangement.childrenLocationHistory && arrangement.childrenLocationHistory.length > 0)
-                  ? <FamilyName family={familyLookup(arrangement.childrenLocationHistory[arrangement.childrenLocationHistory.length - 1].childLocationFamilyId)} />
-                  : "Location unspecified"}</span>
+                <>
+                  <IconButton size="small" style={{float: 'right', marginLeft: 4}}
+                    onClick={(event) => {}}>
+                    <PersonPinCircleIcon />
+                  </IconButton>
+                  <span style={{float: 'right', paddingTop: 4}}>{
+                    (arrangement.childrenLocationHistory && arrangement.childrenLocationHistory.length > 0)
+                    ? <FamilyName family={familyLookup(arrangement.childrenLocationHistory[arrangement.childrenLocationHistory.length - 1].childLocationFamilyId)} />
+                    : <strong>Location unspecified</strong>
+                  }</span>
+                </>
               )}
             </li>
             <Divider style={{marginBottom: 10}} />
