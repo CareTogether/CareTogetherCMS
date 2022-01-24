@@ -98,7 +98,7 @@ namespace CareTogether.Resources.Models
                     c.PartneringFamilyPersonId,
                     ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<ExemptedRequirementInfo>.Empty,
                     ImmutableList<IndividualVolunteerAssignment>.Empty, ImmutableList<FamilyVolunteerAssignment>.Empty,
-                    ImmutableList<ChildLocationHistoryEntry>.Empty),
+                    ImmutableSortedSet<ChildLocationHistoryEntry>.Empty),
                 _ => referralEntry.Arrangements.TryGetValue(command.ArrangementId, out var arrangementEntry)
                     ? command switch
                     {
