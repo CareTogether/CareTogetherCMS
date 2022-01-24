@@ -6,7 +6,7 @@ CareTogether is an open-source case management system (CMS) for nonprofits conne
 ![Open Help-Wanted Issues](https://badgen.net/github/label-issues/CareTogether/CareTogetherCMS/help%20wanted/open)
 
 ## Prerequisites
-You can build and run CareTogether on any operating system supported by Node.js and .NET Core, including Windows, MacOS, and supported Linux distros. CareTogether requires currently supported versions of Node.js and the .NET Core 5.0 SDK to be installed on your system, and - depending on how you choose to run the API - you may want to install Docker Desktop as well (the API runs in an Alpine Linux container in Azure for production builds).
+You can build and run CareTogether on any operating system supported by Node.js and .NET Core, including Windows, MacOS, and supported Linux distros. CareTogether requires currently supported versions of Node.js and the .NET 6 SDK to be installed on your system.
 
 You will also need to install [the Azurite emulator for Azure Storage](https://github.com/Azure/Azurite) and [the Yarn package manager](https://yarnpkg.com/getting-started/install):
 ```
@@ -17,15 +17,21 @@ Finally, to run locally you will need a set of environment configuration files. 
 
 ## Development
 1. Clone the repository into any local directory on your device, e.g. `D:\Code\CareTogetherCMS`.
-2. Create a directory (outside of the Git-managed repo directory) for storing Azurite data and logs, e.g. `D:\AzuriteData`.
-3. Start Azurite from the command line, specifying a location for storing data outside of the Git-managed directory, e.g.:
+2. Start Azurite from the command line with the `--loose` flag:
    ```
-   azurite-blob --location D:\AzuriteData --loose
+   azurite-blob --loose
    ```
    This will run Azurite with the default Blob service endpoint (we don't use the Queue or Table storage endpoints currently). Add a `--silent` parameter if you don't want to see individual requests logged to the terminal. The `--loose` parameter is currently required to support valet key access from the browser.
-4. Run the _CareTogether.Api_ project in the debugger. If using Visual Studio, you can open the _CareTogetherCMS.sln_ solution and hit F5 to start debugging.
-5. To run the _caretogether-pwa_ web application, run the following from the _caretogether-pwa_ directory:
+3. Run the _CareTogether.Api_ project:
+   a. If using **Visual Studio**, you can open the _CareTogetherCMS.sln_ solution and hit F5 to start debugging.
+   b. If using **Visual Studio Code**, you may first need to perform a `dotnet build` before you can debug.
+   c. If you just want to run the API **from the command line**, run the following from the _CareTogether.Api_ directory:
    ```
+   dotnet run SolutionDir=..
+   ```
+4. To run the _caretogether-pwa_ web application, run the following from the _caretogether-pwa_ directory:
+   ```
+   yarn install
    yarn start
    ```
 
