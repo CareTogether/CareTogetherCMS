@@ -14,6 +14,7 @@ import { RecordArrangementStepDialog } from './RecordArrangementStepDialog';
 import { StartArrangementDialog } from './StartArrangementDialog';
 import { EndArrangementDialog } from './EndArrangementDialog';
 import { AssignVolunteerFunctionDialog } from './AssignVolunteerFunctionDialog';
+import { TrackChildLocationDialog } from './TrackChildLocationDialog';
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -77,6 +78,7 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
     setArrangementRecordMenuAnchor(null);
     setAssignVolunteerFunctionParameter(volunteerFunction);
   }
+  const [showTrackChildLocationDialog, setShowTrackChildLocationDialog] = useState(false);
 
   const arrangementPolicy = policy.referralPolicy?.arrangementPolicies?.find(a => a.arrangementType === arrangement.arrangementType);
   const missingVolunteerFunctions = arrangementPolicy?.volunteerFunctions?.filter(volunteerFunction =>
@@ -105,7 +107,7 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
                   {summaryOnly
                     ? <PersonPinCircleIcon color='disabled' style={{float: 'right', marginLeft: 2, marginTop: 2}} />
                     : <IconButton size="small" style={{float: 'right', marginLeft: 2}}
-                        onClick={(event) => {}}>
+                        onClick={(event) => setShowTrackChildLocationDialog(true)}>
                         <PersonPinCircleIcon />
                       </IconButton>}
                   <span style={{float: 'right', paddingTop: 4}}>{
@@ -203,6 +205,8 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
           ))}
         </MenuList>
       </Menu>
+      {showTrackChildLocationDialog && <TrackChildLocationDialog partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement}
+        onClose={() => setShowTrackChildLocationDialog(false)} />}
       {(recordArrangementStepParameter && <RecordArrangementStepDialog partneringFamily={partneringFamily} referralId={referralId} arrangementId={arrangement.id!}
         requirementName={recordArrangementStepParameter.requirementName} stepActionRequirement={recordArrangementStepParameter.requirementInfo}
         onClose={() => setRecordArrangementStepParameter(null)} />) || null}

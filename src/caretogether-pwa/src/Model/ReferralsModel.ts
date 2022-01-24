@@ -1,6 +1,6 @@
 import { selector, useRecoilCallback } from "recoil";
 import { authenticatingFetch } from "../Auth";
-import { ReferralCommand, ReferralsClient, ArrangementCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement, StartArrangement, EndArrangement, AssignVolunteerFamily, AssignIndividualVolunteer, ReferralCloseReason, CloseReferral, CreateReferral } from "../GeneratedClient";
+import { ReferralCommand, ReferralsClient, ArrangementCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement, StartArrangement, EndArrangement, AssignVolunteerFamily, AssignIndividualVolunteer, ReferralCloseReason, CloseReferral, CreateReferral, TrackChildLocationChange, ChildLocationPlan } from "../GeneratedClient";
 import { visibleFamiliesData } from "./ModelLoader";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 
@@ -154,6 +154,22 @@ export function useReferralsModel() {
       command.arrangementFunction = arrangementFunction;
       return command;
     });
+  const trackChildLocation = useArrangementCommandCallbackWithLocation(
+    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
+      childLocationFamilyId: string, childLocationAdultId: string, changedAtLocal: Date,
+      childLocationPlan: ChildLocationPlan, additionalExplanation: string) => {
+      const command = new TrackChildLocationChange({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementId: arrangementId
+      });
+      command.childLocationFamilyId = childLocationFamilyId;
+      //command.childLocationAdultId = childLocationAdultId; TODO: Implement this!
+      command.changedAtUtc = changedAtLocal;
+      command.plan = childLocationPlan;
+      command.additionalExplanation = additionalExplanation;
+      return command;
+    });
   const closeReferral = useReferralCommandCallbackWithLocation(
     async (organizationId, locationId, partneringFamilyId, referralId: string,
       reason: ReferralCloseReason, closedAtLocal: Date) => {
@@ -183,6 +199,7 @@ export function useReferralsModel() {
     endArrangement,
     assignVolunteerFamily,
     assignIndividualVolunteer,
+    trackChildLocation,
     closeReferral,
     openReferral
   };
