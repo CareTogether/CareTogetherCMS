@@ -24,13 +24,16 @@ export function useScrollMemory() {
 
   useLayoutEffect(() => {
     // Restore the scroll position for the current page when mounting it.
-    // If none was prevoiusly saved, the default is simply to scroll to (0, 0).
-    mainElement.scrollTo(pagePosition.x, pagePosition.y);
+    // If none was previously saved, the default is simply to scroll to (0, 0).
+    mainElement?.scrollTo(pagePosition.x, pagePosition.y);
 
     return () => {
       // Save the scroll position for the current page when unmounting it.
-      const positionToSave = { x: mainElement.scrollLeft, y: mainElement.scrollTop } as ScrollPosition;
-      setPagePosition(positionToSave);
+      // Only do this if the page has actually rendered the main element.
+      if (mainElement) {
+        const positionToSave = { x: mainElement?.scrollLeft, y: mainElement?.scrollTop } as ScrollPosition;
+        setPagePosition(positionToSave);
+      }
     };
   }, [mainElement, pagePosition.x, pagePosition.y, setPagePosition]);
 }
