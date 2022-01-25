@@ -1,6 +1,6 @@
 import { Card, CardActions, CardContent, CardHeader, Divider, IconButton, ListItemText, makeStyles, Menu, MenuItem, MenuList, Typography, useMediaQuery, useTheme } from '@material-ui/core';
 import React, { useState } from 'react';
-import { ArrangementPhase, Arrangement, CombinedFamilyInfo, ActionRequirement, Person, FunctionRequirement, VolunteerFunction } from '../../GeneratedClient';
+import { ArrangementPhase, Arrangement, CombinedFamilyInfo, ActionRequirement, Person, FunctionRequirement, VolunteerFunction, ChildInvolvement } from '../../GeneratedClient';
 import { useFamilyLookup, usePersonLookup } from '../../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
 import { FamilyName } from '../Families/FamilyName';
@@ -9,10 +9,12 @@ import { CardInfoRow } from '../CardInfoRow';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../../Model/ConfigurationModel';
 import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
+import PersonPinCircleIcon from '@material-ui/icons/PersonPinCircle';
 import { RecordArrangementStepDialog } from './RecordArrangementStepDialog';
 import { StartArrangementDialog } from './StartArrangementDialog';
 import { EndArrangementDialog } from './EndArrangementDialog';
 import { AssignVolunteerFunctionDialog } from './AssignVolunteerFunctionDialog';
+import { TrackChildLocationDialog } from './TrackChildLocationDialog';
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -76,6 +78,7 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
     setArrangementRecordMenuAnchor(null);
     setAssignVolunteerFunctionParameter(volunteerFunction);
   }
+  const [showTrackChildLocationDialog, setShowTrackChildLocationDialog] = useState(false);
 
   const arrangementPolicy = policy.referralPolicy?.arrangementPolicies?.find(a => a.arrangementType === arrangement.arrangementType);
   const missingVolunteerFunctions = arrangementPolicy?.volunteerFunctions?.filter(volunteerFunction =>
@@ -97,7 +100,25 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
       <CardContent className={classes.cardContent}>
         <Typography variant="body2" component="div">
           <ul className={classes.cardList}>
-            <li><strong><PersonName person={personLookup(partneringFamily.family!.id, arrangement.partneringFamilyPersonId)} /></strong></li>
+            <li style={{paddingBottom: 12}}>
+              <strong><PersonName person={personLookup(partneringFamily.family!.id, arrangement.partneringFamilyPersonId)} /></strong>
+              {(arrangementPolicy?.childInvolvement === ChildInvolvement.ChildHousing || arrangementPolicy?.childInvolvement === ChildInvolvement.DaytimeChildCareOnly) && (
+                <>
+                  {summaryOnly
+                    ? <PersonPinCircleIcon color='disabled' style={{float: 'right', marginLeft: 2, marginTop: 2}} />
+                    : <IconButton size="small" style={{float: 'right', marginLeft: 2}}
+                        onClick={(event) => setShowTrackChildLocationDialog(true)}>
+                        <PersonPinCircleIcon />
+                      </IconButton>}
+                  <span style={{float: 'right', paddingTop: 4}}>{
+                    (arrangement.childrenLocationHistory && arrangement.childrenLocationHistory.length > 0)
+                    ? <FamilyName family={familyLookup(arrangement.childrenLocationHistory[arrangement.childrenLocationHistory.length - 1].childLocationFamilyId)} />
+                    : <strong>Location unspecified</strong>
+                  }</span>
+                </>
+              )}
+            </li>
+            <Divider style={{marginBottom: 10}} />
             {arrangement.familyVolunteerAssignments?.map(x => (
               <li key={`famVol-${x.arrangementFunction}-${x.familyId}`}><FamilyName family={familyLookup(x.familyId)} /> - {x.arrangementFunction}</li>
             ))}
@@ -184,6 +205,8 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
           ))}
         </MenuList>
       </Menu>
+      {showTrackChildLocationDialog && <TrackChildLocationDialog partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement}
+        onClose={() => setShowTrackChildLocationDialog(false)} />}
       {(recordArrangementStepParameter && <RecordArrangementStepDialog partneringFamily={partneringFamily} referralId={referralId} arrangementId={arrangement.id!}
         requirementName={recordArrangementStepParameter.requirementName} stepActionRequirement={recordArrangementStepParameter.requirementInfo}
         onClose={() => setRecordArrangementStepParameter(null)} />) || null}

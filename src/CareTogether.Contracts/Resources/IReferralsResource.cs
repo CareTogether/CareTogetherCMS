@@ -18,15 +18,22 @@ namespace CareTogether.Resources
         ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<IndividualVolunteerAssignment> IndividualVolunteerAssignments,
         ImmutableList<FamilyVolunteerAssignment> FamilyVolunteerAssignments,
-        ImmutableList<ChildLocationHistoryEntry> ChildrenLocationHistory);
+        ImmutableSortedSet<ChildLocationHistoryEntry> ChildrenLocationHistory);
 
     public enum ReferralCloseReason { NotAppropriate, NoCapacity, NoLongerNeeded, Resourced, NeedMet };
 
     public sealed record IndividualVolunteerAssignment(Guid FamilyId, Guid PersonId, string ArrangementFunction);
     public sealed record FamilyVolunteerAssignment(Guid FamilyId, string ArrangementFunction);
     public sealed record ChildLocationHistoryEntry(Guid UserId, DateTime TimestampUtc,
-        Guid ChildLocationFamilyId, ChildLocationPlan Plan, string AdditionalExplanation);
-
+        Guid ChildLocationFamilyId, ChildLocationPlan Plan, string AdditionalExplanation) : IComparable<ChildLocationHistoryEntry>
+    {
+        public int CompareTo(ChildLocationHistoryEntry? other)
+        {
+            return other == null
+                ? 1
+                : DateTime.Compare(TimestampUtc, other.TimestampUtc);
+        }
+    }
     public enum ChildLocationPlan { OvernightHousing, DaytimeChildCare, ReturnToFamily }
 
     [JsonHierarchyBase]
