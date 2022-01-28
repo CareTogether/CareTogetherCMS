@@ -37,7 +37,7 @@ namespace CareTogether.Engines
         {
             var missingSetupRequirements = CalculateMissingSetupRequirements(arrangementPolicy.RequiredSetupActionNames,
                 arrangement.CompletedRequirements);
-            var missingMonitoringRequirements = CalculateMissingMonitoringRequirements(arrangementPolicy.RequiredMonitoringActionNames,
+            var missingMonitoringRequirements = CalculateMissingMonitoringRequirements(arrangementPolicy.RequiredMonitoringActions,
                 arrangement.StartedAtUtc, arrangement.CompletedRequirements, utcNow);
             var missingCloseoutRequirements = CalculateMissingCloseoutRequirements(arrangementPolicy.RequiredCloseoutActionNames,
                 arrangement.CompletedRequirements);

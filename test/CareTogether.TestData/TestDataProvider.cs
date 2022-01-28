@@ -399,7 +399,7 @@ namespace CareTogether.TestData
                                 "Hosting Consent",
                                 "Medical POA"
                             }.ToImmutableList(),
-                            RequiredMonitoringActionNames: new List<MonitoringRequirement>
+                            RequiredMonitoringActions: new List<MonitoringRequirement>
                             {
                                 new MonitoringRequirement("Family Coach Safety Visit",
                                     new RecurrencePolicy(new List<RecurrencePolicyStage>
@@ -442,7 +442,7 @@ namespace CareTogether.TestData
                             {
                                 "Advocacy Agreement"
                             }.ToImmutableList(),
-                            RequiredMonitoringActionNames: new List<MonitoringRequirement>
+                            RequiredMonitoringActions: new List<MonitoringRequirement>
                             {
                                 new MonitoringRequirement("Family Coach Checkin",
                                     new RecurrencePolicy(new List<RecurrencePolicyStage>

@@ -40,7 +40,7 @@ namespace CareTogether.Resources
         ChildInvolvement ChildInvolvement,
         ImmutableList<VolunteerFunction> VolunteerFunctions,
         ImmutableList<string> RequiredSetupActionNames,
-        ImmutableList<MonitoringRequirement> RequiredMonitoringActionNames,
+        ImmutableList<MonitoringRequirement> RequiredMonitoringActions,
         ImmutableList<string> RequiredCloseoutActionNames);
     public enum ChildInvolvement { ChildHousing, DaytimeChildCareOnly, NoChildInvolvement };
 

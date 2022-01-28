@@ -37,7 +37,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     EligibleIndividualVolunteerRoles: Helpers.From(),
                     EligibleVolunteerFamilyRoles: Helpers.From())),
                 RequiredSetupActionNames: Helpers.From(),
-                RequiredMonitoringActionNames: ImmutableList<MonitoringRequirement>.Empty,
+                RequiredMonitoringActions: ImmutableList<MonitoringRequirement>.Empty,
                 RequiredCloseoutActionNames: Helpers.From()))
             .Add(new ArrangementPolicy("Daytime Hosting", ChildInvolvement.DaytimeChildCareOnly,
                 ImmutableList<VolunteerFunction>.Empty
@@ -54,7 +54,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     EligibleIndividualVolunteerRoles: Helpers.From(),
                     EligibleVolunteerFamilyRoles: Helpers.From())),
                 RequiredSetupActionNames: Helpers.From(),
-                RequiredMonitoringActionNames: ImmutableList<MonitoringRequirement>.Empty,
+                RequiredMonitoringActions: ImmutableList<MonitoringRequirement>.Empty,
                 RequiredCloseoutActionNames: Helpers.From()))
             .Add(new ArrangementPolicy("Friending", ChildInvolvement.NoChildInvolvement,
                 ImmutableList<VolunteerFunction>.Empty
@@ -65,7 +65,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     EligibleIndividualVolunteerRoles: Helpers.From(),
                     EligibleVolunteerFamilyRoles: Helpers.From())),
                 RequiredSetupActionNames: Helpers.From(),
-                RequiredMonitoringActionNames: ImmutableList<MonitoringRequirement>.Empty,
+                RequiredMonitoringActions: ImmutableList<MonitoringRequirement>.Empty,
                 RequiredCloseoutActionNames: Helpers.From())));
 
         static Person adult1 = new Person(guid1, null, true, "Bob", "Smith", Gender.Male, new ExactAge(new DateTime(2000, 1, 1)), "",

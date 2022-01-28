@@ -1098,7 +1098,7 @@ export class ArrangementPolicy implements IArrangementPolicy {
     childInvolvement?: ChildInvolvement;
     volunteerFunctions?: VolunteerFunction[];
     requiredSetupActionNames?: string[];
-    requiredMonitoringActionNames?: MonitoringRequirement[];
+    requiredMonitoringActions?: MonitoringRequirement[];
     requiredCloseoutActionNames?: string[];
 
     constructor(data?: IArrangementPolicy) {
@@ -1124,10 +1124,10 @@ export class ArrangementPolicy implements IArrangementPolicy {
                 for (let item of _data["requiredSetupActionNames"])
                     this.requiredSetupActionNames!.push(item);
             }
-            if (Array.isArray(_data["requiredMonitoringActionNames"])) {
-                this.requiredMonitoringActionNames = [] as any;
-                for (let item of _data["requiredMonitoringActionNames"])
-                    this.requiredMonitoringActionNames!.push(MonitoringRequirement.fromJS(item));
+            if (Array.isArray(_data["requiredMonitoringActions"])) {
+                this.requiredMonitoringActions = [] as any;
+                for (let item of _data["requiredMonitoringActions"])
+                    this.requiredMonitoringActions!.push(MonitoringRequirement.fromJS(item));
             }
             if (Array.isArray(_data["requiredCloseoutActionNames"])) {
                 this.requiredCloseoutActionNames = [] as any;
@@ -1158,10 +1158,10 @@ export class ArrangementPolicy implements IArrangementPolicy {
             for (let item of this.requiredSetupActionNames)
                 data["requiredSetupActionNames"].push(item);
         }
-        if (Array.isArray(this.requiredMonitoringActionNames)) {
-            data["requiredMonitoringActionNames"] = [];
-            for (let item of this.requiredMonitoringActionNames)
-                data["requiredMonitoringActionNames"].push(item.toJSON());
+        if (Array.isArray(this.requiredMonitoringActions)) {
+            data["requiredMonitoringActions"] = [];
+            for (let item of this.requiredMonitoringActions)
+                data["requiredMonitoringActions"].push(item.toJSON());
         }
         if (Array.isArray(this.requiredCloseoutActionNames)) {
             data["requiredCloseoutActionNames"] = [];
@@ -1177,7 +1177,7 @@ export interface IArrangementPolicy {
     childInvolvement?: ChildInvolvement;
     volunteerFunctions?: VolunteerFunction[];
     requiredSetupActionNames?: string[];
-    requiredMonitoringActionNames?: MonitoringRequirement[];
+    requiredMonitoringActions?: MonitoringRequirement[];
     requiredCloseoutActionNames?: string[];
 }
 
