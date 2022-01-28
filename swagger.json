@@ -911,7 +911,7 @@
           "requiredMonitoringActionNames": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ValueTupleOfStringAndRecurrencePolicy"
+              "$ref": "#/components/schemas/MonitoringRequirement"
             }
           },
           "requiredCloseoutActionNames": {
@@ -974,14 +974,14 @@
           2
         ]
       },
-      "ValueTupleOfStringAndRecurrencePolicy": {
+      "MonitoringRequirement": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "item1": {
+          "actionName": {
             "type": "string"
           },
-          "item2": {
+          "recurrence": {
             "$ref": "#/components/schemas/RecurrencePolicy"
           }
         }
