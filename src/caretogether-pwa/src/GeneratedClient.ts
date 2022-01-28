@@ -1098,7 +1098,7 @@ export class ArrangementPolicy implements IArrangementPolicy {
     childInvolvement?: ChildInvolvement;
     volunteerFunctions?: VolunteerFunction[];
     requiredSetupActionNames?: string[];
-    requiredMonitoringActionNames?: ValueTupleOfStringAndRecurrencePolicy[];
+    requiredMonitoringActions?: MonitoringRequirement[];
     requiredCloseoutActionNames?: string[];
 
     constructor(data?: IArrangementPolicy) {
@@ -1124,10 +1124,10 @@ export class ArrangementPolicy implements IArrangementPolicy {
                 for (let item of _data["requiredSetupActionNames"])
                     this.requiredSetupActionNames!.push(item);
             }
-            if (Array.isArray(_data["requiredMonitoringActionNames"])) {
-                this.requiredMonitoringActionNames = [] as any;
-                for (let item of _data["requiredMonitoringActionNames"])
-                    this.requiredMonitoringActionNames!.push(ValueTupleOfStringAndRecurrencePolicy.fromJS(item));
+            if (Array.isArray(_data["requiredMonitoringActions"])) {
+                this.requiredMonitoringActions = [] as any;
+                for (let item of _data["requiredMonitoringActions"])
+                    this.requiredMonitoringActions!.push(MonitoringRequirement.fromJS(item));
             }
             if (Array.isArray(_data["requiredCloseoutActionNames"])) {
                 this.requiredCloseoutActionNames = [] as any;
@@ -1158,10 +1158,10 @@ export class ArrangementPolicy implements IArrangementPolicy {
             for (let item of this.requiredSetupActionNames)
                 data["requiredSetupActionNames"].push(item);
         }
-        if (Array.isArray(this.requiredMonitoringActionNames)) {
-            data["requiredMonitoringActionNames"] = [];
-            for (let item of this.requiredMonitoringActionNames)
-                data["requiredMonitoringActionNames"].push(item.toJSON());
+        if (Array.isArray(this.requiredMonitoringActions)) {
+            data["requiredMonitoringActions"] = [];
+            for (let item of this.requiredMonitoringActions)
+                data["requiredMonitoringActions"].push(item.toJSON());
         }
         if (Array.isArray(this.requiredCloseoutActionNames)) {
             data["requiredCloseoutActionNames"] = [];
@@ -1177,7 +1177,7 @@ export interface IArrangementPolicy {
     childInvolvement?: ChildInvolvement;
     volunteerFunctions?: VolunteerFunction[];
     requiredSetupActionNames?: string[];
-    requiredMonitoringActionNames?: ValueTupleOfStringAndRecurrencePolicy[];
+    requiredMonitoringActions?: MonitoringRequirement[];
     requiredCloseoutActionNames?: string[];
 }
 
@@ -1257,11 +1257,11 @@ export enum FunctionRequirement {
     OneOrMore = 2,
 }
 
-export class ValueTupleOfStringAndRecurrencePolicy implements IValueTupleOfStringAndRecurrencePolicy {
-    item1?: string;
-    item2?: RecurrencePolicy;
+export class MonitoringRequirement implements IMonitoringRequirement {
+    actionName?: string;
+    recurrence?: RecurrencePolicy;
 
-    constructor(data?: IValueTupleOfStringAndRecurrencePolicy) {
+    constructor(data?: IMonitoringRequirement) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -1272,29 +1272,29 @@ export class ValueTupleOfStringAndRecurrencePolicy implements IValueTupleOfStrin
 
     init(_data?: any) {
         if (_data) {
-            this.item1 = _data["item1"];
-            this.item2 = _data["item2"] ? RecurrencePolicy.fromJS(_data["item2"]) : <any>undefined;
+            this.actionName = _data["actionName"];
+            this.recurrence = _data["recurrence"] ? RecurrencePolicy.fromJS(_data["recurrence"]) : <any>undefined;
         }
     }
 
-    static fromJS(data: any): ValueTupleOfStringAndRecurrencePolicy {
+    static fromJS(data: any): MonitoringRequirement {
         data = typeof data === 'object' ? data : {};
-        let result = new ValueTupleOfStringAndRecurrencePolicy();
+        let result = new MonitoringRequirement();
         result.init(data);
         return result;
     }
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["item1"] = this.item1;
-        data["item2"] = this.item2 ? this.item2.toJSON() : <any>undefined;
+        data["actionName"] = this.actionName;
+        data["recurrence"] = this.recurrence ? this.recurrence.toJSON() : <any>undefined;
         return data;
     }
 }
 
-export interface IValueTupleOfStringAndRecurrencePolicy {
-    item1?: string;
-    item2?: RecurrencePolicy;
+export interface IMonitoringRequirement {
+    actionName?: string;
+    recurrence?: RecurrencePolicy;
 }
 
 export class RecurrencePolicy implements IRecurrencePolicy {

@@ -37,7 +37,7 @@ namespace CareTogether.Engines
         {
             var missingSetupRequirements = CalculateMissingSetupRequirements(arrangementPolicy.RequiredSetupActionNames,
                 arrangement.CompletedRequirements);
-            var missingMonitoringRequirements = CalculateMissingMonitoringRequirements(arrangementPolicy.RequiredMonitoringActionNames,
+            var missingMonitoringRequirements = CalculateMissingMonitoringRequirements(arrangementPolicy.RequiredMonitoringActions,
                 arrangement.StartedAtUtc, arrangement.CompletedRequirements, utcNow);
             var missingCloseoutRequirements = CalculateMissingCloseoutRequirements(arrangementPolicy.RequiredCloseoutActionNames,
                 arrangement.CompletedRequirements);
@@ -86,7 +86,7 @@ namespace CareTogether.Engines
                 .ToImmutableList();
 
         internal static ImmutableList<MissingArrangementRequirement> CalculateMissingMonitoringRequirements(
-            ImmutableList<(string ActionName, RecurrencePolicy Recurrence)> requiredMonitoringActionNames,
+            ImmutableList<MonitoringRequirement> requiredMonitoringActionNames,
             DateTime? startedAtUtc, ImmutableList<CompletedRequirementInfo> completedRequirements, DateTime utcNow) =>
             requiredMonitoringActionNames.SelectMany(monitoringRequirement =>
                 (startedAtUtc.HasValue

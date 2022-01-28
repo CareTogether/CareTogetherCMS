@@ -40,9 +40,11 @@ namespace CareTogether.Resources
         ChildInvolvement ChildInvolvement,
         ImmutableList<VolunteerFunction> VolunteerFunctions,
         ImmutableList<string> RequiredSetupActionNames,
-        ImmutableList<(string ActionName, RecurrencePolicy Recurrence)> RequiredMonitoringActionNames,
+        ImmutableList<MonitoringRequirement> RequiredMonitoringActions,
         ImmutableList<string> RequiredCloseoutActionNames);
     public enum ChildInvolvement { ChildHousing, DaytimeChildCareOnly, NoChildInvolvement };
+
+    public sealed record MonitoringRequirement(string ActionName, RecurrencePolicy Recurrence);
 
     public enum FunctionRequirement { ZeroOrMore, ExactlyOne, OneOrMore };
     public sealed record VolunteerFunction(string ArrangementFunction, FunctionRequirement Requirement,

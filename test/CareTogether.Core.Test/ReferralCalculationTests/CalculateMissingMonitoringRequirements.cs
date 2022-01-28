@@ -13,12 +13,12 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestNotStarted()
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirements(
-                requiredMonitoringActionNames: ImmutableList<(string ActionName, RecurrencePolicy Recurrence)>.Empty
-                .Add(("A", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                requiredMonitoringActionNames: ImmutableList<MonitoringRequirement>.Empty
+                .Add(new MonitoringRequirement("A", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null)))))
-                .Add(("B", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                .Add(new MonitoringRequirement("B", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null))))),
                 startedAtUtc: null,
                 Helpers.Completed(),
@@ -31,12 +31,12 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestStartedNoCompletions()
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirements(
-                requiredMonitoringActionNames: ImmutableList<(string ActionName, RecurrencePolicy Recurrence)>.Empty
-                .Add(("A", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                requiredMonitoringActionNames: ImmutableList<MonitoringRequirement>.Empty
+                .Add(new MonitoringRequirement("A", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null)))))
-                .Add(("B", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                .Add(new MonitoringRequirement("B", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null))))),
                 startedAtUtc: new DateTime(2022, 1, 1),
                 Helpers.Completed(),
@@ -60,12 +60,12 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestStartedSomeCompletions()
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirements(
-                requiredMonitoringActionNames: ImmutableList<(string ActionName, RecurrencePolicy Recurrence)>.Empty
-                .Add(("A", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                requiredMonitoringActionNames: ImmutableList<MonitoringRequirement>.Empty
+                .Add(new MonitoringRequirement("A", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null)))))
-                .Add(("B", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                .Add(new MonitoringRequirement("B", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null))))),
                 startedAtUtc: new DateTime(2022, 1, 1),
                 Helpers.Completed(("A", 3), ("B", 7)),
@@ -87,12 +87,12 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestStartedUpToDate()
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirements(
-                requiredMonitoringActionNames: ImmutableList<(string ActionName, RecurrencePolicy Recurrence)>.Empty
-                .Add(("A", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                requiredMonitoringActionNames: ImmutableList<MonitoringRequirement>.Empty
+                .Add(new MonitoringRequirement("A", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null)))))
-                .Add(("B", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                .Add(new MonitoringRequirement("B", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null))))),
                 startedAtUtc: new DateTime(2022, 1, 1),
                 Helpers.Completed(("A", 3), ("B", 7)),

@@ -399,16 +399,16 @@ namespace CareTogether.TestData
                                 "Hosting Consent",
                                 "Medical POA"
                             }.ToImmutableList(),
-                            RequiredMonitoringActionNames: new List<(string, RecurrencePolicy)>
+                            RequiredMonitoringActions: new List<MonitoringRequirement>
                             {
-                                ("Family Coach Safety Visit",
+                                new MonitoringRequirement("Family Coach Safety Visit",
                                     new RecurrencePolicy(new List<RecurrencePolicyStage>
                                     {
                                         new RecurrencePolicyStage(TimeSpan.FromHours(48), 1),
                                         new RecurrencePolicyStage(TimeSpan.FromDays(7), 5),
                                         new RecurrencePolicyStage(TimeSpan.FromDays(14), null)
                                     }.ToImmutableList())),
-                                ("Family Coach Supervision",
+                                new MonitoringRequirement("Family Coach Supervision",
                                     new RecurrencePolicy(new List<RecurrencePolicyStage>
                                     {
                                         new RecurrencePolicyStage(TimeSpan.FromDays(7), null)
@@ -442,15 +442,15 @@ namespace CareTogether.TestData
                             {
                                 "Advocacy Agreement"
                             }.ToImmutableList(),
-                            RequiredMonitoringActionNames: new List<(string, RecurrencePolicy)>
+                            RequiredMonitoringActions: new List<MonitoringRequirement>
                             {
-                                ("Family Coach Checkin",
+                                new MonitoringRequirement("Family Coach Checkin",
                                     new RecurrencePolicy(new List<RecurrencePolicyStage>
                                     {
                                         new RecurrencePolicyStage(TimeSpan.FromDays(2), 1),
                                         new RecurrencePolicyStage(TimeSpan.FromDays(7), null)
                                     }.ToImmutableList())),
-                                ("Family Coach Supervision",
+                                new MonitoringRequirement("Family Coach Supervision",
                                     new RecurrencePolicy(new List<RecurrencePolicyStage>
                                     {
                                         new RecurrencePolicyStage(TimeSpan.FromDays(7), null)
