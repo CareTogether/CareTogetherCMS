@@ -3101,7 +3101,7 @@ export interface IChildLocationHistoryEntry {
 export enum ChildLocationPlan {
     OvernightHousing = 0,
     DaytimeChildCare = 1,
-    ReturnToFamily = 2,
+    WithParent = 2,
 }
 
 export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {

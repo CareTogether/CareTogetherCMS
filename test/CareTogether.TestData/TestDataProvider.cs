@@ -211,7 +211,7 @@ namespace CareTogether.TestData
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 24, 8, 30, 35), new TrackChildLocationChange(guid1, guid1, guid1,
                     new DateTime(2020, 3, 24, 8, 30, 35), guid2, ChildLocationPlan.OvernightHousing, "Mom dropped off on way to work")),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 30, 18, 18, 18), new TrackChildLocationChange(guid1, guid1, guid1,
-                    new DateTime(2020, 3, 30, 18, 18, 18), guid1, ChildLocationPlan.ReturnToFamily, "Mom met us and picked him up at DQ"))/*,
+                    new DateTime(2020, 3, 30, 18, 18, 18), guid1, ChildLocationPlan.WithParent, "Mom met us and picked him up at DQ"))/*,
                 new ReferralCommandExecuted(adminId, new DateTime(2020, 10, 4, 12, 32, 55), new CloseReferral(guid1, guid1, ReferralCloseReason.NeedMet)),
                 new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 30, 45), new CreateReferral(guid2, guid2, new DateTime(2021, 7, 10, 19, 30, 45))),
                 new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 32, 0), new UploadReferralDocument(guid2, guid2, guid2, "Jane Doe second referral info.pdf")),

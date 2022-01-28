@@ -34,7 +34,7 @@ namespace CareTogether.Resources
                 : DateTime.Compare(TimestampUtc, other.TimestampUtc);
         }
     }
-    public enum ChildLocationPlan { OvernightHousing, DaytimeChildCare, ReturnToFamily }
+    public enum ChildLocationPlan { OvernightHousing, DaytimeChildCare, WithParent }
 
     [JsonHierarchyBase]
     public abstract partial record ReferralCommand(Guid FamilyId, Guid ReferralId);
