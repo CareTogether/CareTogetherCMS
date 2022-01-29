@@ -7,10 +7,13 @@ namespace CareTogether.Resources
 {
     public sealed record OrganizationConfiguration(string OrganizationName,
         ImmutableList<LocationConfiguration> Locations,
+        ImmutableList<RoleDefinition> Roles,
         ImmutableDictionary<Guid, UserAccessConfiguration> Users);
 
     public sealed record LocationConfiguration(Guid Id, string Name,
         ImmutableList<string> Ethnicities, ImmutableList<string> AdultFamilyRelationships);
+
+    public sealed record RoleDefinition(string RoleName, ImmutableList<Permission> Permissions);
 
     public sealed record UserAccessConfiguration(Guid PersonId,
         ImmutableList<UserLocationRole> LocationRoles);

@@ -295,9 +295,13 @@ namespace CareTogether.TestData
                         .Add(new LocationConfiguration(Guid.Parse("33333333-3333-3333-3333-333333333333"), "El Dorado",
                             ImmutableList<string>.Empty.AddRange(new[] { "Amazon", "Caucasian", "Other" }),
                             ImmutableList<string>.Empty.AddRange(new[] { "Single", "Spouse", "Partner", "Dad", "Mom", "Relative", "Domestic Worker" }))),
+                    ImmutableList<RoleDefinition>.Empty
+                        .Add(new RoleDefinition("OrganizationAdministrator", ImmutableList<Permission>.Empty
+                            .AddRange(Enum.GetValues<Permission>())))
+                        .Add(new RoleDefinition("NoteEnterer", ImmutableList<Permission>.Empty)),
                     ImmutableDictionary<Guid, UserAccessConfiguration>.Empty
                         .Add(adminId, new UserAccessConfiguration(adminId, ImmutableList<UserLocationRole>.Empty
-                            .Add(new UserLocationRole(guid2, Roles.OrganizationAdministrator))))));
+                            .Add(new UserLocationRole(guid2, "OrganizationAdministrator"))))));
         }
 
         public static async Task PopulatePolicies(IObjectStore<EffectiveLocationPolicy> policiesStore)

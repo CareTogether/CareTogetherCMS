@@ -1,5 +1,6 @@
 ﻿using CareTogether.Resources;
 using Microsoft.AspNetCore.Authentication;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -38,14 +39,19 @@ namespace CareTogether.Api
             var userAccessConfiguration = configuration.Users[userId];
             foreach (var locationRole in userAccessConfiguration.LocationRoles)
             {
-                //TODO: We should either define a more complex claims structure or scope authentication to a user-specified location.
+                //TODO: We should either define a more complex claims structure, or scope authentication to a user-specified location.
+                //      One possible structure would be a ClaimsIdentity per location, requiring the current location to be
+                //      factored in when evaluating claims on the principal.
                 principal.AddClaimOnlyOnce(claimsIdentity, Claims.LocationId, locationRole.LocationId.ToString());
                 principal.AddClaimOnlyOnce(claimsIdentity, claimsIdentity.RoleClaimType, locationRole.RoleName);
                 principal.AddClaimOnlyOnce(claimsIdentity, Claims.PersonId, userAccessConfiguration.PersonId.ToString());
-            }
 
-            //TODO: Store the individual permissions (set union of role grants minus set union of role denies),
-            //      rather than the coarse-grained roles?
+                var rolePermissions = configuration.Roles
+                    .Single(role => role.RoleName == locationRole.RoleName)
+                    .Permissions;
+                foreach (var rolePermission in rolePermissions)
+                    claimsIdentity.AddClaim(new Claim(Claims.Permission, rolePermission.ToString()));
+            }
 
             claimsIdentity.Label = "Tenant User";
             principal.AddIdentity(claimsIdentity);

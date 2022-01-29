@@ -718,6 +718,7 @@ export class VolunteersClient {
 export class OrganizationConfiguration implements IOrganizationConfiguration {
     organizationName?: string;
     locations?: LocationConfiguration[];
+    roles?: RoleDefinition[];
     users?: { [key: string]: UserAccessConfiguration; };
 
     constructor(data?: IOrganizationConfiguration) {
@@ -736,6 +737,11 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
                 this.locations = [] as any;
                 for (let item of _data["locations"])
                     this.locations!.push(LocationConfiguration.fromJS(item));
+            }
+            if (Array.isArray(_data["roles"])) {
+                this.roles = [] as any;
+                for (let item of _data["roles"])
+                    this.roles!.push(RoleDefinition.fromJS(item));
             }
             if (_data["users"]) {
                 this.users = {} as any;
@@ -762,6 +768,11 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
             for (let item of this.locations)
                 data["locations"].push(item.toJSON());
         }
+        if (Array.isArray(this.roles)) {
+            data["roles"] = [];
+            for (let item of this.roles)
+                data["roles"].push(item.toJSON());
+        }
         if (this.users) {
             data["users"] = {};
             for (let key in this.users) {
@@ -776,6 +787,7 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
 export interface IOrganizationConfiguration {
     organizationName?: string;
     locations?: LocationConfiguration[];
+    roles?: RoleDefinition[];
     users?: { [key: string]: UserAccessConfiguration; };
 }
 
@@ -841,6 +853,54 @@ export interface ILocationConfiguration {
     name?: string;
     ethnicities?: string[];
     adultFamilyRelationships?: string[];
+}
+
+export class RoleDefinition implements IRoleDefinition {
+    roleName?: string;
+    permissions?: number[];
+
+    constructor(data?: IRoleDefinition) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.roleName = _data["roleName"];
+            if (Array.isArray(_data["permissions"])) {
+                this.permissions = [] as any;
+                for (let item of _data["permissions"])
+                    this.permissions!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): RoleDefinition {
+        data = typeof data === 'object' ? data : {};
+        let result = new RoleDefinition();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["roleName"] = this.roleName;
+        if (Array.isArray(this.permissions)) {
+            data["permissions"] = [];
+            for (let item of this.permissions)
+                data["permissions"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IRoleDefinition {
+    roleName?: string;
+    permissions?: number[];
 }
 
 export class UserAccessConfiguration implements IUserAccessConfiguration {

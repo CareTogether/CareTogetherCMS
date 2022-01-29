@@ -756,6 +756,12 @@
               "$ref": "#/components/schemas/LocationConfiguration"
             }
           },
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleDefinition"
+            }
+          },
           "users": {
             "type": "object",
             "additionalProperties": {
@@ -788,6 +794,25 @@
             }
           }
         }
+      },
+      "RoleDefinition": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "roleName": {
+            "type": "string"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Permission"
+            }
+          }
+        }
+      },
+      "Permission": {
+        "type": "integer",
+        "description": ""
       },
       "UserAccessConfiguration": {
         "type": "object",

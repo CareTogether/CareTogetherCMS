@@ -55,5 +55,8 @@ namespace CareTogether
         public static bool CanAccess(this ClaimsPrincipal user, Guid organizationId, Guid locationId) =>
             user.HasClaim(Claims.OrganizationId, organizationId.ToString()) &&
             user.HasClaim(Claims.LocationId, locationId.ToString());
+
+        public static bool HasPermission(this ClaimsPrincipal user, Permission permission) =>
+            user.HasClaim(Claims.Permission, permission.ToString());
     }
 }
