@@ -102,7 +102,8 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
           <ul className={classes.cardList}>
             <li style={{paddingBottom: 12}}>
               <strong><PersonName person={personLookup(partneringFamily.family!.id, arrangement.partneringFamilyPersonId)} /></strong>
-              {(arrangementPolicy?.childInvolvement === ChildInvolvement.ChildHousing || arrangementPolicy?.childInvolvement === ChildInvolvement.DaytimeChildCareOnly) && (
+              {arrangement.phase === ArrangementPhase.Started &&
+                (arrangementPolicy?.childInvolvement === ChildInvolvement.ChildHousing || arrangementPolicy?.childInvolvement === ChildInvolvement.DaytimeChildCareOnly) && (
                 <>
                   {summaryOnly
                     ? <PersonPinCircleIcon color='disabled' style={{float: 'right', marginLeft: 2, marginTop: 2}} />
@@ -181,11 +182,14 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
         open={Boolean(arrangementRecordMenuAnchor)}
         onClose={() => setArrangementRecordMenuAnchor(null)}>
         <MenuList dense={isMobile}>
-          {arrangement.missingRequirements?.map(missingRequirement =>
-            <MenuItem key={missingRequirement.actionName} onClick={() => selectRecordArrangementStep(missingRequirement.actionName!)}>
-              <ListItemText primary={missingRequirement.actionName} />
+          {arrangement.missingRequirements
+            ?.map(missingRequirement => missingRequirement.actionName!)
+            ?.filter((value, index, self) => self.indexOf(value) === index)
+            ?.map(missingRequirementActionName => (
+            <MenuItem key={missingRequirementActionName} onClick={() => selectRecordArrangementStep(missingRequirementActionName)}>
+              <ListItemText primary={missingRequirementActionName} />
             </MenuItem>
-          )}
+          ))}
           {arrangement.phase === ArrangementPhase.ReadyToStart && (
             <MenuItem onClick={() => setShowStartArrangementDialog(true)}>
               <ListItemText primary="Start" />
