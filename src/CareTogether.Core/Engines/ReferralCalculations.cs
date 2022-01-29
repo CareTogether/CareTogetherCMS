@@ -62,7 +62,7 @@ namespace CareTogether.Engines
                 ArrangementPhase.SettingUp => missingSetupRequirements,
                 ArrangementPhase.ReadyToStart => ImmutableList<MissingArrangementRequirement>.Empty,
                 ArrangementPhase.Started => missingMonitoringRequirements,
-                ArrangementPhase.Ended => missingCloseoutRequirements,
+                ArrangementPhase.Ended => missingCloseoutRequirements.Concat(missingMonitoringRequirements).ToImmutableList(),
                 _ => throw new NotImplementedException($"The arrangement phase '{phase}' has not been implemented.")
             };
 
