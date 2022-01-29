@@ -6,7 +6,7 @@ import { useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../../Model/VolunteersModel';
 import { policyData } from '../../Model/ConfigurationModel';
 import { RoleApprovalStatus } from '../../GeneratedClient';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import AddIcon from '@material-ui/icons/Add';
 import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -86,7 +86,10 @@ function simplify(input: string) {
     .toLowerCase();
 }
 
-function VolunteerApproval() {
+function VolunteerApproval(props: { onOpen: () => void }) {
+  const { onOpen } = props;
+  useEffect(onOpen);
+
   const classes = useStyles();
   const navigate = useNavigate();
 

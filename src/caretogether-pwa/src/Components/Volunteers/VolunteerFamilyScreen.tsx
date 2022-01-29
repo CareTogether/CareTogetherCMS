@@ -139,7 +139,7 @@ export function VolunteerFamilyScreen() {
   <Container>
     <HeaderContent>
       <HeaderTitle>
-        <IconButton color="inherit" onClick={() => navigate(-1)}>
+        <IconButton color="inherit" onClick={() => navigate("..")}>
           <ArrowBack />
         </IconButton>
         &nbsp;
