@@ -27,7 +27,7 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
   
   const child = personLookup(partneringFamily.family!.id, arrangement.partneringFamilyPersonId);
 
-  const lastTrackedLocationFamily = familyLookup(arrangement.childrenLocationHistory?.[arrangement.childrenLocationHistory.length - 1].childLocationFamilyId);
+  const lastTrackedLocationFamily = familyLookup(arrangement.childrenLocationHistory?.[arrangement.childrenLocationHistory.length - 1]?.childLocationFamilyId);
   
   const [selectedAssigneeKey, setSelectedAssigneeKey] = useState('');
   const [changedAtLocal, setChangedAtLocal] = useState(new Date());
@@ -75,8 +75,11 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
     <Dialog open={true} onClose={onClose} aria-labelledby="track-child-location-title">
       <DialogTitle id="track-child-location-title">Track Location Change for <PersonName person={child} /></DialogTitle>
       <DialogContent>
-        <DialogContentText>The last recorded location for this child is: <FamilyName family={lastTrackedLocationFamily} /></DialogContentText>
-        <br />
+        {lastTrackedLocationFamily &&
+          <>
+            <DialogContentText>The last recorded location for this child is: <FamilyName family={lastTrackedLocationFamily} /></DialogContentText>
+            <br />
+          </>}
         <Grid container spacing={2}>
           <Grid item xs={12} sm={6}>
             <FormControl required fullWidth size="small">
