@@ -1,6 +1,7 @@
 ﻿using CareTogether.Engines;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Immutable;
+using System.Linq;
 
 namespace CareTogether.Core.Test.ReferralCalculationTests
 {
@@ -84,7 +85,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 ArrangementPhase.Ended,
                 missingSetupRequirements, missingMonitoringRequirements, missingCloseoutRequirements);
 
-            Assert.AreSame(result, missingCloseoutRequirements);
+            AssertEx.SequenceIs(result, missingCloseoutRequirements.Concat(missingMonitoringRequirements).ToArray());
         }
     }
 }
