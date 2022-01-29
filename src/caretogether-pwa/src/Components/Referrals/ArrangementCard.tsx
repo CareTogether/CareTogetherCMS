@@ -102,7 +102,8 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
           <ul className={classes.cardList}>
             <li style={{paddingBottom: 12}}>
               <strong><PersonName person={personLookup(partneringFamily.family!.id, arrangement.partneringFamilyPersonId)} /></strong>
-              {(arrangementPolicy?.childInvolvement === ChildInvolvement.ChildHousing || arrangementPolicy?.childInvolvement === ChildInvolvement.DaytimeChildCareOnly) && (
+              {arrangement.phase === ArrangementPhase.Started &&
+                (arrangementPolicy?.childInvolvement === ChildInvolvement.ChildHousing || arrangementPolicy?.childInvolvement === ChildInvolvement.DaytimeChildCareOnly) && (
                 <>
                   {summaryOnly
                     ? <PersonPinCircleIcon color='disabled' style={{float: 'right', marginLeft: 2, marginTop: 2}} />
