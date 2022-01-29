@@ -3,7 +3,7 @@ import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, Ta
 import { useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../../Model/VolunteersModel';
 import { allApprovalAndOnboardingRequirementsData } from '../../Model/ConfigurationModel';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import AddIcon from '@material-ui/icons/Add';
 import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';
@@ -54,7 +54,10 @@ function simplify(input: string) {
     .toLowerCase();
 }
 
-function VolunteerProgress() {
+function VolunteerProgress(props: { onOpen: () => void }) {
+  const { onOpen } = props;
+  useEffect(onOpen);
+
   const classes = useStyles();
   const navigate = useNavigate();
 
