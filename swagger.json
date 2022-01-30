@@ -815,11 +815,13 @@
         "description": "",
         "x-enumNames": [
           "ReadDocuments",
-          "UploadDocuments"
+          "UploadDocuments",
+          "ViewApprovalStatus"
         ],
         "enum": [
           1,
-          2
+          2,
+          200
         ]
       },
       "UserAccessConfiguration": {

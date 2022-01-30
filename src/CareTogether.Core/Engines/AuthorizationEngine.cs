@@ -1,6 +1,7 @@
 using CareTogether.Managers;
 using CareTogether.Resources;
 using System;
+using System.Collections.Immutable;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -81,7 +82,24 @@ namespace CareTogether.Engines
         public async Task<VolunteerFamilyInfo> DiscloseVolunteerFamilyInfoAsync(ClaimsPrincipal user, VolunteerFamilyInfo volunteerFamilyInfo)
         {
             await Task.Yield();
-            return volunteerFamilyInfo;
+            return volunteerFamilyInfo with
+            {
+                FamilyRoleApprovals = user.HasPermission(Permission.ViewApprovalStatus)
+                ? volunteerFamilyInfo.FamilyRoleApprovals
+                : ImmutableDictionary<string, ImmutableList<RoleVersionApproval>>.Empty,
+                RemovedRoles = user.HasPermission(Permission.ViewApprovalStatus)
+                ? volunteerFamilyInfo.RemovedRoles
+                : ImmutableList<RemovedRole>.Empty,
+                IndividualVolunteers = user.HasPermission(Permission.ViewApprovalStatus)
+                ? volunteerFamilyInfo.IndividualVolunteers
+                : volunteerFamilyInfo.IndividualVolunteers.ToImmutableDictionary(
+                    keySelector: kvp => kvp.Key,
+                    elementSelector: kvp => kvp.Value with
+                    {
+                        RemovedRoles = ImmutableList<RemovedRole>.Empty,
+                        IndividualRoleApprovals = ImmutableDictionary<string, ImmutableList<RoleVersionApproval>>.Empty
+                    })
+            };
         }
 
         public async Task<Family> DiscloseFamilyAsync(ClaimsPrincipal user, Family family)
