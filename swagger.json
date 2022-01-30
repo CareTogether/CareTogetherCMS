@@ -812,7 +812,15 @@
       },
       "Permission": {
         "type": "integer",
-        "description": ""
+        "description": "",
+        "x-enumNames": [
+          "ReadDocuments",
+          "UploadDocuments"
+        ],
+        "enum": [
+          1,
+          2
+        ]
       },
       "UserAccessConfiguration": {
         "type": "object",

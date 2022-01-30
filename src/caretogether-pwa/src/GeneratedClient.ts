@@ -857,7 +857,7 @@ export interface ILocationConfiguration {
 
 export class RoleDefinition implements IRoleDefinition {
     roleName?: string;
-    permissions?: number[];
+    permissions?: Permission[];
 
     constructor(data?: IRoleDefinition) {
         if (data) {
@@ -900,7 +900,12 @@ export class RoleDefinition implements IRoleDefinition {
 
 export interface IRoleDefinition {
     roleName?: string;
-    permissions?: number[];
+    permissions?: Permission[];
+}
+
+export enum Permission {
+    ReadDocuments = 1,
+    UploadDocuments = 2,
 }
 
 export class UserAccessConfiguration implements IUserAccessConfiguration {
