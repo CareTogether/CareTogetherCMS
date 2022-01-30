@@ -23,7 +23,9 @@ namespace CareTogether.Api
             var userId = principal.UserId();
 
             // Look up the tenant access for the user.
-            var userTenantAccess = await accountsResource.GetTenantAccessSummaryAsync(principal);
+            //TODO: This is currently a not-quite-circular reference as AccountsResource looks up roles from the ClaimsPrincipal.
+            //      It works, the way this code is written, but it's messy and should be fixed when implementing org switching.
+            var userTenantAccess = await accountsResource.GetUserOrganizationAccessAsync(principal);
             
             var organizationId = userTenantAccess.OrganizationId;
             principal.AddClaimOnlyOnce(claimsIdentity, Claims.OrganizationId, organizationId.ToString());

@@ -17,11 +17,11 @@ namespace CareTogether.Api.Controllers
 
 
         [HttpGet("/api/[controller]/me/tenantAccess")]
-        public async Task<ActionResult<UserTenantAccessSummary>> GetUserTenantAccess()
+        public async Task<ActionResult<UserOrganizationAccess>> GetUserOrganizationAccess()
         {
-            var tenantAccessSummary = await accountsResource.GetTenantAccessSummaryAsync(User);
+            var userOrganizationAccess = await accountsResource.GetUserOrganizationAccessAsync(User);
 
-            return Ok(tenantAccessSummary);
+            return Ok(userOrganizationAccess);
         }
     }
 }

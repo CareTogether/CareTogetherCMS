@@ -5,14 +5,16 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Resources
 {
-    public sealed record UserTenantAccessSummary(Guid OrganizationId,
-        ImmutableList<Guid> LocationIds);
+    public sealed record UserOrganizationAccess(Guid OrganizationId,
+        ImmutableList<UserLocationAccess> LocationIds);
+    public sealed record UserLocationAccess(Guid LocationId,
+        ImmutableList<string> Roles, ImmutableList<Permission> Permissions);
 
     /// <summary>
     /// The <see cref="IAccountsResource"/> is responsible for user account management in CareTogether.
     /// </summary>
     public interface IAccountsResource
     {
-        Task<UserTenantAccessSummary> GetTenantAccessSummaryAsync(ClaimsPrincipal user);
+        Task<UserOrganizationAccess> GetUserOrganizationAccessAsync(ClaimsPrincipal user);
     }
 }

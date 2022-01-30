@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { atom, useRecoilState, useSetRecoilState } from "recoil";
 import { authenticatingFetch } from "../Auth";
 import { CombinedFamilyInfo, DirectoryClient, UsersClient } from "../GeneratedClient";
-import { currentOrganizationState, currentLocationState } from "./SessionModel";
+import { currentOrganizationState, currentLocationState, currentPermissionsState } from "./SessionModel";
 
 export const visibleFamiliesData = atom<CombinedFamilyInfo[]>({
   key: 'visibleFamiliesData',
@@ -16,6 +16,7 @@ interface ModelLoaderProps {
 export function ModelLoader({children}: ModelLoaderProps) {
   const [organizationId, setOrganizationId] = useRecoilState(currentOrganizationState);
   const [locationId, setLocationId] = useRecoilState(currentLocationState);
+  const [, setCurrentPermissions] = useRecoilState(currentPermissionsState);
   const [loaded, setLoaded] = useState(false);
   
   const setVisibleFamilies = useSetRecoilState(visibleFamiliesData);
@@ -24,12 +25,13 @@ export function ModelLoader({children}: ModelLoaderProps) {
   useEffect(() => {
     const loadInitialLocation = async () => {
       const usersClient = new UsersClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const userResponse = await usersClient.getUserTenantAccess();
+      const userResponse = await usersClient.getUserOrganizationAccess();
       setOrganizationId(userResponse.organizationId!);
-      setLocationId(userResponse.locationIds![0]);
+      setLocationId(userResponse.locationIds![0].locationId!);
+      setCurrentPermissions(userResponse.locationIds![0].permissions!);
     }
     loadInitialLocation();
-  }, [setOrganizationId, setLocationId]);
+  }, [setOrganizationId, setLocationId, setCurrentPermissions]);
 
   useEffect(() => {
     const loadInitialData = async () => {

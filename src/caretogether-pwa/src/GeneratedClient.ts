@@ -581,7 +581,7 @@ export class UsersClient {
         this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
     }
 
-    getUserTenantAccess(): Promise<UserTenantAccessSummary> {
+    getUserOrganizationAccess(): Promise<UserOrganizationAccess> {
         let url_ = this.baseUrl + "/api/Users/me/tenantAccess";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -593,18 +593,18 @@ export class UsersClient {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetUserTenantAccess(_response);
+            return this.processGetUserOrganizationAccess(_response);
         });
     }
 
-    protected processGetUserTenantAccess(response: Response): Promise<UserTenantAccessSummary> {
+    protected processGetUserOrganizationAccess(response: Response): Promise<UserOrganizationAccess> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = UserTenantAccessSummary.fromJS(resultData200);
+            result200 = UserOrganizationAccess.fromJS(resultData200);
             return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -612,7 +612,7 @@ export class UsersClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<UserTenantAccessSummary>(<any>null);
+        return Promise.resolve<UserOrganizationAccess>(<any>null);
     }
 }
 
@@ -5996,11 +5996,11 @@ export interface IUnexemptArrangementRequirement extends IArrangementCommand {
     requirementName?: string;
 }
 
-export class UserTenantAccessSummary implements IUserTenantAccessSummary {
+export class UserOrganizationAccess implements IUserOrganizationAccess {
     organizationId?: string;
-    locationIds?: string[];
+    locationIds?: UserLocationAccess[];
 
-    constructor(data?: IUserTenantAccessSummary) {
+    constructor(data?: IUserOrganizationAccess) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -6015,14 +6015,14 @@ export class UserTenantAccessSummary implements IUserTenantAccessSummary {
             if (Array.isArray(_data["locationIds"])) {
                 this.locationIds = [] as any;
                 for (let item of _data["locationIds"])
-                    this.locationIds!.push(item);
+                    this.locationIds!.push(UserLocationAccess.fromJS(item));
             }
         }
     }
 
-    static fromJS(data: any): UserTenantAccessSummary {
+    static fromJS(data: any): UserOrganizationAccess {
         data = typeof data === 'object' ? data : {};
-        let result = new UserTenantAccessSummary();
+        let result = new UserOrganizationAccess();
         result.init(data);
         return result;
     }
@@ -6033,15 +6033,75 @@ export class UserTenantAccessSummary implements IUserTenantAccessSummary {
         if (Array.isArray(this.locationIds)) {
             data["locationIds"] = [];
             for (let item of this.locationIds)
-                data["locationIds"].push(item);
+                data["locationIds"].push(item.toJSON());
         }
         return data;
     }
 }
 
-export interface IUserTenantAccessSummary {
+export interface IUserOrganizationAccess {
     organizationId?: string;
-    locationIds?: string[];
+    locationIds?: UserLocationAccess[];
+}
+
+export class UserLocationAccess implements IUserLocationAccess {
+    locationId?: string;
+    roles?: string[];
+    permissions?: Permission[];
+
+    constructor(data?: IUserLocationAccess) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.locationId = _data["locationId"];
+            if (Array.isArray(_data["roles"])) {
+                this.roles = [] as any;
+                for (let item of _data["roles"])
+                    this.roles!.push(item);
+            }
+            if (Array.isArray(_data["permissions"])) {
+                this.permissions = [] as any;
+                for (let item of _data["permissions"])
+                    this.permissions!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): UserLocationAccess {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserLocationAccess();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["locationId"] = this.locationId;
+        if (Array.isArray(this.roles)) {
+            data["roles"] = [];
+            for (let item of this.roles)
+                data["roles"].push(item);
+        }
+        if (Array.isArray(this.permissions)) {
+            data["permissions"] = [];
+            for (let item of this.permissions)
+                data["permissions"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IUserLocationAccess {
+    locationId?: string;
+    roles?: string[];
+    permissions?: Permission[];
 }
 
 export abstract class VolunteerFamilyCommand implements IVolunteerFamilyCommand {
