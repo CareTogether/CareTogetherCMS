@@ -1,6 +1,6 @@
 import { Container, Toolbar, Grid, Button, Menu, MenuItem, MenuList, useMediaQuery, useTheme, IconButton } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { ActionRequirement, ArrangementPolicy, CombinedFamilyInfo, ReferralCloseReason } from '../../GeneratedClient';
+import { ActionRequirement, ArrangementPolicy, CombinedFamilyInfo, Permission, ReferralCloseReason } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { useParams } from 'react-router';
@@ -27,6 +27,7 @@ import { FamilyDocuments } from '../Families/FamilyDocuments';
 import { HeaderContent, HeaderTitle } from '../Header';
 import { ArrowBack } from '@material-ui/icons';
 import { useNavigate } from 'react-router-dom';
+import { usePermissions } from '../../Model/SessionModel';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -113,6 +114,8 @@ export function PartneringFamilyScreen() {
 
   const navigate = useNavigate();
 
+  const permissions = usePermissions();
+
   return (
   <Container>
     <HeaderContent>
@@ -131,12 +134,12 @@ export function PartneringFamilyScreen() {
         onClick={(event) => setFamilyRecordMenuAnchor(event.currentTarget)}>
         Complete…
       </Button>
-      <Button
+      {permissions(Permission.UploadDocuments) && <Button
         onClick={() => setUploadDocumentDialogOpen(true)}
         variant="contained" color="default" size="small" className={classes.button}
         startIcon={<CloudUploadIcon />}>
         Upload
-      </Button>
+      </Button>}
       <Button
         onClick={() => setAddAdultDialogOpen(true)}
         variant="contained" color="default" size="small" className={classes.button}

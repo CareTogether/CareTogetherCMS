@@ -16,7 +16,7 @@ export const currentPermissionsState = atom({
   default: [] as Permission[]
 });
 
-export function usePermission(permission: Permission) {
+export function usePermissions() {
   const currentPermissions = useRecoilValue(currentPermissionsState);
-  return currentPermissions.includes(permission);
+  return (permission: Permission) => currentPermissions.includes(permission);
 }

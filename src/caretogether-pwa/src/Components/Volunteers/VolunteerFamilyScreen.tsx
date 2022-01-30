@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Container, Toolbar, Button, Menu, MenuItem, Grid, useMediaQuery, useTheme, MenuList, Divider, IconButton, ListItemText, Chip } from '@material-ui/core';
-import { CombinedFamilyInfo, ActionRequirement, RoleRemovalReason, CompletedRequirementInfo, ExemptedRequirementInfo } from '../../GeneratedClient';
+import { CombinedFamilyInfo, ActionRequirement, RoleRemovalReason, CompletedRequirementInfo, ExemptedRequirementInfo, Permission } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../../Model/ConfigurationModel';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
@@ -28,6 +28,7 @@ import { UnexemptVolunteerFamilyRequirementDialog } from './UnexemptVolunteerFam
 import { HeaderContent, HeaderTitle } from '../Header';
 import { useNavigate } from 'react-router-dom';
 import { ArrowBack } from '@material-ui/icons';
+import { usePermissions } from '../../Model/SessionModel';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -135,6 +136,8 @@ export function VolunteerFamilyScreen() {
   
   const navigate = useNavigate();
 
+  const permissions = usePermissions();
+
   return (
   <Container>
     <HeaderContent>
@@ -153,12 +156,12 @@ export function VolunteerFamilyScreen() {
         onClick={(event) => setFamilyRecordMenuAnchor(event.currentTarget)}>
         Complete…
       </Button>
-      <Button
+      {permissions(Permission.UploadDocuments) && <Button
         onClick={() => setUploadDocumentDialogOpen(true)}
         variant="contained" color="default" size="small" className={classes.button}
         startIcon={<CloudUploadIcon />}>
         Upload
-      </Button>
+      </Button>}
       <Button
         onClick={() => setAddAdultDialogOpen(true)}
         variant="contained" color="default" size="small" className={classes.button}
