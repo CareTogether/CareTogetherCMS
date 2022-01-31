@@ -18,39 +18,99 @@ namespace CareTogether.Engines
         }
 
 
-        public async Task<bool> AuthorizeFamilyCommandAsync(
+        public Task<bool> AuthorizeFamilyCommandAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user, FamilyCommand command)
         {
-            await Task.Yield();
-            return true;
+            //TODO: Enforce own/linked/all-families scope permissions in addition to these action type permissions!
+            return CheckPermission(organizationId, locationId, user, command switch
+            {
+                CreateFamily => null,
+                AddAdultToFamily => null,
+                AddChildToFamily => null,
+                UpdateAdultRelationshipToFamily => null,
+                AddCustodialRelationship => null,
+                UpdateCustodialRelationshipType => null,
+                RemoveCustodialRelationship => null,
+                UploadFamilyDocument => Permission.UploadStandaloneDocuments,
+                DeleteUploadedFamilyDocument => null,
+                _ => throw new NotImplementedException(
+                    $"The command type '{command.GetType().FullName}' has not been implemented.")
+            });
         }
 
-        public async Task<bool> AuthorizePersonCommandAsync(
+        public Task<bool> AuthorizePersonCommandAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user, PersonCommand command)
         {
-            await Task.Yield();
-            return true;
+            //TODO: Enforce own/linked/all-families scope permissions in addition to these action type permissions!
+            return CheckPermission(organizationId, locationId, user, command switch
+            {
+                CreatePerson => null,
+                UndoCreatePerson => null,
+                UpdatePersonName => null,
+                UpdatePersonAge => null,
+                UpdatePersonUserLink => null,
+                UpdatePersonConcerns => null,
+                UpdatePersonNotes => null,
+                AddPersonAddress => null,
+                UpdatePersonAddress => null,
+                AddPersonPhoneNumber => null,
+                UpdatePersonPhoneNumber => null,
+                AddPersonEmailAddress => null,
+                UpdatePersonEmailAddress => null,
+                _ => throw new NotImplementedException(
+                    $"The command type '{command.GetType().FullName}' has not been implemented.")
+            });
         }
 
-        public async Task<bool> AuthorizeReferralCommandAsync(
+        public Task<bool> AuthorizeReferralCommandAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user, ReferralCommand command)
         {
-            await Task.Yield();
-            return true;
+            //TODO: Enforce own/linked/all-families scope permissions in addition to these action type permissions!
+            return CheckPermission(organizationId, locationId, user, command switch
+            {
+                CreateReferral => null,
+                CompleteReferralRequirement => null,
+                ExemptReferralRequirement => null,
+                UnexemptReferralRequirement => null,
+                CloseReferral => null,
+                _ => throw new NotImplementedException(
+                    $"The command type '{command.GetType().FullName}' has not been implemented.")
+            });
         }
 
-        public async Task<bool> AuthorizeArrangementCommandAsync(
+        public Task<bool> AuthorizeArrangementCommandAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user, ArrangementCommand command)
         {
-            await Task.Yield();
-            return true;
+            //TODO: Enforce own/linked/all-families scope permissions in addition to these action type permissions!
+            return CheckPermission(organizationId, locationId, user, command switch
+            {
+                CreateArrangement => null,
+                AssignIndividualVolunteer => null,
+                AssignVolunteerFamily => null,
+                StartArrangement => null,
+                CompleteArrangementRequirement => null,
+                ExemptArrangementRequirement => null,
+                UnexemptArrangementRequirement => null,
+                TrackChildLocationChange => null,
+                EndArrangement => null,
+                _ => throw new NotImplementedException(
+                    $"The command type '{command.GetType().FullName}' has not been implemented.")
+            });
         }
 
-        public async Task<bool> AuthorizeNoteCommandAsync(
+        public Task<bool> AuthorizeNoteCommandAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user, NoteCommand command)
         {
-            await Task.Yield();
-            return true;
+            //TODO: Enforce own/linked/all-families scope permissions in addition to these action type permissions!
+            return CheckPermission(organizationId, locationId, user, command switch
+            {
+                CreateDraftNote => null,
+                EditDraftNote => null,
+                DiscardDraftNote => null,
+                ApproveNote => null,
+                _ => throw new NotImplementedException(
+                    $"The command type '{command.GetType().FullName}' has not been implemented.")
+            });
         }
 
         public Task<bool> AuthorizeVolunteerFamilyCommandAsync(
@@ -59,14 +119,14 @@ namespace CareTogether.Engines
             //TODO: Enforce own/linked/all-families scope permissions in addition to these action type permissions!
             return CheckPermission(organizationId, locationId, user, command switch
             {
-                ActivateVolunteerFamily c => null,
-                CompleteVolunteerFamilyRequirement c => Permission.EditApprovalRequirementCompletion,
-                MarkVolunteerFamilyRequirementIncomplete c => Permission.EditApprovalRequirementCompletion,
-                ExemptVolunteerFamilyRequirement c => Permission.EditApprovalRequirementExemption,
-                UnexemptVolunteerFamilyRequirement c => Permission.EditApprovalRequirementExemption,
-                UploadVolunteerFamilyDocument c => Permission.UploadStandaloneDocuments,
-                RemoveVolunteerFamilyRole c => Permission.EditVolunteerRoleParticipation,
-                ResetVolunteerFamilyRole c => Permission.EditVolunteerRoleParticipation,
+                ActivateVolunteerFamily => null,
+                CompleteVolunteerFamilyRequirement => Permission.EditApprovalRequirementCompletion,
+                MarkVolunteerFamilyRequirementIncomplete => Permission.EditApprovalRequirementCompletion,
+                ExemptVolunteerFamilyRequirement => Permission.EditApprovalRequirementExemption,
+                UnexemptVolunteerFamilyRequirement => Permission.EditApprovalRequirementExemption,
+                UploadVolunteerFamilyDocument => Permission.UploadStandaloneDocuments,
+                RemoveVolunteerFamilyRole => Permission.EditVolunteerRoleParticipation,
+                ResetVolunteerFamilyRole => Permission.EditVolunteerRoleParticipation,
                 _ => throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented.")
             });
@@ -78,12 +138,12 @@ namespace CareTogether.Engines
             //TODO: Enforce own/linked/all-families scope permissions in addition to these action type permissions!
             return CheckPermission(organizationId, locationId, user, command switch
             {
-                CompleteVolunteerRequirement c => Permission.EditApprovalRequirementCompletion,
-                MarkVolunteerRequirementIncomplete c => Permission.EditApprovalRequirementCompletion,
-                ExemptVolunteerRequirement c => Permission.EditApprovalRequirementExemption,
-                UnexemptVolunteerRequirement c => Permission.EditApprovalRequirementExemption,
-                RemoveVolunteerRole c => Permission.EditVolunteerRoleParticipation,
-                ResetVolunteerRole c => Permission.EditVolunteerRoleParticipation,
+                CompleteVolunteerRequirement => Permission.EditApprovalRequirementCompletion,
+                MarkVolunteerRequirementIncomplete => Permission.EditApprovalRequirementCompletion,
+                ExemptVolunteerRequirement => Permission.EditApprovalRequirementExemption,
+                UnexemptVolunteerRequirement => Permission.EditApprovalRequirementExemption,
+                RemoveVolunteerRole => Permission.EditVolunteerRoleParticipation,
+                ResetVolunteerRole => Permission.EditVolunteerRoleParticipation,
                 _ => throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented.")
             });
