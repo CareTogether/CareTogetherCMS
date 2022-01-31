@@ -34,6 +34,9 @@ namespace CareTogether.Engines
             // Less common but simple case: the user is part of the target family.
             var userPersonId = user.PersonId();
             var userFamily = await directoryResource.FindPersonFamilyAsync(organizationId, locationId, userPersonId);
+            if (userFamily == null)
+                return false; // If the user is not part of a family, the remaining conditions are invalid.
+
             var targetFamily = await directoryResource.FindFamilyAsync(organizationId, locationId, familyId);
             if (targetFamily.Id == userFamily.Id)
                 return true;

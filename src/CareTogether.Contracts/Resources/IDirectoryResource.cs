@@ -116,7 +116,7 @@ namespace CareTogether.Resources
 
         Task<Family> FindFamilyAsync(Guid organizationId, Guid locationId, Guid familyId);
 
-        Task<Family> FindPersonFamilyAsync(Guid organizationId, Guid locationId, Guid personId);
+        Task<Family?> FindPersonFamilyAsync(Guid organizationId, Guid locationId, Guid personId);
 
         Task<ImmutableList<Family>> ListFamiliesAsync(Guid organizationId, Guid locationId);
 

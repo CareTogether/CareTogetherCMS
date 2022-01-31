@@ -83,12 +83,12 @@ namespace CareTogether.Resources
             }
         }
 
-        public async Task<Family> FindPersonFamilyAsync(Guid organizationId, Guid locationId, Guid personId)
+        public async Task<Family?> FindPersonFamilyAsync(Guid organizationId, Guid locationId, Guid personId)
         {
             using (var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId)))
             {
                 var result = lockedModel.Value.FindFamilies(f => f.Adults.Exists(a => a.Item1.Id == personId));
-                return result.Single();
+                return result.SingleOrDefault(); //TODO: Should this be tightened down to always have a value?
             }
         }
     }
