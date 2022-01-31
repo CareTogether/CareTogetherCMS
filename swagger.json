@@ -817,13 +817,15 @@
           "ReadDocuments",
           "UploadStandaloneDocuments",
           "ViewApprovalStatus",
-          "EditApprovalRequirementCompletion"
+          "EditApprovalRequirementCompletion",
+          "EditApprovalRequirementExemption"
         ],
         "enum": [
           1,
           2,
           200,
-          201
+          201,
+          202
         ]
       },
       "UserAccessConfiguration": {

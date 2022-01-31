@@ -56,14 +56,15 @@ namespace CareTogether.Engines
         public Task<bool> AuthorizeVolunteerFamilyCommandAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user, VolunteerFamilyCommand command)
         {
+            //TODO: Enforce own/linked/all-families scope permissions in addition to these action type permissions!
             return CheckPermission(organizationId, locationId, user, command switch
             {
                 ActivateVolunteerFamily c => null,
                 CompleteVolunteerFamilyRequirement c => Permission.EditApprovalRequirementCompletion,
                 MarkVolunteerFamilyRequirementIncomplete c => Permission.EditApprovalRequirementCompletion,
-                ExemptVolunteerFamilyRequirement c => null,
-                UnexemptVolunteerFamilyRequirement c => null,
-                UploadVolunteerFamilyDocument c => null,
+                ExemptVolunteerFamilyRequirement c => Permission.EditApprovalRequirementExemption,
+                UnexemptVolunteerFamilyRequirement c => Permission.EditApprovalRequirementExemption,
+                UploadVolunteerFamilyDocument c => Permission.UploadStandaloneDocuments,
                 RemoveVolunteerFamilyRole c => null,
                 ResetVolunteerFamilyRole c => null,
                 _ => throw new NotImplementedException(

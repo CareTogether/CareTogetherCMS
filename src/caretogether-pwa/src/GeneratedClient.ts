@@ -908,6 +908,7 @@ export enum Permission {
     UploadStandaloneDocuments = 2,
     ViewApprovalStatus = 200,
     EditApprovalRequirementCompletion = 201,
+    EditApprovalRequirementExemption = 202,
 }
 
 export class UserAccessConfiguration implements IUserAccessConfiguration {
