@@ -53,11 +53,29 @@ namespace CareTogether.Engines
             return true;
         }
 
-        public async Task<bool> AuthorizeVolunteerFamilyCommandAsync(
+        public Task<bool> AuthorizeVolunteerFamilyCommandAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user, VolunteerFamilyCommand command)
         {
-            await Task.Yield();
-            return true;
+            return CheckPermission(organizationId, locationId, user, command switch
+            {
+                ActivateVolunteerFamily c => null,
+                CompleteVolunteerFamilyRequirement c => Permission.EditApprovalRequirementCompletion,
+                MarkVolunteerFamilyRequirementIncomplete c => Permission.EditApprovalRequirementCompletion,
+                ExemptVolunteerFamilyRequirement c => null,
+                UnexemptVolunteerFamilyRequirement c => null,
+                UploadVolunteerFamilyDocument c => null,
+                RemoveVolunteerFamilyRole c => null,
+                ResetVolunteerFamilyRole c => null,
+                _ => throw new NotImplementedException(
+                    $"The command type '{command.GetType().FullName}' has not been implemented.")
+            });
+        }
+
+        private Task<bool> CheckPermission(Guid organizationId, Guid locationId, ClaimsPrincipal user,
+            Permission? permission)
+        {
+            //TODO: Handle multiple orgs/locations
+            return Task.FromResult(permission == null ? true : user.HasPermission(permission.Value));
         }
 
         public async Task<bool> AuthorizeVolunteerCommandAsync(

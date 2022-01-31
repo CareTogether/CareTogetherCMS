@@ -1,7 +1,7 @@
 import { Card, CardHeader, IconButton, CardContent, Typography, Chip, CardActions, makeStyles, Divider, ListItemText, Menu, MenuItem, MenuList, useMediaQuery, useTheme } from "@material-ui/core";
 import { format } from 'date-fns';
 import { useState } from "react";
-import { ActionRequirement, Gender, Person, CombinedFamilyInfo, RoleRemovalReason, CompletedRequirementInfo, ExemptedRequirementInfo } from "../../GeneratedClient";
+import { ActionRequirement, Gender, Person, CombinedFamilyInfo, RoleRemovalReason, CompletedRequirementInfo, ExemptedRequirementInfo, Permission } from "../../GeneratedClient";
 import { AgeText } from "../AgeText";
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
@@ -24,6 +24,7 @@ import { DeletePersonDialog } from "../Families/DeletePersonDialog";
 import { MarkVolunteerStepIncompleteDialog } from "./MarkVolunteerStepIncompleteDialog";
 import { ExemptVolunteerRequirementDialog } from "./ExemptVolunteerRequirementDialog";
 import { UnexemptVolunteerRequirementDialog } from "./UnexemptVolunteerRequirementDialog";
+import { usePermissions } from "../../Model/SessionModel";
 
 const useStyles = makeStyles((theme) => ({
   sectionChips: {
@@ -148,6 +149,8 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
 
+  const permissions = usePermissions();
+
   return (<>{adult?.item1 && adult.item1.id && adult.item2 &&
     <Card className={classes.card}>
       <CardHeader className={classes.cardHeader}
@@ -217,7 +220,7 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
             { (typeof requirementMoreMenuAnchor?.requirement === 'string') &&
               <MenuItem onClick={() => selectExempt(requirementMoreMenuAnchor?.requirement as string)}>Exempt</MenuItem>
               }
-            { (requirementMoreMenuAnchor?.requirement instanceof CompletedRequirementInfo) &&
+            { (requirementMoreMenuAnchor?.requirement instanceof CompletedRequirementInfo) && permissions(Permission.EditApprovalRequirementCompletion) &&
               <MenuItem onClick={() => selectMarkIncomplete(requirementMoreMenuAnchor?.requirement as CompletedRequirementInfo)}>Mark Incomplete</MenuItem>
               }
             { (requirementMoreMenuAnchor?.requirement instanceof ExemptedRequirementInfo) &&
@@ -237,10 +240,10 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         </Typography>
       </CardContent>
       <CardActions>
-        <IconButton size="small" className={classes.rightCardAction}
+        {permissions(Permission.EditApprovalRequirementCompletion) && <IconButton size="small" className={classes.rightCardAction}
           onClick={(event) => setAdultRecordMenuAnchor({anchor: event.currentTarget, adult: adult.item1 as Person})}>
           <AssignmentTurnedInIcon />
-        </IconButton>
+        </IconButton>}
       </CardActions>
       <Menu id="adult-record-menu"
         anchorEl={adultRecordMenuAnchor?.anchor}

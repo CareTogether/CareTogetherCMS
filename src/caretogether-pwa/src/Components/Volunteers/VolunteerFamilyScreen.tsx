@@ -150,12 +150,12 @@ export function VolunteerFamilyScreen() {
       </HeaderTitle>
     </HeaderContent>
     <Toolbar variant="dense" disableGutters={true}>
-      <Button aria-controls="family-record-menu" aria-haspopup="true"
+      {permissions(Permission.EditApprovalRequirementCompletion) && <Button aria-controls="family-record-menu" aria-haspopup="true"
         variant="contained" color="default" size="small" className={classes.button}
         startIcon={<AssignmentTurnedInIcon />}
         onClick={(event) => setFamilyRecordMenuAnchor(event.currentTarget)}>
         Complete…
-      </Button>
+      </Button>}
       {permissions(Permission.UploadStandaloneDocuments) && <Button
         onClick={() => setUploadDocumentDialogOpen(true)}
         variant="contained" color="default" size="small" className={classes.button}
@@ -280,7 +280,7 @@ export function VolunteerFamilyScreen() {
         { (typeof requirementMoreMenuAnchor?.requirement === 'string') &&
           <MenuItem onClick={() => selectExempt(requirementMoreMenuAnchor?.requirement as string)}>Exempt</MenuItem>
           }
-        { (requirementMoreMenuAnchor?.requirement instanceof CompletedRequirementInfo) &&
+        { (requirementMoreMenuAnchor?.requirement instanceof CompletedRequirementInfo) && permissions(Permission.EditApprovalRequirementCompletion) &&
           <MenuItem onClick={() => selectMarkIncomplete(requirementMoreMenuAnchor?.requirement as CompletedRequirementInfo)}>Mark Incomplete</MenuItem>
           }
         { (requirementMoreMenuAnchor?.requirement instanceof ExemptedRequirementInfo) &&
