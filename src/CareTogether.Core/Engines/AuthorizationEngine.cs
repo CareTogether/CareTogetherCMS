@@ -18,6 +18,13 @@ namespace CareTogether.Engines
         }
 
 
+        public Task<bool> AuthorizeFamilyAccessAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, Family family)
+        {
+            return Task.FromResult(
+                user.HasPermission(Permission.ViewAllFamilies));
+        }
+
         public Task<bool> AuthorizeFamilyCommandAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user, FamilyCommand command)
         {

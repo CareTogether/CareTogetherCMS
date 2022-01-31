@@ -816,6 +816,7 @@
         "x-enumNames": [
           "ReadDocuments",
           "UploadStandaloneDocuments",
+          "ViewAllFamilies",
           "ViewApprovalStatus",
           "EditApprovalRequirementCompletion",
           "EditApprovalRequirementExemption",
@@ -824,6 +825,7 @@
         "enum": [
           1,
           2,
+          100,
           200,
           201,
           202,

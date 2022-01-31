@@ -36,7 +36,16 @@ namespace CareTogether.Managers
         {
             var families = await directoryResource.ListFamiliesAsync(organizationId, locationId);
 
-            var result = await families
+            var visibleFamilies = (await families.Select(async family =>
+                await authorizationEngine.AuthorizeFamilyAccessAsync(organizationId, locationId, user, family)
+                ? family
+                : null)
+                .WhenAll())
+                .Where(family => family != null)
+                .Cast<Family>()
+                .ToImmutableList();
+
+            var result = await visibleFamilies
                 .Select(family => combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, family.Id, user))
                 .WhenAll();
             return result.ToImmutableList();

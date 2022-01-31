@@ -6,6 +6,8 @@ namespace CareTogether
         ReadDocuments = 1,
         UploadStandaloneDocuments = 2,
         
+        ViewAllFamilies = 100,
+
         ViewApprovalStatus = 200,
         EditApprovalRequirementCompletion = 201, // Also allows linked document uploads
         EditApprovalRequirementExemption = 202,
