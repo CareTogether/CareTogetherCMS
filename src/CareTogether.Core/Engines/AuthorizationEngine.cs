@@ -72,18 +72,21 @@ namespace CareTogether.Engines
             });
         }
 
-        private Task<bool> CheckPermission(Guid organizationId, Guid locationId, ClaimsPrincipal user,
-            Permission? permission)
-        {
-            //TODO: Handle multiple orgs/locations
-            return Task.FromResult(permission == null ? true : user.HasPermission(permission.Value));
-        }
-
-        public async Task<bool> AuthorizeVolunteerCommandAsync(
+        public Task<bool> AuthorizeVolunteerCommandAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user, VolunteerCommand command)
         {
-            await Task.Yield();
-            return true;
+            //TODO: Enforce own/linked/all-families scope permissions in addition to these action type permissions!
+            return CheckPermission(organizationId, locationId, user, command switch
+            {
+                CompleteVolunteerRequirement c => Permission.EditApprovalRequirementCompletion,
+                MarkVolunteerRequirementIncomplete c => Permission.EditApprovalRequirementCompletion,
+                ExemptVolunteerRequirement c => Permission.EditApprovalRequirementExemption,
+                UnexemptVolunteerRequirement c => Permission.EditApprovalRequirementExemption,
+                RemoveVolunteerRole c => null,
+                ResetVolunteerRole c => null,
+                _ => throw new NotImplementedException(
+                    $"The command type '{command.GetType().FullName}' has not been implemented.")
+            });
         }
 
         public async Task<Referral> DiscloseReferralAsync(ClaimsPrincipal user, Referral referral)
@@ -137,6 +140,14 @@ namespace CareTogether.Engines
         {
             await Task.Yield();
             return true;
+        }
+
+
+        private Task<bool> CheckPermission(Guid organizationId, Guid locationId, ClaimsPrincipal user,
+            Permission? permission)
+        {
+            //TODO: Handle multiple orgs/locations
+            return Task.FromResult(permission == null ? true : user.HasPermission(permission.Value));
         }
     }
 }
