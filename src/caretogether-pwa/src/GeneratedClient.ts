@@ -905,8 +905,9 @@ export interface IRoleDefinition {
 
 export enum Permission {
     ReadDocuments = 1,
-    UploadDocuments = 2,
+    UploadStandaloneDocuments = 2,
     ViewApprovalStatus = 200,
+    EditApprovalRequirementCompletion = 201,
 }
 
 export class UserAccessConfiguration implements IUserAccessConfiguration {

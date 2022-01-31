@@ -134,7 +134,7 @@ export function PartneringFamilyScreen() {
         onClick={(event) => setFamilyRecordMenuAnchor(event.currentTarget)}>
         Complete…
       </Button>
-      {permissions(Permission.UploadDocuments) && <Button
+      {permissions(Permission.UploadStandaloneDocuments) && <Button
         onClick={() => setUploadDocumentDialogOpen(true)}
         variant="contained" color="default" size="small" className={classes.button}
         startIcon={<CloudUploadIcon />}>
