@@ -19,141 +19,141 @@ namespace CareTogether.Engines
 
 
         public Task<bool> AuthorizeFamilyAccessAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, Family family)
+            ClaimsPrincipal user, Guid familyId)
         {
             return Task.FromResult(
                 user.HasPermission(Permission.ViewAllFamilies));
         }
 
-        public Task<bool> AuthorizeFamilyCommandAsync(
+        public async Task<bool> AuthorizeFamilyCommandAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user, FamilyCommand command)
         {
-            //TODO: Enforce own/linked/all-families scope permissions in addition to these action type permissions!
-            return CheckPermission(organizationId, locationId, user, command switch
-            {
-                CreateFamily => null,
-                AddAdultToFamily => null,
-                AddChildToFamily => null,
-                UpdateAdultRelationshipToFamily => null,
-                AddCustodialRelationship => null,
-                UpdateCustodialRelationshipType => null,
-                RemoveCustodialRelationship => null,
-                UploadFamilyDocument => Permission.UploadStandaloneDocuments,
-                DeleteUploadedFamilyDocument => null,
-                _ => throw new NotImplementedException(
-                    $"The command type '{command.GetType().FullName}' has not been implemented.")
-            });
+            return await AuthorizeFamilyAccessAsync(organizationId, locationId, user, command.FamilyId) &&
+                CheckPermission(organizationId, locationId, user, command switch
+                {
+                    CreateFamily => null,
+                    AddAdultToFamily => null,
+                    AddChildToFamily => null,
+                    UpdateAdultRelationshipToFamily => null,
+                    AddCustodialRelationship => null,
+                    UpdateCustodialRelationshipType => null,
+                    RemoveCustodialRelationship => null,
+                    UploadFamilyDocument => Permission.UploadStandaloneDocuments,
+                    DeleteUploadedFamilyDocument => null,
+                    _ => throw new NotImplementedException(
+                        $"The command type '{command.GetType().FullName}' has not been implemented.")
+                });
         }
 
-        public Task<bool> AuthorizePersonCommandAsync(
-            Guid organizationId, Guid locationId, ClaimsPrincipal user, PersonCommand command)
+        public async Task<bool> AuthorizePersonCommandAsync(
+            Guid organizationId, Guid locationId, ClaimsPrincipal user, Guid familyId, PersonCommand command)
         {
-            //TODO: Enforce own/linked/all-families scope permissions in addition to these action type permissions!
-            return CheckPermission(organizationId, locationId, user, command switch
-            {
-                CreatePerson => null,
-                UndoCreatePerson => null,
-                UpdatePersonName => null,
-                UpdatePersonAge => null,
-                UpdatePersonUserLink => null,
-                UpdatePersonConcerns => null,
-                UpdatePersonNotes => null,
-                AddPersonAddress => null,
-                UpdatePersonAddress => null,
-                AddPersonPhoneNumber => null,
-                UpdatePersonPhoneNumber => null,
-                AddPersonEmailAddress => null,
-                UpdatePersonEmailAddress => null,
-                _ => throw new NotImplementedException(
-                    $"The command type '{command.GetType().FullName}' has not been implemented.")
-            });
+            return await AuthorizeFamilyAccessAsync(organizationId, locationId, user, familyId) &&
+                CheckPermission(organizationId, locationId, user, command switch
+                {
+                    CreatePerson => null,
+                    UndoCreatePerson => null,
+                    UpdatePersonName => null,
+                    UpdatePersonAge => null,
+                    UpdatePersonUserLink => null,
+                    UpdatePersonConcerns => null,
+                    UpdatePersonNotes => null,
+                    AddPersonAddress => null,
+                    UpdatePersonAddress => null,
+                    AddPersonPhoneNumber => null,
+                    UpdatePersonPhoneNumber => null,
+                    AddPersonEmailAddress => null,
+                    UpdatePersonEmailAddress => null,
+                    _ => throw new NotImplementedException(
+                        $"The command type '{command.GetType().FullName}' has not been implemented.")
+                });
         }
 
-        public Task<bool> AuthorizeReferralCommandAsync(
+        public async Task<bool> AuthorizeReferralCommandAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user, ReferralCommand command)
         {
-            //TODO: Enforce own/linked/all-families scope permissions in addition to these action type permissions!
-            return CheckPermission(organizationId, locationId, user, command switch
-            {
-                CreateReferral => null,
-                CompleteReferralRequirement => null,
-                ExemptReferralRequirement => null,
-                UnexemptReferralRequirement => null,
-                CloseReferral => null,
-                _ => throw new NotImplementedException(
-                    $"The command type '{command.GetType().FullName}' has not been implemented.")
-            });
+            return await AuthorizeFamilyAccessAsync(organizationId, locationId, user, command.FamilyId) &&
+                CheckPermission(organizationId, locationId, user, command switch
+                {
+                    CreateReferral => null,
+                    CompleteReferralRequirement => null,
+                    ExemptReferralRequirement => null,
+                    UnexemptReferralRequirement => null,
+                    CloseReferral => null,
+                    _ => throw new NotImplementedException(
+                        $"The command type '{command.GetType().FullName}' has not been implemented.")
+                });
         }
 
-        public Task<bool> AuthorizeArrangementCommandAsync(
+        public async Task<bool> AuthorizeArrangementCommandAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user, ArrangementCommand command)
         {
-            //TODO: Enforce own/linked/all-families scope permissions in addition to these action type permissions!
-            return CheckPermission(organizationId, locationId, user, command switch
-            {
-                CreateArrangement => null,
-                AssignIndividualVolunteer => null,
-                AssignVolunteerFamily => null,
-                StartArrangement => null,
-                CompleteArrangementRequirement => null,
-                ExemptArrangementRequirement => null,
-                UnexemptArrangementRequirement => null,
-                TrackChildLocationChange => null,
-                EndArrangement => null,
-                _ => throw new NotImplementedException(
-                    $"The command type '{command.GetType().FullName}' has not been implemented.")
-            });
+            return await AuthorizeFamilyAccessAsync(organizationId, locationId, user, command.FamilyId) &&
+                CheckPermission(organizationId, locationId, user, command switch
+                {
+                    CreateArrangement => null,
+                    AssignIndividualVolunteer => null,
+                    AssignVolunteerFamily => null,
+                    StartArrangement => null,
+                    CompleteArrangementRequirement => null,
+                    ExemptArrangementRequirement => null,
+                    UnexemptArrangementRequirement => null,
+                    TrackChildLocationChange => null,
+                    EndArrangement => null,
+                    _ => throw new NotImplementedException(
+                        $"The command type '{command.GetType().FullName}' has not been implemented.")
+                });
         }
 
-        public Task<bool> AuthorizeNoteCommandAsync(
+        public async Task<bool> AuthorizeNoteCommandAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user, NoteCommand command)
         {
-            //TODO: Enforce own/linked/all-families scope permissions in addition to these action type permissions!
-            return CheckPermission(organizationId, locationId, user, command switch
-            {
-                CreateDraftNote => null,
-                EditDraftNote => null,
-                DiscardDraftNote => null,
-                ApproveNote => null,
-                _ => throw new NotImplementedException(
-                    $"The command type '{command.GetType().FullName}' has not been implemented.")
-            });
+            return await AuthorizeFamilyAccessAsync(organizationId, locationId, user, command.FamilyId) &&
+                CheckPermission(organizationId, locationId, user, command switch
+                {
+                    CreateDraftNote => null,
+                    EditDraftNote => null,
+                    DiscardDraftNote => null,
+                    ApproveNote => null,
+                    _ => throw new NotImplementedException(
+                        $"The command type '{command.GetType().FullName}' has not been implemented.")
+                });
         }
 
-        public Task<bool> AuthorizeVolunteerFamilyCommandAsync(
+        public async Task<bool> AuthorizeVolunteerFamilyCommandAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user, VolunteerFamilyCommand command)
         {
-            //TODO: Enforce own/linked/all-families scope permissions in addition to these action type permissions!
-            return CheckPermission(organizationId, locationId, user, command switch
-            {
-                ActivateVolunteerFamily => null,
-                CompleteVolunteerFamilyRequirement => Permission.EditApprovalRequirementCompletion,
-                MarkVolunteerFamilyRequirementIncomplete => Permission.EditApprovalRequirementCompletion,
-                ExemptVolunteerFamilyRequirement => Permission.EditApprovalRequirementExemption,
-                UnexemptVolunteerFamilyRequirement => Permission.EditApprovalRequirementExemption,
-                UploadVolunteerFamilyDocument => Permission.UploadStandaloneDocuments,
-                RemoveVolunteerFamilyRole => Permission.EditVolunteerRoleParticipation,
-                ResetVolunteerFamilyRole => Permission.EditVolunteerRoleParticipation,
-                _ => throw new NotImplementedException(
-                    $"The command type '{command.GetType().FullName}' has not been implemented.")
-            });
+            return await AuthorizeFamilyAccessAsync(organizationId, locationId, user, command.FamilyId) &&
+                CheckPermission(organizationId, locationId, user, command switch
+                {
+                    ActivateVolunteerFamily => null,
+                    CompleteVolunteerFamilyRequirement => Permission.EditApprovalRequirementCompletion,
+                    MarkVolunteerFamilyRequirementIncomplete => Permission.EditApprovalRequirementCompletion,
+                    ExemptVolunteerFamilyRequirement => Permission.EditApprovalRequirementExemption,
+                    UnexemptVolunteerFamilyRequirement => Permission.EditApprovalRequirementExemption,
+                    UploadVolunteerFamilyDocument => Permission.UploadStandaloneDocuments,
+                    RemoveVolunteerFamilyRole => Permission.EditVolunteerRoleParticipation,
+                    ResetVolunteerFamilyRole => Permission.EditVolunteerRoleParticipation,
+                    _ => throw new NotImplementedException(
+                        $"The command type '{command.GetType().FullName}' has not been implemented.")
+                });
         }
 
-        public Task<bool> AuthorizeVolunteerCommandAsync(
+        public async Task<bool> AuthorizeVolunteerCommandAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user, VolunteerCommand command)
         {
-            //TODO: Enforce own/linked/all-families scope permissions in addition to these action type permissions!
-            return CheckPermission(organizationId, locationId, user, command switch
-            {
-                CompleteVolunteerRequirement => Permission.EditApprovalRequirementCompletion,
-                MarkVolunteerRequirementIncomplete => Permission.EditApprovalRequirementCompletion,
-                ExemptVolunteerRequirement => Permission.EditApprovalRequirementExemption,
-                UnexemptVolunteerRequirement => Permission.EditApprovalRequirementExemption,
-                RemoveVolunteerRole => Permission.EditVolunteerRoleParticipation,
-                ResetVolunteerRole => Permission.EditVolunteerRoleParticipation,
-                _ => throw new NotImplementedException(
-                    $"The command type '{command.GetType().FullName}' has not been implemented.")
-            });
+            return await AuthorizeFamilyAccessAsync(organizationId, locationId, user, command.FamilyId) &&
+                CheckPermission(organizationId, locationId, user, command switch
+                {
+                    CompleteVolunteerRequirement => Permission.EditApprovalRequirementCompletion,
+                    MarkVolunteerRequirementIncomplete => Permission.EditApprovalRequirementCompletion,
+                    ExemptVolunteerRequirement => Permission.EditApprovalRequirementExemption,
+                    UnexemptVolunteerRequirement => Permission.EditApprovalRequirementExemption,
+                    RemoveVolunteerRole => Permission.EditVolunteerRoleParticipation,
+                    ResetVolunteerRole => Permission.EditVolunteerRoleParticipation,
+                    _ => throw new NotImplementedException(
+                        $"The command type '{command.GetType().FullName}' has not been implemented.")
+                });
         }
 
         public async Task<Referral> DiscloseReferralAsync(ClaimsPrincipal user, Referral referral)
@@ -210,11 +210,11 @@ namespace CareTogether.Engines
         }
 
 
-        private Task<bool> CheckPermission(Guid organizationId, Guid locationId, ClaimsPrincipal user,
+        private bool CheckPermission(Guid organizationId, Guid locationId, ClaimsPrincipal user,
             Permission? permission)
         {
             //TODO: Handle multiple orgs/locations
-            return Task.FromResult(permission == null ? true : user.HasPermission(permission.Value));
+            return permission == null ? true : user.HasPermission(permission.Value);
         }
     }
 }
