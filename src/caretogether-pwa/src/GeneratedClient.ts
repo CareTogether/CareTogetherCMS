@@ -909,6 +909,7 @@ export enum Permission {
     ViewApprovalStatus = 200,
     EditApprovalRequirementCompletion = 201,
     EditApprovalRequirementExemption = 202,
+    EditVolunteerRoleParticipation = 203,
 }
 
 export class UserAccessConfiguration implements IUserAccessConfiguration {

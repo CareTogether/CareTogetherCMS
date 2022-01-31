@@ -818,14 +818,16 @@
           "UploadStandaloneDocuments",
           "ViewApprovalStatus",
           "EditApprovalRequirementCompletion",
-          "EditApprovalRequirementExemption"
+          "EditApprovalRequirementExemption",
+          "EditVolunteerRoleParticipation"
         ],
         "enum": [
           1,
           2,
           200,
           201,
-          202
+          202,
+          203
         ]
       },
       "UserAccessConfiguration": {

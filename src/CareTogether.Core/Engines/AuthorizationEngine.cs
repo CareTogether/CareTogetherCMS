@@ -65,8 +65,8 @@ namespace CareTogether.Engines
                 ExemptVolunteerFamilyRequirement c => Permission.EditApprovalRequirementExemption,
                 UnexemptVolunteerFamilyRequirement c => Permission.EditApprovalRequirementExemption,
                 UploadVolunteerFamilyDocument c => Permission.UploadStandaloneDocuments,
-                RemoveVolunteerFamilyRole c => null,
-                ResetVolunteerFamilyRole c => null,
+                RemoveVolunteerFamilyRole c => Permission.EditVolunteerRoleParticipation,
+                ResetVolunteerFamilyRole c => Permission.EditVolunteerRoleParticipation,
                 _ => throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented.")
             });
@@ -82,8 +82,8 @@ namespace CareTogether.Engines
                 MarkVolunteerRequirementIncomplete c => Permission.EditApprovalRequirementCompletion,
                 ExemptVolunteerRequirement c => Permission.EditApprovalRequirementExemption,
                 UnexemptVolunteerRequirement c => Permission.EditApprovalRequirementExemption,
-                RemoveVolunteerRole c => null,
-                ResetVolunteerRole c => null,
+                RemoveVolunteerRole c => Permission.EditVolunteerRoleParticipation,
+                ResetVolunteerRole c => Permission.EditVolunteerRoleParticipation,
                 _ => throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented.")
             });

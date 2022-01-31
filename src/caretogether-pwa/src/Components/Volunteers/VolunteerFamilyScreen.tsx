@@ -199,13 +199,15 @@ export function VolunteerFamilyScreen() {
         open={Boolean(familyMoreMenuAnchor)}
         onClose={() => setFamilyMoreMenuAnchor(null)}>
         <MenuList dense={isMobile}>
-          {Object.entries(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals || {}).filter(([role, ]) =>
+          {permissions(Permission.EditVolunteerRoleParticipation) &&
+            Object.entries(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals || {}).filter(([role, ]) =>
             !volunteerFamily.volunteerFamilyInfo?.removedRoles?.find(x => x.roleName === role)).flatMap(([role, ]) => (
             <MenuItem key={role} onClick={() => selectRemoveRole(role)}>
               <ListItemText primary={`Remove from ${role} role`} />
             </MenuItem>
           ))}
-          {(volunteerFamily.volunteerFamilyInfo?.removedRoles || []).map(removedRole => (
+          {permissions(Permission.EditVolunteerRoleParticipation) &&
+            (volunteerFamily.volunteerFamilyInfo?.removedRoles || []).map(removedRole => (
             <MenuItem key={removedRole.roleName}
               onClick={() => selectResetRole(removedRole.roleName!, removedRole.reason!, removedRole.additionalComments!)}>
               <ListItemText primary={`Reset ${removedRole.roleName} participation`} />
