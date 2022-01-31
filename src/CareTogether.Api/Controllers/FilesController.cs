@@ -39,7 +39,7 @@ namespace CareTogether.Api.Controllers
         [HttpPost("upload")]
         public async Task<ActionResult<DocumentUploadInfo>> GenerateUploadValetUrl(Guid organizationId, Guid locationId)
         {
-            if (User.HasPermission(Permission.UploadDocuments))
+            if (User.HasPermission(Permission.UploadStandaloneDocuments))
             {
                 //TODO: Authorize this via policy! Best to do this in the context of an associated referral or approval, instead of at this level.
                 var documentId = Guid.NewGuid();
