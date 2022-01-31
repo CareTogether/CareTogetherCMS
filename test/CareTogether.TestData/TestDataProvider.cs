@@ -43,6 +43,7 @@ namespace CareTogether.TestData
         static readonly Guid guid8 = Id('8');
         static readonly Guid guid9 = Id('9');
         static readonly Guid adminId = Guid.Parse("2b87864a-63e3-4406-bcbc-c0068a13ac05");
+        static readonly Guid volunteerId = Guid.Parse("e3aaef77-0e97-47a6-b788-a67c237c781e");
 
 
         public static async Task PopulateTestDataAsync(
@@ -298,10 +299,13 @@ namespace CareTogether.TestData
                     ImmutableList<RoleDefinition>.Empty
                         .Add(new RoleDefinition("OrganizationAdministrator", ImmutableList<Permission>.Empty
                             .AddRange(Enum.GetValues<Permission>())))
-                        .Add(new RoleDefinition("NoteEnterer", ImmutableList<Permission>.Empty)),
+                        .Add(new RoleDefinition("NoteEnterer", ImmutableList<Permission>.Empty
+                            .AddRange(new Permission[] {  }))),
                     ImmutableDictionary<Guid, UserAccessConfiguration>.Empty
                         .Add(adminId, new UserAccessConfiguration(adminId, ImmutableList<UserLocationRole>.Empty
-                            .Add(new UserLocationRole(guid2, "OrganizationAdministrator"))))));
+                            .Add(new UserLocationRole(guid2, "OrganizationAdministrator"))))
+                        .Add(volunteerId, new UserAccessConfiguration(volunteerId, ImmutableList<UserLocationRole>.Empty
+                            .Add(new UserLocationRole(guid2, "NoteEnterer"))))));
         }
 
         public static async Task PopulatePolicies(IObjectStore<EffectiveLocationPolicy> policiesStore)
@@ -525,6 +529,9 @@ namespace CareTogether.TestData
         {
             await userTenantAccessStore.UpsertAsync(Guid.Empty, Guid.Empty,
                 adminId.ToString(),
+                new UserTenantAccessSummary(guid1, ImmutableList<Guid>.Empty.Add(guid2)));
+            await userTenantAccessStore.UpsertAsync(Guid.Empty, Guid.Empty,
+                volunteerId.ToString(),
                 new UserTenantAccessSummary(guid1, ImmutableList<Guid>.Empty.Add(guid2)));
         }
 
