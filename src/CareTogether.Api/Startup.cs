@@ -91,7 +91,7 @@ namespace CareTogether.Api
             services.AddSingleton<IAccountsResource>(accountsResource);
 
             // Engine services
-            var authorizationEngine = new AuthorizationEngine(policiesResource);
+            var authorizationEngine = new AuthorizationEngine(policiesResource, directoryResource, referralsResource);
             var policyEvaluationEngine = new PolicyEvaluationEngine(policiesResource);
 
             // Shared family info formatting logic used by all manager services

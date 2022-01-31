@@ -907,6 +907,7 @@ export enum Permission {
     ReadDocuments = 1,
     UploadStandaloneDocuments = 2,
     ViewAllFamilies = 100,
+    ViewLinkedFamilies = 101,
     ViewApprovalStatus = 200,
     EditApprovalRequirementCompletion = 201,
     EditApprovalRequirementExemption = 202,

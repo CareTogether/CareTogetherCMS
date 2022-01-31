@@ -2,6 +2,7 @@ using CareTogether.Managers;
 using CareTogether.Resources;
 using System;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -10,19 +11,63 @@ namespace CareTogether.Engines
     public sealed class AuthorizationEngine : IAuthorizationEngine
     {
         private readonly IPoliciesResource policiesResource;
+        private readonly IDirectoryResource directoryResource;
+        private readonly IReferralsResource referralsResource;
 
 
-        public AuthorizationEngine(IPoliciesResource policiesResource)
+        public AuthorizationEngine(IPoliciesResource policiesResource,
+            IDirectoryResource directoryResource, IReferralsResource referralsResource)
         {
             this.policiesResource = policiesResource;
+            this.directoryResource = directoryResource;
+            this.referralsResource = referralsResource;
         }
 
 
-        public Task<bool> AuthorizeFamilyAccessAsync(Guid organizationId, Guid locationId,
+        public async Task<bool> AuthorizeFamilyAccessAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, Guid familyId)
         {
-            return Task.FromResult(
-                user.HasPermission(Permission.ViewAllFamilies));
+            // Most common case for highly active users: the user has access to all families.
+            if (user.HasPermission(Permission.ViewAllFamilies))
+                return true;
+
+            // Less common but simple case: the user is part of the target family.
+            var userPersonId = user.PersonId();
+            var userFamily = await directoryResource.FindPersonFamilyAsync(organizationId, locationId, userPersonId);
+            var targetFamily = await directoryResource.FindFamilyAsync(organizationId, locationId, familyId);
+            if (targetFamily.Id == userFamily.Id)
+                return true;
+
+            // General case: the user's family is linked to the target family through a referral.
+            if (user.HasPermission(Permission.ViewLinkedFamilies))
+            {
+                var referrals = await referralsResource.ListReferralsAsync(organizationId, locationId);
+
+                // Find all linked referrals - that is, referrals where either the user's family is the partnering
+                // family or someone from the user's family is assigned to a volunteer role in the referral.
+                //TODO: Should the latter case be restricted so only the assigned individual can see others' info?
+                //TODO: Should the latter case be restricted so only participating individuals in the family can see others' info?
+                var ownReferrals = referrals.Where(referral => referral.FamilyId == userFamily.Id);
+                var assignedReferrals = referrals.Where(referral => referral.Arrangements.Any(arrangement =>
+                    arrangement.Value.FamilyVolunteerAssignments.Exists(assignment => assignment.FamilyId == userFamily.Id) ||
+                    arrangement.Value.IndividualVolunteerAssignments.Exists(assignment => assignment.FamilyId == userFamily.Id)));
+                var allLinkedReferrals = ownReferrals.Concat(assignedReferrals).ToImmutableHashSet();
+
+                // Find all families connected to the linked referrals (as either partnering families and assigned volunteers).
+                var allVisiblePartneringFamilies = allLinkedReferrals.Select(referral => referral.FamilyId);
+                var allVisibleAssignedFamilies = allLinkedReferrals.SelectMany(referral =>
+                    referral.Arrangements.SelectMany(arrangement =>
+                    {
+                        var linkedFamilies = arrangement.Value.FamilyVolunteerAssignments.Select(assignment => assignment.FamilyId);
+                        var linkedIndividualFamilies = arrangement.Value.IndividualVolunteerAssignments.Select(assignment => assignment.FamilyId);
+                        return linkedFamilies.Concat(linkedIndividualFamilies);
+                    }));
+                var allVisibleFamilies = allVisiblePartneringFamilies.Concat(allVisibleAssignedFamilies).ToImmutableHashSet();
+
+                return allVisibleFamilies.Contains(userFamily.Id);
+            }
+
+            return false;
         }
 
         public async Task<bool> AuthorizeFamilyCommandAsync(
