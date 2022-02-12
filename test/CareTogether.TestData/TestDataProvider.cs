@@ -300,7 +300,7 @@ namespace CareTogether.TestData
                         .Add(new RoleDefinition("OrganizationAdministrator", ImmutableList<Permission>.Empty
                             .AddRange(Enum.GetValues<Permission>())))
                         .Add(new RoleDefinition("NoteEnterer", ImmutableList<Permission>.Empty
-                            .AddRange(new Permission[] {  }))),
+                            .AddRange(new Permission[] { Permission.ViewLinkedFamilies }))),
                     ImmutableDictionary<Guid, UserAccessConfiguration>.Empty
                         .Add(adminId, new UserAccessConfiguration(adminId, ImmutableList<UserLocationRole>.Empty
                             .Add(new UserLocationRole(guid2, "OrganizationAdministrator"))))
