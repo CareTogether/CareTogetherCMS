@@ -888,6 +888,9 @@
           "documentLink": {
             "$ref": "#/components/schemas/DocumentLinkRequirement"
           },
+          "noteEntry": {
+            "$ref": "#/components/schemas/NoteEntryRequirement"
+          },
           "instructions": {
             "type": "string",
             "nullable": true
@@ -900,6 +903,20 @@
         }
       },
       "DocumentLinkRequirement": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "None",
+          "Allowed",
+          "Required"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
+      "NoteEntryRequirement": {
         "type": "integer",
         "description": "",
         "x-enumNames": [

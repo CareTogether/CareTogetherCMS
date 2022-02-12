@@ -32,7 +32,16 @@ namespace CareTogether.Resources
         Required
     }
 
-    public sealed record ActionRequirement(DocumentLinkRequirement DocumentLink, string? Instructions, Uri? InfoLink);
+    public enum NoteEntryRequirement
+    {
+        None,
+        Allowed,
+        Required
+    }
+
+    public sealed record ActionRequirement(
+        DocumentLinkRequirement DocumentLink, NoteEntryRequirement NoteEntry,
+        string? Instructions, Uri? InfoLink);
 
     public sealed record ReferralPolicy(
         ImmutableList<string> RequiredIntakeActionNames,
