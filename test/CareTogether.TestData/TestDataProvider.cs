@@ -297,8 +297,6 @@ namespace CareTogether.TestData
                             ImmutableList<string>.Empty.AddRange(new[] { "Amazon", "Caucasian", "Other" }),
                             ImmutableList<string>.Empty.AddRange(new[] { "Single", "Spouse", "Partner", "Dad", "Mom", "Relative", "Domestic Worker" }))),
                     ImmutableList<RoleDefinition>.Empty
-                        .Add(new RoleDefinition("OrganizationAdministrator", ImmutableList<Permission>.Empty
-                            .AddRange(Enum.GetValues<Permission>())))
                         .Add(new RoleDefinition("NoteEnterer", ImmutableList<Permission>.Empty
                             .AddRange(new Permission[] { Permission.ViewLinkedFamilies }))),
                     ImmutableDictionary<Guid, UserAccessConfiguration>.Empty
