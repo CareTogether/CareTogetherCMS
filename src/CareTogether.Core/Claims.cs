@@ -9,5 +9,7 @@
         public const string LocationId = "LocationId";
 
         public const string PersonId = "PersonId";
+
+        public const string Permission = "Permission";
     }
 }

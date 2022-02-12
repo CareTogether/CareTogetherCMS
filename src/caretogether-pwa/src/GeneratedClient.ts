@@ -581,7 +581,7 @@ export class UsersClient {
         this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
     }
 
-    getUserTenantAccess(): Promise<UserTenantAccessSummary> {
+    getUserOrganizationAccess(): Promise<UserOrganizationAccess> {
         let url_ = this.baseUrl + "/api/Users/me/tenantAccess";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -593,18 +593,18 @@ export class UsersClient {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetUserTenantAccess(_response);
+            return this.processGetUserOrganizationAccess(_response);
         });
     }
 
-    protected processGetUserTenantAccess(response: Response): Promise<UserTenantAccessSummary> {
+    protected processGetUserOrganizationAccess(response: Response): Promise<UserOrganizationAccess> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = UserTenantAccessSummary.fromJS(resultData200);
+            result200 = UserOrganizationAccess.fromJS(resultData200);
             return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -612,7 +612,7 @@ export class UsersClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<UserTenantAccessSummary>(<any>null);
+        return Promise.resolve<UserOrganizationAccess>(<any>null);
     }
 }
 
@@ -718,6 +718,7 @@ export class VolunteersClient {
 export class OrganizationConfiguration implements IOrganizationConfiguration {
     organizationName?: string;
     locations?: LocationConfiguration[];
+    roles?: RoleDefinition[];
     users?: { [key: string]: UserAccessConfiguration; };
 
     constructor(data?: IOrganizationConfiguration) {
@@ -736,6 +737,11 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
                 this.locations = [] as any;
                 for (let item of _data["locations"])
                     this.locations!.push(LocationConfiguration.fromJS(item));
+            }
+            if (Array.isArray(_data["roles"])) {
+                this.roles = [] as any;
+                for (let item of _data["roles"])
+                    this.roles!.push(RoleDefinition.fromJS(item));
             }
             if (_data["users"]) {
                 this.users = {} as any;
@@ -762,6 +768,11 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
             for (let item of this.locations)
                 data["locations"].push(item.toJSON());
         }
+        if (Array.isArray(this.roles)) {
+            data["roles"] = [];
+            for (let item of this.roles)
+                data["roles"].push(item.toJSON());
+        }
         if (this.users) {
             data["users"] = {};
             for (let key in this.users) {
@@ -776,6 +787,7 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
 export interface IOrganizationConfiguration {
     organizationName?: string;
     locations?: LocationConfiguration[];
+    roles?: RoleDefinition[];
     users?: { [key: string]: UserAccessConfiguration; };
 }
 
@@ -841,6 +853,65 @@ export interface ILocationConfiguration {
     name?: string;
     ethnicities?: string[];
     adultFamilyRelationships?: string[];
+}
+
+export class RoleDefinition implements IRoleDefinition {
+    roleName?: string;
+    permissions?: Permission[];
+
+    constructor(data?: IRoleDefinition) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.roleName = _data["roleName"];
+            if (Array.isArray(_data["permissions"])) {
+                this.permissions = [] as any;
+                for (let item of _data["permissions"])
+                    this.permissions!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): RoleDefinition {
+        data = typeof data === 'object' ? data : {};
+        let result = new RoleDefinition();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["roleName"] = this.roleName;
+        if (Array.isArray(this.permissions)) {
+            data["permissions"] = [];
+            for (let item of this.permissions)
+                data["permissions"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IRoleDefinition {
+    roleName?: string;
+    permissions?: Permission[];
+}
+
+export enum Permission {
+    ReadDocuments = 1,
+    UploadStandaloneDocuments = 2,
+    ViewAllFamilies = 100,
+    ViewLinkedFamilies = 101,
+    ViewApprovalStatus = 200,
+    EditApprovalRequirementCompletion = 201,
+    EditApprovalRequirementExemption = 202,
+    EditVolunteerRoleParticipation = 203,
 }
 
 export class UserAccessConfiguration implements IUserAccessConfiguration {
@@ -5931,11 +6002,11 @@ export interface IUnexemptArrangementRequirement extends IArrangementCommand {
     requirementName?: string;
 }
 
-export class UserTenantAccessSummary implements IUserTenantAccessSummary {
+export class UserOrganizationAccess implements IUserOrganizationAccess {
     organizationId?: string;
-    locationIds?: string[];
+    locationIds?: UserLocationAccess[];
 
-    constructor(data?: IUserTenantAccessSummary) {
+    constructor(data?: IUserOrganizationAccess) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -5950,14 +6021,14 @@ export class UserTenantAccessSummary implements IUserTenantAccessSummary {
             if (Array.isArray(_data["locationIds"])) {
                 this.locationIds = [] as any;
                 for (let item of _data["locationIds"])
-                    this.locationIds!.push(item);
+                    this.locationIds!.push(UserLocationAccess.fromJS(item));
             }
         }
     }
 
-    static fromJS(data: any): UserTenantAccessSummary {
+    static fromJS(data: any): UserOrganizationAccess {
         data = typeof data === 'object' ? data : {};
-        let result = new UserTenantAccessSummary();
+        let result = new UserOrganizationAccess();
         result.init(data);
         return result;
     }
@@ -5968,15 +6039,75 @@ export class UserTenantAccessSummary implements IUserTenantAccessSummary {
         if (Array.isArray(this.locationIds)) {
             data["locationIds"] = [];
             for (let item of this.locationIds)
-                data["locationIds"].push(item);
+                data["locationIds"].push(item.toJSON());
         }
         return data;
     }
 }
 
-export interface IUserTenantAccessSummary {
+export interface IUserOrganizationAccess {
     organizationId?: string;
-    locationIds?: string[];
+    locationIds?: UserLocationAccess[];
+}
+
+export class UserLocationAccess implements IUserLocationAccess {
+    locationId?: string;
+    roles?: string[];
+    permissions?: Permission[];
+
+    constructor(data?: IUserLocationAccess) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.locationId = _data["locationId"];
+            if (Array.isArray(_data["roles"])) {
+                this.roles = [] as any;
+                for (let item of _data["roles"])
+                    this.roles!.push(item);
+            }
+            if (Array.isArray(_data["permissions"])) {
+                this.permissions = [] as any;
+                for (let item of _data["permissions"])
+                    this.permissions!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): UserLocationAccess {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserLocationAccess();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["locationId"] = this.locationId;
+        if (Array.isArray(this.roles)) {
+            data["roles"] = [];
+            for (let item of this.roles)
+                data["roles"].push(item);
+        }
+        if (Array.isArray(this.permissions)) {
+            data["permissions"] = [];
+            for (let item of this.permissions)
+                data["permissions"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IUserLocationAccess {
+    locationId?: string;
+    roles?: string[];
+    permissions?: Permission[];
 }
 
 export abstract class VolunteerFamilyCommand implements IVolunteerFamilyCommand {

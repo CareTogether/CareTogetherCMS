@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { makeStyles, Menu, MenuItem } from '@material-ui/core';
 import { format } from 'date-fns';
 import { useRecoilValue } from 'recoil';
-import { CombinedFamilyInfo, UploadedDocumentInfo } from '../../GeneratedClient';
+import { CombinedFamilyInfo, Permission, UploadedDocumentInfo } from '../../GeneratedClient';
 import { downloadFile } from '../../Model/FilesModel';
-import { currentOrganizationState, currentLocationState } from '../../Model/SessionModel';
+import { currentOrganizationState, currentLocationState, usePermissions } from '../../Model/SessionModel';
 import { DeleteDocumentDialog } from './DeleteDocumentDialog';
 
 const useStyles = makeStyles((theme) => ({
@@ -31,17 +31,24 @@ export function FamilyDocuments({ family }: FamilyDocumentsProps) {
     setDeleteParameter({familyId: family.family!.id!, document: document});
   }
 
+  const permissions = usePermissions();
+  
   return (
     <>
       <ul className={classes.familyDocumentsList}>
-        {family.uploadedDocuments?.map((uploaded, i) => (
-          <li key={i}
-            onContextMenu={(e) => { e.preventDefault(); setMoreMenuAnchor({ anchor: e.currentTarget, document: uploaded }); }}
-            onClick={() => downloadFile(organizationId, locationId, uploaded.uploadedDocumentId!)}>
-            📃 {uploaded.uploadedFileName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            {uploaded.timestampUtc && <span style={{float:'right',marginRight:20}}>{format(uploaded.timestampUtc, "MM/dd/yyyy hh:mm aa")}</span>}
-          </li>
-        ))}
+        {family.uploadedDocuments?.map((uploaded, i) =>
+          permissions(Permission.ReadDocuments)
+          ? <li key={i}
+              onContextMenu={(e) => { e.preventDefault(); setMoreMenuAnchor({ anchor: e.currentTarget, document: uploaded }); }}
+              onClick={() => downloadFile(organizationId, locationId, uploaded.uploadedDocumentId!)}>
+              📃 {uploaded.uploadedFileName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              {uploaded.timestampUtc && <span style={{float:'right',marginRight:20}}>{format(uploaded.timestampUtc, "MM/dd/yyyy hh:mm aa")}</span>}
+            </li>
+          : <li key={i}>
+              📃 {uploaded.uploadedFileName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              {uploaded.timestampUtc && <span style={{float:'right',marginRight:20}}>{format(uploaded.timestampUtc, "MM/dd/yyyy hh:mm aa")}</span>}
+            </li>
+        )}
       </ul>
       <Menu id="documents-more-menu"
         anchorEl={moreMenuAnchor?.anchor}

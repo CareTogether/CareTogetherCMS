@@ -1,7 +1,7 @@
 import { Card, CardHeader, IconButton, CardContent, Typography, Chip, CardActions, makeStyles, Divider, ListItemText, Menu, MenuItem, MenuList, useMediaQuery, useTheme } from "@material-ui/core";
 import { format } from 'date-fns';
 import { useState } from "react";
-import { ActionRequirement, Gender, Person, CombinedFamilyInfo, RoleRemovalReason, CompletedRequirementInfo, ExemptedRequirementInfo } from "../../GeneratedClient";
+import { ActionRequirement, Gender, Person, CombinedFamilyInfo, RoleRemovalReason, CompletedRequirementInfo, ExemptedRequirementInfo, Permission } from "../../GeneratedClient";
 import { AgeText } from "../AgeText";
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
@@ -24,6 +24,7 @@ import { DeletePersonDialog } from "../Families/DeletePersonDialog";
 import { MarkVolunteerStepIncompleteDialog } from "./MarkVolunteerStepIncompleteDialog";
 import { ExemptVolunteerRequirementDialog } from "./ExemptVolunteerRequirementDialog";
 import { UnexemptVolunteerRequirementDialog } from "./UnexemptVolunteerRequirementDialog";
+import { usePermissions } from "../../Model/SessionModel";
 
 const useStyles = makeStyles((theme) => ({
   sectionChips: {
@@ -148,6 +149,8 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
 
+  const permissions = usePermissions();
+
   return (<>{adult?.item1 && adult.item1.id && adult.item2 &&
     <Card className={classes.card}>
       <CardHeader className={classes.cardHeader}
@@ -214,13 +217,13 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
             keepMounted
             open={Boolean(requirementMoreMenuAnchor)}
             onClose={() => setRequirementMoreMenuAnchor(null)}>
-            { (typeof requirementMoreMenuAnchor?.requirement === 'string') &&
+            { (typeof requirementMoreMenuAnchor?.requirement === 'string') && permissions(Permission.EditApprovalRequirementExemption) &&
               <MenuItem onClick={() => selectExempt(requirementMoreMenuAnchor?.requirement as string)}>Exempt</MenuItem>
               }
-            { (requirementMoreMenuAnchor?.requirement instanceof CompletedRequirementInfo) &&
+            { (requirementMoreMenuAnchor?.requirement instanceof CompletedRequirementInfo) && permissions(Permission.EditApprovalRequirementCompletion) &&
               <MenuItem onClick={() => selectMarkIncomplete(requirementMoreMenuAnchor?.requirement as CompletedRequirementInfo)}>Mark Incomplete</MenuItem>
               }
-            { (requirementMoreMenuAnchor?.requirement instanceof ExemptedRequirementInfo) &&
+            { (requirementMoreMenuAnchor?.requirement instanceof ExemptedRequirementInfo) && permissions(Permission.EditApprovalRequirementExemption) &&
               <MenuItem onClick={() => selectUnexempt(requirementMoreMenuAnchor?.requirement as ExemptedRequirementInfo)}>Unexempt</MenuItem>
               }
           </Menu>
@@ -237,10 +240,10 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         </Typography>
       </CardContent>
       <CardActions>
-        <IconButton size="small" className={classes.rightCardAction}
+        {permissions(Permission.EditApprovalRequirementCompletion) && <IconButton size="small" className={classes.rightCardAction}
           onClick={(event) => setAdultRecordMenuAnchor({anchor: event.currentTarget, adult: adult.item1 as Person})}>
           <AssignmentTurnedInIcon />
-        </IconButton>
+        </IconButton>}
       </CardActions>
       <Menu id="adult-record-menu"
         anchorEl={adultRecordMenuAnchor?.anchor}
@@ -292,22 +295,26 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectUpdateAddress(adultMoreMenuAnchor.adult)}>
           <ListItemText primary="Update address" />
         </MenuItem>
-        {(Object.entries(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals || {}).length > 0 ||
+        {permissions(Permission.EditVolunteerRoleParticipation) &&
+          (Object.entries(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals || {}).length > 0 ||
           Object.entries(volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.individualRoleApprovals || {}).length > 0 ||
           (volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles || []).length > 0) && <Divider />}
-        {Object.entries(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals || {}).filter(([role, ]) =>
+        {permissions(Permission.EditVolunteerRoleParticipation) &&
+          Object.entries(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals || {}).filter(([role, ]) =>
           !volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles?.find(x => x.roleName === role)).flatMap(([role, ]) => (
           <MenuItem key={role} onClick={() => adultMoreMenuAnchor?.adult && selectRemoveRole(adultMoreMenuAnchor.adult, role)}>
             <ListItemText primary={`Remove from ${role} role`} />
           </MenuItem>
         ))}
-        {Object.entries(volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.individualRoleApprovals || {}).filter(([role, ]) =>
+        {permissions(Permission.EditVolunteerRoleParticipation) &&
+          Object.entries(volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.individualRoleApprovals || {}).filter(([role, ]) =>
           !volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles?.find(x => x.roleName === role)).flatMap(([role, ]) => (
           <MenuItem key={role} onClick={() => adultMoreMenuAnchor?.adult && selectRemoveRole(adultMoreMenuAnchor.adult, role)}>
             <ListItemText primary={`Remove from ${role} role`} />
           </MenuItem>
         ))}
-        {(volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles || []).map(removedRole => (
+        {permissions(Permission.EditVolunteerRoleParticipation) &&
+          (volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles || []).map(removedRole => (
           <MenuItem key={removedRole.roleName}
             onClick={() => adultMoreMenuAnchor?.adult && selectResetRole(adultMoreMenuAnchor.adult, removedRole.roleName!, removedRole.reason!, removedRole.additionalComments!)}>
             <ListItemText primary={`Reset ${removedRole.roleName} participation`} />

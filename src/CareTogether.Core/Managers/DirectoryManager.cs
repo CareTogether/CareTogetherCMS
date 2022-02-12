@@ -36,7 +36,16 @@ namespace CareTogether.Managers
         {
             var families = await directoryResource.ListFamiliesAsync(organizationId, locationId);
 
-            var result = await families
+            var visibleFamilies = (await families.Select(async family =>
+                await authorizationEngine.AuthorizeFamilyAccessAsync(organizationId, locationId, user, family.Id)
+                ? family
+                : null)
+                .WhenAll())
+                .Where(family => family != null)
+                .Cast<Family>()
+                .ToImmutableList();
+
+            var result = await visibleFamilies
                 .Select(family => combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, family.Id, user))
                 .WhenAll();
             return result.ToImmutableList();
@@ -66,7 +75,7 @@ namespace CareTogether.Managers
                         var addAdultToFamilySubcommand = new AddAdultToFamily(c.FamilyId, adultPersonId, c.FamilyAdultRelationshipInfo);
 
                         if (!await authorizationEngine.AuthorizePersonCommandAsync(
-                            organizationId, locationId, user, createPersonSubcommand))
+                            organizationId, locationId, user, c.FamilyId, createPersonSubcommand))
                             throw new Exception("The user is not authorized to perform this command.");
 
                         if (!await authorizationEngine.AuthorizeFamilyCommandAsync(
@@ -96,7 +105,7 @@ namespace CareTogether.Managers
                             cr with { ChildId = childPersonId }).ToImmutableList());
 
                         if (!await authorizationEngine.AuthorizePersonCommandAsync(
-                            organizationId, locationId, user, createPersonSubcommand))
+                            organizationId, locationId, user, c.FamilyId, createPersonSubcommand))
                             throw new Exception("The user is not authorized to perform this command.");
 
                         if (!await authorizationEngine.AuthorizeFamilyCommandAsync(
@@ -136,7 +145,7 @@ namespace CareTogether.Managers
                         var activateVolunteerFamilySubcommand = new ActivateVolunteerFamily(familyId);
 
                         if (!await authorizationEngine.AuthorizePersonCommandAsync(
-                            organizationId, locationId, user, createPersonSubcommand))
+                            organizationId, locationId, user, familyId, createPersonSubcommand))
                             throw new Exception("The user is not authorized to perform this command.");
 
                         if (!await authorizationEngine.AuthorizeFamilyCommandAsync(
@@ -184,7 +193,7 @@ namespace CareTogether.Managers
                         var createReferralSubcommand = new CreateReferral(familyId, referralId, c.ReferralOpenedAtUtc);
 
                         if (!await authorizationEngine.AuthorizePersonCommandAsync(
-                            organizationId, locationId, user, createPersonSubcommand))
+                            organizationId, locationId, user, familyId, createPersonSubcommand))
                             throw new Exception("The user is not authorized to perform this command.");
 
                         if (!await authorizationEngine.AuthorizeFamilyCommandAsync(
@@ -238,7 +247,7 @@ namespace CareTogether.Managers
             };
 
             if (!await authorizationEngine.AuthorizePersonCommandAsync(
-                organizationId, locationId, user, command))
+                organizationId, locationId, user, familyId, command))
                 throw new Exception("The user is not authorized to perform this command.");
 
             _ = await directoryResource.ExecutePersonCommandAsync(organizationId, locationId, command, user.UserId());

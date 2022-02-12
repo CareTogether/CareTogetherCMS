@@ -617,14 +617,14 @@
         "tags": [
           "Users"
         ],
-        "operationId": "Users_GetUserTenantAccess",
+        "operationId": "Users_GetUserOrganizationAccess",
         "responses": {
           "200": {
             "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserTenantAccessSummary"
+                  "$ref": "#/components/schemas/UserOrganizationAccess"
                 }
               }
             }
@@ -756,6 +756,12 @@
               "$ref": "#/components/schemas/LocationConfiguration"
             }
           },
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleDefinition"
+            }
+          },
           "users": {
             "type": "object",
             "additionalProperties": {
@@ -788,6 +794,45 @@
             }
           }
         }
+      },
+      "RoleDefinition": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "roleName": {
+            "type": "string"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Permission"
+            }
+          }
+        }
+      },
+      "Permission": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "ReadDocuments",
+          "UploadStandaloneDocuments",
+          "ViewAllFamilies",
+          "ViewLinkedFamilies",
+          "ViewApprovalStatus",
+          "EditApprovalRequirementCompletion",
+          "EditApprovalRequirementExemption",
+          "EditVolunteerRoleParticipation"
+        ],
+        "enum": [
+          1,
+          2,
+          100,
+          101,
+          200,
+          201,
+          202,
+          203
+        ]
       },
       "UserAccessConfiguration": {
         "type": "object",
@@ -3337,7 +3382,7 @@
           }
         ]
       },
-      "UserTenantAccessSummary": {
+      "UserOrganizationAccess": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -3348,8 +3393,29 @@
           "locationIds": {
             "type": "array",
             "items": {
-              "type": "string",
-              "format": "guid"
+              "$ref": "#/components/schemas/UserLocationAccess"
+            }
+          }
+        }
+      },
+      "UserLocationAccess": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "locationId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Permission"
             }
           }
         }

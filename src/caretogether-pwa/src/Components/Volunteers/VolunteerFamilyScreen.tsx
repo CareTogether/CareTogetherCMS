@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Container, Toolbar, Button, Menu, MenuItem, Grid, useMediaQuery, useTheme, MenuList, Divider, IconButton, ListItemText, Chip } from '@material-ui/core';
-import { CombinedFamilyInfo, ActionRequirement, RoleRemovalReason, CompletedRequirementInfo, ExemptedRequirementInfo } from '../../GeneratedClient';
+import { CombinedFamilyInfo, ActionRequirement, RoleRemovalReason, CompletedRequirementInfo, ExemptedRequirementInfo, Permission } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../../Model/ConfigurationModel';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
@@ -28,6 +28,7 @@ import { UnexemptVolunteerFamilyRequirementDialog } from './UnexemptVolunteerFam
 import { HeaderContent, HeaderTitle } from '../Header';
 import { useNavigate } from 'react-router-dom';
 import { ArrowBack } from '@material-ui/icons';
+import { usePermissions } from '../../Model/SessionModel';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -135,6 +136,8 @@ export function VolunteerFamilyScreen() {
   
   const navigate = useNavigate();
 
+  const permissions = usePermissions();
+
   return (
   <Container>
     <HeaderContent>
@@ -147,18 +150,18 @@ export function VolunteerFamilyScreen() {
       </HeaderTitle>
     </HeaderContent>
     <Toolbar variant="dense" disableGutters={true}>
-      <Button aria-controls="family-record-menu" aria-haspopup="true"
+      {permissions(Permission.EditApprovalRequirementCompletion) && <Button aria-controls="family-record-menu" aria-haspopup="true"
         variant="contained" color="default" size="small" className={classes.button}
         startIcon={<AssignmentTurnedInIcon />}
         onClick={(event) => setFamilyRecordMenuAnchor(event.currentTarget)}>
         Complete…
-      </Button>
-      <Button
+      </Button>}
+      {permissions(Permission.UploadStandaloneDocuments) && <Button
         onClick={() => setUploadDocumentDialogOpen(true)}
         variant="contained" color="default" size="small" className={classes.button}
         startIcon={<CloudUploadIcon />}>
         Upload
-      </Button>
+      </Button>}
       <Button
         onClick={() => setAddAdultDialogOpen(true)}
         variant="contained" color="default" size="small" className={classes.button}
@@ -196,13 +199,15 @@ export function VolunteerFamilyScreen() {
         open={Boolean(familyMoreMenuAnchor)}
         onClose={() => setFamilyMoreMenuAnchor(null)}>
         <MenuList dense={isMobile}>
-          {Object.entries(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals || {}).filter(([role, ]) =>
+          {permissions(Permission.EditVolunteerRoleParticipation) &&
+            Object.entries(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals || {}).filter(([role, ]) =>
             !volunteerFamily.volunteerFamilyInfo?.removedRoles?.find(x => x.roleName === role)).flatMap(([role, ]) => (
             <MenuItem key={role} onClick={() => selectRemoveRole(role)}>
               <ListItemText primary={`Remove from ${role} role`} />
             </MenuItem>
           ))}
-          {(volunteerFamily.volunteerFamilyInfo?.removedRoles || []).map(removedRole => (
+          {permissions(Permission.EditVolunteerRoleParticipation) &&
+            (volunteerFamily.volunteerFamilyInfo?.removedRoles || []).map(removedRole => (
             <MenuItem key={removedRole.roleName}
               onClick={() => selectResetRole(removedRole.roleName!, removedRole.reason!, removedRole.additionalComments!)}>
               <ListItemText primary={`Reset ${removedRole.roleName} participation`} />
@@ -274,13 +279,13 @@ export function VolunteerFamilyScreen() {
         keepMounted
         open={Boolean(requirementMoreMenuAnchor)}
         onClose={() => setRequirementMoreMenuAnchor(null)}>
-        { (typeof requirementMoreMenuAnchor?.requirement === 'string') &&
+        { (typeof requirementMoreMenuAnchor?.requirement === 'string') && permissions(Permission.EditApprovalRequirementExemption) &&
           <MenuItem onClick={() => selectExempt(requirementMoreMenuAnchor?.requirement as string)}>Exempt</MenuItem>
           }
-        { (requirementMoreMenuAnchor?.requirement instanceof CompletedRequirementInfo) &&
+        { (requirementMoreMenuAnchor?.requirement instanceof CompletedRequirementInfo) && permissions(Permission.EditApprovalRequirementCompletion) &&
           <MenuItem onClick={() => selectMarkIncomplete(requirementMoreMenuAnchor?.requirement as CompletedRequirementInfo)}>Mark Incomplete</MenuItem>
           }
-        { (requirementMoreMenuAnchor?.requirement instanceof ExemptedRequirementInfo) &&
+        { (requirementMoreMenuAnchor?.requirement instanceof ExemptedRequirementInfo) && permissions(Permission.EditApprovalRequirementExemption) &&
           <MenuItem onClick={() => selectUnexempt(requirementMoreMenuAnchor?.requirement as ExemptedRequirementInfo)}>Unexempt</MenuItem>
           }
       </Menu>

@@ -18,7 +18,7 @@ namespace CareTogether.TestData
          *   Jane Doe (Smith) - guid2 - UserID guid3
          *   Eric Doe - guid3
          * Coachworthy - guid4
-         *   Emily Coachworthy - guid4
+         *   Emily Coachworthy - guid4 - UserID volunteerId
          * Skywalker - guid2
          *   Han Solo - guid5
          *   Leia Skywalker - guid6
@@ -43,6 +43,7 @@ namespace CareTogether.TestData
         static readonly Guid guid8 = Id('8');
         static readonly Guid guid9 = Id('9');
         static readonly Guid adminId = Guid.Parse("2b87864a-63e3-4406-bcbc-c0068a13ac05");
+        static readonly Guid volunteerId = Guid.Parse("e3aaef77-0e97-47a6-b788-a67c237c781e");
 
 
         public static async Task PopulateTestDataAsync(
@@ -96,7 +97,7 @@ namespace CareTogether.TestData
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new RemoveCustodialRelationship(guid1, guid3, guid1)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdateCustodialRelationshipType(guid1, guid3, guid2, CustodialRelationshipType.ParentWithCourtAppointedCustody)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddCustodialRelationship(guid1, new CustodialRelationship(guid3, guid1, CustodialRelationshipType.ParentWithCourtAppointedCustody))),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid4, null, "Emily", "Coachworthy", Gender.Female, new ExactAge(new DateTime(1980, 3, 19)), "Caucasian",
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid4, volunteerId, "Emily", "Coachworthy", Gender.Female, new ExactAge(new DateTime(1980, 3, 19)), "Caucasian",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid4, guid4,
                     ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty.Add((guid4, new FamilyAdultRelationshipInfo("Single", true))),
@@ -295,9 +296,14 @@ namespace CareTogether.TestData
                         .Add(new LocationConfiguration(Guid.Parse("33333333-3333-3333-3333-333333333333"), "El Dorado",
                             ImmutableList<string>.Empty.AddRange(new[] { "Amazon", "Caucasian", "Other" }),
                             ImmutableList<string>.Empty.AddRange(new[] { "Single", "Spouse", "Partner", "Dad", "Mom", "Relative", "Domestic Worker" }))),
+                    ImmutableList<RoleDefinition>.Empty
+                        .Add(new RoleDefinition("NoteEnterer", ImmutableList<Permission>.Empty
+                            .AddRange(new Permission[] { Permission.ViewLinkedFamilies }))),
                     ImmutableDictionary<Guid, UserAccessConfiguration>.Empty
                         .Add(adminId, new UserAccessConfiguration(adminId, ImmutableList<UserLocationRole>.Empty
-                            .Add(new UserLocationRole(guid2, Roles.OrganizationAdministrator))))));
+                            .Add(new UserLocationRole(guid2, "OrganizationAdministrator"))))
+                        .Add(volunteerId, new UserAccessConfiguration(volunteerId, ImmutableList<UserLocationRole>.Empty
+                            .Add(new UserLocationRole(guid2, "NoteEnterer"))))));
         }
 
         public static async Task PopulatePolicies(IObjectStore<EffectiveLocationPolicy> policiesStore)
@@ -521,6 +527,9 @@ namespace CareTogether.TestData
         {
             await userTenantAccessStore.UpsertAsync(Guid.Empty, Guid.Empty,
                 adminId.ToString(),
+                new UserTenantAccessSummary(guid1, ImmutableList<Guid>.Empty.Add(guid2)));
+            await userTenantAccessStore.UpsertAsync(Guid.Empty, Guid.Empty,
+                volunteerId.ToString(),
                 new UserTenantAccessSummary(guid1, ImmutableList<Guid>.Empty.Add(guid2)));
         }
 
