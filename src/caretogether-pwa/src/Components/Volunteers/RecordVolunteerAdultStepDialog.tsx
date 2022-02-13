@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, Grid, InputLabel, Link, MenuItem, Select } from '@material-ui/core';
-import { CombinedFamilyInfo, ActionRequirement, Person, DocumentLinkRequirement } from '../../GeneratedClient';
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, Grid, InputLabel, Link, MenuItem, Select, TextField } from '@material-ui/core';
+import { CombinedFamilyInfo, ActionRequirement, Person, DocumentLinkRequirement, NoteEntryRequirement } from '../../GeneratedClient';
 import { KeyboardDatePicker } from '@material-ui/pickers';
 import { useVolunteersModel } from '../../Model/VolunteersModel';
 import { uploadFileToTenant } from "../../Model/FilesModel";
@@ -26,8 +26,9 @@ interface RecordVolunteerAdultStepDialogProps {
 export function RecordVolunteerAdultStepDialog({requirementName, stepActionRequirement, volunteerFamily, adult, onClose}: RecordVolunteerAdultStepDialogProps) {
   const classes = useStyles();
   const [documentFile, setDocumentFile] = useState<File | null>(null);
-  const [documentId, setDocumentId] = useState<string>("");
+  const [documentId, setDocumentId] = useState("");
   const [completedAtLocal, setCompletedAtLocal] = useState(new Date());
+  const [notes, setNotes] = useState("");
   const organizationId = useRecoilValue(currentOrganizationState);
   const locationId = useRecoilValue(currentLocationState);
   const directoryModel = useDirectoryModel();
@@ -42,12 +43,16 @@ export function RecordVolunteerAdultStepDialog({requirementName, stepActionRequi
         alert("No file was selected. Try again.");
       } else if (documentId === "" && stepActionRequirement.documentLink === DocumentLinkRequirement.Required) {
         alert("You must either select from an already-uploaded document or upload a new document for this requirement.");
+      } else if (notes === "" && stepActionRequirement.noteEntry === NoteEntryRequirement.Required) {
+        alert("You must enter a note for this requirement.");
       } else {
         let document = documentId;
         if (documentId === UPLOAD_NEW) {
           document = await uploadFileToTenant(organizationId, locationId, documentFile!);
           await directoryModel.uploadFamilyDocument(volunteerFamily.family!.id!, document, documentFile!.name);
         }
+        if (notes !== "")
+          await directoryModel.createDraftNote(volunteerFamily.family?.id as string, notes);
         await volunteerFamiliesModel.completeIndividualRequirement(volunteerFamily.family?.id as string, adult.id as string,
           requirementName, stepActionRequirement, completedAtLocal, document === "" ? null : document);
         //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
@@ -114,6 +119,16 @@ export function RecordVolunteerAdultStepDialog({requirementName, stepActionRequi
                   />}
               </Grid>
             </>}
+          {(stepActionRequirement.noteEntry === NoteEntryRequirement.Allowed ||
+            stepActionRequirement.noteEntry === NoteEntryRequirement.Required) &&
+            <Grid item xs={12}>
+              <TextField
+                id="notes" required={stepActionRequirement.noteEntry === NoteEntryRequirement.Required}
+                label="Notes" placeholder="Space for any general notes"
+                multiline fullWidth variant="outlined" minRows={6} size="medium"
+                value={notes} onChange={e => setNotes(e.target.value)}
+              />
+            </Grid>}
         </Grid>
       </DialogContent>
       <DialogActions>

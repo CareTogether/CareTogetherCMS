@@ -1060,6 +1060,7 @@ export interface IEffectiveLocationPolicy {
 
 export class ActionRequirement implements IActionRequirement {
     documentLink?: DocumentLinkRequirement;
+    noteEntry?: NoteEntryRequirement;
     instructions?: string | undefined;
     infoLink?: string | undefined;
 
@@ -1075,6 +1076,7 @@ export class ActionRequirement implements IActionRequirement {
     init(_data?: any) {
         if (_data) {
             this.documentLink = _data["documentLink"];
+            this.noteEntry = _data["noteEntry"];
             this.instructions = _data["instructions"];
             this.infoLink = _data["infoLink"];
         }
@@ -1090,6 +1092,7 @@ export class ActionRequirement implements IActionRequirement {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["documentLink"] = this.documentLink;
+        data["noteEntry"] = this.noteEntry;
         data["instructions"] = this.instructions;
         data["infoLink"] = this.infoLink;
         return data;
@@ -1098,11 +1101,18 @@ export class ActionRequirement implements IActionRequirement {
 
 export interface IActionRequirement {
     documentLink?: DocumentLinkRequirement;
+    noteEntry?: NoteEntryRequirement;
     instructions?: string | undefined;
     infoLink?: string | undefined;
 }
 
 export enum DocumentLinkRequirement {
+    None = 0,
+    Allowed = 1,
+    Required = 2,
+}
+
+export enum NoteEntryRequirement {
     None = 0,
     Allowed = 1,
     Required = 2,
