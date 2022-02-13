@@ -363,52 +363,56 @@ namespace CareTogether.TestData
                             ArrangementFunctions: new List<ArrangementFunction>
                             {
                                 new ArrangementFunction("Host Family", FunctionRequirement.OneOrMore,
-                                EligibleIndividualVolunteerRoles: ImmutableList<string>.Empty,
-                                EligibleVolunteerFamilyRoles: new List<string>
-                                {
-                                    "Host Family"
-                                }.ToImmutableList(),
-                                EligiblePeople: ImmutableList<Guid>.Empty),
+                                    EligibleIndividualVolunteerRoles: ImmutableList<string>.Empty,
+                                    EligibleVolunteerFamilyRoles: new List<string>
+                                    {
+                                        "Host Family"
+                                    }.ToImmutableList(),
+                                    EligiblePeople: ImmutableList<Guid>.Empty),
                                 new ArrangementFunction("Family Coach", FunctionRequirement.ExactlyOne,
-                                EligibleIndividualVolunteerRoles: new List<string>
-                                {
-                                    "Family Coach"
-                                }.ToImmutableList(),
-                                EligibleVolunteerFamilyRoles: ImmutableList<string>.Empty,
-                                EligiblePeople: ImmutableList<Guid>.Empty),
+                                    EligibleIndividualVolunteerRoles: new List<string>
+                                    {
+                                        "Family Coach"
+                                    }.ToImmutableList(),
+                                    EligibleVolunteerFamilyRoles: ImmutableList<string>.Empty,
+                                    EligiblePeople: ImmutableList<Guid>.Empty),
                                 new ArrangementFunction("Parent Friend", FunctionRequirement.ZeroOrMore,
-                                EligibleIndividualVolunteerRoles: new List<string>
-                                {
-                                    "Family Coach",
-                                    "Family Friend"
-                                }.ToImmutableList(),
-                                EligibleVolunteerFamilyRoles: new List<string>
-                                {
-                                    "Host Family"
-                                }.ToImmutableList(),
-                                EligiblePeople: ImmutableList<Guid>.Empty),
+                                    EligibleIndividualVolunteerRoles: new List<string>
+                                    {
+                                        "Family Coach",
+                                        "Family Friend"
+                                    }.ToImmutableList(),
+                                    EligibleVolunteerFamilyRoles: new List<string>
+                                    {
+                                        "Host Family"
+                                    }.ToImmutableList(),
+                                    EligiblePeople: ImmutableList<Guid>.Empty),
                                 new ArrangementFunction("Host Family Friend", FunctionRequirement.ZeroOrMore,
-                                EligibleIndividualVolunteerRoles: new List<string>
-                                {
-                                    "Family Coach",
-                                    "Family Friend"
-                                }.ToImmutableList(),
-                                EligibleVolunteerFamilyRoles: new List<string>
-                                {
-                                    "Host Family"
-                                }.ToImmutableList(),
-                                EligiblePeople: ImmutableList<Guid>.Empty),
+                                    EligibleIndividualVolunteerRoles: new List<string>
+                                    {
+                                        "Family Coach",
+                                        "Family Friend"
+                                    }.ToImmutableList(),
+                                    EligibleVolunteerFamilyRoles: new List<string>
+                                    {
+                                        "Host Family"
+                                    }.ToImmutableList(),
+                                    EligiblePeople: ImmutableList<Guid>.Empty),
                                 new ArrangementFunction("Parent and Host Family Friend", FunctionRequirement.ZeroOrMore,
-                                EligibleIndividualVolunteerRoles: new List<string>
-                                {
-                                    "Family Coach",
-                                    "Family Friend"
-                                }.ToImmutableList(),
-                                EligibleVolunteerFamilyRoles: new List<string>
-                                {
-                                    "Host Family"
-                                }.ToImmutableList(),
-                                EligiblePeople: ImmutableList<Guid>.Empty)
+                                    EligibleIndividualVolunteerRoles: new List<string>
+                                    {
+                                        "Family Coach",
+                                        "Family Friend"
+                                    }.ToImmutableList(),
+                                    EligibleVolunteerFamilyRoles: new List<string>
+                                    {
+                                        "Host Family"
+                                    }.ToImmutableList(),
+                                    EligiblePeople: ImmutableList<Guid>.Empty),
+                                new ArrangementFunction("Staff Supervision", FunctionRequirement.ExactlyOne,
+                                    EligibleIndividualVolunteerRoles: ImmutableList<string>.Empty,
+                                    EligibleVolunteerFamilyRoles: ImmutableList<string>.Empty,
+                                    EligiblePeople: new[] { adminId }.ToImmutableList())
                             }.ToImmutableList(),
                             RequiredSetupActionNames: new List<string>
                             {
@@ -438,23 +442,27 @@ namespace CareTogether.TestData
                             ArrangementFunctions: new List<ArrangementFunction>
                             {
                                 new ArrangementFunction("Family Friend", FunctionRequirement.OneOrMore,
-                                EligibleIndividualVolunteerRoles: new List<string>
-                                {
-                                    "Family Coach",
-                                    "Family Friend"
-                                }.ToImmutableList(),
-                                EligibleVolunteerFamilyRoles: new List<string>
-                                {
-                                    "Host Family"
-                                }.ToImmutableList(),
-                                EligiblePeople: ImmutableList<Guid>.Empty),
+                                    EligibleIndividualVolunteerRoles: new List<string>
+                                    {
+                                        "Family Coach",
+                                        "Family Friend"
+                                    }.ToImmutableList(),
+                                    EligibleVolunteerFamilyRoles: new List<string>
+                                    {
+                                        "Host Family"
+                                    }.ToImmutableList(),
+                                    EligiblePeople: ImmutableList<Guid>.Empty),
                                 new ArrangementFunction("Family Coach", FunctionRequirement.ExactlyOne,
-                                EligibleIndividualVolunteerRoles: new List<string>
-                                {
-                                    "Family Coach"
-                                }.ToImmutableList(),
-                                EligibleVolunteerFamilyRoles: ImmutableList<string>.Empty,
-                                EligiblePeople: ImmutableList<Guid>.Empty)
+                                    EligibleIndividualVolunteerRoles: new List<string>
+                                    {
+                                        "Family Coach"
+                                    }.ToImmutableList(),
+                                    EligibleVolunteerFamilyRoles: ImmutableList<string>.Empty,
+                                    EligiblePeople: ImmutableList<Guid>.Empty),
+                                new ArrangementFunction("Staff Supervision", FunctionRequirement.ExactlyOne,
+                                    EligibleIndividualVolunteerRoles: ImmutableList<string>.Empty,
+                                    EligibleVolunteerFamilyRoles: ImmutableList<string>.Empty,
+                                    EligiblePeople: new[] { adminId }.ToImmutableList())
                             }.ToImmutableList(),
                             RequiredSetupActionNames: new List<string>
                             {
