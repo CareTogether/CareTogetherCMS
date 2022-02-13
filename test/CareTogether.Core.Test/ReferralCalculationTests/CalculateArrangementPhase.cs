@@ -16,7 +16,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 startedAtUtc: null,
                 endedAtUtc: null,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty,
-                missingFunctionAssignments: ImmutableList<VolunteerFunction>.Empty);
+                missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty);
             
             Assert.AreEqual(ArrangementPhase.ReadyToStart, result);
         }
@@ -28,7 +28,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 startedAtUtc: DateTime.UtcNow,
                 endedAtUtc: null,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty,
-                missingFunctionAssignments: ImmutableList<VolunteerFunction>.Empty);
+                missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty);
 
             Assert.AreEqual(ArrangementPhase.Started, result);
         }
@@ -40,7 +40,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 startedAtUtc: DateTime.UtcNow,
                 endedAtUtc: DateTime.UtcNow,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty,
-                missingFunctionAssignments: ImmutableList<VolunteerFunction>.Empty);
+                missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty);
 
             Assert.AreEqual(ArrangementPhase.Ended, result);
         }
@@ -53,7 +53,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 endedAtUtc: null,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty
                 .Add(new MissingArrangementRequirement("A", null, null)),
-                missingFunctionAssignments: ImmutableList<VolunteerFunction>.Empty);
+                missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty);
 
             Assert.AreEqual(ArrangementPhase.SettingUp, result);
         }
@@ -66,7 +66,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 startedAtUtc: null,
                 endedAtUtc: null,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty,
-                missingFunctionAssignments: ImmutableList<VolunteerFunction>.Empty
+                missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty
                 .Add(Helpers.FunctionWithoutEligibility("X", FunctionRequirement.OneOrMore)));
 
             Assert.AreEqual(ArrangementPhase.SettingUp, result);
@@ -81,7 +81,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 endedAtUtc: null,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty
                 .Add(new MissingArrangementRequirement("A", null, null)),
-                missingFunctionAssignments: ImmutableList<VolunteerFunction>.Empty
+                missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty
                 .Add(Helpers.FunctionWithoutEligibility("X", FunctionRequirement.OneOrMore)));
 
             Assert.AreEqual(ArrangementPhase.SettingUp, result);
@@ -96,7 +96,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 endedAtUtc: DateTime.UtcNow,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty
                 .Add(new MissingArrangementRequirement("A", null, null)),
-                missingFunctionAssignments: ImmutableList<VolunteerFunction>.Empty
+                missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty
                 .Add(Helpers.FunctionWithoutEligibility("X", FunctionRequirement.OneOrMore)));
 
             Assert.AreEqual(ArrangementPhase.SettingUp, result);

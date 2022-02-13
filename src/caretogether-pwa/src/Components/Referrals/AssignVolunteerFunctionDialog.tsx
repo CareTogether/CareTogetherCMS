@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid, InputLabel, MenuItem, Select } from '@material-ui/core';
-import { ArrangementPolicy, Arrangement, VolunteerFunction, RoleApprovalStatus, Person } from '../../GeneratedClient';
+import { ArrangementPolicy, Arrangement, ArrangementFunction, RoleApprovalStatus, Person } from '../../GeneratedClient';
 import { visibleFamiliesData } from '../../Model/ModelLoader';
 import { useRecoilValue } from 'recoil';
 import { useParams } from 'react-router-dom';
@@ -22,11 +22,11 @@ interface AssignVolunteerFunctionDialogProps {
   referralId: string,
   arrangement: Arrangement,
   arrangementPolicy: ArrangementPolicy,
-  volunteerFunction: VolunteerFunction
+  arrangementFunction: ArrangementFunction
   onClose: () => void
 }
 
-export function AssignVolunteerFunctionDialog({referralId, arrangement, arrangementPolicy, volunteerFunction, onClose}: AssignVolunteerFunctionDialogProps) {
+export function AssignVolunteerFunctionDialog({referralId, arrangement, arrangementPolicy, arrangementFunction, onClose}: AssignVolunteerFunctionDialogProps) {
   const classes = useStyles();
   
   const familyIdMaybe = useParams<{ familyId: string }>();
@@ -34,27 +34,27 @@ export function AssignVolunteerFunctionDialog({referralId, arrangement, arrangem
   
   const visibleFamilies = useRecoilValue(visibleFamiliesData);
 
-  const candidateIndividualAssignees = volunteerFunction.eligibleIndividualVolunteerRoles
+  const candidateIndividualAssignees = arrangementFunction.eligibleIndividualVolunteerRoles
     ? visibleFamilies.flatMap(f => f.volunteerFamilyInfo?.individualVolunteers
       ? Object.entries(f.volunteerFamilyInfo?.individualVolunteers).filter(([volunteerId, _]) =>
         f.family!.adults!.find(a => a.item1!.id === volunteerId)!.item1!.active).flatMap(([volunteerId, volunteerInfo]) => volunteerInfo.individualRoleApprovals
         ? Object.entries(volunteerInfo.individualRoleApprovals).flatMap(([roleName, roleVersionApproval]) =>
-          volunteerFunction.eligibleIndividualVolunteerRoles!.find(x => x === roleName) &&
+          arrangementFunction.eligibleIndividualVolunteerRoles!.find(x => x === roleName) &&
           roleVersionApproval.find(rva => rva.approvalStatus === RoleApprovalStatus.Approved || rva.approvalStatus === RoleApprovalStatus.Onboarded) &&
           !arrangement.individualVolunteerAssignments?.find(iva =>
-            iva.arrangementFunction === volunteerFunction.arrangementFunction && iva.familyId === f.family!.id && iva.personId === volunteerId)
+            iva.arrangementFunction === arrangementFunction.functionName && iva.familyId === f.family!.id && iva.personId === volunteerId)
           ? [{ family: f.family!, person: f.family!.adults!.find(a => a.item1!.id === volunteerId)!.item1 || null }]
           : [])
         : [])
       : [])
     : [];
-  const candidateFamilyAssignees = volunteerFunction.eligibleVolunteerFamilyRoles
+  const candidateFamilyAssignees = arrangementFunction.eligibleVolunteerFamilyRoles
     ? visibleFamilies.flatMap(f => f.volunteerFamilyInfo?.familyRoleApprovals
       ? Object.entries(f.volunteerFamilyInfo.familyRoleApprovals).flatMap(([roleName, roleVersionApproval]) =>
-        volunteerFunction.eligibleVolunteerFamilyRoles!.find(x => x === roleName) &&
+        arrangementFunction.eligibleVolunteerFamilyRoles!.find(x => x === roleName) &&
         roleVersionApproval.find(rva => rva.approvalStatus === RoleApprovalStatus.Approved || rva.approvalStatus === RoleApprovalStatus.Onboarded) &&
         !arrangement.familyVolunteerAssignments?.find(fva =>
-          fva.arrangementFunction === volunteerFunction.arrangementFunction && fva.familyId === f.family!.id)
+          fva.arrangementFunction === arrangementFunction.functionName && fva.familyId === f.family!.id)
         ? [{ family: f.family!, person: null as Person | null }]
         : [])
       : [])
@@ -93,10 +93,10 @@ export function AssignVolunteerFunctionDialog({referralId, arrangement, arrangem
       const assigneeInfo = candidateAssignees.find(ca => ca.key === assigneeKey);
       if (assigneeInfo?.personId == null) {
         await referralsModel.assignVolunteerFamily(familyId, referralId, arrangement.id!,
-          assigneeInfo!.familyId, volunteerFunction.arrangementFunction!);
+          assigneeInfo!.familyId, arrangementFunction.functionName!);
       } else {
         await referralsModel.assignIndividualVolunteer(familyId, referralId, arrangement.id!,
-          assigneeInfo!.familyId, assigneeInfo!.personId, volunteerFunction.arrangementFunction!);
+          assigneeInfo!.familyId, assigneeInfo!.personId, arrangementFunction.functionName!);
       }
       //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
       onClose();
@@ -106,7 +106,7 @@ export function AssignVolunteerFunctionDialog({referralId, arrangement, arrangem
   return (
     <Dialog open={true} onClose={onClose} scroll='body' aria-labelledby="assign-volunteer-title">
       <DialogTitle id="assign-volunteer-title">
-        Assign {volunteerFunction.arrangementFunction}
+        Assign {arrangementFunction.functionName}
       </DialogTitle>
       <DialogContent>
         <form className={classes.form} noValidate autoComplete="off">
