@@ -13,7 +13,7 @@ import PersonPinCircleIcon from '@material-ui/icons/PersonPinCircle';
 import { RecordArrangementStepDialog } from './RecordArrangementStepDialog';
 import { StartArrangementDialog } from './StartArrangementDialog';
 import { EndArrangementDialog } from './EndArrangementDialog';
-import { AssignVolunteerFunctionDialog } from './AssignVolunteerFunctionDialog';
+import { AssignArrangementFunctionDialog } from './AssignArrangementFunctionDialog';
 import { TrackChildLocationDialog } from './TrackChildLocationDialog';
 
 const useStyles = makeStyles((theme) => ({
@@ -73,10 +73,10 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
     setArrangementRecordMenuAnchor(null);
     setShowEndArrangementDialog(false);
   }
-  const [assignVolunteerFunctionParameter, setAssignVolunteerFunctionParameter] = useState<ArrangementFunction | null>(null);
-  function selectAssignVolunteerFunction(volunteerFunction: ArrangementFunction | null) {
+  const [assignArrangementFunctionParameter, setAssignArrangementFunctionParameter] = useState<ArrangementFunction | null>(null);
+  function selectAssignArrangementFunction(arrangementFunction: ArrangementFunction | null) {
     setArrangementRecordMenuAnchor(null);
-    setAssignVolunteerFunctionParameter(volunteerFunction);
+    setAssignArrangementFunctionParameter(arrangementFunction);
   }
   const [showTrackChildLocationDialog, setShowTrackChildLocationDialog] = useState(false);
 
@@ -203,7 +203,7 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
           {arrangement.phase !== ArrangementPhase.Ended && <Divider />}
           {arrangement.phase !== ArrangementPhase.Ended && arrangementPolicy?.arrangementFunctions?.map(arrangementFunction => (
             <MenuItem key={arrangementFunction.functionName}
-              onClick={() => selectAssignVolunteerFunction(arrangementFunction)}>
+              onClick={() => selectAssignArrangementFunction(arrangementFunction)}>
               <ListItemText primary={`Assign ${arrangementFunction.functionName}`} />
             </MenuItem>
           ))}
@@ -218,9 +218,9 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
         onClose={() => closeStartArrangementDialog()} />) || null}
       {(showEndArrangementDialog && <EndArrangementDialog referralId={referralId} arrangement={arrangement}
         onClose={() => closeEndArrangementDialog()} />) || null}
-      {(assignVolunteerFunctionParameter && <AssignVolunteerFunctionDialog referralId={referralId} arrangement={arrangement} arrangementPolicy={arrangementPolicy!}
-        arrangementFunction={assignVolunteerFunctionParameter}
-        onClose={() => selectAssignVolunteerFunction(null)} />) || null}
+      {(assignArrangementFunctionParameter && <AssignArrangementFunctionDialog referralId={referralId} arrangement={arrangement} arrangementPolicy={arrangementPolicy!}
+        arrangementFunction={assignArrangementFunctionParameter}
+        onClose={() => selectAssignArrangementFunction(null)} />) || null}
     </Card>
   );
 }
