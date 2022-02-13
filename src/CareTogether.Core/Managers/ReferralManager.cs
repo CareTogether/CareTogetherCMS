@@ -29,6 +29,7 @@ namespace CareTogether.Managers
             {
                 CreateReferral c => c with { ReferralId = Guid.NewGuid() },
                 CompleteReferralRequirement c => c with { CompletedRequirementId = Guid.NewGuid() },
+                CompleteCustomReferralField c => c with { CompletedCustomFieldId = Guid.NewGuid() },
                 _ => command
             };
 

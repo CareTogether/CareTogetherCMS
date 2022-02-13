@@ -3105,6 +3105,7 @@
           "propertyName": "discriminator",
           "mapping": {
             "CloseReferral": "#/components/schemas/CloseReferral",
+            "CompleteCustomReferralField": "#/components/schemas/CompleteCustomReferralField",
             "CompleteReferralRequirement": "#/components/schemas/CompleteReferralRequirement",
             "CreateReferral": "#/components/schemas/CreateReferral",
             "ExemptReferralRequirement": "#/components/schemas/ExemptReferralRequirement",
@@ -3146,6 +3147,30 @@
                 "type": "string",
                 "format": "date-time"
               }
+            }
+          }
+        ]
+      },
+      "CompleteCustomReferralField": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "completedCustomFieldId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "customFieldName": {
+                "type": "string"
+              },
+              "customFieldType": {
+                "$ref": "#/components/schemas/CustomFieldType"
+              },
+              "value": {}
             }
           }
         ]

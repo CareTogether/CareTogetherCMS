@@ -64,6 +64,12 @@ namespace CareTogether.Resources.Models
                             ExemptedRequirements = referralEntry.ExemptedRequirements.RemoveAll(x =>
                                 x.RequirementName == c.RequirementName)
                         },
+                        CompleteCustomReferralField c => referralEntry with
+                        {
+                            CompletedCustomFields = referralEntry.CompletedCustomFields.Add(
+                                new CompletedCustomFieldInfo(userId, timestampUtc, c.CompletedCustomFieldId,
+                                    c.CustomFieldName, c.CustomFieldType, c.Value))
+                        },
                         CloseReferral c => referralEntry with
                         {
                             CloseReason = c.CloseReason,
