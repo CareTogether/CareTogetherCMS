@@ -15,6 +15,19 @@ export function usePersonLookup() {
   }
 }
 
+export function usePersonAndFamilyLookup() {
+  const visibleFamilies = useRecoilValue(visibleFamiliesData);
+
+  return (personId?: string) => {
+    const family = visibleFamilies.find(family =>
+      family.family!.adults!.some(adult => adult.item1!.id === personId) ||
+      family.family!.children!.some(child => child.id === personId));
+    const adult = family?.family?.adults?.find(adult => adult.item1!.id === personId);
+    const person = adult?.item1 || family?.family?.children?.find(child => child.id === personId);
+    return { family: family?.family, person: person };
+  }
+}
+
 export function useUserLookup() {
   const visibleFamilies = useRecoilValue(visibleFamiliesData);
 

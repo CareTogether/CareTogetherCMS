@@ -41,7 +41,7 @@ namespace CareTogether.Engines
                 arrangement.StartedAtUtc, arrangement.CompletedRequirements, utcNow);
             var missingCloseoutRequirements = CalculateMissingCloseoutRequirements(arrangementPolicy.RequiredCloseoutActionNames,
                 arrangement.CompletedRequirements);
-            var missingFunctionAssignments = CalculateMissingFunctionAssignments(arrangementPolicy.VolunteerFunctions,
+            var missingFunctionAssignments = CalculateMissingFunctionAssignments(arrangementPolicy.ArrangementFunctions,
                 arrangement.FamilyVolunteerAssignments, arrangement.IndividualVolunteerAssignments);
 
             var phase = CalculateArrangementPhase(arrangement.StartedAtUtc, arrangement.EndedAtUtc,
@@ -68,7 +68,7 @@ namespace CareTogether.Engines
 
         internal static ArrangementPhase CalculateArrangementPhase(DateTime? startedAtUtc, DateTime? endedAtUtc,
             ImmutableList<MissingArrangementRequirement> missingSetupRequirements,
-            ImmutableList<VolunteerFunction> missingFunctionAssignments) =>
+            ImmutableList<ArrangementFunction> missingFunctionAssignments) =>
             (missingSetupRequirements.Count > 0 || missingFunctionAssignments.Count > 0)
                 ? ArrangementPhase.SettingUp
                 : !startedAtUtc.HasValue
@@ -207,8 +207,8 @@ namespace CareTogether.Engines
                 .Select(requiredAction => new MissingArrangementRequirement(requiredAction, null, null))
                 .ToImmutableList();
 
-        internal static ImmutableList<VolunteerFunction> CalculateMissingFunctionAssignments(
-            ImmutableList<VolunteerFunction> volunteerFunctions,
+        internal static ImmutableList<ArrangementFunction> CalculateMissingFunctionAssignments(
+            ImmutableList<ArrangementFunction> volunteerFunctions,
             ImmutableList<FamilyVolunteerAssignment> familyVolunteerAssignments,
             ImmutableList<IndividualVolunteerAssignment> individualVolunteerAssignments) =>
             // NOTE: This calculation assumes that the current assignments are valid,
@@ -217,8 +217,8 @@ namespace CareTogether.Engines
             //      and decide whether to flag changes in validity here or elsewhere.
             volunteerFunctions
                 .Where(vf => (vf.Requirement == FunctionRequirement.ExactlyOne || vf.Requirement == FunctionRequirement.OneOrMore) &&
-                    familyVolunteerAssignments.Where(fva => fva.ArrangementFunction == vf.ArrangementFunction).Count() == 0 &&
-                    individualVolunteerAssignments.Where(iva => iva.ArrangementFunction == vf.ArrangementFunction).Count() == 0)
+                    familyVolunteerAssignments.Where(fva => fva.ArrangementFunction == vf.FunctionName).Count() == 0 &&
+                    individualVolunteerAssignments.Where(iva => iva.ArrangementFunction == vf.FunctionName).Count() == 0)
                 .ToImmutableList();
     }
 }

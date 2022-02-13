@@ -23,47 +23,57 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             RequiredIntakeActionNames: Helpers.From(),
             ArrangementPolicies: ImmutableList<ArrangementPolicy>.Empty
             .Add(new ArrangementPolicy("Overnight Hosting", ChildInvolvement.ChildHousing,
-                ImmutableList<VolunteerFunction>.Empty
-                .Add(new VolunteerFunction("Host Family", FunctionRequirement.OneOrMore,
+                ImmutableList<ArrangementFunction>.Empty
+                .Add(new ArrangementFunction("Host Family", FunctionRequirement.OneOrMore,
                     EligibleIndividualVolunteerRoles: Helpers.From(),
-                    EligibleVolunteerFamilyRoles: Helpers.From()))
-                .Add(new VolunteerFunction("Parent Ally", FunctionRequirement.ExactlyOne,
+                    EligibleVolunteerFamilyRoles: Helpers.From(),
+                EligiblePeople: ImmutableList<Guid>.Empty))
+                .Add(new ArrangementFunction("Parent Ally", FunctionRequirement.ExactlyOne,
                     EligibleIndividualVolunteerRoles: Helpers.From(),
-                    EligibleVolunteerFamilyRoles: Helpers.From()))
-                .Add(new VolunteerFunction("Family Coach", FunctionRequirement.OneOrMore,
+                    EligibleVolunteerFamilyRoles: Helpers.From(),
+                EligiblePeople: ImmutableList<Guid>.Empty))
+                .Add(new ArrangementFunction("Family Coach", FunctionRequirement.OneOrMore,
                     EligibleIndividualVolunteerRoles: Helpers.From(),
-                    EligibleVolunteerFamilyRoles: Helpers.From()))
-                .Add(new VolunteerFunction("Community Friend", FunctionRequirement.ZeroOrMore,
+                    EligibleVolunteerFamilyRoles: Helpers.From(),
+                EligiblePeople: ImmutableList<Guid>.Empty))
+                .Add(new ArrangementFunction("Community Friend", FunctionRequirement.ZeroOrMore,
                     EligibleIndividualVolunteerRoles: Helpers.From(),
-                    EligibleVolunteerFamilyRoles: Helpers.From())),
+                    EligibleVolunteerFamilyRoles: Helpers.From(),
+                EligiblePeople: ImmutableList<Guid>.Empty)),
                 RequiredSetupActionNames: Helpers.From(),
                 RequiredMonitoringActions: ImmutableList<MonitoringRequirement>.Empty,
                 RequiredCloseoutActionNames: Helpers.From()))
             .Add(new ArrangementPolicy("Daytime Hosting", ChildInvolvement.DaytimeChildCareOnly,
-                ImmutableList<VolunteerFunction>.Empty
-                .Add(new VolunteerFunction("Host Family", FunctionRequirement.OneOrMore,
+                ImmutableList<ArrangementFunction>.Empty
+                .Add(new ArrangementFunction("Host Family", FunctionRequirement.OneOrMore,
                     EligibleIndividualVolunteerRoles: Helpers.From(),
-                    EligibleVolunteerFamilyRoles: Helpers.From()))
-                .Add(new VolunteerFunction("Parent Ally", FunctionRequirement.ExactlyOne,
+                    EligibleVolunteerFamilyRoles: Helpers.From(),
+                EligiblePeople: ImmutableList<Guid>.Empty))
+                .Add(new ArrangementFunction("Parent Ally", FunctionRequirement.ExactlyOne,
                     EligibleIndividualVolunteerRoles: Helpers.From(),
-                    EligibleVolunteerFamilyRoles: Helpers.From()))
-                .Add(new VolunteerFunction("Family Coach", FunctionRequirement.OneOrMore,
+                    EligibleVolunteerFamilyRoles: Helpers.From(),
+                EligiblePeople: ImmutableList<Guid>.Empty))
+                .Add(new ArrangementFunction("Family Coach", FunctionRequirement.OneOrMore,
                     EligibleIndividualVolunteerRoles: Helpers.From(),
-                    EligibleVolunteerFamilyRoles: Helpers.From()))
-                .Add(new VolunteerFunction("Community Friend", FunctionRequirement.ZeroOrMore,
+                    EligibleVolunteerFamilyRoles: Helpers.From(),
+                EligiblePeople: ImmutableList<Guid>.Empty))
+                .Add(new ArrangementFunction("Community Friend", FunctionRequirement.ZeroOrMore,
                     EligibleIndividualVolunteerRoles: Helpers.From(),
-                    EligibleVolunteerFamilyRoles: Helpers.From())),
+                    EligibleVolunteerFamilyRoles: Helpers.From(),
+                EligiblePeople: ImmutableList<Guid>.Empty)),
                 RequiredSetupActionNames: Helpers.From(),
                 RequiredMonitoringActions: ImmutableList<MonitoringRequirement>.Empty,
                 RequiredCloseoutActionNames: Helpers.From()))
             .Add(new ArrangementPolicy("Friending", ChildInvolvement.NoChildInvolvement,
-                ImmutableList<VolunteerFunction>.Empty
-                .Add(new VolunteerFunction("Parent Ally", FunctionRequirement.ExactlyOne,
+                ImmutableList<ArrangementFunction>.Empty
+                .Add(new ArrangementFunction("Parent Ally", FunctionRequirement.ExactlyOne,
                     EligibleIndividualVolunteerRoles: Helpers.From(),
-                    EligibleVolunteerFamilyRoles: Helpers.From()))
-                .Add(new VolunteerFunction("Community Friend", FunctionRequirement.ZeroOrMore,
+                    EligibleVolunteerFamilyRoles: Helpers.From(),
+                EligiblePeople: ImmutableList<Guid>.Empty))
+                .Add(new ArrangementFunction("Community Friend", FunctionRequirement.ZeroOrMore,
                     EligibleIndividualVolunteerRoles: Helpers.From(),
-                    EligibleVolunteerFamilyRoles: Helpers.From())),
+                    EligibleVolunteerFamilyRoles: Helpers.From(),
+                EligiblePeople: ImmutableList<Guid>.Empty)),
                 RequiredSetupActionNames: Helpers.From(),
                 RequiredMonitoringActions: ImmutableList<MonitoringRequirement>.Empty,
                 RequiredCloseoutActionNames: Helpers.From())));

@@ -958,10 +958,10 @@
           "childInvolvement": {
             "$ref": "#/components/schemas/ChildInvolvement"
           },
-          "volunteerFunctions": {
+          "arrangementFunctions": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/VolunteerFunction"
+              "$ref": "#/components/schemas/ArrangementFunction"
             }
           },
           "requiredSetupActionNames": {
@@ -998,11 +998,11 @@
           2
         ]
       },
-      "VolunteerFunction": {
+      "ArrangementFunction": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "arrangementFunction": {
+          "functionName": {
             "type": "string"
           },
           "requirement": {
@@ -1018,6 +1018,13 @@
             "type": "array",
             "items": {
               "type": "string"
+            }
+          },
+          "eligiblePeople": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "guid"
             }
           }
         }

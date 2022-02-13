@@ -50,7 +50,7 @@ namespace CareTogether.Resources
 
     public sealed record ArrangementPolicy(string ArrangementType,
         ChildInvolvement ChildInvolvement,
-        ImmutableList<VolunteerFunction> VolunteerFunctions,
+        ImmutableList<ArrangementFunction> ArrangementFunctions,
         ImmutableList<string> RequiredSetupActionNames,
         ImmutableList<MonitoringRequirement> RequiredMonitoringActions,
         ImmutableList<string> RequiredCloseoutActionNames);
@@ -59,8 +59,9 @@ namespace CareTogether.Resources
     public sealed record MonitoringRequirement(string ActionName, RecurrencePolicy Recurrence);
 
     public enum FunctionRequirement { ZeroOrMore, ExactlyOne, OneOrMore };
-    public sealed record VolunteerFunction(string ArrangementFunction, FunctionRequirement Requirement,
-        ImmutableList<string> EligibleIndividualVolunteerRoles, ImmutableList<string> EligibleVolunteerFamilyRoles);
+    public sealed record ArrangementFunction(string FunctionName, FunctionRequirement Requirement,
+        ImmutableList<string> EligibleIndividualVolunteerRoles, ImmutableList<string> EligibleVolunteerFamilyRoles,
+        ImmutableList<Guid> EligiblePeople);
 
     public sealed record RecurrencePolicy(ImmutableList<RecurrencePolicyStage> Stages);
     public sealed record RecurrencePolicyStage(TimeSpan Delay, int? MaxOccurrences);
