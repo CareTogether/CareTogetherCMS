@@ -93,6 +93,7 @@ namespace CareTogether.Managers
 
                 return new(entry.Id, entry.OpenedAtUtc, entry.ClosedAtUtc, entry.CloseReason,
                     entry.CompletedRequirements, entry.ExemptedRequirements, referralStatus.MissingIntakeRequirements,
+                    entry.CompletedCustomFields, referralStatus.MissingCustomFields,
                     entry.Arrangements
                         .Select(a => ToArrangement(a.Value, referralStatus.IndividualArrangements[a.Key]))
                         .ToImmutableList());

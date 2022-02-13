@@ -43,6 +43,7 @@ namespace CareTogether.Resources.Models
                 CreateReferral c => new ReferralEntry(c.ReferralId, c.FamilyId,
                     OpenedAtUtc: c.OpenedAtUtc, ClosedAtUtc: null, CloseReason: null,
                     ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<ExemptedRequirementInfo>.Empty,
+                    ImmutableList<CompletedCustomFieldInfo>.Empty,
                     ImmutableDictionary<Guid, ArrangementEntry>.Empty),
                 _ => referrals.TryGetValue(command.ReferralId, out var referralEntry)
                     ? command switch

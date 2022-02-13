@@ -2725,6 +2725,8 @@ export class Referral implements IReferral {
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
     missingRequirements?: string[];
+    completedCustomFields?: CompletedCustomFieldInfo[];
+    missingCustomFields?: string[];
     arrangements?: Arrangement[];
 
     constructor(data?: IReferral) {
@@ -2756,6 +2758,16 @@ export class Referral implements IReferral {
                 this.missingRequirements = [] as any;
                 for (let item of _data["missingRequirements"])
                     this.missingRequirements!.push(item);
+            }
+            if (Array.isArray(_data["completedCustomFields"])) {
+                this.completedCustomFields = [] as any;
+                for (let item of _data["completedCustomFields"])
+                    this.completedCustomFields!.push(CompletedCustomFieldInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["missingCustomFields"])) {
+                this.missingCustomFields = [] as any;
+                for (let item of _data["missingCustomFields"])
+                    this.missingCustomFields!.push(item);
             }
             if (Array.isArray(_data["arrangements"])) {
                 this.arrangements = [] as any;
@@ -2793,6 +2805,16 @@ export class Referral implements IReferral {
             for (let item of this.missingRequirements)
                 data["missingRequirements"].push(item);
         }
+        if (Array.isArray(this.completedCustomFields)) {
+            data["completedCustomFields"] = [];
+            for (let item of this.completedCustomFields)
+                data["completedCustomFields"].push(item.toJSON());
+        }
+        if (Array.isArray(this.missingCustomFields)) {
+            data["missingCustomFields"] = [];
+            for (let item of this.missingCustomFields)
+                data["missingCustomFields"].push(item);
+        }
         if (Array.isArray(this.arrangements)) {
             data["arrangements"] = [];
             for (let item of this.arrangements)
@@ -2810,6 +2832,8 @@ export interface IReferral {
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
     missingRequirements?: string[];
+    completedCustomFields?: CompletedCustomFieldInfo[];
+    missingCustomFields?: string[];
     arrangements?: Arrangement[];
 }
 
@@ -2927,6 +2951,62 @@ export interface IExemptedRequirementInfo {
     requirementName?: string;
     additionalComments?: string;
     exemptionExpiresAtUtc?: Date | undefined;
+}
+
+export class CompletedCustomFieldInfo implements ICompletedCustomFieldInfo {
+    userId?: string;
+    timestampUtc?: Date;
+    completedCustomFieldId?: string;
+    customFieldName?: string;
+    customFieldType?: CustomFieldType;
+    value?: any;
+
+    constructor(data?: ICompletedCustomFieldInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
+            this.completedCustomFieldId = _data["completedCustomFieldId"];
+            this.customFieldName = _data["customFieldName"];
+            this.customFieldType = _data["customFieldType"];
+            this.value = _data["value"];
+        }
+    }
+
+    static fromJS(data: any): CompletedCustomFieldInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new CompletedCustomFieldInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
+        data["completedCustomFieldId"] = this.completedCustomFieldId;
+        data["customFieldName"] = this.customFieldName;
+        data["customFieldType"] = this.customFieldType;
+        data["value"] = this.value;
+        return data;
+    }
+}
+
+export interface ICompletedCustomFieldInfo {
+    userId?: string;
+    timestampUtc?: Date;
+    completedCustomFieldId?: string;
+    customFieldName?: string;
+    customFieldType?: CustomFieldType;
+    value?: any;
 }
 
 export class Arrangement implements IArrangement {

@@ -24,6 +24,7 @@ namespace CareTogether.Engines
 
     public sealed record ReferralStatus(
         ImmutableList<string> MissingIntakeRequirements,
+        ImmutableList<string> MissingCustomFields,
         ImmutableDictionary<Guid, ArrangementStatus> IndividualArrangements);
 
     public sealed record ArrangementStatus(

@@ -1717,6 +1717,18 @@
               "type": "string"
             }
           },
+          "completedCustomFields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompletedCustomFieldInfo"
+            }
+          },
+          "missingCustomFields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "arrangements": {
             "type": "array",
             "items": {
@@ -1796,6 +1808,31 @@
             "format": "date-time",
             "nullable": true
           }
+        }
+      },
+      "CompletedCustomFieldInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "timestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedCustomFieldId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "customFieldName": {
+            "type": "string"
+          },
+          "customFieldType": {
+            "$ref": "#/components/schemas/CustomFieldType"
+          },
+          "value": {}
         }
       },
       "Arrangement": {

@@ -15,6 +15,11 @@ namespace CareTogether.Engines
                 !referralEntry.CompletedRequirements.Any(completed => completed.RequirementName == requiredAction))
                 .ToImmutableList();
 
+            var missingCustomFields = referralPolicy.CustomFields.Where(customField =>
+                !referralEntry.CompletedCustomFields.Any(completed => completed.CustomFieldName == customField.Name))
+                .Select(customField => customField.Name)
+                .ToImmutableList();
+
             var individualArrangements = referralEntry.Arrangements.ToImmutableDictionary(
                 arrangement => arrangement.Key,
                 arrangement =>
@@ -28,6 +33,7 @@ namespace CareTogether.Engines
 
             return new ReferralStatus(
                 missingIntakeRequirements,
+                missingCustomFields,
                 individualArrangements);
         }
 
