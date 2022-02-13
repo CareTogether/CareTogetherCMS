@@ -1120,6 +1120,7 @@ export enum NoteEntryRequirement {
 
 export class ReferralPolicy implements IReferralPolicy {
     requiredIntakeActionNames?: string[];
+    customFields?: CustomField[];
     arrangementPolicies?: ArrangementPolicy[];
 
     constructor(data?: IReferralPolicy) {
@@ -1137,6 +1138,11 @@ export class ReferralPolicy implements IReferralPolicy {
                 this.requiredIntakeActionNames = [] as any;
                 for (let item of _data["requiredIntakeActionNames"])
                     this.requiredIntakeActionNames!.push(item);
+            }
+            if (Array.isArray(_data["customFields"])) {
+                this.customFields = [] as any;
+                for (let item of _data["customFields"])
+                    this.customFields!.push(CustomField.fromJS(item));
             }
             if (Array.isArray(_data["arrangementPolicies"])) {
                 this.arrangementPolicies = [] as any;
@@ -1160,6 +1166,11 @@ export class ReferralPolicy implements IReferralPolicy {
             for (let item of this.requiredIntakeActionNames)
                 data["requiredIntakeActionNames"].push(item);
         }
+        if (Array.isArray(this.customFields)) {
+            data["customFields"] = [];
+            for (let item of this.customFields)
+                data["customFields"].push(item.toJSON());
+        }
         if (Array.isArray(this.arrangementPolicies)) {
             data["arrangementPolicies"] = [];
             for (let item of this.arrangementPolicies)
@@ -1171,7 +1182,53 @@ export class ReferralPolicy implements IReferralPolicy {
 
 export interface IReferralPolicy {
     requiredIntakeActionNames?: string[];
+    customFields?: CustomField[];
     arrangementPolicies?: ArrangementPolicy[];
+}
+
+export class CustomField implements ICustomField {
+    name?: string;
+    type?: CustomFieldType;
+
+    constructor(data?: ICustomField) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.name = _data["name"];
+            this.type = _data["type"];
+        }
+    }
+
+    static fromJS(data: any): CustomField {
+        data = typeof data === 'object' ? data : {};
+        let result = new CustomField();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["name"] = this.name;
+        data["type"] = this.type;
+        return data;
+    }
+}
+
+export interface ICustomField {
+    name?: string;
+    type?: CustomFieldType;
+}
+
+export enum CustomFieldType {
+    Boolean = 0,
+    String = 1,
 }
 
 export class ArrangementPolicy implements IArrangementPolicy {

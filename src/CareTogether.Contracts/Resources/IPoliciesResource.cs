@@ -45,8 +45,17 @@ namespace CareTogether.Resources
 
     public sealed record ReferralPolicy(
         ImmutableList<string> RequiredIntakeActionNames,
+        ImmutableList<CustomField> CustomFields,
         ImmutableList<ArrangementPolicy> ArrangementPolicies);
         //TODO: Include referral close reasons
+
+    public sealed record CustomField(string Name, CustomFieldType Type);
+
+    public enum CustomFieldType
+    {
+        Boolean,
+        String
+    }
 
     public sealed record ArrangementPolicy(string ArrangementType,
         ChildInvolvement ChildInvolvement,

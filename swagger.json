@@ -940,6 +940,12 @@
               "type": "string"
             }
           },
+          "customFields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomField"
+            }
+          },
           "arrangementPolicies": {
             "type": "array",
             "items": {
@@ -947,6 +953,30 @@
             }
           }
         }
+      },
+      "CustomField": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CustomFieldType"
+          }
+        }
+      },
+      "CustomFieldType": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Boolean",
+          "String"
+        ],
+        "enum": [
+          0,
+          1
+        ]
       },
       "ArrangementPolicy": {
         "type": "object",

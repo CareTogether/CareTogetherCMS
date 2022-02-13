@@ -357,6 +357,11 @@ namespace CareTogether.TestData
                         "Intake Coordinator Screening Call",
                         "Intake Form"
                     }.ToImmutableList(),
+                    new List<CustomField>
+                    {
+                        new CustomField("Referral Source", CustomFieldType.String),
+                        new CustomField("Protective Order", CustomFieldType.Boolean)
+                    }.ToImmutableList(),
                     new List<ArrangementPolicy>
                     {
                         new ArrangementPolicy("Hosting", ChildInvolvement.ChildHousing,

@@ -21,6 +21,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
 
         static ReferralPolicy referralPolicy = new ReferralPolicy(
             RequiredIntakeActionNames: Helpers.From(),
+            CustomFields: ImmutableList<CustomField>.Empty,
             ArrangementPolicies: ImmutableList<ArrangementPolicy>.Empty
             .Add(new ArrangementPolicy("Overnight Hosting", ChildInvolvement.ChildHousing,
                 ImmutableList<ArrangementFunction>.Empty
