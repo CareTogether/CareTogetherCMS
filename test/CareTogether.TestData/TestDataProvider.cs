@@ -241,6 +241,8 @@ namespace CareTogether.TestData
         {
             await approvalsEventLog.AppendEventsAsync(guid1, guid2,
                 new VolunteerFamilyCommandExecuted(adminId, new DateTime(),
+                    new ActivateVolunteerFamily(guid0)),
+                new VolunteerFamilyCommandExecuted(adminId, new DateTime(),
                     new UploadVolunteerFamilyDocument(guid4, guid1, "fca.pdf")),
                 new VolunteerCommandExecuted(adminId, new DateTime(2021, 7, 1),
                     new CompleteVolunteerRequirement(guid4, guid4, guid1, "Family Coach Application", new DateTime(2021, 7, 1), guid1)),
