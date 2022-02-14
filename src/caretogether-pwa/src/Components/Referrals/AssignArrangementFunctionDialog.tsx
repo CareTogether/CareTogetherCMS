@@ -117,7 +117,7 @@ export function AssignArrangementFunctionDialog({referralId, arrangement, arrang
       <DialogContent>
         <form className={classes.form} noValidate autoComplete="off">
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12}>
               <FormControl required fullWidth size="small">
                 <InputLabel id="assignee-label">Assignee</InputLabel>
                 <Select
