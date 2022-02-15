@@ -1832,7 +1832,9 @@
           "customFieldType": {
             "$ref": "#/components/schemas/CustomFieldType"
           },
-          "value": {}
+          "value": {
+            "nullable": true
+          }
         }
       },
       "Arrangement": {
@@ -3170,7 +3172,9 @@
               "customFieldType": {
                 "$ref": "#/components/schemas/CustomFieldType"
               },
-              "value": {}
+              "value": {
+                "nullable": true
+              }
             }
           }
         ]

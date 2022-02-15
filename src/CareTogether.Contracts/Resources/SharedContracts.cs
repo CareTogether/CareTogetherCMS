@@ -12,5 +12,5 @@ namespace CareTogether.Resources
         Guid UploadedDocumentId, string UploadedFileName);
 
     public sealed record CompletedCustomFieldInfo(Guid UserId, DateTime TimestampUtc,
-        Guid CompletedCustomFieldId, string CustomFieldName, CustomFieldType CustomFieldType, object Value);
+        Guid CompletedCustomFieldId, string CustomFieldName, CustomFieldType CustomFieldType, object? Value);
 }

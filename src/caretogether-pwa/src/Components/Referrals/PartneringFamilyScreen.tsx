@@ -1,6 +1,6 @@
 import { Container, Toolbar, Grid, Button, Menu, MenuItem, MenuList, useMediaQuery, useTheme, IconButton } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { ActionRequirement, ArrangementPolicy, CombinedFamilyInfo, Permission, ReferralCloseReason } from '../../GeneratedClient';
+import { ActionRequirement, ArrangementPolicy, CombinedFamilyInfo, CompletedCustomFieldInfo, Permission, ReferralCloseReason } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { useParams } from 'react-router';
@@ -23,6 +23,7 @@ import { RecordReferralStepDialog } from './RecordReferralStepDialog';
 import { CreateArrangementDialog } from './CreateArrangementDialog';
 import { CloseReferralDialog } from './CloseReferralDialog';
 import { OpenNewReferralDialog } from './OpenNewReferralDialog';
+import { CustomReferralFieldDialog } from './CustomReferralFieldDialog';
 import { FamilyDocuments } from '../Families/FamilyDocuments';
 import { HeaderContent, HeaderTitle } from '../Header';
 import { ArrowBack } from '@material-ui/icons';
@@ -106,6 +107,8 @@ export function PartneringFamilyScreen() {
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
   const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
   const [addNoteDialogOpen, setAddNoteDialogOpen] = useState(false);
+  
+  const [customFieldDialogParameter, setCustomFieldDialogParameter] = useState<string | CompletedCustomFieldInfo | null>(null);
 
   const [createArrangementDialogParameter, setCreateArrangementDialogParameter] = useState<ArrangementPolicy | null>(null);
   
@@ -209,33 +212,63 @@ export function PartneringFamilyScreen() {
         <Grid item xs={12}>
           <span>Primary Contact: <PersonName person={partneringFamily.family?.adults?.find(adult => adult.item1?.id === partneringFamily.family?.primaryFamilyContactPersonId)?.item1} /></span>
         </Grid>
-        <Grid item xs={12}>
-          <p>{
-            partneringFamily.partneringFamilyInfo?.openReferral
-            ? "Referral open since " + format(partneringFamily.partneringFamilyInfo.openReferral.openedAtUtc!, "MM/dd/yyyy")
-            : "Referral closed - " + ReferralCloseReason[partneringFamily.partneringFamilyInfo?.closedReferrals?.[partneringFamily.partneringFamilyInfo.closedReferrals.length-1]?.closeReason!]
-            //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closedUtc) -- needs a new calculated property
+        <Grid item container xs={12}>
+          <Grid item xs={6} md={4}>
+            {partneringFamily.partneringFamilyInfo?.openReferral
+              ? "Referral open since " + format(partneringFamily.partneringFamilyInfo.openReferral.openedAtUtc!, "MM/dd/yyyy")
+              : "Referral closed - " + ReferralCloseReason[partneringFamily.partneringFamilyInfo?.closedReferrals?.[partneringFamily.partneringFamilyInfo.closedReferrals.length-1]?.closeReason!]
+              //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closedUtc) -- needs a new calculated property
             }
-          </p>
-          {canCloseReferral && <Button
-            onClick={() => setCloseReferralDialogOpen(true)}
-            variant="contained" color="default" size="small" className={classes.button}>
-            Close Referral
-          </Button>}
-          {!partneringFamily.partneringFamilyInfo?.openReferral && <Button
-            onClick={() => setOpenNewReferralDialogOpen(true)}
-            variant="contained" color="default" size="small" className={classes.button}>
-            Open New Referral
-          </Button>}
-          {closeReferralDialogOpen && (
-            <CloseReferralDialog
-              partneringFamilyId={partneringFamily.family?.id!}
-              referralId={partneringFamily.partneringFamilyInfo!.openReferral!.id!}
-              onClose={() => setCloseReferralDialogOpen(false)} />)}
-          {openNewReferralDialogOpen && (
-            <OpenNewReferralDialog
-              partneringFamilyId={partneringFamily.family?.id!}
-              onClose={() => setOpenNewReferralDialogOpen(false)} />)}
+          </Grid>
+          <Grid item xs={6} md={8}>
+            {partneringFamily.partneringFamilyInfo?.openReferral?.completedCustomFields?.map(completedField => (
+              <p key={completedField.customFieldName}>
+                {completedField.customFieldName}: {JSON.stringify(completedField.value)}&nbsp;
+                <Button
+                  onClick={() => setCustomFieldDialogParameter(completedField)}
+                  variant="contained" color="default" size="small" className={classes.button}>
+                  Edit…
+                </Button>
+              </p>
+            ))}
+            {partneringFamily.partneringFamilyInfo?.openReferral?.missingCustomFields?.map(missingField => (
+              <p key={missingField}>
+                {missingField}: ❓&nbsp;
+                <Button
+                  onClick={() => setCustomFieldDialogParameter(missingField)}
+                  variant="contained" color="default" size="small" className={classes.button}>
+                  Complete…
+                </Button>
+              </p>
+            ))}
+            {customFieldDialogParameter && (
+              <CustomReferralFieldDialog
+                partneringFamilyId={partneringFamily.family?.id!}
+                referralId={partneringFamily.partneringFamilyInfo!.openReferral!.id!}
+                customField={customFieldDialogParameter}
+                onClose={() => setCustomFieldDialogParameter(null)} />)}
+          </Grid>
+          <Grid item xs={12}>
+            {canCloseReferral && <Button
+              onClick={() => setCloseReferralDialogOpen(true)}
+              variant="contained" color="default" size="small" className={classes.button}>
+              Close Referral
+            </Button>}
+            {!partneringFamily.partneringFamilyInfo?.openReferral && <Button
+              onClick={() => setOpenNewReferralDialogOpen(true)}
+              variant="contained" color="default" size="small" className={classes.button}>
+              Open New Referral
+            </Button>}
+            {closeReferralDialogOpen && (
+              <CloseReferralDialog
+                partneringFamilyId={partneringFamily.family?.id!}
+                referralId={partneringFamily.partneringFamilyInfo!.openReferral!.id!}
+                onClose={() => setCloseReferralDialogOpen(false)} />)}
+            {openNewReferralDialogOpen && (
+              <OpenNewReferralDialog
+                partneringFamilyId={partneringFamily.family?.id!}
+                onClose={() => setOpenNewReferralDialogOpen(false)} />)}
+          </Grid>
         </Grid>
         <Grid item xs={12} sm={6} md={4}>
           <h3>Incomplete</h3>

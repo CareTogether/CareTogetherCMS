@@ -52,7 +52,7 @@ namespace CareTogether.Resources
         string RequirementName)
         : ReferralCommand(FamilyId, ReferralId);
     public sealed record CompleteCustomReferralField(Guid FamilyId, Guid ReferralId,
-        Guid CompletedCustomFieldId, string CustomFieldName, CustomFieldType CustomFieldType, object Value)
+        Guid CompletedCustomFieldId, string CustomFieldName, CustomFieldType CustomFieldType, object? Value)
         : ReferralCommand(FamilyId, ReferralId);
     public sealed record CloseReferral(Guid FamilyId, Guid ReferralId,
         ReferralCloseReason CloseReason, DateTime ClosedAtUtc)

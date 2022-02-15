@@ -2959,7 +2959,7 @@ export class CompletedCustomFieldInfo implements ICompletedCustomFieldInfo {
     completedCustomFieldId?: string;
     customFieldName?: string;
     customFieldType?: CustomFieldType;
-    value?: any;
+    value?: any | undefined;
 
     constructor(data?: ICompletedCustomFieldInfo) {
         if (data) {
@@ -3006,7 +3006,7 @@ export interface ICompletedCustomFieldInfo {
     completedCustomFieldId?: string;
     customFieldName?: string;
     customFieldType?: CustomFieldType;
-    value?: any;
+    value?: any | undefined;
 }
 
 export class Arrangement implements IArrangement {
@@ -5565,7 +5565,7 @@ export class CompleteCustomReferralField extends ReferralCommand implements ICom
     completedCustomFieldId?: string;
     customFieldName?: string;
     customFieldType?: CustomFieldType;
-    value?: any;
+    value?: any | undefined;
 
     constructor(data?: ICompleteCustomReferralField) {
         super(data);
@@ -5604,7 +5604,7 @@ export interface ICompleteCustomReferralField extends IReferralCommand {
     completedCustomFieldId?: string;
     customFieldName?: string;
     customFieldType?: CustomFieldType;
-    value?: any;
+    value?: any | undefined;
 }
 
 export class CompleteReferralRequirement extends ReferralCommand implements ICompleteReferralRequirement {
