@@ -75,7 +75,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestRequirementsAndFunctionsMissingStarted()
         {
-            // Not a valid state, but included for completeness.
+            // This could be a valid state if the policy has changed since the arrangement started.
+            // Referral policy versioning is a solution to mitigate this scenario but it cannot
+            // guarantee that this scenario will never happen as long as a policy can change.
             var result = ReferralCalculations.CalculateArrangementPhase(
                 startedAtUtc: DateTime.UtcNow,
                 endedAtUtc: null,
@@ -84,13 +86,15 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty
                 .Add(Helpers.FunctionWithoutEligibility("X", FunctionRequirement.OneOrMore)));
 
-            Assert.AreEqual(ArrangementPhase.SettingUp, result);
+            Assert.AreEqual(ArrangementPhase.Started, result);
         }
 
         [TestMethod]
         public void TestRequirementsAndFunctionsMissingStartedAndEnded()
         {
-            // Not a valid state, but included for completeness.
+            // This could be a valid state if the policy has changed since the arrangement ended.
+            // Referral policy versioning is a solution to mitigate this scenario but it cannot
+            // guarantee that this scenario will never happen as long as a policy can change.
             var result = ReferralCalculations.CalculateArrangementPhase(
                 startedAtUtc: DateTime.UtcNow,
                 endedAtUtc: DateTime.UtcNow,
@@ -99,7 +103,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty
                 .Add(Helpers.FunctionWithoutEligibility("X", FunctionRequirement.OneOrMore)));
 
-            Assert.AreEqual(ArrangementPhase.SettingUp, result);
+            Assert.AreEqual(ArrangementPhase.Ended, result);
         }
     }
 }
