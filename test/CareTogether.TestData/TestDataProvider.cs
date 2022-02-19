@@ -217,7 +217,8 @@ namespace CareTogether.TestData
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 24, 8, 30, 35), new TrackChildLocationChange(guid1, guid1, guid1,
                     new DateTime(2020, 3, 24, 8, 30, 35), guid2, ChildLocationPlan.OvernightHousing, "Mom dropped off on way to work")),
                 new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 30, 18, 18, 18), new TrackChildLocationChange(guid1, guid1, guid1,
-                    new DateTime(2020, 3, 30, 18, 18, 18), guid1, ChildLocationPlan.WithParent, "Mom met us and picked him up at DQ"))/*,
+                    new DateTime(2020, 3, 30, 18, 18, 18), guid1, ChildLocationPlan.WithParent, "Mom met us and picked him up at DQ")),
+                new ArrangementCommandExecuted(adminId, new DateTime(2020, 3, 30, 19, 0, 0), new EndArrangement(guid1, guid1, guid1, new DateTime(2020, 3, 30, 19, 0, 0)))/*,
                 new ReferralCommandExecuted(adminId, new DateTime(2020, 10, 4, 12, 32, 55), new CloseReferral(guid1, guid1, ReferralCloseReason.NeedMet)),
                 new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 30, 45), new CreateReferral(guid2, guid2, new DateTime(2021, 7, 10, 19, 30, 45))),
                 new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 32, 0), new UploadReferralDocument(guid2, guid2, guid2, "Jane Doe second referral info.pdf")),
@@ -240,6 +241,8 @@ namespace CareTogether.TestData
         public static async Task PopulateApprovalEvents(IMultitenantEventLog<ApprovalEvent> approvalsEventLog)
         {
             await approvalsEventLog.AppendEventsAsync(guid1, guid2,
+                new VolunteerFamilyCommandExecuted(adminId, new DateTime(),
+                    new ActivateVolunteerFamily(guid0)),
                 new VolunteerFamilyCommandExecuted(adminId, new DateTime(),
                     new UploadVolunteerFamilyDocument(guid4, guid1, "fca.pdf")),
                 new VolunteerCommandExecuted(adminId, new DateTime(2021, 7, 1),
@@ -356,6 +359,11 @@ namespace CareTogether.TestData
                         "Request for Help Form",
                         "Intake Coordinator Screening Call",
                         "Intake Form"
+                    }.ToImmutableList(),
+                    new List<CustomField>
+                    {
+                        new CustomField("Referral Source", CustomFieldType.String),
+                        new CustomField("Protective Order", CustomFieldType.Boolean)
                     }.ToImmutableList(),
                     new List<ArrangementPolicy>
                     {

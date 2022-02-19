@@ -1120,6 +1120,7 @@ export enum NoteEntryRequirement {
 
 export class ReferralPolicy implements IReferralPolicy {
     requiredIntakeActionNames?: string[];
+    customFields?: CustomField[];
     arrangementPolicies?: ArrangementPolicy[];
 
     constructor(data?: IReferralPolicy) {
@@ -1137,6 +1138,11 @@ export class ReferralPolicy implements IReferralPolicy {
                 this.requiredIntakeActionNames = [] as any;
                 for (let item of _data["requiredIntakeActionNames"])
                     this.requiredIntakeActionNames!.push(item);
+            }
+            if (Array.isArray(_data["customFields"])) {
+                this.customFields = [] as any;
+                for (let item of _data["customFields"])
+                    this.customFields!.push(CustomField.fromJS(item));
             }
             if (Array.isArray(_data["arrangementPolicies"])) {
                 this.arrangementPolicies = [] as any;
@@ -1160,6 +1166,11 @@ export class ReferralPolicy implements IReferralPolicy {
             for (let item of this.requiredIntakeActionNames)
                 data["requiredIntakeActionNames"].push(item);
         }
+        if (Array.isArray(this.customFields)) {
+            data["customFields"] = [];
+            for (let item of this.customFields)
+                data["customFields"].push(item.toJSON());
+        }
         if (Array.isArray(this.arrangementPolicies)) {
             data["arrangementPolicies"] = [];
             for (let item of this.arrangementPolicies)
@@ -1171,7 +1182,53 @@ export class ReferralPolicy implements IReferralPolicy {
 
 export interface IReferralPolicy {
     requiredIntakeActionNames?: string[];
+    customFields?: CustomField[];
     arrangementPolicies?: ArrangementPolicy[];
+}
+
+export class CustomField implements ICustomField {
+    name?: string;
+    type?: CustomFieldType;
+
+    constructor(data?: ICustomField) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.name = _data["name"];
+            this.type = _data["type"];
+        }
+    }
+
+    static fromJS(data: any): CustomField {
+        data = typeof data === 'object' ? data : {};
+        let result = new CustomField();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["name"] = this.name;
+        data["type"] = this.type;
+        return data;
+    }
+}
+
+export interface ICustomField {
+    name?: string;
+    type?: CustomFieldType;
+}
+
+export enum CustomFieldType {
+    Boolean = 0,
+    String = 1,
 }
 
 export class ArrangementPolicy implements IArrangementPolicy {
@@ -2668,6 +2725,8 @@ export class Referral implements IReferral {
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
     missingRequirements?: string[];
+    completedCustomFields?: CompletedCustomFieldInfo[];
+    missingCustomFields?: string[];
     arrangements?: Arrangement[];
 
     constructor(data?: IReferral) {
@@ -2699,6 +2758,16 @@ export class Referral implements IReferral {
                 this.missingRequirements = [] as any;
                 for (let item of _data["missingRequirements"])
                     this.missingRequirements!.push(item);
+            }
+            if (Array.isArray(_data["completedCustomFields"])) {
+                this.completedCustomFields = [] as any;
+                for (let item of _data["completedCustomFields"])
+                    this.completedCustomFields!.push(CompletedCustomFieldInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["missingCustomFields"])) {
+                this.missingCustomFields = [] as any;
+                for (let item of _data["missingCustomFields"])
+                    this.missingCustomFields!.push(item);
             }
             if (Array.isArray(_data["arrangements"])) {
                 this.arrangements = [] as any;
@@ -2736,6 +2805,16 @@ export class Referral implements IReferral {
             for (let item of this.missingRequirements)
                 data["missingRequirements"].push(item);
         }
+        if (Array.isArray(this.completedCustomFields)) {
+            data["completedCustomFields"] = [];
+            for (let item of this.completedCustomFields)
+                data["completedCustomFields"].push(item.toJSON());
+        }
+        if (Array.isArray(this.missingCustomFields)) {
+            data["missingCustomFields"] = [];
+            for (let item of this.missingCustomFields)
+                data["missingCustomFields"].push(item);
+        }
         if (Array.isArray(this.arrangements)) {
             data["arrangements"] = [];
             for (let item of this.arrangements)
@@ -2753,6 +2832,8 @@ export interface IReferral {
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
     missingRequirements?: string[];
+    completedCustomFields?: CompletedCustomFieldInfo[];
+    missingCustomFields?: string[];
     arrangements?: Arrangement[];
 }
 
@@ -2870,6 +2951,62 @@ export interface IExemptedRequirementInfo {
     requirementName?: string;
     additionalComments?: string;
     exemptionExpiresAtUtc?: Date | undefined;
+}
+
+export class CompletedCustomFieldInfo implements ICompletedCustomFieldInfo {
+    userId?: string;
+    timestampUtc?: Date;
+    completedCustomFieldId?: string;
+    customFieldName?: string;
+    customFieldType?: CustomFieldType;
+    value?: any | undefined;
+
+    constructor(data?: ICompletedCustomFieldInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
+            this.completedCustomFieldId = _data["completedCustomFieldId"];
+            this.customFieldName = _data["customFieldName"];
+            this.customFieldType = _data["customFieldType"];
+            this.value = _data["value"];
+        }
+    }
+
+    static fromJS(data: any): CompletedCustomFieldInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new CompletedCustomFieldInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
+        data["completedCustomFieldId"] = this.completedCustomFieldId;
+        data["customFieldName"] = this.customFieldName;
+        data["customFieldType"] = this.customFieldType;
+        data["value"] = this.value;
+        return data;
+    }
+}
+
+export interface ICompletedCustomFieldInfo {
+    userId?: string;
+    timestampUtc?: Date;
+    completedCustomFieldId?: string;
+    customFieldName?: string;
+    customFieldType?: CustomFieldType;
+    value?: any | undefined;
 }
 
 export class Arrangement implements IArrangement {
@@ -5364,6 +5501,11 @@ export abstract class ReferralCommand implements IReferralCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "UpdateCustomReferralField") {
+            let result = new UpdateCustomReferralField();
+            result.init(data);
+            return result;
+        }
         throw new Error("The abstract class 'ReferralCommand' cannot be instantiated.");
     }
 
@@ -5573,6 +5715,52 @@ export class UnexemptReferralRequirement extends ReferralCommand implements IUne
 
 export interface IUnexemptReferralRequirement extends IReferralCommand {
     requirementName?: string;
+}
+
+export class UpdateCustomReferralField extends ReferralCommand implements IUpdateCustomReferralField {
+    completedCustomFieldId?: string;
+    customFieldName?: string;
+    customFieldType?: CustomFieldType;
+    value?: any | undefined;
+
+    constructor(data?: IUpdateCustomReferralField) {
+        super(data);
+        this._discriminator = "UpdateCustomReferralField";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.completedCustomFieldId = _data["completedCustomFieldId"];
+            this.customFieldName = _data["customFieldName"];
+            this.customFieldType = _data["customFieldType"];
+            this.value = _data["value"];
+        }
+    }
+
+    static fromJS(data: any): UpdateCustomReferralField {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateCustomReferralField();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["completedCustomFieldId"] = this.completedCustomFieldId;
+        data["customFieldName"] = this.customFieldName;
+        data["customFieldType"] = this.customFieldType;
+        data["value"] = this.value;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUpdateCustomReferralField extends IReferralCommand {
+    completedCustomFieldId?: string;
+    customFieldName?: string;
+    customFieldType?: CustomFieldType;
+    value?: any | undefined;
 }
 
 export abstract class ArrangementCommand implements IArrangementCommand {

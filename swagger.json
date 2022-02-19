@@ -940,6 +940,12 @@
               "type": "string"
             }
           },
+          "customFields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomField"
+            }
+          },
           "arrangementPolicies": {
             "type": "array",
             "items": {
@@ -947,6 +953,30 @@
             }
           }
         }
+      },
+      "CustomField": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CustomFieldType"
+          }
+        }
+      },
+      "CustomFieldType": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Boolean",
+          "String"
+        ],
+        "enum": [
+          0,
+          1
+        ]
       },
       "ArrangementPolicy": {
         "type": "object",
@@ -1687,6 +1717,18 @@
               "type": "string"
             }
           },
+          "completedCustomFields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompletedCustomFieldInfo"
+            }
+          },
+          "missingCustomFields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "arrangements": {
             "type": "array",
             "items": {
@@ -1764,6 +1806,33 @@
           "exemptionExpiresAtUtc": {
             "type": "string",
             "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "CompletedCustomFieldInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "timestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedCustomFieldId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "customFieldName": {
+            "type": "string"
+          },
+          "customFieldType": {
+            "$ref": "#/components/schemas/CustomFieldType"
+          },
+          "value": {
             "nullable": true
           }
         }
@@ -3041,7 +3110,8 @@
             "CompleteReferralRequirement": "#/components/schemas/CompleteReferralRequirement",
             "CreateReferral": "#/components/schemas/CreateReferral",
             "ExemptReferralRequirement": "#/components/schemas/ExemptReferralRequirement",
-            "UnexemptReferralRequirement": "#/components/schemas/UnexemptReferralRequirement"
+            "UnexemptReferralRequirement": "#/components/schemas/UnexemptReferralRequirement",
+            "UpdateCustomReferralField": "#/components/schemas/UpdateCustomReferralField"
           }
         },
         "x-abstract": true,
@@ -3164,6 +3234,32 @@
             "properties": {
               "requirementName": {
                 "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "UpdateCustomReferralField": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "completedCustomFieldId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "customFieldName": {
+                "type": "string"
+              },
+              "customFieldType": {
+                "$ref": "#/components/schemas/CustomFieldType"
+              },
+              "value": {
+                "nullable": true
               }
             }
           }

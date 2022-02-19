@@ -18,6 +18,8 @@ namespace CareTogether.Managers
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<string> MissingRequirements,
+        ImmutableList<CompletedCustomFieldInfo> CompletedCustomFields,
+        ImmutableList<string> MissingCustomFields,
         ImmutableList<Arrangement> Arrangements);
 
     public sealed record Arrangement(Guid Id, string ArrangementType, Guid PartneringFamilyPersonId,

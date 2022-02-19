@@ -15,6 +15,11 @@ namespace CareTogether.Engines
                 !referralEntry.CompletedRequirements.Any(completed => completed.RequirementName == requiredAction))
                 .ToImmutableList();
 
+            var missingCustomFields = referralPolicy.CustomFields.Where(customField =>
+                !referralEntry.CompletedCustomFields.Any(completed => completed.Key == customField.Name))
+                .Select(customField => customField.Name)
+                .ToImmutableList();
+
             var individualArrangements = referralEntry.Arrangements.ToImmutableDictionary(
                 arrangement => arrangement.Key,
                 arrangement =>
@@ -28,6 +33,7 @@ namespace CareTogether.Engines
 
             return new ReferralStatus(
                 missingIntakeRequirements,
+                missingCustomFields,
                 individualArrangements);
         }
 
@@ -69,13 +75,13 @@ namespace CareTogether.Engines
         internal static ArrangementPhase CalculateArrangementPhase(DateTime? startedAtUtc, DateTime? endedAtUtc,
             ImmutableList<MissingArrangementRequirement> missingSetupRequirements,
             ImmutableList<ArrangementFunction> missingFunctionAssignments) =>
-            (missingSetupRequirements.Count > 0 || missingFunctionAssignments.Count > 0)
-                ? ArrangementPhase.SettingUp
-                : !startedAtUtc.HasValue
-                ? ArrangementPhase.ReadyToStart
-                : !endedAtUtc.HasValue
+            endedAtUtc.HasValue
+                ? ArrangementPhase.Ended
+                : startedAtUtc.HasValue
                 ? ArrangementPhase.Started
-                : ArrangementPhase.Ended;
+                : (missingSetupRequirements.Count == 0 && missingFunctionAssignments.Count == 0)
+                ? ArrangementPhase.ReadyToStart
+                : ArrangementPhase.SettingUp;
 
         internal static ImmutableList<MissingArrangementRequirement> CalculateMissingSetupRequirements(
             ImmutableList<string> requiredSetupActionNames, ImmutableList<CompletedRequirementInfo> completedRequirements) =>
