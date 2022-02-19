@@ -16,7 +16,7 @@ namespace CareTogether.Engines
                 .ToImmutableList();
 
             var missingCustomFields = referralPolicy.CustomFields.Where(customField =>
-                !referralEntry.CompletedCustomFields.Any(completed => completed.CustomFieldName == customField.Name))
+                !referralEntry.CompletedCustomFields.Any(completed => completed.Key == customField.Name))
                 .Select(customField => customField.Name)
                 .ToImmutableList();
 

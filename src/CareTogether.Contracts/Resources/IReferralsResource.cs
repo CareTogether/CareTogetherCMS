@@ -1,4 +1,4 @@
-using JsonPolymorph;
+﻿using JsonPolymorph;
 using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
@@ -9,7 +9,7 @@ namespace CareTogether.Resources
         DateTime OpenedAtUtc, DateTime? ClosedAtUtc, ReferralCloseReason? CloseReason,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
-        ImmutableList<CompletedCustomFieldInfo> CompletedCustomFields,
+        ImmutableDictionary<string, CompletedCustomFieldInfo> CompletedCustomFields,
         ImmutableDictionary<Guid, ArrangementEntry> Arrangements);
 
     public record ArrangementEntry(Guid Id, string ArrangementType,

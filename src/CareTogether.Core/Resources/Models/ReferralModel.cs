@@ -43,7 +43,7 @@ namespace CareTogether.Resources.Models
                 CreateReferral c => new ReferralEntry(c.ReferralId, c.FamilyId,
                     OpenedAtUtc: c.OpenedAtUtc, ClosedAtUtc: null, CloseReason: null,
                     ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<ExemptedRequirementInfo>.Empty,
-                    ImmutableList<CompletedCustomFieldInfo>.Empty,
+                    ImmutableDictionary<string, CompletedCustomFieldInfo>.Empty,
                     ImmutableDictionary<Guid, ArrangementEntry>.Empty),
                 _ => referrals.TryGetValue(command.ReferralId, out var referralEntry)
                     ? command switch
@@ -64,9 +64,10 @@ namespace CareTogether.Resources.Models
                             ExemptedRequirements = referralEntry.ExemptedRequirements.RemoveAll(x =>
                                 x.RequirementName == c.RequirementName)
                         },
-                        CompleteCustomReferralField c => referralEntry with
+                        UpdateCustomReferralField c => referralEntry with
                         {
-                            CompletedCustomFields = referralEntry.CompletedCustomFields.Add(
+                            CompletedCustomFields = referralEntry.CompletedCustomFields.SetItem(
+                                c.CustomFieldName,
                                 new CompletedCustomFieldInfo(userId, timestampUtc, c.CompletedCustomFieldId,
                                     c.CustomFieldName, c.CustomFieldType, c.Value))
                         },
