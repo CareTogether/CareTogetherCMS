@@ -1,4 +1,4 @@
-﻿using JsonPolymorph;
+using JsonPolymorph;
 using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
@@ -51,7 +51,7 @@ namespace CareTogether.Resources
     public sealed record UnexemptReferralRequirement(Guid FamilyId, Guid ReferralId,
         string RequirementName)
         : ReferralCommand(FamilyId, ReferralId);
-    public sealed record CompleteCustomReferralField(Guid FamilyId, Guid ReferralId,
+    public sealed record UpdateCustomReferralField(Guid FamilyId, Guid ReferralId,
         Guid CompletedCustomFieldId, string CustomFieldName, CustomFieldType CustomFieldType, object? Value)
         : ReferralCommand(FamilyId, ReferralId);
     public sealed record CloseReferral(Guid FamilyId, Guid ReferralId,

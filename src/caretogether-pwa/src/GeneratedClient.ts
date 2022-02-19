@@ -5481,11 +5481,6 @@ export abstract class ReferralCommand implements IReferralCommand {
             result.init(data);
             return result;
         }
-        if (data["discriminator"] === "CompleteCustomReferralField") {
-            let result = new CompleteCustomReferralField();
-            result.init(data);
-            return result;
-        }
         if (data["discriminator"] === "CompleteReferralRequirement") {
             let result = new CompleteReferralRequirement();
             result.init(data);
@@ -5503,6 +5498,11 @@ export abstract class ReferralCommand implements IReferralCommand {
         }
         if (data["discriminator"] === "UnexemptReferralRequirement") {
             let result = new UnexemptReferralRequirement();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UpdateCustomReferralField") {
+            let result = new UpdateCustomReferralField();
             result.init(data);
             return result;
         }
@@ -5559,52 +5559,6 @@ export class CloseReferral extends ReferralCommand implements ICloseReferral {
 export interface ICloseReferral extends IReferralCommand {
     closeReason?: ReferralCloseReason;
     closedAtUtc?: Date;
-}
-
-export class CompleteCustomReferralField extends ReferralCommand implements ICompleteCustomReferralField {
-    completedCustomFieldId?: string;
-    customFieldName?: string;
-    customFieldType?: CustomFieldType;
-    value?: any | undefined;
-
-    constructor(data?: ICompleteCustomReferralField) {
-        super(data);
-        this._discriminator = "CompleteCustomReferralField";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.completedCustomFieldId = _data["completedCustomFieldId"];
-            this.customFieldName = _data["customFieldName"];
-            this.customFieldType = _data["customFieldType"];
-            this.value = _data["value"];
-        }
-    }
-
-    static fromJS(data: any): CompleteCustomReferralField {
-        data = typeof data === 'object' ? data : {};
-        let result = new CompleteCustomReferralField();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["completedCustomFieldId"] = this.completedCustomFieldId;
-        data["customFieldName"] = this.customFieldName;
-        data["customFieldType"] = this.customFieldType;
-        data["value"] = this.value;
-        super.toJSON(data);
-        return data;
-    }
-}
-
-export interface ICompleteCustomReferralField extends IReferralCommand {
-    completedCustomFieldId?: string;
-    customFieldName?: string;
-    customFieldType?: CustomFieldType;
-    value?: any | undefined;
 }
 
 export class CompleteReferralRequirement extends ReferralCommand implements ICompleteReferralRequirement {
@@ -5761,6 +5715,52 @@ export class UnexemptReferralRequirement extends ReferralCommand implements IUne
 
 export interface IUnexemptReferralRequirement extends IReferralCommand {
     requirementName?: string;
+}
+
+export class UpdateCustomReferralField extends ReferralCommand implements IUpdateCustomReferralField {
+    completedCustomFieldId?: string;
+    customFieldName?: string;
+    customFieldType?: CustomFieldType;
+    value?: any | undefined;
+
+    constructor(data?: IUpdateCustomReferralField) {
+        super(data);
+        this._discriminator = "UpdateCustomReferralField";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.completedCustomFieldId = _data["completedCustomFieldId"];
+            this.customFieldName = _data["customFieldName"];
+            this.customFieldType = _data["customFieldType"];
+            this.value = _data["value"];
+        }
+    }
+
+    static fromJS(data: any): UpdateCustomReferralField {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateCustomReferralField();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["completedCustomFieldId"] = this.completedCustomFieldId;
+        data["customFieldName"] = this.customFieldName;
+        data["customFieldType"] = this.customFieldType;
+        data["value"] = this.value;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUpdateCustomReferralField extends IReferralCommand {
+    completedCustomFieldId?: string;
+    customFieldName?: string;
+    customFieldType?: CustomFieldType;
+    value?: any | undefined;
 }
 
 export abstract class ArrangementCommand implements IArrangementCommand {

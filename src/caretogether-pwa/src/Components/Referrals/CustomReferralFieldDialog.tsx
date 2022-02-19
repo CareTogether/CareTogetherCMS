@@ -28,7 +28,7 @@ export function CustomReferralFieldDialog({partneringFamilyId, referralId, custo
   const [value, setValue] = useState<boolean | string | null>(isEdit ? customField.value : null);
 
   async function save() {
-    await referralsModel.completeCustomReferralField(partneringFamilyId, referralId,
+    await referralsModel.updateCustomReferralField(partneringFamilyId, referralId,
       customFieldPolicy, value);
   }
 

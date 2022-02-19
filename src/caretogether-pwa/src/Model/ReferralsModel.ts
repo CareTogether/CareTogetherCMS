@@ -1,6 +1,6 @@
 import { selector, useRecoilCallback } from "recoil";
 import { authenticatingFetch } from "../Auth";
-import { ReferralCommand, ReferralsClient, ArrangementCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement, StartArrangement, EndArrangement, AssignVolunteerFamily, AssignIndividualVolunteer, ReferralCloseReason, CloseReferral, CreateReferral, TrackChildLocationChange, ChildLocationPlan, CompleteCustomReferralField, CustomField } from "../GeneratedClient";
+import { ReferralCommand, ReferralsClient, ArrangementCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement, StartArrangement, EndArrangement, AssignVolunteerFamily, AssignIndividualVolunteer, ReferralCloseReason, CloseReferral, CreateReferral, TrackChildLocationChange, ChildLocationPlan, UpdateCustomReferralField, CustomField } from "../GeneratedClient";
 import { visibleFamiliesData } from "./ModelLoader";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 
@@ -81,10 +81,10 @@ export function useReferralsModel() {
         command.uploadedDocumentId = documentId;
       return command;
     });
-  const completeCustomReferralField = useReferralCommandCallbackWithLocation(
+  const updateCustomReferralField = useReferralCommandCallbackWithLocation(
     async (organizationId, locationId, partneringFamilyId, referralId: string, customField: CustomField,
       value: boolean | string | null) => {
-      const command = new CompleteCustomReferralField({
+      const command = new UpdateCustomReferralField({
         familyId: partneringFamilyId,
         referralId: referralId,
       });
@@ -205,7 +205,7 @@ export function useReferralsModel() {
   
   return {
     completeReferralRequirement,
-    completeCustomReferralField,
+    updateCustomReferralField,
     completeArrangementRequirement,
     createArrangement,
     startArrangement,
