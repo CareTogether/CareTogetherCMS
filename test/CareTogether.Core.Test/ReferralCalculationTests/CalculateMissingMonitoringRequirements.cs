@@ -20,7 +20,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null)))))
                 .Add(new MonitoringRequirement("B", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null))))),
-                startedAtUtc: null,
+                startedAtUtc: null, endedAtUtc: null,
                 Helpers.Completed(),
                 utcNow: new DateTime(2022, 1, 31));
 
@@ -38,7 +38,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null)))))
                 .Add(new MonitoringRequirement("B", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null))))),
-                startedAtUtc: new DateTime(2022, 1, 1),
+                startedAtUtc: new DateTime(2022, 1, 1), endedAtUtc: null,
                 Helpers.Completed(),
                 utcNow: new DateTime(2022, 1, 31));
 
@@ -67,7 +67,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null)))))
                 .Add(new MonitoringRequirement("B", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null))))),
-                startedAtUtc: new DateTime(2022, 1, 1),
+                startedAtUtc: new DateTime(2022, 1, 1), endedAtUtc: null,
                 Helpers.Completed(("A", 3), ("B", 7)),
                 utcNow: new DateTime(2022, 1, 31));
 
@@ -94,7 +94,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null)))))
                 .Add(new MonitoringRequirement("B", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null))))),
-                startedAtUtc: new DateTime(2022, 1, 1),
+                startedAtUtc: new DateTime(2022, 1, 1), endedAtUtc: null,
                 Helpers.Completed(("A", 3), ("B", 7)),
                 utcNow: new DateTime(2022, 1, 8));
 
