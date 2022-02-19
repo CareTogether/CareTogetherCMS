@@ -44,7 +44,7 @@ namespace CareTogether.Engines
             var missingSetupRequirements = CalculateMissingSetupRequirements(arrangementPolicy.RequiredSetupActionNames,
                 arrangement.CompletedRequirements);
             var missingMonitoringRequirements = CalculateMissingMonitoringRequirements(arrangementPolicy.RequiredMonitoringActions,
-                arrangement.StartedAtUtc, arrangement.CompletedRequirements, utcNow);
+                arrangement.StartedAtUtc, arrangement.EndedAtUtc, arrangement.CompletedRequirements, utcNow);
             var missingCloseoutRequirements = CalculateMissingCloseoutRequirements(arrangementPolicy.RequiredCloseoutActionNames,
                 arrangement.CompletedRequirements);
             var missingFunctionAssignments = CalculateMissingFunctionAssignments(arrangementPolicy.ArrangementFunctions,
@@ -93,10 +93,12 @@ namespace CareTogether.Engines
 
         internal static ImmutableList<MissingArrangementRequirement> CalculateMissingMonitoringRequirements(
             ImmutableList<MonitoringRequirement> requiredMonitoringActionNames,
-            DateTime? startedAtUtc, ImmutableList<CompletedRequirementInfo> completedRequirements, DateTime utcNow) =>
+            DateTime? startedAtUtc, DateTime? endedAtUtc,
+            ImmutableList<CompletedRequirementInfo> completedRequirements, DateTime utcNow) =>
             requiredMonitoringActionNames.SelectMany(monitoringRequirement =>
                 (startedAtUtc.HasValue
-                ? CalculateMissingMonitoringRequirementInstances(monitoringRequirement.Recurrence, startedAtUtc.Value,
+                ? CalculateMissingMonitoringRequirementInstances(monitoringRequirement.Recurrence,
+                    startedAtUtc.Value, endedAtUtc,
                     completedRequirements
                     .Where(x => x.RequirementName == monitoringRequirement.ActionName)
                     .Select(x => x.CompletedAtUtc)
@@ -110,7 +112,8 @@ namespace CareTogether.Engines
                 .ToImmutableList();
 
         internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementInstances(
-            RecurrencePolicy recurrence, DateTime arrangementStartedAtUtc, ImmutableList<DateTime> completions, DateTime utcNow)
+            RecurrencePolicy recurrence, DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc,
+            ImmutableList<DateTime> completions, DateTime utcNow)
         {
             // Technically, the RecurrencePolicyStage model currently allows any stage to have an unlimited
             // # of occurrences, but that would be invalid, so check for those cases and throw an exception.
@@ -133,12 +136,17 @@ namespace CareTogether.Engines
                         ? arrangementStartedAtUtc + stage.totalDuration
                         : priorStages.Last().endDate!.Value + stage.totalDuration)));
 
-            // For each completion, find the time of the following completion (null in the case of the last completion).
+            // For each completion, find the time of the following completion (null in the case of the last completion
+            // unless the arrangement has ended, in which case use the end of the arrangement).
             // This represents the set of gaps between completions in which there could be missing requirement due dates.
             // Prepend this list with an entry representing the start of the arrangement.
             var completionGaps = completions.Select((completion, i) =>
-                (start: completion, end: i + 1 >= completions.Count ? null as DateTime? : completions[i + 1]))
-                .Prepend((arrangementStartedAtUtc, completions.Count > 0 ? completions[0] : null))
+                (start: completion, end: i + 1 >= completions.Count
+                    ? (arrangementEndedAtUtc.HasValue ? arrangementEndedAtUtc.Value : null as DateTime?)
+                    : completions[i + 1]))
+                .Prepend((start: arrangementStartedAtUtc, end: completions.Count > 0
+                    ? completions[0]
+                    : (arrangementEndedAtUtc.HasValue ? arrangementEndedAtUtc.Value : null as DateTime?)))
                 .ToImmutableList();
 
             // Calculate all missing requirements within each completion gap (there may be none).
