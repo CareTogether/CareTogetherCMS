@@ -1,6 +1,6 @@
 import { Container, Toolbar, Grid, Button, Menu, MenuItem, MenuList, useMediaQuery, useTheme, IconButton } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { ActionRequirement, ArrangementPolicy, CombinedFamilyInfo, CompletedCustomFieldInfo, Permission, ReferralCloseReason } from '../../GeneratedClient';
+import { ActionRequirement, ArrangementPolicy, CombinedFamilyInfo, CompletedCustomFieldInfo, CustomFieldType, Permission, ReferralCloseReason } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { useParams } from 'react-router';
@@ -223,7 +223,9 @@ export function PartneringFamilyScreen() {
           <Grid item xs={6} md={8}>
             {partneringFamily.partneringFamilyInfo?.openReferral?.completedCustomFields?.map(completedField => (
               <p key={completedField.customFieldName}>
-                {completedField.customFieldName}: {JSON.stringify(completedField.value)}&nbsp;
+                {completedField.customFieldName}: {completedField.customFieldType === CustomFieldType.String
+                  ? completedField.value as string
+                  : (completedField.value as boolean ? "Yes" : "No")}&nbsp;
                 <Button
                   onClick={() => setCustomFieldDialogParameter(completedField)}
                   variant="contained" color="default" size="small" className={classes.button}>
