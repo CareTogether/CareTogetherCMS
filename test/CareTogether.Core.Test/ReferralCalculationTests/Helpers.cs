@@ -19,6 +19,13 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public static ImmutableList<DateTime> Dates(params (int month, int day)[] values) =>
             values.Select(value => new DateTime(2022, value.month, value.day)).ToImmutableList();
 
+        public static ImmutableSortedSet<ChildLocationHistoryEntry> LocationHistoryEntries(
+            params (ChildLocationPlan plan, int month, int day)[] values) =>
+            values
+                .Select(value => new ChildLocationHistoryEntry(
+                    Guid.Empty, new DateTime(2022, value.month, value.day), Guid.Empty, value.plan, ""))
+                .ToImmutableSortedSet();
+
         public static ArrangementFunction FunctionWithoutEligibility(
             string arrangementFunction, FunctionRequirement requirement) =>
             new ArrangementFunction(arrangementFunction, requirement,

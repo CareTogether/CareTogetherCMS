@@ -1,4 +1,4 @@
-﻿using CareTogether.Resources;
+using CareTogether.Resources;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -44,7 +44,8 @@ namespace CareTogether.Engines
             var missingSetupRequirements = CalculateMissingSetupRequirements(arrangementPolicy.RequiredSetupActionNames,
                 arrangement.CompletedRequirements);
             var missingMonitoringRequirements = CalculateMissingMonitoringRequirements(arrangementPolicy.RequiredMonitoringActions,
-                arrangement.StartedAtUtc, arrangement.EndedAtUtc, arrangement.CompletedRequirements, utcNow);
+                arrangement.StartedAtUtc, arrangement.EndedAtUtc,
+                arrangement.CompletedRequirements, arrangement.ChildrenLocationHistory, utcNow);
             var missingCloseoutRequirements = CalculateMissingCloseoutRequirements(arrangementPolicy.RequiredCloseoutActionNames,
                 arrangement.CompletedRequirements);
             var missingFunctionAssignments = CalculateMissingFunctionAssignments(arrangementPolicy.ArrangementFunctions,
@@ -94,7 +95,9 @@ namespace CareTogether.Engines
         internal static ImmutableList<MissingArrangementRequirement> CalculateMissingMonitoringRequirements(
             ImmutableList<MonitoringRequirement> requiredMonitoringActionNames,
             DateTime? startedAtUtc, DateTime? endedAtUtc,
-            ImmutableList<CompletedRequirementInfo> completedRequirements, DateTime utcNow) =>
+            ImmutableList<CompletedRequirementInfo> completedRequirements,
+            ImmutableSortedSet<ChildLocationHistoryEntry> childLocationHistory,
+            DateTime utcNow) =>
             requiredMonitoringActionNames.SelectMany(monitoringRequirement =>
                 (startedAtUtc.HasValue
                 ? CalculateMissingMonitoringRequirementInstances(monitoringRequirement.Recurrence,
@@ -103,7 +106,7 @@ namespace CareTogether.Engines
                     .Where(x => x.RequirementName == monitoringRequirement.ActionName)
                     .Select(x => x.CompletedAtUtc)
                     .OrderBy(x => x).ToImmutableList(),
-                    utcNow)
+                    childLocationHistory, utcNow)
                 : ImmutableList<DateTime>.Empty)
                 .Select(missingDueDate =>
                     new MissingArrangementRequirement(monitoringRequirement.ActionName,
@@ -113,7 +116,27 @@ namespace CareTogether.Engines
 
         internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementInstances(
             RecurrencePolicy recurrence, DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc,
-            ImmutableList<DateTime> completions, DateTime utcNow)
+            ImmutableList<DateTime> completions, ImmutableSortedSet<ChildLocationHistoryEntry> childLocationHistory,
+            DateTime utcNow)
+        {
+            return recurrence switch
+            {
+                DurationStagesRecurrencePolicy durationStages =>
+                    CalculateMissingMonitoringRequirementInstancesForDurationRecurrence(
+                        durationStages, arrangementStartedAtUtc, arrangementEndedAtUtc, utcNow, completions),
+                ChildCareOccurrenceBasedRecurrencePolicy childCareOccurences =>
+                    CalculateMissingMonitoringRequirementInstancesForChildCareOccurrences(
+                        childCareOccurences, arrangementStartedAtUtc, arrangementEndedAtUtc,
+                        completions, childLocationHistory, utcNow),
+                _ => throw new NotImplementedException(
+                    $"The recurrence policy type '{recurrence.GetType().FullName}' has not been implemented.")
+            };
+        }
+
+        internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementInstancesForDurationRecurrence(
+            DurationStagesRecurrencePolicy recurrence,
+            DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc, DateTime utcNow,
+            ImmutableList<DateTime> completions)
         {
             // Technically, the RecurrencePolicyStage model currently allows any stage to have an unlimited
             // # of occurrences, but that would be invalid, so check for those cases and throw an exception.
@@ -155,6 +178,16 @@ namespace CareTogether.Engines
                 .ToImmutableList();
 
             return missingRequirements;
+        }
+
+        internal static ImmutableList<DateTime>
+            CalculateMissingMonitoringRequirementInstancesForChildCareOccurrences(
+            ChildCareOccurrenceBasedRecurrencePolicy recurrence,
+            DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc,
+            ImmutableList<DateTime> completions, ImmutableSortedSet<ChildLocationHistoryEntry> childLocationHistory,
+            DateTime utcNow)
+        {
+            throw new NotImplementedException();
         }
 
         internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementsWithinCompletionGap(

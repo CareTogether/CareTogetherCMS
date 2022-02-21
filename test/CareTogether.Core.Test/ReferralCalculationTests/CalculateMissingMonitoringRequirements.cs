@@ -14,14 +14,15 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirements(
                 requiredMonitoringActionNames: ImmutableList<MonitoringRequirement>.Empty
-                .Add(new MonitoringRequirement("A", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                .Add(new MonitoringRequirement("A", new DurationStagesRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null)))))
-                .Add(new MonitoringRequirement("B", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                .Add(new MonitoringRequirement("B", new DurationStagesRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null))))),
                 startedAtUtc: null, endedAtUtc: null,
                 Helpers.Completed(),
+                Helpers.LocationHistoryEntries(),
                 utcNow: new DateTime(2022, 1, 31));
 
             AssertEx.SequenceIs(result);
@@ -32,14 +33,15 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirements(
                 requiredMonitoringActionNames: ImmutableList<MonitoringRequirement>.Empty
-                .Add(new MonitoringRequirement("A", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                .Add(new MonitoringRequirement("A", new DurationStagesRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null)))))
-                .Add(new MonitoringRequirement("B", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                .Add(new MonitoringRequirement("B", new DurationStagesRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null))))),
                 startedAtUtc: new DateTime(2022, 1, 1), endedAtUtc: null,
                 Helpers.Completed(),
+                Helpers.LocationHistoryEntries(),
                 utcNow: new DateTime(2022, 1, 31));
 
             AssertEx.SequenceIs(result,
@@ -61,14 +63,15 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirements(
                 requiredMonitoringActionNames: ImmutableList<MonitoringRequirement>.Empty
-                .Add(new MonitoringRequirement("A", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                .Add(new MonitoringRequirement("A", new DurationStagesRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null)))))
-                .Add(new MonitoringRequirement("B", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                .Add(new MonitoringRequirement("B", new DurationStagesRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null))))),
                 startedAtUtc: new DateTime(2022, 1, 1), endedAtUtc: null,
                 Helpers.Completed(("A", 3), ("B", 7)),
+                Helpers.LocationHistoryEntries(),
                 utcNow: new DateTime(2022, 1, 31));
 
             AssertEx.SequenceIs(result,
@@ -88,14 +91,15 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirements(
                 requiredMonitoringActionNames: ImmutableList<MonitoringRequirement>.Empty
-                .Add(new MonitoringRequirement("A", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                .Add(new MonitoringRequirement("A", new DurationStagesRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null)))))
-                .Add(new MonitoringRequirement("B", new RecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                .Add(new MonitoringRequirement("B", new DurationStagesRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null))))),
                 startedAtUtc: new DateTime(2022, 1, 1), endedAtUtc: null,
                 Helpers.Completed(("A", 3), ("B", 7)),
+                Helpers.LocationHistoryEntries(),
                 utcNow: new DateTime(2022, 1, 8));
 
             AssertEx.SequenceIs(result,
