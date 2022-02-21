@@ -55,8 +55,12 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
     const assigneeIsFromPartneringFamily = candidatePartneringFamilyAssignees.some(ca => ca.key === assigneeKey);
     if (assigneeIsFromPartneringFamily) {
       setPlan(ChildLocationPlan.WithParent);
-    } else if (plan === ChildLocationPlan.WithParent) {
-      setPlan(null);
+    } else {
+      if (plan === ChildLocationPlan.WithParent) {
+        setPlan(arrangementPolicy?.childInvolvement === ChildInvolvement.DaytimeChildCareOnly ? ChildLocationPlan.DaytimeChildCare : null);
+      } else if (arrangementPolicy?.childInvolvement === ChildInvolvement.DaytimeChildCareOnly) {
+        setPlan(ChildLocationPlan.DaytimeChildCare);
+      }
     }
   }
   const assigneeIsFromPartneringFamily = candidatePartneringFamilyAssignees.some(ca => ca.key === selectedAssigneeKey);
