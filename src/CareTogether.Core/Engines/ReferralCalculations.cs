@@ -1,4 +1,4 @@
-using CareTogether.Resources;
+﻿using CareTogether.Resources;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -187,7 +187,37 @@ namespace CareTogether.Engines
             ImmutableList<DateTime> completions, ImmutableSortedSet<ChildLocationHistoryEntry> childLocationHistory,
             DateTime utcNow)
         {
-            throw new NotImplementedException();
+            // Determine the start and end time of each child location history entry
+            var childCareOccurrences = childLocationHistory.SelectMany((entry, i) =>
+            {
+                if (i < childLocationHistory.Count - 1)
+                {
+                    var nextEntry = childLocationHistory[i + 1];
+                    return new[] { (entry: entry, startDate: entry.TimestampUtc, endDate: nextEntry.TimestampUtc as DateTime?) };
+                }
+                else
+                    return new[] { (entry: entry, startDate: entry.TimestampUtc, endDate: null as DateTime?) };
+            }).ToImmutableList();
+
+            // Determine which child care occurrences the requirement will apply to.
+            var applicableOccurrences = childCareOccurrences
+                .Where(x => x.entry.Plan != ChildLocationPlan.WithParent)
+                .Where((x, i) => recurrence.Positive
+                    ? i % recurrence.Frequency == recurrence.InitialSkipCount
+                    : i % recurrence.Frequency != recurrence.InitialSkipCount)
+                .ToImmutableList();
+
+            // Determine which child care occurrences did not have a completion within the required delay timespan.
+            var missedOccurrences = applicableOccurrences
+                .Where(x => !completions.Any(c => c >= x.startDate && c <= x.startDate + recurrence.Delay))
+                .ToImmutableList();
+
+            // Return the due-by date of each missed occurrence.
+            var missingInstances = missedOccurrences
+                .Select(x => x.startDate + recurrence.Delay)
+                .ToImmutableList();
+
+            return missingInstances;
         }
 
         internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementsWithinCompletionGap(
