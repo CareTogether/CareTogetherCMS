@@ -72,7 +72,14 @@ namespace CareTogether.Resources
         ImmutableList<string> EligibleIndividualVolunteerRoles, ImmutableList<string> EligibleVolunteerFamilyRoles,
         ImmutableList<Guid> EligiblePeople);
 
-    public sealed record RecurrencePolicy(ImmutableList<RecurrencePolicyStage> Stages);
+    [JsonHierarchyBase]
+    public abstract partial record RecurrencePolicy();
+    public sealed record DurationStagesRecurrencePolicy(ImmutableList<RecurrencePolicyStage> Stages)
+        : RecurrencePolicy;
+    public sealed record ChildCareOccurrenceBasedRecurrencePolicy(
+        TimeSpan Delay, int Frequency, int InitialSkipCount, bool Positive)
+        : RecurrencePolicy;
+
     public sealed record RecurrencePolicyStage(TimeSpan Delay, int? MaxOccurrences);
 
 
