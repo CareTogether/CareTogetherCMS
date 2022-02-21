@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, FormControlLabel, FormLabel, Grid, InputLabel, MenuItem, Radio, RadioGroup, Select } from '@material-ui/core';
-import { CombinedFamilyInfo, Arrangement, Person, ChildLocationPlan } from '../../GeneratedClient';
+import { CombinedFamilyInfo, Arrangement, Person, ChildLocationPlan, ChildInvolvement } from '../../GeneratedClient';
 import { KeyboardDateTimePicker } from '@material-ui/pickers';
 import { useBackdrop } from '../RequestBackdrop';
 import { useFamilyLookup, usePersonLookup } from '../../Model/DirectoryModel';
 import { useReferralsModel } from '../../Model/ReferralsModel';
 import { FamilyName } from '../Families/FamilyName';
 import { PersonName } from '../Families/PersonName';
+import { useRecoilValue } from 'recoil';
+import { policyData } from '../../Model/ConfigurationModel';
 
 interface TrackChildLocationDialogProps {
   partneringFamily: CombinedFamilyInfo,
@@ -16,6 +18,9 @@ interface TrackChildLocationDialogProps {
 }
 
 export function TrackChildLocationDialog({partneringFamily, referralId, arrangement, onClose}: TrackChildLocationDialogProps) {
+  const policy = useRecoilValue(policyData);
+  const arrangementPolicy = policy.referralPolicy!.arrangementPolicies!.find(x => x.arrangementType === arrangement.arrangementType);
+
   const familyLookup = useFamilyLookup();
   const personLookup = usePersonLookup();
   
@@ -115,7 +120,7 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
                 <FormControlLabel value={ChildLocationPlan[ChildLocationPlan.DaytimeChildCare]} control={<Radio size="small" />} label="Daytime Child Care"
                   disabled={assigneeIsFromPartneringFamily} />
                 <FormControlLabel value={ChildLocationPlan[ChildLocationPlan.OvernightHousing]} control={<Radio size="small" />} label="Overnight Housing"
-                  disabled={assigneeIsFromPartneringFamily} />
+                  disabled={assigneeIsFromPartneringFamily || arrangementPolicy?.childInvolvement === ChildInvolvement.DaytimeChildCareOnly} />
                 <FormControlLabel value={ChildLocationPlan[ChildLocationPlan.WithParent]} control={<Radio size="small" />} label="With Parent"
                   disabled={!assigneeIsFromPartneringFamily} />
               </RadioGroup>
