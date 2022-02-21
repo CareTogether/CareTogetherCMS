@@ -446,7 +446,7 @@ namespace CareTogether.TestData
                             {
                                 "Return of Child Form"
                             }.ToImmutableList()),
-                        new ArrangementPolicy("Recurring Hosting", ChildInvolvement.ChildHousing,
+                        new ArrangementPolicy("Babysitting", ChildInvolvement.DaytimeChildCareOnly,
                             ArrangementFunctions: new List<ArrangementFunction>
                             {
                                 new ArrangementFunction("Host Family", FunctionRequirement.OneOrMore,
@@ -470,8 +470,7 @@ namespace CareTogether.TestData
                             }.ToImmutableList(),
                             RequiredSetupActionNames: new List<string>
                             {
-                                "Hosting Consent",
-                                "Medical POA"
+                                "Hosting Consent"
                             }.ToImmutableList(),
                             RequiredMonitoringActions: new List<MonitoringRequirement>
                             {
