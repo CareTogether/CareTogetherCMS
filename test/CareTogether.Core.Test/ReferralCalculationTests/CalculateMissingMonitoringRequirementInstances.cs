@@ -44,6 +44,108 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         }
 
         [TestMethod]
+        public void TestNoCompletionsOccurrenceBasedNoSkip()
+        {
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+                new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromDays(2), 3, 0, true),
+                arrangementStartedAtUtc: new DateTime(2022, 1, 1),
+                arrangementEndedAtUtc: null,
+                completions: Helpers.Dates(),
+                childLocationHistory: Helpers.LocationHistoryEntries(
+                    (ChildLocationPlan.DaytimeChildCare, 1, 1),
+                    (ChildLocationPlan.WithParent, 1, 4),
+                    (ChildLocationPlan.DaytimeChildCare, 1, 8),
+                    (ChildLocationPlan.WithParent, 1, 11),
+                    (ChildLocationPlan.DaytimeChildCare, 1, 15),
+                    (ChildLocationPlan.WithParent, 1, 18),
+                    (ChildLocationPlan.DaytimeChildCare, 1, 22),
+                    (ChildLocationPlan.WithParent, 1, 25),
+                    (ChildLocationPlan.DaytimeChildCare, 1, 29),
+                    (ChildLocationPlan.WithParent, 2, 1),
+                    (ChildLocationPlan.DaytimeChildCare, 2, 8),
+                    (ChildLocationPlan.WithParent, 2, 11),
+                    (ChildLocationPlan.DaytimeChildCare, 2, 15),
+                    (ChildLocationPlan.WithParent, 2, 18),
+                    (ChildLocationPlan.DaytimeChildCare, 2, 22),
+                    (ChildLocationPlan.WithParent, 2, 25)),
+                utcNow: new DateTime(2022, 2, 28));
+
+            AssertEx.SequenceIs(result, Helpers.Dates((1, 3), (1, 24), (2, 17)));
+        }
+
+        [TestMethod]
+        public void TestNoCompletionsOccurrenceBasedWithSkip()
+        {
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+                new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromDays(2), 3, 2, true),
+                arrangementStartedAtUtc: new DateTime(2022, 1, 1),
+                arrangementEndedAtUtc: null,
+                completions: Helpers.Dates(),
+                childLocationHistory: Helpers.LocationHistoryEntries(
+                    (ChildLocationPlan.DaytimeChildCare, 1, 1),
+                    (ChildLocationPlan.WithParent, 1, 4),
+                    (ChildLocationPlan.DaytimeChildCare, 1, 8),
+                    (ChildLocationPlan.WithParent, 1, 11),
+                    (ChildLocationPlan.DaytimeChildCare, 1, 15),
+                    (ChildLocationPlan.WithParent, 1, 18),
+                    (ChildLocationPlan.DaytimeChildCare, 1, 22),
+                    (ChildLocationPlan.WithParent, 1, 25),
+                    (ChildLocationPlan.DaytimeChildCare, 1, 29),
+                    (ChildLocationPlan.WithParent, 2, 1),
+                    (ChildLocationPlan.DaytimeChildCare, 2, 8),
+                    (ChildLocationPlan.WithParent, 2, 11),
+                    (ChildLocationPlan.DaytimeChildCare, 2, 15),
+                    (ChildLocationPlan.WithParent, 2, 18),
+                    (ChildLocationPlan.DaytimeChildCare, 2, 22),
+                    (ChildLocationPlan.WithParent, 2, 25)),
+                utcNow: new DateTime(2022, 2, 28));
+
+            AssertEx.SequenceIs(result, Helpers.Dates((1, 17), (2, 10)));
+        }
+
+        [TestMethod]
+        public void TestNoCompletionsOccurrenceBasedNotYetReturnedPastDue()
+        {
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+                new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromDays(2), 3, 0, true),
+                arrangementStartedAtUtc: new DateTime(2022, 1, 1),
+                arrangementEndedAtUtc: null,
+                completions: Helpers.Dates(),
+                childLocationHistory: Helpers.LocationHistoryEntries(
+                    (ChildLocationPlan.DaytimeChildCare, 1, 1),
+                    (ChildLocationPlan.WithParent, 1, 4),
+                    (ChildLocationPlan.DaytimeChildCare, 1, 8),
+                    (ChildLocationPlan.WithParent, 1, 11),
+                    (ChildLocationPlan.DaytimeChildCare, 1, 15),
+                    (ChildLocationPlan.WithParent, 1, 18),
+                    (ChildLocationPlan.DaytimeChildCare, 1, 22)),
+                utcNow: new DateTime(2022, 2, 28));
+
+            AssertEx.SequenceIs(result, Helpers.Dates((1, 3), (1, 24)));
+        }
+
+        [TestMethod]
+        public void TestNoCompletionsOccurrenceBasedNotYetReturnedDueInFuture()
+        {
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+                new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromDays(2), 3, 0, true),
+                arrangementStartedAtUtc: new DateTime(2022, 1, 1),
+                arrangementEndedAtUtc: null,
+                completions: Helpers.Dates(),
+                childLocationHistory: Helpers.LocationHistoryEntries(
+                    (ChildLocationPlan.DaytimeChildCare, 1, 1),
+                    (ChildLocationPlan.WithParent, 1, 4),
+                    (ChildLocationPlan.DaytimeChildCare, 1, 8),
+                    (ChildLocationPlan.WithParent, 1, 11),
+                    (ChildLocationPlan.DaytimeChildCare, 1, 15),
+                    (ChildLocationPlan.WithParent, 1, 18),
+                    (ChildLocationPlan.DaytimeChildCare, 1, 22)),
+                utcNow: new DateTime(2022, 2, 23));
+
+            AssertEx.SequenceIs(result, Helpers.Dates((1, 3), (1, 24)));
+        }
+
+        [TestMethod]
         public void TestOneCompletion()
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
