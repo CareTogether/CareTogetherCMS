@@ -107,7 +107,6 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
             </FormControl>
           </Grid>
           <Grid item xs={12}>
-            <p>Partnering? {JSON.stringify(assigneeIsFromPartneringFamily)}</p>
             <FormControl component="fieldset" required>
               <FormLabel component="legend">Plan for the location change:</FormLabel>
               <RadioGroup aria-label="plan" name="plan" row
