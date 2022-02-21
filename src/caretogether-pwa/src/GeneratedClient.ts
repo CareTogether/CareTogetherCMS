@@ -1447,8 +1447,9 @@ export interface IMonitoringRequirement {
     recurrence?: RecurrencePolicy;
 }
 
-export class RecurrencePolicy implements IRecurrencePolicy {
-    stages?: RecurrencePolicyStage[];
+export abstract class RecurrencePolicy implements IRecurrencePolicy {
+
+    protected _discriminator: string;
 
     constructor(data?: IRecurrencePolicy) {
         if (data) {
@@ -1457,9 +1458,93 @@ export class RecurrencePolicy implements IRecurrencePolicy {
                     (<any>this)[property] = (<any>data)[property];
             }
         }
+        this._discriminator = "RecurrencePolicy";
     }
 
     init(_data?: any) {
+    }
+
+    static fromJS(data: any): RecurrencePolicy {
+        data = typeof data === 'object' ? data : {};
+        if (data["discriminator"] === "ChildCareOccurrenceBasedRecurrencePolicy") {
+            let result = new ChildCareOccurrenceBasedRecurrencePolicy();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "DurationStagesRecurrencePolicy") {
+            let result = new DurationStagesRecurrencePolicy();
+            result.init(data);
+            return result;
+        }
+        throw new Error("The abstract class 'RecurrencePolicy' cannot be instantiated.");
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["discriminator"] = this._discriminator;
+        return data;
+    }
+}
+
+export interface IRecurrencePolicy {
+}
+
+export class ChildCareOccurrenceBasedRecurrencePolicy extends RecurrencePolicy implements IChildCareOccurrenceBasedRecurrencePolicy {
+    delay?: string;
+    frequency?: number;
+    initialSkipCount?: number;
+    positive?: boolean;
+
+    constructor(data?: IChildCareOccurrenceBasedRecurrencePolicy) {
+        super(data);
+        this._discriminator = "ChildCareOccurrenceBasedRecurrencePolicy";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.delay = _data["delay"];
+            this.frequency = _data["frequency"];
+            this.initialSkipCount = _data["initialSkipCount"];
+            this.positive = _data["positive"];
+        }
+    }
+
+    static fromJS(data: any): ChildCareOccurrenceBasedRecurrencePolicy {
+        data = typeof data === 'object' ? data : {};
+        let result = new ChildCareOccurrenceBasedRecurrencePolicy();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["delay"] = this.delay;
+        data["frequency"] = this.frequency;
+        data["initialSkipCount"] = this.initialSkipCount;
+        data["positive"] = this.positive;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IChildCareOccurrenceBasedRecurrencePolicy extends IRecurrencePolicy {
+    delay?: string;
+    frequency?: number;
+    initialSkipCount?: number;
+    positive?: boolean;
+}
+
+export class DurationStagesRecurrencePolicy extends RecurrencePolicy implements IDurationStagesRecurrencePolicy {
+    stages?: RecurrencePolicyStage[];
+
+    constructor(data?: IDurationStagesRecurrencePolicy) {
+        super(data);
+        this._discriminator = "DurationStagesRecurrencePolicy";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
         if (_data) {
             if (Array.isArray(_data["stages"])) {
                 this.stages = [] as any;
@@ -1469,9 +1554,9 @@ export class RecurrencePolicy implements IRecurrencePolicy {
         }
     }
 
-    static fromJS(data: any): RecurrencePolicy {
+    static fromJS(data: any): DurationStagesRecurrencePolicy {
         data = typeof data === 'object' ? data : {};
-        let result = new RecurrencePolicy();
+        let result = new DurationStagesRecurrencePolicy();
         result.init(data);
         return result;
     }
@@ -1483,11 +1568,12 @@ export class RecurrencePolicy implements IRecurrencePolicy {
             for (let item of this.stages)
                 data["stages"].push(item.toJSON());
         }
+        super.toJSON(data);
         return data;
     }
 }
 
-export interface IRecurrencePolicy {
+export interface IDurationStagesRecurrencePolicy extends IRecurrencePolicy {
     stages?: RecurrencePolicyStage[];
 }
 

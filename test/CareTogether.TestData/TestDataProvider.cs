@@ -430,14 +430,14 @@ namespace CareTogether.TestData
                             RequiredMonitoringActions: new List<MonitoringRequirement>
                             {
                                 new MonitoringRequirement("Family Coach Safety Visit",
-                                    new RecurrencePolicy(new List<RecurrencePolicyStage>
+                                    new DurationStagesRecurrencePolicy(new List<RecurrencePolicyStage>
                                     {
                                         new RecurrencePolicyStage(TimeSpan.FromHours(48), 1),
                                         new RecurrencePolicyStage(TimeSpan.FromDays(7), 5),
                                         new RecurrencePolicyStage(TimeSpan.FromDays(14), null)
                                     }.ToImmutableList())),
                                 new MonitoringRequirement("Family Coach Supervision",
-                                    new RecurrencePolicy(new List<RecurrencePolicyStage>
+                                    new DurationStagesRecurrencePolicy(new List<RecurrencePolicyStage>
                                     {
                                         new RecurrencePolicyStage(TimeSpan.FromDays(7), null)
                                     }.ToImmutableList()))

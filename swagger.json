@@ -1087,15 +1087,70 @@
       },
       "RecurrencePolicy": {
         "type": "object",
+        "discriminator": {
+          "propertyName": "discriminator",
+          "mapping": {
+            "ChildCareOccurrenceBasedRecurrencePolicy": "#/components/schemas/ChildCareOccurrenceBasedRecurrencePolicy",
+            "DurationStagesRecurrencePolicy": "#/components/schemas/DurationStagesRecurrencePolicy"
+          }
+        },
+        "x-abstract": true,
         "additionalProperties": false,
+        "required": [
+          "discriminator"
+        ],
         "properties": {
-          "stages": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/RecurrencePolicyStage"
-            }
+          "discriminator": {
+            "type": "string"
           }
         }
+      },
+      "ChildCareOccurrenceBasedRecurrencePolicy": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/RecurrencePolicy"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "delay": {
+                "type": "string",
+                "format": "time-span"
+              },
+              "frequency": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "initialSkipCount": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "positive": {
+                "type": "boolean"
+              }
+            }
+          }
+        ]
+      },
+      "DurationStagesRecurrencePolicy": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/RecurrencePolicy"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "stages": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/RecurrencePolicyStage"
+                }
+              }
+            }
+          }
+        ]
       },
       "RecurrencePolicyStage": {
         "type": "object",
