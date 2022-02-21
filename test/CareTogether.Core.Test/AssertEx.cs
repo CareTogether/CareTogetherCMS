@@ -54,7 +54,7 @@ namespace CareTogether.Core.Test
         {
             Assert.AreEqual(expected.Length, actual.Count);
             foreach (var (First, Second) in Enumerable
-                .Zip(actual, expected))
+                .Zip(expected, actual))
                 Assert.AreEqual(First, Second);
         }
 
@@ -63,7 +63,7 @@ namespace CareTogether.Core.Test
         {
             Assert.AreEqual(expected.Length, actual.Count);
             foreach (var (First, Second) in Enumerable
-                .Zip(actual, expected))
+                .Zip(expected, actual))
                 Assert.AreEqual(First, Second);
         }
 
@@ -75,7 +75,7 @@ namespace CareTogether.Core.Test
                 var a = actual[e.Item1];
                 Assert.AreEqual(e.Item2.Length, a.Count);
                 foreach (var (First, Second) in Enumerable
-                    .Zip(a.ToImmutableSortedSet(), e.Item2.ToImmutableSortedSet()))
+                    .Zip(e.Item2.ToImmutableSortedSet(), a.ToImmutableSortedSet()))
                     Assert.AreEqual(First, Second);
             }
         }
@@ -88,7 +88,7 @@ namespace CareTogether.Core.Test
                 var a = actual[e.Item1];
                 Assert.AreEqual(e.Item2.Length, a.Count);
                 foreach (var (First, Second) in Enumerable
-                    .Zip(a, e.Item2))
+                    .Zip(e.Item2, a))
                     Assert.AreEqual(First, Second);
             }
         }
