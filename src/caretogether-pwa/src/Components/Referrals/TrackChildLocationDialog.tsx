@@ -1,12 +1,10 @@
 import { useState } from 'react';
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, Grid, InputLabel, MenuItem, Select } from '@material-ui/core';
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, FormControlLabel, FormLabel, Grid, InputLabel, MenuItem, Radio, RadioGroup, Select } from '@material-ui/core';
 import { CombinedFamilyInfo, Arrangement, Person, ChildLocationPlan } from '../../GeneratedClient';
 import { KeyboardDateTimePicker } from '@material-ui/pickers';
-import { useRecoilValue } from 'recoil';
 import { useBackdrop } from '../RequestBackdrop';
 import { useFamilyLookup, usePersonLookup } from '../../Model/DirectoryModel';
 import { useReferralsModel } from '../../Model/ReferralsModel';
-import { policyData } from '../../Model/ConfigurationModel';
 import { FamilyName } from '../Families/FamilyName';
 import { PersonName } from '../Families/PersonName';
 
@@ -18,10 +16,6 @@ interface TrackChildLocationDialogProps {
 }
 
 export function TrackChildLocationDialog({partneringFamily, referralId, arrangement, onClose}: TrackChildLocationDialogProps) {
-  const policy = useRecoilValue(policyData);
-  const arrangementPolicy = policy.referralPolicy!.arrangementPolicies!.find(x => x.arrangementType === arrangement.arrangementType);
-  console.log(arrangementPolicy?.childInvolvement);
-  
   const familyLookup = useFamilyLookup();
   const personLookup = usePersonLookup();
   
@@ -31,6 +25,7 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
   
   const [selectedAssigneeKey, setSelectedAssigneeKey] = useState('');
   const [changedAtLocal, setChangedAtLocal] = useState(new Date());
+  const [plan, setPlan] = useState<ChildLocationPlan | null>(null);
 
   function candidateItem(candidate: {familyId: string, adult: Person}) {
     return {
@@ -49,6 +44,17 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
     ({ familyId: individualAssignment.familyId!, adult: personLookup(individualAssignment.familyId, individualAssignment.personId)! })) || [];
   const allCandidateVolunteerAssignees = candidateFamilyAssignees.concat(candidateIndividualAssignees)
     .map(candidateItem);
+  
+  function updateAssignee(assigneeKey: string) {
+    setSelectedAssigneeKey(assigneeKey);
+    const assigneeIsFromPartneringFamily = candidatePartneringFamilyAssignees.some(ca => ca.key === assigneeKey);
+    if (assigneeIsFromPartneringFamily) {
+      setPlan(ChildLocationPlan.WithParent);
+    } else if (plan === ChildLocationPlan.WithParent) {
+      setPlan(null);
+    }
+  }
+  const assigneeIsFromPartneringFamily = candidatePartneringFamilyAssignees.some(ca => ca.key === selectedAssigneeKey);
 
   const referralsModel = useReferralsModel();
   
@@ -58,12 +64,13 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
     await withBackdrop(async () => {
       if (selectedAssigneeKey === '') {
         alert("No family was selected. Please try again.");
+      } else if (plan == null) {
+        alert("No plan was selected. Please try again.");
       } else {
         const assigneeInfo = candidatePartneringFamilyAssignees.concat(allCandidateVolunteerAssignees).find(ca => ca.key === selectedAssigneeKey);
-        const childLocationPlan = ChildLocationPlan.DaytimeChildCare; //TODO!!
         const additionalExplanation = ''; //TODO:!!
         await referralsModel.trackChildLocation(partneringFamily.family?.id as string, referralId, arrangement.id!,
-          assigneeInfo!.familyId, assigneeInfo!.personId, changedAtLocal, childLocationPlan,
+          assigneeInfo!.familyId, assigneeInfo!.personId, changedAtLocal, plan,
           additionalExplanation);
         //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
         onClose();
@@ -81,13 +88,13 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
             <br />
           </>}
         <Grid container spacing={2}>
-          <Grid item xs={12} sm={6}>
+          <Grid item xs={12}>
             <FormControl required fullWidth size="small">
               <InputLabel id="assignee-label">Receiving Adult</InputLabel>
               <Select
                 labelId="assignee-label" id="assignee"
                 value={selectedAssigneeKey}
-                onChange={e => setSelectedAssigneeKey(e.target.value as string)}>
+                onChange={e => updateAssignee(e.target.value as string)}>
                   <MenuItem key="placeholder" value="" disabled>
                     Select the adult who received the child
                   </MenuItem>
@@ -97,6 +104,22 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
                   {allCandidateVolunteerAssignees.map(candidate =>
                     <MenuItem key={candidate.key} value={candidate.key}>{candidate.displayName}</MenuItem>)}
               </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12}>
+            <p>Partnering? {JSON.stringify(assigneeIsFromPartneringFamily)}</p>
+            <FormControl component="fieldset" required>
+              <FormLabel component="legend">Plan for the location change:</FormLabel>
+              <RadioGroup aria-label="plan" name="plan" row
+                value={plan == null ? '' : ChildLocationPlan[plan]}
+                onChange={e => setPlan(ChildLocationPlan[e.target.value as keyof typeof ChildLocationPlan])}>
+                <FormControlLabel value={ChildLocationPlan[ChildLocationPlan.DaytimeChildCare]} control={<Radio size="small" />} label="Daytime Child Care"
+                  disabled={assigneeIsFromPartneringFamily} />
+                <FormControlLabel value={ChildLocationPlan[ChildLocationPlan.OvernightHousing]} control={<Radio size="small" />} label="Overnight Housing"
+                  disabled={assigneeIsFromPartneringFamily} />
+                <FormControlLabel value={ChildLocationPlan[ChildLocationPlan.WithParent]} control={<Radio size="small" />} label="With Parent"
+                  disabled={!assigneeIsFromPartneringFamily} />
+              </RadioGroup>
             </FormControl>
           </Grid>
           <Grid item xs={12}>
