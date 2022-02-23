@@ -1855,6 +1855,11 @@
           "requirementName": {
             "type": "string"
           },
+          "dueDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "additionalComments": {
             "type": "string"
           },
@@ -3482,6 +3487,11 @@
               "requirementName": {
                 "type": "string"
               },
+              "dueDate": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
               "additionalComments": {
                 "type": "string"
               },
@@ -3546,6 +3556,11 @@
             "properties": {
               "requirementName": {
                 "type": "string"
+              },
+              "dueDate": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
               }
             }
           }

@@ -76,10 +76,10 @@ namespace CareTogether.Resources
         Guid CompletedRequirementId, string RequirementName, DateTime CompletedAtUtc, Guid? UploadedDocumentId)
         : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
     public sealed record ExemptArrangementRequirement(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
-        string RequirementName, string AdditionalComments, DateTime? ExemptionExpiresAtUtc)
+        string RequirementName, DateTime? DueDate, string AdditionalComments, DateTime? ExemptionExpiresAtUtc)
         : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
     public sealed record UnexemptArrangementRequirement(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
-        string RequirementName)
+        string RequirementName, DateTime? DueDate)
         : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
     public sealed record TrackChildLocationChange(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
         DateTime ChangedAtUtc, Guid ChildLocationFamilyId, ChildLocationPlan Plan)

@@ -17,7 +17,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public static ImmutableList<ExemptedRequirementInfo> Exempted(params (string, int?)[] exemptionsWithExpirations) =>
             exemptionsWithExpirations.Select(exemption =>
                 new ExemptedRequirementInfo(Guid.Empty, DateTime.MinValue,
-                    exemption.Item1, "", exemption.Item2.HasValue ? new DateTime(2022, 1, exemption.Item2.Value) : null))
+                    exemption.Item1, DueDate: null, "", exemption.Item2.HasValue ? new DateTime(2022, 1, exemption.Item2.Value) : null))
             .ToImmutableList();
 
         public static ImmutableList<RemovedRole> Removed(params string[] removedRoles) =>
@@ -44,7 +44,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     .GroupBy(exempted => exempted.Item1, exempted => exempted)
                     .Select(exempted => new KeyValuePair<Guid, ImmutableList<ExemptedRequirementInfo>>(exempted.Key,
                         exempted.Select(e => new ExemptedRequirementInfo(Guid.Empty, DateTime.MinValue,
-                            e.Item2, "", e.Item3.HasValue ? new DateTime(2022, 1, e.Item3.Value) : null))
+                            e.Item2, DueDate: null, "", e.Item3.HasValue ? new DateTime(2022, 1, e.Item3.Value) : null))
                             .ToImmutableList())));
 
         public static

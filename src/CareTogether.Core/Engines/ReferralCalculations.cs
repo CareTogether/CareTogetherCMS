@@ -48,7 +48,7 @@ namespace CareTogether.Engines
                 arrangement.CompletedRequirements, arrangement.ExemptedRequirements, utcNow);
             var missingMonitoringRequirements = CalculateMissingMonitoringRequirements(arrangementPolicy.RequiredMonitoringActions,
                 arrangement.StartedAtUtc, arrangement.EndedAtUtc,
-                arrangement.CompletedRequirements, arrangement.ChildrenLocationHistory, utcNow);
+                arrangement.CompletedRequirements, arrangement.ExemptedRequirements, arrangement.ChildrenLocationHistory, utcNow);
             var missingCloseoutRequirements = CalculateMissingCloseoutRequirements(arrangementPolicy.RequiredCloseoutActionNames,
                 arrangement.CompletedRequirements, arrangement.ExemptedRequirements, utcNow);
             var missingFunctionAssignments = CalculateMissingFunctionAssignments(arrangementPolicy.ArrangementFunctions,
@@ -103,6 +103,7 @@ namespace CareTogether.Engines
             ImmutableList<MonitoringRequirement> requiredMonitoringActionNames,
             DateTime? startedAtUtc, DateTime? endedAtUtc,
             ImmutableList<CompletedRequirementInfo> completedRequirements,
+            ImmutableList<ExemptedRequirementInfo> exemptedRequirements,
             ImmutableSortedSet<ChildLocationHistoryEntry> childLocationHistory,
             DateTime utcNow) =>
             requiredMonitoringActionNames.SelectMany(monitoringRequirement =>
@@ -115,6 +116,10 @@ namespace CareTogether.Engines
                     .OrderBy(x => x).ToImmutableList(),
                     childLocationHistory, utcNow)
                 : ImmutableList<DateTime>.Empty)
+                .Where(missingDueDate => !exemptedRequirements.Any(exempted =>
+                    exempted.RequirementName == monitoringRequirement.ActionName &&
+                    (!exempted.DueDate.HasValue || exempted.DueDate == missingDueDate) &&
+                    (exempted.ExemptionExpiresAtUtc == null || exempted.ExemptionExpiresAtUtc > utcNow)))
                 .Select(missingDueDate =>
                     new MissingArrangementRequirement(monitoringRequirement.ActionName,
                         DueBy: missingDueDate > utcNow ? missingDueDate : null,

@@ -15,7 +15,7 @@ export function UnexemptArrangementRequirementDialog({partneringFamilyId, referr
 
   async function save() {
     await referralsModel.unexemptArrangementRequirement(partneringFamilyId, referralId, arrangementId,
-      exemptedRequirement.requirementName!);
+      exemptedRequirement);
   }
 
   return (

@@ -16,7 +16,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public static ImmutableList<ExemptedRequirementInfo> Exempted(params (string, int?)[] exemptionsWithExpirations) =>
             exemptionsWithExpirations.Select(exemption =>
                 new ExemptedRequirementInfo(Guid.Empty, DateTime.MinValue,
-                    exemption.Item1, "", exemption.Item2.HasValue ? new DateTime(2022, 1, exemption.Item2.Value) : null))
+                    exemption.Item1, DueDate: null, "", exemption.Item2.HasValue ? new DateTime(2022, 1, exemption.Item2.Value) : null))
             .ToImmutableList();
 
         public static ImmutableList<string> From(params string[] values) =>

@@ -23,7 +23,7 @@ export function ExemptArrangementRequirementDialog({partneringFamilyId, referral
 
   async function save() {
     await referralsModel.exemptArrangementRequirement(partneringFamilyId, referralId, arrangementId,
-      requirement.actionName!, additionalComments, exemptionExpiresAtLocal);
+      requirement, additionalComments, exemptionExpiresAtLocal);
   }
 
   return (

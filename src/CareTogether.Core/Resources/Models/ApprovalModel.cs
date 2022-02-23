@@ -61,7 +61,8 @@ namespace CareTogether.Resources.Models
                 ExemptVolunteerFamilyRequirement c => volunteerFamilyEntry with
                 {
                     ExemptedRequirements = volunteerFamilyEntry.ExemptedRequirements.Add(
-                        new ExemptedRequirementInfo(userId, timestampUtc, c.RequirementName, c.AdditionalComments, c.ExemptionExpiresAtUtc))
+                        new ExemptedRequirementInfo(userId, timestampUtc, c.RequirementName, DueDate: null,
+                            c.AdditionalComments, c.ExemptionExpiresAtUtc))
                 },
                 UnexemptVolunteerFamilyRequirement c => volunteerFamilyEntry with
                 {
@@ -124,7 +125,8 @@ namespace CareTogether.Resources.Models
                 ExemptVolunteerRequirement c => volunteerEntry with
                 {
                     ExemptedRequirements = volunteerEntry.ExemptedRequirements.Add(
-                        new ExemptedRequirementInfo(userId, timestampUtc, c.RequirementName, c.AdditionalComments, c.ExemptionExpiresAtUtc))
+                        new ExemptedRequirementInfo(userId, timestampUtc, c.RequirementName, DueDate: null,
+                            c.AdditionalComments, c.ExemptionExpiresAtUtc))
                 },
                 UnexemptVolunteerRequirement c => volunteerEntry with
                 {
