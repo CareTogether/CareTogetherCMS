@@ -89,11 +89,11 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
     setRequirementMoreMenuAnchor(null);
     setExemptParameter({requirement: requirement});
   }
-  const [markIncompleteParameter, setMarkIncompleteParameter] = useState<{completedRequirement: CompletedRequirementInfo} | null>(null);
-  function selectMarkIncomplete(completedRequirement: CompletedRequirementInfo) {
-    setRequirementMoreMenuAnchor(null);
-    setMarkIncompleteParameter({completedRequirement: completedRequirement});
-  }
+  // const [markIncompleteParameter, setMarkIncompleteParameter] = useState<{completedRequirement: CompletedRequirementInfo} | null>(null);
+  // function selectMarkIncomplete(completedRequirement: CompletedRequirementInfo) {
+  //   setRequirementMoreMenuAnchor(null);
+  //   setMarkIncompleteParameter({completedRequirement: completedRequirement});
+  // }
   const [unexemptParameter, setUnexemptParameter] = useState<{exemptedRequirement: ExemptedRequirementInfo} | null>(null);
   function selectUnexempt(exemptedRequirement: ExemptedRequirementInfo) {
     setRequirementMoreMenuAnchor(null);
