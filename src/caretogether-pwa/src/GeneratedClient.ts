@@ -2991,6 +2991,7 @@ export class ExemptedRequirementInfo implements IExemptedRequirementInfo {
     userId?: string;
     timestampUtc?: Date;
     requirementName?: string;
+    dueDate?: Date | undefined;
     additionalComments?: string;
     exemptionExpiresAtUtc?: Date | undefined;
 
@@ -3008,6 +3009,7 @@ export class ExemptedRequirementInfo implements IExemptedRequirementInfo {
             this.userId = _data["userId"];
             this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
             this.requirementName = _data["requirementName"];
+            this.dueDate = _data["dueDate"] ? new Date(_data["dueDate"].toString()) : <any>undefined;
             this.additionalComments = _data["additionalComments"];
             this.exemptionExpiresAtUtc = _data["exemptionExpiresAtUtc"] ? new Date(_data["exemptionExpiresAtUtc"].toString()) : <any>undefined;
         }
@@ -3025,6 +3027,7 @@ export class ExemptedRequirementInfo implements IExemptedRequirementInfo {
         data["userId"] = this.userId;
         data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
         data["requirementName"] = this.requirementName;
+        data["dueDate"] = this.dueDate ? this.dueDate.toISOString() : <any>undefined;
         data["additionalComments"] = this.additionalComments;
         data["exemptionExpiresAtUtc"] = this.exemptionExpiresAtUtc ? this.exemptionExpiresAtUtc.toISOString() : <any>undefined;
         return data;
@@ -3035,6 +3038,7 @@ export interface IExemptedRequirementInfo {
     userId?: string;
     timestampUtc?: Date;
     requirementName?: string;
+    dueDate?: Date | undefined;
     additionalComments?: string;
     exemptionExpiresAtUtc?: Date | undefined;
 }
@@ -3367,7 +3371,6 @@ export class ChildLocationHistoryEntry implements IChildLocationHistoryEntry {
     timestampUtc?: Date;
     childLocationFamilyId?: string;
     plan?: ChildLocationPlan;
-    additionalExplanation?: string;
 
     constructor(data?: IChildLocationHistoryEntry) {
         if (data) {
@@ -3384,7 +3387,6 @@ export class ChildLocationHistoryEntry implements IChildLocationHistoryEntry {
             this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
             this.childLocationFamilyId = _data["childLocationFamilyId"];
             this.plan = _data["plan"];
-            this.additionalExplanation = _data["additionalExplanation"];
         }
     }
 
@@ -3401,7 +3403,6 @@ export class ChildLocationHistoryEntry implements IChildLocationHistoryEntry {
         data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
         data["childLocationFamilyId"] = this.childLocationFamilyId;
         data["plan"] = this.plan;
-        data["additionalExplanation"] = this.additionalExplanation;
         return data;
     }
 }
@@ -3411,7 +3412,6 @@ export interface IChildLocationHistoryEntry {
     timestampUtc?: Date;
     childLocationFamilyId?: string;
     plan?: ChildLocationPlan;
-    additionalExplanation?: string;
 }
 
 export enum ChildLocationPlan {
@@ -6144,6 +6144,7 @@ export interface IEndArrangement extends IArrangementCommand {
 
 export class ExemptArrangementRequirement extends ArrangementCommand implements IExemptArrangementRequirement {
     requirementName?: string;
+    dueDate?: Date | undefined;
     additionalComments?: string;
     exemptionExpiresAtUtc?: Date | undefined;
 
@@ -6156,6 +6157,7 @@ export class ExemptArrangementRequirement extends ArrangementCommand implements 
         super.init(_data);
         if (_data) {
             this.requirementName = _data["requirementName"];
+            this.dueDate = _data["dueDate"] ? new Date(_data["dueDate"].toString()) : <any>undefined;
             this.additionalComments = _data["additionalComments"];
             this.exemptionExpiresAtUtc = _data["exemptionExpiresAtUtc"] ? new Date(_data["exemptionExpiresAtUtc"].toString()) : <any>undefined;
         }
@@ -6171,6 +6173,7 @@ export class ExemptArrangementRequirement extends ArrangementCommand implements 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["requirementName"] = this.requirementName;
+        data["dueDate"] = this.dueDate ? this.dueDate.toISOString() : <any>undefined;
         data["additionalComments"] = this.additionalComments;
         data["exemptionExpiresAtUtc"] = this.exemptionExpiresAtUtc ? this.exemptionExpiresAtUtc.toISOString() : <any>undefined;
         super.toJSON(data);
@@ -6180,6 +6183,7 @@ export class ExemptArrangementRequirement extends ArrangementCommand implements 
 
 export interface IExemptArrangementRequirement extends IArrangementCommand {
     requirementName?: string;
+    dueDate?: Date | undefined;
     additionalComments?: string;
     exemptionExpiresAtUtc?: Date | undefined;
 }
@@ -6222,7 +6226,6 @@ export class TrackChildLocationChange extends ArrangementCommand implements ITra
     changedAtUtc?: Date;
     childLocationFamilyId?: string;
     plan?: ChildLocationPlan;
-    additionalExplanation?: string;
 
     constructor(data?: ITrackChildLocationChange) {
         super(data);
@@ -6235,7 +6238,6 @@ export class TrackChildLocationChange extends ArrangementCommand implements ITra
             this.changedAtUtc = _data["changedAtUtc"] ? new Date(_data["changedAtUtc"].toString()) : <any>undefined;
             this.childLocationFamilyId = _data["childLocationFamilyId"];
             this.plan = _data["plan"];
-            this.additionalExplanation = _data["additionalExplanation"];
         }
     }
 
@@ -6251,7 +6253,6 @@ export class TrackChildLocationChange extends ArrangementCommand implements ITra
         data["changedAtUtc"] = this.changedAtUtc ? this.changedAtUtc.toISOString() : <any>undefined;
         data["childLocationFamilyId"] = this.childLocationFamilyId;
         data["plan"] = this.plan;
-        data["additionalExplanation"] = this.additionalExplanation;
         super.toJSON(data);
         return data;
     }
@@ -6261,11 +6262,11 @@ export interface ITrackChildLocationChange extends IArrangementCommand {
     changedAtUtc?: Date;
     childLocationFamilyId?: string;
     plan?: ChildLocationPlan;
-    additionalExplanation?: string;
 }
 
 export class UnexemptArrangementRequirement extends ArrangementCommand implements IUnexemptArrangementRequirement {
     requirementName?: string;
+    dueDate?: Date | undefined;
 
     constructor(data?: IUnexemptArrangementRequirement) {
         super(data);
@@ -6276,6 +6277,7 @@ export class UnexemptArrangementRequirement extends ArrangementCommand implement
         super.init(_data);
         if (_data) {
             this.requirementName = _data["requirementName"];
+            this.dueDate = _data["dueDate"] ? new Date(_data["dueDate"].toString()) : <any>undefined;
         }
     }
 
@@ -6289,6 +6291,7 @@ export class UnexemptArrangementRequirement extends ArrangementCommand implement
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["requirementName"] = this.requirementName;
+        data["dueDate"] = this.dueDate ? this.dueDate.toISOString() : <any>undefined;
         super.toJSON(data);
         return data;
     }
@@ -6296,6 +6299,7 @@ export class UnexemptArrangementRequirement extends ArrangementCommand implement
 
 export interface IUnexemptArrangementRequirement extends IArrangementCommand {
     requirementName?: string;
+    dueDate?: Date | undefined;
 }
 
 export class UserOrganizationAccess implements IUserOrganizationAccess {

@@ -11,7 +11,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingSetupRequirements(
                 Helpers.From("A", "B", "C"),
-                Helpers.Completed());
+                Helpers.Completed(),
+                Helpers.Exempted(),
+                utcNow: new System.DateTime(2022, 2, 1));
 
             AssertEx.SequenceIs(result,
                 new MissingArrangementRequirement("A", null, null),
@@ -24,7 +26,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingSetupRequirements(
                 Helpers.From("A", "B", "C"),
-                Helpers.Completed(("A", 1), ("A", 2), ("B", 3)));
+                Helpers.Completed(("A", 1), ("A", 2), ("B", 3)),
+                Helpers.Exempted(),
+                utcNow: new System.DateTime(2022, 2, 1));
 
             AssertEx.SequenceIs(result,
                 new MissingArrangementRequirement("C", null, null));
@@ -35,7 +39,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingSetupRequirements(
                 Helpers.From("A", "B", "C"),
-                Helpers.Completed(("A", 1), ("A", 2), ("B", 3), ("C", 12)));
+                Helpers.Completed(("A", 1), ("A", 2), ("B", 3), ("C", 12)),
+                Helpers.Exempted(),
+                utcNow: new System.DateTime(2022, 2, 1));
 
             AssertEx.SequenceIs(result);
         }

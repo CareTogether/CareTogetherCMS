@@ -1,6 +1,6 @@
-import { Container, Toolbar, Grid, Button, Menu, MenuItem, MenuList, useMediaQuery, useTheme, IconButton } from '@material-ui/core';
+import { Container, Toolbar, Grid, Button, Menu, MenuItem, MenuList, useMediaQuery, useTheme, IconButton, Tooltip } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { ActionRequirement, ArrangementPolicy, CombinedFamilyInfo, CompletedCustomFieldInfo, CustomFieldType, Permission, ReferralCloseReason } from '../../GeneratedClient';
+import { ActionRequirement, ArrangementPolicy, CombinedFamilyInfo, CompletedCustomFieldInfo, CompletedRequirementInfo, CustomFieldType, ExemptedRequirementInfo, Permission, ReferralCloseReason } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { useParams } from 'react-router';
@@ -29,6 +29,9 @@ import { HeaderContent, HeaderTitle } from '../Header';
 import { ArrowBack } from '@material-ui/icons';
 import { useNavigate } from 'react-router-dom';
 import { usePermissions } from '../../Model/SessionModel';
+import { useUserLookup } from '../../Model/DirectoryModel';
+import { ExemptReferralRequirementDialog } from './ExemptReferralRequirementDialog';
+import { UnexemptReferralRequirementDialog } from './UnexemptReferralRequirementDialog';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -84,6 +87,8 @@ export function PartneringFamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
 
+  const userLookup = useUserLookup();
+
   const partneringFamilies = useRecoilValue(partneringFamiliesData);
   const policy = useRecoilValue(policyData);
 
@@ -110,6 +115,23 @@ export function PartneringFamilyScreen() {
   
   const [customFieldDialogParameter, setCustomFieldDialogParameter] = useState<string | CompletedCustomFieldInfo | null>(null);
 
+  const [requirementMoreMenuAnchor, setRequirementMoreMenuAnchor] = useState<{anchor: Element, requirement: string | CompletedRequirementInfo | ExemptedRequirementInfo } | null>(null);
+  const [exemptParameter, setExemptParameter] = useState<{requirementName: string} | null>(null);
+  function selectExempt(requirementName: string) {
+    setRequirementMoreMenuAnchor(null);
+    setExemptParameter({requirementName: requirementName});
+  }
+  // const [markIncompleteParameter, setMarkIncompleteParameter] = useState<{completedRequirement: CompletedRequirementInfo} | null>(null);
+  // function selectMarkIncomplete(completedRequirement: CompletedRequirementInfo) {
+  //   setRequirementMoreMenuAnchor(null);
+  //   setMarkIncompleteParameter({completedRequirement: completedRequirement});
+  // }
+  const [unexemptParameter, setUnexemptParameter] = useState<{exemptedRequirement: ExemptedRequirementInfo} | null>(null);
+  function selectUnexempt(exemptedRequirement: ExemptedRequirementInfo) {
+    setRequirementMoreMenuAnchor(null);
+    setUnexemptParameter({exemptedRequirement: exemptedRequirement});
+  }
+  
   const [createArrangementDialogParameter, setCreateArrangementDialogParameter] = useState<ArrangementPolicy | null>(null);
   
   const theme = useTheme();
@@ -276,7 +298,8 @@ export function PartneringFamilyScreen() {
           <h3>Incomplete</h3>
           <ul className={classes.familyRequirementsList}>
             {partneringFamily.partneringFamilyInfo?.openReferral?.missingRequirements?.map((missingRequirementName, i) => (
-              <li key={i}>
+              <li key={i}
+                onContextMenu={(e) => { e.preventDefault(); setRequirementMoreMenuAnchor({ anchor: e.currentTarget, requirement: missingRequirementName }); }}>
                 ❌ {missingRequirementName}
               </li>
             ))}
@@ -286,13 +309,50 @@ export function PartneringFamilyScreen() {
           <h3>Completed</h3>
           <ul className={classes.familyRequirementsList}>
             {partneringFamily.partneringFamilyInfo?.openReferral?.completedRequirements?.map((completed, i) => (
-              <li key={i}>
-                ✅ {completed.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                {completed.completedAtUtc && <span style={{float:'right',marginRight:20}}>{format(completed.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
+              <li key={i}
+                onContextMenu={(e) => { e.preventDefault(); setRequirementMoreMenuAnchor({ anchor: e.currentTarget, requirement: completed }); }}>
+                <Tooltip title={<PersonName person={userLookup(completed.userId)} />}>
+                  <span>
+                    ✅ {completed.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    {completed.completedAtUtc && <span style={{float:'right',marginRight:20}}>{format(completed.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
+                  </span>
+                </Tooltip>
+              </li>
+            ))}
+            {partneringFamily.partneringFamilyInfo?.openReferral?.exemptedRequirements?.map((exempted, i) => (
+              <li key={i}
+                onContextMenu={(e) => { e.preventDefault(); setRequirementMoreMenuAnchor({ anchor: e.currentTarget, requirement: exempted }); }}>
+                <>
+                  <span>🚫 {exempted.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                  {exempted.exemptionExpiresAtUtc && <span style={{float:'right',marginRight:20}}>until {format(exempted.exemptionExpiresAtUtc, "MM/dd/yyyy")}</span>}
+                  <br />
+                  <span style={{lineHeight: '1.5em', paddingLeft:30, fontStyle: 'italic'}}>{exempted.additionalComments}</span>
+                </>
               </li>
             ))}
           </ul>
         </Grid>
+        <Menu id="partneringfamily-requirement-more-menu"
+          anchorEl={requirementMoreMenuAnchor?.anchor}
+          keepMounted
+          open={Boolean(requirementMoreMenuAnchor)}
+          onClose={() => setRequirementMoreMenuAnchor(null)}>
+          { (typeof requirementMoreMenuAnchor?.requirement === 'string') &&
+            <MenuItem onClick={() => selectExempt(requirementMoreMenuAnchor?.requirement as string)}>Exempt</MenuItem>
+            }
+          {/* { (requirementMoreMenuAnchor?.requirement instanceof CompletedRequirementInfo) && permissions(Permission.EditApprovalRequirementCompletion) &&
+            <MenuItem onClick={() => selectMarkIncomplete(requirementMoreMenuAnchor?.requirement as CompletedRequirementInfo)}>Mark Incomplete</MenuItem>
+            } */}
+          { (requirementMoreMenuAnchor?.requirement instanceof ExemptedRequirementInfo) &&
+            <MenuItem onClick={() => selectUnexempt(requirementMoreMenuAnchor?.requirement as ExemptedRequirementInfo)}>Unexempt</MenuItem>
+            }
+        </Menu>
+        {(exemptParameter && <ExemptReferralRequirementDialog partneringFamilyId={familyId} referralId={partneringFamily.partneringFamilyInfo?.openReferral?.id!} requirementName={exemptParameter.requirementName}
+          onClose={() => setExemptParameter(null)} />) || null}
+        {/* {(markIncompleteParameter && <MarkVolunteerFamilyStepIncompleteDialog volunteerFamily={volunteerFamily} completedRequirement={markIncompleteParameter.completedRequirement}
+          onClose={() => setMarkIncompleteParameter(null)} />) || null} */}
+        {(unexemptParameter && <UnexemptReferralRequirementDialog partneringFamilyId={familyId} referralId={partneringFamily.partneringFamilyInfo?.openReferral?.id!} exemptedRequirement={unexemptParameter.exemptedRequirement}
+          onClose={() => setUnexemptParameter(null)} />) || null}
         <Grid item xs={12} sm={6} md={4}>
           <h3>Documents</h3>
           <FamilyDocuments family={partneringFamily} />

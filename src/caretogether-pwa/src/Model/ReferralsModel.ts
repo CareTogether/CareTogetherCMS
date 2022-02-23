@@ -1,6 +1,6 @@
 import { selector, useRecoilCallback } from "recoil";
 import { authenticatingFetch } from "../Auth";
-import { ReferralCommand, ReferralsClient, ArrangementCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement, StartArrangement, EndArrangement, AssignVolunteerFamily, AssignIndividualVolunteer, ReferralCloseReason, CloseReferral, CreateReferral, TrackChildLocationChange, ChildLocationPlan, UpdateCustomReferralField, CustomField } from "../GeneratedClient";
+import { ReferralCommand, ReferralsClient, ArrangementCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement, StartArrangement, EndArrangement, AssignVolunteerFamily, AssignIndividualVolunteer, ReferralCloseReason, CloseReferral, CreateReferral, TrackChildLocationChange, ChildLocationPlan, UpdateCustomReferralField, CustomField, ExemptReferralRequirement, UnexemptReferralRequirement, ExemptArrangementRequirement, UnexemptArrangementRequirement, MissingArrangementRequirement, ExemptedRequirementInfo } from "../GeneratedClient";
 import { visibleFamiliesData } from "./ModelLoader";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 
@@ -81,6 +81,27 @@ export function useReferralsModel() {
         command.uploadedDocumentId = documentId;
       return command;
     });
+  const exemptReferralRequirement = useReferralCommandCallbackWithLocation(
+    async (organizationId, locationId, partneringFamilyId, referralId: string, requirementName: string,
+      additionalComments: string, exemptionExpiresAtLocal: Date | null) => {
+      const command = new ExemptReferralRequirement({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+      });
+      command.requirementName = requirementName;
+      command.additionalComments = additionalComments;
+      command.exemptionExpiresAtUtc = exemptionExpiresAtLocal ?? undefined;
+      return command;
+    });
+  const unexemptReferralRequirement = useReferralCommandCallbackWithLocation(
+    async (organizationId, locationId, partneringFamilyId, referralId: string, requirementName: string) => {
+      const command = new UnexemptReferralRequirement({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+      });
+      command.requirementName = requirementName;
+      return command;
+    });
   const updateCustomReferralField = useReferralCommandCallbackWithLocation(
     async (organizationId, locationId, partneringFamilyId, referralId: string, customField: CustomField,
       value: boolean | string | null) => {
@@ -105,6 +126,31 @@ export function useReferralsModel() {
       command.completedAtUtc = completedAtLocal;
       if (documentId != null)
         command.uploadedDocumentId = documentId;
+      return command;
+    });
+  const exemptArrangementRequirement = useArrangementCommandCallbackWithLocation(
+    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string, requirement: MissingArrangementRequirement,
+      additionalComments: string, exemptionExpiresAtLocal: Date | null) => {
+      const command = new ExemptArrangementRequirement({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementId: arrangementId
+      });
+      command.requirementName = requirement.actionName;
+      command.dueDate = requirement.dueBy || requirement.pastDueSince;
+      command.additionalComments = additionalComments;
+      command.exemptionExpiresAtUtc = exemptionExpiresAtLocal ?? undefined;
+      return command;
+    });
+  const unexemptArrangementRequirement = useArrangementCommandCallbackWithLocation(
+    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string, exemptedRequirement: ExemptedRequirementInfo) => {
+      const command = new UnexemptArrangementRequirement({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementId: arrangementId
+      });
+      command.requirementName = exemptedRequirement.requirementName;
+      command.dueDate = exemptedRequirement.dueDate;
       return command;
     });
   const createArrangement = useArrangementCommandCallbackWithLocation(
@@ -169,7 +215,7 @@ export function useReferralsModel() {
   const trackChildLocation = useArrangementCommandCallbackWithLocation(
     async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
       childLocationFamilyId: string, childLocationAdultId: string, changedAtLocal: Date,
-      childLocationPlan: ChildLocationPlan, additionalExplanation: string) => {
+      childLocationPlan: ChildLocationPlan) => {
       const command = new TrackChildLocationChange({
         familyId: partneringFamilyId,
         referralId: referralId,
@@ -179,7 +225,6 @@ export function useReferralsModel() {
       //command.childLocationAdultId = childLocationAdultId; TODO: Implement this!
       command.changedAtUtc = changedAtLocal;
       command.plan = childLocationPlan;
-      command.additionalExplanation = additionalExplanation;
       return command;
     });
   const closeReferral = useReferralCommandCallbackWithLocation(
@@ -205,8 +250,12 @@ export function useReferralsModel() {
   
   return {
     completeReferralRequirement,
+    exemptReferralRequirement,
+    unexemptReferralRequirement,
     updateCustomReferralField,
     completeArrangementRequirement,
+    exemptArrangementRequirement,
+    unexemptArrangementRequirement,
     createArrangement,
     startArrangement,
     endArrangement,

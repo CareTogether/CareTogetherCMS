@@ -74,8 +74,8 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
         alert("Date of birth was not specified. Try again.");
       } else if (ageType === 'inYears' && ageInYears == null) {
         alert("Age in years was not specified. Try again.");
-      } else if (ageType === 'inYears' && ageInYears != null && ageInYears < 18) {
-        alert("Age in years must be at least 18. Try again.");
+      } else if (ageType === 'inYears' && ageInYears != null && ageInYears < 16) {
+        alert("Age in years must be at least 16. Try again.");
       } else if (ethnicity === '') {
         alert("Ethnicity was not selected. Try again.");
       } else if (relationshipToFamily === '') { //TODO: Actual validation!
@@ -155,7 +155,7 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
               <Grid item>
                 <KeyboardDatePicker
                   label="Date of birth" size="small" variant="inline"
-                  value={dateOfBirth} maxDate={subYears(new Date(), 18)} openTo="year"
+                  value={dateOfBirth} maxDate={subYears(new Date(), 16)} openTo="year"
                   required disabled={ageType !== 'exact'} format="MM/dd/yyyy"
                   onChange={(date) => date && setFields({...fields, dateOfBirth: date})}
                   />

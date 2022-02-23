@@ -229,8 +229,8 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
           </Menu>
           {(exemptParameter && <ExemptVolunteerRequirementDialog volunteerFamilyId={volunteerFamilyId} personId={personId} requirementName={exemptParameter.requirementName}
             onClose={() => setExemptParameter(null)} />) || null}
-            {(markIncompleteParameter && <MarkVolunteerStepIncompleteDialog volunteerFamily={volunteerFamily} personId={personId} completedRequirement={markIncompleteParameter.completedRequirement}
-              onClose={() => setMarkIncompleteParameter(null)} />) || null}
+          {(markIncompleteParameter && <MarkVolunteerStepIncompleteDialog volunteerFamily={volunteerFamily} personId={personId} completedRequirement={markIncompleteParameter.completedRequirement}
+            onClose={() => setMarkIncompleteParameter(null)} />) || null}
           {(unexemptParameter && <UnexemptVolunteerRequirementDialog volunteerFamilyId={volunteerFamilyId} personId={personId} exemptedRequirement={unexemptParameter.exemptedRequirement}
             onClose={() => setUnexemptParameter(null)} />) || null}
         </Typography>

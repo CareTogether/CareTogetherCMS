@@ -1,4 +1,4 @@
-import { Dashboard } from "@material-ui/icons";
+import { Dashboard } from "./Components/Dashboard";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Arrangements } from "./Components/Referrals/Arrangements";
 import { Referrals } from "./Components/Referrals/Referrals";

@@ -1855,6 +1855,11 @@
           "requirementName": {
             "type": "string"
           },
+          "dueDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "additionalComments": {
             "type": "string"
           },
@@ -2045,9 +2050,6 @@
           },
           "plan": {
             "$ref": "#/components/schemas/ChildLocationPlan"
-          },
-          "additionalExplanation": {
-            "type": "string"
           }
         }
       },
@@ -3485,6 +3487,11 @@
               "requirementName": {
                 "type": "string"
               },
+              "dueDate": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
               "additionalComments": {
                 "type": "string"
               },
@@ -3533,9 +3540,6 @@
               },
               "plan": {
                 "$ref": "#/components/schemas/ChildLocationPlan"
-              },
-              "additionalExplanation": {
-                "type": "string"
               }
             }
           }
@@ -3552,6 +3556,11 @@
             "properties": {
               "requirementName": {
                 "type": "string"
+              },
+              "dueDate": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
               }
             }
           }

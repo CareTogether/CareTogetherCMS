@@ -1,7 +1,7 @@
-import { Card, CardActions, CardContent, CardHeader, Divider, IconButton, ListItemText, makeStyles, Menu, MenuItem, MenuList, Typography, useMediaQuery, useTheme } from '@material-ui/core';
+import { Card, CardActions, CardContent, CardHeader, Divider, IconButton, ListItemText, makeStyles, Menu, MenuItem, MenuList, Tooltip, Typography, useMediaQuery, useTheme } from '@material-ui/core';
 import React, { useState } from 'react';
-import { ArrangementPhase, Arrangement, CombinedFamilyInfo, ActionRequirement, Person, FunctionRequirement, ArrangementFunction, ChildInvolvement } from '../../GeneratedClient';
-import { useFamilyLookup, usePersonLookup } from '../../Model/DirectoryModel';
+import { ArrangementPhase, Arrangement, CombinedFamilyInfo, ActionRequirement, Person, FunctionRequirement, ArrangementFunction, ChildInvolvement, CompletedRequirementInfo, ExemptedRequirementInfo, MissingArrangementRequirement } from '../../GeneratedClient';
+import { useFamilyLookup, usePersonLookup, useUserLookup } from '../../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
 import { FamilyName } from '../Families/FamilyName';
 import { format } from 'date-fns';
@@ -15,6 +15,8 @@ import { StartArrangementDialog } from './StartArrangementDialog';
 import { EndArrangementDialog } from './EndArrangementDialog';
 import { AssignArrangementFunctionDialog } from './AssignArrangementFunctionDialog';
 import { TrackChildLocationDialog } from './TrackChildLocationDialog';
+import { ExemptArrangementRequirementDialog } from './ExemptArrangementRequirementDialog';
+import { UnexemptArrangementRequirementDialog } from './UnexemptArrangementRequirementDialog';
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -52,9 +54,10 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
   const classes = useStyles();
 
   const policy = useRecoilValue(policyData);
-  
+
   const familyLookup = useFamilyLookup();
   const personLookup = usePersonLookup();
+  const userLookup = useUserLookup();
   
   const [arrangementRecordMenuAnchor, setArrangementRecordMenuAnchor] = useState<{anchor: Element, arrangement: Arrangement} | null>(null);
   const [recordArrangementStepParameter, setRecordArrangementStepParameter] = useState<{requirementName: string, requirementInfo: ActionRequirement, arrangement: Person} | null>(null);
@@ -80,6 +83,23 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
   }
   const [showTrackChildLocationDialog, setShowTrackChildLocationDialog] = useState(false);
 
+  const [requirementMoreMenuAnchor, setRequirementMoreMenuAnchor] = useState<{anchor: Element, requirement: MissingArrangementRequirement | CompletedRequirementInfo | ExemptedRequirementInfo} | null>(null);
+  const [exemptParameter, setExemptParameter] = useState<{requirement: MissingArrangementRequirement} | null>(null);
+  function selectExempt(requirement: MissingArrangementRequirement) {
+    setRequirementMoreMenuAnchor(null);
+    setExemptParameter({requirement: requirement});
+  }
+  // const [markIncompleteParameter, setMarkIncompleteParameter] = useState<{completedRequirement: CompletedRequirementInfo} | null>(null);
+  // function selectMarkIncomplete(completedRequirement: CompletedRequirementInfo) {
+  //   setRequirementMoreMenuAnchor(null);
+  //   setMarkIncompleteParameter({completedRequirement: completedRequirement});
+  // }
+  const [unexemptParameter, setUnexemptParameter] = useState<{exemptedRequirement: ExemptedRequirementInfo} | null>(null);
+  function selectUnexempt(exemptedRequirement: ExemptedRequirementInfo) {
+    setRequirementMoreMenuAnchor(null);
+    setUnexemptParameter({exemptedRequirement: exemptedRequirement});
+  }
+  
   const arrangementPolicy = policy.referralPolicy?.arrangementPolicies?.find(a => a.arrangementType === arrangement.arrangementType);
   const missingVolunteerFunctions = arrangementPolicy?.arrangementFunctions?.filter(arrangementFunction =>
     !arrangement.familyVolunteerAssignments?.some(x => x.arrangementFunction === arrangementFunction.functionName) &&
@@ -141,17 +161,36 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
             <Typography variant="body2" component="div">
               <ul className={classes.cardList}>
                 {arrangement.completedRequirements?.map((completed, i) => (
-                  <li key={i}>
+                  <li key={i}
+                    onContextMenu={(e) => { e.preventDefault(); setRequirementMoreMenuAnchor({ anchor: e.currentTarget, requirement: completed }); }}>
                     <CardInfoRow icon='✅'>
-                      {completed.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                      {completed.completedAtUtc && <span style={{float:'right'}}>{format(completed.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
+                      <Tooltip title={<PersonName person={userLookup(completed.userId)} />}>
+                        <span>
+                          {completed.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                          {completed.completedAtUtc && <span style={{float:'right'}}>{format(completed.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
+                        </span>
+                      </Tooltip>
+                    </CardInfoRow>
+                  </li>
+                ))}
+                {arrangement.exemptedRequirements?.map((exempted, i) => (
+                  <li key={i}
+                    onContextMenu={(e) => { e.preventDefault(); setRequirementMoreMenuAnchor({ anchor: e.currentTarget, requirement: exempted }); }}>
+                    <CardInfoRow icon='🚫'>
+                      <>
+                        <span>{exempted.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                        {exempted.exemptionExpiresAtUtc && <span style={{float:'right',marginRight:20}}>until {format(exempted.exemptionExpiresAtUtc, "MM/dd/yyyy")}</span>}
+                        <br />
+                        <span style={{lineHeight: '1.5em', paddingLeft:30, fontStyle: 'italic'}}>{exempted.additionalComments}</span>
+                      </>
                     </CardInfoRow>
                   </li>
                 ))}
               </ul>
               <ul className={classes.cardList}>
                 {arrangement.missingRequirements?.map((missingRequirement, i) => (
-                  <li key={i}>
+                  <li key={i}
+                    onContextMenu={(e) => { e.preventDefault(); setRequirementMoreMenuAnchor({ anchor: e.currentTarget, requirement: missingRequirement }); }}>
                     {missingRequirement.dueBy
                       ? <CardInfoRow icon='📅'>
                           {missingRequirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -164,6 +203,27 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
                   </li>
                 ))}
               </ul>
+              <Menu id="arrangement-requirement-more-menu"
+                anchorEl={requirementMoreMenuAnchor?.anchor}
+                keepMounted
+                open={Boolean(requirementMoreMenuAnchor)}
+                onClose={() => setRequirementMoreMenuAnchor(null)}>
+                { (requirementMoreMenuAnchor?.requirement instanceof MissingArrangementRequirement) &&
+                  <MenuItem onClick={() => selectExempt(requirementMoreMenuAnchor?.requirement as MissingArrangementRequirement)}>Exempt</MenuItem>
+                  }
+                {/* { (requirementMoreMenuAnchor?.requirement instanceof CompletedRequirementInfo) &&
+                  <MenuItem onClick={() => selectMarkIncomplete(requirementMoreMenuAnchor?.requirement as CompletedRequirementInfo)}>Mark Incomplete</MenuItem>
+                  } */}
+                { (requirementMoreMenuAnchor?.requirement instanceof ExemptedRequirementInfo) &&
+                  <MenuItem onClick={() => selectUnexempt(requirementMoreMenuAnchor?.requirement as ExemptedRequirementInfo)}>Unexempt</MenuItem>
+                  }
+              </Menu>
+              {(exemptParameter && <ExemptArrangementRequirementDialog partneringFamilyId={partneringFamily.family!.id!} referralId={referralId} arrangementId={arrangement.id!} requirement={exemptParameter.requirement}
+                onClose={() => setExemptParameter(null)} />) || null}
+              {/* {(markIncompleteParameter && <MarkArrangementStepIncompleteDialog partneringFamily={partneringFamily} referralId={referralId} arrangementId={arrangement.id!} completedRequirement={markIncompleteParameter.completedRequirement}
+                onClose={() => setMarkIncompleteParameter(null)} />) || null} */}
+              {(unexemptParameter && <UnexemptArrangementRequirementDialog partneringFamilyId={partneringFamily.family!.id!} referralId={referralId} arrangementId={arrangement.id!} exemptedRequirement={unexemptParameter.exemptedRequirement}
+                onClose={() => setUnexemptParameter(null)} />) || null}
             </Typography>
           </>
         )}

@@ -22,6 +22,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null))))),
                 startedAtUtc: null, endedAtUtc: null,
                 Helpers.Completed(),
+                Helpers.Exempted(),
                 Helpers.LocationHistoryEntries(),
                 utcNow: new DateTime(2022, 1, 31));
 
@@ -41,6 +42,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null))))),
                 startedAtUtc: new DateTime(2022, 1, 1), endedAtUtc: null,
                 Helpers.Completed(),
+                Helpers.Exempted(),
                 Helpers.LocationHistoryEntries(),
                 utcNow: new DateTime(2022, 1, 31));
 
@@ -71,6 +73,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null))))),
                 startedAtUtc: new DateTime(2022, 1, 1), endedAtUtc: null,
                 Helpers.Completed(("A", 3), ("B", 7)),
+                Helpers.Exempted(),
                 Helpers.LocationHistoryEntries(),
                 utcNow: new DateTime(2022, 1, 31));
 
@@ -99,6 +102,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null))))),
                 startedAtUtc: new DateTime(2022, 1, 1), endedAtUtc: null,
                 Helpers.Completed(("A", 3), ("B", 7)),
+                Helpers.Exempted(),
                 Helpers.LocationHistoryEntries(),
                 utcNow: new DateTime(2022, 1, 8));
 

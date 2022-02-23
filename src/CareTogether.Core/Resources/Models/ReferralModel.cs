@@ -57,7 +57,8 @@ namespace CareTogether.Resources.Models
                         ExemptReferralRequirement c => referralEntry with
                         {
                             ExemptedRequirements = referralEntry.ExemptedRequirements.Add(
-                                new ExemptedRequirementInfo(userId, timestampUtc, c.RequirementName, c.AdditionalComments, c.ExemptionExpiresAtUtc))
+                                new ExemptedRequirementInfo(userId, timestampUtc, c.RequirementName, DueDate: null,
+                                    c.AdditionalComments, c.ExemptionExpiresAtUtc))
                         },
                         UnexemptReferralRequirement c => referralEntry with
                         {
@@ -133,18 +134,19 @@ namespace CareTogether.Resources.Models
                         ExemptArrangementRequirement c => arrangementEntry with
                         {
                             ExemptedRequirements = arrangementEntry.ExemptedRequirements.Add(
-                                new ExemptedRequirementInfo(userId, timestampUtc, c.RequirementName, c.AdditionalComments, c.ExemptionExpiresAtUtc))
+                                new ExemptedRequirementInfo(userId, timestampUtc, c.RequirementName, c.DueDate,
+                                    c.AdditionalComments, c.ExemptionExpiresAtUtc))
                         },
                         UnexemptArrangementRequirement c => arrangementEntry with
                         {
                             ExemptedRequirements = arrangementEntry.ExemptedRequirements.RemoveAll(x =>
-                                x.RequirementName == c.RequirementName)
+                                x.RequirementName == c.RequirementName && x.DueDate == c.DueDate)
                         },
                         TrackChildLocationChange c => arrangementEntry with
                         {
                             ChildrenLocationHistory = arrangementEntry.ChildrenLocationHistory.Add(
                                 new ChildLocationHistoryEntry(userId, c.ChangedAtUtc,
-                                    c.ChildLocationFamilyId, c.Plan, c.AdditionalExplanation))
+                                    c.ChildLocationFamilyId, c.Plan))
                         },
                         EndArrangement c => arrangementEntry with
                         {
