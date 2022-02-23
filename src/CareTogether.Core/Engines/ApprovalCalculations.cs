@@ -185,7 +185,7 @@ namespace CareTogether.Engines
 
             var requirementCompletionStatus = policyVersion.Requirements.Select(requirement =>
                 (requirement.ActionName, requirement.Stage, RequirementMetOrExempted:
-                    RequirementMetOrExempted(requirement.ActionName, supersededAtUtc, utcNow, completedRequirements, exemptedRequirements)))
+                    SharedCalculations.RequirementMetOrExempted(requirement.ActionName, supersededAtUtc, utcNow, completedRequirements, exemptedRequirements)))
                 .ToImmutableList();
 
             var status = CalculateRoleApprovalStatusFromRequirementCompletions(requirementCompletionStatus);
@@ -362,15 +362,15 @@ namespace CareTogether.Engines
             activeAdults.Count > 0 && requirementScope switch
             {
                 VolunteerFamilyRequirementScope.AllAdultsInTheFamily => activeAdults.All(a =>
-                    RequirementMetOrExempted(requirementActionName, supersededAtUtc, utcNow,
+                    SharedCalculations.RequirementMetOrExempted(requirementActionName, supersededAtUtc, utcNow,
                         a.CompletedRequirements, a.ExemptedRequirements)),
                 VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily => activeAdults.All(a =>
                     (removedIndividualRoles.TryGetValue(a.Id, out var removedRoles)
                             && removedRoles.Any(x => x.RoleName == roleName)) ||
-                    RequirementMetOrExempted(requirementActionName, supersededAtUtc, utcNow,
+                    SharedCalculations.RequirementMetOrExempted(requirementActionName, supersededAtUtc, utcNow,
                         a.CompletedRequirements, a.ExemptedRequirements)),
                 VolunteerFamilyRequirementScope.OncePerFamily =>
-                    RequirementMetOrExempted(requirementActionName, supersededAtUtc, utcNow,
+                    SharedCalculations.RequirementMetOrExempted(requirementActionName, supersededAtUtc, utcNow,
                         completedFamilyRequirements, exemptedFamilyRequirements),
                 _ => throw new NotImplementedException(
                     $"The volunteer family requirement scope '{requirementScope}' has not been implemented.")
@@ -384,29 +384,18 @@ namespace CareTogether.Engines
             requirement.Scope switch
             {
                 VolunteerFamilyRequirementScope.AllAdultsInTheFamily => activeAdults.Where(a =>
-                    !RequirementMetOrExempted(requirement.ActionName, supersededAtUtc, utcNow,
+                    !SharedCalculations.RequirementMetOrExempted(requirement.ActionName, supersededAtUtc, utcNow,
                         a.CompletedRequirements, a.ExemptedRequirements))
                     .Select(a => a.Id).ToList(),
                 VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily => activeAdults.Where(a =>
                     !(removedIndividualRoles.TryGetValue(a.Id, out var removedRoles)
                         && removedRoles.Any(x => x.RoleName == roleName)) &&
-                    !RequirementMetOrExempted(requirement.ActionName, supersededAtUtc, utcNow,
+                    !SharedCalculations.RequirementMetOrExempted(requirement.ActionName, supersededAtUtc, utcNow,
                         a.CompletedRequirements, a.ExemptedRequirements))
                     .Select(a => a.Id).ToList(),
                 VolunteerFamilyRequirementScope.OncePerFamily => new List<Guid>(),
                 _ => throw new NotImplementedException(
                     $"The volunteer family requirement scope '{requirement.Scope}' has not been implemented.")
             };
-
-        internal static bool RequirementMetOrExempted(string requirementName,
-            DateTime? policySupersededAtUtc, DateTime utcNow,
-            ImmutableList<CompletedRequirementInfo> completedRequirements,
-            ImmutableList<ExemptedRequirementInfo> exemptedRequirements) =>
-            completedRequirements.Any(completed =>
-                completed.RequirementName == requirementName &&
-                (policySupersededAtUtc == null || completed.CompletedAtUtc < policySupersededAtUtc)) ||
-            exemptedRequirements.Any(exempted =>
-                exempted.RequirementName == requirementName &&
-                (exempted.ExemptionExpiresAtUtc == null || exempted.ExemptionExpiresAtUtc > utcNow));
     }
 }

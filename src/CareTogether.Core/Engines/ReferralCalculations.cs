@@ -12,7 +12,10 @@ namespace CareTogether.Engines
             ReferralPolicy referralPolicy, ReferralEntry referralEntry, DateTime utcNow)
         {
             var missingIntakeRequirements = referralPolicy.RequiredIntakeActionNames.Where(requiredAction =>
-                !referralEntry.CompletedRequirements.Any(completed => completed.RequirementName == requiredAction))
+                !SharedCalculations.RequirementMetOrExempted(requiredAction,
+                    policySupersededAtUtc: null, utcNow: utcNow,
+                    completedRequirements: referralEntry.CompletedRequirements,
+                    exemptedRequirements: referralEntry.ExemptedRequirements))
                 .ToImmutableList();
 
             var missingCustomFields = referralPolicy.CustomFields.Where(customField =>
