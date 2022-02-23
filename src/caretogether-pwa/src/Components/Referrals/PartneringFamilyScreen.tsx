@@ -1,4 +1,4 @@
-import { Container, Toolbar, Grid, Button, Menu, MenuItem, MenuList, useMediaQuery, useTheme, IconButton } from '@material-ui/core';
+import { Container, Toolbar, Grid, Button, Menu, MenuItem, MenuList, useMediaQuery, useTheme, IconButton, Tooltip } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { ActionRequirement, ArrangementPolicy, CombinedFamilyInfo, CompletedCustomFieldInfo, CustomFieldType, Permission, ReferralCloseReason } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
@@ -29,6 +29,7 @@ import { HeaderContent, HeaderTitle } from '../Header';
 import { ArrowBack } from '@material-ui/icons';
 import { useNavigate } from 'react-router-dom';
 import { usePermissions } from '../../Model/SessionModel';
+import { useUserLookup } from '../../Model/DirectoryModel';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -83,6 +84,8 @@ export function PartneringFamilyScreen() {
   
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
+
+  const userLookup = useUserLookup();
 
   const partneringFamilies = useRecoilValue(partneringFamiliesData);
   const policy = useRecoilValue(policyData);
@@ -287,8 +290,12 @@ export function PartneringFamilyScreen() {
           <ul className={classes.familyRequirementsList}>
             {partneringFamily.partneringFamilyInfo?.openReferral?.completedRequirements?.map((completed, i) => (
               <li key={i}>
-                ✅ {completed.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                {completed.completedAtUtc && <span style={{float:'right',marginRight:20}}>{format(completed.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
+                <Tooltip title={<PersonName person={userLookup(completed.userId)} />}>
+                  <span>
+                    ✅ {completed.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    {completed.completedAtUtc && <span style={{float:'right',marginRight:20}}>{format(completed.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
+                  </span>
+                </Tooltip>
               </li>
             ))}
           </ul>

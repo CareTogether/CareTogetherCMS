@@ -1,7 +1,7 @@
-import { Card, CardActions, CardContent, CardHeader, Divider, IconButton, ListItemText, makeStyles, Menu, MenuItem, MenuList, Typography, useMediaQuery, useTheme } from '@material-ui/core';
+import { Card, CardActions, CardContent, CardHeader, Divider, IconButton, ListItemText, makeStyles, Menu, MenuItem, MenuList, Tooltip, Typography, useMediaQuery, useTheme } from '@material-ui/core';
 import React, { useState } from 'react';
 import { ArrangementPhase, Arrangement, CombinedFamilyInfo, ActionRequirement, Person, FunctionRequirement, ArrangementFunction, ChildInvolvement } from '../../GeneratedClient';
-import { useFamilyLookup, usePersonLookup } from '../../Model/DirectoryModel';
+import { useFamilyLookup, usePersonLookup, useUserLookup } from '../../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
 import { FamilyName } from '../Families/FamilyName';
 import { format } from 'date-fns';
@@ -52,9 +52,10 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
   const classes = useStyles();
 
   const policy = useRecoilValue(policyData);
-  
+
   const familyLookup = useFamilyLookup();
   const personLookup = usePersonLookup();
+  const userLookup = useUserLookup();
   
   const [arrangementRecordMenuAnchor, setArrangementRecordMenuAnchor] = useState<{anchor: Element, arrangement: Arrangement} | null>(null);
   const [recordArrangementStepParameter, setRecordArrangementStepParameter] = useState<{requirementName: string, requirementInfo: ActionRequirement, arrangement: Person} | null>(null);
@@ -143,8 +144,12 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
                 {arrangement.completedRequirements?.map((completed, i) => (
                   <li key={i}>
                     <CardInfoRow icon='✅'>
-                      {completed.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                      {completed.completedAtUtc && <span style={{float:'right'}}>{format(completed.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
+                      <Tooltip title={<PersonName person={userLookup(completed.userId)} />}>
+                        <span>
+                          {completed.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                          {completed.completedAtUtc && <span style={{float:'right'}}>{format(completed.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
+                        </span>
+                      </Tooltip>
                     </CardInfoRow>
                   </li>
                 ))}
