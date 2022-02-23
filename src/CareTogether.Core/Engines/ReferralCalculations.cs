@@ -45,12 +45,12 @@ namespace CareTogether.Engines
             DateTime utcNow)
         {
             var missingSetupRequirements = CalculateMissingSetupRequirements(arrangementPolicy.RequiredSetupActionNames,
-                arrangement.CompletedRequirements);
+                arrangement.CompletedRequirements, arrangement.ExemptedRequirements, utcNow);
             var missingMonitoringRequirements = CalculateMissingMonitoringRequirements(arrangementPolicy.RequiredMonitoringActions,
                 arrangement.StartedAtUtc, arrangement.EndedAtUtc,
                 arrangement.CompletedRequirements, arrangement.ChildrenLocationHistory, utcNow);
             var missingCloseoutRequirements = CalculateMissingCloseoutRequirements(arrangementPolicy.RequiredCloseoutActionNames,
-                arrangement.CompletedRequirements);
+                arrangement.CompletedRequirements, arrangement.ExemptedRequirements, utcNow);
             var missingFunctionAssignments = CalculateMissingFunctionAssignments(arrangementPolicy.ArrangementFunctions,
                 arrangement.FamilyVolunteerAssignments, arrangement.IndividualVolunteerAssignments);
 
@@ -88,10 +88,14 @@ namespace CareTogether.Engines
                 : ArrangementPhase.SettingUp;
 
         internal static ImmutableList<MissingArrangementRequirement> CalculateMissingSetupRequirements(
-            ImmutableList<string> requiredSetupActionNames, ImmutableList<CompletedRequirementInfo> completedRequirements) =>
+            ImmutableList<string> requiredSetupActionNames, ImmutableList<CompletedRequirementInfo> completedRequirements,
+            ImmutableList<ExemptedRequirementInfo> exemptedRequirements, DateTime utcNow) =>
             requiredSetupActionNames
                 .Where(requiredAction =>
-                    !completedRequirements.Any(completed => completed.RequirementName == requiredAction))
+                    !SharedCalculations.RequirementMetOrExempted(requiredAction,
+                        policySupersededAtUtc: null, utcNow: utcNow,
+                        completedRequirements: completedRequirements,
+                        exemptedRequirements: exemptedRequirements))
                 .Select(requiredAction => new MissingArrangementRequirement(requiredAction, null, null))
                 .ToImmutableList();
 
@@ -280,10 +284,14 @@ namespace CareTogether.Engines
         }
 
         internal static ImmutableList<MissingArrangementRequirement> CalculateMissingCloseoutRequirements(
-            ImmutableList<string> requiredCloseoutActionNames, ImmutableList<CompletedRequirementInfo> completedRequirements) =>
+            ImmutableList<string> requiredCloseoutActionNames, ImmutableList<CompletedRequirementInfo> completedRequirements,
+            ImmutableList<ExemptedRequirementInfo> exemptedRequirements, DateTime utcNow) =>
             requiredCloseoutActionNames
                 .Where(requiredAction =>
-                    !completedRequirements.Any(completed => completed.RequirementName == requiredAction))
+                    !SharedCalculations.RequirementMetOrExempted(requiredAction,
+                        policySupersededAtUtc: null, utcNow: utcNow,
+                        completedRequirements: completedRequirements,
+                        exemptedRequirements: exemptedRequirements))
                 .Select(requiredAction => new MissingArrangementRequirement(requiredAction, null, null))
                 .ToImmutableList();
 
