@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, FormControlLabel, FormLabel, Grid, InputLabel, MenuItem, Radio, RadioGroup, Select } from '@material-ui/core';
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, FormControlLabel, FormLabel, Grid, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@material-ui/core';
 import { CombinedFamilyInfo, Arrangement, Person, ChildLocationPlan, ChildInvolvement } from '../../GeneratedClient';
 import { KeyboardDateTimePicker } from '@material-ui/pickers';
 import { useBackdrop } from '../RequestBackdrop';
-import { useFamilyLookup, usePersonLookup } from '../../Model/DirectoryModel';
+import { useDirectoryModel, useFamilyLookup, usePersonLookup } from '../../Model/DirectoryModel';
 import { useReferralsModel } from '../../Model/ReferralsModel';
 import { FamilyName } from '../Families/FamilyName';
 import { PersonName } from '../Families/PersonName';
@@ -31,6 +31,7 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
   const [selectedAssigneeKey, setSelectedAssigneeKey] = useState('');
   const [changedAtLocal, setChangedAtLocal] = useState(new Date());
   const [plan, setPlan] = useState<ChildLocationPlan | null>(null);
+  const [notes, setNotes] = useState("");
 
   function candidateItem(candidate: {familyId: string, adult: Person}) {
     return {
@@ -66,6 +67,7 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
   const assigneeIsFromPartneringFamily = candidatePartneringFamilyAssignees.some(ca => ca.key === selectedAssigneeKey);
 
   const referralsModel = useReferralsModel();
+  const directoryModel = useDirectoryModel();
   
   const withBackdrop = useBackdrop();
   
@@ -75,12 +77,14 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
         alert("No family was selected. Please try again.");
       } else if (plan == null) {
         alert("No plan was selected. Please try again.");
+      } else if (notes === "") {
+        alert("You must enter a note for this requirement.");
       } else {
         const assigneeInfo = candidatePartneringFamilyAssignees.concat(allCandidateVolunteerAssignees).find(ca => ca.key === selectedAssigneeKey);
-        const additionalExplanation = ''; //TODO:!!
+        if (notes !== "")
+          await directoryModel.createDraftNote(partneringFamily.family?.id as string, notes);
         await referralsModel.trackChildLocation(partneringFamily.family?.id as string, referralId, arrangement.id!,
-          assigneeInfo!.familyId, assigneeInfo!.personId, changedAtLocal, plan,
-          additionalExplanation);
+          assigneeInfo!.familyId, assigneeInfo!.personId, changedAtLocal, plan);
         //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
         onClose();
       }
@@ -137,6 +141,14 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
               disableFuture format="MM/dd/yyyy hh:mm a"
               onChange={(date) => date && setChangedAtLocal(date)}
               showTodayButton />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              id="notes" required
+              label="Notes" placeholder="Space for any general notes"
+              multiline fullWidth variant="outlined" minRows={6} size="medium"
+              value={notes} onChange={e => setNotes(e.target.value)}
+            />
           </Grid>
         </Grid>
       </DialogContent>

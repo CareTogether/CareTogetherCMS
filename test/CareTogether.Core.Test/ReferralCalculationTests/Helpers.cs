@@ -23,7 +23,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             params (ChildLocationPlan plan, int month, int day)[] values) =>
             values
                 .Select(value => new ChildLocationHistoryEntry(
-                    Guid.Empty, new DateTime(2022, value.month, value.day), Guid.Empty, value.plan, ""))
+                    Guid.Empty, new DateTime(2022, value.month, value.day), Guid.Empty, value.plan))
                 .ToImmutableSortedSet();
 
         public static ArrangementFunction FunctionWithoutEligibility(

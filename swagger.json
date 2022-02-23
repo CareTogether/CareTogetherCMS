@@ -2045,9 +2045,6 @@
           },
           "plan": {
             "$ref": "#/components/schemas/ChildLocationPlan"
-          },
-          "additionalExplanation": {
-            "type": "string"
           }
         }
       },
@@ -3533,9 +3530,6 @@
               },
               "plan": {
                 "$ref": "#/components/schemas/ChildLocationPlan"
-              },
-              "additionalExplanation": {
-                "type": "string"
               }
             }
           }

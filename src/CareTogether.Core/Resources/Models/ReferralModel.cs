@@ -144,7 +144,7 @@ namespace CareTogether.Resources.Models
                         {
                             ChildrenLocationHistory = arrangementEntry.ChildrenLocationHistory.Add(
                                 new ChildLocationHistoryEntry(userId, c.ChangedAtUtc,
-                                    c.ChildLocationFamilyId, c.Plan, c.AdditionalExplanation))
+                                    c.ChildLocationFamilyId, c.Plan))
                         },
                         EndArrangement c => arrangementEntry with
                         {

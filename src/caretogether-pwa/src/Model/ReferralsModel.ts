@@ -169,7 +169,7 @@ export function useReferralsModel() {
   const trackChildLocation = useArrangementCommandCallbackWithLocation(
     async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
       childLocationFamilyId: string, childLocationAdultId: string, changedAtLocal: Date,
-      childLocationPlan: ChildLocationPlan, additionalExplanation: string) => {
+      childLocationPlan: ChildLocationPlan) => {
       const command = new TrackChildLocationChange({
         familyId: partneringFamilyId,
         referralId: referralId,
@@ -179,7 +179,6 @@ export function useReferralsModel() {
       //command.childLocationAdultId = childLocationAdultId; TODO: Implement this!
       command.changedAtUtc = changedAtLocal;
       command.plan = childLocationPlan;
-      command.additionalExplanation = additionalExplanation;
       return command;
     });
   const closeReferral = useReferralCommandCallbackWithLocation(

@@ -26,7 +26,7 @@ namespace CareTogether.Resources
     public sealed record IndividualVolunteerAssignment(Guid FamilyId, Guid PersonId, string ArrangementFunction);
     public sealed record FamilyVolunteerAssignment(Guid FamilyId, string ArrangementFunction);
     public sealed record ChildLocationHistoryEntry(Guid UserId, DateTime TimestampUtc,
-        Guid ChildLocationFamilyId, ChildLocationPlan Plan, string AdditionalExplanation) : IComparable<ChildLocationHistoryEntry>
+        Guid ChildLocationFamilyId, ChildLocationPlan Plan) : IComparable<ChildLocationHistoryEntry>
     {
         public int CompareTo(ChildLocationHistoryEntry? other)
         {
@@ -82,7 +82,7 @@ namespace CareTogether.Resources
         string RequirementName)
         : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
     public sealed record TrackChildLocationChange(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
-        DateTime ChangedAtUtc, Guid ChildLocationFamilyId, ChildLocationPlan Plan, string AdditionalExplanation)
+        DateTime ChangedAtUtc, Guid ChildLocationFamilyId, ChildLocationPlan Plan)
         : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
     public sealed record EndArrangement(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
         DateTime EndedAtUtc)

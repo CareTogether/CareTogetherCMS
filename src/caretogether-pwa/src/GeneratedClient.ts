@@ -3367,7 +3367,6 @@ export class ChildLocationHistoryEntry implements IChildLocationHistoryEntry {
     timestampUtc?: Date;
     childLocationFamilyId?: string;
     plan?: ChildLocationPlan;
-    additionalExplanation?: string;
 
     constructor(data?: IChildLocationHistoryEntry) {
         if (data) {
@@ -3384,7 +3383,6 @@ export class ChildLocationHistoryEntry implements IChildLocationHistoryEntry {
             this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
             this.childLocationFamilyId = _data["childLocationFamilyId"];
             this.plan = _data["plan"];
-            this.additionalExplanation = _data["additionalExplanation"];
         }
     }
 
@@ -3401,7 +3399,6 @@ export class ChildLocationHistoryEntry implements IChildLocationHistoryEntry {
         data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
         data["childLocationFamilyId"] = this.childLocationFamilyId;
         data["plan"] = this.plan;
-        data["additionalExplanation"] = this.additionalExplanation;
         return data;
     }
 }
@@ -3411,7 +3408,6 @@ export interface IChildLocationHistoryEntry {
     timestampUtc?: Date;
     childLocationFamilyId?: string;
     plan?: ChildLocationPlan;
-    additionalExplanation?: string;
 }
 
 export enum ChildLocationPlan {
@@ -6222,7 +6218,6 @@ export class TrackChildLocationChange extends ArrangementCommand implements ITra
     changedAtUtc?: Date;
     childLocationFamilyId?: string;
     plan?: ChildLocationPlan;
-    additionalExplanation?: string;
 
     constructor(data?: ITrackChildLocationChange) {
         super(data);
@@ -6235,7 +6230,6 @@ export class TrackChildLocationChange extends ArrangementCommand implements ITra
             this.changedAtUtc = _data["changedAtUtc"] ? new Date(_data["changedAtUtc"].toString()) : <any>undefined;
             this.childLocationFamilyId = _data["childLocationFamilyId"];
             this.plan = _data["plan"];
-            this.additionalExplanation = _data["additionalExplanation"];
         }
     }
 
@@ -6251,7 +6245,6 @@ export class TrackChildLocationChange extends ArrangementCommand implements ITra
         data["changedAtUtc"] = this.changedAtUtc ? this.changedAtUtc.toISOString() : <any>undefined;
         data["childLocationFamilyId"] = this.childLocationFamilyId;
         data["plan"] = this.plan;
-        data["additionalExplanation"] = this.additionalExplanation;
         super.toJSON(data);
         return data;
     }
@@ -6261,7 +6254,6 @@ export interface ITrackChildLocationChange extends IArrangementCommand {
     changedAtUtc?: Date;
     childLocationFamilyId?: string;
     plan?: ChildLocationPlan;
-    additionalExplanation?: string;
 }
 
 export class UnexemptArrangementRequirement extends ArrangementCommand implements IUnexemptArrangementRequirement {
