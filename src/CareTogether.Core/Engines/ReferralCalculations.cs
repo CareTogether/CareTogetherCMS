@@ -118,7 +118,7 @@ namespace CareTogether.Engines
                 : ImmutableList<DateTime>.Empty)
                 .Where(missingDueDate => !exemptedRequirements.Any(exempted =>
                     exempted.RequirementName == monitoringRequirement.ActionName &&
-                    (!exempted.DueDate.HasValue || exempted.DueDate == missingDueDate) &&
+                    (!exempted.DueDate.HasValue || exempted.DueDate == missingDueDate.ToUniversalTime()) &&
                     (exempted.ExemptionExpiresAtUtc == null || exempted.ExemptionExpiresAtUtc > utcNow)))
                 .Select(missingDueDate =>
                     new MissingArrangementRequirement(monitoringRequirement.ActionName,
