@@ -337,13 +337,13 @@ export function PartneringFamilyScreen() {
           keepMounted
           open={Boolean(requirementMoreMenuAnchor)}
           onClose={() => setRequirementMoreMenuAnchor(null)}>
-          { (typeof requirementMoreMenuAnchor?.requirement === 'string') && permissions(Permission.EditApprovalRequirementExemption) &&
+          { (typeof requirementMoreMenuAnchor?.requirement === 'string') &&
             <MenuItem onClick={() => selectExempt(requirementMoreMenuAnchor?.requirement as string)}>Exempt</MenuItem>
             }
           {/* { (requirementMoreMenuAnchor?.requirement instanceof CompletedRequirementInfo) && permissions(Permission.EditApprovalRequirementCompletion) &&
             <MenuItem onClick={() => selectMarkIncomplete(requirementMoreMenuAnchor?.requirement as CompletedRequirementInfo)}>Mark Incomplete</MenuItem>
             } */}
-          { (requirementMoreMenuAnchor?.requirement instanceof ExemptedRequirementInfo) && permissions(Permission.EditApprovalRequirementExemption) &&
+          { (requirementMoreMenuAnchor?.requirement instanceof ExemptedRequirementInfo) &&
             <MenuItem onClick={() => selectUnexempt(requirementMoreMenuAnchor?.requirement as ExemptedRequirementInfo)}>Unexempt</MenuItem>
             }
         </Menu>
