@@ -45,6 +45,9 @@ namespace CareTogether.Resources
     public sealed record CompleteReferralRequirement(Guid FamilyId, Guid ReferralId,
         Guid CompletedRequirementId, string RequirementName, DateTime CompletedAtUtc, Guid? UploadedDocumentId)
         : ReferralCommand(FamilyId, ReferralId);
+    public sealed record MarkReferralRequirementIncomplete(Guid FamilyId, Guid ReferralId,
+        Guid CompletedRequirementId, string RequirementName)
+        : ReferralCommand(FamilyId, ReferralId);
     public sealed record ExemptReferralRequirement(Guid FamilyId, Guid ReferralId,
         string RequirementName, string AdditionalComments, DateTime? ExemptionExpiresAtUtc)
         : ReferralCommand(FamilyId, ReferralId);
@@ -74,6 +77,9 @@ namespace CareTogether.Resources
         : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
     public sealed record CompleteArrangementRequirement(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
         Guid CompletedRequirementId, string RequirementName, DateTime CompletedAtUtc, Guid? UploadedDocumentId)
+        : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
+    public sealed record MarkArrangementRequirementIncomplete(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
+        Guid CompletedRequirementId, string RequirementName)
         : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
     public sealed record ExemptArrangementRequirement(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
         string RequirementName, DateTime? DueDate, string AdditionalComments, DateTime? ExemptionExpiresAtUtc)

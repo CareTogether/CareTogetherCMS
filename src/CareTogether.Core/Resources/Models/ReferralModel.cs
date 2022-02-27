@@ -54,6 +54,11 @@ namespace CareTogether.Resources.Models
                                 new CompletedRequirementInfo(userId, timestampUtc, c.CompletedRequirementId,
                                     c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId))
                         },
+                        MarkReferralRequirementIncomplete c => referralEntry with
+                        {
+                            CompletedRequirements = referralEntry.CompletedRequirements.RemoveAll(x =>
+                                x.RequirementName == c.RequirementName && x.CompletedRequirementId == c.CompletedRequirementId),
+                        },
                         ExemptReferralRequirement c => referralEntry with
                         {
                             ExemptedRequirements = referralEntry.ExemptedRequirements.Add(
@@ -130,6 +135,11 @@ namespace CareTogether.Resources.Models
                             CompletedRequirements = arrangementEntry.CompletedRequirements.Add(
                                 new CompletedRequirementInfo(userId, timestampUtc, c.CompletedRequirementId,
                                     c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId))
+                        },
+                        MarkArrangementRequirementIncomplete c => arrangementEntry with
+                        {
+                            CompletedRequirements = arrangementEntry.CompletedRequirements.RemoveAll(x =>
+                                x.RequirementName == c.RequirementName && x.CompletedRequirementId == c.CompletedRequirementId),
                         },
                         ExemptArrangementRequirement c => arrangementEntry with
                         {
