@@ -17,6 +17,7 @@ import { AssignArrangementFunctionDialog } from './AssignArrangementFunctionDial
 import { TrackChildLocationDialog } from './TrackChildLocationDialog';
 import { ExemptArrangementRequirementDialog } from './ExemptArrangementRequirementDialog';
 import { UnexemptArrangementRequirementDialog } from './UnexemptArrangementRequirementDialog';
+import { MarkArrangementStepIncompleteDialog } from './MarkArrangementStepIncompleteDialog';
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -89,11 +90,11 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
     setRequirementMoreMenuAnchor(null);
     setExemptParameter({requirement: requirement});
   }
-  // const [markIncompleteParameter, setMarkIncompleteParameter] = useState<{completedRequirement: CompletedRequirementInfo} | null>(null);
-  // function selectMarkIncomplete(completedRequirement: CompletedRequirementInfo) {
-  //   setRequirementMoreMenuAnchor(null);
-  //   setMarkIncompleteParameter({completedRequirement: completedRequirement});
-  // }
+  const [markIncompleteParameter, setMarkIncompleteParameter] = useState<{completedRequirement: CompletedRequirementInfo} | null>(null);
+  function selectMarkIncomplete(completedRequirement: CompletedRequirementInfo) {
+    setRequirementMoreMenuAnchor(null);
+    setMarkIncompleteParameter({completedRequirement: completedRequirement});
+  }
   const [unexemptParameter, setUnexemptParameter] = useState<{exemptedRequirement: ExemptedRequirementInfo} | null>(null);
   function selectUnexempt(exemptedRequirement: ExemptedRequirementInfo) {
     setRequirementMoreMenuAnchor(null);
@@ -211,17 +212,17 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
                 { (requirementMoreMenuAnchor?.requirement instanceof MissingArrangementRequirement) &&
                   <MenuItem onClick={() => selectExempt(requirementMoreMenuAnchor?.requirement as MissingArrangementRequirement)}>Exempt</MenuItem>
                   }
-                {/* { (requirementMoreMenuAnchor?.requirement instanceof CompletedRequirementInfo) &&
+                { (requirementMoreMenuAnchor?.requirement instanceof CompletedRequirementInfo) &&
                   <MenuItem onClick={() => selectMarkIncomplete(requirementMoreMenuAnchor?.requirement as CompletedRequirementInfo)}>Mark Incomplete</MenuItem>
-                  } */}
+                  }
                 { (requirementMoreMenuAnchor?.requirement instanceof ExemptedRequirementInfo) &&
                   <MenuItem onClick={() => selectUnexempt(requirementMoreMenuAnchor?.requirement as ExemptedRequirementInfo)}>Unexempt</MenuItem>
                   }
               </Menu>
               {(exemptParameter && <ExemptArrangementRequirementDialog partneringFamilyId={partneringFamily.family!.id!} referralId={referralId} arrangementId={arrangement.id!} requirement={exemptParameter.requirement}
                 onClose={() => setExemptParameter(null)} />) || null}
-              {/* {(markIncompleteParameter && <MarkArrangementStepIncompleteDialog partneringFamily={partneringFamily} referralId={referralId} arrangementId={arrangement.id!} completedRequirement={markIncompleteParameter.completedRequirement}
-                onClose={() => setMarkIncompleteParameter(null)} />) || null} */}
+              {(markIncompleteParameter && <MarkArrangementStepIncompleteDialog partneringFamily={partneringFamily} referralId={referralId} arrangementId={arrangement.id!} completedRequirement={markIncompleteParameter.completedRequirement}
+                onClose={() => setMarkIncompleteParameter(null)} />) || null}
               {(unexemptParameter && <UnexemptArrangementRequirementDialog partneringFamilyId={partneringFamily.family!.id!} referralId={referralId} arrangementId={arrangement.id!} exemptedRequirement={unexemptParameter.exemptedRequirement}
                 onClose={() => setUnexemptParameter(null)} />) || null}
             </Typography>

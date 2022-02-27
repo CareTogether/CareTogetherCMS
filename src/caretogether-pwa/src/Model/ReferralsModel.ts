@@ -1,6 +1,6 @@
 import { selector, useRecoilCallback } from "recoil";
 import { authenticatingFetch } from "../Auth";
-import { ReferralCommand, ReferralsClient, ArrangementCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement, StartArrangement, EndArrangement, AssignVolunteerFamily, AssignIndividualVolunteer, ReferralCloseReason, CloseReferral, CreateReferral, TrackChildLocationChange, ChildLocationPlan, UpdateCustomReferralField, CustomField, ExemptReferralRequirement, UnexemptReferralRequirement, ExemptArrangementRequirement, UnexemptArrangementRequirement, MissingArrangementRequirement, ExemptedRequirementInfo } from "../GeneratedClient";
+import { ReferralCommand, ReferralsClient, ArrangementCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement, StartArrangement, EndArrangement, AssignVolunteerFamily, AssignIndividualVolunteer, ReferralCloseReason, CloseReferral, CreateReferral, TrackChildLocationChange, ChildLocationPlan, UpdateCustomReferralField, CustomField, ExemptReferralRequirement, UnexemptReferralRequirement, ExemptArrangementRequirement, UnexemptArrangementRequirement, MissingArrangementRequirement, ExemptedRequirementInfo, MarkReferralRequirementIncomplete, CompletedRequirementInfo, MarkArrangementRequirementIncomplete } from "../GeneratedClient";
 import { visibleFamiliesData } from "./ModelLoader";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 
@@ -81,6 +81,16 @@ export function useReferralsModel() {
         command.uploadedDocumentId = documentId;
       return command;
     });
+  const markReferralRequirementIncomplete = useReferralCommandCallbackWithLocation(
+    async (organizationId, locationId, partneringFamilyId, referralId: string, completedRequirement: CompletedRequirementInfo) => {
+      const command = new MarkReferralRequirementIncomplete({
+        familyId: partneringFamilyId,
+        referralId: referralId
+      });
+      command.requirementName = completedRequirement.requirementName;
+      command.completedRequirementId = completedRequirement.completedRequirementId;
+      return command;
+    });
   const exemptReferralRequirement = useReferralCommandCallbackWithLocation(
     async (organizationId, locationId, partneringFamilyId, referralId: string, requirementName: string,
       additionalComments: string, exemptionExpiresAtLocal: Date | null) => {
@@ -126,6 +136,17 @@ export function useReferralsModel() {
       command.completedAtUtc = completedAtLocal;
       if (documentId != null)
         command.uploadedDocumentId = documentId;
+      return command;
+    });
+  const markArrangementRequirementIncomplete = useArrangementCommandCallbackWithLocation(
+    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string, completedRequirement: CompletedRequirementInfo) => {
+      const command = new MarkArrangementRequirementIncomplete({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementId: arrangementId
+      });
+      command.requirementName = completedRequirement.requirementName;
+      command.completedRequirementId = completedRequirement.completedRequirementId;
       return command;
     });
   const exemptArrangementRequirement = useArrangementCommandCallbackWithLocation(
@@ -250,10 +271,12 @@ export function useReferralsModel() {
   
   return {
     completeReferralRequirement,
+    markReferralRequirementIncomplete,
     exemptReferralRequirement,
     unexemptReferralRequirement,
     updateCustomReferralField,
     completeArrangementRequirement,
+    markArrangementRequirementIncomplete,
     exemptArrangementRequirement,
     unexemptArrangementRequirement,
     createArrangement,
