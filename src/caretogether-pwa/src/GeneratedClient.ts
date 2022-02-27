@@ -5582,6 +5582,11 @@ export abstract class ReferralCommand implements IReferralCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "MarkReferralRequirementIncomplete") {
+            let result = new MarkReferralRequirementIncomplete();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "UnexemptReferralRequirement") {
             let result = new UnexemptReferralRequirement();
             result.init(data);
@@ -5769,6 +5774,44 @@ export interface IExemptReferralRequirement extends IReferralCommand {
     exemptionExpiresAtUtc?: Date | undefined;
 }
 
+export class MarkReferralRequirementIncomplete extends ReferralCommand implements IMarkReferralRequirementIncomplete {
+    completedRequirementId?: string;
+    requirementName?: string;
+
+    constructor(data?: IMarkReferralRequirementIncomplete) {
+        super(data);
+        this._discriminator = "MarkReferralRequirementIncomplete";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.completedRequirementId = _data["completedRequirementId"];
+            this.requirementName = _data["requirementName"];
+        }
+    }
+
+    static fromJS(data: any): MarkReferralRequirementIncomplete {
+        data = typeof data === 'object' ? data : {};
+        let result = new MarkReferralRequirementIncomplete();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["completedRequirementId"] = this.completedRequirementId;
+        data["requirementName"] = this.requirementName;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IMarkReferralRequirementIncomplete extends IReferralCommand {
+    completedRequirementId?: string;
+    requirementName?: string;
+}
+
 export class UnexemptReferralRequirement extends ReferralCommand implements IUnexemptReferralRequirement {
     requirementName?: string;
 
@@ -5903,6 +5946,11 @@ export abstract class ArrangementCommand implements IArrangementCommand {
         }
         if (data["discriminator"] === "ExemptArrangementRequirement") {
             let result = new ExemptArrangementRequirement();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "MarkArrangementRequirementIncomplete") {
+            let result = new MarkArrangementRequirementIncomplete();
             result.init(data);
             return result;
         }
@@ -6186,6 +6234,44 @@ export interface IExemptArrangementRequirement extends IArrangementCommand {
     dueDate?: Date | undefined;
     additionalComments?: string;
     exemptionExpiresAtUtc?: Date | undefined;
+}
+
+export class MarkArrangementRequirementIncomplete extends ArrangementCommand implements IMarkArrangementRequirementIncomplete {
+    completedRequirementId?: string;
+    requirementName?: string;
+
+    constructor(data?: IMarkArrangementRequirementIncomplete) {
+        super(data);
+        this._discriminator = "MarkArrangementRequirementIncomplete";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.completedRequirementId = _data["completedRequirementId"];
+            this.requirementName = _data["requirementName"];
+        }
+    }
+
+    static fromJS(data: any): MarkArrangementRequirementIncomplete {
+        data = typeof data === 'object' ? data : {};
+        let result = new MarkArrangementRequirementIncomplete();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["completedRequirementId"] = this.completedRequirementId;
+        data["requirementName"] = this.requirementName;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IMarkArrangementRequirementIncomplete extends IArrangementCommand {
+    completedRequirementId?: string;
+    requirementName?: string;
 }
 
 export class StartArrangement extends ArrangementCommand implements IStartArrangement {

@@ -125,6 +125,7 @@ namespace CareTogether.Engines
                 {
                     CreateReferral => null,
                     CompleteReferralRequirement => null,
+                    MarkReferralRequirementIncomplete => null,
                     ExemptReferralRequirement => null,
                     UnexemptReferralRequirement => null,
                     UpdateCustomReferralField => null,
@@ -145,6 +146,7 @@ namespace CareTogether.Engines
                     AssignVolunteerFamily => null,
                     StartArrangement => null,
                     CompleteArrangementRequirement => null,
+                    MarkArrangementRequirementIncomplete => null,
                     ExemptArrangementRequirement => null,
                     UnexemptArrangementRequirement => null,
                     TrackChildLocationChange => null,

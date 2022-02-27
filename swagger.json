@@ -3167,6 +3167,7 @@
             "CompleteReferralRequirement": "#/components/schemas/CompleteReferralRequirement",
             "CreateReferral": "#/components/schemas/CreateReferral",
             "ExemptReferralRequirement": "#/components/schemas/ExemptReferralRequirement",
+            "MarkReferralRequirementIncomplete": "#/components/schemas/MarkReferralRequirementIncomplete",
             "UnexemptReferralRequirement": "#/components/schemas/UnexemptReferralRequirement",
             "UpdateCustomReferralField": "#/components/schemas/UpdateCustomReferralField"
           }
@@ -3280,6 +3281,26 @@
           }
         ]
       },
+      "MarkReferralRequirementIncomplete": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "completedRequirementId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "requirementName": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
       "UnexemptReferralRequirement": {
         "allOf": [
           {
@@ -3333,6 +3354,7 @@
             "CreateArrangement": "#/components/schemas/CreateArrangement",
             "EndArrangement": "#/components/schemas/EndArrangement",
             "ExemptArrangementRequirement": "#/components/schemas/ExemptArrangementRequirement",
+            "MarkArrangementRequirementIncomplete": "#/components/schemas/MarkArrangementRequirementIncomplete",
             "StartArrangement": "#/components/schemas/StartArrangement",
             "TrackChildLocationChange": "#/components/schemas/TrackChildLocationChange",
             "UnexemptArrangementRequirement": "#/components/schemas/UnexemptArrangementRequirement"
@@ -3499,6 +3521,26 @@
                 "type": "string",
                 "format": "date-time",
                 "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "MarkArrangementRequirementIncomplete": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "completedRequirementId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "requirementName": {
+                "type": "string"
               }
             }
           }
