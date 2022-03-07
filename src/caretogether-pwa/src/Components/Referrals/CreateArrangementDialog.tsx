@@ -81,7 +81,7 @@ export function CreateArrangementDialog({referralId, arrangementPolicy, onClose}
                 <RadioGroup aria-label="familyMember" name="familyMember"
                   value={partneringFamilyPersonId} onChange={e => setFields({...fields, partneringFamilyPersonId: e.target.value})}>
                   {applicableFamilyMembers.map(person => (
-                    <FormControlLabel key={person.id} value={person.id} control={<Radio size="small" />} label={person.firstName} />
+                    <FormControlLabel key={person.id} value={person.id} control={<Radio size="small" />} label={person.firstName!} />
                   ))}
                 </RadioGroup>
               </FormControl>
