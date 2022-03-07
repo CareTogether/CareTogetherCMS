@@ -8,14 +8,22 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { RecoilRoot } from 'recoil';
 import { globalMsalInstance } from './Auth';
-import { MuiPickersUtilsProvider } from '@material-ui/pickers';
-import DateFnsUtils from '@date-io/date-fns';
+import LocalizationProvider from '@mui/lab/LocalizationProvider';
+import DateAdapter from '@mui/lab/AdapterDateFns';
 import { ModelLoader } from './Model/ModelLoader';
-import { ThemeProvider } from '@material-ui/core';
-import { createTheme } from '@material-ui/core/styles';
-import amber from '@material-ui/core/colors/amber';
+import { Theme, StyledEngineProvider } from '@mui/material';
+import { ThemeProvider } from '@mui/material/styles';
+import { createTheme } from '@mui/material/styles';
 import ErrorBackdrop from './Components/ErrorBackdrop';
 import RequestBackdrop from './Components/RequestBackdrop';
+import { amber } from '@mui/material/colors';
+
+
+declare module '@mui/styles/defaultTheme' {
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
+  interface DefaultTheme extends Theme {}
+}
+
 
 const theme = createTheme({
   palette: {
@@ -52,17 +60,19 @@ function AuthWrapper() {
 // https://docs.microsoft.com/en-us/azure/azure-monitor/app/javascript-react-plugin
 ReactDOM.render(
   <React.StrictMode>
-    <ThemeProvider theme={theme}>
-      <AppInsightsContext.Provider value={aiReact}>
-        <MsalProvider instance={globalMsalInstance}>
-          <MuiPickersUtilsProvider utils={DateFnsUtils}>
-            <RecoilRoot>
-              <AuthWrapper />
-            </RecoilRoot>
-          </MuiPickersUtilsProvider>
-        </MsalProvider>
-      </AppInsightsContext.Provider>
-    </ThemeProvider>
+    <StyledEngineProvider injectFirst>
+      <ThemeProvider theme={theme}>
+        <AppInsightsContext.Provider value={aiReact}>
+          <MsalProvider instance={globalMsalInstance}>
+            <LocalizationProvider dateAdapter={DateAdapter}>
+              <RecoilRoot>
+                <AuthWrapper />
+              </RecoilRoot>
+            </LocalizationProvider>
+          </MsalProvider>
+        </AppInsightsContext.Provider>
+      </ThemeProvider>
+    </StyledEngineProvider>
   </React.StrictMode>,
   document.getElementById('root')
 );

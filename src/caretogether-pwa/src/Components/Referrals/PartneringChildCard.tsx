@@ -1,8 +1,19 @@
-import { Card, CardHeader, IconButton, CardContent, Typography, CardActions, makeStyles, Menu, ListItemText, MenuItem } from "@material-ui/core";
+import {
+  Card,
+  CardHeader,
+  IconButton,
+  CardContent,
+  Typography,
+  CardActions,
+  Menu,
+  ListItemText,
+  MenuItem,
+} from "@mui/material";
+import makeStyles from '@mui/styles/makeStyles';
 import { useState } from "react";
 import { CustodialRelationshipType, Gender, Person, CombinedFamilyInfo } from "../../GeneratedClient";
 import { AgeText } from "../AgeText";
-import MoreVertIcon from '@material-ui/icons/MoreVert';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useRecoilValue } from "recoil";
 import { partneringFamiliesData } from "../../Model/ReferralsModel";
 import { RenamePersonDialog } from "../Families/RenamePersonDialog";
@@ -79,7 +90,7 @@ export function PartneringChildCard({partneringFamilyId, personId}: PartneringCh
     setUpdateNotesParameter({partneringFamilyId, person: child});
   }
 
-  return (<>{child &&
+  return <>{child &&
     <Card className={classes.card}>
       <CardHeader className={classes.cardHeader}
         title={child.firstName + " " + child.lastName}
@@ -88,7 +99,8 @@ export function PartneringChildCard({partneringFamilyId, personId}: PartneringCh
         </>}
         action={
           <IconButton
-            onClick={(event) => setChildMoreMenuAnchor({anchor: event.currentTarget, child: child})}>
+            onClick={(event) => setChildMoreMenuAnchor({anchor: event.currentTarget, child: child})}
+            size="large">
             <MoreVertIcon />
           </IconButton>} />
       <CardContent className={classes.cardContent}>
@@ -142,5 +154,5 @@ export function PartneringChildCard({partneringFamilyId, personId}: PartneringCh
         onClose={() => setUpdateConcernsParameter(null)} />) || null}
       {(updateNotesParameter && <UpdateNotesDialog familyId={partneringFamilyId} person={updateNotesParameter.person}
         onClose={() => setUpdateNotesParameter(null)} />) || null}
-    </Card>}</>);
+    </Card>}</>;
 }

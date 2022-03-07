@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { makeStyles } from '@material-ui/core/styles';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup } from '@material-ui/core';
+import makeStyles from '@mui/styles/makeStyles';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@mui/material';
 import { CombinedFamilyInfo, ArrangementPolicy, ChildInvolvement } from '../../GeneratedClient';
 import { visibleFamiliesData } from '../../Model/ModelLoader';
-import { KeyboardDatePicker } from '@material-ui/pickers';
+import { DatePicker } from '@mui/lab';
 import { useRecoilValue } from 'recoil';
 import { useParams } from 'react-router-dom';
 import { useBackdrop } from '../RequestBackdrop';
@@ -68,12 +68,12 @@ export function CreateArrangementDialog({referralId, arrangementPolicy, onClose}
         <form className={classes.form} noValidate autoComplete="off">
           <Grid container spacing={2}>
             <Grid item>
-              <KeyboardDatePicker
-                label="Requested at" size="small" variant="inline"
+              <DatePicker
+                label="Requested at"
                 value={requestedAtLocal} maxDate={new Date()} openTo="year"
-                required format="MM/dd/yyyy"
+                inputFormat="MM/dd/yyyy"
                 onChange={(date) => date && setFields({...fields, requestedAtLocal: date})}
-                />
+                renderInput={(params) => <TextField size="small" required {...params} />} />
             </Grid>
             <Grid item xs={12}>
               <FormControl required component="fieldset">
@@ -81,7 +81,7 @@ export function CreateArrangementDialog({referralId, arrangementPolicy, onClose}
                 <RadioGroup aria-label="familyMember" name="familyMember"
                   value={partneringFamilyPersonId} onChange={e => setFields({...fields, partneringFamilyPersonId: e.target.value})}>
                   {applicableFamilyMembers.map(person => (
-                    <FormControlLabel key={person.id} value={person.id} control={<Radio size="small" />} label={person.firstName} />
+                    <FormControlLabel key={person.id} value={person.id} control={<Radio size="small" />} label={person.firstName!} />
                   ))}
                 </RadioGroup>
               </FormControl>

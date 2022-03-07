@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { makeStyles } from '@material-ui/core/styles';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid, InputLabel, MenuItem, Select } from '@material-ui/core';
+import makeStyles from '@mui/styles/makeStyles';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid, InputLabel, MenuItem, Select } from '@mui/material';
 import { ArrangementPolicy, Arrangement, ArrangementFunction, RoleApprovalStatus, Person, Family } from '../../GeneratedClient';
 import { visibleFamiliesData } from '../../Model/ModelLoader';
 import { useRecoilValue } from 'recoil';

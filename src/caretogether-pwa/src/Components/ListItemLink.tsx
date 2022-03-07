@@ -1,10 +1,10 @@
 import React from 'react';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListItemText from '@material-ui/core/ListItemText';
+import ListItem from '@mui/material/ListItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
 import { useMatch } from 'react-router';
 import { Link as RouterLink, LinkProps as RouterLinkProps } from 'react-router-dom';
-import { Omit } from '@material-ui/types';
+import { DistributiveOmit } from '@mui/types';
 
 // Reference: https://material-ui.com/guides/composition/
 
@@ -23,7 +23,7 @@ function ListItemLink(props: ListItemLinkProps) {
 
   const renderLink = React.useMemo(
     () =>
-      React.forwardRef<any, Omit<RouterLinkProps, 'to'>>((itemProps, ref) => (
+      React.forwardRef<any, DistributiveOmit<RouterLinkProps, 'to'>>((itemProps, ref) => (
         <RouterLink to={to} ref={ref} {...itemProps} />
       )),
     [to],

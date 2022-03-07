@@ -1,4 +1,4 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@material-ui/core';
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { CombinedFamilyInfo, CompletedRequirementInfo } from '../../GeneratedClient';
 import { useVolunteersModel } from '../../Model/VolunteersModel';
 import { useBackdrop } from '../RequestBackdrop';

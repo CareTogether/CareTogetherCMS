@@ -1,4 +1,4 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@material-ui/core';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { useBackdrop } from './RequestBackdrop';
 
 type UpdateDialogProps = {

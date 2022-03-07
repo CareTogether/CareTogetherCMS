@@ -1,10 +1,26 @@
-import { Card, CardHeader, IconButton, CardContent, Typography, Chip, CardActions, makeStyles, Divider, ListItemText, Menu, MenuItem, MenuList, useMediaQuery, useTheme } from "@material-ui/core";
+import {
+  Card,
+  CardHeader,
+  IconButton,
+  CardContent,
+  Typography,
+  Chip,
+  CardActions,
+  Divider,
+  ListItemText,
+  Menu,
+  MenuItem,
+  MenuList,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
+import makeStyles from '@mui/styles/makeStyles';
 import { format } from 'date-fns';
 import { useState } from "react";
 import { ActionRequirement, Gender, Person, CombinedFamilyInfo, RoleRemovalReason, CompletedRequirementInfo, ExemptedRequirementInfo, Permission } from "../../GeneratedClient";
 import { AgeText } from "../AgeText";
-import MoreVertIcon from '@material-ui/icons/MoreVert';
-import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import { useRecoilValue } from "recoil";
 import { volunteerFamiliesData } from "../../Model/VolunteersModel";
 import { RecordVolunteerAdultStepDialog } from "./RecordVolunteerAdultStepDialog";
@@ -151,7 +167,7 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
 
   const permissions = usePermissions();
 
-  return (<>{adult?.item1 && adult.item1.id && adult.item2 &&
+  return <>{adult?.item1 && adult.item1.id && adult.item2 &&
     <Card className={classes.card}>
       <CardHeader className={classes.cardHeader}
         title={adult.item1.firstName + " " + adult.item1.lastName}
@@ -160,7 +176,8 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         </>}
         action={
           <IconButton
-            onClick={(event) => setAdultMoreMenuAnchor({anchor: event.currentTarget, adult: adult.item1 as Person})}>
+            onClick={(event) => setAdultMoreMenuAnchor({anchor: event.currentTarget, adult: adult.item1 as Person})}
+            size="large">
             <MoreVertIcon />
           </IconButton>} />
       <CardContent className={classes.cardContent}>
@@ -340,5 +357,5 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
       {(resetRoleParameter && <ResetIndividualRoleDialog volunteerFamilyId={volunteerFamilyId} person={resetRoleParameter.person} role={resetRoleParameter.role}
         removalReason={resetRoleParameter.removalReason} removalAdditionalComments={resetRoleParameter.removalAdditionalComments}
         onClose={() => setResetRoleParameter(null)} />) || null}
-    </Card>}</>);
+    </Card>}</>;
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Grid, TextField } from '@material-ui/core';
+import { Grid, TextField } from '@mui/material';
 import { UpdateDialog } from '../UpdateDialog';
-import { KeyboardDatePicker } from '@material-ui/pickers';
+import { DatePicker } from '@mui/lab';
 import { useReferralsModel } from '../../Model/ReferralsModel';
 
 interface ExemptReferralRequirementDialogProps {
@@ -38,12 +38,13 @@ export function ExemptReferralRequirementDialog({partneringFamilyId, referralId,
             />
           </Grid>
           <Grid item xs={12}>
-            <KeyboardDatePicker
+            <DatePicker
               label="When does this exemption expire? (Default is never)"
-              value={exemptionExpiresAtLocal} fullWidth
-              format="MM/dd/yyyy"
+              value={exemptionExpiresAtLocal}
+              inputFormat="MM/dd/yyyy"
               onChange={(date) => date && setFields({...fields, exemptionExpiresAtLocal: date })}
-              showTodayButton />
+              showTodayButton
+              renderInput={(params) => <TextField fullWidth {...params} />} />
           </Grid>
         </Grid>
       </form>

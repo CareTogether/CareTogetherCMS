@@ -1,5 +1,7 @@
-import { makeStyles, Theme, createStyles, alpha, InputBase } from "@material-ui/core";
-import SearchIcon from '@material-ui/icons/Search';
+import { Theme, alpha, InputBase } from "@mui/material";
+import makeStyles from '@mui/styles/makeStyles';
+import createStyles from '@mui/styles/createStyles';
+import SearchIcon from '@mui/icons-material/Search';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -32,7 +34,7 @@ const useStyles = makeStyles((theme: Theme) =>
     inputInput: {
       padding: theme.spacing(1, 1, 1, 0),
       // vertical padding + font size from searchIcon
-      paddingLeft: `calc(1em + ${theme.spacing(4)}px)`,
+      paddingLeft: `calc(1em + ${theme.spacing(4)})`,
       //transition: theme.transitions.create('width'),
       width: '100%',
       [theme.breakpoints.up('sm')]: {

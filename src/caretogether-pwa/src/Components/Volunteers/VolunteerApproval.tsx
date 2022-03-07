@@ -1,5 +1,5 @@
-import { makeStyles } from '@material-ui/core/styles';
-import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, useMediaQuery, useTheme, Button, ButtonGroup, FormControlLabel, Switch } from '@material-ui/core';
+import makeStyles from '@mui/styles/makeStyles';
+import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, useMediaQuery, useTheme, Button, ButtonGroup, FormControlLabel, Switch } from '@mui/material';
 import { Gender, ExactAge, AgeInYears, RoleVersionApproval, CombinedFamilyInfo, RemovedRole, RoleRemovalReason } from '../../GeneratedClient';
 import { differenceInYears } from 'date-fns';
 import { useRecoilValue } from 'recoil';
@@ -7,7 +7,7 @@ import { volunteerFamiliesData } from '../../Model/VolunteersModel';
 import { policyData } from '../../Model/ConfigurationModel';
 import { RoleApprovalStatus } from '../../GeneratedClient';
 import React, { useEffect, useState } from 'react';
-import AddIcon from '@material-ui/icons/Add';
+import AddIcon from '@mui/icons-material/Add';
 import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { HeaderContent, HeaderTitle } from '../Header';
@@ -120,7 +120,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   const [createVolunteerFamilyDialogOpen, setCreateVolunteerFamilyDialogOpen] = useState(false);
   
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const location = useLocation();
     
   const [expandedView, setExpandedView] = useLocalStorage('volunteer-approval-expanded', true);

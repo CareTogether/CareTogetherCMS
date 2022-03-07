@@ -1,4 +1,20 @@
-import { Card, CardActions, CardContent, CardHeader, Divider, IconButton, ListItemText, makeStyles, Menu, MenuItem, MenuList, Tooltip, Typography, useMediaQuery, useTheme } from '@material-ui/core';
+import {
+  Card,
+  CardActions,
+  CardContent,
+  CardHeader,
+  Divider,
+  IconButton,
+  ListItemText,
+  Menu,
+  MenuItem,
+  MenuList,
+  Tooltip,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 import React, { useState } from 'react';
 import { ArrangementPhase, Arrangement, CombinedFamilyInfo, ActionRequirement, Person, FunctionRequirement, ArrangementFunction, ChildInvolvement, CompletedRequirementInfo, ExemptedRequirementInfo, MissingArrangementRequirement } from '../../GeneratedClient';
 import { useFamilyLookup, usePersonLookup, useUserLookup } from '../../Model/DirectoryModel';
@@ -8,8 +24,8 @@ import { format } from 'date-fns';
 import { CardInfoRow } from '../CardInfoRow';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../../Model/ConfigurationModel';
-import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
-import PersonPinCircleIcon from '@material-ui/icons/PersonPinCircle';
+import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
+import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
 import { RecordArrangementStepDialog } from './RecordArrangementStepDialog';
 import { StartArrangementDialog } from './StartArrangementDialog';
 import { EndArrangementDialog } from './EndArrangementDialog';

@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { makeStyles } from '@material-ui/core/styles';
-import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@material-ui/core';
+import makeStyles from '@mui/styles/makeStyles';
+import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@mui/material';
 import { Age, ExactAge, AgeInYears, Gender, PhoneNumberType, EmailAddressType } from '../../GeneratedClient';
 import { useDirectoryModel } from '../../Model/DirectoryModel';
-import WarningIcon from '@material-ui/icons/Warning';
-import { KeyboardDatePicker } from '@material-ui/pickers';
+import WarningIcon from '@mui/icons-material/Warning';
+import { DatePicker } from '@mui/lab';
 import { useRecoilValue } from 'recoil';
 import { adultFamilyRelationshipsData, ethnicitiesData } from '../../Model/ConfigurationModel';
 import { useBackdrop } from '../RequestBackdrop';
@@ -143,12 +143,12 @@ export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDial
             </Grid>
             <Grid item xs={12} sm={8} container direction="column" spacing={0}>
               <Grid item>
-                <KeyboardDatePicker
-                  label="Date of birth" size="small" variant="inline"
+                <DatePicker
+                  label="Date of birth"
                   value={dateOfBirth} maxDate={subYears(new Date(), 18)} openTo="year"
-                  required disabled={ageType !== 'exact'} format="MM/dd/yyyy"
+                  disabled={ageType !== 'exact'} inputFormat="MM/dd/yyyy"
                   onChange={(date) => date && setFields({...fields, dateOfBirth: date})}
-                  />
+                  renderInput={(params) => <TextField size="small" required {...params} />} />
               </Grid>
               <Grid item>
                 <TextField

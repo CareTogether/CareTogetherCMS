@@ -1,10 +1,10 @@
-import { makeStyles } from '@material-ui/core/styles';
-import { Fab, Grid, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, useMediaQuery, useTheme } from '@material-ui/core';
+import makeStyles from '@mui/styles/makeStyles';
+import { Fab, Grid, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, useMediaQuery, useTheme } from '@mui/material';
 import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { format } from 'date-fns';
 import React, { useState } from 'react';
-import AddIcon from '@material-ui/icons/Add';
+import AddIcon from '@mui/icons-material/Add';
 import { ReferralCloseReason, PartneringFamilyInfo, Arrangement } from '../../GeneratedClient';
 import { useNavigate } from 'react-router-dom';
 import { FamilyName } from '../Families/FamilyName';
@@ -61,7 +61,7 @@ function PartneringFamilies() {
   const [createPartneringFamilyDialogOpen, setCreatePartneringFamilyDialogOpen] = useState(false);
 
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   return (
     <Grid container spacing={3}>

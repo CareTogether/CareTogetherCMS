@@ -1,12 +1,24 @@
-import { Card, CardContent, CardHeader, CardActions, IconButton, Button, ListItemText, makeStyles, Menu, MenuItem, Typography } from '@material-ui/core';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardActions,
+  IconButton,
+  Button,
+  ListItemText,
+  Menu,
+  MenuItem,
+  Typography,
+} from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 import { format } from 'date-fns';
 import React, { useState } from 'react';
 import { Note, NoteStatus } from '../../GeneratedClient';
 import { useUserLookup } from '../../Model/DirectoryModel';
 import { PersonName } from './PersonName';
-import MoreVertIcon from '@material-ui/icons/MoreVert';
-import CheckIcon from '@material-ui/icons/Check';
-import EditIcon from '@material-ui/icons/Edit';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import CheckIcon from '@mui/icons-material/Check';
+import EditIcon from '@mui/icons-material/Edit';
 import { AddEditNoteDialog } from './AddEditNoteDialog';
 import { ApproveNoteDialog } from './ApproveNoteDialog';
 import { DiscardNoteDialog } from './DiscardNoteDialog';
@@ -74,7 +86,8 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
         action={
           note.status === NoteStatus.Draft && (
           <IconButton
-            onClick={(event) => setMoreMenuAnchor({anchor: event.currentTarget})}>
+            onClick={(event) => setMoreMenuAnchor({anchor: event.currentTarget})}
+            size="large">
             <MoreVertIcon />
           </IconButton>
         )} />
@@ -87,7 +100,9 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
         {note.status === NoteStatus.Draft && (
           <Button
             onClick={() => setShowEditNoteDialog(true)}
-            variant="contained" color="default" size="small" className={classes.rightCardActionButton}
+            variant="contained"
+            size="small"
+            className={classes.rightCardActionButton}
             startIcon={<EditIcon />}>
             Edit
           </Button>
@@ -95,7 +110,9 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
         {note.status === NoteStatus.Draft && (
           <Button
             onClick={() => setShowApproveNoteDialog(true)}
-            variant="contained" color="default" size="small" className={classes.rightCardActionButton}
+            variant="contained"
+            size="small"
+            className={classes.rightCardActionButton}
             startIcon={<CheckIcon />}>
             Approve
           </Button>

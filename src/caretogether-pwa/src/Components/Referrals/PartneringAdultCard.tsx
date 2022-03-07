@@ -1,8 +1,21 @@
-import { Card, CardHeader, IconButton, CardContent, Typography, Chip, CardActions, makeStyles, Divider, Menu, ListItemText, MenuItem } from "@material-ui/core";
+import {
+  Card,
+  CardHeader,
+  IconButton,
+  CardContent,
+  Typography,
+  Chip,
+  CardActions,
+  Divider,
+  Menu,
+  ListItemText,
+  MenuItem,
+} from "@mui/material";
+import makeStyles from '@mui/styles/makeStyles';
 import { useState } from "react";
 import { Gender, Person, CombinedFamilyInfo } from "../../GeneratedClient";
 import { AgeText } from "../AgeText";
-import MoreVertIcon from '@material-ui/icons/MoreVert';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useRecoilValue } from "recoil";
 import { partneringFamiliesData } from "../../Model/ReferralsModel";
 import { ContactDisplay } from "../ContactDisplay";
@@ -111,7 +124,7 @@ export function PartneringAdultCard({partneringFamilyId, personId}: PartneringAd
   //const theme = useTheme();
   //const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
 
-  return (<>{adult?.item1 && adult.item1.id && adult.item2 &&
+  return <>{adult?.item1 && adult.item1.id && adult.item2 &&
     <Card className={classes.card}>
       <CardHeader className={classes.cardHeader}
         title={adult.item1.firstName + " " + adult.item1.lastName}
@@ -120,7 +133,8 @@ export function PartneringAdultCard({partneringFamilyId, personId}: PartneringAd
         </>}
         action={
           <IconButton
-            onClick={(event) => setAdultMoreMenuAnchor({anchor: event.currentTarget, adult: adult.item1 as Person})}>
+            onClick={(event) => setAdultMoreMenuAnchor({anchor: event.currentTarget, adult: adult.item1 as Person})}
+            size="large">
             <MoreVertIcon />
           </IconButton>} />
       <CardContent className={classes.cardContent}>
@@ -234,5 +248,5 @@ export function PartneringAdultCard({partneringFamilyId, personId}: PartneringAd
         onClose={() => setUpdateEmailParameter(null)} />) || null}
       {(updateAddressParameter && <UpdateAddressDialog familyId={partneringFamilyId} person={updateAddressParameter.person}
         onClose={() => setUpdateAddressParameter(null)} />) || null}
-    </Card>}</>);
+    </Card>}</>;
 }

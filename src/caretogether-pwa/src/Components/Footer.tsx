@@ -1,10 +1,10 @@
-import { makeStyles } from '@material-ui/core/styles';
-import { BottomNavigation, BottomNavigationAction } from '@material-ui/core';
+import makeStyles from '@mui/styles/makeStyles';
+import { BottomNavigation, BottomNavigationAction } from '@mui/material';
 import { Link, useLocation } from 'react-router-dom';
-import PermPhoneMsgIcon from '@material-ui/icons/PermPhoneMsg';
-import PeopleIcon from '@material-ui/icons/People';
+import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
+import PeopleIcon from '@mui/icons-material/People';
 import { useFeatureFlags } from '../Model/ConfigurationModel';
-//import DashboardIcon from '@material-ui/icons/Dashboard';
+//import DashboardIcon from '@mui/icons-material/Dashboard';
 
 const useStyles = makeStyles((theme) => ({
   stickToBottom: {

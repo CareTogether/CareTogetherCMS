@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { makeStyles } from '@material-ui/core/styles';
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, Grid, InputLabel, Link, MenuItem, Select, TextField } from '@material-ui/core';
+import makeStyles from '@mui/styles/makeStyles';
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, Grid, InputLabel, Link, MenuItem, Select, TextField } from '@mui/material';
 import { CombinedFamilyInfo, ActionRequirement, DocumentLinkRequirement, NoteEntryRequirement } from '../../GeneratedClient';
-import { KeyboardDateTimePicker } from '@material-ui/pickers';
+import { DateTimePicker } from '@mui/lab';
 import { uploadFileToTenant } from "../../Model/FilesModel";
 import { currentLocationState, currentOrganizationState } from '../../Model/SessionModel';
 import { useRecoilValue } from 'recoil';
@@ -70,17 +70,22 @@ export function RecordArrangementStepDialog({requirementName, stepActionRequirem
         {stepActionRequirement.instructions && <DialogContentText>{stepActionRequirement.instructions}</DialogContentText>}
         {stepActionRequirement.infoLink && (
           <DialogContentText>
-            <Link href={stepActionRequirement.infoLink} target="_blank" rel="noreferrer">More Info</Link>
+            <Link
+              href={stepActionRequirement.infoLink}
+              target="_blank"
+              rel="noreferrer"
+              underline="hover">More Info</Link>
           </DialogContentText>)}
         <br />
         <Grid container spacing={2}>
           <Grid item xs={12}>
-            <KeyboardDateTimePicker
+            <DateTimePicker
               label="When was this requirement completed?"
-              value={completedAtLocal} fullWidth required
-              disableFuture format="MM/dd/yyyy hh:mm a"
+              value={completedAtLocal}
+              disableFuture inputFormat="MM/dd/yyyy hh:mm a"
               onChange={(date) => date && setCompletedAtLocal(date)}
-              showTodayButton />
+              showTodayButton
+              renderInput={(params) => <TextField fullWidth required {...params} />} />
           </Grid>
           {(stepActionRequirement.documentLink === DocumentLinkRequirement.Allowed ||
             stepActionRequirement.documentLink === DocumentLinkRequirement.Required) &&
