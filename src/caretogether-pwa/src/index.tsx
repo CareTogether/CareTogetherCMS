@@ -8,8 +8,8 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { RecoilRoot } from 'recoil';
 import { globalMsalInstance } from './Auth';
-import { MuiPickersUtilsProvider } from '@material-ui/pickers';
-import DateFnsUtils from '@date-io/date-fns';
+import LocalizationProvider from '@mui/lab/LocalizationProvider';
+import AdapterDateFns from '@mui/lab/AdapterDateFns';
 import { ModelLoader } from './Model/ModelLoader';
 import { Theme, StyledEngineProvider } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
@@ -64,11 +64,11 @@ ReactDOM.render(
       <ThemeProvider theme={theme}>
         <AppInsightsContext.Provider value={aiReact}>
           <MsalProvider instance={globalMsalInstance}>
-            <MuiPickersUtilsProvider utils={DateFnsUtils}>
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
               <RecoilRoot>
                 <AuthWrapper />
               </RecoilRoot>
-            </MuiPickersUtilsProvider>
+            </LocalizationProvider>
           </MsalProvider>
         </AppInsightsContext.Provider>
       </ThemeProvider>
