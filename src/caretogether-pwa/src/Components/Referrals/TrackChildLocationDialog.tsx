@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, FormControlLabel, FormLabel, Grid, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@mui/material';
 import { CombinedFamilyInfo, Arrangement, Person, ChildLocationPlan, ChildInvolvement } from '../../GeneratedClient';
-import { DateTimePicker } from '@material-ui/pickers';
+import { DateTimePicker } from '@mui/lab';
 import { useBackdrop } from '../RequestBackdrop';
 import { useDirectoryModel, useFamilyLookup, usePersonLookup } from '../../Model/DirectoryModel';
 import { useReferralsModel } from '../../Model/ReferralsModel';
@@ -137,10 +137,11 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
           <Grid item xs={12}>
             <DateTimePicker
               label="What time did this person receive the child?"
-              value={changedAtLocal} fullWidth required
-              disableFuture format="MM/dd/yyyy hh:mm a"
+              value={changedAtLocal}
+              disableFuture inputFormat="MM/dd/yyyy hh:mm a"
               onChange={(date) => date && setChangedAtLocal(date)}
-              showTodayButton />
+              showTodayButton
+              renderInput={(params) => <TextField fullWidth required {...params} />} />
           </Grid>
           <Grid item xs={12}>
             <TextField

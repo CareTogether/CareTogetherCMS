@@ -1,5 +1,5 @@
-import { Grid } from '@mui/material';
-import { DateTimePicker } from '@material-ui/pickers';
+import { Grid, TextField } from '@mui/material';
+import { DateTimePicker } from '@mui/lab';
 import { useState } from 'react';
 import { useParams } from 'react-router';
 import { Arrangement, Person } from '../../GeneratedClient';
@@ -38,10 +38,11 @@ export function EndArrangementDialog({referralId, arrangement, onClose}: EndArra
         <Grid item xs={12}>
           <DateTimePicker
             label="When was this arrangement ended?"
-            value={endedAtLocal} fullWidth required
-            disableFuture format="MM/dd/yyyy hh:mm a"
+            value={endedAtLocal}
+            disableFuture inputFormat="MM/dd/yyyy hh:mm a"
             onChange={(date) => date && setFields({ ...fields, endedAtLocal: date })}
-            showTodayButton />
+            showTodayButton
+            renderInput={(params) => <TextField fullWidth required {...params} />} />
         </Grid>
       </Grid>
     </UpdateDialog>

@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup } from '@mui/material';
+import { FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@mui/material';
 import { ReferralCloseReason } from '../../GeneratedClient';
 import { UpdateDialog } from '../UpdateDialog';
-import { DatePicker } from '@material-ui/pickers';
+import { DatePicker } from '@mui/lab';
 import { useReferralsModel } from '../../Model/ReferralsModel';
 
 interface CloseReferralDialogProps {
@@ -46,10 +46,11 @@ export function CloseReferralDialog({partneringFamilyId, referralId, onClose}: C
           <Grid item xs={12}>
             <DatePicker
               label="When was this referral closed?"
-              value={closedAtLocal} fullWidth required
-              disableFuture format="MM/dd/yyyy"
+              value={closedAtLocal}
+              disableFuture inputFormat="MM/dd/yyyy"
               onChange={(date) => date && setFields({ ...fields, closedAtLocal: date })}
-              showTodayButton />
+              showTodayButton
+              renderInput={(params) => <TextField {...params} />} />
           </Grid>
         </Grid>
       </form>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import makeStyles from '@mui/styles/makeStyles';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, Grid, InputLabel, Link, MenuItem, Select, TextField } from '@mui/material';
 import { CombinedFamilyInfo, ActionRequirement, DocumentLinkRequirement, NoteEntryRequirement } from '../../GeneratedClient';
-import { DatePicker } from '@material-ui/pickers';
+import { DatePicker } from '@mui/lab';
 import { useVolunteersModel } from '../../Model/VolunteersModel';
 import { uploadFileToTenant } from "../../Model/FilesModel";
 import { currentLocationState, currentOrganizationState } from '../../Model/SessionModel';
@@ -79,10 +79,11 @@ export function RecordVolunteerFamilyStepDialog({requirementName, stepActionRequ
           <Grid item xs={12}>
             <DatePicker
               label="When was this requirement completed?"
-              value={completedAtLocal} fullWidth required
-              disableFuture format="MM/dd/yyyy"
+              value={completedAtLocal}
+              disableFuture inputFormat="MM/dd/yyyy"
               onChange={(date) => date && setCompletedAtLocal(date)}
-              showTodayButton />
+              showTodayButton
+              renderInput={(params) => <TextField fullWidth required {...params} />} />
           </Grid>
           {(stepActionRequirement.documentLink === DocumentLinkRequirement.Allowed ||
             stepActionRequirement.documentLink === DocumentLinkRequirement.Required) &&

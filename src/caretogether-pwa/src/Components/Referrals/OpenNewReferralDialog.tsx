@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Grid } from '@mui/material';
+import { Grid, TextField } from '@mui/material';
 import { UpdateDialog } from '../UpdateDialog';
-import { DatePicker } from '@material-ui/pickers';
+import { DatePicker } from '@mui/lab';
 import { useReferralsModel } from '../../Model/ReferralsModel';
 
 interface OpenNewReferralDialogProps {
@@ -29,10 +29,11 @@ export function OpenNewReferralDialog({partneringFamilyId, onClose}: OpenNewRefe
           <Grid item xs={12}>
             <DatePicker
               label="When was this referral opened?"
-              value={openedAtLocal} fullWidth required
-              disableFuture format="MM/dd/yyyy"
+              value={openedAtLocal}
+              disableFuture inputFormat="MM/dd/yyyy"
               onChange={(date) => date && setFields({...fields, openedAtLocal: date})}
-              showTodayButton />
+              showTodayButton
+              renderInput={(params) => <TextField fullWidth required {...params} />} />
           </Grid>
         </Grid>
       </form>
