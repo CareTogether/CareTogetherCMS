@@ -1,5 +1,5 @@
 import { Grid } from '@mui/material';
-import { KeyboardDateTimePicker } from '@material-ui/pickers';
+import { DateTimePicker } from '@material-ui/pickers';
 import { useState } from 'react';
 import { useParams } from 'react-router';
 import { Arrangement, Person } from '../../GeneratedClient';
@@ -36,7 +36,7 @@ export function StartArrangementDialog({referralId, arrangement, onClose}: Start
       onSave={save}>
       <Grid container spacing={2}>
         <Grid item xs={12}>
-          <KeyboardDateTimePicker
+          <DateTimePicker
             label="When was this arrangement started?"
             value={startedAtLocal} fullWidth required
             disableFuture format="MM/dd/yyyy hh:mm a"

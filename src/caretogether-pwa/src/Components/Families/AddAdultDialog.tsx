@@ -4,7 +4,7 @@ import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, Fo
 import { Age, ExactAge, AgeInYears, Gender, EmailAddressType, PhoneNumberType, CombinedFamilyInfo } from '../../GeneratedClient';
 import { useDirectoryModel } from '../../Model/DirectoryModel';
 import WarningIcon from '@mui/icons-material/Warning';
-import { KeyboardDatePicker } from '@material-ui/pickers';
+import { DatePicker } from '@material-ui/pickers';
 import { useRecoilValue } from 'recoil';
 import { adultFamilyRelationshipsData, ethnicitiesData } from '../../Model/ConfigurationModel';
 import { useParams } from 'react-router-dom';
@@ -152,7 +152,7 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
             </Grid>
             <Grid item xs={12} sm={8} container direction="column" spacing={0}>
               <Grid item>
-                <KeyboardDatePicker
+                <DatePicker
                   label="Date of birth" size="small" variant="inline"
                   value={dateOfBirth} maxDate={subYears(new Date(), 16)} openTo="year"
                   required disabled={ageType !== 'exact'} format="MM/dd/yyyy"

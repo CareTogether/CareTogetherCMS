@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Grid, TextField } from '@mui/material';
 import { useVolunteersModel } from '../../Model/VolunteersModel';
 import { UpdateDialog } from '../UpdateDialog';
-import { KeyboardDatePicker } from '@material-ui/pickers';
+import { DatePicker } from '@material-ui/pickers';
 
 interface ExemptVolunteerFamilyRequirementDialogProps {
   volunteerFamilyId: string,
@@ -37,7 +37,7 @@ export function ExemptVolunteerFamilyRequirementDialog({volunteerFamilyId, requi
             />
           </Grid>
           <Grid item xs={12}>
-            <KeyboardDatePicker
+            <DatePicker
               label="When does this exemption expire? (Default is never)"
               value={exemptionExpiresAtLocal} fullWidth
               format="MM/dd/yyyy"

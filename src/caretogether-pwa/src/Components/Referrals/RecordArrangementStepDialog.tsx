@@ -2,7 +2,7 @@ import { useState } from 'react';
 import makeStyles from '@mui/styles/makeStyles';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, Grid, InputLabel, Link, MenuItem, Select, TextField } from '@mui/material';
 import { CombinedFamilyInfo, ActionRequirement, DocumentLinkRequirement, NoteEntryRequirement } from '../../GeneratedClient';
-import { KeyboardDateTimePicker } from '@material-ui/pickers';
+import { DateTimePicker } from '@material-ui/pickers';
 import { uploadFileToTenant } from "../../Model/FilesModel";
 import { currentLocationState, currentOrganizationState } from '../../Model/SessionModel';
 import { useRecoilValue } from 'recoil';
@@ -79,7 +79,7 @@ export function RecordArrangementStepDialog({requirementName, stepActionRequirem
         <br />
         <Grid container spacing={2}>
           <Grid item xs={12}>
-            <KeyboardDateTimePicker
+            <DateTimePicker
               label="When was this requirement completed?"
               value={completedAtLocal} fullWidth required
               disableFuture format="MM/dd/yyyy hh:mm a"

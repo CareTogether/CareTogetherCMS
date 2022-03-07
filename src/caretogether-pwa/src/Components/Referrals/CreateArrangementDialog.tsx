@@ -3,7 +3,7 @@ import makeStyles from '@mui/styles/makeStyles';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup } from '@mui/material';
 import { CombinedFamilyInfo, ArrangementPolicy, ChildInvolvement } from '../../GeneratedClient';
 import { visibleFamiliesData } from '../../Model/ModelLoader';
-import { KeyboardDatePicker } from '@material-ui/pickers';
+import { DatePicker } from '@material-ui/pickers';
 import { useRecoilValue } from 'recoil';
 import { useParams } from 'react-router-dom';
 import { useBackdrop } from '../RequestBackdrop';
@@ -68,7 +68,7 @@ export function CreateArrangementDialog({referralId, arrangementPolicy, onClose}
         <form className={classes.form} noValidate autoComplete="off">
           <Grid container spacing={2}>
             <Grid item>
-              <KeyboardDatePicker
+              <DatePicker
                 label="Requested at" size="small" variant="inline"
                 value={requestedAtLocal} maxDate={new Date()} openTo="year"
                 required format="MM/dd/yyyy"

@@ -4,7 +4,7 @@ import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogContentTe
 import { Age, ExactAge, AgeInYears, Gender, PhoneNumberType, EmailAddressType } from '../../GeneratedClient';
 import { useDirectoryModel } from '../../Model/DirectoryModel';
 import WarningIcon from '@mui/icons-material/Warning';
-import { KeyboardDatePicker } from '@material-ui/pickers';
+import { DatePicker } from '@material-ui/pickers';
 import { useRecoilValue } from 'recoil';
 import { adultFamilyRelationshipsData, ethnicitiesData } from '../../Model/ConfigurationModel';
 import { useBackdrop } from '../RequestBackdrop';
@@ -110,7 +110,7 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
       </DialogTitle>
       <DialogContent>
         <Grid item xs={12}>
-          <KeyboardDatePicker
+          <DatePicker
             label="When was this referral opened?"
             value={referralOpenedAtLocal} fullWidth required
             disableFuture format="MM/dd/yyyy"
@@ -153,7 +153,7 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
             </Grid>
             <Grid item xs={12} sm={8} container direction="column" spacing={0}>
               <Grid item>
-                <KeyboardDatePicker
+                <DatePicker
                   label="Date of birth" size="small" variant="inline"
                   value={dateOfBirth} maxDate={subYears(new Date(), 16)} openTo="year"
                   required disabled={ageType !== 'exact'} format="MM/dd/yyyy"

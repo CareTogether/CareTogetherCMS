@@ -5,7 +5,7 @@ import { CombinedFamilyInfo, Age, ExactAge, AgeInYears, Gender, CustodialRelatio
 import { visibleFamiliesData } from '../../Model/ModelLoader';
 import { useDirectoryModel } from '../../Model/DirectoryModel';
 import WarningIcon from '@mui/icons-material/Warning';
-import { KeyboardDatePicker } from '@material-ui/pickers';
+import { DatePicker } from '@material-ui/pickers';
 import { useRecoilValue } from 'recoil';
 import { ethnicitiesData } from '../../Model/ConfigurationModel';
 import { useParams } from 'react-router-dom';
@@ -136,7 +136,7 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
             </Grid>
             <Grid item xs={12} sm={8} container direction="column" spacing={0}>
               <Grid item>
-                <KeyboardDatePicker
+                <DatePicker
                   label="Date of birth" size="small" variant="inline"
                   value={dateOfBirth} minDate={addDays(subYears(new Date(), 18), 1)} maxDate={new Date()} openTo="year"
                   required disabled={ageType !== 'exact'} format="MM/dd/yyyy"
