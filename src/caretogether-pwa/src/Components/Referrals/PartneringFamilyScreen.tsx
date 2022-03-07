@@ -304,7 +304,7 @@ export function PartneringFamilyScreen() {
                 className={classes.button}>
                 Open New Referral
               </Button>}
-              {closeReferralDialogOpen && (
+              {closeReferralDialogOpen && partneringFamily.partneringFamilyInfo?.openReferral && (
                 <CloseReferralDialog
                   partneringFamilyId={partneringFamily.family?.id!}
                   referralId={partneringFamily.partneringFamilyInfo!.openReferral!.id!}
