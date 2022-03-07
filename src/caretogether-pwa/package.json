@@ -48,9 +48,12 @@
   },
   "browserslist": {
     "production": [
-      ">0.2%",
+      ">0.5%",
+      "last 2 versions",
+      "Firefox ESR",
       "not dead",
-      "not op_mini all"
+      "not IE 11",
+      "maintained node versions"
     ],
     "development": [
       "last 1 chrome version",
