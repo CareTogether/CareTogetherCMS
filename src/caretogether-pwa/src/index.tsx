@@ -11,7 +11,7 @@ import { globalMsalInstance } from './Auth';
 import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 import DateFnsUtils from '@date-io/date-fns';
 import { ModelLoader } from './Model/ModelLoader';
-import { ThemeProvider, Theme, StyledEngineProvider, adaptV4Theme } from '@mui/material';
+import { ThemeProvider, Theme, StyledEngineProvider } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
 import ErrorBackdrop from './Components/ErrorBackdrop';
 import RequestBackdrop from './Components/RequestBackdrop';
@@ -24,14 +24,14 @@ declare module '@mui/styles/defaultTheme' {
 }
 
 
-const theme = createTheme(adaptV4Theme({
+const theme = createTheme({
   palette: {
     primary: {
       main: '#00838f',
     },
     secondary: amber,
   }
-}));
+});
 
 function AuthWrapper() {
   // Force the user to sign in if not already authenticated, then render the app.
