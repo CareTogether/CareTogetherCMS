@@ -16,16 +16,9 @@ import { CurrentFeatureFlags } from './GeneratedClient';
 import { HeaderContext } from './Components/HeaderContext';
 import { AppRoutes } from './AppRoutes';
 
-const copyrightStyles = makeStyles((theme) => ({
-  copyright: {
-    lineHeight: '3em'
-  }
-}));
-
 function Copyright() {
-  const classes = copyrightStyles();
   return (
-    <Typography variant="body2" color="textSecondary" align="center" className={classes.copyright}>
+    <Typography variant="body2" color="textSecondary" align="center" sx={{lineHeight: '3em'}}>
       {' © '} {new Date().getFullYear()} &nbsp;
       <a color="inherit" href="https://caretogether.io/" target="_blank" rel="noreferrer">
         CareTogether CMS
@@ -34,38 +27,7 @@ function Copyright() {
   );
 }
 
-const drawerWidth = 200;
-const footerHeight = 56;
-
 const useStyles = makeStyles((theme) => ({
-  root: {
-    display: 'flex',
-  },
-  drawerHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '0 8px',
-  },
-  drawerHeaderOrganization: {
-    margin: '0',
-    paddingLeft: '8px',
-    fontSize: '16px'
-  },
-  drawerHeaderLocation: {
-    margin: '0',
-    paddingLeft: '8px',
-    fontSize: '14px'
-  },
-  drawerPaper: {
-    position: 'relative',
-    whiteSpace: 'nowrap',
-    width: drawerWidth,
-    transition: theme.transitions.create('width', {
-      easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.enteringScreen,
-    }),
-  },
   drawerPaperClose: {
     overflowX: 'hidden',
     transition: theme.transitions.create('width', {
@@ -77,9 +39,6 @@ const useStyles = makeStyles((theme) => ({
       width: theme.spacing(9),
     },
   },
-  appBarSpacer: {
-    height: 48,
-  },
   content: {
     flexGrow: 1,
     height: '100vh',
@@ -87,7 +46,7 @@ const useStyles = makeStyles((theme) => ({
   },
   mobileContent: {
     flexGrow: 1,
-    height: `calc(100vh - ${footerHeight}px)`,
+    height: `calc(100vh - 56px)`, // subtract footer height
     overflow: 'auto',
   },
 }));
@@ -126,7 +85,7 @@ function App() {
   const headerContainer = React.useRef(null);
 
   return (
-    <div className={classes.root}>
+    <div style={{display: 'flex'}}>
       <CssBaseline />
       <HeaderContext.Provider value={headerContainer}>
         {/* <Router> needs to be defined after the <HeaderContext.Provider> and before <Header> to link it correctly */}
@@ -135,15 +94,37 @@ function App() {
           {isMobile ? null :
             <Drawer
               variant="permanent"
+              sx={{
+                position: 'relative',
+                whiteSpace: 'nowrap',
+                width: 200, // drawer width
+                transition: theme.transitions.create('width', {
+                  easing: theme.transitions.easing.sharp,
+                  duration: theme.transitions.duration.enteringScreen,
+                }),
+              }}
               classes={{
-                paper: clsx(classes.drawerPaper, !open && classes.drawerPaperClose),
+                paper: clsx(!open && classes.drawerPaperClose),
               }}
               open={open}
             >
-              <div className={classes.drawerHeader}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '0 8px',
+              }}>
                 {isMobile ? null : <header>
-                  <p className={classes.drawerHeaderOrganization}>{organizationName}</p>
-                  <p className={classes.drawerHeaderLocation}>{locationName}</p>
+                  <p style={{
+                    margin: '0',
+                    paddingLeft: '8px',
+                    fontSize: '16px'
+                  }}>{organizationName}</p>
+                  <p style={{
+                    margin: '0',
+                    paddingLeft: '8px',
+                    fontSize: '14px'
+                  }}>{locationName}</p>
                 </header>}
                 <IconButton onClick={handleDrawerClose} size="large">
                   <ChevronLeftIcon />
@@ -157,7 +138,7 @@ function App() {
               {open && <Copyright />}
             </Drawer>}
           <main className={isMobile ? classes.mobileContent : classes.content}>
-            <div className={classes.appBarSpacer} />
+            <div style={{height: 48}} />
             <React.Suspense fallback={<div>Loading...</div>}>
               <AppRoutes />
             </React.Suspense>
