@@ -69,7 +69,11 @@ export function RecordVolunteerAdultStepDialog({requirementName, stepActionRequi
         {stepActionRequirement.instructions && <DialogContentText>{stepActionRequirement.instructions}</DialogContentText>}
         {stepActionRequirement.infoLink && (
           <DialogContentText>
-            <Link href={stepActionRequirement.infoLink} target="_blank" rel="noreferrer">More Info</Link>
+            <Link
+              href={stepActionRequirement.infoLink}
+              target="_blank"
+              rel="noreferrer"
+              underline="hover">More Info</Link>
           </DialogContentText>)}
         <br />
         <Grid container spacing={2}>
