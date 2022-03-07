@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup } from '@material-ui/core';
+import { FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup } from '@mui/material';
 import { ReferralCloseReason } from '../../GeneratedClient';
 import { UpdateDialog } from '../UpdateDialog';
 import { KeyboardDatePicker } from '@material-ui/pickers';

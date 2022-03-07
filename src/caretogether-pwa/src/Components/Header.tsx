@@ -1,8 +1,8 @@
 import React from 'react';
 import clsx from 'clsx';
-import { AppBar, Toolbar, IconButton, Typography, useMediaQuery, useTheme, Portal } from "@material-ui/core";
-import { makeStyles } from "@material-ui/core/styles";
-import MenuIcon from '@material-ui/icons/Menu';
+import { AppBar, Toolbar, IconButton, Typography, useMediaQuery, useTheme, Portal } from "@mui/material";
+import makeStyles from '@mui/styles/makeStyles';
+import MenuIcon from '@mui/icons-material/Menu';
 import { HeaderContext } from './HeaderContext';
 
 const drawerWidth = 200;
@@ -70,7 +70,7 @@ function Header(props: HeaderProps) {
   const classes = useStyles();
 
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   return (
     <AppBar position="absolute" className={clsx(classes.appBar, (open && !isMobile) && classes.appBarShift)}>
@@ -81,7 +81,7 @@ function Header(props: HeaderProps) {
           aria-label="open drawer"
           onClick={handleDrawerOpen}
           className={clsx(classes.menuButton, open && classes.menuButtonHidden)}
-        >
+          size="large">
           <MenuIcon />
         </IconButton>}
         <HeaderContext.Consumer>

@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { makeStyles } from '@material-ui/core/styles';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@material-ui/core';
+import makeStyles from '@mui/styles/makeStyles';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@mui/material';
 import { CombinedFamilyInfo, Age, ExactAge, AgeInYears, Gender, CustodialRelationshipType, CustodialRelationship } from '../../GeneratedClient';
 import { visibleFamiliesData } from '../../Model/ModelLoader';
 import { useDirectoryModel } from '../../Model/DirectoryModel';
-import WarningIcon from '@material-ui/icons/Warning';
+import WarningIcon from '@mui/icons-material/Warning';
 import { KeyboardDatePicker } from '@material-ui/pickers';
 import { useRecoilValue } from 'recoil';
 import { ethnicitiesData } from '../../Model/ConfigurationModel';

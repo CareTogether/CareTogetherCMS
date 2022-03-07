@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { makeStyles } from '@material-ui/core/styles';
-import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@material-ui/core';
+import makeStyles from '@mui/styles/makeStyles';
+import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@mui/material';
 import { Age, ExactAge, AgeInYears, Gender, EmailAddressType, PhoneNumberType, CombinedFamilyInfo } from '../../GeneratedClient';
 import { useDirectoryModel } from '../../Model/DirectoryModel';
-import WarningIcon from '@material-ui/icons/Warning';
+import WarningIcon from '@mui/icons-material/Warning';
 import { KeyboardDatePicker } from '@material-ui/pickers';
 import { useRecoilValue } from 'recoil';
 import { adultFamilyRelationshipsData, ethnicitiesData } from '../../Model/ConfigurationModel';

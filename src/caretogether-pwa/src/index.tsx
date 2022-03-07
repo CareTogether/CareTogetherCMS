@@ -11,20 +11,27 @@ import { globalMsalInstance } from './Auth';
 import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 import DateFnsUtils from '@date-io/date-fns';
 import { ModelLoader } from './Model/ModelLoader';
-import { ThemeProvider } from '@material-ui/core';
-import { createTheme } from '@material-ui/core/styles';
-import amber from '@material-ui/core/colors/amber';
+import { ThemeProvider, Theme, StyledEngineProvider, adaptV4Theme } from '@mui/material';
+import { createTheme } from '@mui/material/styles';
 import ErrorBackdrop from './Components/ErrorBackdrop';
 import RequestBackdrop from './Components/RequestBackdrop';
+import { amber } from '@mui/material/colors';
 
-const theme = createTheme({
+
+declare module '@mui/styles/defaultTheme' {
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
+  interface DefaultTheme extends Theme {}
+}
+
+
+const theme = createTheme(adaptV4Theme({
   palette: {
     primary: {
       main: '#00838f',
     },
     secondary: amber,
   }
-});
+}));
 
 function AuthWrapper() {
   // Force the user to sign in if not already authenticated, then render the app.
@@ -52,17 +59,19 @@ function AuthWrapper() {
 // https://docs.microsoft.com/en-us/azure/azure-monitor/app/javascript-react-plugin
 ReactDOM.render(
   <React.StrictMode>
-    <ThemeProvider theme={theme}>
-      <AppInsightsContext.Provider value={aiReact}>
-        <MsalProvider instance={globalMsalInstance}>
-          <MuiPickersUtilsProvider utils={DateFnsUtils}>
-            <RecoilRoot>
-              <AuthWrapper />
-            </RecoilRoot>
-          </MuiPickersUtilsProvider>
-        </MsalProvider>
-      </AppInsightsContext.Provider>
-    </ThemeProvider>
+    <StyledEngineProvider injectFirst>
+      <ThemeProvider theme={theme}>
+        <AppInsightsContext.Provider value={aiReact}>
+          <MsalProvider instance={globalMsalInstance}>
+            <MuiPickersUtilsProvider utils={DateFnsUtils}>
+              <RecoilRoot>
+                <AuthWrapper />
+              </RecoilRoot>
+            </MuiPickersUtilsProvider>
+          </MsalProvider>
+        </AppInsightsContext.Provider>
+      </ThemeProvider>
+    </StyledEngineProvider>
   </React.StrictMode>,
   document.getElementById('root')
 );

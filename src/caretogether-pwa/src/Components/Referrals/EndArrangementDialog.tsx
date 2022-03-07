@@ -1,4 +1,4 @@
-import { Grid } from '@material-ui/core';
+import { Grid } from '@mui/material';
 import { KeyboardDateTimePicker } from '@material-ui/pickers';
 import { useState } from 'react';
 import { useParams } from 'react-router';

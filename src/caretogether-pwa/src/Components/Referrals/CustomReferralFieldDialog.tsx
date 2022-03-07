@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@material-ui/core';
+import { FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@mui/material';
 import { CompletedCustomFieldInfo, CustomField, CustomFieldType } from '../../GeneratedClient';
 import { UpdateDialog } from '../UpdateDialog';
 import { useReferralsModel } from '../../Model/ReferralsModel';

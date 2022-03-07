@@ -1,11 +1,11 @@
 import React from 'react';
 import clsx from 'clsx';
-import { makeStyles } from '@material-ui/core/styles';
-import { Typography, CssBaseline, IconButton, Drawer, Divider, List, useMediaQuery, useTheme } from '@material-ui/core';
-import PermPhoneMsgIcon from '@material-ui/icons/PermPhoneMsg';
-import PeopleIcon from '@material-ui/icons/People';
-import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
-//import DashboardIcon from '@material-ui/icons/Dashboard';
+import makeStyles from '@mui/styles/makeStyles';
+import { Typography, CssBaseline, IconButton, Drawer, Divider, List, useMediaQuery, useTheme } from '@mui/material';
+import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
+import PeopleIcon from '@mui/icons-material/People';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+//import DashboardIcon from '@mui/icons-material/Dashboard';
 import { BrowserRouter as Router } from "react-router-dom";
 import { ListItemLink } from './Components/ListItemLink';
 import { useRecoilValue } from 'recoil';
@@ -116,7 +116,7 @@ function App() {
   };
 
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const organizationName = useRecoilValue(organizationNameData);
   const locationName = useRecoilValue(locationNameData);
@@ -145,7 +145,7 @@ function App() {
                   <p className={classes.drawerHeaderOrganization}>{organizationName}</p>
                   <p className={classes.drawerHeaderLocation}>{locationName}</p>
                 </header>}
-                <IconButton onClick={handleDrawerClose}>
+                <IconButton onClick={handleDrawerClose} size="large">
                   <ChevronLeftIcon />
                 </IconButton>
               </div>

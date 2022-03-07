@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Grid } from '@material-ui/core';
+import { Grid } from '@mui/material';
 import { UpdateDialog } from '../UpdateDialog';
 import { KeyboardDatePicker } from '@material-ui/pickers';
 import { useReferralsModel } from '../../Model/ReferralsModel';

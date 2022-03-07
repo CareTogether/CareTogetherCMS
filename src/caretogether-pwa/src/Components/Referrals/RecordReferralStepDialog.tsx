@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { makeStyles } from '@material-ui/core/styles';
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, Grid, InputLabel, Link, MenuItem, Select, TextField } from '@material-ui/core';
+import makeStyles from '@mui/styles/makeStyles';
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, Grid, InputLabel, Link, MenuItem, Select, TextField } from '@mui/material';
 import { CombinedFamilyInfo, ActionRequirement, DocumentLinkRequirement, NoteEntryRequirement } from '../../GeneratedClient';
 import { KeyboardDatePicker } from '@material-ui/pickers';
 import { uploadFileToTenant } from "../../Model/FilesModel";

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@material-ui/core';
+import { FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@mui/material';
 import { Person, EmailAddressType } from '../../GeneratedClient';
 import { useDirectoryModel } from '../../Model/DirectoryModel';
 import { UpdateDialog } from '../UpdateDialog';

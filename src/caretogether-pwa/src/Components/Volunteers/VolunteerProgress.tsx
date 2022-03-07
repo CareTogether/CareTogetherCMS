@@ -1,11 +1,11 @@
-import { makeStyles } from '@material-ui/core/styles';
-import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, Button, ButtonGroup, useMediaQuery, useTheme, FormControlLabel, Switch } from '@material-ui/core';
+import makeStyles from '@mui/styles/makeStyles';
+import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, Button, ButtonGroup, useMediaQuery, useTheme, FormControlLabel, Switch } from '@mui/material';
 import { useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../../Model/VolunteersModel';
 import { allApprovalAndOnboardingRequirementsData } from '../../Model/ConfigurationModel';
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import AddIcon from '@material-ui/icons/Add';
+import AddIcon from '@mui/icons-material/Add';
 import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';
 import { CombinedFamilyInfo } from '../../GeneratedClient';
 import { HeaderContent, HeaderTitle } from '../Header';
@@ -79,7 +79,7 @@ function VolunteerProgress(props: { onOpen: () => void }) {
   const [createVolunteerFamilyDialogOpen, setCreateVolunteerFamilyDialogOpen] = useState(false);
   
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const location = useLocation();
   
   const [expandedView, setExpandedView] = useLocalStorage('volunteer-progress-expanded', true);

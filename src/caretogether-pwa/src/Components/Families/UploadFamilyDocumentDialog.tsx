@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { makeStyles } from '@material-ui/core/styles';
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@material-ui/core';
+import makeStyles from '@mui/styles/makeStyles';
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { CombinedFamilyInfo } from '../../GeneratedClient';
 import { uploadFileToTenant } from '../../Model/FilesModel';
 import { useRecoilValue } from 'recoil';

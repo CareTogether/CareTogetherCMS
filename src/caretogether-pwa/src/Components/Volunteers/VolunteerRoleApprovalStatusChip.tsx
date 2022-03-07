@@ -1,4 +1,4 @@
-import { Chip } from "@material-ui/core";
+import { Chip } from "@mui/material";
 import { RoleApprovalStatus, RoleVersionApproval } from "../../GeneratedClient";
 
 type VolunteerRoleApprovalStatusChipProps = {

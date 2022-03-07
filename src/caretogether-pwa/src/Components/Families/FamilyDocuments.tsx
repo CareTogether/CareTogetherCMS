@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { makeStyles, Menu, MenuItem } from '@material-ui/core';
+import { Menu, MenuItem } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 import { format } from 'date-fns';
 import { useRecoilValue } from 'recoil';
 import { CombinedFamilyInfo, Permission, UploadedDocumentInfo } from '../../GeneratedClient';

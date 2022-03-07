@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { makeStyles } from '@material-ui/core/styles';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup } from '@material-ui/core';
+import makeStyles from '@mui/styles/makeStyles';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup } from '@mui/material';
 import { CombinedFamilyInfo, ArrangementPolicy, ChildInvolvement } from '../../GeneratedClient';
 import { visibleFamiliesData } from '../../Model/ModelLoader';
 import { KeyboardDatePicker } from '@material-ui/pickers';
