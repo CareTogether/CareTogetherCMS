@@ -1,0 +1,120 @@
+﻿using JsonPolymorph;
+using Nito.AsyncEx;
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace CareTogether.Resources.Notes
+{
+    [JsonHierarchyBase]
+    public abstract partial record NotesEvent(Guid UserId, DateTime TimestampUtc)
+        : DomainEvent(UserId, TimestampUtc);
+    public sealed record NoteCommandExecuted(Guid UserId, DateTime TimestampUtc,
+        NoteCommand Command) : NotesEvent(UserId, TimestampUtc);
+
+    public sealed class NotesModel
+    {
+        private ImmutableDictionary<Guid, NoteEntry> notes =
+            ImmutableDictionary<Guid, NoteEntry>.Empty;
+
+
+        public long LastKnownSequenceNumber { get; private set; } = -1;
+
+
+        public static async Task<NotesModel> InitializeAsync(
+            IAsyncEnumerable<(NotesEvent DomainEvent, long SequenceNumber)> eventLog,
+            Func<Guid, Task<string?>> loadDraftNoteAsync)
+        {
+            var model = new NotesModel();
+
+            await foreach (var (domainEvent, sequenceNumber) in eventLog)
+                model.ReplayEvent(domainEvent, sequenceNumber);
+
+            // Since draft note contents are not stored in the immutable log, note command replays will result in 'null'
+            // contents for any notes that have not been approved (approved note contents are stored in the log). So, we
+            // need to load the contents for any draft notes.
+            model.notes = (await model.notes.Select(async note =>
+            {
+                return (note.Key, note.Value with
+                {
+                    Contents = note.Value.Status == NoteStatus.Approved
+                        ? note.Value.Contents
+                        : await loadDraftNoteAsync(note.Key)
+                });
+            }).WhenAll()).ToImmutableDictionary(note => note.Key, note => note.Item2);
+
+            return model;
+        }
+
+
+        public (NoteCommandExecuted Event, long SequenceNumber, NoteEntry? NoteEntry, Action OnCommit)
+            ExecuteNoteCommand(NoteCommand command, Guid userId, DateTime timestampUtc)
+        {
+            var noteEntryToUpsert = command switch
+            {
+                CreateDraftNote c => new NoteEntry(c.NoteId, c.FamilyId, userId, timestampUtc, NoteStatus.Draft,
+                    c.DraftNoteContents, ApproverId: null, ApprovedTimestampUtc: null),
+                DiscardDraftNote c => null,
+                _ => notes.TryGetValue(command.NoteId, out var noteEntry)
+                    ? command switch
+                    {
+                        //TODO: Invariants need to be enforced in the model - e.g., no edits or deletes to approved notes.
+                        EditDraftNote c => noteEntry with
+                        {
+                            Contents = c.DraftNoteContents,
+                            LastEditTimestampUtc = timestampUtc
+                        },
+                        ApproveNote c => noteEntry with
+                        {
+                            Status = NoteStatus.Approved,
+                            Contents = c.FinalizedNoteContents,
+                            ApprovedTimestampUtc = timestampUtc,
+                            ApproverId = userId
+                        },
+                        _ => throw new NotImplementedException(
+                            $"The command type '{command.GetType().FullName}' has not been implemented.")
+                    }
+                    : throw new KeyNotFoundException("A note with the specified ID does not exist.")
+            };
+
+            return (
+                Event: new NoteCommandExecuted(userId, timestampUtc, command),
+                SequenceNumber: LastKnownSequenceNumber + 1,
+                NoteEntry: noteEntryToUpsert,
+                OnCommit: () =>
+                {
+                    LastKnownSequenceNumber++;
+                    notes = noteEntryToUpsert == null
+                        ? notes.Remove(command.NoteId)
+                        : notes.SetItem(command.NoteId, noteEntryToUpsert);
+                });
+        }
+
+        public ImmutableList<NoteEntry> FindNoteEntries(Func<NoteEntry, bool> predicate)
+        {
+            return notes.Values
+                .Where(predicate)
+                .ToImmutableList();
+        }
+
+        public NoteEntry GetNoteEntry(Guid noteId) => notes[noteId];
+
+
+        private void ReplayEvent(NotesEvent domainEvent, long sequenceNumber)
+        {
+            if (domainEvent is NoteCommandExecuted noteCommandExecuted)
+            {
+                var (_, _, _, onCommit) = ExecuteNoteCommand(noteCommandExecuted.Command,
+                    noteCommandExecuted.UserId, noteCommandExecuted.TimestampUtc);
+                onCommit();
+            }
+            else
+                throw new NotImplementedException(
+                $"The event type '{domainEvent.GetType().FullName}' has not been implemented.");
+
+            LastKnownSequenceNumber = sequenceNumber;
+        }
+    }
+}

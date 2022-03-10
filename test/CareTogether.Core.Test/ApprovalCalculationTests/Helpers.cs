@@ -1,4 +1,6 @@
 ﻿using CareTogether.Resources;
+using CareTogether.Resources.Approvals;
+using CareTogether.Resources.Policies;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;

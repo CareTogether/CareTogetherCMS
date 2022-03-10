@@ -1,6 +1,13 @@
-﻿using CareTogether.Resources;
-using CareTogether.Resources.Models;
-using CareTogether.Resources.Storage;
+﻿using CareTogether.Utilities.EventLog;
+using CareTogether.Utilities.ObjectStore;
+using CareTogether.Resources;
+using CareTogether.Resources.Accounts;
+using CareTogether.Resources.Approvals;
+using CareTogether.Resources.Directory;
+using CareTogether.Resources.Goals;
+using CareTogether.Resources.Notes;
+using CareTogether.Resources.Policies;
+using CareTogether.Resources.Referrals;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -49,11 +56,11 @@ namespace CareTogether.TestData
 
 
         public static async Task PopulateTestDataAsync(
-            IMultitenantEventLog<DirectoryEvent> directoryEventLog,
-            IMultitenantEventLog<GoalCommandExecutedEvent> goalsEventLog,
-            IMultitenantEventLog<ReferralEvent> referralsEventLog,
-            IMultitenantEventLog<ApprovalEvent> approvalsEventLog,
-            IMultitenantEventLog<NotesEvent> notesEventLog,
+            IEventLog<DirectoryEvent> directoryEventLog,
+            IEventLog<GoalCommandExecutedEvent> goalsEventLog,
+            IEventLog<ReferralEvent> referralsEventLog,
+            IEventLog<ApprovalEvent> approvalsEventLog,
+            IEventLog<NotesEvent> notesEventLog,
             IObjectStore<string?> draftNotesStore,
             IObjectStore<OrganizationConfiguration> configurationStore,
             IObjectStore<EffectiveLocationPolicy> policiesStore,
@@ -72,7 +79,7 @@ namespace CareTogether.TestData
 
         #endregion
 
-        public static async Task PopulateDirectoryEvents(IMultitenantEventLog<DirectoryEvent> directoryEventLog)
+        public static async Task PopulateDirectoryEvents(IEventLog<DirectoryEvent> directoryEventLog)
         {
             await directoryEventLog.AppendEventsAsync(guid1, guid2,
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(adminId, adminId, "Administrator", "McTester", Gender.Male, new ExactAge(new DateTime(2021, 7, 1)), "Ethnic",
@@ -193,7 +200,7 @@ namespace CareTogether.TestData
             );
         }
 
-        public static async Task PopulateReferralEvents(IMultitenantEventLog<ReferralEvent> referralsEventLog)
+        public static async Task PopulateReferralEvents(IEventLog<ReferralEvent> referralsEventLog)
         {
             await referralsEventLog.AppendEventsAsync(guid1, guid2,
                 new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 5, 4, 10, 0), new CreateReferral(guid1, guid1, new DateTime(2020, 3, 5, 4, 10, 0))),
@@ -227,7 +234,7 @@ namespace CareTogether.TestData
                     new DateTime(2021, 7, 10, 19, 32, 0), adminId))*/);
         }
 
-        public static async Task PopulateGoalEvents(IMultitenantEventLog<GoalCommandExecutedEvent> goalsEventLog)
+        public static async Task PopulateGoalEvents(IEventLog<GoalCommandExecutedEvent> goalsEventLog)
         {
             await goalsEventLog.AppendEventsAsync(guid1, guid2,
                 new GoalCommandExecutedEvent(adminId, new DateTime(2021, 7, 11), new CreateGoal(guid2, guid1, "Get an apartment", new DateTime(2021, 8, 11))),
@@ -238,7 +245,7 @@ namespace CareTogether.TestData
                 new GoalCommandExecutedEvent(adminId, new DateTime(2021, 8, 30), new MarkGoalCompleted(guid2, guid1, new DateTime(2021, 8, 27))));
         }
 
-        public static async Task PopulateApprovalEvents(IMultitenantEventLog<ApprovalEvent> approvalsEventLog)
+        public static async Task PopulateApprovalEvents(IEventLog<ApprovalEvent> approvalsEventLog)
         {
             await approvalsEventLog.AppendEventsAsync(guid1, guid2,
                 new VolunteerFamilyCommandExecuted(adminId, new DateTime(),
@@ -275,7 +282,7 @@ namespace CareTogether.TestData
                     new CompleteVolunteerRequirement(guid2, guid5, guid7, "Family Friend Application", new DateTime(2021, 8, 11), guid7)));
         }
 
-        public static async Task PopulateNoteEvents(IMultitenantEventLog<NotesEvent> referralsEventLog)
+        public static async Task PopulateNoteEvents(IEventLog<NotesEvent> referralsEventLog)
         {
             await referralsEventLog.AppendEventsAsync(guid1, guid2,
                 new NoteCommandExecuted(guid4, new DateTime(2020, 3, 15, 8, 33, 34), new CreateDraftNote(guid1, guid4, null)),
@@ -614,7 +621,7 @@ namespace CareTogether.TestData
         }
 
 
-        private static async Task AppendEventsAsync<T>(this IMultitenantEventLog<T> eventLog,
+        private static async Task AppendEventsAsync<T>(this IEventLog<T> eventLog,
             Guid organizationId, Guid locationId, params T[] events)
         {
             foreach (var (domainEvent, index) in events

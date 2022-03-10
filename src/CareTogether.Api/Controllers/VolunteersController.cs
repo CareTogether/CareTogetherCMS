@@ -1,5 +1,7 @@
 ﻿using CareTogether.Managers;
+using CareTogether.Managers.Approval;
 using CareTogether.Resources;
+using CareTogether.Resources.Approvals;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;

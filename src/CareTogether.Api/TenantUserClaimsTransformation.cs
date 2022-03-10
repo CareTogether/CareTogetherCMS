@@ -1,4 +1,6 @@
 ﻿using CareTogether.Resources;
+using CareTogether.Resources.Accounts;
+using CareTogether.Resources.Policies;
 using Microsoft.AspNetCore.Authentication;
 using System.Linq;
 using System.Security.Claims;

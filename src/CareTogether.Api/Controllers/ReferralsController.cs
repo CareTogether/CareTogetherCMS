@@ -1,5 +1,7 @@
 ﻿using CareTogether.Managers;
+using CareTogether.Managers.Referrals;
 using CareTogether.Resources;
+using CareTogether.Resources.Referrals;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.FeatureManagement.Mvc;
@@ -14,11 +16,11 @@ namespace CareTogether.Api.Controllers
     [Route("/api/{organizationId:guid}/{locationId:guid}/[controller]")]
     public class ReferralsController : ControllerBase
     {
-        private readonly IReferralManager referralManager;
+        private readonly IReferralsManager referralsManager;
 
-        public ReferralsController(IReferralManager referralManager)
+        public ReferralsController(IReferralsManager referralsManager)
         {
-            this.referralManager = referralManager;
+            this.referralsManager = referralsManager;
         }
 
 
@@ -26,7 +28,7 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<CombinedFamilyInfo>> SubmitReferralCommandAsync(Guid organizationId, Guid locationId,
             [FromBody] ReferralCommand command)
         {
-            var result = await referralManager.ExecuteReferralCommandAsync(organizationId, locationId, User, command);
+            var result = await referralsManager.ExecuteReferralCommandAsync(organizationId, locationId, User, command);
             return result;
         }
 
@@ -34,7 +36,7 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<CombinedFamilyInfo>> SubmitArrangementCommandAsync(Guid organizationId, Guid locationId,
             [FromBody] ArrangementCommand command)
         {
-            var result = await referralManager.ExecuteArrangementCommandAsync(organizationId, locationId, User, command);
+            var result = await referralsManager.ExecuteArrangementCommandAsync(organizationId, locationId, User, command);
             return result;
         }
     }

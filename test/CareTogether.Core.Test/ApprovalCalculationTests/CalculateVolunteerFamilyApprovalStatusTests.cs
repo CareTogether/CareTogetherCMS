@@ -1,5 +1,9 @@
 ﻿using CareTogether.Engines;
+using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Resources;
+using CareTogether.Resources.Approvals;
+using CareTogether.Resources.Directory;
+using CareTogether.Resources.Policies;
 using CareTogether.TestData;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -47,8 +51,8 @@ namespace CareTogether.Core.Test
                 .Add(new CustodialRelationship(guid5, guid2, CustodialRelationshipType.LegalGuardian)),
             ImmutableList<UploadedDocumentInfo>.Empty, ImmutableList<Guid>.Empty);
 
-        private static MemoryMultitenantObjectStore<EffectiveLocationPolicy> policiesStore =
-            new MemoryMultitenantObjectStore<EffectiveLocationPolicy>();
+        private static MemoryObjectStore<EffectiveLocationPolicy> policiesStore =
+            new MemoryObjectStore<EffectiveLocationPolicy>();
         private static readonly VolunteerPolicy volunteerPolicy;
 
         static CalculateVolunteerFamilyApprovalStatusTests()

@@ -1,7 +1,12 @@
-﻿using CareTogether.Engines;
+﻿using CareTogether.Engines.Authorization;
+using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Resources;
-using System;
+using CareTogether.Resources.Approvals;
+using CareTogether.Resources.Directory;
+using CareTogether.Resources.Notes;
+using CareTogether.Resources.Referrals;
 using Nito.AsyncEx;
+using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Security.Claims;

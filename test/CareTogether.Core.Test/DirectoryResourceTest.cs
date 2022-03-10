@@ -1,5 +1,5 @@
 using CareTogether.Resources;
-using CareTogether.Resources.Models;
+using CareTogether.Resources.Directory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -22,13 +22,13 @@ namespace CareTogether.Core.Test
         static readonly Guid guid6 = Id('6');
 
 #nullable disable
-        MemoryMultitenantEventLog<DirectoryEvent> events;
+        MemoryEventLog<DirectoryEvent> events;
 #nullable restore
 
         [TestInitialize]
         public async Task TestInitialize()
         {
-            events = new MemoryMultitenantEventLog<DirectoryEvent>();
+            events = new MemoryEventLog<DirectoryEvent>();
             foreach (var (domainEvent, index) in EventSequence(
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid1, null, "John", "Doe", Gender.Male, new ExactAge(new DateTime(1980, 7, 1)), "Ethnic",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, "Test", "ABC")),
