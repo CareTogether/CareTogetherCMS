@@ -3,7 +3,7 @@ using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 
-namespace CareTogether.Resources
+namespace CareTogether.Resources.Policies
 {
     public sealed record OrganizationConfiguration(string OrganizationName,
         ImmutableList<LocationConfiguration> Locations,

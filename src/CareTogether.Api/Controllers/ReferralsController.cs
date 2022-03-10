@@ -1,6 +1,7 @@
 ﻿using CareTogether.Managers;
 using CareTogether.Managers.Referrals;
 using CareTogether.Resources;
+using CareTogether.Resources.Referrals;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.FeatureManagement.Mvc;

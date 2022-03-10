@@ -1,4 +1,5 @@
 using CareTogether.Resources;
+using CareTogether.Resources.Approvals;
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;

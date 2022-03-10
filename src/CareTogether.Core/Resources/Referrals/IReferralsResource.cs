@@ -1,9 +1,10 @@
-﻿using JsonPolymorph;
+﻿using CareTogether.Resources.Policies;
+using JsonPolymorph;
 using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 
-namespace CareTogether.Resources
+namespace CareTogether.Resources.Referrals
 {
     public record ReferralEntry(Guid Id, Guid FamilyId,
         DateTime OpenedAtUtc, DateTime? ClosedAtUtc, ReferralCloseReason? CloseReason,

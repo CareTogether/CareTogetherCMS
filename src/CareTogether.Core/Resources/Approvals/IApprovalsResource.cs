@@ -3,7 +3,7 @@ using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 
-namespace CareTogether.Resources
+namespace CareTogether.Resources.Approvals
 {
     public record VolunteerFamilyEntry(Guid FamilyId,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,

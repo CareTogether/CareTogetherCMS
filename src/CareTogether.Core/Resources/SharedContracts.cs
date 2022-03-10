@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CareTogether.Resources.Policies;
+using System;
 
 namespace CareTogether.Resources
 {

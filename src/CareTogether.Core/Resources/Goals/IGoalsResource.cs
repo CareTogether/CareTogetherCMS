@@ -3,7 +3,7 @@ using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 
-namespace CareTogether.Resources
+namespace CareTogether.Resources.Goals
 {
     public sealed record Goal(Guid Id, Guid PersonId,
         string Description, DateTime CreatedDate, DateTime? TargetDate, DateTime? CompletedDate);

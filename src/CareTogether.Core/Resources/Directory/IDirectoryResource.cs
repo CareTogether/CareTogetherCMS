@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 
-namespace CareTogether.Resources
+namespace CareTogether.Resources.Directory
 {
     public sealed record Family(Guid Id, Guid PrimaryFamilyContactPersonId,
         ImmutableList<(Person, FamilyAdultRelationshipInfo)> Adults,

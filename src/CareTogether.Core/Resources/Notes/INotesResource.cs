@@ -3,7 +3,7 @@ using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 
-namespace CareTogether.Resources
+namespace CareTogether.Resources.Notes
 {
     public record NoteEntry(Guid Id, Guid FamilyId, Guid AuthorId, DateTime LastEditTimestampUtc, NoteStatus Status,
         string? Contents, Guid? ApproverId, DateTime? ApprovedTimestampUtc);

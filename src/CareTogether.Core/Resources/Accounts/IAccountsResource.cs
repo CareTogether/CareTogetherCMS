@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-namespace CareTogether.Resources
+namespace CareTogether.Resources.Accounts
 {
     public sealed record UserOrganizationAccess(Guid OrganizationId,
         ImmutableList<UserLocationAccess> LocationIds);

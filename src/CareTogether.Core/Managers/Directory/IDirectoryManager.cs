@@ -1,4 +1,6 @@
 using CareTogether.Resources;
+using CareTogether.Resources.Directory;
+using CareTogether.Resources.Notes;
 using JsonPolymorph;
 using System;
 using System.Collections.Generic;

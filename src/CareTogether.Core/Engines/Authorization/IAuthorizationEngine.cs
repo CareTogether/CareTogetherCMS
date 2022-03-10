@@ -1,5 +1,9 @@
 ﻿using CareTogether.Managers;
 using CareTogether.Resources;
+using CareTogether.Resources.Approvals;
+using CareTogether.Resources.Directory;
+using CareTogether.Resources.Notes;
+using CareTogether.Resources.Referrals;
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;

@@ -1,4 +1,5 @@
 ﻿using CareTogether.Resources;
+using CareTogether.Resources.Accounts;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
