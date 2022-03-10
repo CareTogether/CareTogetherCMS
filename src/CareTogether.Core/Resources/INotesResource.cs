@@ -1,0 +1,38 @@
+﻿using JsonPolymorph;
+using System;
+using System.Collections.Immutable;
+using System.Threading.Tasks;
+
+namespace CareTogether.Resources
+{
+    public record NoteEntry(Guid Id, Guid FamilyId, Guid AuthorId, DateTime LastEditTimestampUtc, NoteStatus Status,
+        string? Contents, Guid? ApproverId, DateTime? ApprovedTimestampUtc);
+
+    public enum NoteStatus { Draft, Approved };
+
+    [JsonHierarchyBase]
+    public abstract partial record NoteCommand(Guid FamilyId, Guid NoteId);
+    public sealed record CreateDraftNote(Guid FamilyId, Guid NoteId,
+        string? DraftNoteContents)
+        : NoteCommand(FamilyId, NoteId);
+    public sealed record EditDraftNote(Guid FamilyId, Guid NoteId,
+        string? DraftNoteContents)
+        : NoteCommand(FamilyId, NoteId);
+    public sealed record DiscardDraftNote(Guid FamilyId, Guid NoteId)
+        : NoteCommand(FamilyId, NoteId);
+    public sealed record ApproveNote(Guid FamilyId, Guid NoteId,
+        string FinalizedNoteContents)
+        : NoteCommand(FamilyId, NoteId);
+
+    /// <summary>
+    /// The <see cref="INotesResource"/> models the lifecycle of record-keeping notes in CareTogether organizations,
+    /// which are always kept at the family level, as well as authorizing related queries.
+    /// </summary>
+    public interface INotesResource
+    {
+        Task<ImmutableList<NoteEntry>> ListFamilyNotesAsync(Guid organizationId, Guid locationId, Guid familyId);
+
+        Task<NoteEntry?> ExecuteNoteCommandAsync(Guid organizationId, Guid locationId,
+            NoteCommand command, Guid userId);
+    }
+}

@@ -24,7 +24,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CareTogether.Contracts\CareTogether.Contracts.csproj" />
     <ProjectReference Include="..\CareTogether.Core\CareTogether.Core.csproj" />
     <ProjectReference Include="..\..\test\CareTogether.TestData\CareTogether.TestData.csproj" />
   </ItemGroup>
