@@ -3,7 +3,7 @@ using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 
-namespace CareTogether.Engines
+namespace CareTogether.Engines.PolicyEvaluation
 {
     public sealed record VolunteerFamilyApprovalStatus(
         ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> FamilyRoleApprovals,
@@ -17,10 +17,6 @@ namespace CareTogether.Engines
         ImmutableList<RemovedRole> RemovedIndividualRoles,
         ImmutableList<string> MissingIndividualRequirements,
         ImmutableList<string> AvailableIndividualApplications);
-
-    public sealed record RoleVersionApproval(string Version, RoleApprovalStatus ApprovalStatus);
-
-    public enum RoleApprovalStatus { Prospective = 0, Approved = 1, Onboarded = 2 };
 
     public sealed record ReferralStatus(
         ImmutableList<string> MissingIntakeRequirements,

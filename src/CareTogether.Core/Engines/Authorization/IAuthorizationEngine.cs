@@ -4,7 +4,7 @@ using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-namespace CareTogether.Engines
+namespace CareTogether.Engines.Authorization
 {
     public interface IAuthorizationEngine
     {

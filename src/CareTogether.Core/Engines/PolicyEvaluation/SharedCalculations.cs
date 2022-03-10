@@ -3,7 +3,7 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 
-namespace CareTogether.Engines
+namespace CareTogether.Engines.PolicyEvaluation
 {
     internal static class SharedCalculations
     {

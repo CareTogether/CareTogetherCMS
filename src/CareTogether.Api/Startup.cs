@@ -1,5 +1,6 @@
 using Azure.Storage.Blobs;
-using CareTogether.Engines;
+using CareTogether.Engines.Authorization;
+using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Managers;
 using CareTogether.Resources;
 using CareTogether.Resources.Models;
