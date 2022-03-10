@@ -63,11 +63,11 @@ namespace CareTogether.Api
             var blobServiceClient = new BlobServiceClient(Configuration["Persistence:BlobStorageConnectionString"]);
 
             // Data store services
-            var directoryEventLog = new AppendBlobMultitenantEventLog<DirectoryEvent>(blobServiceClient, "DirectoryEventLog");
-            var goalsEventLog = new AppendBlobMultitenantEventLog<GoalCommandExecutedEvent>(blobServiceClient, "GoalsEventLog");
-            var referralsEventLog = new AppendBlobMultitenantEventLog<ReferralEvent>(blobServiceClient, "ReferralsEventLog");
-            var approvalsEventLog = new AppendBlobMultitenantEventLog<ApprovalEvent>(blobServiceClient, "ApprovalsEventLog");
-            var notesEventLog = new AppendBlobMultitenantEventLog<NotesEvent>(blobServiceClient, "NotesEventLog");
+            var directoryEventLog = new AppendBlobEventLog<DirectoryEvent>(blobServiceClient, "DirectoryEventLog");
+            var goalsEventLog = new AppendBlobEventLog<GoalCommandExecutedEvent>(blobServiceClient, "GoalsEventLog");
+            var referralsEventLog = new AppendBlobEventLog<ReferralEvent>(blobServiceClient, "ReferralsEventLog");
+            var approvalsEventLog = new AppendBlobEventLog<ApprovalEvent>(blobServiceClient, "ApprovalsEventLog");
+            var notesEventLog = new AppendBlobEventLog<NotesEvent>(blobServiceClient, "NotesEventLog");
             var draftNotesStore = new JsonBlobObjectStore<string?>(blobServiceClient, "DraftNotes");
             var configurationStore = new JsonBlobObjectStore<OrganizationConfiguration>(blobServiceClient, "Configuration");
             var policiesStore = new JsonBlobObjectStore<EffectiveLocationPolicy>(blobServiceClient, "LocationPolicies");

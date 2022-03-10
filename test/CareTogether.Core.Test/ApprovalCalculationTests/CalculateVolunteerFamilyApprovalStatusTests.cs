@@ -51,8 +51,8 @@ namespace CareTogether.Core.Test
                 .Add(new CustodialRelationship(guid5, guid2, CustodialRelationshipType.LegalGuardian)),
             ImmutableList<UploadedDocumentInfo>.Empty, ImmutableList<Guid>.Empty);
 
-        private static MemoryMultitenantObjectStore<EffectiveLocationPolicy> policiesStore =
-            new MemoryMultitenantObjectStore<EffectiveLocationPolicy>();
+        private static MemoryObjectStore<EffectiveLocationPolicy> policiesStore =
+            new MemoryObjectStore<EffectiveLocationPolicy>();
         private static readonly VolunteerPolicy volunteerPolicy;
 
         static CalculateVolunteerFamilyApprovalStatusTests()

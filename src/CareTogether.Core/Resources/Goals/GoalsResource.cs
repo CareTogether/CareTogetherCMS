@@ -7,11 +7,11 @@ namespace CareTogether.Resources.Goals
 {
     public sealed class GoalsResource : IGoalsResource
     {
-        private readonly IMultitenantEventLog<GoalCommandExecutedEvent> goalsEventLog;
+        private readonly IEventLog<GoalCommandExecutedEvent> goalsEventLog;
         private readonly ConcurrentLockingStore<(Guid organizationId, Guid locationId), GoalsModel> tenantGoalsModels;
 
 
-        public GoalsResource(IMultitenantEventLog<GoalCommandExecutedEvent> goalsEventLog)
+        public GoalsResource(IEventLog<GoalCommandExecutedEvent> goalsEventLog)
         {
             this.goalsEventLog = goalsEventLog;
             tenantGoalsModels = new ConcurrentLockingStore<(Guid organizationId, Guid locationId), GoalsModel>(key =>

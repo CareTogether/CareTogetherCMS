@@ -11,13 +11,13 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Utilities.EventLog
 {
-    public class AppendBlobMultitenantEventLog<T> : IMultitenantEventLog<T>
+    public class AppendBlobEventLog<T> : IEventLog<T>
     {
         private readonly string _logType;
         private readonly BlobServiceClient _blobServiceClient;
         private readonly ConcurrentDictionary<Guid, BlobContainerClient> organizationBlobContainerClients;
 
-        public AppendBlobMultitenantEventLog(BlobServiceClient blobServiceClient, string logType)
+        public AppendBlobEventLog(BlobServiceClient blobServiceClient, string logType)
         {
             _blobServiceClient = blobServiceClient;
             _logType = logType;

@@ -8,11 +8,11 @@ namespace CareTogether.Resources.Directory
 {
     public sealed class DirectoryResource : IDirectoryResource
     {
-        private readonly IMultitenantEventLog<DirectoryEvent> eventLog;
+        private readonly IEventLog<DirectoryEvent> eventLog;
         private readonly ConcurrentLockingStore<(Guid organizationId, Guid locationId), DirectoryModel> tenantModels;
 
 
-        public DirectoryResource(IMultitenantEventLog<DirectoryEvent> eventLog)
+        public DirectoryResource(IEventLog<DirectoryEvent> eventLog)
         {
             this.eventLog = eventLog;
             tenantModels = new ConcurrentLockingStore<(Guid organizationId, Guid locationId), DirectoryModel>(key =>

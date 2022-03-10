@@ -15,7 +15,7 @@ namespace CareTogether.Core.Test
 
 
     [TestClass]
-    public class AppendBlobMultitenantEventLogTest
+    public class AppendBlobEventLogTest
     {
         private static readonly BlobServiceClient testingClient = new BlobServiceClient("UseDevelopmentStorage=true");
         private static Guid Id(char x) => Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
@@ -27,7 +27,7 @@ namespace CareTogether.Core.Test
         static readonly Guid guid3 = Id('3');
         static readonly Guid guid4 = Id('4');
 
-        private static async Task AppendEventsAsync<T>(IMultitenantEventLog<T> eventLog,
+        private static async Task AppendEventsAsync<T>(IEventLog<T> eventLog,
             Guid organizationId, Guid locationId, params T[] events)
         {
             foreach (var (domainEvent, index) in events
@@ -38,8 +38,8 @@ namespace CareTogether.Core.Test
         }
 
 #nullable disable
-        AppendBlobMultitenantEventLog<TestEventA> directoryEventLog;
-        AppendBlobMultitenantEventLog<TestEventB> referralsEventLog;
+        AppendBlobEventLog<TestEventA> directoryEventLog;
+        AppendBlobEventLog<TestEventB> referralsEventLog;
 #nullable restore
 
         [TestInitialize]
@@ -48,8 +48,8 @@ namespace CareTogether.Core.Test
             testingClient.GetBlobContainerClient(organizationId.ToString()).DeleteIfExists();
             testingClient.GetBlobContainerClient(guid3.ToString()).DeleteIfExists();
 
-            directoryEventLog = new AppendBlobMultitenantEventLog<TestEventA>(testingClient, "A");
-            referralsEventLog = new AppendBlobMultitenantEventLog<TestEventB>(testingClient, "B");
+            directoryEventLog = new AppendBlobEventLog<TestEventA>(testingClient, "A");
+            referralsEventLog = new AppendBlobEventLog<TestEventB>(testingClient, "B");
         }
 
         [TestCleanup]

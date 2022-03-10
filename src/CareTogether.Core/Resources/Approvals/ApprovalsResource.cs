@@ -7,11 +7,11 @@ namespace CareTogether.Resources.Approvals
 {
     public sealed class ApprovalsResource : IApprovalsResource
     {
-        private readonly IMultitenantEventLog<ApprovalEvent> eventLog;
+        private readonly IEventLog<ApprovalEvent> eventLog;
         private readonly ConcurrentLockingStore<(Guid organizationId, Guid locationId), ApprovalModel> tenantModels;
 
 
-        public ApprovalsResource(IMultitenantEventLog<ApprovalEvent> eventLog)
+        public ApprovalsResource(IEventLog<ApprovalEvent> eventLog)
         {
             this.eventLog = eventLog;
             tenantModels = new ConcurrentLockingStore<(Guid organizationId, Guid locationId), ApprovalModel>(key =>

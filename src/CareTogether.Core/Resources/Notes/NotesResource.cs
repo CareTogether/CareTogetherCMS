@@ -8,12 +8,12 @@ namespace CareTogether.Resources.Notes
 {
     public sealed class NotesResource : INotesResource
     {
-        private readonly IMultitenantEventLog<NotesEvent> eventLog;
+        private readonly IEventLog<NotesEvent> eventLog;
         private readonly IObjectStore<string?> draftNotesStore;
         private readonly ConcurrentLockingStore<(Guid organizationId, Guid locationId), NotesModel> tenantModels;
 
 
-        public NotesResource(IMultitenantEventLog<NotesEvent> eventLog, IObjectStore<string?> draftNotesStore)
+        public NotesResource(IEventLog<NotesEvent> eventLog, IObjectStore<string?> draftNotesStore)
         {
             this.eventLog = eventLog;
             this.draftNotesStore = draftNotesStore;

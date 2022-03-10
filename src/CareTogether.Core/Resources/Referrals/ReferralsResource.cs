@@ -7,11 +7,11 @@ namespace CareTogether.Resources.Referrals
 {
     public sealed class ReferralsResource : IReferralsResource
     {
-        private readonly IMultitenantEventLog<ReferralEvent> eventLog;
+        private readonly IEventLog<ReferralEvent> eventLog;
         private readonly ConcurrentLockingStore<(Guid organizationId, Guid locationId), ReferralModel> tenantModels;
 
 
-        public ReferralsResource(IMultitenantEventLog<ReferralEvent> eventLog)
+        public ReferralsResource(IEventLog<ReferralEvent> eventLog)
         {
             this.eventLog = eventLog;
             tenantModels = new ConcurrentLockingStore<(Guid organizationId, Guid locationId), ReferralModel>(key =>

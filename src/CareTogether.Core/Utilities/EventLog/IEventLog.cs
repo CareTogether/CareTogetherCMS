@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Utilities.EventLog
 {
-    public interface IMultitenantEventLog<T>
+    public interface IEventLog<T>
     {
         IAsyncEnumerable<(T DomainEvent, long SequenceNumber)> GetAllEventsAsync(Guid organizationId, Guid locationId);
 
