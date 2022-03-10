@@ -2,6 +2,9 @@ using Azure.Storage.Blobs;
 using CareTogether.Engines.Authorization;
 using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Managers;
+using CareTogether.Managers.Approval;
+using CareTogether.Managers.Directory;
+using CareTogether.Managers.Referrals;
 using CareTogether.Resources;
 using CareTogether.Resources.Models;
 using CareTogether.Resources.Storage;
@@ -102,7 +105,7 @@ namespace CareTogether.Api
             // Manager services
             services.AddSingleton<IDirectoryManager>(new DirectoryManager(authorizationEngine, directoryResource,
                 approvalsResource, referralsResource, notesResource, combinedFamilyInfoFormatter));
-            services.AddSingleton<IReferralManager>(new ReferralManager(authorizationEngine, referralsResource,
+            services.AddSingleton<IReferralsManager>(new ReferralsManager(authorizationEngine, referralsResource,
                 combinedFamilyInfoFormatter));
             services.AddSingleton<IApprovalManager>(new ApprovalManager(authorizationEngine, approvalsResource,
                 combinedFamilyInfoFormatter));

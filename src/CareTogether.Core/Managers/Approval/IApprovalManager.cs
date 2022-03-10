@@ -3,7 +3,7 @@ using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-namespace CareTogether.Managers
+namespace CareTogether.Managers.Approval
 {
     public interface IApprovalManager
     {

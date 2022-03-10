@@ -3,9 +3,9 @@ using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-namespace CareTogether.Managers
+namespace CareTogether.Managers.Referrals
 {
-    public interface IReferralManager
+    public interface IReferralsManager
     {
         Task<CombinedFamilyInfo> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, ReferralCommand command);

@@ -1,4 +1,5 @@
 ﻿using CareTogether.Managers;
+using CareTogether.Managers.Directory;
 using CareTogether.Resources;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

@@ -6,7 +6,7 @@ using System.Collections.Immutable;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-namespace CareTogether.Managers
+namespace CareTogether.Managers.Directory
 {
     [JsonHierarchyBase]
     public abstract partial record DirectoryCommand();
