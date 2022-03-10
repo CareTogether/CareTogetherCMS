@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace CareTogether.Resources.Storage
+namespace CareTogether.Utilities.EventLog
 {
     public interface IMultitenantEventLog<T>
     {

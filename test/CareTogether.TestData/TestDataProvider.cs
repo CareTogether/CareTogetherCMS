@@ -1,4 +1,6 @@
-﻿using CareTogether.Resources;
+﻿using CareTogether.Utilities.EventLog;
+using CareTogether.Utilities.ObjectStore;
+using CareTogether.Resources;
 using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
@@ -6,7 +8,6 @@ using CareTogether.Resources.Goals;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.Referrals;
-using CareTogether.Resources.Storage;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;

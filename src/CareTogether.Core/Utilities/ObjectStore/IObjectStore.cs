@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace CareTogether.Resources.Storage
+namespace CareTogether.Utilities.ObjectStore
 {
     public interface IObjectStore<T>
     {

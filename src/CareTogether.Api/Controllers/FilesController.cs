@@ -1,4 +1,4 @@
-﻿using CareTogether.Resources.Storage;
+﻿using CareTogether.Utilities.FileStore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;

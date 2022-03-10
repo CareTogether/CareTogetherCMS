@@ -1,5 +1,5 @@
 ﻿using Azure.Storage.Blobs;
-using CareTogether.Resources.Storage;
+using CareTogether.Utilities.EventLog;
 using JsonPolymorph;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;

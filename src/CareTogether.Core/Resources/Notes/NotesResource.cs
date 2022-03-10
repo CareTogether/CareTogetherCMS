@@ -1,4 +1,5 @@
-using CareTogether.Resources.Storage;
+using CareTogether.Utilities.EventLog;
+using CareTogether.Utilities.ObjectStore;
 using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;

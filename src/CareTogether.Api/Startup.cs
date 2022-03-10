@@ -1,6 +1,9 @@
 using Azure.Storage.Blobs;
 using CareTogether.Engines.Authorization;
 using CareTogether.Engines.PolicyEvaluation;
+using CareTogether.Utilities.EventLog;
+using CareTogether.Utilities.FileStore;
+using CareTogether.Utilities.ObjectStore;
 using CareTogether.Managers;
 using CareTogether.Managers.Approval;
 using CareTogether.Managers.Directory;
@@ -13,7 +16,6 @@ using CareTogether.Resources.Goals;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.Referrals;
-using CareTogether.Resources.Storage;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
