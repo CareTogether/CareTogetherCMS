@@ -57,7 +57,7 @@ function ArrangementPhaseSummary({ phase, requestedAtUtc, startedAtUtc, endedAtU
         <div style={{flexGrow: 1,
           backgroundColor:
             phase === ArrangementPhase.SettingUp ? currentPhaseColor
-            : phase === ArrangementPhase.ReadyToStart ? currentPhaseColor
+            : phase === ArrangementPhase.ReadyToStart ? completedPhaseColor
             : phase === ArrangementPhase.Started ? completedPhaseColor
             : completedPhaseColor}}>
         </div>
@@ -73,7 +73,7 @@ function ArrangementPhaseSummary({ phase, requestedAtUtc, startedAtUtc, endedAtU
             phase === ArrangementPhase.SettingUp ? futurePhaseColor
             : phase === ArrangementPhase.ReadyToStart ? futurePhaseColor
             : phase === ArrangementPhase.Started ? futurePhaseColor
-            : completedPhaseColor}}>
+            : completedPhaseColor /* TODO: Show as currentPhaseColor if any closeout requirements are missing */}}>
         </div>
       </div>
     </Tooltip>
@@ -181,14 +181,32 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
       <CardHeader className={classes.cardHeader}
         title={<>
           <span style={{fontWeight: "bold"}}>{arrangement.arrangementType}</span>
-          <span style={{marginLeft: 40, float: "right"}}>
-            {arrangement.phase === ArrangementPhase.SettingUp ? "Setting up"
-              : arrangement.phase === ArrangementPhase.ReadyToStart ? "Ready to start"
-              : arrangement.phase === ArrangementPhase.Started ? "Started"
-              : "Ended"}
-            {arrangement.phase === ArrangementPhase.Started && (<span>&nbsp;{format(arrangement.startedAtUtc!, "M/d/yy h:mm a")}</span>)}
-            {arrangement.phase === ArrangementPhase.Ended && (<span>&nbsp;{format(arrangement.endedAtUtc!, "M/d/yy h:mm a")}</span>)}
-          </span>
+          {summaryOnly &&
+            <span style={{marginLeft: 40, float: "right"}}>
+              {arrangement.phase === ArrangementPhase.SettingUp ? "Setting up"
+                : arrangement.phase === ArrangementPhase.ReadyToStart ? "Ready to start"
+                : arrangement.phase === ArrangementPhase.Started ? `Started ${format(arrangement.startedAtUtc!, "M/d/yy h:mm a")}`
+                : `Ended ${format(arrangement.endedAtUtc!, "M/d/yy h:mm a")}`}
+            </span>}
+          {!summaryOnly &&
+            <span style={{marginLeft: 0, float: "right"}}>
+              {arrangement.phase === ArrangementPhase.SettingUp ? "Setting up"
+                : arrangement.phase === ArrangementPhase.ReadyToStart ?
+                  <Button variant="contained" size="small"
+                    onClick={() => setShowStartArrangementDialog(true)}>
+                    Start
+                  </Button>
+                : arrangement.phase === ArrangementPhase.Started ?
+                  <>
+                    <span>Started {format(arrangement.startedAtUtc!, "M/d/yy h:mm a")}</span>
+                    <Button variant="outlined" size="small"
+                      style={{marginLeft: 10}}
+                      onClick={() => setShowEndArrangementDialog(true)}>
+                      End
+                    </Button>
+                  </>
+                : `Ended ${format(arrangement.endedAtUtc!, "M/d/yy h:mm a")}`}
+          </span>}
         </>} />
       <CardContent className={classes.cardContent}>
         <Typography variant="body2" component="div">
@@ -329,16 +347,6 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
               <ListItemText primary={missingRequirementActionName} />
             </MenuItem>
           ))}
-          {arrangement.phase === ArrangementPhase.ReadyToStart && (
-            <MenuItem onClick={() => setShowStartArrangementDialog(true)}>
-              <ListItemText primary="Start" />
-            </MenuItem>
-          )}
-          {arrangement.phase === ArrangementPhase.Started && (
-            <MenuItem onClick={() => setShowEndArrangementDialog(true)}>
-              <ListItemText primary="End" />
-            </MenuItem>
-          )}
           {arrangement.phase !== ArrangementPhase.Ended && <Divider />}
           {arrangement.phase !== ArrangementPhase.Ended && arrangementPolicy?.arrangementFunctions?.map(arrangementFunction => (
             <MenuItem key={arrangementFunction.functionName}
