@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, FormControlLabel, FormLabel, Grid, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@mui/material';
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, FormControlLabel, FormLabel, Grid, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField, Typography } from '@mui/material';
 import { CombinedFamilyInfo, Arrangement, Person, ChildLocationPlan, ChildInvolvement } from '../../GeneratedClient';
-import { DateTimePicker } from '@mui/lab';
+import { DateTimePicker, Timeline, TimelineConnector, TimelineContent, TimelineDot, TimelineItem, TimelineOppositeContent, TimelineSeparator } from '@mui/lab';
 import { useBackdrop } from '../RequestBackdrop';
 import { useDirectoryModel, useFamilyLookup, usePersonLookup } from '../../Model/DirectoryModel';
 import { useReferralsModel } from '../../Model/ReferralsModel';
@@ -9,6 +9,7 @@ import { FamilyName } from '../Families/FamilyName';
 import { PersonName } from '../Families/PersonName';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../../Model/ConfigurationModel';
+import { format } from 'date-fns';
 
 interface TrackChildLocationDialogProps {
   partneringFamily: CombinedFamilyInfo,
@@ -92,64 +93,86 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
   }
 
   return (
-    <Dialog open={true} onClose={onClose} aria-labelledby="track-child-location-title">
-      <DialogTitle id="track-child-location-title">Track Location Change for <PersonName person={child} /></DialogTitle>
+    <Dialog open={true} onClose={onClose} fullWidth maxWidth="md" aria-labelledby="track-child-location-title">
+      <DialogTitle id="track-child-location-title">Location History for <PersonName person={child} /></DialogTitle>
       <DialogContent>
-        {lastTrackedLocationFamily &&
-          <>
-            <DialogContentText>The last recorded location for this child is: <FamilyName family={lastTrackedLocationFamily} /></DialogContentText>
-            <br />
-          </>}
         <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <FormControl required fullWidth size="small">
-              <InputLabel id="assignee-label">Receiving Adult</InputLabel>
-              <Select
-                labelId="assignee-label" id="assignee"
-                value={selectedAssigneeKey}
-                onChange={e => updateAssignee(e.target.value as string)}>
-                  <MenuItem key="placeholder" value="" disabled>
-                    Select the adult who received the child
-                  </MenuItem>
-                  {candidatePartneringFamilyAssignees.map(candidate =>
-                    <MenuItem key={candidate.key} value={candidate.key}>{candidate.displayName}</MenuItem>)}
-                  <Divider />
-                  {allCandidateVolunteerAssignees.map(candidate =>
-                    <MenuItem key={candidate.key} value={candidate.key}>{candidate.displayName}</MenuItem>)}
-              </Select>
-            </FormControl>
+          <Grid item xs={12} md={6}>
+            <Timeline position="right">
+              {arrangement.childrenLocationHistory?.slice().reverse().map((historyEntry, i) =>
+                <TimelineItem key={i}>
+                  <TimelineOppositeContent>
+                    {format(historyEntry.timestampUtc!, "M/d/yy h:mm a")}
+                  </TimelineOppositeContent>
+                  <TimelineSeparator>
+                    <TimelineDot color={i == 0 ? "secondary" : "primary"} />
+                    <TimelineConnector />
+                  </TimelineSeparator>
+                  <TimelineContent>
+                    <FamilyName family={familyLookup(historyEntry.childLocationFamilyId)} />
+                    <br />
+                    <span style={{fontStyle: "italic"}}>
+                      {historyEntry.plan === ChildLocationPlan.DaytimeChildCare ? "daytime child care"
+                      : historyEntry.plan === ChildLocationPlan.OvernightHousing ? "overnight housing"
+                      : "with parent"}
+                    </span>
+                  </TimelineContent>
+                </TimelineItem>
+              )}
+            </Timeline>
           </Grid>
-          <Grid item xs={12}>
-            <FormControl component="fieldset" required>
-              <FormLabel component="legend">Plan for the location change:</FormLabel>
-              <RadioGroup aria-label="plan" name="plan" row
-                value={plan == null ? '' : ChildLocationPlan[plan]}
-                onChange={e => setPlan(ChildLocationPlan[e.target.value as keyof typeof ChildLocationPlan])}>
-                <FormControlLabel value={ChildLocationPlan[ChildLocationPlan.DaytimeChildCare]} control={<Radio size="small" />} label="Daytime Child Care"
-                  disabled={assigneeIsFromPartneringFamily} />
-                <FormControlLabel value={ChildLocationPlan[ChildLocationPlan.OvernightHousing]} control={<Radio size="small" />} label="Overnight Housing"
-                  disabled={assigneeIsFromPartneringFamily || arrangementPolicy?.childInvolvement === ChildInvolvement.DaytimeChildCareOnly} />
-                <FormControlLabel value={ChildLocationPlan[ChildLocationPlan.WithParent]} control={<Radio size="small" />} label="With Parent"
-                  disabled={!assigneeIsFromPartneringFamily} />
-              </RadioGroup>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12}>
-            <DateTimePicker
-              label="What time did this person receive the child?"
-              value={changedAtLocal}
-              disableFuture inputFormat="MM/dd/yyyy hh:mm a"
-              onChange={(date) => date && setChangedAtLocal(date)}
-              showTodayButton
-              renderInput={(params) => <TextField fullWidth required {...params} />} />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              id="notes" required
-              label="Notes" placeholder="Space for any general notes"
-              multiline fullWidth variant="outlined" minRows={6} size="medium"
-              value={notes} onChange={e => setNotes(e.target.value)}
-            />
+          <Grid item container spacing={2} xs={12} md={6}>
+            <Grid item xs={12}>
+              <p style={{fontSize: 16, fontWeight: 'bold'}}>Track a new location change</p>
+              <FormControl required fullWidth size="small">
+                <InputLabel id="assignee-label">Receiving Adult</InputLabel>
+                <Select
+                  labelId="assignee-label" id="assignee"
+                  value={selectedAssigneeKey}
+                  onChange={e => updateAssignee(e.target.value as string)}>
+                    <MenuItem key="placeholder" value="" disabled>
+                      Select the adult who received the child
+                    </MenuItem>
+                    {candidatePartneringFamilyAssignees.map(candidate =>
+                      <MenuItem key={candidate.key} value={candidate.key}>{candidate.displayName}</MenuItem>)}
+                    <Divider />
+                    {allCandidateVolunteerAssignees.map(candidate =>
+                      <MenuItem key={candidate.key} value={candidate.key}>{candidate.displayName}</MenuItem>)}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+              <FormControl component="fieldset" required>
+                <FormLabel component="legend">Plan for the location change:</FormLabel>
+                <RadioGroup aria-label="plan" name="plan" row
+                  value={plan == null ? '' : ChildLocationPlan[plan]}
+                  onChange={e => setPlan(ChildLocationPlan[e.target.value as keyof typeof ChildLocationPlan])}>
+                  <FormControlLabel value={ChildLocationPlan[ChildLocationPlan.DaytimeChildCare]} control={<Radio size="small" />} label="Daytime Child Care"
+                    disabled={assigneeIsFromPartneringFamily} />
+                  <FormControlLabel value={ChildLocationPlan[ChildLocationPlan.OvernightHousing]} control={<Radio size="small" />} label="Overnight Housing"
+                    disabled={assigneeIsFromPartneringFamily || arrangementPolicy?.childInvolvement === ChildInvolvement.DaytimeChildCareOnly} />
+                  <FormControlLabel value={ChildLocationPlan[ChildLocationPlan.WithParent]} control={<Radio size="small" />} label="With Parent"
+                    disabled={!assigneeIsFromPartneringFamily} />
+                </RadioGroup>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+              <DateTimePicker
+                label="What time did this person receive the child?"
+                value={changedAtLocal}
+                disableFuture inputFormat="MM/dd/yyyy hh:mm a"
+                onChange={(date) => date && setChangedAtLocal(date)}
+                showTodayButton
+                renderInput={(params) => <TextField fullWidth required {...params} />} />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                id="notes" required
+                label="Notes" placeholder="Space for any general notes"
+                multiline fullWidth variant="outlined" minRows={6} size="medium"
+                value={notes} onChange={e => setNotes(e.target.value)}
+              />
+            </Grid>
           </Grid>
         </Grid>
       </DialogContent>
