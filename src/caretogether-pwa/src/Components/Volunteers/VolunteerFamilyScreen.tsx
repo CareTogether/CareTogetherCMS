@@ -141,7 +141,7 @@ export function VolunteerFamilyScreen() {
   const permissions = usePermissions();
 
   return (
-    <Container>
+    <Container maxWidth={false}>
       <HeaderContent>
         <HeaderTitle>
           <IconButton color="inherit" onClick={() => navigate("..")} size="large">

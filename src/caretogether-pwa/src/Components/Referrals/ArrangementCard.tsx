@@ -1,4 +1,5 @@
 import {
+  Button,
   Card,
   CardActions,
   CardContent,
@@ -20,7 +21,7 @@ import { ArrangementPhase, Arrangement, CombinedFamilyInfo, ActionRequirement, P
 import { useFamilyLookup, usePersonLookup, useUserLookup } from '../../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
 import { FamilyName } from '../Families/FamilyName';
-import { format } from 'date-fns';
+import { format, formatRelative } from 'date-fns';
 import { CardInfoRow } from '../CardInfoRow';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../../Model/ConfigurationModel';
@@ -35,12 +36,60 @@ import { ExemptArrangementRequirementDialog } from './ExemptArrangementRequireme
 import { UnexemptArrangementRequirementDialog } from './UnexemptArrangementRequirementDialog';
 import { MarkArrangementStepIncompleteDialog } from './MarkArrangementStepIncompleteDialog';
 
+type ArrangementPhaseSummaryProps = {
+  phase: ArrangementPhase,
+  requestedAtUtc: Date,
+  startedAtUtc?: Date,
+  endedAtUtc?: Date
+}
+
+function ArrangementPhaseSummary({ phase, requestedAtUtc, startedAtUtc, endedAtUtc }: ArrangementPhaseSummaryProps) {
+  const completedPhaseColor = "#00838f";
+  const currentPhaseColor = "#ffc400";
+  const futurePhaseColor = "#ddd";
+  return (
+    <Tooltip title={<>
+      <p>Requested at {format(requestedAtUtc, "M/d/yy h:mm a")}</p>
+      {startedAtUtc && <p>Started at {format(startedAtUtc, "M/d/yy h:mm a")}</p>}
+      {endedAtUtc && <p>Ended at {format(endedAtUtc, "M/d/yy h:mm a")}</p>}
+    </>}>
+      <div style={{display: "flex", height: 8, backgroundColor: "red"}}>
+        <div style={{flexGrow: 1,
+          backgroundColor:
+            phase === ArrangementPhase.SettingUp ? currentPhaseColor
+            : phase === ArrangementPhase.ReadyToStart ? completedPhaseColor
+            : phase === ArrangementPhase.Started ? completedPhaseColor
+            : completedPhaseColor}}>
+        </div>
+        <div style={{flexGrow: 1,
+          backgroundColor:
+            phase === ArrangementPhase.SettingUp ? futurePhaseColor
+            : phase === ArrangementPhase.ReadyToStart ? futurePhaseColor
+            : phase === ArrangementPhase.Started ? currentPhaseColor
+            : completedPhaseColor}}>
+        </div>
+        <div style={{flexGrow: 1,
+          backgroundColor:
+            phase === ArrangementPhase.SettingUp ? futurePhaseColor
+            : phase === ArrangementPhase.ReadyToStart ? futurePhaseColor
+            : phase === ArrangementPhase.Started ? futurePhaseColor
+            : completedPhaseColor /* TODO: Show as currentPhaseColor if any closeout requirements are missing */}}>
+        </div>
+      </div>
+    </Tooltip>
+  );
+}
+
 const useStyles = makeStyles((theme) => ({
   card: {
     minWidth: 275,
   },
   cardHeader: {
-    paddingBottom: 0
+    paddingTop: 4,
+    paddingBottom: 0,
+    '& .MuiCardHeader-title': {
+      fontSize: "16px"
+    }
   },
   cardContent: {
     paddingTop: 8,
@@ -125,14 +174,41 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
 
+  const now = new Date();
+
   return (
-    <Card>
+    <Card variant="outlined">
+      <ArrangementPhaseSummary phase={arrangement.phase!}
+        requestedAtUtc={arrangement.requestedAtUtc!} startedAtUtc={arrangement.startedAtUtc} endedAtUtc={arrangement.endedAtUtc} />
       <CardHeader className={classes.cardHeader}
-        subheader={<>
-          {arrangement.arrangementType} -&nbsp;
-          {ArrangementPhase[arrangement.phase!]}
-          {arrangement.phase === ArrangementPhase.Started && (<span> -&nbsp;{format(arrangement.startedAtUtc!, "MM/dd/yyyy hh:mm aa")}</span>)}
-          {arrangement.phase === ArrangementPhase.Ended && (<span> -&nbsp;{format(arrangement.endedAtUtc!, "MM/dd/yyyy hh:mm aa")}</span>)}
+        title={<>
+          <span style={{fontWeight: "bold"}}>{arrangement.arrangementType}</span>
+          {summaryOnly &&
+            <span style={{marginLeft: 40, float: "right"}}>
+              {arrangement.phase === ArrangementPhase.SettingUp ? "Setting up"
+                : arrangement.phase === ArrangementPhase.ReadyToStart ? "Ready to start"
+                : arrangement.phase === ArrangementPhase.Started ? `Started ${formatRelative(arrangement.startedAtUtc!, now)}`
+                : `Ended ${formatRelative(arrangement.endedAtUtc!, now)}`}
+            </span>}
+          {!summaryOnly &&
+            <span style={{marginLeft: 0, float: "right"}}>
+              {arrangement.phase === ArrangementPhase.SettingUp ? "Setting up"
+                : arrangement.phase === ArrangementPhase.ReadyToStart ?
+                  <Button variant="contained" size="small"
+                    onClick={() => setShowStartArrangementDialog(true)}>
+                    Start
+                  </Button>
+                : arrangement.phase === ArrangementPhase.Started ?
+                  <>
+                    <span>Started {formatRelative(arrangement.startedAtUtc!, now)}</span>
+                    <Button variant="outlined" size="small"
+                      style={{marginLeft: 10}}
+                      onClick={() => setShowEndArrangementDialog(true)}>
+                      End
+                    </Button>
+                  </>
+                : `Ended ${formatRelative(arrangement.endedAtUtc!, now)}`}
+          </span>}
         </>} />
       <CardContent className={classes.cardContent}>
         <Typography variant="body2" component="div">
@@ -143,20 +219,26 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
                 (arrangementPolicy?.childInvolvement === ChildInvolvement.ChildHousing || arrangementPolicy?.childInvolvement === ChildInvolvement.DaytimeChildCareOnly) && (
                 <>
                   {summaryOnly
-                    ? <PersonPinCircleIcon color='disabled' style={{float: 'right', marginLeft: 2, marginTop: 2}} />
-                    : <IconButton size="small" style={{float: 'right', marginLeft: 2}}
+                    ? <>
+                        <PersonPinCircleIcon color='disabled' style={{float: 'right', marginLeft: 2, marginTop: 2}} />
+                        <span style={{float: 'right', paddingTop: 4}}>{
+                          (arrangement.childrenLocationHistory && arrangement.childrenLocationHistory.length > 0)
+                          ? <FamilyName family={familyLookup(arrangement.childrenLocationHistory[arrangement.childrenLocationHistory.length - 1].childLocationFamilyId)} />
+                          : <strong>Location unspecified</strong>
+                        }</span>
+                      </>
+                    : <Button size="large" variant="text"
+                        style={{float: 'right', marginTop: -10, marginRight: -10, textTransform: "initial"}}
+                        endIcon={<PersonPinCircleIcon />}
                         onClick={(event) => setShowTrackChildLocationDialog(true)}>
-                        <PersonPinCircleIcon />
-                      </IconButton>}
-                  <span style={{float: 'right', paddingTop: 4}}>{
-                    (arrangement.childrenLocationHistory && arrangement.childrenLocationHistory.length > 0)
-                    ? <FamilyName family={familyLookup(arrangement.childrenLocationHistory[arrangement.childrenLocationHistory.length - 1].childLocationFamilyId)} />
-                    : <strong>Location unspecified</strong>
-                  }</span>
+                        {(arrangement.childrenLocationHistory && arrangement.childrenLocationHistory.length > 0)
+                          ? <FamilyName family={familyLookup(arrangement.childrenLocationHistory[arrangement.childrenLocationHistory.length - 1].childLocationFamilyId)} />
+                          : <strong>Location unspecified</strong>}
+                      </Button>}
                 </>
               )}
             </li>
-            <Divider style={{marginBottom: 10}} />
+            <Divider style={{marginBottom: 10, marginTop: 2}} />
             {arrangement.familyVolunteerAssignments?.map(x => (
               <li key={`famVol-${x.arrangementFunction}-${x.familyId}`}><FamilyName family={familyLookup(x.familyId)} /> - {x.arrangementFunction}</li>
             ))}
@@ -267,16 +349,6 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
               <ListItemText primary={missingRequirementActionName} />
             </MenuItem>
           ))}
-          {arrangement.phase === ArrangementPhase.ReadyToStart && (
-            <MenuItem onClick={() => setShowStartArrangementDialog(true)}>
-              <ListItemText primary="Start" />
-            </MenuItem>
-          )}
-          {arrangement.phase === ArrangementPhase.Started && (
-            <MenuItem onClick={() => setShowEndArrangementDialog(true)}>
-              <ListItemText primary="End" />
-            </MenuItem>
-          )}
           {arrangement.phase !== ArrangementPhase.Ended && <Divider />}
           {arrangement.phase !== ArrangementPhase.Ended && arrangementPolicy?.arrangementFunctions?.map(arrangementFunction => (
             <MenuItem key={arrangementFunction.functionName}

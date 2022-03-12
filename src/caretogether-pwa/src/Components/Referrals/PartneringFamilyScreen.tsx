@@ -145,7 +145,7 @@ export function PartneringFamilyScreen() {
   const permissions = usePermissions();
 
   return (
-    <Container>
+    <Container maxWidth={false}>
       <HeaderContent>
         <HeaderTitle>
           <IconButton color="inherit" onClick={() => navigate("..")} size="large">
@@ -380,12 +380,14 @@ export function PartneringFamilyScreen() {
             <h3>Documents</h3>
             <FamilyDocuments family={partneringFamily} />
           </Grid>
-          <Grid item container xs={12} spacing={2}>
-            {partneringFamily.partneringFamilyInfo?.openReferral?.arrangements?.map(arrangement => (
-              <Grid item key={arrangement.id}>
-                <ArrangementCard partneringFamily={partneringFamily} referralId={partneringFamily.partneringFamilyInfo!.openReferral!.id!} arrangement={arrangement} />
-              </Grid>
-            ))}
+          <Grid item xs={12}>
+            <Masonry columns={isDesktop ? isWideScreen ? 3 : 2 : 1} spacing={2}>
+              {partneringFamily.partneringFamilyInfo?.openReferral?.arrangements?.map(arrangement => (
+                <ArrangementCard key={arrangement.id}
+                  partneringFamily={partneringFamily} referralId={partneringFamily.partneringFamilyInfo!.openReferral!.id!}
+                  arrangement={arrangement} />
+              )) || false}
+            </Masonry>
             {partneringFamily.partneringFamilyInfo?.openReferral && policy.referralPolicy?.arrangementPolicies?.map(arrangementPolicy => (
               <Grid item key={arrangementPolicy.arrangementType}>
                 <Button
@@ -404,7 +406,7 @@ export function PartneringFamilyScreen() {
                 arrangementPolicy={createArrangementDialogParameter}
                 onClose={() => setCreateArrangementDialogParameter(null)} />}
           </Grid>
-          <Grid item xs={12} spacing={2}>
+          <Grid item xs={12}>
             <Masonry columns={isDesktop ? isWideScreen ? 3 : 2 : 1} spacing={2}>
               {partneringFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item1.active && adult.item2 && (
                 <PartneringAdultCard key={adult.item1.id} partneringFamilyId={familyId} personId={adult.item1.id} />

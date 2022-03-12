@@ -1,5 +1,4 @@
 import React from 'react';
-import clsx from 'clsx';
 import makeStyles from '@mui/styles/makeStyles';
 import { Typography, CssBaseline, IconButton, Drawer, Divider, List, useMediaQuery, useTheme } from '@mui/material';
 import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
@@ -27,28 +26,30 @@ function Copyright() {
   );
 }
 
+const drawerWidth = 200;
 const useStyles = makeStyles((theme) => ({
-  drawerPaperClose: {
-    overflowX: 'hidden',
+  drawerPaperOpen: {
+    position: 'relative',
+    whiteSpace: 'nowrap',
+    width: drawerWidth,
     transition: theme.transitions.create('width', {
       easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.leavingScreen,
-    }),
+      duration: theme.transitions.duration.enteringScreen,
+    })
+  },
+  drawerPaperClose: {
+    position: 'relative',
+    whiteSpace: 'nowrap',
+    overflowX: 'hidden',
     width: theme.spacing(7),
     [theme.breakpoints.up('sm')]: {
       width: theme.spacing(9),
     },
-  },
-  content: {
-    flexGrow: 1,
-    height: '100vh',
-    overflow: 'auto',
-  },
-  mobileContent: {
-    flexGrow: 1,
-    height: `calc(100vh - 56px)`, // subtract footer height
-    overflow: 'auto',
-  },
+    transition: theme.transitions.create('width', {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.leavingScreen,
+    })
+  }
 }));
 
 const mainListItems = (flags: CurrentFeatureFlags) => (
@@ -94,18 +95,7 @@ function App() {
           {isMobile ? null :
             <Drawer
               variant="permanent"
-              sx={{
-                position: 'relative',
-                whiteSpace: 'nowrap',
-                width: 200, // drawer width
-                transition: theme.transitions.create('width', {
-                  easing: theme.transitions.easing.sharp,
-                  duration: theme.transitions.duration.enteringScreen,
-                }),
-              }}
-              classes={{
-                paper: clsx(!open && classes.drawerPaperClose),
-              }}
+              classes={{ paper: open ? classes.drawerPaperOpen : classes.drawerPaperClose }}
               open={open}
             >
               <div style={{
@@ -137,8 +127,12 @@ function App() {
               <Divider />
               {open && <Copyright />}
             </Drawer>}
-          <main className={isMobile ? classes.mobileContent : classes.content}>
-            <div style={{height: 48}} />
+          <main style={{
+            flexGrow: 1,
+            height: isMobile ? `calc(100vh - 56px)` : '100vh', // subtract bottom navigation height on mobile
+            overflow: 'auto'
+          }}>
+            <div style={{height: 48 /* Offset main content from page top by the header height amount */}} />
             <React.Suspense fallback={<div>Loading...</div>}>
               <AppRoutes />
             </React.Suspense>

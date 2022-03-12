@@ -1,5 +1,5 @@
 import makeStyles from '@mui/styles/makeStyles';
-import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, Button, ButtonGroup, useMediaQuery, useTheme, FormControlLabel, Switch } from '@mui/material';
+import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, Button, ButtonGroup, useMediaQuery, useTheme, FormControlLabel, Switch } from '@mui/material';
 import { useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../../Model/VolunteersModel';
 import { allApprovalAndOnboardingRequirementsData } from '../../Model/ConfigurationModel';
@@ -14,15 +14,6 @@ import { useLocalStorage } from '../../useLocalStorage';
 import { useScrollMemory } from '../../useScrollMemory';
 
 const useStyles = makeStyles((theme) => ({
-  paper: {
-    padding: theme.spacing(2),
-    display: 'flex',
-    overflow: 'auto',
-    flexDirection: 'column',
-  },
-  fixedHeight: {
-    height: 240,
-  },
   table: {
     minWidth: 700,
   },
@@ -99,7 +90,7 @@ function VolunteerProgress(props: { onOpen: () => void }) {
         <SearchBar value={filterText} onChange={setFilterText} />
       </HeaderContent>
       <Grid item xs={12}>
-        <TableContainer component={Paper}>
+        <TableContainer>
           <Table className={classes.table} size="small">
             <TableHead>
               <TableRow>

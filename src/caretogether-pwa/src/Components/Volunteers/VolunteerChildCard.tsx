@@ -91,7 +91,7 @@ export function VolunteerChildCard({volunteerFamilyId, personId}: VolunteerChild
   }
 
   return <>{child &&
-    <Card className={classes.card}>
+    <Card variant="outlined" className={classes.card}>
       <CardHeader className={classes.cardHeader}
         title={child.firstName + " " + child.lastName}
         subheader={<>

@@ -126,7 +126,7 @@ const useStyles = makeStyles((theme) => ({
 //   return (
 //     <Grid container spacing={3}>
 //       <Grid item xs={12}>
-//         <TableContainer component={Paper}>
+//         <TableContainer>
 //           <Table className={classes.table} size="small">
 //             <TableHead>
 //               <TableRow>
