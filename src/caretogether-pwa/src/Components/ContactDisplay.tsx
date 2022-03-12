@@ -1,5 +1,5 @@
 import { Person } from "../GeneratedClient";
-import { CardInfoRow } from "./CardInfoRow";
+import { IconRow } from "./IconRow";
 
 type ContactDisplayProps = {
   person: Person
@@ -12,15 +12,15 @@ export function ContactDisplay({ person }: ContactDisplayProps) {
 
   return (
     <>
-      {preferredPhoneNumber && <CardInfoRow icon='📞'>{preferredPhoneNumber.number}</CardInfoRow>}
-      {preferredEmailAddress && <CardInfoRow icon='📧'>{preferredEmailAddress.address}</CardInfoRow>}
-      {currentAddress && <CardInfoRow icon='🏠'>
+      {preferredPhoneNumber && <IconRow icon='📞'>{preferredPhoneNumber.number}</IconRow>}
+      {preferredEmailAddress && <IconRow icon='📧'>{preferredEmailAddress.address}</IconRow>}
+      {currentAddress && <IconRow icon='🏠'>
         <p style={{display: 'inline-block', margin: 0}}>
           {currentAddress.line1}<br />
           {currentAddress.line2 && <>{currentAddress.line2}<br /></>}
           {currentAddress.city},&nbsp;{currentAddress.state}&nbsp;{currentAddress.postalCode}
         </p>
-      </CardInfoRow>}
+      </IconRow>}
     </>
   );
 }

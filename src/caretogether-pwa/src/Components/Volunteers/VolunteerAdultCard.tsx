@@ -29,7 +29,7 @@ import { RenamePersonDialog } from "../Families/RenamePersonDialog";
 import { UpdateConcernsDialog } from "../Families/UpdateConcernsDialog";
 import { UpdateNotesDialog } from "../Families/UpdateNotesDialog";
 import { ContactDisplay } from "../ContactDisplay";
-import { CardInfoRow } from "../CardInfoRow";
+import { IconRow } from "../IconRow";
 import { VolunteerRoleApprovalStatusChip } from "./VolunteerRoleApprovalStatusChip";
 import { UpdatePhoneDialog } from "../Families/UpdatePhoneDialog";
 import { UpdateEmailDialog } from "../Families/UpdateEmailDialog";
@@ -190,8 +190,8 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
           {adult.item2.isInHousehold && <Chip size="small" label="In Household" />}
         </Typography>
         <Typography variant="body2" component="div">
-          {adult.item1.concerns && <CardInfoRow icon='⚠'><strong>{adult.item1.concerns}</strong></CardInfoRow>}
-          {adult.item1.notes && <CardInfoRow icon='📝'>{adult.item1.notes}</CardInfoRow>}
+          {adult.item1.concerns && <IconRow icon='⚠'><strong>{adult.item1.concerns}</strong></IconRow>}
+          {adult.item1.notes && <IconRow icon='📝'>{adult.item1.notes}</IconRow>}
         </Typography>
         <Divider />
         <Typography variant="body2" component="div">
@@ -199,23 +199,23 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
             {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].completedRequirements?.map((completed, i) => (
               <li key={i}
                 onContextMenu={(e) => { e.preventDefault(); setRequirementMoreMenuAnchor({ anchor: e.currentTarget, requirement: completed }); }}>
-                <CardInfoRow icon='✅'>
+                <IconRow icon='✅'>
                   {completed.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                   {completed.completedAtUtc && <span style={{float:'right'}}>{format(completed.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
-                </CardInfoRow>
+                </IconRow>
               </li>
             ))}
             {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].exemptedRequirements?.map((exempted, i) => (
               <li key={i}
                 onContextMenu={(e) => { e.preventDefault(); setRequirementMoreMenuAnchor({ anchor: e.currentTarget, requirement: exempted }); }}>
-                <CardInfoRow icon='🚫'>
+                <IconRow icon='🚫'>
                   <>
                     <span>{exempted.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
                     {exempted.exemptionExpiresAtUtc && <span style={{float:'right',marginRight:20}}>until {format(exempted.exemptionExpiresAtUtc, "MM/dd/yyyy")}</span>}
                     <br />
                     <span style={{lineHeight: '1.5em', paddingLeft:30, fontStyle: 'italic'}}>{exempted.additionalComments}</span>
                   </>
-                </CardInfoRow>
+                </IconRow>
               </li>
             ))}
           </ul>
@@ -223,9 +223,9 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
             {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].missingRequirements?.map((missingRequirementName, i) => (
               <li key={i}
                 onContextMenu={(e) => { e.preventDefault(); setRequirementMoreMenuAnchor({ anchor: e.currentTarget, requirement: missingRequirementName }); }}>
-              <CardInfoRow icon='❌'>
+              <IconRow icon='❌'>
                 {missingRequirementName}
-              </CardInfoRow>
+              </IconRow>
             </li>
             ))}
           </ul>

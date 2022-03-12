@@ -19,7 +19,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useRecoilValue } from "recoil";
 import { partneringFamiliesData } from "../../Model/ReferralsModel";
 import { ContactDisplay } from "../ContactDisplay";
-import { CardInfoRow } from "../CardInfoRow";
+import { IconRow } from "../IconRow";
 import { RenamePersonDialog } from "../Families/RenamePersonDialog";
 import { UpdateAddressDialog } from "../Families/UpdateAddressDialog";
 import { UpdateConcernsDialog } from "../Families/UpdateConcernsDialog";
@@ -147,8 +147,8 @@ export function PartneringAdultCard({partneringFamilyId, personId}: PartneringAd
           {adult.item2.isInHousehold && <Chip size="small" label="In Household" />}
         </Typography>
         <Typography variant="body2" component="div">
-          {adult.item1.concerns && <CardInfoRow icon='⚠'><strong>{adult.item1.concerns}</strong></CardInfoRow>}
-          {adult.item1.notes && <CardInfoRow icon='📝'>{adult.item1.notes}</CardInfoRow>}
+          {adult.item1.concerns && <IconRow icon='⚠'><strong>{adult.item1.concerns}</strong></IconRow>}
+          {adult.item1.notes && <IconRow icon='📝'>{adult.item1.notes}</IconRow>}
         </Typography>
         {/* <Divider />
         <Typography variant="body2" component="div">

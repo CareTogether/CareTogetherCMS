@@ -22,7 +22,7 @@ import { useFamilyLookup, usePersonLookup, useUserLookup } from '../../Model/Dir
 import { PersonName } from '../Families/PersonName';
 import { FamilyName } from '../Families/FamilyName';
 import { format, formatRelative } from 'date-fns';
-import { CardInfoRow } from '../CardInfoRow';
+import { IconRow } from '../IconRow';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../../Model/ConfigurationModel';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
@@ -247,9 +247,9 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
             ))}
             {arrangement.phase !== ArrangementPhase.Ended && missingVolunteerFunctions?.map(x => (
               <li key={`missing-${x.functionName}`}>
-                <CardInfoRow icon={x.requirement === FunctionRequirement.ZeroOrMore ? '⚠' : '❌'}>
+                <IconRow icon={x.requirement === FunctionRequirement.ZeroOrMore ? '⚠' : '❌'}>
                   {x.functionName}
-                </CardInfoRow>
+                </IconRow>
               </li>
             ))}
           </ul>
@@ -262,27 +262,27 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
                 {arrangement.completedRequirements?.map((completed, i) => (
                   <li key={i}
                     onContextMenu={(e) => { e.preventDefault(); setRequirementMoreMenuAnchor({ anchor: e.currentTarget, requirement: completed }); }}>
-                    <CardInfoRow icon='✅'>
+                    <IconRow icon='✅'>
                       <Tooltip title={<PersonName person={userLookup(completed.userId)} />}>
                         <span>
                           {completed.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                           {completed.completedAtUtc && <span style={{float:'right'}}>{format(completed.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
                         </span>
                       </Tooltip>
-                    </CardInfoRow>
+                    </IconRow>
                   </li>
                 ))}
                 {arrangement.exemptedRequirements?.map((exempted, i) => (
                   <li key={i}
                     onContextMenu={(e) => { e.preventDefault(); setRequirementMoreMenuAnchor({ anchor: e.currentTarget, requirement: exempted }); }}>
-                    <CardInfoRow icon='🚫'>
+                    <IconRow icon='🚫'>
                       <>
                         <span>{exempted.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
                         {exempted.exemptionExpiresAtUtc && <span style={{float:'right',marginRight:20}}>until {format(exempted.exemptionExpiresAtUtc, "MM/dd/yyyy")}</span>}
                         <br />
                         <span style={{lineHeight: '1.5em', paddingLeft:30, fontStyle: 'italic'}}>{exempted.additionalComments}</span>
                       </>
-                    </CardInfoRow>
+                    </IconRow>
                   </li>
                 ))}
               </ul>
@@ -291,14 +291,14 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
                   <li key={i}
                     onContextMenu={(e) => { e.preventDefault(); setRequirementMoreMenuAnchor({ anchor: e.currentTarget, requirement: missingRequirement }); }}>
                     {missingRequirement.dueBy
-                      ? <CardInfoRow icon='📅'>
+                      ? <IconRow icon='📅'>
                           {missingRequirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                           <span style={{float:'right'}}>{format(missingRequirement.dueBy, "MM/dd/yyyy hh:mm aa")}</span>
-                        </CardInfoRow>
-                      : <CardInfoRow icon='❌'>
+                        </IconRow>
+                      : <IconRow icon='❌'>
                           {missingRequirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                           {missingRequirement.pastDueSince && <span style={{float:'right'}}>{format(missingRequirement.pastDueSince, "MM/dd/yyyy hh:mm aa")}</span>}
-                        </CardInfoRow>}
+                        </IconRow>}
                   </li>
                 ))}
               </ul>
