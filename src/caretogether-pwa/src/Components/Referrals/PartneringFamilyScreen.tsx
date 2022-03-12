@@ -145,7 +145,7 @@ export function PartneringFamilyScreen() {
   const permissions = usePermissions();
 
   return (
-    <Container>
+    <Container maxWidth={false}>
       <HeaderContent>
         <HeaderTitle>
           <IconButton color="inherit" onClick={() => navigate("..")} size="large">
