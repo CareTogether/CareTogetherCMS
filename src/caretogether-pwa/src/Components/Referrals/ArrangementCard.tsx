@@ -35,12 +35,60 @@ import { ExemptArrangementRequirementDialog } from './ExemptArrangementRequireme
 import { UnexemptArrangementRequirementDialog } from './UnexemptArrangementRequirementDialog';
 import { MarkArrangementStepIncompleteDialog } from './MarkArrangementStepIncompleteDialog';
 
+type ArrangementPhaseSummaryProps = {
+  phase: ArrangementPhase,
+  requestedAtUtc: Date,
+  startedAtUtc?: Date,
+  endedAtUtc?: Date
+}
+
+function ArrangementPhaseSummary({ phase, requestedAtUtc, startedAtUtc, endedAtUtc }: ArrangementPhaseSummaryProps) {
+  const completedPhaseColor = "#00838f";
+  const currentPhaseColor = "#ffc400";
+  const futurePhaseColor = "#ddd";
+  return (
+    <Tooltip title={<>
+      <p>Requested at {format(requestedAtUtc, "M/d/yy h:mm a")}</p>
+      {startedAtUtc && <p>Started at {format(startedAtUtc, "M/d/yy h:mm a")}</p>}
+      {endedAtUtc && <p>Ended at {format(endedAtUtc, "M/d/yy h:mm a")}</p>}
+    </>}>
+      <div style={{display: "flex", height: 8, backgroundColor: "red"}}>
+        <div style={{flexGrow: 1,
+          backgroundColor:
+            phase === ArrangementPhase.SettingUp ? currentPhaseColor
+            : phase === ArrangementPhase.ReadyToStart ? currentPhaseColor
+            : phase === ArrangementPhase.Started ? completedPhaseColor
+            : completedPhaseColor}}>
+        </div>
+        <div style={{flexGrow: 1,
+          backgroundColor:
+            phase === ArrangementPhase.SettingUp ? futurePhaseColor
+            : phase === ArrangementPhase.ReadyToStart ? futurePhaseColor
+            : phase === ArrangementPhase.Started ? currentPhaseColor
+            : completedPhaseColor}}>
+        </div>
+        <div style={{flexGrow: 1,
+          backgroundColor:
+            phase === ArrangementPhase.SettingUp ? futurePhaseColor
+            : phase === ArrangementPhase.ReadyToStart ? futurePhaseColor
+            : phase === ArrangementPhase.Started ? futurePhaseColor
+            : completedPhaseColor}}>
+        </div>
+      </div>
+    </Tooltip>
+  );
+}
+
 const useStyles = makeStyles((theme) => ({
   card: {
     minWidth: 275,
   },
   cardHeader: {
-    paddingBottom: 0
+    paddingTop: 4,
+    paddingBottom: 0,
+    '& .MuiCardHeader-title': {
+      fontSize: "16px"
+    }
   },
   cardContent: {
     paddingTop: 8,
@@ -127,12 +175,19 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
 
   return (
     <Card variant="outlined">
+      <ArrangementPhaseSummary phase={arrangement.phase!}
+        requestedAtUtc={arrangement.requestedAtUtc!} startedAtUtc={arrangement.startedAtUtc} endedAtUtc={arrangement.endedAtUtc} />
       <CardHeader className={classes.cardHeader}
-        subheader={<>
-          {arrangement.arrangementType} -&nbsp;
-          {ArrangementPhase[arrangement.phase!]}
-          {arrangement.phase === ArrangementPhase.Started && (<span> -&nbsp;{format(arrangement.startedAtUtc!, "MM/dd/yyyy hh:mm aa")}</span>)}
-          {arrangement.phase === ArrangementPhase.Ended && (<span> -&nbsp;{format(arrangement.endedAtUtc!, "MM/dd/yyyy hh:mm aa")}</span>)}
+        title={<>
+          <span style={{fontWeight: "bold"}}>{arrangement.arrangementType}</span>
+          <span style={{marginLeft: 40, float: "right"}}>
+            {arrangement.phase === ArrangementPhase.SettingUp ? "Setting up"
+              : arrangement.phase === ArrangementPhase.ReadyToStart ? "Ready to start"
+              : arrangement.phase === ArrangementPhase.Started ? "Started"
+              : "Ended"}
+            {arrangement.phase === ArrangementPhase.Started && (<span>&nbsp;{format(arrangement.startedAtUtc!, "M/d/yy h:mm a")}</span>)}
+            {arrangement.phase === ArrangementPhase.Ended && (<span>&nbsp;{format(arrangement.endedAtUtc!, "M/d/yy h:mm a")}</span>)}
+          </span>
         </>} />
       <CardContent className={classes.cardContent}>
         <Typography variant="body2" component="div">
