@@ -1,5 +1,4 @@
 import React from 'react';
-import clsx from 'clsx';
 import makeStyles from '@mui/styles/makeStyles';
 import { Typography, CssBaseline, IconButton, Drawer, Divider, List, useMediaQuery, useTheme } from '@mui/material';
 import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';

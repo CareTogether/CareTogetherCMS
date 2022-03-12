@@ -1,5 +1,5 @@
 import makeStyles from '@mui/styles/makeStyles';
-import { Fab, Grid, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, useMediaQuery, useTheme } from '@mui/material';
+import { Fab, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, useMediaQuery, useTheme } from '@mui/material';
 import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { format } from 'date-fns';
@@ -14,15 +14,6 @@ import { HeaderContent, HeaderTitle } from '../Header';
 import { useScrollMemory } from '../../useScrollMemory';
 
 export const useStyles = makeStyles((theme) => ({
-  paper: {
-    padding: theme.spacing(2),
-    display: 'flex',
-    overflow: 'auto',
-    flexDirection: 'column',
-  },
-  fixedHeight: {
-    height: 240,
-  },
   table: {
     minWidth: 700,
   },
@@ -30,8 +21,6 @@ export const useStyles = makeStyles((theme) => ({
     backgroundColor: '#eef'
   },
   arrangementsRow: {
-  },
-  drawerPaper: {
   },
   fabAdd: {
     position: 'fixed',

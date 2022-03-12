@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, FormControlLabel, FormLabel, Grid, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField, Typography } from '@mui/material';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControl, FormControlLabel, FormLabel, Grid, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@mui/material';
 import { CombinedFamilyInfo, Arrangement, Person, ChildLocationPlan, ChildInvolvement } from '../../GeneratedClient';
 import { DateTimePicker, Timeline, TimelineConnector, TimelineContent, TimelineDot, TimelineItem, TimelineOppositeContent, TimelineSeparator } from '@mui/lab';
 import { useBackdrop } from '../RequestBackdrop';
@@ -27,8 +27,6 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
   
   const child = personLookup(partneringFamily.family!.id, arrangement.partneringFamilyPersonId);
 
-  const lastTrackedLocationFamily = familyLookup(arrangement.childrenLocationHistory?.[arrangement.childrenLocationHistory.length - 1]?.childLocationFamilyId);
-  
   const [selectedAssigneeKey, setSelectedAssigneeKey] = useState('');
   const [changedAtLocal, setChangedAtLocal] = useState(new Date());
   const [plan, setPlan] = useState<ChildLocationPlan | null>(null);
@@ -105,7 +103,7 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
                     {format(historyEntry.timestampUtc!, "M/d/yy h:mm a")}
                   </TimelineOppositeContent>
                   <TimelineSeparator>
-                    <TimelineDot color={i == 0 ? "secondary" : "primary"} />
+                    <TimelineDot color={i === 0 ? "secondary" : "primary"} />
                     <TimelineConnector />
                   </TimelineSeparator>
                   <TimelineContent>

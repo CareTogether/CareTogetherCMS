@@ -1,5 +1,5 @@
 import makeStyles from '@mui/styles/makeStyles';
-import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, useMediaQuery, useTheme, Button, ButtonGroup, FormControlLabel, Switch } from '@mui/material';
+import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, useMediaQuery, useTheme, Button, ButtonGroup, FormControlLabel, Switch } from '@mui/material';
 import { Gender, ExactAge, AgeInYears, RoleVersionApproval, CombinedFamilyInfo, RemovedRole, RoleRemovalReason } from '../../GeneratedClient';
 import { differenceInYears } from 'date-fns';
 import { useRecoilValue } from 'recoil';
@@ -16,15 +16,6 @@ import { useLocalStorage } from '../../useLocalStorage';
 import { useScrollMemory } from '../../useScrollMemory';
 
 const useStyles = makeStyles((theme) => ({
-  paper: {
-    padding: theme.spacing(2),
-    display: 'flex',
-    overflow: 'auto',
-    flexDirection: 'column',
-  },
-  fixedHeight: {
-    height: 240,
-  },
   table: {
     minWidth: 700,
   },
@@ -36,8 +27,6 @@ const useStyles = makeStyles((theme) => ({
   childRow: {
     color: 'ddd',
     fontStyle: 'italic'
-  },
-  drawerPaper: {
   },
   fabAdd: {
     position: 'fixed',
