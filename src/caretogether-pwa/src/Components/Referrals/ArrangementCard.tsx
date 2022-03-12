@@ -1,4 +1,5 @@
 import {
+  Button,
   Card,
   CardActions,
   CardContent,
@@ -198,20 +199,26 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
                 (arrangementPolicy?.childInvolvement === ChildInvolvement.ChildHousing || arrangementPolicy?.childInvolvement === ChildInvolvement.DaytimeChildCareOnly) && (
                 <>
                   {summaryOnly
-                    ? <PersonPinCircleIcon color='disabled' style={{float: 'right', marginLeft: 2, marginTop: 2}} />
-                    : <IconButton size="small" style={{float: 'right', marginLeft: 2}}
+                    ? <>
+                        <PersonPinCircleIcon color='disabled' style={{float: 'right', marginLeft: 2, marginTop: 2}} />
+                        <span style={{float: 'right', paddingTop: 4}}>{
+                          (arrangement.childrenLocationHistory && arrangement.childrenLocationHistory.length > 0)
+                          ? <FamilyName family={familyLookup(arrangement.childrenLocationHistory[arrangement.childrenLocationHistory.length - 1].childLocationFamilyId)} />
+                          : <strong>Location unspecified</strong>
+                        }</span>
+                      </>
+                    : <Button size="large" variant="text"
+                        style={{float: 'right', marginTop: -10, marginRight: -10, textTransform: "initial"}}
+                        endIcon={<PersonPinCircleIcon />}
                         onClick={(event) => setShowTrackChildLocationDialog(true)}>
-                        <PersonPinCircleIcon />
-                      </IconButton>}
-                  <span style={{float: 'right', paddingTop: 4}}>{
-                    (arrangement.childrenLocationHistory && arrangement.childrenLocationHistory.length > 0)
-                    ? <FamilyName family={familyLookup(arrangement.childrenLocationHistory[arrangement.childrenLocationHistory.length - 1].childLocationFamilyId)} />
-                    : <strong>Location unspecified</strong>
-                  }</span>
+                        {(arrangement.childrenLocationHistory && arrangement.childrenLocationHistory.length > 0)
+                          ? <FamilyName family={familyLookup(arrangement.childrenLocationHistory[arrangement.childrenLocationHistory.length - 1].childLocationFamilyId)} />
+                          : <strong>Location unspecified</strong>}
+                      </Button>}
                 </>
               )}
             </li>
-            <Divider style={{marginBottom: 10}} />
+            <Divider style={{marginBottom: 10, marginTop: 2}} />
             {arrangement.familyVolunteerAssignments?.map(x => (
               <li key={`famVol-${x.arrangementFunction}-${x.familyId}`}><FamilyName family={familyLookup(x.familyId)} /> - {x.arrangementFunction}</li>
             ))}
