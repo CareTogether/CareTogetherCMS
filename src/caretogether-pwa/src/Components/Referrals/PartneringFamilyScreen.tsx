@@ -34,6 +34,7 @@ import { ExemptReferralRequirementDialog } from './ExemptReferralRequirementDial
 import { UnexemptReferralRequirementDialog } from './UnexemptReferralRequirementDialog';
 import { MarkReferralStepIncompleteDialog } from './MarkReferralStepIncompleteDialog';
 import { Masonry } from '@mui/lab';
+import { RequirementRow } from '../Requirements/RequirementRow';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -317,43 +318,20 @@ export function PartneringFamilyScreen() {
                   onClose={() => setOpenNewReferralDialogOpen(false)} />)}
             </Grid>
           </Grid>
-          <Grid item xs={12} sm={6} md={4}>
+          <Grid item xs={12} sm={6} md={4} style={{paddingRight: 20}}>
             <h3>Incomplete</h3>
-            <ul className={classes.familyRequirementsList}>
-              {partneringFamily.partneringFamilyInfo?.openReferral?.missingRequirements?.map((missingRequirementName, i) => (
-                <li key={i}
-                  onContextMenu={(e) => { e.preventDefault(); setRequirementMoreMenuAnchor({ anchor: e.currentTarget, requirement: missingRequirementName }); }}>
-                  ❌ {missingRequirementName}
-                </li>
-              ))}
-            </ul>
+            {partneringFamily.partneringFamilyInfo?.openReferral?.missingRequirements?.map((missing, i) =>
+              <RequirementRow key={`${missing}:${i}`} requirement={missing} />
+            )}
           </Grid>
-          <Grid item xs={12} sm={6} md={4}>
+          <Grid item xs={12} sm={6} md={4} style={{paddingRight: 20}}>
             <h3>Completed</h3>
-            <ul className={classes.familyRequirementsList}>
-              {partneringFamily.partneringFamilyInfo?.openReferral?.completedRequirements?.map((completed, i) => (
-                <li key={i}
-                  onContextMenu={(e) => { e.preventDefault(); setRequirementMoreMenuAnchor({ anchor: e.currentTarget, requirement: completed }); }}>
-                  <Tooltip title={<PersonName person={userLookup(completed.userId)} />}>
-                    <span>
-                      ✅ {completed.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                      {completed.completedAtUtc && <span style={{float:'right',marginRight:20}}>{format(completed.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
-                    </span>
-                  </Tooltip>
-                </li>
-              ))}
-              {partneringFamily.partneringFamilyInfo?.openReferral?.exemptedRequirements?.map((exempted, i) => (
-                <li key={i}
-                  onContextMenu={(e) => { e.preventDefault(); setRequirementMoreMenuAnchor({ anchor: e.currentTarget, requirement: exempted }); }}>
-                  <>
-                    <span>🚫 {exempted.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                    {exempted.exemptionExpiresAtUtc && <span style={{float:'right',marginRight:20}}>until {format(exempted.exemptionExpiresAtUtc, "MM/dd/yyyy")}</span>}
-                    <br />
-                    <span style={{lineHeight: '1.5em', paddingLeft:30, fontStyle: 'italic'}}>{exempted.additionalComments}</span>
-                  </>
-                </li>
-              ))}
-            </ul>
+            {partneringFamily.partneringFamilyInfo?.openReferral?.completedRequirements?.map((completed, i) =>
+              <RequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} />
+            )}
+            {partneringFamily.partneringFamilyInfo?.openReferral?.exemptedRequirements?.map((exempted, i) =>
+              <RequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} />
+            )}
           </Grid>
           <Menu id="partneringfamily-requirement-more-menu"
             anchorEl={requirementMoreMenuAnchor?.anchor}

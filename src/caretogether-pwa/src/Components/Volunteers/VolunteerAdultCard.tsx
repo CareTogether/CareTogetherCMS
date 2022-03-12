@@ -41,6 +41,7 @@ import { MarkVolunteerStepIncompleteDialog } from "./MarkVolunteerStepIncomplete
 import { ExemptVolunteerRequirementDialog } from "./ExemptVolunteerRequirementDialog";
 import { UnexemptVolunteerRequirementDialog } from "./UnexemptVolunteerRequirementDialog";
 import { usePermissions } from "../../Model/SessionModel";
+import { RequirementRow } from "../Requirements/RequirementRow";
 
 const useStyles = makeStyles((theme) => ({
   sectionChips: {
@@ -195,40 +196,15 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         </Typography>
         <Divider />
         <Typography variant="body2" component="div">
-          <ul className={classes.cardList}>
-            {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].completedRequirements?.map((completed, i) => (
-              <li key={i}
-                onContextMenu={(e) => { e.preventDefault(); setRequirementMoreMenuAnchor({ anchor: e.currentTarget, requirement: completed }); }}>
-                <IconRow icon='✅'>
-                  {completed.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                  {completed.completedAtUtc && <span style={{float:'right'}}>{format(completed.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
-                </IconRow>
-              </li>
-            ))}
-            {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].exemptedRequirements?.map((exempted, i) => (
-              <li key={i}
-                onContextMenu={(e) => { e.preventDefault(); setRequirementMoreMenuAnchor({ anchor: e.currentTarget, requirement: exempted }); }}>
-                <IconRow icon='🚫'>
-                  <>
-                    <span>{exempted.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                    {exempted.exemptionExpiresAtUtc && <span style={{float:'right',marginRight:20}}>until {format(exempted.exemptionExpiresAtUtc, "MM/dd/yyyy")}</span>}
-                    <br />
-                    <span style={{lineHeight: '1.5em', paddingLeft:30, fontStyle: 'italic'}}>{exempted.additionalComments}</span>
-                  </>
-                </IconRow>
-              </li>
-            ))}
-          </ul>
-          <ul className={classes.cardList}>
-            {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].missingRequirements?.map((missingRequirementName, i) => (
-              <li key={i}
-                onContextMenu={(e) => { e.preventDefault(); setRequirementMoreMenuAnchor({ anchor: e.currentTarget, requirement: missingRequirementName }); }}>
-              <IconRow icon='❌'>
-                {missingRequirementName}
-              </IconRow>
-            </li>
-            ))}
-          </ul>
+          {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].completedRequirements?.map((completed, i) => (
+            <RequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} />
+          ))}
+          {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].exemptedRequirements?.map((exempted, i) => (
+            <RequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} />
+          ))}
+          {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].missingRequirements?.map((missing, i) => (
+            <RequirementRow key={`${missing}:${i}`} requirement={missing} />
+          ))}
           <Menu id="volunteer-requirement-more-menu"
             anchorEl={requirementMoreMenuAnchor?.anchor}
             keepMounted

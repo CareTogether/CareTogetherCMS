@@ -35,6 +35,7 @@ import { TrackChildLocationDialog } from './TrackChildLocationDialog';
 import { ExemptArrangementRequirementDialog } from './ExemptArrangementRequirementDialog';
 import { UnexemptArrangementRequirementDialog } from './UnexemptArrangementRequirementDialog';
 import { MarkArrangementStepIncompleteDialog } from './MarkArrangementStepIncompleteDialog';
+import { RequirementRow } from '../Requirements/RequirementRow';
 
 type ArrangementPhaseSummaryProps = {
   phase: ArrangementPhase,
@@ -258,50 +259,15 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
           <>
             <Divider />
             <Typography variant="body2" component="div">
-              <ul className={classes.cardList}>
-                {arrangement.completedRequirements?.map((completed, i) => (
-                  <li key={i}
-                    onContextMenu={(e) => { e.preventDefault(); setRequirementMoreMenuAnchor({ anchor: e.currentTarget, requirement: completed }); }}>
-                    <IconRow icon='✅'>
-                      <Tooltip title={<PersonName person={userLookup(completed.userId)} />}>
-                        <span>
-                          {completed.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                          {completed.completedAtUtc && <span style={{float:'right'}}>{format(completed.completedAtUtc, "MM/dd/yyyy hh:mm aa")}</span>}
-                        </span>
-                      </Tooltip>
-                    </IconRow>
-                  </li>
-                ))}
-                {arrangement.exemptedRequirements?.map((exempted, i) => (
-                  <li key={i}
-                    onContextMenu={(e) => { e.preventDefault(); setRequirementMoreMenuAnchor({ anchor: e.currentTarget, requirement: exempted }); }}>
-                    <IconRow icon='🚫'>
-                      <>
-                        <span>{exempted.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                        {exempted.exemptionExpiresAtUtc && <span style={{float:'right',marginRight:20}}>until {format(exempted.exemptionExpiresAtUtc, "MM/dd/yyyy")}</span>}
-                        <br />
-                        <span style={{lineHeight: '1.5em', paddingLeft:30, fontStyle: 'italic'}}>{exempted.additionalComments}</span>
-                      </>
-                    </IconRow>
-                  </li>
-                ))}
-              </ul>
-              <ul className={classes.cardList}>
-                {arrangement.missingRequirements?.map((missingRequirement, i) => (
-                  <li key={i}
-                    onContextMenu={(e) => { e.preventDefault(); setRequirementMoreMenuAnchor({ anchor: e.currentTarget, requirement: missingRequirement }); }}>
-                    {missingRequirement.dueBy
-                      ? <IconRow icon='📅'>
-                          {missingRequirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                          <span style={{float:'right'}}>{format(missingRequirement.dueBy, "MM/dd/yyyy hh:mm aa")}</span>
-                        </IconRow>
-                      : <IconRow icon='❌'>
-                          {missingRequirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                          {missingRequirement.pastDueSince && <span style={{float:'right'}}>{format(missingRequirement.pastDueSince, "MM/dd/yyyy hh:mm aa")}</span>}
-                        </IconRow>}
-                  </li>
-                ))}
-              </ul>
+              {arrangement.completedRequirements?.map((completed, i) =>
+                <RequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} />
+              )}
+              {arrangement.exemptedRequirements?.map((exempted, i) =>
+                <RequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} />
+              )}
+              {arrangement.missingRequirements?.map((missing, i) =>
+                <RequirementRow key={`${missing}:${i}`} requirement={missing} />
+              )}
               <Menu id="arrangement-requirement-more-menu"
                 anchorEl={requirementMoreMenuAnchor?.anchor}
                 keepMounted
