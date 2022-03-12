@@ -29,6 +29,7 @@ import { HeaderContent, HeaderTitle } from '../Header';
 import { useNavigate } from 'react-router-dom';
 import { ArrowBack } from '@mui/icons-material';
 import { usePermissions } from '../../Model/SessionModel';
+import { Masonry } from '@mui/lab';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -132,7 +133,8 @@ export function VolunteerFamilyScreen() {
   }
 
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
+  const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));
+  const isLargeScreen = useMediaQuery(theme.breakpoints.up('xl'));
   
   const navigate = useNavigate();
 
@@ -194,7 +196,7 @@ export function VolunteerFamilyScreen() {
           keepMounted
           open={Boolean(familyRecordMenuAnchor)}
           onClose={() => setFamilyRecordMenuAnchor(null)}>
-          <MenuList dense={isMobile}>
+          <MenuList dense={isDesktop}>
             {volunteerFamily.volunteerFamilyInfo?.missingRequirements?.map(requirementName => (
               <MenuItem key={requirementName} onClick={() => selectRecordFamilyStep(requirementName)}>{requirementName}</MenuItem>
             ))}
@@ -209,7 +211,7 @@ export function VolunteerFamilyScreen() {
           keepMounted
           open={Boolean(familyMoreMenuAnchor)}
           onClose={() => setFamilyMoreMenuAnchor(null)}>
-          <MenuList dense={isMobile}>
+          <MenuList dense={isDesktop}>
             {permissions(Permission.EditVolunteerRoleParticipation) &&
               Object.entries(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals || {}).filter(([role, ]) =>
               !volunteerFamily.volunteerFamilyInfo?.removedRoles?.find(x => x.roleName === role)).flatMap(([role, ]) => (
@@ -311,18 +313,14 @@ export function VolunteerFamilyScreen() {
           <FamilyDocuments family={volunteerFamily} />
         </Grid>
       </Grid>
-      <Grid container spacing={2}>
+      <Masonry columns={isDesktop ? isLargeScreen ? 3 : 2 : 1} spacing={2}>
         {volunteerFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item1.active && adult.item2 && (
-          <Grid item key={adult.item1.id}>
-            <VolunteerAdultCard volunteerFamilyId={familyId} personId={adult.item1.id} />
-          </Grid>
+          <VolunteerAdultCard key={adult.item1.id} volunteerFamilyId={familyId} personId={adult.item1.id} />
         ))}
         {volunteerFamily.family?.children?.map(child => child.active && (
-          <Grid item key={child.id!}>
-            <VolunteerChildCard volunteerFamilyId={familyId} personId={child.id!} />
-          </Grid>
+          <VolunteerChildCard key={child.id!} volunteerFamilyId={familyId} personId={child.id!} />
         ))}
-      </Grid>
+      </Masonry>
     </Container>
   );
 }

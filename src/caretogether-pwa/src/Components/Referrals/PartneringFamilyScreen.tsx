@@ -33,6 +33,7 @@ import { useUserLookup } from '../../Model/DirectoryModel';
 import { ExemptReferralRequirementDialog } from './ExemptReferralRequirementDialog';
 import { UnexemptReferralRequirementDialog } from './UnexemptReferralRequirementDialog';
 import { MarkReferralStepIncompleteDialog } from './MarkReferralStepIncompleteDialog';
+import { Masonry } from '@mui/lab';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -136,7 +137,8 @@ export function PartneringFamilyScreen() {
   const [createArrangementDialogParameter, setCreateArrangementDialogParameter] = useState<ArrangementPolicy | null>(null);
   
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));
+  const isWideScreen = useMediaQuery(theme.breakpoints.up('xl'));
 
   const navigate = useNavigate();
 
@@ -205,7 +207,7 @@ export function PartneringFamilyScreen() {
           keepMounted
           open={Boolean(familyRecordMenuAnchor)}
           onClose={() => setFamilyRecordMenuAnchor(null)}>
-          <MenuList dense={isMobile}>
+          <MenuList dense={isDesktop}>
             {partneringFamily.partneringFamilyInfo?.openReferral?.missingRequirements?.map(requirementName => (
               <MenuItem key={requirementName} onClick={() => selectRecordReferralStep(requirementName)}>{requirementName}</MenuItem>
             ))}
@@ -402,16 +404,16 @@ export function PartneringFamilyScreen() {
                 arrangementPolicy={createArrangementDialogParameter}
                 onClose={() => setCreateArrangementDialogParameter(null)} />}
           </Grid>
-          {partneringFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item1.active && adult.item2 && (
-            <Grid item key={adult.item1.id}>
-              <PartneringAdultCard partneringFamilyId={familyId} personId={adult.item1.id} />
-            </Grid>
-          ))}
-          {partneringFamily.family?.children?.map(child => child.active && (
-            <Grid item key={child.id!}>
-              <PartneringChildCard partneringFamilyId={familyId} personId={child.id!} />
-            </Grid>
-          ))}
+          <Grid item xs={12} spacing={2}>
+            <Masonry columns={isDesktop ? isWideScreen ? 3 : 2 : 1} spacing={2}>
+              {partneringFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item1.active && adult.item2 && (
+                <PartneringAdultCard key={adult.item1.id} partneringFamilyId={familyId} personId={adult.item1.id} />
+              ))}
+              {partneringFamily.family?.children?.map(child => child.active && (
+                <PartneringChildCard key={child.id!} partneringFamilyId={familyId} personId={child.id!} />
+              ))}
+            </Masonry>
+          </Grid>
         </Grid>
       </Grid>
     </Container>
