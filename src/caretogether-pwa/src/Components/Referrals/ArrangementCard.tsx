@@ -21,7 +21,7 @@ import { ArrangementPhase, Arrangement, CombinedFamilyInfo, ActionRequirement, P
 import { useFamilyLookup, usePersonLookup, useUserLookup } from '../../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
 import { FamilyName } from '../Families/FamilyName';
-import { format } from 'date-fns';
+import { format, formatRelative } from 'date-fns';
 import { CardInfoRow } from '../CardInfoRow';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../../Model/ConfigurationModel';
@@ -174,6 +174,8 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
 
+  const now = new Date();
+
   return (
     <Card variant="outlined">
       <ArrangementPhaseSummary phase={arrangement.phase!}
@@ -185,8 +187,8 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
             <span style={{marginLeft: 40, float: "right"}}>
               {arrangement.phase === ArrangementPhase.SettingUp ? "Setting up"
                 : arrangement.phase === ArrangementPhase.ReadyToStart ? "Ready to start"
-                : arrangement.phase === ArrangementPhase.Started ? `Started ${format(arrangement.startedAtUtc!, "M/d/yy h:mm a")}`
-                : `Ended ${format(arrangement.endedAtUtc!, "M/d/yy h:mm a")}`}
+                : arrangement.phase === ArrangementPhase.Started ? `Started ${formatRelative(arrangement.startedAtUtc!, now)}`
+                : `Ended ${formatRelative(arrangement.endedAtUtc!, now)}`}
             </span>}
           {!summaryOnly &&
             <span style={{marginLeft: 0, float: "right"}}>
@@ -198,14 +200,14 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
                   </Button>
                 : arrangement.phase === ArrangementPhase.Started ?
                   <>
-                    <span>Started {format(arrangement.startedAtUtc!, "M/d/yy h:mm a")}</span>
+                    <span>Started {formatRelative(arrangement.startedAtUtc!, now)}</span>
                     <Button variant="outlined" size="small"
                       style={{marginLeft: 10}}
                       onClick={() => setShowEndArrangementDialog(true)}>
                       End
                     </Button>
                   </>
-                : `Ended ${format(arrangement.endedAtUtc!, "M/d/yy h:mm a")}`}
+                : `Ended ${formatRelative(arrangement.endedAtUtc!, now)}`}
           </span>}
         </>} />
       <CardContent className={classes.cardContent}>
