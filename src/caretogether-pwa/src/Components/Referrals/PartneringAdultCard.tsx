@@ -125,7 +125,7 @@ export function PartneringAdultCard({partneringFamilyId, personId}: PartneringAd
   //const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
 
   return <>{adult?.item1 && adult.item1.id && adult.item2 &&
-    <Card className={classes.card}>
+    <Card variant="outlined" className={classes.card}>
       <CardHeader className={classes.cardHeader}
         title={adult.item1.firstName + " " + adult.item1.lastName}
         subheader={<>

@@ -126,7 +126,7 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
   const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
 
   return (
-    <Card>
+    <Card variant="outlined">
       <CardHeader className={classes.cardHeader}
         subheader={<>
           {arrangement.arrangementType} -&nbsp;

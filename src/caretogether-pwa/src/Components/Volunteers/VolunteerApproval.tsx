@@ -140,7 +140,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
         <SearchBar value={filterText} onChange={setFilterText} />
       </HeaderContent>
       <Grid item xs={12}>
-        <TableContainer component={Paper}>
+        <TableContainer>
           <Table className={classes.table} size="small">
             <TableHead>
               <TableRow>

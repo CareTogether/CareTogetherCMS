@@ -69,7 +69,7 @@ function PartneringFamilies() {
         {!isMobile && <HeaderTitle>Referrals</HeaderTitle>}
       </HeaderContent>
       <Grid item xs={12}>
-        <TableContainer component={Paper}>
+        <TableContainer>
           <Table className={classes.table} size="small">
             <TableHead>
               <TableRow>
