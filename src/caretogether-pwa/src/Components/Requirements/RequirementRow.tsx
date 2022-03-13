@@ -1,4 +1,4 @@
-import { DatePicker } from "@mui/lab";
+import { DatePicker, DateTimePicker } from "@mui/lab";
 import { Box, DialogContentText, Divider, FormControl, Grid, InputLabel, Link, MenuItem, Select, Tab, Tabs, TextField, Tooltip } from "@mui/material";
 import { format } from "date-fns";
 import { useState } from "react";
@@ -256,13 +256,21 @@ function MissingRequirementDialog({
         <br />
         <Grid container spacing={2}>
           <Grid item xs={12}>
-            <DatePicker
-              label="When was this requirement completed?"
-              value={completedAtLocal}
-              disableFuture inputFormat="MM/dd/yyyy"
-              onChange={(date) => date && setCompletedAtLocal(date)}
-              showTodayButton
-              renderInput={(params) => <TextField fullWidth required {...params} />} />
+            {requirement instanceof MissingArrangementRequirement
+              ? <DateTimePicker
+                  label="When was this requirement completed?"
+                  value={completedAtLocal}
+                  disableFuture inputFormat="MM/dd/yyyy hh:mm a"
+                  onChange={(date) => date && setCompletedAtLocal(date)}
+                  showTodayButton
+                  renderInput={(params) => <TextField fullWidth required {...params} />} />
+              : <DatePicker
+                  label="When was this requirement completed?"
+                  value={completedAtLocal}
+                  disableFuture inputFormat="MM/dd/yyyy"
+                  onChange={(date) => date && setCompletedAtLocal(date)}
+                  showTodayButton
+                  renderInput={(params) => <TextField fullWidth required {...params} />} />}
           </Grid>
           {(policy.documentLink === DocumentLinkRequirement.Allowed ||
             policy.documentLink === DocumentLinkRequirement.Required) &&
