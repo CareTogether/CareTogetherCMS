@@ -2,7 +2,7 @@ import { Tooltip } from "@mui/material";
 import { format } from "date-fns";
 import { useState } from "react";
 import { useRecoilValue } from "recoil";
-import { CompletedRequirementInfo, ExemptedRequirementInfo, MissingArrangementRequirement } from "../../GeneratedClient";
+import { ActionRequirement, CompletedRequirementInfo, ExemptedRequirementInfo, MissingArrangementRequirement } from "../../GeneratedClient";
 import { policyData } from "../../Model/ConfigurationModel";
 import { useUserLookup } from "../../Model/DirectoryModel";
 import { PersonName } from "../Families/PersonName";
@@ -35,6 +35,70 @@ export interface IndividualVolunteerContext {
 
 export type RequirementContext = ReferralContext | ArrangementContext | VolunteerFamilyContext | IndividualVolunteerContext;
 
+type CompletedRequirementDialogProps = {
+  open: boolean
+  onClose: () => void
+  requirement: CompletedRequirementInfo
+  context: RequirementContext
+  policy: ActionRequirement
+}
+
+function CompletedRequirementDialog({
+  open, onClose, requirement, context, policy
+}: CompletedRequirementDialogProps) {
+  return (
+    <UpdateDialog open={open} onClose={onClose}
+      title={`${context.kind} Requirement: ${requirement.requirementName}`}
+      enableSave={() => false}
+      onSave={() => Promise.resolve()}>
+      <p>MARK ME INCOMPLETE</p>
+    </UpdateDialog>
+  );
+}
+
+type ExemptedRequirementDialogProps = {
+  open: boolean
+  onClose: () => void
+  requirement: ExemptedRequirementInfo
+  context: RequirementContext
+  policy: ActionRequirement
+}
+
+function ExemptedRequirementDialog({
+  open, onClose, requirement, context, policy
+}: ExemptedRequirementDialogProps) {
+  return (
+    <UpdateDialog open={open} onClose={onClose}
+      title={`${context.kind} Requirement: ${requirement.requirementName}`}
+      enableSave={() => false}
+      onSave={() => Promise.resolve()}>
+      <p>UNEXEMPT ME</p>
+    </UpdateDialog>
+  );
+}
+
+type MissingRequirementDialogProps = {
+  open: boolean
+  onClose: () => void
+  requirement: MissingArrangementRequirement | string
+  context: RequirementContext
+  policy: ActionRequirement
+}
+
+function MissingRequirementDialog({
+  open, onClose, requirement, context, policy
+}: MissingRequirementDialogProps) {
+  return (
+    <UpdateDialog open={open} onClose={onClose}
+      title={`${context.kind} Requirement: ${typeof requirement === 'string' ? requirement : requirement.actionName}`}
+      enableSave={() => false}
+      onSave={() => Promise.resolve()}>
+      <p>COMPLETE ME</p>
+      <p>or... EXEMPT ME</p>
+    </UpdateDialog>
+  );
+}
+
 type RequirementDialogProps = {
   open: boolean;
   onClose: () => void;
@@ -43,32 +107,21 @@ type RequirementDialogProps = {
 }
 
 function RequirementDialog({
-  open, onClose, requirement, context,
+  requirement, ...rest
 }: RequirementDialogProps) {
   const policy = useRecoilValue(policyData);
 
-  const requirementName =
-    requirement instanceof CompletedRequirementInfo
-    ? requirement.requirementName!
+  return requirement instanceof CompletedRequirementInfo
+    ? <CompletedRequirementDialog
+        requirement={requirement} policy={policy.actionDefinitions![requirement.requirementName!]} {...rest} />
     : requirement instanceof ExemptedRequirementInfo
-    ? requirement.requirementName!
+    ? <ExemptedRequirementDialog
+        requirement={requirement} policy={policy.actionDefinitions![requirement.requirementName!]} {...rest} />
     : requirement instanceof MissingArrangementRequirement
-    ? requirement.actionName!
-    : requirement;
-  const requirementPolicy = policy.actionDefinitions![requirementName];
-
-  const dialogTitle = `${context.kind} Requirement: ${requirementName}`;
-
-  return (
-    <UpdateDialog open={open} onClose={onClose}
-      title={dialogTitle}
-      enableSave={() => false}
-      onSave={() => Promise.resolve()}>
-      <p>{JSON.stringify(requirement)}</p>
-      <p>{JSON.stringify(requirementPolicy)}</p>
-      <p>{JSON.stringify(context)}</p>
-    </UpdateDialog>
-  );
+    ? <MissingRequirementDialog
+        requirement={requirement} policy={policy.actionDefinitions![requirement.actionName!]} {...rest} />
+    : <MissingRequirementDialog
+        requirement={requirement} policy={policy.actionDefinitions![requirement]} {...rest} />;
 }
 
 type RequirementRowProps = {
