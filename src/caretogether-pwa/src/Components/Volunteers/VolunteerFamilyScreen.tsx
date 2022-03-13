@@ -24,7 +24,10 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowBack } from '@mui/icons-material';
 import { usePermissions } from '../../Model/SessionModel';
 import { Masonry } from '@mui/lab';
-import { CompletedRequirementRow, ExemptedRequirementRow, MissingRequirementRow, VolunteerFamilyContext } from '../Requirements/RequirementRow';
+import { MissingRequirementRow } from "../Requirements/MissingRequirementRow";
+import { ExemptedRequirementRow } from "../Requirements/ExemptedRequirementRow";
+import { CompletedRequirementRow } from "../Requirements/CompletedRequirementRow";
+import { VolunteerFamilyContext } from "../Requirements/RequirementContext";
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {

@@ -32,7 +32,10 @@ import { EndArrangementDialog } from './EndArrangementDialog';
 import { AssignArrangementFunctionDialog } from './AssignArrangementFunctionDialog';
 import { TrackChildLocationDialog } from './TrackChildLocationDialog';
 import { ExemptArrangementRequirementDialog } from './ExemptArrangementRequirementDialog';
-import { ArrangementContext, CompletedRequirementRow, ExemptedRequirementRow, MissingArrangementRequirementRow } from '../Requirements/RequirementRow';
+import { MissingArrangementRequirementRow } from "../Requirements/MissingArrangementRequirementRow";
+import { ExemptedRequirementRow } from "../Requirements/ExemptedRequirementRow";
+import { CompletedRequirementRow } from "../Requirements/CompletedRequirementRow";
+import { ArrangementContext } from "../Requirements/RequirementContext";
 
 type ArrangementPhaseSummaryProps = {
   phase: ArrangementPhase,

@@ -29,7 +29,10 @@ import { useNavigate } from 'react-router-dom';
 import { usePermissions } from '../../Model/SessionModel';
 import { ExemptReferralRequirementDialog } from './ExemptReferralRequirementDialog';
 import { Masonry } from '@mui/lab';
-import { CompletedRequirementRow, ExemptedRequirementRow, MissingRequirementRow, ReferralContext } from '../Requirements/RequirementRow';
+import { MissingRequirementRow } from "../Requirements/MissingRequirementRow";
+import { ExemptedRequirementRow } from "../Requirements/ExemptedRequirementRow";
+import { CompletedRequirementRow } from "../Requirements/CompletedRequirementRow";
+import { ReferralContext } from "../Requirements/RequirementContext";
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {

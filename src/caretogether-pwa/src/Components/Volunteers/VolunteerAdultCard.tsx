@@ -31,7 +31,10 @@ import { ResetIndividualRoleDialog } from "./ResetIndividualRoleDialog";
 import { DeletePersonDialog } from "../Families/DeletePersonDialog";
 import { ExemptVolunteerRequirementDialog } from "./ExemptVolunteerRequirementDialog";
 import { usePermissions } from "../../Model/SessionModel";
-import { CompletedRequirementRow, ExemptedRequirementRow, IndividualVolunteerContext, MissingRequirementRow } from "../Requirements/RequirementRow";
+import { MissingRequirementRow } from "../Requirements/MissingRequirementRow";
+import { ExemptedRequirementRow } from "../Requirements/ExemptedRequirementRow";
+import { CompletedRequirementRow } from "../Requirements/CompletedRequirementRow";
+import { IndividualVolunteerContext } from "../Requirements/RequirementContext";
 
 const useStyles = makeStyles((theme) => ({
   sectionChips: {
