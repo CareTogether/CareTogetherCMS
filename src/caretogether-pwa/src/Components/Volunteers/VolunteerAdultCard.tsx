@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import makeStyles from '@mui/styles/makeStyles';
 import { useState } from "react";
-import { Gender, Person, CombinedFamilyInfo, RoleRemovalReason, CompletedRequirementInfo, ExemptedRequirementInfo, Permission } from "../../GeneratedClient";
+import { Gender, Person, CombinedFamilyInfo, RoleRemovalReason, Permission } from "../../GeneratedClient";
 import { AgeText } from "../AgeText";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useRecoilValue } from "recoil";
@@ -29,7 +29,6 @@ import { UpdateAddressDialog } from "../Families/UpdateAddressDialog";
 import { RemoveIndividualRoleDialog } from "./RemoveIndividualRoleDialog";
 import { ResetIndividualRoleDialog } from "./ResetIndividualRoleDialog";
 import { DeletePersonDialog } from "../Families/DeletePersonDialog";
-import { ExemptVolunteerRequirementDialog } from "./ExemptVolunteerRequirementDialog";
 import { usePermissions } from "../../Model/SessionModel";
 import { MissingRequirementRow } from "../Requirements/MissingRequirementRow";
 import { ExemptedRequirementRow } from "../Requirements/ExemptedRequirementRow";
@@ -82,13 +81,6 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
 
   const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as CombinedFamilyInfo;
   const adult = volunteerFamily.family?.adults?.find(x => x.item1?.id === personId);
-
-  const [requirementMoreMenuAnchor, setRequirementMoreMenuAnchor] = useState<{anchor: Element, requirement: string | CompletedRequirementInfo | ExemptedRequirementInfo} | null>(null);
-  const [exemptParameter, setExemptParameter] = useState<{requirementName: string} | null>(null);
-  function selectExempt(requirementName: string) {
-    setRequirementMoreMenuAnchor(null);
-    setExemptParameter({requirementName: requirementName});
-  }
 
   const requirementContext: IndividualVolunteerContext = {
     kind: "Individual Volunteer",
@@ -186,17 +178,6 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
           {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].availableApplications?.map((application, i) =>
             <MissingRequirementRow key={`${application}:${i}`} requirement={application} context={requirementContext} isAvailableApplication={true} />
           )}
-          <Menu id="volunteer-requirement-more-menu"
-            anchorEl={requirementMoreMenuAnchor?.anchor}
-            keepMounted
-            open={Boolean(requirementMoreMenuAnchor)}
-            onClose={() => setRequirementMoreMenuAnchor(null)}>
-            { (typeof requirementMoreMenuAnchor?.requirement === 'string') && permissions(Permission.EditApprovalRequirementExemption) &&
-              <MenuItem onClick={() => selectExempt(requirementMoreMenuAnchor?.requirement as string)}>Exempt</MenuItem>
-              }
-          </Menu>
-          {(exemptParameter && <ExemptVolunteerRequirementDialog volunteerFamilyId={volunteerFamilyId} personId={personId} requirementName={exemptParameter.requirementName}
-            onClose={() => setExemptParameter(null)} />) || null}
         </Typography>
         <Divider />
         <Typography variant="body2" component="div">

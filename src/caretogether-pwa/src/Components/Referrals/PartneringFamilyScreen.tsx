@@ -1,6 +1,6 @@
-import { Container, Toolbar, Grid, Button, Menu, MenuItem, useMediaQuery, useTheme, IconButton } from '@mui/material';
+import { Container, Toolbar, Grid, Button, useMediaQuery, useTheme, IconButton } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { ArrangementPolicy, CombinedFamilyInfo, CompletedCustomFieldInfo, CompletedRequirementInfo, CustomFieldType, ExemptedRequirementInfo, Permission, ReferralCloseReason } from '../../GeneratedClient';
+import { ArrangementPolicy, CombinedFamilyInfo, CompletedCustomFieldInfo, CustomFieldType, Permission, ReferralCloseReason } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { useParams } from 'react-router';
@@ -27,7 +27,6 @@ import { HeaderContent, HeaderTitle } from '../Header';
 import { ArrowBack } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { usePermissions } from '../../Model/SessionModel';
-import { ExemptReferralRequirementDialog } from './ExemptReferralRequirementDialog';
 import { Masonry } from '@mui/lab';
 import { MissingRequirementRow } from "../Requirements/MissingRequirementRow";
 import { ExemptedRequirementRow } from "../Requirements/ExemptedRequirementRow";
@@ -105,13 +104,6 @@ export function PartneringFamilyScreen() {
   const [addNoteDialogOpen, setAddNoteDialogOpen] = useState(false);
   
   const [customFieldDialogParameter, setCustomFieldDialogParameter] = useState<string | CompletedCustomFieldInfo | null>(null);
-
-  const [requirementMoreMenuAnchor, setRequirementMoreMenuAnchor] = useState<{anchor: Element, requirement: string | CompletedRequirementInfo | ExemptedRequirementInfo } | null>(null);
-  const [exemptParameter, setExemptParameter] = useState<{requirementName: string} | null>(null);
-  function selectExempt(requirementName: string) {
-    setRequirementMoreMenuAnchor(null);
-    setExemptParameter({requirementName: requirementName});
-  }
 
   let requirementContext: ReferralContext | undefined;
   if (partneringFamily.partneringFamilyInfo?.openReferral) {
@@ -292,17 +284,6 @@ export function PartneringFamilyScreen() {
               <ExemptedRequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={requirementContext!} />
             )}
           </Grid>
-          <Menu id="partneringfamily-requirement-more-menu"
-            anchorEl={requirementMoreMenuAnchor?.anchor}
-            keepMounted
-            open={Boolean(requirementMoreMenuAnchor)}
-            onClose={() => setRequirementMoreMenuAnchor(null)}>
-            { (typeof requirementMoreMenuAnchor?.requirement === 'string') &&
-              <MenuItem onClick={() => selectExempt(requirementMoreMenuAnchor?.requirement as string)}>Exempt</MenuItem>
-              }
-          </Menu>
-          {(exemptParameter && <ExemptReferralRequirementDialog partneringFamilyId={familyId} referralId={partneringFamily.partneringFamilyInfo?.openReferral?.id!} requirementName={exemptParameter.requirementName}
-            onClose={() => setExemptParameter(null)} />) || null}
           <Grid item xs={12} sm={6} md={4}>
             <h3>Documents</h3>
             <FamilyDocuments family={partneringFamily} />

@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import React, { useState } from 'react';
-import { ArrangementPhase, Arrangement, CombinedFamilyInfo, FunctionRequirement, ArrangementFunction, ChildInvolvement, CompletedRequirementInfo, ExemptedRequirementInfo, MissingArrangementRequirement } from '../../GeneratedClient';
+import { ArrangementPhase, Arrangement, CombinedFamilyInfo, FunctionRequirement, ArrangementFunction, ChildInvolvement } from '../../GeneratedClient';
 import { useFamilyLookup, usePersonLookup } from '../../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
 import { FamilyName } from '../Families/FamilyName';
@@ -31,7 +31,6 @@ import { StartArrangementDialog } from './StartArrangementDialog';
 import { EndArrangementDialog } from './EndArrangementDialog';
 import { AssignArrangementFunctionDialog } from './AssignArrangementFunctionDialog';
 import { TrackChildLocationDialog } from './TrackChildLocationDialog';
-import { ExemptArrangementRequirementDialog } from './ExemptArrangementRequirementDialog';
 import { MissingArrangementRequirementRow } from "../Requirements/MissingArrangementRequirementRow";
 import { ExemptedRequirementRow } from "../Requirements/ExemptedRequirementRow";
 import { CompletedRequirementRow } from "../Requirements/CompletedRequirementRow";
@@ -143,13 +142,6 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
   }
   const [showTrackChildLocationDialog, setShowTrackChildLocationDialog] = useState(false);
 
-  const [requirementMoreMenuAnchor, setRequirementMoreMenuAnchor] = useState<{anchor: Element, requirement: MissingArrangementRequirement | CompletedRequirementInfo | ExemptedRequirementInfo} | null>(null);
-  const [exemptParameter, setExemptParameter] = useState<{requirement: MissingArrangementRequirement} | null>(null);
-  function selectExempt(requirement: MissingArrangementRequirement) {
-    setRequirementMoreMenuAnchor(null);
-    setExemptParameter({requirement: requirement});
-  }
-
   const requirementContext: ArrangementContext = {
     kind: "Arrangement",
     partneringFamilyId: partneringFamily.family!.id!,
@@ -258,17 +250,6 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
               {arrangement.missingRequirements?.map((missing, i) =>
                 <MissingArrangementRequirementRow key={`${missing}:${i}`} requirement={missing} context={requirementContext} />
               )}
-              <Menu id="arrangement-requirement-more-menu"
-                anchorEl={requirementMoreMenuAnchor?.anchor}
-                keepMounted
-                open={Boolean(requirementMoreMenuAnchor)}
-                onClose={() => setRequirementMoreMenuAnchor(null)}>
-                { (requirementMoreMenuAnchor?.requirement instanceof MissingArrangementRequirement) &&
-                  <MenuItem onClick={() => selectExempt(requirementMoreMenuAnchor?.requirement as MissingArrangementRequirement)}>Exempt</MenuItem>
-                  }
-              </Menu>
-              {(exemptParameter && <ExemptArrangementRequirementDialog partneringFamilyId={partneringFamily.family!.id!} referralId={referralId} arrangementId={arrangement.id!} requirement={exemptParameter.requirement}
-                onClose={() => setExemptParameter(null)} />) || null}
             </Typography>
           </>
         )}

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import makeStyles from '@mui/styles/makeStyles';
 import { Container, Toolbar, Button, Menu, MenuItem, Grid, useMediaQuery, useTheme, MenuList, IconButton, ListItemText, Chip, Divider } from '@mui/material';
-import { CombinedFamilyInfo, RoleRemovalReason, CompletedRequirementInfo, ExemptedRequirementInfo, Permission } from '../../GeneratedClient';
+import { CombinedFamilyInfo, RoleRemovalReason, Permission } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -18,7 +18,6 @@ import { RemoveFamilyRoleDialog } from './RemoveFamilyRoleDialog';
 import { ResetFamilyRoleDialog } from './ResetFamilyRoleDialog';
 import { PersonName } from '../Families/PersonName';
 import { FamilyDocuments } from '../Families/FamilyDocuments';
-import { ExemptVolunteerFamilyRequirementDialog } from './ExemptVolunteerFamilyRequirementDialog';
 import { HeaderContent, HeaderTitle } from '../Header';
 import { useNavigate } from 'react-router-dom';
 import { ArrowBack } from '@mui/icons-material';
@@ -104,13 +103,6 @@ export function VolunteerFamilyScreen() {
     setResetRoleParameter({volunteerFamilyId: familyId, role: role, removalReason: removalReason, removalAdditionalComments: removalAdditionalComments});
   }
   
-  const [requirementMoreMenuAnchor, setRequirementMoreMenuAnchor] = useState<{anchor: Element, requirement: string | CompletedRequirementInfo | ExemptedRequirementInfo } | null>(null);
-  const [exemptParameter, setExemptParameter] = useState<{requirementName: string} | null>(null);
-  function selectExempt(requirementName: string) {
-    setRequirementMoreMenuAnchor(null);
-    setExemptParameter({requirementName: requirementName});
-  }
-
   const requirementContext: VolunteerFamilyContext = {
     kind: "Volunteer Family",
     volunteerFamilyId: familyId
@@ -228,17 +220,6 @@ export function VolunteerFamilyScreen() {
             <ExemptedRequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={requirementContext} />
           )}
         </Grid>
-        <Menu id="volunteerfamily-requirement-more-menu"
-          anchorEl={requirementMoreMenuAnchor?.anchor}
-          keepMounted
-          open={Boolean(requirementMoreMenuAnchor)}
-          onClose={() => setRequirementMoreMenuAnchor(null)}>
-          { (typeof requirementMoreMenuAnchor?.requirement === 'string') && permissions(Permission.EditApprovalRequirementExemption) &&
-            <MenuItem onClick={() => selectExempt(requirementMoreMenuAnchor?.requirement as string)}>Exempt</MenuItem>
-            }
-        </Menu>
-        {(exemptParameter && <ExemptVolunteerFamilyRequirementDialog volunteerFamilyId={familyId} requirementName={exemptParameter.requirementName}
-          onClose={() => setExemptParameter(null)} />) || null}
         <Grid item xs={12} sm={6} md={4}>
           <h3>Documents</h3>
           <FamilyDocuments family={volunteerFamily} />

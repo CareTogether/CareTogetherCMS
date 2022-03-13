@@ -34,6 +34,8 @@ export function MissingRequirementDialog({
   const UPLOAD_NEW = "__uploadnew__";
   const organizationId = useRecoilValue(currentOrganizationState);
   const locationId = useRecoilValue(currentLocationState);
+  const [additionalComments, setAdditionalComments] = useState("");
+  const [exemptionExpiresAtLocal, setExemptionExpiresAtLocal] = useState(null as Date | null);
 
   const familyLookup = useFamilyLookup();
   const contextFamilyId = context.kind === 'Referral' || context.kind === 'Arrangement'
@@ -49,7 +51,7 @@ export function MissingRequirementDialog({
       policy.documentLink !== DocumentLinkRequirement.Required) &&
     (notes !== "" || policy.noteEntry !== NoteEntryRequirement.Required)
     : // grant exemption
-    true;
+    additionalComments !== "";
 
   const requirementName = requirement instanceof MissingArrangementRequirement ? requirement.actionName! : requirement;
 
@@ -83,6 +85,24 @@ export function MissingRequirementDialog({
   }
 
   async function exempt() {
+    switch (context.kind) {
+      case 'Referral':
+        await referrals.exemptReferralRequirement(contextFamilyId, context.referralId,
+          requirementName, additionalComments, exemptionExpiresAtLocal);
+        break;
+      case 'Arrangement':
+        await referrals.exemptArrangementRequirement(contextFamilyId, context.referralId, context.arrangementId,
+          requirement as MissingArrangementRequirement, additionalComments, exemptionExpiresAtLocal);
+        break;
+      case 'Volunteer Family':
+        await volunteers.exemptVolunteerFamilyRequirement(contextFamilyId,
+          requirementName, additionalComments, exemptionExpiresAtLocal);
+        break;
+      case 'Individual Volunteer':
+        await volunteers.exemptVolunteerRequirement(contextFamilyId, context.personId,
+          requirementName, additionalComments, exemptionExpiresAtLocal);
+        break;
+    }
   }
 
   async function save() {
@@ -183,7 +203,25 @@ export function MissingRequirementDialog({
         </Grid>
       </TabPanel>
       <TabPanel value={tabValue} index={1}>
-        or... EXEMPT ME
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <TextField
+              id="additional-comments" required
+              label="Additional Comments" placeholder="Explain why this requirement will be exempted"
+              multiline fullWidth variant="outlined" minRows={2} maxRows={5} size="small"
+              value={additionalComments} onChange={e => setAdditionalComments(e.target.value)}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <DatePicker
+              label="When does this exemption expire? (Default is never)"
+              value={exemptionExpiresAtLocal}
+              inputFormat="MM/dd/yyyy"
+              onChange={(date) => date && setExemptionExpiresAtLocal(date)}
+              showTodayButton
+              renderInput={(params) => <TextField fullWidth {...params} />} />
+          </Grid>
+        </Grid>
       </TabPanel>
     </UpdateDialog>
   );
