@@ -18,7 +18,7 @@ import {
 import makeStyles from '@mui/styles/makeStyles';
 import React, { useState } from 'react';
 import { ArrangementPhase, Arrangement, CombinedFamilyInfo, ActionRequirement, Person, FunctionRequirement, ArrangementFunction, ChildInvolvement, CompletedRequirementInfo, ExemptedRequirementInfo, MissingArrangementRequirement } from '../../GeneratedClient';
-import { useFamilyLookup, usePersonLookup, useUserLookup } from '../../Model/DirectoryModel';
+import { useFamilyLookup, usePersonLookup } from '../../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
 import { FamilyName } from '../Families/FamilyName';
 import { format, formatRelative } from 'date-fns';
@@ -124,7 +124,6 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
 
   const familyLookup = useFamilyLookup();
   const personLookup = usePersonLookup();
-  const userLookup = useUserLookup();
   
   const [arrangementRecordMenuAnchor, setArrangementRecordMenuAnchor] = useState<{anchor: Element, arrangement: Arrangement} | null>(null);
   const [recordArrangementStepParameter, setRecordArrangementStepParameter] = useState<{requirementName: string, requirementInfo: ActionRequirement, arrangement: Person} | null>(null);

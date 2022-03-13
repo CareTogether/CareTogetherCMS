@@ -15,7 +15,6 @@ import {
   useTheme,
 } from "@mui/material";
 import makeStyles from '@mui/styles/makeStyles';
-import { format } from 'date-fns';
 import { useState } from "react";
 import { ActionRequirement, Gender, Person, CombinedFamilyInfo, RoleRemovalReason, CompletedRequirementInfo, ExemptedRequirementInfo, Permission } from "../../GeneratedClient";
 import { AgeText } from "../AgeText";

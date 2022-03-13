@@ -1,4 +1,4 @@
-import { Container, Toolbar, Grid, Button, Menu, MenuItem, MenuList, useMediaQuery, useTheme, IconButton, Tooltip } from '@mui/material';
+import { Container, Toolbar, Grid, Button, Menu, MenuItem, MenuList, useMediaQuery, useTheme, IconButton } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { ActionRequirement, ArrangementPolicy, CombinedFamilyInfo, CompletedCustomFieldInfo, CompletedRequirementInfo, CustomFieldType, ExemptedRequirementInfo, Permission, ReferralCloseReason } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
@@ -29,7 +29,6 @@ import { HeaderContent, HeaderTitle } from '../Header';
 import { ArrowBack } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { usePermissions } from '../../Model/SessionModel';
-import { useUserLookup } from '../../Model/DirectoryModel';
 import { ExemptReferralRequirementDialog } from './ExemptReferralRequirementDialog';
 import { UnexemptReferralRequirementDialog } from './UnexemptReferralRequirementDialog';
 import { MarkReferralStepIncompleteDialog } from './MarkReferralStepIncompleteDialog';
@@ -89,8 +88,6 @@ export function PartneringFamilyScreen() {
   
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
-
-  const userLookup = useUserLookup();
 
   const partneringFamilies = useRecoilValue(partneringFamiliesData);
   const policy = useRecoilValue(policyData);
