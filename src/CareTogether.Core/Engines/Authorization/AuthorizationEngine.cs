@@ -141,8 +141,8 @@ namespace CareTogether.Engines.Authorization
                 });
         }
 
-        public async Task<bool> AuthorizeArrangementCommandAsync(
-            Guid organizationId, Guid locationId, ClaimsPrincipal user, ArrangementCommand command)
+        public async Task<bool> AuthorizeArrangementsCommandAsync(
+            Guid organizationId, Guid locationId, ClaimsPrincipal user, ArrangementsCommand command)
         {
             return await AuthorizeFamilyAccessAsync(organizationId, locationId, user, command.FamilyId) &&
                 CheckPermission(organizationId, locationId, user, command switch
@@ -150,13 +150,13 @@ namespace CareTogether.Engines.Authorization
                     CreateArrangement => null,
                     AssignIndividualVolunteer => null,
                     AssignVolunteerFamily => null,
-                    StartArrangement => null,
+                    StartArrangements => null,
                     CompleteArrangementRequirement => null,
                     MarkArrangementRequirementIncomplete => null,
                     ExemptArrangementRequirement => null,
                     UnexemptArrangementRequirement => null,
                     TrackChildLocationChange => null,
-                    EndArrangement => null,
+                    EndArrangements => null,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented.")
                 });

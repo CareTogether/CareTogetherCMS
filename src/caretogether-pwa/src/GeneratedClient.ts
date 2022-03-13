@@ -527,7 +527,7 @@ export class ReferralsClient {
         return Promise.resolve<CombinedFamilyInfo>(null as any);
     }
 
-    submitArrangementCommand(organizationId: string, locationId: string, command: ArrangementCommand): Promise<CombinedFamilyInfo> {
+    submitArrangementsCommand(organizationId: string, locationId: string, command: ArrangementsCommand): Promise<CombinedFamilyInfo> {
         let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Referrals/arrangementCommand";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
@@ -549,11 +549,11 @@ export class ReferralsClient {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processSubmitArrangementCommand(_response);
+            return this.processSubmitArrangementsCommand(_response);
         });
     }
 
-    protected processSubmitArrangementCommand(response: Response): Promise<CombinedFamilyInfo> {
+    protected processSubmitArrangementsCommand(response: Response): Promise<CombinedFamilyInfo> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -5893,32 +5893,36 @@ export interface IUpdateCustomReferralField extends IReferralCommand {
     value?: any | undefined;
 }
 
-export abstract class ArrangementCommand implements IArrangementCommand {
+export abstract class ArrangementsCommand implements IArrangementsCommand {
     familyId?: string;
     referralId?: string;
-    arrangementId?: string;
+    arrangementIds?: string[];
 
     protected _discriminator: string;
 
-    constructor(data?: IArrangementCommand) {
+    constructor(data?: IArrangementsCommand) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
                     (<any>this)[property] = (<any>data)[property];
             }
         }
-        this._discriminator = "ArrangementCommand";
+        this._discriminator = "ArrangementsCommand";
     }
 
     init(_data?: any) {
         if (_data) {
             this.familyId = _data["familyId"];
             this.referralId = _data["referralId"];
-            this.arrangementId = _data["arrangementId"];
+            if (Array.isArray(_data["arrangementIds"])) {
+                this.arrangementIds = [] as any;
+                for (let item of _data["arrangementIds"])
+                    this.arrangementIds!.push(item);
+            }
         }
     }
 
-    static fromJS(data: any): ArrangementCommand {
+    static fromJS(data: any): ArrangementsCommand {
         data = typeof data === 'object' ? data : {};
         if (data["discriminator"] === "AssignIndividualVolunteer") {
             let result = new AssignIndividualVolunteer();
@@ -5940,8 +5944,8 @@ export abstract class ArrangementCommand implements IArrangementCommand {
             result.init(data);
             return result;
         }
-        if (data["discriminator"] === "EndArrangement") {
-            let result = new EndArrangement();
+        if (data["discriminator"] === "EndArrangements") {
+            let result = new EndArrangements();
             result.init(data);
             return result;
         }
@@ -5955,8 +5959,8 @@ export abstract class ArrangementCommand implements IArrangementCommand {
             result.init(data);
             return result;
         }
-        if (data["discriminator"] === "StartArrangement") {
-            let result = new StartArrangement();
+        if (data["discriminator"] === "StartArrangements") {
+            let result = new StartArrangements();
             result.init(data);
             return result;
         }
@@ -5970,7 +5974,7 @@ export abstract class ArrangementCommand implements IArrangementCommand {
             result.init(data);
             return result;
         }
-        throw new Error("The abstract class 'ArrangementCommand' cannot be instantiated.");
+        throw new Error("The abstract class 'ArrangementsCommand' cannot be instantiated.");
     }
 
     toJSON(data?: any) {
@@ -5978,18 +5982,22 @@ export abstract class ArrangementCommand implements IArrangementCommand {
         data["discriminator"] = this._discriminator;
         data["familyId"] = this.familyId;
         data["referralId"] = this.referralId;
-        data["arrangementId"] = this.arrangementId;
+        if (Array.isArray(this.arrangementIds)) {
+            data["arrangementIds"] = [];
+            for (let item of this.arrangementIds)
+                data["arrangementIds"].push(item);
+        }
         return data;
     }
 }
 
-export interface IArrangementCommand {
+export interface IArrangementsCommand {
     familyId?: string;
     referralId?: string;
-    arrangementId?: string;
+    arrangementIds?: string[];
 }
 
-export class AssignIndividualVolunteer extends ArrangementCommand implements IAssignIndividualVolunteer {
+export class AssignIndividualVolunteer extends ArrangementsCommand implements IAssignIndividualVolunteer {
     volunteerFamilyId?: string;
     personId?: string;
     arrangementFunction?: string;
@@ -6025,13 +6033,13 @@ export class AssignIndividualVolunteer extends ArrangementCommand implements IAs
     }
 }
 
-export interface IAssignIndividualVolunteer extends IArrangementCommand {
+export interface IAssignIndividualVolunteer extends IArrangementsCommand {
     volunteerFamilyId?: string;
     personId?: string;
     arrangementFunction?: string;
 }
 
-export class AssignVolunteerFamily extends ArrangementCommand implements IAssignVolunteerFamily {
+export class AssignVolunteerFamily extends ArrangementsCommand implements IAssignVolunteerFamily {
     volunteerFamilyId?: string;
     arrangementFunction?: string;
 
@@ -6064,12 +6072,12 @@ export class AssignVolunteerFamily extends ArrangementCommand implements IAssign
     }
 }
 
-export interface IAssignVolunteerFamily extends IArrangementCommand {
+export interface IAssignVolunteerFamily extends IArrangementsCommand {
     volunteerFamilyId?: string;
     arrangementFunction?: string;
 }
 
-export class CompleteArrangementRequirement extends ArrangementCommand implements ICompleteArrangementRequirement {
+export class CompleteArrangementRequirement extends ArrangementsCommand implements ICompleteArrangementRequirement {
     completedRequirementId?: string;
     requirementName?: string;
     completedAtUtc?: Date;
@@ -6108,14 +6116,14 @@ export class CompleteArrangementRequirement extends ArrangementCommand implement
     }
 }
 
-export interface ICompleteArrangementRequirement extends IArrangementCommand {
+export interface ICompleteArrangementRequirement extends IArrangementsCommand {
     completedRequirementId?: string;
     requirementName?: string;
     completedAtUtc?: Date;
     uploadedDocumentId?: string | undefined;
 }
 
-export class CreateArrangement extends ArrangementCommand implements ICreateArrangement {
+export class CreateArrangement extends ArrangementsCommand implements ICreateArrangement {
     arrangementType?: string;
     requestedAtUtc?: Date;
     partneringFamilyPersonId?: string;
@@ -6151,18 +6159,18 @@ export class CreateArrangement extends ArrangementCommand implements ICreateArra
     }
 }
 
-export interface ICreateArrangement extends IArrangementCommand {
+export interface ICreateArrangement extends IArrangementsCommand {
     arrangementType?: string;
     requestedAtUtc?: Date;
     partneringFamilyPersonId?: string;
 }
 
-export class EndArrangement extends ArrangementCommand implements IEndArrangement {
+export class EndArrangements extends ArrangementsCommand implements IEndArrangements {
     endedAtUtc?: Date;
 
-    constructor(data?: IEndArrangement) {
+    constructor(data?: IEndArrangements) {
         super(data);
-        this._discriminator = "EndArrangement";
+        this._discriminator = "EndArrangements";
     }
 
     init(_data?: any) {
@@ -6172,9 +6180,9 @@ export class EndArrangement extends ArrangementCommand implements IEndArrangemen
         }
     }
 
-    static fromJS(data: any): EndArrangement {
+    static fromJS(data: any): EndArrangements {
         data = typeof data === 'object' ? data : {};
-        let result = new EndArrangement();
+        let result = new EndArrangements();
         result.init(data);
         return result;
     }
@@ -6187,11 +6195,11 @@ export class EndArrangement extends ArrangementCommand implements IEndArrangemen
     }
 }
 
-export interface IEndArrangement extends IArrangementCommand {
+export interface IEndArrangements extends IArrangementsCommand {
     endedAtUtc?: Date;
 }
 
-export class ExemptArrangementRequirement extends ArrangementCommand implements IExemptArrangementRequirement {
+export class ExemptArrangementRequirement extends ArrangementsCommand implements IExemptArrangementRequirement {
     requirementName?: string;
     dueDate?: Date | undefined;
     additionalComments?: string;
@@ -6230,14 +6238,14 @@ export class ExemptArrangementRequirement extends ArrangementCommand implements 
     }
 }
 
-export interface IExemptArrangementRequirement extends IArrangementCommand {
+export interface IExemptArrangementRequirement extends IArrangementsCommand {
     requirementName?: string;
     dueDate?: Date | undefined;
     additionalComments?: string;
     exemptionExpiresAtUtc?: Date | undefined;
 }
 
-export class MarkArrangementRequirementIncomplete extends ArrangementCommand implements IMarkArrangementRequirementIncomplete {
+export class MarkArrangementRequirementIncomplete extends ArrangementsCommand implements IMarkArrangementRequirementIncomplete {
     completedRequirementId?: string;
     requirementName?: string;
 
@@ -6270,17 +6278,17 @@ export class MarkArrangementRequirementIncomplete extends ArrangementCommand imp
     }
 }
 
-export interface IMarkArrangementRequirementIncomplete extends IArrangementCommand {
+export interface IMarkArrangementRequirementIncomplete extends IArrangementsCommand {
     completedRequirementId?: string;
     requirementName?: string;
 }
 
-export class StartArrangement extends ArrangementCommand implements IStartArrangement {
+export class StartArrangements extends ArrangementsCommand implements IStartArrangements {
     startedAtUtc?: Date;
 
-    constructor(data?: IStartArrangement) {
+    constructor(data?: IStartArrangements) {
         super(data);
-        this._discriminator = "StartArrangement";
+        this._discriminator = "StartArrangements";
     }
 
     init(_data?: any) {
@@ -6290,9 +6298,9 @@ export class StartArrangement extends ArrangementCommand implements IStartArrang
         }
     }
 
-    static fromJS(data: any): StartArrangement {
+    static fromJS(data: any): StartArrangements {
         data = typeof data === 'object' ? data : {};
-        let result = new StartArrangement();
+        let result = new StartArrangements();
         result.init(data);
         return result;
     }
@@ -6305,11 +6313,11 @@ export class StartArrangement extends ArrangementCommand implements IStartArrang
     }
 }
 
-export interface IStartArrangement extends IArrangementCommand {
+export interface IStartArrangements extends IArrangementsCommand {
     startedAtUtc?: Date;
 }
 
-export class TrackChildLocationChange extends ArrangementCommand implements ITrackChildLocationChange {
+export class TrackChildLocationChange extends ArrangementsCommand implements ITrackChildLocationChange {
     changedAtUtc?: Date;
     childLocationFamilyId?: string;
     plan?: ChildLocationPlan;
@@ -6345,13 +6353,13 @@ export class TrackChildLocationChange extends ArrangementCommand implements ITra
     }
 }
 
-export interface ITrackChildLocationChange extends IArrangementCommand {
+export interface ITrackChildLocationChange extends IArrangementsCommand {
     changedAtUtc?: Date;
     childLocationFamilyId?: string;
     plan?: ChildLocationPlan;
 }
 
-export class UnexemptArrangementRequirement extends ArrangementCommand implements IUnexemptArrangementRequirement {
+export class UnexemptArrangementRequirement extends ArrangementsCommand implements IUnexemptArrangementRequirement {
     requirementName?: string;
     dueDate?: Date | undefined;
 
@@ -6384,7 +6392,7 @@ export class UnexemptArrangementRequirement extends ArrangementCommand implement
     }
 }
 
-export interface IUnexemptArrangementRequirement extends IArrangementCommand {
+export interface IUnexemptArrangementRequirement extends IArrangementsCommand {
     requirementName?: string;
     dueDate?: Date | undefined;
 }

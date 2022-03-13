@@ -563,7 +563,7 @@
         "tags": [
           "Referrals"
         ],
-        "operationId": "Referrals_SubmitArrangementCommand",
+        "operationId": "Referrals_SubmitArrangementsCommand",
         "parameters": [
           {
             "name": "organizationId",
@@ -591,7 +591,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ArrangementCommand"
+                "$ref": "#/components/schemas/ArrangementsCommand"
               }
             }
           },
@@ -3343,7 +3343,7 @@
           }
         ]
       },
-      "ArrangementCommand": {
+      "ArrangementsCommand": {
         "type": "object",
         "discriminator": {
           "propertyName": "discriminator",
@@ -3352,10 +3352,10 @@
             "AssignVolunteerFamily": "#/components/schemas/AssignVolunteerFamily",
             "CompleteArrangementRequirement": "#/components/schemas/CompleteArrangementRequirement",
             "CreateArrangement": "#/components/schemas/CreateArrangement",
-            "EndArrangement": "#/components/schemas/EndArrangement",
+            "EndArrangements": "#/components/schemas/EndArrangements",
             "ExemptArrangementRequirement": "#/components/schemas/ExemptArrangementRequirement",
             "MarkArrangementRequirementIncomplete": "#/components/schemas/MarkArrangementRequirementIncomplete",
-            "StartArrangement": "#/components/schemas/StartArrangement",
+            "StartArrangements": "#/components/schemas/StartArrangements",
             "TrackChildLocationChange": "#/components/schemas/TrackChildLocationChange",
             "UnexemptArrangementRequirement": "#/components/schemas/UnexemptArrangementRequirement"
           }
@@ -3374,9 +3374,12 @@
             "type": "string",
             "format": "guid"
           },
-          "arrangementId": {
-            "type": "string",
-            "format": "guid"
+          "arrangementIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "guid"
+            }
           },
           "discriminator": {
             "type": "string"
@@ -3386,7 +3389,7 @@
       "AssignIndividualVolunteer": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/ArrangementCommand"
+            "$ref": "#/components/schemas/ArrangementsCommand"
           },
           {
             "type": "object",
@@ -3410,7 +3413,7 @@
       "AssignVolunteerFamily": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/ArrangementCommand"
+            "$ref": "#/components/schemas/ArrangementsCommand"
           },
           {
             "type": "object",
@@ -3430,7 +3433,7 @@
       "CompleteArrangementRequirement": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/ArrangementCommand"
+            "$ref": "#/components/schemas/ArrangementsCommand"
           },
           {
             "type": "object",
@@ -3459,7 +3462,7 @@
       "CreateArrangement": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/ArrangementCommand"
+            "$ref": "#/components/schemas/ArrangementsCommand"
           },
           {
             "type": "object",
@@ -3480,10 +3483,10 @@
           }
         ]
       },
-      "EndArrangement": {
+      "EndArrangements": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/ArrangementCommand"
+            "$ref": "#/components/schemas/ArrangementsCommand"
           },
           {
             "type": "object",
@@ -3500,7 +3503,7 @@
       "ExemptArrangementRequirement": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/ArrangementCommand"
+            "$ref": "#/components/schemas/ArrangementsCommand"
           },
           {
             "type": "object",
@@ -3529,7 +3532,7 @@
       "MarkArrangementRequirementIncomplete": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/ArrangementCommand"
+            "$ref": "#/components/schemas/ArrangementsCommand"
           },
           {
             "type": "object",
@@ -3546,10 +3549,10 @@
           }
         ]
       },
-      "StartArrangement": {
+      "StartArrangements": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/ArrangementCommand"
+            "$ref": "#/components/schemas/ArrangementsCommand"
           },
           {
             "type": "object",
@@ -3566,7 +3569,7 @@
       "TrackChildLocationChange": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/ArrangementCommand"
+            "$ref": "#/components/schemas/ArrangementsCommand"
           },
           {
             "type": "object",
@@ -3590,7 +3593,7 @@
       "UnexemptArrangementRequirement": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/ArrangementCommand"
+            "$ref": "#/components/schemas/ArrangementsCommand"
           },
           {
             "type": "object",

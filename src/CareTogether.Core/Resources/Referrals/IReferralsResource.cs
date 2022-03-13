@@ -63,37 +63,37 @@ namespace CareTogether.Resources.Referrals
         : ReferralCommand(FamilyId, ReferralId);
 
     [JsonHierarchyBase]
-    public abstract partial record ArrangementCommand(Guid FamilyId, Guid ReferralId, Guid ArrangementId);
-    public sealed record CreateArrangement(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
+    public abstract partial record ArrangementsCommand(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds);
+    public sealed record CreateArrangement(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         string ArrangementType, DateTime RequestedAtUtc, Guid PartneringFamilyPersonId)
-        : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
-    public sealed record AssignIndividualVolunteer(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+    public sealed record AssignIndividualVolunteer(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         Guid VolunteerFamilyId, Guid PersonId, string ArrangementFunction)
-        : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
-    public sealed record AssignVolunteerFamily(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+    public sealed record AssignVolunteerFamily(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         Guid VolunteerFamilyId, string ArrangementFunction)
-        : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
-    public sealed record StartArrangement(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+    public sealed record StartArrangements(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         DateTime StartedAtUtc)
-        : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
-    public sealed record CompleteArrangementRequirement(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+    public sealed record CompleteArrangementRequirement(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         Guid CompletedRequirementId, string RequirementName, DateTime CompletedAtUtc, Guid? UploadedDocumentId)
-        : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
-    public sealed record MarkArrangementRequirementIncomplete(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+    public sealed record MarkArrangementRequirementIncomplete(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         Guid CompletedRequirementId, string RequirementName)
-        : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
-    public sealed record ExemptArrangementRequirement(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+    public sealed record ExemptArrangementRequirement(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         string RequirementName, DateTime? DueDate, string AdditionalComments, DateTime? ExemptionExpiresAtUtc)
-        : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
-    public sealed record UnexemptArrangementRequirement(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+    public sealed record UnexemptArrangementRequirement(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         string RequirementName, DateTime? DueDate)
-        : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
-    public sealed record TrackChildLocationChange(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+    public sealed record TrackChildLocationChange(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         DateTime ChangedAtUtc, Guid ChildLocationFamilyId, ChildLocationPlan Plan)
-        : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
-    public sealed record EndArrangement(Guid FamilyId, Guid ReferralId, Guid ArrangementId,
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+    public sealed record EndArrangements(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         DateTime EndedAtUtc)
-        : ArrangementCommand(FamilyId, ReferralId, ArrangementId);
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
 
     /// <summary>
     /// The <see cref="IReferralsResource"/> models the lifecycle of people's referrals to CareTogether organizations,
@@ -108,7 +108,7 @@ namespace CareTogether.Resources.Referrals
         Task<ReferralEntry> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId,
             ReferralCommand command, Guid userId);
 
-        Task<ReferralEntry> ExecuteArrangementCommandAsync(Guid organizationId, Guid locationId,
-            ArrangementCommand command, Guid userId);
+        Task<ReferralEntry> ExecuteArrangementsCommandAsync(Guid organizationId, Guid locationId,
+            ArrangementsCommand command, Guid userId);
     }
 }

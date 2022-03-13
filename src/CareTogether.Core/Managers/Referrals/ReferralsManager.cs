@@ -2,6 +2,7 @@
 using CareTogether.Resources;
 using CareTogether.Resources.Referrals;
 using System;
+using System.Collections.Immutable;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -44,21 +45,21 @@ namespace CareTogether.Managers.Referrals
             return familyResult;
         }
 
-        public async Task<CombinedFamilyInfo> ExecuteArrangementCommandAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, ArrangementCommand command)
+        public async Task<CombinedFamilyInfo> ExecuteArrangementsCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, ArrangementsCommand command)
         {
             command = command switch
             {
-                CreateArrangement c => c with { ArrangementId = Guid.NewGuid() },
+                CreateArrangement c => c with { ArrangementIds = ImmutableList.Create(Guid.NewGuid()) },
                 CompleteArrangementRequirement c => c with { CompletedRequirementId = Guid.NewGuid() },
                 _ => command
             };
 
-            if (!await authorizationEngine.AuthorizeArrangementCommandAsync(
+            if (!await authorizationEngine.AuthorizeArrangementsCommandAsync(
                 organizationId, locationId, user, command))
                 throw new Exception("The user is not authorized to perform this command.");
             
-            _ = await referralsResource.ExecuteArrangementCommandAsync(organizationId, locationId, command, user.UserId());
+            _ = await referralsResource.ExecuteArrangementsCommandAsync(organizationId, locationId, command, user.UserId());
 
             var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, command.FamilyId, user);
             return familyResult;

@@ -11,7 +11,7 @@ namespace CareTogether.Managers.Referrals
         Task<CombinedFamilyInfo> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, ReferralCommand command);
 
-        Task<CombinedFamilyInfo> ExecuteArrangementCommandAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, ArrangementCommand command);
+        Task<CombinedFamilyInfo> ExecuteArrangementsCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, ArrangementsCommand command);
     }
 }

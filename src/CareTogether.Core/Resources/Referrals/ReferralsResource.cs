@@ -32,12 +32,12 @@ namespace CareTogether.Resources.Referrals
             }
         }
 
-        public async Task<ReferralEntry> ExecuteArrangementCommandAsync(Guid organizationId, Guid locationId,
-            ArrangementCommand command, Guid userId)
+        public async Task<ReferralEntry> ExecuteArrangementsCommandAsync(Guid organizationId, Guid locationId,
+            ArrangementsCommand command, Guid userId)
         {
             using (var lockedModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
             {
-                var result = lockedModel.Value.ExecuteArrangementCommand(command, userId, DateTime.UtcNow);
+                var result = lockedModel.Value.ExecuteArrangementsCommand(command, userId, DateTime.UtcNow);
                 
                 await eventLog.AppendEventAsync(organizationId, locationId, result.Event, result.SequenceNumber);
                 result.OnCommit();

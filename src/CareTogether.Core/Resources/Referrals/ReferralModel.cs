@@ -12,8 +12,8 @@ namespace CareTogether.Resources.Referrals
         : DomainEvent(UserId, TimestampUtc);
     public sealed record ReferralCommandExecuted(Guid UserId, DateTime TimestampUtc,
         ReferralCommand Command) : ReferralEvent(UserId, TimestampUtc);
-    public sealed record ArrangementCommandExecuted(Guid UserId, DateTime TimestampUtc,
-        ArrangementCommand Command) : ReferralEvent(UserId, TimestampUtc);
+    public sealed record ArrangementsCommandExecuted(Guid UserId, DateTime TimestampUtc,
+        ArrangementsCommand Command) : ReferralEvent(UserId, TimestampUtc);
 
     public sealed class ReferralModel
     {
@@ -99,81 +99,82 @@ namespace CareTogether.Resources.Referrals
                 });
         }
 
-        public (ArrangementCommandExecuted Event, long SequenceNumber, ReferralEntry ReferralEntry, Action OnCommit)
-            ExecuteArrangementCommand(ArrangementCommand command, Guid userId, DateTime timestampUtc)
+        public (ArrangementsCommandExecuted Event, long SequenceNumber, ReferralEntry ReferralEntry, Action OnCommit)
+            ExecuteArrangementsCommand(ArrangementsCommand command, Guid userId, DateTime timestampUtc)
         {
             if (!referrals.TryGetValue(command.ReferralId, out var referralEntry))
                 throw new KeyNotFoundException("A referral with the specified ID does not exist.");
 
-            var arrangementEntryToUpsert = command switch
-            {
-                CreateArrangement c => new ArrangementEntry(c.ArrangementId, c.ArrangementType,
-                    RequestedAtUtc: c.RequestedAtUtc, StartedAtUtc: null, EndedAtUtc: null,
-                    c.PartneringFamilyPersonId,
-                    ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<ExemptedRequirementInfo>.Empty,
-                    ImmutableList<IndividualVolunteerAssignment>.Empty, ImmutableList<FamilyVolunteerAssignment>.Empty,
-                    ImmutableSortedSet<ChildLocationHistoryEntry>.Empty),
-                _ => referralEntry.Arrangements.TryGetValue(command.ArrangementId, out var arrangementEntry)
-                    ? command switch
-                    {
-                        AssignIndividualVolunteer c => arrangementEntry with
+            var arrangementEntriesToUpsert = command.ArrangementIds.Select(arrangementId =>
+                new KeyValuePair<Guid, ArrangementEntry>(arrangementId, command switch
+                {
+                    CreateArrangement c => new ArrangementEntry(arrangementId, c.ArrangementType,
+                        RequestedAtUtc: c.RequestedAtUtc, StartedAtUtc: null, EndedAtUtc: null,
+                        c.PartneringFamilyPersonId,
+                        ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<ExemptedRequirementInfo>.Empty,
+                        ImmutableList<IndividualVolunteerAssignment>.Empty, ImmutableList<FamilyVolunteerAssignment>.Empty,
+                        ImmutableSortedSet<ChildLocationHistoryEntry>.Empty),
+                    _ => referralEntry.Arrangements.TryGetValue(arrangementId, out var arrangementEntry)
+                        ? command switch
                         {
-                            IndividualVolunteerAssignments = arrangementEntry.IndividualVolunteerAssignments.Add(
-                                new IndividualVolunteerAssignment(c.VolunteerFamilyId, c.PersonId, c.ArrangementFunction))
-                        },
-                        AssignVolunteerFamily c => arrangementEntry with
-                        {
-                            FamilyVolunteerAssignments = arrangementEntry.FamilyVolunteerAssignments.Add(
-                                new FamilyVolunteerAssignment(c.VolunteerFamilyId, c.ArrangementFunction))
-                        },
-                        StartArrangement c => arrangementEntry with
-                        {
-                            StartedAtUtc = c.StartedAtUtc
-                        },
-                        CompleteArrangementRequirement c => arrangementEntry with
-                        {
-                            CompletedRequirements = arrangementEntry.CompletedRequirements.Add(
-                                new CompletedRequirementInfo(userId, timestampUtc, c.CompletedRequirementId,
-                                    c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId))
-                        },
-                        MarkArrangementRequirementIncomplete c => arrangementEntry with
-                        {
-                            CompletedRequirements = arrangementEntry.CompletedRequirements.RemoveAll(x =>
-                                x.RequirementName == c.RequirementName && x.CompletedRequirementId == c.CompletedRequirementId),
-                        },
-                        ExemptArrangementRequirement c => arrangementEntry with
-                        {
-                            ExemptedRequirements = arrangementEntry.ExemptedRequirements.Add(
-                                new ExemptedRequirementInfo(userId, timestampUtc, c.RequirementName, c.DueDate,
-                                    c.AdditionalComments, c.ExemptionExpiresAtUtc))
-                        },
-                        UnexemptArrangementRequirement c => arrangementEntry with
-                        {
-                            ExemptedRequirements = arrangementEntry.ExemptedRequirements.RemoveAll(x =>
-                                x.RequirementName == c.RequirementName && x.DueDate == c.DueDate)
-                        },
-                        TrackChildLocationChange c => arrangementEntry with
-                        {
-                            ChildrenLocationHistory = arrangementEntry.ChildrenLocationHistory.Add(
-                                new ChildLocationHistoryEntry(userId, c.ChangedAtUtc,
-                                    c.ChildLocationFamilyId, c.Plan))
-                        },
-                        EndArrangement c => arrangementEntry with
-                        {
-                            EndedAtUtc = c.EndedAtUtc
-                        },
-                        _ => throw new NotImplementedException(
-                            $"The command type '{command.GetType().FullName}' has not been implemented.")
-                    }
-                    : throw new KeyNotFoundException("An arrangement with the specified ID does not exist.")
-            };
+                            AssignIndividualVolunteer c => arrangementEntry with
+                            {
+                                IndividualVolunteerAssignments = arrangementEntry.IndividualVolunteerAssignments.Add(
+                                    new IndividualVolunteerAssignment(c.VolunteerFamilyId, c.PersonId, c.ArrangementFunction))
+                            },
+                            AssignVolunteerFamily c => arrangementEntry with
+                            {
+                                FamilyVolunteerAssignments = arrangementEntry.FamilyVolunteerAssignments.Add(
+                                    new FamilyVolunteerAssignment(c.VolunteerFamilyId, c.ArrangementFunction))
+                            },
+                            StartArrangements c => arrangementEntry with
+                            {
+                                StartedAtUtc = c.StartedAtUtc
+                            },
+                            CompleteArrangementRequirement c => arrangementEntry with
+                            {
+                                CompletedRequirements = arrangementEntry.CompletedRequirements.Add(
+                                    new CompletedRequirementInfo(userId, timestampUtc, c.CompletedRequirementId,
+                                        c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId))
+                            },
+                            MarkArrangementRequirementIncomplete c => arrangementEntry with
+                            {
+                                CompletedRequirements = arrangementEntry.CompletedRequirements.RemoveAll(x =>
+                                    x.RequirementName == c.RequirementName && x.CompletedRequirementId == c.CompletedRequirementId),
+                            },
+                            ExemptArrangementRequirement c => arrangementEntry with
+                            {
+                                ExemptedRequirements = arrangementEntry.ExemptedRequirements.Add(
+                                    new ExemptedRequirementInfo(userId, timestampUtc, c.RequirementName, c.DueDate,
+                                        c.AdditionalComments, c.ExemptionExpiresAtUtc))
+                            },
+                            UnexemptArrangementRequirement c => arrangementEntry with
+                            {
+                                ExemptedRequirements = arrangementEntry.ExemptedRequirements.RemoveAll(x =>
+                                    x.RequirementName == c.RequirementName && x.DueDate == c.DueDate)
+                            },
+                            TrackChildLocationChange c => arrangementEntry with
+                            {
+                                ChildrenLocationHistory = arrangementEntry.ChildrenLocationHistory.Add(
+                                    new ChildLocationHistoryEntry(userId, c.ChangedAtUtc,
+                                        c.ChildLocationFamilyId, c.Plan))
+                            },
+                            EndArrangements c => arrangementEntry with
+                            {
+                                EndedAtUtc = c.EndedAtUtc
+                            },
+                            _ => throw new NotImplementedException(
+                                $"The command type '{command.GetType().FullName}' has not been implemented.")
+                        }
+                        : throw new KeyNotFoundException("An arrangement with the specified ID does not exist.")
+                })).ToImmutableList();
 
             var referralEntryToUpsert = referralEntry with
             {
-                Arrangements = referralEntry.Arrangements.SetItem(command.ArrangementId, arrangementEntryToUpsert)
+                Arrangements = referralEntry.Arrangements.SetItems(arrangementEntriesToUpsert)
             };
             return (
-                Event: new ArrangementCommandExecuted(userId, timestampUtc, command),
+                Event: new ArrangementsCommandExecuted(userId, timestampUtc, command),
                 SequenceNumber: LastKnownSequenceNumber + 1,
                 ReferralEntry: referralEntryToUpsert,
                 OnCommit: () =>
@@ -201,9 +202,9 @@ namespace CareTogether.Resources.Referrals
                     referralCommandExecuted.UserId, referralCommandExecuted.TimestampUtc);
                 onCommit();
             }
-            else if (domainEvent is ArrangementCommandExecuted arrangementCommandExecuted)
+            else if (domainEvent is ArrangementsCommandExecuted arrangementCommandExecuted)
             {
-                var (_, _, _, onCommit) = ExecuteArrangementCommand(arrangementCommandExecuted.Command,
+                var (_, _, _, onCommit) = ExecuteArrangementsCommand(arrangementCommandExecuted.Command,
                     arrangementCommandExecuted.UserId, arrangementCommandExecuted.TimestampUtc);
                 onCommit();
             }
