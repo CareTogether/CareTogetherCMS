@@ -29,7 +29,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowBack } from '@mui/icons-material';
 import { usePermissions } from '../../Model/SessionModel';
 import { Masonry } from '@mui/lab';
-import { RequirementRow } from '../Requirements/RequirementRow';
+import { RequirementRow, VolunteerFamilyContext } from '../Requirements/RequirementRow';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -131,6 +131,11 @@ export function VolunteerFamilyScreen() {
     setRequirementMoreMenuAnchor(null);
     setUnexemptParameter({exemptedRequirement: exemptedRequirement});
   }
+
+  const requirementContext: VolunteerFamilyContext = {
+    kind: "Volunteer Family",
+    volunteerFamilyId: familyId
+  };
 
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));
@@ -256,16 +261,16 @@ export function VolunteerFamilyScreen() {
         <Grid item xs={12} sm={6} md={4} style={{paddingRight: 20}}>
           <h3>Incomplete</h3>
           {volunteerFamily.volunteerFamilyInfo?.missingRequirements?.map((missing, i) =>
-            <RequirementRow key={`${missing}:${i}`} requirement={missing} />
+            <RequirementRow key={`${missing}:${i}`} requirement={missing} context={requirementContext} />
           )}
         </Grid>
         <Grid item xs={12} sm={6} md={4} style={{paddingRight: 20}}>
           <h3>Completed</h3>
           {volunteerFamily.volunteerFamilyInfo?.completedRequirements?.map((completed, i) =>
-            <RequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} />
+            <RequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} context={requirementContext} />
           )}
           {volunteerFamily.volunteerFamilyInfo?.exemptedRequirements?.map((exempted, i) =>
-            <RequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} />
+            <RequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={requirementContext} />
           )}
         </Grid>
         <Menu id="volunteerfamily-requirement-more-menu"

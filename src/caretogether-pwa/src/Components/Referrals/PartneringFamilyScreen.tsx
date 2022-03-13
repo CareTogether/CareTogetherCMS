@@ -33,7 +33,7 @@ import { ExemptReferralRequirementDialog } from './ExemptReferralRequirementDial
 import { UnexemptReferralRequirementDialog } from './UnexemptReferralRequirementDialog';
 import { MarkReferralStepIncompleteDialog } from './MarkReferralStepIncompleteDialog';
 import { Masonry } from '@mui/lab';
-import { RequirementRow } from '../Requirements/RequirementRow';
+import { ReferralContext, RequirementRow } from '../Requirements/RequirementRow';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -130,6 +130,15 @@ export function PartneringFamilyScreen() {
   function selectUnexempt(exemptedRequirement: ExemptedRequirementInfo) {
     setRequirementMoreMenuAnchor(null);
     setUnexemptParameter({exemptedRequirement: exemptedRequirement});
+  }
+
+  let requirementContext: ReferralContext | undefined;
+  if (partneringFamily.partneringFamilyInfo?.openReferral) {
+    requirementContext = {
+      kind: "Referral",
+      partneringFamilyId: familyId,
+      referralId: partneringFamily.partneringFamilyInfo.openReferral.id!
+    };
   }
   
   const [createArrangementDialogParameter, setCreateArrangementDialogParameter] = useState<ArrangementPolicy | null>(null);
@@ -318,16 +327,16 @@ export function PartneringFamilyScreen() {
           <Grid item xs={12} sm={6} md={4} style={{paddingRight: 20}}>
             <h3>Incomplete</h3>
             {partneringFamily.partneringFamilyInfo?.openReferral?.missingRequirements?.map((missing, i) =>
-              <RequirementRow key={`${missing}:${i}`} requirement={missing} />
+              <RequirementRow key={`${missing}:${i}`} requirement={missing} context={requirementContext!} />
             )}
           </Grid>
           <Grid item xs={12} sm={6} md={4} style={{paddingRight: 20}}>
             <h3>Completed</h3>
             {partneringFamily.partneringFamilyInfo?.openReferral?.completedRequirements?.map((completed, i) =>
-              <RequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} />
+              <RequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} context={requirementContext!} />
             )}
             {partneringFamily.partneringFamilyInfo?.openReferral?.exemptedRequirements?.map((exempted, i) =>
-              <RequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} />
+              <RequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={requirementContext!} />
             )}
           </Grid>
           <Menu id="partneringfamily-requirement-more-menu"

@@ -35,7 +35,7 @@ import { TrackChildLocationDialog } from './TrackChildLocationDialog';
 import { ExemptArrangementRequirementDialog } from './ExemptArrangementRequirementDialog';
 import { UnexemptArrangementRequirementDialog } from './UnexemptArrangementRequirementDialog';
 import { MarkArrangementStepIncompleteDialog } from './MarkArrangementStepIncompleteDialog';
-import { RequirementRow } from '../Requirements/RequirementRow';
+import { ArrangementContext, RequirementRow } from '../Requirements/RequirementRow';
 
 type ArrangementPhaseSummaryProps = {
   phase: ArrangementPhase,
@@ -165,6 +165,13 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
     setRequirementMoreMenuAnchor(null);
     setUnexemptParameter({exemptedRequirement: exemptedRequirement});
   }
+
+  const requirementContext: ArrangementContext = {
+    kind: "Arrangement",
+    partneringFamilyId: partneringFamily.family!.id!,
+    referralId: referralId,
+    arrangementId: arrangement.id!
+  };
   
   const arrangementPolicy = policy.referralPolicy?.arrangementPolicies?.find(a => a.arrangementType === arrangement.arrangementType);
   const missingVolunteerFunctions = arrangementPolicy?.arrangementFunctions?.filter(arrangementFunction =>
@@ -259,13 +266,13 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
             <Divider />
             <Typography variant="body2" component="div">
               {arrangement.completedRequirements?.map((completed, i) =>
-                <RequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} />
+                <RequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} context={requirementContext} />
               )}
               {arrangement.exemptedRequirements?.map((exempted, i) =>
-                <RequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} />
+                <RequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={requirementContext} />
               )}
               {arrangement.missingRequirements?.map((missing, i) =>
-                <RequirementRow key={`${missing}:${i}`} requirement={missing} />
+                <RequirementRow key={`${missing}:${i}`} requirement={missing} context={requirementContext} />
               )}
               <Menu id="arrangement-requirement-more-menu"
                 anchorEl={requirementMoreMenuAnchor?.anchor}

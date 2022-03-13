@@ -9,20 +9,41 @@ import { PersonName } from "../Families/PersonName";
 import { IconRow } from "../IconRow";
 import { UpdateDialog } from "../UpdateDialog";
 
+export interface ReferralContext {
+  kind: "Referral"
+  partneringFamilyId: string
+  referralId: string
+}
+
+export interface ArrangementContext {
+  kind: "Arrangement"
+  partneringFamilyId: string
+  referralId: string
+  arrangementId: string
+}
+
+export interface VolunteerFamilyContext {
+  kind: "Volunteer Family"
+  volunteerFamilyId: string
+}
+
+export interface IndividualVolunteerContext {
+  kind: "Individual Volunteer"
+  volunteerFamilyId: string
+  personId: string
+}
+
+export type RequirementContext = ReferralContext | ArrangementContext | VolunteerFamilyContext | IndividualVolunteerContext;
+
 type RequirementDialogProps = {
   open: boolean;
   onClose: () => void;
   requirement: CompletedRequirementInfo | ExemptedRequirementInfo | MissingArrangementRequirement | string
-  title: string
-  onComplete?: () => Promise<void>
-  onMarkIncomplete?: () => Promise<void>
-  onExempt?: () => Promise<void>
-  onUnexempt?: () => Promise<void>
+  context: RequirementContext
 }
 
 function RequirementDialog({
-  open, onClose, requirement, title,
-  onComplete, onMarkIncomplete, onExempt, onUnexempt
+  open, onClose, requirement, context,
 }: RequirementDialogProps) {
   const policy = useRecoilValue(policyData);
 
@@ -36,26 +57,26 @@ function RequirementDialog({
     : requirement;
   const requirementPolicy = policy.actionDefinitions![requirementName];
 
+  const dialogTitle = `${context.kind} Requirement: ${requirementName}`;
+
   return (
     <UpdateDialog open={open} onClose={onClose}
-      title={title}
+      title={dialogTitle}
       enableSave={() => false}
       onSave={() => Promise.resolve()}>
       <p>{JSON.stringify(requirement)}</p>
       <p>{JSON.stringify(requirementPolicy)}</p>
+      <p>{JSON.stringify(context)}</p>
     </UpdateDialog>
   );
 }
 
 type RequirementRowProps = {
   requirement: CompletedRequirementInfo | ExemptedRequirementInfo | MissingArrangementRequirement | string
-  onComplete?: () => Promise<void> //TODO: non-optional!
-  onMarkIncomplete?: () => Promise<void> //TODO: non-optional!
-  onExempt?: () => Promise<void> //TODO: non-optional!
-  onUnexempt?: () => Promise<void> //TODO: non-optional!
+  context: RequirementContext
 }
 
-export function RequirementRow({ requirement, ...callbackProps }: RequirementRowProps) {
+export function RequirementRow({ requirement, context }: RequirementRowProps) {
   const userLookup = useUserLookup();
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -109,9 +130,7 @@ export function RequirementRow({ requirement, ...callbackProps }: RequirementRow
           </IconRow>
       : <IconRow icon="❌" onClick={openDialog}>{requirement}</IconRow>}
       <RequirementDialog open={dialogOpen} onClose={() => setDialogOpen(false)}
-        requirement={requirement} title={"TITLE"} {...callbackProps} />
-        {/* onComplete={onMarkComplete} onMarkIncomplete={onMarkIncomplete}
-        onExempt={onExempt} onUnexempt={onUnexempt} /> */}
+        requirement={requirement} context={context} />
     </>
   );
 }
