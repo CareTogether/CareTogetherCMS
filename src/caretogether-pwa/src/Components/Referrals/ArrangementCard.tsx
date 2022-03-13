@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import React, { useState } from 'react';
-import { ArrangementPhase, Arrangement, CombinedFamilyInfo, ActionRequirement, Person, FunctionRequirement, ArrangementFunction, ChildInvolvement, CompletedRequirementInfo, ExemptedRequirementInfo, MissingArrangementRequirement } from '../../GeneratedClient';
+import { ArrangementPhase, Arrangement, CombinedFamilyInfo, FunctionRequirement, ArrangementFunction, ChildInvolvement, CompletedRequirementInfo, ExemptedRequirementInfo, MissingArrangementRequirement } from '../../GeneratedClient';
 import { useFamilyLookup, usePersonLookup } from '../../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
 import { FamilyName } from '../Families/FamilyName';
@@ -27,7 +27,6 @@ import { useRecoilValue } from 'recoil';
 import { policyData } from '../../Model/ConfigurationModel';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
-import { RecordArrangementStepDialog } from './RecordArrangementStepDialog';
 import { StartArrangementDialog } from './StartArrangementDialog';
 import { EndArrangementDialog } from './EndArrangementDialog';
 import { AssignArrangementFunctionDialog } from './AssignArrangementFunctionDialog';
@@ -124,12 +123,6 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
   const personLookup = usePersonLookup();
   
   const [arrangementRecordMenuAnchor, setArrangementRecordMenuAnchor] = useState<{anchor: Element, arrangement: Arrangement} | null>(null);
-  const [recordArrangementStepParameter, setRecordArrangementStepParameter] = useState<{requirementName: string, requirementInfo: ActionRequirement, arrangement: Person} | null>(null);
-  function selectRecordArrangementStep(requirementName: string) {
-    setArrangementRecordMenuAnchor(null);
-    const requirementInfo = policy.actionDefinitions![requirementName];
-    setRecordArrangementStepParameter({requirementName, requirementInfo, arrangement});
-  }
   const [showStartArrangementDialog, setShowStartArrangementDialog] = useState(false);
   function closeStartArrangementDialog() {
     setArrangementRecordMenuAnchor(null);
@@ -291,15 +284,6 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
         open={Boolean(arrangementRecordMenuAnchor)}
         onClose={() => setArrangementRecordMenuAnchor(null)}>
         <MenuList dense={isMobile}>
-          {arrangement.missingRequirements
-            ?.map(missingRequirement => missingRequirement.actionName!)
-            ?.filter((value, index, self) => self.indexOf(value) === index)
-            ?.map(missingRequirementActionName => (
-            <MenuItem key={missingRequirementActionName} onClick={() => selectRecordArrangementStep(missingRequirementActionName)}>
-              <ListItemText primary={missingRequirementActionName} />
-            </MenuItem>
-          ))}
-          {arrangement.phase !== ArrangementPhase.Ended && <Divider />}
           {arrangement.phase !== ArrangementPhase.Ended && arrangementPolicy?.arrangementFunctions?.map(arrangementFunction => (
             <MenuItem key={arrangementFunction.functionName}
               onClick={() => selectAssignArrangementFunction(arrangementFunction)}>
@@ -310,9 +294,6 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
       </Menu>
       {showTrackChildLocationDialog && <TrackChildLocationDialog partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement}
         onClose={() => setShowTrackChildLocationDialog(false)} />}
-      {(recordArrangementStepParameter && <RecordArrangementStepDialog partneringFamily={partneringFamily} referralId={referralId} arrangementId={arrangement.id!}
-        requirementName={recordArrangementStepParameter.requirementName} stepActionRequirement={recordArrangementStepParameter.requirementInfo}
-        onClose={() => setRecordArrangementStepParameter(null)} />) || null}
       {(showStartArrangementDialog && <StartArrangementDialog referralId={referralId} arrangement={arrangement}
         onClose={() => closeStartArrangementDialog()} />) || null}
       {(showEndArrangementDialog && <EndArrangementDialog referralId={referralId} arrangement={arrangement}

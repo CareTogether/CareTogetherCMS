@@ -1,14 +1,11 @@
 import { useState } from 'react';
 import makeStyles from '@mui/styles/makeStyles';
-import { Container, Toolbar, Button, Menu, MenuItem, Grid, useMediaQuery, useTheme, MenuList, Divider, IconButton, ListItemText, Chip } from '@mui/material';
-import { CombinedFamilyInfo, ActionRequirement, RoleRemovalReason, CompletedRequirementInfo, ExemptedRequirementInfo, Permission } from '../../GeneratedClient';
+import { Container, Toolbar, Button, Menu, MenuItem, Grid, useMediaQuery, useTheme, MenuList, IconButton, ListItemText, Chip, Divider } from '@mui/material';
+import { CombinedFamilyInfo, RoleRemovalReason, CompletedRequirementInfo, ExemptedRequirementInfo, Permission } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
-import { policyData } from '../../Model/ConfigurationModel';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import { RecordVolunteerFamilyStepDialog } from './RecordVolunteerFamilyStepDialog';
 import { volunteerFamiliesData } from '../../Model/VolunteersModel';
 import { AddAdultDialog } from '../Families/AddAdultDialog';
 import { AddChildDialog } from '../Families/AddChildDialog';
@@ -84,17 +81,8 @@ export function VolunteerFamilyScreen() {
   const familyId = familyIdMaybe.familyId as string;
 
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
-  const policy = useRecoilValue(policyData);
 
   const volunteerFamily = volunteerFamilies.find(x => x.family?.id === familyId) as CombinedFamilyInfo;
-  
-  const [familyRecordMenuAnchor, setFamilyRecordMenuAnchor] = useState<Element | null>(null);
-  const [recordFamilyStepParameter, setRecordFamilyStepParameter] = useState<{requirementName: string, requirementInfo: ActionRequirement} | null>(null);
-  function selectRecordFamilyStep(requirementName: string) {
-    setFamilyRecordMenuAnchor(null);
-    const requirementInfo = policy.actionDefinitions![requirementName];
-    setRecordFamilyStepParameter({requirementName, requirementInfo});
-  }
   
   const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] = useState(false);
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
@@ -145,16 +133,6 @@ export function VolunteerFamilyScreen() {
         </HeaderTitle>
       </HeaderContent>
       <Toolbar variant="dense" disableGutters={true}>
-        {permissions(Permission.EditApprovalRequirementCompletion) && <Button
-          aria-controls="family-record-menu"
-          aria-haspopup="true"
-          variant="contained"
-          size="small"
-          className={classes.button}
-          startIcon={<AssignmentTurnedInIcon />}
-          onClick={(event) => setFamilyRecordMenuAnchor(event.currentTarget)}>
-          Complete…
-        </Button>}
         {permissions(Permission.UploadStandaloneDocuments) && <Button
           onClick={() => setUploadDocumentDialogOpen(true)}
           variant="contained"
@@ -184,21 +162,6 @@ export function VolunteerFamilyScreen() {
           size="large">
           <MoreVertIcon />
         </IconButton>
-        <Menu id="family-record-menu"
-          anchorEl={familyRecordMenuAnchor}
-          keepMounted
-          open={Boolean(familyRecordMenuAnchor)}
-          onClose={() => setFamilyRecordMenuAnchor(null)}>
-          <MenuList dense={isDesktop}>
-            {volunteerFamily.volunteerFamilyInfo?.missingRequirements?.map(requirementName => (
-              <MenuItem key={requirementName} onClick={() => selectRecordFamilyStep(requirementName)}>{requirementName}</MenuItem>
-            ))}
-            <Divider />
-            {volunteerFamily.volunteerFamilyInfo?.availableApplications?.map(requirementName => (
-              <MenuItem key={requirementName} onClick={() => selectRecordFamilyStep(requirementName)}>{requirementName}</MenuItem>
-            ))}
-          </MenuList>
-        </Menu>
         <Menu id="family-more-menu"
           anchorEl={familyMoreMenuAnchor}
           keepMounted
@@ -221,9 +184,6 @@ export function VolunteerFamilyScreen() {
             ))}
           </MenuList>
         </Menu>
-        {recordFamilyStepParameter && <RecordVolunteerFamilyStepDialog volunteerFamily={volunteerFamily}
-          requirementName={recordFamilyStepParameter.requirementName} stepActionRequirement={recordFamilyStepParameter.requirementInfo}
-          onClose={() => setRecordFamilyStepParameter(null)} />}
         {uploadDocumentDialogOpen && <UploadFamilyDocumentDialog family={volunteerFamily}
           onClose={() => setUploadDocumentDialogOpen(false)} />}
         {addAdultDialogOpen && <AddAdultDialog onClose={() => setAddAdultDialogOpen(false)} />}
@@ -250,6 +210,10 @@ export function VolunteerFamilyScreen() {
           <h3>Incomplete</h3>
           {volunteerFamily.volunteerFamilyInfo?.missingRequirements?.map((missing, i) =>
             <RequirementRow key={`${missing}:${i}`} requirement={missing} context={requirementContext} />
+          )}
+          <Divider />
+          {volunteerFamily.volunteerFamilyInfo?.availableApplications?.map((application, i) =>
+            <RequirementRow key={`${application}:${i}`} requirement={application} context={requirementContext} isAvailableApplication={true} />
           )}
         </Grid>
         <Grid item xs={12} sm={6} md={4} style={{paddingRight: 20}}>

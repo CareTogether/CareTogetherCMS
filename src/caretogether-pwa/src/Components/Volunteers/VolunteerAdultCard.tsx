@@ -5,25 +5,20 @@ import {
   CardContent,
   Typography,
   Chip,
-  CardActions,
   Divider,
   ListItemText,
   Menu,
   MenuItem,
-  MenuList,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
 import makeStyles from '@mui/styles/makeStyles';
 import { useState } from "react";
-import { ActionRequirement, Gender, Person, CombinedFamilyInfo, RoleRemovalReason, CompletedRequirementInfo, ExemptedRequirementInfo, Permission } from "../../GeneratedClient";
+import { Gender, Person, CombinedFamilyInfo, RoleRemovalReason, CompletedRequirementInfo, ExemptedRequirementInfo, Permission } from "../../GeneratedClient";
 import { AgeText } from "../AgeText";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import { useRecoilValue } from "recoil";
 import { volunteerFamiliesData } from "../../Model/VolunteersModel";
-import { RecordVolunteerAdultStepDialog } from "./RecordVolunteerAdultStepDialog";
-import { policyData } from '../../Model/ConfigurationModel';
 import { RenamePersonDialog } from "../Families/RenamePersonDialog";
 import { UpdateConcernsDialog } from "../Families/UpdateConcernsDialog";
 import { UpdateNotesDialog } from "../Families/UpdateNotesDialog";
@@ -83,19 +78,10 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
   const classes = useStyles();
 
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
-  const policy = useRecoilValue(policyData);
 
   const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as CombinedFamilyInfo;
   const adult = volunteerFamily.family?.adults?.find(x => x.item1?.id === personId);
 
-  const [adultRecordMenuAnchor, setAdultRecordMenuAnchor] = useState<{anchor: Element, adult: Person} | null>(null);
-  const [recordAdultStepParameter, setRecordAdultStepParameter] = useState<{requirementName: string, requirementInfo: ActionRequirement, adult: Person} | null>(null);
-  function selectRecordAdultStep(requirementName: string, adult: Person) {
-    setAdultRecordMenuAnchor(null);
-    const requirementInfo = policy.actionDefinitions![requirementName];
-    setRecordAdultStepParameter({requirementName, requirementInfo, adult});
-  }
-  
   const [requirementMoreMenuAnchor, setRequirementMoreMenuAnchor] = useState<{anchor: Element, requirement: string | CompletedRequirementInfo | ExemptedRequirementInfo} | null>(null);
   const [exemptParameter, setExemptParameter] = useState<{requirementName: string} | null>(null);
   function selectExempt(requirementName: string) {
@@ -157,7 +143,6 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
   }
   
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
 
   const permissions = usePermissions();
 
@@ -189,15 +174,19 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         </Typography>
         <Divider />
         <Typography variant="body2" component="div">
-          {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].completedRequirements?.map((completed, i) => (
+          {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].completedRequirements?.map((completed, i) =>
             <RequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} context={requirementContext} />
-          ))}
-          {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].exemptedRequirements?.map((exempted, i) => (
+          )}
+          {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].exemptedRequirements?.map((exempted, i) =>
             <RequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={requirementContext} />
-          ))}
-          {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].missingRequirements?.map((missing, i) => (
+          )}
+          {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].missingRequirements?.map((missing, i) =>
             <RequirementRow key={`${missing}:${i}`} requirement={missing} context={requirementContext} />
-          ))}
+          )}
+          <Divider />
+          {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].availableApplications?.map((application, i) =>
+            <RequirementRow key={`${application}:${i}`} requirement={application} context={requirementContext} isAvailableApplication={true} />
+          )}
           <Menu id="volunteer-requirement-more-menu"
             anchorEl={requirementMoreMenuAnchor?.anchor}
             keepMounted
@@ -215,36 +204,6 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
           <ContactDisplay person={adult.item1} />
         </Typography>
       </CardContent>
-      <CardActions>
-        {permissions(Permission.EditApprovalRequirementCompletion) && <IconButton size="small" className={classes.rightCardAction}
-          onClick={(event) => setAdultRecordMenuAnchor({anchor: event.currentTarget, adult: adult.item1 as Person})}>
-          <AssignmentTurnedInIcon />
-        </IconButton>}
-      </CardActions>
-      <Menu id="adult-record-menu"
-        anchorEl={adultRecordMenuAnchor?.anchor}
-        keepMounted
-        open={Boolean(adultRecordMenuAnchor)}
-        onClose={() => setAdultRecordMenuAnchor(null)}>
-        <MenuList dense={isMobile}>
-          {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].missingRequirements?.map(missingRequirementName =>
-            <MenuItem key={missingRequirementName} onClick={() =>
-              adultRecordMenuAnchor?.adult && selectRecordAdultStep(missingRequirementName, adultRecordMenuAnchor.adult)}>
-              <ListItemText primary={missingRequirementName} />
-            </MenuItem>
-          )}
-          <Divider />
-          {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].availableApplications?.map(requirementName =>
-            <MenuItem key={requirementName} onClick={() =>
-              adultRecordMenuAnchor?.adult && selectRecordAdultStep(requirementName, adultRecordMenuAnchor.adult)}>
-              <ListItemText primary={requirementName} />
-            </MenuItem>
-          )}
-        </MenuList>
-      </Menu>
-      {(recordAdultStepParameter && <RecordVolunteerAdultStepDialog volunteerFamily={volunteerFamily} adult={recordAdultStepParameter.adult}
-        requirementName={recordAdultStepParameter.requirementName} stepActionRequirement={recordAdultStepParameter.requirementInfo}
-        onClose={() => setRecordAdultStepParameter(null)} />) || null}
       <Menu id="adult-more-menu"
         anchorEl={adultMoreMenuAnchor?.anchor}
         keepMounted

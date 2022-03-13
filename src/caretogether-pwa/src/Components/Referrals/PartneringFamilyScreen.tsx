@@ -1,12 +1,11 @@
-import { Container, Toolbar, Grid, Button, Menu, MenuItem, MenuList, useMediaQuery, useTheme, IconButton } from '@mui/material';
+import { Container, Toolbar, Grid, Button, Menu, MenuItem, useMediaQuery, useTheme, IconButton } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { ActionRequirement, ArrangementPolicy, CombinedFamilyInfo, CompletedCustomFieldInfo, CompletedRequirementInfo, CustomFieldType, ExemptedRequirementInfo, Permission, ReferralCloseReason } from '../../GeneratedClient';
+import { ArrangementPolicy, CombinedFamilyInfo, CompletedCustomFieldInfo, CompletedRequirementInfo, CustomFieldType, ExemptedRequirementInfo, Permission, ReferralCloseReason } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { useParams } from 'react-router';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import { PartneringAdultCard } from './PartneringAdultCard';
 import { PartneringChildCard } from './PartneringChildCard';
 import { useState } from 'react';
@@ -19,7 +18,6 @@ import { format } from 'date-fns';
 import { NoteCard } from '../Families/NoteCard';
 import { UploadFamilyDocumentDialog } from '../Families/UploadFamilyDocumentDialog';
 import { policyData } from '../../Model/ConfigurationModel';
-import { RecordReferralStepDialog } from './RecordReferralStepDialog';
 import { CreateArrangementDialog } from './CreateArrangementDialog';
 import { CloseReferralDialog } from './CloseReferralDialog';
 import { OpenNewReferralDialog } from './OpenNewReferralDialog';
@@ -96,14 +94,6 @@ export function PartneringFamilyScreen() {
     !partneringFamily.partneringFamilyInfo.openReferral.closeReason &&
     !partneringFamily.partneringFamilyInfo.openReferral.arrangements?.some(arrangement => !arrangement.endedAtUtc);
 
-  const [familyRecordMenuAnchor, setFamilyRecordMenuAnchor] = useState<Element | null>(null);
-  const [recordReferralStepParameter, setRecordReferralStepParameter] = useState<{requirementName: string, requirementInfo: ActionRequirement} | null>(null);
-  function selectRecordReferralStep(requirementName: string) {
-    setFamilyRecordMenuAnchor(null);
-    const requirementInfo = policy.actionDefinitions![requirementName];
-    setRecordReferralStepParameter({requirementName, requirementInfo});
-  }
-  
   const [closeReferralDialogOpen, setCloseReferralDialogOpen] = useState(false);
   const [openNewReferralDialogOpen, setOpenNewReferralDialogOpen] = useState(false);
   const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] = useState(false);
@@ -151,16 +141,6 @@ export function PartneringFamilyScreen() {
         </HeaderTitle>
       </HeaderContent>
       <Toolbar variant="dense" disableGutters={true}>
-        <Button
-          aria-controls="family-record-menu"
-          aria-haspopup="true"
-          variant="contained"
-          size="small"
-          className={classes.button}
-          startIcon={<AssignmentTurnedInIcon />}
-          onClick={(event) => setFamilyRecordMenuAnchor(event.currentTarget)}>
-          Complete…
-        </Button>
         {permissions(Permission.UploadStandaloneDocuments) && <Button
           onClick={() => setUploadDocumentDialogOpen(true)}
           variant="contained"
@@ -197,24 +177,6 @@ export function PartneringFamilyScreen() {
           onClick={(event) => setFamilyMoreMenuAnchor(event.currentTarget)}>
           <MoreVertIcon />
         </IconButton> */}
-        <Menu id="family-record-menu"
-          anchorEl={familyRecordMenuAnchor}
-          keepMounted
-          open={Boolean(familyRecordMenuAnchor)}
-          onClose={() => setFamilyRecordMenuAnchor(null)}>
-          <MenuList dense={isDesktop}>
-            {partneringFamily.partneringFamilyInfo?.openReferral?.missingRequirements?.map(requirementName => (
-              <MenuItem key={requirementName} onClick={() => selectRecordReferralStep(requirementName)}>{requirementName}</MenuItem>
-            ))}
-            {/* <Divider /> */}
-            {/* {partneringFamily.partneringFamilyInfo?.availableApplications?.map(requirementName => (
-              <MenuItem key={requirementName} onClick={() => selectRecordFamilyStep(requirementName)}>{requirementName}</MenuItem>
-            ))} */}
-          </MenuList>
-        </Menu>
-        {recordReferralStepParameter && <RecordReferralStepDialog partneringFamily={partneringFamily} referralId={partneringFamily.partneringFamilyInfo?.openReferral?.id!}
-          requirementName={recordReferralStepParameter.requirementName} stepActionRequirement={recordReferralStepParameter.requirementInfo}
-          onClose={() => setRecordReferralStepParameter(null)} />}
         {uploadDocumentDialogOpen && <UploadFamilyDocumentDialog family={partneringFamily}
           onClose={() => setUploadDocumentDialogOpen(false)} />}
         {addAdultDialogOpen && <AddAdultDialog onClose={() => setAddAdultDialogOpen(false)} />}
