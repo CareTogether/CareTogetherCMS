@@ -460,7 +460,7 @@ function MissingRequirementRow({ requirement, context, isAvailableApplication }:
   
   return (
     <>
-      <IconRow icon={isAvailableApplication ? "🆕" : "❌"}
+      <IconRow icon={isAvailableApplication ? "💤" : "❌"}
         onClick={canComplete ? openDialog : undefined}>{requirement}</IconRow>
       <MissingRequirementDialog open={dialogOpen} onClose={() => setDialogOpen(false)}
         requirement={requirement} context={context} policy={requirementPolicy} />
