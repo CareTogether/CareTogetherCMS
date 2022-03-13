@@ -30,8 +30,6 @@ import { ArrowBack } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { usePermissions } from '../../Model/SessionModel';
 import { ExemptReferralRequirementDialog } from './ExemptReferralRequirementDialog';
-import { UnexemptReferralRequirementDialog } from './UnexemptReferralRequirementDialog';
-import { MarkReferralStepIncompleteDialog } from './MarkReferralStepIncompleteDialog';
 import { Masonry } from '@mui/lab';
 import { ReferralContext, RequirementRow } from '../Requirements/RequirementRow';
 
@@ -120,16 +118,6 @@ export function PartneringFamilyScreen() {
   function selectExempt(requirementName: string) {
     setRequirementMoreMenuAnchor(null);
     setExemptParameter({requirementName: requirementName});
-  }
-  const [markIncompleteParameter, setMarkIncompleteParameter] = useState<{completedRequirement: CompletedRequirementInfo} | null>(null);
-  function selectMarkIncomplete(completedRequirement: CompletedRequirementInfo) {
-    setRequirementMoreMenuAnchor(null);
-    setMarkIncompleteParameter({completedRequirement: completedRequirement});
-  }
-  const [unexemptParameter, setUnexemptParameter] = useState<{exemptedRequirement: ExemptedRequirementInfo} | null>(null);
-  function selectUnexempt(exemptedRequirement: ExemptedRequirementInfo) {
-    setRequirementMoreMenuAnchor(null);
-    setUnexemptParameter({exemptedRequirement: exemptedRequirement});
   }
 
   let requirementContext: ReferralContext | undefined;
@@ -347,19 +335,9 @@ export function PartneringFamilyScreen() {
             { (typeof requirementMoreMenuAnchor?.requirement === 'string') &&
               <MenuItem onClick={() => selectExempt(requirementMoreMenuAnchor?.requirement as string)}>Exempt</MenuItem>
               }
-            { (requirementMoreMenuAnchor?.requirement instanceof CompletedRequirementInfo) && permissions(Permission.EditApprovalRequirementCompletion) &&
-              <MenuItem onClick={() => selectMarkIncomplete(requirementMoreMenuAnchor?.requirement as CompletedRequirementInfo)}>Mark Incomplete</MenuItem>
-              }
-            { (requirementMoreMenuAnchor?.requirement instanceof ExemptedRequirementInfo) &&
-              <MenuItem onClick={() => selectUnexempt(requirementMoreMenuAnchor?.requirement as ExemptedRequirementInfo)}>Unexempt</MenuItem>
-              }
           </Menu>
           {(exemptParameter && <ExemptReferralRequirementDialog partneringFamilyId={familyId} referralId={partneringFamily.partneringFamilyInfo?.openReferral?.id!} requirementName={exemptParameter.requirementName}
             onClose={() => setExemptParameter(null)} />) || null}
-          {(markIncompleteParameter && <MarkReferralStepIncompleteDialog partneringFamily={partneringFamily} referralId={partneringFamily.partneringFamilyInfo?.openReferral?.id!} completedRequirement={markIncompleteParameter.completedRequirement}
-            onClose={() => setMarkIncompleteParameter(null)} />) || null}
-          {(unexemptParameter && <UnexemptReferralRequirementDialog partneringFamilyId={familyId} referralId={partneringFamily.partneringFamilyInfo?.openReferral?.id!} exemptedRequirement={unexemptParameter.exemptedRequirement}
-            onClose={() => setUnexemptParameter(null)} />) || null}
           <Grid item xs={12} sm={6} md={4}>
             <h3>Documents</h3>
             <FamilyDocuments family={partneringFamily} />

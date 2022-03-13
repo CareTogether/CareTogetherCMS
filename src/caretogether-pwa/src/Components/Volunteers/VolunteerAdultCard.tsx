@@ -36,9 +36,7 @@ import { UpdateAddressDialog } from "../Families/UpdateAddressDialog";
 import { RemoveIndividualRoleDialog } from "./RemoveIndividualRoleDialog";
 import { ResetIndividualRoleDialog } from "./ResetIndividualRoleDialog";
 import { DeletePersonDialog } from "../Families/DeletePersonDialog";
-import { MarkVolunteerStepIncompleteDialog } from "./MarkVolunteerStepIncompleteDialog";
 import { ExemptVolunteerRequirementDialog } from "./ExemptVolunteerRequirementDialog";
-import { UnexemptVolunteerRequirementDialog } from "./UnexemptVolunteerRequirementDialog";
 import { usePermissions } from "../../Model/SessionModel";
 import { IndividualVolunteerContext, RequirementRow } from "../Requirements/RequirementRow";
 
@@ -103,16 +101,6 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
   function selectExempt(requirementName: string) {
     setRequirementMoreMenuAnchor(null);
     setExemptParameter({requirementName: requirementName});
-  }
-  const [markIncompleteParameter, setMarkIncompleteParameter] = useState<{completedRequirement: CompletedRequirementInfo} | null>(null);
-  function selectMarkIncomplete(completedRequirement: CompletedRequirementInfo) {
-    setRequirementMoreMenuAnchor(null);
-    setMarkIncompleteParameter({completedRequirement: completedRequirement});
-  }
-  const [unexemptParameter, setUnexemptParameter] = useState<{exemptedRequirement: ExemptedRequirementInfo} | null>(null);
-  function selectUnexempt(exemptedRequirement: ExemptedRequirementInfo) {
-    setRequirementMoreMenuAnchor(null);
-    setUnexemptParameter({exemptedRequirement: exemptedRequirement});
   }
 
   const requirementContext: IndividualVolunteerContext = {
@@ -218,19 +206,9 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
             { (typeof requirementMoreMenuAnchor?.requirement === 'string') && permissions(Permission.EditApprovalRequirementExemption) &&
               <MenuItem onClick={() => selectExempt(requirementMoreMenuAnchor?.requirement as string)}>Exempt</MenuItem>
               }
-            { (requirementMoreMenuAnchor?.requirement instanceof CompletedRequirementInfo) && permissions(Permission.EditApprovalRequirementCompletion) &&
-              <MenuItem onClick={() => selectMarkIncomplete(requirementMoreMenuAnchor?.requirement as CompletedRequirementInfo)}>Mark Incomplete</MenuItem>
-              }
-            { (requirementMoreMenuAnchor?.requirement instanceof ExemptedRequirementInfo) && permissions(Permission.EditApprovalRequirementExemption) &&
-              <MenuItem onClick={() => selectUnexempt(requirementMoreMenuAnchor?.requirement as ExemptedRequirementInfo)}>Unexempt</MenuItem>
-              }
           </Menu>
           {(exemptParameter && <ExemptVolunteerRequirementDialog volunteerFamilyId={volunteerFamilyId} personId={personId} requirementName={exemptParameter.requirementName}
             onClose={() => setExemptParameter(null)} />) || null}
-          {(markIncompleteParameter && <MarkVolunteerStepIncompleteDialog volunteerFamily={volunteerFamily} personId={personId} completedRequirement={markIncompleteParameter.completedRequirement}
-            onClose={() => setMarkIncompleteParameter(null)} />) || null}
-          {(unexemptParameter && <UnexemptVolunteerRequirementDialog volunteerFamilyId={volunteerFamilyId} personId={personId} exemptedRequirement={unexemptParameter.exemptedRequirement}
-            onClose={() => setUnexemptParameter(null)} />) || null}
         </Typography>
         <Divider />
         <Typography variant="body2" component="div">
