@@ -493,7 +493,7 @@ namespace CareTogether.TestData
                             {
                                 new MonitoringRequirement("Family Coach Safety Visit",
                                     new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromHours(48), 3, 2, true)),
-                                new MonitoringRequirement("Family Coach Checkin Text",
+                                new MonitoringRequirement("Family Coach Checkin",
                                     new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromHours(48), 3, 2, false)),
                                 new MonitoringRequirement("Family Coach Supervision",
                                     new DurationStagesRecurrencePolicy(new List<RecurrencePolicyStage>

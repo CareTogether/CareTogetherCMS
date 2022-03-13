@@ -1,5 +1,5 @@
 import { selector, useRecoilCallback } from "recoil";
-import { ActionRequirement, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, VolunteerCommand, VolunteersClient, VolunteerFamilyCommand, RoleRemovalReason, RemoveVolunteerRole, ResetVolunteerRole, RemoveVolunteerFamilyRole, ResetVolunteerFamilyRole, MarkVolunteerFamilyRequirementIncomplete, CompletedRequirementInfo, MarkVolunteerRequirementIncomplete, ExemptVolunteerRequirement, UnexemptVolunteerRequirement, ExemptVolunteerFamilyRequirement, UnexemptVolunteerFamilyRequirement } from "../GeneratedClient";
+import { ActionRequirement, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, VolunteerCommand, VolunteersClient, VolunteerFamilyCommand, RoleRemovalReason, RemoveVolunteerRole, ResetVolunteerRole, RemoveVolunteerFamilyRole, ResetVolunteerFamilyRole, MarkVolunteerFamilyRequirementIncomplete, CompletedRequirementInfo, MarkVolunteerRequirementIncomplete, ExemptVolunteerRequirement, UnexemptVolunteerRequirement, ExemptVolunteerFamilyRequirement, UnexemptVolunteerFamilyRequirement, ExemptedRequirementInfo } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { visibleFamiliesData } from "./ModelLoader";
@@ -101,11 +101,11 @@ export function useVolunteersModel() {
       return command;
     });
   const unexemptVolunteerFamilyRequirement = useVolunteerFamilyCommandCallbackWithLocation(
-    async (organizationId, locationId, volunteerFamilyId, requirementName: string) => {
+    async (organizationId, locationId, volunteerFamilyId, exemptedRequirement: ExemptedRequirementInfo) => {
       const command = new UnexemptVolunteerFamilyRequirement({
         familyId: volunteerFamilyId
       });
-      command.requirementName = requirementName;
+      command.requirementName = exemptedRequirement.requirementName;
       return command;
     });
   const removeFamilyRole = useVolunteerFamilyCommandCallbackWithLocation(
@@ -166,12 +166,12 @@ export function useVolunteersModel() {
       return command;
     });
   const unexemptVolunteerRequirement = useVolunteerCommandCallbackWithLocation(
-    async (organizationId, locationId, volunteerFamilyId, personId, requirementName: string) => {
+    async (organizationId, locationId, volunteerFamilyId, personId, exemptedRequirement: ExemptedRequirementInfo) => {
       const command = new UnexemptVolunteerRequirement({
         familyId: volunteerFamilyId,
         personId: personId
       });
-      command.requirementName = requirementName;
+      command.requirementName = exemptedRequirement.requirementName;
       return command;
     });
   const removeIndividualRole = useVolunteerCommandCallbackWithLocation(

@@ -104,12 +104,12 @@ export function useReferralsModel() {
       return command;
     });
   const unexemptReferralRequirement = useReferralCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, requirementName: string) => {
+    async (organizationId, locationId, partneringFamilyId, referralId: string, exemptedRequirement: ExemptedRequirementInfo) => {
       const command = new UnexemptReferralRequirement({
         familyId: partneringFamilyId,
         referralId: referralId,
       });
-      command.requirementName = requirementName;
+      command.requirementName = exemptedRequirement.requirementName;
       return command;
     });
   const updateCustomReferralField = useReferralCommandCallbackWithLocation(
