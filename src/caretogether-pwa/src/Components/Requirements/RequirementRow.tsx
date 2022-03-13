@@ -1,11 +1,12 @@
-import { Tooltip } from "@mui/material";
+import { DialogContentText, Tooltip } from "@mui/material";
 import { format } from "date-fns";
 import { useState } from "react";
 import { useRecoilValue } from "recoil";
-import { ActionRequirement, CompletedRequirementInfo, ExemptedRequirementInfo, MissingArrangementRequirement } from "../../GeneratedClient";
+import { ActionRequirement, CompletedRequirementInfo, ExemptedRequirementInfo, MissingArrangementRequirement, Permission } from "../../GeneratedClient";
 import { policyData } from "../../Model/ConfigurationModel";
 import { useUserLookup } from "../../Model/DirectoryModel";
 import { useReferralsModel } from "../../Model/ReferralsModel";
+import { usePermissions } from "../../Model/SessionModel";
 import { useVolunteersModel } from "../../Model/VolunteersModel";
 import { PersonName } from "../Families/PersonName";
 import { IconRow } from "../IconRow";
@@ -42,11 +43,10 @@ type CompletedRequirementDialogProps = {
   onClose: () => void
   requirement: CompletedRequirementInfo
   context: RequirementContext
-  policy: ActionRequirement
 }
 
 function CompletedRequirementDialog({
-  open, onClose, requirement, context, policy
+  open, onClose, requirement, context
 }: CompletedRequirementDialogProps) {
   const referrals = useReferralsModel();
   const volunteers = useVolunteersModel();
@@ -80,11 +80,10 @@ type ExemptedRequirementDialogProps = {
   onClose: () => void
   requirement: ExemptedRequirementInfo
   context: RequirementContext
-  policy: ActionRequirement
 }
 
 function ExemptedRequirementDialog({
-  open, onClose, requirement, context, policy
+  open, onClose, requirement, context
 }: ExemptedRequirementDialogProps) {
   return (
     <UpdateDialog open={open} onClose={onClose}
@@ -99,7 +98,7 @@ function ExemptedRequirementDialog({
 type MissingRequirementDialogProps = {
   open: boolean
   onClose: () => void
-  requirement: MissingArrangementRequirement | string
+  requirement: string
   context: RequirementContext
   policy: ActionRequirement
 }
@@ -109,7 +108,7 @@ function MissingRequirementDialog({
 }: MissingRequirementDialogProps) {
   return (
     <UpdateDialog open={open} onClose={onClose}
-      title={`${context.kind} Requirement: ${typeof requirement === 'string' ? requirement : requirement.actionName}`}
+      title={`${context.kind} Requirement: ${requirement}`}
       enableSave={() => false}
       onSave={() => Promise.resolve()}>
       <p>COMPLETE ME</p>
@@ -118,29 +117,172 @@ function MissingRequirementDialog({
   );
 }
 
-type RequirementDialogProps = {
-  open: boolean;
-  onClose: () => void;
-  requirement: CompletedRequirementInfo | ExemptedRequirementInfo | MissingArrangementRequirement | string
+type MissingArrangementRequirementDialogProps = {
+  open: boolean
+  onClose: () => void
+  requirement: MissingArrangementRequirement
+  context: RequirementContext
+  policy: ActionRequirement
+}
+
+function MissingArrangementRequirementDialog({
+  open, onClose, requirement, context, policy
+}: MissingArrangementRequirementDialogProps) {
+  return (
+    <UpdateDialog open={open} onClose={onClose}
+      title={`${context.kind} Requirement: ${requirement.actionName}`}
+      enableSave={() => false}
+      onSave={() => Promise.resolve()}>
+      <p>COMPLETE ME</p>
+      <p>or... EXEMPT ME</p>
+    </UpdateDialog>
+  );
+}
+
+type CompletedRequirementRowProps = {
+  requirement: CompletedRequirementInfo
   context: RequirementContext
 }
 
-function RequirementDialog({
-  requirement, ...rest
-}: RequirementDialogProps) {
-  const policy = useRecoilValue(policyData);
+function CompletedRequirementRow({ requirement, context }: CompletedRequirementRowProps) {
+  const userLookup = useUserLookup();
+  const permissions = usePermissions();
 
-  return requirement instanceof CompletedRequirementInfo
-    ? <CompletedRequirementDialog
-        requirement={requirement} policy={policy.actionDefinitions![requirement.requirementName!]} {...rest} />
-    : requirement instanceof ExemptedRequirementInfo
-    ? <ExemptedRequirementDialog
-        requirement={requirement} policy={policy.actionDefinitions![requirement.requirementName!]} {...rest} />
-    : requirement instanceof MissingArrangementRequirement
-    ? <MissingRequirementDialog
-        requirement={requirement} policy={policy.actionDefinitions![requirement.actionName!]} {...rest} />
-    : <MissingRequirementDialog
-        requirement={requirement} policy={policy.actionDefinitions![requirement]} {...rest} />;
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const openDialog = () => setDialogOpen(true);
+  
+  const canMarkIncomplete =
+    context.kind === 'Referral' || context.kind === 'Arrangement'
+    ? true //TODO: Implement these permissions!
+    : permissions(Permission.EditApprovalRequirementCompletion);
+  
+  return (
+    <>
+      <IconRow icon="✅" onClick={canMarkIncomplete ? openDialog : undefined}>
+        <Tooltip title={
+          <>
+            Completed by <PersonName person={userLookup(requirement.userId)} />
+          </>}>
+          <span>
+            {requirement.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            {requirement.completedAtUtc &&
+              <span style={{float:'right'}}>
+                {format(requirement.completedAtUtc, "M/d/yy h:mm a")}
+              </span>}
+          </span>
+        </Tooltip>
+      </IconRow>
+      <CompletedRequirementDialog open={dialogOpen} onClose={() => setDialogOpen(false)}
+        requirement={requirement} context={context} />
+    </>
+  );
+}
+
+type ExemptedRequirementRowProps = {
+  requirement: ExemptedRequirementInfo
+  context: RequirementContext
+}
+
+function ExemptedRequirementRow({ requirement, context }: ExemptedRequirementRowProps) {
+  const userLookup = useUserLookup();
+  const permissions = usePermissions();
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const openDialog = () => setDialogOpen(true);
+
+  const canExempt =
+    context.kind === 'Referral' || context.kind === 'Arrangement'
+    ? true //TODO: Implement these permissions!
+    : permissions(Permission.EditApprovalRequirementExemption);
+  
+  return (
+    <>
+      <IconRow icon="🚫" onClick={canExempt ? openDialog : undefined}>
+        <Tooltip title={
+          <>
+            Granted by <PersonName person={userLookup(requirement.userId)} /> {format(requirement.timestampUtc!, "M/d/yy h:mm a")}
+          </>}>
+          <span>
+            {requirement.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            {requirement.exemptionExpiresAtUtc &&
+              <span style={{float:'right'}}>
+                until {format(requirement.exemptionExpiresAtUtc, "M/d/yy")}
+              </span>}
+            <br />
+            <span style={{lineHeight: '1.5em', paddingLeft: 30, fontStyle: 'italic'}}>
+              {requirement.additionalComments}
+            </span>
+          </span>
+        </Tooltip>
+      </IconRow>
+      <ExemptedRequirementDialog open={dialogOpen} onClose={() => setDialogOpen(false)}
+        requirement={requirement} context={context} />
+    </>
+  );
+}
+
+type MissingArrangementRequirementRowProps = {
+  requirement: MissingArrangementRequirement
+  context: RequirementContext
+}
+
+function MissingArrangementRequirementRow({ requirement, context }: MissingArrangementRequirementRowProps) {
+  const policy = useRecoilValue(policyData);
+  const permissions = usePermissions();
+
+  const requirementPolicy = policy.actionDefinitions![requirement.actionName!];
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const openDialog = () => setDialogOpen(true);
+  
+  const canComplete =
+    context.kind === 'Referral' || context.kind === 'Arrangement'
+    ? true //TODO: Implement these permissions!
+    : permissions(Permission.EditApprovalRequirementCompletion);
+  
+  return (
+    <>
+      {requirement.dueBy
+        ? <IconRow icon='📅' onClick={canComplete ? openDialog : undefined}>
+            {requirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <span style={{float:'right'}}>{format(requirement.dueBy, "M/d/yy h:mm a")}</span>
+          </IconRow>
+        : <IconRow icon='❌' onClick={canComplete ? openDialog : undefined}>
+            {requirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            {requirement.pastDueSince && <span style={{float:'right'}}>{format(requirement.pastDueSince, "M/d/yy h:mm a")}</span>}
+          </IconRow>}
+      <MissingArrangementRequirementDialog open={dialogOpen} onClose={() => setDialogOpen(false)}
+        requirement={requirement} context={context} policy={requirementPolicy} />
+    </>
+  );
+}
+
+type MissingRequirementRowProps = {
+  requirement: string
+  context: RequirementContext
+}
+
+function MissingRequirementRow({ requirement, context }: MissingRequirementRowProps) {
+  const policy = useRecoilValue(policyData);
+  const permissions = usePermissions();
+
+  const requirementPolicy = policy.actionDefinitions![requirement];
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const openDialog = () => setDialogOpen(true);
+  
+  const canComplete =
+    context.kind === 'Referral' || context.kind === 'Arrangement'
+    ? true //TODO: Implement these permissions!
+    : permissions(Permission.EditApprovalRequirementCompletion);
+  
+  return (
+    <>
+      <IconRow icon="❌" onClick={canComplete ? openDialog : undefined}>{requirement}</IconRow>
+      <MissingRequirementDialog open={dialogOpen} onClose={() => setDialogOpen(false)}
+        requirement={requirement} context={context} policy={requirementPolicy} />
+    </>
+  );
 }
 
 type RequirementRowProps = {
@@ -149,60 +291,13 @@ type RequirementRowProps = {
 }
 
 export function RequirementRow({ requirement, context }: RequirementRowProps) {
-  const userLookup = useUserLookup();
-
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const openDialog = () => setDialogOpen(true);
-  
   return (
-    <>
-      {requirement instanceof CompletedRequirementInfo
-      ? <IconRow icon="✅" onClick={openDialog}>
-          <Tooltip title={
-            <>
-              Completed by <PersonName person={userLookup(requirement.userId)} />
-            </>}>
-            <span>
-              {requirement.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-              {requirement.completedAtUtc &&
-                <span style={{float:'right'}}>
-                  {format(requirement.completedAtUtc, "M/d/yy h:mm a")}
-                </span>}
-            </span>
-          </Tooltip>
-        </IconRow>
-      : requirement instanceof ExemptedRequirementInfo
-      ? <IconRow icon="🚫" onClick={openDialog}>
-          <Tooltip title={
-            <>
-              Granted by <PersonName person={userLookup(requirement.userId)} /> {format(requirement.timestampUtc!, "M/d/yy h:mm a")}
-            </>}>
-            <span>
-              {requirement.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-              {requirement.exemptionExpiresAtUtc &&
-                <span style={{float:'right'}}>
-                  until {format(requirement.exemptionExpiresAtUtc, "M/d/yy")}
-                </span>}
-              <br />
-              <span style={{lineHeight: '1.5em', paddingLeft: 30, fontStyle: 'italic'}}>
-                {requirement.additionalComments}
-              </span>
-            </span>
-          </Tooltip>
-        </IconRow>
-      : requirement instanceof MissingArrangementRequirement
-      ? requirement.dueBy
-        ? <IconRow icon='📅' onClick={openDialog}>
-            {requirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            <span style={{float:'right'}}>{format(requirement.dueBy, "M/d/yy h:mm a")}</span>
-          </IconRow>
-        : <IconRow icon='❌' onClick={openDialog}>
-            {requirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            {requirement.pastDueSince && <span style={{float:'right'}}>{format(requirement.pastDueSince, "M/d/yy h:mm a")}</span>}
-          </IconRow>
-      : <IconRow icon="❌" onClick={openDialog}>{requirement}</IconRow>}
-      <RequirementDialog open={dialogOpen} onClose={() => setDialogOpen(false)}
-        requirement={requirement} context={context} />
-    </>
+    requirement instanceof CompletedRequirementInfo
+    ? <CompletedRequirementRow requirement={requirement} context={context} />
+    : requirement instanceof ExemptedRequirementInfo
+    ? <ExemptedRequirementRow requirement={requirement} context={context} />
+    : requirement instanceof MissingArrangementRequirement
+    ? <MissingArrangementRequirementRow requirement={requirement} context={context} />
+    : <MissingRequirementRow requirement={requirement} context={context} />
   );
 }
