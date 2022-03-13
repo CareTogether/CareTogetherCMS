@@ -14,7 +14,7 @@ export function RequirementRow({ requirement }: RequirementRowProps) {
   
   return (
     requirement instanceof CompletedRequirementInfo
-    ? <IconRow icon="✅">
+    ? <IconRow icon="✅" interactive>
         <Tooltip title={
           <>
             Completed by <PersonName person={userLookup(requirement.userId)} />
@@ -29,7 +29,7 @@ export function RequirementRow({ requirement }: RequirementRowProps) {
         </Tooltip>
       </IconRow>
     : requirement instanceof ExemptedRequirementInfo
-    ? <IconRow icon="🚫">
+    ? <IconRow icon="🚫" interactive>
         <Tooltip title={
           <>
             Granted by <PersonName person={userLookup(requirement.userId)} /> {format(requirement.timestampUtc!, "M/d/yy h:mm a")}
@@ -49,14 +49,14 @@ export function RequirementRow({ requirement }: RequirementRowProps) {
       </IconRow>
     : requirement instanceof MissingArrangementRequirement
     ? requirement.dueBy
-      ? <IconRow icon='📅'>
+      ? <IconRow icon='📅' interactive>
           {requirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           <span style={{float:'right'}}>{format(requirement.dueBy, "M/d/yy h:mm a")}</span>
         </IconRow>
-      : <IconRow icon='❌'>
+      : <IconRow icon='❌' interactive>
           {requirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           {requirement.pastDueSince && <span style={{float:'right'}}>{format(requirement.pastDueSince, "M/d/yy h:mm a")}</span>}
         </IconRow>
-    : <IconRow icon="❌">{requirement}</IconRow>
+    : <IconRow icon="❌" interactive>{requirement}</IconRow>
   );
 }
