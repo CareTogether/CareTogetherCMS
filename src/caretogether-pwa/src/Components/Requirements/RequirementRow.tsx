@@ -5,6 +5,8 @@ import { useRecoilValue } from "recoil";
 import { ActionRequirement, CompletedRequirementInfo, ExemptedRequirementInfo, MissingArrangementRequirement } from "../../GeneratedClient";
 import { policyData } from "../../Model/ConfigurationModel";
 import { useUserLookup } from "../../Model/DirectoryModel";
+import { useReferralsModel } from "../../Model/ReferralsModel";
+import { useVolunteersModel } from "../../Model/VolunteersModel";
 import { PersonName } from "../Families/PersonName";
 import { IconRow } from "../IconRow";
 import { UpdateDialog } from "../UpdateDialog";
@@ -46,12 +48,29 @@ type CompletedRequirementDialogProps = {
 function CompletedRequirementDialog({
   open, onClose, requirement, context, policy
 }: CompletedRequirementDialogProps) {
+  const referrals = useReferralsModel();
+  const volunteers = useVolunteersModel();
   return (
     <UpdateDialog open={open} onClose={onClose}
-      title={`${context.kind} Requirement: ${requirement.requirementName}`}
-      enableSave={() => false}
-      onSave={() => Promise.resolve()}>
-      <p>MARK ME INCOMPLETE</p>
+      title="Are you sure you want to mark this step as incomplete?"
+      saveLabel="Yes, Mark Incomplete"
+      onSave={async () => {
+        switch (context.kind) {
+          case 'Referral':
+            return referrals.markReferralRequirementIncomplete(
+              context.partneringFamilyId, context.referralId, requirement);
+          case 'Arrangement':
+            return referrals.markArrangementRequirementIncomplete(
+              context.partneringFamilyId, context.referralId, context.arrangementId, requirement);
+          case 'Volunteer Family':
+            return volunteers.markFamilyRequirementIncomplete(
+              context.volunteerFamilyId, requirement);
+          case 'Individual Volunteer':
+            return volunteers.markIndividualRequirementIncomplete(
+              context.volunteerFamilyId, context.personId, requirement);
+        }
+      }}>
+      <DialogContentText>{`${context.kind} Requirement: ${requirement.requirementName}`}</DialogContentText>
     </UpdateDialog>
   );
 }

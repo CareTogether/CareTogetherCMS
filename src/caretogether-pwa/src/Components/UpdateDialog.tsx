@@ -7,6 +7,7 @@ type UpdateDialogProps = {
   onClose: () => void
   onSave: () => Promise<void>
   enableSave?: () => boolean
+  saveLabel?: string
 }
 
 export const UpdateDialog: React.FC<UpdateDialogProps> = ({
@@ -15,12 +16,15 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
   onClose,
   onSave,
   enableSave,
+  saveLabel,
   children,
 }) => {
   const withBackdrop = useBackdrop();
 
   // Whether the dialog is open or not can be controlled by the caller; otherwise it will always be open.
   const isOpen = typeof(open) === 'undefined' ? true : open;
+  
+  const saveButtonLabel = typeof(saveLabel) === 'undefined' ? "Save" : saveLabel;
   
   async function saveHandler() {
     await withBackdrop(async () => {
@@ -42,7 +46,7 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
         </Button>
         <Button onClick={saveHandler} variant="contained" color="primary"
           disabled={enableSave && !enableSave()}>
-          Save
+          {saveButtonLabel}
         </Button>
       </DialogActions>
     </Dialog>
