@@ -325,7 +325,7 @@ type CompletedRequirementRowProps = {
   context: RequirementContext
 }
 
-function CompletedRequirementRow({ requirement, context }: CompletedRequirementRowProps) {
+export function CompletedRequirementRow({ requirement, context }: CompletedRequirementRowProps) {
   const userLookup = useUserLookup();
   const permissions = usePermissions();
 
@@ -364,7 +364,7 @@ type ExemptedRequirementRowProps = {
   context: RequirementContext
 }
 
-function ExemptedRequirementRow({ requirement, context }: ExemptedRequirementRowProps) {
+export function ExemptedRequirementRow({ requirement, context }: ExemptedRequirementRowProps) {
   const userLookup = useUserLookup();
   const permissions = usePermissions();
 
@@ -407,7 +407,7 @@ type MissingArrangementRequirementRowProps = {
   context: RequirementContext
 }
 
-function MissingArrangementRequirementRow({ requirement, context }: MissingArrangementRequirementRowProps) {
+export function MissingArrangementRequirementRow({ requirement, context }: MissingArrangementRequirementRowProps) {
   const policy = useRecoilValue(policyData);
   const permissions = usePermissions();
 
@@ -444,7 +444,7 @@ type MissingRequirementRowProps = {
   isAvailableApplication?: boolean
 }
 
-function MissingRequirementRow({ requirement, context, isAvailableApplication }: MissingRequirementRowProps) {
+export function MissingRequirementRow({ requirement, context, isAvailableApplication }: MissingRequirementRowProps) {
   const policy = useRecoilValue(policyData);
   const permissions = usePermissions();
 
@@ -465,24 +465,5 @@ function MissingRequirementRow({ requirement, context, isAvailableApplication }:
       <MissingRequirementDialog open={dialogOpen} onClose={() => setDialogOpen(false)}
         requirement={requirement} context={context} policy={requirementPolicy} />
     </>
-  );
-}
-
-type RequirementRowProps = {
-  requirement: CompletedRequirementInfo | ExemptedRequirementInfo | MissingArrangementRequirement | string
-  context: RequirementContext
-  isAvailableApplication?: boolean
-}
-
-//TODO: Remove this type & reference the specific types instead!
-export function RequirementRow({ requirement, context, isAvailableApplication }: RequirementRowProps) {
-  return (
-    requirement instanceof CompletedRequirementInfo
-    ? <CompletedRequirementRow requirement={requirement} context={context} />
-    : requirement instanceof ExemptedRequirementInfo
-    ? <ExemptedRequirementRow requirement={requirement} context={context} />
-    : requirement instanceof MissingArrangementRequirement
-    ? <MissingArrangementRequirementRow requirement={requirement} context={context} />
-    : <MissingRequirementRow requirement={requirement} context={context} isAvailableApplication={isAvailableApplication} />
   );
 }

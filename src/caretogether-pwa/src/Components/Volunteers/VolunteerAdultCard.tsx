@@ -8,9 +8,7 @@ import {
   Divider,
   ListItemText,
   Menu,
-  MenuItem,
-  useMediaQuery,
-  useTheme,
+  MenuItem
 } from "@mui/material";
 import makeStyles from '@mui/styles/makeStyles';
 import { useState } from "react";
@@ -33,7 +31,7 @@ import { ResetIndividualRoleDialog } from "./ResetIndividualRoleDialog";
 import { DeletePersonDialog } from "../Families/DeletePersonDialog";
 import { ExemptVolunteerRequirementDialog } from "./ExemptVolunteerRequirementDialog";
 import { usePermissions } from "../../Model/SessionModel";
-import { IndividualVolunteerContext, RequirementRow } from "../Requirements/RequirementRow";
+import { CompletedRequirementRow, ExemptedRequirementRow, IndividualVolunteerContext, MissingRequirementRow } from "../Requirements/RequirementRow";
 
 const useStyles = makeStyles((theme) => ({
   sectionChips: {
@@ -142,8 +140,6 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
     setResetRoleParameter({volunteerFamilyId, person: adult, role: role, removalReason: removalReason, removalAdditionalComments: removalAdditionalComments});
   }
   
-  const theme = useTheme();
-
   const permissions = usePermissions();
 
   return <>{adult?.item1 && adult.item1.id && adult.item2 &&
@@ -175,17 +171,17 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         <Divider />
         <Typography variant="body2" component="div">
           {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].completedRequirements?.map((completed, i) =>
-            <RequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} context={requirementContext} />
+            <CompletedRequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} context={requirementContext} />
           )}
           {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].exemptedRequirements?.map((exempted, i) =>
-            <RequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={requirementContext} />
+            <ExemptedRequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={requirementContext} />
           )}
           {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].missingRequirements?.map((missing, i) =>
-            <RequirementRow key={`${missing}:${i}`} requirement={missing} context={requirementContext} />
+            <MissingRequirementRow key={`${missing}:${i}`} requirement={missing} context={requirementContext} />
           )}
           <Divider />
           {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].availableApplications?.map((application, i) =>
-            <RequirementRow key={`${application}:${i}`} requirement={application} context={requirementContext} isAvailableApplication={true} />
+            <MissingRequirementRow key={`${application}:${i}`} requirement={application} context={requirementContext} isAvailableApplication={true} />
           )}
           <Menu id="volunteer-requirement-more-menu"
             anchorEl={requirementMoreMenuAnchor?.anchor}

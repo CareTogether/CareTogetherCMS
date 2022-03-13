@@ -24,7 +24,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowBack } from '@mui/icons-material';
 import { usePermissions } from '../../Model/SessionModel';
 import { Masonry } from '@mui/lab';
-import { RequirementRow, VolunteerFamilyContext } from '../Requirements/RequirementRow';
+import { CompletedRequirementRow, ExemptedRequirementRow, MissingRequirementRow, VolunteerFamilyContext } from '../Requirements/RequirementRow';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -209,20 +209,20 @@ export function VolunteerFamilyScreen() {
         <Grid item xs={12} sm={6} md={4} style={{paddingRight: 20}}>
           <h3>Incomplete</h3>
           {volunteerFamily.volunteerFamilyInfo?.missingRequirements?.map((missing, i) =>
-            <RequirementRow key={`${missing}:${i}`} requirement={missing} context={requirementContext} />
+            <MissingRequirementRow key={`${missing}:${i}`} requirement={missing} context={requirementContext} />
           )}
           <Divider />
           {volunteerFamily.volunteerFamilyInfo?.availableApplications?.map((application, i) =>
-            <RequirementRow key={`${application}:${i}`} requirement={application} context={requirementContext} isAvailableApplication={true} />
+            <MissingRequirementRow key={`${application}:${i}`} requirement={application} context={requirementContext} isAvailableApplication={true} />
           )}
         </Grid>
         <Grid item xs={12} sm={6} md={4} style={{paddingRight: 20}}>
           <h3>Completed</h3>
           {volunteerFamily.volunteerFamilyInfo?.completedRequirements?.map((completed, i) =>
-            <RequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} context={requirementContext} />
+            <CompletedRequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} context={requirementContext} />
           )}
           {volunteerFamily.volunteerFamilyInfo?.exemptedRequirements?.map((exempted, i) =>
-            <RequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={requirementContext} />
+            <ExemptedRequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={requirementContext} />
           )}
         </Grid>
         <Menu id="volunteerfamily-requirement-more-menu"

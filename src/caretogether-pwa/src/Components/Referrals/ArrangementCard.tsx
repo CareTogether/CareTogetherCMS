@@ -32,7 +32,7 @@ import { EndArrangementDialog } from './EndArrangementDialog';
 import { AssignArrangementFunctionDialog } from './AssignArrangementFunctionDialog';
 import { TrackChildLocationDialog } from './TrackChildLocationDialog';
 import { ExemptArrangementRequirementDialog } from './ExemptArrangementRequirementDialog';
-import { ArrangementContext, RequirementRow } from '../Requirements/RequirementRow';
+import { ArrangementContext, CompletedRequirementRow, ExemptedRequirementRow, MissingArrangementRequirementRow } from '../Requirements/RequirementRow';
 
 type ArrangementPhaseSummaryProps = {
   phase: ArrangementPhase,
@@ -247,13 +247,13 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
             <Divider />
             <Typography variant="body2" component="div">
               {arrangement.completedRequirements?.map((completed, i) =>
-                <RequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} context={requirementContext} />
+                <CompletedRequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} context={requirementContext} />
               )}
               {arrangement.exemptedRequirements?.map((exempted, i) =>
-                <RequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={requirementContext} />
+                <ExemptedRequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={requirementContext} />
               )}
               {arrangement.missingRequirements?.map((missing, i) =>
-                <RequirementRow key={`${missing}:${i}`} requirement={missing} context={requirementContext} />
+                <MissingArrangementRequirementRow key={`${missing}:${i}`} requirement={missing} context={requirementContext} />
               )}
               <Menu id="arrangement-requirement-more-menu"
                 anchorEl={requirementMoreMenuAnchor?.anchor}

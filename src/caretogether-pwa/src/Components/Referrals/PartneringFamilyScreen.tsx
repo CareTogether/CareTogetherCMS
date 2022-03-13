@@ -29,7 +29,7 @@ import { useNavigate } from 'react-router-dom';
 import { usePermissions } from '../../Model/SessionModel';
 import { ExemptReferralRequirementDialog } from './ExemptReferralRequirementDialog';
 import { Masonry } from '@mui/lab';
-import { ReferralContext, RequirementRow } from '../Requirements/RequirementRow';
+import { CompletedRequirementRow, ExemptedRequirementRow, MissingRequirementRow, ReferralContext } from '../Requirements/RequirementRow';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -277,16 +277,16 @@ export function PartneringFamilyScreen() {
           <Grid item xs={12} sm={6} md={4} style={{paddingRight: 20}}>
             <h3>Incomplete</h3>
             {partneringFamily.partneringFamilyInfo?.openReferral?.missingRequirements?.map((missing, i) =>
-              <RequirementRow key={`${missing}:${i}`} requirement={missing} context={requirementContext!} />
+              <MissingRequirementRow key={`${missing}:${i}`} requirement={missing} context={requirementContext!} />
             )}
           </Grid>
           <Grid item xs={12} sm={6} md={4} style={{paddingRight: 20}}>
             <h3>Completed</h3>
             {partneringFamily.partneringFamilyInfo?.openReferral?.completedRequirements?.map((completed, i) =>
-              <RequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} context={requirementContext!} />
+              <CompletedRequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} context={requirementContext!} />
             )}
             {partneringFamily.partneringFamilyInfo?.openReferral?.exemptedRequirements?.map((exempted, i) =>
-              <RequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={requirementContext!} />
+              <ExemptedRequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={requirementContext!} />
             )}
           </Grid>
           <Menu id="partneringfamily-requirement-more-menu"
