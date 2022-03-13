@@ -2,20 +2,25 @@ import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/
 import { useBackdrop } from './RequestBackdrop';
 
 type UpdateDialogProps = {
-  title: string,
-  onClose: () => void,
-  onSave: () => Promise<void>,
+  title: string
+  open?: boolean
+  onClose: () => void
+  onSave: () => Promise<void>
   enableSave?: () => boolean
 }
 
 export const UpdateDialog: React.FC<UpdateDialogProps> = ({
   title,
+  open,
   onClose,
   onSave,
   enableSave,
   children,
 }) => {
   const withBackdrop = useBackdrop();
+
+  // Whether the dialog is open or not can be controlled by the caller; otherwise it will always be open.
+  const isOpen = typeof(open) === 'undefined' ? true : open;
   
   async function saveHandler() {
     await withBackdrop(async () => {
@@ -24,7 +29,7 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
     });
   }
   return (
-    <Dialog fullWidth open={true} onClose={onClose} scroll='body' aria-labelledby="update-dialog-title">
+    <Dialog fullWidth open={isOpen} onClose={onClose} scroll='body' aria-labelledby="update-dialog-title">
       <DialogTitle id="update-dialog-title">
         {title}
       </DialogTitle>
