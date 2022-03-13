@@ -38,7 +38,7 @@ export function RequirementRow({ requirement }: RequirementRowProps) {
             {requirement.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
             {requirement.exemptionExpiresAtUtc &&
               <span style={{float:'right'}}>
-                until {format(requirement.exemptionExpiresAtUtc, "MM/dd/yyyy")}
+                until {format(requirement.exemptionExpiresAtUtc, "M/d/yy")}
               </span>}
             <br />
             <span style={{lineHeight: '1.5em', paddingLeft: 30, fontStyle: 'italic'}}>
