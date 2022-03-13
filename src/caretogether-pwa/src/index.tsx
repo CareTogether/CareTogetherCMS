@@ -31,7 +31,7 @@ const theme = createTheme({
       main: '#00838f',
     },
     secondary: amber,
-    tonalOffset: 0.9
+    tonalOffset: 0.6
   }
 });
 
