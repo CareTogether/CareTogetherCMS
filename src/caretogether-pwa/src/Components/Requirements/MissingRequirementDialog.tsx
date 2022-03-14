@@ -1,9 +1,9 @@
 import { DatePicker, DateTimePicker } from "@mui/lab";
-import { DialogContentText, Divider, FormControl, Grid, InputLabel, Link, MenuItem, Select, Tab, Tabs, TextField } from "@mui/material";
+import { Checkbox, DialogContentText, Divider, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputLabel, Link, MenuItem, Select, Tab, Tabs, TextField } from "@mui/material";
 import { useState } from "react";
 import { useRecoilValue } from "recoil";
-import { ActionRequirement, DocumentLinkRequirement, MissingArrangementRequirement, NoteEntryRequirement } from "../../GeneratedClient";
-import { useDirectoryModel, useFamilyLookup } from "../../Model/DirectoryModel";
+import { ActionRequirement, Arrangement, DocumentLinkRequirement, MissingArrangementRequirement, NoteEntryRequirement } from "../../GeneratedClient";
+import { useDirectoryModel, useFamilyLookup, usePersonLookup } from "../../Model/DirectoryModel";
 import { uploadFileToTenant } from "../../Model/FilesModel";
 import { useReferralsModel } from "../../Model/ReferralsModel";
 import { currentLocationState, currentOrganizationState } from "../../Model/SessionModel";
@@ -11,16 +11,17 @@ import { useVolunteersModel } from "../../Model/VolunteersModel";
 import { UpdateDialog } from "../UpdateDialog";
 import { RequirementContext } from "./RequirementContext";
 import { a11yProps, TabPanel } from "../TabPanel";
+import { personNameString } from "../Families/PersonName";
+import { DialogHandle } from "../../useDialogHandle";
 
 type MissingRequirementDialogProps = {
-  open: boolean;
-  onClose: () => void;
-  requirement: MissingArrangementRequirement | string;
-  context: RequirementContext;
-  policy: ActionRequirement;
+  handle: DialogHandle
+  requirement: MissingArrangementRequirement | string
+  context: RequirementContext
+  policy: ActionRequirement
 };
 export function MissingRequirementDialog({
-  open, onClose, requirement, context, policy
+  handle, requirement, context, policy
 }: MissingRequirementDialogProps) {
   const directory = useDirectoryModel();
   const referrals = useReferralsModel();
@@ -43,13 +44,32 @@ export function MissingRequirementDialog({
     : context.volunteerFamilyId;
   const contextFamily = familyLookup(contextFamilyId);
 
+  const personLookup = usePersonLookup().bind(null, contextFamilyId);
+
+  const availableArrangements = requirement instanceof MissingArrangementRequirement
+  ? contextFamily!.partneringFamilyInfo!.openReferral!.arrangements!.filter(arrangement =>
+      arrangement.missingRequirements?.some(x => x.actionName === requirement.actionName))
+  : [];
+  const [applyToArrangements, setApplyToArrangements] = useState(
+    context.kind === 'Arrangement'
+    ? availableArrangements.filter(arrangement => arrangement.id === context.arrangementId)
+    :[]);
+  function toggleApplyToArrangement(arrangement: Arrangement, include: boolean) {
+    if (include) {
+      setApplyToArrangements(applyToArrangements.concat(arrangement));
+    } else {
+      setApplyToArrangements(applyToArrangements.filter(a => a.id !== arrangement.id));
+    }
+  }
+
   const enableSave = () => tabValue === 0
     ? // mark complete
     completedAtLocal != null &&
     ((documentId === UPLOAD_NEW && documentFile) ||
       (documentId !== UPLOAD_NEW && documentId !== "") ||
       policy.documentLink !== DocumentLinkRequirement.Required) &&
-    (notes !== "" || policy.noteEntry !== NoteEntryRequirement.Required)
+    (notes !== "" || policy.noteEntry !== NoteEntryRequirement.Required) &&
+    ((availableArrangements.length === 0) !== (applyToArrangements.length > 0)) // logical XOR
     : // grant exemption
     additionalComments !== "";
 
@@ -69,8 +89,8 @@ export function MissingRequirementDialog({
           requirementName, policy, completedAtLocal!, document === "" ? null : document);
         break;
       case 'Arrangement':
-        //TODO: Support completing for multiple arrangements simultaneously
-        await referrals.completeArrangementRequirement(contextFamilyId, context.referralId, context.arrangementId,
+        await referrals.completeArrangementRequirement(contextFamilyId, context.referralId,
+          applyToArrangements.map(arrangement => arrangement.id!),
           requirementName, policy, completedAtLocal!, document === "" ? null : document);
         break;
       case 'Volunteer Family':
@@ -114,7 +134,7 @@ export function MissingRequirementDialog({
   }
 
   return (
-    <UpdateDialog open={open} onClose={onClose}
+    <UpdateDialog open={handle.open} onClose={handle.closeDialog} key={handle.key}
       title={`${context.kind} Requirement: ${requirementName}`}
       enableSave={enableSave}
       onSave={save}>
@@ -137,6 +157,22 @@ export function MissingRequirementDialog({
           </DialogContentText>)}
         <br />
         <Grid container spacing={2}>
+          {requirement instanceof MissingArrangementRequirement &&
+            <Grid item xs={12}>
+              <FormControl component="fieldset" variant="standard">
+                <FormLabel component="legend">Complete for</FormLabel>
+                <FormGroup>
+                  {availableArrangements.map(arrangement =>
+                    <FormControlLabel key={arrangement.id}
+                      control={<Checkbox size="medium"
+                        checked={applyToArrangements.includes(arrangement)}
+                        onChange={(_, checked) => toggleApplyToArrangement(arrangement, checked)}
+                        name={arrangement.id!} />}
+                      label={`${arrangement.arrangementType} - ${personNameString(personLookup(arrangement.partneringFamilyPersonId))}`} />
+                  )}
+                </FormGroup>
+              </FormControl>
+            </Grid>}
           <Grid item xs={12}>
             {requirement instanceof MissingArrangementRequirement
               ? <DateTimePicker

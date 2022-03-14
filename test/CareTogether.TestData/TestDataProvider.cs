@@ -194,9 +194,10 @@ namespace CareTogether.TestData
                     true)),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 8, 1), new UpdatePersonEmailAddress(guid4,
                     new EmailAddress(guid2, "personal@example.com", EmailAddressType.Personal),
-                    false))
+                    false)),
                 //new PersonCommandExecuted(guid0, new DateTime(2021, 8, 1), new UpdatePersonContactMethodPreferenceNotes(guid4,
                 //    "Cannot receive voicemails"))
+                new FamilyCommandExecuted(adminId, new DateTime(2022, 3, 2, 18, 0, 0), new UploadFamilyDocument(guid1, guid2, "Jane Doe second referral info.pdf"))
             );
         }
 
@@ -225,13 +226,16 @@ namespace CareTogether.TestData
                     new DateTime(2020, 3, 24, 8, 30, 35), guid2, ChildLocationPlan.OvernightHousing)),
                 new ArrangementsCommandExecuted(adminId, new DateTime(2020, 3, 30, 18, 18, 18), new TrackChildLocationChange(guid1, guid1, ImmutableList.Create(guid1),
                     new DateTime(2020, 3, 30, 18, 18, 18), guid1, ChildLocationPlan.WithParent)),
-                new ArrangementsCommandExecuted(adminId, new DateTime(2020, 3, 30, 19, 0, 0), new EndArrangements(guid1, guid1, ImmutableList.Create(guid1), new DateTime(2020, 3, 30, 19, 0, 0)))/*,
-                new ReferralCommandExecuted(adminId, new DateTime(2020, 10, 4, 12, 32, 55), new CloseReferral(guid1, guid1, ReferralCloseReason.NeedMet)),
-                new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 30, 45), new CreateReferral(guid2, guid2, new DateTime(2021, 7, 10, 19, 30, 45))),
-                new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 32, 0), new UploadReferralDocument(guid2, guid2, guid2, "Jane Doe second referral info.pdf")),
-                new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 32, 0), new CompleteReferralRequirement(guid2, guid2, "Request for Help Form", new DateTime(2021, 7, 10, 18, 0, 0), guid2)),
-                new ReferralCommandExecuted(adminId, new DateTime(2021, 7, 10, 19, 32, 0), new CompleteReferralRequirement(guid2, guid2, "Intake Coordinator Screening Call",
-                    new DateTime(2021, 7, 10, 19, 32, 0), adminId))*/);
+                new ArrangementsCommandExecuted(adminId, new DateTime(2020, 3, 30, 19, 0, 0), new EndArrangements(guid1, guid1, ImmutableList.Create(guid1), new DateTime(2020, 3, 30, 19, 0, 0))),
+                new ReferralCommandExecuted(adminId, new DateTime(2020, 4, 1, 12, 32, 55), new CloseReferral(guid1, guid1, ReferralCloseReason.NeedMet, new DateTime(2020, 4, 1, 12, 0, 0))),
+                new ReferralCommandExecuted(adminId, new DateTime(2022, 3, 1, 19, 30, 45), new CreateReferral(guid1, guid2, new DateTime(2022, 3, 1, 19, 30, 45))),
+                new ReferralCommandExecuted(adminId, new DateTime(2022, 3, 2, 19, 32, 0), new CompleteReferralRequirement(guid1, guid2, guid3, "Request for Help Form", new DateTime(2022, 3, 2, 18, 0, 0), guid2)),
+                new ReferralCommandExecuted(adminId, new DateTime(2022, 3, 2, 19, 32, 0), new CompleteReferralRequirement(guid1, guid2, guid4, "Intake Coordinator Screening Call",
+                    new DateTime(2022, 3, 2, 19, 32, 0), null)),
+                new ArrangementsCommandExecuted(adminId, new DateTime(2022, 3, 3, 10, 0, 0), new CreateArrangement(guid1, guid2, ImmutableList.Create(guid2), "Babysitting", new DateTime(2022, 3, 2), guid3)),
+                new ArrangementsCommandExecuted(adminId, new DateTime(2022, 3, 3, 10, 0, 0), new CreateArrangement(guid1, guid2, ImmutableList.Create(guid3), "Friending", new DateTime(2022, 3, 2), guid1)),
+                new ArrangementsCommandExecuted(adminId, new DateTime(2022, 3, 3, 10, 0, 0), new CreateArrangement(guid1, guid2, ImmutableList.Create(guid4), "Friending", new DateTime(2022, 3, 2), guid2))
+                );
         }
 
         public static async Task PopulateGoalEvents(IEventLog<GoalCommandExecutedEvent> goalsEventLog)

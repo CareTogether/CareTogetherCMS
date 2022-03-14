@@ -1,9 +1,9 @@
 import { Tooltip } from "@mui/material";
 import { format } from "date-fns";
-import { useState } from "react";
 import { CompletedRequirementInfo, Permission } from "../../GeneratedClient";
 import { useUserLookup } from "../../Model/DirectoryModel";
 import { usePermissions } from "../../Model/SessionModel";
+import { useDialogHandle } from "../../useDialogHandle";
 import { PersonName } from "../Families/PersonName";
 import { IconRow } from "../IconRow";
 import { CompletedRequirementDialog } from "./CompletedRequirementDialog";
@@ -18,8 +18,7 @@ export function CompletedRequirementRow({ requirement, context }: CompletedRequi
   const userLookup = useUserLookup();
   const permissions = usePermissions();
 
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const openDialog = () => setDialogOpen(true);
+  const dialogHandle = useDialogHandle();
 
   const canMarkIncomplete = context.kind === 'Referral' || context.kind === 'Arrangement'
     ? true //TODO: Implement these permissions!
@@ -27,7 +26,7 @@ export function CompletedRequirementRow({ requirement, context }: CompletedRequi
 
   return (
     <>
-      <IconRow icon="✅" onClick={canMarkIncomplete ? openDialog : undefined}>
+      <IconRow icon="✅" onClick={canMarkIncomplete ? dialogHandle.openDialog : undefined}>
         <Tooltip title={<>
           Completed by <PersonName person={userLookup(requirement.userId)} />
         </>}>
@@ -40,7 +39,7 @@ export function CompletedRequirementRow({ requirement, context }: CompletedRequi
           </span>
         </Tooltip>
       </IconRow>
-      <CompletedRequirementDialog open={dialogOpen} onClose={() => setDialogOpen(false)}
+      <CompletedRequirementDialog handle={dialogHandle}
         requirement={requirement} context={context} />
     </>
   );

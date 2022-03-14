@@ -2,23 +2,23 @@ import { DialogContentText } from "@mui/material";
 import { ExemptedRequirementInfo } from "../../GeneratedClient";
 import { useReferralsModel } from "../../Model/ReferralsModel";
 import { useVolunteersModel } from "../../Model/VolunteersModel";
+import { DialogHandle } from "../../useDialogHandle";
 import { UpdateDialog } from "../UpdateDialog";
 import { RequirementContext } from "./RequirementContext";
 
 type ExemptedRequirementDialogProps = {
-  open: boolean;
-  onClose: () => void;
-  requirement: ExemptedRequirementInfo;
-  context: RequirementContext;
+  handle: DialogHandle
+  requirement: ExemptedRequirementInfo
+  context: RequirementContext
 };
 export function ExemptedRequirementDialog({
-  open, onClose, requirement, context
+  handle, requirement, context
 }: ExemptedRequirementDialogProps) {
   const referrals = useReferralsModel();
   const volunteers = useVolunteersModel();
 
   return (
-    <UpdateDialog open={open} onClose={onClose}
+    <UpdateDialog open={handle.open} onClose={handle.closeDialog} key={handle.key}
       title="Are you sure you want to remove the exemption for this requirement?"
       saveLabel="Yes, Remove Exemption"
       onSave={async () => {
