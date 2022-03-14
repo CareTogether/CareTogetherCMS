@@ -2,23 +2,23 @@ import { DialogContentText } from "@mui/material";
 import { CompletedRequirementInfo } from "../../GeneratedClient";
 import { useReferralsModel } from "../../Model/ReferralsModel";
 import { useVolunteersModel } from "../../Model/VolunteersModel";
+import { DialogHandle } from "../../useDialogHandle";
 import { UpdateDialog } from "../UpdateDialog";
 import { RequirementContext } from "./RequirementContext";
 
 type CompletedRequirementDialogProps = {
-  open: boolean;
-  onClose: () => void;
-  requirement: CompletedRequirementInfo;
-  context: RequirementContext;
+  handle: DialogHandle
+  requirement: CompletedRequirementInfo
+  context: RequirementContext
 };
 export function CompletedRequirementDialog({
-  open, onClose, requirement, context
+  handle, requirement, context
 }: CompletedRequirementDialogProps) {
   const referrals = useReferralsModel();
   const volunteers = useVolunteersModel();
 
   return (
-    <UpdateDialog open={open} onClose={onClose}
+    <UpdateDialog open={handle.open} onClose={handle.closeDialog} key={handle.key}
       title="Are you sure you want to mark this step as incomplete?"
       saveLabel="Yes, Mark Incomplete"
       onSave={async () => {

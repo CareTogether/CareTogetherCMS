@@ -17,27 +17,27 @@ export function MissingArrangementRequirementRow({ requirement, context }: Missi
   const policy = useRecoilValue(policyData);
   const permissions = usePermissions();
   
+  const dialogHandle = useDialogHandle();
+  
   const requirementPolicy = policy.actionDefinitions![requirement.actionName!];
   
   const canComplete = context.kind === 'Referral' || context.kind === 'Arrangement'
     ? true //TODO: Implement these permissions!
     : permissions(Permission.EditApprovalRequirementCompletion);
 
-  const dialog = useDialogHandle();
-
   return (
     <>
       {requirement.dueBy
-        ? <IconRow icon='📅' onClick={canComplete ? dialog.openDialog : undefined}>
+        ? <IconRow icon='📅' onClick={canComplete ? dialogHandle.openDialog : undefined}>
           {requirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           <span style={{ float: 'right' }}>{format(requirement.dueBy, "M/d/yy h:mm a")}</span>
         </IconRow>
-        : <IconRow icon='❌' onClick={canComplete ? dialog.openDialog : undefined}>
+        : <IconRow icon='❌' onClick={canComplete ? dialogHandle.openDialog : undefined}>
           {requirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           {requirement.pastDueSince && <span style={{ float: 'right' }}>{format(requirement.pastDueSince, "M/d/yy h:mm a")}</span>}
         </IconRow>}
-      {dialog.open && <MissingRequirementDialog open={dialog.open} onClose={dialog.closeDialog} key={dialog.key}
-        requirement={requirement} context={context} policy={requirementPolicy} />}
+      <MissingRequirementDialog handle={dialogHandle}
+        requirement={requirement} context={context} policy={requirementPolicy} />
     </>
   );
 }

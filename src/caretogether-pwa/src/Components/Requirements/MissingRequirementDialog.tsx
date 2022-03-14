@@ -9,19 +9,19 @@ import { useReferralsModel } from "../../Model/ReferralsModel";
 import { currentLocationState, currentOrganizationState } from "../../Model/SessionModel";
 import { useVolunteersModel } from "../../Model/VolunteersModel";
 import { UpdateDialog } from "../UpdateDialog";
-import { ArrangementContext, RequirementContext } from "./RequirementContext";
+import { RequirementContext } from "./RequirementContext";
 import { a11yProps, TabPanel } from "../TabPanel";
-import { PersonName, personNameString } from "../Families/PersonName";
+import { personNameString } from "../Families/PersonName";
+import { DialogHandle } from "../../useDialogHandle";
 
 type MissingRequirementDialogProps = {
-  open: boolean;
-  onClose: () => void;
-  requirement: MissingArrangementRequirement | string;
-  context: RequirementContext;
-  policy: ActionRequirement;
+  handle: DialogHandle
+  requirement: MissingArrangementRequirement | string
+  context: RequirementContext
+  policy: ActionRequirement
 };
 export function MissingRequirementDialog({
-  open, onClose, requirement, context, policy
+  handle, requirement, context, policy
 }: MissingRequirementDialogProps) {
   const directory = useDirectoryModel();
   const referrals = useReferralsModel();
@@ -134,7 +134,7 @@ export function MissingRequirementDialog({
   }
 
   return (
-    <UpdateDialog open={open} onClose={onClose}
+    <UpdateDialog open={handle.open} onClose={handle.closeDialog} key={handle.key}
       title={`${context.kind} Requirement: ${requirementName}`}
       enableSave={enableSave}
       onSave={save}>

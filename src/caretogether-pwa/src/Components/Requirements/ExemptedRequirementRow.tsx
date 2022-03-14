@@ -1,9 +1,9 @@
 import { Tooltip } from "@mui/material";
 import { format } from "date-fns";
-import { useState } from "react";
 import { ExemptedRequirementInfo, Permission } from "../../GeneratedClient";
 import { useUserLookup } from "../../Model/DirectoryModel";
 import { usePermissions } from "../../Model/SessionModel";
+import { useDialogHandle } from "../../useDialogHandle";
 import { PersonName } from "../Families/PersonName";
 import { IconRow } from "../IconRow";
 import { ExemptedRequirementDialog } from "./ExemptedRequirementDialog";
@@ -17,17 +17,16 @@ type ExemptedRequirementRowProps = {
 export function ExemptedRequirementRow({ requirement, context }: ExemptedRequirementRowProps) {
   const userLookup = useUserLookup();
   const permissions = usePermissions();
-
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const openDialog = () => setDialogOpen(true);
+  
+  const dialogHandle = useDialogHandle();
 
   const canExempt = context.kind === 'Referral' || context.kind === 'Arrangement'
     ? true //TODO: Implement these permissions!
     : permissions(Permission.EditApprovalRequirementExemption);
-
+  
   return (
     <>
-      <IconRow icon="🚫" onClick={canExempt ? openDialog : undefined}>
+      <IconRow icon="🚫" onClick={canExempt ? dialogHandle.openDialog : undefined}>
         <Tooltip title={<>
           Granted by <PersonName person={userLookup(requirement.userId)} /> {format(requirement.timestampUtc!, "M/d/yy h:mm a")}
         </>}>
@@ -44,7 +43,7 @@ export function ExemptedRequirementRow({ requirement, context }: ExemptedRequire
           </span>
         </Tooltip>
       </IconRow>
-      <ExemptedRequirementDialog open={dialogOpen} onClose={() => setDialogOpen(false)}
+      <ExemptedRequirementDialog handle={dialogHandle}
         requirement={requirement} context={context} />
     </>
   );
