@@ -1837,6 +1837,11 @@
             "type": "string",
             "format": "guid",
             "nullable": true
+          },
+          "noteId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
           }
         }
       },
@@ -2050,6 +2055,11 @@
           },
           "plan": {
             "$ref": "#/components/schemas/ChildLocationPlan"
+          },
+          "noteId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
           }
         }
       },
@@ -3252,6 +3262,11 @@
                 "type": "string",
                 "format": "guid",
                 "nullable": true
+              },
+              "noteId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
               }
             }
           }
@@ -3471,6 +3486,11 @@
                 "type": "string",
                 "format": "guid",
                 "nullable": true
+              },
+              "noteId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
               }
             }
           }
@@ -3602,6 +3622,11 @@
               },
               "plan": {
                 "$ref": "#/components/schemas/ChildLocationPlan"
+              },
+              "noteId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
               }
             }
           }
@@ -3728,6 +3753,11 @@
                 "format": "date-time"
               },
               "uploadedDocumentId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              },
+              "noteId": {
                 "type": "string",
                 "format": "guid",
                 "nullable": true
@@ -3908,6 +3938,11 @@
                 "format": "date-time"
               },
               "uploadedDocumentId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              },
+              "noteId": {
                 "type": "string",
                 "format": "guid",
                 "nullable": true

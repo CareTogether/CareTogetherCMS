@@ -27,7 +27,7 @@ namespace CareTogether.Resources.Referrals
     public sealed record IndividualVolunteerAssignment(Guid FamilyId, Guid PersonId, string ArrangementFunction);
     public sealed record FamilyVolunteerAssignment(Guid FamilyId, string ArrangementFunction);
     public sealed record ChildLocationHistoryEntry(Guid UserId, DateTime TimestampUtc,
-        Guid ChildLocationFamilyId, ChildLocationPlan Plan) : IComparable<ChildLocationHistoryEntry>
+        Guid ChildLocationFamilyId, ChildLocationPlan Plan, Guid? NoteId) : IComparable<ChildLocationHistoryEntry>
     {
         public int CompareTo(ChildLocationHistoryEntry? other)
         {
@@ -44,7 +44,8 @@ namespace CareTogether.Resources.Referrals
         DateTime OpenedAtUtc)
         : ReferralCommand(FamilyId, ReferralId);
     public sealed record CompleteReferralRequirement(Guid FamilyId, Guid ReferralId,
-        Guid CompletedRequirementId, string RequirementName, DateTime CompletedAtUtc, Guid? UploadedDocumentId)
+        Guid CompletedRequirementId, string RequirementName, DateTime CompletedAtUtc,
+        Guid? UploadedDocumentId, Guid? NoteId)
         : ReferralCommand(FamilyId, ReferralId);
     public sealed record MarkReferralRequirementIncomplete(Guid FamilyId, Guid ReferralId,
         Guid CompletedRequirementId, string RequirementName)
@@ -77,7 +78,8 @@ namespace CareTogether.Resources.Referrals
         DateTime StartedAtUtc)
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
     public sealed record CompleteArrangementRequirement(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
-        Guid CompletedRequirementId, string RequirementName, DateTime CompletedAtUtc, Guid? UploadedDocumentId)
+        Guid CompletedRequirementId, string RequirementName, DateTime CompletedAtUtc,
+        Guid? UploadedDocumentId, Guid? NoteId)
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
     public sealed record MarkArrangementRequirementIncomplete(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         Guid CompletedRequirementId, string RequirementName)
@@ -89,7 +91,7 @@ namespace CareTogether.Resources.Referrals
         string RequirementName, DateTime? DueDate)
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
     public sealed record TrackChildLocationChange(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
-        DateTime ChangedAtUtc, Guid ChildLocationFamilyId, ChildLocationPlan Plan)
+        DateTime ChangedAtUtc, Guid ChildLocationFamilyId, ChildLocationPlan Plan, Guid? NoteId)
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
     public sealed record EndArrangements(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         DateTime EndedAtUtc)
