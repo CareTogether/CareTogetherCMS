@@ -125,12 +125,12 @@ export function useReferralsModel() {
       return command;
     });
   const completeArrangementRequirement = useArrangementsCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string, requirementName: string, requirement: ActionRequirement,
+    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementIds: string[], requirementName: string, requirement: ActionRequirement,
       completedAtLocal: Date, documentId: string | null) => {
       const command = new CompleteArrangementRequirement({
         familyId: partneringFamilyId,
         referralId: referralId,
-        arrangementIds: [arrangementId]
+        arrangementIds: arrangementIds
       });
       command.requirementName = requirementName;
       command.completedAtUtc = completedAtLocal;
