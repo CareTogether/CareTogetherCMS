@@ -11,7 +11,6 @@ WORKDIR /src
 COPY ["src/CareTogether.Api/CareTogether.Api.csproj", "src/CareTogether.Api/"]
 COPY ["test/CareTogether.TestData/CareTogether.TestData.csproj", "test/CareTogether.TestData/"]
 COPY ["src/CareTogether.Core/CareTogether.Core.csproj", "src/CareTogether.Core/"]
-COPY ["src/CareTogether.Contracts/CareTogether.Contracts.csproj", "src/CareTogether.Contracts/"]
 RUN dotnet restore "src/CareTogether.Api/CareTogether.Api.csproj" -r linux-musl-x64
 COPY . .
 WORKDIR "/src/src/CareTogether.Api"
