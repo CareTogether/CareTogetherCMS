@@ -12,7 +12,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public static ImmutableList<CompletedRequirementInfo> Completed(params (string, int)[] completionsWithDates) =>
             completionsWithDates.Select(completion =>
                 new CompletedRequirementInfo(Guid.Empty, DateTime.MinValue,
-                    Guid.Empty, completion.Item1, new DateTime(2022, 1, completion.Item2), null))
+                    Guid.Empty, completion.Item1, new DateTime(2022, 1, completion.Item2), null, null))
             .ToImmutableList();
 
         public static ImmutableList<ExemptedRequirementInfo> Exempted(params (string, int?)[] exemptionsWithExpirations) =>
@@ -31,7 +31,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             params (ChildLocationPlan plan, int month, int day)[] values) =>
             values
                 .Select(value => new ChildLocationHistoryEntry(
-                    Guid.Empty, new DateTime(2022, value.month, value.day), Guid.Empty, value.plan))
+                    Guid.Empty, new DateTime(2022, value.month, value.day), Guid.Empty, value.plan, null))
                 .ToImmutableSortedSet();
 
         public static ArrangementFunction FunctionWithoutEligibility(

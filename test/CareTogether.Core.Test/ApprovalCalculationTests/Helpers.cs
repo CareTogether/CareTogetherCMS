@@ -13,7 +13,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public static ImmutableList<CompletedRequirementInfo> Completed(params (string, int)[] completionsWithDates) =>
             completionsWithDates.Select(completion =>
                 new CompletedRequirementInfo(Guid.Empty, DateTime.MinValue,
-                    Guid.Empty, completion.Item1, new DateTime(2022, 1, completion.Item2), null))
+                    Guid.Empty, completion.Item1, new DateTime(2022, 1, completion.Item2), null, null))
             .ToImmutableList();
 
         public static ImmutableList<ExemptedRequirementInfo> Exempted(params (string, int?)[] exemptionsWithExpirations) =>
@@ -35,7 +35,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     .GroupBy(completed => completed.Item1, completed => (completed.Item2, new DateTime(2022, 1, completed.Item3)))
                     .Select(completed => new KeyValuePair<Guid, ImmutableList<CompletedRequirementInfo>>(completed.Key,
                         completed.Select(c => new CompletedRequirementInfo(Guid.Empty, DateTime.MinValue, new Guid(),
-                            c.Item1, c.Item2, null))
+                            c.Item1, c.Item2, null, null))
                         .ToImmutableList())));
 
         public static
