@@ -33,6 +33,8 @@ namespace CareTogether.Managers.Directory
         string? Concerns, string? Notes)
         : DirectoryCommand;
 
+    public sealed record NoteCommandResult(CombinedFamilyInfo Family, Note? Note);
+
     public interface IDirectoryManager
     {
         Task<ImmutableList<CombinedFamilyInfo>> ListVisibleFamiliesAsync(
@@ -47,7 +49,7 @@ namespace CareTogether.Managers.Directory
         Task<CombinedFamilyInfo> ExecutePersonCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, Guid familyId, PersonCommand command);
 
-        Task<CombinedFamilyInfo> ExecuteNoteCommandAsync(Guid organizationId, Guid locationId,
+        Task<NoteCommandResult> ExecuteNoteCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, NoteCommand command);
     }
 }

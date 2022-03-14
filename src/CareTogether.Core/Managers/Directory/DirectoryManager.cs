@@ -260,7 +260,7 @@ namespace CareTogether.Managers.Directory
             return familyResult;
         }
 
-        public async Task<CombinedFamilyInfo> ExecuteNoteCommandAsync(Guid organizationId, Guid locationId,
+        public async Task<NoteCommandResult> ExecuteNoteCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, NoteCommand command)
         {
             command = command switch
@@ -273,10 +273,12 @@ namespace CareTogether.Managers.Directory
                 organizationId, locationId, user, command))
                 throw new Exception("The user is not authorized to perform this command.");
 
-            _ = await notesResource.ExecuteNoteCommandAsync(organizationId, locationId, command, user.UserId());
+            var noteEntry = await notesResource.ExecuteNoteCommandAsync(organizationId, locationId, command, user.UserId());
 
             var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, command.FamilyId, user);
-            return familyResult;
+
+            var note = familyResult.Notes.SingleOrDefault(note => note.Id == noteEntry?.Id);
+            return new NoteCommandResult(familyResult, note);
         }
     }
 }
