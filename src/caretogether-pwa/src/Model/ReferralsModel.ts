@@ -1,6 +1,6 @@
 import { selector, useRecoilCallback } from "recoil";
 import { authenticatingFetch } from "../Auth";
-import { ReferralCommand, ReferralsClient, ArrangementCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement, StartArrangement, EndArrangement, AssignVolunteerFamily, AssignIndividualVolunteer, ReferralCloseReason, CloseReferral, CreateReferral, TrackChildLocationChange, ChildLocationPlan, UpdateCustomReferralField, CustomField, ExemptReferralRequirement, UnexemptReferralRequirement, ExemptArrangementRequirement, UnexemptArrangementRequirement, MissingArrangementRequirement, ExemptedRequirementInfo, MarkReferralRequirementIncomplete, CompletedRequirementInfo, MarkArrangementRequirementIncomplete } from "../GeneratedClient";
+import { ReferralCommand, ReferralsClient, ArrangementsCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement, StartArrangements, EndArrangements, AssignVolunteerFamily, AssignIndividualVolunteer, ReferralCloseReason, CloseReferral, CreateReferral, TrackChildLocationChange, ChildLocationPlan, UpdateCustomReferralField, CustomField, ExemptReferralRequirement, UnexemptReferralRequirement, ExemptArrangementRequirement, UnexemptArrangementRequirement, MissingArrangementRequirement, ExemptedRequirementInfo, MarkReferralRequirementIncomplete, CompletedRequirementInfo, MarkArrangementRequirementIncomplete } from "../GeneratedClient";
 import { visibleFamiliesData } from "./ModelLoader";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 
@@ -39,17 +39,17 @@ function useReferralCommandCallbackWithLocation<T extends unknown[]>(
 //     (_organizationId, _locationId, partneringFamilyId, ...args) => callback(partneringFamilyId, ...args));
 // }
 
-function useArrangementCommandCallbackWithLocation<T extends unknown[]>(
-  callback: (organizationId: string, locationId: string, partneringFamilyId: string, personId: string, ...args: T) => Promise<ArrangementCommand>) {
+function useArrangementsCommandCallbackWithLocation<T extends unknown[]>(
+  callback: (organizationId: string, locationId: string, partneringFamilyId: string, referralId: string, ...args: T) => Promise<ArrangementsCommand>) {
   return useRecoilCallback(({snapshot, set}) => {
-    const asyncCallback = async (partneringFamilyId: string, personId: string, ...args: T) => {
+    const asyncCallback = async (partneringFamilyId: string, referralId: string, ...args: T) => {
       const organizationId = await snapshot.getPromise(currentOrganizationState);
       const locationId = await snapshot.getPromise(currentLocationState);
 
-      const command = await callback(organizationId, locationId, partneringFamilyId, personId, ...args);
+      const command = await callback(organizationId, locationId, partneringFamilyId, referralId, ...args);
 
       const client = new ReferralsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedFamily = await client.submitArrangementCommand(organizationId, locationId, command);
+      const updatedFamily = await client.submitArrangementsCommand(organizationId, locationId, command);
 
       set(visibleFamiliesData, current => {
         return current.map(currentEntry => currentEntry.family?.id === partneringFamilyId
@@ -124,13 +124,13 @@ export function useReferralsModel() {
       command.value = value;
       return command;
     });
-  const completeArrangementRequirement = useArrangementCommandCallbackWithLocation(
+  const completeArrangementRequirement = useArrangementsCommandCallbackWithLocation(
     async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string, requirementName: string, requirement: ActionRequirement,
       completedAtLocal: Date, documentId: string | null) => {
       const command = new CompleteArrangementRequirement({
         familyId: partneringFamilyId,
         referralId: referralId,
-        arrangementId: arrangementId
+        arrangementIds: [arrangementId]
       });
       command.requirementName = requirementName;
       command.completedAtUtc = completedAtLocal;
@@ -138,24 +138,24 @@ export function useReferralsModel() {
         command.uploadedDocumentId = documentId;
       return command;
     });
-  const markArrangementRequirementIncomplete = useArrangementCommandCallbackWithLocation(
+  const markArrangementRequirementIncomplete = useArrangementsCommandCallbackWithLocation(
     async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string, completedRequirement: CompletedRequirementInfo) => {
       const command = new MarkArrangementRequirementIncomplete({
         familyId: partneringFamilyId,
         referralId: referralId,
-        arrangementId: arrangementId
+        arrangementIds: [arrangementId]
       });
       command.requirementName = completedRequirement.requirementName;
       command.completedRequirementId = completedRequirement.completedRequirementId;
       return command;
     });
-  const exemptArrangementRequirement = useArrangementCommandCallbackWithLocation(
+  const exemptArrangementRequirement = useArrangementsCommandCallbackWithLocation(
     async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string, requirement: MissingArrangementRequirement,
       additionalComments: string, exemptionExpiresAtLocal: Date | null) => {
       const command = new ExemptArrangementRequirement({
         familyId: partneringFamilyId,
         referralId: referralId,
-        arrangementId: arrangementId
+        arrangementIds: [arrangementId]
       });
       command.requirementName = requirement.actionName;
       command.dueDate = requirement.dueBy || requirement.pastDueSince;
@@ -163,84 +163,85 @@ export function useReferralsModel() {
       command.exemptionExpiresAtUtc = exemptionExpiresAtLocal ?? undefined;
       return command;
     });
-  const unexemptArrangementRequirement = useArrangementCommandCallbackWithLocation(
+  const unexemptArrangementRequirement = useArrangementsCommandCallbackWithLocation(
     async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string, exemptedRequirement: ExemptedRequirementInfo) => {
       const command = new UnexemptArrangementRequirement({
         familyId: partneringFamilyId,
         referralId: referralId,
-        arrangementId: arrangementId
+        arrangementIds: [arrangementId]
       });
       command.requirementName = exemptedRequirement.requirementName;
       command.dueDate = exemptedRequirement.dueDate;
       return command;
     });
-  const createArrangement = useArrangementCommandCallbackWithLocation(
+  const createArrangement = useArrangementsCommandCallbackWithLocation(
     async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementType: string,
       requestedAtLocal: Date, partneringFamilyPersonId: string) => {
       const command = new CreateArrangement({
         familyId: partneringFamilyId,
-        referralId: referralId
+        referralId: referralId,
+        arrangementIds: []
       });
       command.arrangementType = arrangementType;
       command.requestedAtUtc = requestedAtLocal;
       command.partneringFamilyPersonId = partneringFamilyPersonId;
       return command;
     });
-  const startArrangement = useArrangementCommandCallbackWithLocation(
+  const startArrangement = useArrangementsCommandCallbackWithLocation(
     async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
       startedAtLocal: Date) => {
-      const command = new StartArrangement({
+      const command = new StartArrangements({
         familyId: partneringFamilyId,
         referralId: referralId,
-        arrangementId: arrangementId
+        arrangementIds: [arrangementId]
       });
       command.startedAtUtc = startedAtLocal;
       return command;
     });
-  const endArrangement = useArrangementCommandCallbackWithLocation(
+  const endArrangement = useArrangementsCommandCallbackWithLocation(
     async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
       endedAtLocal: Date) => {
-      const command = new EndArrangement({
+      const command = new EndArrangements({
         familyId: partneringFamilyId,
         referralId: referralId,
-        arrangementId: arrangementId
+        arrangementIds: [arrangementId]
       });
       command.endedAtUtc = endedAtLocal;
       return command;
     });
-  const assignVolunteerFamily = useArrangementCommandCallbackWithLocation(
+  const assignVolunteerFamily = useArrangementsCommandCallbackWithLocation(
     async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
       volunteerFamilyId: string, arrangementFunction: string) => {
       const command = new AssignVolunteerFamily({
         familyId: partneringFamilyId,
         referralId: referralId,
-        arrangementId: arrangementId
+        arrangementIds: [arrangementId]
       });
       command.volunteerFamilyId = volunteerFamilyId;
       command.arrangementFunction = arrangementFunction;
       return command;
     });
-  const assignIndividualVolunteer = useArrangementCommandCallbackWithLocation(
+  const assignIndividualVolunteer = useArrangementsCommandCallbackWithLocation(
     async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
       volunteerFamilyId: string, personId: string, arrangementFunction: string) => {
       const command = new AssignIndividualVolunteer({
         familyId: partneringFamilyId,
         referralId: referralId,
-        arrangementId: arrangementId
+        arrangementIds: [arrangementId]
       });
       command.volunteerFamilyId = volunteerFamilyId;
       command.personId = personId;
       command.arrangementFunction = arrangementFunction;
       return command;
     });
-  const trackChildLocation = useArrangementCommandCallbackWithLocation(
+  const trackChildLocation = useArrangementsCommandCallbackWithLocation(
     async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
       childLocationFamilyId: string, childLocationAdultId: string, changedAtLocal: Date,
       childLocationPlan: ChildLocationPlan) => {
       const command = new TrackChildLocationChange({
         familyId: partneringFamilyId,
         referralId: referralId,
-        arrangementId: arrangementId
+        arrangementIds: [arrangementId]
       });
       command.childLocationFamilyId = childLocationFamilyId;
       //command.childLocationAdultId = childLocationAdultId; TODO: Implement this!

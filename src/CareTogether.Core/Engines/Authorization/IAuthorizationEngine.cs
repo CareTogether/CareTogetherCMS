@@ -24,8 +24,8 @@ namespace CareTogether.Engines.Authorization
         Task<bool> AuthorizeReferralCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, ReferralCommand command);
 
-        Task<bool> AuthorizeArrangementCommandAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, ArrangementCommand command);
+        Task<bool> AuthorizeArrangementsCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, ArrangementsCommand command);
 
         Task<bool> AuthorizeNoteCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, NoteCommand command);
