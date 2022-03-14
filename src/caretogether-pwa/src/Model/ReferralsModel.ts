@@ -70,7 +70,7 @@ function useArrangementsCommandCallbackWithLocation<T extends unknown[]>(
 export function useReferralsModel() {
   const completeReferralRequirement = useReferralCommandCallbackWithLocation(
     async (organizationId, locationId, partneringFamilyId, referralId: string, requirementName: string, requirement: ActionRequirement,
-      completedAtLocal: Date, documentId: string | null) => {
+      completedAtLocal: Date, documentId: string | null, noteId: string | null) => {
       const command = new CompleteReferralRequirement({
         familyId: partneringFamilyId,
         referralId: referralId,
@@ -79,6 +79,8 @@ export function useReferralsModel() {
       command.completedAtUtc = completedAtLocal;
       if (documentId != null)
         command.uploadedDocumentId = documentId;
+      if (noteId != null)
+        command.noteId = noteId;
       return command;
     });
   const markReferralRequirementIncomplete = useReferralCommandCallbackWithLocation(
@@ -126,7 +128,7 @@ export function useReferralsModel() {
     });
   const completeArrangementRequirement = useArrangementsCommandCallbackWithLocation(
     async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementIds: string[], requirementName: string, requirement: ActionRequirement,
-      completedAtLocal: Date, documentId: string | null) => {
+      completedAtLocal: Date, documentId: string | null, noteId: string | null) => {
       const command = new CompleteArrangementRequirement({
         familyId: partneringFamilyId,
         referralId: referralId,
@@ -136,6 +138,8 @@ export function useReferralsModel() {
       command.completedAtUtc = completedAtLocal;
       if (documentId != null)
         command.uploadedDocumentId = documentId;
+      if (noteId != null)
+        command.noteId = noteId;
       return command;
     });
   const markArrangementRequirementIncomplete = useArrangementsCommandCallbackWithLocation(
@@ -237,7 +241,7 @@ export function useReferralsModel() {
   const trackChildLocation = useArrangementsCommandCallbackWithLocation(
     async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
       childLocationFamilyId: string, childLocationAdultId: string, changedAtLocal: Date,
-      childLocationPlan: ChildLocationPlan) => {
+      childLocationPlan: ChildLocationPlan, noteId: string | null) => {
       const command = new TrackChildLocationChange({
         familyId: partneringFamilyId,
         referralId: referralId,
@@ -247,6 +251,8 @@ export function useReferralsModel() {
       //command.childLocationAdultId = childLocationAdultId; TODO: Implement this!
       command.changedAtUtc = changedAtLocal;
       command.plan = childLocationPlan;
+      if (noteId != null)
+        command.noteId = noteId;
       return command;
     });
   const closeReferral = useReferralCommandCallbackWithLocation(

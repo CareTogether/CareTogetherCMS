@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControl, FormControlLabel, FormLabel, Grid, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@mui/material';
-import { CombinedFamilyInfo, Arrangement, Person, ChildLocationPlan, ChildInvolvement } from '../../GeneratedClient';
+import { CombinedFamilyInfo, Arrangement, Person, ChildLocationPlan, ChildInvolvement, Note } from '../../GeneratedClient';
 import { DateTimePicker, Timeline, TimelineConnector, TimelineContent, TimelineDot, TimelineItem, TimelineOppositeContent, TimelineSeparator } from '@mui/lab';
 import { useBackdrop } from '../RequestBackdrop';
 import { useDirectoryModel, useFamilyLookup, usePersonLookup } from '../../Model/DirectoryModel';
@@ -80,10 +80,11 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
         alert("You must enter a note for this requirement.");
       } else {
         const assigneeInfo = candidatePartneringFamilyAssignees.concat(allCandidateVolunteerAssignees).find(ca => ca.key === selectedAssigneeKey);
+        let note: Note | undefined = undefined;
         if (notes !== "")
-          await directoryModel.createDraftNote(partneringFamily.family?.id as string, notes);
+          note = (await directoryModel.createDraftNote(partneringFamily.family?.id as string, notes)).note;
         await referralsModel.trackChildLocation(partneringFamily.family?.id as string, referralId, arrangement.id!,
-          assigneeInfo!.familyId, assigneeInfo!.personId, changedAtLocal, plan);
+          assigneeInfo!.familyId, assigneeInfo!.personId, changedAtLocal, plan, note?.id || null);
         //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
         onClose();
       }
