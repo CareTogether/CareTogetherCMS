@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRecoilValue } from "recoil";
 import { MissingArrangementRequirement, Permission } from "../../GeneratedClient";
 import { policyData } from "../../Model/ConfigurationModel";
@@ -14,13 +14,20 @@ type MissingArrangementRequirementRowProps = {
 };
 
 export function MissingArrangementRequirementRow({ requirement, context }: MissingArrangementRequirementRowProps) {
+  const openId = useRef(1);
+  
   const policy = useRecoilValue(policyData);
   const permissions = usePermissions();
-
+  
   const requirementPolicy = policy.actionDefinitions![requirement.actionName!];
-
+  
   const [dialogOpen, setDialogOpen] = useState(false);
   const openDialog = () => setDialogOpen(true);
+  useEffect(() => {
+    if (!dialogOpen) { // Increment id each time modal closes
+      openId.current = openId.current + 1;
+    }
+  }, [dialogOpen]);
 
   const canComplete = context.kind === 'Referral' || context.kind === 'Arrangement'
     ? true //TODO: Implement these permissions!
@@ -37,8 +44,8 @@ export function MissingArrangementRequirementRow({ requirement, context }: Missi
           {requirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           {requirement.pastDueSince && <span style={{ float: 'right' }}>{format(requirement.pastDueSince, "M/d/yy h:mm a")}</span>}
         </IconRow>}
-      <MissingRequirementDialog open={dialogOpen} onClose={() => setDialogOpen(false)}
-        requirement={requirement} context={context} policy={requirementPolicy} />
+      {dialogOpen && <MissingRequirementDialog open={dialogOpen} onClose={() => setDialogOpen(false)} key={openId.current}
+        requirement={requirement} context={context} policy={requirementPolicy} />}
     </>
   );
 }
