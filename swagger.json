@@ -1398,6 +1398,12 @@
               "type": "string",
               "format": "guid"
             }
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Activity"
+            }
           }
         }
       },
@@ -1709,6 +1715,40 @@
           }
         }
       },
+      "Activity": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "discriminator"
+        },
+        "x-abstract": true,
+        "additionalProperties": false,
+        "required": [
+          "discriminator"
+        ],
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "timestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "uploadedDocumentId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          },
+          "noteId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          },
+          "discriminator": {
+            "type": "string"
+          }
+        }
+      },
       "PartneringFamilyInfo": {
         "type": "object",
         "additionalProperties": false,
@@ -1725,6 +1765,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Referral"
+            }
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Activity"
             }
           }
         }
@@ -2124,6 +2170,12 @@
             "type": "object",
             "additionalProperties": {
               "$ref": "#/components/schemas/VolunteerInfo"
+            }
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Activity"
             }
           }
         }

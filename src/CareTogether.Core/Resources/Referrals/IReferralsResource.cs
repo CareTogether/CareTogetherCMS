@@ -11,7 +11,8 @@ namespace CareTogether.Resources.Referrals
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableDictionary<string, CompletedCustomFieldInfo> CompletedCustomFields,
-        ImmutableDictionary<Guid, ArrangementEntry> Arrangements);
+        ImmutableDictionary<Guid, ArrangementEntry> Arrangements,
+        ImmutableList<Activity> History);
 
     public record ArrangementEntry(Guid Id, string ArrangementType,
         DateTime RequestedAtUtc, DateTime? StartedAtUtc, DateTime? EndedAtUtc,

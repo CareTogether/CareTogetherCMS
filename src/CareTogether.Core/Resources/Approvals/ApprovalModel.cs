@@ -41,7 +41,7 @@ namespace CareTogether.Resources.Approvals
             if (!volunteerFamilies.TryGetValue(command.FamilyId, out var volunteerFamilyEntry))
                 volunteerFamilyEntry = new VolunteerFamilyEntry(command.FamilyId,
                     ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<ExemptedRequirementInfo>.Empty, ImmutableList<UploadedDocumentInfo>.Empty,
-                    ImmutableList<RemovedRole>.Empty, ImmutableDictionary<Guid, VolunteerEntry>.Empty);
+                    ImmutableList<RemovedRole>.Empty, ImmutableDictionary<Guid, VolunteerEntry>.Empty, ImmutableList<Activity>.Empty);
 
             var volunteerFamilyEntryToUpsert = command switch
             {
@@ -104,7 +104,7 @@ namespace CareTogether.Resources.Approvals
             if (!volunteerFamilies.TryGetValue(command.FamilyId, out var volunteerFamilyEntry))
                 volunteerFamilyEntry = new VolunteerFamilyEntry(command.FamilyId,
                     ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<ExemptedRequirementInfo>.Empty, ImmutableList<UploadedDocumentInfo>.Empty,
-                    ImmutableList<RemovedRole>.Empty, ImmutableDictionary<Guid, VolunteerEntry>.Empty);
+                    ImmutableList<RemovedRole>.Empty, ImmutableDictionary<Guid, VolunteerEntry>.Empty, ImmutableList<Activity>.Empty);
 
             if (!volunteerFamilyEntry.IndividualEntries.TryGetValue(command.PersonId, out var volunteerEntry))
                 volunteerEntry = new VolunteerEntry(command.PersonId, true, "",

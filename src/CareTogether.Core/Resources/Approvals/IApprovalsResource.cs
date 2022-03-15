@@ -12,7 +12,8 @@ namespace CareTogether.Resources.Approvals
         // It should not be referenced directly.
         ImmutableList<UploadedDocumentInfo> UploadedDocuments,
         ImmutableList<RemovedRole> RemovedRoles,
-        ImmutableDictionary<Guid, VolunteerEntry> IndividualEntries);
+        ImmutableDictionary<Guid, VolunteerEntry> IndividualEntries,
+        ImmutableList<Activity> History);
 
     public record RemovedRole(string RoleName, RoleRemovalReason Reason, string? AdditionalComments);
 

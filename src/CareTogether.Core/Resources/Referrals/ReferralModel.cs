@@ -44,7 +44,7 @@ namespace CareTogether.Resources.Referrals
                     OpenedAtUtc: c.OpenedAtUtc, ClosedAtUtc: null, CloseReason: null,
                     ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<ExemptedRequirementInfo>.Empty,
                     ImmutableDictionary<string, CompletedCustomFieldInfo>.Empty,
-                    ImmutableDictionary<Guid, ArrangementEntry>.Empty),
+                    ImmutableDictionary<Guid, ArrangementEntry>.Empty, ImmutableList<Activity>.Empty),
                 _ => referrals.TryGetValue(command.ReferralId, out var referralEntry)
                     ? command switch
                     {
