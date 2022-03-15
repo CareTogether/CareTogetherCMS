@@ -70,7 +70,7 @@ function useVolunteerCommandCallbackWithLocation<T extends unknown[]>(
 export function useVolunteersModel() {
   const completeFamilyRequirement = useVolunteerFamilyCommandCallbackWithLocation(
     async (organizationId, locationId, volunteerFamilyId, requirementName: string, requirement: ActionRequirement,
-      completedAtLocal: Date, documentId: string | null) => {
+      completedAtLocal: Date, documentId: string | null, noteId: string | null) => {
       const command = new CompleteVolunteerFamilyRequirement({
         familyId: volunteerFamilyId
       });
@@ -78,6 +78,8 @@ export function useVolunteersModel() {
       command.completedAtUtc = completedAtLocal;
       if (documentId != null)
         command.uploadedDocumentId = documentId;
+      if (noteId != null)
+        command.noteId = noteId;
       return command;
     });
   const markFamilyRequirementIncomplete = useVolunteerFamilyCommandCallbackWithLocation(
@@ -132,7 +134,7 @@ export function useVolunteersModel() {
     });
   const completeIndividualRequirement = useVolunteerCommandCallbackWithLocation(
     async (organizationId, locationId, volunteerFamilyId, personId, requirementName: string, requirement: ActionRequirement,
-      completedAtLocal: Date, documentId: string | null) => {
+      completedAtLocal: Date, documentId: string | null, noteId: string | null) => {
       const command = new CompleteVolunteerRequirement({
         familyId: volunteerFamilyId,
         personId: personId
@@ -141,6 +143,8 @@ export function useVolunteersModel() {
       command.completedAtUtc = completedAtLocal;
       if (documentId != null)
         command.uploadedDocumentId = documentId;
+      if (noteId != null)
+        command.noteId = noteId;
       return command;
     });
   const markIndividualRequirementIncomplete = useVolunteerCommandCallbackWithLocation(

@@ -333,7 +333,7 @@ export class DirectoryClient {
         return Promise.resolve<CombinedFamilyInfo>(null as any);
     }
 
-    submitNoteCommand(organizationId: string, locationId: string, command: NoteCommand): Promise<CombinedFamilyInfo> {
+    submitNoteCommand(organizationId: string, locationId: string, command: NoteCommand): Promise<NoteCommandResult> {
         let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Directory/noteCommand";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
@@ -359,14 +359,14 @@ export class DirectoryClient {
         });
     }
 
-    protected processSubmitNoteCommand(response: Response): Promise<CombinedFamilyInfo> {
+    protected processSubmitNoteCommand(response: Response): Promise<NoteCommandResult> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = CombinedFamilyInfo.fromJS(resultData200);
+            result200 = NoteCommandResult.fromJS(resultData200);
             return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -374,7 +374,7 @@ export class DirectoryClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<CombinedFamilyInfo>(null as any);
+        return Promise.resolve<NoteCommandResult>(null as any);
     }
 }
 
@@ -2939,6 +2939,7 @@ export class CompletedRequirementInfo implements ICompletedRequirementInfo {
     requirementName?: string;
     completedAtUtc?: Date;
     uploadedDocumentId?: string | undefined;
+    noteId?: string | undefined;
 
     constructor(data?: ICompletedRequirementInfo) {
         if (data) {
@@ -2957,6 +2958,7 @@ export class CompletedRequirementInfo implements ICompletedRequirementInfo {
             this.requirementName = _data["requirementName"];
             this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
             this.uploadedDocumentId = _data["uploadedDocumentId"];
+            this.noteId = _data["noteId"];
         }
     }
 
@@ -2975,6 +2977,7 @@ export class CompletedRequirementInfo implements ICompletedRequirementInfo {
         data["requirementName"] = this.requirementName;
         data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
         data["uploadedDocumentId"] = this.uploadedDocumentId;
+        data["noteId"] = this.noteId;
         return data;
     }
 }
@@ -2986,6 +2989,7 @@ export interface ICompletedRequirementInfo {
     requirementName?: string;
     completedAtUtc?: Date;
     uploadedDocumentId?: string | undefined;
+    noteId?: string | undefined;
 }
 
 export class ExemptedRequirementInfo implements IExemptedRequirementInfo {
@@ -3372,6 +3376,7 @@ export class ChildLocationHistoryEntry implements IChildLocationHistoryEntry {
     timestampUtc?: Date;
     childLocationFamilyId?: string;
     plan?: ChildLocationPlan;
+    noteId?: string | undefined;
 
     constructor(data?: IChildLocationHistoryEntry) {
         if (data) {
@@ -3388,6 +3393,7 @@ export class ChildLocationHistoryEntry implements IChildLocationHistoryEntry {
             this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
             this.childLocationFamilyId = _data["childLocationFamilyId"];
             this.plan = _data["plan"];
+            this.noteId = _data["noteId"];
         }
     }
 
@@ -3404,6 +3410,7 @@ export class ChildLocationHistoryEntry implements IChildLocationHistoryEntry {
         data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
         data["childLocationFamilyId"] = this.childLocationFamilyId;
         data["plan"] = this.plan;
+        data["noteId"] = this.noteId;
         return data;
     }
 }
@@ -3413,6 +3420,7 @@ export interface IChildLocationHistoryEntry {
     timestampUtc?: Date;
     childLocationFamilyId?: string;
     plan?: ChildLocationPlan;
+    noteId?: string | undefined;
 }
 
 export enum ChildLocationPlan {
@@ -5306,6 +5314,46 @@ export interface IUpdatePersonUserLink extends IPersonCommand {
     userId?: string | undefined;
 }
 
+export class NoteCommandResult implements INoteCommandResult {
+    family?: CombinedFamilyInfo;
+    note?: Note | undefined;
+
+    constructor(data?: INoteCommandResult) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.family = _data["family"] ? CombinedFamilyInfo.fromJS(_data["family"]) : <any>undefined;
+            this.note = _data["note"] ? Note.fromJS(_data["note"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): NoteCommandResult {
+        data = typeof data === 'object' ? data : {};
+        let result = new NoteCommandResult();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["family"] = this.family ? this.family.toJSON() : <any>undefined;
+        data["note"] = this.note ? this.note.toJSON() : <any>undefined;
+        return data;
+    }
+}
+
+export interface INoteCommandResult {
+    family?: CombinedFamilyInfo;
+    note?: Note | undefined;
+}
+
 export abstract class NoteCommand implements INoteCommand {
     familyId?: string;
     noteId?: string;
@@ -5658,6 +5706,7 @@ export class CompleteReferralRequirement extends ReferralCommand implements ICom
     requirementName?: string;
     completedAtUtc?: Date;
     uploadedDocumentId?: string | undefined;
+    noteId?: string | undefined;
 
     constructor(data?: ICompleteReferralRequirement) {
         super(data);
@@ -5671,6 +5720,7 @@ export class CompleteReferralRequirement extends ReferralCommand implements ICom
             this.requirementName = _data["requirementName"];
             this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
             this.uploadedDocumentId = _data["uploadedDocumentId"];
+            this.noteId = _data["noteId"];
         }
     }
 
@@ -5687,6 +5737,7 @@ export class CompleteReferralRequirement extends ReferralCommand implements ICom
         data["requirementName"] = this.requirementName;
         data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
         data["uploadedDocumentId"] = this.uploadedDocumentId;
+        data["noteId"] = this.noteId;
         super.toJSON(data);
         return data;
     }
@@ -5697,6 +5748,7 @@ export interface ICompleteReferralRequirement extends IReferralCommand {
     requirementName?: string;
     completedAtUtc?: Date;
     uploadedDocumentId?: string | undefined;
+    noteId?: string | undefined;
 }
 
 export class CreateReferral extends ReferralCommand implements ICreateReferral {
@@ -6082,6 +6134,7 @@ export class CompleteArrangementRequirement extends ArrangementsCommand implemen
     requirementName?: string;
     completedAtUtc?: Date;
     uploadedDocumentId?: string | undefined;
+    noteId?: string | undefined;
 
     constructor(data?: ICompleteArrangementRequirement) {
         super(data);
@@ -6095,6 +6148,7 @@ export class CompleteArrangementRequirement extends ArrangementsCommand implemen
             this.requirementName = _data["requirementName"];
             this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
             this.uploadedDocumentId = _data["uploadedDocumentId"];
+            this.noteId = _data["noteId"];
         }
     }
 
@@ -6111,6 +6165,7 @@ export class CompleteArrangementRequirement extends ArrangementsCommand implemen
         data["requirementName"] = this.requirementName;
         data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
         data["uploadedDocumentId"] = this.uploadedDocumentId;
+        data["noteId"] = this.noteId;
         super.toJSON(data);
         return data;
     }
@@ -6121,6 +6176,7 @@ export interface ICompleteArrangementRequirement extends IArrangementsCommand {
     requirementName?: string;
     completedAtUtc?: Date;
     uploadedDocumentId?: string | undefined;
+    noteId?: string | undefined;
 }
 
 export class CreateArrangement extends ArrangementsCommand implements ICreateArrangement {
@@ -6321,6 +6377,7 @@ export class TrackChildLocationChange extends ArrangementsCommand implements ITr
     changedAtUtc?: Date;
     childLocationFamilyId?: string;
     plan?: ChildLocationPlan;
+    noteId?: string | undefined;
 
     constructor(data?: ITrackChildLocationChange) {
         super(data);
@@ -6333,6 +6390,7 @@ export class TrackChildLocationChange extends ArrangementsCommand implements ITr
             this.changedAtUtc = _data["changedAtUtc"] ? new Date(_data["changedAtUtc"].toString()) : <any>undefined;
             this.childLocationFamilyId = _data["childLocationFamilyId"];
             this.plan = _data["plan"];
+            this.noteId = _data["noteId"];
         }
     }
 
@@ -6348,6 +6406,7 @@ export class TrackChildLocationChange extends ArrangementsCommand implements ITr
         data["changedAtUtc"] = this.changedAtUtc ? this.changedAtUtc.toISOString() : <any>undefined;
         data["childLocationFamilyId"] = this.childLocationFamilyId;
         data["plan"] = this.plan;
+        data["noteId"] = this.noteId;
         super.toJSON(data);
         return data;
     }
@@ -6357,6 +6416,7 @@ export interface ITrackChildLocationChange extends IArrangementsCommand {
     changedAtUtc?: Date;
     childLocationFamilyId?: string;
     plan?: ChildLocationPlan;
+    noteId?: string | undefined;
 }
 
 export class UnexemptArrangementRequirement extends ArrangementsCommand implements IUnexemptArrangementRequirement {
@@ -6616,6 +6676,7 @@ export class CompleteVolunteerFamilyRequirement extends VolunteerFamilyCommand i
     requirementName?: string;
     completedAtUtc?: Date;
     uploadedDocumentId?: string | undefined;
+    noteId?: string | undefined;
 
     constructor(data?: ICompleteVolunteerFamilyRequirement) {
         super(data);
@@ -6629,6 +6690,7 @@ export class CompleteVolunteerFamilyRequirement extends VolunteerFamilyCommand i
             this.requirementName = _data["requirementName"];
             this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
             this.uploadedDocumentId = _data["uploadedDocumentId"];
+            this.noteId = _data["noteId"];
         }
     }
 
@@ -6645,6 +6707,7 @@ export class CompleteVolunteerFamilyRequirement extends VolunteerFamilyCommand i
         data["requirementName"] = this.requirementName;
         data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
         data["uploadedDocumentId"] = this.uploadedDocumentId;
+        data["noteId"] = this.noteId;
         super.toJSON(data);
         return data;
     }
@@ -6655,6 +6718,7 @@ export interface ICompleteVolunteerFamilyRequirement extends IVolunteerFamilyCom
     requirementName?: string;
     completedAtUtc?: Date;
     uploadedDocumentId?: string | undefined;
+    noteId?: string | undefined;
 }
 
 export class ExemptVolunteerFamilyRequirement extends VolunteerFamilyCommand implements IExemptVolunteerFamilyRequirement {
@@ -6962,6 +7026,7 @@ export class CompleteVolunteerRequirement extends VolunteerCommand implements IC
     requirementName?: string;
     completedAtUtc?: Date;
     uploadedDocumentId?: string | undefined;
+    noteId?: string | undefined;
 
     constructor(data?: ICompleteVolunteerRequirement) {
         super(data);
@@ -6975,6 +7040,7 @@ export class CompleteVolunteerRequirement extends VolunteerCommand implements IC
             this.requirementName = _data["requirementName"];
             this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
             this.uploadedDocumentId = _data["uploadedDocumentId"];
+            this.noteId = _data["noteId"];
         }
     }
 
@@ -6991,6 +7057,7 @@ export class CompleteVolunteerRequirement extends VolunteerCommand implements IC
         data["requirementName"] = this.requirementName;
         data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
         data["uploadedDocumentId"] = this.uploadedDocumentId;
+        data["noteId"] = this.noteId;
         super.toJSON(data);
         return data;
     }
@@ -7001,6 +7068,7 @@ export interface ICompleteVolunteerRequirement extends IVolunteerCommand {
     requirementName?: string;
     completedAtUtc?: Date;
     uploadedDocumentId?: string | undefined;
+    noteId?: string | undefined;
 }
 
 export class ExemptVolunteerRequirement extends VolunteerCommand implements IExemptVolunteerRequirement {

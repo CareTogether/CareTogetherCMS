@@ -4,7 +4,8 @@ using System;
 namespace CareTogether.Resources
 {
     public sealed record CompletedRequirementInfo(Guid UserId, DateTime TimestampUtc,
-        Guid CompletedRequirementId, string RequirementName, DateTime CompletedAtUtc, Guid? UploadedDocumentId);
+        Guid CompletedRequirementId, string RequirementName, DateTime CompletedAtUtc,
+        Guid? UploadedDocumentId, Guid? NoteId);
 
     public sealed record ExemptedRequirementInfo(Guid UserId, DateTime TimestampUtc,
         string RequirementName, DateTime? DueDate, string AdditionalComments, DateTime? ExemptionExpiresAtUtc);

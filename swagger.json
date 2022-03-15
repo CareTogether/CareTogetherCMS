@@ -401,7 +401,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CombinedFamilyInfo"
+                  "$ref": "#/components/schemas/NoteCommandResult"
                 }
               }
             }
@@ -1837,6 +1837,11 @@
             "type": "string",
             "format": "guid",
             "nullable": true
+          },
+          "noteId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
           }
         }
       },
@@ -2050,6 +2055,11 @@
           },
           "plan": {
             "$ref": "#/components/schemas/ChildLocationPlan"
+          },
+          "noteId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
           }
         }
       },
@@ -3053,6 +3063,23 @@
           }
         ]
       },
+      "NoteCommandResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "family": {
+            "$ref": "#/components/schemas/CombinedFamilyInfo"
+          },
+          "note": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Note"
+              }
+            ]
+          }
+        }
+      },
       "NoteCommand": {
         "type": "object",
         "discriminator": {
@@ -3232,6 +3259,11 @@
                 "format": "date-time"
               },
               "uploadedDocumentId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              },
+              "noteId": {
                 "type": "string",
                 "format": "guid",
                 "nullable": true
@@ -3454,6 +3486,11 @@
                 "type": "string",
                 "format": "guid",
                 "nullable": true
+              },
+              "noteId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
               }
             }
           }
@@ -3585,6 +3622,11 @@
               },
               "plan": {
                 "$ref": "#/components/schemas/ChildLocationPlan"
+              },
+              "noteId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
               }
             }
           }
@@ -3711,6 +3753,11 @@
                 "format": "date-time"
               },
               "uploadedDocumentId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              },
+              "noteId": {
                 "type": "string",
                 "format": "guid",
                 "nullable": true
@@ -3891,6 +3938,11 @@
                 "format": "date-time"
               },
               "uploadedDocumentId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              },
+              "noteId": {
                 "type": "string",
                 "format": "guid",
                 "nullable": true

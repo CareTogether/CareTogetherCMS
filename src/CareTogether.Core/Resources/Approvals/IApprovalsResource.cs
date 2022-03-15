@@ -29,7 +29,8 @@ namespace CareTogether.Resources.Approvals
     public sealed record ActivateVolunteerFamily(Guid FamilyId)
         : VolunteerFamilyCommand(FamilyId);
     public sealed record CompleteVolunteerFamilyRequirement(Guid FamilyId,
-        Guid CompletedRequirementId, string RequirementName, DateTime CompletedAtUtc, Guid? UploadedDocumentId)
+        Guid CompletedRequirementId, string RequirementName, DateTime CompletedAtUtc,
+        Guid? UploadedDocumentId, Guid? NoteId)
         : VolunteerFamilyCommand(FamilyId);
     public sealed record MarkVolunteerFamilyRequirementIncomplete(Guid FamilyId,
         Guid CompletedRequirementId, string RequirementName)
@@ -53,7 +54,8 @@ namespace CareTogether.Resources.Approvals
     [JsonHierarchyBase]
     public abstract partial record VolunteerCommand(Guid FamilyId, Guid PersonId);
     public sealed record CompleteVolunteerRequirement(Guid FamilyId, Guid PersonId,
-        Guid CompletedRequirementId, string RequirementName,  DateTime CompletedAtUtc, Guid? UploadedDocumentId)
+        Guid CompletedRequirementId, string RequirementName,  DateTime CompletedAtUtc,
+        Guid? UploadedDocumentId, Guid? NoteId)
         : VolunteerCommand(FamilyId, PersonId);
     public sealed record MarkVolunteerRequirementIncomplete(Guid FamilyId, Guid PersonId,
         Guid CompletedRequirementId, string RequirementName)

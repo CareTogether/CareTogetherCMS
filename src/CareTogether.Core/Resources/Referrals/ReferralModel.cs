@@ -52,7 +52,7 @@ namespace CareTogether.Resources.Referrals
                         {
                             CompletedRequirements = referralEntry.CompletedRequirements.Add(
                                 new CompletedRequirementInfo(userId, timestampUtc, c.CompletedRequirementId,
-                                    c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId))
+                                    c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId, c.NoteId))
                         },
                         MarkReferralRequirementIncomplete c => referralEntry with
                         {
@@ -135,7 +135,7 @@ namespace CareTogether.Resources.Referrals
                             {
                                 CompletedRequirements = arrangementEntry.CompletedRequirements.Add(
                                     new CompletedRequirementInfo(userId, timestampUtc, c.CompletedRequirementId,
-                                        c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId))
+                                        c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId, c.NoteId))
                             },
                             MarkArrangementRequirementIncomplete c => arrangementEntry with
                             {
@@ -157,7 +157,7 @@ namespace CareTogether.Resources.Referrals
                             {
                                 ChildrenLocationHistory = arrangementEntry.ChildrenLocationHistory.Add(
                                     new ChildLocationHistoryEntry(userId, c.ChangedAtUtc,
-                                        c.ChildLocationFamilyId, c.Plan))
+                                        c.ChildLocationFamilyId, c.Plan, c.NoteId))
                             },
                             EndArrangements c => arrangementEntry with
                             {
