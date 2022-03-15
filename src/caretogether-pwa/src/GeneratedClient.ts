@@ -2797,6 +2797,26 @@ export abstract class Activity implements IActivity {
 
     static fromJS(data: any): Activity {
         data = typeof data === 'object' ? data : {};
+        if (data["discriminator"] === "ArrangementRequirementCompleted") {
+            let result = new ArrangementRequirementCompleted();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "ChildLocationChanged") {
+            let result = new ChildLocationChanged();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "ReferralOpened") {
+            let result = new ReferralOpened();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "ReferralRequirementCompleted") {
+            let result = new ReferralRequirementCompleted();
+            result.init(data);
+            return result;
+        }
         throw new Error("The abstract class 'Activity' cannot be instantiated.");
     }
 
@@ -2816,6 +2836,172 @@ export interface IActivity {
     timestampUtc?: Date;
     uploadedDocumentId?: string | undefined;
     noteId?: string | undefined;
+}
+
+export class ArrangementRequirementCompleted extends Activity implements IArrangementRequirementCompleted {
+    arrangementId?: string;
+    requirementName?: string;
+    completedAtUtc?: Date;
+
+    constructor(data?: IArrangementRequirementCompleted) {
+        super(data);
+        this._discriminator = "ArrangementRequirementCompleted";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.arrangementId = _data["arrangementId"];
+            this.requirementName = _data["requirementName"];
+            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ArrangementRequirementCompleted {
+        data = typeof data === 'object' ? data : {};
+        let result = new ArrangementRequirementCompleted();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["arrangementId"] = this.arrangementId;
+        data["requirementName"] = this.requirementName;
+        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IArrangementRequirementCompleted extends IActivity {
+    arrangementId?: string;
+    requirementName?: string;
+    completedAtUtc?: Date;
+}
+
+export class ChildLocationChanged extends Activity implements IChildLocationChanged {
+    arrangementId?: string;
+    changedAtUtc?: Date;
+    childLocationFamilyId?: string;
+    plan?: ChildLocationPlan;
+
+    constructor(data?: IChildLocationChanged) {
+        super(data);
+        this._discriminator = "ChildLocationChanged";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.arrangementId = _data["arrangementId"];
+            this.changedAtUtc = _data["changedAtUtc"] ? new Date(_data["changedAtUtc"].toString()) : <any>undefined;
+            this.childLocationFamilyId = _data["childLocationFamilyId"];
+            this.plan = _data["plan"];
+        }
+    }
+
+    static fromJS(data: any): ChildLocationChanged {
+        data = typeof data === 'object' ? data : {};
+        let result = new ChildLocationChanged();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["arrangementId"] = this.arrangementId;
+        data["changedAtUtc"] = this.changedAtUtc ? this.changedAtUtc.toISOString() : <any>undefined;
+        data["childLocationFamilyId"] = this.childLocationFamilyId;
+        data["plan"] = this.plan;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IChildLocationChanged extends IActivity {
+    arrangementId?: string;
+    changedAtUtc?: Date;
+    childLocationFamilyId?: string;
+    plan?: ChildLocationPlan;
+}
+
+export enum ChildLocationPlan {
+    OvernightHousing = 0,
+    DaytimeChildCare = 1,
+    WithParent = 2,
+}
+
+export class ReferralOpened extends Activity implements IReferralOpened {
+    openedAtUtc?: Date;
+
+    constructor(data?: IReferralOpened) {
+        super(data);
+        this._discriminator = "ReferralOpened";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.openedAtUtc = _data["openedAtUtc"] ? new Date(_data["openedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ReferralOpened {
+        data = typeof data === 'object' ? data : {};
+        let result = new ReferralOpened();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["openedAtUtc"] = this.openedAtUtc ? this.openedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IReferralOpened extends IActivity {
+    openedAtUtc?: Date;
+}
+
+export class ReferralRequirementCompleted extends Activity implements IReferralRequirementCompleted {
+    requirementName?: string;
+    completedAtUtc?: Date;
+
+    constructor(data?: IReferralRequirementCompleted) {
+        super(data);
+        this._discriminator = "ReferralRequirementCompleted";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.requirementName = _data["requirementName"];
+            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ReferralRequirementCompleted {
+        data = typeof data === 'object' ? data : {};
+        let result = new ReferralRequirementCompleted();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["requirementName"] = this.requirementName;
+        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IReferralRequirementCompleted extends IActivity {
+    requirementName?: string;
+    completedAtUtc?: Date;
 }
 
 export class PartneringFamilyInfo implements IPartneringFamilyInfo {
@@ -3495,12 +3681,6 @@ export interface IChildLocationHistoryEntry {
     childLocationFamilyId?: string;
     plan?: ChildLocationPlan;
     noteId?: string | undefined;
-}
-
-export enum ChildLocationPlan {
-    OvernightHousing = 0,
-    DaytimeChildCare = 1,
-    WithParent = 2,
 }
 
 export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {

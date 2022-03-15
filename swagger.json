@@ -1718,7 +1718,13 @@
       "Activity": {
         "type": "object",
         "discriminator": {
-          "propertyName": "discriminator"
+          "propertyName": "discriminator",
+          "mapping": {
+            "ArrangementRequirementCompleted": "#/components/schemas/ArrangementRequirementCompleted",
+            "ChildLocationChanged": "#/components/schemas/ChildLocationChanged",
+            "ReferralOpened": "#/components/schemas/ReferralOpened",
+            "ReferralRequirementCompleted": "#/components/schemas/ReferralRequirementCompleted"
+          }
         },
         "x-abstract": true,
         "additionalProperties": false,
@@ -1748,6 +1754,109 @@
             "type": "string"
           }
         }
+      },
+      "ArrangementRequirementCompleted": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Activity"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "arrangementId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "requirementName": {
+                "type": "string"
+              },
+              "completedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "ChildLocationChanged": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Activity"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "arrangementId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "changedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "childLocationFamilyId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "plan": {
+                "$ref": "#/components/schemas/ChildLocationPlan"
+              }
+            }
+          }
+        ]
+      },
+      "ChildLocationPlan": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "OvernightHousing",
+          "DaytimeChildCare",
+          "WithParent"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
+      "ReferralOpened": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Activity"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "openedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "ReferralRequirementCompleted": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Activity"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "requirementName": {
+                "type": "string"
+              },
+              "completedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
       },
       "PartneringFamilyInfo": {
         "type": "object",
@@ -2108,20 +2217,6 @@
             "nullable": true
           }
         }
-      },
-      "ChildLocationPlan": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "OvernightHousing",
-          "DaytimeChildCare",
-          "WithParent"
-        ],
-        "enum": [
-          0,
-          1,
-          2
-        ]
       },
       "VolunteerFamilyInfo": {
         "type": "object",
