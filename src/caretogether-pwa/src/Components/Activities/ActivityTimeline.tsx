@@ -79,7 +79,7 @@ export function ActivityTimeline({ family }: ActivityTimelineProps) {
                   
                 </>
               : activity instanceof ReferralOpened
-              ? "\n" + "Referral opened"
+              ? "\nReferral opened"
               : null}
             <br />
             {activity.noteId && <NoteCard familyId={family.family!.id!} note={noteLookup(activity.noteId)!} />}
