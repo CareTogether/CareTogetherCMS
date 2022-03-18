@@ -79,18 +79,22 @@ namespace CareTogether.Managers
         private async Task<PartneringFamilyInfo?> RenderPartneringFamilyInfoAsync(Guid organizationId, Guid locationId,
             Family family, ClaimsPrincipal user)
         {
-            var referrals = await (await referralsResource.ListReferralsAsync(organizationId, locationId))
+            var referralEntries = (await referralsResource.ListReferralsAsync(organizationId, locationId))
                 .Where(r => r.FamilyId == family.Id)
+                .ToImmutableList();
+
+            if (referralEntries.Count == 0)
+                return null;
+
+            var referrals = await referralEntries
                 .Select(r => ToReferralAsync(r))
                 .WhenAll();
-
-            if (referrals.Length == 0)
-                return null;
 
             var openReferral = referrals.SingleOrDefault(r => r.CloseReason == null);
             var closedReferrals = referrals.Where(r => r.CloseReason != null).ToImmutableList();
 
-            return new PartneringFamilyInfo(openReferral, closedReferrals);
+            return new PartneringFamilyInfo(openReferral, closedReferrals,
+                referralEntries.SelectMany(entry => entry.History).ToImmutableList());
 
             async Task<Referral> ToReferralAsync(ReferralEntry entry)
             {
@@ -152,7 +156,8 @@ namespace CareTogether.Managers
                             x.Value.MissingIndividualRequirements,
                             x.Value.AvailableIndividualApplications,
                             x.Value.IndividualRoleApprovals);
-                    }));
+                    }),
+                entry.History);
 
             var disclosedVolunteerFamilyInfo = await authorizationEngine.DiscloseVolunteerFamilyInfoAsync(user, volunteerFamilyInfo);
             return (disclosedVolunteerFamilyInfo, entry.UploadedDocuments);

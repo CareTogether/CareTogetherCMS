@@ -22,14 +22,14 @@ namespace CareTogether.Resources.Directory
             ImmutableList<Guid> Children,
             ImmutableDictionary<(Guid ChildId, Guid AdultId), CustodialRelationshipType> CustodialRelationships,
             ImmutableList<UploadedDocumentInfo> UploadedDocuments,
-            ImmutableList<Guid> DeletedDocuments)
+            ImmutableList<Guid> DeletedDocuments, ImmutableList<Activity> History)
         {
             internal Family ToFamily(ImmutableDictionary<Guid, PersonEntry> people) =>
                 new(Id, PrimaryFamilyContactPersonId,
                     AdultRelationships.Select(ar => (people[ar.Key].ToPerson(), ar.Value)).ToImmutableList(),
                     Children.Select(c => people[c].ToPerson()).ToImmutableList(),
                     CustodialRelationships.Select(cr => new CustodialRelationship(cr.Key.ChildId, cr.Key.AdultId, cr.Value)).ToImmutableList(),
-                    UploadedDocuments, DeletedDocuments);
+                    UploadedDocuments, DeletedDocuments, History);
         }
 
         internal record PersonEntry(Guid Id, Guid? UserId, bool Active, string FirstName, string LastName,
@@ -81,7 +81,8 @@ namespace CareTogether.Resources.Directory
                         c.CustodialRelationships?.Select(cr =>
                             new KeyValuePair<(Guid ChildId, Guid AdultId), CustodialRelationshipType>((cr.ChildId, cr.PersonId), cr.Type))
                         ?? new List<KeyValuePair<(Guid ChildId, Guid AdultId), CustodialRelationshipType>>()),
-                        ImmutableList<UploadedDocumentInfo>.Empty, DeletedDocuments: ImmutableList<Guid>.Empty),
+                        ImmutableList<UploadedDocumentInfo>.Empty, DeletedDocuments: ImmutableList<Guid>.Empty,
+                        ImmutableList<Activity>.Empty),
                 _ => families.TryGetValue(command.FamilyId, out var familyEntry)
                     ? command switch
                     {

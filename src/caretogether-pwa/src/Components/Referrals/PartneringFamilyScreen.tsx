@@ -15,7 +15,6 @@ import { AddEditNoteDialog } from '../Families/AddEditNoteDialog';
 import { ArrangementCard } from './ArrangementCard';
 import { PersonName } from '../Families/PersonName';
 import { format } from 'date-fns';
-import { NoteCard } from '../Families/NoteCard';
 import { UploadFamilyDocumentDialog } from '../Families/UploadFamilyDocumentDialog';
 import { policyData } from '../../Model/ConfigurationModel';
 import { CreateArrangementDialog } from './CreateArrangementDialog';
@@ -32,6 +31,7 @@ import { MissingRequirementRow } from "../Requirements/MissingRequirementRow";
 import { ExemptedRequirementRow } from "../Requirements/ExemptedRequirementRow";
 import { CompletedRequirementRow } from "../Requirements/CompletedRequirementRow";
 import { ReferralContext } from "../Requirements/RequirementContext";
+import { ActivityTimeline } from '../Activities/ActivityTimeline';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -125,7 +125,7 @@ export function PartneringFamilyScreen() {
   const permissions = usePermissions();
 
   return (
-    <Container maxWidth={false}>
+    <Container maxWidth={false} sx={{paddingLeft: '12px'}}>
       <HeaderContent>
         <HeaderTitle>
           <IconButton color="inherit" onClick={() => navigate("..")} size="large">
@@ -179,32 +179,29 @@ export function PartneringFamilyScreen() {
         {addNoteDialogOpen && <AddEditNoteDialog familyId={partneringFamily.family!.id!} onClose={() => setAddNoteDialogOpen(false)} />}
       </Toolbar>
       <Grid container spacing={0}>
-        <Grid item container xs={12} md={4} spacing={2}>
+        <Grid item container xs={12} md={4} spacing={0}>
           <Grid item xs={12}>
-            {partneringFamily.notes?.slice().sort((a, b) =>
-              a.timestampUtc! < b.timestampUtc! ? -1 : a.timestampUtc! > b.timestampUtc! ? 1 : 0).map(note => (
-              <NoteCard key={note.id} familyId={partneringFamily.family!.id!} note={note} />
-            ))}
+            <ActivityTimeline family={partneringFamily} />
+          </Grid>
+        </Grid>
+        <Grid item container xs={12} md={8} spacing={2}>
+          <Grid item xs={12} md={4}>
+            <span>Primary Contact: <PersonName person={partneringFamily.family?.adults?.find(adult => adult.item1?.id === partneringFamily.family?.primaryFamilyContactPersonId)?.item1} /></span>
           </Grid>
           {(partneringFamily.partneringFamilyInfo!.closedReferrals?.length && (
-            <Grid item xs={12}>
-              <p>Previous Referrals:</p>
+            <Grid item xs={12} md={8}>
+              <span>Previous Referrals:</span>
               <ul>
                 {partneringFamily.partneringFamilyInfo!.closedReferrals?.map(referral => (
-                  <li key={referral.id}>Referral closed - {ReferralCloseReason[referral.closeReason!]}</li>
+                  <li key={referral.id}>Referral closed {format(referral.closedAtUtc!, "M/d/yy")} - {ReferralCloseReason[referral.closeReason!]}</li>
                 ))}
               </ul>
             </Grid>
           )) || null}
-        </Grid>
-        <Grid item container xs={12} md={8} spacing={2}>
-          <Grid item xs={12}>
-            <span>Primary Contact: <PersonName person={partneringFamily.family?.adults?.find(adult => adult.item1?.id === partneringFamily.family?.primaryFamilyContactPersonId)?.item1} /></span>
-          </Grid>
           <Grid item container xs={12}>
             <Grid item xs={6} md={4}>
               {partneringFamily.partneringFamilyInfo?.openReferral
-                ? "Referral open since " + format(partneringFamily.partneringFamilyInfo.openReferral.openedAtUtc!, "MM/dd/yyyy")
+                ? "Referral open since " + format(partneringFamily.partneringFamilyInfo.openReferral.openedAtUtc!, "M/d/yy")
                 : "Referral closed - " + ReferralCloseReason[partneringFamily.partneringFamilyInfo?.closedReferrals?.[partneringFamily.partneringFamilyInfo.closedReferrals.length-1]?.closeReason!]
                 //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closedUtc) -- needs a new calculated property
               }

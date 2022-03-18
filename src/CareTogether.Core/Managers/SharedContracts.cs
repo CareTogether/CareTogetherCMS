@@ -16,7 +16,8 @@ namespace CareTogether.Managers
 
     public sealed record PartneringFamilyInfo(
         Referral? OpenReferral,
-        ImmutableList<Referral> ClosedReferrals);
+        ImmutableList<Referral> ClosedReferrals,
+        ImmutableList<Activity> History);
 
     public sealed record Referral(Guid Id,
         DateTime OpenedAtUtc, DateTime? ClosedAtUtc, ReferralCloseReason? CloseReason,
@@ -46,7 +47,8 @@ namespace CareTogether.Managers
         ImmutableList<string> MissingRequirements,
         ImmutableList<string> AvailableApplications,
         ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> FamilyRoleApprovals,
-        ImmutableDictionary<Guid, VolunteerInfo> IndividualVolunteers);
+        ImmutableDictionary<Guid, VolunteerInfo> IndividualVolunteers,
+        ImmutableList<Activity> History);
 
     public sealed record VolunteerInfo(
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,

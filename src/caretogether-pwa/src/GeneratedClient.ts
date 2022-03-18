@@ -2090,6 +2090,7 @@ export class Family implements IFamily {
     custodialRelationships?: CustodialRelationship[];
     uploadedDocuments?: UploadedDocumentInfo[];
     deletedDocuments?: string[];
+    history?: Activity[];
 
     constructor(data?: IFamily) {
         if (data) {
@@ -2128,6 +2129,11 @@ export class Family implements IFamily {
                 this.deletedDocuments = [] as any;
                 for (let item of _data["deletedDocuments"])
                     this.deletedDocuments!.push(item);
+            }
+            if (Array.isArray(_data["history"])) {
+                this.history = [] as any;
+                for (let item of _data["history"])
+                    this.history!.push(Activity.fromJS(item));
             }
         }
     }
@@ -2168,6 +2174,11 @@ export class Family implements IFamily {
             for (let item of this.deletedDocuments)
                 data["deletedDocuments"].push(item);
         }
+        if (Array.isArray(this.history)) {
+            data["history"] = [];
+            for (let item of this.history)
+                data["history"].push(item.toJSON());
+        }
         return data;
     }
 }
@@ -2180,6 +2191,7 @@ export interface IFamily {
     custodialRelationships?: CustodialRelationship[];
     uploadedDocuments?: UploadedDocumentInfo[];
     deletedDocuments?: string[];
+    history?: Activity[];
 }
 
 export class ValueTupleOfPersonAndFamilyAdultRelationshipInfo implements IValueTupleOfPersonAndFamilyAdultRelationshipInfo {
@@ -2756,9 +2768,246 @@ export interface IUploadedDocumentInfo {
     uploadedFileName?: string;
 }
 
+export abstract class Activity implements IActivity {
+    userId?: string;
+    timestampUtc?: Date;
+    uploadedDocumentId?: string | undefined;
+    noteId?: string | undefined;
+
+    protected _discriminator: string;
+
+    constructor(data?: IActivity) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        this._discriminator = "Activity";
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
+            this.noteId = _data["noteId"];
+        }
+    }
+
+    static fromJS(data: any): Activity {
+        data = typeof data === 'object' ? data : {};
+        if (data["discriminator"] === "ArrangementRequirementCompleted") {
+            let result = new ArrangementRequirementCompleted();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "ChildLocationChanged") {
+            let result = new ChildLocationChanged();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "ReferralOpened") {
+            let result = new ReferralOpened();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "ReferralRequirementCompleted") {
+            let result = new ReferralRequirementCompleted();
+            result.init(data);
+            return result;
+        }
+        throw new Error("The abstract class 'Activity' cannot be instantiated.");
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["discriminator"] = this._discriminator;
+        data["userId"] = this.userId;
+        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
+        data["noteId"] = this.noteId;
+        return data;
+    }
+}
+
+export interface IActivity {
+    userId?: string;
+    timestampUtc?: Date;
+    uploadedDocumentId?: string | undefined;
+    noteId?: string | undefined;
+}
+
+export class ArrangementRequirementCompleted extends Activity implements IArrangementRequirementCompleted {
+    arrangementId?: string;
+    requirementName?: string;
+    completedAtUtc?: Date;
+
+    constructor(data?: IArrangementRequirementCompleted) {
+        super(data);
+        this._discriminator = "ArrangementRequirementCompleted";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.arrangementId = _data["arrangementId"];
+            this.requirementName = _data["requirementName"];
+            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ArrangementRequirementCompleted {
+        data = typeof data === 'object' ? data : {};
+        let result = new ArrangementRequirementCompleted();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["arrangementId"] = this.arrangementId;
+        data["requirementName"] = this.requirementName;
+        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IArrangementRequirementCompleted extends IActivity {
+    arrangementId?: string;
+    requirementName?: string;
+    completedAtUtc?: Date;
+}
+
+export class ChildLocationChanged extends Activity implements IChildLocationChanged {
+    arrangementId?: string;
+    changedAtUtc?: Date;
+    childLocationFamilyId?: string;
+    plan?: ChildLocationPlan;
+
+    constructor(data?: IChildLocationChanged) {
+        super(data);
+        this._discriminator = "ChildLocationChanged";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.arrangementId = _data["arrangementId"];
+            this.changedAtUtc = _data["changedAtUtc"] ? new Date(_data["changedAtUtc"].toString()) : <any>undefined;
+            this.childLocationFamilyId = _data["childLocationFamilyId"];
+            this.plan = _data["plan"];
+        }
+    }
+
+    static fromJS(data: any): ChildLocationChanged {
+        data = typeof data === 'object' ? data : {};
+        let result = new ChildLocationChanged();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["arrangementId"] = this.arrangementId;
+        data["changedAtUtc"] = this.changedAtUtc ? this.changedAtUtc.toISOString() : <any>undefined;
+        data["childLocationFamilyId"] = this.childLocationFamilyId;
+        data["plan"] = this.plan;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IChildLocationChanged extends IActivity {
+    arrangementId?: string;
+    changedAtUtc?: Date;
+    childLocationFamilyId?: string;
+    plan?: ChildLocationPlan;
+}
+
+export enum ChildLocationPlan {
+    OvernightHousing = 0,
+    DaytimeChildCare = 1,
+    WithParent = 2,
+}
+
+export class ReferralOpened extends Activity implements IReferralOpened {
+    openedAtUtc?: Date;
+
+    constructor(data?: IReferralOpened) {
+        super(data);
+        this._discriminator = "ReferralOpened";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.openedAtUtc = _data["openedAtUtc"] ? new Date(_data["openedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ReferralOpened {
+        data = typeof data === 'object' ? data : {};
+        let result = new ReferralOpened();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["openedAtUtc"] = this.openedAtUtc ? this.openedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IReferralOpened extends IActivity {
+    openedAtUtc?: Date;
+}
+
+export class ReferralRequirementCompleted extends Activity implements IReferralRequirementCompleted {
+    requirementName?: string;
+    completedAtUtc?: Date;
+
+    constructor(data?: IReferralRequirementCompleted) {
+        super(data);
+        this._discriminator = "ReferralRequirementCompleted";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.requirementName = _data["requirementName"];
+            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ReferralRequirementCompleted {
+        data = typeof data === 'object' ? data : {};
+        let result = new ReferralRequirementCompleted();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["requirementName"] = this.requirementName;
+        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IReferralRequirementCompleted extends IActivity {
+    requirementName?: string;
+    completedAtUtc?: Date;
+}
+
 export class PartneringFamilyInfo implements IPartneringFamilyInfo {
     openReferral?: Referral | undefined;
     closedReferrals?: Referral[];
+    history?: Activity[];
 
     constructor(data?: IPartneringFamilyInfo) {
         if (data) {
@@ -2776,6 +3025,11 @@ export class PartneringFamilyInfo implements IPartneringFamilyInfo {
                 this.closedReferrals = [] as any;
                 for (let item of _data["closedReferrals"])
                     this.closedReferrals!.push(Referral.fromJS(item));
+            }
+            if (Array.isArray(_data["history"])) {
+                this.history = [] as any;
+                for (let item of _data["history"])
+                    this.history!.push(Activity.fromJS(item));
             }
         }
     }
@@ -2795,6 +3049,11 @@ export class PartneringFamilyInfo implements IPartneringFamilyInfo {
             for (let item of this.closedReferrals)
                 data["closedReferrals"].push(item.toJSON());
         }
+        if (Array.isArray(this.history)) {
+            data["history"] = [];
+            for (let item of this.history)
+                data["history"].push(item.toJSON());
+        }
         return data;
     }
 }
@@ -2802,6 +3061,7 @@ export class PartneringFamilyInfo implements IPartneringFamilyInfo {
 export interface IPartneringFamilyInfo {
     openReferral?: Referral | undefined;
     closedReferrals?: Referral[];
+    history?: Activity[];
 }
 
 export class Referral implements IReferral {
@@ -3423,12 +3683,6 @@ export interface IChildLocationHistoryEntry {
     noteId?: string | undefined;
 }
 
-export enum ChildLocationPlan {
-    OvernightHousing = 0,
-    DaytimeChildCare = 1,
-    WithParent = 2,
-}
-
 export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
@@ -3437,6 +3691,7 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
     availableApplications?: string[];
     familyRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
     individualVolunteers?: { [key: string]: VolunteerInfo; };
+    history?: Activity[];
 
     constructor(data?: IVolunteerFamilyInfo) {
         if (data) {
@@ -3487,6 +3742,11 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
                     if (_data["individualVolunteers"].hasOwnProperty(key))
                         (<any>this.individualVolunteers)![key] = _data["individualVolunteers"][key] ? VolunteerInfo.fromJS(_data["individualVolunteers"][key]) : new VolunteerInfo();
                 }
+            }
+            if (Array.isArray(_data["history"])) {
+                this.history = [] as any;
+                for (let item of _data["history"])
+                    this.history!.push(Activity.fromJS(item));
             }
         }
     }
@@ -3539,6 +3799,11 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
                     (<any>data["individualVolunteers"])[key] = this.individualVolunteers[key] ? this.individualVolunteers[key].toJSON() : <any>undefined;
             }
         }
+        if (Array.isArray(this.history)) {
+            data["history"] = [];
+            for (let item of this.history)
+                data["history"].push(item.toJSON());
+        }
         return data;
     }
 }
@@ -3551,6 +3816,7 @@ export interface IVolunteerFamilyInfo {
     availableApplications?: string[];
     familyRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
     individualVolunteers?: { [key: string]: VolunteerInfo; };
+    history?: Activity[];
 }
 
 export class RemovedRole implements IRemovedRole {

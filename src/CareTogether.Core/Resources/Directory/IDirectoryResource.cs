@@ -13,7 +13,8 @@ namespace CareTogether.Resources.Directory
         ImmutableList<UploadedDocumentInfo> UploadedDocuments,
         // COMPATIBILITY: This is included so we don't have to duplicate a delete command for the old approvals document model,
         // and can instead just merge the deletions in the CombinedFamilyInfoFormatter.
-        ImmutableList<Guid> DeletedDocuments);
+        ImmutableList<Guid> DeletedDocuments,
+        ImmutableList<Activity> History);
     public sealed record Person(Guid Id, Guid? UserId, bool Active,
         string FirstName, string LastName, Gender Gender, Age Age, string Ethnicity,
         ImmutableList<Address> Addresses, Guid? CurrentAddressId,

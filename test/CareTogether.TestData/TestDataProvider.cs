@@ -311,7 +311,7 @@ namespace CareTogether.TestData
                 new NoteCommandExecuted(volunteerId, new DateTime(2020, 3, 30, 18, 18, 18), new CreateDraftNote(guid1, guid8, null)),
                 new NoteCommandExecuted(adminId, new DateTime(2020, 3, 30, 18, 18, 18), new ApproveNote(guid1, guid8, "Mom met us and picked him up at DQ")),
                 new NoteCommandExecuted(adminId, new DateTime(2021, 7, 10, 9, 30, 0), new CreateDraftNote(guid4, guid9, null)),
-                new NoteCommandExecuted(adminId, new DateTime(2021, 7, 10, 9, 32, 0), new CreateDraftNote(guid4, guid9, "I'm a little star-struck... Emily is *amazing*!!")));
+                new NoteCommandExecuted(adminId, new DateTime(2021, 7, 10, 9, 32, 0), new ApproveNote(guid4, guid9, "I'm a little star-struck... Emily is *amazing*!!")));
         }
 
         public static async Task PopulateDraftNotes(IObjectStore<string?> draftNotesStore)

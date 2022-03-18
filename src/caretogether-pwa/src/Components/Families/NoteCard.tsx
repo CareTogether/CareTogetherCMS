@@ -11,7 +11,6 @@ import {
   Typography,
 } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { format } from 'date-fns';
 import React, { useState } from 'react';
 import { Note, NoteStatus } from '../../GeneratedClient';
 import { useUserLookup } from '../../Model/DirectoryModel';
@@ -25,7 +24,7 @@ import { DiscardNoteDialog } from './DiscardNoteDialog';
 
 const useStyles = makeStyles((theme) => ({
   card: {
-    margin: 8
+    margin: 0
   },
   cardHeader: {
     padding: 8
@@ -76,11 +75,10 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
   const [showEditNoteDialog, setShowEditNoteDialog] = useState(false);
 
   return (
-    <Card className={classes.card}>
+    <Card className={classes.card} variant="outlined">
       <CardHeader className={classes.cardHeader}
         subheader={<>
-          <PersonName person={userLookup(note.authorId)} /> -&nbsp;
-          {format(note.timestampUtc!, "MM/dd/yyyy hh:mm aa")}
+          <PersonName person={userLookup(note.authorId)} />
           {note.status === NoteStatus.Draft ? " - DRAFT" : ""}
         </>}
         action={
