@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { Activity, ArrangementRequirementCompleted, ChildLocationChanged, ChildLocationPlan, CombinedFamilyInfo, ReferralOpened, ReferralRequirementCompleted } from "../../GeneratedClient";
 import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
 import PersonIcon from '@mui/icons-material/Person';
+import EditIcon from '@mui/icons-material/Edit';
 import { useFamilyLookup, usePersonLookup, useUserLookup } from "../../Model/DirectoryModel";
 import { PersonName } from "../Families/PersonName";
 import { FamilyName } from "../Families/FamilyName";
@@ -54,7 +55,7 @@ export function ActivityTimeline({ family }: ActivityTimelineProps) {
                 ? "✔"
                 : activity instanceof ChildLocationChanged
                 ? <PersonPinCircleIcon fontSize="medium" />
-                : null}
+                : <EditIcon fontSize="small" />}
             </TimelineDot>
             <TimelineConnector />
           </TimelineSeparator>
