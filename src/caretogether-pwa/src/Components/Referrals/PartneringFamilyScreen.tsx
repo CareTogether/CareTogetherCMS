@@ -1,6 +1,6 @@
 import { Container, Toolbar, Grid, Button, useMediaQuery, useTheme, IconButton } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { ArrangementPolicy, ChildLocationPlan, CombinedFamilyInfo, CompletedCustomFieldInfo, CustomFieldType, Permission, ReferralCloseReason } from '../../GeneratedClient';
+import { ArrangementPolicy, CombinedFamilyInfo, CompletedCustomFieldInfo, CustomFieldType, Permission, ReferralCloseReason } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { useParams } from 'react-router';
@@ -15,7 +15,6 @@ import { AddEditNoteDialog } from '../Families/AddEditNoteDialog';
 import { ArrangementCard } from './ArrangementCard';
 import { PersonName } from '../Families/PersonName';
 import { format } from 'date-fns';
-import { NoteCard } from '../Families/NoteCard';
 import { UploadFamilyDocumentDialog } from '../Families/UploadFamilyDocumentDialog';
 import { policyData } from '../../Model/ConfigurationModel';
 import { CreateArrangementDialog } from './CreateArrangementDialog';
@@ -27,12 +26,12 @@ import { HeaderContent, HeaderTitle } from '../Header';
 import { ArrowBack } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { usePermissions } from '../../Model/SessionModel';
-import { Masonry, Timeline, TimelineConnector, TimelineContent, TimelineDot, TimelineItem, TimelineOppositeContent, TimelineSeparator } from '@mui/lab';
+import { Masonry } from '@mui/lab';
 import { MissingRequirementRow } from "../Requirements/MissingRequirementRow";
 import { ExemptedRequirementRow } from "../Requirements/ExemptedRequirementRow";
 import { CompletedRequirementRow } from "../Requirements/CompletedRequirementRow";
 import { ReferralContext } from "../Requirements/RequirementContext";
-import { FamilyName } from '../Families/FamilyName';
+import { ActivityTimeline } from '../Activities/ActivityTimeline';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -126,7 +125,7 @@ export function PartneringFamilyScreen() {
   const permissions = usePermissions();
 
   return (
-    <Container maxWidth={false}>
+    <Container maxWidth={false} sx={{paddingLeft: 12}}>
       <HeaderContent>
         <HeaderTitle>
           <IconButton color="inherit" onClick={() => navigate("..")} size="large">
@@ -180,35 +179,10 @@ export function PartneringFamilyScreen() {
         {addNoteDialogOpen && <AddEditNoteDialog familyId={partneringFamily.family!.id!} onClose={() => setAddNoteDialogOpen(false)} />}
       </Toolbar>
       <Grid container spacing={0}>
-        <Grid item container xs={12} md={4} spacing={2}>
+        <Grid item container xs={12} md={4} spacing={0}>
           <Grid item xs={12}>
-            <Timeline position="right">
-              {partneringFamily.partneringFamilyInfo?.history?.slice().reverse().map((activity, i) =>
-                <TimelineItem key={i}>
-                  <TimelineOppositeContent>
-                    {format(activity.timestampUtc!, "M/d/yy h:mm a")}
-                  </TimelineOppositeContent>
-                  <TimelineSeparator>
-                    <TimelineDot color={i === 0 ? "secondary" : "primary"} />
-                    <TimelineConnector />
-                  </TimelineSeparator>
-                  <TimelineContent>
-                    {JSON.stringify(activity)}
-                    {/* <FamilyName family={familyLookup(historyEntry.childLocationFamilyId)} />
-                    <br />
-                    <span style={{fontStyle: "italic"}}>
-                      {historyEntry.plan === ChildLocationPlan.DaytimeChildCare ? "daytime child care"
-                      : historyEntry.plan === ChildLocationPlan.OvernightHousing ? "overnight housing"
-                      : "with parent"}
-                    </span> */}
-                  </TimelineContent>
-                </TimelineItem>
-              )}
-            </Timeline>
-            {partneringFamily.notes?.slice().sort((a, b) =>
-              a.timestampUtc! < b.timestampUtc! ? -1 : a.timestampUtc! > b.timestampUtc! ? 1 : 0).map(note => (
-              <NoteCard key={note.id} familyId={partneringFamily.family!.id!} note={note} />
-            ))}
+            <ActivityTimeline family={partneringFamily}
+              activities={partneringFamily.partneringFamilyInfo?.history?.slice().reverse()} />
           </Grid>
           {(partneringFamily.partneringFamilyInfo!.closedReferrals?.length && (
             <Grid item xs={12}>
