@@ -11,13 +11,23 @@ import { NoteCard } from "../Families/NoteCard";
 
 type ActivityTimelineProps = {
   family: CombinedFamilyInfo
-  activities?: Activity[]
 }
 
-export function ActivityTimeline({ family, activities }: ActivityTimelineProps) {
+export function ActivityTimeline({ family }: ActivityTimelineProps) {
   const userLookup = useUserLookup();
   const familyLookup = useFamilyLookup();
   const personLookup = usePersonLookup();
+
+  const activities = family.partneringFamilyInfo?.history?.slice();
+  const unmatchedNotesAsActivities = family.notes?.filter(note =>
+    activities?.every(a => a.noteId !== note.id))?.map(note =>
+    ({
+      userId: note.authorId,
+      timestampUtc: note.timestampUtc,
+      noteId: note.id
+    } as Activity)) || [];
+  const allActivitiesSorted = activities?.concat(unmatchedNotesAsActivities)?.sort((a, b) =>
+    a.timestampUtc! < b.timestampUtc! ? 1 : a.timestampUtc! > b.timestampUtc! ? -1 : 0);
 
   function arrangementPartneringPerson(arrangementId?: string) {
     const allArrangements = (family.partneringFamilyInfo?.openReferral?.arrangements || []).concat(
@@ -35,14 +45,9 @@ export function ActivityTimeline({ family, activities }: ActivityTimelineProps) 
   return (
     <Timeline position="right"
       sx={{ padding: 0 }}>
-      {activities?.map((activity, i) =>
+      {allActivitiesSorted?.map((activity, i) =>
         <TimelineItem key={i}>
           <TimelineOppositeContent sx={{display: "none"}} />
-          {/* <TimelineOppositeContent sx={{flex:0.3, paddingLeft: 0}}>
-            {format(activity.timestampUtc!, "M/d/yy")}
-            <br />
-            {format(activity.timestampUtc!, "h:mm a")}
-          </TimelineOppositeContent> */}
           <TimelineSeparator>
             <TimelineDot sx={{width:36, height:36, textAlign:'center', display:'block'}}>
               {activity instanceof ReferralRequirementCompleted || activity instanceof ArrangementRequirementCompleted
@@ -53,16 +58,16 @@ export function ActivityTimeline({ family, activities }: ActivityTimelineProps) 
             </TimelineDot>
             <TimelineConnector />
           </TimelineSeparator>
-          <TimelineContent style={{width:200,wordWrap:'break-word'}}>
+          <TimelineContent style={{width:200,wordWrap:'break-word',whiteSpace:'pre-wrap'}}>
             {format(activity.timestampUtc!, "M/d/yy h:mm a")}
             <Tooltip key={i} title={<PersonName person={userLookup(activity.userId)} />}>
               <PersonIcon fontSize="small" color="disabled" sx={{verticalAlign:"middle", marginLeft: 1}} />
             </Tooltip>
-            <br />
             {activity instanceof ReferralRequirementCompleted || activity instanceof ArrangementRequirementCompleted
-              ? activity.requirementName
+              ? "\n" + activity.requirementName
               : activity instanceof ChildLocationChanged
               ? <>
+                  <br />
                   <PersonName person={arrangementPartneringPerson(activity.arrangementId)} />
                   <span> &rarr; </span><FamilyName family={familyLookup(activity.childLocationFamilyId)} />
                   <span> </span>({activity.plan === ChildLocationPlan.DaytimeChildCare
@@ -73,8 +78,8 @@ export function ActivityTimeline({ family, activities }: ActivityTimelineProps) 
                   
                 </>
               : activity instanceof ReferralOpened
-              ? "Referral opened"
-              : JSON.stringify(typeof activity)}
+              ? "\n" + "Referral opened"
+              : null}
             <br />
             {activity.noteId && <NoteCard familyId={family.family!.id!} note={noteLookup(activity.noteId)!} />}
           </TimelineContent>

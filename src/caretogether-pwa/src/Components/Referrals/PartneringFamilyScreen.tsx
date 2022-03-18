@@ -181,8 +181,7 @@ export function PartneringFamilyScreen() {
       <Grid container spacing={0}>
         <Grid item container xs={12} md={4} spacing={0}>
           <Grid item xs={12}>
-            <ActivityTimeline family={partneringFamily}
-              activities={partneringFamily.partneringFamilyInfo?.history?.slice().reverse()} />
+            <ActivityTimeline family={partneringFamily} />
           </Grid>
           {(partneringFamily.partneringFamilyInfo!.closedReferrals?.length && (
             <Grid item xs={12}>
