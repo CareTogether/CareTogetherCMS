@@ -39,8 +39,8 @@ export function CompletedRequirementRow({ requirement, context }: CompletedRequi
           </span>
         </Tooltip>
       </IconRow>
-      <CompletedRequirementDialog handle={dialogHandle}
-        requirement={requirement} context={context} />
+      {dialogHandle.open && <CompletedRequirementDialog handle={dialogHandle}
+        requirement={requirement} context={context} />}
     </>
   );
 }

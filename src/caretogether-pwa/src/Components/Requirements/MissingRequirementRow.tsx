@@ -29,8 +29,8 @@ export function MissingRequirementRow({ requirement, context, isAvailableApplica
     <>
       <IconRow icon={isAvailableApplication ? "💤" : "❌"}
         onClick={canComplete ? dialogHandle.openDialog : undefined}>{requirement}</IconRow>
-      <MissingRequirementDialog handle={dialogHandle}
-        requirement={requirement} context={context} policy={requirementPolicy} />
+      {dialogHandle.open && <MissingRequirementDialog handle={dialogHandle}
+        requirement={requirement} context={context} policy={requirementPolicy} />}
     </>
   );
 }

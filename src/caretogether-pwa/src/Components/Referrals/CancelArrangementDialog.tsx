@@ -34,7 +34,7 @@ export function CancelArrangementDialog({referralId, arrangement, onClose}: Canc
   return (
     <UpdateDialog title={`Do you want to cancel setting up this ${arrangement.arrangementType} arrangement for ${person.firstName} ${person.lastName}?`} onClose={onClose}
       onSave={save}>
-      <Grid container spacing={2}>
+      <Grid container spacing={0}>
         <Grid item xs={12}>
           <DateTimePicker
             label="When was this arrangement cancelled?"
@@ -42,7 +42,7 @@ export function CancelArrangementDialog({referralId, arrangement, onClose}: Canc
             disableFuture inputFormat="MM/dd/yyyy hh:mm a"
             onChange={(date) => date && setFields({ ...fields, cancelledAtLocal: date })}
             showTodayButton
-            renderInput={(params) => <TextField fullWidth required {...params} />} />
+            renderInput={(params) => <TextField fullWidth required {...params} sx={{marginTop: 1}} />} />
         </Grid>
       </Grid>
     </UpdateDialog>

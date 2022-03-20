@@ -36,8 +36,8 @@ export function MissingArrangementRequirementRow({ requirement, context }: Missi
           {requirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           {requirement.pastDueSince && <span style={{ float: 'right' }}>{format(requirement.pastDueSince, "M/d/yy h:mm a")}</span>}
         </IconRow>}
-      <MissingRequirementDialog handle={dialogHandle}
-        requirement={requirement} context={context} policy={requirementPolicy} />
+      {dialogHandle.open && <MissingRequirementDialog handle={dialogHandle}
+        requirement={requirement} context={context} policy={requirementPolicy} />}
     </>
   );
 }
