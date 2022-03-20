@@ -2,12 +2,11 @@ import { Timeline, TimelineItem, TimelineOppositeContent, TimelineSeparator, Tim
 import { format } from "date-fns";
 import { Activity, ArrangementRequirementCompleted, ChildLocationChanged, ChildLocationPlan, CombinedFamilyInfo, ReferralOpened, ReferralRequirementCompleted } from "../../GeneratedClient";
 import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
-import PersonIcon from '@mui/icons-material/Person';
 import EditIcon from '@mui/icons-material/Edit';
 import { useFamilyLookup, usePersonLookup, useUserLookup } from "../../Model/DirectoryModel";
 import { PersonName } from "../Families/PersonName";
 import { FamilyName } from "../Families/FamilyName";
-import { Box, Tooltip } from "@mui/material";
+import { Box } from "@mui/material";
 import { NoteCard } from "../Families/NoteCard";
 
 type ActivityTimelineProps = {
