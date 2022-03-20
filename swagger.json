@@ -2138,13 +2138,15 @@
           "SettingUp",
           "ReadyToStart",
           "Started",
-          "Ended"
+          "Ended",
+          "Cancelled"
         ],
         "enum": [
           0,
           1,
           2,
-          3
+          3,
+          4
         ]
       },
       "MissingArrangementRequirement": {
@@ -3537,6 +3539,7 @@
           "mapping": {
             "AssignIndividualVolunteer": "#/components/schemas/AssignIndividualVolunteer",
             "AssignVolunteerFamily": "#/components/schemas/AssignVolunteerFamily",
+            "CancelArrangementsSetup": "#/components/schemas/CancelArrangementsSetup",
             "CompleteArrangementRequirement": "#/components/schemas/CompleteArrangementRequirement",
             "CreateArrangement": "#/components/schemas/CreateArrangement",
             "EndArrangements": "#/components/schemas/EndArrangements",
@@ -3612,6 +3615,23 @@
               },
               "arrangementFunction": {
                 "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "CancelArrangementsSetup": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "cancellationRequestedAtUtc": {
+                "type": "string",
+                "format": "date-time"
               }
             }
           }

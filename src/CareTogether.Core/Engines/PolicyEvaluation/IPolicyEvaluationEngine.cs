@@ -32,7 +32,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 
     public sealed record MissingArrangementRequirement(string ActionName, DateTime? DueBy, DateTime? PastDueSince);
 
-    public enum ArrangementPhase { SettingUp, ReadyToStart, Started, Ended };
+    public enum ArrangementPhase { SettingUp, ReadyToStart, Started, Ended, Cancelled };
 
     public interface IPolicyEvaluationEngine
     {

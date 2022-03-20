@@ -136,6 +136,7 @@ namespace CareTogether.Resources.Referrals
                 {
                     CreateArrangement c => (new ArrangementEntry(arrangementId, c.ArrangementType,
                         RequestedAtUtc: c.RequestedAtUtc, StartedAtUtc: null, EndedAtUtc: null,
+                        CancelledAtUtc: null,
                         c.PartneringFamilyPersonId,
                         ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<ExemptedRequirementInfo>.Empty,
                         ImmutableList<IndividualVolunteerAssignment>.Empty, ImmutableList<FamilyVolunteerAssignment>.Empty,
@@ -190,7 +191,13 @@ namespace CareTogether.Resources.Referrals
                                 c.ChangedAtUtc, c.ChildLocationFamilyId, c.ChildLocationReceivingAdultId, c.Plan, c.NoteId)),
                             EndArrangements c => (arrangementEntry with
                             {
+                                //TODO: Enforce invariant - cannot end before starting
                                 EndedAtUtc = c.EndedAtUtc
+                            }, null),
+                            CancelArrangementsSetup c => (arrangementEntry with
+                            {
+                                //TODO: Enforce invariant - cannot cancel after starting
+                                CancelledAtUtc = c.CancellationRequestedAtUtc
                             }, null),
                             _ => throw new NotImplementedException(
                                 $"The command type '{command.GetType().FullName}' has not been implemented.")
