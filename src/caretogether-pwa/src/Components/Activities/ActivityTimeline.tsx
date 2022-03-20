@@ -42,6 +42,11 @@ export function ActivityTimeline({ family }: ActivityTimelineProps) {
     return note;
   }
 
+  function documentLookup(uploadedDocumentId?: string) {
+    const document = family.uploadedDocuments?.find(d => d.uploadedDocumentId === uploadedDocumentId);
+    return document;
+  }
+
   return (
     <Timeline position="right"
       sx={{ padding: 0 }}>
@@ -79,10 +84,11 @@ export function ActivityTimeline({ family }: ActivityTimelineProps) {
               : activity instanceof ReferralOpened
               ? "Referral opened"
               : null}
-            {activity.noteId &&
-              <>
-                <NoteCard familyId={family.family!.id!} note={noteLookup(activity.noteId)!} />
-              </>}
+            {activity.uploadedDocumentId &&
+              <Box sx={{margin: 0, padding: 0}}>
+                📃 {documentLookup(activity.uploadedDocumentId)?.uploadedFileName}
+              </Box>}
+            {activity.noteId && <NoteCard familyId={family.family!.id!} note={noteLookup(activity.noteId)!} />}
           </TimelineContent>
         </TimelineItem>
       )}
