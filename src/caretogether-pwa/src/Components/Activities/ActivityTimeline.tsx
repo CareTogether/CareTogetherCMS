@@ -57,7 +57,7 @@ export function ActivityTimeline({ family }: ActivityTimelineProps) {
                 ? <PersonPinCircleIcon fontSize="medium" />
                 : <EditIcon fontSize="small" />}
             </TimelineDot>
-            <TimelineConnector />
+            {i < allActivitiesSorted.length - 1 && <TimelineConnector />}
           </TimelineSeparator>
           <TimelineContent style={{width:200,wordWrap:'break-word',whiteSpace:'pre-wrap'}}>
             {format(activity.timestampUtc!, "M/d/yy h:mm a")}
