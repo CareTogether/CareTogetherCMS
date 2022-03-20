@@ -25,7 +25,7 @@ namespace CareTogether.Resources.Referrals
         string RequirementName, DateTime CompletedAtUtc, Guid? UploadedDocumentId, Guid? NoteId)
         : Activity(UserId, TimestampUtc, UploadedDocumentId, NoteId);
     public sealed record ChildLocationChanged(Guid UserId, DateTime TimestampUtc, Guid ArrangementId,
-        DateTime ChangedAtUtc, Guid ChildLocationFamilyId, ChildLocationPlan Plan, Guid? NoteId)
+        DateTime ChangedAtUtc, Guid ChildLocationFamilyId, Guid ChildLocationReceivingAdultId, ChildLocationPlan Plan, Guid? NoteId)
         : Activity(UserId, TimestampUtc, null, NoteId);
 
     public sealed class ReferralModel
@@ -185,9 +185,9 @@ namespace CareTogether.Resources.Referrals
                             {
                                 ChildrenLocationHistory = arrangementEntry.ChildrenLocationHistory.Add(
                                     new ChildLocationHistoryEntry(userId, c.ChangedAtUtc,
-                                        c.ChildLocationFamilyId, c.Plan, c.NoteId))
+                                        c.ChildLocationFamilyId, c.ChildLocationReceivingAdultId, c.Plan, c.NoteId))
                             }, new ChildLocationChanged(userId, timestampUtc, arrangementId,
-                                c.ChangedAtUtc, c.ChildLocationFamilyId, c.Plan, c.NoteId)),
+                                c.ChangedAtUtc, c.ChildLocationFamilyId, c.ChildLocationReceivingAdultId, c.Plan, c.NoteId)),
                             EndArrangements c => (arrangementEntry with
                             {
                                 EndedAtUtc = c.EndedAtUtc

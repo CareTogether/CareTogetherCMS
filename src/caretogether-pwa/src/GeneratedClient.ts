@@ -2884,6 +2884,7 @@ export class ChildLocationChanged extends Activity implements IChildLocationChan
     arrangementId?: string;
     changedAtUtc?: Date;
     childLocationFamilyId?: string;
+    childLocationReceivingAdultId?: string;
     plan?: ChildLocationPlan;
 
     constructor(data?: IChildLocationChanged) {
@@ -2897,6 +2898,7 @@ export class ChildLocationChanged extends Activity implements IChildLocationChan
             this.arrangementId = _data["arrangementId"];
             this.changedAtUtc = _data["changedAtUtc"] ? new Date(_data["changedAtUtc"].toString()) : <any>undefined;
             this.childLocationFamilyId = _data["childLocationFamilyId"];
+            this.childLocationReceivingAdultId = _data["childLocationReceivingAdultId"];
             this.plan = _data["plan"];
         }
     }
@@ -2913,6 +2915,7 @@ export class ChildLocationChanged extends Activity implements IChildLocationChan
         data["arrangementId"] = this.arrangementId;
         data["changedAtUtc"] = this.changedAtUtc ? this.changedAtUtc.toISOString() : <any>undefined;
         data["childLocationFamilyId"] = this.childLocationFamilyId;
+        data["childLocationReceivingAdultId"] = this.childLocationReceivingAdultId;
         data["plan"] = this.plan;
         super.toJSON(data);
         return data;
@@ -2923,6 +2926,7 @@ export interface IChildLocationChanged extends IActivity {
     arrangementId?: string;
     changedAtUtc?: Date;
     childLocationFamilyId?: string;
+    childLocationReceivingAdultId?: string;
     plan?: ChildLocationPlan;
 }
 
@@ -3635,6 +3639,7 @@ export class ChildLocationHistoryEntry implements IChildLocationHistoryEntry {
     userId?: string;
     timestampUtc?: Date;
     childLocationFamilyId?: string;
+    childLocationReceivingAdultId?: string;
     plan?: ChildLocationPlan;
     noteId?: string | undefined;
 
@@ -3652,6 +3657,7 @@ export class ChildLocationHistoryEntry implements IChildLocationHistoryEntry {
             this.userId = _data["userId"];
             this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
             this.childLocationFamilyId = _data["childLocationFamilyId"];
+            this.childLocationReceivingAdultId = _data["childLocationReceivingAdultId"];
             this.plan = _data["plan"];
             this.noteId = _data["noteId"];
         }
@@ -3669,6 +3675,7 @@ export class ChildLocationHistoryEntry implements IChildLocationHistoryEntry {
         data["userId"] = this.userId;
         data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
         data["childLocationFamilyId"] = this.childLocationFamilyId;
+        data["childLocationReceivingAdultId"] = this.childLocationReceivingAdultId;
         data["plan"] = this.plan;
         data["noteId"] = this.noteId;
         return data;
@@ -3679,6 +3686,7 @@ export interface IChildLocationHistoryEntry {
     userId?: string;
     timestampUtc?: Date;
     childLocationFamilyId?: string;
+    childLocationReceivingAdultId?: string;
     plan?: ChildLocationPlan;
     noteId?: string | undefined;
 }
@@ -6642,6 +6650,7 @@ export interface IStartArrangements extends IArrangementsCommand {
 export class TrackChildLocationChange extends ArrangementsCommand implements ITrackChildLocationChange {
     changedAtUtc?: Date;
     childLocationFamilyId?: string;
+    childLocationReceivingAdultId?: string;
     plan?: ChildLocationPlan;
     noteId?: string | undefined;
 
@@ -6655,6 +6664,7 @@ export class TrackChildLocationChange extends ArrangementsCommand implements ITr
         if (_data) {
             this.changedAtUtc = _data["changedAtUtc"] ? new Date(_data["changedAtUtc"].toString()) : <any>undefined;
             this.childLocationFamilyId = _data["childLocationFamilyId"];
+            this.childLocationReceivingAdultId = _data["childLocationReceivingAdultId"];
             this.plan = _data["plan"];
             this.noteId = _data["noteId"];
         }
@@ -6671,6 +6681,7 @@ export class TrackChildLocationChange extends ArrangementsCommand implements ITr
         data = typeof data === 'object' ? data : {};
         data["changedAtUtc"] = this.changedAtUtc ? this.changedAtUtc.toISOString() : <any>undefined;
         data["childLocationFamilyId"] = this.childLocationFamilyId;
+        data["childLocationReceivingAdultId"] = this.childLocationReceivingAdultId;
         data["plan"] = this.plan;
         data["noteId"] = this.noteId;
         super.toJSON(data);
@@ -6681,6 +6692,7 @@ export class TrackChildLocationChange extends ArrangementsCommand implements ITr
 export interface ITrackChildLocationChange extends IArrangementsCommand {
     changedAtUtc?: Date;
     childLocationFamilyId?: string;
+    childLocationReceivingAdultId?: string;
     plan?: ChildLocationPlan;
     noteId?: string | undefined;
 }

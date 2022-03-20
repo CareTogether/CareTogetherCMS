@@ -73,7 +73,8 @@ export function ActivityTimeline({ family }: ActivityTimelineProps) {
               : activity instanceof ChildLocationChanged
               ? <>
                   <PersonName person={arrangementPartneringPerson(activity.arrangementId)} />
-                  <span> &rarr; </span><FamilyName family={familyLookup(activity.childLocationFamilyId)} />
+                  <span> &rarr; </span><PersonName
+                    person={personLookup(activity.childLocationFamilyId, activity.childLocationReceivingAdultId)} />
                   <span> </span>({activity.plan === ChildLocationPlan.DaytimeChildCare
                     ? "daytime"
                     : activity.plan === ChildLocationPlan.OvernightHousing

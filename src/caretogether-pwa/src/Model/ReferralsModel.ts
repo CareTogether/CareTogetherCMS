@@ -248,7 +248,7 @@ export function useReferralsModel() {
         arrangementIds: [arrangementId]
       });
       command.childLocationFamilyId = childLocationFamilyId;
-      //command.childLocationAdultId = childLocationAdultId; TODO: Implement this!
+      command.childLocationReceivingAdultId = childLocationAdultId;
       command.changedAtUtc = changedAtLocal;
       command.plan = childLocationPlan;
       if (noteId != null)
