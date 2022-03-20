@@ -3,9 +3,8 @@ import { format } from "date-fns";
 import { Activity, ArrangementRequirementCompleted, ChildLocationChanged, ChildLocationPlan, CombinedFamilyInfo, ReferralOpened, ReferralRequirementCompleted } from "../../GeneratedClient";
 import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
 import EditIcon from '@mui/icons-material/Edit';
-import { useFamilyLookup, usePersonLookup, useUserLookup } from "../../Model/DirectoryModel";
+import { usePersonLookup, useUserLookup } from "../../Model/DirectoryModel";
 import { PersonName } from "../Families/PersonName";
-import { FamilyName } from "../Families/FamilyName";
 import { Box } from "@mui/material";
 import { NoteCard } from "../Families/NoteCard";
 
@@ -15,7 +14,6 @@ type ActivityTimelineProps = {
 
 export function ActivityTimeline({ family }: ActivityTimelineProps) {
   const userLookup = useUserLookup();
-  const familyLookup = useFamilyLookup();
   const personLookup = usePersonLookup();
 
   const activities = family.partneringFamilyInfo?.history?.slice();
