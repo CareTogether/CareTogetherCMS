@@ -35,6 +35,7 @@ import { MissingArrangementRequirementRow } from "../Requirements/MissingArrange
 import { ExemptedRequirementRow } from "../Requirements/ExemptedRequirementRow";
 import { CompletedRequirementRow } from "../Requirements/CompletedRequirementRow";
 import { ArrangementContext } from "../Requirements/RequirementContext";
+import { CancelArrangementDialog } from './CancelArrangementDialog';
 
 type ArrangementPhaseSummaryProps = {
   phase: ArrangementPhase,
@@ -126,15 +127,8 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
   
   const [arrangementRecordMenuAnchor, setArrangementRecordMenuAnchor] = useState<{anchor: Element, arrangement: Arrangement} | null>(null);
   const [showStartArrangementDialog, setShowStartArrangementDialog] = useState(false);
-  function closeStartArrangementDialog() {
-    setArrangementRecordMenuAnchor(null);
-    setShowStartArrangementDialog(false);
-  }
   const [showEndArrangementDialog, setShowEndArrangementDialog] = useState(false);
-  function closeEndArrangementDialog() {
-    setArrangementRecordMenuAnchor(null);
-    setShowEndArrangementDialog(false);
-  }
+  const [showCancelArrangementDialog, setShowCancelArrangementDialog] = useState(false);
   const [assignArrangementFunctionParameter, setAssignArrangementFunctionParameter] = useState<ArrangementFunction | null>(null);
   function selectAssignArrangementFunction(arrangementFunction: ArrangementFunction | null) {
     setArrangementRecordMenuAnchor(null);
@@ -279,9 +273,11 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
       {showTrackChildLocationDialog && <TrackChildLocationDialog partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement}
         onClose={() => setShowTrackChildLocationDialog(false)} />}
       {(showStartArrangementDialog && <StartArrangementDialog referralId={referralId} arrangement={arrangement}
-        onClose={() => closeStartArrangementDialog()} />) || null}
+        onClose={() => setShowStartArrangementDialog(false)} />) || null}
       {(showEndArrangementDialog && <EndArrangementDialog referralId={referralId} arrangement={arrangement}
-        onClose={() => closeEndArrangementDialog()} />) || null}
+        onClose={() => setShowEndArrangementDialog(false)} />) || null}
+      {(showCancelArrangementDialog && <CancelArrangementDialog referralId={referralId} arrangement={arrangement}
+        onClose={() => setShowCancelArrangementDialog(false)} />) || null}
       {(assignArrangementFunctionParameter && <AssignArrangementFunctionDialog referralId={referralId} arrangement={arrangement} arrangementPolicy={arrangementPolicy!}
         arrangementFunction={assignArrangementFunctionParameter}
         onClose={() => selectAssignArrangementFunction(null)} />) || null}
