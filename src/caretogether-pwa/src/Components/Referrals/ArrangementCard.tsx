@@ -45,6 +45,7 @@ type ArrangementPhaseSummaryProps = {
 }
 
 function ArrangementPhaseSummary({ phase, requestedAtUtc, startedAtUtc, endedAtUtc }: ArrangementPhaseSummaryProps) {
+  const cancelledColor = "#bdbdbd";
   const completedPhaseColor = "#00838f";
   const currentPhaseColor = "#ffc400";
   const futurePhaseColor = "#ddd";
@@ -57,21 +58,24 @@ function ArrangementPhaseSummary({ phase, requestedAtUtc, startedAtUtc, endedAtU
       <div style={{display: "flex", height: 8, backgroundColor: "red"}}>
         <div style={{flexGrow: 1,
           backgroundColor:
-            phase === ArrangementPhase.SettingUp ? currentPhaseColor
+            phase === ArrangementPhase.Cancelled ? cancelledColor
+            : phase === ArrangementPhase.SettingUp ? currentPhaseColor
             : phase === ArrangementPhase.ReadyToStart ? completedPhaseColor
             : phase === ArrangementPhase.Started ? completedPhaseColor
             : completedPhaseColor}}>
         </div>
         <div style={{flexGrow: 1,
           backgroundColor:
-            phase === ArrangementPhase.SettingUp ? futurePhaseColor
+            phase === ArrangementPhase.Cancelled ? cancelledColor
+            : phase === ArrangementPhase.SettingUp ? futurePhaseColor
             : phase === ArrangementPhase.ReadyToStart ? futurePhaseColor
             : phase === ArrangementPhase.Started ? currentPhaseColor
             : completedPhaseColor}}>
         </div>
         <div style={{flexGrow: 1,
           backgroundColor:
-            phase === ArrangementPhase.SettingUp ? futurePhaseColor
+            phase === ArrangementPhase.Cancelled ? cancelledColor
+            : phase === ArrangementPhase.SettingUp ? futurePhaseColor
             : phase === ArrangementPhase.ReadyToStart ? futurePhaseColor
             : phase === ArrangementPhase.Started ? futurePhaseColor
             : completedPhaseColor /* TODO: Show as currentPhaseColor if any closeout requirements are missing */}}>
@@ -162,19 +166,38 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
           <span style={{fontWeight: "bold"}}>{arrangement.arrangementType}</span>
           {summaryOnly &&
             <span style={{marginLeft: 40, float: "right"}}>
-              {arrangement.phase === ArrangementPhase.SettingUp ? "Setting up"
+              {arrangement.phase === ArrangementPhase.Cancelled ? `Cancelled ${formatRelative(arrangement.cancelledAtUtc!, now)}`
+                : arrangement.phase === ArrangementPhase.SettingUp ? "Setting up"
                 : arrangement.phase === ArrangementPhase.ReadyToStart ? "Ready to start"
                 : arrangement.phase === ArrangementPhase.Started ? `Started ${formatRelative(arrangement.startedAtUtc!, now)}`
                 : `Ended ${formatRelative(arrangement.endedAtUtc!, now)}`}
             </span>}
           {!summaryOnly &&
             <span style={{marginLeft: 0, float: "right"}}>
-              {arrangement.phase === ArrangementPhase.SettingUp ? "Setting up"
+              {arrangement.phase === ArrangementPhase.Cancelled ?
+                `Cancelled ${formatRelative(arrangement.cancelledAtUtc!, now)}`
+                : arrangement.phase === ArrangementPhase.SettingUp ?
+                  <>
+                    Setting up
+                    <Button variant="outlined" size="small"
+                      style={{marginLeft: 10}}
+                      onClick={() => setShowCancelArrangementDialog(true)}>
+                      Cancel
+                    </Button>
+                  </>
                 : arrangement.phase === ArrangementPhase.ReadyToStart ?
-                  <Button variant="contained" size="small"
-                    onClick={() => setShowStartArrangementDialog(true)}>
-                    Start
-                  </Button>
+                  <>
+                    <Button variant="outlined" size="small"
+                      style={{marginLeft: 10}}
+                      onClick={() => setShowCancelArrangementDialog(true)}>
+                      Cancel
+                    </Button>
+                    <Button variant="contained" size="small"
+                      style={{marginLeft: 10}}
+                      onClick={() => setShowStartArrangementDialog(true)}>
+                      Start
+                    </Button>
+                  </>
                 : arrangement.phase === ArrangementPhase.Started ?
                   <>
                     <span>Started {formatRelative(arrangement.startedAtUtc!, now)}</span>
@@ -215,23 +238,26 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
                 </>
               )}
             </li>
-            <Divider style={{marginBottom: 10, marginTop: 2}} />
-            {arrangement.familyVolunteerAssignments?.map(x => (
-              <li key={`famVol-${x.arrangementFunction}-${x.familyId}`}><FamilyName family={familyLookup(x.familyId)} /> - {x.arrangementFunction}</li>
-            ))}
-            {arrangement.individualVolunteerAssignments?.map(x => (
-              <li key={`indVol-${x.arrangementFunction}-${x.personId}`}><PersonName person={personLookup(x.familyId, x.personId)} /> - {x.arrangementFunction}</li>
-            ))}
-            {arrangement.phase !== ArrangementPhase.Ended && missingVolunteerFunctions?.map(x => (
-              <li key={`missing-${x.functionName}`}>
-                <IconRow icon={x.requirement === FunctionRequirement.ZeroOrMore ? '⚠' : '❌'}>
-                  {x.functionName}
-                </IconRow>
-              </li>
-            ))}
+            {arrangement.phase !== ArrangementPhase.Cancelled &&
+              <>
+                <Divider style={{marginBottom: 10, marginTop: 2}} />
+                {arrangement.familyVolunteerAssignments?.map(x => (
+                  <li key={`famVol-${x.arrangementFunction}-${x.familyId}`}><FamilyName family={familyLookup(x.familyId)} /> - {x.arrangementFunction}</li>
+                ))}
+                {arrangement.individualVolunteerAssignments?.map(x => (
+                  <li key={`indVol-${x.arrangementFunction}-${x.personId}`}><PersonName person={personLookup(x.familyId, x.personId)} /> - {x.arrangementFunction}</li>
+                ))}
+                {arrangement.phase !== ArrangementPhase.Ended && missingVolunteerFunctions?.map(x => (
+                  <li key={`missing-${x.functionName}`}>
+                    <IconRow icon={x.requirement === FunctionRequirement.ZeroOrMore ? '⚠' : '❌'}>
+                      {x.functionName}
+                    </IconRow>
+                  </li>
+                ))}
+              </>}
           </ul>
         </Typography>
-        {!summaryOnly && (
+        {!summaryOnly && arrangement.phase !== ArrangementPhase.Cancelled && (
           <>
             <Divider />
             <Typography variant="body2" component="div">
@@ -248,7 +274,7 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
           </>
         )}
       </CardContent>
-      {!summaryOnly && (
+      {!summaryOnly && arrangement.phase !== ArrangementPhase.Cancelled && (
         <CardActions>
           <IconButton size="small" className={classes.rightCardAction}
             onClick={(event) => setArrangementRecordMenuAnchor({anchor: event.currentTarget, arrangement: arrangement})}>

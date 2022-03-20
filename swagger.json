@@ -2093,6 +2093,11 @@
             "format": "date-time",
             "nullable": true
           },
+          "cancelledAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "completedRequirements": {
             "type": "array",
             "items": {
