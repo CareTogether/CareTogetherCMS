@@ -1800,6 +1800,10 @@
                 "type": "string",
                 "format": "guid"
               },
+              "childLocationReceivingAdultId": {
+                "type": "string",
+                "format": "guid"
+              },
               "plan": {
                 "$ref": "#/components/schemas/ChildLocationPlan"
               }
@@ -2205,6 +2209,10 @@
             "format": "date-time"
           },
           "childLocationFamilyId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "childLocationReceivingAdultId": {
             "type": "string",
             "format": "guid"
           },
@@ -3764,6 +3772,10 @@
                 "format": "date-time"
               },
               "childLocationFamilyId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "childLocationReceivingAdultId": {
                 "type": "string",
                 "format": "guid"
               },
