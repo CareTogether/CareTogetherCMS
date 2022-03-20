@@ -43,8 +43,8 @@ export function ExemptedRequirementRow({ requirement, context }: ExemptedRequire
           </span>
         </Tooltip>
       </IconRow>
-      <ExemptedRequirementDialog handle={dialogHandle}
-        requirement={requirement} context={context} />
+      {dialogHandle.open && <ExemptedRequirementDialog handle={dialogHandle}
+        requirement={requirement} context={context} />}
     </>
   );
 }
