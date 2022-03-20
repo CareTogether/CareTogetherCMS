@@ -52,7 +52,7 @@ const useStyles = makeStyles((theme) => ({
 
 type NoteCardProps = {
   familyId: string;
-  note: Note;
+  note?: Note;
 };
 
 export function NoteCard({ familyId, note }: NoteCardProps) {
@@ -64,7 +64,7 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
   const [showApproveNoteDialog, setShowApproveNoteDialog] = useState(false);
   const [showEditNoteDialog, setShowEditNoteDialog] = useState(false);
 
-  return (
+  return typeof note === 'undefined' ? null : (
     <Card className={classes.card} variant="outlined">
       <CardHeader className={classes.cardHeader}
         subheader={<>
