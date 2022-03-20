@@ -16,6 +16,7 @@ namespace CareTogether.Resources.Referrals
 
     public record ArrangementEntry(Guid Id, string ArrangementType,
         DateTime RequestedAtUtc, DateTime? StartedAtUtc, DateTime? EndedAtUtc,
+        DateTime? CancelledAtUtc,
         Guid PartneringFamilyPersonId,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
@@ -97,6 +98,9 @@ namespace CareTogether.Resources.Referrals
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
     public sealed record EndArrangements(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         DateTime EndedAtUtc)
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+    public sealed record CancelArrangementsSetup(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
+        DateTime CancelledAtUtc)
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
 
     /// <summary>

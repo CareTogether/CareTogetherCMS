@@ -16,6 +16,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             var result = ReferralCalculations.CalculateArrangementPhase(
                 startedAtUtc: null,
                 endedAtUtc: null,
+                cancelledAtUtc: null,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty,
                 missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty);
             
@@ -28,6 +29,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             var result = ReferralCalculations.CalculateArrangementPhase(
                 startedAtUtc: DateTime.UtcNow,
                 endedAtUtc: null,
+                cancelledAtUtc: null,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty,
                 missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty);
 
@@ -40,6 +42,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             var result = ReferralCalculations.CalculateArrangementPhase(
                 startedAtUtc: DateTime.UtcNow,
                 endedAtUtc: DateTime.UtcNow,
+                cancelledAtUtc: null,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty,
                 missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty);
 
@@ -52,11 +55,26 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             var result = ReferralCalculations.CalculateArrangementPhase(
                 startedAtUtc: null,
                 endedAtUtc: null,
+                cancelledAtUtc: null,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty
                 .Add(new MissingArrangementRequirement("A", null, null)),
                 missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty);
 
             Assert.AreEqual(ArrangementPhase.SettingUp, result);
+        }
+
+        [TestMethod]
+        public void TestRequirementMissingCancelled()
+        {
+            var result = ReferralCalculations.CalculateArrangementPhase(
+                startedAtUtc: null,
+                endedAtUtc: null,
+                cancelledAtUtc: DateTime.UtcNow,
+                missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty
+                .Add(new MissingArrangementRequirement("A", null, null)),
+                missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty);
+
+            Assert.AreEqual(ArrangementPhase.Cancelled, result);
         }
 
 
@@ -66,6 +84,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             var result = ReferralCalculations.CalculateArrangementPhase(
                 startedAtUtc: null,
                 endedAtUtc: null,
+                cancelledAtUtc: null,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty,
                 missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty
                 .Add(Helpers.FunctionWithoutEligibility("X", FunctionRequirement.OneOrMore)));
@@ -82,6 +101,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             var result = ReferralCalculations.CalculateArrangementPhase(
                 startedAtUtc: DateTime.UtcNow,
                 endedAtUtc: null,
+                cancelledAtUtc: null,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty
                 .Add(new MissingArrangementRequirement("A", null, null)),
                 missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty
@@ -99,6 +119,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             var result = ReferralCalculations.CalculateArrangementPhase(
                 startedAtUtc: DateTime.UtcNow,
                 endedAtUtc: DateTime.UtcNow,
+                cancelledAtUtc: null,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty
                 .Add(new MissingArrangementRequirement("A", null, null)),
                 missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty

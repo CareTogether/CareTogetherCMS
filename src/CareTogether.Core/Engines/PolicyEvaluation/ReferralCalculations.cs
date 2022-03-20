@@ -56,7 +56,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             var missingFunctionAssignments = CalculateMissingFunctionAssignments(arrangementPolicy.ArrangementFunctions,
                 arrangement.FamilyVolunteerAssignments, arrangement.IndividualVolunteerAssignments);
 
-            var phase = CalculateArrangementPhase(arrangement.StartedAtUtc, arrangement.EndedAtUtc,
+            var phase = CalculateArrangementPhase(arrangement.StartedAtUtc, arrangement.EndedAtUtc, arrangement.CancelledAtUtc,
                 missingSetupRequirements, missingFunctionAssignments);
 
             var missingRequirements = SelectMissingRequirementsForStatus(phase,
@@ -75,13 +75,17 @@ namespace CareTogether.Engines.PolicyEvaluation
                 ArrangementPhase.ReadyToStart => ImmutableList<MissingArrangementRequirement>.Empty,
                 ArrangementPhase.Started => missingMonitoringRequirements,
                 ArrangementPhase.Ended => missingCloseoutRequirements.Concat(missingMonitoringRequirements).ToImmutableList(),
+                ArrangementPhase.Cancelled => ImmutableList<MissingArrangementRequirement>.Empty,
                 _ => throw new NotImplementedException($"The arrangement phase '{phase}' has not been implemented.")
             };
 
-        internal static ArrangementPhase CalculateArrangementPhase(DateTime? startedAtUtc, DateTime? endedAtUtc,
+        internal static ArrangementPhase CalculateArrangementPhase(
+            DateTime? startedAtUtc, DateTime? endedAtUtc, DateTime? cancelledAtUtc,
             ImmutableList<MissingArrangementRequirement> missingSetupRequirements,
             ImmutableList<ArrangementFunction> missingFunctionAssignments) =>
-            endedAtUtc.HasValue
+            cancelledAtUtc.HasValue
+                ? ArrangementPhase.Cancelled
+                : endedAtUtc.HasValue
                 ? ArrangementPhase.Ended
                 : startedAtUtc.HasValue
                 ? ArrangementPhase.Started

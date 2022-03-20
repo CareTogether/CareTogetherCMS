@@ -110,7 +110,7 @@ namespace CareTogether.Managers
 
             static Arrangement ToArrangement(ArrangementEntry entry, ArrangementStatus status) =>
                 new(entry.Id, entry.ArrangementType, entry.PartneringFamilyPersonId, status.Phase,
-                    entry.RequestedAtUtc, entry.StartedAtUtc, entry.EndedAtUtc,
+                    entry.RequestedAtUtc, entry.StartedAtUtc, entry.EndedAtUtc, entry.CancelledAtUtc,
                     entry.CompletedRequirements, entry.ExemptedRequirements,
                     status.MissingRequirements,
                     entry.IndividualVolunteerAssignments, entry.FamilyVolunteerAssignments,

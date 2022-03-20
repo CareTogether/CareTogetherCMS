@@ -3376,6 +3376,7 @@ export class Arrangement implements IArrangement {
     requestedAtUtc?: Date;
     startedAtUtc?: Date | undefined;
     endedAtUtc?: Date | undefined;
+    cancelledAtUtc?: Date | undefined;
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
     missingRequirements?: MissingArrangementRequirement[];
@@ -3401,6 +3402,7 @@ export class Arrangement implements IArrangement {
             this.requestedAtUtc = _data["requestedAtUtc"] ? new Date(_data["requestedAtUtc"].toString()) : <any>undefined;
             this.startedAtUtc = _data["startedAtUtc"] ? new Date(_data["startedAtUtc"].toString()) : <any>undefined;
             this.endedAtUtc = _data["endedAtUtc"] ? new Date(_data["endedAtUtc"].toString()) : <any>undefined;
+            this.cancelledAtUtc = _data["cancelledAtUtc"] ? new Date(_data["cancelledAtUtc"].toString()) : <any>undefined;
             if (Array.isArray(_data["completedRequirements"])) {
                 this.completedRequirements = [] as any;
                 for (let item of _data["completedRequirements"])
@@ -3450,6 +3452,7 @@ export class Arrangement implements IArrangement {
         data["requestedAtUtc"] = this.requestedAtUtc ? this.requestedAtUtc.toISOString() : <any>undefined;
         data["startedAtUtc"] = this.startedAtUtc ? this.startedAtUtc.toISOString() : <any>undefined;
         data["endedAtUtc"] = this.endedAtUtc ? this.endedAtUtc.toISOString() : <any>undefined;
+        data["cancelledAtUtc"] = this.cancelledAtUtc ? this.cancelledAtUtc.toISOString() : <any>undefined;
         if (Array.isArray(this.completedRequirements)) {
             data["completedRequirements"] = [];
             for (let item of this.completedRequirements)
@@ -3492,6 +3495,7 @@ export interface IArrangement {
     requestedAtUtc?: Date;
     startedAtUtc?: Date | undefined;
     endedAtUtc?: Date | undefined;
+    cancelledAtUtc?: Date | undefined;
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
     missingRequirements?: MissingArrangementRequirement[];
@@ -3505,6 +3509,7 @@ export enum ArrangementPhase {
     ReadyToStart = 1,
     Started = 2,
     Ended = 3,
+    Cancelled = 4,
 }
 
 export class MissingArrangementRequirement implements IMissingArrangementRequirement {
@@ -6260,6 +6265,11 @@ export abstract class ArrangementsCommand implements IArrangementsCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "CancelArrangementsSetup") {
+            let result = new CancelArrangementsSetup();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "CompleteArrangementRequirement") {
             let result = new CompleteArrangementRequirement();
             result.init(data);
@@ -6401,6 +6411,40 @@ export class AssignVolunteerFamily extends ArrangementsCommand implements IAssig
 export interface IAssignVolunteerFamily extends IArrangementsCommand {
     volunteerFamilyId?: string;
     arrangementFunction?: string;
+}
+
+export class CancelArrangementsSetup extends ArrangementsCommand implements ICancelArrangementsSetup {
+    cancelledAtUtc?: Date;
+
+    constructor(data?: ICancelArrangementsSetup) {
+        super(data);
+        this._discriminator = "CancelArrangementsSetup";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.cancelledAtUtc = _data["cancelledAtUtc"] ? new Date(_data["cancelledAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): CancelArrangementsSetup {
+        data = typeof data === 'object' ? data : {};
+        let result = new CancelArrangementsSetup();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["cancelledAtUtc"] = this.cancelledAtUtc ? this.cancelledAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ICancelArrangementsSetup extends IArrangementsCommand {
+    cancelledAtUtc?: Date;
 }
 
 export class CompleteArrangementRequirement extends ArrangementsCommand implements ICompleteArrangementRequirement {
