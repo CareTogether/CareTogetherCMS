@@ -94,7 +94,8 @@ export function PartneringFamilyScreen() {
   
   const canCloseReferral = partneringFamily.partneringFamilyInfo?.openReferral &&
     !partneringFamily.partneringFamilyInfo.openReferral.closeReason &&
-    !partneringFamily.partneringFamilyInfo.openReferral.arrangements?.some(arrangement => !arrangement.endedAtUtc);
+    !partneringFamily.partneringFamilyInfo.openReferral.arrangements?.some(arrangement =>
+      !arrangement.endedAtUtc && !arrangement.cancelledAtUtc);
 
   const [closeReferralDialogOpen, setCloseReferralDialogOpen] = useState(false);
   const [openNewReferralDialogOpen, setOpenNewReferralDialogOpen] = useState(false);
