@@ -100,7 +100,7 @@ namespace CareTogether.Resources.Referrals
         DateTime EndedAtUtc)
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
     public sealed record CancelArrangementsSetup(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
-        DateTime CancellationRequestedAtUtc)
+        DateTime CancelledAtUtc)
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
 
     /// <summary>

@@ -221,7 +221,7 @@ export function useReferralsModel() {
         referralId: referralId,
         arrangementIds: [arrangementId]
       });
-      command.cancellationRequestedAtUtc = cancelledAtLocal;
+      command.cancelledAtUtc = cancelledAtLocal;
       return command;
     });
   const assignVolunteerFamily = useArrangementsCommandCallbackWithLocation(

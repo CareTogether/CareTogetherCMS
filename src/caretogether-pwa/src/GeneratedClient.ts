@@ -6410,7 +6410,7 @@ export interface IAssignVolunteerFamily extends IArrangementsCommand {
 }
 
 export class CancelArrangementsSetup extends ArrangementsCommand implements ICancelArrangementsSetup {
-    cancellationRequestedAtUtc?: Date;
+    cancelledAtUtc?: Date;
 
     constructor(data?: ICancelArrangementsSetup) {
         super(data);
@@ -6420,7 +6420,7 @@ export class CancelArrangementsSetup extends ArrangementsCommand implements ICan
     init(_data?: any) {
         super.init(_data);
         if (_data) {
-            this.cancellationRequestedAtUtc = _data["cancellationRequestedAtUtc"] ? new Date(_data["cancellationRequestedAtUtc"].toString()) : <any>undefined;
+            this.cancelledAtUtc = _data["cancelledAtUtc"] ? new Date(_data["cancelledAtUtc"].toString()) : <any>undefined;
         }
     }
 
@@ -6433,14 +6433,14 @@ export class CancelArrangementsSetup extends ArrangementsCommand implements ICan
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["cancellationRequestedAtUtc"] = this.cancellationRequestedAtUtc ? this.cancellationRequestedAtUtc.toISOString() : <any>undefined;
+        data["cancelledAtUtc"] = this.cancelledAtUtc ? this.cancelledAtUtc.toISOString() : <any>undefined;
         super.toJSON(data);
         return data;
     }
 }
 
 export interface ICancelArrangementsSetup extends IArrangementsCommand {
-    cancellationRequestedAtUtc?: Date;
+    cancelledAtUtc?: Date;
 }
 
 export class CompleteArrangementRequirement extends ArrangementsCommand implements ICompleteArrangementRequirement {

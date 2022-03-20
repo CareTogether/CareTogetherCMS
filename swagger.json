@@ -3629,7 +3629,7 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
-              "cancellationRequestedAtUtc": {
+              "cancelledAtUtc": {
                 "type": "string",
                 "format": "date-time"
               }

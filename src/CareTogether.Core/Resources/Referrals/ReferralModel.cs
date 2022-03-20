@@ -197,7 +197,7 @@ namespace CareTogether.Resources.Referrals
                             CancelArrangementsSetup c => (arrangementEntry with
                             {
                                 //TODO: Enforce invariant - cannot cancel after starting
-                                CancelledAtUtc = c.CancellationRequestedAtUtc
+                                CancelledAtUtc = c.CancelledAtUtc
                             }, null),
                             _ => throw new NotImplementedException(
                                 $"The command type '{command.GetType().FullName}' has not been implemented.")
