@@ -51,6 +51,7 @@ namespace CareTogether.TestData
         static readonly Guid guid7 = Id('7');
         static readonly Guid guid8 = Id('8');
         static readonly Guid guid9 = Id('9');
+        static readonly Guid guida = Id('a');
         static readonly Guid adminId = Guid.Parse("2b87864a-63e3-4406-bcbc-c0068a13ac05");
         static readonly Guid volunteerId = Guid.Parse("e3aaef77-0e97-47a6-b788-a67c237c781e");
 
@@ -310,6 +311,7 @@ namespace CareTogether.TestData
                 new NoteCommandExecuted(volunteerId, new DateTime(2020, 3, 24, 8, 57, 0), new EditDraftNote(guid1, guid3, null)),
                 new NoteCommandExecuted(volunteerId, new DateTime(2020, 3, 30, 18, 18, 18), new CreateDraftNote(guid1, guid8, null)),
                 new NoteCommandExecuted(adminId, new DateTime(2020, 3, 30, 18, 18, 18), new ApproveNote(guid1, guid8, "Mom met us and picked him up at DQ")),
+                new NoteCommandExecuted(adminId, new DateTime(2020, 3, 31, 10, 0, 0), new CreateDraftNote(guid1, guida, null)),
                 new NoteCommandExecuted(adminId, new DateTime(2021, 7, 10, 9, 30, 0), new CreateDraftNote(guid4, guid9, null)),
                 new NoteCommandExecuted(adminId, new DateTime(2021, 7, 10, 9, 32, 0), new ApproveNote(guid4, guid9, "I'm a little star-struck... Emily is *amazing*!!")));
         }
@@ -318,6 +320,8 @@ namespace CareTogether.TestData
         {
             await draftNotesStore.UpsertAsync(guid1, guid2, guid3.ToString(),
                 "Kids are doing better playing this morning. For some reason they're both really into \"lightsabers\" or something like that... 😅");
+            await draftNotesStore.UpsertAsync(guid1, guid2, guida.ToString(),
+                "Jane said \"So long and thanks for all the fish.\" Not sure what to make of that.");
         }
 
         public static async Task PopulateConfigurations(IObjectStore<OrganizationConfiguration> configurationStore)
