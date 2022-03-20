@@ -184,8 +184,8 @@ export function PartneringFamilyScreen() {
             <ActivityTimeline family={partneringFamily} />
           </Grid>
         </Grid>
-        <Grid item xs={12} md={8} spacing={0}>
-          <Grid container xs={12} spacing={0}>
+        <Grid item xs={12} md={8}>
+          <Grid container spacing={0}>
             <Grid item xs={12} md={4}>
               <span>Primary Contact: <PersonName person={partneringFamily.family?.adults?.find(adult => adult.item1?.id === partneringFamily.family?.primaryFamilyContactPersonId)?.item1} /></span>
               <br />
@@ -263,7 +263,7 @@ export function PartneringFamilyScreen() {
                   onClose={() => setOpenNewReferralDialogOpen(false)} />)}
             </Grid>
           </Grid>
-          <Grid container xs={12} spacing={0}>
+          <Grid container spacing={0}>
             <Grid item xs={12} sm={6} md={4} style={{paddingRight: 20}}>
               <h3>Incomplete</h3>
               {partneringFamily.partneringFamilyInfo?.openReferral?.missingRequirements?.map((missing, i) =>
@@ -284,7 +284,7 @@ export function PartneringFamilyScreen() {
               <FamilyDocuments family={partneringFamily} />
             </Grid>
           </Grid>
-          <Grid container xs={12} spacing={0}>
+          <Grid container spacing={0}>
             <Grid item xs={12}>
               <Masonry columns={isDesktop ? isWideScreen ? 3 : 2 : 1} spacing={2}>
                 {partneringFamily.partneringFamilyInfo?.openReferral?.arrangements?.map(arrangement => (

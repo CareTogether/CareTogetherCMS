@@ -2,12 +2,11 @@ import { Timeline, TimelineItem, TimelineOppositeContent, TimelineSeparator, Tim
 import { format } from "date-fns";
 import { Activity, ArrangementRequirementCompleted, ChildLocationChanged, ChildLocationPlan, CombinedFamilyInfo, ReferralOpened, ReferralRequirementCompleted } from "../../GeneratedClient";
 import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
-import PersonIcon from '@mui/icons-material/Person';
 import EditIcon from '@mui/icons-material/Edit';
 import { useFamilyLookup, usePersonLookup, useUserLookup } from "../../Model/DirectoryModel";
 import { PersonName } from "../Families/PersonName";
 import { FamilyName } from "../Families/FamilyName";
-import { Tooltip } from "@mui/material";
+import { Box } from "@mui/material";
 import { NoteCard } from "../Families/NoteCard";
 
 type ActivityTimelineProps = {
@@ -57,18 +56,17 @@ export function ActivityTimeline({ family }: ActivityTimelineProps) {
                 ? <PersonPinCircleIcon fontSize="medium" />
                 : <EditIcon fontSize="small" />}
             </TimelineDot>
-            <TimelineConnector />
+            {i < allActivitiesSorted.length - 1 && <TimelineConnector />}
           </TimelineSeparator>
           <TimelineContent style={{width:200,wordWrap:'break-word',whiteSpace:'pre-wrap'}}>
-            {format(activity.timestampUtc!, "M/d/yy h:mm a")}
-            <Tooltip key={i} title={<PersonName person={userLookup(activity.userId)} />}>
-              <PersonIcon fontSize="small" color="disabled" sx={{verticalAlign:"middle", marginLeft: 1}} />
-            </Tooltip>
+            <Box sx={{color: 'text.disabled', margin: 0, padding: 0}}>
+              <span style={{marginRight: 16}}>{format(activity.timestampUtc!, "M/d/yy h:mm a")}</span>
+              <PersonName person={userLookup(activity.userId)} />
+            </Box>
             {activity instanceof ReferralRequirementCompleted || activity instanceof ArrangementRequirementCompleted
-              ? "\n" + activity.requirementName
+              ? activity.requirementName
               : activity instanceof ChildLocationChanged
               ? <>
-                  <br />
                   <PersonName person={arrangementPartneringPerson(activity.arrangementId)} />
                   <span> &rarr; </span><FamilyName family={familyLookup(activity.childLocationFamilyId)} />
                   <span> </span>({activity.plan === ChildLocationPlan.DaytimeChildCare
@@ -79,10 +77,12 @@ export function ActivityTimeline({ family }: ActivityTimelineProps) {
                   
                 </>
               : activity instanceof ReferralOpened
-              ? "\nReferral opened"
+              ? "Referral opened"
               : null}
-            <br />
-            {activity.noteId && <NoteCard familyId={family.family!.id!} note={noteLookup(activity.noteId)!} />}
+            {activity.noteId &&
+              <>
+                <NoteCard familyId={family.family!.id!} note={noteLookup(activity.noteId)!} />
+              </>}
           </TimelineContent>
         </TimelineItem>
       )}

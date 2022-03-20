@@ -13,7 +13,7 @@ import { CreatePartneringFamilyDialog } from './CreatePartneringFamilyDialog';
 import { HeaderContent, HeaderTitle } from '../Header';
 import { useScrollMemory } from '../../useScrollMemory';
 
-export const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles((theme) => ({
   table: {
     minWidth: 700,
   },
