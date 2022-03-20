@@ -85,7 +85,7 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
             color='secondary'
             className={classes.rightCardActionButton}
             startIcon={<DeleteForeverIcon />}>
-            Discard
+            Delete
           </Button>
           <Button
             onClick={() => setShowEditNoteDialog(true)}

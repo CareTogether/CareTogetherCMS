@@ -81,7 +81,6 @@ export function ActivityTimeline({ family }: ActivityTimelineProps) {
               : null}
             {activity.noteId &&
               <>
-                <br />
                 <NoteCard familyId={family.family!.id!} note={noteLookup(activity.noteId)!} />
               </>}
           </TimelineContent>
