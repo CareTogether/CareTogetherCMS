@@ -3079,6 +3079,7 @@ export class Referral implements IReferral {
     completedCustomFields?: CompletedCustomFieldInfo[];
     missingCustomFields?: string[];
     arrangements?: Arrangement[];
+    comments?: string | undefined;
 
     constructor(data?: IReferral) {
         if (data) {
@@ -3125,6 +3126,7 @@ export class Referral implements IReferral {
                 for (let item of _data["arrangements"])
                     this.arrangements!.push(Arrangement.fromJS(item));
             }
+            this.comments = _data["comments"];
         }
     }
 
@@ -3171,6 +3173,7 @@ export class Referral implements IReferral {
             for (let item of this.arrangements)
                 data["arrangements"].push(item.toJSON());
         }
+        data["comments"] = this.comments;
         return data;
     }
 }
@@ -3186,6 +3189,7 @@ export interface IReferral {
     completedCustomFields?: CompletedCustomFieldInfo[];
     missingCustomFields?: string[];
     arrangements?: Arrangement[];
+    comments?: string | undefined;
 }
 
 export enum ReferralCloseReason {
@@ -5925,6 +5929,11 @@ export abstract class ReferralCommand implements IReferralCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "UpdateReferralComments") {
+            let result = new UpdateReferralComments();
+            result.init(data);
+            return result;
+        }
         throw new Error("The abstract class 'ReferralCommand' cannot be instantiated.");
     }
 
@@ -6222,6 +6231,40 @@ export interface IUpdateCustomReferralField extends IReferralCommand {
     customFieldName?: string;
     customFieldType?: CustomFieldType;
     value?: any | undefined;
+}
+
+export class UpdateReferralComments extends ReferralCommand implements IUpdateReferralComments {
+    comments?: string | undefined;
+
+    constructor(data?: IUpdateReferralComments) {
+        super(data);
+        this._discriminator = "UpdateReferralComments";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.comments = _data["comments"];
+        }
+    }
+
+    static fromJS(data: any): UpdateReferralComments {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateReferralComments();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["comments"] = this.comments;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUpdateReferralComments extends IReferralCommand {
+    comments?: string | undefined;
 }
 
 export abstract class ArrangementsCommand implements IArrangementsCommand {

@@ -105,7 +105,8 @@ namespace CareTogether.Managers
                     entry.CompletedCustomFields.Values.ToImmutableList(), referralStatus.MissingCustomFields,
                     entry.Arrangements
                         .Select(a => ToArrangement(a.Value, referralStatus.IndividualArrangements[a.Key]))
-                        .ToImmutableList());
+                        .ToImmutableList(),
+                    entry.Comments);
             }
 
             static Arrangement ToArrangement(ArrangementEntry entry, ArrangementStatus status) =>

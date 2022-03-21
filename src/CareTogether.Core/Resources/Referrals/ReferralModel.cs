@@ -57,7 +57,8 @@ namespace CareTogether.Resources.Referrals
                     OpenedAtUtc: c.OpenedAtUtc, ClosedAtUtc: null, CloseReason: null,
                     ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<ExemptedRequirementInfo>.Empty,
                     ImmutableDictionary<string, CompletedCustomFieldInfo>.Empty,
-                    ImmutableDictionary<Guid, ArrangementEntry>.Empty, ImmutableList<Activity>.Empty),
+                    ImmutableDictionary<Guid, ArrangementEntry>.Empty, ImmutableList<Activity>.Empty,
+                    Comments: null),
                         new ReferralOpened(userId, timestampUtc, c.OpenedAtUtc)),
                 _ => referrals.TryGetValue(command.ReferralId, out var referralEntry)
                     ? command switch
@@ -91,6 +92,10 @@ namespace CareTogether.Resources.Referrals
                                 c.CustomFieldName,
                                 new CompletedCustomFieldInfo(userId, timestampUtc, c.CompletedCustomFieldId,
                                     c.CustomFieldName, c.CustomFieldType, c.Value))
+                        }, null),
+                        UpdateReferralComments c => (referralEntry with
+                        {
+                            Comments = referralEntry.Comments
                         }, null),
                         CloseReferral c => (referralEntry with
                         {

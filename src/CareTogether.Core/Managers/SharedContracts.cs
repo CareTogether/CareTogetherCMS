@@ -26,7 +26,8 @@ namespace CareTogether.Managers
         ImmutableList<string> MissingRequirements,
         ImmutableList<CompletedCustomFieldInfo> CompletedCustomFields,
         ImmutableList<string> MissingCustomFields,
-        ImmutableList<Arrangement> Arrangements);
+        ImmutableList<Arrangement> Arrangements,
+        string? Comments);
 
     public sealed record Arrangement(Guid Id, string ArrangementType, Guid PartneringFamilyPersonId,
         ArrangementPhase Phase, DateTime RequestedAtUtc, DateTime? StartedAtUtc, DateTime? EndedAtUtc,

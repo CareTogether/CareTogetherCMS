@@ -12,7 +12,8 @@ namespace CareTogether.Resources.Referrals
         ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableDictionary<string, CompletedCustomFieldInfo> CompletedCustomFields,
         ImmutableDictionary<Guid, ArrangementEntry> Arrangements,
-        ImmutableList<Activity> History);
+        ImmutableList<Activity> History,
+        string? Comments);
 
     public record ArrangementEntry(Guid Id, string ArrangementType,
         DateTime RequestedAtUtc, DateTime? StartedAtUtc, DateTime? EndedAtUtc,
@@ -61,6 +62,9 @@ namespace CareTogether.Resources.Referrals
         : ReferralCommand(FamilyId, ReferralId);
     public sealed record UpdateCustomReferralField(Guid FamilyId, Guid ReferralId,
         Guid CompletedCustomFieldId, string CustomFieldName, CustomFieldType CustomFieldType, object? Value)
+        : ReferralCommand(FamilyId, ReferralId);
+    public sealed record UpdateReferralComments(Guid FamilyId, Guid ReferralId,
+        string? Comments)
         : ReferralCommand(FamilyId, ReferralId);
     public sealed record CloseReferral(Guid FamilyId, Guid ReferralId,
         ReferralCloseReason CloseReason, DateTime ClosedAtUtc)
