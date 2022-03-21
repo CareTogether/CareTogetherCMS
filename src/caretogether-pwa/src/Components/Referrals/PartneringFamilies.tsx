@@ -80,7 +80,10 @@ function PartneringFamilies() {
                   </TableRow>
                   <TableRow onClick={() => openPartneringFamily(partneringFamily.family!.id!)}
                     className={classes.arrangementsRow}>
-                    <TableCell colSpan={2}>
+                    <TableCell>
+                      {partneringFamily.partneringFamilyInfo?.openReferral?.comments}
+                    </TableCell>
+                    <TableCell>
                       <Grid container spacing={2}>
                         {allArrangements(partneringFamily.partneringFamilyInfo!).map(arrangementEntry => (
                           <Grid item key={arrangementEntry.arrangement.id}>
