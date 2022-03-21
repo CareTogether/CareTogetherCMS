@@ -95,7 +95,7 @@ namespace CareTogether.Resources.Referrals
                         }, null),
                         UpdateReferralComments c => (referralEntry with
                         {
-                            Comments = referralEntry.Comments
+                            Comments = c.Comments
                         }, null),
                         CloseReferral c => (referralEntry with
                         {
