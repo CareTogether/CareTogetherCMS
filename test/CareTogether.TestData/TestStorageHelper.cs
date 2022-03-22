@@ -10,8 +10,13 @@ namespace CareTogether.TestData
         {
             var organizationId = guid1.ToString();
             var tenantContainer = blobServiceClient.GetBlobContainerClient(organizationId);
-            tenantContainer.DeleteIfExists();
-            tenantContainer.Create();
+
+            tenantContainer.CreateIfNotExists();
+
+            foreach (var blobPage in tenantContainer.GetBlobs().AsPages())
+                foreach (var blob in blobPage.Values)
+                    tenantContainer.DeleteBlobIfExists(blob.Name, DeleteSnapshotsOption.IncludeSnapshots);
+            
             //TODO: Figure out why this fails.
             //blobServiceClient.SetProperties(new BlobServiceProperties
             //{
