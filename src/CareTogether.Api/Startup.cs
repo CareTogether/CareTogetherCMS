@@ -59,24 +59,28 @@ namespace CareTogether.Api
             
             services.AddTransient<IClaimsTransformation, TenantUserClaimsTransformation>();
 
-            // Shared blob storage client configured to authenticate according to the environment
-            var blobServiceClient = new BlobServiceClient(Configuration["Persistence:BlobStorageConnectionString"]);
+            // Shared blob storage clients configured to authenticate according to the environment -
+            // one for mutable storage and one for immutable storage.
+            // Note that this only has an effect when running in Azure; the local (Azurite) emulated storage is always mutable.
+            var immutableBlobServiceClient = new BlobServiceClient(Configuration["Persistence:ImmutableBlobStorageConnectionString"]);
+            var mutableBlobServiceClient = new BlobServiceClient(Configuration["Persistence:MutableBlobStorageConnectionString"]);
 
             // Data store services
-            var directoryEventLog = new AppendBlobEventLog<DirectoryEvent>(blobServiceClient, "DirectoryEventLog");
-            var goalsEventLog = new AppendBlobEventLog<GoalCommandExecutedEvent>(blobServiceClient, "GoalsEventLog");
-            var referralsEventLog = new AppendBlobEventLog<ReferralEvent>(blobServiceClient, "ReferralsEventLog");
-            var approvalsEventLog = new AppendBlobEventLog<ApprovalEvent>(blobServiceClient, "ApprovalsEventLog");
-            var notesEventLog = new AppendBlobEventLog<NotesEvent>(blobServiceClient, "NotesEventLog");
-            var draftNotesStore = new JsonBlobObjectStore<string?>(blobServiceClient, "DraftNotes");
-            var configurationStore = new JsonBlobObjectStore<OrganizationConfiguration>(blobServiceClient, "Configuration");
-            var policiesStore = new JsonBlobObjectStore<EffectiveLocationPolicy>(blobServiceClient, "LocationPolicies");
-            var userTenantAccessStore = new JsonBlobObjectStore<UserTenantAccessSummary>(blobServiceClient, "UserTenantAccess");
+            var directoryEventLog = new AppendBlobEventLog<DirectoryEvent>(immutableBlobServiceClient, "DirectoryEventLog");
+            var goalsEventLog = new AppendBlobEventLog<GoalCommandExecutedEvent>(immutableBlobServiceClient, "GoalsEventLog");
+            var referralsEventLog = new AppendBlobEventLog<ReferralEvent>(immutableBlobServiceClient, "ReferralsEventLog");
+            var approvalsEventLog = new AppendBlobEventLog<ApprovalEvent>(immutableBlobServiceClient, "ApprovalsEventLog");
+            var notesEventLog = new AppendBlobEventLog<NotesEvent>(immutableBlobServiceClient, "NotesEventLog");
+            var draftNotesStore = new JsonBlobObjectStore<string?>(mutableBlobServiceClient, "DraftNotes");
+            var configurationStore = new JsonBlobObjectStore<OrganizationConfiguration>(immutableBlobServiceClient, "Configuration");
+            var policiesStore = new JsonBlobObjectStore<EffectiveLocationPolicy>(immutableBlobServiceClient, "LocationPolicies");
+            var userTenantAccessStore = new JsonBlobObjectStore<UserTenantAccessSummary>(immutableBlobServiceClient, "UserTenantAccess");
 
             if (HostEnvironment.EnvironmentName != "OpenApiGen")
             {
                 // Reset and populate data in the test tenant for debugging. Note that this will not affect other tenants.
-                TestData.TestStorageHelper.ResetTestTenantData(blobServiceClient);
+                TestData.TestStorageHelper.ResetTestTenantData(immutableBlobServiceClient);
+                TestData.TestStorageHelper.ResetTestTenantData(mutableBlobServiceClient);
                 TestData.TestDataProvider.PopulateTestDataAsync(
                     directoryEventLog,
                     goalsEventLog,
@@ -119,7 +123,7 @@ namespace CareTogether.Api
                 combinedFamilyInfoFormatter));
 
             // Utility providers
-            services.AddSingleton<IFileStore>(new BlobFileStore(blobServiceClient, "Uploads"));
+            services.AddSingleton<IFileStore>(new BlobFileStore(immutableBlobServiceClient, "Uploads"));
 
             // Use legacy Newtonsoft JSON to support JsonPolymorph & NSwag for polymorphic serialization
             services.AddControllers().AddNewtonsoftJson();
