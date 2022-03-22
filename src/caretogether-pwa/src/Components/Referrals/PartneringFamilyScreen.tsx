@@ -1,14 +1,12 @@
-import { Container, Toolbar, Grid, Button, useMediaQuery, useTheme, IconButton, TextField } from '@mui/material';
+import { Container, Toolbar, Grid, Button, useMediaQuery, useTheme, IconButton } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { ArrangementPolicy, CombinedFamilyInfo, CompletedCustomFieldInfo, CustomFieldType, Permission, ReferralCloseReason } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
-import { partneringFamiliesData, useReferralsModel } from '../../Model/ReferralsModel';
+import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { useParams } from 'react-router';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import EditIcon from '@mui/icons-material/Edit';
-import SaveIcon from '@mui/icons-material/Save';
-import UndoIcon from '@mui/icons-material/Undo';
 import { PartneringAdultCard } from './PartneringAdultCard';
 import { PartneringChildCard } from './PartneringChildCard';
 import { useState } from 'react';
@@ -35,7 +33,7 @@ import { ExemptedRequirementRow } from "../Requirements/ExemptedRequirementRow";
 import { CompletedRequirementRow } from "../Requirements/CompletedRequirementRow";
 import { ReferralContext } from "../Requirements/RequirementContext";
 import { ActivityTimeline } from '../Activities/ActivityTimeline';
-import { useBackdrop } from '../RequestBackdrop';
+import { ReferralComments } from './ReferralComments';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -87,8 +85,6 @@ const useStyles = makeStyles((theme) => ({
 
 export function PartneringFamilyScreen() {
   const classes = useStyles();
-  const referralsModel = useReferralsModel();
-  const withBackdrop = useBackdrop();
   
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
@@ -123,20 +119,6 @@ export function PartneringFamilyScreen() {
   
   const [createArrangementDialogParameter, setCreateArrangementDialogParameter] = useState<ArrangementPolicy | null>(null);
   
-  const [commentsEditing, setCommentsEditing] = useState(false);
-  const [referralComments, setReferralComments] = useState(partneringFamily.partneringFamilyInfo?.openReferral?.comments);
-  async function saveReferralComments() {
-    await withBackdrop(async () => {
-      await referralsModel.updateReferralComments(familyId, partneringFamily.partneringFamilyInfo!.openReferral!.id!,
-        referralComments);
-      setCommentsEditing(false);
-    });
-  }
-  function cancelCommentsEditing() {
-    setCommentsEditing(false);
-    setReferralComments(partneringFamily.partneringFamilyInfo?.openReferral?.comments);
-  }
-
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));
   const isWideScreen = useMediaQuery(theme.breakpoints.up('xl'));
@@ -232,8 +214,9 @@ export function PartneringFamilyScreen() {
                     : (completedField.value as boolean ? "Yes" : "No")}&nbsp;
                   <Button
                     onClick={() => setCustomFieldDialogParameter(completedField)}
-                    variant="contained"
+                    variant="text"
                     size="small"
+                    startIcon={<EditIcon />}
                     className={classes.button}>
                     Edit…
                   </Button>
@@ -244,8 +227,9 @@ export function PartneringFamilyScreen() {
                   {missingField}: ❓&nbsp;
                   <Button
                     onClick={() => setCustomFieldDialogParameter(missingField)}
-                    variant="contained"
+                    variant="text"
                     size="small"
+                    startIcon={<EditIcon />}
                     className={classes.button}>
                     Complete…
                   </Button>
@@ -286,46 +270,8 @@ export function PartneringFamilyScreen() {
           </Grid>
           {partneringFamily.partneringFamilyInfo?.openReferral &&
             <Grid container spacing={0}>
-              <h3 style={{ marginBottom: 0 }}>
-                Comments
-                {!commentsEditing && <Button
-                  onClick={() => setCommentsEditing(true)}
-                  variant="contained"
-                  size="small"
-                  startIcon={<EditIcon />}
-                  className={classes.button}>
-                  Edit
-                </Button>}
-                {commentsEditing &&
-                <>
-                  <Button
-                    onClick={() => cancelCommentsEditing()}
-                    variant="contained"
-                    size="small"
-                    startIcon={<UndoIcon />}
-                    color="secondary"
-                    className={classes.button}>
-                    Cancel
-                  </Button>
-                  <Button
-                    disabled={referralComments === partneringFamily.partneringFamilyInfo.openReferral.comments}
-                    onClick={saveReferralComments}
-                    variant="contained"
-                    size="small"
-                    startIcon={<SaveIcon />}
-                    className={classes.button}>
-                    Save Comments
-                  </Button>
-                </>}
-              </h3>
-              {commentsEditing
-                ? <TextField
-                    id="comments" label="Comments"
-                    placeholder="Space for any general notes about the referral, upcoming plans, etc."
-                    multiline fullWidth variant="outlined" minRows={2} size="medium"
-                    value={referralComments}
-                    onChange={e => setReferralComments(e.target.value)} />
-                : partneringFamily.partneringFamilyInfo.openReferral.comments}
+              <ReferralComments partneringFamily={partneringFamily}
+                referralId={partneringFamily.partneringFamilyInfo.openReferral.id!} />
             </Grid>}
           <Grid container spacing={0}>
             {partneringFamily.partneringFamilyInfo?.openReferral &&
