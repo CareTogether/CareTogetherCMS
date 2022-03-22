@@ -6,6 +6,7 @@ import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { useParams } from 'react-router';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import EditIcon from '@mui/icons-material/Edit';
 import { PartneringAdultCard } from './PartneringAdultCard';
 import { PartneringChildCard } from './PartneringChildCard';
 import { useState } from 'react';
@@ -32,6 +33,7 @@ import { ExemptedRequirementRow } from "../Requirements/ExemptedRequirementRow";
 import { CompletedRequirementRow } from "../Requirements/CompletedRequirementRow";
 import { ReferralContext } from "../Requirements/RequirementContext";
 import { ActivityTimeline } from '../Activities/ActivityTimeline';
+import { ReferralComments } from './ReferralComments';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -212,8 +214,9 @@ export function PartneringFamilyScreen() {
                     : (completedField.value as boolean ? "Yes" : "No")}&nbsp;
                   <Button
                     onClick={() => setCustomFieldDialogParameter(completedField)}
-                    variant="contained"
+                    variant="text"
                     size="small"
+                    startIcon={<EditIcon />}
                     className={classes.button}>
                     Edit…
                   </Button>
@@ -224,8 +227,9 @@ export function PartneringFamilyScreen() {
                   {missingField}: ❓&nbsp;
                   <Button
                     onClick={() => setCustomFieldDialogParameter(missingField)}
-                    variant="contained"
+                    variant="text"
                     size="small"
+                    startIcon={<EditIcon />}
                     className={classes.button}>
                     Complete…
                   </Button>
@@ -264,17 +268,22 @@ export function PartneringFamilyScreen() {
                   onClose={() => setOpenNewReferralDialogOpen(false)} />)}
             </Grid>
           </Grid>
+          {partneringFamily.partneringFamilyInfo?.openReferral &&
+            <Grid container spacing={0}>
+              <ReferralComments partneringFamily={partneringFamily}
+                referralId={partneringFamily.partneringFamilyInfo.openReferral.id!} />
+            </Grid>}
           <Grid container spacing={0}>
             {partneringFamily.partneringFamilyInfo?.openReferral &&
               <>
                 <Grid item xs={12} sm={6} md={4} style={{paddingRight: 20}}>
-                  <h3>Incomplete</h3>
+                  <h3 style={{ marginBottom: 0 }}>Incomplete</h3>
                   {partneringFamily.partneringFamilyInfo?.openReferral?.missingRequirements?.map((missing, i) =>
                     <MissingRequirementRow key={`${missing}:${i}`} requirement={missing} context={requirementContext!} />
                   )}
                 </Grid>
                 <Grid item xs={12} sm={6} md={4} style={{paddingRight: 20}}>
-                  <h3>Completed</h3>
+                  <h3 style={{ marginBottom: 0 }}>Completed</h3>
                   {partneringFamily.partneringFamilyInfo?.openReferral?.completedRequirements?.map((completed, i) =>
                     <CompletedRequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} context={requirementContext!} />
                   )}
@@ -284,13 +293,14 @@ export function PartneringFamilyScreen() {
                 </Grid>
               </>}
             <Grid item xs={12} sm={6} md={4}>
-              <h3>Documents</h3>
+              <h3 style={{ marginBottom: 0 }}>Documents</h3>
               <FamilyDocuments family={partneringFamily} />
             </Grid>
           </Grid>
           <Grid container spacing={0}>
             {partneringFamily.partneringFamilyInfo?.openReferral &&
               <Grid item xs={12}>
+                <h3 style={{ marginBottom: 0 }}>Arrangements</h3>
                 <Masonry columns={isDesktop ? isWideScreen ? 3 : 2 : 1} spacing={2}>
                   {partneringFamily.partneringFamilyInfo?.openReferral?.arrangements?.map(arrangement => (
                     <ArrangementCard key={arrangement.id}
@@ -317,6 +327,7 @@ export function PartneringFamilyScreen() {
                     onClose={() => setCreateArrangementDialogParameter(null)} />}
               </Grid>}
             <Grid item xs={12}>
+              <h3 style={{ marginBottom: 0 }}>Family Members</h3>
               <Masonry columns={isDesktop ? isWideScreen ? 3 : 2 : 1} spacing={2}>
                 {partneringFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item1.active && adult.item2 && (
                   <PartneringAdultCard key={adult.item1.id} partneringFamilyId={familyId} personId={adult.item1.id} />

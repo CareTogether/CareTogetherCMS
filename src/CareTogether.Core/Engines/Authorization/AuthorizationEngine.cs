@@ -135,6 +135,7 @@ namespace CareTogether.Engines.Authorization
                     ExemptReferralRequirement => null,
                     UnexemptReferralRequirement => null,
                     UpdateCustomReferralField => null,
+                    UpdateReferralComments => null,
                     CloseReferral => null,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented.")

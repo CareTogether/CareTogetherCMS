@@ -1948,6 +1948,10 @@
             "items": {
               "$ref": "#/components/schemas/Arrangement"
             }
+          },
+          "comments": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -3358,7 +3362,8 @@
             "ExemptReferralRequirement": "#/components/schemas/ExemptReferralRequirement",
             "MarkReferralRequirementIncomplete": "#/components/schemas/MarkReferralRequirementIncomplete",
             "UnexemptReferralRequirement": "#/components/schemas/UnexemptReferralRequirement",
-            "UpdateCustomReferralField": "#/components/schemas/UpdateCustomReferralField"
+            "UpdateCustomReferralField": "#/components/schemas/UpdateCustomReferralField",
+            "UpdateReferralComments": "#/components/schemas/UpdateReferralComments"
           }
         },
         "x-abstract": true,
@@ -3531,6 +3536,23 @@
                 "$ref": "#/components/schemas/CustomFieldType"
               },
               "value": {
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "UpdateReferralComments": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "comments": {
+                "type": "string",
                 "nullable": true
               }
             }

@@ -208,6 +208,7 @@ namespace CareTogether.TestData
                 new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 5, 4, 10, 0), new CreateReferral(guid1, guid1, new DateTime(2020, 3, 5, 4, 10, 0))),
                 new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 5, 4, 15, 15), new CompleteReferralRequirement(guid1, guid1, guid1, "Request for Help Form", new DateTime(2020, 3, 5, 4, 12, 15), guid1, null)),
                 new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 6, 8, 45, 30), new CompleteReferralRequirement(guid1, guid1, guid2, "Intake Coordinator Screening Call", new DateTime(2020, 3, 6, 8, 45, 30), adminId, null)),
+                new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 6, 8, 45, 45), new UpdateReferralComments(guid1, guid1, "John and Jane seem eerily... generic.")),
                 new ArrangementsCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 12, 13), new CreateArrangement(guid1, guid1, ImmutableList.Create(guid1), "Hosting", new DateTime(2020, 3, 11), guid3)),
                 new ArrangementsCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 13, 14), new AssignIndividualVolunteer(guid1, guid1, ImmutableList.Create(guid1), guid4, guid4, "Family Coach")),
                 new ArrangementsCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 13, 55), new AssignVolunteerFamily(guid1, guid1, ImmutableList.Create(guid1), guid2, "Host Family")),
@@ -230,12 +231,14 @@ namespace CareTogether.TestData
                 new ArrangementsCommandExecuted(adminId, new DateTime(2020, 3, 30, 19, 0, 0), new EndArrangements(guid1, guid1, ImmutableList.Create(guid1), new DateTime(2020, 3, 30, 19, 0, 0))),
                 new ReferralCommandExecuted(adminId, new DateTime(2020, 4, 1, 12, 32, 55), new CloseReferral(guid1, guid1, ReferralCloseReason.NeedMet, new DateTime(2020, 4, 1, 12, 0, 0))),
                 new ReferralCommandExecuted(adminId, new DateTime(2022, 3, 1, 19, 30, 45), new CreateReferral(guid1, guid2, new DateTime(2022, 3, 1, 19, 30, 45))),
+                new ReferralCommandExecuted(adminId, new DateTime(2022, 3, 1, 19, 31, 0), new UpdateReferralComments(guid1, guid2, "The family needs help because Daylight Savings Time is starting up again soon.")),
                 new ReferralCommandExecuted(adminId, new DateTime(2022, 3, 2, 19, 32, 0), new CompleteReferralRequirement(guid1, guid2, guid3, "Request for Help Form", new DateTime(2022, 3, 2, 18, 0, 0), guid2, null)),
                 new ReferralCommandExecuted(adminId, new DateTime(2022, 3, 2, 19, 32, 0), new CompleteReferralRequirement(guid1, guid2, guid4, "Intake Coordinator Screening Call",
                     new DateTime(2022, 3, 2, 19, 32, 0), null, null)),
                 new ArrangementsCommandExecuted(adminId, new DateTime(2022, 3, 3, 10, 0, 0), new CreateArrangement(guid1, guid2, ImmutableList.Create(guid2), "Babysitting", new DateTime(2022, 3, 2), guid3)),
                 new ArrangementsCommandExecuted(adminId, new DateTime(2022, 3, 3, 10, 0, 0), new CreateArrangement(guid1, guid2, ImmutableList.Create(guid3), "Friending", new DateTime(2022, 3, 2), guid1)),
-                new ArrangementsCommandExecuted(adminId, new DateTime(2022, 3, 3, 10, 0, 0), new CreateArrangement(guid1, guid2, ImmutableList.Create(guid4), "Friending", new DateTime(2022, 3, 2), guid2))
+                new ArrangementsCommandExecuted(adminId, new DateTime(2022, 3, 3, 10, 0, 0), new CreateArrangement(guid1, guid2, ImmutableList.Create(guid4), "Friending", new DateTime(2022, 3, 2), guid2)),
+                new ReferralCommandExecuted(adminId, new DateTime(2022, 3, 3, 10, 1, 0), new UpdateReferralComments(guid1, guid2, "The plan is to have babysitting start on Friday the 11th, and the friendings on Saturday the 12th. Should be just for the weekend until the Daylight Savings Time change is over."))
                 );
         }
 

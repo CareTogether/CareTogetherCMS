@@ -1,6 +1,6 @@
 import { selector, useRecoilCallback } from "recoil";
 import { authenticatingFetch } from "../Auth";
-import { ReferralCommand, ReferralsClient, ArrangementsCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement, StartArrangements, EndArrangements, AssignVolunteerFamily, AssignIndividualVolunteer, ReferralCloseReason, CloseReferral, CreateReferral, TrackChildLocationChange, ChildLocationPlan, UpdateCustomReferralField, CustomField, ExemptReferralRequirement, UnexemptReferralRequirement, ExemptArrangementRequirement, UnexemptArrangementRequirement, MissingArrangementRequirement, ExemptedRequirementInfo, MarkReferralRequirementIncomplete, CompletedRequirementInfo, MarkArrangementRequirementIncomplete, CancelArrangementsSetup } from "../GeneratedClient";
+import { ReferralCommand, ReferralsClient, ArrangementsCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement, StartArrangements, EndArrangements, AssignVolunteerFamily, AssignIndividualVolunteer, ReferralCloseReason, CloseReferral, CreateReferral, TrackChildLocationChange, ChildLocationPlan, UpdateCustomReferralField, CustomField, ExemptReferralRequirement, UnexemptReferralRequirement, ExemptArrangementRequirement, UnexemptArrangementRequirement, MissingArrangementRequirement, ExemptedRequirementInfo, MarkReferralRequirementIncomplete, CompletedRequirementInfo, MarkArrangementRequirementIncomplete, CancelArrangementsSetup, UpdateReferralComments } from "../GeneratedClient";
 import { visibleFamiliesData } from "./ModelLoader";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 
@@ -124,6 +124,15 @@ export function useReferralsModel() {
       command.customFieldName = customField.name;
       command.customFieldType = customField.type;
       command.value = value;
+      return command;
+    });
+  const updateReferralComments = useReferralCommandCallbackWithLocation(
+    async (organizationId, locationId, partneringFamilyId, referralId: string, comments: string | undefined) => {
+      const command = new UpdateReferralComments({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+      });
+      command.comments = comments;
       return command;
     });
   const completeArrangementRequirement = useArrangementsCommandCallbackWithLocation(
@@ -293,6 +302,7 @@ export function useReferralsModel() {
     exemptReferralRequirement,
     unexemptReferralRequirement,
     updateCustomReferralField,
+    updateReferralComments,
     completeArrangementRequirement,
     markArrangementRequirementIncomplete,
     exemptArrangementRequirement,
