@@ -61,13 +61,14 @@ export function ReferralComments({ partneringFamily, referralId }: ReferralComme
             size="small"
             startIcon={<SaveIcon />}
             sx={{margin: 1}}>
-            Save Comments
+            Save
           </Button>
         </>}
       </h3>
       {commentsEditing
         ? <TextField
-            id="comments" label="Comments"
+            id="referral-comments"
+            helperText="Referral comments are visible to everyone."
             placeholder="Space for any general notes about the referral, upcoming plans, etc."
             multiline fullWidth variant="outlined" minRows={2} size="medium"
             value={referralComments}

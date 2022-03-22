@@ -300,6 +300,7 @@ export function PartneringFamilyScreen() {
           <Grid container spacing={0}>
             {partneringFamily.partneringFamilyInfo?.openReferral &&
               <Grid item xs={12}>
+                <h3 style={{ marginBottom: 0 }}>Arrangements</h3>
                 <Masonry columns={isDesktop ? isWideScreen ? 3 : 2 : 1} spacing={2}>
                   {partneringFamily.partneringFamilyInfo?.openReferral?.arrangements?.map(arrangement => (
                     <ArrangementCard key={arrangement.id}
@@ -326,6 +327,7 @@ export function PartneringFamilyScreen() {
                     onClose={() => setCreateArrangementDialogParameter(null)} />}
               </Grid>}
             <Grid item xs={12}>
+              <h3 style={{ marginBottom: 0 }}>Family Members</h3>
               <Masonry columns={isDesktop ? isWideScreen ? 3 : 2 : 1} spacing={2}>
                 {partneringFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item1.active && adult.item2 && (
                   <PartneringAdultCard key={adult.item1.id} partneringFamilyId={familyId} personId={adult.item1.id} />
