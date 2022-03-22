@@ -80,7 +80,7 @@ function PartneringFamilies() {
                   </TableRow>
                   <TableRow onClick={() => openPartneringFamily(partneringFamily.family!.id!)}
                     className={classes.arrangementsRow}>
-                    <TableCell>
+                    <TableCell sx={{maxWidth: '400px'}}>
                       {partneringFamily.partneringFamilyInfo?.openReferral?.comments}
                     </TableCell>
                     <TableCell>
