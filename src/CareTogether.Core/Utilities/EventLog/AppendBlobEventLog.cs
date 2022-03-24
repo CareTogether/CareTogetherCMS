@@ -34,8 +34,10 @@ namespace CareTogether.Utilities.EventLog
 
             if (!await logSegmentBlob.ExistsAsync())
             {
-                await logSegmentBlob.CreateAsync();
-                await logSegmentBlob.SetHttpHeadersAsync(new BlobHttpHeaders() { ContentType = "application/x-ndjson" });
+                await logSegmentBlob.CreateAsync(new AppendBlobCreateOptions
+                {
+                    HttpHeaders = new BlobHttpHeaders { ContentType = "application/x-ndjson" }
+                });
             }
 
             // excplicitly setting the StringEscapeHandling property so that it's immediately obvious how escaping is being handled, and so that
