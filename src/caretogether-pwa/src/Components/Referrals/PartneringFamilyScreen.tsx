@@ -1,12 +1,11 @@
 import { Container, Toolbar, Grid, Button, useMediaQuery, useTheme, IconButton } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { ArrangementPolicy, CombinedFamilyInfo, CompletedCustomFieldInfo, CustomFieldType, Permission, ReferralCloseReason } from '../../GeneratedClient';
+import { ArrangementPolicy, CombinedFamilyInfo, CompletedCustomFieldInfo, Permission, ReferralCloseReason } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { useParams } from 'react-router';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import EditIcon from '@mui/icons-material/Edit';
 import { PartneringAdultCard } from './PartneringAdultCard';
 import { PartneringChildCard } from './PartneringChildCard';
 import { useState } from 'react';
@@ -21,7 +20,6 @@ import { policyData } from '../../Model/ConfigurationModel';
 import { CreateArrangementDialog } from './CreateArrangementDialog';
 import { CloseReferralDialog } from './CloseReferralDialog';
 import { OpenNewReferralDialog } from './OpenNewReferralDialog';
-import { CustomReferralFieldDialog } from './CustomReferralFieldDialog';
 import { FamilyDocuments } from '../Families/FamilyDocuments';
 import { HeaderContent, HeaderTitle } from '../Header';
 import { ArrowBack } from '@mui/icons-material';
@@ -34,6 +32,7 @@ import { CompletedRequirementRow } from "../Requirements/CompletedRequirementRow
 import { ReferralContext } from "../Requirements/RequirementContext";
 import { ActivityTimeline } from '../Activities/ActivityTimeline';
 import { ReferralComments } from './ReferralComments';
+import { ReferralCustomField } from './ReferralCustomField';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -106,8 +105,6 @@ export function PartneringFamilyScreen() {
   const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
   const [addNoteDialogOpen, setAddNoteDialogOpen] = useState(false);
   
-  const [customFieldDialogParameter, setCustomFieldDialogParameter] = useState<string | CompletedCustomFieldInfo | null>(null);
-
   let requirementContext: ReferralContext | undefined;
   if (partneringFamily.partneringFamilyInfo?.openReferral) {
     requirementContext = {
@@ -207,40 +204,12 @@ export function PartneringFamilyScreen() {
               )) || null}
             </Grid>
             <Grid item xs={6} md={4}>
-              {partneringFamily.partneringFamilyInfo?.openReferral?.completedCustomFields?.map(completedField => (
-                <p key={completedField.customFieldName} style={{margin:0}}>
-                  {completedField.customFieldName}: {completedField.customFieldType === CustomFieldType.String
-                    ? completedField.value as string
-                    : (completedField.value as boolean ? "Yes" : "No")}&nbsp;
-                  <Button
-                    onClick={() => setCustomFieldDialogParameter(completedField)}
-                    variant="text"
-                    size="small"
-                    startIcon={<EditIcon />}
-                    className={classes.button}>
-                    Edit…
-                  </Button>
-                </p>
-              ))}
-              {partneringFamily.partneringFamilyInfo?.openReferral?.missingCustomFields?.map(missingField => (
-                <p key={missingField} style={{margin:0}}>
-                  {missingField}: ❓&nbsp;
-                  <Button
-                    onClick={() => setCustomFieldDialogParameter(missingField)}
-                    variant="text"
-                    size="small"
-                    startIcon={<EditIcon />}
-                    className={classes.button}>
-                    Complete…
-                  </Button>
-                </p>
-              ))}
-              {customFieldDialogParameter && (
-                <CustomReferralFieldDialog
-                  partneringFamilyId={partneringFamily.family?.id!}
-                  referralId={partneringFamily.partneringFamilyInfo!.openReferral!.id!}
-                  customField={customFieldDialogParameter}
-                  onClose={() => setCustomFieldDialogParameter(null)} />)}
+              {(partneringFamily.partneringFamilyInfo?.openReferral?.completedCustomFields ||
+                [] as Array<CompletedCustomFieldInfo | string>).concat(
+                partneringFamily.partneringFamilyInfo?.openReferral?.missingCustomFields || []).map(customField =>
+                <ReferralCustomField key={typeof customField === 'string' ? customField : customField.customFieldName}
+                  partneringFamilyId={familyId} referralId={partneringFamily.partneringFamilyInfo!.openReferral!.id!}
+                  customField={customField} />)}
             </Grid>
             <Grid item xs={6} md={4}>
               {canCloseReferral && <Button
