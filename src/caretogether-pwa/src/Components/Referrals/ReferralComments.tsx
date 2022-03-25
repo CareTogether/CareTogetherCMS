@@ -13,40 +13,40 @@ type ReferralCommentsProps = {
 }
 
 export function ReferralComments({ partneringFamily, referralId }: ReferralCommentsProps) {
-  const savedComments = partneringFamily.partneringFamilyInfo?.openReferral?.comments;
+  const savedValue = partneringFamily.partneringFamilyInfo?.openReferral?.comments;
 
   const referralsModel = useReferralsModel();
   const withBackdrop = useBackdrop();
 
-  const [commentsEditing, setCommentsEditing] = useState(false);
-  const [referralComments, setReferralComments] = useState(savedComments);
-  async function saveReferralComments() {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(savedValue);
+  async function saveChanges() {
     await withBackdrop(async () => {
-      await referralsModel.updateReferralComments(partneringFamily.family!.id!, referralId, referralComments);
-      setCommentsEditing(false);
+      await referralsModel.updateReferralComments(partneringFamily.family!.id!, referralId, value);
+      setEditing(false);
     });
   }
-  function cancelCommentsEditing() {
-    setCommentsEditing(false);
-    setReferralComments(savedComments);
+  function cancelEditing() {
+    setEditing(false);
+    setValue(savedValue);
   }
 
   return (
     <>
       <h3 style={{ marginBottom: 0 }}>
         Comments
-        {!commentsEditing && <Button
-          onClick={() => setCommentsEditing(true)}
+        {!editing && <Button
+          onClick={() => setEditing(true)}
           variant="text"
           size="small"
           startIcon={<EditIcon />}
           sx={{margin: 1}}>
           Edit
         </Button>}
-        {commentsEditing &&
+        {editing &&
         <>
           <Button
-            onClick={() => cancelCommentsEditing()}
+            onClick={() => cancelEditing()}
             variant="contained"
             size="small"
             startIcon={<UndoIcon />}
@@ -55,8 +55,8 @@ export function ReferralComments({ partneringFamily, referralId }: ReferralComme
             Cancel
           </Button>
           <Button
-            disabled={referralComments === savedComments}
-            onClick={saveReferralComments}
+            disabled={value === savedValue}
+            onClick={saveChanges}
             variant="contained"
             size="small"
             startIcon={<SaveIcon />}
@@ -65,15 +65,15 @@ export function ReferralComments({ partneringFamily, referralId }: ReferralComme
           </Button>
         </>}
       </h3>
-      {commentsEditing
+      {editing
         ? <TextField
             id="referral-comments"
             helperText="Referral comments are visible to everyone."
             placeholder="Space for any general notes about the referral, upcoming plans, etc."
             multiline fullWidth variant="outlined" minRows={2} size="medium"
-            value={referralComments}
-            onChange={e => setReferralComments(e.target.value)} />
-        : savedComments}
+            value={value}
+            onChange={e => setValue(e.target.value)} />
+        : savedValue}
     </>
   );
 }
