@@ -1,9 +1,6 @@
 import { TableCell, TableRow } from "@mui/material";
-import { useRecoilValue } from "recoil";
 import { Arrangement, ArrangementFunction, ArrangementPolicy, FamilyVolunteerAssignment, FunctionRequirement, IndividualVolunteerAssignment } from "../../GeneratedClient";
-import { policyData } from "../../Model/ConfigurationModel";
 import { useFamilyLookup, usePersonLookup } from "../../Model/DirectoryModel";
-import { usePermissions } from "../../Model/SessionModel";
 import { useDialogHandle } from "../../useDialogHandle";
 import { FamilyName } from "../Families/FamilyName";
 import { PersonName } from "../Families/PersonName";
@@ -11,6 +8,7 @@ import { IconRow } from "../IconRow";
 import { AssignArrangementFunctionDialog } from "./AssignArrangementFunctionDialog";
 
 type ArrangementFunctionRowProps = {
+  summaryOnly?: boolean
   partneringFamilyId: string
   referralId: string
   arrangement: Arrangement
@@ -19,15 +17,14 @@ type ArrangementFunctionRowProps = {
 };
 
 export function ArrangementFunctionRow({
-  partneringFamilyId, referralId, arrangement, arrangementPolicy, functionPolicy
+  summaryOnly, partneringFamilyId, referralId, arrangement, arrangementPolicy, functionPolicy
 }: ArrangementFunctionRowProps) {
-  const policy = useRecoilValue(policyData);
-  const permissions = usePermissions();
+  //const permissions = usePermissions();
   const familyLookup = useFamilyLookup();
   const personLookup = usePersonLookup();
   
   const addAssignmentDialogHandle = useDialogHandle();
-  const removeAssignmentDialogHandle = useDialogHandle();
+  //const removeAssignmentDialogHandle = useDialogHandle();
 
   const canComplete = true; //TODO: Implement permissions!
   
@@ -42,18 +39,19 @@ export function ArrangementFunctionRow({
   return (
     <>
       <TableRow key={functionPolicy.functionName}>
-        <TableCell sx={{ padding: 0 }} colSpan={assignments.length === 0 ? 2 : 1}>
+        <TableCell sx={{ padding: 0 }} colSpan={assignments.length === 0 ? 2 : 1} valign="top">
           <IconRow icon={isMissing
             ? functionPolicy.requirement === FunctionRequirement.ZeroOrMore ? "⚠" : "❌"
             : "✅"}
-            onClick={canComplete ? addAssignmentDialogHandle.openDialog : undefined}>
+            onClick={!summaryOnly && canComplete ? addAssignmentDialogHandle.openDialog : undefined}>
             {functionPolicy.functionName}
           </IconRow>
         </TableCell>
         <TableCell sx={{ padding: 0 }}>
           {assignments.map(assignment =>
             <IconRow key={JSON.stringify(assignment)} icon=''
-              onClick={canComplete ? removeAssignmentDialogHandle.openDialog : undefined}>
+              //onClick={!summaryOnly && canComplete ? removeAssignmentDialogHandle.openDialog : undefined}
+              >
               {assignment instanceof FamilyVolunteerAssignment &&
                 <FamilyName family={familyLookup(assignment.familyId)} />}
               {assignment instanceof IndividualVolunteerAssignment &&

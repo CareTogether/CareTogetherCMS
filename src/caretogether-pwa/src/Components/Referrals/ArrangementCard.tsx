@@ -3,7 +3,6 @@ import {
   Card,
   CardContent,
   CardHeader,
-  Divider,
   Table,
   TableBody,
   TableContainer,
@@ -11,11 +10,10 @@ import {
 } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { useState } from 'react';
-import { ArrangementPhase, Arrangement, CombinedFamilyInfo, FunctionRequirement, ChildInvolvement } from '../../GeneratedClient';
+import { ArrangementPhase, Arrangement, CombinedFamilyInfo, ChildInvolvement } from '../../GeneratedClient';
 import { useFamilyLookup, usePersonLookup } from '../../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
 import { FamilyName } from '../Families/FamilyName';
-import { IconRow } from '../IconRow';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../../Model/ConfigurationModel';
 import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
@@ -82,9 +80,6 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
   };
   
   const arrangementPolicy = policy.referralPolicy?.arrangementPolicies?.find(a => a.arrangementType === arrangement.arrangementType);
-  const missingVolunteerFunctions = arrangementPolicy?.arrangementFunctions?.filter(arrangementFunction =>
-    !arrangement.familyVolunteerAssignments?.some(x => x.arrangementFunction === arrangementFunction.functionName) &&
-    !arrangement.individualVolunteerAssignments?.some(x => x.arrangementFunction === arrangementFunction.functionName));
 
   return (
     <Card variant="outlined">
@@ -127,7 +122,7 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
           <Table size="small">
             <TableBody>
               {arrangementPolicy?.arrangementFunctions?.map(functionPolicy =>
-                <ArrangementFunctionRow key={functionPolicy.functionName}
+                <ArrangementFunctionRow key={functionPolicy.functionName} summaryOnly={summaryOnly}
                   partneringFamilyId={partneringFamily.family!.id!} referralId={referralId} arrangement={arrangement}
                   arrangementPolicy={arrangementPolicy} functionPolicy={functionPolicy} />)}
             </TableBody>
