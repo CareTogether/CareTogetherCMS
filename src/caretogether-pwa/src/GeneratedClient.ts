@@ -6348,6 +6348,16 @@ export abstract class ArrangementsCommand implements IArrangementsCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "UnassignIndividualVolunteer") {
+            let result = new UnassignIndividualVolunteer();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UnassignVolunteerFamily") {
+            let result = new UnassignVolunteerFamily();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "UnexemptArrangementRequirement") {
             let result = new UnexemptArrangementRequirement();
             result.init(data);
@@ -6782,6 +6792,86 @@ export interface ITrackChildLocationChange extends IArrangementsCommand {
     childLocationReceivingAdultId?: string;
     plan?: ChildLocationPlan;
     noteId?: string | undefined;
+}
+
+export class UnassignIndividualVolunteer extends ArrangementsCommand implements IUnassignIndividualVolunteer {
+    volunteerFamilyId?: string;
+    personId?: string;
+    arrangementFunction?: string;
+
+    constructor(data?: IUnassignIndividualVolunteer) {
+        super(data);
+        this._discriminator = "UnassignIndividualVolunteer";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.volunteerFamilyId = _data["volunteerFamilyId"];
+            this.personId = _data["personId"];
+            this.arrangementFunction = _data["arrangementFunction"];
+        }
+    }
+
+    static fromJS(data: any): UnassignIndividualVolunteer {
+        data = typeof data === 'object' ? data : {};
+        let result = new UnassignIndividualVolunteer();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["volunteerFamilyId"] = this.volunteerFamilyId;
+        data["personId"] = this.personId;
+        data["arrangementFunction"] = this.arrangementFunction;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUnassignIndividualVolunteer extends IArrangementsCommand {
+    volunteerFamilyId?: string;
+    personId?: string;
+    arrangementFunction?: string;
+}
+
+export class UnassignVolunteerFamily extends ArrangementsCommand implements IUnassignVolunteerFamily {
+    volunteerFamilyId?: string;
+    arrangementFunction?: string;
+
+    constructor(data?: IUnassignVolunteerFamily) {
+        super(data);
+        this._discriminator = "UnassignVolunteerFamily";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.volunteerFamilyId = _data["volunteerFamilyId"];
+            this.arrangementFunction = _data["arrangementFunction"];
+        }
+    }
+
+    static fromJS(data: any): UnassignVolunteerFamily {
+        data = typeof data === 'object' ? data : {};
+        let result = new UnassignVolunteerFamily();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["volunteerFamilyId"] = this.volunteerFamilyId;
+        data["arrangementFunction"] = this.arrangementFunction;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUnassignVolunteerFamily extends IArrangementsCommand {
+    volunteerFamilyId?: string;
+    arrangementFunction?: string;
 }
 
 export class UnexemptArrangementRequirement extends ArrangementsCommand implements IUnexemptArrangementRequirement {
