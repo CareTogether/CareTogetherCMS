@@ -20,22 +20,19 @@ import { ArrangementPhase, Arrangement, CombinedFamilyInfo, FunctionRequirement,
 import { useFamilyLookup, usePersonLookup } from '../../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
 import { FamilyName } from '../Families/FamilyName';
-import { formatRelative } from 'date-fns';
 import { IconRow } from '../IconRow';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../../Model/ConfigurationModel';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
-import { StartArrangementDialog } from './StartArrangementDialog';
-import { EndArrangementDialog } from './EndArrangementDialog';
 import { AssignArrangementFunctionDialog } from './AssignArrangementFunctionDialog';
 import { TrackChildLocationDialog } from './TrackChildLocationDialog';
 import { MissingArrangementRequirementRow } from "../Requirements/MissingArrangementRequirementRow";
 import { ExemptedRequirementRow } from "../Requirements/ExemptedRequirementRow";
 import { CompletedRequirementRow } from "../Requirements/CompletedRequirementRow";
 import { ArrangementContext } from "../Requirements/RequirementContext";
-import { CancelArrangementDialog } from './CancelArrangementDialog';
 import { ArrangementPhaseSummary } from './ArrangementPhaseSummary';
+import { ArrangementCardTitle } from './ArrangementCardTitle';
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -82,9 +79,6 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
   const personLookup = usePersonLookup();
   
   const [arrangementRecordMenuAnchor, setArrangementRecordMenuAnchor] = useState<{anchor: Element, arrangement: Arrangement} | null>(null);
-  const [showStartArrangementDialog, setShowStartArrangementDialog] = useState(false);
-  const [showEndArrangementDialog, setShowEndArrangementDialog] = useState(false);
-  const [showCancelArrangementDialog, setShowCancelArrangementDialog] = useState(false);
   const [assignArrangementFunctionParameter, setAssignArrangementFunctionParameter] = useState<ArrangementFunction | null>(null);
   function selectAssignArrangementFunction(arrangementFunction: ArrangementFunction | null) {
     setArrangementRecordMenuAnchor(null);
@@ -107,61 +101,12 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
 
-  const now = new Date();
-
   return (
     <Card variant="outlined">
       <ArrangementPhaseSummary phase={arrangement.phase!}
         requestedAtUtc={arrangement.requestedAtUtc!} startedAtUtc={arrangement.startedAtUtc} endedAtUtc={arrangement.endedAtUtc} />
       <CardHeader className={classes.cardHeader}
-        title={<>
-          <span style={{fontWeight: "bold"}}>{arrangement.arrangementType}</span>
-          {summaryOnly &&
-            <span style={{marginLeft: 40, float: "right"}}>
-              {arrangement.phase === ArrangementPhase.Cancelled ? `Cancelled ${formatRelative(arrangement.cancelledAtUtc!, now)}`
-                : arrangement.phase === ArrangementPhase.SettingUp ? "Setting up"
-                : arrangement.phase === ArrangementPhase.ReadyToStart ? "Ready to start"
-                : arrangement.phase === ArrangementPhase.Started ? `Started ${formatRelative(arrangement.startedAtUtc!, now)}`
-                : `Ended ${formatRelative(arrangement.endedAtUtc!, now)}`}
-            </span>}
-          {!summaryOnly &&
-            <span style={{marginLeft: 0, float: "right"}}>
-              {arrangement.phase === ArrangementPhase.Cancelled ?
-                `Cancelled ${formatRelative(arrangement.cancelledAtUtc!, now)}`
-                : arrangement.phase === ArrangementPhase.SettingUp ?
-                  <>
-                    Setting up
-                    <Button variant="outlined" size="small"
-                      style={{marginLeft: 10}}
-                      onClick={() => setShowCancelArrangementDialog(true)}>
-                      Cancel
-                    </Button>
-                  </>
-                : arrangement.phase === ArrangementPhase.ReadyToStart ?
-                  <>
-                    <Button variant="outlined" size="small"
-                      style={{marginLeft: 10}}
-                      onClick={() => setShowCancelArrangementDialog(true)}>
-                      Cancel
-                    </Button>
-                    <Button variant="contained" size="small"
-                      style={{marginLeft: 10}}
-                      onClick={() => setShowStartArrangementDialog(true)}>
-                      Start
-                    </Button>
-                  </>
-                : arrangement.phase === ArrangementPhase.Started ?
-                  <>
-                    <span>Started {formatRelative(arrangement.startedAtUtc!, now)}</span>
-                    <Button variant="outlined" size="small"
-                      style={{marginLeft: 10}}
-                      onClick={() => setShowEndArrangementDialog(true)}>
-                      End
-                    </Button>
-                  </>
-                : `Ended ${formatRelative(arrangement.endedAtUtc!, now)}`}
-          </span>}
-        </>} />
+        title={<ArrangementCardTitle summaryOnly={summaryOnly} referralId={referralId} arrangement={arrangement} />} />
       <CardContent className={classes.cardContent}>
         <Typography variant="body2" component="div">
           <ul className={classes.cardList}>
@@ -250,12 +195,6 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
       </Menu>
       {showTrackChildLocationDialog && <TrackChildLocationDialog partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement}
         onClose={() => setShowTrackChildLocationDialog(false)} />}
-      {(showStartArrangementDialog && <StartArrangementDialog referralId={referralId} arrangement={arrangement}
-        onClose={() => setShowStartArrangementDialog(false)} />) || null}
-      {(showEndArrangementDialog && <EndArrangementDialog referralId={referralId} arrangement={arrangement}
-        onClose={() => setShowEndArrangementDialog(false)} />) || null}
-      {(showCancelArrangementDialog && <CancelArrangementDialog referralId={referralId} arrangement={arrangement}
-        onClose={() => setShowCancelArrangementDialog(false)} />) || null}
       {(assignArrangementFunctionParameter && <AssignArrangementFunctionDialog referralId={referralId} arrangement={arrangement} arrangementPolicy={arrangementPolicy!}
         arrangementFunction={assignArrangementFunctionParameter}
         onClose={() => selectAssignArrangementFunction(null)} />) || null}
