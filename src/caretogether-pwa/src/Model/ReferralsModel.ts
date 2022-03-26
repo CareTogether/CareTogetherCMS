@@ -1,6 +1,6 @@
 import { selector, useRecoilCallback } from "recoil";
 import { authenticatingFetch } from "../Auth";
-import { ReferralCommand, ReferralsClient, ArrangementsCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement, StartArrangements, EndArrangements, AssignVolunteerFamily, AssignIndividualVolunteer, ReferralCloseReason, CloseReferral, CreateReferral, TrackChildLocationChange, ChildLocationPlan, UpdateCustomReferralField, CustomField, ExemptReferralRequirement, UnexemptReferralRequirement, ExemptArrangementRequirement, UnexemptArrangementRequirement, MissingArrangementRequirement, ExemptedRequirementInfo, MarkReferralRequirementIncomplete, CompletedRequirementInfo, MarkArrangementRequirementIncomplete, CancelArrangementsSetup, UpdateReferralComments } from "../GeneratedClient";
+import { ReferralCommand, ReferralsClient, ArrangementsCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement, StartArrangements, EndArrangements, AssignVolunteerFamily, AssignIndividualVolunteer, ReferralCloseReason, CloseReferral, CreateReferral, TrackChildLocationChange, ChildLocationPlan, UpdateCustomReferralField, CustomField, ExemptReferralRequirement, UnexemptReferralRequirement, ExemptArrangementRequirement, UnexemptArrangementRequirement, MissingArrangementRequirement, ExemptedRequirementInfo, MarkReferralRequirementIncomplete, CompletedRequirementInfo, MarkArrangementRequirementIncomplete, CancelArrangementsSetup, UpdateReferralComments, UnassignVolunteerFamily, UnassignIndividualVolunteer } from "../GeneratedClient";
 import { visibleFamiliesData } from "./ModelLoader";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 
@@ -258,6 +258,31 @@ export function useReferralsModel() {
       command.arrangementFunction = arrangementFunction;
       return command;
     });
+  const unassignVolunteerFamily = useArrangementsCommandCallbackWithLocation(
+    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
+      volunteerFamilyId: string, arrangementFunction: string) => {
+      const command = new UnassignVolunteerFamily({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementIds: [arrangementId]
+      });
+      command.volunteerFamilyId = volunteerFamilyId;
+      command.arrangementFunction = arrangementFunction;
+      return command;
+    });
+  const unassignIndividualVolunteer = useArrangementsCommandCallbackWithLocation(
+    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
+      volunteerFamilyId: string, personId: string, arrangementFunction: string) => {
+      const command = new UnassignIndividualVolunteer({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementIds: [arrangementId]
+      });
+      command.volunteerFamilyId = volunteerFamilyId;
+      command.personId = personId;
+      command.arrangementFunction = arrangementFunction;
+      return command;
+    });
   const trackChildLocation = useArrangementsCommandCallbackWithLocation(
     async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
       childLocationFamilyId: string, childLocationAdultId: string, changedAtLocal: Date,
@@ -313,6 +338,8 @@ export function useReferralsModel() {
     cancelArrangement,
     assignVolunteerFamily,
     assignIndividualVolunteer,
+    unassignVolunteerFamily,
+    unassignIndividualVolunteer,
     trackChildLocation,
     closeReferral,
     openReferral
