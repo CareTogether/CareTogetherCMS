@@ -1,13 +1,9 @@
-import { Box, Button, Checkbox, TextField } from "@mui/material";
-import EditIcon from '@mui/icons-material/Edit';
-import SaveIcon from '@mui/icons-material/Save';
-import UndoIcon from '@mui/icons-material/Undo';
-import { useState } from "react";
+import { Box, Checkbox, TextField } from "@mui/material";
 import { CompletedCustomFieldInfo, CustomField, CustomFieldType } from "../../GeneratedClient";
 import { useReferralsModel } from "../../Model/ReferralsModel";
-import { useBackdrop } from "../RequestBackdrop";
 import { useRecoilValue } from "recoil";
 import { policyData } from "../../Model/ConfigurationModel";
+import { useInlineEditor } from "../../useInlineEditor";
 
 type ReferralCustomFieldProps = {
   partneringFamilyId: string
@@ -28,71 +24,36 @@ export function ReferralCustomField({ partneringFamilyId, referralId, customFiel
   const savedValue = savedCustomField?.value;
 
   const referralsModel = useReferralsModel();
-  const withBackdrop = useBackdrop();
-
-  const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState<boolean | string | null>(savedValue);
-  async function saveChanges() {
-    await withBackdrop(async () => {
-      await referralsModel.updateCustomReferralField(partneringFamilyId, referralId,
-        customFieldPolicy, value);
-      setEditing(false);
-    });
-  }
-  function cancelEditing() {
-    setEditing(false);
-    setValue(savedValue);
-  }
+  const editor = useInlineEditor(async value => {
+    await referralsModel.updateCustomReferralField(partneringFamilyId, referralId,
+      customFieldPolicy, value);
+  }, savedValue);
 
   return (
     <Box style={{margin:0}}>
       <span>
         {customFieldPolicy.name}:&nbsp;
-        {editing
+        {editor.editing
           ? type === CustomFieldType.Boolean
             ? <Checkbox
                 size="medium"
-                checked={(value as boolean | null) === null || typeof(value) === 'undefined' ? false : value as boolean}
-                onChange={e => setValue(e.target.checked)} />
+                checked={(editor.value as boolean | null) === null || typeof(editor.value) === 'undefined'
+                  ? false
+                  : editor.value as boolean}
+                onChange={e => editor.setValue(e.target.checked)} />
             : <TextField
                 variant="outlined" size="medium"
-                value={value || ""}
-                onChange={e => setValue(e.target.value)} />
+                value={editor.value || ""}
+                onChange={e => editor.setValue(e.target.value)} />
           : typeof(savedValue) === 'undefined'
             ? "❓"
             : type === CustomFieldType.Boolean
               ? savedValue ? "Yes" : "No"
               : savedValue}
       </span>
-      {!editing && <Button
-        onClick={() => setEditing(true)}
-        variant="text"
-        size="small"
-        startIcon={<EditIcon />}
-        sx={{margin: 1}}>
-        Edit
-      </Button>}
-      {editing &&
-      <>
-        <Button
-          onClick={() => cancelEditing()}
-          variant="contained"
-          size="small"
-          startIcon={<UndoIcon />}
-          color="secondary"
-          sx={{margin: 1}}>
-          Cancel
-        </Button>
-        <Button
-          disabled={value === savedValue}
-          onClick={saveChanges}
-          variant="contained"
-          size="small"
-          startIcon={<SaveIcon />}
-          sx={{margin: 1}}>
-          Save
-        </Button>
-      </>}
+      {editor.editButton}
+      {editor.cancelButton}
+      {editor.saveButton}
     </Box>
   );
 }
