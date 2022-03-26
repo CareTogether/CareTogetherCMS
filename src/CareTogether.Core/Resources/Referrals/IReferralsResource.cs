@@ -81,6 +81,12 @@ namespace CareTogether.Resources.Referrals
     public sealed record AssignVolunteerFamily(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         Guid VolunteerFamilyId, string ArrangementFunction)
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+    public sealed record UnassignIndividualVolunteer(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
+        Guid VolunteerFamilyId, Guid PersonId, string ArrangementFunction)
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+    public sealed record UnassignVolunteerFamily(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
+        Guid VolunteerFamilyId, string ArrangementFunction)
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
     public sealed record StartArrangements(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         DateTime StartedAtUtc)
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);

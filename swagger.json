@@ -3574,6 +3574,8 @@
             "MarkArrangementRequirementIncomplete": "#/components/schemas/MarkArrangementRequirementIncomplete",
             "StartArrangements": "#/components/schemas/StartArrangements",
             "TrackChildLocationChange": "#/components/schemas/TrackChildLocationChange",
+            "UnassignIndividualVolunteer": "#/components/schemas/UnassignIndividualVolunteer",
+            "UnassignVolunteerFamily": "#/components/schemas/UnassignVolunteerFamily",
             "UnexemptArrangementRequirement": "#/components/schemas/UnexemptArrangementRequirement"
           }
         },
@@ -3833,6 +3835,50 @@
                 "type": "string",
                 "format": "guid",
                 "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "UnassignIndividualVolunteer": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "volunteerFamilyId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "arrangementFunction": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "UnassignVolunteerFamily": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "volunteerFamilyId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "arrangementFunction": {
+                "type": "string"
               }
             }
           }

@@ -1,4 +1,5 @@
 import { TableCell, TableRow } from "@mui/material";
+import { useState } from "react";
 import { Arrangement, ArrangementFunction, ArrangementPolicy, FamilyVolunteerAssignment, FunctionRequirement, IndividualVolunteerAssignment } from "../../GeneratedClient";
 import { useFamilyLookup, usePersonLookup } from "../../Model/DirectoryModel";
 import { useDialogHandle } from "../../useDialogHandle";
@@ -6,6 +7,7 @@ import { FamilyName } from "../Families/FamilyName";
 import { PersonName } from "../Families/PersonName";
 import { IconRow } from "../IconRow";
 import { AssignArrangementFunctionDialog } from "./AssignArrangementFunctionDialog";
+import { UnassignArrangementFunctionDialog } from "./UnassignArrangementFunctionDialog";
 
 type ArrangementFunctionRowProps = {
   summaryOnly?: boolean
@@ -24,7 +26,7 @@ export function ArrangementFunctionRow({
   const personLookup = usePersonLookup();
   
   const addAssignmentDialogHandle = useDialogHandle();
-  //const removeAssignmentDialogHandle = useDialogHandle();
+  const removeAssignmentDialogHandle = useDialogHandle();
 
   const canComplete = true; //TODO: Implement permissions!
   
@@ -36,6 +38,12 @@ export function ArrangementFunctionRow({
     !arrangement.familyVolunteerAssignments?.some(x => x.arrangementFunction === functionPolicy.functionName) &&
     !arrangement.individualVolunteerAssignments?.some(x => x.arrangementFunction === functionPolicy.functionName);
 
+  const [unassignmentParameter, setUnassignmentParameter] = useState<FamilyVolunteerAssignment | IndividualVolunteerAssignment | null>(null);
+  function openUnassignDialog(assignment: FamilyVolunteerAssignment | IndividualVolunteerAssignment) {
+    setUnassignmentParameter(assignment);
+    removeAssignmentDialogHandle.openDialog();
+  }
+  
   return (
     <>
       <TableRow key={functionPolicy.functionName}>
@@ -50,8 +58,7 @@ export function ArrangementFunctionRow({
         <TableCell sx={{ padding: 0 }}>
           {assignments.map(assignment =>
             <IconRow key={JSON.stringify(assignment)} icon=''
-              //onClick={!summaryOnly && canComplete ? removeAssignmentDialogHandle.openDialog : undefined}
-              >
+              onClick={!summaryOnly && canComplete ? openUnassignDialog.bind(null, assignment) : undefined}>
               {assignment instanceof FamilyVolunteerAssignment &&
                 <FamilyName family={familyLookup(assignment.familyId)} />}
               {assignment instanceof IndividualVolunteerAssignment &&
@@ -64,12 +71,13 @@ export function ArrangementFunctionRow({
         arrangement={arrangement}
         arrangementPolicy={arrangementPolicy}
         arrangementFunction={functionPolicy} />}
-      {/* {removeAssignmentDialogHandle.open && <UnassignArrangementFunctionDialog handle={removeAssignmentDialogHandle}
+      {removeAssignmentDialogHandle.open && <UnassignArrangementFunctionDialog handle={removeAssignmentDialogHandle}
+        partneringFamilyId={partneringFamilyId}
         referralId={referralId}
         arrangement={arrangement}
         arrangementPolicy={arrangementPolicy}
         arrangementFunction={functionPolicy}
-        assignment={assignment} />} */}
+        assignment={unassignmentParameter!} />}
     </>
   );
 }

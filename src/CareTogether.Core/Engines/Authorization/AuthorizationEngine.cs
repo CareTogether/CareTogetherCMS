@@ -151,6 +151,8 @@ namespace CareTogether.Engines.Authorization
                     CreateArrangement => null,
                     AssignIndividualVolunteer => null,
                     AssignVolunteerFamily => null,
+                    UnassignIndividualVolunteer => null,
+                    UnassignVolunteerFamily => null,
                     StartArrangements => null,
                     CompleteArrangementRequirement => null,
                     MarkArrangementRequirementIncomplete => null,

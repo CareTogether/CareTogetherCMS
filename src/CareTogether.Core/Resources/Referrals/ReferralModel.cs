@@ -160,6 +160,16 @@ namespace CareTogether.Resources.Referrals
                                 FamilyVolunteerAssignments = arrangementEntry.FamilyVolunteerAssignments.Add(
                                     new FamilyVolunteerAssignment(c.VolunteerFamilyId, c.ArrangementFunction))
                             }, null),
+                            UnassignIndividualVolunteer c => (arrangementEntry with
+                            {
+                                IndividualVolunteerAssignments = arrangementEntry.IndividualVolunteerAssignments.RemoveAll(iva =>
+                                    iva.ArrangementFunction == c.ArrangementFunction && iva.FamilyId == c.VolunteerFamilyId && iva.PersonId == c.PersonId)
+                            }, null),
+                            UnassignVolunteerFamily c => (arrangementEntry with
+                            {
+                                FamilyVolunteerAssignments = arrangementEntry.FamilyVolunteerAssignments.RemoveAll(fva =>
+                                    fva.ArrangementFunction == c.ArrangementFunction && fva.FamilyId == c.VolunteerFamilyId)
+                            }, null),
                             StartArrangements c => (arrangementEntry with
                             {
                                 StartedAtUtc = c.StartedAtUtc
