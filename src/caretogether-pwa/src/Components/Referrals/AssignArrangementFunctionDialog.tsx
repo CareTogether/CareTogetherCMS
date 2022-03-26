@@ -41,7 +41,10 @@ export function AssignArrangementFunctionDialog({
   const familyAndPersonLookup = usePersonAndFamilyLookup();
 
   const candidateNamedPeopleAssignees = arrangementFunction.eligiblePeople
-    ? arrangementFunction.eligiblePeople.map(personId => familyAndPersonLookup(personId) as { family: Family, person: Person | null })
+    ? arrangementFunction.eligiblePeople.map(personId =>
+      familyAndPersonLookup(personId) as { family: Family, person: Person | null }).filter(person =>
+        !arrangement.individualVolunteerAssignments?.find(iva =>
+          iva.arrangementFunction === arrangementFunction.functionName && iva.familyId === person.family!.id && iva.personId === person.person?.id))
     : [];
   const candidateVolunteerIndividualAssignees = arrangementFunction.eligibleIndividualVolunteerRoles
     ? visibleFamilies.flatMap(f => f.volunteerFamilyInfo?.individualVolunteers
