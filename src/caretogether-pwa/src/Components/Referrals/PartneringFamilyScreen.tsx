@@ -1,4 +1,4 @@
-import { Container, Toolbar, Grid, Button, useMediaQuery, useTheme, IconButton } from '@mui/material';
+import { Container, Toolbar, Grid, Button, useMediaQuery, useTheme, IconButton, Box } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { ArrangementPolicy, CombinedFamilyInfo, CompletedCustomFieldInfo, Permission, ReferralCloseReason } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
@@ -281,19 +281,21 @@ export function PartneringFamilyScreen() {
                       partneringFamily={partneringFamily} referralId={partneringFamily.partneringFamilyInfo!.openReferral!.id!}
                       arrangement={arrangement} />
                   )) || false}
+                  <Box sx={{textAlign: 'center'}}>
+                    {partneringFamily.partneringFamilyInfo?.openReferral && policy.referralPolicy?.arrangementPolicies?.map(arrangementPolicy => (
+                      <Box key={arrangementPolicy.arrangementType}>
+                        <Button
+                          onClick={() => setCreateArrangementDialogParameter(arrangementPolicy)}
+                          variant="contained"
+                          size="small"
+                          className={classes.button}
+                          startIcon={<AddCircleIcon />}>
+                          {arrangementPolicy.arrangementType}
+                        </Button>
+                      </Box>
+                    ))}
+                  </Box>
                 </Masonry>
-                {partneringFamily.partneringFamilyInfo?.openReferral && policy.referralPolicy?.arrangementPolicies?.map(arrangementPolicy => (
-                  <Grid item key={arrangementPolicy.arrangementType}>
-                    <Button
-                      onClick={() => setCreateArrangementDialogParameter(arrangementPolicy)}
-                      variant="contained"
-                      size="small"
-                      className={classes.button}
-                      startIcon={<AddCircleIcon />}>
-                      {arrangementPolicy.arrangementType}
-                    </Button>
-                  </Grid>
-                ))}
                 {createArrangementDialogParameter &&
                   <CreateArrangementDialog
                     referralId={partneringFamily.partneringFamilyInfo!.openReferral!.id!}
