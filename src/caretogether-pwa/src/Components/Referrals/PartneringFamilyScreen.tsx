@@ -206,7 +206,12 @@ export function PartneringFamilyScreen() {
             <Grid item xs={6} md={4}>
               {(partneringFamily.partneringFamilyInfo?.openReferral?.completedCustomFields ||
                 [] as Array<CompletedCustomFieldInfo | string>).concat(
-                partneringFamily.partneringFamilyInfo?.openReferral?.missingCustomFields || []).map(customField =>
+                partneringFamily.partneringFamilyInfo?.openReferral?.missingCustomFields || []).sort((a, b) =>
+                  (a instanceof CompletedCustomFieldInfo ? a.customFieldName! : a) <
+                  (b instanceof CompletedCustomFieldInfo ? b.customFieldName! : b) ? -1
+                  : (a instanceof CompletedCustomFieldInfo ? a.customFieldName! : a) >
+                  (b instanceof CompletedCustomFieldInfo ? b.customFieldName! : b) ? 1
+                  : 0).map(customField =>
                 <ReferralCustomField key={typeof customField === 'string' ? customField : customField.customFieldName}
                   partneringFamilyId={familyId} referralId={partneringFamily.partneringFamilyInfo!.openReferral!.id!}
                   customField={customField} />)}
