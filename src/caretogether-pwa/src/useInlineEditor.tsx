@@ -3,7 +3,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import UndoIcon from '@mui/icons-material/Undo';
 import { useState } from "react";
-import { useBackdrop } from "./Components/RequestBackdrop";
+import { useBackdrop } from "./useBackdrop";
 
 export function useInlineEditor<T>(onSave: (value: T) => Promise<void>, savedValue?: T) {
   const withBackdrop = useBackdrop();
