@@ -163,12 +163,12 @@ export function useReferralsModel() {
       return command;
     });
   const exemptArrangementRequirement = useArrangementsCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string, requirement: MissingArrangementRequirement,
+    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementIds: string[], requirement: MissingArrangementRequirement,
       additionalComments: string, exemptionExpiresAtLocal: Date | null) => {
       const command = new ExemptArrangementRequirement({
         familyId: partneringFamilyId,
         referralId: referralId,
-        arrangementIds: [arrangementId]
+        arrangementIds: arrangementIds
       });
       command.requirementName = requirement.actionName;
       command.dueDate = requirement.dueBy || requirement.pastDueSince;

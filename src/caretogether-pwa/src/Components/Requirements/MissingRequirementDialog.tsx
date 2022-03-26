@@ -112,7 +112,8 @@ export function MissingRequirementDialog({
           requirementName, additionalComments, exemptionExpiresAtLocal);
         break;
       case 'Arrangement':
-        await referrals.exemptArrangementRequirement(contextFamilyId, context.referralId, context.arrangementId,
+        await referrals.exemptArrangementRequirement(contextFamilyId, context.referralId,
+          applyToArrangements.map(arrangement => arrangement.id!),
           requirement as MissingArrangementRequirement, additionalComments, exemptionExpiresAtLocal);
         break;
       case 'Volunteer Family':
@@ -241,6 +242,22 @@ export function MissingRequirementDialog({
       </TabPanel>
       <TabPanel value={tabValue} index={1}>
         <Grid container spacing={2}>
+          {requirement instanceof MissingArrangementRequirement &&
+            <Grid item xs={12}>
+              <FormControl component="fieldset" variant="standard">
+                <FormLabel component="legend">Exempt for</FormLabel>
+                <FormGroup>
+                  {availableArrangements.map(arrangement =>
+                    <FormControlLabel key={arrangement.id}
+                      control={<Checkbox size="medium"
+                        checked={applyToArrangements.includes(arrangement)}
+                        onChange={(_, checked) => toggleApplyToArrangement(arrangement, checked)}
+                        name={arrangement.id!} />}
+                      label={`${arrangement.arrangementType} - ${personNameString(personLookup(arrangement.partneringFamilyPersonId))}`} />
+                  )}
+                </FormGroup>
+              </FormControl>
+            </Grid>}
           <Grid item xs={12}>
             <TextField
               id="additional-comments" required
