@@ -287,7 +287,18 @@ namespace CareTogether.TestData
                 new VolunteerCommandExecuted(adminId, new DateTime(2021, 8, 10),
                     new CompleteVolunteerRequirement(guid2, guid6, guid6, "Family Friend Application", new DateTime(2021, 8, 10), guid6, null)),
                 new VolunteerCommandExecuted(adminId, new DateTime(2021, 8, 11), //TODO: This is a workaround for a bug!
-                    new CompleteVolunteerRequirement(guid2, guid5, guid7, "Family Friend Application", new DateTime(2021, 8, 11), guid7, null)));
+                    new CompleteVolunteerRequirement(guid2, guid5, guid7, "Family Friend Application", new DateTime(2021, 8, 11), guid7, null)),
+                new VolunteerFamilyCommandExecuted(adminId, new DateTime(2021, 9, 1),
+                    new ExemptVolunteerFamilyRequirement(guid3, "Host Family Interview", "'Picard' showed that they still watch out for Jean-Luc, so we have no concerns.", null)),
+                new VolunteerCommandExecuted(adminId, new DateTime(2021, 9, 1),
+                    new ExemptVolunteerRequirement(guid3, guid8, "Comprehensive Background Check", "Starfleet clearance still active", new DateTime(2278, 12, 31))),
+                new VolunteerCommandExecuted(adminId, new DateTime(2021, 9, 1),
+                    new CompleteVolunteerRequirement(guid3, guid8, new Guid(), "Host Family Training", new DateTime(2021, 9, 1), null, null)),
+                new VolunteerCommandExecuted(adminId, new DateTime(2021, 9, 1),
+                    new ExemptVolunteerRequirement(guid3, guid9, "Host Family Training", "She's a Betazoid. Empaths don't need training.", new DateTime(2278, 12, 31))),
+                new VolunteerCommandExecuted(adminId, new DateTime(2021, 9, 1),
+                    new CompleteVolunteerRequirement(guid3, guid9, new Guid(), "Comprehensive Background Check", new DateTime(2021, 9, 1), null, null))
+                );
         }
 
         public static async Task PopulateNoteEvents(IEventLog<NotesEvent> referralsEventLog)

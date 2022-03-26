@@ -6,6 +6,7 @@ import { visibleFamiliesData } from '../../Model/ModelLoader';
 import { useRecoilValue } from 'recoil';
 import { useParams } from 'react-router-dom';
 import { useBackdrop } from '../../useBackdrop';
+import { DialogHandle } from "../../useDialogHandle";
 import { useReferralsModel } from '../../Model/ReferralsModel';
 import { usePersonAndFamilyLookup } from '../../Model/DirectoryModel';
 
@@ -20,14 +21,16 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 interface AssignArrangementFunctionDialogProps {
-  referralId: string,
-  arrangement: Arrangement,
-  arrangementPolicy: ArrangementPolicy,
+  handle: DialogHandle
+  referralId: string
+  arrangement: Arrangement
+  arrangementPolicy: ArrangementPolicy
   arrangementFunction: ArrangementFunction
-  onClose: () => void
 }
 
-export function AssignArrangementFunctionDialog({referralId, arrangement, arrangementPolicy, arrangementFunction, onClose}: AssignArrangementFunctionDialogProps) {
+export function AssignArrangementFunctionDialog({
+  handle, referralId, arrangement, arrangementPolicy, arrangementFunction
+}: AssignArrangementFunctionDialogProps) {
   const classes = useStyles();
   
   const familyIdMaybe = useParams<{ familyId: string }>();
@@ -105,12 +108,13 @@ export function AssignArrangementFunctionDialog({referralId, arrangement, arrang
           assigneeInfo!.familyId, assigneeInfo!.personId, arrangementFunction.functionName!);
       }
       //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
-      onClose();
+      handle.closeDialog();
     });
   }
 
   return (
-    <Dialog open={true} onClose={onClose} scroll='body' aria-labelledby="assign-volunteer-title">
+    <Dialog open={handle.open} onClose={handle.closeDialog} key={handle.key}
+      scroll='body' aria-labelledby="assign-volunteer-title">
       <DialogTitle id="assign-volunteer-title">
         Assign {arrangementFunction.functionName}
       </DialogTitle>
@@ -136,7 +140,7 @@ export function AssignArrangementFunctionDialog({referralId, arrangement, arrang
         </form>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} color="secondary">
+        <Button onClick={handle.closeDialog} color="secondary">
           Cancel
         </Button>
         <Button onClick={save} variant="contained" color="primary"

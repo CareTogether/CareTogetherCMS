@@ -4,6 +4,9 @@ import {
   CardContent,
   CardHeader,
   Divider,
+  Table,
+  TableBody,
+  TableContainer,
   Typography,
 } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
@@ -23,6 +26,7 @@ import { CompletedRequirementRow } from "../Requirements/CompletedRequirementRow
 import { ArrangementContext } from "../Requirements/RequirementContext";
 import { ArrangementPhaseSummary } from './ArrangementPhaseSummary';
 import { ArrangementCardTitle } from './ArrangementCardTitle';
+import { ArrangementFunctionRow } from './ArrangementFunctionRow';
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -119,30 +123,18 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
             </>
           )}
         </Typography>
-        <Typography variant="body2" component="div">
-          <ul className={classes.cardList}>
-            {arrangement.phase !== ArrangementPhase.Cancelled &&
-              <>
-                <Divider style={{marginBottom: 10, marginTop: 2}} />
-                {arrangement.familyVolunteerAssignments?.map(x => (
-                  <li key={`famVol-${x.arrangementFunction}-${x.familyId}`}><FamilyName family={familyLookup(x.familyId)} /> - {x.arrangementFunction}</li>
-                ))}
-                {arrangement.individualVolunteerAssignments?.map(x => (
-                  <li key={`indVol-${x.arrangementFunction}-${x.personId}`}><PersonName person={personLookup(x.familyId, x.personId)} /> - {x.arrangementFunction}</li>
-                ))}
-                {arrangement.phase !== ArrangementPhase.Ended && missingVolunteerFunctions?.map(x => (
-                  <li key={`missing-${x.functionName}`}>
-                    <IconRow icon={x.requirement === FunctionRequirement.ZeroOrMore ? '⚠' : '❌'}>
-                      {x.functionName}
-                    </IconRow>
-                  </li>
-                ))}
-              </>}
-          </ul>
-        </Typography>
+        <TableContainer>
+          <Table size="small">
+            <TableBody>
+              {arrangementPolicy?.arrangementFunctions?.map(functionPolicy =>
+                <ArrangementFunctionRow key={functionPolicy.functionName}
+                  partneringFamilyId={partneringFamily.family!.id!} referralId={referralId} arrangement={arrangement}
+                  arrangementPolicy={arrangementPolicy} functionPolicy={functionPolicy} />)}
+            </TableBody>
+          </Table>
+        </TableContainer>
         {!summaryOnly && arrangement.phase !== ArrangementPhase.Cancelled && (
           <>
-            <Divider />
             <Typography variant="body2" component="div">
               {arrangement.completedRequirements?.map((completed, i) =>
                 <CompletedRequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} context={requirementContext} />
