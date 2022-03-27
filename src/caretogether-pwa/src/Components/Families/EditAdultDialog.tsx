@@ -5,6 +5,7 @@ import { DialogHandle } from '../../useDialogHandle';
 import { NameEditor } from './NameEditor';
 import { PersonEditorProps } from './PersonEditorProps';
 import { GenderEditor } from './GenderEditor';
+import { NotesEditor } from './NotesEditor';
 
 interface EditAdultDialogProps {
   handle: DialogHandle
@@ -35,7 +36,6 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
   //TODO: address(es)
   //TODO: phone number(s)
   //TODO: email address(es)
-  //TODO: notes
   //TODO: concerns
 
   // const relationshipTypes = useRecoilValue(adultFamilyRelationshipsData);
@@ -61,6 +61,8 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
       <DialogContent sx={{ paddingTop: '8px' }}>
         <NameEditor {...personEditorProps} />
         <GenderEditor {...personEditorProps} />
+        <NotesEditor {...personEditorProps} />
+        {/* <ConcernsEditor {...personEditorProps} /> */}
         {/* 
             <Grid item xs={12} sm={4}>
               <FormControl required component="fieldset">
@@ -194,25 +196,13 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
                 value={concerns == null ? "" : concerns} onChange={e => setFields({...fields, concerns: e.target.value})}
               />
             </Grid>
-            <Grid item xs={12}>
-              <TextField
-                id="notes"
-                label="Notes" placeholder="Space for any general notes"
-                multiline fullWidth variant="outlined" minRows={2} maxRows={5} size="small"
-                value={notes == null ? "" : notes} onChange={e => setFields({...fields, notes: e.target.value})}
-              />
-            </Grid>
           </Grid>
         </form> */}
         {/*
-        {(renamePersonParameter && <RenamePersonDialog familyId={partneringFamilyId} person={renamePersonParameter.person}
-          onClose={() => setRenamePersonParameter(null)} />) || null}
         {(deleteParameter && <DeletePersonDialog familyId={deleteParameter.familyId} person={deleteParameter.person}
           onClose={() => setDeleteParameter(null)} />) || null}
         {(updateConcernsParameter && <UpdateConcernsDialog familyId={partneringFamilyId} person={updateConcernsParameter.person}
           onClose={() => setUpdateConcernsParameter(null)} />) || null}
-        {(updateNotesParameter && <UpdateNotesDialog familyId={partneringFamilyId} person={updateNotesParameter.person}
-          onClose={() => setUpdateNotesParameter(null)} />) || null}
         {(updatePhoneParameter && <UpdatePhoneDialog familyId={partneringFamilyId} person={updatePhoneParameter.person}
           onClose={() => setUpdatePhoneParameter(null)} />) || null}
         {(updateEmailParameter && <UpdateEmailDialog familyId={partneringFamilyId} person={updateEmailParameter.person}
