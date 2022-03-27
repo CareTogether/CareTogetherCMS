@@ -5,28 +5,18 @@ import {
   CardContent,
   Typography,
   Chip,
-  CardActions,
-  Divider,
-  Menu,
-  ListItemText,
-  MenuItem,
+  Divider
 } from "@mui/material";
 import makeStyles from '@mui/styles/makeStyles';
-import { useState } from "react";
-import { Gender, Person, CombinedFamilyInfo } from "../../GeneratedClient";
+import { Gender, CombinedFamilyInfo } from "../../GeneratedClient";
 import { AgeText } from "../AgeText";
-import MoreVertIcon from '@mui/icons-material/MoreVert';
+import EditIcon from '@mui/icons-material/Edit';
 import { useRecoilValue } from "recoil";
 import { partneringFamiliesData } from "../../Model/ReferralsModel";
 import { ContactDisplay } from "../ContactDisplay";
 import { IconRow } from "../IconRow";
-import { RenamePersonDialog } from "../Families/RenamePersonDialog";
-import { UpdateAddressDialog } from "../Families/UpdateAddressDialog";
-import { UpdateConcernsDialog } from "../Families/UpdateConcernsDialog";
-import { UpdateEmailDialog } from "../Families/UpdateEmailDialog";
-import { UpdateNotesDialog } from "../Families/UpdateNotesDialog";
-import { UpdatePhoneDialog } from "../Families/UpdatePhoneDialog";
-import { DeletePersonDialog } from "../Families/DeletePersonDialog";
+import { useDialogHandle } from "../../useDialogHandle";
+import { EditAdultDialog } from "../Families/EditAdultDialog";
 
 const useStyles = makeStyles((theme) => ({
   sectionChips: {
@@ -71,50 +61,11 @@ export function PartneringAdultCard({partneringFamilyId, personId}: PartneringAd
   const classes = useStyles();
 
   const partneringFamilies = useRecoilValue(partneringFamiliesData);
-  //const policy = useRecoilValue(policyData);
 
   const partneringFamily = partneringFamilies.find(x => x.family?.id === partneringFamilyId) as CombinedFamilyInfo;
   const adult = partneringFamily.family?.adults?.find(x => x.item1?.id === personId);
 
-  const [adultMoreMenuAnchor, setAdultMoreMenuAnchor] = useState<{anchor: Element, adult: Person} | null>(null);
-  const [renamePersonParameter, setRenamePersonParameter] = useState<{partneringFamilyId: string, person: Person} | null>(null);
-  function selectChangeName(adult: Person) {
-    setAdultMoreMenuAnchor(null);
-    setRenamePersonParameter({partneringFamilyId, person: adult});
-  }
-  const [deleteParameter, setDeleteParameter] = useState<{familyId: string, person: Person} | null>(null);
-  function selectDelete(adult: Person) {
-    setAdultMoreMenuAnchor(null);
-    setDeleteParameter({familyId: partneringFamilyId, person: adult});
-  }
-  const [updateConcernsParameter, setUpdateConcernsParameter] = useState<{partneringFamilyId: string, person: Person} | null>(null);
-  function selectUpdateConcerns(adult: Person) {
-    setAdultMoreMenuAnchor(null);
-    setUpdateConcernsParameter({partneringFamilyId, person: adult});
-  }
-  const [updateNotesParameter, setUpdateNotesParameter] = useState<{partneringFamilyId: string, person: Person} | null>(null);
-  function selectUpdateNotes(adult: Person) {
-    setAdultMoreMenuAnchor(null);
-    setUpdateNotesParameter({partneringFamilyId, person: adult});
-  }
-  const [updatePhoneParameter, setUpdatePhoneParameter] = useState<{partneringFamilyId: string, person: Person} | null>(null);
-  function selectUpdatePhone(adult: Person) {
-    setAdultMoreMenuAnchor(null);
-    setUpdatePhoneParameter({partneringFamilyId, person: adult});
-  }
-  const [updateEmailParameter, setUpdateEmailParameter] = useState<{partneringFamilyId: string, person: Person} | null>(null);
-  function selectUpdateEmail(adult: Person) {
-    setAdultMoreMenuAnchor(null);
-    setUpdateEmailParameter({partneringFamilyId, person: adult});
-  }
-  const [updateAddressParameter, setUpdateAddressParameter] = useState<{partneringFamilyId: string, person: Person} | null>(null);
-  function selectUpdateAddress(adult: Person) {
-    setAdultMoreMenuAnchor(null);
-    setUpdateAddressParameter({partneringFamilyId, person: adult});
-  }
-  
-  //const theme = useTheme();
-  //const isMobile = useMediaQuery(theme.breakpoints.up('sm'));
+  const editDialogHandle = useDialogHandle();
 
   return <>{adult?.item1 && adult.item1.id && adult.item2 &&
     <Card variant="outlined" className={classes.card}>
@@ -125,9 +76,9 @@ export function PartneringAdultCard({partneringFamilyId, personId}: PartneringAd
         </>}
         action={
           <IconButton
-            onClick={(event) => setAdultMoreMenuAnchor({anchor: event.currentTarget, adult: adult.item1 as Person})}
-            size="large">
-            <MoreVertIcon />
+            onClick={editDialogHandle.openDialog}
+            size="medium">
+            <EditIcon color="primary" />
           </IconButton>} />
       <CardContent className={classes.cardContent}>
         <Typography color="textSecondary" className={classes.sectionChips} component="div">
@@ -143,52 +94,7 @@ export function PartneringAdultCard({partneringFamilyId, personId}: PartneringAd
           <ContactDisplay person={adult.item1} />
         </Typography>
       </CardContent>
-      <CardActions>
-        {/* <IconButton size="small" className={classes.rightCardAction}
-          onClick={(event) => setAdultRecordMenuAnchor({anchor: event.currentTarget, adult: adult.item1 as Person})}>
-          <AssignmentTurnedInIcon />
-        </IconButton> */}
-      </CardActions>
-      <Menu id="adult-more-menu"
-        anchorEl={adultMoreMenuAnchor?.anchor}
-        keepMounted
-        open={Boolean(adultMoreMenuAnchor)}
-        onClose={() => setAdultMoreMenuAnchor(null)}>
-        <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectChangeName(adultMoreMenuAnchor.adult)}>
-          <ListItemText primary="Change name" />
-        </MenuItem>
-        <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectDelete(adultMoreMenuAnchor.adult)}>
-          <ListItemText primary="Delete" />
-        </MenuItem>
-        <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectUpdateConcerns(adultMoreMenuAnchor.adult)}>
-          <ListItemText primary="Update concerns" />
-        </MenuItem>
-        <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectUpdateNotes(adultMoreMenuAnchor.adult)}>
-          <ListItemText primary="Update notes" />
-        </MenuItem>
-        <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectUpdatePhone(adultMoreMenuAnchor.adult)}>
-          <ListItemText primary="Update phone" />
-        </MenuItem>
-        <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectUpdateEmail(adultMoreMenuAnchor.adult)}>
-          <ListItemText primary="Update email" />
-        </MenuItem>
-        <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectUpdateAddress(adultMoreMenuAnchor.adult)}>
-          <ListItemText primary="Update address" />
-        </MenuItem>
-      </Menu>
-      {(renamePersonParameter && <RenamePersonDialog familyId={partneringFamilyId} person={renamePersonParameter.person}
-        onClose={() => setRenamePersonParameter(null)} />) || null}
-      {(deleteParameter && <DeletePersonDialog familyId={deleteParameter.familyId} person={deleteParameter.person}
-        onClose={() => setDeleteParameter(null)} />) || null}
-      {(updateConcernsParameter && <UpdateConcernsDialog familyId={partneringFamilyId} person={updateConcernsParameter.person}
-        onClose={() => setUpdateConcernsParameter(null)} />) || null}
-      {(updateNotesParameter && <UpdateNotesDialog familyId={partneringFamilyId} person={updateNotesParameter.person}
-        onClose={() => setUpdateNotesParameter(null)} />) || null}
-      {(updatePhoneParameter && <UpdatePhoneDialog familyId={partneringFamilyId} person={updatePhoneParameter.person}
-        onClose={() => setUpdatePhoneParameter(null)} />) || null}
-      {(updateEmailParameter && <UpdateEmailDialog familyId={partneringFamilyId} person={updateEmailParameter.person}
-        onClose={() => setUpdateEmailParameter(null)} />) || null}
-      {(updateAddressParameter && <UpdateAddressDialog familyId={partneringFamilyId} person={updateAddressParameter.person}
-        onClose={() => setUpdateAddressParameter(null)} />) || null}
+      {editDialogHandle.open && <EditAdultDialog handle={editDialogHandle} key={editDialogHandle.key}
+        adult={adult} />}
     </Card>}</>;
 }

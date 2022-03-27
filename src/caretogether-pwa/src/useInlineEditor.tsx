@@ -5,7 +5,7 @@ import UndoIcon from '@mui/icons-material/Undo';
 import { useState } from "react";
 import { useBackdrop } from "./useBackdrop";
 
-export function useInlineEditor<T>(onSave: (value: T) => Promise<void>, savedValue?: T) {
+export function useInlineEditor<T, U>(onSave: (value: T) => Promise<U>, savedValue?: T) {
   const withBackdrop = useBackdrop();
 
   const [editing, setEditing] = useState(false);
