@@ -5022,6 +5022,11 @@ export abstract class PersonCommand implements IPersonCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "UpdatePersonGender") {
+            let result = new UpdatePersonGender();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "UpdatePersonName") {
             let result = new UpdatePersonName();
             result.init(data);
@@ -5451,6 +5456,40 @@ export class UpdatePersonEmailAddress extends PersonCommand implements IUpdatePe
 export interface IUpdatePersonEmailAddress extends IPersonCommand {
     emailAddress?: EmailAddress;
     isPreferredEmailAddress?: boolean;
+}
+
+export class UpdatePersonGender extends PersonCommand implements IUpdatePersonGender {
+    gender?: Gender;
+
+    constructor(data?: IUpdatePersonGender) {
+        super(data);
+        this._discriminator = "UpdatePersonGender";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.gender = _data["gender"];
+        }
+    }
+
+    static fromJS(data: any): UpdatePersonGender {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdatePersonGender();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["gender"] = this.gender;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUpdatePersonGender extends IPersonCommand {
+    gender?: Gender;
 }
 
 export class UpdatePersonName extends PersonCommand implements IUpdatePersonName {

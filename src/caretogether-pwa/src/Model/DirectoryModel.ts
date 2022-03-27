@@ -1,5 +1,5 @@
 import { useRecoilCallback, useRecoilValue } from "recoil";
-import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, DirectoryCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, DirectoryClient, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, NoteCommandResult } from "../GeneratedClient";
+import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, DirectoryCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, DirectoryClient, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, NoteCommandResult, UpdatePersonGender } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { visibleFamiliesData } from "./ModelLoader";
@@ -172,6 +172,14 @@ export function useDirectoryModel() {
       });
       command.firstName = firstName;
       command.lastName = lastName;
+      return command;
+    });
+  const updatePersonGender = usePersonCommandCallback(
+    async (familyId, personId, gender: Gender) => {
+      const command = new UpdatePersonGender({
+        personId: personId
+      });
+      command.gender = gender;
       return command;
     });
   const updatePersonConcerns = usePersonCommandCallback(
@@ -411,6 +419,7 @@ export function useDirectoryModel() {
     uploadFamilyDocument,
     deleteUploadedFamilyDocument,
     updatePersonName,
+    updatePersonGender,
     updatePersonConcerns,
     updatePersonNotes,
     undoCreatePerson,

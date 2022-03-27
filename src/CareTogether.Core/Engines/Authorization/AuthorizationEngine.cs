@@ -108,6 +108,7 @@ namespace CareTogether.Engines.Authorization
                     CreatePerson => null,
                     UndoCreatePerson => null,
                     UpdatePersonName => null,
+                    UpdatePersonGender => null,
                     UpdatePersonAge => null,
                     UpdatePersonUserLink => null,
                     UpdatePersonConcerns => null,

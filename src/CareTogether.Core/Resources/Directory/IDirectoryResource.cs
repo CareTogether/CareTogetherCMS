@@ -84,6 +84,8 @@ namespace CareTogether.Resources.Directory
         : PersonCommand(PersonId);
     public sealed record UpdatePersonName(Guid PersonId, string FirstName, string LastName)
         : PersonCommand(PersonId);
+    public sealed record UpdatePersonGender(Guid PersonId, Gender Gender)
+        : PersonCommand(PersonId);
     public sealed record UpdatePersonAge(Guid PersonId, Age Age)
         : PersonCommand(PersonId);
     public sealed record UpdatePersonUserLink(Guid PersonId, Guid? UserId)

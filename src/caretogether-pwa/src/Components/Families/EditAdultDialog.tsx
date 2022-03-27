@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@mui/material';
-import { Age, ExactAge, AgeInYears, Gender, EmailAddressType, PhoneNumberType, Person, ValueTupleOfPersonAndFamilyAdultRelationshipInfo } from '../../GeneratedClient';
+import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select } from '@mui/material';
+import { Age, ExactAge, AgeInYears, Gender, EmailAddressType, PhoneNumberType, ValueTupleOfPersonAndFamilyAdultRelationshipInfo } from '../../GeneratedClient';
 import { useDirectoryModel } from '../../Model/DirectoryModel';
 import WarningIcon from '@mui/icons-material/Warning';
 import { DatePicker } from '@mui/lab';
@@ -10,43 +10,9 @@ import { useParams } from 'react-router-dom';
 import { useBackdrop } from '../../useBackdrop';
 import { subYears } from 'date-fns';
 import { DialogHandle } from '../../useDialogHandle';
-import { useInlineEditor } from '../../useInlineEditor';
-import { PersonName } from './PersonName';
-
-type PersonEditorProps = {
-  familyId: string
-  person: Person
-}
-
-function NameEditor({ familyId, person }: PersonEditorProps) {
-  const directoryModel = useDirectoryModel();
-
-  const editor = useInlineEditor(async ({ firstName, lastName }) =>
-    await directoryModel.updatePersonName(familyId!, person.id!, firstName, lastName),
-    { firstName: person.firstName!, lastName: person.lastName! });
-
-  return (editor.editing
-    ? <>
-        <Grid item xs={12} sm={6}>
-          <TextField required id="first-name" label="First Name" fullWidth size="small"
-            value={editor.value!.firstName}
-            onChange={e => editor.setValue({ firstName: e.target.value, lastName: editor.value!.lastName })} />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField required id="last-name" label="Last Name" fullWidth size="small"
-            value={editor.value!.lastName}
-            onChange={e => editor.setValue({ firstName: editor.value!.firstName, lastName: e.target.value })} />
-        </Grid>
-        <Grid item xs={12}>
-          {editor.cancelButton}
-          {editor.saveButton}
-        </Grid>
-      </>
-    : <Grid item xs={12}>
-        <PersonName person={person} />
-        {editor.editButton}
-      </Grid>);
-}
+import { NameEditor } from './NameEditor';
+import { PersonEditorProps } from './PersonEditorProps';
+import { GenderEditor } from './GenderEditor';
 
 interface EditAdultDialogProps {
   handle: DialogHandle
@@ -62,10 +28,8 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
 
   const person = adult.item1!;
 
-  // const genderEditor = useInlineEditor(async gender =>
-  //   await directoryModel.updatePersonGender(familyId!, person.id!, gender),
-  //   person.gender);
-  
+  const personEditorProps = { familyId, person } as PersonEditorProps;
+
   // const ageEditor = useInlineEditor(async age =>
   //   await directoryModel.updatePersonAge(familyId!, person.id!, age),
   //   person.age);
@@ -82,15 +46,9 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
   //TODO: notes
   //TODO: concerns
 
-  const directoryModel = useDirectoryModel();
-
   const relationshipTypes = useRecoilValue(adultFamilyRelationshipsData);
   const ethnicities = useRecoilValue(ethnicitiesData);
 
-  // if (firstName.length <= 0 || lastName.length <= 0) {
-  //   alert("First and last name are required. Try again.");
-  // } else if (gender == null) {
-  //   alert("Gender was not selected. Try again.");
   // } else if (ageType === 'exact' && dateOfBirth == null) {
   //   alert("Date of birth was not specified. Try again.");
   // } else if (ageType === 'inYears' && ageInYears == null) {
@@ -104,37 +62,14 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
 
   return (
     <Dialog open={handle.open} onClose={handle.closeDialog}
-      scroll='body' aria-labelledby="edit-adult-title">
+      fullWidth scroll='body' aria-labelledby="edit-adult-title">
       <DialogTitle id="edit-adult-title">
         Edit Adult
       </DialogTitle>
-      <DialogContent>
-        <form noValidate autoComplete="off">
-          <Grid container spacing={2}>
-            <NameEditor familyId={familyId!} person={person} />
-          </Grid>
-        </form>
-        {/* <form noValidate autoComplete="off">
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
-              <TextField required id="first-name" label="First Name" fullWidth size="small"
-                value={firstName} onChange={e => setFields({...fields, firstName: e.target.value})} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField required id="last-name" label="Last Name" fullWidth size="small"
-                value={lastName} onChange={e => setFields({...fields, lastName: e.target.value})} />
-            </Grid>
-            <Grid item xs={12}>
-              <FormControl required component="fieldset">
-                <FormLabel component="legend">Gender:</FormLabel>
-                <RadioGroup aria-label="genderType" name="genderType" row
-                  value={gender == null ? null : Gender[gender]} onChange={e => setFields({...fields, gender: Gender[e.target.value as keyof typeof Gender]})}>
-                  <FormControlLabel value={Gender[Gender.Male]} control={<Radio size="small" />} label="Male" />
-                  <FormControlLabel value={Gender[Gender.Female]} control={<Radio size="small" />} label="Female" />
-                  <FormControlLabel value={Gender[Gender.SeeNotes]} control={<Radio size="small" />} label="See Notes" />
-                </RadioGroup>
-              </FormControl>
-            </Grid>
+      <DialogContent sx={{ paddingTop: '8px' }}>
+        <NameEditor {...personEditorProps} />
+        <GenderEditor {...personEditorProps} />
+        {/* 
             <Grid item xs={12} sm={4}>
               <FormControl required component="fieldset">
                 <FormLabel component="legend">Specify age as:</FormLabel>

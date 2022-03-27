@@ -5,7 +5,8 @@ import UndoIcon from '@mui/icons-material/Undo';
 import { useState } from "react";
 import { useBackdrop } from "./useBackdrop";
 
-export function useInlineEditor<T, U>(onSave: (value: T) => Promise<U>, savedValue?: T) {
+export function useInlineEditor<T, U>(onSave: (value: T) => Promise<U>, savedValue?: T,
+  validate?: (value?: T) => boolean) {
   const withBackdrop = useBackdrop();
 
   const [editing, setEditing] = useState(false);
@@ -13,7 +14,7 @@ export function useInlineEditor<T, U>(onSave: (value: T) => Promise<U>, savedVal
 
   async function saveChanges() {
     await withBackdrop(async () => {
-      await onSave(value as T); //TODO: Ensure 'value' is always defined at this point
+      await onSave(value as T);
       setEditing(false);
     });
   }
@@ -47,7 +48,9 @@ export function useInlineEditor<T, U>(onSave: (value: T) => Promise<U>, savedVal
       </Button>,
     saveButton: editing &&
       <Button
-        disabled={value === savedValue}
+        disabled={value === savedValue ||
+          typeof(value) === 'undefined' ||
+          (typeof(validate) !== 'undefined' && !validate(value))}
         onClick={saveChanges}
         variant="contained"
         size="small"
