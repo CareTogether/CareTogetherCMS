@@ -7,6 +7,7 @@ import { PersonEditorProps } from './PersonEditorProps';
 import { GenderEditor } from './GenderEditor';
 import { NotesEditor } from './NotesEditor';
 import { ConcernsEditor } from './ConcernsEditor';
+import { AgeEditor } from './AgeEditor';
 
 interface EditAdultDialogProps {
   handle: DialogHandle
@@ -24,10 +25,6 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
 
   const personEditorProps = { familyId, person } as PersonEditorProps;
 
-  // const ageEditor = useInlineEditor(async age =>
-  //   await directoryModel.updatePersonAge(familyId!, person.id!, age),
-  //   person.age);
-  
   // const ethnicityEditor = useInlineEditor(async ethnicity =>
   //   await directoryModel.updatePersonEthnicity(familyId!, person.id!, ethnicity),
   //   person.ethnicity);
@@ -41,12 +38,6 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
   // const relationshipTypes = useRecoilValue(adultFamilyRelationshipsData);
   // const ethnicities = useRecoilValue(ethnicitiesData);
 
-  // } else if (ageType === 'exact' && dateOfBirth == null) {
-  //   alert("Date of birth was not specified. Try again.");
-  // } else if (ageType === 'inYears' && ageInYears == null) {
-  //   alert("Age in years was not specified. Try again.");
-  // } else if (ageType === 'inYears' && ageInYears != null && ageInYears < 16) {
-  //   alert("Age in years must be at least 16. Try again.");
   // } else if (ethnicity === '') {
   //   alert("Ethnicity was not selected. Try again.");
   // } else if (relationshipToFamily === '') { //TODO: Actual validation!
@@ -61,38 +52,10 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
       <DialogContent sx={{ paddingTop: '8px' }}>
         <NameEditor {...personEditorProps} />
         <GenderEditor {...personEditorProps} />
+        <AgeEditor {...personEditorProps} />
         <NotesEditor {...personEditorProps} />
         <ConcernsEditor {...personEditorProps} />
         {/* 
-            <Grid item xs={12} sm={4}>
-              <FormControl required component="fieldset">
-                <FormLabel component="legend">Specify age as:</FormLabel>
-                <RadioGroup aria-label="ageType" name="ageType"
-                  value={ageType} onChange={e => setAgeType(e.target.value as 'exact' | 'inYears')}>
-                  <FormControlLabel value="exact" control={<Radio size="small" />} label="Date of birth:" />
-                  <FormControlLabel value="inYears" control={<Radio size="small" />} label="Years old today:" />
-                </RadioGroup>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={8} container direction="column" spacing={0}>
-              <Grid item>
-                <DatePicker
-                  label="Date of birth"
-                  value={dateOfBirth} maxDate={subYears(new Date(), 16)} openTo="year"
-                  disabled={ageType !== 'exact'} inputFormat="MM/dd/yyyy"
-                  onChange={(date) => date && setFields({...fields, dateOfBirth: date})}
-                  renderInput={(params) => <TextField size="small" required {...params} />} />
-              </Grid>
-              <Grid item>
-                <TextField
-                  id="age-years" label="Age" size="small"
-                  required type="number" disabled={ageType !== 'inYears'}
-                  value={ageInYears == null ? "" : ageInYears} onChange={e => setFields({...fields, ageInYears: Number.parseInt(e.target.value)})}
-                  InputProps={{
-                    endAdornment: <InputAdornment position="end">years</InputAdornment>,
-                  }} />
-                </Grid>
-            </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl required fullWidth size="small">
                 <InputLabel id="ethnicity-label">Ethnicity</InputLabel>
