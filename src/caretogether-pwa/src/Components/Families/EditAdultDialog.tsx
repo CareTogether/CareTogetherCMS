@@ -1,13 +1,15 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { ValueTupleOfPersonAndFamilyAdultRelationshipInfo } from '../../GeneratedClient';
 import { useParams } from 'react-router-dom';
-import { DialogHandle } from '../../useDialogHandle';
+import { DialogHandle, useDialogHandle } from '../../useDialogHandle';
 import { NameEditor } from './NameEditor';
 import { PersonEditorProps } from './PersonEditorProps';
 import { GenderEditor } from './GenderEditor';
 import { NotesEditor } from './NotesEditor';
 import { ConcernsEditor } from './ConcernsEditor';
 import { AgeEditor } from './AgeEditor';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import { DeletePersonDialog } from './DeletePersonDialog';
 
 interface EditAdultDialogProps {
   handle: DialogHandle
@@ -24,6 +26,8 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
   const person = adult.item1!;
 
   const personEditorProps = { familyId, person } as PersonEditorProps;
+
+  const deleteDialogHandle = useDialogHandle();
 
   // const ethnicityEditor = useInlineEditor(async ethnicity =>
   //   await directoryModel.updatePersonEthnicity(familyId!, person.id!, ethnicity),
@@ -147,8 +151,6 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
           </Grid>
         </form> */}
         {/*
-        {(deleteParameter && <DeletePersonDialog familyId={deleteParameter.familyId} person={deleteParameter.person}
-          onClose={() => setDeleteParameter(null)} />) || null}
         {(updatePhoneParameter && <UpdatePhoneDialog familyId={partneringFamilyId} person={updatePhoneParameter.person}
           onClose={() => setUpdatePhoneParameter(null)} />) || null}
         {(updateEmailParameter && <UpdateEmailDialog familyId={partneringFamilyId} person={updateEmailParameter.person}
@@ -158,13 +160,16 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
           */}
       </DialogContent>
       <DialogActions>
-        {/* <Button onClick={handle.closeDialog} color="secondary">
-          Cancel
-        </Button> */}
+        <Button onClick={deleteDialogHandle.openDialog} variant="contained" color="secondary"
+          startIcon={<DeleteForeverIcon />}>
+          Delete
+        </Button>
         <Button onClick={handle.closeDialog} variant="contained" color="primary">
           Close
         </Button>
       </DialogActions>
+      {deleteDialogHandle.open && <DeletePersonDialog key={deleteDialogHandle.key}
+        handle={deleteDialogHandle} familyId={familyId!} person={person} />}
     </Dialog>
   );
 }
