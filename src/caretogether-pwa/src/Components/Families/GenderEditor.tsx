@@ -1,4 +1,4 @@
-import { FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@mui/material';
+import { FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup } from '@mui/material';
 import { useDirectoryModel } from '../../Model/DirectoryModel';
 import { useInlineEditor } from '../../useInlineEditor';
 import { PersonEditorProps } from "./PersonEditorProps";
@@ -34,7 +34,7 @@ export function GenderEditor({ familyId, person }: PersonEditorProps) {
           </>
         : <Grid item xs={12}>
             Gender: {
-              person.gender == Gender.Male ? "Male"
+              person.gender === Gender.Male ? "Male"
               : person.gender === Gender.Female ? "Female"
               : "(see notes)"}
             {editor.editButton}

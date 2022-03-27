@@ -1,14 +1,6 @@
-import { useState } from 'react';
-import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select } from '@mui/material';
-import { Age, ExactAge, AgeInYears, Gender, EmailAddressType, PhoneNumberType, ValueTupleOfPersonAndFamilyAdultRelationshipInfo } from '../../GeneratedClient';
-import { useDirectoryModel } from '../../Model/DirectoryModel';
-import WarningIcon from '@mui/icons-material/Warning';
-import { DatePicker } from '@mui/lab';
-import { useRecoilValue } from 'recoil';
-import { adultFamilyRelationshipsData, ethnicitiesData } from '../../Model/ConfigurationModel';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { ValueTupleOfPersonAndFamilyAdultRelationshipInfo } from '../../GeneratedClient';
 import { useParams } from 'react-router-dom';
-import { useBackdrop } from '../../useBackdrop';
-import { subYears } from 'date-fns';
 import { DialogHandle } from '../../useDialogHandle';
 import { NameEditor } from './NameEditor';
 import { PersonEditorProps } from './PersonEditorProps';
@@ -19,9 +11,9 @@ interface EditAdultDialogProps {
   adult: ValueTupleOfPersonAndFamilyAdultRelationshipInfo
 }
 
-function optional(arg: string) {
-  return arg.length > 0 ? arg : null;
-}
+// function optional(arg: string) {
+//   return arg.length > 0 ? arg : null;
+// }
 
 export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
   const { familyId } = useParams<{ familyId: string }>();
@@ -46,8 +38,8 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
   //TODO: notes
   //TODO: concerns
 
-  const relationshipTypes = useRecoilValue(adultFamilyRelationshipsData);
-  const ethnicities = useRecoilValue(ethnicitiesData);
+  // const relationshipTypes = useRecoilValue(adultFamilyRelationshipsData);
+  // const ethnicities = useRecoilValue(ethnicitiesData);
 
   // } else if (ageType === 'exact' && dateOfBirth == null) {
   //   alert("Date of birth was not specified. Try again.");
