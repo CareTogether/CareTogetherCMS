@@ -43,7 +43,7 @@ export function AgeEditor({ familyId, person }: PersonEditorProps) {
               {editor.saveButton}
             </Grid>
           </>
-        : <Grid item xs={12} sm={6}>
+        : <Grid item xs={12}>
             Age: <AgeText age={person.age} />
             {person.age instanceof ExactAge
               ? ` (date of birth: ${format(dateOfBirth!, " (M/d/yyyy)")}`
