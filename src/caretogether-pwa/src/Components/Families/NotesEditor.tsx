@@ -7,7 +7,8 @@ export function NotesEditor({ familyId, person }: PersonEditorProps) {
   const directoryModel = useDirectoryModel();
 
   const editor = useInlineEditor(async notes =>
-    await directoryModel.updatePersonNotes(familyId!, person.id!, notes),
+    await directoryModel.updatePersonNotes(familyId!, person.id!,
+      notes != null && notes.length > 0 ? notes : null),
     typeof person.notes === 'undefined' ? null : person.notes);
 
   return (

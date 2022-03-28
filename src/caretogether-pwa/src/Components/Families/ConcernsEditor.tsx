@@ -8,7 +8,8 @@ export function ConcernsEditor({ familyId, person }: PersonEditorProps) {
   const directoryModel = useDirectoryModel();
 
   const editor = useInlineEditor(async concerns =>
-    await directoryModel.updatePersonConcerns(familyId!, person.id!, concerns),
+    await directoryModel.updatePersonConcerns(familyId!, person.id!,
+      concerns != null && concerns.length > 0 ? concerns : null),
     typeof person.concerns === 'undefined' ? null : person.concerns);
 
   return (

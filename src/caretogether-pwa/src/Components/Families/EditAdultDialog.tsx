@@ -18,10 +18,6 @@ interface EditAdultDialogProps {
   adult: ValueTupleOfPersonAndFamilyAdultRelationshipInfo
 }
 
-// function optional(arg: string) {
-//   return arg.length > 0 ? arg : null;
-// }
-
 export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
   const { familyId } = useParams<{ familyId: string }>();
 
