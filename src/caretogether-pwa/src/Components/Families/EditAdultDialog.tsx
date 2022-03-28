@@ -10,6 +10,7 @@ import { ConcernsEditor } from './ConcernsEditor';
 import { AgeEditor } from './AgeEditor';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { DeletePersonDialog } from './DeletePersonDialog';
+import { EthnicityEditor } from './EthnicityEditor';
 
 interface EditAdultDialogProps {
   handle: DialogHandle
@@ -29,10 +30,6 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
 
   const deleteDialogHandle = useDialogHandle();
 
-  // const ethnicityEditor = useInlineEditor(async ethnicity =>
-  //   await directoryModel.updatePersonEthnicity(familyId!, person.id!, ethnicity),
-  //   person.ethnicity);
-  
   //TODO: isInHousehold
   //TODO: relationshipToFamily
   //TODO: address(es)
@@ -40,10 +37,7 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
   //TODO: email address(es)
 
   // const relationshipTypes = useRecoilValue(adultFamilyRelationshipsData);
-  // const ethnicities = useRecoilValue(ethnicitiesData);
 
-  // } else if (ethnicity === '') {
-  //   alert("Ethnicity was not selected. Try again.");
   // } else if (relationshipToFamily === '') { //TODO: Actual validation!
   //   alert("Family relationship was not selected. Try again.");
 
@@ -57,24 +51,10 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
         <NameEditor {...personEditorProps} />
         <GenderEditor {...personEditorProps} />
         <AgeEditor {...personEditorProps} />
+        <EthnicityEditor {...personEditorProps} />
         <NotesEditor {...personEditorProps} />
         <ConcernsEditor {...personEditorProps} />
         {/* 
-            <Grid item xs={12} sm={6}>
-              <FormControl required fullWidth size="small">
-                <InputLabel id="ethnicity-label">Ethnicity</InputLabel>
-                <Select
-                  labelId="ethnicity-label" id="ethnicity"
-                  value={ethnicity}
-                  onChange={e => setFields({...fields, ethnicity: e.target.value as string})}>
-                    <MenuItem key="placeholder" value="" disabled>
-                      Select an ethnicity
-                    </MenuItem>
-                    {ethnicities.map(ethnicity =>
-                      <MenuItem key={ethnicity} value={ethnicity}>{ethnicity}</MenuItem>)}
-                </Select>
-              </FormControl>
-            </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl required fullWidth size="small">
                 <InputLabel id="family-relationship-label">Relationship to Family</InputLabel>

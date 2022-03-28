@@ -110,6 +110,7 @@ namespace CareTogether.Engines.Authorization
                     UpdatePersonName => null,
                     UpdatePersonGender => null,
                     UpdatePersonAge => null,
+                    UpdatePersonEthnicity => null,
                     UpdatePersonUserLink => null,
                     UpdatePersonConcerns => null,
                     UpdatePersonNotes => null,
