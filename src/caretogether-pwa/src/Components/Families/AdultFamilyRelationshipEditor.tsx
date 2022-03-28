@@ -6,7 +6,7 @@ import { useRecoilValue } from 'recoil';
 import { adultFamilyRelationshipsData } from '../../Model/ConfigurationModel';
 import { FamilyAdultRelationshipInfo } from '../../GeneratedClient';
 
-export type AdultFamilyRelationshipEditorProps = PersonEditorProps & {
+type AdultFamilyRelationshipEditorProps = PersonEditorProps & {
   relationship: FamilyAdultRelationshipInfo
 }
 

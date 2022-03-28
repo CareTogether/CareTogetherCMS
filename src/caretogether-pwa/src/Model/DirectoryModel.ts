@@ -277,11 +277,11 @@ export function useDirectoryModel() {
     });
   const updatePersonAddress = usePersonCommandCallback(
     async (familyId, personId, addressId: string,
-      line1: string, line2: string, city: string, state: string, postalCode: string) => {
+      line1: string, line2: string | null, city: string, state: string, postalCode: string) => {
       const command = new UpdatePersonAddress({
         personId: personId
       });
-      command.address = new Address({ id: addressId, line1: line1, line2: line2, city: city, state: state, postalCode: postalCode })
+      command.address = new Address({ id: addressId, line1: line1, line2: line2 == null ? undefined : line2, city: city, state: state, postalCode: postalCode })
       command.isCurrentAddress = true;
       return command;
     });

@@ -12,6 +12,7 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { DeletePersonDialog } from './DeletePersonDialog';
 import { EthnicityEditor } from './EthnicityEditor';
 import { AdultFamilyRelationshipEditor } from './AdultFamilyRelationshipEditor';
+import { AddressEditor } from './AddressEditor';
 
 interface EditAdultDialogProps {
   handle: DialogHandle
@@ -27,7 +28,6 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
 
   const deleteDialogHandle = useDialogHandle();
 
-  //TODO: address(es)
   //TODO: phone number(s)
   //TODO: email address(es)
 
@@ -44,6 +44,13 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
         <AgeEditor {...personEditorProps} />
         <EthnicityEditor {...personEditorProps} />
         <AdultFamilyRelationshipEditor relationship={adult.item2!} {...personEditorProps} />
+        {/* {person.phoneNumbers?.map(phoneNumber =>
+          <PhoneNumberEditor key={phoneNumber.id!} phoneNumber={phoneNumber} {...personEditorProps } />)}
+        {person.emailAddresses?.map(emailAddress =>
+          <EmailAddressEditor key={emailAddress.id!} emailAddress={emailAddress} {...personEditorProps } />)} */}
+        Addresses:
+        {person.addresses?.map(address =>
+          <AddressEditor key={address.id!} address={address} {...personEditorProps } />)}
         <NotesEditor {...personEditorProps} />
         <ConcernsEditor {...personEditorProps} />
         {/* 
@@ -76,26 +83,6 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
                 </RadioGroup>
               </FormControl>
             </Grid>
-            <Grid item xs={12}>
-              <TextField id="address-line1" label="Address Line 1" fullWidth size="small"
-                value={addressLine1} onChange={e => setFields({...fields, addressLine1: e.target.value})} />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField id="address-line2" label="Address Line 2" fullWidth size="small"
-                value={addressLine2} onChange={e => setFields({...fields, addressLine2: e.target.value})} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField id="address-city" label="City" fullWidth size="small"
-                value={city} onChange={e => setFields({...fields, city: e.target.value})} />
-            </Grid>
-            <Grid item xs={12} sm={2}>
-              <TextField id="address-state" label="State" fullWidth size="small"
-                value={state} onChange={e => setFields({...fields, state: e.target.value})} />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField id="address-postalcode" label="ZIP/Postal Code" fullWidth size="small"
-                value={postalCode} onChange={e => setFields({...fields, postalCode: e.target.value})} />
-            </Grid>
           </Grid>
         </form> */}
         {/*
@@ -103,8 +90,6 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
           onClose={() => setUpdatePhoneParameter(null)} />) || null}
         {(updateEmailParameter && <UpdateEmailDialog familyId={partneringFamilyId} person={updateEmailParameter.person}
           onClose={() => setUpdateEmailParameter(null)} />) || null}
-        {(updateAddressParameter && <UpdateAddressDialog familyId={partneringFamilyId} person={updateAddressParameter.person}
-          onClose={() => setUpdateAddressParameter(null)} />) || null}
           */}
       </DialogContent>
       <DialogActions>
