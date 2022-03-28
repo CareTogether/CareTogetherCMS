@@ -20,6 +20,7 @@ import { RenamePersonDialog } from "../Families/RenamePersonDialog";
 import { UpdateConcernsDialog } from "../Families/UpdateConcernsDialog";
 import { UpdateNotesDialog } from "../Families/UpdateNotesDialog";
 import { DeletePersonDialog } from "../Families/DeletePersonDialog";
+import { useDialogHandle } from "../../useDialogHandle";
 
 const useStyles = makeStyles((theme) => ({
   sectionChips: {
@@ -68,6 +69,8 @@ export function PartneringChildCard({partneringFamilyId, personId}: PartneringCh
   const partneringFamily = partneringFamilies.find(x => x.family?.id === partneringFamilyId) as CombinedFamilyInfo;
   const child = partneringFamily.family?.children?.find(x => x.id === personId);
 
+  const deleteDialogHandle = useDialogHandle();
+  
   const [childMoreMenuAnchor, setChildMoreMenuAnchor] = useState<{anchor: Element, child: Person} | null>(null);
   const [renamePersonParameter, setRenamePersonParameter] = useState<{partneringFamilyId: string, person: Person} | null>(null);
   function selectChangeName(child: Person) {
@@ -78,6 +81,7 @@ export function PartneringChildCard({partneringFamilyId, personId}: PartneringCh
   function selectDelete(child: Person) {
     setChildMoreMenuAnchor(null);
     setDeleteParameter({familyId: partneringFamilyId, person: child});
+    deleteDialogHandle.openDialog();
   }
   const [updateConcernsParameter, setUpdateConcernsParameter] = useState<{partneringFamilyId: string, person: Person} | null>(null);
   function selectUpdateConcerns(child: Person) {
@@ -148,8 +152,8 @@ export function PartneringChildCard({partneringFamilyId, personId}: PartneringCh
       </Menu>
       {(renamePersonParameter && <RenamePersonDialog familyId={partneringFamilyId} person={renamePersonParameter.person}
         onClose={() => setRenamePersonParameter(null)} />) || null}
-      {(deleteParameter && <DeletePersonDialog familyId={deleteParameter.familyId} person={deleteParameter.person}
-        onClose={() => setDeleteParameter(null)} />) || null}
+      {deleteDialogHandle.open && <DeletePersonDialog key={deleteDialogHandle.key} handle={deleteDialogHandle}
+        familyId={deleteParameter!.familyId!} person={deleteParameter!.person!} />}
       {(updateConcernsParameter && <UpdateConcernsDialog familyId={partneringFamilyId} person={updateConcernsParameter.person}
         onClose={() => setUpdateConcernsParameter(null)} />) || null}
       {(updateNotesParameter && <UpdateNotesDialog familyId={partneringFamilyId} person={updateNotesParameter.person}
