@@ -11,6 +11,7 @@ import { AgeEditor } from './AgeEditor';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { DeletePersonDialog } from './DeletePersonDialog';
 import { EthnicityEditor } from './EthnicityEditor';
+import { AdultFamilyRelationshipEditor } from './AdultFamilyRelationshipEditor';
 
 interface EditAdultDialogProps {
   handle: DialogHandle
@@ -30,16 +31,10 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
 
   const deleteDialogHandle = useDialogHandle();
 
-  //TODO: isInHousehold
-  //TODO: relationshipToFamily
   //TODO: address(es)
   //TODO: phone number(s)
   //TODO: email address(es)
 
-  // const relationshipTypes = useRecoilValue(adultFamilyRelationshipsData);
-
-  // } else if (relationshipToFamily === '') { //TODO: Actual validation!
-  //   alert("Family relationship was not selected. Try again.");
 
   return (
     <Dialog open={handle.open} onClose={handle.closeDialog}
@@ -52,33 +47,10 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
         <GenderEditor {...personEditorProps} />
         <AgeEditor {...personEditorProps} />
         <EthnicityEditor {...personEditorProps} />
+        <AdultFamilyRelationshipEditor relationship={adult.item2!} {...personEditorProps} />
         <NotesEditor {...personEditorProps} />
         <ConcernsEditor {...personEditorProps} />
         {/* 
-            <Grid item xs={12} sm={6}>
-              <FormControl required fullWidth size="small">
-                <InputLabel id="family-relationship-label">Relationship to Family</InputLabel>
-                <Select
-                  labelId="family-relationship-label" id="family-relationship"
-                  value={relationshipToFamily}
-                  onChange={e => setFields({...fields, relationshipToFamily: e.target.value as string})}>
-                    <MenuItem key="placeholder" value="" disabled>
-                      Select a relationship type
-                    </MenuItem>
-                    {relationshipTypes.map(relationshipType =>
-                      <MenuItem key={relationshipType} value={relationshipType}>{relationshipType}</MenuItem>)}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12}>
-              <FormGroup row>
-                <FormControlLabel
-                  control={<Checkbox checked={isInHousehold} onChange={e => setFields({...fields, isInHousehold: e.target.checked})}
-                    name="isInHousehold" color="primary" size="small" />}
-                  label="In Household"
-                />
-              </FormGroup>
-            </Grid>
             <Grid item xs={12} sm={6}>
               <TextField id="phone-number" label="Phone Number" fullWidth size="small" type="tel"
                 value={phoneNumber} onChange={e => setFields({...fields, phoneNumber: e.target.value})} />
