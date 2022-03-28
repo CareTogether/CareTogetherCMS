@@ -11,10 +11,10 @@ type AddressEditorProps = PersonEditorProps & {
 export function AddressEditor({ familyId, person, address }: AddressEditorProps) {
   const directoryModel = useDirectoryModel();
 
-  const editor = useInlineEditor(async address =>
+  const editor = useInlineEditor(async value =>
     await directoryModel.updatePersonAddress(familyId!, person.id!,
-      address.id!, address.line1!, address.line2!.length > 0 ? address.line2! : null,
-      address.city!, address.state!, address.postalCode!),
+      value.id!, value.line1!, value.line2!.length > 0 ? value.line2! : null,
+      value.city!, value.state!, value.postalCode!),
     address as IAddress,
     value => (value &&
       (value.line1!.length > 0 && value.city!.length > 0 && value.state!.length > 0 && value.postalCode!.length > 0) &&

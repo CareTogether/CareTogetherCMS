@@ -13,6 +13,7 @@ import { DeletePersonDialog } from './DeletePersonDialog';
 import { EthnicityEditor } from './EthnicityEditor';
 import { AdultFamilyRelationshipEditor } from './AdultFamilyRelationshipEditor';
 import { AddressEditor } from './AddressEditor';
+import { PhoneNumberEditor } from './PhoneNumberEditor';
 
 interface EditAdultDialogProps {
   handle: DialogHandle
@@ -44,9 +45,10 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
         <AgeEditor {...personEditorProps} />
         <EthnicityEditor {...personEditorProps} />
         <AdultFamilyRelationshipEditor relationship={adult.item2!} {...personEditorProps} />
-        {/* {person.phoneNumbers?.map(phoneNumber =>
+        Phone Numbers:
+        {person.phoneNumbers?.map(phoneNumber =>
           <PhoneNumberEditor key={phoneNumber.id!} phoneNumber={phoneNumber} {...personEditorProps } />)}
-        {person.emailAddresses?.map(emailAddress =>
+        {/* {person.emailAddresses?.map(emailAddress =>
           <EmailAddressEditor key={emailAddress.id!} emailAddress={emailAddress} {...personEditorProps } />)} */}
         Addresses:
         {person.addresses?.map(address =>
@@ -54,21 +56,6 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
         <NotesEditor {...personEditorProps} />
         <ConcernsEditor {...personEditorProps} />
         {/* 
-            <Grid item xs={12} sm={6}>
-              <TextField id="phone-number" label="Phone Number" fullWidth size="small" type="tel"
-                value={phoneNumber} onChange={e => setFields({...fields, phoneNumber: e.target.value})} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl component="fieldset">
-                <FormLabel component="legend">Phone Type:</FormLabel>
-                <RadioGroup aria-label="phoneType" name="phoneType" row
-                  value={PhoneNumberType[phoneType]} onChange={e => setFields({...fields, phoneType: PhoneNumberType[e.target.value as keyof typeof PhoneNumberType]})}>
-                  <FormControlLabel value={PhoneNumberType[PhoneNumberType.Mobile]} control={<Radio size="small" />} label="Mobile" />
-                  <FormControlLabel value={PhoneNumberType[PhoneNumberType.Home]} control={<Radio size="small" />} label="Home" />
-                  <FormControlLabel value={PhoneNumberType[PhoneNumberType.Work]} control={<Radio size="small" />} label="Work" />
-                </RadioGroup>
-              </FormControl>
-            </Grid>
             <Grid item xs={12} sm={6}>
               <TextField id="email-address" label="Email Address" fullWidth size="small" type="email"
                 value={emailAddress} onChange={e => setFields({...fields, emailAddress: e.target.value})} />
