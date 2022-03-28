@@ -4,23 +4,15 @@ import {
   IconButton,
   CardContent,
   Typography,
-  CardActions,
-  ListItemText,
-  Menu,
-  MenuItem,
 } from "@mui/material";
 import makeStyles from '@mui/styles/makeStyles';
-import { useState } from "react";
-import { CustodialRelationshipType, Gender, Person, CombinedFamilyInfo } from "../../GeneratedClient";
+import { CustodialRelationshipType, Gender, CombinedFamilyInfo } from "../../GeneratedClient";
 import { AgeText } from "../AgeText";
-import MoreVertIcon from '@mui/icons-material/MoreVert';
+import EditIcon from '@mui/icons-material/Edit';
 import { useRecoilValue } from "recoil";
 import { volunteerFamiliesData } from "../../Model/VolunteersModel";
-import { RenamePersonDialog } from "../Families/RenamePersonDialog";
-import { UpdateConcernsDialog } from "../Families/UpdateConcernsDialog";
-import { UpdateNotesDialog } from "../Families/UpdateNotesDialog";
-import { DeletePersonDialog } from "../Families/DeletePersonDialog";
 import { useDialogHandle } from "../../useDialogHandle";
+import { EditChildDialog } from "../Families/EditChildDialog";
 
 const useStyles = makeStyles((theme) => ({
   sectionChips: {
@@ -50,9 +42,6 @@ const useStyles = makeStyles((theme) => ({
     '& > li': {
       marginTop: 4
     }
-  },
-  rightCardAction: {
-    marginLeft: 'auto !important'
   }
 }));
 
@@ -69,30 +58,7 @@ export function VolunteerChildCard({volunteerFamilyId, personId}: VolunteerChild
   const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as CombinedFamilyInfo;
   const child = volunteerFamily.family?.children?.find(x => x.id === personId);
 
-  const deleteDialogHandle = useDialogHandle();
-  
-  const [childMoreMenuAnchor, setChildMoreMenuAnchor] = useState<{anchor: Element, child: Person} | null>(null);
-  const [renamePersonParameter, setRenamePersonParameter] = useState<{volunteerFamilyId: string, person: Person} | null>(null);
-  function selectChangeName(child: Person) {
-    setChildMoreMenuAnchor(null);
-    setRenamePersonParameter({volunteerFamilyId, person: child});
-  }
-  const [deleteParameter, setDeleteParameter] = useState<{familyId: string, person: Person} | null>(null);
-  function selectDelete(child: Person) {
-    setChildMoreMenuAnchor(null);
-    setDeleteParameter({familyId: volunteerFamilyId, person: child});
-    deleteDialogHandle.openDialog();
-  }
-  const [updateConcernsParameter, setUpdateConcernsParameter] = useState<{volunteerFamilyId: string, person: Person} | null>(null);
-  function selectUpdateConcerns(child: Person) {
-    setChildMoreMenuAnchor(null);
-    setUpdateConcernsParameter({volunteerFamilyId, person: child});
-  }
-  const [updateNotesParameter, setUpdateNotesParameter] = useState<{volunteerFamilyId: string, person: Person} | null>(null);
-  function selectUpdateNotes(child: Person) {
-    setChildMoreMenuAnchor(null);
-    setUpdateNotesParameter({volunteerFamilyId, person: child});
-  }
+  const editDialogHandle = useDialogHandle();
 
   return <>{child &&
     <Card variant="outlined" className={classes.card}>
@@ -103,9 +69,9 @@ export function VolunteerChildCard({volunteerFamilyId, personId}: VolunteerChild
         </>}
         action={
           <IconButton
-            onClick={(event) => setChildMoreMenuAnchor({anchor: event.currentTarget, child: child})}
-            size="large">
-            <MoreVertIcon />
+            onClick={editDialogHandle.openDialog}
+            size="medium">
+            <EditIcon color="primary" />
           </IconButton>} />
       <CardContent className={classes.cardContent}>
         <Typography variant="body2" component="div">
@@ -130,33 +96,7 @@ export function VolunteerChildCard({volunteerFamilyId, personId}: VolunteerChild
           </ul>
         </Typography>
       </CardContent>
-      <CardActions>
-      </CardActions>
-      <Menu id="child-more-menu"
-        anchorEl={childMoreMenuAnchor?.anchor}
-        keepMounted
-        open={Boolean(childMoreMenuAnchor)}
-        onClose={() => setChildMoreMenuAnchor(null)}>
-        <MenuItem onClick={() => childMoreMenuAnchor?.child && selectChangeName(childMoreMenuAnchor.child)}>
-          <ListItemText primary="Change name" />
-        </MenuItem>
-        <MenuItem onClick={() => childMoreMenuAnchor?.child && selectDelete(childMoreMenuAnchor.child)}>
-          <ListItemText primary="Delete" />
-        </MenuItem>
-        <MenuItem onClick={() => childMoreMenuAnchor?.child && selectUpdateConcerns(childMoreMenuAnchor.child)}>
-          <ListItemText primary="Update concerns" />
-        </MenuItem>
-        <MenuItem onClick={() => childMoreMenuAnchor?.child && selectUpdateNotes(childMoreMenuAnchor.child)}>
-          <ListItemText primary="Update notes" />
-        </MenuItem>
-      </Menu>
-      {(renamePersonParameter && <RenamePersonDialog familyId={volunteerFamilyId} person={renamePersonParameter.person}
-        onClose={() => setRenamePersonParameter(null)} />) || null}
-      {deleteDialogHandle.open && <DeletePersonDialog key={deleteDialogHandle.key} handle={deleteDialogHandle}
-        familyId={deleteParameter!.familyId!} person={deleteParameter!.person!} />}
-      {(updateConcernsParameter && <UpdateConcernsDialog familyId={volunteerFamilyId} person={updateConcernsParameter.person}
-        onClose={() => setUpdateConcernsParameter(null)} />) || null}
-      {(updateNotesParameter && <UpdateNotesDialog familyId={volunteerFamilyId} person={updateNotesParameter.person}
-        onClose={() => setUpdateNotesParameter(null)} />) || null}
+      {editDialogHandle.open && <EditChildDialog handle={editDialogHandle} key={editDialogHandle.key}
+        child={child} />}
     </Card>}</>;
 }
