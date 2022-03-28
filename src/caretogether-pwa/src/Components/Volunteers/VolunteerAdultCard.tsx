@@ -15,25 +15,21 @@ import { useState } from "react";
 import { Gender, Person, CombinedFamilyInfo, RoleRemovalReason, Permission } from "../../GeneratedClient";
 import { AgeText } from "../AgeText";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import EditIcon from '@mui/icons-material/Edit';
 import { useRecoilValue } from "recoil";
 import { volunteerFamiliesData } from "../../Model/VolunteersModel";
-import { RenamePersonDialog } from "../Families/RenamePersonDialog";
-import { UpdateConcernsDialog } from "../Families/UpdateConcernsDialog";
-import { UpdateNotesDialog } from "../Families/UpdateNotesDialog";
 import { ContactDisplay } from "../ContactDisplay";
 import { IconRow } from "../IconRow";
 import { VolunteerRoleApprovalStatusChip } from "./VolunteerRoleApprovalStatusChip";
-import { UpdatePhoneDialog } from "../Families/UpdatePhoneDialog";
-import { UpdateEmailDialog } from "../Families/UpdateEmailDialog";
-import { UpdateAddressDialog } from "../Families/UpdateAddressDialog";
 import { RemoveIndividualRoleDialog } from "./RemoveIndividualRoleDialog";
 import { ResetIndividualRoleDialog } from "./ResetIndividualRoleDialog";
-import { DeletePersonDialog } from "../Families/DeletePersonDialog";
 import { usePermissions } from "../../Model/SessionModel";
 import { MissingRequirementRow } from "../Requirements/MissingRequirementRow";
 import { ExemptedRequirementRow } from "../Requirements/ExemptedRequirementRow";
 import { CompletedRequirementRow } from "../Requirements/CompletedRequirementRow";
 import { IndividualVolunteerContext } from "../Requirements/RequirementContext";
+import { useDialogHandle } from "../../useDialogHandle";
+import { EditAdultDialog } from "../Families/EditAdultDialog";
 
 const useStyles = makeStyles((theme) => ({
   sectionChips: {
@@ -88,42 +84,9 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
     personId: personId
   };
 
+  const editDialogHandle = useDialogHandle();
+  
   const [adultMoreMenuAnchor, setAdultMoreMenuAnchor] = useState<{anchor: Element, adult: Person} | null>(null);
-  const [renamePersonParameter, setRenamePersonParameter] = useState<{volunteerFamilyId: string, person: Person} | null>(null);
-  function selectChangeName(adult: Person) {
-    setAdultMoreMenuAnchor(null);
-    setRenamePersonParameter({volunteerFamilyId, person: adult});
-  }
-  const [deleteParameter, setDeleteParameter] = useState<{familyId: string, person: Person} | null>(null);
-  function selectDelete(adult: Person) {
-    setAdultMoreMenuAnchor(null);
-    setDeleteParameter({familyId: volunteerFamilyId, person: adult});
-  }
-  const [updateConcernsParameter, setUpdateConcernsParameter] = useState<{volunteerFamilyId: string, person: Person} | null>(null);
-  function selectUpdateConcerns(adult: Person) {
-    setAdultMoreMenuAnchor(null);
-    setUpdateConcernsParameter({volunteerFamilyId, person: adult});
-  }
-  const [updateNotesParameter, setUpdateNotesParameter] = useState<{volunteerFamilyId: string, person: Person} | null>(null);
-  function selectUpdateNotes(adult: Person) {
-    setAdultMoreMenuAnchor(null);
-    setUpdateNotesParameter({volunteerFamilyId, person: adult});
-  }
-  const [updatePhoneParameter, setUpdatePhoneParameter] = useState<{volunteerFamilyId: string, person: Person} | null>(null);
-  function selectUpdatePhone(adult: Person) {
-    setAdultMoreMenuAnchor(null);
-    setUpdatePhoneParameter({volunteerFamilyId, person: adult});
-  }
-  const [updateEmailParameter, setUpdateEmailParameter] = useState<{volunteerFamilyId: string, person: Person} | null>(null);
-  function selectUpdateEmail(adult: Person) {
-    setAdultMoreMenuAnchor(null);
-    setUpdateEmailParameter({volunteerFamilyId, person: adult});
-  }
-  const [updateAddressParameter, setUpdateAddressParameter] = useState<{volunteerFamilyId: string, person: Person} | null>(null);
-  function selectUpdateAddress(adult: Person) {
-    setAdultMoreMenuAnchor(null);
-    setUpdateAddressParameter({volunteerFamilyId, person: adult});
-  }
   const [removeRoleParameter, setRemoveRoleParameter] = useState<{volunteerFamilyId: string, person: Person, role: string} | null>(null);
   function selectRemoveRole(adult: Person, role: string) {
     setAdultMoreMenuAnchor(null);
@@ -145,11 +108,18 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
           Adult, <AgeText age={adult.item1.age} />, {typeof(adult.item1.gender) === 'undefined' ? "" : Gender[adult.item1.gender] + ","} {adult.item1.ethnicity}
         </>}
         action={
-          <IconButton
-            onClick={(event) => setAdultMoreMenuAnchor({anchor: event.currentTarget, adult: adult.item1 as Person})}
-            size="large">
-            <MoreVertIcon />
-          </IconButton>} />
+          <>
+            <IconButton
+              onClick={editDialogHandle.openDialog}
+              size="medium">
+              <EditIcon color="primary" />
+            </IconButton>
+            <IconButton
+              onClick={(event) => setAdultMoreMenuAnchor({anchor: event.currentTarget, adult: adult.item1 as Person})}
+              size="large">
+              <MoreVertIcon />
+            </IconButton>
+          </>} />
       <CardContent className={classes.cardContent}>
         <Typography color="textSecondary" className={classes.sectionChips} component="div">
           {Object.entries(volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].individualRoleApprovals || {}).map(([role, roleVersionApprovals]) =>
@@ -189,31 +159,6 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         keepMounted
         open={Boolean(adultMoreMenuAnchor)}
         onClose={() => setAdultMoreMenuAnchor(null)}>
-        <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectChangeName(adultMoreMenuAnchor.adult)}>
-          <ListItemText primary="Change name" />
-        </MenuItem>
-        <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectDelete(adultMoreMenuAnchor.adult)}>
-          <ListItemText primary="Delete" />
-        </MenuItem>
-        <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectUpdateConcerns(adultMoreMenuAnchor.adult)}>
-          <ListItemText primary="Update concerns" />
-        </MenuItem>
-        <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectUpdateNotes(adultMoreMenuAnchor.adult)}>
-          <ListItemText primary="Update notes" />
-        </MenuItem>
-        <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectUpdatePhone(adultMoreMenuAnchor.adult)}>
-          <ListItemText primary="Update phone" />
-        </MenuItem>
-        <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectUpdateEmail(adultMoreMenuAnchor.adult)}>
-          <ListItemText primary="Update email" />
-        </MenuItem>
-        <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectUpdateAddress(adultMoreMenuAnchor.adult)}>
-          <ListItemText primary="Update address" />
-        </MenuItem>
-        {permissions(Permission.EditVolunteerRoleParticipation) &&
-          (Object.entries(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals || {}).length > 0 ||
-          Object.entries(volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.individualRoleApprovals || {}).length > 0 ||
-          (volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles || []).length > 0) && <Divider />}
         {permissions(Permission.EditVolunteerRoleParticipation) &&
           Object.entries(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals || {}).filter(([role, ]) =>
           !volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles?.find(x => x.roleName === role)).flatMap(([role, ]) => (
@@ -236,24 +181,12 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
           </MenuItem>
         ))}
       </Menu>
-      {(renamePersonParameter && <RenamePersonDialog familyId={volunteerFamilyId} person={renamePersonParameter.person}
-        onClose={() => setRenamePersonParameter(null)} />) || null}
-      {(deleteParameter && <DeletePersonDialog familyId={deleteParameter.familyId} person={deleteParameter.person}
-        onClose={() => setDeleteParameter(null)} />) || null}
-      {(updateConcernsParameter && <UpdateConcernsDialog familyId={volunteerFamilyId} person={updateConcernsParameter.person}
-        onClose={() => setUpdateConcernsParameter(null)} />) || null}
-      {(updateNotesParameter && <UpdateNotesDialog familyId={volunteerFamilyId} person={updateNotesParameter.person}
-        onClose={() => setUpdateNotesParameter(null)} />) || null}
-      {(updatePhoneParameter && <UpdatePhoneDialog familyId={volunteerFamilyId} person={updatePhoneParameter.person}
-        onClose={() => setUpdatePhoneParameter(null)} />) || null}
-      {(updateEmailParameter && <UpdateEmailDialog familyId={volunteerFamilyId} person={updateEmailParameter.person}
-        onClose={() => setUpdateEmailParameter(null)} />) || null}
-      {(updateAddressParameter && <UpdateAddressDialog familyId={volunteerFamilyId} person={updateAddressParameter.person}
-        onClose={() => setUpdateAddressParameter(null)} />) || null}
       {(removeRoleParameter && <RemoveIndividualRoleDialog volunteerFamilyId={volunteerFamilyId} person={removeRoleParameter.person} role={removeRoleParameter.role}
         onClose={() => setRemoveRoleParameter(null)} />) || null}
       {(resetRoleParameter && <ResetIndividualRoleDialog volunteerFamilyId={volunteerFamilyId} person={resetRoleParameter.person} role={resetRoleParameter.role}
         removalReason={resetRoleParameter.removalReason} removalAdditionalComments={resetRoleParameter.removalAdditionalComments}
         onClose={() => setResetRoleParameter(null)} />) || null}
+      {editDialogHandle.open && <EditAdultDialog handle={editDialogHandle} key={editDialogHandle.key}
+        adult={adult} />}
     </Card>}</>;
 }

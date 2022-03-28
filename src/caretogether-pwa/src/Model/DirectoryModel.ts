@@ -1,5 +1,5 @@
 import { useRecoilCallback, useRecoilValue } from "recoil";
-import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, DirectoryCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, DirectoryClient, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, NoteCommandResult } from "../GeneratedClient";
+import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, DirectoryCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, DirectoryClient, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, NoteCommandResult, UpdatePersonGender, UpdatePersonAge, UpdatePersonEthnicity, UpdateAdultRelationshipToFamily } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { visibleFamiliesData } from "./ModelLoader";
@@ -165,6 +165,15 @@ export function useDirectoryModel() {
       command.uploadedDocumentId = uploadedDocumentId;
       return command;
     });
+  const updateAdultRelationshipToFamily = useFamilyCommandCallback(
+    async (familyId, adultPersonId: string, relationship: FamilyAdultRelationshipInfo) => {
+      const command = new UpdateAdultRelationshipToFamily({
+        familyId: familyId
+      });
+      command.adultPersonId = adultPersonId;
+      command.relationshipToFamily = relationship;
+      return command;
+    });
   const updatePersonName = usePersonCommandCallback(
     async (familyId, personId, firstName: string, lastName: string) => {
       const command = new UpdatePersonName({
@@ -172,6 +181,30 @@ export function useDirectoryModel() {
       });
       command.firstName = firstName;
       command.lastName = lastName;
+      return command;
+    });
+  const updatePersonGender = usePersonCommandCallback(
+    async (familyId, personId, gender: Gender) => {
+      const command = new UpdatePersonGender({
+        personId: personId
+      });
+      command.gender = gender;
+      return command;
+    });
+  const updatePersonAge = usePersonCommandCallback(
+    async (familyId, personId, age: Age) => {
+      const command = new UpdatePersonAge({
+        personId: personId
+      });
+      command.age = age;
+      return command;
+    });
+  const updatePersonEthnicity = usePersonCommandCallback(
+    async (familyId, personId, ethnicity: string) => {
+      const command = new UpdatePersonEthnicity({
+        personId: personId
+      });
+      command.ethnicity = ethnicity;
       return command;
     });
   const updatePersonConcerns = usePersonCommandCallback(
@@ -244,11 +277,11 @@ export function useDirectoryModel() {
     });
   const updatePersonAddress = usePersonCommandCallback(
     async (familyId, personId, addressId: string,
-      line1: string, line2: string, city: string, state: string, postalCode: string) => {
+      line1: string, line2: string | null, city: string, state: string, postalCode: string) => {
       const command = new UpdatePersonAddress({
         personId: personId
       });
-      command.address = new Address({ id: addressId, line1: line1, line2: line2, city: city, state: state, postalCode: postalCode })
+      command.address = new Address({ id: addressId, line1: line1, line2: line2 == null ? undefined : line2, city: city, state: state, postalCode: postalCode })
       command.isCurrentAddress = true;
       return command;
     });
@@ -410,7 +443,11 @@ export function useDirectoryModel() {
   return {
     uploadFamilyDocument,
     deleteUploadedFamilyDocument,
+    updateAdultRelationshipToFamily,
     updatePersonName,
+    updatePersonGender,
+    updatePersonAge,
+    updatePersonEthnicity,
     updatePersonConcerns,
     updatePersonNotes,
     undoCreatePerson,

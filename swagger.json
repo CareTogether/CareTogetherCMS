@@ -2922,6 +2922,8 @@
             "UpdatePersonAge": "#/components/schemas/UpdatePersonAge",
             "UpdatePersonConcerns": "#/components/schemas/UpdatePersonConcerns",
             "UpdatePersonEmailAddress": "#/components/schemas/UpdatePersonEmailAddress",
+            "UpdatePersonEthnicity": "#/components/schemas/UpdatePersonEthnicity",
+            "UpdatePersonGender": "#/components/schemas/UpdatePersonGender",
             "UpdatePersonName": "#/components/schemas/UpdatePersonName",
             "UpdatePersonNotes": "#/components/schemas/UpdatePersonNotes",
             "UpdatePersonPhoneNumber": "#/components/schemas/UpdatePersonPhoneNumber",
@@ -3151,6 +3153,38 @@
               },
               "isPreferredEmailAddress": {
                 "type": "boolean"
+              }
+            }
+          }
+        ]
+      },
+      "UpdatePersonEthnicity": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "ethnicity": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "UpdatePersonGender": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "gender": {
+                "$ref": "#/components/schemas/Gender"
               }
             }
           }

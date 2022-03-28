@@ -4,22 +4,15 @@ import {
   IconButton,
   CardContent,
   Typography,
-  CardActions,
-  Menu,
-  ListItemText,
-  MenuItem,
 } from "@mui/material";
 import makeStyles from '@mui/styles/makeStyles';
-import { useState } from "react";
-import { CustodialRelationshipType, Gender, Person, CombinedFamilyInfo } from "../../GeneratedClient";
+import { CustodialRelationshipType, Gender, CombinedFamilyInfo } from "../../GeneratedClient";
 import { AgeText } from "../AgeText";
-import MoreVertIcon from '@mui/icons-material/MoreVert';
+import EditIcon from '@mui/icons-material/Edit';
 import { useRecoilValue } from "recoil";
 import { partneringFamiliesData } from "../../Model/ReferralsModel";
-import { RenamePersonDialog } from "../Families/RenamePersonDialog";
-import { UpdateConcernsDialog } from "../Families/UpdateConcernsDialog";
-import { UpdateNotesDialog } from "../Families/UpdateNotesDialog";
-import { DeletePersonDialog } from "../Families/DeletePersonDialog";
+import { useDialogHandle } from "../../useDialogHandle";
+import { EditChildDialog } from "../Families/EditChildDialog";
 
 const useStyles = makeStyles((theme) => ({
   sectionChips: {
@@ -49,9 +42,6 @@ const useStyles = makeStyles((theme) => ({
     '& > li': {
       marginTop: 4
     }
-  },
-  rightCardAction: {
-    marginLeft: 'auto !important'
   }
 }));
 
@@ -68,28 +58,8 @@ export function PartneringChildCard({partneringFamilyId, personId}: PartneringCh
   const partneringFamily = partneringFamilies.find(x => x.family?.id === partneringFamilyId) as CombinedFamilyInfo;
   const child = partneringFamily.family?.children?.find(x => x.id === personId);
 
-  const [childMoreMenuAnchor, setChildMoreMenuAnchor] = useState<{anchor: Element, child: Person} | null>(null);
-  const [renamePersonParameter, setRenamePersonParameter] = useState<{partneringFamilyId: string, person: Person} | null>(null);
-  function selectChangeName(child: Person) {
-    setChildMoreMenuAnchor(null);
-    setRenamePersonParameter({partneringFamilyId, person: child});
-  }
-  const [deleteParameter, setDeleteParameter] = useState<{familyId: string, person: Person} | null>(null);
-  function selectDelete(child: Person) {
-    setChildMoreMenuAnchor(null);
-    setDeleteParameter({familyId: partneringFamilyId, person: child});
-  }
-  const [updateConcernsParameter, setUpdateConcernsParameter] = useState<{partneringFamilyId: string, person: Person} | null>(null);
-  function selectUpdateConcerns(child: Person) {
-    setChildMoreMenuAnchor(null);
-    setUpdateConcernsParameter({partneringFamilyId, person: child});
-  }
-  const [updateNotesParameter, setUpdateNotesParameter] = useState<{partneringFamilyId: string, person: Person} | null>(null);
-  function selectUpdateNotes(child: Person) {
-    setChildMoreMenuAnchor(null);
-    setUpdateNotesParameter({partneringFamilyId, person: child});
-  }
-
+  const editDialogHandle = useDialogHandle();
+  
   return <>{child &&
     <Card variant="outlined" className={classes.card}>
       <CardHeader className={classes.cardHeader}
@@ -99,9 +69,9 @@ export function PartneringChildCard({partneringFamilyId, personId}: PartneringCh
         </>}
         action={
           <IconButton
-            onClick={(event) => setChildMoreMenuAnchor({anchor: event.currentTarget, child: child})}
-            size="large">
-            <MoreVertIcon />
+            onClick={editDialogHandle.openDialog}
+            size="medium">
+            <EditIcon color="primary" />
           </IconButton>} />
       <CardContent className={classes.cardContent}>
         <Typography variant="body2" component="div">
@@ -126,33 +96,7 @@ export function PartneringChildCard({partneringFamilyId, personId}: PartneringCh
           </ul>
         </Typography>
       </CardContent>
-      <CardActions>
-      </CardActions>
-      <Menu id="child-more-menu"
-        anchorEl={childMoreMenuAnchor?.anchor}
-        keepMounted
-        open={Boolean(childMoreMenuAnchor)}
-        onClose={() => setChildMoreMenuAnchor(null)}>
-        <MenuItem onClick={() => childMoreMenuAnchor?.child && selectChangeName(childMoreMenuAnchor.child)}>
-          <ListItemText primary="Change name" />
-        </MenuItem>
-        <MenuItem onClick={() => childMoreMenuAnchor?.child && selectDelete(childMoreMenuAnchor.child)}>
-          <ListItemText primary="Delete" />
-        </MenuItem>
-        <MenuItem onClick={() => childMoreMenuAnchor?.child && selectUpdateConcerns(childMoreMenuAnchor.child)}>
-          <ListItemText primary="Update concerns" />
-        </MenuItem>
-        <MenuItem onClick={() => childMoreMenuAnchor?.child && selectUpdateNotes(childMoreMenuAnchor.child)}>
-          <ListItemText primary="Update notes" />
-        </MenuItem>
-      </Menu>
-      {(renamePersonParameter && <RenamePersonDialog familyId={partneringFamilyId} person={renamePersonParameter.person}
-        onClose={() => setRenamePersonParameter(null)} />) || null}
-      {(deleteParameter && <DeletePersonDialog familyId={deleteParameter.familyId} person={deleteParameter.person}
-        onClose={() => setDeleteParameter(null)} />) || null}
-      {(updateConcernsParameter && <UpdateConcernsDialog familyId={partneringFamilyId} person={updateConcernsParameter.person}
-        onClose={() => setUpdateConcernsParameter(null)} />) || null}
-      {(updateNotesParameter && <UpdateNotesDialog familyId={partneringFamilyId} person={updateNotesParameter.person}
-        onClose={() => setUpdateNotesParameter(null)} />) || null}
+      {editDialogHandle.open && <EditChildDialog handle={editDialogHandle} key={editDialogHandle.key}
+        child={child} />}
     </Card>}</>;
 }

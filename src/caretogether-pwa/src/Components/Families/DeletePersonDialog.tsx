@@ -1,14 +1,15 @@
 import { Person } from '../../GeneratedClient';
 import { useDirectoryModel } from '../../Model/DirectoryModel';
+import { DialogHandle } from '../../useDialogHandle';
 import { UpdateDialog } from '../UpdateDialog';
 
 interface DeletePersonDialogProps {
   familyId: string,
   person: Person,
-  onClose: () => void
+  handle: DialogHandle
 }
 
-export function DeletePersonDialog({familyId, person, onClose}: DeletePersonDialogProps) {
+export function DeletePersonDialog({familyId, person, handle}: DeletePersonDialogProps) {
   const directoryModel = useDirectoryModel();
 
   async function save() {
@@ -16,8 +17,8 @@ export function DeletePersonDialog({familyId, person, onClose}: DeletePersonDial
   }
 
   return (
-    <UpdateDialog title={`Are you sure you want to delete ${person.firstName} ${person.lastName}?`} onClose={onClose}
-      onSave={save}>
+    <UpdateDialog title={`Are you sure you want to delete ${person.firstName} ${person.lastName}?`}
+      onClose={handle.closeDialog} onSave={save}>
     </UpdateDialog>
   );
 }

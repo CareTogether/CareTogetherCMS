@@ -166,7 +166,9 @@ namespace CareTogether.Resources.Directory
                     {
                         UndoCreatePerson c => personEntry with { Active = false },
                         UpdatePersonName c => personEntry with { FirstName = c.FirstName, LastName = c.LastName },
+                        UpdatePersonGender c => personEntry with { Gender = c.Gender },
                         UpdatePersonAge c => personEntry with { Age = c.Age },
+                        UpdatePersonEthnicity c => personEntry with { Ethnicity = c.Ethnicity },
                         UpdatePersonUserLink c => personEntry with { UserId = c.UserId },
                         UpdatePersonConcerns c => personEntry with { Concerns = c.Concerns },
                         UpdatePersonNotes c => personEntry with { Notes = c.Notes },
