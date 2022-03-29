@@ -39,7 +39,7 @@ export function EndArrangementDialog({referralId, arrangement, onClose}: EndArra
           <DateTimePicker
             label="When was this arrangement ended?"
             value={endedAtLocal}
-            disableFuture inputFormat="MM/dd/yyyy hh:mm a"
+            disableFuture inputFormat="M/d/yyyy h:mma"
             onChange={(date) => date && setFields({ ...fields, endedAtLocal: date })}
             showTodayButton
             renderInput={(params) => <TextField fullWidth required {...params} sx={{marginTop: 1}} />} />

@@ -180,7 +180,7 @@ export function MissingRequirementDialog({
               ? <DateTimePicker
                 label="When was this requirement completed?"
                 value={completedAtLocal}
-                disableFuture inputFormat="MM/dd/yyyy hh:mm a"
+                disableFuture inputFormat="M/d/yyyy h:mma"
                 onChange={(date) => date && setCompletedAtLocal(date)}
                 showTodayButton
                 renderInput={(params) => <TextField fullWidth required {...params} />} />

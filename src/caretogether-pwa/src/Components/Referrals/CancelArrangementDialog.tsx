@@ -39,7 +39,7 @@ export function CancelArrangementDialog({referralId, arrangement, onClose}: Canc
           <DateTimePicker
             label="When was this arrangement cancelled?"
             value={cancelledAtLocal}
-            disableFuture inputFormat="MM/dd/yyyy hh:mm a"
+            disableFuture inputFormat="M/d/yyyy h:mma"
             onChange={(date) => date && setFields({ ...fields, cancelledAtLocal: date })}
             showTodayButton
             renderInput={(params) => <TextField fullWidth required {...params} sx={{marginTop: 1}} />} />

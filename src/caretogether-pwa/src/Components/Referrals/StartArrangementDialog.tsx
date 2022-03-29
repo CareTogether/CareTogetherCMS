@@ -39,7 +39,7 @@ export function StartArrangementDialog({referralId, arrangement, onClose}: Start
           <DateTimePicker
             label="When was this arrangement started?"
             value={startedAtLocal}
-            disableFuture inputFormat="MM/dd/yyyy hh:mm a"
+            disableFuture inputFormat="M/d/yyyy h:mma"
             onChange={(date) => date && setFields({ ...fields, startedAtLocal: date })}
             showTodayButton
             renderInput={(params) => <TextField fullWidth required {...params} sx={{marginTop: 1}} />} />

@@ -1,4 +1,4 @@
-import { Box, Checkbox, TextField } from "@mui/material";
+import { Box, FormControlLabel, Radio, RadioGroup, TextField } from "@mui/material";
 import { CompletedCustomFieldInfo, CustomField, CustomFieldType } from "../../GeneratedClient";
 import { useReferralsModel } from "../../Model/ReferralsModel";
 import { useRecoilValue } from "recoil";
@@ -35,17 +35,22 @@ export function ReferralCustomField({ partneringFamilyId, referralId, customFiel
         {customFieldPolicy.name}:&nbsp;
         {editor.editing
           ? type === CustomFieldType.Boolean
-            ? <Checkbox
-                size="medium"
-                checked={(editor.value as boolean | null) === null || typeof(editor.value) === 'undefined'
-                  ? false
-                  : editor.value as boolean}
-                onChange={e => editor.setValue(e.target.checked)} />
+            ? <>
+                <RadioGroup
+                  name="boolean-custom-field" row
+                  value={(editor.value as boolean | null) == null ? "" : editor.value ? "yes" : "no"}
+                  onChange={e => editor.setValue(e.target.value === "yes" ? true : e.target.value === "no" ? false : null)}
+                >
+                  <FormControlLabel value="yes" control={<Radio />} label="Yes" />
+                  <FormControlLabel value="no" control={<Radio />} label="No" />
+                  <FormControlLabel value="" control={<Radio />} label="(blank)" />
+                </RadioGroup>
+              </>
             : <TextField
                 variant="outlined" size="medium"
                 value={editor.value || ""}
                 onChange={e => editor.setValue(e.target.value)} />
-          : typeof(savedValue) === 'undefined'
+          : typeof(savedValue) === 'undefined' || savedValue == null
             ? "❓"
             : type === CustomFieldType.Boolean
               ? savedValue ? "Yes" : "No"
