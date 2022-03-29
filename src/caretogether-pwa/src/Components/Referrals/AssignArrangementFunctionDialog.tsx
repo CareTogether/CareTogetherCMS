@@ -72,7 +72,22 @@ export function AssignArrangementFunctionDialog({
       : [])
     : [];
   const allCandidateAssignees = candidateNamedPeopleAssignees.concat(candidateVolunteerFamilyAssignees).concat(candidateVolunteerIndividualAssignees);
-  const deduplicatedCandidateAssignees = allCandidateAssignees.filter((item, i) => allCandidateAssignees.indexOf(item) === i);
+  const deduplicatedCandidateAssignees = allCandidateAssignees.filter((item, i) =>
+    allCandidateAssignees.indexOf(item) === i).sort((a, b) => {
+      const aPrimaryContact = a.family!.adults!.find(adult =>
+        a.family.primaryFamilyContactPersonId === adult.item1!.id)!.item1!;
+      const bPrimaryContact = b.family!.adults!.find(adult =>
+        b.family.primaryFamilyContactPersonId === adult.item1!.id)!.item1!;
+      
+      const aFirst = a.person ? a.person.firstName! : null;
+      const aLast = a.person ? a.person.lastName! : aPrimaryContact.lastName!;
+      const bFirst = b.person ? b.person.firstName! : null;
+      const bLast = b.person ? b.person.lastName! : bPrimaryContact.lastName!;
+
+      // Sort by last name, then by first name (if applicable)
+      return aLast < bLast ? -1 : aLast > bLast ? 1 :
+        aFirst == null || bFirst == null ? 0 : aFirst < bFirst ? -1 : aFirst > bFirst ? 1 : 0;
+    });
   const candidateAssignees = deduplicatedCandidateAssignees.map(candidate => {
     if (candidate.person == null) {
       return {
