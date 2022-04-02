@@ -1,30 +1,20 @@
 import React from 'react';
 import makeStyles from '@mui/styles/makeStyles';
-import { Typography, CssBaseline, IconButton, Drawer, Divider, List, useMediaQuery, useTheme } from '@mui/material';
+import { CssBaseline, IconButton, Drawer, Divider, List, useMediaQuery, useTheme } from '@mui/material';
 import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
 import PeopleIcon from '@mui/icons-material/People';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 //import DashboardIcon from '@mui/icons-material/Dashboard';
 import { BrowserRouter as Router } from "react-router-dom";
 import { ListItemLink } from './Components/ListItemLink';
-import { useRecoilValue } from 'recoil';
-import { locationNameData, organizationNameData, useFeatureFlags } from './Model/ConfigurationModel';
+import { useFeatureFlags } from './Model/ConfigurationModel';
 import Header from './Components/Header';
 import { Footer } from './Components/Footer';
 import { CurrentFeatureFlags } from './GeneratedClient';
 import { HeaderContext } from './Components/HeaderContext';
 import { AppRoutes } from './AppRoutes';
-
-function Copyright() {
-  return (
-    <Typography variant="body2" color="textSecondary" align="center" sx={{lineHeight: '3em'}}>
-      {' © '} {new Date().getFullYear()} &nbsp;
-      <a color="inherit" href="https://caretogether.io/" target="_blank" rel="noreferrer">
-        CareTogether CMS
-      </a><br />
-    </Typography>
-  );
-}
+import { LocationSwitcher } from './Components/LocationSwitcher';
+import { Copyright } from './Components/Copyright';
 
 const drawerWidth = 200;
 const useStyles = makeStyles((theme) => ({
@@ -78,9 +68,6 @@ function App() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-  const organizationName = useRecoilValue(organizationNameData);
-  const locationName = useRecoilValue(locationNameData);
-
   const featureFlags = useFeatureFlags();
 
   const headerContainer = React.useRef(null);
@@ -104,18 +91,7 @@ function App() {
                 justifyContent: 'space-between',
                 padding: '0 8px',
               }}>
-                {isMobile ? null : <header>
-                  <p style={{
-                    margin: '0',
-                    paddingLeft: '8px',
-                    fontSize: '16px'
-                  }}>{organizationName}</p>
-                  <p style={{
-                    margin: '0',
-                    paddingLeft: '8px',
-                    fontSize: '14px'
-                  }}>{locationName}</p>
-                </header>}
+                {isMobile ? null : <LocationSwitcher />}
                 <IconButton onClick={handleDrawerClose} size="large">
                   <ChevronLeftIcon />
                 </IconButton>

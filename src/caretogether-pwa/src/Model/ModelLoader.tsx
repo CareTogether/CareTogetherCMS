@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { atom, useRecoilState, useSetRecoilState } from "recoil";
+import { atom, useRecoilCallback, useRecoilState, useSetRecoilState } from "recoil";
 import { authenticatingFetch } from "../Auth";
-import { CombinedFamilyInfo, DirectoryClient, UsersClient } from "../GeneratedClient";
-import { currentOrganizationState, currentLocationState, currentPermissionsState } from "./SessionModel";
+import { CombinedFamilyInfo, DirectoryClient, UserLocationAccess, UsersClient } from "../GeneratedClient";
+import { useLocalStorage } from "../useLocalStorage";
+import { currentOrganizationState, currentLocationState, currentPermissionsState, availableLocationsState } from "./SessionModel";
 
 export const visibleFamiliesData = atom<CombinedFamilyInfo[]>({
   key: 'visibleFamiliesData',
@@ -15,11 +16,25 @@ interface ModelLoaderProps {
 
 export function ModelLoader({children}: ModelLoaderProps) {
   const [organizationId, setOrganizationId] = useRecoilState(currentOrganizationState);
-  const [locationId, setLocationId] = useRecoilState(currentLocationState);
+  const [savedLocationId, setSavedLocationId] = useLocalStorage<string | null>('locationId', null);
+  const [locationId, ] = useRecoilState(currentLocationState);
   const [, setCurrentPermissions] = useRecoilState(currentPermissionsState);
+  const [, setAvailableLocations] = useRecoilState(availableLocationsState)
   const [loaded, setLoaded] = useState(false);
   
   const setVisibleFamilies = useSetRecoilState(visibleFamiliesData);
+
+  const selectLocation = useRecoilCallback(({snapshot, set}) => (locations: UserLocationAccess[]) => {
+    // Default to the most recently selected location, or the first available location
+    // if none was previously saved or the saved location is no longer available.
+    const selectedLocation =
+      (savedLocationId == null || !locations.some(loc => loc.locationId === savedLocationId))
+      ? locations[0]
+      : locations.find(location => location.locationId === savedLocationId);
+    setSavedLocationId(selectedLocation!.locationId!);
+    set(currentLocationState, selectedLocation!.locationId!);
+    setCurrentPermissions(selectedLocation!.permissions!);
+  }, []);
 
   //TODO: Consider useRecoilSnapshot here instead
   useEffect(() => {
@@ -27,11 +42,11 @@ export function ModelLoader({children}: ModelLoaderProps) {
       const usersClient = new UsersClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
       const userResponse = await usersClient.getUserOrganizationAccess();
       setOrganizationId(userResponse.organizationId!);
-      setLocationId(userResponse.locationIds![0].locationId!);
-      setCurrentPermissions(userResponse.locationIds![0].permissions!);
+      setAvailableLocations(userResponse.locationIds!);
+      selectLocation(userResponse.locationIds!);
     }
     loadInitialLocation();
-  }, [setOrganizationId, setLocationId, setCurrentPermissions]);
+  }, [setOrganizationId, setAvailableLocations, selectLocation, setCurrentPermissions]);
 
   useEffect(() => {
     const loadInitialData = async () => {
