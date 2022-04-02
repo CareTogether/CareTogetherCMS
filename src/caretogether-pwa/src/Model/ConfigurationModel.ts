@@ -20,15 +20,6 @@ export const organizationNameData = selector({
   }
 })
 
-export const locationNameData = selector({
-  key: 'locationNameData',
-  get: ({get}) => {
-    const organizationConfiguration = get(organizationConfigurationData);
-    const currentLocationId = get(currentLocationState);
-    return organizationConfiguration.locations?.find(x => x.id === currentLocationId)?.name as string;
-  }
-})
-
 export const ethnicitiesData = selector({
   key: 'ethnicitiesData',
   get: ({get}) => {

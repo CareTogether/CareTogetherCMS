@@ -26,6 +26,7 @@ export function ModelLoader({children}: ModelLoaderProps) {
 
   //TODO: Consider useRecoilSnapshot here instead
   useEffect(() => {
+    console.log("effecting 1...");
     const loadInitialLocation = async () => {
       const usersClient = new UsersClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
       const userResponse = await usersClient.getUserOrganizationAccess();
@@ -42,10 +43,13 @@ export function ModelLoader({children}: ModelLoaderProps) {
       setLocationId(userResponse.locationIds![0].locationId!);
       setCurrentPermissions(userResponse.locationIds![0].permissions!);
     }
+    console.log("run 1...");
     loadInitialLocation();
+    console.log("effected 1");
   }, [setOrganizationId, setLocationId, setCurrentPermissions]);
 
   useEffect(() => {
+    console.log("effecting 2...");
     const loadInitialData = async () => {
       if (organizationId.length > 0 && locationId.length > 0) {
         const directoryClient = new DirectoryClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
@@ -55,7 +59,9 @@ export function ModelLoader({children}: ModelLoaderProps) {
         setLoaded(true);
       }
     }
+    console.log("run 2...");
     loadInitialData();
+    console.log("effected 2");
   }, [organizationId, locationId, setVisibleFamilies]);
 
   return loaded
