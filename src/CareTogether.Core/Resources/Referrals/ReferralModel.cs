@@ -15,18 +15,18 @@ namespace CareTogether.Resources.Referrals
     public sealed record ArrangementsCommandExecuted(Guid UserId, DateTime TimestampUtc,
         ArrangementsCommand Command) : ReferralEvent(UserId, TimestampUtc);
 
-    public sealed record ReferralOpened(Guid UserId, DateTime TimestampUtc,
+    public sealed record ReferralOpened(Guid UserId, DateTime AuditTimestampUtc,
         DateTime OpenedAtUtc)
-        : Activity(UserId, TimestampUtc, null, null);
-    public sealed record ReferralRequirementCompleted(Guid UserId, DateTime TimestampUtc,
+        : Activity(UserId, AuditTimestampUtc, OpenedAtUtc, null, null);
+    public sealed record ReferralRequirementCompleted(Guid UserId, DateTime AuditTimestampUtc,
         string RequirementName, DateTime CompletedAtUtc, Guid? UploadedDocumentId, Guid? NoteId)
-        : Activity(UserId, TimestampUtc, UploadedDocumentId, NoteId);
-    public sealed record ArrangementRequirementCompleted(Guid UserId, DateTime TimestampUtc, Guid ArrangementId,
+        : Activity(UserId, AuditTimestampUtc, CompletedAtUtc, UploadedDocumentId, NoteId);
+    public sealed record ArrangementRequirementCompleted(Guid UserId, DateTime AuditTimestampUtc, Guid ArrangementId,
         string RequirementName, DateTime CompletedAtUtc, Guid? UploadedDocumentId, Guid? NoteId)
-        : Activity(UserId, TimestampUtc, UploadedDocumentId, NoteId);
-    public sealed record ChildLocationChanged(Guid UserId, DateTime TimestampUtc, Guid ArrangementId,
+        : Activity(UserId, AuditTimestampUtc, CompletedAtUtc, UploadedDocumentId, NoteId);
+    public sealed record ChildLocationChanged(Guid UserId, DateTime AuditTimestampUtc, Guid ArrangementId,
         DateTime ChangedAtUtc, Guid ChildLocationFamilyId, Guid ChildLocationReceivingAdultId, ChildLocationPlan Plan, Guid? NoteId)
-        : Activity(UserId, TimestampUtc, null, NoteId);
+        : Activity(UserId, AuditTimestampUtc, ChangedAtUtc, null, NoteId);
 
     public sealed class ReferralModel
     {

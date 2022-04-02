@@ -1736,7 +1736,11 @@
             "type": "string",
             "format": "guid"
           },
-          "timestampUtc": {
+          "auditTimestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "activityTimestampUtc": {
             "type": "string",
             "format": "date-time"
           },
