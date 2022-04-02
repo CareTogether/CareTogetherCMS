@@ -1,6 +1,6 @@
 import React from 'react';
 import makeStyles from '@mui/styles/makeStyles';
-import { Typography, CssBaseline, IconButton, Drawer, Divider, List, useMediaQuery, useTheme } from '@mui/material';
+import { CssBaseline, IconButton, Drawer, Divider, List, useMediaQuery, useTheme } from '@mui/material';
 import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
 import PeopleIcon from '@mui/icons-material/People';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
@@ -14,17 +14,7 @@ import { CurrentFeatureFlags } from './GeneratedClient';
 import { HeaderContext } from './Components/HeaderContext';
 import { AppRoutes } from './AppRoutes';
 import { LocationSwitcher } from './Components/LocationSwitcher';
-
-function Copyright() {
-  return (
-    <Typography variant="body2" color="textSecondary" align="center" sx={{lineHeight: '3em'}}>
-      {' © '} {new Date().getFullYear()} &nbsp;
-      <a color="inherit" href="https://caretogether.io/" target="_blank" rel="noreferrer">
-        CareTogether CMS
-      </a><br />
-    </Typography>
-  );
-}
+import { Copyright } from './Components/Copyright';
 
 const drawerWidth = 200;
 const useStyles = makeStyles((theme) => ({

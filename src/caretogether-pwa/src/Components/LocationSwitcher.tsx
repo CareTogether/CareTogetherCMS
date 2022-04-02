@@ -1,9 +1,12 @@
-import { Select, MenuItem } from '@mui/material';
+import { Select, MenuItem, useMediaQuery, useTheme } from '@mui/material';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { organizationConfigurationData, organizationNameData } from '../Model/ConfigurationModel';
 import { availableLocationsState, currentLocationState } from '../Model/SessionModel';
 
 export function LocationSwitcher() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
   const organizationName = useRecoilValue(organizationNameData);
   const organizationConfiguration = useRecoilValue(organizationConfigurationData);
 
@@ -29,7 +32,8 @@ export function LocationSwitcher() {
         fontSize: '16px'
       }}>{organizationName}</p>
       {availableLocations.length >= 1
-        ? <Select size="small" sx={{ paddingLeft: '8px', '& .MuiInputBase-input': { padding: 0 } }}
+        ? <Select size={isMobile ? "medium" : "small"}
+            sx={{ paddingLeft: '8px', '& .MuiInputBase-input': { padding: isMobile ? 1 : 0 } }}
             value={currentLocationId}
             onChange={e => switchLocation(e.target.value as string)}>
               {locations.map(location =>
