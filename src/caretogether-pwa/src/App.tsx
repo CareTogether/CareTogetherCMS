@@ -7,13 +7,13 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 //import DashboardIcon from '@mui/icons-material/Dashboard';
 import { BrowserRouter as Router } from "react-router-dom";
 import { ListItemLink } from './Components/ListItemLink';
-import { useRecoilValue } from 'recoil';
-import { locationNameData, organizationNameData, useFeatureFlags } from './Model/ConfigurationModel';
+import { useFeatureFlags } from './Model/ConfigurationModel';
 import Header from './Components/Header';
 import { Footer } from './Components/Footer';
 import { CurrentFeatureFlags } from './GeneratedClient';
 import { HeaderContext } from './Components/HeaderContext';
 import { AppRoutes } from './AppRoutes';
+import { LocationSwitcher } from './Components/LocationSwitcher';
 
 function Copyright() {
   return (
@@ -78,9 +78,6 @@ function App() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-  const organizationName = useRecoilValue(organizationNameData);
-  const locationName = useRecoilValue(locationNameData);
-
   const featureFlags = useFeatureFlags();
 
   const headerContainer = React.useRef(null);
@@ -104,18 +101,7 @@ function App() {
                 justifyContent: 'space-between',
                 padding: '0 8px',
               }}>
-                {isMobile ? null : <header>
-                  <p style={{
-                    margin: '0',
-                    paddingLeft: '8px',
-                    fontSize: '16px'
-                  }}>{organizationName}</p>
-                  <p style={{
-                    margin: '0',
-                    paddingLeft: '8px',
-                    fontSize: '14px'
-                  }}>{locationName}</p>
-                </header>}
+                {isMobile ? null : <LocationSwitcher />}
                 <IconButton onClick={handleDrawerClose} size="large">
                   <ChevronLeftIcon />
                 </IconButton>

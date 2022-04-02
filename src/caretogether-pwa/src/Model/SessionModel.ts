@@ -1,9 +1,14 @@
 import { atom, useRecoilValue } from "recoil";
-import { Permission } from "../GeneratedClient";
+import { Permission, UserLocationAccess } from "../GeneratedClient";
 
 export const currentOrganizationState = atom({
   key: 'currentOrganizationState',
   default: ''
+});
+
+export const availableLocationsState = atom({
+  key: 'availableLocationsState',
+  default: [] as UserLocationAccess[]
 });
 
 export const currentLocationState = atom({
