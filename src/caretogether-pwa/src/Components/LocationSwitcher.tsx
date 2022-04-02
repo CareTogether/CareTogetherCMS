@@ -1,4 +1,5 @@
 import { Select, MenuItem, useMediaQuery, useTheme } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { organizationConfigurationData, organizationNameData } from '../Model/ConfigurationModel';
 import { availableLocationsState, currentLocationState } from '../Model/SessionModel';
@@ -22,9 +23,12 @@ export function LocationSwitcher() {
   }));
   const currentLocationName = locations.find(x => x.id === currentLocationId)?.name;
   
+  const navigate = useNavigate();
+
   function switchLocation(locationId: string) {
     setCurrentLocationId(locationId);
     setSavedLocationId(locationId);
+    navigate("/");
   }
 
   return (
