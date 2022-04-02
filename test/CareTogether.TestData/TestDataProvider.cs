@@ -343,10 +343,10 @@ namespace CareTogether.TestData
             await configurationStore.UpsertAsync(guid1, Guid.Empty, "config",
                 new OrganizationConfiguration("CareTogether",
                     ImmutableList<LocationConfiguration>.Empty
-                        .Add(new LocationConfiguration(Guid.Parse("22222222-2222-2222-2222-222222222222"), "Atlantis",
+                        .Add(new LocationConfiguration(guid2, "Atlantis",
                             ImmutableList<string>.Empty.AddRange(new[] { "Atlantean", "Aquatic", "Norse" }),
                             ImmutableList<string>.Empty.AddRange(new[] { "Single", "Spouse", "Partner", "Dad", "Mom", "Relative", "Droid" })))
-                        .Add(new LocationConfiguration(Guid.Parse("33333333-3333-3333-3333-333333333333"), "El Dorado",
+                        .Add(new LocationConfiguration(guid3, "El Dorado",
                             ImmutableList<string>.Empty.AddRange(new[] { "Amazon", "Caucasian", "Other" }),
                             ImmutableList<string>.Empty.AddRange(new[] { "Single", "Spouse", "Partner", "Dad", "Mom", "Relative", "Domestic Worker" }))),
                     ImmutableList<RoleDefinition>.Empty
@@ -354,14 +354,15 @@ namespace CareTogether.TestData
                             .AddRange(new Permission[] { Permission.ViewLinkedFamilies }))),
                     ImmutableDictionary<Guid, UserAccessConfiguration>.Empty
                         .Add(adminId, new UserAccessConfiguration(adminId, ImmutableList<UserLocationRole>.Empty
-                            .Add(new UserLocationRole(guid2, "OrganizationAdministrator"))))
+                            .Add(new UserLocationRole(guid2, "OrganizationAdministrator"))
+                            .Add(new UserLocationRole(guid3, "OrganizationAdministrator"))))
                         .Add(volunteerId, new UserAccessConfiguration(guid4, ImmutableList<UserLocationRole>.Empty
                             .Add(new UserLocationRole(guid2, "NoteEnterer"))))));
         }
 
         public static async Task PopulatePolicies(IObjectStore<EffectiveLocationPolicy> policiesStore)
         {
-            await policiesStore.UpsertAsync(guid1, guid2, "policy", new EffectiveLocationPolicy(
+            var policy = new EffectiveLocationPolicy(
                 ActionDefinitions: new Dictionary<string, ActionRequirement>
                 {
                     ["Request for Help Form"] = new ActionRequirement(DocumentLinkRequirement.Allowed, NoteEntryRequirement.Allowed,
@@ -635,14 +636,17 @@ namespace CareTogether.TestData
                                 new VolunteerFamilyApprovalRequirement(RequirementStage.Onboarding, "Meet & Greet", VolunteerFamilyRequirementScope.OncePerFamily)
                             }.ToImmutableList())
                         }.ToImmutableList())
-                    }.ToImmutableDictionary())));
+                    }.ToImmutableDictionary()));
+
+            await policiesStore.UpsertAsync(guid1, guid2, "policy", policy);
+            await policiesStore.UpsertAsync(guid1, guid3, "policy", policy);
         }
 
         public static async Task PopulateUserTenantAccess(IObjectStore<UserTenantAccessSummary> userTenantAccessStore)
         {
             await userTenantAccessStore.UpsertAsync(Guid.Empty, Guid.Empty,
                 adminId.ToString(),
-                new UserTenantAccessSummary(guid1, ImmutableList<Guid>.Empty.Add(guid2)));
+                new UserTenantAccessSummary(guid1, ImmutableList<Guid>.Empty.Add(guid2).Add(guid3)));
             await userTenantAccessStore.UpsertAsync(Guid.Empty, Guid.Empty,
                 volunteerId.ToString(),
                 new UserTenantAccessSummary(guid1, ImmutableList<Guid>.Empty.Add(guid2)));
