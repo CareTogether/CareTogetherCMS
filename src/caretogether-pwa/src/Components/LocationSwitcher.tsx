@@ -2,7 +2,6 @@ import { Select, MenuItem } from '@mui/material';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { organizationConfigurationData, organizationNameData } from '../Model/ConfigurationModel';
 import { availableLocationsState, currentLocationState } from '../Model/SessionModel';
-import { useBackdrop } from '../useBackdrop';
 
 export function LocationSwitcher() {
   const organizationName = useRecoilValue(organizationNameData);
@@ -11,21 +10,15 @@ export function LocationSwitcher() {
   const [currentLocationId, setCurrentLocationId] = useRecoilState(currentLocationState);
   const availableLocations = useRecoilValue(availableLocationsState);
 
-  const withBackdrop = useBackdrop();
-
   const locations = organizationConfiguration.locations!.map(location => ({
     id: location.id!,
     name: location.name!,
-    isAvailable: availableLocations.some(available => available.locationId === location.id) || true
+    isAvailable: availableLocations.some(available => available.locationId === location.id)
   }));
   const currentLocationName = locations.find(x => x.id === currentLocationId)?.name;
   
-  async function switchLocation(locationId: string) {
-    // await withBackdrop(async () => {
-      console.log(locationId);
-      setCurrentLocationId(locationId);
-      console.log("finished");
-    // });
+  function switchLocation(locationId: string) {
+    setCurrentLocationId(locationId);
   }
 
   return (
