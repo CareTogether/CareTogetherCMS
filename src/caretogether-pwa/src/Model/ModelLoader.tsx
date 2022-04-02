@@ -43,7 +43,7 @@ export function ModelLoader({children}: ModelLoaderProps) {
       setCurrentPermissions(userResponse.locationIds![0].permissions!);
     }
     loadInitialLocation();
-  }, [setOrganizationId, setLocationId, setCurrentPermissions]);
+  }, [setOrganizationId, setAvailableLocations, savedLocationId, setSavedLocationId, setLocationId, setCurrentPermissions]);
 
   useEffect(() => {
     const loadInitialData = async () => {

@@ -2,6 +2,7 @@ import { Select, MenuItem, useMediaQuery, useTheme } from '@mui/material';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { organizationConfigurationData, organizationNameData } from '../Model/ConfigurationModel';
 import { availableLocationsState, currentLocationState } from '../Model/SessionModel';
+import { useLocalStorage } from '../useLocalStorage';
 
 export function LocationSwitcher() {
   const theme = useTheme();
@@ -11,6 +12,7 @@ export function LocationSwitcher() {
   const organizationConfiguration = useRecoilValue(organizationConfigurationData);
 
   const [currentLocationId, setCurrentLocationId] = useRecoilState(currentLocationState);
+  const [, setSavedLocationId] = useLocalStorage<string | null>('locationId', null);
   const availableLocations = useRecoilValue(availableLocationsState);
 
   const locations = organizationConfiguration.locations!.map(location => ({
@@ -22,6 +24,7 @@ export function LocationSwitcher() {
   
   function switchLocation(locationId: string) {
     setCurrentLocationId(locationId);
+    setSavedLocationId(locationId);
   }
 
   return (

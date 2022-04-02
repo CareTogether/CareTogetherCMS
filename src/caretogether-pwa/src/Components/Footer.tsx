@@ -1,5 +1,5 @@
 import makeStyles from '@mui/styles/makeStyles';
-import { BottomNavigation, BottomNavigationAction, Divider, Drawer, IconButton, useTheme } from '@mui/material';
+import { BottomNavigation, BottomNavigationAction, Drawer, useTheme } from '@mui/material';
 import { Link, useLocation } from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu';
 import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
