@@ -50,7 +50,7 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
   const allCandidateVolunteerAssignees = candidateFamilyAssignees.concat(candidateIndividualAssignees)
     .map(candidateItem);
   const deduplicatedCandidateVolunteerAssignees = allCandidateVolunteerAssignees.filter((candidateItem, i) =>
-    allCandidateVolunteerAssignees.filter((x, j) => x.key == candidateItem.key && j < i).length == 0);
+    allCandidateVolunteerAssignees.filter((x, j) => x.key === candidateItem.key && j < i).length === 0);
   
   function updateAssignee(assigneeKey: string) {
     setSelectedAssigneeKey(assigneeKey);
