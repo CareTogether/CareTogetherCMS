@@ -22,25 +22,23 @@ export function StartArrangementDialog({referralId, arrangement, onClose}: Start
   
   const person = personLookup(familyId, arrangement.partneringFamilyPersonId) as Person;
 
-  const [fields, setFields] = useState({
-    startedAtLocal: new Date()
-  });
-  const { startedAtLocal } = fields;
+  const [startedAtLocal, setStartedAtLocal] = useState(null as Date | null);
 
   async function save() {
-    await referralsModel.startArrangement(familyId, referralId, arrangement.id!, startedAtLocal);
+    await referralsModel.startArrangement(familyId, referralId, arrangement.id!, startedAtLocal!);
   }
 
   return (
-    <UpdateDialog title={`Do you want to start this ${arrangement.arrangementType} arrangement for ${person.firstName} ${person.lastName}?`} onClose={onClose}
-      onSave={save}>
+    <UpdateDialog
+      title={`Do you want to start this ${arrangement.arrangementType} arrangement for ${person.firstName} ${person.lastName}?`}
+      onClose={onClose} onSave={save} enableSave={() => startedAtLocal != null}>
       <Grid container spacing={2}>
         <Grid item xs={12}>
           <DateTimePicker
             label="When was this arrangement started?"
             value={startedAtLocal}
             disableFuture inputFormat="M/d/yyyy h:mma"
-            onChange={(date) => date && setFields({ ...fields, startedAtLocal: date })}
+            onChange={(date) => date && setStartedAtLocal(date)}
             showTodayButton
             renderInput={(params) => <TextField fullWidth required {...params} sx={{marginTop: 1}} />} />
         </Grid>

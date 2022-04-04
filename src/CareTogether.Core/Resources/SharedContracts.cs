@@ -18,6 +18,6 @@ namespace CareTogether.Resources
         Guid CompletedCustomFieldId, string CustomFieldName, CustomFieldType CustomFieldType, object? Value);
 
     [JsonHierarchyBase]
-    public abstract partial record Activity(Guid UserId, DateTime TimestampUtc,
+    public abstract partial record Activity(Guid UserId, DateTime AuditTimestampUtc, DateTime ActivityTimestampUtc,
         Guid? UploadedDocumentId, Guid? NoteId);
 }

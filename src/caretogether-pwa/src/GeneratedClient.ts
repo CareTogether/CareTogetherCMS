@@ -2770,7 +2770,8 @@ export interface IUploadedDocumentInfo {
 
 export abstract class Activity implements IActivity {
     userId?: string;
-    timestampUtc?: Date;
+    auditTimestampUtc?: Date;
+    activityTimestampUtc?: Date;
     uploadedDocumentId?: string | undefined;
     noteId?: string | undefined;
 
@@ -2789,7 +2790,8 @@ export abstract class Activity implements IActivity {
     init(_data?: any) {
         if (_data) {
             this.userId = _data["userId"];
-            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
+            this.auditTimestampUtc = _data["auditTimestampUtc"] ? new Date(_data["auditTimestampUtc"].toString()) : <any>undefined;
+            this.activityTimestampUtc = _data["activityTimestampUtc"] ? new Date(_data["activityTimestampUtc"].toString()) : <any>undefined;
             this.uploadedDocumentId = _data["uploadedDocumentId"];
             this.noteId = _data["noteId"];
         }
@@ -2824,7 +2826,8 @@ export abstract class Activity implements IActivity {
         data = typeof data === 'object' ? data : {};
         data["discriminator"] = this._discriminator;
         data["userId"] = this.userId;
-        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
+        data["auditTimestampUtc"] = this.auditTimestampUtc ? this.auditTimestampUtc.toISOString() : <any>undefined;
+        data["activityTimestampUtc"] = this.activityTimestampUtc ? this.activityTimestampUtc.toISOString() : <any>undefined;
         data["uploadedDocumentId"] = this.uploadedDocumentId;
         data["noteId"] = this.noteId;
         return data;
@@ -2833,7 +2836,8 @@ export abstract class Activity implements IActivity {
 
 export interface IActivity {
     userId?: string;
-    timestampUtc?: Date;
+    auditTimestampUtc?: Date;
+    activityTimestampUtc?: Date;
     uploadedDocumentId?: string | undefined;
     noteId?: string | undefined;
 }

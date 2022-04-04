@@ -19,7 +19,7 @@ export function useDialogHandle(): DialogHandle {
   const closeDialog = () => setDialogOpen(false);
 
   useEffect(() => {
-    if (!dialogOpen) { // Increment id each time modal closes
+    if (dialogOpen) { // Increment id each time modal is opened
       openId.current = openId.current + 1;
     }
   }, [dialogOpen]);

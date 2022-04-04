@@ -21,11 +21,12 @@ export function ActivityTimeline({ family }: ActivityTimelineProps) {
     activities?.every(a => a.noteId !== note.id))?.map(note =>
     ({
       userId: note.authorId,
-      timestampUtc: note.timestampUtc,
+      activityTimestampUtc: note.timestampUtc,
+      auditTimestampUtc: note.timestampUtc,
       noteId: note.id
     } as Activity)) || [];
   const allActivitiesSorted = activities?.concat(unmatchedNotesAsActivities)?.sort((a, b) =>
-    a.timestampUtc! < b.timestampUtc! ? 1 : a.timestampUtc! > b.timestampUtc! ? -1 : 0);
+    a.activityTimestampUtc! < b.activityTimestampUtc! ? 1 : a.activityTimestampUtc! > b.activityTimestampUtc! ? -1 : 0);
 
   function arrangementPartneringPerson(arrangementId?: string) {
     const allArrangements = (family.partneringFamilyInfo?.openReferral?.arrangements || []).concat(
@@ -63,7 +64,7 @@ export function ActivityTimeline({ family }: ActivityTimelineProps) {
           </TimelineSeparator>
           <TimelineContent style={{width:200,wordWrap:'break-word',whiteSpace:'pre-wrap'}}>
             <Box sx={{color: 'text.disabled', margin: 0, padding: 0}}>
-              <span style={{marginRight: 16}}>{format(activity.timestampUtc!, "M/d/yy h:mm a")}</span>
+              <span style={{marginRight: 16}}>{format(activity.activityTimestampUtc!, "M/d/yy h:mm a")}</span>
               <PersonName person={userLookup(activity.userId)} />
             </Box>
             {activity instanceof ReferralRequirementCompleted || activity instanceof ArrangementRequirementCompleted

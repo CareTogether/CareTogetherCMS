@@ -28,7 +28,7 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
   const child = personLookup(partneringFamily.family!.id, arrangement.partneringFamilyPersonId);
 
   const [selectedAssigneeKey, setSelectedAssigneeKey] = useState('');
-  const [changedAtLocal, setChangedAtLocal] = useState(new Date());
+  const [changedAtLocal, setChangedAtLocal] = useState(null as Date | null);
   const [plan, setPlan] = useState<ChildLocationPlan | null>(null);
   const [notes, setNotes] = useState("");
 
@@ -49,6 +49,8 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
     ({ familyId: individualAssignment.familyId!, adult: personLookup(individualAssignment.familyId, individualAssignment.personId)! })) || [];
   const allCandidateVolunteerAssignees = candidateFamilyAssignees.concat(candidateIndividualAssignees)
     .map(candidateItem);
+  const deduplicatedCandidateVolunteerAssignees = allCandidateVolunteerAssignees.filter((candidateItem, i) =>
+    allCandidateVolunteerAssignees.filter((x, j) => x.key === candidateItem.key && j < i).length === 0);
   
   function updateAssignee(assigneeKey: string) {
     setSelectedAssigneeKey(assigneeKey);
@@ -78,8 +80,10 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
         alert("No plan was selected. Please try again.");
       } else if (notes === "") {
         alert("You must enter a note for this requirement.");
+      } else if (changedAtLocal == null) {
+        alert("No date was entered. Please try again.");
       } else {
-        const assigneeInfo = candidatePartneringFamilyAssignees.concat(allCandidateVolunteerAssignees).find(ca => ca.key === selectedAssigneeKey);
+        const assigneeInfo = candidatePartneringFamilyAssignees.concat(deduplicatedCandidateVolunteerAssignees).find(ca => ca.key === selectedAssigneeKey);
         let note: Note | undefined = undefined;
         if (notes !== "")
           note = (await directoryModel.createDraftNote(partneringFamily.family?.id as string, notes)).note;
@@ -135,7 +139,7 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
                     {candidatePartneringFamilyAssignees.map(candidate =>
                       <MenuItem key={candidate.key} value={candidate.key}>{candidate.displayName}</MenuItem>)}
                     <Divider />
-                    {allCandidateVolunteerAssignees.map(candidate =>
+                    {deduplicatedCandidateVolunteerAssignees.map(candidate =>
                       <MenuItem key={candidate.key} value={candidate.key}>{candidate.displayName}</MenuItem>)}
                 </Select>
               </FormControl>
