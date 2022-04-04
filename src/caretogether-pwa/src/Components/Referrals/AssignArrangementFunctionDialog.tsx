@@ -117,6 +117,7 @@ export function AssignArrangementFunctionDialog({
 
   async function save() {
     await withBackdrop(async () => {
+      handle.closeDialog(); // This is placed here so values are not recalculated unnecessarily (which otherwise results in errors).
       const assigneeInfo = candidateAssignees.find(ca => ca.key === assigneeKey);
       if (assigneeInfo?.personId == null) {
         await referralsModel.assignVolunteerFamily(familyId, referralId, arrangement.id!,
@@ -126,7 +127,6 @@ export function AssignArrangementFunctionDialog({
           assigneeInfo!.familyId, assigneeInfo!.personId, arrangementFunction.functionName!);
       }
       //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
-      handle.closeDialog();
     });
   }
 
