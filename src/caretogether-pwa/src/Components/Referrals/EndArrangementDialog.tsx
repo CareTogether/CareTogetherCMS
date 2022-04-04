@@ -22,25 +22,23 @@ export function EndArrangementDialog({referralId, arrangement, onClose}: EndArra
   
   const person = personLookup(familyId, arrangement.partneringFamilyPersonId) as Person;
 
-  const [fields, setFields] = useState({
-    endedAtLocal: new Date()
-  });
-  const { endedAtLocal } = fields;
+  const [endedAtLocal, setEndedAtLocal] = useState(null as Date | null);
 
   async function save() {
-    await referralsModel.endArrangement(familyId, referralId, arrangement.id!, endedAtLocal);
+    await referralsModel.endArrangement(familyId, referralId, arrangement.id!, endedAtLocal!);
   }
 
   return (
-    <UpdateDialog title={`Do you want to end this ${arrangement.arrangementType} arrangement for ${person.firstName} ${person.lastName}?`} onClose={onClose}
-      onSave={save}>
+    <UpdateDialog
+      title={`Do you want to end this ${arrangement.arrangementType} arrangement for ${person.firstName} ${person.lastName}?`}
+      onClose={onClose} onSave={save} enableSave={() => endedAtLocal != null}>
       <Grid container spacing={2}>
         <Grid item xs={12}>
           <DateTimePicker
             label="When was this arrangement ended?"
             value={endedAtLocal}
             disableFuture inputFormat="M/d/yyyy h:mma"
-            onChange={(date) => date && setFields({ ...fields, endedAtLocal: date })}
+            onChange={(date) => date && setEndedAtLocal(date)}
             showTodayButton
             renderInput={(params) => <TextField fullWidth required {...params} sx={{marginTop: 1}} />} />
         </Grid>
