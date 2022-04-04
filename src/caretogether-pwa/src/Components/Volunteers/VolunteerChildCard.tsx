@@ -87,7 +87,7 @@ export function VolunteerChildCard({volunteerFamilyId, personId}: VolunteerChild
                 <span style={{float:'right'}}>{relationship.type === CustodialRelationshipType.LegalGuardian
                   ? "legal guardian"
                   : relationship.type === CustodialRelationshipType.ParentWithCustody
-                  ? "parent (with joint custody)"
+                  ? "parent with custody"
                   : relationship.type === CustodialRelationshipType.ParentWithCourtAppointedCustody
                   ? "parent with court-appointed sole custody"
                   : null}</span>
