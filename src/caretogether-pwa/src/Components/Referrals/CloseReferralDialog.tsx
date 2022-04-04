@@ -15,18 +15,18 @@ export function CloseReferralDialog({partneringFamilyId, referralId, onClose}: C
   const referralsModel = useReferralsModel();
   const [fields, setFields] = useState({
     reason: null as ReferralCloseReason | null,
-    closedAtLocal: new Date()
+    closedAtLocal: null as Date | null
   });
   const { reason, closedAtLocal } = fields;
 
   async function save() {
     await referralsModel.closeReferral(partneringFamilyId, referralId,
-      reason!, closedAtLocal);
+      reason!, closedAtLocal!);
   }
 
   return (
-    <UpdateDialog title={`Why is this referral being closed?`} onClose={onClose}
-      onSave={save} enableSave={() => reason != null}>
+    <UpdateDialog title={`Why is this referral being closed?`}
+      onClose={onClose} onSave={save} enableSave={() => reason != null && closedAtLocal != null}>
       <form noValidate autoComplete="off">
         <Grid container spacing={2}>
           <Grid item xs={12}>

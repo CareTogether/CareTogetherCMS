@@ -37,7 +37,7 @@ export function CreateArrangementDialog({referralId, arrangementPolicy, onClose}
     : family.family!.children!;
 
   const [fields, setFields] = useState({
-    requestedAtLocal: new Date(),
+    requestedAtLocal: null as Date | null,
     partneringFamilyPersonId: null as string | null
   });
   const { requestedAtLocal, partneringFamilyPersonId } = fields;
@@ -50,6 +50,8 @@ export function CreateArrangementDialog({referralId, arrangementPolicy, onClose}
     await withBackdrop(async () => {
       if (!partneringFamilyPersonId) {
         alert("A partnering family member was not selected. Try again.");
+      } else if (requestedAtLocal == null) {
+        alert("A date is required.");
       } else {
         await referralsModel.createArrangement(family.family?.id as string, referralId,
           arrangementPolicy.arrangementType!, requestedAtLocal, partneringFamilyPersonId);
@@ -70,7 +72,7 @@ export function CreateArrangementDialog({referralId, arrangementPolicy, onClose}
             <Grid item>
               <DatePicker
                 label="Requested at"
-                value={requestedAtLocal} maxDate={new Date()} openTo="year"
+                value={requestedAtLocal} maxDate={new Date()}
                 inputFormat="MM/dd/yyyy"
                 onChange={(date) => date && setFields({...fields, requestedAtLocal: date})}
                 renderInput={(params) => <TextField size="small" required {...params} sx={{marginTop: 1}} />} />

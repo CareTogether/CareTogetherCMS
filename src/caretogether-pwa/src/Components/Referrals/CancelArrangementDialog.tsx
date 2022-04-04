@@ -23,17 +23,17 @@ export function CancelArrangementDialog({referralId, arrangement, onClose}: Canc
   const person = personLookup(familyId, arrangement.partneringFamilyPersonId) as Person;
 
   const [fields, setFields] = useState({
-    cancelledAtLocal: new Date()
+    cancelledAtLocal: null as Date | null
   });
   const { cancelledAtLocal } = fields;
 
   async function save() {
-    await referralsModel.cancelArrangement(familyId, referralId, arrangement.id!, cancelledAtLocal);
+    await referralsModel.cancelArrangement(familyId, referralId, arrangement.id!, cancelledAtLocal!);
   }
 
   return (
-    <UpdateDialog title={`Do you want to cancel setting up this ${arrangement.arrangementType} arrangement for ${person.firstName} ${person.lastName}?`} onClose={onClose}
-      onSave={save}>
+    <UpdateDialog title={`Do you want to cancel setting up this ${arrangement.arrangementType} arrangement for ${person.firstName} ${person.lastName}?`}
+      onClose={onClose} onSave={save} enableSave={() => cancelledAtLocal != null}>
       <Grid container spacing={0}>
         <Grid item xs={12}>
           <DateTimePicker
