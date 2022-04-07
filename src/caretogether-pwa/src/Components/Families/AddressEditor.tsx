@@ -13,7 +13,7 @@ export function AddressEditor({ familyId, person, address }: AddressEditorProps)
 
   const editor = useInlineEditor(async value =>
     await directoryModel.updatePersonAddress(familyId!, person.id!,
-      value.id!, value.line1!, value.line2!.length > 0 ? value.line2! : null,
+      value.id!, value.line1!, value.line2 && value.line2.length > 0 ? value.line2 : null,
       value.city!, value.state!, value.postalCode!),
     address as IAddress,
     value => (value &&
