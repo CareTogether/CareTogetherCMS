@@ -256,23 +256,19 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             // For each discontinuous child location timeline, calculate the adjusted start and end dates of each stage
             // of the recurrence policy.
-            // A null end date means the stage continues indefinitely (which can only apply to the current child's location).
-            // A null start date will only occur if invalid data is provided (i.e., if any stage other than the last one has
-            // an unlimited number of occurrences), so this calculation forces start date results to be non-null.
+            // A "max" end date means the stage continues indefinitely (which can only apply to the current child's location).
             var arrangementStagesByLocation = timelinesByLocation.Select(timeline =>
             {
-                //TODO: .......
                 var arrangementStages = recurrence.Stages
-                    .Select(stage => (incrementDelay: stage.Delay, totalDuration: stage.Delay * stage.MaxOccurrences))
-                    .Aggregate(ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty,
-                        (priorStages, stage) => priorStages.Add((stage.incrementDelay,
-                            startDate: priorStages.Count == 0
-                            ? arrangementStartedAtUtc
-                            : priorStages.Last().endDate!.Value,
-                            endDate: priorStages.Count == 0
-                            ? arrangementStartedAtUtc + stage.totalDuration
-                            : priorStages.Last().endDate!.Value + stage.totalDuration)));
-                return KeyValuePair.Create(timeline.Key, (timeline, arrangementStages));
+                    .Select(stage => stage.Delay * stage.MaxOccurrences)
+                    .Aggregate(ImmutableList<(TimeSpan startDelay, TimeSpan? totalDuration)>.Empty,
+                        (priorStages, stageTotalDuration) => priorStages.Add(
+                            (startDelay: new TimeSpan(priorStages.Sum(x => ((TimeSpan)x.totalDuration!).Ticks)),
+                            totalDuration: stageTotalDuration)))
+                    .Select(stage => stage.totalDuration.HasValue
+                        ? timeline.Value.Map(stage.startDelay, (TimeSpan)stage.totalDuration)
+                        : new AbsoluteTimeSpan(timeline.Value.Map(stage.startDelay), DateTime.MaxValue));
+                return KeyValuePair.Create(timeline.Key, (timeline.Value, arrangementStages));
             }).ToImmutableDictionary();
 
             // For each completion, find the time of the following completion (null in the case of the last completion

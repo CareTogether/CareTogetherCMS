@@ -9,7 +9,7 @@ namespace CareTogether.Engines.PolicyEvaluation
     }
     internal sealed record NonTerminatingTimelineStage(DateTime Start);
 
-    internal sealed record MappedTimeSpan(DateTime Start, DateTime End);
+    internal sealed record AbsoluteTimeSpan(DateTime Start, DateTime End);
 
     /// <summary>
     /// The <see cref="Timeline"/> class simplifies temporal calculations by
@@ -36,12 +36,12 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
 
-        public MappedTimeSpan Map(TimeSpan startDelay, TimeSpan duration)
+        public AbsoluteTimeSpan Map(TimeSpan startDelay, TimeSpan duration)
         {
             var start = Map(startDelay);
             var end = Map(startDelay + duration);
             
-            return new MappedTimeSpan(start, end);
+            return new AbsoluteTimeSpan(start, end);
         }
 
 

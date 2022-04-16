@@ -10,7 +10,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
     {
         private static DateTime D(int day) => new DateTime(2022, 1, day);
         private static TimeSpan T(int days) => TimeSpan.FromDays(days);
-        private static MappedTimeSpan M(int start, int end) => new MappedTimeSpan(D(start), D(end));
+        private static AbsoluteTimeSpan M(int start, int end) => new AbsoluteTimeSpan(D(start), D(end));
 
 
         [TestMethod]
