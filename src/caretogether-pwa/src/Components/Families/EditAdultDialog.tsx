@@ -42,16 +42,13 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
         <AgeEditor {...personEditorProps} />
         <EthnicityEditor {...personEditorProps} />
         <AdultFamilyRelationshipEditor relationship={adult.item2!} {...personEditorProps} />
-        <br />
-        Phone Number(s):
+        <h4 style={{ marginBottom:0 }}>Phone Number(s):</h4>
         {person.phoneNumbers?.map(phoneNumber =>
           <PhoneNumberEditor key={phoneNumber.id!} phoneNumber={phoneNumber} {...personEditorProps } />)}
-        <br />
-        Email Address(es):
+        <h4 style={{ marginBottom:0 }}>Email Address(es):</h4>
         {person.emailAddresses?.map(emailAddress =>
           <EmailAddressEditor key={emailAddress.id!} emailAddress={emailAddress} {...personEditorProps } />)}
-        <br />
-        Address(es):
+        <h4 style={{ marginBottom:0 }}>Address(es):</h4>
         {person.addresses?.map(address =>
           <AddressEditor key={address.id!} address={address} {...personEditorProps } />)}
         <NotesEditor {...personEditorProps} />
