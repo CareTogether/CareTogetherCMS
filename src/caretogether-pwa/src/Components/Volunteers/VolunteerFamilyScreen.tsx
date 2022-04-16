@@ -12,7 +12,7 @@ import { AddChildDialog } from '../Families/AddChildDialog';
 import { useParams } from 'react-router';
 import { VolunteerAdultCard } from './VolunteerAdultCard';
 import { VolunteerChildCard } from './VolunteerChildCard';
-import { UploadFamilyDocumentDialog } from '../Families/UploadFamilyDocumentDialog';
+import { UploadFamilyDocumentsDialog } from '../Families/UploadFamilyDocumentsDialog';
 import { VolunteerRoleApprovalStatusChip } from './VolunteerRoleApprovalStatusChip';
 import { RemoveFamilyRoleDialog } from './RemoveFamilyRoleDialog';
 import { ResetFamilyRoleDialog } from './ResetFamilyRoleDialog';
@@ -179,7 +179,7 @@ export function VolunteerFamilyScreen() {
             ))}
           </MenuList>
         </Menu>
-        {uploadDocumentDialogOpen && <UploadFamilyDocumentDialog family={volunteerFamily}
+        {uploadDocumentDialogOpen && <UploadFamilyDocumentsDialog family={volunteerFamily}
           onClose={() => setUploadDocumentDialogOpen(false)} />}
         {addAdultDialogOpen && <AddAdultDialog onClose={() => setAddAdultDialogOpen(false)} />}
         {addChildDialogOpen && <AddChildDialog onClose={() => setAddChildDialogOpen(false)} />}

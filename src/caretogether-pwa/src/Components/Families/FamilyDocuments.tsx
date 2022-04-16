@@ -39,13 +39,13 @@ export function FamilyDocuments({ family }: FamilyDocumentsProps) {
       <ul className={classes.familyDocumentsList}>
         {family.uploadedDocuments?.map((uploaded, i) =>
           permissions(Permission.ReadDocuments)
-          ? <li key={i}
+          ? <li key={i} style={{ clear: 'both' }}
               onContextMenu={(e) => { e.preventDefault(); setMoreMenuAnchor({ anchor: e.currentTarget, document: uploaded }); }}
               onClick={() => downloadFile(organizationId, locationId, uploaded.uploadedDocumentId!)}>
               📃 {uploaded.uploadedFileName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               {uploaded.timestampUtc && <span style={{float:'right',marginRight:20}}>{format(uploaded.timestampUtc, "MM/dd/yyyy hh:mm aa")}</span>}
             </li>
-          : <li key={i}>
+          : <li key={i} style={{ clear: 'both' }}>
               📃 {uploaded.uploadedFileName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               {uploaded.timestampUtc && <span style={{float:'right',marginRight:20}}>{format(uploaded.timestampUtc, "MM/dd/yyyy hh:mm aa")}</span>}
             </li>
