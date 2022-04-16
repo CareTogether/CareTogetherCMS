@@ -15,7 +15,7 @@ import { AddEditNoteDialog } from '../Families/AddEditNoteDialog';
 import { ArrangementCard } from './ArrangementCard';
 import { PersonName } from '../Families/PersonName';
 import { format } from 'date-fns';
-import { UploadFamilyDocumentDialog } from '../Families/UploadFamilyDocumentDialog';
+import { UploadFamilyDocumentsDialog } from '../Families/UploadFamilyDocumentsDialog';
 import { policyData } from '../../Model/ConfigurationModel';
 import { CreateArrangementDialog } from './CreateArrangementDialog';
 import { CloseReferralDialog } from './CloseReferralDialog';
@@ -172,7 +172,7 @@ export function PartneringFamilyScreen() {
           onClick={(event) => setFamilyMoreMenuAnchor(event.currentTarget)}>
           <MoreVertIcon />
         </IconButton> */}
-        {uploadDocumentDialogOpen && <UploadFamilyDocumentDialog family={partneringFamily}
+        {uploadDocumentDialogOpen && <UploadFamilyDocumentsDialog family={partneringFamily}
           onClose={() => setUploadDocumentDialogOpen(false)} />}
         {addAdultDialogOpen && <AddAdultDialog onClose={() => setAddAdultDialogOpen(false)} />}
         {addChildDialogOpen && <AddChildDialog onClose={() => setAddChildDialogOpen(false)} />}
