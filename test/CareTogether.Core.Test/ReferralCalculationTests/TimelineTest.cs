@@ -1,11 +1,7 @@
 ﻿using CareTogether.Engines.PolicyEvaluation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CareTogether.Core.Test.ReferralCalculationTests
 {
@@ -38,10 +34,10 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             Assert.AreEqual(M(2, 2), dut.Map(T(1), T(0)));
             Assert.AreEqual(M(2, 3), dut.Map(T(1), T(1)));
             Assert.AreEqual(M(2, 4), dut.Map(T(1), T(2)));
+            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(8), T(5)));
             Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(9), T(5)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(10), T(5)));
             Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(11), T(10)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(11), T(20)));
+            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(11), T(19)));
         }
 
         [TestMethod]
@@ -51,7 +47,24 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 new TerminatingTimelineStage(D(1), D(10)),
                 new TerminatingTimelineStage(D(10), D(20))));
 
-            Assert.Fail("Test not implemented");
+            Assert.AreEqual(D(1), dut.Map(T(0)));
+            Assert.AreEqual(D(2), dut.Map(T(1)));
+            Assert.AreEqual(D(10), dut.Map(T(9)));
+            Assert.AreEqual(D(11), dut.Map(T(10)));
+            Assert.AreEqual(D(12), dut.Map(T(11)));
+            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(20)));
+            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(25)));
+            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(30)));
+
+            Assert.AreEqual(M(1, 1), dut.Map(T(0), T(0)));
+            Assert.AreEqual(M(1, 2), dut.Map(T(0), T(1)));
+            Assert.AreEqual(M(2, 2), dut.Map(T(1), T(0)));
+            Assert.AreEqual(M(2, 3), dut.Map(T(1), T(1)));
+            Assert.AreEqual(M(2, 4), dut.Map(T(1), T(2)));
+            Assert.AreEqual(M(9, 14), dut.Map(T(8), T(5)));
+            Assert.AreEqual(M(10, 15), dut.Map(T(9), T(5)));
+            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(11), T(10)));
+            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(11), T(19)));
         }
 
         [TestMethod]
@@ -61,7 +74,24 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 new TerminatingTimelineStage(D(1), D(10)),
                 new TerminatingTimelineStage(D(20), D(30))));
 
-            Assert.Fail("Test not implemented");
+            Assert.AreEqual(D(1), dut.Map(T(0)));
+            Assert.AreEqual(D(2), dut.Map(T(1)));
+            Assert.AreEqual(D(10), dut.Map(T(9)));
+            Assert.AreEqual(D(21), dut.Map(T(10)));
+            Assert.AreEqual(D(22), dut.Map(T(11)));
+            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(20)));
+            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(25)));
+            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(30)));
+
+            Assert.AreEqual(M(1, 1), dut.Map(T(0), T(0)));
+            Assert.AreEqual(M(1, 2), dut.Map(T(0), T(1)));
+            Assert.AreEqual(M(2, 2), dut.Map(T(1), T(0)));
+            Assert.AreEqual(M(2, 3), dut.Map(T(1), T(1)));
+            Assert.AreEqual(M(2, 4), dut.Map(T(1), T(2)));
+            Assert.AreEqual(M(9, 24), dut.Map(T(8), T(5)));
+            Assert.AreEqual(M(10, 25), dut.Map(T(9), T(5)));
+            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(11), T(10)));
+            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(11), T(19)));
         }
 
         [TestMethod]
@@ -70,7 +100,24 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             var dut = new Timeline(ImmutableList<TerminatingTimelineStage>.Empty,
                 new NonTerminatingTimelineStage(D(1)));
 
-            Assert.Fail("Test not implemented");
+            Assert.AreEqual(D(1), dut.Map(T(0)));
+            Assert.AreEqual(D(2), dut.Map(T(1)));
+            Assert.AreEqual(D(10), dut.Map(T(9)));
+            Assert.AreEqual(D(11), dut.Map(T(10)));
+            Assert.AreEqual(D(12), dut.Map(T(11)));
+            Assert.AreEqual(D(21), dut.Map(T(20)));
+            Assert.AreEqual(D(26), dut.Map(T(25)));
+            Assert.AreEqual(D(31), dut.Map(T(30)));
+
+            Assert.AreEqual(M(1, 1), dut.Map(T(0), T(0)));
+            Assert.AreEqual(M(1, 2), dut.Map(T(0), T(1)));
+            Assert.AreEqual(M(2, 2), dut.Map(T(1), T(0)));
+            Assert.AreEqual(M(2, 3), dut.Map(T(1), T(1)));
+            Assert.AreEqual(M(2, 4), dut.Map(T(1), T(2)));
+            Assert.AreEqual(M(9, 14), dut.Map(T(8), T(5)));
+            Assert.AreEqual(M(10, 15), dut.Map(T(9), T(5)));
+            Assert.AreEqual(M(12, 22), dut.Map(T(11), T(10)));
+            Assert.AreEqual(M(12, 31), dut.Map(T(11), T(19)));
         }
 
         [TestMethod]
@@ -80,7 +127,24 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 new TerminatingTimelineStage(D(1), D(10))),
                 new NonTerminatingTimelineStage(D(10)));
 
-            Assert.Fail("Test not implemented");
+            Assert.AreEqual(D(1), dut.Map(T(0)));
+            Assert.AreEqual(D(2), dut.Map(T(1)));
+            Assert.AreEqual(D(10), dut.Map(T(9)));
+            Assert.AreEqual(D(11), dut.Map(T(10)));
+            Assert.AreEqual(D(12), dut.Map(T(11)));
+            Assert.AreEqual(D(21), dut.Map(T(20)));
+            Assert.AreEqual(D(26), dut.Map(T(25)));
+            Assert.AreEqual(D(31), dut.Map(T(30)));
+
+            Assert.AreEqual(M(1, 1), dut.Map(T(0), T(0)));
+            Assert.AreEqual(M(1, 2), dut.Map(T(0), T(1)));
+            Assert.AreEqual(M(2, 2), dut.Map(T(1), T(0)));
+            Assert.AreEqual(M(2, 3), dut.Map(T(1), T(1)));
+            Assert.AreEqual(M(2, 4), dut.Map(T(1), T(2)));
+            Assert.AreEqual(M(9, 14), dut.Map(T(8), T(5)));
+            Assert.AreEqual(M(10, 15), dut.Map(T(9), T(5)));
+            Assert.AreEqual(M(12, 22), dut.Map(T(11), T(10)));
+            Assert.AreEqual(M(12, 31), dut.Map(T(11), T(19)));
         }
 
         [TestMethod]
@@ -90,7 +154,21 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 new TerminatingTimelineStage(D(1), D(10))),
                 new NonTerminatingTimelineStage(D(20)));
 
-            Assert.Fail("Test not implemented");
+            Assert.AreEqual(D(1), dut.Map(T(0)));
+            Assert.AreEqual(D(2), dut.Map(T(1)));
+            Assert.AreEqual(D(10), dut.Map(T(9)));
+            Assert.AreEqual(D(21), dut.Map(T(10)));
+            Assert.AreEqual(D(22), dut.Map(T(11)));
+            Assert.AreEqual(D(31), dut.Map(T(20)));
+
+            Assert.AreEqual(M(1, 1), dut.Map(T(0), T(0)));
+            Assert.AreEqual(M(1, 2), dut.Map(T(0), T(1)));
+            Assert.AreEqual(M(2, 2), dut.Map(T(1), T(0)));
+            Assert.AreEqual(M(2, 3), dut.Map(T(1), T(1)));
+            Assert.AreEqual(M(2, 4), dut.Map(T(1), T(2)));
+            Assert.AreEqual(M(9, 24), dut.Map(T(8), T(5)));
+            Assert.AreEqual(M(10, 25), dut.Map(T(9), T(5)));
+            Assert.AreEqual(M(22, 31), dut.Map(T(11), T(9)));
         }
     }
 }
