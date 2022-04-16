@@ -142,6 +142,10 @@ namespace CareTogether.Engines.PolicyEvaluation
                 DurationStagesRecurrencePolicy durationStages =>
                     CalculateMissingMonitoringRequirementInstancesForDurationRecurrence(
                         durationStages, arrangementStartedAtUtc, arrangementEndedAtUtc, utcNow, completions),
+                DurationStagesPerChildLocationRecurrencePolicy durationStagesPerChildLocation =>
+                    CalculateMissingMonitoringRequirementInstancesForDurationRecurrencePerChildLocation(
+                        durationStagesPerChildLocation, arrangementStartedAtUtc, arrangementEndedAtUtc, utcNow,
+                        completions, childLocationHistory),
                 ChildCareOccurrenceBasedRecurrencePolicy childCareOccurences =>
                     CalculateMissingMonitoringRequirementInstancesForChildCareOccurrences(
                         childCareOccurences, arrangementStartedAtUtc, arrangementEndedAtUtc,
@@ -155,6 +159,52 @@ namespace CareTogether.Engines.PolicyEvaluation
             DurationStagesRecurrencePolicy recurrence,
             DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc, DateTime utcNow,
             ImmutableList<DateTime> completions)
+        {
+            // Technically, the RecurrencePolicyStage model currently allows any stage to have an unlimited
+            // # of occurrences, but that would be invalid, so check for those cases and throw an exception.
+            //TODO: Move this into the policy loading code, or better yet fix the model to make this impossible.
+            if (recurrence.Stages.Take(recurrence.Stages.Count - 1).Any(stage => !stage.MaxOccurrences.HasValue))
+                throw new InvalidOperationException("A stage other than the last stage in a recurrence policy was found to have an unlimited number of occurrences.");
+
+            // Calculate the start and end dates of each stage based on the recurrence policy and the arrangement start date.
+            // A null end date means the stage continues indefinitely.
+            // A null start date will only occur if invalid data is provided (i.e., if any stage other than the last one has
+            // an unlimited number of occurrences), so this calculation forces start date results to be non-null.
+            var arrangementStages = recurrence.Stages
+                .Select(stage => (incrementDelay: stage.Delay, totalDuration: stage.Delay * stage.MaxOccurrences))
+                .Aggregate(ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty,
+                    (priorStages, stage) => priorStages.Add((stage.incrementDelay,
+                        startDate: priorStages.Count == 0
+                        ? arrangementStartedAtUtc
+                        : priorStages.Last().endDate!.Value,
+                        endDate: priorStages.Count == 0
+                        ? arrangementStartedAtUtc + stage.totalDuration
+                        : priorStages.Last().endDate!.Value + stage.totalDuration)));
+
+            // For each completion, find the time of the following completion (null in the case of the last completion
+            // unless the arrangement has ended, in which case use the end of the arrangement).
+            // This represents the set of gaps between completions in which there could be missing requirement due dates.
+            // Prepend this list with an entry representing the start of the arrangement.
+            var completionGaps = completions.Select((completion, i) =>
+                (start: completion, end: i + 1 >= completions.Count
+                    ? (arrangementEndedAtUtc.HasValue ? arrangementEndedAtUtc.Value : null as DateTime?)
+                    : completions[i + 1]))
+                .Prepend((start: arrangementStartedAtUtc, end: completions.Count > 0
+                    ? completions[0]
+                    : (arrangementEndedAtUtc.HasValue ? arrangementEndedAtUtc.Value : null as DateTime?)))
+                .ToImmutableList();
+
+            // Calculate all missing requirements within each completion gap (there may be none).
+            var missingRequirements = completionGaps.SelectMany(gap =>
+                CalculateMissingMonitoringRequirementsWithinCompletionGap(utcNow, gap.start, gap.end, arrangementStages))
+                .ToImmutableList();
+
+            return missingRequirements;
+        }
+        internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementInstancesForDurationRecurrencePerChildLocation(
+            DurationStagesPerChildLocationRecurrencePolicy recurrence,
+            DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc, DateTime utcNow,
+            ImmutableList<DateTime> completions, ImmutableSortedSet<ChildLocationHistoryEntry> childLocationHistory)
         {
             // Technically, the RecurrencePolicyStage model currently allows any stage to have an unlimited
             // # of occurrences, but that would be invalid, so check for those cases and throw an exception.

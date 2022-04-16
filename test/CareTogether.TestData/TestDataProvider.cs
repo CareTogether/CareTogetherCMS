@@ -476,7 +476,7 @@ namespace CareTogether.TestData
                             RequiredMonitoringActions: new List<MonitoringRequirement>
                             {
                                 new MonitoringRequirement("Family Coach Safety Visit",
-                                    new DurationStagesRecurrencePolicy(new List<RecurrencePolicyStage>
+                                    new DurationStagesPerChildLocationRecurrencePolicy(new List<RecurrencePolicyStage>
                                     {
                                         new RecurrencePolicyStage(TimeSpan.FromHours(48), 1),
                                         new RecurrencePolicyStage(TimeSpan.FromDays(7), 5),

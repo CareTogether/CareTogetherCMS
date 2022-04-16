@@ -76,6 +76,8 @@ namespace CareTogether.Resources.Policies
     public abstract partial record RecurrencePolicy();
     public sealed record DurationStagesRecurrencePolicy(ImmutableList<RecurrencePolicyStage> Stages)
         : RecurrencePolicy;
+    public sealed record DurationStagesPerChildLocationRecurrencePolicy(ImmutableList<RecurrencePolicyStage> Stages)
+        : RecurrencePolicy;
     public sealed record ChildCareOccurrenceBasedRecurrencePolicy(
         TimeSpan Delay, int Frequency, int InitialSkipCount, bool Positive)
         : RecurrencePolicy;
