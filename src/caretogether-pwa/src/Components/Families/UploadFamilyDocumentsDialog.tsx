@@ -41,10 +41,10 @@ export function UploadFamilyDocumentsDialog({family, onClose}: UploadFamilyDocum
   }
 
   return (
-    <Dialog open={true} onClose={onClose} aria-labelledby="upload-family-document-title">
-      <DialogTitle id="upload-family-document-title">Upload Family Document</DialogTitle>
+    <Dialog open={true} onClose={onClose} aria-labelledby="upload-family-documents-title">
+      <DialogTitle id="upload-family-documents-title">Upload Family Documents</DialogTitle>
       <DialogContent>
-        <DialogContentText>Do you want to upload a new document for this family?</DialogContentText>
+        <DialogContentText>Select one or more documents to upload for this family:</DialogContentText>
         <input
           accept="*/*"
           className={classes.fileInput}
