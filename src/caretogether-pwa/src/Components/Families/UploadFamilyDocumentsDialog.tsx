@@ -20,7 +20,7 @@ interface UploadFamilyDocumentsDialogProps {
 
 export function UploadFamilyDocumentsDialog({family, onClose}: UploadFamilyDocumentsDialogProps) {
   const classes = useStyles();
-  const [documentFile, setDocumentFile] = useState<File>();
+  const [documentFiles, setDocumentFiles] = useState<FileList>();
   const organizationId = useRecoilValue(currentOrganizationState);
   const locationId = useRecoilValue(currentLocationState);
   const directoryModel = useDirectoryModel();
@@ -29,11 +29,13 @@ export function UploadFamilyDocumentsDialog({family, onClose}: UploadFamilyDocum
 
   async function uploadDocument() {
     await withBackdrop(async () => {
-      if (!documentFile) {
-        alert("No file was selected. Try again.");
+      if (!documentFiles) {
+        alert("No files were selected. Try again.");
       } else {
-        const documentId = await uploadFileToTenant(organizationId, locationId, documentFile!);
-        await directoryModel.uploadFamilyDocument(family.family!.id!, documentId, documentFile!.name);
+        await Promise.all(Array.from(documentFiles).map(async documentFile => {
+          const documentId = await uploadFileToTenant(organizationId, locationId, documentFile);
+          await directoryModel.uploadFamilyDocument(family.family!.id!, documentId, documentFile.name);
+        }));
         //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
         onClose();
       }
@@ -44,15 +46,15 @@ export function UploadFamilyDocumentsDialog({family, onClose}: UploadFamilyDocum
     <Dialog open={true} onClose={onClose} aria-labelledby="upload-family-documents-title">
       <DialogTitle id="upload-family-documents-title">Upload Family Documents</DialogTitle>
       <DialogContent>
-        <DialogContentText>Select one or more documents to upload for this family:</DialogContentText>
+        <DialogContentText>Select one or more documents to upload for this family.</DialogContentText>
         <input
           accept="*/*"
           className={classes.fileInput}
-          multiple={false}
+          multiple={true}
           id="family-document-file"
           type="file"
           onChange={async (e) => {if (e.target.files && e.target.files.length > 0) {
-            setDocumentFile(e.target.files[0]);
+            setDocumentFiles(e.target.files);
           }}}
         />
       </DialogContent>
