@@ -97,6 +97,7 @@ export function VolunteerChildCard({volunteerFamilyId, personId}: VolunteerChild
         </Typography>
       </CardContent>
       {editDialogHandle.open && <EditChildDialog handle={editDialogHandle} key={editDialogHandle.key}
-        child={child} />}
+        child={child} familyAdults={volunteerFamily.family!.adults!.map(a => a.item1!)}
+        custodialRelationships={volunteerFamily.family!.custodialRelationships} />}
     </Card>}</>;
 }

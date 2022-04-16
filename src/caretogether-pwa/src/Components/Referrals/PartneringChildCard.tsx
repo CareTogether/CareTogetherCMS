@@ -97,6 +97,7 @@ export function PartneringChildCard({partneringFamilyId, personId}: PartneringCh
         </Typography>
       </CardContent>
       {editDialogHandle.open && <EditChildDialog handle={editDialogHandle} key={editDialogHandle.key}
-        child={child} />}
+        child={child} familyAdults={partneringFamily.family!.adults!.map(a => a.item1!)}
+        custodialRelationships={partneringFamily.family!.custodialRelationships} />}
     </Card>}</>;
 }

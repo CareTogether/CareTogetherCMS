@@ -1,5 +1,5 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
-import { Person } from '../../GeneratedClient';
+import { CustodialRelationship, Person } from '../../GeneratedClient';
 import { useParams } from 'react-router-dom';
 import { DialogHandle, useDialogHandle } from '../../useDialogHandle';
 import { NameEditor } from './NameEditor';
@@ -11,13 +11,16 @@ import { AgeEditor } from './AgeEditor';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { DeletePersonDialog } from './DeletePersonDialog';
 import { EthnicityEditor } from './EthnicityEditor';
+import { ChildCustodyRelationshipEditor } from './ChildCustodyRelationshipEditor';
 
 interface EditChildDialogProps {
   handle: DialogHandle
   child: Person
+  familyAdults: Person[]
+  custodialRelationships?: CustodialRelationship[]
 }
 
-export function EditChildDialog({ handle, child }: EditChildDialogProps) {
+export function EditChildDialog({ handle, child, familyAdults, custodialRelationships }: EditChildDialogProps) {
   const { familyId } = useParams<{ familyId: string }>();
 
   const person = child;
@@ -37,6 +40,11 @@ export function EditChildDialog({ handle, child }: EditChildDialogProps) {
         <GenderEditor {...personEditorProps} />
         <AgeEditor {...personEditorProps} />
         <EthnicityEditor {...personEditorProps} />
+        <h4 style={{ marginBottom: 0 }}>Custodial Relationships:</h4>
+        {familyAdults.map(adult =>
+          <ChildCustodyRelationshipEditor key={adult.id!}
+            adult={adult} relationship={custodialRelationships?.find(r => r.personId === adult.id)}
+            {...personEditorProps } />)}
         <NotesEditor {...personEditorProps} />
         <ConcernsEditor {...personEditorProps} />
       </DialogContent>
