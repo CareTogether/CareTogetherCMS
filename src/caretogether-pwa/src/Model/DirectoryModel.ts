@@ -1,5 +1,5 @@
 import { useRecoilCallback, useRecoilValue } from "recoil";
-import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, DirectoryCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, DirectoryClient, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, NoteCommandResult, UpdatePersonGender, UpdatePersonAge, UpdatePersonEthnicity, UpdateAdultRelationshipToFamily } from "../GeneratedClient";
+import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, DirectoryCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, DirectoryClient, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, NoteCommandResult, UpdatePersonGender, UpdatePersonAge, UpdatePersonEthnicity, UpdateAdultRelationshipToFamily, CustodialRelationshipType, UpdateCustodialRelationshipType, RemoveCustodialRelationship } from "../GeneratedClient";
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { visibleFamiliesData } from "./ModelLoader";
@@ -172,6 +172,25 @@ export function useDirectoryModel() {
       });
       command.adultPersonId = adultPersonId;
       command.relationshipToFamily = relationship;
+      return command;
+    });
+  const upsertCustodialRelationship = useFamilyCommandCallback(
+    async (familyId, childId: string, adultId: string, type: CustodialRelationshipType) => {
+      const command = new UpdateCustodialRelationshipType({
+        familyId: familyId
+      });
+      command.childPersonId = childId;
+      command.adultPersonId = adultId;
+      command.type = type;
+      return command;
+    });
+  const removeCustodialRelationship = useFamilyCommandCallback(
+    async (familyId, childId: string, adultId: string) => {
+      const command = new RemoveCustodialRelationship({
+        familyId: familyId
+      });
+      command.childPersonId = childId;
+      command.adultPersonId = adultId;
       return command;
     });
   const updatePersonName = usePersonCommandCallback(
@@ -444,6 +463,8 @@ export function useDirectoryModel() {
     uploadFamilyDocument,
     deleteUploadedFamilyDocument,
     updateAdultRelationshipToFamily,
+    upsertCustodialRelationship,
+    removeCustodialRelationship,
     updatePersonName,
     updatePersonGender,
     updatePersonAge,
