@@ -27,7 +27,6 @@ export function ChildCustodyRelationshipEditor({ familyId, person, adult, relati
         ? <>
             <Grid item xs={12}>
               <PersonName person={adult} />
-
               <FormControl required fullWidth size="small">
                 <Select
                   id={"custodial-relationship-"+adult.id}
