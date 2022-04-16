@@ -212,20 +212,68 @@ namespace CareTogether.Engines.PolicyEvaluation
             if (recurrence.Stages.Take(recurrence.Stages.Count - 1).Any(stage => !stage.MaxOccurrences.HasValue))
                 throw new InvalidOperationException("A stage other than the last stage in a recurrence policy was found to have an unlimited number of occurrences.");
 
-            // Calculate the start and end dates of each stage based on the recurrence policy and the arrangement start date.
-            // A null end date means the stage continues indefinitely.
+            // Determine the start and end time of each child location history entry.
+            var childCareOccurrences = childLocationHistory.SelectMany((entry, i) =>
+            {
+                if (i < childLocationHistory.Count - 1)
+                {
+                    var nextEntry = childLocationHistory[i + 1];
+                    return new[] { (entry: entry, startDate: entry.TimestampUtc, endDate: nextEntry.TimestampUtc as DateTime?) };
+                }
+                else
+                    return new[] { (entry: entry, startDate: entry.TimestampUtc, endDate: null as DateTime?) };
+            }).ToImmutableList();
+
+            // Determine which child care occurrences the requirement will apply to.
+            var applicableOccurrences = childCareOccurrences
+                .Where(x => x.entry.Plan != ChildLocationPlan.WithParent)
+                .ToImmutableList();
+
+            // Group the child care occurrences by child location (i.e., by the family caring for the child).
+            // This results in a (discontinuous) timeline of start and end dates/times for the child being in this location.
+            var occurrencesByLocation = applicableOccurrences
+                .GroupBy(x => x.entry.ChildLocationFamilyId)
+                .ToImmutableDictionary(x => x.Key);
+
+            // Build a (possibly discontinuous) timeline for the child's stay in each location.
+            // This will simplify subsequent calculations along this timeline.
+            var timelinesByLocation = occurrencesByLocation.Select(occurrences =>
+            {
+                var terminatingStages = occurrences.Value
+                    .Where(occurrence => occurrence.endDate != null)
+                    .Select(occurrence => new TerminatingTimelineStage(occurrence.startDate, (DateTime)occurrence.endDate!))
+                    .ToImmutableList();
+
+                var currentOccurrence = occurrences.Value
+                    .SingleOrDefault(occurrence => occurrence.endDate == null);
+
+                var timeline = currentOccurrence == default
+                ? new Timeline(terminatingStages)
+                : new Timeline(terminatingStages, new NonTerminatingTimelineStage(currentOccurrence.startDate));
+
+                return KeyValuePair.Create(occurrences.Key, timeline);
+            }).ToImmutableDictionary();
+
+            // For each discontinuous child location timeline, calculate the adjusted start and end dates of each stage
+            // of the recurrence policy.
+            // A null end date means the stage continues indefinitely (which can only apply to the current child's location).
             // A null start date will only occur if invalid data is provided (i.e., if any stage other than the last one has
             // an unlimited number of occurrences), so this calculation forces start date results to be non-null.
-            var arrangementStages = recurrence.Stages
-                .Select(stage => (incrementDelay: stage.Delay, totalDuration: stage.Delay * stage.MaxOccurrences))
-                .Aggregate(ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty,
-                    (priorStages, stage) => priorStages.Add((stage.incrementDelay,
-                        startDate: priorStages.Count == 0
-                        ? arrangementStartedAtUtc
-                        : priorStages.Last().endDate!.Value,
-                        endDate: priorStages.Count == 0
-                        ? arrangementStartedAtUtc + stage.totalDuration
-                        : priorStages.Last().endDate!.Value + stage.totalDuration)));
+            var arrangementStagesByLocation = timelinesByLocation.Select(timeline =>
+            {
+                //TODO: .......
+                var arrangementStages = recurrence.Stages
+                    .Select(stage => (incrementDelay: stage.Delay, totalDuration: stage.Delay * stage.MaxOccurrences))
+                    .Aggregate(ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty,
+                        (priorStages, stage) => priorStages.Add((stage.incrementDelay,
+                            startDate: priorStages.Count == 0
+                            ? arrangementStartedAtUtc
+                            : priorStages.Last().endDate!.Value,
+                            endDate: priorStages.Count == 0
+                            ? arrangementStartedAtUtc + stage.totalDuration
+                            : priorStages.Last().endDate!.Value + stage.totalDuration)));
+                return KeyValuePair.Create(timeline.Key, (timeline, arrangementStages));
+            }).ToImmutableDictionary();
 
             // For each completion, find the time of the following completion (null in the case of the last completion
             // unless the arrangement has ended, in which case use the end of the arrangement).
@@ -242,7 +290,8 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             // Calculate all missing requirements within each completion gap (there may be none).
             var missingRequirements = completionGaps.SelectMany(gap =>
-                CalculateMissingMonitoringRequirementsWithinCompletionGap(utcNow, gap.start, gap.end, arrangementStages))
+                CalculateMissingMonitoringRequirementsWithinCompletionGap(utcNow, gap.start, gap.end,
+                arrangementStagesByLocation.Single().Value.arrangementStages)) //TODO: .......
                 .ToImmutableList();
 
             return missingRequirements;
@@ -311,7 +360,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             ImmutableList<DateTime> completions, ImmutableSortedSet<ChildLocationHistoryEntry> childLocationHistory,
             DateTime utcNow)
         {
-            // Determine the start and end time of each child location history entry
+            // Determine the start and end time of each child location history entry.
             var childCareOccurrences = childLocationHistory.SelectMany((entry, i) =>
             {
                 if (i < childLocationHistory.Count - 1)
