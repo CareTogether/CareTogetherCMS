@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Immutable;
+using System.Linq;
 
 namespace CareTogether.Engines.PolicyEvaluation
 {
@@ -20,6 +21,12 @@ namespace CareTogether.Engines.PolicyEvaluation
     {
         private readonly ImmutableList<TerminatingTimelineStage> terminatingStages;
         private readonly NonTerminatingTimelineStage? nonTerminatingStage;
+
+
+        public DateTime Start => terminatingStages.FirstOrDefault()?.Start ??
+            nonTerminatingStage!.Start;
+
+        public DateTime? End => terminatingStages.LastOrDefault()?.End;
 
 
         public Timeline(ImmutableList<TerminatingTimelineStage> terminatingStages)
@@ -76,6 +83,25 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             return (DateTime)(mappedStageStartDate!) +
                 durationFromStart - mappedDurationPriorToCurrentStage;
+        }
+
+        public Timeline Subset(DateTime start, DateTime? end)
+        {
+            var terminatingSubset = terminatingStages
+                .Where(stage => (stage.Start < end || !end.HasValue) && stage.End > start)
+                .Select(stage => new TerminatingTimelineStage(
+                    Start: start > stage.Start ? start : stage.Start,
+                    End: end.HasValue ? (end < stage.End ? end.Value : stage.End) : stage.End))
+                .ToImmutableList();
+
+            var nonTerminatingSubset = nonTerminatingStage == null
+                ? null
+                : new NonTerminatingTimelineStage(
+                    start > nonTerminatingStage.Start ? start : nonTerminatingStage.Start);
+
+            return nonTerminatingSubset == null
+                ? new Timeline(terminatingSubset)
+                : new Timeline(terminatingSubset, nonTerminatingSubset);
         }
     }
 }

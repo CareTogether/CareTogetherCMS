@@ -277,23 +277,27 @@ namespace CareTogether.Engines.PolicyEvaluation
                 var containedCompletions = completions
                     .Where(completion => location.Value.Contains(completion))
                     .ToImmutableList();
-                return KeyValuePair.Create(location.Key, containedCompletions);
-            }).ToImmutableDictionary();
 
-            // For each completion, find the time of the following completion (null in the case of the last completion
-            // unless the arrangement has ended, in which case use the end of the arrangement).
-            // This represents the set of gaps between completions in which there could be missing requirement due dates.
-            // Prepend this list with an entry representing the start of the arrangement.
-            //TODO: Calculate these as timelines to handle discontinuities.
-            //      This will require a Subset(start, end) method on Timeline.
-            var completionGaps = completions.Select((completion, i) =>
-                (start: completion, end: i + 1 >= completions.Count
-                    ? (arrangementEndedAtUtc.HasValue ? arrangementEndedAtUtc.Value : null as DateTime?)
-                    : completions[i + 1]))
-                .Prepend((start: arrangementStartedAtUtc, end: completions.Count > 0
-                    ? completions[0]
-                    : (arrangementEndedAtUtc.HasValue ? arrangementEndedAtUtc.Value : null as DateTime?)))
-                .ToImmutableList();
+                // For each completion, find the time of the following completion (null in the case of the last completion
+                // unless the location's timeline terminates, in which case use the end of the location's timeline).
+                // This represents the set of gaps between completions in which there could be missing requirement due dates.
+                // Prepend this list with an entry representing the start of the location's timeline.
+                var completionGaps = containedCompletions.Select((completion, i) =>
+                    (start: completion, end: i + 1 >= containedCompletions.Count
+                        ? location.Value.End
+                        : containedCompletions[i + 1]))
+                    .Prepend((start: arrangementStartedAtUtc, end: containedCompletions.Count > 0
+                        ? containedCompletions[0]
+                        : location.Value.End))
+                    .ToImmutableList();
+
+                // Represent gaps as timelines (subsets of their location timeline) to automatically handle
+                // any discontinuities in the location's timeline.
+                var completionGapTimelines = completionGaps.Select(completion =>
+                    location.Value.Subset(completion.start, completion.end)).ToImmutableList();
+
+                return KeyValuePair.Create(location.Key, completionGapTimelines);
+            }).ToImmutableDictionary();
 
             // Calculate all missing requirements within each completion gap (there may be none).
             throw new NotImplementedException();
