@@ -260,19 +260,21 @@ namespace CareTogether.Engines.PolicyEvaluation
             var arrangementStagesByLocation = timelinesByLocation.Select(timeline =>
             {
                 var arrangementStages = recurrence.Stages
-                    .Select(stage => stage.Delay * stage.MaxOccurrences)
-                    .Aggregate(ImmutableList<(TimeSpan startDelay, TimeSpan? totalDuration)>.Empty,
-                        (priorStages, stageTotalDuration) => priorStages.Add(
+                    .Select(stage => (incrementDelay: stage.Delay, totalDuration: stage.Delay * stage.MaxOccurrences))
+                    .Aggregate(ImmutableList<(TimeSpan startDelay, TimeSpan incrementDelay, TimeSpan? totalDuration)>.Empty,
+                        (priorStages, stage) => priorStages.Add(
                             (startDelay: new TimeSpan(priorStages.Sum(x => ((TimeSpan)x.totalDuration!).Ticks)),
-                            totalDuration: stageTotalDuration)))
-                    .Select(stage => stage.totalDuration.HasValue
+                            incrementDelay: stage.incrementDelay,
+                            totalDuration: stage.totalDuration)))
+                    .Select(stage => (incrementDelay: stage.incrementDelay,
+                        stageTimeline: stage.totalDuration.HasValue
                         ? timeline.Value.Map(stage.startDelay, (TimeSpan)stage.totalDuration)
-                        : new AbsoluteTimeSpan(timeline.Value.Map(stage.startDelay), DateTime.MaxValue));
-                return KeyValuePair.Create(timeline.Key, (timeline.Value, arrangementStages));
+                        : new AbsoluteTimeSpan(timeline.Value.Map(stage.startDelay), DateTime.MaxValue)));
+                return KeyValuePair.Create(timeline.Key, arrangementStages);
             }).ToImmutableDictionary();
 
             // Assign completions to their corresponding child location by determining which timeline contains them.
-            var completionsByLocation = timelinesByLocation.Select(location =>
+            var completionGapsByLocation = timelinesByLocation.Select(location =>
             {
                 var containedCompletions = completions
                     .Where(completion => location.Value.Contains(completion))
@@ -299,12 +301,12 @@ namespace CareTogether.Engines.PolicyEvaluation
                 return KeyValuePair.Create(location.Key, completionGapTimelines);
             }).ToImmutableDictionary();
 
-            // Calculate all missing requirements within each completion gap (there may be none).
-            throw new NotImplementedException();
-            //var missingRequirements = completionGaps.SelectMany(gap =>
-            //    CalculateMissingMonitoringRequirementsWithinCompletionGap(utcNow, gap.start, gap.end,
-            //    arrangementStagesByLocation.Single().Value.arrangementStages)) //TODO: .......
-            //    .ToImmutableList();
+            // Calculate all missing requirements within each completion gap timeline (there may be none).
+            var missingRequirements = completionGapsByLocation.SelectMany(locationGaps =>
+                locationGaps.Value.SelectMany(gap =>
+                    CalculateMissingMonitoringRequirementsWithinCompletionGap(utcNow, gap.Start, gap.End,
+                    arrangementStagesByLocation[locationGaps.Key])))
+                .ToImmutableList();
 
             //return missingRequirements;
         }
