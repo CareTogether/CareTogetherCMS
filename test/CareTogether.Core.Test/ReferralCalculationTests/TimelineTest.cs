@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Immutable;
+using System.Linq;
 
 namespace CareTogether.Core.Test.ReferralCalculationTests
 {
@@ -10,7 +11,13 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
     {
         private static DateTime D(int day) => new DateTime(2022, 1, day);
         private static TimeSpan T(int days) => TimeSpan.FromDays(days);
-        private static AbsoluteTimeSpan M(int start, int end) => new AbsoluteTimeSpan(D(start), D(end));
+        private static AbsoluteTimeSpan M(int start, int end) =>
+            new AbsoluteTimeSpan(D(start), D(end));
+        private static Timeline TL(params (int start, int? end)[] stages) =>
+            new Timeline(stages.Select(stage => new TerminatingTimelineStage(
+                Start: D(stage.start),
+                End: stage.end.HasValue ? D(stage.end.Value) : DateTime.MaxValue))
+                .ToImmutableList());
 
 
         [TestMethod]
@@ -50,6 +57,11 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(9), T(5)));
             Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(11), T(10)));
             Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(11), T(19)));
+
+            Assert.AreEqual(TL((1, 5)), dut.Subset(D(1), D(5)));
+            Assert.AreEqual(TL((6, 10)), dut.Subset(D(6), D(15)));
+            Assert.AreEqual(TL((1, 10)), dut.Subset(D(1), D(26)));
+            Assert.AreEqual(TL((8, 10)), dut.Subset(D(8), null));
         }
 
         [TestMethod]
@@ -89,6 +101,11 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             Assert.AreEqual(M(10, 15), dut.Map(T(9), T(5)));
             Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(11), T(10)));
             Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(11), T(19)));
+
+            Assert.AreEqual(TL((1, 5)), dut.Subset(D(1), D(5)));
+            Assert.AreEqual(TL((6, 10), (10, 15)), dut.Subset(D(6), D(15)));
+            Assert.AreEqual(TL((1, 10), (10, 20)), dut.Subset(D(1), D(26)));
+            Assert.AreEqual(TL((8, 10), (10, 20)), dut.Subset(D(8), null));
         }
 
         [TestMethod]
@@ -128,6 +145,11 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             Assert.AreEqual(M(10, 25), dut.Map(T(9), T(5)));
             Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(11), T(10)));
             Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(11), T(19)));
+
+            Assert.AreEqual(TL((1, 5)), dut.Subset(D(1), D(5)));
+            Assert.AreEqual(TL((6, 10)), dut.Subset(D(6), D(15)));
+            Assert.AreEqual(TL((1, 10), (20, 26)), dut.Subset(D(1), D(26)));
+            Assert.AreEqual(TL((8, 10), (20, 30)), dut.Subset(D(8), null));
         }
 
         [TestMethod]
@@ -166,6 +188,11 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             Assert.AreEqual(M(10, 15), dut.Map(T(9), T(5)));
             Assert.AreEqual(M(12, 22), dut.Map(T(11), T(10)));
             Assert.AreEqual(M(12, 31), dut.Map(T(11), T(19)));
+
+            Assert.AreEqual(TL((1, 5)), dut.Subset(D(1), D(5)));
+            Assert.AreEqual(TL((6, 15)), dut.Subset(D(6), D(15)));
+            Assert.AreEqual(TL((1, 26)), dut.Subset(D(1), D(26)));
+            Assert.AreEqual(TL((8, null)), dut.Subset(D(8), null));
         }
 
         [TestMethod]
@@ -205,6 +232,11 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             Assert.AreEqual(M(10, 15), dut.Map(T(9), T(5)));
             Assert.AreEqual(M(12, 22), dut.Map(T(11), T(10)));
             Assert.AreEqual(M(12, 31), dut.Map(T(11), T(19)));
+
+            Assert.AreEqual(TL((1, 5)), dut.Subset(D(1), D(5)));
+            Assert.AreEqual(TL((6, 10), (10, 15)), dut.Subset(D(6), D(15)));
+            Assert.AreEqual(TL((1, 10), (10, 26)), dut.Subset(D(1), D(26)));
+            Assert.AreEqual(TL((8, 10), (10, null)), dut.Subset(D(8), null));
         }
 
         [TestMethod]
@@ -241,6 +273,11 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             Assert.AreEqual(M(9, 24), dut.Map(T(8), T(5)));
             Assert.AreEqual(M(10, 25), dut.Map(T(9), T(5)));
             Assert.AreEqual(M(22, 31), dut.Map(T(11), T(9)));
+
+            Assert.AreEqual(TL((1, 5)), dut.Subset(D(1), D(5)));
+            Assert.AreEqual(TL((6, 10)), dut.Subset(D(6), D(15)));
+            Assert.AreEqual(TL((1, 10), (20, 26)), dut.Subset(D(1), D(26)));
+            Assert.AreEqual(TL((8, 10), (20, null)), dut.Subset(D(8), null));
         }
     }
 }

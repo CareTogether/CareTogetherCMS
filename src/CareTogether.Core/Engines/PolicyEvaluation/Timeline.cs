@@ -4,49 +4,60 @@ using System.Linq;
 
 namespace CareTogether.Engines.PolicyEvaluation
 {
-    internal sealed record TerminatingTimelineStage(DateTime Start, DateTime End)
+    internal sealed record TerminatingTimelineStage(DateTime Start, DateTime End);
+    internal sealed record NonTerminatingTimelineStage(DateTime Start);
+
+    internal sealed record AbsoluteTimeSpan(DateTime Start, DateTime End)
     {
         public TimeSpan Duration => End - Start;
     }
-    internal sealed record NonTerminatingTimelineStage(DateTime Start);
-
-    internal sealed record AbsoluteTimeSpan(DateTime Start, DateTime End);
 
     /// <summary>
     /// The <see cref="Timeline"/> class simplifies temporal calculations by
     /// mapping high-level concepts like durations and intervals onto
     /// potentially-discontinuous underlying time segments.
     /// </summary>
-    internal sealed class Timeline
+    internal sealed class Timeline : IEquatable<Timeline?>
     {
-        private readonly ImmutableList<TerminatingTimelineStage> terminatingStages;
-        private readonly NonTerminatingTimelineStage? nonTerminatingStage;
+        private readonly ImmutableList<AbsoluteTimeSpan> stages;
 
 
-        public DateTime Start => terminatingStages.FirstOrDefault()?.Start ??
-            nonTerminatingStage!.Start;
+        public DateTime Start =>
+            stages.First().Start;
 
-        public DateTime? End => terminatingStages.LastOrDefault()?.End;
+        public DateTime? End =>
+            stages.Last().End == DateTime.MaxValue ? null : stages.Last().End;
 
 
         public Timeline(ImmutableList<TerminatingTimelineStage> terminatingStages)
         {
-            this.terminatingStages = terminatingStages;
-            this.nonTerminatingStage = null;
+            if (terminatingStages.Count == 0)
+                throw new ArgumentException("At least one timeline stage is required.");
+
+            stages = terminatingStages
+                .Select(stage => new AbsoluteTimeSpan(stage.Start, stage.End))
+                .ToImmutableList();
         }
 
         public Timeline(ImmutableList<TerminatingTimelineStage> terminatingStages,
             NonTerminatingTimelineStage nonTerminatingStage)
+            : this(terminatingStages
+                .Select(stage => new AbsoluteTimeSpan(stage.Start, stage.End))
+                .Append(new AbsoluteTimeSpan(nonTerminatingStage.Start, DateTime.MaxValue))
+                .ToImmutableList())
+        { }
+
+        private Timeline(ImmutableList<AbsoluteTimeSpan> stages)
         {
-            this.terminatingStages = terminatingStages;
-            this.nonTerminatingStage = nonTerminatingStage;
+            //TODO: Validate stage invariants (sequential start & end, sequential stages)
+
+            this.stages = stages;
         }
 
 
         public bool Contains(DateTime value) =>
-            terminatingStages.Exists(stage =>
-                stage.Start <= value && stage.End >= value) ||
-            nonTerminatingStage?.Start <= value;
+            stages.Exists(stage =>
+                stage.Start <= value && stage.End >= value);
 
         public AbsoluteTimeSpan Map(TimeSpan startDelay, TimeSpan duration)
         {
@@ -61,7 +72,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             DateTime? mappedStageStartDate = null;
             TimeSpan mappedDurationPriorToCurrentStage = TimeSpan.Zero;
 
-            foreach (var stage in terminatingStages)
+            foreach (var stage in stages)
             {
                 if (stage.Duration + mappedDurationPriorToCurrentStage >= durationFromStart)
                 {
@@ -73,13 +84,8 @@ namespace CareTogether.Engines.PolicyEvaluation
             }
 
             if (mappedStageStartDate == null)
-            {
-                if (nonTerminatingStage != null)
-                    mappedStageStartDate = nonTerminatingStage.Start;
-                else
-                    throw new InvalidOperationException(
-                        "The timeline is not long enough to accommodate mapping the requeste date.");
-            }
+                throw new InvalidOperationException(
+                    "The timeline is not long enough to accommodate mapping the requested date.");
 
             return (DateTime)(mappedStageStartDate!) +
                 durationFromStart - mappedDurationPriorToCurrentStage;
@@ -87,21 +93,26 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         public Timeline Subset(DateTime start, DateTime? end)
         {
-            var terminatingSubset = terminatingStages
-                .Where(stage => (stage.Start < end || !end.HasValue) && stage.End > start)
+            var subsetEnd = end.HasValue ? end.Value : DateTime.MaxValue;
+
+            var subsetStages = stages
+                .Where(stage => stage.Start < subsetEnd && stage.End > start)
                 .Select(stage => new TerminatingTimelineStage(
                     Start: start > stage.Start ? start : stage.Start,
-                    End: end.HasValue ? (end < stage.End ? end.Value : stage.End) : stage.End))
+                    End: subsetEnd < stage.End ? subsetEnd : stage.End))
                 .ToImmutableList();
 
-            var nonTerminatingSubset = nonTerminatingStage == null
-                ? null
-                : new NonTerminatingTimelineStage(
-                    start > nonTerminatingStage.Start ? start : nonTerminatingStage.Start);
+            return new Timeline(subsetStages);
+        }
 
-            return nonTerminatingSubset == null
-                ? new Timeline(terminatingSubset)
-                : new Timeline(terminatingSubset, nonTerminatingSubset);
+        public override bool Equals(object? obj)
+        {
+            return Equals(obj as Timeline);
+        }
+
+        public bool Equals(Timeline? other)
+        {
+            return other != null && stages.SequenceEqual(other.stages);
         }
     }
 }
