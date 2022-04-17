@@ -36,6 +36,11 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
 
+        public bool Contains(DateTime value) =>
+            terminatingStages.Exists(stage =>
+                stage.Start <= value && stage.End >= value) ||
+            nonTerminatingStage?.Start <= value;
+
         public AbsoluteTimeSpan Map(TimeSpan startDelay, TimeSpan duration)
         {
             var start = Map(startDelay);
@@ -43,7 +48,6 @@ namespace CareTogether.Engines.PolicyEvaluation
             
             return new AbsoluteTimeSpan(start, end);
         }
-
 
         public DateTime Map(TimeSpan durationFromStart)
         {

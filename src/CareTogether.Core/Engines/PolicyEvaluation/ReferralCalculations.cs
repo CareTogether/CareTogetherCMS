@@ -271,10 +271,21 @@ namespace CareTogether.Engines.PolicyEvaluation
                 return KeyValuePair.Create(timeline.Key, (timeline.Value, arrangementStages));
             }).ToImmutableDictionary();
 
+            // Assign completions to their corresponding child location by determining which timeline contains them.
+            var completionsByLocation = timelinesByLocation.Select(location =>
+            {
+                var containedCompletions = completions
+                    .Where(completion => location.Value.Contains(completion))
+                    .ToImmutableList();
+                return KeyValuePair.Create(location.Key, containedCompletions);
+            }).ToImmutableDictionary();
+
             // For each completion, find the time of the following completion (null in the case of the last completion
             // unless the arrangement has ended, in which case use the end of the arrangement).
             // This represents the set of gaps between completions in which there could be missing requirement due dates.
             // Prepend this list with an entry representing the start of the arrangement.
+            //TODO: Calculate these as timelines to handle discontinuities.
+            //      This will require a Subset(start, end) method on Timeline.
             var completionGaps = completions.Select((completion, i) =>
                 (start: completion, end: i + 1 >= completions.Count
                     ? (arrangementEndedAtUtc.HasValue ? arrangementEndedAtUtc.Value : null as DateTime?)
@@ -285,12 +296,13 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .ToImmutableList();
 
             // Calculate all missing requirements within each completion gap (there may be none).
-            var missingRequirements = completionGaps.SelectMany(gap =>
-                CalculateMissingMonitoringRequirementsWithinCompletionGap(utcNow, gap.start, gap.end,
-                arrangementStagesByLocation.Single().Value.arrangementStages)) //TODO: .......
-                .ToImmutableList();
+            throw new NotImplementedException();
+            //var missingRequirements = completionGaps.SelectMany(gap =>
+            //    CalculateMissingMonitoringRequirementsWithinCompletionGap(utcNow, gap.start, gap.end,
+            //    arrangementStagesByLocation.Single().Value.arrangementStages)) //TODO: .......
+            //    .ToImmutableList();
 
-            return missingRequirements;
+            //return missingRequirements;
         }
 
         internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementsWithinCompletionGap(

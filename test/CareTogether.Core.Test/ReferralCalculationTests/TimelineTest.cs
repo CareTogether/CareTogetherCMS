@@ -19,6 +19,18 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             var dut = new Timeline(ImmutableList.Create(
                 new TerminatingTimelineStage(D(1), D(10))));
 
+            Assert.IsTrue(dut.Contains(D(1)));
+            Assert.IsTrue(dut.Contains(D(2)));
+            Assert.IsTrue(dut.Contains(D(9)));
+            Assert.IsTrue(dut.Contains(D(10)));
+            Assert.IsFalse(dut.Contains(D(11)));
+            Assert.IsFalse(dut.Contains(D(19)));
+            Assert.IsFalse(dut.Contains(D(20)));
+            Assert.IsFalse(dut.Contains(D(21)));
+            Assert.IsFalse(dut.Contains(D(25)));
+            Assert.IsFalse(dut.Contains(D(30)));
+            Assert.IsFalse(dut.Contains(D(31)));
+
             Assert.AreEqual(D(1), dut.Map(T(0)));
             Assert.AreEqual(D(2), dut.Map(T(1)));
             Assert.AreEqual(D(10), dut.Map(T(9)));
@@ -47,6 +59,18 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 new TerminatingTimelineStage(D(1), D(10)),
                 new TerminatingTimelineStage(D(10), D(20))));
 
+            Assert.IsTrue(dut.Contains(D(1)));
+            Assert.IsTrue(dut.Contains(D(2)));
+            Assert.IsTrue(dut.Contains(D(9)));
+            Assert.IsTrue(dut.Contains(D(10)));
+            Assert.IsTrue(dut.Contains(D(11)));
+            Assert.IsTrue(dut.Contains(D(19)));
+            Assert.IsTrue(dut.Contains(D(20)));
+            Assert.IsFalse(dut.Contains(D(21)));
+            Assert.IsFalse(dut.Contains(D(25)));
+            Assert.IsFalse(dut.Contains(D(30)));
+            Assert.IsFalse(dut.Contains(D(31)));
+
             Assert.AreEqual(D(1), dut.Map(T(0)));
             Assert.AreEqual(D(2), dut.Map(T(1)));
             Assert.AreEqual(D(10), dut.Map(T(9)));
@@ -74,6 +98,18 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 new TerminatingTimelineStage(D(1), D(10)),
                 new TerminatingTimelineStage(D(20), D(30))));
 
+            Assert.IsTrue(dut.Contains(D(1)));
+            Assert.IsTrue(dut.Contains(D(2)));
+            Assert.IsTrue(dut.Contains(D(9)));
+            Assert.IsTrue(dut.Contains(D(10)));
+            Assert.IsFalse(dut.Contains(D(11)));
+            Assert.IsFalse(dut.Contains(D(19)));
+            Assert.IsTrue(dut.Contains(D(20)));
+            Assert.IsTrue(dut.Contains(D(21)));
+            Assert.IsTrue(dut.Contains(D(25)));
+            Assert.IsTrue(dut.Contains(D(30)));
+            Assert.IsFalse(dut.Contains(D(31)));
+
             Assert.AreEqual(D(1), dut.Map(T(0)));
             Assert.AreEqual(D(2), dut.Map(T(1)));
             Assert.AreEqual(D(10), dut.Map(T(9)));
@@ -99,6 +135,18 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var dut = new Timeline(ImmutableList<TerminatingTimelineStage>.Empty,
                 new NonTerminatingTimelineStage(D(1)));
+
+            Assert.IsTrue(dut.Contains(D(1)));
+            Assert.IsTrue(dut.Contains(D(2)));
+            Assert.IsTrue(dut.Contains(D(9)));
+            Assert.IsTrue(dut.Contains(D(10)));
+            Assert.IsTrue(dut.Contains(D(11)));
+            Assert.IsTrue(dut.Contains(D(19)));
+            Assert.IsTrue(dut.Contains(D(20)));
+            Assert.IsTrue(dut.Contains(D(21)));
+            Assert.IsTrue(dut.Contains(D(25)));
+            Assert.IsTrue(dut.Contains(D(30)));
+            Assert.IsTrue(dut.Contains(D(31)));
 
             Assert.AreEqual(D(1), dut.Map(T(0)));
             Assert.AreEqual(D(2), dut.Map(T(1)));
@@ -127,6 +175,18 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 new TerminatingTimelineStage(D(1), D(10))),
                 new NonTerminatingTimelineStage(D(10)));
 
+            Assert.IsTrue(dut.Contains(D(1)));
+            Assert.IsTrue(dut.Contains(D(2)));
+            Assert.IsTrue(dut.Contains(D(9)));
+            Assert.IsTrue(dut.Contains(D(10)));
+            Assert.IsTrue(dut.Contains(D(11)));
+            Assert.IsTrue(dut.Contains(D(19)));
+            Assert.IsTrue(dut.Contains(D(20)));
+            Assert.IsTrue(dut.Contains(D(21)));
+            Assert.IsTrue(dut.Contains(D(25)));
+            Assert.IsTrue(dut.Contains(D(30)));
+            Assert.IsTrue(dut.Contains(D(31)));
+
             Assert.AreEqual(D(1), dut.Map(T(0)));
             Assert.AreEqual(D(2), dut.Map(T(1)));
             Assert.AreEqual(D(10), dut.Map(T(9)));
@@ -153,6 +213,18 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             var dut = new Timeline(ImmutableList.Create(
                 new TerminatingTimelineStage(D(1), D(10))),
                 new NonTerminatingTimelineStage(D(20)));
+
+            Assert.IsTrue(dut.Contains(D(1)));
+            Assert.IsTrue(dut.Contains(D(2)));
+            Assert.IsTrue(dut.Contains(D(9)));
+            Assert.IsTrue(dut.Contains(D(10)));
+            Assert.IsFalse(dut.Contains(D(11)));
+            Assert.IsFalse(dut.Contains(D(19)));
+            Assert.IsTrue(dut.Contains(D(20)));
+            Assert.IsTrue(dut.Contains(D(21)));
+            Assert.IsTrue(dut.Contains(D(25)));
+            Assert.IsTrue(dut.Contains(D(30)));
+            Assert.IsTrue(dut.Contains(D(31)));
 
             Assert.AreEqual(D(1), dut.Map(T(0)));
             Assert.AreEqual(D(2), dut.Map(T(1)));
