@@ -317,16 +317,16 @@ namespace CareTogether.Engines.PolicyEvaluation
                     arrangementStagesByLocation[locationGaps.Key])))
                 .ToImmutableList();
 
-            //return missingRequirements;
+            return missingRequirements;
         }
 
         internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementsWithinCompletionGap(
             DateTime utcNow, Timeline gap,
             ImmutableList<(TimeSpan incrementDelay, AbsoluteTimeSpan timeSpan)> arrangementStages)
         {
-            // Use the current date as the end value if either the gap has no end or if the
-            // current date is before the end of the gap.
-            var effectiveEnd = !gapEnd.HasValue || utcNow <= gapEnd ? utcNow : gapEnd.Value;
+            // Use the current date as the end value if either the gap has no end (represented by DateTime.MaxValue)
+            // or if the current date is before the end of the gap (these logically reduce to the same condition).
+            var effectiveEnd = utcNow <= gap.End ? utcNow : gap.End;
 
             // Determine which recurrence stages apply to the completion gap.
             // One of three conditions makes a stage apply:
@@ -334,9 +334,9 @@ namespace CareTogether.Engines.PolicyEvaluation
             //  2. It ends during the gap.
             //  3. It begins before the gap and either ends after the gap or doesn't end.
             var gapStages = arrangementStages.Where(stage =>
-                (stage.timeSpan.Start >= gapStart && stage.timeSpan.Start <= effectiveEnd) ||
-                (stage.timeSpan.End >= gapStart && stage.timeSpan.End <= effectiveEnd) ||
-                (stage.timeSpan.Start < gapStart && stage.timeSpan.End > effectiveEnd))
+                (stage.timeSpan.Start >= gap.Start && stage.timeSpan.Start <= effectiveEnd) ||
+                (stage.timeSpan.End >= gap.Start && stage.timeSpan.End <= effectiveEnd) ||
+                (stage.timeSpan.Start < gap.Start && stage.timeSpan.End > effectiveEnd))
                 .ToImmutableList();
 
             // Calculate all missing requirements within the gap, using the stages to determine the
@@ -357,20 +357,20 @@ namespace CareTogether.Engines.PolicyEvaluation
                 // TODO: An unknown issue is causing this to match no stages in some cases.
                 //       Is it possible for 'gapStages' to have zero elements?
                 var applicableStage = gapStages.FirstOrDefault(stage =>
-                    stage.timeSpan.End >= (nextDueDate ?? gapStart) + stage.incrementDelay);
+                    stage.timeSpan.End >= (nextDueDate ?? gap.Start) + stage.incrementDelay);
                 if (applicableStage == default)
                     break;
 
                 // Calculate the next requirement due date based on the applicable stage.
                 // If it falls within the current completion gap (& before the current time), it is a missing requirement.
-                nextDueDate = (nextDueDate ?? gapStart) + applicableStage.incrementDelay;
+                nextDueDate = (nextDueDate ?? gap.Start) + applicableStage.incrementDelay;
 
                 // Include one more if this is the last gap and we want the next due-by date (not a missing requirement per se).
                 // The end of the gap is a hard cut-off, but the current UTC date/time is a +1 cut-off (overshoot by one is needed).
                 // Similarly, if the current UTC date/time falls before the end of the gap, use the +1 cut-off instead of the gap end.
-                endConditionExceeded = gapEnd == null || utcNow < gapEnd
+                endConditionExceeded = utcNow < gap.End
                     ? nextDueDate - applicableStage.incrementDelay > utcNow
-                    : nextDueDate >= gapEnd;
+                    : nextDueDate >= gap.End;
             } while (!endConditionExceeded);
 
             return dueDatesInGap.ToImmutableList();
