@@ -167,19 +167,26 @@ namespace CareTogether.Engines.PolicyEvaluation
                 throw new InvalidOperationException("A stage other than the last stage in a recurrence policy was found to have an unlimited number of occurrences.");
 
             // Calculate the start and end dates of each stage based on the recurrence policy and the arrangement start date.
-            // A null end date means the stage continues indefinitely.
+            // A null end date means the stage continues indefinitely, so for simplicity this case will be
+            // represented as DateTime.MaxValue.
             // A null start date will only occur if invalid data is provided (i.e., if any stage other than the last one has
             // an unlimited number of occurrences), so this calculation forces start date results to be non-null.
             var arrangementStages = recurrence.Stages
                 .Select(stage => (incrementDelay: stage.Delay, totalDuration: stage.Delay * stage.MaxOccurrences))
-                .Aggregate(ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty,
+                .Aggregate(ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime endDate)>.Empty,
                     (priorStages, stage) => priorStages.Add((stage.incrementDelay,
                         startDate: priorStages.Count == 0
                         ? arrangementStartedAtUtc
-                        : priorStages.Last().endDate!.Value,
-                        endDate: priorStages.Count == 0
-                        ? arrangementStartedAtUtc + stage.totalDuration
-                        : priorStages.Last().endDate!.Value + stage.totalDuration)));
+                        : priorStages.Last().endDate,
+                        endDate: stage.totalDuration.HasValue
+                        ? (priorStages.Count == 0
+                            ? arrangementStartedAtUtc + stage.totalDuration.Value
+                            : priorStages.Last().endDate + stage.totalDuration.Value)
+                        : DateTime.MaxValue)))
+                .Select(result => (
+                    result.incrementDelay,
+                    timeSpan: new AbsoluteTimeSpan(result.startDate, result.endDate)))
+                .ToImmutableList();
 
             // For each completion, find the time of the following completion (null in the case of the last completion
             // unless the arrangement has ended, in which case use the end of the arrangement).
@@ -187,16 +194,17 @@ namespace CareTogether.Engines.PolicyEvaluation
             // Prepend this list with an entry representing the start of the arrangement.
             var completionGaps = completions.Select((completion, i) =>
                 (start: completion, end: i + 1 >= completions.Count
-                    ? (arrangementEndedAtUtc.HasValue ? arrangementEndedAtUtc.Value : null as DateTime?)
+                    ? (arrangementEndedAtUtc.HasValue ? arrangementEndedAtUtc.Value : DateTime.MaxValue)
                     : completions[i + 1]))
                 .Prepend((start: arrangementStartedAtUtc, end: completions.Count > 0
                     ? completions[0]
-                    : (arrangementEndedAtUtc.HasValue ? arrangementEndedAtUtc.Value : null as DateTime?)))
+                    : (arrangementEndedAtUtc.HasValue ? arrangementEndedAtUtc.Value : DateTime.MaxValue)))
+                .Select(gap => new Timeline(gap.start, gap.end))
                 .ToImmutableList();
 
             // Calculate all missing requirements within each completion gap (there may be none).
             var missingRequirements = completionGaps.SelectMany(gap =>
-                CalculateMissingMonitoringRequirementsWithinCompletionGap(utcNow, gap.start, gap.end, arrangementStages))
+                CalculateMissingMonitoringRequirementsWithinCompletionGap(utcNow, gap, arrangementStages))
                 .ToImmutableList();
 
             return missingRequirements;
@@ -267,9 +275,10 @@ namespace CareTogether.Engines.PolicyEvaluation
                             incrementDelay: stage.incrementDelay,
                             totalDuration: stage.totalDuration)))
                     .Select(stage => (incrementDelay: stage.incrementDelay,
-                        stageTimeline: stage.totalDuration.HasValue
+                        timeSpan: stage.totalDuration.HasValue
                         ? timeline.Value.Map(stage.startDelay, (TimeSpan)stage.totalDuration)
-                        : new AbsoluteTimeSpan(timeline.Value.Map(stage.startDelay), DateTime.MaxValue)));
+                        : new AbsoluteTimeSpan(timeline.Value.Map(stage.startDelay), DateTime.MaxValue)))
+                    .ToImmutableList();
                 return KeyValuePair.Create(timeline.Key, arrangementStages);
             }).ToImmutableDictionary();
 
@@ -304,7 +313,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             // Calculate all missing requirements within each completion gap timeline (there may be none).
             var missingRequirements = completionGapsByLocation.SelectMany(locationGaps =>
                 locationGaps.Value.SelectMany(gap =>
-                    CalculateMissingMonitoringRequirementsWithinCompletionGap(utcNow, gap.Start, gap.End,
+                    CalculateMissingMonitoringRequirementsWithinCompletionGap(utcNow, gap,
                     arrangementStagesByLocation[locationGaps.Key])))
                 .ToImmutableList();
 
@@ -312,8 +321,8 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
         internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementsWithinCompletionGap(
-            DateTime utcNow, DateTime gapStart, DateTime? gapEnd,
-            ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)> arrangementStages)
+            DateTime utcNow, Timeline gap,
+            ImmutableList<(TimeSpan incrementDelay, AbsoluteTimeSpan timeSpan)> arrangementStages)
         {
             // Use the current date as the end value if either the gap has no end or if the
             // current date is before the end of the gap.
@@ -325,9 +334,9 @@ namespace CareTogether.Engines.PolicyEvaluation
             //  2. It ends during the gap.
             //  3. It begins before the gap and either ends after the gap or doesn't end.
             var gapStages = arrangementStages.Where(stage =>
-                (stage.startDate >= gapStart && stage.startDate <= effectiveEnd) ||
-                (stage.endDate >= gapStart && stage.endDate <= effectiveEnd) ||
-                (stage.startDate < gapStart && (stage.endDate > effectiveEnd || !stage.endDate.HasValue)))
+                (stage.timeSpan.Start >= gapStart && stage.timeSpan.Start <= effectiveEnd) ||
+                (stage.timeSpan.End >= gapStart && stage.timeSpan.End <= effectiveEnd) ||
+                (stage.timeSpan.Start < gapStart && stage.timeSpan.End > effectiveEnd))
                 .ToImmutableList();
 
             // Calculate all missing requirements within the gap, using the stages to determine the
@@ -344,11 +353,11 @@ namespace CareTogether.Engines.PolicyEvaluation
                 //  1. the first of the gap stages if this is the first requirement being calculated, or
                 //  2. the first of the gap stages that would end after this next requirement (self-referencing), or
                 //  3. the first of the gap stages that has no end date (i.e., the last stage).
+                //     Note that case #3 is just a subset of #2 when "no end date" is represented by DateTime.MaxValue.
                 // TODO: An unknown issue is causing this to match no stages in some cases.
                 //       Is it possible for 'gapStages' to have zero elements?
                 var applicableStage = gapStages.FirstOrDefault(stage =>
-                    stage.endDate >= (nextDueDate ?? gapStart) + stage.incrementDelay ||
-                    stage.endDate == null);
+                    stage.timeSpan.End >= (nextDueDate ?? gapStart) + stage.incrementDelay);
                 if (applicableStage == default)
                     break;
 

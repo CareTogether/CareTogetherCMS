@@ -29,6 +29,10 @@ namespace CareTogether.Engines.PolicyEvaluation
             stages.Last().End == DateTime.MaxValue ? null : stages.Last().End;
 
 
+        public Timeline(DateTime start, DateTime end)
+            : this(ImmutableList.Create(new TerminatingTimelineStage(start, end)))
+        { }
+
         public Timeline(ImmutableList<TerminatingTimelineStage> terminatingStages)
         {
             if (terminatingStages.Count == 0)
