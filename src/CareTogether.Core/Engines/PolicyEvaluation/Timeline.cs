@@ -22,11 +22,9 @@ namespace CareTogether.Engines.PolicyEvaluation
         private readonly ImmutableList<AbsoluteTimeSpan> stages;
 
 
-        public DateTime Start =>
-            stages.First().Start;
+        public DateTime Start => stages.First().Start;
 
-        public DateTime? End =>
-            stages.Last().End == DateTime.MaxValue ? null : stages.Last().End;
+        public DateTime End => stages.Last().End;
 
 
         public Timeline(DateTime start, DateTime end)
