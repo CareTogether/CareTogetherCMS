@@ -118,5 +118,10 @@ namespace CareTogether.Engines.PolicyEvaluation
         {
             return other != null && stages.SequenceEqual(other.stages);
         }
+
+        public override int GetHashCode()
+        {
+            return stages.GetHashCode();
+        }
     }
 }
