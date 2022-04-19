@@ -13,7 +13,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 1, 30),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: new DateTime(2022, 1, 20),
+                gap: new Timeline(new DateTime(2022, 1, 10), new DateTime(2022, 1, 20)),
                 arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
                 .Add((TimeSpan.FromDays(2), startDate: new DateTime(2022, 1, 1), endDate: new DateTime(2022, 1, 31))));
 
@@ -29,7 +29,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 1, 15),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: new DateTime(2022, 1, 20),
+                gap: new Timeline(new DateTime(2022, 1, 10), new DateTime(2022, 1, 20)),
                 arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
                 .Add((TimeSpan.FromDays(2), startDate: new DateTime(2022, 1, 1), endDate: new DateTime(2022, 1, 31))));
 
@@ -44,7 +44,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 1, 30),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: new DateTime(2022, 1, 20),
+                gap: new Timeline(new DateTime(2022, 1, 10), new DateTime(2022, 1, 20)),
                 arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
                 .Add((TimeSpan.FromDays(7), startDate: new DateTime(2022, 1, 1), endDate: new DateTime(2022, 1, 31))));
 
@@ -57,7 +57,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 1, 20),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: null,
+                gap: new Timeline(new DateTime(2022, 1, 10), DateTime.MaxValue),
                 arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
                 .Add((TimeSpan.FromDays(2), startDate: new DateTime(2022, 1, 1), endDate: new DateTime(2022, 1, 31))));
 
@@ -75,7 +75,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 1, 21),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: null,
+                gap: new Timeline(new DateTime(2022, 1, 10), DateTime.MaxValue),
                 arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
                 .Add((TimeSpan.FromDays(2), startDate: new DateTime(2022, 1, 1), endDate: new DateTime(2022, 1, 31))));
 
@@ -93,7 +93,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 1, 30),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: null,
+                gap: new Timeline(new DateTime(2022, 1, 10), DateTime.MaxValue),
                 arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
                 .Add((TimeSpan.FromDays(7), startDate: new DateTime(2022, 1, 1), endDate: new DateTime(2022, 1, 31))));
 
@@ -108,7 +108,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 1, 30),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: null,
+                gap: new Timeline(new DateTime(2022, 1, 10), DateTime.MaxValue),
                 arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
                 .Add((TimeSpan.FromDays(7), startDate: new DateTime(2022, 1, 1), endDate: new DateTime(2022, 1, 28))));
 
@@ -122,7 +122,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 1, 30),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: new DateTime(2022, 1, 20),
+                gap: new Timeline(new DateTime(2022, 1, 10), new DateTime(2022, 1, 20)),
                 arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
                 .Add((TimeSpan.FromDays(2), startDate: new DateTime(2022, 1, 10), endDate: new DateTime(2022, 1, 31))));
 
@@ -138,7 +138,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 1, 30),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: new DateTime(2022, 1, 20),
+                gap: new Timeline(new DateTime(2022, 1, 10), new DateTime(2022, 1, 20)),
                 arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
                 .Add((TimeSpan.FromDays(2), startDate: new DateTime(2022, 1, 1), endDate: new DateTime(2022, 1, 31)))
                 .Add((TimeSpan.FromDays(4), startDate: new DateTime(2022, 1, 31), endDate: new DateTime(2022, 2, 28))));
@@ -155,7 +155,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 1, 15),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: new DateTime(2022, 1, 20),
+                gap: new Timeline(new DateTime(2022, 1, 10), new DateTime(2022, 1, 20)),
                 arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
                 .Add((TimeSpan.FromDays(2), startDate: new DateTime(2022, 1, 1), endDate: new DateTime(2022, 1, 31)))
                 .Add((TimeSpan.FromDays(4), startDate: new DateTime(2022, 1, 31), endDate: new DateTime(2022, 2, 28))));
@@ -171,7 +171,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 1, 30),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: new DateTime(2022, 1, 20),
+                gap: new Timeline(new DateTime(2022, 1, 10), new DateTime(2022, 1, 20)),
                 arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
                 .Add((TimeSpan.FromDays(7), startDate: new DateTime(2022, 1, 1), endDate: new DateTime(2022, 1, 31)))
                 .Add((TimeSpan.FromDays(4), startDate: new DateTime(2022, 1, 31), endDate: new DateTime(2022, 2, 28))));
@@ -185,7 +185,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 1, 20),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: null,
+                gap: new Timeline(new DateTime(2022, 1, 10), DateTime.MaxValue),
                 arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
                 .Add((TimeSpan.FromDays(2), startDate: new DateTime(2022, 1, 1), endDate: new DateTime(2022, 1, 31)))
                 .Add((TimeSpan.FromDays(4), startDate: new DateTime(2022, 1, 31), endDate: new DateTime(2022, 2, 28))));
@@ -204,7 +204,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 1, 21),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: null,
+                gap: new Timeline(new DateTime(2022, 1, 10), DateTime.MaxValue),
                 arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
                 .Add((TimeSpan.FromDays(2), startDate: new DateTime(2022, 1, 1), endDate: new DateTime(2022, 1, 31)))
                 .Add((TimeSpan.FromDays(4), startDate: new DateTime(2022, 1, 31), endDate: new DateTime(2022, 2, 28))));
@@ -223,7 +223,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 1, 30),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: null,
+                gap: new Timeline(new DateTime(2022, 1, 10), DateTime.MaxValue),
                 arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
                 .Add((TimeSpan.FromDays(7), startDate: new DateTime(2022, 1, 1), endDate: new DateTime(2022, 1, 31)))
                 .Add((TimeSpan.FromDays(4), startDate: new DateTime(2022, 1, 31), endDate: new DateTime(2022, 2, 28))));
@@ -239,7 +239,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 2, 14),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: null,
+                gap: new Timeline(new DateTime(2022, 1, 10), DateTime.MaxValue),
                 arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
                 .Add((TimeSpan.FromDays(2), startDate: new DateTime(2022, 1, 1), endDate: new DateTime(2022, 1, 31)))
                 .Add((TimeSpan.FromDays(4), startDate: new DateTime(2022, 1, 31), endDate: new DateTime(2022, 2, 28))));
@@ -266,7 +266,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 1, 30),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: new DateTime(2022, 1, 20),
+                gap: new Timeline(new DateTime(2022, 1, 10), new DateTime(2022, 1, 20)),
                 arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
                 .Add((TimeSpan.FromDays(2), startDate: new DateTime(2022, 1, 10), endDate: new DateTime(2022, 1, 31)))
                 .Add((TimeSpan.FromDays(4), startDate: new DateTime(2022, 1, 31), endDate: new DateTime(2022, 2, 28))));
@@ -283,7 +283,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 2, 14),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: null,
+                gap: new Timeline(new DateTime(2022, 1, 10), DateTime.MaxValue),
                 arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
                 .Add((TimeSpan.FromDays(2), startDate: new DateTime(2022, 1, 10), endDate: new DateTime(2022, 1, 31)))
                 .Add((TimeSpan.FromDays(4), startDate: new DateTime(2022, 1, 31), endDate: new DateTime(2022, 2, 28))));
@@ -310,7 +310,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 3, 15),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: new DateTime(2022, 3, 31),
+                gap: new Timeline(new DateTime(2022, 1, 10), new DateTime(2022, 3, 31)),
                 arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
                 .Add((TimeSpan.FromDays(2), startDate: new DateTime(2022, 1, 10), endDate: new DateTime(2022, 1, 31)))
                 .Add((TimeSpan.FromDays(4), startDate: new DateTime(2022, 1, 31), endDate: new DateTime(2022, 2, 28)))
@@ -344,7 +344,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 3, 15),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: null,
+                gap: new Timeline(new DateTime(2022, 1, 10), DateTime.MaxValue),
                 arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
                 .Add((TimeSpan.FromDays(2), startDate: new DateTime(2022, 1, 10), endDate: new DateTime(2022, 1, 31)))
                 .Add((TimeSpan.FromDays(4), startDate: new DateTime(2022, 1, 31), endDate: new DateTime(2022, 2, 28)))
