@@ -69,14 +69,6 @@ namespace CareTogether.Engines.PolicyEvaluation
             return new AbsoluteTimeSpan(start, end);
         }
 
-        public AbsoluteTimeSpan Map(TimeSpan startDelay, TimeSpan duration)
-        {
-            var start = Map(startDelay);
-            var end = Map(startDelay + duration);
-            
-            return new AbsoluteTimeSpan(start, end);
-        }
-
         public DateTime? TryMapFrom(DateTime offset, TimeSpan duration)
         {
             var subsetFromOffset = Subset(offset, DateTime.MaxValue);
@@ -90,17 +82,6 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             if (result == null)
                 return DateTime.MaxValue;
-
-            return result.Value;
-        }
-
-        public DateTime Map(TimeSpan durationFromStart)
-        {
-            var result = TryMap(durationFromStart);
-
-            if (result == null)
-                throw new InvalidOperationException(
-                    "The timeline is not long enough to accommodate mapping the requested date.");
 
             return result.Value;
         }

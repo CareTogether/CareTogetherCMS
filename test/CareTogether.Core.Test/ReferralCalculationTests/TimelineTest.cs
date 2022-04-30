@@ -13,6 +13,10 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         private static TimeSpan T(int days) => TimeSpan.FromDays(days);
         private static AbsoluteTimeSpan M(int start, int end) =>
             new AbsoluteTimeSpan(D(start), D(end));
+        private static AbsoluteTimeSpan MMax(int start) =>
+            new AbsoluteTimeSpan(D(start), DateTime.MaxValue);
+        private static AbsoluteTimeSpan MMaxMax =
+            new AbsoluteTimeSpan(DateTime.MaxValue, DateTime.MaxValue);
         private static Timeline TL(params (int start, int? end)[] stages) =>
             new Timeline(stages.Select(stage => new TerminatingTimelineStage(
                 Start: D(stage.start),
@@ -38,25 +42,25 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             Assert.IsFalse(dut.Contains(D(30)));
             Assert.IsFalse(dut.Contains(D(31)));
 
-            Assert.AreEqual(D(1), dut.Map(T(0)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(1)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(9)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(10)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(11)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(20)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(25)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(30)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(35)));
+            Assert.AreEqual(D(1), dut.MapUnbounded(T(0)));
+            Assert.AreEqual(DateTime.MaxValue, dut.MapUnbounded(T(1)));
+            Assert.AreEqual(DateTime.MaxValue, dut.MapUnbounded(T(9)));
+            Assert.AreEqual(DateTime.MaxValue, dut.MapUnbounded(T(10)));
+            Assert.AreEqual(DateTime.MaxValue, dut.MapUnbounded(T(11)));
+            Assert.AreEqual(DateTime.MaxValue, dut.MapUnbounded(T(20)));
+            Assert.AreEqual(DateTime.MaxValue, dut.MapUnbounded(T(25)));
+            Assert.AreEqual(DateTime.MaxValue, dut.MapUnbounded(T(30)));
+            Assert.AreEqual(DateTime.MaxValue, dut.MapUnbounded(T(35)));
 
-            Assert.AreEqual(M(1, 1), dut.Map(T(0), T(0)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(0), T(1)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(1), T(0)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(1), T(1)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(1), T(2)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(8), T(5)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(9), T(5)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(11), T(10)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(11), T(19)));
+            Assert.AreEqual(M(1, 1), dut.MapUnbounded(T(0), T(0)));
+            Assert.AreEqual(MMax(1), dut.MapUnbounded(T(0), T(1)));
+            Assert.AreEqual(MMaxMax, dut.MapUnbounded(T(1), T(0)));
+            Assert.AreEqual(MMaxMax, dut.MapUnbounded(T(1), T(1)));
+            Assert.AreEqual(MMaxMax, dut.MapUnbounded(T(1), T(2)));
+            Assert.AreEqual(MMaxMax, dut.MapUnbounded(T(8), T(5)));
+            Assert.AreEqual(MMaxMax, dut.MapUnbounded(T(9), T(5)));
+            Assert.AreEqual(MMaxMax, dut.MapUnbounded(T(11), T(10)));
+            Assert.AreEqual(MMaxMax, dut.MapUnbounded(T(11), T(19)));
 
             Assert.AreEqual(TL((1, 1)), dut.Subset(D(1), D(5)));
             Assert.ThrowsException<ArgumentException>(() => dut.Subset(D(6), D(15)));
@@ -85,25 +89,25 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             Assert.IsFalse(dut.Contains(D(30)));
             Assert.IsFalse(dut.Contains(D(31)));
 
-            Assert.AreEqual(D(1), dut.Map(T(0)));
-            Assert.AreEqual(D(2), dut.Map(T(1)));
-            Assert.AreEqual(D(10), dut.Map(T(9)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(10)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(11)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(20)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(25)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(30)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(35)));
+            Assert.AreEqual(D(1), dut.MapUnbounded(T(0)));
+            Assert.AreEqual(D(2), dut.MapUnbounded(T(1)));
+            Assert.AreEqual(D(10), dut.MapUnbounded(T(9)));
+            Assert.AreEqual(DateTime.MaxValue, dut.MapUnbounded(T(10)));
+            Assert.AreEqual(DateTime.MaxValue, dut.MapUnbounded(T(11)));
+            Assert.AreEqual(DateTime.MaxValue, dut.MapUnbounded(T(20)));
+            Assert.AreEqual(DateTime.MaxValue, dut.MapUnbounded(T(25)));
+            Assert.AreEqual(DateTime.MaxValue, dut.MapUnbounded(T(30)));
+            Assert.AreEqual(DateTime.MaxValue, dut.MapUnbounded(T(35)));
             
-            Assert.AreEqual(M(1, 1), dut.Map(T(0), T(0)));
-            Assert.AreEqual(M(1, 2), dut.Map(T(0), T(1)));
-            Assert.AreEqual(M(2, 2), dut.Map(T(1), T(0)));
-            Assert.AreEqual(M(2, 3), dut.Map(T(1), T(1)));
-            Assert.AreEqual(M(2, 4), dut.Map(T(1), T(2)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(8), T(5)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(9), T(5)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(11), T(10)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(11), T(19)));
+            Assert.AreEqual(M(1, 1), dut.MapUnbounded(T(0), T(0)));
+            Assert.AreEqual(M(1, 2), dut.MapUnbounded(T(0), T(1)));
+            Assert.AreEqual(M(2, 2), dut.MapUnbounded(T(1), T(0)));
+            Assert.AreEqual(M(2, 3), dut.MapUnbounded(T(1), T(1)));
+            Assert.AreEqual(M(2, 4), dut.MapUnbounded(T(1), T(2)));
+            Assert.AreEqual(MMax(9), dut.MapUnbounded(T(8), T(5)));
+            Assert.AreEqual(MMax(10), dut.MapUnbounded(T(9), T(5)));
+            Assert.AreEqual(MMaxMax, dut.MapUnbounded(T(11), T(10)));
+            Assert.AreEqual(MMaxMax, dut.MapUnbounded(T(11), T(19)));
 
             Assert.AreEqual(TL((1, 5)), dut.Subset(D(1), D(5)));
             Assert.AreEqual(TL((6, 10)), dut.Subset(D(6), D(15)));
@@ -133,24 +137,24 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             Assert.IsFalse(dut.Contains(D(30)));
             Assert.IsFalse(dut.Contains(D(31)));
 
-            Assert.AreEqual(D(1), dut.Map(T(0)));
-            Assert.AreEqual(D(2), dut.Map(T(1)));
-            Assert.AreEqual(D(10), dut.Map(T(9)));
-            Assert.AreEqual(D(11), dut.Map(T(10)));
-            Assert.AreEqual(D(12), dut.Map(T(11)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(20)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(25)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(30)));
+            Assert.AreEqual(D(1), dut.MapUnbounded(T(0)));
+            Assert.AreEqual(D(2), dut.MapUnbounded(T(1)));
+            Assert.AreEqual(D(10), dut.MapUnbounded(T(9)));
+            Assert.AreEqual(D(11), dut.MapUnbounded(T(10)));
+            Assert.AreEqual(D(12), dut.MapUnbounded(T(11)));
+            Assert.AreEqual(DateTime.MaxValue, dut.MapUnbounded(T(20)));
+            Assert.AreEqual(DateTime.MaxValue, dut.MapUnbounded(T(25)));
+            Assert.AreEqual(DateTime.MaxValue, dut.MapUnbounded(T(30)));
 
-            Assert.AreEqual(M(1, 1), dut.Map(T(0), T(0)));
-            Assert.AreEqual(M(1, 2), dut.Map(T(0), T(1)));
-            Assert.AreEqual(M(2, 2), dut.Map(T(1), T(0)));
-            Assert.AreEqual(M(2, 3), dut.Map(T(1), T(1)));
-            Assert.AreEqual(M(2, 4), dut.Map(T(1), T(2)));
-            Assert.AreEqual(M(9, 14), dut.Map(T(8), T(5)));
-            Assert.AreEqual(M(10, 15), dut.Map(T(9), T(5)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(11), T(10)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(11), T(19)));
+            Assert.AreEqual(M(1, 1), dut.MapUnbounded(T(0), T(0)));
+            Assert.AreEqual(M(1, 2), dut.MapUnbounded(T(0), T(1)));
+            Assert.AreEqual(M(2, 2), dut.MapUnbounded(T(1), T(0)));
+            Assert.AreEqual(M(2, 3), dut.MapUnbounded(T(1), T(1)));
+            Assert.AreEqual(M(2, 4), dut.MapUnbounded(T(1), T(2)));
+            Assert.AreEqual(M(9, 14), dut.MapUnbounded(T(8), T(5)));
+            Assert.AreEqual(M(10, 15), dut.MapUnbounded(T(9), T(5)));
+            Assert.AreEqual(MMax(12), dut.MapUnbounded(T(11), T(10)));
+            Assert.AreEqual(MMax(12), dut.MapUnbounded(T(11), T(19)));
 
             Assert.AreEqual(TL((1, 5)), dut.Subset(D(1), D(5)));
             Assert.AreEqual(TL((6, 10), (10, 15)), dut.Subset(D(6), D(15)));
@@ -180,24 +184,24 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             Assert.IsTrue(dut.Contains(D(30)));
             Assert.IsFalse(dut.Contains(D(31)));
 
-            Assert.AreEqual(D(1), dut.Map(T(0)));
-            Assert.AreEqual(D(2), dut.Map(T(1)));
-            Assert.AreEqual(D(10), dut.Map(T(9)));
-            Assert.AreEqual(D(21), dut.Map(T(10)));
-            Assert.AreEqual(D(22), dut.Map(T(11)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(20)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(25)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(30)));
+            Assert.AreEqual(D(1), dut.MapUnbounded(T(0)));
+            Assert.AreEqual(D(2), dut.MapUnbounded(T(1)));
+            Assert.AreEqual(D(10), dut.MapUnbounded(T(9)));
+            Assert.AreEqual(D(21), dut.MapUnbounded(T(10)));
+            Assert.AreEqual(D(22), dut.MapUnbounded(T(11)));
+            Assert.AreEqual(DateTime.MaxValue, dut.MapUnbounded(T(20)));
+            Assert.AreEqual(DateTime.MaxValue, dut.MapUnbounded(T(25)));
+            Assert.AreEqual(DateTime.MaxValue, dut.MapUnbounded(T(30)));
 
-            Assert.AreEqual(M(1, 1), dut.Map(T(0), T(0)));
-            Assert.AreEqual(M(1, 2), dut.Map(T(0), T(1)));
-            Assert.AreEqual(M(2, 2), dut.Map(T(1), T(0)));
-            Assert.AreEqual(M(2, 3), dut.Map(T(1), T(1)));
-            Assert.AreEqual(M(2, 4), dut.Map(T(1), T(2)));
-            Assert.AreEqual(M(9, 24), dut.Map(T(8), T(5)));
-            Assert.AreEqual(M(10, 25), dut.Map(T(9), T(5)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(11), T(10)));
-            Assert.ThrowsException<InvalidOperationException>(() => dut.Map(T(11), T(19)));
+            Assert.AreEqual(M(1, 1), dut.MapUnbounded(T(0), T(0)));
+            Assert.AreEqual(M(1, 2), dut.MapUnbounded(T(0), T(1)));
+            Assert.AreEqual(M(2, 2), dut.MapUnbounded(T(1), T(0)));
+            Assert.AreEqual(M(2, 3), dut.MapUnbounded(T(1), T(1)));
+            Assert.AreEqual(M(2, 4), dut.MapUnbounded(T(1), T(2)));
+            Assert.AreEqual(M(9, 24), dut.MapUnbounded(T(8), T(5)));
+            Assert.AreEqual(M(10, 25), dut.MapUnbounded(T(9), T(5)));
+            Assert.AreEqual(MMax(22), dut.MapUnbounded(T(11), T(10)));
+            Assert.AreEqual(MMax(22), dut.MapUnbounded(T(11), T(19)));
 
             Assert.AreEqual(TL((1, 5)), dut.Subset(D(1), D(5)));
             Assert.AreEqual(TL((6, 10)), dut.Subset(D(6), D(15)));
@@ -226,24 +230,24 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             Assert.IsTrue(dut.Contains(D(30)));
             Assert.IsTrue(dut.Contains(D(31)));
 
-            Assert.AreEqual(D(1), dut.Map(T(0)));
-            Assert.AreEqual(D(2), dut.Map(T(1)));
-            Assert.AreEqual(D(10), dut.Map(T(9)));
-            Assert.AreEqual(D(11), dut.Map(T(10)));
-            Assert.AreEqual(D(12), dut.Map(T(11)));
-            Assert.AreEqual(D(21), dut.Map(T(20)));
-            Assert.AreEqual(D(26), dut.Map(T(25)));
-            Assert.AreEqual(D(31), dut.Map(T(30)));
+            Assert.AreEqual(D(1), dut.MapUnbounded(T(0)));
+            Assert.AreEqual(D(2), dut.MapUnbounded(T(1)));
+            Assert.AreEqual(D(10), dut.MapUnbounded(T(9)));
+            Assert.AreEqual(D(11), dut.MapUnbounded(T(10)));
+            Assert.AreEqual(D(12), dut.MapUnbounded(T(11)));
+            Assert.AreEqual(D(21), dut.MapUnbounded(T(20)));
+            Assert.AreEqual(D(26), dut.MapUnbounded(T(25)));
+            Assert.AreEqual(D(31), dut.MapUnbounded(T(30)));
 
-            Assert.AreEqual(M(1, 1), dut.Map(T(0), T(0)));
-            Assert.AreEqual(M(1, 2), dut.Map(T(0), T(1)));
-            Assert.AreEqual(M(2, 2), dut.Map(T(1), T(0)));
-            Assert.AreEqual(M(2, 3), dut.Map(T(1), T(1)));
-            Assert.AreEqual(M(2, 4), dut.Map(T(1), T(2)));
-            Assert.AreEqual(M(9, 14), dut.Map(T(8), T(5)));
-            Assert.AreEqual(M(10, 15), dut.Map(T(9), T(5)));
-            Assert.AreEqual(M(12, 22), dut.Map(T(11), T(10)));
-            Assert.AreEqual(M(12, 31), dut.Map(T(11), T(19)));
+            Assert.AreEqual(M(1, 1), dut.MapUnbounded(T(0), T(0)));
+            Assert.AreEqual(M(1, 2), dut.MapUnbounded(T(0), T(1)));
+            Assert.AreEqual(M(2, 2), dut.MapUnbounded(T(1), T(0)));
+            Assert.AreEqual(M(2, 3), dut.MapUnbounded(T(1), T(1)));
+            Assert.AreEqual(M(2, 4), dut.MapUnbounded(T(1), T(2)));
+            Assert.AreEqual(M(9, 14), dut.MapUnbounded(T(8), T(5)));
+            Assert.AreEqual(M(10, 15), dut.MapUnbounded(T(9), T(5)));
+            Assert.AreEqual(M(12, 22), dut.MapUnbounded(T(11), T(10)));
+            Assert.AreEqual(M(12, 31), dut.MapUnbounded(T(11), T(19)));
 
             Assert.AreEqual(TL((1, 5)), dut.Subset(D(1), D(5)));
             Assert.AreEqual(TL((6, 15)), dut.Subset(D(6), D(15)));
@@ -273,24 +277,24 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             Assert.IsTrue(dut.Contains(D(30)));
             Assert.IsTrue(dut.Contains(D(31)));
 
-            Assert.AreEqual(D(1), dut.Map(T(0)));
-            Assert.AreEqual(D(2), dut.Map(T(1)));
-            Assert.AreEqual(D(10), dut.Map(T(9)));
-            Assert.AreEqual(D(11), dut.Map(T(10)));
-            Assert.AreEqual(D(12), dut.Map(T(11)));
-            Assert.AreEqual(D(21), dut.Map(T(20)));
-            Assert.AreEqual(D(26), dut.Map(T(25)));
-            Assert.AreEqual(D(31), dut.Map(T(30)));
+            Assert.AreEqual(D(1), dut.MapUnbounded(T(0)));
+            Assert.AreEqual(D(2), dut.MapUnbounded(T(1)));
+            Assert.AreEqual(D(10), dut.MapUnbounded(T(9)));
+            Assert.AreEqual(D(11), dut.MapUnbounded(T(10)));
+            Assert.AreEqual(D(12), dut.MapUnbounded(T(11)));
+            Assert.AreEqual(D(21), dut.MapUnbounded(T(20)));
+            Assert.AreEqual(D(26), dut.MapUnbounded(T(25)));
+            Assert.AreEqual(D(31), dut.MapUnbounded(T(30)));
 
-            Assert.AreEqual(M(1, 1), dut.Map(T(0), T(0)));
-            Assert.AreEqual(M(1, 2), dut.Map(T(0), T(1)));
-            Assert.AreEqual(M(2, 2), dut.Map(T(1), T(0)));
-            Assert.AreEqual(M(2, 3), dut.Map(T(1), T(1)));
-            Assert.AreEqual(M(2, 4), dut.Map(T(1), T(2)));
-            Assert.AreEqual(M(9, 14), dut.Map(T(8), T(5)));
-            Assert.AreEqual(M(10, 15), dut.Map(T(9), T(5)));
-            Assert.AreEqual(M(12, 22), dut.Map(T(11), T(10)));
-            Assert.AreEqual(M(12, 31), dut.Map(T(11), T(19)));
+            Assert.AreEqual(M(1, 1), dut.MapUnbounded(T(0), T(0)));
+            Assert.AreEqual(M(1, 2), dut.MapUnbounded(T(0), T(1)));
+            Assert.AreEqual(M(2, 2), dut.MapUnbounded(T(1), T(0)));
+            Assert.AreEqual(M(2, 3), dut.MapUnbounded(T(1), T(1)));
+            Assert.AreEqual(M(2, 4), dut.MapUnbounded(T(1), T(2)));
+            Assert.AreEqual(M(9, 14), dut.MapUnbounded(T(8), T(5)));
+            Assert.AreEqual(M(10, 15), dut.MapUnbounded(T(9), T(5)));
+            Assert.AreEqual(M(12, 22), dut.MapUnbounded(T(11), T(10)));
+            Assert.AreEqual(M(12, 31), dut.MapUnbounded(T(11), T(19)));
 
             Assert.AreEqual(TL((1, 5)), dut.Subset(D(1), D(5)));
             Assert.AreEqual(TL((6, 10), (10, 15)), dut.Subset(D(6), D(15)));
@@ -320,21 +324,21 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             Assert.IsTrue(dut.Contains(D(30)));
             Assert.IsTrue(dut.Contains(D(31)));
 
-            Assert.AreEqual(D(1), dut.Map(T(0)));
-            Assert.AreEqual(D(2), dut.Map(T(1)));
-            Assert.AreEqual(D(10), dut.Map(T(9)));
-            Assert.AreEqual(D(21), dut.Map(T(10)));
-            Assert.AreEqual(D(22), dut.Map(T(11)));
-            Assert.AreEqual(D(31), dut.Map(T(20)));
+            Assert.AreEqual(D(1), dut.MapUnbounded(T(0)));
+            Assert.AreEqual(D(2), dut.MapUnbounded(T(1)));
+            Assert.AreEqual(D(10), dut.MapUnbounded(T(9)));
+            Assert.AreEqual(D(21), dut.MapUnbounded(T(10)));
+            Assert.AreEqual(D(22), dut.MapUnbounded(T(11)));
+            Assert.AreEqual(D(31), dut.MapUnbounded(T(20)));
 
-            Assert.AreEqual(M(1, 1), dut.Map(T(0), T(0)));
-            Assert.AreEqual(M(1, 2), dut.Map(T(0), T(1)));
-            Assert.AreEqual(M(2, 2), dut.Map(T(1), T(0)));
-            Assert.AreEqual(M(2, 3), dut.Map(T(1), T(1)));
-            Assert.AreEqual(M(2, 4), dut.Map(T(1), T(2)));
-            Assert.AreEqual(M(9, 24), dut.Map(T(8), T(5)));
-            Assert.AreEqual(M(10, 25), dut.Map(T(9), T(5)));
-            Assert.AreEqual(M(22, 31), dut.Map(T(11), T(9)));
+            Assert.AreEqual(M(1, 1), dut.MapUnbounded(T(0), T(0)));
+            Assert.AreEqual(M(1, 2), dut.MapUnbounded(T(0), T(1)));
+            Assert.AreEqual(M(2, 2), dut.MapUnbounded(T(1), T(0)));
+            Assert.AreEqual(M(2, 3), dut.MapUnbounded(T(1), T(1)));
+            Assert.AreEqual(M(2, 4), dut.MapUnbounded(T(1), T(2)));
+            Assert.AreEqual(M(9, 24), dut.MapUnbounded(T(8), T(5)));
+            Assert.AreEqual(M(10, 25), dut.MapUnbounded(T(9), T(5)));
+            Assert.AreEqual(M(22, 31), dut.MapUnbounded(T(11), T(9)));
 
             Assert.AreEqual(TL((1, 5)), dut.Subset(D(1), D(5)));
             Assert.AreEqual(TL((6, 10)), dut.Subset(D(6), D(15)));
