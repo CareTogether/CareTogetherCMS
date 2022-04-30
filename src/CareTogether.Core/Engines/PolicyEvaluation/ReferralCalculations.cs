@@ -361,9 +361,11 @@ namespace CareTogether.Engines.PolicyEvaluation
                 if (applicableStage == default)
                     break;
 
-                // Calculate the next requirement due date based on the applicable stage.
+                // Calculate the next requirement due date based on the applicable stage, using the gap's timeline.
                 // If it falls within the current completion gap (& before the current time), it is a missing requirement.
-                nextDueDate = (nextDueDate ?? gap.Start) + applicableStage.incrementDelay;
+                nextDueDate = gap.TryMapFrom(nextDueDate ?? gap.Start, applicableStage.incrementDelay);
+                if (nextDueDate == null)
+                    break;
 
                 // Include one more if this is the last gap and we want the next due-by date (not a missing requirement per se).
                 // The end of the gap is a hard cut-off, but the current UTC date/time is a +1 cut-off (overshoot by one is needed).

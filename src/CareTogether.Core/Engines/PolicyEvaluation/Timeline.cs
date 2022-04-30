@@ -69,7 +69,25 @@ namespace CareTogether.Engines.PolicyEvaluation
             return new AbsoluteTimeSpan(start, end);
         }
 
+        public DateTime? TryMapFrom(DateTime offset, TimeSpan duration)
+        {
+            var subsetFromOffset = Subset(offset, DateTime.MaxValue);
+            var mappedDurationInSubset = subsetFromOffset.TryMap(duration);
+            return mappedDurationInSubset;
+        }
+
         public DateTime Map(TimeSpan durationFromStart)
+        {
+            var result = TryMap(durationFromStart);
+
+            if (result == null)
+                throw new InvalidOperationException(
+                    "The timeline is not long enough to accommodate mapping the requested date.");
+
+            return result.Value;
+        }
+
+        public DateTime? TryMap(TimeSpan durationFromStart)
         {
             DateTime? mappedStageStartDate = null;
             TimeSpan mappedDurationPriorToCurrentStage = TimeSpan.Zero;
@@ -86,10 +104,9 @@ namespace CareTogether.Engines.PolicyEvaluation
             }
 
             if (mappedStageStartDate == null)
-                throw new InvalidOperationException(
-                    "The timeline is not long enough to accommodate mapping the requested date.");
-
-            return (DateTime)(mappedStageStartDate!) +
+                return null;
+            
+            return mappedStageStartDate +
                 durationFromStart - mappedDurationPriorToCurrentStage;
         }
 
@@ -98,7 +115,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             var subsetEnd = end.HasValue ? end.Value : DateTime.MaxValue;
 
             var subsetStages = stages
-                .Where(stage => stage.Start < subsetEnd && stage.End > start)
+                .Where(stage => stage.Start <= subsetEnd && stage.End >= start)
                 .Select(stage => new TerminatingTimelineStage(
                     Start: start > stage.Start ? start : stage.Start,
                     End: subsetEnd < stage.End ? subsetEnd : stage.End))
