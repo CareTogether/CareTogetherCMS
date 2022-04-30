@@ -276,8 +276,8 @@ namespace CareTogether.Engines.PolicyEvaluation
                             totalDuration: stage.totalDuration)))
                     .Select(stage => (incrementDelay: stage.incrementDelay,
                         timeSpan: stage.totalDuration.HasValue
-                        ? timeline.Value.Map(stage.startDelay, (TimeSpan)stage.totalDuration)
-                        : new AbsoluteTimeSpan(timeline.Value.Map(stage.startDelay), DateTime.MaxValue)))
+                        ? timeline.Value.MapUnbounded(stage.startDelay, (TimeSpan)stage.totalDuration)
+                        : new AbsoluteTimeSpan(timeline.Value.MapUnbounded(stage.startDelay), DateTime.MaxValue)))
                     .ToImmutableList();
                 return KeyValuePair.Create(timeline.Key, arrangementStages);
             }).ToImmutableDictionary();

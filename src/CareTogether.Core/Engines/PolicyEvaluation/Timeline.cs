@@ -61,6 +61,14 @@ namespace CareTogether.Engines.PolicyEvaluation
             stages.Exists(stage =>
                 stage.Start <= value && stage.End >= value);
 
+        public AbsoluteTimeSpan MapUnbounded(TimeSpan startDelay, TimeSpan duration)
+        {
+            var start = MapUnbounded(startDelay);
+            var end = MapUnbounded(startDelay + duration);
+
+            return new AbsoluteTimeSpan(start, end);
+        }
+
         public AbsoluteTimeSpan Map(TimeSpan startDelay, TimeSpan duration)
         {
             var start = Map(startDelay);
@@ -74,6 +82,16 @@ namespace CareTogether.Engines.PolicyEvaluation
             var subsetFromOffset = Subset(offset, DateTime.MaxValue);
             var mappedDurationInSubset = subsetFromOffset.TryMap(duration);
             return mappedDurationInSubset;
+        }
+
+        public DateTime MapUnbounded(TimeSpan durationFromStart)
+        {
+            var result = TryMap(durationFromStart);
+
+            if (result == null)
+                return DateTime.MaxValue;
+
+            return result.Value;
         }
 
         public DateTime Map(TimeSpan durationFromStart)
