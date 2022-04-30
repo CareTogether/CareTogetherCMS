@@ -61,11 +61,11 @@ namespace CareTogether.Engines.PolicyEvaluation
             stages.Exists(stage =>
                 stage.Start <= value && stage.End >= value);
 
-        public AbsoluteTimeSpan Map(TimeSpan startDelay, TimeSpan duration)
+        public AbsoluteTimeSpan MapUnbounded(TimeSpan startDelay, TimeSpan duration)
         {
-            var start = Map(startDelay);
-            var end = Map(startDelay + duration);
-            
+            var start = MapUnbounded(startDelay);
+            var end = MapUnbounded(startDelay + duration);
+
             return new AbsoluteTimeSpan(start, end);
         }
 
@@ -76,13 +76,12 @@ namespace CareTogether.Engines.PolicyEvaluation
             return mappedDurationInSubset;
         }
 
-        public DateTime Map(TimeSpan durationFromStart)
+        public DateTime MapUnbounded(TimeSpan durationFromStart)
         {
             var result = TryMap(durationFromStart);
 
             if (result == null)
-                throw new InvalidOperationException(
-                    "The timeline is not long enough to accommodate mapping the requested date.");
+                return DateTime.MaxValue;
 
             return result.Value;
         }
