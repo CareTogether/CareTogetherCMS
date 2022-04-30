@@ -1472,6 +1472,11 @@ export abstract class RecurrencePolicy implements IRecurrencePolicy {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "DurationStagesPerChildLocationRecurrencePolicy") {
+            let result = new DurationStagesPerChildLocationRecurrencePolicy();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "DurationStagesRecurrencePolicy") {
             let result = new DurationStagesRecurrencePolicy();
             result.init(data);
@@ -1536,12 +1541,12 @@ export interface IChildCareOccurrenceBasedRecurrencePolicy extends IRecurrencePo
     positive?: boolean;
 }
 
-export class DurationStagesRecurrencePolicy extends RecurrencePolicy implements IDurationStagesRecurrencePolicy {
+export class DurationStagesPerChildLocationRecurrencePolicy extends RecurrencePolicy implements IDurationStagesPerChildLocationRecurrencePolicy {
     stages?: RecurrencePolicyStage[];
 
-    constructor(data?: IDurationStagesRecurrencePolicy) {
+    constructor(data?: IDurationStagesPerChildLocationRecurrencePolicy) {
         super(data);
-        this._discriminator = "DurationStagesRecurrencePolicy";
+        this._discriminator = "DurationStagesPerChildLocationRecurrencePolicy";
     }
 
     init(_data?: any) {
@@ -1555,9 +1560,9 @@ export class DurationStagesRecurrencePolicy extends RecurrencePolicy implements 
         }
     }
 
-    static fromJS(data: any): DurationStagesRecurrencePolicy {
+    static fromJS(data: any): DurationStagesPerChildLocationRecurrencePolicy {
         data = typeof data === 'object' ? data : {};
-        let result = new DurationStagesRecurrencePolicy();
+        let result = new DurationStagesPerChildLocationRecurrencePolicy();
         result.init(data);
         return result;
     }
@@ -1574,7 +1579,7 @@ export class DurationStagesRecurrencePolicy extends RecurrencePolicy implements 
     }
 }
 
-export interface IDurationStagesRecurrencePolicy extends IRecurrencePolicy {
+export interface IDurationStagesPerChildLocationRecurrencePolicy extends IRecurrencePolicy {
     stages?: RecurrencePolicyStage[];
 }
 
@@ -1616,6 +1621,48 @@ export class RecurrencePolicyStage implements IRecurrencePolicyStage {
 export interface IRecurrencePolicyStage {
     delay?: string;
     maxOccurrences?: number | undefined;
+}
+
+export class DurationStagesRecurrencePolicy extends RecurrencePolicy implements IDurationStagesRecurrencePolicy {
+    stages?: RecurrencePolicyStage[];
+
+    constructor(data?: IDurationStagesRecurrencePolicy) {
+        super(data);
+        this._discriminator = "DurationStagesRecurrencePolicy";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            if (Array.isArray(_data["stages"])) {
+                this.stages = [] as any;
+                for (let item of _data["stages"])
+                    this.stages!.push(RecurrencePolicyStage.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): DurationStagesRecurrencePolicy {
+        data = typeof data === 'object' ? data : {};
+        let result = new DurationStagesRecurrencePolicy();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.stages)) {
+            data["stages"] = [];
+            for (let item of this.stages)
+                data["stages"].push(item.toJSON());
+        }
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IDurationStagesRecurrencePolicy extends IRecurrencePolicy {
+    stages?: RecurrencePolicyStage[];
 }
 
 export class VolunteerPolicy implements IVolunteerPolicy {

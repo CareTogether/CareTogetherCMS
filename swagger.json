@@ -1091,6 +1091,7 @@
           "propertyName": "discriminator",
           "mapping": {
             "ChildCareOccurrenceBasedRecurrencePolicy": "#/components/schemas/ChildCareOccurrenceBasedRecurrencePolicy",
+            "DurationStagesPerChildLocationRecurrencePolicy": "#/components/schemas/DurationStagesPerChildLocationRecurrencePolicy",
             "DurationStagesRecurrencePolicy": "#/components/schemas/DurationStagesRecurrencePolicy"
           }
         },
@@ -1133,7 +1134,7 @@
           }
         ]
       },
-      "DurationStagesRecurrencePolicy": {
+      "DurationStagesPerChildLocationRecurrencePolicy": {
         "allOf": [
           {
             "$ref": "#/components/schemas/RecurrencePolicy"
@@ -1166,6 +1167,25 @@
             "nullable": true
           }
         }
+      },
+      "DurationStagesRecurrencePolicy": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/RecurrencePolicy"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "stages": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/RecurrencePolicyStage"
+                }
+              }
+            }
+          }
+        ]
       },
       "VolunteerPolicy": {
         "type": "object",

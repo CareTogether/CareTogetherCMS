@@ -13,9 +13,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 1, 30),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: new DateTime(2022, 1, 20),
-                arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
-                .Add((TimeSpan.FromDays(2), startDate: new DateTime(2022, 1, 1), endDate: new DateTime(2022, 1, 31))));
+                gap: new Timeline(new DateTime(2022, 1, 10), new DateTime(2022, 1, 20)),
+                arrangementStages: ImmutableList<(TimeSpan incrementDelay, AbsoluteTimeSpan timeSpan)>.Empty
+                .Add((TimeSpan.FromDays(2), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 1), new DateTime(2022, 1, 31)))));
 
             AssertEx.SequenceIs(result,
                 new DateTime(2022, 1, 12),
@@ -29,9 +29,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 1, 15),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: new DateTime(2022, 1, 20),
-                arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
-                .Add((TimeSpan.FromDays(2), startDate: new DateTime(2022, 1, 1), endDate: new DateTime(2022, 1, 31))));
+                gap: new Timeline(new DateTime(2022, 1, 10), new DateTime(2022, 1, 20)),
+                arrangementStages: ImmutableList<(TimeSpan incrementDelay, AbsoluteTimeSpan timeSpan)>.Empty
+                .Add((TimeSpan.FromDays(2), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 1), new DateTime(2022, 1, 31)))));
 
             AssertEx.SequenceIs(result,
                 new DateTime(2022, 1, 12),
@@ -44,9 +44,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 1, 30),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: new DateTime(2022, 1, 20),
-                arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
-                .Add((TimeSpan.FromDays(7), startDate: new DateTime(2022, 1, 1), endDate: new DateTime(2022, 1, 31))));
+                gap: new Timeline(new DateTime(2022, 1, 10), new DateTime(2022, 1, 20)),
+                arrangementStages: ImmutableList<(TimeSpan incrementDelay, AbsoluteTimeSpan timeSpan)>.Empty
+                .Add((TimeSpan.FromDays(7), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 1), new DateTime(2022, 1, 31)))));
 
             AssertEx.SequenceIs(result,
                 new DateTime(2022, 1, 17));
@@ -57,9 +57,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 1, 20),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: null,
-                arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
-                .Add((TimeSpan.FromDays(2), startDate: new DateTime(2022, 1, 1), endDate: new DateTime(2022, 1, 31))));
+                gap: new Timeline(new DateTime(2022, 1, 10), DateTime.MaxValue),
+                arrangementStages: ImmutableList<(TimeSpan incrementDelay, AbsoluteTimeSpan timeSpan)>.Empty
+                .Add((TimeSpan.FromDays(2), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 1), new DateTime(2022, 1, 31)))));
 
             AssertEx.SequenceIs(result,
                 new DateTime(2022, 1, 12),
@@ -75,9 +75,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 1, 21),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: null,
-                arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
-                .Add((TimeSpan.FromDays(2), startDate: new DateTime(2022, 1, 1), endDate: new DateTime(2022, 1, 31))));
+                gap: new Timeline(new DateTime(2022, 1, 10), DateTime.MaxValue),
+                arrangementStages: ImmutableList<(TimeSpan incrementDelay, AbsoluteTimeSpan timeSpan)>.Empty
+                .Add((TimeSpan.FromDays(2), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 1), new DateTime(2022, 1, 31)))));
 
             AssertEx.SequenceIs(result,
                 new DateTime(2022, 1, 12),
@@ -93,9 +93,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 1, 30),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: null,
-                arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
-                .Add((TimeSpan.FromDays(7), startDate: new DateTime(2022, 1, 1), endDate: new DateTime(2022, 1, 31))));
+                gap: new Timeline(new DateTime(2022, 1, 10), DateTime.MaxValue),
+                arrangementStages: ImmutableList<(TimeSpan incrementDelay, AbsoluteTimeSpan timeSpan)>.Empty
+                .Add((TimeSpan.FromDays(7), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 1), new DateTime(2022, 1, 31)))));
 
             AssertEx.SequenceIs(result,
                 new DateTime(2022, 1, 17),
@@ -108,9 +108,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 1, 30),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: null,
-                arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
-                .Add((TimeSpan.FromDays(7), startDate: new DateTime(2022, 1, 1), endDate: new DateTime(2022, 1, 28))));
+                gap: new Timeline(new DateTime(2022, 1, 10), DateTime.MaxValue),
+                arrangementStages: ImmutableList<(TimeSpan incrementDelay, AbsoluteTimeSpan timeSpan)>.Empty
+                .Add((TimeSpan.FromDays(7), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 1), new DateTime(2022, 1, 28)))));
 
             AssertEx.SequenceIs(result,
                 new DateTime(2022, 1, 17),
@@ -122,9 +122,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 1, 30),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: new DateTime(2022, 1, 20),
-                arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
-                .Add((TimeSpan.FromDays(2), startDate: new DateTime(2022, 1, 10), endDate: new DateTime(2022, 1, 31))));
+                gap: new Timeline(new DateTime(2022, 1, 10), new DateTime(2022, 1, 20)),
+                arrangementStages: ImmutableList<(TimeSpan incrementDelay, AbsoluteTimeSpan timeSpan)>.Empty
+                .Add((TimeSpan.FromDays(2), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 10), new DateTime(2022, 1, 31)))));
 
             AssertEx.SequenceIs(result,
                 new DateTime(2022, 1, 12),
@@ -138,10 +138,10 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 1, 30),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: new DateTime(2022, 1, 20),
-                arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
-                .Add((TimeSpan.FromDays(2), startDate: new DateTime(2022, 1, 1), endDate: new DateTime(2022, 1, 31)))
-                .Add((TimeSpan.FromDays(4), startDate: new DateTime(2022, 1, 31), endDate: new DateTime(2022, 2, 28))));
+                gap: new Timeline(new DateTime(2022, 1, 10), new DateTime(2022, 1, 20)),
+                arrangementStages: ImmutableList<(TimeSpan incrementDelay, AbsoluteTimeSpan timeSpan)>.Empty
+                .Add((TimeSpan.FromDays(2), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 1), new DateTime(2022, 1, 31))))
+                .Add((TimeSpan.FromDays(4), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 31), new DateTime(2022, 2, 28)))));
 
             AssertEx.SequenceIs(result,
                 new DateTime(2022, 1, 12),
@@ -155,10 +155,10 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 1, 15),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: new DateTime(2022, 1, 20),
-                arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
-                .Add((TimeSpan.FromDays(2), startDate: new DateTime(2022, 1, 1), endDate: new DateTime(2022, 1, 31)))
-                .Add((TimeSpan.FromDays(4), startDate: new DateTime(2022, 1, 31), endDate: new DateTime(2022, 2, 28))));
+                gap: new Timeline(new DateTime(2022, 1, 10), new DateTime(2022, 1, 20)),
+                arrangementStages: ImmutableList<(TimeSpan incrementDelay, AbsoluteTimeSpan timeSpan)>.Empty
+                .Add((TimeSpan.FromDays(2), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 1), new DateTime(2022, 1, 31))))
+                .Add((TimeSpan.FromDays(4), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 31), new DateTime(2022, 2, 28)))));
 
             AssertEx.SequenceIs(result,
                 new DateTime(2022, 1, 12),
@@ -171,10 +171,10 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 1, 30),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: new DateTime(2022, 1, 20),
-                arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
-                .Add((TimeSpan.FromDays(7), startDate: new DateTime(2022, 1, 1), endDate: new DateTime(2022, 1, 31)))
-                .Add((TimeSpan.FromDays(4), startDate: new DateTime(2022, 1, 31), endDate: new DateTime(2022, 2, 28))));
+                gap: new Timeline(new DateTime(2022, 1, 10), new DateTime(2022, 1, 20)),
+                arrangementStages: ImmutableList<(TimeSpan incrementDelay, AbsoluteTimeSpan timeSpan)>.Empty
+                .Add((TimeSpan.FromDays(7), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 1), new DateTime(2022, 1, 31))))
+                .Add((TimeSpan.FromDays(4), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 31), new DateTime(2022, 2, 28)))));
 
             AssertEx.SequenceIs(result,
                 new DateTime(2022, 1, 17));
@@ -185,10 +185,10 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 1, 20),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: null,
-                arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
-                .Add((TimeSpan.FromDays(2), startDate: new DateTime(2022, 1, 1), endDate: new DateTime(2022, 1, 31)))
-                .Add((TimeSpan.FromDays(4), startDate: new DateTime(2022, 1, 31), endDate: new DateTime(2022, 2, 28))));
+                gap: new Timeline(new DateTime(2022, 1, 10), DateTime.MaxValue),
+                arrangementStages: ImmutableList<(TimeSpan incrementDelay, AbsoluteTimeSpan timeSpan)>.Empty
+                .Add((TimeSpan.FromDays(2), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 1), new DateTime(2022, 1, 31))))
+                .Add((TimeSpan.FromDays(4), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 31), new DateTime(2022, 2, 28)))));
 
             AssertEx.SequenceIs(result,
                 new DateTime(2022, 1, 12),
@@ -204,10 +204,10 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 1, 21),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: null,
-                arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
-                .Add((TimeSpan.FromDays(2), startDate: new DateTime(2022, 1, 1), endDate: new DateTime(2022, 1, 31)))
-                .Add((TimeSpan.FromDays(4), startDate: new DateTime(2022, 1, 31), endDate: new DateTime(2022, 2, 28))));
+                gap: new Timeline(new DateTime(2022, 1, 10), DateTime.MaxValue),
+                arrangementStages: ImmutableList<(TimeSpan incrementDelay, AbsoluteTimeSpan timeSpan)>.Empty
+                .Add((TimeSpan.FromDays(2), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 1), new DateTime(2022, 1, 31))))
+                .Add((TimeSpan.FromDays(4), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 31), new DateTime(2022, 2, 28)))));
 
             AssertEx.SequenceIs(result,
                 new DateTime(2022, 1, 12),
@@ -223,10 +223,10 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 1, 30),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: null,
-                arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
-                .Add((TimeSpan.FromDays(7), startDate: new DateTime(2022, 1, 1), endDate: new DateTime(2022, 1, 31)))
-                .Add((TimeSpan.FromDays(4), startDate: new DateTime(2022, 1, 31), endDate: new DateTime(2022, 2, 28))));
+                gap: new Timeline(new DateTime(2022, 1, 10), DateTime.MaxValue),
+                arrangementStages: ImmutableList<(TimeSpan incrementDelay, AbsoluteTimeSpan timeSpan)>.Empty
+                .Add((TimeSpan.FromDays(7), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 1), new DateTime(2022, 1, 31))))
+                .Add((TimeSpan.FromDays(4), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 31), new DateTime(2022, 2, 28)))));
 
             AssertEx.SequenceIs(result,
                 new DateTime(2022, 1, 17),
@@ -239,10 +239,10 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 2, 14),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: null,
-                arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
-                .Add((TimeSpan.FromDays(2), startDate: new DateTime(2022, 1, 1), endDate: new DateTime(2022, 1, 31)))
-                .Add((TimeSpan.FromDays(4), startDate: new DateTime(2022, 1, 31), endDate: new DateTime(2022, 2, 28))));
+                gap: new Timeline(new DateTime(2022, 1, 10), DateTime.MaxValue),
+                arrangementStages: ImmutableList<(TimeSpan incrementDelay, AbsoluteTimeSpan timeSpan)>.Empty
+                .Add((TimeSpan.FromDays(2), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 1), new DateTime(2022, 1, 31))))
+                .Add((TimeSpan.FromDays(4), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 31), new DateTime(2022, 2, 28)))));
 
             AssertEx.SequenceIs(result,
                 new DateTime(2022, 1, 12),
@@ -266,10 +266,10 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 1, 30),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: new DateTime(2022, 1, 20),
-                arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
-                .Add((TimeSpan.FromDays(2), startDate: new DateTime(2022, 1, 10), endDate: new DateTime(2022, 1, 31)))
-                .Add((TimeSpan.FromDays(4), startDate: new DateTime(2022, 1, 31), endDate: new DateTime(2022, 2, 28))));
+                gap: new Timeline(new DateTime(2022, 1, 10), new DateTime(2022, 1, 20)),
+                arrangementStages: ImmutableList<(TimeSpan incrementDelay, AbsoluteTimeSpan timeSpan)>.Empty
+                .Add((TimeSpan.FromDays(2), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 10), new DateTime(2022, 1, 31))))
+                .Add((TimeSpan.FromDays(4), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 31), new DateTime(2022, 2, 28)))));
 
             AssertEx.SequenceIs(result,
                 new DateTime(2022, 1, 12),
@@ -283,10 +283,10 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 2, 14),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: null,
-                arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
-                .Add((TimeSpan.FromDays(2), startDate: new DateTime(2022, 1, 10), endDate: new DateTime(2022, 1, 31)))
-                .Add((TimeSpan.FromDays(4), startDate: new DateTime(2022, 1, 31), endDate: new DateTime(2022, 2, 28))));
+                gap: new Timeline(new DateTime(2022, 1, 10), DateTime.MaxValue),
+                arrangementStages: ImmutableList<(TimeSpan incrementDelay, AbsoluteTimeSpan timeSpan)>.Empty
+                .Add((TimeSpan.FromDays(2), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 10), new DateTime(2022, 1, 31))))
+                .Add((TimeSpan.FromDays(4), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 31), new DateTime(2022, 2, 28)))));
 
             AssertEx.SequenceIs(result,
                 new DateTime(2022, 1, 12),
@@ -310,11 +310,11 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 3, 15),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: new DateTime(2022, 3, 31),
-                arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
-                .Add((TimeSpan.FromDays(2), startDate: new DateTime(2022, 1, 10), endDate: new DateTime(2022, 1, 31)))
-                .Add((TimeSpan.FromDays(4), startDate: new DateTime(2022, 1, 31), endDate: new DateTime(2022, 2, 28)))
-                .Add((TimeSpan.FromDays(8), startDate: new DateTime(2022, 2, 28), endDate: null)));
+                gap: new Timeline(new DateTime(2022, 1, 10), new DateTime(2022, 3, 31)),
+                arrangementStages: ImmutableList<(TimeSpan incrementDelay, AbsoluteTimeSpan timeSpan)>.Empty
+                .Add((TimeSpan.FromDays(2), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 10), new DateTime(2022, 1, 31))))
+                .Add((TimeSpan.FromDays(4), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 31), new DateTime(2022, 2, 28))))
+                .Add((TimeSpan.FromDays(8), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 2, 28), DateTime.MaxValue))));
 
             AssertEx.SequenceIs(result,
                 new DateTime(2022, 1, 12),
@@ -344,11 +344,11 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementsWithinCompletionGap(
                 utcNow: new DateTime(2022, 3, 15),
-                gapStart: new DateTime(2022, 1, 10), gapEnd: null,
-                arrangementStages: ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime? endDate)>.Empty
-                .Add((TimeSpan.FromDays(2), startDate: new DateTime(2022, 1, 10), endDate: new DateTime(2022, 1, 31)))
-                .Add((TimeSpan.FromDays(4), startDate: new DateTime(2022, 1, 31), endDate: new DateTime(2022, 2, 28)))
-                .Add((TimeSpan.FromDays(8), startDate: new DateTime(2022, 2, 28), endDate: null)));
+                gap: new Timeline(new DateTime(2022, 1, 10), DateTime.MaxValue),
+                arrangementStages: ImmutableList<(TimeSpan incrementDelay, AbsoluteTimeSpan timeSpan)>.Empty
+                .Add((TimeSpan.FromDays(2), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 10), new DateTime(2022, 1, 31))))
+                .Add((TimeSpan.FromDays(4), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 31), new DateTime(2022, 2, 28))))
+                .Add((TimeSpan.FromDays(8), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 2, 28), DateTime.MaxValue))));
 
             AssertEx.SequenceIs(result,
                 new DateTime(2022, 1, 12),
