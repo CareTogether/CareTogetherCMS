@@ -55,7 +55,10 @@ const useStyles = makeStyles((theme) => ({
   },
   cardContent: {
     paddingTop: 8,
-    paddingBottom: 8
+    paddingBottom: 8,
+    '&:last-child': {
+      paddingBottom: 0
+    }
   },
   cardList: {
     padding: 0,
@@ -187,7 +190,6 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
               {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].missingRequirements?.map((missing, i) =>
                 <MissingRequirementRow key={`${missing}:${i}`} requirement={missing} context={requirementContext} />
               )}
-              <Divider />
               {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].availableApplications?.map((application, i) =>
                 <MissingRequirementRow key={`${application}:${i}`} requirement={application} context={requirementContext} isAvailableApplication={true} />
               )}
