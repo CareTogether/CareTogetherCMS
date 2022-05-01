@@ -1,8 +1,13 @@
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Badge,
   Button,
   Card,
   CardContent,
   CardHeader,
+  Grid,
   Table,
   TableBody,
   TableContainer,
@@ -10,13 +15,14 @@ import {
 } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { useState } from 'react';
-import { ArrangementPhase, Arrangement, CombinedFamilyInfo, ChildInvolvement } from '../../GeneratedClient';
+import { ArrangementPhase, Arrangement, CombinedFamilyInfo, ChildInvolvement, FunctionRequirement } from '../../GeneratedClient';
 import { useFamilyLookup, usePersonLookup } from '../../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
 import { FamilyName } from '../Families/FamilyName';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../../Model/ConfigurationModel';
 import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { TrackChildLocationDialog } from './TrackChildLocationDialog';
 import { MissingArrangementRequirementRow } from "../Requirements/MissingArrangementRequirementRow";
 import { ExemptedRequirementRow } from "../Requirements/ExemptedRequirementRow";
@@ -25,6 +31,7 @@ import { ArrangementContext } from "../Requirements/RequirementContext";
 import { ArrangementPhaseSummary } from './ArrangementPhaseSummary';
 import { ArrangementCardTitle } from './ArrangementCardTitle';
 import { ArrangementFunctionRow } from './ArrangementFunctionRow';
+import { useCollapsed } from '../../useCollapsed';
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -39,7 +46,10 @@ const useStyles = makeStyles((theme) => ({
   },
   cardContent: {
     paddingTop: 8,
-    paddingBottom: 8
+    paddingBottom: 8,
+    '&:last-child': {
+      paddingBottom: 0
+    }
   },
   cardList: {
     padding: 0,
@@ -72,6 +82,8 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
   
   const [showTrackChildLocationDialog, setShowTrackChildLocationDialog] = useState(false);
 
+  const [collapsed, setCollapsed] = useCollapsed(`arrangement-${referralId}-${arrangement.id}`, false);
+
   const requirementContext: ArrangementContext = {
     kind: "Arrangement",
     partneringFamilyId: partneringFamily.family!.id!,
@@ -80,6 +92,11 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
   };
   
   const arrangementPolicy = policy.referralPolicy?.arrangementPolicies?.find(a => a.arrangementType === arrangement.arrangementType);
+
+  const missingAssignmentFunctions = arrangementPolicy?.arrangementFunctions?.filter(functionPolicy =>
+    (functionPolicy.requirement === FunctionRequirement.ExactlyOne || functionPolicy.requirement === FunctionRequirement.OneOrMore) &&
+    !arrangement.familyVolunteerAssignments?.some(x => x.arrangementFunction === functionPolicy.functionName) &&
+    !arrangement.individualVolunteerAssignments?.some(x => x.arrangementFunction === functionPolicy.functionName))?.length || 0;
 
   return (
     <Card variant="outlined">
@@ -118,30 +135,59 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
             </>
           )}
         </Typography>
-        <TableContainer>
-          <Table size="small">
-            <TableBody>
-              {arrangementPolicy?.arrangementFunctions?.map(functionPolicy =>
-                <ArrangementFunctionRow key={functionPolicy.functionName} summaryOnly={summaryOnly}
-                  partneringFamilyId={partneringFamily.family!.id!} referralId={referralId} arrangement={arrangement}
-                  arrangementPolicy={arrangementPolicy} functionPolicy={functionPolicy} />)}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        {!summaryOnly && arrangement.phase !== ArrangementPhase.Cancelled && (
-          <>
-            <Typography variant="body2" component="div">
-              {arrangement.completedRequirements?.map((completed, i) =>
-                <CompletedRequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} context={requirementContext} />
+        {!summaryOnly && (
+          <Accordion expanded={!collapsed} onChange={(event, isExpanded) => setCollapsed(!isExpanded)}
+            variant="outlined" square disableGutters sx={{marginLeft:-2, marginRight:-2, border: 'none'}}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ marginTop:1, paddingTop:1, backgroundColor: "#0000000a" }}>
+              <Grid container>
+                <Grid item xs={4}>
+                  <Badge color="success"
+                    badgeContent={arrangement.completedRequirements?.length}>
+                    ✅
+                  </Badge>
+                </Grid>
+                <Grid item xs={4}>
+                  <Badge color="warning"
+                    badgeContent={arrangement.exemptedRequirements?.length}>
+                    🚫
+                  </Badge>
+                </Grid>
+                <Grid item xs={4}>
+                  <Badge color="error"
+                    badgeContent={missingAssignmentFunctions + (arrangement.missingRequirements?.length || 0)}>
+                    ❌
+                  </Badge>
+                </Grid>
+              </Grid>
+            </AccordionSummary>
+            <AccordionDetails>
+              <TableContainer>
+                <Table size="small">
+                  <TableBody>
+                    {arrangementPolicy?.arrangementFunctions?.map(functionPolicy =>
+                      <ArrangementFunctionRow key={functionPolicy.functionName} summaryOnly={summaryOnly}
+                        partneringFamilyId={partneringFamily.family!.id!} referralId={referralId} arrangement={arrangement}
+                        arrangementPolicy={arrangementPolicy} functionPolicy={functionPolicy} />)}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              {arrangement.phase !== ArrangementPhase.Cancelled && (
+                <>
+                  <Typography variant="body2" component="div">
+                    {arrangement.completedRequirements?.map((completed, i) =>
+                      <CompletedRequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} context={requirementContext} />
+                    )}
+                    {arrangement.exemptedRequirements?.map((exempted, i) =>
+                      <ExemptedRequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={requirementContext} />
+                    )}
+                    {arrangement.missingRequirements?.map((missing, i) =>
+                      <MissingArrangementRequirementRow key={`${missing}:${i}`} requirement={missing} context={requirementContext} />
+                    )}
+                  </Typography>
+                </>
               )}
-              {arrangement.exemptedRequirements?.map((exempted, i) =>
-                <ExemptedRequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={requirementContext} />
-              )}
-              {arrangement.missingRequirements?.map((missing, i) =>
-                <MissingArrangementRequirementRow key={`${missing}:${i}`} requirement={missing} context={requirementContext} />
-              )}
-            </Typography>
-          </>
+            </AccordionDetails>
+          </Accordion>
         )}
       </CardContent>
     </Card>

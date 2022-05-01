@@ -21,7 +21,9 @@ export function ArrangementCardTitle({ summaryOnly, referralId, arrangement }: A
 
   return (
     <>
-      <span style={{fontWeight: "bold"}}>{arrangement.arrangementType}</span>
+      <span>
+        {arrangement.arrangementType}
+      </span>
       {summaryOnly &&
         <span style={{marginLeft: 40, float: "right"}}>
           {arrangement.phase === ArrangementPhase.Cancelled ? `Cancelled ${formatRelative(arrangement.cancelledAtUtc!, now)}`
