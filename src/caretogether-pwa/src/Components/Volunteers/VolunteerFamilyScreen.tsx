@@ -28,6 +28,7 @@ import { ExemptedRequirementRow } from "../Requirements/ExemptedRequirementRow";
 import { CompletedRequirementRow } from "../Requirements/CompletedRequirementRow";
 import { VolunteerFamilyContext } from "../Requirements/RequirementContext";
 import { ActivityTimeline } from '../Activities/ActivityTimeline';
+import { AddEditNoteDialog } from '../Families/AddEditNoteDialog';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -90,6 +91,7 @@ export function VolunteerFamilyScreen() {
   const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] = useState(false);
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
   const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
+  const [addNoteDialogOpen, setAddNoteDialogOpen] = useState(false);
 
   const [familyMoreMenuAnchor, setFamilyMoreMenuAnchor] = useState<Element | null>(null);
 
@@ -153,6 +155,14 @@ export function VolunteerFamilyScreen() {
           startIcon={<AddCircleIcon />}>
           Child
         </Button>
+        <Button
+          onClick={() => setAddNoteDialogOpen(true)}
+          variant="contained"
+          size="small"
+          className={classes.button}
+          startIcon={<AddCircleIcon />}>
+          Note
+        </Button>
         <IconButton
           onClick={(event) => setFamilyMoreMenuAnchor(event.currentTarget)}
           size="large">
@@ -184,6 +194,7 @@ export function VolunteerFamilyScreen() {
           onClose={() => setUploadDocumentDialogOpen(false)} />}
         {addAdultDialogOpen && <AddAdultDialog onClose={() => setAddAdultDialogOpen(false)} />}
         {addChildDialogOpen && <AddChildDialog onClose={() => setAddChildDialogOpen(false)} />}
+        {addNoteDialogOpen && <AddEditNoteDialog familyId={volunteerFamily.family!.id!} onClose={() => setAddNoteDialogOpen(false)} />}
         {(removeRoleParameter && <RemoveFamilyRoleDialog volunteerFamilyId={familyId} role={removeRoleParameter.role}
           onClose={() => setRemoveRoleParameter(null)} />) || null}
         {(resetRoleParameter && <ResetFamilyRoleDialog volunteerFamilyId={familyId} role={resetRoleParameter.role}
