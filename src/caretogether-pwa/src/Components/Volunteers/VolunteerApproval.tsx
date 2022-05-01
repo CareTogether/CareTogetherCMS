@@ -64,7 +64,8 @@ function approvalStatus(roleVersionApprovals: RoleVersionApproval[] | undefined,
 }
 
 function familyLastName(family: CombinedFamilyInfo) {
-  return family.family!.adults?.filter(adult => family.family!.primaryFamilyContactPersonId === adult.item1?.id)[0]?.item1?.lastName || "";
+  return family.family!.adults?.filter(adult =>
+    family.family!.primaryFamilyContactPersonId === adult.item1?.id)[0]?.item1?.lastName || "";
 }
 
 function simplify(input: string) {

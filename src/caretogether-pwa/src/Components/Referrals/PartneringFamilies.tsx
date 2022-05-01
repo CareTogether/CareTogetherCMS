@@ -36,11 +36,18 @@ function allArrangements(partneringFamilyInfo: PartneringFamilyInfo) {
   return results;
 }
 
+function familyLastName(family: CombinedFamilyInfo) {
+  return family.family!.adults?.filter(adult =>
+    family.family!.primaryFamilyContactPersonId === adult.item1?.id)[0]?.item1?.lastName || "";
+}
+
 function PartneringFamilies() {
   const classes = useStyles();
   const navigate = useNavigate();
 
-  const partneringFamilies = useRecoilValue(partneringFamiliesData);
+  // The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
+  const partneringFamilies = useRecoilValue(partneringFamiliesData).map(x => x).sort((a, b) =>
+    familyLastName(a) < familyLastName(b) ? -1 : familyLastName(a) > familyLastName(b) ? 1 : 0);
 
   useScrollMemory();
 
