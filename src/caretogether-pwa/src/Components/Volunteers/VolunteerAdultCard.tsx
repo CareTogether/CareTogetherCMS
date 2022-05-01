@@ -30,6 +30,7 @@ import { CompletedRequirementRow } from "../Requirements/CompletedRequirementRow
 import { IndividualVolunteerContext } from "../Requirements/RequirementContext";
 import { useDialogHandle } from "../../useDialogHandle";
 import { EditAdultDialog } from "../Families/EditAdultDialog";
+import { useCollapsed } from "../../useCollapsed";
 
 const useStyles = makeStyles((theme) => ({
   sectionChips: {
@@ -84,6 +85,8 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
     personId: personId
   };
 
+  const [collapsed, setCollapsed] = useCollapsed(`person-${volunteerFamilyId}-${personId}`, false);
+
   const editDialogHandle = useDialogHandle();
   
   const [adultMoreMenuAnchor, setAdultMoreMenuAnchor] = useState<{anchor: Element, adult: Person} | null>(null);
@@ -103,7 +106,10 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
   return <>{adult?.item1 && adult.item1.id && adult.item2 &&
     <Card variant="outlined" className={classes.card}>
       <CardHeader className={classes.cardHeader}
-        title={adult.item1.firstName + " " + adult.item1.lastName}
+        title={<span style={{ cursor: 'pointer' }}
+          onClick={() => setCollapsed(!collapsed)}>
+          {adult.item1.firstName + " " + adult.item1.lastName}
+        </span>}
         subheader={<>
           Adult, <AgeText age={adult.item1.age} />, {typeof(adult.item1.gender) === 'undefined' ? "" : Gender[adult.item1.gender] + ","} {adult.item1.ethnicity}
         </>}
@@ -133,26 +139,30 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
           {adult.item1.concerns && <IconRow icon='⚠'><strong>{adult.item1.concerns}</strong></IconRow>}
           {adult.item1.notes && <IconRow icon='📝'>{adult.item1.notes}</IconRow>}
         </Typography>
-        <Divider />
-        <Typography variant="body2" component="div">
-          {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].completedRequirements?.map((completed, i) =>
-            <CompletedRequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} context={requirementContext} />
-          )}
-          {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].exemptedRequirements?.map((exempted, i) =>
-            <ExemptedRequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={requirementContext} />
-          )}
-          {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].missingRequirements?.map((missing, i) =>
-            <MissingRequirementRow key={`${missing}:${i}`} requirement={missing} context={requirementContext} />
-          )}
-          <Divider />
-          {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].availableApplications?.map((application, i) =>
-            <MissingRequirementRow key={`${application}:${i}`} requirement={application} context={requirementContext} isAvailableApplication={true} />
-          )}
-        </Typography>
-        <Divider />
-        <Typography variant="body2" component="div">
-          <ContactDisplay person={adult.item1} />
-        </Typography>
+        {collapsed
+          ? null
+          : <>
+              <Divider />
+              <Typography variant="body2" component="div">
+                {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].completedRequirements?.map((completed, i) =>
+                  <CompletedRequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} context={requirementContext} />
+                )}
+                {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].exemptedRequirements?.map((exempted, i) =>
+                  <ExemptedRequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={requirementContext} />
+                )}
+                {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].missingRequirements?.map((missing, i) =>
+                  <MissingRequirementRow key={`${missing}:${i}`} requirement={missing} context={requirementContext} />
+                )}
+                <Divider />
+                {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].availableApplications?.map((application, i) =>
+                  <MissingRequirementRow key={`${application}:${i}`} requirement={application} context={requirementContext} isAvailableApplication={true} />
+                )}
+              </Typography>
+              <Divider />
+              <Typography variant="body2" component="div">
+                <ContactDisplay person={adult.item1} />
+              </Typography>
+            </>}
       </CardContent>
       <Menu id="adult-more-menu"
         anchorEl={adultMoreMenuAnchor?.anchor}
