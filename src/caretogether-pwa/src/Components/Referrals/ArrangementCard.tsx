@@ -25,6 +25,7 @@ import { ArrangementContext } from "../Requirements/RequirementContext";
 import { ArrangementPhaseSummary } from './ArrangementPhaseSummary';
 import { ArrangementCardTitle } from './ArrangementCardTitle';
 import { ArrangementFunctionRow } from './ArrangementFunctionRow';
+import { useCollapsed } from '../../useCollapsed';
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -72,6 +73,8 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
   
   const [showTrackChildLocationDialog, setShowTrackChildLocationDialog] = useState(false);
 
+  const [collapsed, setCollapsed] = useCollapsed(`arrangement-${referralId}-${arrangement.id}`, false);
+
   const requirementContext: ArrangementContext = {
     kind: "Arrangement",
     partneringFamilyId: partneringFamily.family!.id!,
@@ -86,64 +89,67 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
       <ArrangementPhaseSummary phase={arrangement.phase!}
         requestedAtUtc={arrangement.requestedAtUtc!} startedAtUtc={arrangement.startedAtUtc} endedAtUtc={arrangement.endedAtUtc} />
       <CardHeader className={classes.cardHeader}
-        title={<ArrangementCardTitle summaryOnly={summaryOnly} referralId={referralId} arrangement={arrangement} />} />
-      <CardContent className={classes.cardContent}>
-        <Typography variant="body2" component="div">
-          <strong><PersonName person={personLookup(partneringFamily.family!.id, arrangement.partneringFamilyPersonId)} /></strong>
-          {arrangement.phase === ArrangementPhase.Started &&
-            (arrangementPolicy?.childInvolvement === ChildInvolvement.ChildHousing || arrangementPolicy?.childInvolvement === ChildInvolvement.DaytimeChildCareOnly) && (
-            <>
-              {summaryOnly
-                ? <>
-                    <PersonPinCircleIcon color='disabled' style={{float: 'right', marginLeft: 2, marginTop: 2}} />
-                    <span style={{float: 'right', paddingTop: 4}}>{
-                      (arrangement.childrenLocationHistory && arrangement.childrenLocationHistory.length > 0)
-                      ? <FamilyName family={familyLookup(arrangement.childrenLocationHistory[arrangement.childrenLocationHistory.length - 1].childLocationFamilyId)} />
-                      : <strong>Location unspecified</strong>
-                    }</span>
-                  </>
-                : <>
-                    <Button size="large" variant="text"
-                      style={{float: 'right', marginTop: -10, marginRight: -10, textTransform: "initial"}}
-                      endIcon={<PersonPinCircleIcon />}
-                      onClick={(event) => setShowTrackChildLocationDialog(true)}>
-                      {(arrangement.childrenLocationHistory && arrangement.childrenLocationHistory.length > 0)
-                        ? <FamilyName family={familyLookup(arrangement.childrenLocationHistory[arrangement.childrenLocationHistory.length - 1].childLocationFamilyId)} />
-                        : <strong>Location unspecified</strong>}
-                    </Button>
-                    {showTrackChildLocationDialog && <TrackChildLocationDialog
-                      partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement}
-                      onClose={() => setShowTrackChildLocationDialog(false)} />}
-                  </>}
-            </>
-          )}
-        </Typography>
-        <TableContainer>
-          <Table size="small">
-            <TableBody>
-              {arrangementPolicy?.arrangementFunctions?.map(functionPolicy =>
-                <ArrangementFunctionRow key={functionPolicy.functionName} summaryOnly={summaryOnly}
-                  partneringFamilyId={partneringFamily.family!.id!} referralId={referralId} arrangement={arrangement}
-                  arrangementPolicy={arrangementPolicy} functionPolicy={functionPolicy} />)}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        {!summaryOnly && arrangement.phase !== ArrangementPhase.Cancelled && (
-          <>
+        title={<ArrangementCardTitle summaryOnly={summaryOnly} referralId={referralId} arrangement={arrangement}
+          onClick={() => setCollapsed(!collapsed)} />} />
+      {collapsed && !summaryOnly
+        ? <br />
+        : <CardContent className={classes.cardContent}>
             <Typography variant="body2" component="div">
-              {arrangement.completedRequirements?.map((completed, i) =>
-                <CompletedRequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} context={requirementContext} />
-              )}
-              {arrangement.exemptedRequirements?.map((exempted, i) =>
-                <ExemptedRequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={requirementContext} />
-              )}
-              {arrangement.missingRequirements?.map((missing, i) =>
-                <MissingArrangementRequirementRow key={`${missing}:${i}`} requirement={missing} context={requirementContext} />
+              <strong><PersonName person={personLookup(partneringFamily.family!.id, arrangement.partneringFamilyPersonId)} /></strong>
+              {arrangement.phase === ArrangementPhase.Started &&
+                (arrangementPolicy?.childInvolvement === ChildInvolvement.ChildHousing || arrangementPolicy?.childInvolvement === ChildInvolvement.DaytimeChildCareOnly) && (
+                <>
+                  {summaryOnly
+                    ? <>
+                        <PersonPinCircleIcon color='disabled' style={{float: 'right', marginLeft: 2, marginTop: 2}} />
+                        <span style={{float: 'right', paddingTop: 4}}>{
+                          (arrangement.childrenLocationHistory && arrangement.childrenLocationHistory.length > 0)
+                          ? <FamilyName family={familyLookup(arrangement.childrenLocationHistory[arrangement.childrenLocationHistory.length - 1].childLocationFamilyId)} />
+                          : <strong>Location unspecified</strong>
+                        }</span>
+                      </>
+                    : <>
+                        <Button size="large" variant="text"
+                          style={{float: 'right', marginTop: -10, marginRight: -10, textTransform: "initial"}}
+                          endIcon={<PersonPinCircleIcon />}
+                          onClick={(event) => setShowTrackChildLocationDialog(true)}>
+                          {(arrangement.childrenLocationHistory && arrangement.childrenLocationHistory.length > 0)
+                            ? <FamilyName family={familyLookup(arrangement.childrenLocationHistory[arrangement.childrenLocationHistory.length - 1].childLocationFamilyId)} />
+                            : <strong>Location unspecified</strong>}
+                        </Button>
+                        {showTrackChildLocationDialog && <TrackChildLocationDialog
+                          partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement}
+                          onClose={() => setShowTrackChildLocationDialog(false)} />}
+                      </>}
+                </>
               )}
             </Typography>
-          </>
-        )}
-      </CardContent>
+            <TableContainer>
+              <Table size="small">
+                <TableBody>
+                  {arrangementPolicy?.arrangementFunctions?.map(functionPolicy =>
+                    <ArrangementFunctionRow key={functionPolicy.functionName} summaryOnly={summaryOnly}
+                      partneringFamilyId={partneringFamily.family!.id!} referralId={referralId} arrangement={arrangement}
+                      arrangementPolicy={arrangementPolicy} functionPolicy={functionPolicy} />)}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            {!summaryOnly && arrangement.phase !== ArrangementPhase.Cancelled && (
+              <>
+                <Typography variant="body2" component="div">
+                  {arrangement.completedRequirements?.map((completed, i) =>
+                    <CompletedRequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} context={requirementContext} />
+                  )}
+                  {arrangement.exemptedRequirements?.map((exempted, i) =>
+                    <ExemptedRequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={requirementContext} />
+                  )}
+                  {arrangement.missingRequirements?.map((missing, i) =>
+                    <MissingArrangementRequirementRow key={`${missing}:${i}`} requirement={missing} context={requirementContext} />
+                  )}
+                </Typography>
+              </>
+            )}
+          </CardContent>}
     </Card>
   );
 }
