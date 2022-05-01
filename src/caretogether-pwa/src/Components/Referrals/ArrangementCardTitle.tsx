@@ -10,10 +10,9 @@ type ArrangementCardTitleProps = {
   summaryOnly?: boolean
   referralId: string
   arrangement: Arrangement
-  onClick: () => Promise<void>
 }
 
-export function ArrangementCardTitle({ summaryOnly, referralId, arrangement, onClick }: ArrangementCardTitleProps) {
+export function ArrangementCardTitle({ summaryOnly, referralId, arrangement }: ArrangementCardTitleProps) {
   const now = new Date();
 
   const [showStartArrangementDialog, setShowStartArrangementDialog] = useState(false);
@@ -22,8 +21,7 @@ export function ArrangementCardTitle({ summaryOnly, referralId, arrangement, onC
 
   return (
     <>
-      <span style={{fontWeight: "bold", cursor: 'pointer'}}
-        onClick={summaryOnly ? undefined : onClick}>
+      <span>
         {arrangement.arrangementType}
       </span>
       {summaryOnly &&
