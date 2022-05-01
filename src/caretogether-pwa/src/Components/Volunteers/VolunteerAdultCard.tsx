@@ -8,7 +8,12 @@ import {
   Divider,
   ListItemText,
   Menu,
-  MenuItem
+  MenuItem,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Badge,
+  Grid
 } from "@mui/material";
 import makeStyles from '@mui/styles/makeStyles';
 import { useState } from "react";
@@ -16,6 +21,7 @@ import { Gender, Person, CombinedFamilyInfo, RoleRemovalReason, Permission } fro
 import { AgeText } from "../AgeText";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import EditIcon from '@mui/icons-material/Edit';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useRecoilValue } from "recoil";
 import { volunteerFamiliesData } from "../../Model/VolunteersModel";
 import { ContactDisplay } from "../ContactDisplay";
@@ -49,8 +55,7 @@ const useStyles = makeStyles((theme) => ({
   },
   cardContent: {
     paddingTop: 8,
-    paddingBottom: 8,
-    maxWidth: 500
+    paddingBottom: 8
   },
   cardList: {
     padding: 0,
@@ -106,8 +111,7 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
   return <>{adult?.item1 && adult.item1.id && adult.item2 &&
     <Card variant="outlined" className={classes.card}>
       <CardHeader className={classes.cardHeader}
-        title={<span style={{ cursor: 'pointer' }}
-          onClick={() => setCollapsed(!collapsed)}>
+        title={<span>
           {adult.item1.firstName + " " + adult.item1.lastName}
         </span>}
         subheader={<>
@@ -139,30 +143,57 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
           {adult.item1.concerns && <IconRow icon='⚠'><strong>{adult.item1.concerns}</strong></IconRow>}
           {adult.item1.notes && <IconRow icon='📝'>{adult.item1.notes}</IconRow>}
         </Typography>
-        {collapsed
-          ? null
-          : <>
+        <Typography variant="body2" component="div">
+          <ContactDisplay person={adult.item1} />
+        </Typography>
+        <Accordion expanded={!collapsed} onChange={(event, isExpanded) => setCollapsed(!isExpanded)}
+          variant="outlined" square disableGutters sx={{marginLeft:-2, marginRight:-2, border: 'none'}}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ marginTop:1, paddingTop:1, backgroundColor: "#0000000a" }}>
+            <Grid container>
+              <Grid item xs={3}>
+                <Badge color="success"
+                  badgeContent={volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].completedRequirements?.length}>
+                  ✅
+                </Badge>
+              </Grid>
+              <Grid item xs={3}>
+                <Badge color="warning"
+                  badgeContent={volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].exemptedRequirements?.length}>
+                  🚫
+                </Badge>
+              </Grid>
+              <Grid item xs={3}>
+                <Badge color="error"
+                  badgeContent={volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].missingRequirements?.length}>
+                  ❌
+                </Badge>
+              </Grid>
+              <Grid item xs={3}>
+                <Badge color="info"
+                  badgeContent={volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].availableApplications?.length}>
+                  💤
+                </Badge>
+              </Grid>
+            </Grid>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Typography variant="body2" component="div">
+              {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].completedRequirements?.map((completed, i) =>
+                <CompletedRequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} context={requirementContext} />
+              )}
+              {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].exemptedRequirements?.map((exempted, i) =>
+                <ExemptedRequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={requirementContext} />
+              )}
+              {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].missingRequirements?.map((missing, i) =>
+                <MissingRequirementRow key={`${missing}:${i}`} requirement={missing} context={requirementContext} />
+              )}
               <Divider />
-              <Typography variant="body2" component="div">
-                {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].completedRequirements?.map((completed, i) =>
-                  <CompletedRequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} context={requirementContext} />
-                )}
-                {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].exemptedRequirements?.map((exempted, i) =>
-                  <ExemptedRequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={requirementContext} />
-                )}
-                {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].missingRequirements?.map((missing, i) =>
-                  <MissingRequirementRow key={`${missing}:${i}`} requirement={missing} context={requirementContext} />
-                )}
-                <Divider />
-                {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].availableApplications?.map((application, i) =>
-                  <MissingRequirementRow key={`${application}:${i}`} requirement={application} context={requirementContext} isAvailableApplication={true} />
-                )}
-              </Typography>
-              <Divider />
-              <Typography variant="body2" component="div">
-                <ContactDisplay person={adult.item1} />
-              </Typography>
-            </>}
+              {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].availableApplications?.map((application, i) =>
+                <MissingRequirementRow key={`${application}:${i}`} requirement={application} context={requirementContext} isAvailableApplication={true} />
+              )}
+            </Typography>
+          </AccordionDetails>
+        </Accordion>
       </CardContent>
       <Menu id="adult-more-menu"
         anchorEl={adultMoreMenuAnchor?.anchor}
