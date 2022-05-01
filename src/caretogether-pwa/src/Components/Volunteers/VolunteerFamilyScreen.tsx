@@ -27,6 +27,7 @@ import { MissingRequirementRow } from "../Requirements/MissingRequirementRow";
 import { ExemptedRequirementRow } from "../Requirements/ExemptedRequirementRow";
 import { CompletedRequirementRow } from "../Requirements/CompletedRequirementRow";
 import { VolunteerFamilyContext } from "../Requirements/RequirementContext";
+import { ActivityTimeline } from '../Activities/ActivityTimeline';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -117,7 +118,7 @@ export function VolunteerFamilyScreen() {
   const permissions = usePermissions();
 
   return (
-    <Container maxWidth={false}>
+    <Container maxWidth={false} sx={{paddingLeft: '12px'}}>
       <HeaderContent>
         <HeaderTitle>
           <IconButton color="inherit" onClick={() => navigate("..")} size="large">
@@ -190,49 +191,62 @@ export function VolunteerFamilyScreen() {
           onClose={() => setResetRoleParameter(null)} />) || null}
       </Toolbar>
       <Grid container spacing={0}>
-        <Grid item xs={12}>
-          <span>Primary Contact: <PersonName person={volunteerFamily.family?.adults?.find(adult => adult.item1?.id === volunteerFamily.family?.primaryFamilyContactPersonId)?.item1} /></span>
+        <Grid item container xs={12} md={4} spacing={0}>
+          <Grid item xs={12}>
+            <ActivityTimeline family={volunteerFamily} />
+          </Grid>
         </Grid>
-        <Grid item xs={12}>
-          <div className={classes.sectionChips}>
-            {Object.entries(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals || {}).flatMap(([role, roleVersionApprovals]) =>
-              <VolunteerRoleApprovalStatusChip key={role} roleName={role} roleVersionApprovals={roleVersionApprovals} />)}
-            {(volunteerFamily.volunteerFamilyInfo?.removedRoles || []).map(removedRole =>
-              <Chip key={removedRole.roleName} size="small" label={`${removedRole.roleName} - ${RoleRemovalReason[removedRole.reason!]} - ${removedRole.additionalComments}`} />)}
-          </div>
-        </Grid>
-        <Grid item xs={12} sm={6} md={4} style={{paddingRight: 20}}>
-          <h3>Incomplete</h3>
-          {volunteerFamily.volunteerFamilyInfo?.missingRequirements?.map((missing, i) =>
-            <MissingRequirementRow key={`${missing}:${i}`} requirement={missing} context={requirementContext} />
-          )}
-          <Divider />
-          {volunteerFamily.volunteerFamilyInfo?.availableApplications?.map((application, i) =>
-            <MissingRequirementRow key={`${application}:${i}`} requirement={application} context={requirementContext} isAvailableApplication={true} />
-          )}
-        </Grid>
-        <Grid item xs={12} sm={6} md={4} style={{paddingRight: 20}}>
-          <h3>Completed</h3>
-          {volunteerFamily.volunteerFamilyInfo?.completedRequirements?.map((completed, i) =>
-            <CompletedRequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} context={requirementContext} />
-          )}
-          {volunteerFamily.volunteerFamilyInfo?.exemptedRequirements?.map((exempted, i) =>
-            <ExemptedRequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={requirementContext} />
-          )}
-        </Grid>
-        <Grid item xs={12} sm={6} md={4}>
-          <h3>Documents</h3>
-          <FamilyDocuments family={volunteerFamily} />
+        <Grid item xs={12} md={8}>
+          <Grid container spacing={0}>
+            <Grid item xs={12}>
+              <span>Primary Contact: <PersonName person={volunteerFamily.family?.adults?.find(adult => adult.item1?.id === volunteerFamily.family?.primaryFamilyContactPersonId)?.item1} /></span>
+            </Grid>
+            <Grid item xs={12}>
+              <div className={classes.sectionChips}>
+                {Object.entries(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals || {}).flatMap(([role, roleVersionApprovals]) =>
+                  <VolunteerRoleApprovalStatusChip key={role} roleName={role} roleVersionApprovals={roleVersionApprovals} />)}
+                {(volunteerFamily.volunteerFamilyInfo?.removedRoles || []).map(removedRole =>
+                  <Chip key={removedRole.roleName} size="small" label={`${removedRole.roleName} - ${RoleRemovalReason[removedRole.reason!]} - ${removedRole.additionalComments}`} />)}
+              </div>
+            </Grid>
+            <Grid item xs={12} sm={6} md={4} style={{paddingRight: 20}}>
+              <h3>Incomplete</h3>
+              {volunteerFamily.volunteerFamilyInfo?.missingRequirements?.map((missing, i) =>
+                <MissingRequirementRow key={`${missing}:${i}`} requirement={missing} context={requirementContext} />
+              )}
+              <Divider />
+              {volunteerFamily.volunteerFamilyInfo?.availableApplications?.map((application, i) =>
+                <MissingRequirementRow key={`${application}:${i}`} requirement={application} context={requirementContext} isAvailableApplication={true} />
+              )}
+            </Grid>
+            <Grid item xs={12} sm={6} md={4} style={{paddingRight: 20}}>
+              <h3>Completed</h3>
+              {volunteerFamily.volunteerFamilyInfo?.completedRequirements?.map((completed, i) =>
+                <CompletedRequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} context={requirementContext} />
+              )}
+              {volunteerFamily.volunteerFamilyInfo?.exemptedRequirements?.map((exempted, i) =>
+                <ExemptedRequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={requirementContext} />
+              )}
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <h3>Documents</h3>
+              <FamilyDocuments family={volunteerFamily} />
+            </Grid>
+          </Grid>
+          <Grid container spacing={0}>
+            <Grid item xs={12}>
+              <Masonry columns={isDesktop ? isWideScreen ? 3 : 2 : 1} spacing={2}>
+                {volunteerFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item1.active && adult.item2 && (
+                  <VolunteerAdultCard key={adult.item1.id} volunteerFamilyId={familyId} personId={adult.item1.id} />
+                ))}
+                {volunteerFamily.family?.children?.map(child => child.active && (
+                  <VolunteerChildCard key={child.id!} volunteerFamilyId={familyId} personId={child.id!} />
+                ))}
+              </Masonry>
+            </Grid>
+          </Grid>
         </Grid>
       </Grid>
-      <Masonry columns={isDesktop ? isWideScreen ? 3 : 2 : 1} spacing={2}>
-        {volunteerFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item1.active && adult.item2 && (
-          <VolunteerAdultCard key={adult.item1.id} volunteerFamilyId={familyId} personId={adult.item1.id} />
-        ))}
-        {volunteerFamily.family?.children?.map(child => child.active && (
-          <VolunteerChildCard key={child.id!} volunteerFamilyId={familyId} personId={child.id!} />
-        ))}
-      </Masonry>
     </Container>
   );
 }
