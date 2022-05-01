@@ -3,6 +3,7 @@ import {
   AccordionDetails,
   AccordionSummary,
   Badge,
+  Box,
   Button,
   Card,
   CardContent,
@@ -135,10 +136,12 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
             </>
           )}
         </Typography>
-        {!summaryOnly && (
+        {!summaryOnly && (<>
+          <Box sx={{ height: '8px' }} />
           <Accordion expanded={!collapsed} onChange={(event, isExpanded) => setCollapsed(!isExpanded)}
-            variant="outlined" square disableGutters sx={{marginLeft:-2, marginRight:-2, border: 'none'}}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ marginTop:1, paddingTop:1, backgroundColor: "#0000000a" }}>
+            variant="outlined" square disableGutters sx={{marginLeft:-2, marginRight:-2, border: 'none' }}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}
+              sx={{ marginTop:1, paddingTop:1, backgroundColor: "#0000000a" }}>
               <Grid container>
                 <Grid item xs={4}>
                   <Badge color="success"
@@ -188,6 +191,7 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
               )}
             </AccordionDetails>
           </Accordion>
+          </>
         )}
       </CardContent>
     </Card>
