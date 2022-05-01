@@ -3,6 +3,7 @@ import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, Add
 import { authenticatingFetch } from "../Auth";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { visibleFamiliesData } from "./ModelLoader";
+import { organizationConfigurationData } from "./ConfigurationModel";
 
 export function usePersonLookup() {
   const visibleFamilies = useRecoilValue(visibleFamiliesData);
@@ -30,9 +31,14 @@ export function usePersonAndFamilyLookup() {
 
 export function useUserLookup() {
   const visibleFamilies = useRecoilValue(visibleFamiliesData);
+  const organizationConfig = useRecoilValue(organizationConfigurationData);
 
   return (userId?: string) => {
-    const person = visibleFamilies.flatMap(family => family.family?.adults).find(adult => adult?.item1?.userId === userId)?.item1;
+    const staticUserAssignment = organizationConfig.users![userId!];
+    const staticPersonId = staticUserAssignment?.personId;
+
+    const person = visibleFamilies.flatMap(family => family.family?.adults).find(adult =>
+      adult?.item1?.id === staticPersonId || adult?.item1?.userId === userId)?.item1;
     return person;
   }
 }
