@@ -110,7 +110,7 @@ export function VolunteerFamilyScreen() {
 
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));
-  const isLargeScreen = useMediaQuery(theme.breakpoints.up('xl'));
+  const isWideScreen = useMediaQuery(theme.breakpoints.up('xl'));
   
   const navigate = useNavigate();
 
@@ -225,7 +225,7 @@ export function VolunteerFamilyScreen() {
           <FamilyDocuments family={volunteerFamily} />
         </Grid>
       </Grid>
-      <Masonry columns={isDesktop ? isLargeScreen ? 3 : 2 : 1} spacing={2}>
+      <Masonry columns={isDesktop ? isWideScreen ? 3 : 2 : 1} spacing={2}>
         {volunteerFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item1.active && adult.item2 && (
           <VolunteerAdultCard key={adult.item1.id} volunteerFamilyId={familyId} personId={adult.item1.id} />
         ))}
