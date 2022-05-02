@@ -16,7 +16,9 @@ export function ActivityTimeline({ family }: ActivityTimelineProps) {
   const userLookup = useUserLookup();
   const personLookup = usePersonLookup();
 
-  const activities = family.partneringFamilyInfo?.history?.slice();
+  const activities = (family.partneringFamilyInfo?.history?.slice() || []).concat(
+    family.volunteerFamilyInfo?.history?.slice() || []);
+  
   const unmatchedNotesAsActivities = family.notes?.filter(note =>
     activities?.every(a => a.noteId !== note.id))?.map(note =>
     ({
