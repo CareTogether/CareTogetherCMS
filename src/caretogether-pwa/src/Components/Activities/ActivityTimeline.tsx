@@ -38,8 +38,19 @@ export function ActivityTimeline({ family }: ActivityTimelineProps) {
     return partneringPerson;
   }
 
+  // We only want to show each note once, on the most recent activity entry that is
+  // linked to that particular note. The following stateful code works by pulling from the
+  // set of all the family's notes, so that each time this component renders, each note will
+  // be "found" at most once. Since activities render in order from most recent to oldest,
+  // the result is that each note is shown only on the most recent matching activity entry.
+  // This is a simplistic fix; at some point it would be better to support actual matching of
+  // related activity entries and showing those as a single "grouped" activity.
+  const unlinkedNotes = family.notes?.slice() || [];
   function noteLookup(noteId?: string) {
-    const note = family.notes?.find(n => n.id === noteId);
+    const noteIndex = unlinkedNotes.findIndex(n => n.id === noteId);
+    if (noteIndex === -1)
+      return undefined;
+    const note = unlinkedNotes.splice(noteIndex, 1)[0];
     return note;
   }
 
