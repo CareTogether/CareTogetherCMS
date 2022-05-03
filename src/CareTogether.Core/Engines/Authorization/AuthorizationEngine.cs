@@ -94,6 +94,7 @@ namespace CareTogether.Engines.Authorization
                     RemoveCustodialRelationship => null,
                     UploadFamilyDocument => Permission.UploadStandaloneDocuments,
                     DeleteUploadedFamilyDocument => null,
+                    ChangePrimaryFamilyContact => null,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented.")
                 });

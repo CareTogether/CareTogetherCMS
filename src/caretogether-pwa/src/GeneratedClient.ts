@@ -4542,6 +4542,11 @@ export abstract class FamilyCommand implements IFamilyCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "ChangePrimaryFamilyContact") {
+            let result = new ChangePrimaryFamilyContact();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "CreateFamily") {
             let result = new CreateFamily();
             result.init(data);
@@ -4703,6 +4708,40 @@ export class AddCustodialRelationship extends FamilyCommand implements IAddCusto
 
 export interface IAddCustodialRelationship extends IFamilyCommand {
     custodialRelationship?: CustodialRelationship;
+}
+
+export class ChangePrimaryFamilyContact extends FamilyCommand implements IChangePrimaryFamilyContact {
+    adultId?: string;
+
+    constructor(data?: IChangePrimaryFamilyContact) {
+        super(data);
+        this._discriminator = "ChangePrimaryFamilyContact";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.adultId = _data["adultId"];
+        }
+    }
+
+    static fromJS(data: any): ChangePrimaryFamilyContact {
+        data = typeof data === 'object' ? data : {};
+        let result = new ChangePrimaryFamilyContact();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["adultId"] = this.adultId;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IChangePrimaryFamilyContact extends IFamilyCommand {
+    adultId?: string;
 }
 
 export class CreateFamily extends FamilyCommand implements ICreateFamily {

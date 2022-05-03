@@ -70,6 +70,9 @@ namespace CareTogether.Resources.Directory
     public sealed record DeleteUploadedFamilyDocument(Guid FamilyId,
         Guid UploadedDocumentId)
         : FamilyCommand(FamilyId);
+    public sealed record ChangePrimaryFamilyContact(Guid FamilyId,
+        Guid AdultId)
+        : FamilyCommand(FamilyId);
 
     [JsonHierarchyBase]
     public abstract partial record PersonCommand(Guid PersonId);

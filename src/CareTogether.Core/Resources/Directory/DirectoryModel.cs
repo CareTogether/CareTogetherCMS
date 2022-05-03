@@ -133,6 +133,10 @@ namespace CareTogether.Resources.Directory
                                 udi.UploadedDocumentId == c.UploadedDocumentId),
                             DeletedDocuments = familyEntry.DeletedDocuments.Add(c.UploadedDocumentId)
                         },
+                        ChangePrimaryFamilyContact c => familyEntry with
+                        {
+                            PrimaryFamilyContactPersonId = c.AdultId
+                        },
                         _ => throw new NotImplementedException(
                             $"The command type '{command.GetType().FullName}' has not been implemented.")
                     }
