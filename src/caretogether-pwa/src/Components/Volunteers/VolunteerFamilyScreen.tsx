@@ -16,7 +16,6 @@ import { UploadFamilyDocumentsDialog } from '../Families/UploadFamilyDocumentsDi
 import { VolunteerRoleApprovalStatusChip } from './VolunteerRoleApprovalStatusChip';
 import { RemoveFamilyRoleDialog } from './RemoveFamilyRoleDialog';
 import { ResetFamilyRoleDialog } from './ResetFamilyRoleDialog';
-import { PersonName } from '../Families/PersonName';
 import { FamilyDocuments } from '../Families/FamilyDocuments';
 import { HeaderContent, HeaderTitle } from '../Header';
 import { useNavigate } from 'react-router-dom';

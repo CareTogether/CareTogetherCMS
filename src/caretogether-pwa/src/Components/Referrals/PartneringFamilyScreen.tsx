@@ -13,7 +13,6 @@ import { AddAdultDialog } from '../Families/AddAdultDialog';
 import { AddChildDialog } from '../Families/AddChildDialog';
 import { AddEditNoteDialog } from '../Families/AddEditNoteDialog';
 import { ArrangementCard } from './ArrangementCard';
-import { PersonName } from '../Families/PersonName';
 import { format } from 'date-fns';
 import { UploadFamilyDocumentsDialog } from '../Families/UploadFamilyDocumentsDialog';
 import { policyData } from '../../Model/ConfigurationModel';
