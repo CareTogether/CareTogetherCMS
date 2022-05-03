@@ -16,7 +16,6 @@ import { UploadFamilyDocumentsDialog } from '../Families/UploadFamilyDocumentsDi
 import { VolunteerRoleApprovalStatusChip } from './VolunteerRoleApprovalStatusChip';
 import { RemoveFamilyRoleDialog } from './RemoveFamilyRoleDialog';
 import { ResetFamilyRoleDialog } from './ResetFamilyRoleDialog';
-import { PersonName } from '../Families/PersonName';
 import { FamilyDocuments } from '../Families/FamilyDocuments';
 import { HeaderContent, HeaderTitle } from '../Header';
 import { useNavigate } from 'react-router-dom';
@@ -29,6 +28,7 @@ import { CompletedRequirementRow } from "../Requirements/CompletedRequirementRow
 import { VolunteerFamilyContext } from "../Requirements/RequirementContext";
 import { ActivityTimeline } from '../Activities/ActivityTimeline';
 import { AddEditNoteDialog } from '../Families/AddEditNoteDialog';
+import { PrimaryContactEditor } from '../Families/PrimaryContactEditor';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -210,7 +210,7 @@ export function VolunteerFamilyScreen() {
         <Grid item xs={12} md={8}>
           <Grid container spacing={0}>
             <Grid item xs={12}>
-              <span>Primary Contact: <PersonName person={volunteerFamily.family?.adults?.find(adult => adult.item1?.id === volunteerFamily.family?.primaryFamilyContactPersonId)?.item1} /></span>
+              <PrimaryContactEditor family={volunteerFamily} />
             </Grid>
             <Grid item xs={12}>
               <div className={classes.sectionChips}>

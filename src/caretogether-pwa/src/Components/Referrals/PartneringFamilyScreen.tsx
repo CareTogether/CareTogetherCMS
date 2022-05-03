@@ -13,7 +13,6 @@ import { AddAdultDialog } from '../Families/AddAdultDialog';
 import { AddChildDialog } from '../Families/AddChildDialog';
 import { AddEditNoteDialog } from '../Families/AddEditNoteDialog';
 import { ArrangementCard } from './ArrangementCard';
-import { PersonName } from '../Families/PersonName';
 import { format } from 'date-fns';
 import { UploadFamilyDocumentsDialog } from '../Families/UploadFamilyDocumentsDialog';
 import { policyData } from '../../Model/ConfigurationModel';
@@ -33,6 +32,7 @@ import { ReferralContext } from "../Requirements/RequirementContext";
 import { ActivityTimeline } from '../Activities/ActivityTimeline';
 import { ReferralComments } from './ReferralComments';
 import { ReferralCustomField } from './ReferralCustomField';
+import { PrimaryContactEditor } from '../Families/PrimaryContactEditor';
 
 const useStyles = makeStyles((theme) => ({
   sectionHeading: {
@@ -187,7 +187,7 @@ export function PartneringFamilyScreen() {
         <Grid item xs={12} md={8}>
           <Grid container spacing={0}>
             <Grid item xs={12} md={4}>
-              <span>Primary Contact: <PersonName person={partneringFamily.family?.adults?.find(adult => adult.item1?.id === partneringFamily.family?.primaryFamilyContactPersonId)?.item1} /></span>
+              <PrimaryContactEditor family={partneringFamily} />
               <br />
               {partneringFamily.partneringFamilyInfo?.openReferral
                 ? "Referral open since " + format(partneringFamily.partneringFamilyInfo.openReferral.openedAtUtc!, "M/d/yy")
