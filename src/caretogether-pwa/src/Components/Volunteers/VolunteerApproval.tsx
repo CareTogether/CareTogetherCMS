@@ -1,19 +1,25 @@
 import makeStyles from '@mui/styles/makeStyles';
-import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, useMediaQuery, useTheme, Button, ButtonGroup, FormControlLabel, Switch } from '@mui/material';
+import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, useMediaQuery, useTheme, Button, ButtonGroup, FormControlLabel, Switch, MenuItem, Select, ListItemText, Checkbox, FormControl, InputBase, SelectChangeEvent } from '@mui/material';
 import { Gender, ExactAge, AgeInYears, RoleVersionApproval, CombinedFamilyInfo, RemovedRole, RoleRemovalReason } from '../../GeneratedClient';
 import { differenceInYears } from 'date-fns';
-import { atom, selector, useRecoilValue } from 'recoil';
+import { atom, selector, useRecoilState, useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../../Model/VolunteersModel';
 import { policyData } from '../../Model/ConfigurationModel';
 import { RoleApprovalStatus } from '../../GeneratedClient';
 import React, { useEffect, useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
+import FilterListIcon from '@mui/icons-material/FilterList';
 import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { HeaderContent, HeaderTitle } from '../Header';
 import { SearchBar } from '../SearchBar';
 import { useLocalStorage } from '../../useLocalStorage';
 import { useScrollMemory } from '../../useScrollMemory';
+
+type RoleFilter = {
+  roleName: string
+  selected: (RoleApprovalStatus|null)[]
+}
 
 const volunteerFamilyRoleFiltersState = atom({
   key: 'volunteerFamilyRoleFiltersState',
@@ -49,18 +55,46 @@ const volunteerRoleFiltersState = atom({
   })
 });
 
-type RoleFilter = {
-  roleName: string
-  selected: (RoleApprovalStatus|null)[]
-}
-
 type RoleHeaderCellProps = {
-  role: RoleFilter
+  roleFilter: RoleFilter
+  setSelected: (selected: string | string[]) => void
 }
 
-function RoleHeaderCell({role}: RoleHeaderCellProps) {
+function RoleHeaderCell({roleFilter, setSelected}: RoleHeaderCellProps) {
+  const choices = [
+    { key: "(blank)", value: null },
+    { key: RoleApprovalStatus[RoleApprovalStatus.Prospective], value: RoleApprovalStatus.Prospective },
+    { key: RoleApprovalStatus[RoleApprovalStatus.Approved], value: RoleApprovalStatus.Approved },
+    { key: RoleApprovalStatus[RoleApprovalStatus.Onboarded], value: RoleApprovalStatus.Onboarded }
+  ];
+
+  const handleChange = (event: SelectChangeEvent<string[]>) => {
+    setSelected(event.target.value);
+  };
+
   return (
-    <TableCell>{role.roleName}</TableCell>
+    <TableCell sx={{position: 'relative'}}>
+      {roleFilter.roleName}
+      <FormControl sx={{position: 'absolute', right: 0}} size="small">
+        <Select
+          sx={{color: roleFilter.selected.length === choices.length ? '#bdbdbd' : null,
+            '& .MuiSelect-iconOpen': { transform: 'none' }}}
+          multiple value={roleFilter.selected.map(x => x === null ? "(blank)" : RoleApprovalStatus[x])}
+          variant="standard" label="Filters"
+          onChange={handleChange}
+          input={<InputBase />}
+          IconComponent={FilterListIcon}
+          renderValue={(selected) => selected.length === choices.length ? 'all' : `${selected.length} of ${choices.length}`}
+        >
+          {choices.map(choice =>
+            <MenuItem key={choice.key} value={choice.key}>
+              <Checkbox checked={roleFilter.selected.indexOf(choice.value) > -1} />
+              <ListItemText primary={choice.key} />
+            </MenuItem>
+          )}
+        </Select>
+      </FormControl>
+    </TableCell>
   );
 }
 
@@ -141,8 +175,31 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     family.family?.adults?.some(adult => simplify(`${adult.item1?.firstName} ${adult.item1?.lastName}`).includes(filterText)) ||
     family.family?.children?.some(child => simplify(`${child?.firstName} ${child?.lastName}`).includes(filterText)));
 
-  const volunteerFamilyRoleFilters = useRecoilValue(volunteerFamilyRoleFiltersState);
-  const volunteerRoleFilters = useRecoilValue(volunteerRoleFiltersState);
+  const [volunteerFamilyRoleFilters, setVolunteerFamilyRoleFilters] = useRecoilState(volunteerFamilyRoleFiltersState);
+  const [volunteerRoleFilters, setVolunteerRoleFilters] = useRecoilState(volunteerRoleFiltersState);
+  function toValue(selection: '(blank)'|'Prospective'|'Approved'|'Onboarded') {
+    return selection === '(blank)' ? null : RoleApprovalStatus[selection];
+  };
+  function changeVolunteerFamilyRoleFilterSelection(roleFilter: RoleFilter, selected: string | string[]) {
+    const selectedValues = typeof selected === 'string'
+    ? [toValue(selected as '(blank)'|'Prospective'|'Approved'|'Onboarded')]
+    : selected.map(x => toValue(x as '(blank)'|'Prospective'|'Approved'|'Onboarded'));
+    const updatedFilters = volunteerFamilyRoleFilters.map(value =>
+      value.roleName === roleFilter.roleName
+      ? { roleName: value.roleName, selected: selectedValues }
+      : value);
+    setVolunteerFamilyRoleFilters(updatedFilters);
+  }
+  function changeVolunteerRoleFilterSelection(roleFilter: RoleFilter, selected: string | string[]) {
+    const selectedValues = typeof selected === 'string'
+    ? [toValue(selected as '(blank)'|'Prospective'|'Approved'|'Onboarded')]
+    : selected.map(x => toValue(x as '(blank)'|'Prospective'|'Approved'|'Onboarded'));
+    const updatedFilters = volunteerRoleFilters.map(value =>
+      value.roleName === roleFilter.roleName
+      ? { roleName: value.roleName, selected: selectedValues }
+      : value);
+      setVolunteerRoleFilters(updatedFilters);
+  }
   
   useScrollMemory();
   
@@ -185,9 +242,11 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                   </>
                 : <TableCell>Family</TableCell>}
                 { volunteerFamilyRoleFilters.map(roleFilter =>
-                  (<RoleHeaderCell key={roleFilter.roleName} role={roleFilter} />))}
+                  (<RoleHeaderCell key={roleFilter.roleName} roleFilter={roleFilter}
+                    setSelected={selected => changeVolunteerFamilyRoleFilterSelection(roleFilter, selected)} />))}
                 { volunteerRoleFilters.map(roleFilter =>
-                  (<RoleHeaderCell key={roleFilter.roleName} role={roleFilter} />))}
+                  (<RoleHeaderCell key={roleFilter.roleName} roleFilter={roleFilter}
+                    setSelected={selected => changeVolunteerRoleFilterSelection(roleFilter, selected)} />))}
               </TableRow>
             </TableHead>
             <TableBody>
