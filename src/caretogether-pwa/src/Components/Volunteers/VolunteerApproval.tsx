@@ -62,7 +62,7 @@ type RoleHeaderCellProps = {
 
 function RoleHeaderCell({roleFilter, setSelected}: RoleHeaderCellProps) {
   const choices = [
-    { key: "(blank)", value: null },
+    { key: "Not Applied", value: null },
     { key: RoleApprovalStatus[RoleApprovalStatus.Prospective], value: RoleApprovalStatus.Prospective },
     { key: RoleApprovalStatus[RoleApprovalStatus.Approved], value: RoleApprovalStatus.Approved },
     { key: RoleApprovalStatus[RoleApprovalStatus.Onboarded], value: RoleApprovalStatus.Onboarded }
@@ -79,7 +79,7 @@ function RoleHeaderCell({roleFilter, setSelected}: RoleHeaderCellProps) {
         <Select
           sx={{color: roleFilter.selected.length === choices.length ? '#bdbdbd' : null,
             '& .MuiSelect-iconOpen': { transform: 'none' }}}
-          multiple value={roleFilter.selected.map(x => x === null ? "(blank)" : RoleApprovalStatus[x])}
+          multiple value={roleFilter.selected.map(x => x === null ? "Not Applied" : RoleApprovalStatus[x])}
           variant="standard" label="Filters"
           onChange={handleChange}
           input={<InputBase />}
@@ -168,13 +168,13 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 
   const [volunteerFamilyRoleFilters, setVolunteerFamilyRoleFilters] = useRecoilState(volunteerFamilyRoleFiltersState);
   const [volunteerRoleFilters, setVolunteerRoleFilters] = useRecoilState(volunteerRoleFiltersState);
-  function toValue(selection: '(blank)'|'Prospective'|'Approved'|'Onboarded') {
-    return selection === '(blank)' ? null : RoleApprovalStatus[selection];
+  function toValue(selection: 'Not Applied'|'Prospective'|'Approved'|'Onboarded') {
+    return selection === 'Not Applied' ? null : RoleApprovalStatus[selection];
   };
   function changeVolunteerFamilyRoleFilterSelection(roleFilter: RoleFilter, selected: string | string[]) {
     const selectedValues = typeof selected === 'string'
-    ? [toValue(selected as '(blank)'|'Prospective'|'Approved'|'Onboarded')]
-    : selected.map(x => toValue(x as '(blank)'|'Prospective'|'Approved'|'Onboarded'));
+    ? [toValue(selected as 'Not Applied'|'Prospective'|'Approved'|'Onboarded')]
+    : selected.map(x => toValue(x as 'Not Applied'|'Prospective'|'Approved'|'Onboarded'));
     const updatedFilters = volunteerFamilyRoleFilters.map(value =>
       value.roleName === roleFilter.roleName
       ? { roleName: value.roleName, selected: selectedValues }
@@ -183,8 +183,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   }
   function changeVolunteerRoleFilterSelection(roleFilter: RoleFilter, selected: string | string[]) {
     const selectedValues = typeof selected === 'string'
-    ? [toValue(selected as '(blank)'|'Prospective'|'Approved'|'Onboarded')]
-    : selected.map(x => toValue(x as '(blank)'|'Prospective'|'Approved'|'Onboarded'));
+    ? [toValue(selected as 'Not Applied'|'Prospective'|'Approved'|'Onboarded')]
+    : selected.map(x => toValue(x as 'Not Applied'|'Prospective'|'Approved'|'Onboarded'));
     const updatedFilters = volunteerRoleFilters.map(value =>
       value.roleName === roleFilter.roleName
       ? { roleName: value.roleName, selected: selectedValues }
