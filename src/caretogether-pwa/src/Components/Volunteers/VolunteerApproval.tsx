@@ -166,15 +166,6 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   const classes = useStyles();
   const navigate = useNavigate();
 
-  // The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
-  const volunteerFamilies = useRecoilValue(volunteerFamiliesData).map(x => x).sort((a, b) =>
-    familyLastName(a) < familyLastName(b) ? -1 : familyLastName(a) > familyLastName(b) ? 1 : 0);
-  
-  const [filterText, setFilterText] = useState("");
-  const filteredVolunteerFamilies = volunteerFamilies.filter(family => filterText.length === 0 ||
-    family.family?.adults?.some(adult => simplify(`${adult.item1?.firstName} ${adult.item1?.lastName}`).includes(filterText)) ||
-    family.family?.children?.some(child => simplify(`${child?.firstName} ${child?.lastName}`).includes(filterText)));
-
   const [volunteerFamilyRoleFilters, setVolunteerFamilyRoleFilters] = useRecoilState(volunteerFamilyRoleFiltersState);
   const [volunteerRoleFilters, setVolunteerRoleFilters] = useRecoilState(volunteerRoleFiltersState);
   function toValue(selection: '(blank)'|'Prospective'|'Approved'|'Onboarded') {
@@ -201,6 +192,28 @@ function VolunteerApproval(props: { onOpen: () => void }) {
       setVolunteerRoleFilters(updatedFilters);
   }
   
+  // The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
+  const volunteerFamilies = useRecoilValue(volunteerFamiliesData).map(x => x).sort((a, b) =>
+    familyLastName(a) < familyLastName(b) ? -1 : familyLastName(a) > familyLastName(b) ? 1 : 0);
+  
+  const [filterText, setFilterText] = useState("");
+
+  // Filter volunteer families by name and by applicable roles.
+  // Role filters are additive amongst themselves (any matching role filters cause a family to be included),
+  // but name filtering is subtractive (if a name filter is specified, it must match the family).
+  const filteredVolunteerFamilies = volunteerFamilies.filter(family => (
+      filterText.length === 0 ||
+      family.family?.adults?.some(adult => simplify(`${adult.item1?.firstName} ${adult.item1?.lastName}`).includes(filterText)) ||
+      family.family?.children?.some(child => simplify(`${child?.firstName} ${child?.lastName}`).includes(filterText))) && (
+      volunteerFamilyRoleFilters.some(roleFilter =>
+        family.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.roleName]?.some(approval =>
+          roleFilter.selected.indexOf(approval.approvalStatus!) > -1) || roleFilter.selected.indexOf(null) > -1) ||
+      volunteerRoleFilters.some(roleFilter => 
+        ((family.volunteerFamilyInfo?.individualVolunteers && Object.entries(family.volunteerFamilyInfo?.individualVolunteers)) || []).some(([_, volunteer]) =>
+          volunteer.individualRoleApprovals?.[roleFilter.roleName]?.some(approval =>
+            roleFilter.selected.indexOf(approval.approvalStatus!) > -1) || roleFilter.selected.indexOf(null) > -1))
+    ));
+
   useScrollMemory();
   
   function openVolunteerFamily(volunteerFamilyId: string) {
