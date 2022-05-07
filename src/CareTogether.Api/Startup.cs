@@ -57,7 +57,7 @@ namespace CareTogether.Api
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddMicrosoftIdentityWebApi(Configuration.GetSection("AzureAdB2C"));
-            
+
             services.AddTransient<IClaimsTransformation, TenantUserClaimsTransformation>();
 
             // Shared blob storage clients configured to authenticate according to the environment -
@@ -77,7 +77,7 @@ namespace CareTogether.Api
             var policiesStore = new JsonBlobObjectStore<EffectiveLocationPolicy>(immutableBlobServiceClient, "LocationPolicies");
             var userTenantAccessStore = new JsonBlobObjectStore<UserTenantAccessSummary>(immutableBlobServiceClient, "UserTenantAccess");
 
-            if (HostEnvironment.EnvironmentName != "OpenApiGen")
+            if (Configuration["OpenApiGen"] != "true")
             {
                 // Reset and populate data in the test tenant for debugging. Note that this will not affect other tenants.
                 TestData.TestStorageHelper.ResetTestTenantData(immutableBlobServiceClient);
