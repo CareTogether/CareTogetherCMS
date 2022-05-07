@@ -797,6 +797,7 @@ export class LocationConfiguration implements ILocationConfiguration {
     name?: string;
     ethnicities?: string[];
     adultFamilyRelationships?: string[];
+    smsSourcePhoneNumber?: string;
 
     constructor(data?: ILocationConfiguration) {
         if (data) {
@@ -821,6 +822,7 @@ export class LocationConfiguration implements ILocationConfiguration {
                 for (let item of _data["adultFamilyRelationships"])
                     this.adultFamilyRelationships!.push(item);
             }
+            this.smsSourcePhoneNumber = _data["smsSourcePhoneNumber"];
         }
     }
 
@@ -845,6 +847,7 @@ export class LocationConfiguration implements ILocationConfiguration {
             for (let item of this.adultFamilyRelationships)
                 data["adultFamilyRelationships"].push(item);
         }
+        data["smsSourcePhoneNumber"] = this.smsSourcePhoneNumber;
         return data;
     }
 }
@@ -854,6 +857,7 @@ export interface ILocationConfiguration {
     name?: string;
     ethnicities?: string[];
     adultFamilyRelationships?: string[];
+    smsSourcePhoneNumber?: string;
 }
 
 export class RoleDefinition implements IRoleDefinition {
