@@ -2,7 +2,7 @@ import makeStyles from '@mui/styles/makeStyles';
 import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, useMediaQuery, useTheme, Button, ButtonGroup, FormControlLabel, Switch } from '@mui/material';
 import { Gender, ExactAge, AgeInYears, RoleVersionApproval, CombinedFamilyInfo, RemovedRole, RoleRemovalReason } from '../../GeneratedClient';
 import { differenceInYears } from 'date-fns';
-import { useRecoilValue } from 'recoil';
+import { atom, selector, useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../../Model/VolunteersModel';
 import { policyData } from '../../Model/ConfigurationModel';
 import { RoleApprovalStatus } from '../../GeneratedClient';
@@ -14,6 +14,40 @@ import { HeaderContent, HeaderTitle } from '../Header';
 import { SearchBar } from '../SearchBar';
 import { useLocalStorage } from '../../useLocalStorage';
 import { useScrollMemory } from '../../useScrollMemory';
+
+const volunteerFamilyRoleFiltersState = atom({
+  key: 'volunteerFamilyRoleFiltersState',
+  default: selector({
+    key: 'volunteerFamilyRoleFiltersState/Default',
+    get: ({get}) => {
+      const policy = get(policyData);
+      const roleFilters =
+        ((policy.volunteerPolicy?.volunteerFamilyRoles &&
+          Object.entries(policy.volunteerPolicy?.volunteerFamilyRoles)) || []).map(([key]) => ({
+        roleName: key,
+        selected: [RoleApprovalStatus.Prospective, RoleApprovalStatus.Approved, RoleApprovalStatus.Onboarded, null]
+      }));
+      return roleFilters;
+    }
+  })
+});
+
+const volunteerRoleFiltersState = atom({
+  key: 'volunteerRoleFiltersState',
+  default: selector({
+    key: 'volunteerRoleFiltersState/Default',
+    get: ({get}) => {
+      const policy = get(policyData);
+      const roleFilters =
+        ((policy.volunteerPolicy?.volunteerRoles &&
+          Object.entries(policy.volunteerPolicy?.volunteerRoles)) || []).map(([key]) => ({
+        roleName: key,
+        selected: [RoleApprovalStatus.Prospective, RoleApprovalStatus.Approved, RoleApprovalStatus.Onboarded, null]
+      }));
+      return roleFilters;
+    }
+  })
+});
 
 type RoleFilter = {
   roleName: string
@@ -101,28 +135,15 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   // The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData).map(x => x).sort((a, b) =>
     familyLastName(a) < familyLastName(b) ? -1 : familyLastName(a) > familyLastName(b) ? 1 : 0);
-  const policy = useRecoilValue(policyData);
-
+  
   const [filterText, setFilterText] = useState("");
   const filteredVolunteerFamilies = volunteerFamilies.filter(family => filterText.length === 0 ||
     family.family?.adults?.some(adult => simplify(`${adult.item1?.firstName} ${adult.item1?.lastName}`).includes(filterText)) ||
     family.family?.children?.some(child => simplify(`${child?.firstName} ${child?.lastName}`).includes(filterText)));
 
-  const volunteerFamilyRoleFilters =
-    (policy.volunteerPolicy?.volunteerFamilyRoles &&
-    Object.entries(policy.volunteerPolicy?.volunteerFamilyRoles).map(([key]) => ({
-      roleName: key,
-      selected: [RoleApprovalStatus.Prospective, RoleApprovalStatus.Approved, RoleApprovalStatus.Onboarded, null]
-    } as RoleFilter)))
-    || [];
-  const volunteerRoleFilters =
-    (policy.volunteerPolicy?.volunteerRoles &&
-    Object.entries(policy.volunteerPolicy?.volunteerRoles).map(([key]) => ({
-      roleName: key,
-      selected: [RoleApprovalStatus.Prospective, RoleApprovalStatus.Approved, RoleApprovalStatus.Onboarded, null]
-    } as RoleFilter)))
-    || [];
-
+  const volunteerFamilyRoleFilters = useRecoilValue(volunteerFamilyRoleFiltersState);
+  const volunteerRoleFilters = useRecoilValue(volunteerRoleFiltersState);
+  
   useScrollMemory();
   
   function openVolunteerFamily(volunteerFamilyId: string) {
