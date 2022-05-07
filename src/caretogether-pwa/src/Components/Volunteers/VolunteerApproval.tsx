@@ -199,16 +199,14 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   const [filterText, setFilterText] = useState("");
 
   // Filter volunteer families by name and by applicable roles.
-  // Role filters are additive amongst themselves (any matching role filters cause a family to be included),
-  // but name filtering is subtractive (if a name filter is specified, it must match the family).
   const filteredVolunteerFamilies = volunteerFamilies.filter(family => (
       filterText.length === 0 ||
       family.family?.adults?.some(adult => simplify(`${adult.item1?.firstName} ${adult.item1?.lastName}`).includes(filterText)) ||
       family.family?.children?.some(child => simplify(`${child?.firstName} ${child?.lastName}`).includes(filterText))) && (
-      volunteerFamilyRoleFilters.some(roleFilter =>
+      volunteerFamilyRoleFilters.every(roleFilter =>
         family.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.roleName]?.some(approval =>
-          roleFilter.selected.indexOf(approval.approvalStatus!) > -1) || roleFilter.selected.indexOf(null) > -1) ||
-      volunteerRoleFilters.some(roleFilter => 
+          roleFilter.selected.indexOf(approval.approvalStatus!) > -1) || roleFilter.selected.indexOf(null) > -1) &&
+      volunteerRoleFilters.every(roleFilter => 
         ((family.volunteerFamilyInfo?.individualVolunteers && Object.entries(family.volunteerFamilyInfo?.individualVolunteers)) || []).some(([_, volunteer]) =>
           volunteer.individualRoleApprovals?.[roleFilter.roleName]?.some(approval =>
             roleFilter.selected.indexOf(approval.approvalStatus!) > -1) || roleFilter.selected.indexOf(null) > -1))
