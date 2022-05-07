@@ -1,9 +1,10 @@
 ﻿using CareTogether.Engines.Authorization;
-using CareTogether.Resources;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
+using CareTogether.Resources.Policies;
 using CareTogether.Resources.Referrals;
+using CareTogether.Utilities.Telephony;
 using Nito.AsyncEx;
 using System;
 using System.Collections.Immutable;
@@ -20,18 +21,22 @@ namespace CareTogether.Managers.Directory
         private readonly IApprovalsResource approvalsResource;
         private readonly IReferralsResource referralsResource;
         private readonly INotesResource notesResource;
+        private readonly IPoliciesResource policiesResource;
+        private readonly ITelephony telephony;
         private readonly CombinedFamilyInfoFormatter combinedFamilyInfoFormatter;
 
 
         public DirectoryManager(IAuthorizationEngine authorizationEngine, IDirectoryResource directoryResource,
             IApprovalsResource approvalsResource, IReferralsResource referralsResource, INotesResource notesResource,
-            CombinedFamilyInfoFormatter combinedFamilyInfoFormatter)
+            IPoliciesResource policiesResource, ITelephony telephony, CombinedFamilyInfoFormatter combinedFamilyInfoFormatter)
         {
             this.authorizationEngine = authorizationEngine;
             this.directoryResource = directoryResource;
             this.approvalsResource = approvalsResource;
             this.referralsResource = referralsResource;
             this.notesResource = notesResource;
+            this.policiesResource = policiesResource;
+            this.telephony = telephony;
             this.combinedFamilyInfoFormatter = combinedFamilyInfoFormatter;
         }
 
@@ -279,6 +284,46 @@ namespace CareTogether.Managers.Directory
 
             var note = familyResult.Notes.SingleOrDefault(note => note.Id == noteEntry?.Id);
             return new NoteCommandResult(familyResult, note);
+        }
+
+        public async Task<ImmutableList<(Guid FamilyId, SmsMessageResult? Result)>> SendSmsToFamilyPrimaryContactsAsync(
+            Guid organizationId, Guid locationId, ClaimsPrincipal user, ImmutableList<Guid> familyIds, string message)
+        {
+            if (!await authorizationEngine.AuthorizeSendSmsAsync(organizationId, locationId, user))
+                throw new Exception("The user is not authorized to perform this command.");
+
+            var configuration = await policiesResource.GetConfigurationAsync(organizationId);
+            var sourcePhoneNumber = configuration.Locations
+                .Single(location => location.Id == locationId)
+                .SmsSourcePhoneNumber;
+
+            var families = await directoryResource.ListFamiliesAsync(organizationId, locationId);
+
+            var familyPrimaryContactNumbers = familyIds
+                .Select(familyId =>
+                {
+                    var family = families.Single(family => family.Id == familyId);
+                    var primaryContactAdult = family.Adults
+                        .Single(adult => adult.Item1.Id == family.PrimaryFamilyContactPersonId);
+                    return (familyId,
+                        phoneNumber: primaryContactAdult.Item1.PhoneNumbers
+                            .FirstOrDefault(number => number.Type == PhoneNumberType.Mobile));
+                }).ToImmutableList();
+
+            var destinationNumbers = familyPrimaryContactNumbers
+                .Where(x => x.phoneNumber != null)
+                .Select(x => x.phoneNumber!.Number)
+                .ToImmutableList();
+
+            var sendResults = await telephony.SendSmsMessageAsync(sourcePhoneNumber, destinationNumbers, message);
+
+            var allFamilyResults = familyPrimaryContactNumbers.Select(x =>
+            {
+                var sendResult = sendResults.SingleOrDefault(result => result.PhoneNumber == x.phoneNumber?.Number);
+                return (FamilyId: x.familyId, Result: sendResult);
+            }).ToImmutableList();
+
+            return allFamilyResults;
         }
     }
 }

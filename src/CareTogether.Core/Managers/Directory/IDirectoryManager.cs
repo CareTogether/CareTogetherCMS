@@ -1,6 +1,7 @@
 using CareTogether.Resources;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
+using CareTogether.Utilities.Telephony;
 using JsonPolymorph;
 using System;
 using System.Collections.Generic;
@@ -51,5 +52,8 @@ namespace CareTogether.Managers.Directory
 
         Task<NoteCommandResult> ExecuteNoteCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, NoteCommand command);
+
+        Task<ImmutableList<(Guid FamilyId, SmsMessageResult? Result)>> SendSmsToFamilyPrimaryContactsAsync(
+            Guid organizationId, Guid locationId, ClaimsPrincipal user, ImmutableList<Guid> familyIds, string message);
     }
 }

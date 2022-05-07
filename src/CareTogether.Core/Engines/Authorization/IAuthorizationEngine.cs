@@ -30,6 +30,9 @@ namespace CareTogether.Engines.Authorization
         Task<bool> AuthorizeNoteCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, NoteCommand command);
 
+        Task<bool> AuthorizeSendSmsAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user);
+
         Task<bool> AuthorizeVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, VolunteerFamilyCommand command);
 

@@ -29,6 +29,7 @@ using Microsoft.FeatureManagement;
 using Microsoft.FeatureManagement.FeatureFilters;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Logging;
+using CareTogether.Utilities.Telephony;
 
 namespace CareTogether.Api
 {
@@ -93,6 +94,11 @@ namespace CareTogether.Api
                     userTenantAccessStore).Wait();
             }
 
+            // Other utility services
+            var telephony = new PlivoTelephony(
+                authId: Configuration["Telephony:Plivo:AuthId"],
+                authToken: Configuration["Telephony:Plivo:AuthToken"]);
+
             // Resource services
             var approvalsResource = new ApprovalsResource(approvalsEventLog);
             var directoryResource = new DirectoryResource(directoryEventLog);
@@ -116,7 +122,8 @@ namespace CareTogether.Api
 
             // Manager services
             services.AddSingleton<IDirectoryManager>(new DirectoryManager(authorizationEngine, directoryResource,
-                approvalsResource, referralsResource, notesResource, combinedFamilyInfoFormatter));
+                approvalsResource, referralsResource, notesResource, policiesResource, telephony,
+                combinedFamilyInfoFormatter));
             services.AddSingleton<IReferralsManager>(new ReferralsManager(authorizationEngine, referralsResource,
                 combinedFamilyInfoFormatter));
             services.AddSingleton<IApprovalManager>(new ApprovalManager(authorizationEngine, approvalsResource,
