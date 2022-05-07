@@ -15,6 +15,21 @@ import { SearchBar } from '../SearchBar';
 import { useLocalStorage } from '../../useLocalStorage';
 import { useScrollMemory } from '../../useScrollMemory';
 
+type RoleFilter = {
+  roleName: string
+  selected: (RoleApprovalStatus|null)[]
+}
+
+type RoleHeaderCellProps = {
+  role: RoleFilter
+}
+
+function RoleHeaderCell({role}: RoleHeaderCellProps) {
+  return (
+    <TableCell>{role.roleName}</TableCell>
+  );
+}
+
 const useStyles = makeStyles((theme) => ({
   table: {
     minWidth: 700,
@@ -93,13 +108,19 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     family.family?.adults?.some(adult => simplify(`${adult.item1?.firstName} ${adult.item1?.lastName}`).includes(filterText)) ||
     family.family?.children?.some(child => simplify(`${child?.firstName} ${child?.lastName}`).includes(filterText)));
 
-  const volunteerFamilyRoleNames =
+  const volunteerFamilyRoleFilters =
     (policy.volunteerPolicy?.volunteerFamilyRoles &&
-    Object.entries(policy.volunteerPolicy?.volunteerFamilyRoles).map(([key]) => key))
+    Object.entries(policy.volunteerPolicy?.volunteerFamilyRoles).map(([key]) => ({
+      roleName: key,
+      selected: [RoleApprovalStatus.Prospective, RoleApprovalStatus.Approved, RoleApprovalStatus.Onboarded, null]
+    } as RoleFilter)))
     || [];
-  const volunteerRoleNames =
+  const volunteerRoleFilters =
     (policy.volunteerPolicy?.volunteerRoles &&
-    Object.entries(policy.volunteerPolicy?.volunteerRoles).map(([key]) => key))
+    Object.entries(policy.volunteerPolicy?.volunteerRoles).map(([key]) => ({
+      roleName: key,
+      selected: [RoleApprovalStatus.Prospective, RoleApprovalStatus.Approved, RoleApprovalStatus.Onboarded, null]
+    } as RoleFilter)))
     || [];
 
   useScrollMemory();
@@ -142,10 +163,10 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                     <TableCell>Age</TableCell>
                   </>
                 : <TableCell>Family</TableCell>}
-                { volunteerFamilyRoleNames.map(roleName =>
-                  (<TableCell key={roleName}>{roleName}</TableCell>))}
-                { volunteerRoleNames.map(roleName =>
-                  (<TableCell key={roleName}>{roleName}</TableCell>))}
+                { volunteerFamilyRoleFilters.map(roleFilter =>
+                  (<RoleHeaderCell key={roleFilter.roleName} role={roleFilter} />))}
+                { volunteerRoleFilters.map(roleFilter =>
+                  (<RoleHeaderCell key={roleFilter.roleName} role={roleFilter} />))}
               </TableRow>
             </TableHead>
             <TableBody>
@@ -154,25 +175,25 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                   <TableRow className={classes.familyRow} onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}>
                     <TableCell key="1" colSpan={expandedView ? 4 : 1}>{familyLastName(volunteerFamily) + " Family"
                     }</TableCell>
-                    { volunteerFamilyRoleNames.map(roleName =>
-                      (<TableCell key={roleName}>{
-                        approvalStatus(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals?.[roleName], volunteerFamily.volunteerFamilyInfo?.removedRoles?.find(x => x.roleName === roleName))
+                    { volunteerFamilyRoleFilters.map(roleFilter =>
+                      (<TableCell key={roleFilter.roleName}>{
+                        approvalStatus(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.roleName], volunteerFamily.volunteerFamilyInfo?.removedRoles?.find(x => x.roleName === roleFilter.roleName))
                       }</TableCell>))}
                     { expandedView
-                      ? <TableCell colSpan={volunteerRoleNames.length} />
-                      : volunteerRoleNames.map(roleName =>
-                        (<TableCell key={roleName}>
+                      ? <TableCell colSpan={volunteerRoleFilters.length} />
+                      : volunteerRoleFilters.map(roleFilter =>
+                        (<TableCell key={roleFilter.roleName}>
                           <CombinedApprovalStatus summary={
                             ((volunteerFamily.volunteerFamilyInfo?.individualVolunteers &&
                             Object.entries(volunteerFamily.volunteerFamilyInfo?.individualVolunteers).map(x => x[1]).flatMap(x =>
                               (x.individualRoleApprovals && Object.entries(x.individualRoleApprovals).map(([role, approvals]) =>
                                 x.removedRoles?.some(r => r.roleName === role)
                                 ? { Prospective: 0, Approved: 0, Onboarded: 0 }
-                                : approvals.some(x => role === roleName && x.approvalStatus === RoleApprovalStatus.Onboarded)
+                                : approvals.some(x => role === roleFilter.roleName && x.approvalStatus === RoleApprovalStatus.Onboarded)
                                 ? { Prospective: 0, Approved: 0, Onboarded: 1 }
-                                : approvals.some(x => role === roleName && x.approvalStatus === RoleApprovalStatus.Approved)
+                                : approvals.some(x => role === roleFilter.roleName && x.approvalStatus === RoleApprovalStatus.Approved)
                                 ? { Prospective: 0, Approved: 1, Onboarded: 0 }
-                                : approvals.some(x => role === roleName && x.approvalStatus === RoleApprovalStatus.Prospective)
+                                : approvals.some(x => role === roleFilter.roleName && x.approvalStatus === RoleApprovalStatus.Prospective)
                                 ? { Prospective: 1, Approved: 0, Onboarded: 0 }
                                 : { Prospective: 0, Approved: 0, Onboarded: 0 })) || [])) || []).reduce((sum, x) =>
                                   ({ Prospective: sum!.Prospective + x!.Prospective,
@@ -195,11 +216,11 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                           ? adult.item1.age.years && adult.item1?.age.asOf && (adult.item1.age.years + differenceInYears(new Date(), adult.item1.age.asOf))
                           : "⚠" }
                       </TableCell>
-                      <TableCell colSpan={volunteerFamilyRoleNames.length} />
-                      { volunteerRoleNames.map(roleName =>
-                        (<TableCell key={roleName}>{
-                          approvalStatus(volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1?.id || '']?.individualRoleApprovals?.[roleName],
-                            volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1?.id || '']?.removedRoles?.find(x => x.roleName === roleName))
+                      <TableCell colSpan={volunteerFamilyRoleFilters.length} />
+                      { volunteerRoleFilters.map(roleFilter =>
+                        (<TableCell key={roleFilter.roleName}>{
+                          approvalStatus(volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1?.id || '']?.individualRoleApprovals?.[roleFilter.roleName],
+                            volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1?.id || '']?.removedRoles?.find(x => x.roleName === roleFilter.roleName))
                         }</TableCell>))}
                     </TableRow>
                   ))}
@@ -218,8 +239,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                           : "⚠" }
                       </TableCell>
                       <TableCell colSpan={
-                        volunteerFamilyRoleNames.length +
-                        volunteerRoleNames.length } />
+                        volunteerFamilyRoleFilters.length +
+                        volunteerRoleFilters.length } />
                     </TableRow>
                   ))}
                 </React.Fragment>
