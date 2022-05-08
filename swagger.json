@@ -851,7 +851,8 @@
             }
           },
           "smsSourcePhoneNumber": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           }
         }
       },

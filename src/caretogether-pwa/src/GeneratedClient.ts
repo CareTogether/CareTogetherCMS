@@ -848,7 +848,7 @@ export class LocationConfiguration implements ILocationConfiguration {
     name?: string;
     ethnicities?: string[];
     adultFamilyRelationships?: string[];
-    smsSourcePhoneNumber?: string;
+    smsSourcePhoneNumber?: string | undefined;
 
     constructor(data?: ILocationConfiguration) {
         if (data) {
@@ -908,7 +908,7 @@ export interface ILocationConfiguration {
     name?: string;
     ethnicities?: string[];
     adultFamilyRelationships?: string[];
-    smsSourcePhoneNumber?: string;
+    smsSourcePhoneNumber?: string | undefined;
 }
 
 export class RoleDefinition implements IRoleDefinition {

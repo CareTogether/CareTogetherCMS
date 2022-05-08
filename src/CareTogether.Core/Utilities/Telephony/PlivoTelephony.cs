@@ -42,21 +42,23 @@ namespace CareTogether.Utilities.Telephony
                 .Select(x => x.sanitizedNumber)
                 .ToList();
 
-            var response = await api.Message.CreateAsync(
-                dst: sanitizedDestinationNumbers,
-                text: message,
-                src: sanitizedSourcePhoneNumber,
-                type: "sms"); ;
+            var response = sanitizedDestinationNumbers.Count > 0
+                ? await api.Message.CreateAsync(
+                    dst: sanitizedDestinationNumbers,
+                    text: message,
+                    src: sanitizedSourcePhoneNumber,
+                    type: "sms")
+                : null;
 
             var sendResults = destinationNumberSanitizationResults.Select(x =>
             {
                 if (!x.isValid)
                     return new SmsMessageResult(x.destinationNumber, SmsResult.InvalidDestinationPhoneNumber);
 
-                if (response.StatusCode != 202)
+                if (response?.StatusCode != 202)
                     return new SmsMessageResult(x.destinationNumber, SmsResult.SendFailure);
 
-                if (response.invalid_number.Contains(x.sanitizedNumber))
+                if (response?.invalid_number?.Contains(x.sanitizedNumber) ?? false)
                     return new SmsMessageResult(x.destinationNumber, SmsResult.InvalidDestinationPhoneNumber);
 
                 return new SmsMessageResult(x.destinationNumber, SmsResult.SendSuccess);

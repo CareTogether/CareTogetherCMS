@@ -1,6 +1,6 @@
 import makeStyles from '@mui/styles/makeStyles';
-import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, useMediaQuery, useTheme, Button, ButtonGroup, FormControlLabel, Switch, MenuItem, Select, ListItemText, Checkbox, FormControl, InputBase, SelectChangeEvent, IconButton, Drawer, TextField } from '@mui/material';
-import { Gender, ExactAge, AgeInYears, RoleVersionApproval, CombinedFamilyInfo, RemovedRole, RoleRemovalReason } from '../../GeneratedClient';
+import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, useMediaQuery, useTheme, Button, ButtonGroup, FormControlLabel, Switch, MenuItem, Select, ListItemText, Checkbox, FormControl, InputBase, SelectChangeEvent, IconButton, Drawer, TextField, Divider } from '@mui/material';
+import { Gender, ExactAge, AgeInYears, RoleVersionApproval, CombinedFamilyInfo, RemovedRole, RoleRemovalReason, DirectoryClient, SendSmsToFamilyPrimaryContactsRequest, ValueTupleOfGuidAndSmsMessageResult, SmsResult } from '../../GeneratedClient';
 import { differenceInYears } from 'date-fns';
 import { atom, selector, useRecoilState, useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../../Model/VolunteersModel';
@@ -16,7 +16,11 @@ import { HeaderContent, HeaderTitle } from '../Header';
 import { SearchBar } from '../SearchBar';
 import { useLocalStorage } from '../../useLocalStorage';
 import { useScrollMemory } from '../../useScrollMemory';
-import { currentLocationState } from '../../Model/SessionModel';
+import { currentLocationState, currentOrganizationState } from '../../Model/SessionModel';
+import { authenticatingFetch } from '../../Auth';
+import { useBackdrop } from '../../useBackdrop';
+import { FamilyName } from '../Families/FamilyName';
+import { useFamilyLookup } from '../../Model/DirectoryModel';
 
 type RoleFilter = {
   roleName: string
@@ -229,14 +233,30 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 
   const [smsMode, setSmsMode] = useState(false);
   const [smsMessage, setSmsMessage] = useState("");
-  function sendSmsToVisibleFamilies() {
-    console.log("Send SMS!");
+  const [smsResults, setSmsResults] = useState<ValueTupleOfGuidAndSmsMessageResult[] | null>(null);
+  
+  const organizationId = useRecoilValue(currentOrganizationState);
+  const locationId = useRecoilValue(currentLocationState);
+  
+  const withBackdrop = useBackdrop();
+
+  async function sendSmsToVisibleFamilies() {
+    await withBackdrop(async () => {
+      const familyIds = filteredVolunteerFamilies.map(family => family.family!.id!);
+  
+      const client = new DirectoryClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+      const sendSmsResults = await client.sendSmsToFamilyPrimaryContacts(organizationId, locationId,
+        new SendSmsToFamilyPrimaryContactsRequest({ familyIds: familyIds, message: smsMessage }));
+      
+      setSmsResults(sendSmsResults);
+    });
   }
+
   const organizationConfiguration = useRecoilValue(organizationConfigurationData);
-  const currentLocation = useRecoilValue(currentLocationState);
   const smsSourcePhoneNumber = organizationConfiguration.locations?.find(loc =>
-    loc.id === currentLocation)?.smsSourcePhoneNumber;
-  //TODO: Only show the SMS button if a source phone number is configured.
+    loc.id === locationId)?.smsSourcePhoneNumber;
+
+  const familyLookup = useFamilyLookup();
 
   return (
     <Grid container spacing={3}>
@@ -246,12 +266,14 @@ function VolunteerApproval(props: { onOpen: () => void }) {
           <Button color={location.pathname === "/volunteers/approval" ? 'secondary' : 'inherit'} component={Link} to={"/volunteers/approval"}>Approvals</Button>
           <Button color={location.pathname === "/volunteers/progress" ? 'secondary' : 'inherit'} component={Link} to={"/volunteers/progress"}>Progress</Button>
         </ButtonGroup>
-        <IconButton color={smsMode ? 'secondary' : 'inherit'} aria-label="send bulk sms"
-          onClick={() => setSmsMode(!smsMode)}>
-          <SmsIcon />
-        </IconButton>
+        {smsSourcePhoneNumber &&
+          <IconButton color={smsMode ? 'secondary' : 'inherit'} aria-label="send bulk sms"
+            onClick={() => setSmsMode(!smsMode)} sx={{ marginRight: 2 }}>
+            <SmsIcon />
+          </IconButton>}
         <FormControlLabel
-          control={<Switch checked={expandedView} onChange={(e) => setExpandedView(e.target.checked)} name="expandedView" />}
+          control={<Switch checked={expandedView} onChange={(e) => setExpandedView(e.target.checked)}
+            name="expandedView" sx={{ marginRight: 1 }} />}
           label={isMobile ? "" : "Expand"}
         />
         <SearchBar value={filterText} onChange={setFilterText} />
@@ -374,13 +396,47 @@ function VolunteerApproval(props: { onOpen: () => void }) {
             </p>
             <TextField multiline maxRows={8} placeholder="Enter the SMS message to send. Remember to keep it short!"
               value={smsMessage} onChange={(event) => setSmsMessage(event.target.value)} />
-            <Button onClick={() => { setSmsMode(false); setSmsMessage(""); }} color="secondary">
+            <Button onClick={() => { setSmsMode(false); setSmsMessage(""); setSmsResults(null); }} color="secondary">
               Cancel
             </Button>
             <Button onClick={sendSmsToVisibleFamilies} variant="contained" color="primary"
-              disabled={filteredVolunteerFamilies.length > 0 && smsMessage.length > 0}>
+              disabled={filteredVolunteerFamilies.length === 0 || smsMessage.length === 0}>
               Send Bulk SMS
             </Button>
+            {smsResults != null && (
+              <>
+                <Divider />
+                <table>
+                  <tbody>
+                    <tr>
+                      <td># of primary contacts without a mobile number</td>
+                      <td>{smsResults.filter(x => x.item2 == null).length}</td>
+                    </tr>
+                    <tr>
+                      <td># of messages sent successfully</td>
+                      <td>{smsResults.filter(x => x.item2?.result === SmsResult.SendSuccess).length}</td>
+                    </tr>
+                    <tr>
+                      <td># of send failures</td>
+                      <td>{smsResults.filter(x => x.item2?.result === SmsResult.SendFailure).length}</td>
+                    </tr>
+                    <tr>
+                      <td># of invalid source numbers</td>
+                      <td>{smsResults.filter(x => x.item2?.result === SmsResult.InvalidSourcePhoneNumber).length}</td>
+                    </tr>
+                    <tr>
+                      <td># of invalid numbers</td>
+                      <td>{smsResults.filter(x => x.item2?.result === SmsResult.InvalidDestinationPhoneNumber).length}</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <ul>
+                  {smsResults.filter(x => x.item2?.result === SmsResult.InvalidDestinationPhoneNumber).map(x => (
+                    <li key={x.item1}><span><FamilyName family={familyLookup(x.item1)} />: {x.item2?.phoneNumber}</span></li>
+                  ))}
+                </ul>
+              </>
+            )}
           </Drawer>}
         {createVolunteerFamilyDialogOpen && <CreateVolunteerFamilyDialog onClose={(volunteerFamilyId) => {
           setCreateVolunteerFamilyDialogOpen(false);

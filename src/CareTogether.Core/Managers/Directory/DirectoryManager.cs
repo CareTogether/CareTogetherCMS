@@ -297,6 +297,10 @@ namespace CareTogether.Managers.Directory
                 .Single(location => location.Id == locationId)
                 .SmsSourcePhoneNumber;
 
+            if (sourcePhoneNumber == null)
+                throw new InvalidOperationException(
+                    "The specified location does not have a source phone number configured for SMS messages.");
+
             var families = await directoryResource.ListFamiliesAsync(organizationId, locationId);
 
             var familyPrimaryContactNumbers = familyIds

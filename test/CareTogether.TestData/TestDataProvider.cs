@@ -65,7 +65,8 @@ namespace CareTogether.TestData
             IObjectStore<string?> draftNotesStore,
             IObjectStore<OrganizationConfiguration> configurationStore,
             IObjectStore<EffectiveLocationPolicy> policiesStore,
-            IObjectStore<UserTenantAccessSummary> userTenantAccessStore)
+            IObjectStore<UserTenantAccessSummary> userTenantAccessStore,
+            string? testSourceSmsPhoneNumber)
         {
             await PopulateDirectoryEvents(directoryEventLog);
             await PopulateGoalEvents(goalsEventLog);
@@ -73,7 +74,7 @@ namespace CareTogether.TestData
             await PopulateApprovalEvents(approvalsEventLog);
             await PopulateNoteEvents(notesEventLog);
             await PopulateDraftNotes(draftNotesStore);
-            await PopulateConfigurations(configurationStore);
+            await PopulateConfigurations(configurationStore, testSourceSmsPhoneNumber);
             await PopulatePolicies(policiesStore);
             await PopulateUserTenantAccess(userTenantAccessStore);
         }
@@ -338,7 +339,8 @@ namespace CareTogether.TestData
                 "Jane said \"So long and thanks for all the fish.\" Not sure what to make of that.");
         }
 
-        public static async Task PopulateConfigurations(IObjectStore<OrganizationConfiguration> configurationStore)
+        public static async Task PopulateConfigurations(IObjectStore<OrganizationConfiguration> configurationStore,
+            string? testSourceSmsPhoneNumber)
         {
             await configurationStore.UpsertAsync(guid1, Guid.Empty, "config",
                 new OrganizationConfiguration("CareTogether",
@@ -346,11 +348,11 @@ namespace CareTogether.TestData
                         .Add(new LocationConfiguration(guid2, "Atlantis",
                             ImmutableList<string>.Empty.AddRange(new[] { "Atlantean", "Aquatic", "Norse" }),
                             ImmutableList<string>.Empty.AddRange(new[] { "Single", "Spouse", "Partner", "Dad", "Mom", "Relative", "Droid" }),
-                            "(123) 555-111"))
+                            testSourceSmsPhoneNumber))
                         .Add(new LocationConfiguration(guid3, "El Dorado",
                             ImmutableList<string>.Empty.AddRange(new[] { "Amazon", "Caucasian", "Other" }),
                             ImmutableList<string>.Empty.AddRange(new[] { "Single", "Spouse", "Partner", "Dad", "Mom", "Relative", "Domestic Worker" }),
-                            "(456) 555-2222")),
+                            testSourceSmsPhoneNumber)),
                     ImmutableList<RoleDefinition>.Empty
                         .Add(new RoleDefinition("NoteEnterer", ImmutableList<Permission>.Empty
                             .AddRange(new Permission[] { Permission.ViewLinkedFamilies }))),

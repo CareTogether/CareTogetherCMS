@@ -91,7 +91,8 @@ namespace CareTogether.Api
                     draftNotesStore,
                     configurationStore,
                     policiesStore,
-                    userTenantAccessStore).Wait();
+                    userTenantAccessStore,
+                    Configuration["TestData:SourceSmsPhoneNumber"]).Wait();
             }
 
             // Other utility services
