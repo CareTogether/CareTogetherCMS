@@ -376,6 +376,57 @@ export class DirectoryClient {
         }
         return Promise.resolve<NoteCommandResult>(null as any);
     }
+
+    sendSmsToFamilyPrimaryContacts(organizationId: string, locationId: string, request: SendSmsToFamilyPrimaryContactsRequest): Promise<ValueTupleOfGuidAndSmsMessageResult[]> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Directory/sendSmsToFamilyPrimaryContacts";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (locationId === undefined || locationId === null)
+            throw new Error("The parameter 'locationId' must be defined.");
+        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(request);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSendSmsToFamilyPrimaryContacts(_response);
+        });
+    }
+
+    protected processSendSmsToFamilyPrimaryContacts(response: Response): Promise<ValueTupleOfGuidAndSmsMessageResult[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(ValueTupleOfGuidAndSmsMessageResult.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ValueTupleOfGuidAndSmsMessageResult[]>(null as any);
+    }
 }
 
 export class FilesClient {
@@ -797,6 +848,7 @@ export class LocationConfiguration implements ILocationConfiguration {
     name?: string;
     ethnicities?: string[];
     adultFamilyRelationships?: string[];
+    smsSourcePhoneNumber?: string | undefined;
 
     constructor(data?: ILocationConfiguration) {
         if (data) {
@@ -821,6 +873,7 @@ export class LocationConfiguration implements ILocationConfiguration {
                 for (let item of _data["adultFamilyRelationships"])
                     this.adultFamilyRelationships!.push(item);
             }
+            this.smsSourcePhoneNumber = _data["smsSourcePhoneNumber"];
         }
     }
 
@@ -845,6 +898,7 @@ export class LocationConfiguration implements ILocationConfiguration {
             for (let item of this.adultFamilyRelationships)
                 data["adultFamilyRelationships"].push(item);
         }
+        data["smsSourcePhoneNumber"] = this.smsSourcePhoneNumber;
         return data;
     }
 }
@@ -854,6 +908,7 @@ export interface ILocationConfiguration {
     name?: string;
     ethnicities?: string[];
     adultFamilyRelationships?: string[];
+    smsSourcePhoneNumber?: string | undefined;
 }
 
 export class RoleDefinition implements IRoleDefinition {
@@ -5995,6 +6050,141 @@ export class EditDraftNote extends NoteCommand implements IEditDraftNote {
 
 export interface IEditDraftNote extends INoteCommand {
     draftNoteContents?: string | undefined;
+}
+
+export class ValueTupleOfGuidAndSmsMessageResult implements IValueTupleOfGuidAndSmsMessageResult {
+    item1?: string;
+    item2?: SmsMessageResult;
+
+    constructor(data?: IValueTupleOfGuidAndSmsMessageResult) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.item1 = _data["item1"];
+            this.item2 = _data["item2"] ? SmsMessageResult.fromJS(_data["item2"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ValueTupleOfGuidAndSmsMessageResult {
+        data = typeof data === 'object' ? data : {};
+        let result = new ValueTupleOfGuidAndSmsMessageResult();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["item1"] = this.item1;
+        data["item2"] = this.item2 ? this.item2.toJSON() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IValueTupleOfGuidAndSmsMessageResult {
+    item1?: string;
+    item2?: SmsMessageResult;
+}
+
+export class SmsMessageResult implements ISmsMessageResult {
+    phoneNumber?: string;
+    result?: SmsResult;
+
+    constructor(data?: ISmsMessageResult) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.phoneNumber = _data["phoneNumber"];
+            this.result = _data["result"];
+        }
+    }
+
+    static fromJS(data: any): SmsMessageResult {
+        data = typeof data === 'object' ? data : {};
+        let result = new SmsMessageResult();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["phoneNumber"] = this.phoneNumber;
+        data["result"] = this.result;
+        return data;
+    }
+}
+
+export interface ISmsMessageResult {
+    phoneNumber?: string;
+    result?: SmsResult;
+}
+
+export enum SmsResult {
+    InvalidSourcePhoneNumber = 0,
+    InvalidDestinationPhoneNumber = 1,
+    SendFailure = 2,
+    SendSuccess = 3,
+}
+
+export class SendSmsToFamilyPrimaryContactsRequest implements ISendSmsToFamilyPrimaryContactsRequest {
+    familyIds?: string[];
+    message?: string;
+
+    constructor(data?: ISendSmsToFamilyPrimaryContactsRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["familyIds"])) {
+                this.familyIds = [] as any;
+                for (let item of _data["familyIds"])
+                    this.familyIds!.push(item);
+            }
+            this.message = _data["message"];
+        }
+    }
+
+    static fromJS(data: any): SendSmsToFamilyPrimaryContactsRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new SendSmsToFamilyPrimaryContactsRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.familyIds)) {
+            data["familyIds"] = [];
+            for (let item of this.familyIds)
+                data["familyIds"].push(item);
+        }
+        data["message"] = this.message;
+        return data;
+    }
+}
+
+export interface ISendSmsToFamilyPrimaryContactsRequest {
+    familyIds?: string[];
+    message?: string;
 }
 
 export class DocumentUploadInfo implements IDocumentUploadInfo {

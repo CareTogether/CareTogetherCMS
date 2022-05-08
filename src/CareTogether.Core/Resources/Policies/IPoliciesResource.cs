@@ -11,7 +11,8 @@ namespace CareTogether.Resources.Policies
         ImmutableDictionary<Guid, UserAccessConfiguration> Users);
 
     public sealed record LocationConfiguration(Guid Id, string Name,
-        ImmutableList<string> Ethnicities, ImmutableList<string> AdultFamilyRelationships);
+        ImmutableList<string> Ethnicities, ImmutableList<string> AdultFamilyRelationships,
+        string? SmsSourcePhoneNumber);
 
     public sealed record RoleDefinition(string RoleName, ImmutableList<Permission> Permissions);
 

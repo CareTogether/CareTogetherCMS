@@ -33,7 +33,7 @@
   </PropertyGroup>
 
   <Target Name="NSwag" AfterTargets="PostBuildEvent" Condition="'$(Configuration)' == 'Debug'">
-    <Exec Command="$(NSwagExe_Net60) aspnetcore2openapi /assembly:$(TargetPath) /output:$(SolutionDir)swagger.json" EnvironmentVariables="ASPNETCORE_ENVIRONMENT=OpenApiGen" />
+    <Exec Command="$(NSwagExe_Net60) aspnetcore2openapi /assembly:$(TargetPath) /output:$(SolutionDir)swagger.json" EnvironmentVariables="ASPNETCORE_ENVIRONMENT=Development;OpenApiGen=true" />
     <Exec Command="$(NSwagExe_Net60) openapi2tsclient /input:$(SolutionDir)swagger.json /output:$(SolutionDir)src\caretogether-pwa\src\GeneratedClient.ts" />
   </Target>
 

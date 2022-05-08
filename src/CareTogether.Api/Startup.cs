@@ -29,6 +29,7 @@ using Microsoft.FeatureManagement;
 using Microsoft.FeatureManagement.FeatureFilters;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Logging;
+using CareTogether.Utilities.Telephony;
 
 namespace CareTogether.Api
 {
@@ -56,7 +57,7 @@ namespace CareTogether.Api
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddMicrosoftIdentityWebApi(Configuration.GetSection("AzureAdB2C"));
-            
+
             services.AddTransient<IClaimsTransformation, TenantUserClaimsTransformation>();
 
             // Shared blob storage clients configured to authenticate according to the environment -
@@ -76,7 +77,7 @@ namespace CareTogether.Api
             var policiesStore = new JsonBlobObjectStore<EffectiveLocationPolicy>(immutableBlobServiceClient, "LocationPolicies");
             var userTenantAccessStore = new JsonBlobObjectStore<UserTenantAccessSummary>(immutableBlobServiceClient, "UserTenantAccess");
 
-            if (HostEnvironment.EnvironmentName != "OpenApiGen")
+            if (Configuration["OpenApiGen"] != "true")
             {
                 // Reset and populate data in the test tenant for debugging. Note that this will not affect other tenants.
                 TestData.TestStorageHelper.ResetTestTenantData(immutableBlobServiceClient);
@@ -90,8 +91,14 @@ namespace CareTogether.Api
                     draftNotesStore,
                     configurationStore,
                     policiesStore,
-                    userTenantAccessStore).Wait();
+                    userTenantAccessStore,
+                    Configuration["TestData:SourceSmsPhoneNumber"]).Wait();
             }
+
+            // Other utility services
+            var telephony = new PlivoTelephony(
+                authId: Configuration["Telephony:Plivo:AuthId"],
+                authToken: Configuration["Telephony:Plivo:AuthToken"]);
 
             // Resource services
             var approvalsResource = new ApprovalsResource(approvalsEventLog);
@@ -116,7 +123,8 @@ namespace CareTogether.Api
 
             // Manager services
             services.AddSingleton<IDirectoryManager>(new DirectoryManager(authorizationEngine, directoryResource,
-                approvalsResource, referralsResource, notesResource, combinedFamilyInfoFormatter));
+                approvalsResource, referralsResource, notesResource, policiesResource, telephony,
+                combinedFamilyInfoFormatter));
             services.AddSingleton<IReferralsManager>(new ReferralsManager(authorizationEngine, referralsResource,
                 combinedFamilyInfoFormatter));
             services.AddSingleton<IApprovalManager>(new ApprovalManager(authorizationEngine, approvalsResource,
