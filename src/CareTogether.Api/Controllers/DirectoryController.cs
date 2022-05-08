@@ -3,14 +3,19 @@ using CareTogether.Managers.Directory;
 using CareTogether.Resources;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
+using CareTogether.Utilities.Telephony;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading.Tasks;
 
 namespace CareTogether.Api.Controllers
 {
+    public sealed record SendSmsToFamilyPrimaryContactsRequest(
+        ImmutableList<Guid> FamilyIds, string Message);
+
     [Authorize]
     [ApiController]
     [Route("/api/{organizationId:guid}/{locationId:guid}/[controller]")]
@@ -61,6 +66,16 @@ namespace CareTogether.Api.Controllers
             Guid organizationId, Guid locationId, [FromBody] NoteCommand command)
         {
             var result = await directoryManager.ExecuteNoteCommandAsync(organizationId, locationId, User, command);
+            return result;
+        }
+
+        [HttpPost("sendSmsToFamilyPrimaryContacts")]
+        public async Task<ActionResult<ImmutableList<(Guid FamilyId, SmsMessageResult? Result)>>>
+            SendSmsToFamilyPrimaryContactsAsync(Guid organizationId, Guid locationId,
+            [FromBody] SendSmsToFamilyPrimaryContactsRequest request)
+        {
+            var result = await directoryManager.SendSmsToFamilyPrimaryContactsAsync(organizationId, locationId,
+                User, request.FamilyIds, request.Message);
             return result;
         }
     }

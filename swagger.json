@@ -409,6 +409,63 @@
         }
       }
     },
+    "/api/{organizationId}/{locationId}/Directory/sendSmsToFamilyPrimaryContacts": {
+      "post": {
+        "tags": [
+          "Directory"
+        ],
+        "operationId": "Directory_SendSmsToFamilyPrimaryContacts",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendSmsToFamilyPrimaryContactsRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 3
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ValueTupleOfGuidAndSmsMessageResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/{organizationId}/{locationId}/Files/{documentId}": {
       "get": {
         "tags": [
@@ -3415,6 +3472,63 @@
             }
           }
         ]
+      },
+      "ValueTupleOfGuidAndSmsMessageResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "item1": {
+            "type": "string",
+            "format": "guid"
+          },
+          "item2": {
+            "$ref": "#/components/schemas/SmsMessageResult"
+          }
+        }
+      },
+      "SmsMessageResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "phoneNumber": {
+            "type": "string"
+          },
+          "result": {
+            "$ref": "#/components/schemas/SmsResult"
+          }
+        }
+      },
+      "SmsResult": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "InvalidSourcePhoneNumber",
+          "InvalidDestinationPhoneNumber",
+          "SendFailure",
+          "SendSuccess"
+        ],
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      "SendSmsToFamilyPrimaryContactsRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "familyIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "guid"
+            }
+          },
+          "message": {
+            "type": "string"
+          }
+        }
       },
       "DocumentUploadInfo": {
         "type": "object",
