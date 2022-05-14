@@ -6,7 +6,9 @@ CareTogether is an open-source case management system (CMS) for nonprofits conne
 ![Available Good First Issues](https://badgen.net/github/label-issues/CareTogether/CareTogetherCMS/good%20first%20issue/open)
 
 ## Contributing
-Thank you for your interest in helping to build this vital tool! If you'd like to jump straight into development, please check out [the CareTogether Contributions project](https://github.com/orgs/CareTogether/projects/2/views/1) which contains tasks that have been identified as a good fit for initial contributions. They are intentionally not critically time-sensitive, so you can work on them at your own pace. If you have additional time to dedicate to contributing, please contact [Lars Kemmann](https://github.com/LarsKemmann) to set up an introductory call and request an invite to Teams where we are coordinating the design, development, and support efforts for CareTogether.
+Thank you for your interest in helping to build this vital tool! If you'd like to jump straight into development, please check out the [issues labeled "Help Wanted"](https://github.com/CareTogether/CareTogetherCMS/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22), which are tasks that have been identified as a good fit for initial contributions. They are intentionally not critically time-sensitive, so you can work on them at your own pace. We are tracking the overall status of those issues in [the CareTogether Contributions project](https://github.com/orgs/CareTogether/projects/2/views/1).
+
+If you have additional time to dedicate to contributing and feel you're ready to take on larger chunks of feature development work, please contact [Lars Kemmann](https://github.com/LarsKemmann) to set up an introductory call and request an invite to Teams where we are coordinating the design, development, and support efforts for CareTogether.
 
 ### Collaboration Guidelines
 We ask that you practice effective communication, preferably through comments on the GitHub issues:
