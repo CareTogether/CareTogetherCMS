@@ -2309,6 +2309,10 @@
           },
           "arrangementFunction": {
             "type": "string"
+          },
+          "arrangementFunctionVariant": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -2322,6 +2326,10 @@
           },
           "arrangementFunction": {
             "type": "string"
+          },
+          "arrangementFunctionVariant": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -3851,6 +3859,10 @@
               },
               "arrangementFunction": {
                 "type": "string"
+              },
+              "arrangementFunctionVariant": {
+                "type": "string",
+                "nullable": true
               }
             }
           }
@@ -3871,6 +3883,10 @@
               },
               "arrangementFunction": {
                 "type": "string"
+              },
+              "arrangementFunctionVariant": {
+                "type": "string",
+                "nullable": true
               }
             }
           }
@@ -4086,6 +4102,10 @@
               },
               "arrangementFunction": {
                 "type": "string"
+              },
+              "arrangementFunctionVariant": {
+                "type": "string",
+                "nullable": true
               }
             }
           }
@@ -4106,6 +4126,10 @@
               },
               "arrangementFunction": {
                 "type": "string"
+              },
+              "arrangementFunctionVariant": {
+                "type": "string",
+                "nullable": true
               }
             }
           }

@@ -153,22 +153,28 @@ namespace CareTogether.Resources.Referrals
                             AssignIndividualVolunteer c => (arrangementEntry with
                             {
                                 IndividualVolunteerAssignments = arrangementEntry.IndividualVolunteerAssignments.Add(
-                                    new IndividualVolunteerAssignment(c.VolunteerFamilyId, c.PersonId, c.ArrangementFunction))
+                                    new IndividualVolunteerAssignment(c.VolunteerFamilyId, c.PersonId,
+                                        c.ArrangementFunction, c.ArrangementFunctionVariant))
                             }, null),
                             AssignVolunteerFamily c => (arrangementEntry with
                             {
                                 FamilyVolunteerAssignments = arrangementEntry.FamilyVolunteerAssignments.Add(
-                                    new FamilyVolunteerAssignment(c.VolunteerFamilyId, c.ArrangementFunction))
+                                    new FamilyVolunteerAssignment(c.VolunteerFamilyId,
+                                        c.ArrangementFunction, c.ArrangementFunctionVariant))
                             }, null),
                             UnassignIndividualVolunteer c => (arrangementEntry with
                             {
                                 IndividualVolunteerAssignments = arrangementEntry.IndividualVolunteerAssignments.RemoveAll(iva =>
-                                    iva.ArrangementFunction == c.ArrangementFunction && iva.FamilyId == c.VolunteerFamilyId && iva.PersonId == c.PersonId)
+                                    iva.ArrangementFunction == c.ArrangementFunction &&
+                                    iva.ArrangementFunctionVariant == c.ArrangementFunctionVariant &&
+                                    iva.FamilyId == c.VolunteerFamilyId && iva.PersonId == c.PersonId)
                             }, null),
                             UnassignVolunteerFamily c => (arrangementEntry with
                             {
                                 FamilyVolunteerAssignments = arrangementEntry.FamilyVolunteerAssignments.RemoveAll(fva =>
-                                    fva.ArrangementFunction == c.ArrangementFunction && fva.FamilyId == c.VolunteerFamilyId)
+                                    fva.ArrangementFunction == c.ArrangementFunction &&
+                                    fva.ArrangementFunctionVariant == c.ArrangementFunctionVariant &&
+                                    fva.FamilyId == c.VolunteerFamilyId)
                             }, null),
                             StartArrangements c => (arrangementEntry with
                             {

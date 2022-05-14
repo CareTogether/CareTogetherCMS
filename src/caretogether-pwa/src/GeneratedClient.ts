@@ -3754,6 +3754,7 @@ export class IndividualVolunteerAssignment implements IIndividualVolunteerAssign
     familyId?: string;
     personId?: string;
     arrangementFunction?: string;
+    arrangementFunctionVariant?: string | undefined;
 
     constructor(data?: IIndividualVolunteerAssignment) {
         if (data) {
@@ -3769,6 +3770,7 @@ export class IndividualVolunteerAssignment implements IIndividualVolunteerAssign
             this.familyId = _data["familyId"];
             this.personId = _data["personId"];
             this.arrangementFunction = _data["arrangementFunction"];
+            this.arrangementFunctionVariant = _data["arrangementFunctionVariant"];
         }
     }
 
@@ -3784,6 +3786,7 @@ export class IndividualVolunteerAssignment implements IIndividualVolunteerAssign
         data["familyId"] = this.familyId;
         data["personId"] = this.personId;
         data["arrangementFunction"] = this.arrangementFunction;
+        data["arrangementFunctionVariant"] = this.arrangementFunctionVariant;
         return data;
     }
 }
@@ -3792,11 +3795,13 @@ export interface IIndividualVolunteerAssignment {
     familyId?: string;
     personId?: string;
     arrangementFunction?: string;
+    arrangementFunctionVariant?: string | undefined;
 }
 
 export class FamilyVolunteerAssignment implements IFamilyVolunteerAssignment {
     familyId?: string;
     arrangementFunction?: string;
+    arrangementFunctionVariant?: string | undefined;
 
     constructor(data?: IFamilyVolunteerAssignment) {
         if (data) {
@@ -3811,6 +3816,7 @@ export class FamilyVolunteerAssignment implements IFamilyVolunteerAssignment {
         if (_data) {
             this.familyId = _data["familyId"];
             this.arrangementFunction = _data["arrangementFunction"];
+            this.arrangementFunctionVariant = _data["arrangementFunctionVariant"];
         }
     }
 
@@ -3825,6 +3831,7 @@ export class FamilyVolunteerAssignment implements IFamilyVolunteerAssignment {
         data = typeof data === 'object' ? data : {};
         data["familyId"] = this.familyId;
         data["arrangementFunction"] = this.arrangementFunction;
+        data["arrangementFunctionVariant"] = this.arrangementFunctionVariant;
         return data;
     }
 }
@@ -3832,6 +3839,7 @@ export class FamilyVolunteerAssignment implements IFamilyVolunteerAssignment {
 export interface IFamilyVolunteerAssignment {
     familyId?: string;
     arrangementFunction?: string;
+    arrangementFunctionVariant?: string | undefined;
 }
 
 export class ChildLocationHistoryEntry implements IChildLocationHistoryEntry {
@@ -6832,6 +6840,7 @@ export class AssignIndividualVolunteer extends ArrangementsCommand implements IA
     volunteerFamilyId?: string;
     personId?: string;
     arrangementFunction?: string;
+    arrangementFunctionVariant?: string | undefined;
 
     constructor(data?: IAssignIndividualVolunteer) {
         super(data);
@@ -6844,6 +6853,7 @@ export class AssignIndividualVolunteer extends ArrangementsCommand implements IA
             this.volunteerFamilyId = _data["volunteerFamilyId"];
             this.personId = _data["personId"];
             this.arrangementFunction = _data["arrangementFunction"];
+            this.arrangementFunctionVariant = _data["arrangementFunctionVariant"];
         }
     }
 
@@ -6859,6 +6869,7 @@ export class AssignIndividualVolunteer extends ArrangementsCommand implements IA
         data["volunteerFamilyId"] = this.volunteerFamilyId;
         data["personId"] = this.personId;
         data["arrangementFunction"] = this.arrangementFunction;
+        data["arrangementFunctionVariant"] = this.arrangementFunctionVariant;
         super.toJSON(data);
         return data;
     }
@@ -6868,11 +6879,13 @@ export interface IAssignIndividualVolunteer extends IArrangementsCommand {
     volunteerFamilyId?: string;
     personId?: string;
     arrangementFunction?: string;
+    arrangementFunctionVariant?: string | undefined;
 }
 
 export class AssignVolunteerFamily extends ArrangementsCommand implements IAssignVolunteerFamily {
     volunteerFamilyId?: string;
     arrangementFunction?: string;
+    arrangementFunctionVariant?: string | undefined;
 
     constructor(data?: IAssignVolunteerFamily) {
         super(data);
@@ -6884,6 +6897,7 @@ export class AssignVolunteerFamily extends ArrangementsCommand implements IAssig
         if (_data) {
             this.volunteerFamilyId = _data["volunteerFamilyId"];
             this.arrangementFunction = _data["arrangementFunction"];
+            this.arrangementFunctionVariant = _data["arrangementFunctionVariant"];
         }
     }
 
@@ -6898,6 +6912,7 @@ export class AssignVolunteerFamily extends ArrangementsCommand implements IAssig
         data = typeof data === 'object' ? data : {};
         data["volunteerFamilyId"] = this.volunteerFamilyId;
         data["arrangementFunction"] = this.arrangementFunction;
+        data["arrangementFunctionVariant"] = this.arrangementFunctionVariant;
         super.toJSON(data);
         return data;
     }
@@ -6906,6 +6921,7 @@ export class AssignVolunteerFamily extends ArrangementsCommand implements IAssig
 export interface IAssignVolunteerFamily extends IArrangementsCommand {
     volunteerFamilyId?: string;
     arrangementFunction?: string;
+    arrangementFunctionVariant?: string | undefined;
 }
 
 export class CancelArrangementsSetup extends ArrangementsCommand implements ICancelArrangementsSetup {
@@ -7240,6 +7256,7 @@ export class UnassignIndividualVolunteer extends ArrangementsCommand implements 
     volunteerFamilyId?: string;
     personId?: string;
     arrangementFunction?: string;
+    arrangementFunctionVariant?: string | undefined;
 
     constructor(data?: IUnassignIndividualVolunteer) {
         super(data);
@@ -7252,6 +7269,7 @@ export class UnassignIndividualVolunteer extends ArrangementsCommand implements 
             this.volunteerFamilyId = _data["volunteerFamilyId"];
             this.personId = _data["personId"];
             this.arrangementFunction = _data["arrangementFunction"];
+            this.arrangementFunctionVariant = _data["arrangementFunctionVariant"];
         }
     }
 
@@ -7267,6 +7285,7 @@ export class UnassignIndividualVolunteer extends ArrangementsCommand implements 
         data["volunteerFamilyId"] = this.volunteerFamilyId;
         data["personId"] = this.personId;
         data["arrangementFunction"] = this.arrangementFunction;
+        data["arrangementFunctionVariant"] = this.arrangementFunctionVariant;
         super.toJSON(data);
         return data;
     }
@@ -7276,11 +7295,13 @@ export interface IUnassignIndividualVolunteer extends IArrangementsCommand {
     volunteerFamilyId?: string;
     personId?: string;
     arrangementFunction?: string;
+    arrangementFunctionVariant?: string | undefined;
 }
 
 export class UnassignVolunteerFamily extends ArrangementsCommand implements IUnassignVolunteerFamily {
     volunteerFamilyId?: string;
     arrangementFunction?: string;
+    arrangementFunctionVariant?: string | undefined;
 
     constructor(data?: IUnassignVolunteerFamily) {
         super(data);
@@ -7292,6 +7313,7 @@ export class UnassignVolunteerFamily extends ArrangementsCommand implements IUna
         if (_data) {
             this.volunteerFamilyId = _data["volunteerFamilyId"];
             this.arrangementFunction = _data["arrangementFunction"];
+            this.arrangementFunctionVariant = _data["arrangementFunctionVariant"];
         }
     }
 
@@ -7306,6 +7328,7 @@ export class UnassignVolunteerFamily extends ArrangementsCommand implements IUna
         data = typeof data === 'object' ? data : {};
         data["volunteerFamilyId"] = this.volunteerFamilyId;
         data["arrangementFunction"] = this.arrangementFunction;
+        data["arrangementFunctionVariant"] = this.arrangementFunctionVariant;
         super.toJSON(data);
         return data;
     }
@@ -7314,6 +7337,7 @@ export class UnassignVolunteerFamily extends ArrangementsCommand implements IUna
 export interface IUnassignVolunteerFamily extends IArrangementsCommand {
     volunteerFamilyId?: string;
     arrangementFunction?: string;
+    arrangementFunctionVariant?: string | undefined;
 }
 
 export class UnexemptArrangementRequirement extends ArrangementsCommand implements IUnexemptArrangementRequirement {
