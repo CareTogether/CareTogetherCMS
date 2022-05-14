@@ -1117,6 +1117,12 @@
               "type": "string",
               "format": "guid"
             }
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArrangementFunctionVariant"
+            }
           }
         }
       },
@@ -1133,6 +1139,33 @@
           1,
           2
         ]
+      },
+      "ArrangementFunctionVariant": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "variantName": {
+            "type": "string"
+          },
+          "requiredSetupActionNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "requiredMonitoringActions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonitoringRequirement"
+            }
+          },
+          "requiredCloseoutActionNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
       },
       "MonitoringRequirement": {
         "type": "object",

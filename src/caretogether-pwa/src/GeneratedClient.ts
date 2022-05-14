@@ -1387,6 +1387,7 @@ export class ArrangementFunction implements IArrangementFunction {
     eligibleIndividualVolunteerRoles?: string[];
     eligibleVolunteerFamilyRoles?: string[];
     eligiblePeople?: string[];
+    variants?: ArrangementFunctionVariant[];
 
     constructor(data?: IArrangementFunction) {
         if (data) {
@@ -1415,6 +1416,11 @@ export class ArrangementFunction implements IArrangementFunction {
                 this.eligiblePeople = [] as any;
                 for (let item of _data["eligiblePeople"])
                     this.eligiblePeople!.push(item);
+            }
+            if (Array.isArray(_data["variants"])) {
+                this.variants = [] as any;
+                for (let item of _data["variants"])
+                    this.variants!.push(ArrangementFunctionVariant.fromJS(item));
             }
         }
     }
@@ -1445,6 +1451,11 @@ export class ArrangementFunction implements IArrangementFunction {
             for (let item of this.eligiblePeople)
                 data["eligiblePeople"].push(item);
         }
+        if (Array.isArray(this.variants)) {
+            data["variants"] = [];
+            for (let item of this.variants)
+                data["variants"].push(item.toJSON());
+        }
         return data;
     }
 }
@@ -1455,12 +1466,85 @@ export interface IArrangementFunction {
     eligibleIndividualVolunteerRoles?: string[];
     eligibleVolunteerFamilyRoles?: string[];
     eligiblePeople?: string[];
+    variants?: ArrangementFunctionVariant[];
 }
 
 export enum FunctionRequirement {
     ZeroOrMore = 0,
     ExactlyOne = 1,
     OneOrMore = 2,
+}
+
+export class ArrangementFunctionVariant implements IArrangementFunctionVariant {
+    variantName?: string;
+    requiredSetupActionNames?: string[];
+    requiredMonitoringActions?: MonitoringRequirement[];
+    requiredCloseoutActionNames?: string[];
+
+    constructor(data?: IArrangementFunctionVariant) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.variantName = _data["variantName"];
+            if (Array.isArray(_data["requiredSetupActionNames"])) {
+                this.requiredSetupActionNames = [] as any;
+                for (let item of _data["requiredSetupActionNames"])
+                    this.requiredSetupActionNames!.push(item);
+            }
+            if (Array.isArray(_data["requiredMonitoringActions"])) {
+                this.requiredMonitoringActions = [] as any;
+                for (let item of _data["requiredMonitoringActions"])
+                    this.requiredMonitoringActions!.push(MonitoringRequirement.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredCloseoutActionNames"])) {
+                this.requiredCloseoutActionNames = [] as any;
+                for (let item of _data["requiredCloseoutActionNames"])
+                    this.requiredCloseoutActionNames!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): ArrangementFunctionVariant {
+        data = typeof data === 'object' ? data : {};
+        let result = new ArrangementFunctionVariant();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["variantName"] = this.variantName;
+        if (Array.isArray(this.requiredSetupActionNames)) {
+            data["requiredSetupActionNames"] = [];
+            for (let item of this.requiredSetupActionNames)
+                data["requiredSetupActionNames"].push(item);
+        }
+        if (Array.isArray(this.requiredMonitoringActions)) {
+            data["requiredMonitoringActions"] = [];
+            for (let item of this.requiredMonitoringActions)
+                data["requiredMonitoringActions"].push(item.toJSON());
+        }
+        if (Array.isArray(this.requiredCloseoutActionNames)) {
+            data["requiredCloseoutActionNames"] = [];
+            for (let item of this.requiredCloseoutActionNames)
+                data["requiredCloseoutActionNames"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IArrangementFunctionVariant {
+    variantName?: string;
+    requiredSetupActionNames?: string[];
+    requiredMonitoringActions?: MonitoringRequirement[];
+    requiredCloseoutActionNames?: string[];
 }
 
 export class MonitoringRequirement implements IMonitoringRequirement {
