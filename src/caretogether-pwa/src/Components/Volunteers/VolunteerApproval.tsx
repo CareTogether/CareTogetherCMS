@@ -207,8 +207,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   // Filter volunteer families by name and by applicable roles.
   const filteredVolunteerFamilies = volunteerFamilies.filter(family => (
       filterText.length === 0 ||
-      family.family?.adults?.some(adult => simplify(`${adult.item1?.firstName} ${adult.item1?.lastName}`).includes(filterText)) ||
-      family.family?.children?.some(child => simplify(`${child?.firstName} ${child?.lastName}`).includes(filterText))) && (
+      family.family?.adults?.some(adult => simplify(`${adult.item1?.firstName} ${adult.item1?.lastName}`).includes(filterText.toLowerCase())) ||
+      family.family?.children?.some(child => simplify(`${child?.firstName} ${child?.lastName}`).includes(filterText.toLowerCase()))) && (
       volunteerFamilyRoleFilters.every(roleFilter =>
         family.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.roleName]?.some(approval =>
           roleFilter.selected.indexOf(approval.approvalStatus!) > -1) || roleFilter.selected.indexOf(null) > -1) &&

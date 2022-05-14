@@ -59,8 +59,8 @@ function VolunteerProgress(props: { onOpen: () => void }) {
 
   const [filterText, setFilterText] = useState("");
   const filteredVolunteerFamilies = volunteerFamilies.filter(family => filterText.length === 0 ||
-    family.family?.adults?.some(adult => simplify(`${adult.item1?.firstName} ${adult.item1?.lastName}`).includes(filterText)) ||
-    family.family?.children?.some(child => simplify(`${child?.firstName} ${child?.lastName}`).includes(filterText)));
+    family.family?.adults?.some(adult => simplify(`${adult.item1?.firstName} ${adult.item1?.lastName}`).includes(filterText.toLowerCase())) ||
+    family.family?.children?.some(child => simplify(`${child?.firstName} ${child?.lastName}`).includes(filterText.toLowerCase())));
 
   useScrollMemory();
 
