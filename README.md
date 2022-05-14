@@ -25,8 +25,6 @@ You will also need to install [the Azurite emulator for Azure Storage](https://g
 npm install -g azurite yarn
 ```
 
-Finally, to run locally you will need a set of environment configuration files. This may be fixed in the future but for now, please contact [Lars Kemmann](https://github.com/LarsKemmann) to obtain the required information.
-
 ## Development
 1. Clone the repository into any local directory on your device, e.g. `D:\Code\CareTogetherCMS`.
 2. Start Azurite from the command line with the `--loose` flag:
@@ -41,11 +39,15 @@ Finally, to run locally you will need a set of environment configuration files. 
    ```
    dotnet run SolutionDir=..
    ```
+   **NOTE:** The API project comes with a basic set of test data for local development. This test data is automatically regenerated each time you start the API project.
 4. To run the _caretogether-pwa_ web application, run the following from the _caretogether-pwa_ directory:
    ```
    yarn install
    yarn start
    ```
+5. To sign into the application's local test environment, use the following credentials:
+   - Email Address: `test@bynalogic.com`
+   - Password: `P@ssw0rd`
 
 ## Licensing Notice
 CareTogether is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0) which, crucially, **only permits hosting this software (including derivatives) if** you also make the source code of the software and any of your modifications available to your users under this same license. This effectively ensures that CareTogether CMS remains forever open-source and doesn't simply become the base code for a proprietary derivative at some point. We value collaboration and openness, and we believe that the best way to accomplish this is to ensure the software remains open to everyone.
