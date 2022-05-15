@@ -10,11 +10,9 @@ import { MainDrawer } from './Components/MainDrawer';
 function App() {
   const [open, setOpen] = React.useState(false);
   const handleDrawerOpen = () => {
-    console.log('open');
     setOpen(true);
   };
   const handleDrawerClose = () => {
-    console.log('close');
     setOpen(false);
   };
 
