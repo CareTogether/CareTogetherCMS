@@ -46,11 +46,11 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const mainListItems = (flags: CurrentFeatureFlags) => (
-  <List aria-label="main navigation">
+//const mainListItems = (flags: CurrentFeatureFlags) => (
+//  <List aria-label="main navigation">
     {/* <ListItemLink to="/dashboard" primary="Dashboard" icon={<DashboardIcon />} /> */}
-  </List>
-);
+//  </List>
+//);
 
 const secondaryListItems = (flags: CurrentFeatureFlags) => (
   <List aria-label="secondary navigation">
