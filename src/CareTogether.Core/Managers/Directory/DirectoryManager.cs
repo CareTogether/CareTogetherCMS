@@ -317,6 +317,7 @@ namespace CareTogether.Managers.Directory
             var destinationNumbers = familyPrimaryContactNumbers
                 .Where(x => x.phoneNumber != null)
                 .Select(x => x.phoneNumber!.Number)
+                .Distinct()
                 .ToImmutableList();
 
             var sendResults = await telephony.SendSmsMessageAsync(sourcePhoneNumber, destinationNumbers, message);
