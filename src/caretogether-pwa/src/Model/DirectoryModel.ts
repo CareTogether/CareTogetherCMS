@@ -282,21 +282,21 @@ export function useDirectoryModel() {
       return command;
     });
   const addPersonEmailAddress = usePersonCommandCallback(
-    async (familyId, personId, emailAddress: string, phoneType: EmailAddressType) => {
+    async (familyId, personId, emailAddress: string, phoneType: EmailAddressType, isPreferred: boolean) => {
       const command = new AddPersonEmailAddress({
         personId: personId
       });
       command.emailAddress = new EmailAddress({ address: emailAddress, type: phoneType })
-      command.isPreferredEmailAddress = true;
+      command.isPreferredEmailAddress = isPreferred;
       return command;
     });
   const updatePersonEmailAddress = usePersonCommandCallback(
-    async (familyId, personId, phoneId: string, emailAddress: string, phoneType: EmailAddressType) => {
+    async (familyId, personId, phoneId: string, emailAddress: string, phoneType: EmailAddressType, isPreferred: boolean) => {
       const command = new UpdatePersonEmailAddress({
         personId: personId
       });
       command.emailAddress = new EmailAddress({ id: phoneId, address: emailAddress, type: phoneType })
-      command.isPreferredEmailAddress = true;
+      command.isPreferredEmailAddress = isPreferred;
       return command;
     });
   const addPersonAddress = usePersonCommandCallback(
