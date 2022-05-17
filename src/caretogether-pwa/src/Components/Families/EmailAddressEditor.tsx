@@ -1,23 +1,36 @@
-import { FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@mui/material';
+import { Button, FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 import { useDirectoryModel } from '../../Model/DirectoryModel';
 import { useInlineEditor } from '../../useInlineEditor';
 import { PersonEditorProps } from "./PersonEditorProps";
 import { EmailAddress, IEmailAddress, EmailAddressType } from '../../GeneratedClient';
 
 type EmailAddressEditorProps = PersonEditorProps & {
-  emailAddress: EmailAddress
+  add?: boolean
+  emailAddress?: EmailAddress
 }
 
-export function EmailAddressEditor({ familyId, person, emailAddress }: EmailAddressEditorProps) {
+export function EmailAddressEditor({ familyId, person, add, emailAddress }: EmailAddressEditorProps) {
   const directoryModel = useDirectoryModel();
 
   const editor = useInlineEditor(async value =>
-    await directoryModel.updatePersonEmailAddress(familyId!, person.id!,
-      value.id!, value.address!, value.type!),
-    emailAddress as IEmailAddress,
+    await (add
+      ? directoryModel.addPersonEmailAddress(familyId!, person.id!,
+          value!.address!, value!.type!)
+      : directoryModel.updatePersonEmailAddress(familyId!, person.id!,
+          value.id!, value.address!, value.type!)),
+    emailAddress as IEmailAddress | undefined,
     value => (value && value.address!.length > 0 &&
-      (value.address !== emailAddress.address || value.type !== emailAddress.type)) as boolean);
+      (value.address !== emailAddress?.address || value.type !== emailAddress?.type)) as boolean);
 
+  function handleAdd() {
+    editor.setValue({
+      address: "",
+      type: EmailAddressType.Personal
+    });
+    editor.setEditing(true);
+  }
+  
   return (
     <Grid container spacing={2}>
       {editor.editing
@@ -44,8 +57,18 @@ export function EmailAddressEditor({ familyId, person, emailAddress }: EmailAddr
             </Grid>
           </>
         : <Grid item xs={12}>
-            {emailAddress.address} - {EmailAddressType[emailAddress.type!]}
-            {editor.editButton}
+          { add
+            ? <Button
+                onClick={handleAdd}
+                variant="text"
+                size="small"
+                startIcon={<AddIcon />}>
+                Add
+              </Button>
+            : <>
+              {emailAddress!.address} - {EmailAddressType[emailAddress!.type!]}
+              {editor.editButton}
+              </>}
         </Grid>}
     </Grid>
   );
