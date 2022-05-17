@@ -45,6 +45,7 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
         <h4 style={{ marginBottom:0 }}>Phone Number(s):</h4>
         {person.phoneNumbers?.map(phoneNumber =>
           <PhoneNumberEditor key={phoneNumber.id!} phoneNumber={phoneNumber} {...personEditorProps } />)}
+        <PhoneNumberEditor add {...personEditorProps} />
         <h4 style={{ marginBottom:0 }}>Email Address(es):</h4>
         {person.emailAddresses?.map(emailAddress =>
           <EmailAddressEditor key={emailAddress.id!} emailAddress={emailAddress} {...personEditorProps } />)}
