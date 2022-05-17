@@ -1,27 +1,43 @@
-import { Grid, TextField } from '@mui/material';
+import { Button, Grid, TextField } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 import { useDirectoryModel } from '../../Model/DirectoryModel';
 import { useInlineEditor } from '../../useInlineEditor';
 import { PersonEditorProps } from "./PersonEditorProps";
 import { Address, IAddress } from '../../GeneratedClient';
 
 type AddressEditorProps = PersonEditorProps & {
-  address: Address
+  add?: boolean
+  address?: Address
 }
 
-export function AddressEditor({ familyId, person, address }: AddressEditorProps) {
+export function AddressEditor({ familyId, person, add, address }: AddressEditorProps) {
   const directoryModel = useDirectoryModel();
 
   const editor = useInlineEditor(async value =>
-    await directoryModel.updatePersonAddress(familyId!, person.id!,
-      value.id!, value.line1!, value.line2 && value.line2.length > 0 ? value.line2 : null,
-      value.city!, value.state!, value.postalCode!),
-    address as IAddress,
+    await (add
+      ? directoryModel.addPersonAddress(familyId!, person.id!,
+          value!.line1!, value!.line2 && value!.line2.length > 0 ? value.line2 : null,
+          value!.city!, value!.state!, value!.postalCode!)
+      : directoryModel.updatePersonAddress(familyId!, person.id!,
+          value.id!, value.line1!, value.line2 && value.line2.length > 0 ? value.line2 : null,
+          value.city!, value.state!, value.postalCode!)),
+    address as IAddress | undefined,
     value => (value &&
       (value.line1!.length > 0 && value.city!.length > 0 && value.state!.length > 0 && value.postalCode!.length > 0) &&
-      (value.line1 !== address.line1 ||
-        (address.line2 && address.line2.length > 0 ? value.line2 !== address.line2 : value.line2 !== "") ||
-        value.city !== address.city || value.state !== address.state || value.postalCode !== address.postalCode)) as boolean);
+      (value.line1 !== address?.line1 ||
+        (address?.line2 && address?.line2.length > 0 ? value.line2 !== address?.line2 : value.line2 !== "") ||
+        value.city !== address?.city || value.state !== address?.state || value.postalCode !== address?.postalCode)) as boolean);
 
+  function handleAdd() {
+    editor.setValue({
+      line1: "",
+      city: "",
+      state: "",
+      postalCode: ""
+    });
+    editor.setEditing(true);
+  }
+  
   return (
     <Grid container spacing={2}>
       {editor.editing
@@ -57,12 +73,22 @@ export function AddressEditor({ familyId, person, address }: AddressEditorProps)
             </Grid>
           </>
         : <Grid item xs={12}>
-            <p style={{display: 'inline-block', margin: 0}}>
-              {address.line1}<br />
-              {address.line2 && <>{address.line2}<br /></>}
-              {address.city},&nbsp;{address.state}&nbsp;{address.postalCode}
-            </p>
-            {editor.editButton}
+          { add
+            ? <Button
+                onClick={handleAdd}
+                variant="text"
+                size="small"
+                startIcon={<AddIcon />}>
+                Add
+              </Button>
+            : <>
+                <p style={{display: 'inline-block', margin: 0}}>
+                  {address!.line1}<br />
+                  {address!.line2 && <>{address!.line2}<br /></>}
+                  {address!.city},&nbsp;{address!.state}&nbsp;{address!.postalCode}
+                </p>
+                {editor.editButton}
+              </>}
         </Grid>}
     </Grid>
   );
