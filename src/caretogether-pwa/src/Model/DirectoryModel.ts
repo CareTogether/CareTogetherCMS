@@ -264,58 +264,58 @@ export function useDirectoryModel() {
       return command;
     });
   const addPersonPhoneNumber = usePersonCommandCallback(
-    async (familyId, personId, phoneNumber: string, phoneType: PhoneNumberType) => {
+    async (familyId, personId, phoneNumber: string, phoneType: PhoneNumberType, isPreferred: boolean) => {
       const command = new AddPersonPhoneNumber({
         personId: personId
       });
       command.phoneNumber = new PhoneNumber({ number: phoneNumber, type: phoneType })
-      command.isPreferredPhoneNumber = true;
+      command.isPreferredPhoneNumber = isPreferred;
       return command;
     });
   const updatePersonPhoneNumber = usePersonCommandCallback(
-    async (familyId, personId, phoneId: string, phoneNumber: string, phoneType: PhoneNumberType) => {
+    async (familyId, personId, phoneId: string, phoneNumber: string, phoneType: PhoneNumberType, isPreferred: boolean) => {
       const command = new UpdatePersonPhoneNumber({
         personId: personId
       });
       command.phoneNumber = new PhoneNumber({ id: phoneId, number: phoneNumber, type: phoneType })
-      command.isPreferredPhoneNumber = true;
+      command.isPreferredPhoneNumber = isPreferred;
       return command;
     });
   const addPersonEmailAddress = usePersonCommandCallback(
-    async (familyId, personId, emailAddress: string, phoneType: EmailAddressType) => {
+    async (familyId, personId, emailAddress: string, phoneType: EmailAddressType, isPreferred: boolean) => {
       const command = new AddPersonEmailAddress({
         personId: personId
       });
       command.emailAddress = new EmailAddress({ address: emailAddress, type: phoneType })
-      command.isPreferredEmailAddress = true;
+      command.isPreferredEmailAddress = isPreferred;
       return command;
     });
   const updatePersonEmailAddress = usePersonCommandCallback(
-    async (familyId, personId, phoneId: string, emailAddress: string, phoneType: EmailAddressType) => {
+    async (familyId, personId, phoneId: string, emailAddress: string, phoneType: EmailAddressType, isPreferred: boolean) => {
       const command = new UpdatePersonEmailAddress({
         personId: personId
       });
       command.emailAddress = new EmailAddress({ id: phoneId, address: emailAddress, type: phoneType })
-      command.isPreferredEmailAddress = true;
+      command.isPreferredEmailAddress = isPreferred;
       return command;
     });
   const addPersonAddress = usePersonCommandCallback(
-    async (familyId, personId, line1: string, line2: string | null, city: string, state: string, postalCode: string) => {
+    async (familyId, personId, line1: string, line2: string | null, city: string, state: string, postalCode: string, isCurrent: boolean) => {
       const command = new AddPersonAddress({
         personId: personId
       });
       command.address = new Address({ line1: line1, line2: line2 == null ? undefined : line2, city: city, state: state, postalCode: postalCode })
-      command.isCurrentAddress = true;
+      command.isCurrentAddress = isCurrent;
       return command;
     });
   const updatePersonAddress = usePersonCommandCallback(
     async (familyId, personId, addressId: string,
-      line1: string, line2: string | null, city: string, state: string, postalCode: string) => {
+      line1: string, line2: string | null, city: string, state: string, postalCode: string, isCurrent: boolean) => {
       const command = new UpdatePersonAddress({
         personId: personId
       });
       command.address = new Address({ id: addressId, line1: line1, line2: line2 == null ? undefined : line2, city: city, state: state, postalCode: postalCode })
-      command.isCurrentAddress = true;
+      command.isCurrentAddress = isCurrent;
       return command;
     });
   const addAdult = useDirectoryCommandCallback(

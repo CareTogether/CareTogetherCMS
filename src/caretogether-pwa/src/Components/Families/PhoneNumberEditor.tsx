@@ -1,40 +1,57 @@
-import { Button, FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@mui/material';
+import { Button, Checkbox, Divider, FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { useDirectoryModel } from '../../Model/DirectoryModel';
 import { useInlineEditor } from '../../useInlineEditor';
 import { PersonEditorProps } from "./PersonEditorProps";
 import { PhoneNumber, IPhoneNumber, PhoneNumberType } from '../../GeneratedClient';
+import { Favorite, FavoriteBorder } from '@mui/icons-material';
 
 type PhoneNumberEditorProps = PersonEditorProps & {
   add?: boolean
   phoneNumber?: PhoneNumber
 }
 
+type IPhoneNumberWithPreference = IPhoneNumber & {
+  isPreferred?: boolean
+}
+
 export function PhoneNumberEditor({ familyId, person, add, phoneNumber }: PhoneNumberEditorProps) {
   const directoryModel = useDirectoryModel();
+
+  // Automatically assume this is the person's preferred phone number if it is the
+  // first phone number being added for that person.
+  const isPreferred = person.preferredPhoneNumberId === phoneNumber?.id ||
+    typeof person.phoneNumbers === 'undefined' ||
+    person.phoneNumbers.length === 0;
+  const phoneNumberWithPreference = {...phoneNumber} as IPhoneNumberWithPreference | undefined;
+  if (typeof phoneNumberWithPreference !== 'undefined')
+    phoneNumberWithPreference.isPreferred = isPreferred;
 
   const editor = useInlineEditor(async value =>
     await (add
       ? directoryModel.addPersonPhoneNumber(familyId!, person.id!,
-          value!.number!, value!.type!)
+          value!.number!, value!.type!, value!.isPreferred!)
       : directoryModel.updatePersonPhoneNumber(familyId!, person.id!,
-          value!.id!, value!.number!, value!.type!)),
-    phoneNumber as IPhoneNumber | undefined,
+          value!.id!, value!.number!, value!.type!, value!.isPreferred!)),
+    phoneNumberWithPreference,
     value => (value && value.number!.length > 0 &&
-      (value.number !== phoneNumber?.number || value.type !== phoneNumber?.type)) as boolean);
+      (value.number !== phoneNumber?.number || value.type !== phoneNumber?.type ||
+        value.isPreferred !== isPreferred)) as boolean);
   
   function handleAdd() {
     editor.setValue({
       number: "",
-      type: PhoneNumberType.Mobile
+      type: PhoneNumberType.Mobile,
+      isPreferred: isPreferred
     });
     editor.setEditing(true);
   }
 
   return (
-    <Grid container spacing={2}>
+    <Grid container rowSpacing={0} columnSpacing={2}>
       {editor.editing
         ? <>
+            <Grid item xs={12}><Divider /><br /></Grid>
             <Grid item xs={12} sm={6}>
               <TextField id="phone-number" label="Phone Number" fullWidth size="small" type="tel"
                 value={editor.value!.number!}
@@ -52,10 +69,19 @@ export function PhoneNumberEditor({ familyId, person, add, phoneNumber }: PhoneN
                 </RadioGroup>
               </FormControl>
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
+              <FormControlLabel control={
+                <Checkbox checked={editor.value!.isPreferred}
+                  onChange={e => editor.setValue({...editor.value, isPreferred: e.target.checked})}
+                  icon={<FavoriteBorder />}
+                  checkedIcon={<Favorite />} />}
+                label="Is Preferred Phone Number" />
+            </Grid>
+            <Grid item xs={12} sm={6}>
               {editor.cancelButton}
               {editor.saveButton}
             </Grid>
+            <Grid item xs={12}><Divider /><br /></Grid>
           </>
         : <Grid item xs={12}>
           { add
@@ -67,6 +93,9 @@ export function PhoneNumberEditor({ familyId, person, add, phoneNumber }: PhoneN
                 Add
               </Button>
             : <>
+                {isPreferred
+                  ? <Favorite fontSize='small' color='disabled' sx={{verticalAlign: 'middle', marginRight: 1}} />
+                  : <FavoriteBorder fontSize='small' color='disabled' sx={{verticalAlign: 'middle', marginRight: 1}} />}
                 {phoneNumber!.number} - {PhoneNumberType[phoneNumber!.type!]}
                 {editor.editButton}
               </>}
