@@ -264,21 +264,21 @@ export function useDirectoryModel() {
       return command;
     });
   const addPersonPhoneNumber = usePersonCommandCallback(
-    async (familyId, personId, phoneNumber: string, phoneType: PhoneNumberType) => {
+    async (familyId, personId, phoneNumber: string, phoneType: PhoneNumberType, isPreferred: boolean) => {
       const command = new AddPersonPhoneNumber({
         personId: personId
       });
       command.phoneNumber = new PhoneNumber({ number: phoneNumber, type: phoneType })
-      command.isPreferredPhoneNumber = true;
+      command.isPreferredPhoneNumber = isPreferred;
       return command;
     });
   const updatePersonPhoneNumber = usePersonCommandCallback(
-    async (familyId, personId, phoneId: string, phoneNumber: string, phoneType: PhoneNumberType) => {
+    async (familyId, personId, phoneId: string, phoneNumber: string, phoneType: PhoneNumberType, isPreferred: boolean) => {
       const command = new UpdatePersonPhoneNumber({
         personId: personId
       });
       command.phoneNumber = new PhoneNumber({ id: phoneId, number: phoneNumber, type: phoneType })
-      command.isPreferredPhoneNumber = true;
+      command.isPreferredPhoneNumber = isPreferred;
       return command;
     });
   const addPersonEmailAddress = usePersonCommandCallback(
