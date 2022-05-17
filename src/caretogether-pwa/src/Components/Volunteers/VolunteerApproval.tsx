@@ -295,6 +295,9 @@ function VolunteerApproval(props: { onOpen: () => void }) {
           <Table className={classes.table} size="small">
             <TableHead>
               <TableRow>
+                {smsMode && <TableCell sx={{ padding: 0, width: '36px' }}>
+                  <Checkbox size='small' defaultChecked />
+                </TableCell>}
                 {expandedView
                 ? <>
                     <TableCell>First Name</TableCell>
@@ -315,6 +318,9 @@ function VolunteerApproval(props: { onOpen: () => void }) {
               {filteredVolunteerFamilies.map((volunteerFamily) => (
                 <React.Fragment key={volunteerFamily.family?.id}>
                   <TableRow className={classes.familyRow} onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}>
+                    {smsMode && <TableCell key="-" sx={{ padding: 0, width: '36px' }}>
+                      <Checkbox size='small' defaultChecked />
+                    </TableCell>}
                     <TableCell key="1" colSpan={expandedView ? 4 : 1}>{familyLastName(volunteerFamily) + " Family"
                     }</TableCell>
                     { volunteerFamilyRoleFilters.map(roleFilter =>
@@ -348,6 +354,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                     <TableRow key={volunteerFamily.family?.id + ":" + adult.item1.id}
                       onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}
                       className={classes.adultRow}>
+                      {smsMode && <TableCell />}
                       <TableCell>{adult.item1.firstName}</TableCell>
                       <TableCell>{adult.item1.lastName}</TableCell>
                       <TableCell>{typeof(adult.item1.gender) === 'undefined' ? "" : Gender[adult.item1.gender]}</TableCell>
@@ -370,6 +377,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                     <TableRow key={volunteerFamily.family?.id + ":" + child.id}
                       onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}
                       className={classes.childRow}>
+                      {smsMode && <TableCell />}
                       <TableCell>{child.firstName}</TableCell>
                       <TableCell>{child.lastName}</TableCell>
                       <TableCell>{typeof(child.gender) === 'undefined' ? "" : Gender[child.gender]}</TableCell>
