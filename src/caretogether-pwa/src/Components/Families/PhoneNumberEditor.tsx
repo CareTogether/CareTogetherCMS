@@ -1,22 +1,35 @@
-import { FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@mui/material';
+import { Button, FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 import { useDirectoryModel } from '../../Model/DirectoryModel';
 import { useInlineEditor } from '../../useInlineEditor';
 import { PersonEditorProps } from "./PersonEditorProps";
 import { PhoneNumber, IPhoneNumber, PhoneNumberType } from '../../GeneratedClient';
 
 type PhoneNumberEditorProps = PersonEditorProps & {
-  phoneNumber: PhoneNumber
+  add?: boolean
+  phoneNumber?: PhoneNumber
 }
 
-export function PhoneNumberEditor({ familyId, person, phoneNumber }: PhoneNumberEditorProps) {
+export function PhoneNumberEditor({ familyId, person, add, phoneNumber }: PhoneNumberEditorProps) {
   const directoryModel = useDirectoryModel();
 
   const editor = useInlineEditor(async value =>
-    await directoryModel.updatePersonPhoneNumber(familyId!, person.id!,
-      value.id!, value.number!, value.type!),
-    phoneNumber as IPhoneNumber,
+    await (add
+      ? directoryModel.addPersonPhoneNumber(familyId!, person.id!,
+          value!.number!, value!.type!)
+      : directoryModel.updatePersonPhoneNumber(familyId!, person.id!,
+          value!.id!, value!.number!, value!.type!)),
+    phoneNumber as IPhoneNumber | undefined,
     value => (value && value.number!.length > 0 &&
-      (value.number !== phoneNumber.number || value.type !== phoneNumber.type)) as boolean);
+      (value.number !== phoneNumber?.number || value.type !== phoneNumber?.type)) as boolean);
+  
+  function handleAdd() {
+    editor.setValue({
+      number: "",
+      type: PhoneNumberType.Mobile
+    });
+    editor.setEditing(true);
+  }
 
   return (
     <Grid container spacing={2}>
@@ -45,8 +58,18 @@ export function PhoneNumberEditor({ familyId, person, phoneNumber }: PhoneNumber
             </Grid>
           </>
         : <Grid item xs={12}>
-            {phoneNumber.number} - {PhoneNumberType[phoneNumber.type!]}
-            {editor.editButton}
+          { add
+            ? <Button
+                onClick={handleAdd}
+                variant="text"
+                size="small"
+                startIcon={<AddIcon />}>
+                Add
+              </Button>
+            : <>
+                {phoneNumber!.number} - {PhoneNumberType[phoneNumber!.type!]}
+                {editor.editButton}
+              </>}
         </Grid>}
     </Grid>
   );

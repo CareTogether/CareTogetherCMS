@@ -300,11 +300,11 @@ export function useDirectoryModel() {
       return command;
     });
   const addPersonAddress = usePersonCommandCallback(
-    async (familyId, personId, line1: string, line2: string, city: string, state: string, postalCode: string) => {
+    async (familyId, personId, line1: string, line2: string | null, city: string, state: string, postalCode: string) => {
       const command = new AddPersonAddress({
         personId: personId
       });
-      command.address = new Address({ line1: line1, line2: line2, city: city, state: state, postalCode: postalCode })
+      command.address = new Address({ line1: line1, line2: line2 == null ? undefined : line2, city: city, state: state, postalCode: postalCode })
       command.isCurrentAddress = true;
       return command;
     });
