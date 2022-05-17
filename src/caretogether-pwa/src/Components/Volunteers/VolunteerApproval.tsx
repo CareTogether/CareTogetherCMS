@@ -391,8 +391,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
               Source number: {smsSourcePhoneNumber}
             </p>
             <p>
-              The SMS will be sent to the mobile number on file for each family's primary contact person.
-              If no mobile number is on file for the primary contact, that family will not be sent an SMS.
+              The SMS will be sent to the preferred phone number on file for each family's primary contact person.
+              If no preferred number is on file for the primary contact, that family will not be sent an SMS.
             </p>
             <TextField multiline maxRows={8} placeholder="Enter the SMS message to send. Remember to keep it short!"
               value={smsMessage} onChange={(event) => setSmsMessage(event.target.value)} />
@@ -409,7 +409,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                 <table>
                   <tbody>
                     <tr>
-                      <td># of primary contacts without a mobile number</td>
+                      <td># of primary contacts without a preferred phone number</td>
                       <td>{smsResults.filter(x => x.item2 == null).length}</td>
                     </tr>
                     <tr>
@@ -425,7 +425,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                       <td>{smsResults.filter(x => x.item2?.result === SmsResult.InvalidSourcePhoneNumber).length}</td>
                     </tr>
                     <tr>
-                      <td># of invalid numbers</td>
+                      <td># of invalid phone numbers</td>
                       <td>{smsResults.filter(x => x.item2?.result === SmsResult.InvalidDestinationPhoneNumber).length}</td>
                     </tr>
                   </tbody>
