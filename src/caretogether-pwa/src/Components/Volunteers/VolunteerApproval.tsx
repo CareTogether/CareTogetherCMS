@@ -171,6 +171,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 
   const classes = useStyles();
   const navigate = useNavigate();
+  
+  const [uncheckedFamilies, setUncheckedFamilies] = useState<string[]>([]);
 
   const [volunteerFamilyRoleFilters, setVolunteerFamilyRoleFilters] = useRecoilState(volunteerFamilyRoleFiltersState);
   const [volunteerRoleFilters, setVolunteerRoleFilters] = useRecoilState(volunteerRoleFiltersState);
@@ -178,6 +180,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     return selection === 'Not Applied' ? null : RoleApprovalStatus[selection];
   };
   function changeVolunteerFamilyRoleFilterSelection(roleFilter: RoleFilter, selected: string | string[]) {
+    setUncheckedFamilies([]);
     const selectedValues = typeof selected === 'string'
     ? [toValue(selected as 'Not Applied'|'Prospective'|'Approved'|'Onboarded')]
     : selected.map(x => toValue(x as 'Not Applied'|'Prospective'|'Approved'|'Onboarded'));
@@ -188,6 +191,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     setVolunteerFamilyRoleFilters(updatedFilters);
   }
   function changeVolunteerRoleFilterSelection(roleFilter: RoleFilter, selected: string | string[]) {
+    setUncheckedFamilies([]);
     const selectedValues = typeof selected === 'string'
     ? [toValue(selected as 'Not Applied'|'Prospective'|'Approved'|'Onboarded')]
     : selected.map(x => toValue(x as 'Not Applied'|'Prospective'|'Approved'|'Onboarded'));
@@ -219,7 +223,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     ));
   
   const phonePattern = /^\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})/;
-  const filteredVolunteerFamiliesSmsReadiness = filteredVolunteerFamilies.map(family => {
+  const familiesSelectedForSms = filteredVolunteerFamilies.filter(family =>
+    !uncheckedFamilies.some(f => f === family.family!.id!)).map(family => {
     const primaryAdult = family.family!.adults!.find(adult => adult.item1!.id === family.family!.primaryFamilyContactPersonId);
     const preferredPhone = primaryAdult?.item1?.phoneNumbers?.find(phone => phone.id === primaryAdult?.item1?.preferredPhoneNumberId);
     const isPhoneValid = phonePattern.test(preferredPhone?.number || "");
@@ -254,7 +259,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 
   async function sendSmsToVisibleFamilies() {
     await withBackdrop(async () => {
-      const familyIds = filteredVolunteerFamilies.map(family => family.family!.id!);
+      const familyIds = familiesSelectedForSms.map(family => family.family!.family!.id!);
   
       const client = new DirectoryClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
       const sendSmsResults = await client.sendSmsToFamilyPrimaryContacts(organizationId, locationId,
@@ -288,7 +293,10 @@ function VolunteerApproval(props: { onOpen: () => void }) {
             name="expandedView" sx={{ marginRight: 1 }} />}
           label={isMobile ? "" : "Expand"}
         />
-        <SearchBar value={filterText} onChange={setFilterText} />
+        <SearchBar value={filterText} onChange={value => {
+          setUncheckedFamilies([]);
+          setFilterText(value);
+        }} />
       </HeaderContent>
       <Grid item xs={12}>
         <TableContainer>
@@ -296,7 +304,10 @@ function VolunteerApproval(props: { onOpen: () => void }) {
             <TableHead>
               <TableRow>
                 {smsMode && <TableCell sx={{ padding: 0, width: '36px' }}>
-                  <Checkbox size='small' defaultChecked />
+                  <Checkbox size='small' checked={uncheckedFamilies.length === 0}
+                    onChange={e => e.target.checked
+                      ? setUncheckedFamilies([])
+                      : setUncheckedFamilies(filteredVolunteerFamilies.map(f => f.family!.id!))} />
                 </TableCell>}
                 {expandedView
                 ? <>
@@ -319,7 +330,11 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                 <React.Fragment key={volunteerFamily.family?.id}>
                   <TableRow className={classes.familyRow} onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}>
                     {smsMode && <TableCell key="-" sx={{ padding: 0, width: '36px' }}>
-                      <Checkbox size='small' defaultChecked />
+                      <Checkbox size='small' checked={!uncheckedFamilies.some(x => x === volunteerFamily.family!.id!)}
+                        onChange={e => e.target.checked
+                          ? setUncheckedFamilies(uncheckedFamilies.filter(x => x !== volunteerFamily.family!.id!))
+                          : setUncheckedFamilies(uncheckedFamilies.concat(volunteerFamily.family!.id!))}
+                        onClick={e => e.stopPropagation()} />
                     </TableCell>}
                     <TableCell key="1" colSpan={expandedView ? 4 : 1}>{familyLastName(volunteerFamily) + " Family"
                     }</TableCell>
@@ -405,7 +420,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
         {smsMode &&
           <Drawer variant="persistent" anchor="right" open={smsMode} PaperProps={{sx: {padding: 2, width: 400}}}>
             <h3 style={{ marginTop: 40, marginBottom: 0 }}>
-              Send SMS to these {filteredVolunteerFamilies.length} families?
+              Send SMS to these {familiesSelectedForSms.length} families?
             </h3>
             <p>
               Source number: {smsSourcePhoneNumber}
@@ -420,13 +435,13 @@ function VolunteerApproval(props: { onOpen: () => void }) {
               Cancel
             </Button>
             <Button onClick={sendSmsToVisibleFamilies} variant="contained" color="primary"
-              disabled={filteredVolunteerFamilies.length === 0 || smsMessage.length === 0}>
+              disabled={familiesSelectedForSms.length === 0 || smsMessage.length === 0}>
               Send Bulk SMS
             </Button>
             <Divider sx={{marginTop: 2, marginBottom: 2}} />
             {smsResults == null
               ? <>
-                  {filteredVolunteerFamiliesSmsReadiness.filter(family => !family.isPhoneValid).length === 0
+                  {familiesSelectedForSms.filter(family => !family.isPhoneValid).length === 0
                     ? <>
                         <p style={{margin: 0}}>
                           ✔&nbsp;
@@ -439,7 +454,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                           Some families have invalid phone numbers!
                         </p>
                         <ul style={{margin: 0, listStyleType: 'none', padding: 0}}>
-                          {filteredVolunteerFamiliesSmsReadiness.filter(family => !family.isPhoneValid).map(family => (
+                          {familiesSelectedForSms.filter(family => !family.isPhoneValid).map(family => (
                             <li key={family.family.family!.id}>
                               <span><FamilyName family={family.family} />: '{family.preferredPhone?.number}'</span>
                             </li>
