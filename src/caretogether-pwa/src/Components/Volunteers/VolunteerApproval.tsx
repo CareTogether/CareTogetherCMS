@@ -21,6 +21,7 @@ import { authenticatingFetch } from '../../Auth';
 import { useBackdrop } from '../../useBackdrop';
 import { FamilyName } from '../Families/FamilyName';
 import { useFamilyLookup } from '../../Model/DirectoryModel';
+import { BulkSmsSideSheet } from './BulkSmsSideSheet';
 
 type RoleFilter = {
   roleName: string
@@ -222,18 +223,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
             roleFilter.selected.indexOf(approval.approvalStatus!) > -1) || roleFilter.selected.indexOf(null) > -1))
     ));
   
-  const phonePattern = /^\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})/;
-  const familiesSelectedForSms = filteredVolunteerFamilies.filter(family =>
-    !uncheckedFamilies.some(f => f === family.family!.id!)).map(family => {
-    const primaryAdult = family.family!.adults!.find(adult => adult.item1!.id === family.family!.primaryFamilyContactPersonId);
-    const preferredPhone = primaryAdult?.item1?.phoneNumbers?.find(phone => phone.id === primaryAdult?.item1?.preferredPhoneNumberId);
-    const isPhoneValid = phonePattern.test(preferredPhone?.number || "");
-    return {
-      family,
-      preferredPhone,
-      isPhoneValid
-    };
-  });
+  const selectedFamilies = filteredVolunteerFamilies.filter(family =>
+    !uncheckedFamilies.some(f => f === family.family!.id!));
 
   useScrollMemory();
   
@@ -248,33 +239,12 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     
   const [expandedView, setExpandedView] = useLocalStorage('volunteer-approval-expanded', true);
 
-  const [smsMode, setSmsMode] = useState(false);
-  const [smsMessage, setSmsMessage] = useState("");
-  const [smsResults, setSmsResults] = useState<ValueTupleOfGuidAndSmsMessageResult[] | null>(null);
-  
-  const organizationId = useRecoilValue(currentOrganizationState);
   const locationId = useRecoilValue(currentLocationState);
-  
-  const withBackdrop = useBackdrop();
-
-  async function sendSmsToVisibleFamilies() {
-    await withBackdrop(async () => {
-      const familyIds = familiesSelectedForSms.map(family => family.family!.family!.id!);
-  
-      const client = new DirectoryClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const sendSmsResults = await client.sendSmsToFamilyPrimaryContacts(organizationId, locationId,
-        new SendSmsToFamilyPrimaryContactsRequest({ familyIds: familyIds, message: smsMessage }));
-      
-      setSmsResults(sendSmsResults);
-    });
-  }
-
   const organizationConfiguration = useRecoilValue(organizationConfigurationData);
   const smsSourcePhoneNumber = organizationConfiguration.locations?.find(loc =>
     loc.id === locationId)?.smsSourcePhoneNumber;
-
-  const familyLookup = useFamilyLookup();
-
+  const [smsMode, setSmsMode] = useState(false);
+  
   return (
     <Grid container spacing={3}>
       <HeaderContent>
@@ -417,83 +387,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
           onClick={() => setCreateVolunteerFamilyDialogOpen(true)}>
           <AddIcon />
         </Fab>
-        {smsMode &&
-          <Drawer variant="persistent" anchor="right" open={smsMode} PaperProps={{sx: {padding: 2, width: 400}}}>
-            <h3 style={{ marginTop: 40, marginBottom: 0 }}>
-              Send SMS to these {familiesSelectedForSms.length} families?
-            </h3>
-            <p>
-              Source number: {smsSourcePhoneNumber}
-            </p>
-            <p>
-              The SMS will be sent to the preferred phone number on file for each family's primary contact person.
-              If no preferred number is on file for the primary contact, that family will not be sent an SMS.
-            </p>
-            <TextField multiline maxRows={8} placeholder="Enter the SMS message to send. Remember to keep it short!"
-              value={smsMessage} onChange={(event) => setSmsMessage(event.target.value)} />
-            <Button onClick={() => { setSmsMode(false); setSmsMessage(""); setSmsResults(null); }} color="secondary">
-              Cancel
-            </Button>
-            <Button onClick={sendSmsToVisibleFamilies} variant="contained" color="primary"
-              disabled={familiesSelectedForSms.length === 0 || smsMessage.length === 0}>
-              Send Bulk SMS
-            </Button>
-            <Divider sx={{marginTop: 2, marginBottom: 2}} />
-            {smsResults == null
-              ? <>
-                  {familiesSelectedForSms.filter(family => !family.isPhoneValid).length === 0
-                    ? <>
-                        <p style={{margin: 0}}>
-                          ✔&nbsp;
-                          All selected families have valid phone numbers.
-                        </p>
-                      </>
-                    : <>
-                        <p style={{margin: 0, fontWeight: 'bold'}}>
-                          ⚠&nbsp;
-                          Some families have invalid phone numbers!
-                        </p>
-                        <ul style={{margin: 0, listStyleType: 'none', padding: 0}}>
-                          {familiesSelectedForSms.filter(family => !family.isPhoneValid).map(family => (
-                            <li key={family.family.family!.id}>
-                              <span><FamilyName family={family.family} />: '{family.preferredPhone?.number}'</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </>}
-                </>
-              : <>
-                  <table>
-                    <tbody>
-                      <tr>
-                        <td># of primary contacts without a preferred phone number</td>
-                        <td>{smsResults.filter(x => x.item2 == null).length}</td>
-                      </tr>
-                      <tr>
-                        <td># of messages sent successfully</td>
-                        <td>{smsResults.filter(x => x.item2?.result === SmsResult.SendSuccess).length}</td>
-                      </tr>
-                      <tr>
-                        <td># of send failures</td>
-                        <td>{smsResults.filter(x => x.item2?.result === SmsResult.SendFailure).length}</td>
-                      </tr>
-                      <tr>
-                        <td># of invalid source numbers</td>
-                        <td>{smsResults.filter(x => x.item2?.result === SmsResult.InvalidSourcePhoneNumber).length}</td>
-                      </tr>
-                      <tr>
-                        <td># of invalid phone numbers (list below)</td>
-                        <td>{smsResults.filter(x => x.item2?.result === SmsResult.InvalidDestinationPhoneNumber).length}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                  <ul style={{margin: 0, listStyleType: 'none', padding: 0}}>
-                    {smsResults.filter(x => x.item2?.result === SmsResult.InvalidDestinationPhoneNumber).map(x => (
-                      <li key={x.item1}><span><FamilyName family={familyLookup(x.item1)} />: '{x.item2?.phoneNumber}'</span></li>
-                    ))}
-                  </ul>
-                </>}
-          </Drawer>}
+        {smsMode && <BulkSmsSideSheet selectedFamilies={selectedFamilies}
+          onClose={() => setSmsMode(false)} />}
         {createVolunteerFamilyDialogOpen && <CreateVolunteerFamilyDialog onClose={(volunteerFamilyId) => {
           setCreateVolunteerFamilyDialogOpen(false);
           volunteerFamilyId && openVolunteerFamily(volunteerFamilyId);
