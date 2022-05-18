@@ -14,7 +14,8 @@ type BulkSmsSideSheetProps = {
   onClose: () => void
 }
 
-const phonePattern = /^\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})/;
+// U+00AD is the soft hyphen.
+const phonePattern = /^\(?([0-9]{3})\)?[\u{00ad}\-.\s]?([0-9]{3})[\u{00ad}\-.\s]?([0-9]{4})/u;
 
 export function BulkSmsSideSheet({ selectedFamilies, onClose }: BulkSmsSideSheetProps) {
   const organizationId = useRecoilValue(currentOrganizationState);
@@ -92,7 +93,12 @@ export function BulkSmsSideSheet({ selectedFamilies, onClose }: BulkSmsSideSheet
               <ul style={{ margin: 0, listStyleType: 'none', padding: 0 }}>
                 {familiesSelectedForSms.filter(family => !family.isPhoneValid).map(family => (
                   <li key={family.family.family!.id}>
-                    <span><FamilyName family={family.family} />: '{family.preferredPhone?.number}'</span>
+                    <span>
+                      <FamilyName family={family.family} />:&nbsp;
+                      {family.preferredPhone?.number == null || typeof family.preferredPhone?.number === 'undefined'
+                        ? "(no number provided)"
+                        : `'${family.preferredPhone?.number}'`}
+                    </span>
                   </li>
                 ))}
               </ul>

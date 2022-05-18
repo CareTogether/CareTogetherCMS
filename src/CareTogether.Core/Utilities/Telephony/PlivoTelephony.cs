@@ -8,8 +8,9 @@ namespace CareTogether.Utilities.Telephony
 {
     public sealed class PlivoTelephony : ITelephony
     {
-        private static Regex phoneNumberFormat = new(@"^\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})$");
-        private static Regex validNonDigitCharacters = new(@"[-.\s\(\)]");
+        // U+00AD is the soft hyphen.
+        private static Regex phoneNumberFormat = new(@"^\(?([0-9]{3})\)?[\u00ad\-.\s]?([0-9]{3})[\u00ad\-.\s]?([0-9]{4})$");
+        private static Regex validNonDigitCharacters = new(@"[\u00ad\-.\s\(\)]");
 
 
         private readonly PlivoApi api;
