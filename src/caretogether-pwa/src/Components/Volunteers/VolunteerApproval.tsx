@@ -18,6 +18,7 @@ import { useLocalStorage } from '../../useLocalStorage';
 import { useScrollMemory } from '../../useScrollMemory';
 import { currentLocationState } from '../../Model/SessionModel';
 import { BulkSmsSideSheet } from './BulkSmsSideSheet';
+import { useWindowSize } from '../../useWindowSize';
 
 type RoleFilter = {
   roleName: string
@@ -241,9 +242,14 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     loc.id === locationId)?.smsSourcePhoneNumber;
   const [smsMode, setSmsMode] = useState(false);
   
+  const windowSize = useWindowSize();
+
   return (
     <>
-      <Grid container spacing={3} sx={{ paddingRight: smsMode ? '400px' : null }}>
+      <Grid container spacing={3} sx={{
+        paddingRight: smsMode && !isMobile ? '400px' : null,
+        height: smsMode && isMobile ? `${windowSize.height - 500 - 24}px` : null,
+        overflow: smsMode && isMobile ? 'scroll' : null }}>
         <HeaderContent>
           {!isMobile && <HeaderTitle>Volunteers</HeaderTitle>}
           <ButtonGroup variant="text" color="inherit" aria-label="text inherit button group" style={{flexGrow: 1}}>

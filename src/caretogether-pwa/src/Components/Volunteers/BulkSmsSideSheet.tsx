@@ -1,4 +1,4 @@
-import { Drawer, TextField, Button, Divider } from "@mui/material";
+import { Drawer, TextField, Button, Divider, useMediaQuery, useTheme } from "@mui/material";
 import { useState } from "react";
 import { useRecoilValue } from "recoil";
 import { authenticatingFetch } from "../../Auth";
@@ -53,10 +53,14 @@ export function BulkSmsSideSheet({ selectedFamilies, onClose }: BulkSmsSideSheet
   }
 
   const familyLookup = useFamilyLookup();
+  
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   return (
-    <Drawer variant="persistent" anchor="right" open PaperProps={{ sx: { padding: 2, width: 400 } }}>
-      <h3 style={{ marginTop: 40, marginBottom: 0 }}>
+    <Drawer variant="persistent" anchor={isMobile ? "bottom" : "right"} open
+      PaperProps={{ sx: { padding: isMobile ? 1 : 2, width: isMobile ? null : 400, height: isMobile ? 500 : null } }}>
+      <h3 style={{ marginTop: isMobile ? 0 : 40, marginBottom: 0 }}>
         Send SMS to these {familiesSelectedForSms.length} families?
       </h3>
       <p>
