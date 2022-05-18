@@ -1,6 +1,6 @@
 import makeStyles from '@mui/styles/makeStyles';
-import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, useMediaQuery, useTheme, Button, ButtonGroup, FormControlLabel, Switch, MenuItem, Select, ListItemText, Checkbox, FormControl, InputBase, SelectChangeEvent, IconButton, Drawer, TextField, Divider } from '@mui/material';
-import { Gender, ExactAge, AgeInYears, RoleVersionApproval, CombinedFamilyInfo, RemovedRole, RoleRemovalReason, DirectoryClient, SendSmsToFamilyPrimaryContactsRequest, ValueTupleOfGuidAndSmsMessageResult, SmsResult } from '../../GeneratedClient';
+import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, useMediaQuery, useTheme, Button, ButtonGroup, FormControlLabel, Switch, MenuItem, Select, ListItemText, Checkbox, FormControl, InputBase, SelectChangeEvent, IconButton } from '@mui/material';
+import { Gender, ExactAge, AgeInYears, RoleVersionApproval, CombinedFamilyInfo, RemovedRole, RoleRemovalReason } from '../../GeneratedClient';
 import { differenceInYears } from 'date-fns';
 import { atom, selector, useRecoilState, useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../../Model/VolunteersModel';
@@ -16,11 +16,7 @@ import { HeaderContent, HeaderTitle } from '../Header';
 import { SearchBar } from '../SearchBar';
 import { useLocalStorage } from '../../useLocalStorage';
 import { useScrollMemory } from '../../useScrollMemory';
-import { currentLocationState, currentOrganizationState } from '../../Model/SessionModel';
-import { authenticatingFetch } from '../../Auth';
-import { useBackdrop } from '../../useBackdrop';
-import { FamilyName } from '../Families/FamilyName';
-import { useFamilyLookup } from '../../Model/DirectoryModel';
+import { currentLocationState } from '../../Model/SessionModel';
 import { BulkSmsSideSheet } from './BulkSmsSideSheet';
 
 type RoleFilter = {
