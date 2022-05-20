@@ -1,17 +1,18 @@
 import makeStyles from '@mui/styles/makeStyles';
-import { Fab, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, useMediaQuery, useTheme } from '@mui/material';
+import { Avatar, Chip, Fab, FormControlLabel, Grid, Switch, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, useMediaQuery, useTheme } from '@mui/material';
 import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { format } from 'date-fns';
 import React, { useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
-import { ReferralCloseReason, PartneringFamilyInfo, Arrangement, CombinedFamilyInfo } from '../../GeneratedClient';
+import { ReferralCloseReason, PartneringFamilyInfo, Arrangement, CombinedFamilyInfo, ArrangementPhase } from '../../GeneratedClient';
 import { useNavigate } from 'react-router-dom';
 import { FamilyName } from '../Families/FamilyName';
 import { ArrangementCard } from './ArrangementCard';
 import { CreatePartneringFamilyDialog } from './CreatePartneringFamilyDialog';
 import { HeaderContent, HeaderTitle } from '../Header';
 import { useScrollMemory } from '../../useScrollMemory';
+import { useLocalStorage } from '../../useLocalStorage';
 
 const useStyles = makeStyles((theme) => ({
   table: {
@@ -19,6 +20,9 @@ const useStyles = makeStyles((theme) => ({
   },
   familyRow: {
     backgroundColor: '#eef'
+  },
+  arrangementChip: {
+    marginRight: '25px',
   },
   arrangementsRow: {
   },
@@ -55,6 +59,7 @@ function PartneringFamilies() {
     navigate(`/referrals/family/${partneringFamilyId}`);
   }
   const [createPartneringFamilyDialogOpen, setCreatePartneringFamilyDialogOpen] = useState(false);
+  const [expandedView, setExpandedView] = useLocalStorage('partnering-families-expanded', true);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -63,6 +68,10 @@ function PartneringFamilies() {
     <Grid container spacing={3}>
       <HeaderContent>
         {!isMobile && <HeaderTitle>Referrals</HeaderTitle>}
+        <FormControlLabel
+          control={<Switch checked={expandedView} onChange={(e) => setExpandedView(e.target.checked)} name="expandedView" />}
+          label={isMobile ? "" : expandedView ? "Collapse" : "Expand" }
+        />
       </HeaderContent>
       <Grid item xs={12}>
         <TableContainer>
@@ -71,6 +80,7 @@ function PartneringFamilies() {
               <TableRow>
                 <TableCell>Partnering Family</TableCell>
                 <TableCell>Referral Status</TableCell>
+                { !expandedView ? (<TableCell>Arrangements</TableCell>) : <></>}
               </TableRow>
             </TableHead>
             <TableBody>
@@ -84,8 +94,28 @@ function PartneringFamilies() {
                       : "Closed - " + ReferralCloseReason[partneringFamily.partneringFamilyInfo?.closedReferrals?.[partneringFamily.partneringFamilyInfo.closedReferrals.length-1]?.closeReason!]
                       //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closedUtc) -- needs a new calculated property
                       }</TableCell>
+                      {!expandedView ? (
+                        <TableCell>
+                          <Chip className={classes.arrangementChip} size="medium" color="default" label="Setting Up" avatar=
+                            {<Avatar sx={{ bgcolor: "darkGrey" }}>
+                              {allArrangements(partneringFamily.partneringFamilyInfo!).filter((a) => a.arrangement.phase === ArrangementPhase.SettingUp).length}
+                            </Avatar>}/>
+                          <Chip className={classes.arrangementChip} size="medium" color="primary" label="Ready To Start" avatar=
+                            {<Avatar>
+                              {allArrangements(partneringFamily.partneringFamilyInfo!).filter((a) => a.arrangement.phase === ArrangementPhase.ReadyToStart).length}
+                            </Avatar>}/>
+                          <Chip className={classes.arrangementChip} size="medium" color="secondary" label="Started" avatar=
+                            {<Avatar>
+                              {allArrangements(partneringFamily.partneringFamilyInfo!).filter((a) => a.arrangement.phase === ArrangementPhase.Started).length}
+                            </Avatar>}/>
+                          <Chip className={classes.arrangementChip} size="medium" color="success" label="Ended" avatar=
+                            {<Avatar sx={{ bgcolor: "white" }}>
+                              {allArrangements(partneringFamily.partneringFamilyInfo!).filter((a) => a.arrangement.phase === ArrangementPhase.Ended).length}
+                            </Avatar>}/>
+                        </TableCell>) : <></> }
                   </TableRow>
-                  <TableRow onClick={() => openPartneringFamily(partneringFamily.family!.id!)}
+                  { expandedView
+                    ? (<TableRow onClick={() => openPartneringFamily(partneringFamily.family!.id!)}
                     className={classes.arrangementsRow}>
                     <TableCell sx={{maxWidth: '400px'}}>
                       {partneringFamily.partneringFamilyInfo?.openReferral?.comments}
@@ -100,7 +130,7 @@ function PartneringFamilies() {
                         ))}
                       </Grid>
                     </TableCell>
-                  </TableRow>
+                  </TableRow> ) : <></> }
                 </React.Fragment>
               ))}
             </TableBody>
