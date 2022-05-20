@@ -1,5 +1,9 @@
 import makeStyles from '@mui/styles/makeStyles';
-import { Avatar, Chip, Fab, FormControlLabel, Grid, Switch, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, useMediaQuery, useTheme } from '@mui/material';
+import { Avatar, Chip, Fab, FormControlLabel, Grid, Switch, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, useMediaQuery, useTheme } from '@mui/material';
+import CircleOutlinedIcon from '@mui/icons-material/CircleOutlined';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import SyncIcon from '@mui/icons-material/Sync';
 import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { format } from 'date-fns';
@@ -21,10 +25,34 @@ const useStyles = makeStyles((theme) => ({
   familyRow: {
     backgroundColor: '#eef'
   },
+  arrangementIcon: {
+    verticalAlign: 'middle',
+  },
+  arrangementSettingUp: {
+    verticalAlign: 'middle',
+    marginLeft: '5px',
+    color: 'darkGrey',
+  },
+  arrangementReady: {
+    verticalAlign: 'middle',
+    marginLeft: '5px',
+    color: '#FDD735',
+  },
+  arrangementStarted: {
+    verticalAlign: 'middle',
+    marginLeft: '5px',
+    color: '#01ACFB',
+  },
+  arrangementEnded: {
+    verticalAlign: 'middle',
+    marginLeft: '5px',
+    color: 'green',
+  },
   arrangementChip: {
     marginRight: '25px',
   },
   arrangementsRow: {
+    color: 'green',
   },
   fabAdd: {
     position: 'fixed',
@@ -58,6 +86,11 @@ function PartneringFamilies() {
   function openPartneringFamily(partneringFamilyId: string) {
     navigate(`/referrals/family/${partneringFamilyId}`);
   }
+
+  function arrangementCountByStatus(partneringFamily: PartneringFamilyInfo, phase: ArrangementPhase) {
+    return allArrangements(partneringFamily).filter((a) => a.arrangement.phase === phase).length
+  }
+
   const [createPartneringFamilyDialogOpen, setCreatePartneringFamilyDialogOpen] = useState(false);
   const [expandedView, setExpandedView] = useLocalStorage('partnering-families-expanded', true);
 
@@ -96,22 +129,33 @@ function PartneringFamilies() {
                       }</TableCell>
                       {!expandedView ? (
                         <TableCell>
-                          <Chip className={classes.arrangementChip} size="medium" color="default" label="Setting Up" avatar=
-                            {<Avatar sx={{ bgcolor: "darkGrey" }}>
-                              {allArrangements(partneringFamily.partneringFamilyInfo!).filter((a) => a.arrangement.phase === ArrangementPhase.SettingUp).length}
-                            </Avatar>}/>
-                          <Chip className={classes.arrangementChip} size="medium" color="primary" label="Ready To Start" avatar=
-                            {<Avatar>
-                              {allArrangements(partneringFamily.partneringFamilyInfo!).filter((a) => a.arrangement.phase === ArrangementPhase.ReadyToStart).length}
-                            </Avatar>}/>
-                          <Chip className={classes.arrangementChip} size="medium" color="secondary" label="Started" avatar=
-                            {<Avatar>
-                              {allArrangements(partneringFamily.partneringFamilyInfo!).filter((a) => a.arrangement.phase === ArrangementPhase.Started).length}
-                            </Avatar>}/>
-                          <Chip className={classes.arrangementChip} size="medium" color="success" label="Ended" avatar=
-                            {<Avatar sx={{ bgcolor: "white" }}>
-                              {allArrangements(partneringFamily.partneringFamilyInfo!).filter((a) => a.arrangement.phase === ArrangementPhase.Ended).length}
-                            </Avatar>}/>
+                          <TableRow>
+                          {arrangementCountByStatus(partneringFamily.partneringFamilyInfo!,ArrangementPhase.SettingUp) > 0 ?
+                            <>
+                            <TableCell padding='none' sx={{borderBottom:"0px", paddingRight:"25px"}}>
+                              <CircleOutlinedIcon className={classes.arrangementIcon}  sx={{color:"lightGrey"}}/>
+                            <b className={classes.arrangementSettingUp}>{arrangementCountByStatus(partneringFamily.partneringFamilyInfo!,ArrangementPhase.SettingUp)}</b></TableCell>
+                            </>
+                          : ""}
+                          {arrangementCountByStatus(partneringFamily.partneringFamilyInfo!,ArrangementPhase.ReadyToStart) > 0 ?
+                            <>
+                            <TableCell padding='none' sx={{borderBottom:"0px", paddingRight:"25px"}}><AccessTimeIcon className={classes.arrangementIcon}sx={{color:"#FDD735"}}/>
+                            <b className={classes.arrangementReady}>{arrangementCountByStatus(partneringFamily.partneringFamilyInfo!,ArrangementPhase.ReadyToStart)}</b></TableCell>              
+                            </>
+                          : ""}
+                          {arrangementCountByStatus(partneringFamily.partneringFamilyInfo!,ArrangementPhase.Started) > 0 ?
+                            <>
+                            <TableCell padding='none' sx={{borderBottom:"0px", paddingRight:"25px"}}><SyncIcon className={classes.arrangementIcon}sx={{color:"#01ACFB"}}/>
+                            <b className={classes.arrangementStarted}>{arrangementCountByStatus(partneringFamily.partneringFamilyInfo!,ArrangementPhase.Started)}</b></TableCell>              
+                            </>
+                          : ""}
+                          {arrangementCountByStatus(partneringFamily.partneringFamilyInfo!,ArrangementPhase.Ended) > 0 ?
+                            <>
+                            <TableCell padding='none' sx={{borderBottom:"0px", paddingRight:"25px"}}><CheckCircleIcon className={classes.arrangementIcon}sx={{color:"green"}}/>
+                            <b className={classes.arrangementEnded}>{arrangementCountByStatus(partneringFamily.partneringFamilyInfo!,ArrangementPhase.Ended)}</b></TableCell>              
+                            </>
+                          : ""}
+                          </TableRow>
                         </TableCell>) : <></> }
                   </TableRow>
                   { expandedView
