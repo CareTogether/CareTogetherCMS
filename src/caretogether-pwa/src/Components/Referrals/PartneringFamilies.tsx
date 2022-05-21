@@ -1,5 +1,5 @@
 import makeStyles from '@mui/styles/makeStyles';
-import { Fab, FormControlLabel, Grid, Switch, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, useMediaQuery, useTheme } from '@mui/material';
+import { Fab, FormControlLabel, Grid, Switch, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip, useMediaQuery, useTheme } from '@mui/material';
 import CircleOutlinedIcon from '@mui/icons-material/CircleOutlined';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
@@ -133,26 +133,41 @@ function PartneringFamilies() {
                           {arrangementCountByStatus(partneringFamily.partneringFamilyInfo!,ArrangementPhase.SettingUp) > 0 ?
                             <>
                             <TableCell padding='none' sx={{borderBottom:"0px", paddingRight:"25px"}}>
-                              <CircleOutlinedIcon className={classes.arrangementIcon}  sx={{color:"lightGrey"}}/>
-                            <b className={classes.arrangementSettingUp}>{arrangementCountByStatus(partneringFamily.partneringFamilyInfo!,ArrangementPhase.SettingUp)}</b></TableCell>
+                              <Tooltip title="Setting Up">
+                                <CircleOutlinedIcon className={classes.arrangementIcon}  sx={{color:"lightGrey"}}/>
+                              </Tooltip>
+                              <b className={classes.arrangementSettingUp}>{arrangementCountByStatus(partneringFamily.partneringFamilyInfo!,ArrangementPhase.SettingUp)}</b>
+                            </TableCell>
                             </>
                           : ""}
                           {arrangementCountByStatus(partneringFamily.partneringFamilyInfo!,ArrangementPhase.ReadyToStart) > 0 ?
                             <>
-                            <TableCell padding='none' sx={{borderBottom:"0px", paddingRight:"25px"}}><AccessTimeIcon className={classes.arrangementIcon}sx={{color:"#FDD735"}}/>
-                            <b className={classes.arrangementReady}>{arrangementCountByStatus(partneringFamily.partneringFamilyInfo!,ArrangementPhase.ReadyToStart)}</b></TableCell>              
+                            <TableCell padding='none' sx={{borderBottom:"0px", paddingRight:"25px"}}>
+                              <Tooltip title="Ready To Start">
+                                <AccessTimeIcon className={classes.arrangementIcon}sx={{color:"#FDD735"}}/>
+                              </Tooltip>
+                              <b className={classes.arrangementReady}>{arrangementCountByStatus(partneringFamily.partneringFamilyInfo!,ArrangementPhase.ReadyToStart)}</b>
+                            </TableCell>              
                             </>
                           : ""}
                           {arrangementCountByStatus(partneringFamily.partneringFamilyInfo!,ArrangementPhase.Started) > 0 ?
                             <>
-                            <TableCell padding='none' sx={{borderBottom:"0px", paddingRight:"25px"}}><SyncIcon className={classes.arrangementIcon}sx={{color:"#01ACFB"}}/>
-                            <b className={classes.arrangementStarted}>{arrangementCountByStatus(partneringFamily.partneringFamilyInfo!,ArrangementPhase.Started)}</b></TableCell>              
+                            <TableCell padding='none' sx={{borderBottom:"0px", paddingRight:"25px"}}>
+                              <Tooltip title="Started">
+                                <SyncIcon className={classes.arrangementIcon}sx={{color:"#01ACFB"}}/>
+                              </Tooltip>
+                              <b className={classes.arrangementStarted}>{arrangementCountByStatus(partneringFamily.partneringFamilyInfo!,ArrangementPhase.Started)}</b>
+                            </TableCell>              
                             </>
                           : ""}
                           {arrangementCountByStatus(partneringFamily.partneringFamilyInfo!,ArrangementPhase.Ended) > 0 ?
                             <>
-                            <TableCell padding='none' sx={{borderBottom:"0px", paddingRight:"25px"}}><CheckCircleIcon className={classes.arrangementIcon}sx={{color:"green"}}/>
-                            <b className={classes.arrangementEnded}>{arrangementCountByStatus(partneringFamily.partneringFamilyInfo!,ArrangementPhase.Ended)}</b></TableCell>              
+                            <TableCell padding='none' sx={{borderBottom:"0px", paddingRight:"25px"}}>
+                              <Tooltip title="Ended">
+                                <CheckCircleIcon className={classes.arrangementIcon}sx={{color:"green"}}/>
+                              </Tooltip>
+                              <b className={classes.arrangementEnded}>{arrangementCountByStatus(partneringFamily.partneringFamilyInfo!,ArrangementPhase.Ended)}</b>
+                            </TableCell>              
                             </>
                           : ""}
                           </TableRow>
