@@ -35,13 +35,13 @@ const useStyles = makeStyles((theme: Theme) =>
       padding: theme.spacing(1, 1, 1, 0),
       // vertical padding + font size from searchIcon
       paddingLeft: `calc(1em + ${theme.spacing(4)})`,
-      //transition: theme.transitions.create('width'),
+      transition: theme.transitions.create('width'),
       width: '100%',
       [theme.breakpoints.up('sm')]: {
-        width: '12ch',
-        // '&:focus': {
-        //   width: '20ch',
-        // },
+        width: '0ch',
+          '&:focus': {
+           width: '20ch',
+         },
       },
     },
   }),
@@ -62,7 +62,6 @@ export function SearchBar(props: SearchBarProps) {
         <SearchIcon />
       </div>
       <InputBase
-        placeholder="Search…"
         classes={{
           root: classes.inputRoot,
           input: classes.inputInput,
