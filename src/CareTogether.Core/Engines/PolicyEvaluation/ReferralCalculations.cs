@@ -46,12 +46,12 @@ namespace CareTogether.Engines.PolicyEvaluation
         internal static ArrangementStatus CalculateArrangementStatus(ArrangementEntry arrangement, ArrangementPolicy arrangementPolicy,
             DateTime utcNow)
         {
-            var missingSetupRequirements = CalculateMissingSetupRequirements(arrangementPolicy.RequiredSetupActionNames,
+            var missingSetupRequirements = CalculateMissingSetupRequirements(arrangementPolicy,
                 arrangement.CompletedRequirements, arrangement.ExemptedRequirements, utcNow);
-            var missingMonitoringRequirements = CalculateMissingMonitoringRequirements(arrangementPolicy.RequiredMonitoringActions,
+            var missingMonitoringRequirements = CalculateMissingMonitoringRequirements(arrangementPolicy,
                 arrangement.StartedAtUtc, arrangement.EndedAtUtc,
                 arrangement.CompletedRequirements, arrangement.ExemptedRequirements, arrangement.ChildrenLocationHistory, utcNow);
-            var missingCloseoutRequirements = CalculateMissingCloseoutRequirements(arrangementPolicy.RequiredCloseoutActionNames,
+            var missingCloseoutRequirements = CalculateMissingCloseoutRequirements(arrangementPolicy,
                 arrangement.CompletedRequirements, arrangement.ExemptedRequirements, utcNow);
             var missingFunctionAssignments = CalculateMissingFunctionAssignments(arrangementPolicy.ArrangementFunctions,
                 arrangement.FamilyVolunteerAssignments, arrangement.IndividualVolunteerAssignments);
@@ -94,25 +94,25 @@ namespace CareTogether.Engines.PolicyEvaluation
                 : ArrangementPhase.SettingUp;
 
         internal static ImmutableList<MissingArrangementRequirement> CalculateMissingSetupRequirements(
-            ImmutableList<string> requiredSetupActionNames, ImmutableList<CompletedRequirementInfo> completedRequirements,
+            ArrangementPolicy arrangementPolicy, ImmutableList<CompletedRequirementInfo> completedRequirements,
             ImmutableList<ExemptedRequirementInfo> exemptedRequirements, DateTime utcNow) =>
-            requiredSetupActionNames
+            arrangementPolicy.RequiredSetupActionNames
                 .Where(requiredAction =>
                     !SharedCalculations.RequirementMetOrExempted(requiredAction,
                         policySupersededAtUtc: null, utcNow: utcNow,
                         completedRequirements: completedRequirements,
                         exemptedRequirements: exemptedRequirements))
                 .Select(requiredAction => new MissingArrangementRequirement(requiredAction, null, null))
-                .ToImmutableList();
+                .ToImmutableList();// "and variants";
 
         internal static ImmutableList<MissingArrangementRequirement> CalculateMissingMonitoringRequirements(
-            ImmutableList<MonitoringRequirement> requiredMonitoringActionNames,
+            ArrangementPolicy arrangementPolicy,
             DateTime? startedAtUtc, DateTime? endedAtUtc,
             ImmutableList<CompletedRequirementInfo> completedRequirements,
             ImmutableList<ExemptedRequirementInfo> exemptedRequirements,
             ImmutableSortedSet<ChildLocationHistoryEntry> childLocationHistory,
             DateTime utcNow) =>
-            requiredMonitoringActionNames.SelectMany(monitoringRequirement =>
+            arrangementPolicy.RequiredMonitoringActions.SelectMany(monitoringRequirement =>
                 (startedAtUtc.HasValue
                 ? CalculateMissingMonitoringRequirementInstances(monitoringRequirement.Recurrence,
                     startedAtUtc.Value, endedAtUtc,
@@ -130,7 +130,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                     new MissingArrangementRequirement(monitoringRequirement.ActionName,
                         DueBy: missingDueDate > utcNow ? missingDueDate : null,
                         PastDueSince: missingDueDate <= utcNow ? missingDueDate : null)))
-                .ToImmutableList();
+                .ToImmutableList();// "and variants";
 
         internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementInstances(
             RecurrencePolicy recurrence, DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc,
@@ -419,16 +419,16 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
         internal static ImmutableList<MissingArrangementRequirement> CalculateMissingCloseoutRequirements(
-            ImmutableList<string> requiredCloseoutActionNames, ImmutableList<CompletedRequirementInfo> completedRequirements,
+            ArrangementPolicy arrangementPolicy, ImmutableList<CompletedRequirementInfo> completedRequirements,
             ImmutableList<ExemptedRequirementInfo> exemptedRequirements, DateTime utcNow) =>
-            requiredCloseoutActionNames
+            arrangementPolicy.RequiredCloseoutActionNames
                 .Where(requiredAction =>
                     !SharedCalculations.RequirementMetOrExempted(requiredAction,
                         policySupersededAtUtc: null, utcNow: utcNow,
                         completedRequirements: completedRequirements,
                         exemptedRequirements: exemptedRequirements))
                 .Select(requiredAction => new MissingArrangementRequirement(requiredAction, null, null))
-                .ToImmutableList();
+                .ToImmutableList();// "and variants";
 
         internal static ImmutableList<ArrangementFunction> CalculateMissingFunctionAssignments(
             ImmutableList<ArrangementFunction> volunteerFunctions,
