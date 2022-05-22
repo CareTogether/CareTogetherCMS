@@ -10,6 +10,6 @@ export function FamilyName({ family }: FamilyNameProps) {
     family.family!.primaryFamilyContactPersonId === adult.item1?.id)?.item1;
   
   return (
-    <span className='ct-family-name'>{primaryContactPerson?.lastName} Family</span>
+    <span className='ct-family-name'>{primaryContactPerson?.firstName} {primaryContactPerson?.lastName} Family</span>
   );
 }
