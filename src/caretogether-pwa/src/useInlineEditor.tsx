@@ -27,6 +27,7 @@ export function useInlineEditor<T, U>(onSave: (value: T) => Promise<U>, savedVal
     value,
     setValue,
     editing,
+    setEditing,
     editButton: !editing &&
       <Button
         onClick={() => setEditing(true)}

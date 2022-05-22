@@ -311,12 +311,13 @@ namespace CareTogether.Managers.Directory
                         .Single(adult => adult.Item1.Id == family.PrimaryFamilyContactPersonId);
                     return (familyId,
                         phoneNumber: primaryContactAdult.Item1.PhoneNumbers
-                            .FirstOrDefault(number => number.Type == PhoneNumberType.Mobile));
+                            .SingleOrDefault(number => number.Id == primaryContactAdult.Item1.PreferredPhoneNumberId));
                 }).ToImmutableList();
 
             var destinationNumbers = familyPrimaryContactNumbers
                 .Where(x => x.phoneNumber != null)
                 .Select(x => x.phoneNumber!.Number)
+                .Distinct()
                 .ToImmutableList();
 
             var sendResults = await telephony.SendSmsMessageAsync(sourcePhoneNumber, destinationNumbers, message);

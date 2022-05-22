@@ -1,27 +1,57 @@
-import { FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@mui/material';
+import { Button, Checkbox, Divider, FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 import { useDirectoryModel } from '../../Model/DirectoryModel';
 import { useInlineEditor } from '../../useInlineEditor';
 import { PersonEditorProps } from "./PersonEditorProps";
 import { EmailAddress, IEmailAddress, EmailAddressType } from '../../GeneratedClient';
+import { Favorite, FavoriteBorder } from '@mui/icons-material';
 
 type EmailAddressEditorProps = PersonEditorProps & {
-  emailAddress: EmailAddress
+  add?: boolean
+  emailAddress?: EmailAddress
 }
 
-export function EmailAddressEditor({ familyId, person, emailAddress }: EmailAddressEditorProps) {
+type IEmailAddressWithPreference = IEmailAddress & {
+  isPreferred?: boolean
+}
+
+export function EmailAddressEditor({ familyId, person, add, emailAddress }: EmailAddressEditorProps) {
   const directoryModel = useDirectoryModel();
 
+  // Automatically assume this is the person's preferred email address if it is the
+  // first email address being added for that person.
+  const isPreferred = person.preferredEmailAddressId === emailAddress?.id ||
+    typeof person.emailAddresses === 'undefined' ||
+    person.emailAddresses.length === 0;
+  const emailAddressWithPreference = {...emailAddress} as IEmailAddressWithPreference | undefined;
+  if (typeof emailAddressWithPreference !== 'undefined')
+    emailAddressWithPreference.isPreferred = isPreferred;
+  
   const editor = useInlineEditor(async value =>
-    await directoryModel.updatePersonEmailAddress(familyId!, person.id!,
-      value.id!, value.address!, value.type!),
-    emailAddress as IEmailAddress,
+    await (add
+      ? directoryModel.addPersonEmailAddress(familyId!, person.id!,
+          value!.address!, value!.type!, value!.isPreferred!)
+      : directoryModel.updatePersonEmailAddress(familyId!, person.id!,
+          value.id!, value.address!, value.type!, value!.isPreferred!)),
+    emailAddressWithPreference,
     value => (value && value.address!.length > 0 &&
-      (value.address !== emailAddress.address || value.type !== emailAddress.type)) as boolean);
+      (value.address !== emailAddress?.address || value.type !== emailAddress?.type ||
+        value.isPreferred !== isPreferred)) as boolean);
 
+  function handleAdd() {
+    editor.setValue({
+      address: "",
+      type: EmailAddressType.Personal,
+      isPreferred: isPreferred
+    });
+    editor.setEditing(true);
+  }
+  
   return (
-    <Grid container spacing={2}>
+    <Grid container rowSpacing={0} columnSpacing={2}>
       {editor.editing
         ? <>
+            <Grid item xs={12}><Divider /><br /></Grid>
             <Grid item xs={12} sm={6}>
               <TextField id="email-address" label="Email Address" fullWidth size="small" type="email"
                 value={editor.value!.address!}
@@ -38,14 +68,36 @@ export function EmailAddressEditor({ familyId, person, emailAddress }: EmailAddr
                 </RadioGroup>
               </FormControl>
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
+              <FormControlLabel control={
+                <Checkbox checked={editor.value!.isPreferred}
+                  onChange={e => editor.setValue({...editor.value, isPreferred: e.target.checked})}
+                  icon={<FavoriteBorder />}
+                  checkedIcon={<Favorite />} />}
+                label="Is Preferred Email Address" />
+            </Grid>
+            <Grid item xs={12} sm={6}>
               {editor.cancelButton}
               {editor.saveButton}
             </Grid>
+            <Grid item xs={12}><Divider /><br /></Grid>
           </>
         : <Grid item xs={12}>
-            {emailAddress.address} - {EmailAddressType[emailAddress.type!]}
-            {editor.editButton}
+          { add
+            ? <Button
+                onClick={handleAdd}
+                variant="text"
+                size="small"
+                startIcon={<AddIcon />}>
+                Add
+              </Button>
+            : <>
+                {isPreferred
+                  ? <Favorite fontSize='small' color='disabled' sx={{verticalAlign: 'middle', marginRight: 1}} />
+                  : <FavoriteBorder fontSize='small' color='disabled' sx={{verticalAlign: 'middle', marginRight: 1}} />}
+                {emailAddress!.address} - {EmailAddressType[emailAddress!.type!]}
+                {editor.editButton}
+              </>}
         </Grid>}
     </Grid>
   );

@@ -1,6 +1,6 @@
 import { Container, Toolbar, Grid, Button, useMediaQuery, useTheme, IconButton, Box } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { ArrangementPolicy, CombinedFamilyInfo, CompletedCustomFieldInfo, Permission, ReferralCloseReason } from '../../GeneratedClient';
+import { Arrangement, ArrangementPolicy, CombinedFamilyInfo, CompletedCustomFieldInfo, Permission, ReferralCloseReason } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { useParams } from 'react-router';
@@ -82,6 +82,11 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
+const sortArrangementsByStartDateDescThenCreateDateDesc = (a: Arrangement,b: Arrangement) => {
+  return ((b.startedAtUtc ?? new Date()).getTime() - (a.startedAtUtc ?? new Date()).getTime()) || 
+  ((b.requestedAtUtc ?? new Date()).getTime() - (a.requestedAtUtc ?? new Date()).getTime())
+};
+
 export function PartneringFamilyScreen() {
   const classes = useStyles();
   
@@ -92,7 +97,7 @@ export function PartneringFamilyScreen() {
   const policy = useRecoilValue(policyData);
 
   const partneringFamily = partneringFamilies.find(x => x.family?.id === familyId) as CombinedFamilyInfo;
-  
+
   const canCloseReferral = partneringFamily.partneringFamilyInfo?.openReferral &&
     !partneringFamily.partneringFamilyInfo.openReferral.closeReason &&
     !partneringFamily.partneringFamilyInfo.openReferral.arrangements?.some(arrangement =>
@@ -276,7 +281,9 @@ export function PartneringFamilyScreen() {
               <Grid item xs={12}>
                 <h3 style={{ marginBottom: 0 }}>Arrangements</h3>
                 <Masonry columns={isDesktop ? isWideScreen ? 3 : 2 : 1} spacing={2}>
-                  {partneringFamily.partneringFamilyInfo?.openReferral?.arrangements?.map(arrangement => (
+                  {partneringFamily.partneringFamilyInfo?.openReferral?.arrangements?.slice()
+                  .sort((a,b) => sortArrangementsByStartDateDescThenCreateDateDesc(a,b))
+                  .map(arrangement => (
                     <ArrangementCard key={arrangement.id}
                       partneringFamily={partneringFamily} referralId={partneringFamily.partneringFamilyInfo!.openReferral!.id!}
                       arrangement={arrangement} />
