@@ -105,7 +105,7 @@ export function AssignArrangementFunctionDialog({
         familyId: candidate.family.id!,
         personId: null as string | null,
         key: candidate.family.id!,
-        displayName: `${getFullName(candidate.family.adults!.find(adult => candidate.family.primaryFamilyContactPersonId === adult.item1?.id))} Family`
+        displayName: getFamilyName(candidate.family.adults!.find(adult => candidate.family.primaryFamilyContactPersonId === adult.item1?.id))
       };
     } else {
       return {
@@ -126,8 +126,8 @@ export function AssignArrangementFunctionDialog({
   
   const withBackdrop = useBackdrop();
 
-  function getFullName(person: ValueTupleOfPersonAndFamilyAdultRelationshipInfo | undefined) {
-    return `${person!.item1!.firstName} ${person!.item1!.lastName}`
+  function getFamilyName(person: ValueTupleOfPersonAndFamilyAdultRelationshipInfo | undefined) {
+    return `${person!.item1!.firstName} ${person!.item1!.lastName} Family`
   }
 
   async function save() {
