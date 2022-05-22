@@ -5,13 +5,15 @@ import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { format } from 'date-fns';
 import React, { useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
-import { ReferralCloseReason, PartneringFamilyInfo, Arrangement, CombinedFamilyInfo } from '../../GeneratedClient';
+import { ReferralCloseReason, PartneringFamilyInfo, Arrangement } from '../../GeneratedClient';
 import { useNavigate } from 'react-router-dom';
 import { FamilyName } from '../Families/FamilyName';
 import { ArrangementCard } from './ArrangementCard';
 import { CreatePartneringFamilyDialog } from './CreatePartneringFamilyDialog';
 import { HeaderContent, HeaderTitle } from '../Header';
 import { useScrollMemory } from '../../useScrollMemory';
+import { SearchBar } from '../SearchBar';
+import { filterFamiliesByText, sortFamiliesByLastNameDesc } from '../Families/FamilyUtils';
 
 const useStyles = makeStyles((theme) => ({
   table: {
@@ -36,19 +38,16 @@ function allArrangements(partneringFamilyInfo: PartneringFamilyInfo) {
   return results;
 }
 
-function familyLastName(family: CombinedFamilyInfo) {
-  return family.family!.adults?.filter(adult =>
-    family.family!.primaryFamilyContactPersonId === adult.item1?.id)[0]?.item1?.lastName || "";
-}
-
 function PartneringFamilies() {
   const classes = useStyles();
   const navigate = useNavigate();
 
   // The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
-  const partneringFamilies = useRecoilValue(partneringFamiliesData).map(x => x).sort((a, b) =>
-    familyLastName(a) < familyLastName(b) ? -1 : familyLastName(a) > familyLastName(b) ? 1 : 0);
+  const partneringFamilies = sortFamiliesByLastNameDesc(useRecoilValue(partneringFamiliesData));
 
+  const [filterText, setFilterText] = useState("");
+  const filteredPartneringFamilies = filterFamiliesByText(partneringFamilies, filterText);
+    
   useScrollMemory();
 
   function openPartneringFamily(partneringFamilyId: string) {
@@ -63,6 +62,7 @@ function PartneringFamilies() {
     <Grid container spacing={3}>
       <HeaderContent>
         {!isMobile && <HeaderTitle>Referrals</HeaderTitle>}
+        <SearchBar value={filterText} onChange={setFilterText} />
       </HeaderContent>
       <Grid item xs={12}>
         <TableContainer>
@@ -74,7 +74,7 @@ function PartneringFamilies() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {partneringFamilies.map((partneringFamily) => (
+              {filteredPartneringFamilies.map((partneringFamily) => (
                 <React.Fragment key={partneringFamily.family?.id}>
                   <TableRow className={classes.familyRow} onClick={() => openPartneringFamily(partneringFamily.family!.id!)}>
                     <TableCell><FamilyName family={partneringFamily} /></TableCell>
