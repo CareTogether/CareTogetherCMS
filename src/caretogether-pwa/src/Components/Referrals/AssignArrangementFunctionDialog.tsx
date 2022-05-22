@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import makeStyles from '@mui/styles/makeStyles';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid, InputLabel, MenuItem, Select } from '@mui/material';
-import { ArrangementPolicy, Arrangement, ArrangementFunction, RoleApprovalStatus, Person, Family } from '../../GeneratedClient';
+import { Autocomplete, Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid, TextField } from '@mui/material';
+import { ArrangementPolicy, Arrangement, ArrangementFunction, RoleApprovalStatus, Person, Family, ValueTupleOfPersonAndFamilyAdultRelationshipInfo } from '../../GeneratedClient';
 import { visibleFamiliesData } from '../../Model/ModelLoader';
 import { useRecoilValue } from 'recoil';
 import { useParams } from 'react-router-dom';
@@ -17,6 +17,12 @@ const useStyles = makeStyles((theme) => ({
   },
   ageYears: {
     width: '20ch'
+  },
+  paperFullWidth: {
+    overflowY: 'visible'
+  },
+  dialogContentRoot: {
+    overflowY: 'visible'
   }
 }));
 
@@ -26,6 +32,11 @@ interface AssignArrangementFunctionDialogProps {
   arrangement: Arrangement
   arrangementPolicy: ArrangementPolicy
   arrangementFunction: ArrangementFunction
+}
+
+interface AssigneeOptionType {
+  label: string;
+  id: string;
 }
 
 export function AssignArrangementFunctionDialog({
@@ -94,7 +105,7 @@ export function AssignArrangementFunctionDialog({
         familyId: candidate.family.id!,
         personId: null as string | null,
         key: candidate.family.id!,
-        displayName: `${candidate.family.adults!.find(adult => candidate.family.primaryFamilyContactPersonId === adult.item1?.id)?.item1!.lastName} Family`
+        displayName: `${getFullName(candidate.family.adults!.find(adult => candidate.family.primaryFamilyContactPersonId === adult.item1?.id))} Family`
       };
     } else {
       return {
@@ -115,6 +126,10 @@ export function AssignArrangementFunctionDialog({
   
   const withBackdrop = useBackdrop();
 
+  function getFullName(person: ValueTupleOfPersonAndFamilyAdultRelationshipInfo | undefined) {
+    return `${person!.item1!.firstName} ${person!.item1!.lastName}`
+  }
+
   async function save() {
     await withBackdrop(async () => {
       handle.closeDialog(); // This is placed here so values are not recalculated unnecessarily (which otherwise results in errors).
@@ -131,33 +146,40 @@ export function AssignArrangementFunctionDialog({
   }
 
   return (
-    <Dialog open={handle.open} onClose={handle.closeDialog} key={handle.key}
-      scroll='body' aria-labelledby="assign-volunteer-title">
-      <DialogTitle id="assign-volunteer-title">
+    <Dialog maxWidth={"xs"} fullWidth={true} open={handle.open} onClose={handle.closeDialog} key={handle.key}
+      aria-labelledby="assign-volunteer-title" classes={{paperFullWidth: classes.paperFullWidth}} >
+      <DialogTitle id="assign-volunteer-title" sx={{paddingBottom:"20px"}}>
         Assign {arrangementFunction.functionName}
       </DialogTitle>
-      <DialogContent>
+      <DialogContent classes={{root: classes.dialogContentRoot}}>
         <form className={classes.form} noValidate autoComplete="off">
           <Grid container spacing={2}>
             <Grid item xs={12}>
-              <FormControl required fullWidth size="small" sx={{marginTop: 1}}>
-                <InputLabel id="assignee-label">Assignee</InputLabel>
-                <Select
-                  labelId="assignee-label" id="assignee"
-                  value={assigneeKey}
-                  onChange={e => setFields({...fields, assigneeKey: e.target.value as string})}>
-                    <MenuItem key="placeholder" value="" disabled>
-                      Select a family or individual to assign
-                    </MenuItem>
-                    {candidateAssignees.map(candidate =>
-                      <MenuItem key={candidate.key} value={candidate.key}>{candidate.displayName}</MenuItem>)}
-                </Select>
+               <FormControl required fullWidth size="small" sx={{marginTop: 1}}> 
+                <Autocomplete
+                  disablePortal
+                  id="assignee"
+                  clearOnEscape
+                  onChange={(event: any, newValue: AssigneeOptionType | null) => {
+                    setFields({...fields, assigneeKey: newValue?.id as string})
+                  }}
+                  options={candidateAssignees.map(candidate => {
+                    return {
+                      label: candidate.displayName,
+                      id: candidate.key,
+                      candidateType: candidate.personId ? 'Individuals' : 'Families',
+                    }
+                  }).sort((a, b) => -b.candidateType.localeCompare(a.candidateType))}
+                  groupBy={(option) => option.candidateType}
+                  sx={{ width: 400 }}
+                  renderInput={(params) => <TextField {...params} label="Select a family or individual to assign" />}
+                />
               </FormControl>
             </Grid>
           </Grid>
         </form>
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={{paddingRight:"20px", paddingBottom:"20px"}}>
         <Button onClick={handle.closeDialog} color="secondary">
           Cancel
         </Button>
