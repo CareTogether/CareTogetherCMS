@@ -46,7 +46,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add(role),
                 ImmutableList<FamilyVolunteerAssignment>.Empty,
                 ImmutableList<IndividualVolunteerAssignment>.Empty
-                .Add(new IndividualVolunteerAssignment(guid1, guid1, "iA1+")));
+                .Add(new IndividualVolunteerAssignment(guid1, guid1, "iA1+", null)));
 
             AssertEx.SequenceIs(result);
         }
@@ -61,8 +61,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add(role),
                 ImmutableList<FamilyVolunteerAssignment>.Empty,
                 ImmutableList<IndividualVolunteerAssignment>.Empty
-                .Add(new IndividualVolunteerAssignment(guid1, guid1, "iA1+"))
-                .Add(new IndividualVolunteerAssignment(guid2, guid2, "iA1+")));
+                .Add(new IndividualVolunteerAssignment(guid1, guid1, "iA1+", null))
+                .Add(new IndividualVolunteerAssignment(guid2, guid2, "iA1+", null)));
 
             AssertEx.SequenceIs(result);
         }
@@ -76,7 +76,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 ImmutableList<ArrangementFunction>.Empty
                 .Add(role),
                 ImmutableList<FamilyVolunteerAssignment>.Empty
-                .Add(new FamilyVolunteerAssignment(guid1, "iA1+")),
+                .Add(new FamilyVolunteerAssignment(guid1, "iA1+", null)),
                 ImmutableList<IndividualVolunteerAssignment>.Empty);
 
             AssertEx.SequenceIs(result);
@@ -91,8 +91,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 ImmutableList<ArrangementFunction>.Empty
                 .Add(role),
                 ImmutableList<FamilyVolunteerAssignment>.Empty
-                .Add(new FamilyVolunteerAssignment(guid1, "iA1+"))
-                .Add(new FamilyVolunteerAssignment(guid2, "iA1+")),
+                .Add(new FamilyVolunteerAssignment(guid1, "iA1+", null))
+                .Add(new FamilyVolunteerAssignment(guid2, "iA1+", null)),
                 ImmutableList<IndividualVolunteerAssignment>.Empty);
 
             AssertEx.SequenceIs(result);
@@ -122,7 +122,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add(role),
                 ImmutableList<FamilyVolunteerAssignment>.Empty,
                 ImmutableList<IndividualVolunteerAssignment>.Empty
-                .Add(new IndividualVolunteerAssignment(guid1, guid1, "iA1")));
+                .Add(new IndividualVolunteerAssignment(guid1, guid1, "iA1", null)));
 
             AssertEx.SequenceIs(result);
         }
@@ -137,8 +137,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add(role),
                 ImmutableList<FamilyVolunteerAssignment>.Empty,
                 ImmutableList<IndividualVolunteerAssignment>.Empty
-                .Add(new IndividualVolunteerAssignment(guid1, guid1, "iA1"))
-                .Add(new IndividualVolunteerAssignment(guid2, guid2, "iA1")));
+                .Add(new IndividualVolunteerAssignment(guid1, guid1, "iA1", null))
+                .Add(new IndividualVolunteerAssignment(guid2, guid2, "iA1", null)));
 
             AssertEx.SequenceIs(result);
         }
@@ -152,7 +152,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 ImmutableList<ArrangementFunction>.Empty
                 .Add(role),
                 ImmutableList<FamilyVolunteerAssignment>.Empty
-                .Add(new FamilyVolunteerAssignment(guid1, "iA1")),
+                .Add(new FamilyVolunteerAssignment(guid1, "iA1", null)),
                 ImmutableList<IndividualVolunteerAssignment>.Empty);
 
             AssertEx.SequenceIs(result);
@@ -167,8 +167,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 ImmutableList<ArrangementFunction>.Empty
                 .Add(role),
                 ImmutableList<FamilyVolunteerAssignment>.Empty
-                .Add(new FamilyVolunteerAssignment(guid1, "iA1"))
-                .Add(new FamilyVolunteerAssignment(guid2, "iA1")),
+                .Add(new FamilyVolunteerAssignment(guid1, "iA1", null))
+                .Add(new FamilyVolunteerAssignment(guid2, "iA1", null)),
                 ImmutableList<IndividualVolunteerAssignment>.Empty);
 
             AssertEx.SequenceIs(result);
@@ -198,7 +198,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add(role),
                 ImmutableList<FamilyVolunteerAssignment>.Empty,
                 ImmutableList<IndividualVolunteerAssignment>.Empty
-                .Add(new IndividualVolunteerAssignment(guid1, guid1, "iA0+")));
+                .Add(new IndividualVolunteerAssignment(guid1, guid1, "iA0+", null)));
 
             AssertEx.SequenceIs(result);
         }
@@ -213,8 +213,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add(role),
                 ImmutableList<FamilyVolunteerAssignment>.Empty,
                 ImmutableList<IndividualVolunteerAssignment>.Empty
-                .Add(new IndividualVolunteerAssignment(guid1, guid1, "iA0+"))
-                .Add(new IndividualVolunteerAssignment(guid2, guid2, "iA0+")));
+                .Add(new IndividualVolunteerAssignment(guid1, guid1, "iA0+", null))
+                .Add(new IndividualVolunteerAssignment(guid2, guid2, "iA0+", null)));
 
             AssertEx.SequenceIs(result);
         }
@@ -228,7 +228,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 ImmutableList<ArrangementFunction>.Empty
                 .Add(role),
                 ImmutableList<FamilyVolunteerAssignment>.Empty
-                .Add(new FamilyVolunteerAssignment(guid1, "iA0+")),
+                .Add(new FamilyVolunteerAssignment(guid1, "iA0+", null)),
                 ImmutableList<IndividualVolunteerAssignment>.Empty);
 
             AssertEx.SequenceIs(result);
@@ -243,8 +243,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 ImmutableList<ArrangementFunction>.Empty
                 .Add(role),
                 ImmutableList<FamilyVolunteerAssignment>.Empty
-                .Add(new FamilyVolunteerAssignment(guid1, "iA0+"))
-                .Add(new FamilyVolunteerAssignment(guid2, "iA0+")),
+                .Add(new FamilyVolunteerAssignment(guid1, "iA0+", null))
+                .Add(new FamilyVolunteerAssignment(guid2, "iA0+", null)),
                 ImmutableList<IndividualVolunteerAssignment>.Empty);
 
             AssertEx.SequenceIs(result);
@@ -279,13 +279,13 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 ImmutableList<ArrangementFunction>.Empty
                 .Add(role1).Add(role2).Add(role3).Add(role4),
                 ImmutableList<FamilyVolunteerAssignment>.Empty
-                .Add(new FamilyVolunteerAssignment(guid1, "fA1+"))
-                .Add(new FamilyVolunteerAssignment(guid2, "fA1+")),
+                .Add(new FamilyVolunteerAssignment(guid1, "fA1+", null))
+                .Add(new FamilyVolunteerAssignment(guid2, "fA1+", null)),
                 ImmutableList<IndividualVolunteerAssignment>.Empty
-                .Add(new IndividualVolunteerAssignment(guid3, guid3, "iB1"))
-                .Add(new IndividualVolunteerAssignment(guid4, guid4, "iB1"))
-                .Add(new IndividualVolunteerAssignment(guid5, guid5, "iC1+"))
-                .Add(new IndividualVolunteerAssignment(guid6, guid6, "iC1+")));
+                .Add(new IndividualVolunteerAssignment(guid3, guid3, "iB1", null))
+                .Add(new IndividualVolunteerAssignment(guid4, guid4, "iB1", null))
+                .Add(new IndividualVolunteerAssignment(guid5, guid5, "iC1+", null))
+                .Add(new IndividualVolunteerAssignment(guid6, guid6, "iC1+", null)));
 
             AssertEx.SequenceIs(result);
         }
@@ -296,19 +296,23 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             var role1 = new ArrangementFunction("fA1+", FunctionRequirement.OneOrMore,
                 EligibleIndividualVolunteerRoles: Helpers.From(),
                 EligibleVolunteerFamilyRoles: Helpers.From("A"),
-                EligiblePeople: ImmutableList<Guid>.Empty);
+                EligiblePeople: ImmutableList<Guid>.Empty,
+                Variants: ImmutableList<ArrangementFunctionVariant>.Empty);
             var role2 = new ArrangementFunction("iB1", FunctionRequirement.ExactlyOne,
                 EligibleIndividualVolunteerRoles: Helpers.From("B"),
                 EligibleVolunteerFamilyRoles: Helpers.From(),
-                EligiblePeople: ImmutableList<Guid>.Empty);
+                EligiblePeople: ImmutableList<Guid>.Empty,
+                Variants: ImmutableList<ArrangementFunctionVariant>.Empty);
             var role3 = new ArrangementFunction("iC1+", FunctionRequirement.OneOrMore,
                 EligibleIndividualVolunteerRoles: Helpers.From("C"),
                 EligibleVolunteerFamilyRoles: Helpers.From(),
-                EligiblePeople: ImmutableList<Guid>.Empty);
+                EligiblePeople: ImmutableList<Guid>.Empty,
+                Variants: ImmutableList<ArrangementFunctionVariant>.Empty);
             var role4 = new ArrangementFunction("fAiBiC0+", FunctionRequirement.ZeroOrMore,
                 EligibleIndividualVolunteerRoles: Helpers.From("B", "C"),
                 EligibleVolunteerFamilyRoles: Helpers.From("A"),
-                EligiblePeople: ImmutableList<Guid>.Empty);
+                EligiblePeople: ImmutableList<Guid>.Empty,
+                Variants: ImmutableList<ArrangementFunctionVariant>.Empty);
 
             var result = ReferralCalculations.CalculateMissingFunctionAssignments(
                 ImmutableList<ArrangementFunction>.Empty
@@ -326,31 +330,35 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             var role1 = new ArrangementFunction("fA1+", FunctionRequirement.OneOrMore,
                 EligibleIndividualVolunteerRoles: Helpers.From(),
                 EligibleVolunteerFamilyRoles: Helpers.From("A"),
-                EligiblePeople: ImmutableList<Guid>.Empty);
+                EligiblePeople: ImmutableList<Guid>.Empty,
+                Variants: ImmutableList<ArrangementFunctionVariant>.Empty);
             var role2 = new ArrangementFunction("iB1", FunctionRequirement.ExactlyOne,
                 EligibleIndividualVolunteerRoles: Helpers.From("B"),
                 EligibleVolunteerFamilyRoles: Helpers.From(),
-                EligiblePeople: ImmutableList<Guid>.Empty);
+                EligiblePeople: ImmutableList<Guid>.Empty,
+                Variants: ImmutableList<ArrangementFunctionVariant>.Empty);
             var role3 = new ArrangementFunction("iC1+", FunctionRequirement.OneOrMore,
                 EligibleIndividualVolunteerRoles: Helpers.From("C"),
                 EligibleVolunteerFamilyRoles: Helpers.From(),
-                EligiblePeople: ImmutableList<Guid>.Empty);
+                EligiblePeople: ImmutableList<Guid>.Empty,
+                Variants: ImmutableList<ArrangementFunctionVariant>.Empty);
             var role4 = new ArrangementFunction("fAiBiC0+", FunctionRequirement.ZeroOrMore,
                 EligibleIndividualVolunteerRoles: Helpers.From("B", "C"),
                 EligibleVolunteerFamilyRoles: Helpers.From("A"),
-                EligiblePeople: ImmutableList<Guid>.Empty);
+                EligiblePeople: ImmutableList<Guid>.Empty,
+                Variants: ImmutableList<ArrangementFunctionVariant>.Empty);
 
             var result = ReferralCalculations.CalculateMissingFunctionAssignments(
                 ImmutableList<ArrangementFunction>.Empty
                 .Add(role1).Add(role2).Add(role3).Add(role4),
                 ImmutableList<FamilyVolunteerAssignment>.Empty
-                .Add(new FamilyVolunteerAssignment(guid1, "fA1+"))
-                .Add(new FamilyVolunteerAssignment(guid2, "fA1+")),
+                .Add(new FamilyVolunteerAssignment(guid1, "fA1+", null))
+                .Add(new FamilyVolunteerAssignment(guid2, "fA1+", null)),
                 ImmutableList<IndividualVolunteerAssignment>.Empty
-                .Add(new IndividualVolunteerAssignment(guid3, guid3, "iB1"))
-                .Add(new IndividualVolunteerAssignment(guid4, guid4, "iB1"))
-                .Add(new IndividualVolunteerAssignment(guid5, guid5, "iC1+"))
-                .Add(new IndividualVolunteerAssignment(guid6, guid6, "iC1+")));
+                .Add(new IndividualVolunteerAssignment(guid3, guid3, "iB1", null))
+                .Add(new IndividualVolunteerAssignment(guid4, guid4, "iB1", null))
+                .Add(new IndividualVolunteerAssignment(guid5, guid5, "iC1+", null))
+                .Add(new IndividualVolunteerAssignment(guid6, guid6, "iC1+", null)));
 
             AssertEx.SequenceIs(result);
             Assert.Inconclusive("The calculation is not validating eligibility.");
