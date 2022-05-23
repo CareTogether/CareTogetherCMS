@@ -158,6 +158,8 @@ namespace CareTogether.Engines.Authorization
                     UnassignVolunteerFamily => null,
                     StartArrangements => null,
                     CompleteArrangementRequirement => null,
+                    CompleteVolunteerFamilyAssignmentRequirement => null,
+                    CompleteIndividualVolunteerAssignmentRequirement => null,
                     MarkArrangementRequirementIncomplete => null,
                     ExemptArrangementRequirement => null,
                     UnexemptArrangementRequirement => null,

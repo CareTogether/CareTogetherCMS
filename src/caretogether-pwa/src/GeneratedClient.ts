@@ -3755,6 +3755,8 @@ export class IndividualVolunteerAssignment implements IIndividualVolunteerAssign
     personId?: string;
     arrangementFunction?: string;
     arrangementFunctionVariant?: string | undefined;
+    completedRequirements?: CompletedRequirementInfo[];
+    exemptedRequirements?: ExemptedRequirementInfo[];
 
     constructor(data?: IIndividualVolunteerAssignment) {
         if (data) {
@@ -3771,6 +3773,16 @@ export class IndividualVolunteerAssignment implements IIndividualVolunteerAssign
             this.personId = _data["personId"];
             this.arrangementFunction = _data["arrangementFunction"];
             this.arrangementFunctionVariant = _data["arrangementFunctionVariant"];
+            if (Array.isArray(_data["completedRequirements"])) {
+                this.completedRequirements = [] as any;
+                for (let item of _data["completedRequirements"])
+                    this.completedRequirements!.push(CompletedRequirementInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["exemptedRequirements"])) {
+                this.exemptedRequirements = [] as any;
+                for (let item of _data["exemptedRequirements"])
+                    this.exemptedRequirements!.push(ExemptedRequirementInfo.fromJS(item));
+            }
         }
     }
 
@@ -3787,6 +3799,16 @@ export class IndividualVolunteerAssignment implements IIndividualVolunteerAssign
         data["personId"] = this.personId;
         data["arrangementFunction"] = this.arrangementFunction;
         data["arrangementFunctionVariant"] = this.arrangementFunctionVariant;
+        if (Array.isArray(this.completedRequirements)) {
+            data["completedRequirements"] = [];
+            for (let item of this.completedRequirements)
+                data["completedRequirements"].push(item.toJSON());
+        }
+        if (Array.isArray(this.exemptedRequirements)) {
+            data["exemptedRequirements"] = [];
+            for (let item of this.exemptedRequirements)
+                data["exemptedRequirements"].push(item.toJSON());
+        }
         return data;
     }
 }
@@ -3796,12 +3818,16 @@ export interface IIndividualVolunteerAssignment {
     personId?: string;
     arrangementFunction?: string;
     arrangementFunctionVariant?: string | undefined;
+    completedRequirements?: CompletedRequirementInfo[];
+    exemptedRequirements?: ExemptedRequirementInfo[];
 }
 
 export class FamilyVolunteerAssignment implements IFamilyVolunteerAssignment {
     familyId?: string;
     arrangementFunction?: string;
     arrangementFunctionVariant?: string | undefined;
+    completedRequirements?: CompletedRequirementInfo[];
+    exemptedRequirements?: ExemptedRequirementInfo[];
 
     constructor(data?: IFamilyVolunteerAssignment) {
         if (data) {
@@ -3817,6 +3843,16 @@ export class FamilyVolunteerAssignment implements IFamilyVolunteerAssignment {
             this.familyId = _data["familyId"];
             this.arrangementFunction = _data["arrangementFunction"];
             this.arrangementFunctionVariant = _data["arrangementFunctionVariant"];
+            if (Array.isArray(_data["completedRequirements"])) {
+                this.completedRequirements = [] as any;
+                for (let item of _data["completedRequirements"])
+                    this.completedRequirements!.push(CompletedRequirementInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["exemptedRequirements"])) {
+                this.exemptedRequirements = [] as any;
+                for (let item of _data["exemptedRequirements"])
+                    this.exemptedRequirements!.push(ExemptedRequirementInfo.fromJS(item));
+            }
         }
     }
 
@@ -3832,6 +3868,16 @@ export class FamilyVolunteerAssignment implements IFamilyVolunteerAssignment {
         data["familyId"] = this.familyId;
         data["arrangementFunction"] = this.arrangementFunction;
         data["arrangementFunctionVariant"] = this.arrangementFunctionVariant;
+        if (Array.isArray(this.completedRequirements)) {
+            data["completedRequirements"] = [];
+            for (let item of this.completedRequirements)
+                data["completedRequirements"].push(item.toJSON());
+        }
+        if (Array.isArray(this.exemptedRequirements)) {
+            data["exemptedRequirements"] = [];
+            for (let item of this.exemptedRequirements)
+                data["exemptedRequirements"].push(item.toJSON());
+        }
         return data;
     }
 }
@@ -3840,6 +3886,8 @@ export interface IFamilyVolunteerAssignment {
     familyId?: string;
     arrangementFunction?: string;
     arrangementFunctionVariant?: string | undefined;
+    completedRequirements?: CompletedRequirementInfo[];
+    exemptedRequirements?: ExemptedRequirementInfo[];
 }
 
 export class ChildLocationHistoryEntry implements IChildLocationHistoryEntry {
@@ -6768,6 +6816,16 @@ export abstract class ArrangementsCommand implements IArrangementsCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "CompleteIndividualVolunteerAssignmentRequirement") {
+            let result = new CompleteIndividualVolunteerAssignmentRequirement();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "CompleteVolunteerFamilyAssignmentRequirement") {
+            let result = new CompleteVolunteerFamilyAssignmentRequirement();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "CreateArrangement") {
             let result = new CreateArrangement();
             result.init(data);
@@ -7001,6 +7059,134 @@ export class CompleteArrangementRequirement extends ArrangementsCommand implemen
 }
 
 export interface ICompleteArrangementRequirement extends IArrangementsCommand {
+    completedRequirementId?: string;
+    requirementName?: string;
+    completedAtUtc?: Date;
+    uploadedDocumentId?: string | undefined;
+    noteId?: string | undefined;
+}
+
+export class CompleteIndividualVolunteerAssignmentRequirement extends ArrangementsCommand implements ICompleteIndividualVolunteerAssignmentRequirement {
+    arrangementFunction?: string;
+    arrangementFunctionVariant?: string | undefined;
+    volunteerFamilyId?: string;
+    personId?: string;
+    completedRequirementId?: string;
+    requirementName?: string;
+    completedAtUtc?: Date;
+    uploadedDocumentId?: string | undefined;
+    noteId?: string | undefined;
+
+    constructor(data?: ICompleteIndividualVolunteerAssignmentRequirement) {
+        super(data);
+        this._discriminator = "CompleteIndividualVolunteerAssignmentRequirement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.arrangementFunction = _data["arrangementFunction"];
+            this.arrangementFunctionVariant = _data["arrangementFunctionVariant"];
+            this.volunteerFamilyId = _data["volunteerFamilyId"];
+            this.personId = _data["personId"];
+            this.completedRequirementId = _data["completedRequirementId"];
+            this.requirementName = _data["requirementName"];
+            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
+            this.noteId = _data["noteId"];
+        }
+    }
+
+    static fromJS(data: any): CompleteIndividualVolunteerAssignmentRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new CompleteIndividualVolunteerAssignmentRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["arrangementFunction"] = this.arrangementFunction;
+        data["arrangementFunctionVariant"] = this.arrangementFunctionVariant;
+        data["volunteerFamilyId"] = this.volunteerFamilyId;
+        data["personId"] = this.personId;
+        data["completedRequirementId"] = this.completedRequirementId;
+        data["requirementName"] = this.requirementName;
+        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
+        data["noteId"] = this.noteId;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ICompleteIndividualVolunteerAssignmentRequirement extends IArrangementsCommand {
+    arrangementFunction?: string;
+    arrangementFunctionVariant?: string | undefined;
+    volunteerFamilyId?: string;
+    personId?: string;
+    completedRequirementId?: string;
+    requirementName?: string;
+    completedAtUtc?: Date;
+    uploadedDocumentId?: string | undefined;
+    noteId?: string | undefined;
+}
+
+export class CompleteVolunteerFamilyAssignmentRequirement extends ArrangementsCommand implements ICompleteVolunteerFamilyAssignmentRequirement {
+    arrangementFunction?: string;
+    arrangementFunctionVariant?: string | undefined;
+    volunteerFamilyId?: string;
+    completedRequirementId?: string;
+    requirementName?: string;
+    completedAtUtc?: Date;
+    uploadedDocumentId?: string | undefined;
+    noteId?: string | undefined;
+
+    constructor(data?: ICompleteVolunteerFamilyAssignmentRequirement) {
+        super(data);
+        this._discriminator = "CompleteVolunteerFamilyAssignmentRequirement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.arrangementFunction = _data["arrangementFunction"];
+            this.arrangementFunctionVariant = _data["arrangementFunctionVariant"];
+            this.volunteerFamilyId = _data["volunteerFamilyId"];
+            this.completedRequirementId = _data["completedRequirementId"];
+            this.requirementName = _data["requirementName"];
+            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
+            this.noteId = _data["noteId"];
+        }
+    }
+
+    static fromJS(data: any): CompleteVolunteerFamilyAssignmentRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new CompleteVolunteerFamilyAssignmentRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["arrangementFunction"] = this.arrangementFunction;
+        data["arrangementFunctionVariant"] = this.arrangementFunctionVariant;
+        data["volunteerFamilyId"] = this.volunteerFamilyId;
+        data["completedRequirementId"] = this.completedRequirementId;
+        data["requirementName"] = this.requirementName;
+        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
+        data["noteId"] = this.noteId;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ICompleteVolunteerFamilyAssignmentRequirement extends IArrangementsCommand {
+    arrangementFunction?: string;
+    arrangementFunctionVariant?: string | undefined;
+    volunteerFamilyId?: string;
     completedRequirementId?: string;
     requirementName?: string;
     completedAtUtc?: Date;

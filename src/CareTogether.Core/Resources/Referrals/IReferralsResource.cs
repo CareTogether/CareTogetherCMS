@@ -28,9 +28,13 @@ namespace CareTogether.Resources.Referrals
     public enum ReferralCloseReason { NotAppropriate, NoCapacity, NoLongerNeeded, Resourced, NeedMet };
 
     public sealed record IndividualVolunteerAssignment(Guid FamilyId, Guid PersonId,
-        string ArrangementFunction, string? ArrangementFunctionVariant);
+        string ArrangementFunction, string? ArrangementFunctionVariant,
+        ImmutableList<CompletedRequirementInfo> CompletedRequirements,
+        ImmutableList<ExemptedRequirementInfo> ExemptedRequirements);
     public sealed record FamilyVolunteerAssignment(Guid FamilyId,
-        string ArrangementFunction, string? ArrangementFunctionVariant);
+        string ArrangementFunction, string? ArrangementFunctionVariant,
+        ImmutableList<CompletedRequirementInfo> CompletedRequirements,
+        ImmutableList<ExemptedRequirementInfo> ExemptedRequirements);
     public sealed record ChildLocationHistoryEntry(Guid UserId, DateTime TimestampUtc,
         Guid ChildLocationFamilyId, Guid ChildLocationReceivingAdultId, ChildLocationPlan Plan, Guid? NoteId)
         : IComparable<ChildLocationHistoryEntry>
@@ -93,6 +97,16 @@ namespace CareTogether.Resources.Referrals
         DateTime StartedAtUtc)
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
     public sealed record CompleteArrangementRequirement(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
+        Guid CompletedRequirementId, string RequirementName, DateTime CompletedAtUtc,
+        Guid? UploadedDocumentId, Guid? NoteId)
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+    public sealed record CompleteVolunteerFamilyAssignmentRequirement(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
+        string ArrangementFunction, string? ArrangementFunctionVariant, Guid VolunteerFamilyId,
+        Guid CompletedRequirementId, string RequirementName, DateTime CompletedAtUtc,
+        Guid? UploadedDocumentId, Guid? NoteId)
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+    public sealed record CompleteIndividualVolunteerAssignmentRequirement(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
+        string ArrangementFunction, string? ArrangementFunctionVariant, Guid VolunteerFamilyId, Guid PersonId,
         Guid CompletedRequirementId, string RequirementName, DateTime CompletedAtUtc,
         Guid? UploadedDocumentId, Guid? NoteId)
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);

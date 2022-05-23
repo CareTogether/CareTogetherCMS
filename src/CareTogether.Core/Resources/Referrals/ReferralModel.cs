@@ -154,13 +154,17 @@ namespace CareTogether.Resources.Referrals
                             {
                                 IndividualVolunteerAssignments = arrangementEntry.IndividualVolunteerAssignments.Add(
                                     new IndividualVolunteerAssignment(c.VolunteerFamilyId, c.PersonId,
-                                        c.ArrangementFunction, c.ArrangementFunctionVariant))
+                                        c.ArrangementFunction, c.ArrangementFunctionVariant,
+                                        ImmutableList<CompletedRequirementInfo>.Empty,
+                                        ImmutableList<ExemptedRequirementInfo>.Empty))
                             }, null),
                             AssignVolunteerFamily c => (arrangementEntry with
                             {
                                 FamilyVolunteerAssignments = arrangementEntry.FamilyVolunteerAssignments.Add(
                                     new FamilyVolunteerAssignment(c.VolunteerFamilyId,
-                                        c.ArrangementFunction, c.ArrangementFunctionVariant))
+                                        c.ArrangementFunction, c.ArrangementFunctionVariant,
+                                        ImmutableList<CompletedRequirementInfo>.Empty,
+                                        ImmutableList<ExemptedRequirementInfo>.Empty))
                             }, null),
                             UnassignIndividualVolunteer c => (arrangementEntry with
                             {
@@ -185,6 +189,35 @@ namespace CareTogether.Resources.Referrals
                                 CompletedRequirements = arrangementEntry.CompletedRequirements.Add(
                                     new CompletedRequirementInfo(userId, timestampUtc, c.CompletedRequirementId,
                                         c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId, c.NoteId))
+                            }, new ArrangementRequirementCompleted(userId, timestampUtc, arrangementId,
+                                c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId, c.NoteId)),
+                            CompleteVolunteerFamilyAssignmentRequirement c => (arrangementEntry with
+                            {
+                                FamilyVolunteerAssignments = arrangementEntry.FamilyVolunteerAssignments.UpdateSingle(
+                                    fva => fva.ArrangementFunction == c.ArrangementFunction &&
+                                        fva.ArrangementFunctionVariant == c.ArrangementFunctionVariant &&
+                                        fva.FamilyId == c.VolunteerFamilyId,
+                                    fva => fva with
+                                    {
+                                        CompletedRequirements = fva.CompletedRequirements.Add(
+                                            new CompletedRequirementInfo(userId, timestampUtc, c.CompletedRequirementId,
+                                                c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId, c.NoteId))
+                                    })
+                            }, new ArrangementRequirementCompleted(userId, timestampUtc, arrangementId,
+                                c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId, c.NoteId)),
+                            CompleteIndividualVolunteerAssignmentRequirement c => (arrangementEntry with
+                            {
+                                IndividualVolunteerAssignments = arrangementEntry.IndividualVolunteerAssignments.UpdateSingle(
+                                    iva => iva.ArrangementFunction == c.ArrangementFunction &&
+                                        iva.ArrangementFunctionVariant == c.ArrangementFunctionVariant &&
+                                        iva.FamilyId == c.VolunteerFamilyId &&
+                                        iva.PersonId == c.PersonId,
+                                    iva => iva with
+                                    {
+                                        CompletedRequirements = iva.CompletedRequirements.Add(
+                                            new CompletedRequirementInfo(userId, timestampUtc, c.CompletedRequirementId,
+                                                c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId, c.NoteId))
+                                    })
                             }, new ArrangementRequirementCompleted(userId, timestampUtc, arrangementId,
                                 c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId, c.NoteId)),
                             MarkArrangementRequirementIncomplete c => (arrangementEntry with

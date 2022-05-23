@@ -12,6 +12,14 @@ namespace CareTogether
             return list.Select(x => predicate(x) ? valueToUpdate : x).ToImmutableList();
         }
 
+        public static ImmutableList<T> UpdateSingle<T>(this ImmutableList<T> list, Func<T, bool> predicate,
+            Func<T, T> selector)
+        {
+            var oldValue = list.Single(predicate);
+            var newValue = selector(oldValue);
+            return list.Replace(oldValue, newValue);
+        }
+
         public static ImmutableList<U> GetValueOrEmptyList<T, U>(this ImmutableDictionary<T, ImmutableList<U>> dictionary, T key)
             where T : notnull
         {
