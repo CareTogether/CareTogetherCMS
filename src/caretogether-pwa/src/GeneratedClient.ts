@@ -3707,6 +3707,10 @@ export enum ArrangementPhase {
 }
 
 export class MissingArrangementRequirement implements IMissingArrangementRequirement {
+    arrangementFunction?: string | undefined;
+    arrangementFunctionVariant?: string | undefined;
+    volunteerFamilyId?: string | undefined;
+    personId?: string | undefined;
     actionName?: string;
     dueBy?: Date | undefined;
     pastDueSince?: Date | undefined;
@@ -3722,6 +3726,10 @@ export class MissingArrangementRequirement implements IMissingArrangementRequire
 
     init(_data?: any) {
         if (_data) {
+            this.arrangementFunction = _data["arrangementFunction"];
+            this.arrangementFunctionVariant = _data["arrangementFunctionVariant"];
+            this.volunteerFamilyId = _data["volunteerFamilyId"];
+            this.personId = _data["personId"];
             this.actionName = _data["actionName"];
             this.dueBy = _data["dueBy"] ? new Date(_data["dueBy"].toString()) : <any>undefined;
             this.pastDueSince = _data["pastDueSince"] ? new Date(_data["pastDueSince"].toString()) : <any>undefined;
@@ -3737,6 +3745,10 @@ export class MissingArrangementRequirement implements IMissingArrangementRequire
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
+        data["arrangementFunction"] = this.arrangementFunction;
+        data["arrangementFunctionVariant"] = this.arrangementFunctionVariant;
+        data["volunteerFamilyId"] = this.volunteerFamilyId;
+        data["personId"] = this.personId;
         data["actionName"] = this.actionName;
         data["dueBy"] = this.dueBy ? this.dueBy.toISOString() : <any>undefined;
         data["pastDueSince"] = this.pastDueSince ? this.pastDueSince.toISOString() : <any>undefined;
@@ -3745,6 +3757,10 @@ export class MissingArrangementRequirement implements IMissingArrangementRequire
 }
 
 export interface IMissingArrangementRequirement {
+    arrangementFunction?: string | undefined;
+    arrangementFunctionVariant?: string | undefined;
+    volunteerFamilyId?: string | undefined;
+    personId?: string | undefined;
     actionName?: string;
     dueBy?: Date | undefined;
     pastDueSince?: Date | undefined;

@@ -2280,6 +2280,24 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "arrangementFunction": {
+            "type": "string",
+            "nullable": true
+          },
+          "arrangementFunctionVariant": {
+            "type": "string",
+            "nullable": true
+          },
+          "volunteerFamilyId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          },
+          "personId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          },
           "actionName": {
             "type": "string"
           },

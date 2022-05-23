@@ -165,26 +165,42 @@ namespace CareTogether.Engines.PolicyEvaluation
             ImmutableList<CompletedRequirementInfo> completedRequirements,
             ImmutableList<ExemptedRequirementInfo> exemptedRequirements,
             ImmutableSortedSet<ChildLocationHistoryEntry> childLocationHistory,
-            DateTime utcNow) =>
-            arrangementPolicy.RequiredMonitoringActions.SelectMany(monitoringRequirement =>
-                (startedAtUtc.HasValue
-                ? CalculateMissingMonitoringRequirementInstances(monitoringRequirement.Recurrence,
-                    startedAtUtc.Value, endedAtUtc,
-                    completedRequirements
-                    .Where(x => x.RequirementName == monitoringRequirement.ActionName)
-                    .Select(x => x.CompletedAtUtc)
-                    .OrderBy(x => x).ToImmutableList(),
-                    childLocationHistory, utcNow)
-                : ImmutableList<DateTime>.Empty)
-                .Where(missingDueDate => !exemptedRequirements.Any(exempted =>
-                    exempted.RequirementName == monitoringRequirement.ActionName &&
-                    (!exempted.DueDate.HasValue || exempted.DueDate == missingDueDate.ToUniversalTime()) &&
-                    (exempted.ExemptionExpiresAtUtc == null || exempted.ExemptionExpiresAtUtc > utcNow)))
-                .Select(missingDueDate =>
-                    new MissingArrangementRequirement(monitoringRequirement.ActionName,
-                        DueBy: missingDueDate > utcNow ? missingDueDate : null,
-                        PastDueSince: missingDueDate <= utcNow ? missingDueDate : null)))
+            DateTime utcNow)
+        {
+            var arrangementLevelResults = arrangementPolicy.RequiredMonitoringActions
+                .SelectMany(monitoringRequirement =>
+                    (startedAtUtc.HasValue
+                    ? CalculateMissingMonitoringRequirementInstances(monitoringRequirement.Recurrence,
+                        startedAtUtc.Value, endedAtUtc,
+                        completedRequirements
+                        .Where(x => x.RequirementName == monitoringRequirement.ActionName)
+                        .Select(x => x.CompletedAtUtc)
+                        .OrderBy(x => x).ToImmutableList(),
+                        childLocationHistory, utcNow)
+                    : ImmutableList<DateTime>.Empty)
+                    .Where(missingDueDate => !exemptedRequirements.Any(exempted =>
+                        exempted.RequirementName == monitoringRequirement.ActionName &&
+                        (!exempted.DueDate.HasValue || exempted.DueDate == missingDueDate.ToUniversalTime()) &&
+                        (exempted.ExemptionExpiresAtUtc == null || exempted.ExemptionExpiresAtUtc > utcNow)))
+                    .Select(missingDueDate =>
+                        new MissingArrangementRequirement(
+                            null, null, null, null,
+                            monitoringRequirement.ActionName,
+                            DueBy: missingDueDate > utcNow ? missingDueDate : null,
+                            PastDueSince: missingDueDate <= utcNow ? missingDueDate : null)))
                 .ToImmutableList();
+
+            var familyAssignmentResults = ImmutableList<MissingArrangementRequirement>.Empty;
+            throw new NotImplementedException();
+
+            var individualAssignmentResults = ImmutableList<MissingArrangementRequirement>.Empty;
+            throw new NotImplementedException();
+
+            return arrangementLevelResults
+                .Concat(familyAssignmentResults)
+                .Concat(individualAssignmentResults)
+                .ToImmutableList();
+        }
 
         internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementInstances(
             RecurrencePolicy recurrence, DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc,
