@@ -51,8 +51,8 @@ namespace CareTogether.Engines.PolicyEvaluation
             var missingMonitoringRequirements = CalculateMissingMonitoringRequirements(arrangementPolicy,
                 arrangement.StartedAtUtc, arrangement.EndedAtUtc,
                 arrangement.CompletedRequirements, arrangement.ExemptedRequirements, arrangement.ChildrenLocationHistory, utcNow);
-            var missingCloseoutRequirements = CalculateMissingCloseoutRequirements(arrangementPolicy,
-                arrangement.CompletedRequirements, arrangement.ExemptedRequirements, utcNow);
+            var missingCloseoutRequirements = CalculateMissingCloseoutRequirements(
+                arrangementPolicy, arrangement, utcNow);
             var missingFunctionAssignments = CalculateMissingFunctionAssignments(arrangementPolicy.ArrangementFunctions,
                 arrangement.FamilyVolunteerAssignments, arrangement.IndividualVolunteerAssignments);
 
@@ -419,16 +419,70 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
         internal static ImmutableList<MissingArrangementRequirement> CalculateMissingCloseoutRequirements(
-            ArrangementPolicy arrangementPolicy, ImmutableList<CompletedRequirementInfo> completedRequirements,
-            ImmutableList<ExemptedRequirementInfo> exemptedRequirements, DateTime utcNow) =>
-            arrangementPolicy.RequiredCloseoutActionNames
+            ArrangementPolicy arrangementPolicy, ArrangementEntry arrangement, DateTime utcNow)
+        {
+            var arrangementLevelResults = arrangementPolicy.RequiredCloseoutActionNames
                 .Where(requiredAction =>
                     !SharedCalculations.RequirementMetOrExempted(requiredAction,
                         policySupersededAtUtc: null, utcNow: utcNow,
-                        completedRequirements: completedRequirements,
-                        exemptedRequirements: exemptedRequirements))
-                .Select(requiredAction => new MissingArrangementRequirement(requiredAction, null, null))
+                        completedRequirements: arrangement.CompletedRequirements,
+                        exemptedRequirements: arrangement.ExemptedRequirements))
+                .Select(requiredAction => new MissingArrangementRequirement(
+                    null, null, null, null,
+                    requiredAction, null, null))
                 .ToImmutableList();
+
+            var familyAssignmentResults = arrangement.FamilyVolunteerAssignments
+                .SelectMany(fva =>
+                {
+                    var functionVariant = arrangementPolicy.ArrangementFunctions
+                        .SingleOrDefault(af => af.FunctionName == fva.ArrangementFunction)
+                        ?.Variants?.SingleOrDefault(afv => afv.VariantName == fva.ArrangementFunctionVariant);
+
+                    if (functionVariant == null)
+                        return ImmutableList<MissingArrangementRequirement>.Empty;
+
+                    return functionVariant.RequiredCloseoutActionNames
+                        .Where(requiredAction =>
+                            !SharedCalculations.RequirementMetOrExempted(requiredAction,
+                                policySupersededAtUtc: null, utcNow: utcNow,
+                                completedRequirements: fva.CompletedRequirements,
+                                exemptedRequirements: fva.ExemptedRequirements))
+                        .Select(requiredAction => new MissingArrangementRequirement(
+                            fva.ArrangementFunction, fva.ArrangementFunctionVariant, fva.FamilyId, null,
+                            requiredAction, null, null))
+                        .ToImmutableList();
+                })
+                .ToImmutableList();
+
+            var individualAssignmentResults = arrangement.IndividualVolunteerAssignments
+                .SelectMany(iva =>
+                {
+                    var functionVariant = arrangementPolicy.ArrangementFunctions
+                        .SingleOrDefault(af => af.FunctionName == iva.ArrangementFunction)
+                        ?.Variants?.SingleOrDefault(afv => afv.VariantName == iva.ArrangementFunctionVariant);
+
+                    if (functionVariant == null)
+                        return ImmutableList<MissingArrangementRequirement>.Empty;
+
+                    return functionVariant.RequiredCloseoutActionNames
+                        .Where(requiredAction =>
+                            !SharedCalculations.RequirementMetOrExempted(requiredAction,
+                                policySupersededAtUtc: null, utcNow: utcNow,
+                                completedRequirements: iva.CompletedRequirements,
+                                exemptedRequirements: iva.ExemptedRequirements))
+                        .Select(requiredAction => new MissingArrangementRequirement(
+                            iva.ArrangementFunction, iva.ArrangementFunctionVariant, iva.FamilyId, iva.PersonId,
+                            requiredAction, null, null))
+                        .ToImmutableList();
+                })
+                .ToImmutableList();
+
+            return arrangementLevelResults
+                .Concat(familyAssignmentResults)
+                .Concat(individualAssignmentResults)
+                .ToImmutableList();
+        }
 
         internal static ImmutableList<ArrangementFunction> CalculateMissingFunctionAssignments(
             ImmutableList<ArrangementFunction> volunteerFunctions,
