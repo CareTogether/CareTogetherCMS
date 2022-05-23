@@ -30,7 +30,10 @@ namespace CareTogether.Engines.PolicyEvaluation
         ArrangementPhase Phase,
         ImmutableList<MissingArrangementRequirement> MissingRequirements);
 
-    public sealed record MissingArrangementRequirement(string ActionName, DateTime? DueBy, DateTime? PastDueSince);
+    public sealed record MissingArrangementRequirement(
+        string? ArrangementFunction, string? ArrangementFunctionVariant,
+        Guid? VolunteerFamilyId, Guid? PersonId,
+        string ActionName, DateTime? DueBy, DateTime? PastDueSince);
 
     public enum ArrangementPhase { SettingUp, ReadyToStart, Started, Ended, Cancelled };
 
