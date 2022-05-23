@@ -103,7 +103,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                         completedRequirements: completedRequirements,
                         exemptedRequirements: exemptedRequirements))
                 .Select(requiredAction => new MissingArrangementRequirement(requiredAction, null, null))
-                .ToImmutableList();// "and variants";
+                .ToImmutableList(); "and variants";
 
         internal static ImmutableList<MissingArrangementRequirement> CalculateMissingMonitoringRequirements(
             ArrangementPolicy arrangementPolicy,
@@ -130,7 +130,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                     new MissingArrangementRequirement(monitoringRequirement.ActionName,
                         DueBy: missingDueDate > utcNow ? missingDueDate : null,
                         PastDueSince: missingDueDate <= utcNow ? missingDueDate : null)))
-                .ToImmutableList();// "and variants";
+                .ToImmutableList(); "and variants";
 
         internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementInstances(
             RecurrencePolicy recurrence, DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc,
@@ -428,7 +428,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                         completedRequirements: completedRequirements,
                         exemptedRequirements: exemptedRequirements))
                 .Select(requiredAction => new MissingArrangementRequirement(requiredAction, null, null))
-                .ToImmutableList();// "and variants";
+                .ToImmutableList(); "and variants";
 
         internal static ImmutableList<ArrangementFunction> CalculateMissingFunctionAssignments(
             ImmutableList<ArrangementFunction> volunteerFunctions,
