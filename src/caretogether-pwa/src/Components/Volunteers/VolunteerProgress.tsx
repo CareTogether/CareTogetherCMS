@@ -7,11 +7,11 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import AddIcon from '@mui/icons-material/Add';
 import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';
-import { CombinedFamilyInfo } from '../../GeneratedClient';
 import { HeaderContent, HeaderTitle } from '../Header';
 import { SearchBar } from '../SearchBar';
 import { useLocalStorage } from '../../useLocalStorage';
 import { useScrollMemory } from '../../useScrollMemory';
+import { filterFamiliesByText, familyLastName, sortFamiliesByLastNameDesc } from '../Families/FamilyUtils';
 
 const useStyles = makeStyles((theme) => ({
   table: {
@@ -33,18 +33,6 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-function familyLastName(family: CombinedFamilyInfo) {
-  return family.family!.adults?.filter(adult => family.family!.primaryFamilyContactPersonId === adult.item1?.id)[0]?.item1?.lastName || "";
-}
-
-function simplify(input: string) {
-  // Strip out common punctuation elements and excessive whitespace, and convert to lowercase
-  return input
-    .replace(/[.,/#!$%^&*;:{}=\-_`'"'‘’‚‛“”„‟′‵″‶`´~()]/g,"")
-    .replace(/\s{2,}/g," ")
-    .toLowerCase();
-}
-
 function VolunteerProgress(props: { onOpen: () => void }) {
   const { onOpen } = props;
   useEffect(onOpen);
@@ -53,14 +41,11 @@ function VolunteerProgress(props: { onOpen: () => void }) {
   const navigate = useNavigate();
 
   // The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
-  const volunteerFamilies = useRecoilValue(volunteerFamiliesData).map(x => x).sort((a, b) =>
-    familyLastName(a) < familyLastName(b) ? -1 : familyLastName(a) > familyLastName(b) ? 1 : 0);
+  const volunteerFamilies = sortFamiliesByLastNameDesc(useRecoilValue(volunteerFamiliesData));
   const allApprovalAndOnboardingRequirements = useRecoilValue(allApprovalAndOnboardingRequirementsData);
 
   const [filterText, setFilterText] = useState("");
-  const filteredVolunteerFamilies = volunteerFamilies.filter(family => filterText.length === 0 ||
-    family.family?.adults?.some(adult => simplify(`${adult.item1?.firstName} ${adult.item1?.lastName}`).includes(filterText.toLowerCase())) ||
-    family.family?.children?.some(child => simplify(`${child?.firstName} ${child?.lastName}`).includes(filterText.toLowerCase())));
+  const filteredVolunteerFamilies = filterFamiliesByText(volunteerFamilies, filterText);
 
   useScrollMemory();
 
