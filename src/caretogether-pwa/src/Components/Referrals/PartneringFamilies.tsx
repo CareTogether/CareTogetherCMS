@@ -9,7 +9,7 @@ import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { format } from 'date-fns';
 import React, { useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
-import { ReferralCloseReason, PartneringFamilyInfo, Arrangement, CombinedFamilyInfo, ArrangementPhase } from '../../GeneratedClient';
+import { ReferralCloseReason, PartneringFamilyInfo, Arrangement, ArrangementPhase } from '../../GeneratedClient';
 import { useNavigate } from 'react-router-dom';
 import { FamilyName } from '../Families/FamilyName';
 import { ArrangementCard } from './ArrangementCard';
