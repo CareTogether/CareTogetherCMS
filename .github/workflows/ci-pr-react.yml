@@ -26,11 +26,9 @@ jobs:
       with:
         path: '**/node_modules'
         key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
-    - name: Install Yarn
-      run: npm install -g yarn
     - name: Install NPM packages
-      run: yarn install
+      run: npm install
       working-directory: src/caretogether-pwa
     - name: Build React app
-      run: yarn build
+      run: npm run build
       working-directory: src/caretogether-pwa

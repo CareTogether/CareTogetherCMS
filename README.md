@@ -22,9 +22,9 @@ We ask that you practice effective communication, preferably through comments on
 ## Prerequisites
 You can build and run CareTogether on any operating system supported by Node.js and .NET Core, including Windows, MacOS, and supported Linux distros. CareTogether requires currently supported versions of Node.js and the .NET 6 SDK to be installed on your system.
 
-You will also need to install [the Azurite emulator for Azure Storage](https://github.com/Azure/Azurite) and [the Yarn package manager](https://yarnpkg.com/getting-started/install):
+You will also need to install [the Azurite emulator for Azure Storage](https://github.com/Azure/Azurite):
 ```
-npm install -g azurite yarn
+npm install -g azurite
 ```
 
 ## Development
@@ -44,8 +44,8 @@ npm install -g azurite yarn
    **NOTE:** The API project comes with a basic set of test data for local development. This test data is automatically regenerated each time you start the API project.
 4. To run the _caretogether-pwa_ web application, run the following from the _caretogether-pwa_ directory:
    ```
-   yarn install
-   yarn start
+   npm install
+   npm run start
    ```
 5. To sign into the application's local test environment, use the following credentials:
    - Email Address: `test@bynalogic.com`
