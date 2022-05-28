@@ -1,9 +1,9 @@
 import makeStyles from '@mui/styles/makeStyles';
 import { Fab, FormControlLabel, Grid, Switch, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip, useMediaQuery, useTheme } from '@mui/material';
-import CircleOutlinedIcon from '@mui/icons-material/CircleOutlined';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import SyncIcon from '@mui/icons-material/Sync';
+import PendingOutlinedIcon from '@mui/icons-material/PendingOutlined';
+import PlayCircleFilledIcon from '@mui/icons-material/PlayCircleFilled';
+import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { format } from 'date-fns';
@@ -17,6 +17,7 @@ import { CreatePartneringFamilyDialog } from './CreatePartneringFamilyDialog';
 import { HeaderContent, HeaderTitle } from '../Header';
 import { useScrollMemory } from '../../useScrollMemory';
 import { useLocalStorage } from '../../useLocalStorage';
+import { policyData } from '../../Model/ConfigurationModel';
 
 const useStyles = makeStyles((theme) => ({
   table: {
@@ -25,33 +26,34 @@ const useStyles = makeStyles((theme) => ({
   familyRow: {
     backgroundColor: '#eef'
   },
+  arrangementIconContainer: {
+    display: 'flex',
+    rowGap: '5px',
+    columnGap: '8px',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+  },
+  iconTextSpace: {
+    marginRight: '3px',
+  },
   arrangementIcon: {
+    display: 'inline-block',
     verticalAlign: 'middle',
+  },
+  arrangementZero: {
+    color: 'lightGrey',
   },
   arrangementSettingUp: {
-    verticalAlign: 'middle',
-    marginLeft: '5px',
-    color: 'darkGrey',
+    color: 'grey',
   },
   arrangementReady: {
-    verticalAlign: 'middle',
-    marginLeft: '5px',
-    color: '#FDD735',
+    color: '#E3AE01',
   },
   arrangementStarted: {
-    verticalAlign: 'middle',
-    marginLeft: '5px',
     color: '#01ACFB',
   },
   arrangementEnded: {
-    verticalAlign: 'middle',
-    marginLeft: '5px',
-    color: 'green',
-  },
-  arrangementChip: {
-    marginRight: '25px',
-  },
-  arrangementsRow: {
     color: 'green',
   },
   fabAdd: {
@@ -60,6 +62,14 @@ const useStyles = makeStyles((theme) => ({
     bottom: '70px'
   }
 }));
+
+const arrangementPhaseText = new Map<number, string>([
+  [ArrangementPhase.SettingUp, 'Setting Up'],
+  [ArrangementPhase.ReadyToStart, 'Ready To Start'],
+  [ArrangementPhase.Started, 'Started'],
+  [ArrangementPhase.Ended, 'Ended'],
+]);
+
 
 function allArrangements(partneringFamilyInfo: PartneringFamilyInfo) {
   const results = [] as { referralId: string, arrangement: Arrangement }[];
@@ -81,14 +91,53 @@ function PartneringFamilies() {
   const partneringFamilies = useRecoilValue(partneringFamiliesData).map(x => x).sort((a, b) =>
     familyLastName(a) < familyLastName(b) ? -1 : familyLastName(a) > familyLastName(b) ? 1 : 0);
 
+  const arrangementTypes = useRecoilValue(policyData).referralPolicy?.arrangementPolicies?.map((a) => {
+    return a.arrangementType;
+  });
+
   useScrollMemory();
 
   function openPartneringFamily(partneringFamilyId: string) {
     navigate(`/referrals/family/${partneringFamilyId}`);
   }
 
-  function arrangementCountByStatus(partneringFamily: PartneringFamilyInfo, phase: ArrangementPhase) {
-    return allArrangements(partneringFamily).filter((a) => a.arrangement.phase === phase).length
+  function arrangementStatusSummary(partneringFamily: PartneringFamilyInfo, phase: ArrangementPhase, type: string) {
+    const phaseText = arrangementPhaseText.get(phase);
+
+    const statusCount = allArrangements(partneringFamily).filter((a) => (a.arrangement.phase === phase 
+      && a.arrangement.arrangementType === type)).length;
+
+    let statusCountDiv;
+
+    if(statusCount > 0) {
+      statusCountDiv = <b className={`${statusCount===0 ? classes.arrangementZero 
+        : phase===ArrangementPhase.SettingUp ? classes.arrangementSettingUp 
+        : phase===ArrangementPhase.ReadyToStart ? classes.arrangementReady 
+        : phase===ArrangementPhase.Started ? classes.arrangementStarted 
+        : classes.arrangementEnded} ${classes.arrangementIcon}`}>{statusCount}</b>
+    }
+    
+    return (
+      <div>
+        <Tooltip title={phaseText!}>
+          {phase===ArrangementPhase.SettingUp ? 
+              <PendingOutlinedIcon className={`${classes.arrangementIcon} ${statusCount===0 ? 
+                classes.arrangementZero : classes.arrangementSettingUp} ${classes.iconTextSpace}`} 
+              />
+          : phase===ArrangementPhase.ReadyToStart ? 
+              <AccessTimeIcon className={`${classes.arrangementIcon} ${statusCount===0 ? 
+                classes.arrangementZero : classes.arrangementReady} ${classes.iconTextSpace}`}
+              />
+          : phase===ArrangementPhase.Started ? 
+              <PlayCircleFilledIcon className={`${classes.arrangementIcon} ${statusCount===0 ? 
+                classes.arrangementZero : classes.arrangementStarted} ${classes.iconTextSpace}`}
+              />
+          : <CheckCircleOutlinedIcon className={`${classes.arrangementIcon} ${statusCount===0 ? 
+              classes.arrangementZero : classes.arrangementEnded} ${classes.iconTextSpace}`} 
+            />}
+        </Tooltip>
+        {statusCountDiv}
+      </div>)
   }
 
   const [createPartneringFamilyDialogOpen, setCreatePartneringFamilyDialogOpen] = useState(false);
@@ -113,11 +162,12 @@ function PartneringFamilies() {
               <TableRow>
                 <TableCell>Partnering Family</TableCell>
                 <TableCell>Referral Status</TableCell>
-                { !expandedView ? (<TableCell>Arrangements</TableCell>) : <></>}
+                { !expandedView ? arrangementTypes?.map((arrangementType) => 
+                  (<TableCell>{arrangementType}</TableCell>)) : <></>}
               </TableRow>
             </TableHead>
             <TableBody>
-              {partneringFamilies.map((partneringFamily) => (
+              {partneringFamilies.map((partneringFamily) =>  (
                 <React.Fragment key={partneringFamily.family?.id}>
                   <TableRow className={classes.familyRow} onClick={() => openPartneringFamily(partneringFamily.family!.id!)}>
                     <TableCell><FamilyName family={partneringFamily} /></TableCell>
@@ -127,55 +177,24 @@ function PartneringFamilies() {
                       : "Closed - " + ReferralCloseReason[partneringFamily.partneringFamilyInfo?.closedReferrals?.[partneringFamily.partneringFamilyInfo.closedReferrals.length-1]?.closeReason!]
                       //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closedUtc) -- needs a new calculated property
                       }</TableCell>
-                      {!expandedView ? (
+                      {!expandedView ? arrangementTypes?.map((arrangementType) => (
                         <TableCell>
-                          <TableRow>
-                          {arrangementCountByStatus(partneringFamily.partneringFamilyInfo!,ArrangementPhase.SettingUp) > 0 ?
-                            <>
-                            <TableCell padding='none' sx={{borderBottom:"0px", paddingRight:"25px"}}>
-                              <Tooltip title="Setting Up">
-                                <CircleOutlinedIcon className={classes.arrangementIcon}  sx={{color:"lightGrey"}}/>
-                              </Tooltip>
-                              <b className={classes.arrangementSettingUp}>{arrangementCountByStatus(partneringFamily.partneringFamilyInfo!,ArrangementPhase.SettingUp)}</b>
-                            </TableCell>
-                            </>
-                          : ""}
-                          {arrangementCountByStatus(partneringFamily.partneringFamilyInfo!,ArrangementPhase.ReadyToStart) > 0 ?
-                            <>
-                            <TableCell padding='none' sx={{borderBottom:"0px", paddingRight:"25px"}}>
-                              <Tooltip title="Ready To Start">
-                                <AccessTimeIcon className={classes.arrangementIcon}sx={{color:"#FDD735"}}/>
-                              </Tooltip>
-                              <b className={classes.arrangementReady}>{arrangementCountByStatus(partneringFamily.partneringFamilyInfo!,ArrangementPhase.ReadyToStart)}</b>
-                            </TableCell>              
-                            </>
-                          : ""}
-                          {arrangementCountByStatus(partneringFamily.partneringFamilyInfo!,ArrangementPhase.Started) > 0 ?
-                            <>
-                            <TableCell padding='none' sx={{borderBottom:"0px", paddingRight:"25px"}}>
-                              <Tooltip title="Started">
-                                <SyncIcon className={classes.arrangementIcon}sx={{color:"#01ACFB"}}/>
-                              </Tooltip>
-                              <b className={classes.arrangementStarted}>{arrangementCountByStatus(partneringFamily.partneringFamilyInfo!,ArrangementPhase.Started)}</b>
-                            </TableCell>              
-                            </>
-                          : ""}
-                          {arrangementCountByStatus(partneringFamily.partneringFamilyInfo!,ArrangementPhase.Ended) > 0 ?
-                            <>
-                            <TableCell padding='none' sx={{borderBottom:"0px", paddingRight:"25px"}}>
-                              <Tooltip title="Ended">
-                                <CheckCircleIcon className={classes.arrangementIcon}sx={{color:"green"}}/>
-                              </Tooltip>
-                              <b className={classes.arrangementEnded}>{arrangementCountByStatus(partneringFamily.partneringFamilyInfo!,ArrangementPhase.Ended)}</b>
-                            </TableCell>              
-                            </>
-                          : ""}
-                          </TableRow>
-                        </TableCell>) : <></> }
+                          <div className={classes.arrangementIconContainer}>
+                            {arrangementStatusSummary(partneringFamily.partneringFamilyInfo!,ArrangementPhase.SettingUp, arrangementType!)}
+                          <div>
+                            {arrangementStatusSummary(partneringFamily.partneringFamilyInfo!,ArrangementPhase.ReadyToStart, arrangementType!)}
+                          </div>
+                          <div>
+                            {arrangementStatusSummary(partneringFamily.partneringFamilyInfo!,ArrangementPhase.Started, arrangementType!)}
+                          </div>
+                          <div>
+                            {arrangementStatusSummary(partneringFamily.partneringFamilyInfo!,ArrangementPhase.Ended, arrangementType!)}
+                          </div>
+                          </div>
+                        </TableCell>)) : <></> }
                   </TableRow>
                   { expandedView
-                    ? (<TableRow onClick={() => openPartneringFamily(partneringFamily.family!.id!)}
-                    className={classes.arrangementsRow}>
+                    ? (<TableRow onClick={() => openPartneringFamily(partneringFamily.family!.id!)}>
                     <TableCell sx={{maxWidth: '400px'}}>
                       {partneringFamily.partneringFamilyInfo?.openReferral?.comments}
                     </TableCell>
