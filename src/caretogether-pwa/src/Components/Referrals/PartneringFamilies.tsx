@@ -151,7 +151,7 @@ function PartneringFamilies() {
         {!isMobile && <HeaderTitle>Referrals</HeaderTitle>}
         <FormControlLabel
           control={<Switch checked={expandedView} onChange={(e) => setExpandedView(e.target.checked)} name="expandedView" />}
-          label={isMobile ? "" : expandedView ? "Collapse" : "Expand" }
+          label={isMobile ? "" : expandedView ? "Collapse" : "Expand" }/>
         <SearchBar value={filterText} onChange={setFilterText} />
       </HeaderContent>
       <Grid item xs={12}>
