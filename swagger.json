@@ -2250,7 +2250,7 @@
               "$ref": "#/components/schemas/FamilyVolunteerAssignment"
             }
           },
-          "childrenLocationHistory": {
+          "childLocationHistory": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ChildLocationHistoryEntry"

@@ -3576,7 +3576,7 @@ export class Arrangement implements IArrangement {
     missingRequirements?: MissingArrangementRequirement[];
     individualVolunteerAssignments?: IndividualVolunteerAssignment[];
     familyVolunteerAssignments?: FamilyVolunteerAssignment[];
-    childrenLocationHistory?: ChildLocationHistoryEntry[];
+    childLocationHistory?: ChildLocationHistoryEntry[];
 
     constructor(data?: IArrangement) {
         if (data) {
@@ -3622,10 +3622,10 @@ export class Arrangement implements IArrangement {
                 for (let item of _data["familyVolunteerAssignments"])
                     this.familyVolunteerAssignments!.push(FamilyVolunteerAssignment.fromJS(item));
             }
-            if (Array.isArray(_data["childrenLocationHistory"])) {
-                this.childrenLocationHistory = [] as any;
-                for (let item of _data["childrenLocationHistory"])
-                    this.childrenLocationHistory!.push(ChildLocationHistoryEntry.fromJS(item));
+            if (Array.isArray(_data["childLocationHistory"])) {
+                this.childLocationHistory = [] as any;
+                for (let item of _data["childLocationHistory"])
+                    this.childLocationHistory!.push(ChildLocationHistoryEntry.fromJS(item));
             }
         }
     }
@@ -3672,10 +3672,10 @@ export class Arrangement implements IArrangement {
             for (let item of this.familyVolunteerAssignments)
                 data["familyVolunteerAssignments"].push(item.toJSON());
         }
-        if (Array.isArray(this.childrenLocationHistory)) {
-            data["childrenLocationHistory"] = [];
-            for (let item of this.childrenLocationHistory)
-                data["childrenLocationHistory"].push(item.toJSON());
+        if (Array.isArray(this.childLocationHistory)) {
+            data["childLocationHistory"] = [];
+            for (let item of this.childLocationHistory)
+                data["childLocationHistory"].push(item.toJSON());
         }
         return data;
     }
@@ -3695,7 +3695,7 @@ export interface IArrangement {
     missingRequirements?: MissingArrangementRequirement[];
     individualVolunteerAssignments?: IndividualVolunteerAssignment[];
     familyVolunteerAssignments?: FamilyVolunteerAssignment[];
-    childrenLocationHistory?: ChildLocationHistoryEntry[];
+    childLocationHistory?: ChildLocationHistoryEntry[];
 }
 
 export enum ArrangementPhase {

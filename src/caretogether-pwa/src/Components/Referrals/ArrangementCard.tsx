@@ -115,8 +115,8 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
                 ? <>
                     <PersonPinCircleIcon color='disabled' style={{float: 'right', marginLeft: 2, marginTop: 2}} />
                     <span style={{float: 'right', paddingTop: 4}}>{
-                      (arrangement.childrenLocationHistory && arrangement.childrenLocationHistory.length > 0)
-                      ? <FamilyName family={familyLookup(arrangement.childrenLocationHistory[arrangement.childrenLocationHistory.length - 1].childLocationFamilyId)} />
+                      (arrangement.childLocationHistory && arrangement.childLocationHistory.length > 0)
+                      ? <FamilyName family={familyLookup(arrangement.childLocationHistory[arrangement.childLocationHistory.length - 1].childLocationFamilyId)} />
                       : <strong>Location unspecified</strong>
                     }</span>
                   </>
@@ -125,8 +125,8 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
                       style={{float: 'right', marginTop: -10, marginRight: -10, textTransform: "initial"}}
                       endIcon={<PersonPinCircleIcon />}
                       onClick={(event) => setShowTrackChildLocationDialog(true)}>
-                      {(arrangement.childrenLocationHistory && arrangement.childrenLocationHistory.length > 0)
-                        ? <FamilyName family={familyLookup(arrangement.childrenLocationHistory[arrangement.childrenLocationHistory.length - 1].childLocationFamilyId)} />
+                      {(arrangement.childLocationHistory && arrangement.childLocationHistory.length > 0)
+                        ? <FamilyName family={familyLookup(arrangement.childLocationHistory[arrangement.childLocationHistory.length - 1].childLocationFamilyId)} />
                         : <strong>Location unspecified</strong>}
                     </Button>
                     {showTrackChildLocationDialog && <TrackChildLocationDialog

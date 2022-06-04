@@ -238,7 +238,7 @@ namespace CareTogether.Resources.Referrals
                             }, null),
                             TrackChildLocationChange c => (arrangementEntry with
                             {
-                                ChildrenLocationHistory = arrangementEntry.ChildrenLocationHistory.Add(
+                                ChildLocationHistory = arrangementEntry.ChildLocationHistory.Add(
                                     new ChildLocationHistoryEntry(userId, c.ChangedAtUtc,
                                         c.ChildLocationFamilyId, c.ChildLocationReceivingAdultId, c.Plan, c.NoteId))
                             }, new ChildLocationChanged(userId, timestampUtc, arrangementId,

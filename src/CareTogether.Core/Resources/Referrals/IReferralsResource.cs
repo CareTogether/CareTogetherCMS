@@ -23,7 +23,7 @@ namespace CareTogether.Resources.Referrals
         ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<IndividualVolunteerAssignment> IndividualVolunteerAssignments,
         ImmutableList<FamilyVolunteerAssignment> FamilyVolunteerAssignments,
-        ImmutableSortedSet<ChildLocationHistoryEntry> ChildrenLocationHistory);
+        ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationHistory);
 
     public enum ReferralCloseReason { NotAppropriate, NoCapacity, NoLongerNeeded, Resourced, NeedMet };
 

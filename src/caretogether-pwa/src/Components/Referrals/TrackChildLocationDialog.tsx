@@ -102,7 +102,7 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
             <Timeline position="right">
-              {arrangement.childrenLocationHistory?.slice().reverse().map((historyEntry, i) =>
+              {arrangement.childLocationHistory?.slice().reverse().map((historyEntry, i) =>
                 <TimelineItem key={i}>
                   <TimelineOppositeContent>
                     {format(historyEntry.timestampUtc!, "M/d/yy h:mm a")}
