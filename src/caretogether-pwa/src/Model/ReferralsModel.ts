@@ -1,6 +1,6 @@
 import { selector, useRecoilCallback } from "recoil";
 import { authenticatingFetch } from "../Auth";
-import { ReferralCommand, ReferralsClient, ArrangementsCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement, StartArrangements, EndArrangements, AssignVolunteerFamily, AssignIndividualVolunteer, ReferralCloseReason, CloseReferral, CreateReferral, TrackChildLocationChange, ChildLocationPlan, UpdateCustomReferralField, CustomField, ExemptReferralRequirement, UnexemptReferralRequirement, ExemptArrangementRequirement, UnexemptArrangementRequirement, MissingArrangementRequirement, ExemptedRequirementInfo, MarkReferralRequirementIncomplete, CompletedRequirementInfo, MarkArrangementRequirementIncomplete, CancelArrangementsSetup, UpdateReferralComments, UnassignVolunteerFamily, UnassignIndividualVolunteer, CompleteVolunteerFamilyAssignmentRequirement, CompleteIndividualVolunteerAssignmentRequirement, FamilyVolunteerAssignment, IndividualVolunteerAssignment } from "../GeneratedClient";
+import { ReferralCommand, ReferralsClient, ArrangementsCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement, StartArrangements, EndArrangements, AssignVolunteerFamily, AssignIndividualVolunteer, ReferralCloseReason, CloseReferral, CreateReferral, TrackChildLocationChange, ChildLocationPlan, UpdateCustomReferralField, CustomField, ExemptReferralRequirement, UnexemptReferralRequirement, ExemptArrangementRequirement, UnexemptArrangementRequirement, MissingArrangementRequirement, ExemptedRequirementInfo, MarkReferralRequirementIncomplete, CompletedRequirementInfo, MarkArrangementRequirementIncomplete, CancelArrangementsSetup, UpdateReferralComments, UnassignVolunteerFamily, UnassignIndividualVolunteer, CompleteVolunteerFamilyAssignmentRequirement, CompleteIndividualVolunteerAssignmentRequirement, FamilyVolunteerAssignment, IndividualVolunteerAssignment, ExemptIndividualVolunteerAssignmentRequirement, ExemptVolunteerFamilyAssignmentRequirement, MarkIndividualVolunteerAssignmentRequirementIncomplete, MarkVolunteerFamilyAssignmentRequirementIncomplete, UnexemptIndividualVolunteerAssignmentRequirement, UnexemptVolunteerFamilyAssignmentRequirement } from "../GeneratedClient";
 import { visibleFamiliesData } from "./ModelLoader";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 
@@ -213,57 +213,57 @@ export function useReferralsModel() {
         command.noteId = noteId;
       return command;
     });
-  // const markVolunteerFamilyAssignmentRequirementIncomplete = useArrangementsCommandCallbackWithLocation(
-  //   async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
-  //     assignment: FamilyVolunteerAssignment,
-  //     completedRequirement: CompletedRequirementInfo) => {
-  //     const command = new MarkVolunteerFamilyAssignmentRequirementIncomplete({
-  //       familyId: partneringFamilyId,
-  //       referralId: referralId,
-  //       arrangementIds: [arrangementId]
-  //     });
-  //     command.arrangementFunction = assignment.arrangementFunction;
-  //     command.arrangementFunctionVariant = assignment.arrangementFunctionVariant;
-  //     command.volunteerFamilyId = assignment.familyId;
-  //     command.requirementName = completedRequirement.requirementName;
-  //     command.completedRequirementId = completedRequirement.completedRequirementId;
-  //     return command;
-  //   });
-  // const exemptVolunteerFamilyAssignmentRequirement = useArrangementsCommandCallbackWithLocation(
-  //   async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementIds: string[],
-  //     assignment: FamilyVolunteerAssignment,
-  //     requirement: MissingArrangementRequirement,
-  //     additionalComments: string, exemptionExpiresAtLocal: Date | null) => {
-  //     const command = new ExemptVolunteerFamilyAssignmentRequirement({
-  //       familyId: partneringFamilyId,
-  //       referralId: referralId,
-  //       arrangementIds: arrangementIds
-  //     });
-  //     command.arrangementFunction = assignment.arrangementFunction;
-  //     command.arrangementFunctionVariant = assignment.arrangementFunctionVariant;
-  //     command.volunteerFamilyId = assignment.familyId;
-  //     command.requirementName = requirement.actionName;
-  //     command.dueDate = requirement.dueBy || requirement.pastDueSince;
-  //     command.additionalComments = additionalComments;
-  //     command.exemptionExpiresAtUtc = exemptionExpiresAtLocal ?? undefined;
-  //     return command;
-  //   });
-  // const unexemptVolunteerFamilyAssignmentRequirement = useArrangementsCommandCallbackWithLocation(
-  //   async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
-  //     assignment: FamilyVolunteerAssignment,
-  //     exemptedRequirement: ExemptedRequirementInfo) => {
-  //     const command = new UnexemptVolunteerFamilyAssignmentRequirement({
-  //       familyId: partneringFamilyId,
-  //       referralId: referralId,
-  //       arrangementIds: [arrangementId]
-  //     });
-  //     command.arrangementFunction = assignment.arrangementFunction;
-  //     command.arrangementFunctionVariant = assignment.arrangementFunctionVariant;
-  //     command.volunteerFamilyId = assignment.familyId;
-  //     command.requirementName = exemptedRequirement.requirementName;
-  //     command.dueDate = exemptedRequirement.dueDate;
-  //     return command;
-  //   });
+  const markVolunteerFamilyAssignmentRequirementIncomplete = useArrangementsCommandCallbackWithLocation(
+    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
+      assignment: FamilyVolunteerAssignment,
+      completedRequirement: CompletedRequirementInfo) => {
+      const command = new MarkVolunteerFamilyAssignmentRequirementIncomplete({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementIds: [arrangementId]
+      });
+      command.arrangementFunction = assignment.arrangementFunction;
+      command.arrangementFunctionVariant = assignment.arrangementFunctionVariant;
+      command.volunteerFamilyId = assignment.familyId;
+      command.requirementName = completedRequirement.requirementName;
+      command.completedRequirementId = completedRequirement.completedRequirementId;
+      return command;
+    });
+  const exemptVolunteerFamilyAssignmentRequirement = useArrangementsCommandCallbackWithLocation(
+    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementIds: string[],
+      assignment: FamilyVolunteerAssignment,
+      requirement: MissingArrangementRequirement,
+      additionalComments: string, exemptionExpiresAtLocal: Date | null) => {
+      const command = new ExemptVolunteerFamilyAssignmentRequirement({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementIds: arrangementIds
+      });
+      command.arrangementFunction = assignment.arrangementFunction;
+      command.arrangementFunctionVariant = assignment.arrangementFunctionVariant;
+      command.volunteerFamilyId = assignment.familyId;
+      command.requirementName = requirement.actionName;
+      command.dueDate = requirement.dueBy || requirement.pastDueSince;
+      command.additionalComments = additionalComments;
+      command.exemptionExpiresAtUtc = exemptionExpiresAtLocal ?? undefined;
+      return command;
+    });
+  const unexemptVolunteerFamilyAssignmentRequirement = useArrangementsCommandCallbackWithLocation(
+    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
+      assignment: FamilyVolunteerAssignment,
+      exemptedRequirement: ExemptedRequirementInfo) => {
+      const command = new UnexemptVolunteerFamilyAssignmentRequirement({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementIds: [arrangementId]
+      });
+      command.arrangementFunction = assignment.arrangementFunction;
+      command.arrangementFunctionVariant = assignment.arrangementFunctionVariant;
+      command.volunteerFamilyId = assignment.familyId;
+      command.requirementName = exemptedRequirement.requirementName;
+      command.dueDate = exemptedRequirement.dueDate;
+      return command;
+    });
 
   const completeIndividualVolunteerAssignmentRequirement = useArrangementsCommandCallbackWithLocation(
     async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementIds: string[],
@@ -287,60 +287,60 @@ export function useReferralsModel() {
         command.noteId = noteId;
       return command;
     });
-  // const markIndividualVolunteerAssignmentRequirementIncomplete = useArrangementsCommandCallbackWithLocation(
-  //   async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
-  //     assignment: IndividualVolunteerAssignment,
-  //     completedRequirement: CompletedRequirementInfo) => {
-  //     const command = new MarkIndividualVolunteerAssignmentRequirementIncomplete({
-  //       familyId: partneringFamilyId,
-  //       referralId: referralId,
-  //       arrangementIds: [arrangementId]
-  //     });
-  //     command.arrangementFunction = assignment.arrangementFunction;
-  //     command.arrangementFunctionVariant = assignment.arrangementFunctionVariant;
-  //     command.volunteerFamilyId = assignment.familyId;
-  //     command.personId = assignment.personId;
-  //     command.requirementName = completedRequirement.requirementName;
-  //     command.completedRequirementId = completedRequirement.completedRequirementId;
-  //     return command;
-  //   });
-  // const exemptIndividualVolunteerAssignmentRequirement = useArrangementsCommandCallbackWithLocation(
-  //   async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementIds: string[],
-  //     assignment: IndividualVolunteerAssignment,
-  //     requirement: MissingArrangementRequirement,
-  //     additionalComments: string, exemptionExpiresAtLocal: Date | null) => {
-  //     const command = new ExemptIndividualVolunteerAssignmentRequirement({
-  //       familyId: partneringFamilyId,
-  //       referralId: referralId,
-  //       arrangementIds: arrangementIds
-  //     });
-  //     command.arrangementFunction = assignment.arrangementFunction;
-  //     command.arrangementFunctionVariant = assignment.arrangementFunctionVariant;
-  //     command.volunteerFamilyId = assignment.familyId;
-  //     command.personId = assignment.personId;
-  //     command.requirementName = requirement.actionName;
-  //     command.dueDate = requirement.dueBy || requirement.pastDueSince;
-  //     command.additionalComments = additionalComments;
-  //     command.exemptionExpiresAtUtc = exemptionExpiresAtLocal ?? undefined;
-  //     return command;
-  //   });
-  // const unexemptIndividualVolunteerAssignmentRequirement = useArrangementsCommandCallbackWithLocation(
-  //   async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
-  //     assignment: IndividualVolunteerAssignment,
-  //     exemptedRequirement: ExemptedRequirementInfo) => {
-  //     const command = new UnexemptIndividualVolunteerAssignmentRequirement({
-  //       familyId: partneringFamilyId,
-  //       referralId: referralId,
-  //       arrangementIds: [arrangementId]
-  //     });
-  //     command.arrangementFunction = assignment.arrangementFunction;
-  //     command.arrangementFunctionVariant = assignment.arrangementFunctionVariant;
-  //     command.volunteerFamilyId = assignment.familyId;
-  //     command.personId = assignment.personId;
-  //     command.requirementName = exemptedRequirement.requirementName;
-  //     command.dueDate = exemptedRequirement.dueDate;
-  //     return command;
-  //   });
+  const markIndividualVolunteerAssignmentRequirementIncomplete = useArrangementsCommandCallbackWithLocation(
+    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
+      assignment: IndividualVolunteerAssignment,
+      completedRequirement: CompletedRequirementInfo) => {
+      const command = new MarkIndividualVolunteerAssignmentRequirementIncomplete({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementIds: [arrangementId]
+      });
+      command.arrangementFunction = assignment.arrangementFunction;
+      command.arrangementFunctionVariant = assignment.arrangementFunctionVariant;
+      command.volunteerFamilyId = assignment.familyId;
+      command.personId = assignment.personId;
+      command.requirementName = completedRequirement.requirementName;
+      command.completedRequirementId = completedRequirement.completedRequirementId;
+      return command;
+    });
+  const exemptIndividualVolunteerAssignmentRequirement = useArrangementsCommandCallbackWithLocation(
+    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementIds: string[],
+      assignment: IndividualVolunteerAssignment,
+      requirement: MissingArrangementRequirement,
+      additionalComments: string, exemptionExpiresAtLocal: Date | null) => {
+      const command = new ExemptIndividualVolunteerAssignmentRequirement({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementIds: arrangementIds
+      });
+      command.arrangementFunction = assignment.arrangementFunction;
+      command.arrangementFunctionVariant = assignment.arrangementFunctionVariant;
+      command.volunteerFamilyId = assignment.familyId;
+      command.personId = assignment.personId;
+      command.requirementName = requirement.actionName;
+      command.dueDate = requirement.dueBy || requirement.pastDueSince;
+      command.additionalComments = additionalComments;
+      command.exemptionExpiresAtUtc = exemptionExpiresAtLocal ?? undefined;
+      return command;
+    });
+  const unexemptIndividualVolunteerAssignmentRequirement = useArrangementsCommandCallbackWithLocation(
+    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
+      assignment: IndividualVolunteerAssignment,
+      exemptedRequirement: ExemptedRequirementInfo) => {
+      const command = new UnexemptIndividualVolunteerAssignmentRequirement({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementIds: [arrangementId]
+      });
+      command.arrangementFunction = assignment.arrangementFunction;
+      command.arrangementFunctionVariant = assignment.arrangementFunctionVariant;
+      command.volunteerFamilyId = assignment.familyId;
+      command.personId = assignment.personId;
+      command.requirementName = exemptedRequirement.requirementName;
+      command.dueDate = exemptedRequirement.dueDate;
+      return command;
+    });
     
   const createArrangement = useArrangementsCommandCallbackWithLocation(
     async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementType: string,
@@ -492,13 +492,13 @@ export function useReferralsModel() {
     exemptArrangementRequirement,
     unexemptArrangementRequirement,
     completeVolunteerFamilyAssignmentRequirement,
-    //markVolunteerFamilyAssignmentRequirementIncomplete,
-    //exemptVolunteerFamilyAssignmentRequirement,
-    //unexemptVolunteerFamilyAssignmentRequirement,
+    markVolunteerFamilyAssignmentRequirementIncomplete,
+    exemptVolunteerFamilyAssignmentRequirement,
+    unexemptVolunteerFamilyAssignmentRequirement,
     completeIndividualVolunteerAssignmentRequirement,
-    //markIndividualVolunteerAssignmentRequirementIncomplete,
-    //exemptIndividualVolunteerAssignmentRequirement,
-    //unexemptIndividualVolunteerAssignmentRequirement,
+    markIndividualVolunteerAssignmentRequirementIncomplete,
+    exemptIndividualVolunteerAssignmentRequirement,
+    unexemptIndividualVolunteerAssignmentRequirement,
     createArrangement,
     startArrangement,
     endArrangement,

@@ -210,19 +210,19 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
               <Grid container>
                 <Grid item xs={4}>
                   <Badge color="success"
-                    badgeContent={arrangement.completedRequirements?.length}>
+                    badgeContent={completedRequirementsWithContext.length}>
                     ✅
                   </Badge>
                 </Grid>
                 <Grid item xs={4}>
                   <Badge color="warning"
-                    badgeContent={arrangement.exemptedRequirements?.length}>
+                    badgeContent={exemptedRequirementsWithContext.length}>
                     🚫
                   </Badge>
                 </Grid>
                 <Grid item xs={4}>
                   <Badge color="error"
-                    badgeContent={missingAssignmentFunctions + (arrangement.missingRequirements?.length || 0)}>
+                    badgeContent={missingAssignmentFunctions + missingRequirementsWithContext.length}>
                     ❌
                   </Badge>
                 </Grid>

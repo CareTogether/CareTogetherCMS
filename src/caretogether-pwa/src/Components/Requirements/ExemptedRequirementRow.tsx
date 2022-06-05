@@ -1,9 +1,10 @@
 import { Tooltip } from "@mui/material";
 import { format } from "date-fns";
 import { ExemptedRequirementInfo, Permission } from "../../GeneratedClient";
-import { useUserLookup } from "../../Model/DirectoryModel";
+import { useFamilyLookup, usePersonLookup, useUserLookup } from "../../Model/DirectoryModel";
 import { usePermissions } from "../../Model/SessionModel";
 import { useDialogHandle } from "../../useDialogHandle";
+import { FamilyName } from "../Families/FamilyName";
 import { PersonName } from "../Families/PersonName";
 import { IconRow } from "../IconRow";
 import { ExemptedRequirementDialog } from "./ExemptedRequirementDialog";
@@ -23,6 +24,9 @@ export function ExemptedRequirementRow({ requirement, context }: ExemptedRequire
   const canExempt = context.kind === 'Referral' || context.kind === 'Arrangement'
     ? true //TODO: Implement these permissions!
     : permissions(Permission.EditApprovalRequirementExemption);
+
+  const familyLookup = useFamilyLookup();
+  const personLookup = usePersonLookup();
   
   return (
     <>
@@ -30,17 +34,27 @@ export function ExemptedRequirementRow({ requirement, context }: ExemptedRequire
         <Tooltip title={<>
           Granted by <PersonName person={userLookup(requirement.userId)} /> {format(requirement.timestampUtc!, "M/d/yy h:mm a")}
         </>}>
-          <span>
-            {requirement.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            {requirement.exemptionExpiresAtUtc &&
-              <span style={{ float: 'right' }}>
-                until {format(requirement.exemptionExpiresAtUtc, "M/d/yy")}
-              </span>}
+          <>
+            <span>
+              {requirement.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              {requirement.exemptionExpiresAtUtc &&
+                <span style={{ float: 'right' }}>
+                  until {format(requirement.exemptionExpiresAtUtc, "M/d/yy")}
+                </span>}
+            </span>
+            {context.kind === 'Family Volunteer Assignment' &&
+              <><br/><span style={{ paddingLeft: '30px' }}>
+                <FamilyName family={familyLookup(context.assignment.familyId)} />
+              </span></>}
+            {context.kind === 'Individual Volunteer Assignment' &&
+              <><br/><span style={{ paddingLeft: '30px' }}>
+                <PersonName person={personLookup(context.assignment.familyId, context.assignment.personId)} />
+              </span></>}
             <br />
             <span style={{ lineHeight: '1.5em', paddingLeft: 30, fontStyle: 'italic', display: 'inline-block' }}>
               {requirement.additionalComments}
             </span>
-          </span>
+          </>
         </Tooltip>
       </IconRow>
       {dialogHandle.open && <ExemptedRequirementDialog handle={dialogHandle}

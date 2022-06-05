@@ -43,11 +43,11 @@ export function CompletedRequirementRow({ requirement, context }: CompletedRequi
                 </span>}
             </span>
             {context.kind === 'Family Volunteer Assignment' &&
-              <><br/><span style={{ paddingLeft: '30px', fontStyle: 'italic' }}>
+              <><br/><span style={{ paddingLeft: '30px' }}>
                 <FamilyName family={familyLookup(context.assignment.familyId)} />
               </span></>}
             {context.kind === 'Individual Volunteer Assignment' &&
-              <><br/><span style={{ paddingLeft: '30px', fontStyle: 'italic' }}>
+              <><br/><span style={{ paddingLeft: '30px' }}>
                 <PersonName person={personLookup(context.assignment.familyId, context.assignment.personId)} />
               </span></>}
           </>

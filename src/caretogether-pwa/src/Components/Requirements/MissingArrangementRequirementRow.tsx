@@ -39,11 +39,11 @@ export function MissingArrangementRequirementRow({ requirement, context }: Missi
           {requirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           <span style={{ float: 'right' }}>{format(requirement.dueBy, "M/d/yy h:mm a")}</span>
           {requirement.volunteerFamilyId && !requirement.personId &&
-            <><br/><span style={{ paddingLeft: '30px', fontStyle: 'italic' }}>
+            <><br/><span style={{ paddingLeft: '30px' }}>
               <FamilyName family={familyLookup(requirement.volunteerFamilyId)} />
             </span></>}
           {requirement.volunteerFamilyId && requirement.personId &&
-            <><br/><span style={{ paddingLeft: '30px', fontStyle: 'italic' }}>
+            <><br/><span style={{ paddingLeft: '30px' }}>
               <PersonName person={personLookup(requirement.volunteerFamilyId, requirement.personId)} />
             </span></>}
         </IconRow>
@@ -51,11 +51,11 @@ export function MissingArrangementRequirementRow({ requirement, context }: Missi
           {requirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           {requirement.pastDueSince && <span style={{ float: 'right' }}>{format(requirement.pastDueSince, "M/d/yy h:mm a")}</span>}
           {requirement.volunteerFamilyId && !requirement.personId &&
-            <><br/><span style={{ paddingLeft: '30px', fontStyle: 'italic' }}>
+            <><br/><span style={{ paddingLeft: '30px' }}>
               <FamilyName family={familyLookup(requirement.volunteerFamilyId)} />
             </span></>}
           {requirement.volunteerFamilyId && requirement.personId &&
-            <><br/><span style={{ paddingLeft: '30px', fontStyle: 'italic' }}>
+            <><br/><span style={{ paddingLeft: '30px' }}>
               <PersonName person={personLookup(requirement.volunteerFamilyId, requirement.personId)} />
             </span></>}
         </IconRow>}

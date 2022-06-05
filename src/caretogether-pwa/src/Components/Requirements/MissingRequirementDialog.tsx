@@ -145,6 +145,18 @@ export function MissingRequirementDialog({
           applyToArrangements.map(arrangement => arrangement.id!),
           requirement as MissingArrangementRequirement, additionalComments, exemptionExpiresAtLocal);
         break;
+      case 'Family Volunteer Assignment':
+        await referrals.exemptVolunteerFamilyAssignmentRequirement(contextFamilyId, context.referralId,
+          applyToArrangements.map(arrangement => arrangement.id!),
+          context.assignment,
+          requirement as MissingArrangementRequirement, additionalComments, exemptionExpiresAtLocal);
+        break;
+      case 'Individual Volunteer Assignment':
+        await referrals.exemptIndividualVolunteerAssignmentRequirement(contextFamilyId, context.referralId,
+          applyToArrangements.map(arrangement => arrangement.id!),
+          context.assignment,
+          requirement as MissingArrangementRequirement, additionalComments, exemptionExpiresAtLocal);
+        break;
       case 'Volunteer Family':
         await volunteers.exemptVolunteerFamilyRequirement(contextFamilyId,
           requirementName, additionalComments, exemptionExpiresAtLocal);
