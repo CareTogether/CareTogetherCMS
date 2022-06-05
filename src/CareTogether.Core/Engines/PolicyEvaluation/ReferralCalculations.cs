@@ -167,9 +167,9 @@ namespace CareTogether.Engines.PolicyEvaluation
                     ? CalculateMissingMonitoringRequirementInstances(monitoringRequirement.Recurrence,
                         arrangement.StartedAtUtc.Value, arrangement.EndedAtUtc,
                         arrangement.CompletedRequirements
-                        .Where(x => x.RequirementName == monitoringRequirement.ActionName)
-                        .Select(x => x.CompletedAtUtc)
-                        .OrderBy(x => x).ToImmutableList(),
+                            .Where(x => x.RequirementName == monitoringRequirement.ActionName)
+                            .Select(x => x.CompletedAtUtc)
+                            .OrderBy(x => x).ToImmutableList(),
                         arrangement.ChildLocationHistory, utcNow)
                     : ImmutableList<DateTime>.Empty)
                     .Where(missingDueDate => !arrangement.ExemptedRequirements.Any(exempted =>
@@ -200,9 +200,9 @@ namespace CareTogether.Engines.PolicyEvaluation
                             ? CalculateMissingMonitoringRequirementInstances(monitoringRequirement.Recurrence,
                                 arrangement.StartedAtUtc.Value, arrangement.EndedAtUtc,
                                 fva.CompletedRequirements
-                                .Where(x => x.RequirementName == monitoringRequirement.ActionName)
-                                .Select(x => x.CompletedAtUtc)
-                                .OrderBy(x => x).ToImmutableList(),
+                                    .Where(x => x.RequirementName == monitoringRequirement.ActionName)
+                                    .Select(x => x.CompletedAtUtc)
+                                    .OrderBy(x => x).ToImmutableList(),
                                 arrangement.ChildLocationHistory, utcNow)
                             : ImmutableList<DateTime>.Empty)
                             .Where(missingDueDate => !fva.ExemptedRequirements.Any(exempted =>
@@ -235,9 +235,9 @@ namespace CareTogether.Engines.PolicyEvaluation
                             ? CalculateMissingMonitoringRequirementInstances(monitoringRequirement.Recurrence,
                                 arrangement.StartedAtUtc.Value, arrangement.EndedAtUtc,
                                 iva.CompletedRequirements
-                                .Where(x => x.RequirementName == monitoringRequirement.ActionName)
-                                .Select(x => x.CompletedAtUtc)
-                                .OrderBy(x => x).ToImmutableList(),
+                                    .Where(x => x.RequirementName == monitoringRequirement.ActionName)
+                                    .Select(x => x.CompletedAtUtc)
+                                    .OrderBy(x => x).ToImmutableList(),
                                 arrangement.ChildLocationHistory, utcNow)
                             : ImmutableList<DateTime>.Empty)
                             .Where(missingDueDate => !iva.ExemptedRequirements.Any(exempted =>
