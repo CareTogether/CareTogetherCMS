@@ -186,6 +186,7 @@ export function AssignArrangementFunctionDialog({
                       candidateType: candidate.personId ? 'Individuals' : 'Families',
                     }
                   }).sort((a, b) => -b.candidateType.localeCompare(a.candidateType))}
+                  isOptionEqualToValue={(option, value) => option.id === value.id}
                   groupBy={(option) => option.candidateType}
                   sx={{ width: 400 }}
                   renderInput={(params) => <TextField required {...params} label="Select a family or individual to assign" />}
