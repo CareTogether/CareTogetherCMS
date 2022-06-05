@@ -24,7 +24,8 @@ export function MissingArrangementRequirementRow({ requirement, context }: Missi
   
   const requirementPolicy = policy.actionDefinitions![requirement.actionName!];
   
-  const canComplete = context.kind === 'Referral' || context.kind === 'Arrangement'
+  const canComplete = context.kind === 'Referral' || context.kind === 'Arrangement' ||
+    context.kind === 'Family Volunteer Assignment' || context.kind === 'Individual Volunteer Assignment'
     ? true //TODO: Implement these permissions!
     : permissions(Permission.EditApprovalRequirementCompletion);
 

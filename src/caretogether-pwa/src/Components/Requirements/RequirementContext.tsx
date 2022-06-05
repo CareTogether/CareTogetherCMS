@@ -1,3 +1,4 @@
+import { FamilyVolunteerAssignment, IndividualVolunteerAssignment } from "../../GeneratedClient";
 
 export interface ReferralContext {
   kind: "Referral";
@@ -12,6 +13,22 @@ export interface ArrangementContext {
   arrangementId: string;
 }
 
+export interface FamilyVolunteerAssignmentContext {
+  kind: "Family Volunteer Assignment";
+  partneringFamilyId: string;
+  referralId: string;
+  arrangementId: string;
+  assignment: FamilyVolunteerAssignment;
+}
+
+export interface IndividualVolunteerAssignmentContext {
+  kind: "Individual Volunteer Assignment";
+  partneringFamilyId: string;
+  referralId: string;
+  arrangementId: string;
+  assignment: IndividualVolunteerAssignment;
+}
+
 export interface VolunteerFamilyContext {
   kind: "Volunteer Family";
   volunteerFamilyId: string;
@@ -23,4 +40,10 @@ export interface IndividualVolunteerContext {
   personId: string;
 }
 
-export type RequirementContext = ReferralContext | ArrangementContext | VolunteerFamilyContext | IndividualVolunteerContext;
+export type RequirementContext =
+  ReferralContext |
+  ArrangementContext |
+  FamilyVolunteerAssignmentContext |
+  IndividualVolunteerAssignmentContext |
+  VolunteerFamilyContext |
+  IndividualVolunteerContext;
