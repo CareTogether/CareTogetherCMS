@@ -1,7 +1,6 @@
-using CareTogether.Engines;
-using CareTogether.Engines.PolicyEvaluation;
-using CareTogether.Resources;
+﻿using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Resources.Policies;
+using CareTogether.Resources.Referrals;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Immutable;
@@ -29,10 +28,14 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                         .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null)))))
                     .Add(new MonitoringRequirement("B", new DurationStagesRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                         .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null)))))),
-                startedAtUtc: null, endedAtUtc: null,
-                Helpers.Completed(),
-                Helpers.Exempted(),
-                Helpers.LocationHistoryEntries(),
+                new ArrangementEntry(Guid.Empty, "", DateTime.MinValue,
+                    StartedAtUtc: null, EndedAtUtc: null,
+                    null, Guid.Empty,
+                    Helpers.Completed(),
+                    Helpers.Exempted(),
+                    ImmutableList<IndividualVolunteerAssignment>.Empty,
+                    ImmutableList<FamilyVolunteerAssignment>.Empty,
+                    Helpers.LocationHistoryEntries()),
                 utcNow: new DateTime(2022, 1, 31));
 
             AssertEx.SequenceIs(result);
@@ -49,10 +52,14 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                         .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null)))))
                     .Add(new MonitoringRequirement("B", new DurationStagesRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                         .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null)))))),
-                startedAtUtc: new DateTime(2022, 1, 1), endedAtUtc: null,
-                Helpers.Completed(),
-                Helpers.Exempted(),
-                Helpers.LocationHistoryEntries(),
+                new ArrangementEntry(Guid.Empty, "", DateTime.MinValue,
+                    StartedAtUtc: new DateTime(2022, 1, 1), EndedAtUtc: null,
+                    null, Guid.Empty,
+                    Helpers.Completed(),
+                    Helpers.Exempted(),
+                    ImmutableList<IndividualVolunteerAssignment>.Empty,
+                    ImmutableList<FamilyVolunteerAssignment>.Empty,
+                    Helpers.LocationHistoryEntries()),
                 utcNow: new DateTime(2022, 1, 31));
 
             AssertEx.SequenceIs(result,
@@ -80,10 +87,14 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                         .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null)))))
                     .Add(new MonitoringRequirement("B", new DurationStagesRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                         .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null)))))),
-                startedAtUtc: new DateTime(2022, 1, 1), endedAtUtc: null,
-                Helpers.Completed(("A", 3), ("B", 7)),
-                Helpers.Exempted(),
-                Helpers.LocationHistoryEntries(),
+                new ArrangementEntry(Guid.Empty, "", DateTime.MinValue,
+                    StartedAtUtc: new DateTime(2022, 1, 1), EndedAtUtc: null,
+                    null, Guid.Empty,
+                    Helpers.Completed(("A", 3), ("B", 7)),
+                    Helpers.Exempted(),
+                    ImmutableList<IndividualVolunteerAssignment>.Empty,
+                    ImmutableList<FamilyVolunteerAssignment>.Empty,
+                    Helpers.LocationHistoryEntries()),
                 utcNow: new DateTime(2022, 1, 31));
 
             AssertEx.SequenceIs(result,
@@ -109,10 +120,14 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                         .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null)))))
                     .Add(new MonitoringRequirement("B", new DurationStagesRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                         .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null)))))),
-                startedAtUtc: new DateTime(2022, 1, 1), endedAtUtc: null,
-                Helpers.Completed(("A", 3), ("B", 7)),
-                Helpers.Exempted(),
-                Helpers.LocationHistoryEntries(),
+                new ArrangementEntry(Guid.Empty, "", DateTime.MinValue,
+                    StartedAtUtc: new DateTime(2022, 1, 1), EndedAtUtc: null,
+                    null, Guid.Empty,
+                    Helpers.Completed(("A", 3), ("B", 7)),
+                    Helpers.Exempted(),
+                    ImmutableList<IndividualVolunteerAssignment>.Empty,
+                    ImmutableList<FamilyVolunteerAssignment>.Empty,
+                    Helpers.LocationHistoryEntries()),
                 utcNow: new DateTime(2022, 1, 8));
 
             AssertEx.SequenceIs(result,
