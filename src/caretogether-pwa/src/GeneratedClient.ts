@@ -6857,8 +6857,28 @@ export abstract class ArrangementsCommand implements IArrangementsCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "ExemptIndividualVolunteerAssignmentRequirement") {
+            let result = new ExemptIndividualVolunteerAssignmentRequirement();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "ExemptVolunteerFamilyAssignmentRequirement") {
+            let result = new ExemptVolunteerFamilyAssignmentRequirement();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "MarkArrangementRequirementIncomplete") {
             let result = new MarkArrangementRequirementIncomplete();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "MarkIndividualVolunteerAssignmentRequirementIncomplete") {
+            let result = new MarkIndividualVolunteerAssignmentRequirementIncomplete();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "MarkVolunteerFamilyAssignmentRequirementIncomplete") {
+            let result = new MarkVolunteerFamilyAssignmentRequirementIncomplete();
             result.init(data);
             return result;
         }
@@ -6884,6 +6904,16 @@ export abstract class ArrangementsCommand implements IArrangementsCommand {
         }
         if (data["discriminator"] === "UnexemptArrangementRequirement") {
             let result = new UnexemptArrangementRequirement();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UnexemptIndividualVolunteerAssignmentRequirement") {
+            let result = new UnexemptIndividualVolunteerAssignmentRequirement();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UnexemptVolunteerFamilyAssignmentRequirement") {
+            let result = new UnexemptVolunteerFamilyAssignmentRequirement();
             result.init(data);
             return result;
         }
@@ -7332,6 +7362,130 @@ export interface IExemptArrangementRequirement extends IArrangementsCommand {
     exemptionExpiresAtUtc?: Date | undefined;
 }
 
+export class ExemptIndividualVolunteerAssignmentRequirement extends ArrangementsCommand implements IExemptIndividualVolunteerAssignmentRequirement {
+    arrangementFunction?: string;
+    arrangementFunctionVariant?: string | undefined;
+    volunteerFamilyId?: string;
+    personId?: string;
+    requirementName?: string;
+    dueDate?: Date | undefined;
+    additionalComments?: string;
+    exemptionExpiresAtUtc?: Date | undefined;
+
+    constructor(data?: IExemptIndividualVolunteerAssignmentRequirement) {
+        super(data);
+        this._discriminator = "ExemptIndividualVolunteerAssignmentRequirement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.arrangementFunction = _data["arrangementFunction"];
+            this.arrangementFunctionVariant = _data["arrangementFunctionVariant"];
+            this.volunteerFamilyId = _data["volunteerFamilyId"];
+            this.personId = _data["personId"];
+            this.requirementName = _data["requirementName"];
+            this.dueDate = _data["dueDate"] ? new Date(_data["dueDate"].toString()) : <any>undefined;
+            this.additionalComments = _data["additionalComments"];
+            this.exemptionExpiresAtUtc = _data["exemptionExpiresAtUtc"] ? new Date(_data["exemptionExpiresAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ExemptIndividualVolunteerAssignmentRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new ExemptIndividualVolunteerAssignmentRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["arrangementFunction"] = this.arrangementFunction;
+        data["arrangementFunctionVariant"] = this.arrangementFunctionVariant;
+        data["volunteerFamilyId"] = this.volunteerFamilyId;
+        data["personId"] = this.personId;
+        data["requirementName"] = this.requirementName;
+        data["dueDate"] = this.dueDate ? this.dueDate.toISOString() : <any>undefined;
+        data["additionalComments"] = this.additionalComments;
+        data["exemptionExpiresAtUtc"] = this.exemptionExpiresAtUtc ? this.exemptionExpiresAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IExemptIndividualVolunteerAssignmentRequirement extends IArrangementsCommand {
+    arrangementFunction?: string;
+    arrangementFunctionVariant?: string | undefined;
+    volunteerFamilyId?: string;
+    personId?: string;
+    requirementName?: string;
+    dueDate?: Date | undefined;
+    additionalComments?: string;
+    exemptionExpiresAtUtc?: Date | undefined;
+}
+
+export class ExemptVolunteerFamilyAssignmentRequirement extends ArrangementsCommand implements IExemptVolunteerFamilyAssignmentRequirement {
+    arrangementFunction?: string;
+    arrangementFunctionVariant?: string | undefined;
+    volunteerFamilyId?: string;
+    personId?: string;
+    requirementName?: string;
+    dueDate?: Date | undefined;
+    additionalComments?: string;
+    exemptionExpiresAtUtc?: Date | undefined;
+
+    constructor(data?: IExemptVolunteerFamilyAssignmentRequirement) {
+        super(data);
+        this._discriminator = "ExemptVolunteerFamilyAssignmentRequirement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.arrangementFunction = _data["arrangementFunction"];
+            this.arrangementFunctionVariant = _data["arrangementFunctionVariant"];
+            this.volunteerFamilyId = _data["volunteerFamilyId"];
+            this.personId = _data["personId"];
+            this.requirementName = _data["requirementName"];
+            this.dueDate = _data["dueDate"] ? new Date(_data["dueDate"].toString()) : <any>undefined;
+            this.additionalComments = _data["additionalComments"];
+            this.exemptionExpiresAtUtc = _data["exemptionExpiresAtUtc"] ? new Date(_data["exemptionExpiresAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ExemptVolunteerFamilyAssignmentRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new ExemptVolunteerFamilyAssignmentRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["arrangementFunction"] = this.arrangementFunction;
+        data["arrangementFunctionVariant"] = this.arrangementFunctionVariant;
+        data["volunteerFamilyId"] = this.volunteerFamilyId;
+        data["personId"] = this.personId;
+        data["requirementName"] = this.requirementName;
+        data["dueDate"] = this.dueDate ? this.dueDate.toISOString() : <any>undefined;
+        data["additionalComments"] = this.additionalComments;
+        data["exemptionExpiresAtUtc"] = this.exemptionExpiresAtUtc ? this.exemptionExpiresAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IExemptVolunteerFamilyAssignmentRequirement extends IArrangementsCommand {
+    arrangementFunction?: string;
+    arrangementFunctionVariant?: string | undefined;
+    volunteerFamilyId?: string;
+    personId?: string;
+    requirementName?: string;
+    dueDate?: Date | undefined;
+    additionalComments?: string;
+    exemptionExpiresAtUtc?: Date | undefined;
+}
+
 export class MarkArrangementRequirementIncomplete extends ArrangementsCommand implements IMarkArrangementRequirementIncomplete {
     completedRequirementId?: string;
     requirementName?: string;
@@ -7366,6 +7520,110 @@ export class MarkArrangementRequirementIncomplete extends ArrangementsCommand im
 }
 
 export interface IMarkArrangementRequirementIncomplete extends IArrangementsCommand {
+    completedRequirementId?: string;
+    requirementName?: string;
+}
+
+export class MarkIndividualVolunteerAssignmentRequirementIncomplete extends ArrangementsCommand implements IMarkIndividualVolunteerAssignmentRequirementIncomplete {
+    arrangementFunction?: string;
+    arrangementFunctionVariant?: string | undefined;
+    volunteerFamilyId?: string;
+    personId?: string;
+    completedRequirementId?: string;
+    requirementName?: string;
+
+    constructor(data?: IMarkIndividualVolunteerAssignmentRequirementIncomplete) {
+        super(data);
+        this._discriminator = "MarkIndividualVolunteerAssignmentRequirementIncomplete";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.arrangementFunction = _data["arrangementFunction"];
+            this.arrangementFunctionVariant = _data["arrangementFunctionVariant"];
+            this.volunteerFamilyId = _data["volunteerFamilyId"];
+            this.personId = _data["personId"];
+            this.completedRequirementId = _data["completedRequirementId"];
+            this.requirementName = _data["requirementName"];
+        }
+    }
+
+    static fromJS(data: any): MarkIndividualVolunteerAssignmentRequirementIncomplete {
+        data = typeof data === 'object' ? data : {};
+        let result = new MarkIndividualVolunteerAssignmentRequirementIncomplete();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["arrangementFunction"] = this.arrangementFunction;
+        data["arrangementFunctionVariant"] = this.arrangementFunctionVariant;
+        data["volunteerFamilyId"] = this.volunteerFamilyId;
+        data["personId"] = this.personId;
+        data["completedRequirementId"] = this.completedRequirementId;
+        data["requirementName"] = this.requirementName;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IMarkIndividualVolunteerAssignmentRequirementIncomplete extends IArrangementsCommand {
+    arrangementFunction?: string;
+    arrangementFunctionVariant?: string | undefined;
+    volunteerFamilyId?: string;
+    personId?: string;
+    completedRequirementId?: string;
+    requirementName?: string;
+}
+
+export class MarkVolunteerFamilyAssignmentRequirementIncomplete extends ArrangementsCommand implements IMarkVolunteerFamilyAssignmentRequirementIncomplete {
+    arrangementFunction?: string;
+    arrangementFunctionVariant?: string | undefined;
+    volunteerFamilyId?: string;
+    completedRequirementId?: string;
+    requirementName?: string;
+
+    constructor(data?: IMarkVolunteerFamilyAssignmentRequirementIncomplete) {
+        super(data);
+        this._discriminator = "MarkVolunteerFamilyAssignmentRequirementIncomplete";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.arrangementFunction = _data["arrangementFunction"];
+            this.arrangementFunctionVariant = _data["arrangementFunctionVariant"];
+            this.volunteerFamilyId = _data["volunteerFamilyId"];
+            this.completedRequirementId = _data["completedRequirementId"];
+            this.requirementName = _data["requirementName"];
+        }
+    }
+
+    static fromJS(data: any): MarkVolunteerFamilyAssignmentRequirementIncomplete {
+        data = typeof data === 'object' ? data : {};
+        let result = new MarkVolunteerFamilyAssignmentRequirementIncomplete();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["arrangementFunction"] = this.arrangementFunction;
+        data["arrangementFunctionVariant"] = this.arrangementFunctionVariant;
+        data["volunteerFamilyId"] = this.volunteerFamilyId;
+        data["completedRequirementId"] = this.completedRequirementId;
+        data["requirementName"] = this.requirementName;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IMarkVolunteerFamilyAssignmentRequirementIncomplete extends IArrangementsCommand {
+    arrangementFunction?: string;
+    arrangementFunctionVariant?: string | undefined;
+    volunteerFamilyId?: string;
     completedRequirementId?: string;
     requirementName?: string;
 }
@@ -7576,6 +7834,114 @@ export class UnexemptArrangementRequirement extends ArrangementsCommand implemen
 }
 
 export interface IUnexemptArrangementRequirement extends IArrangementsCommand {
+    requirementName?: string;
+    dueDate?: Date | undefined;
+}
+
+export class UnexemptIndividualVolunteerAssignmentRequirement extends ArrangementsCommand implements IUnexemptIndividualVolunteerAssignmentRequirement {
+    arrangementFunction?: string;
+    arrangementFunctionVariant?: string | undefined;
+    volunteerFamilyId?: string;
+    personId?: string;
+    requirementName?: string;
+    dueDate?: Date | undefined;
+
+    constructor(data?: IUnexemptIndividualVolunteerAssignmentRequirement) {
+        super(data);
+        this._discriminator = "UnexemptIndividualVolunteerAssignmentRequirement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.arrangementFunction = _data["arrangementFunction"];
+            this.arrangementFunctionVariant = _data["arrangementFunctionVariant"];
+            this.volunteerFamilyId = _data["volunteerFamilyId"];
+            this.personId = _data["personId"];
+            this.requirementName = _data["requirementName"];
+            this.dueDate = _data["dueDate"] ? new Date(_data["dueDate"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): UnexemptIndividualVolunteerAssignmentRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new UnexemptIndividualVolunteerAssignmentRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["arrangementFunction"] = this.arrangementFunction;
+        data["arrangementFunctionVariant"] = this.arrangementFunctionVariant;
+        data["volunteerFamilyId"] = this.volunteerFamilyId;
+        data["personId"] = this.personId;
+        data["requirementName"] = this.requirementName;
+        data["dueDate"] = this.dueDate ? this.dueDate.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUnexemptIndividualVolunteerAssignmentRequirement extends IArrangementsCommand {
+    arrangementFunction?: string;
+    arrangementFunctionVariant?: string | undefined;
+    volunteerFamilyId?: string;
+    personId?: string;
+    requirementName?: string;
+    dueDate?: Date | undefined;
+}
+
+export class UnexemptVolunteerFamilyAssignmentRequirement extends ArrangementsCommand implements IUnexemptVolunteerFamilyAssignmentRequirement {
+    arrangementFunction?: string;
+    arrangementFunctionVariant?: string | undefined;
+    volunteerFamilyId?: string;
+    personId?: string;
+    requirementName?: string;
+    dueDate?: Date | undefined;
+
+    constructor(data?: IUnexemptVolunteerFamilyAssignmentRequirement) {
+        super(data);
+        this._discriminator = "UnexemptVolunteerFamilyAssignmentRequirement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.arrangementFunction = _data["arrangementFunction"];
+            this.arrangementFunctionVariant = _data["arrangementFunctionVariant"];
+            this.volunteerFamilyId = _data["volunteerFamilyId"];
+            this.personId = _data["personId"];
+            this.requirementName = _data["requirementName"];
+            this.dueDate = _data["dueDate"] ? new Date(_data["dueDate"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): UnexemptVolunteerFamilyAssignmentRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new UnexemptVolunteerFamilyAssignmentRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["arrangementFunction"] = this.arrangementFunction;
+        data["arrangementFunctionVariant"] = this.arrangementFunctionVariant;
+        data["volunteerFamilyId"] = this.volunteerFamilyId;
+        data["personId"] = this.personId;
+        data["requirementName"] = this.requirementName;
+        data["dueDate"] = this.dueDate ? this.dueDate.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUnexemptVolunteerFamilyAssignmentRequirement extends IArrangementsCommand {
+    arrangementFunction?: string;
+    arrangementFunctionVariant?: string | undefined;
+    volunteerFamilyId?: string;
+    personId?: string;
     requirementName?: string;
     dueDate?: Date | undefined;
 }

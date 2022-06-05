@@ -3850,12 +3850,18 @@
             "CreateArrangement": "#/components/schemas/CreateArrangement",
             "EndArrangements": "#/components/schemas/EndArrangements",
             "ExemptArrangementRequirement": "#/components/schemas/ExemptArrangementRequirement",
+            "ExemptIndividualVolunteerAssignmentRequirement": "#/components/schemas/ExemptIndividualVolunteerAssignmentRequirement",
+            "ExemptVolunteerFamilyAssignmentRequirement": "#/components/schemas/ExemptVolunteerFamilyAssignmentRequirement",
             "MarkArrangementRequirementIncomplete": "#/components/schemas/MarkArrangementRequirementIncomplete",
+            "MarkIndividualVolunteerAssignmentRequirementIncomplete": "#/components/schemas/MarkIndividualVolunteerAssignmentRequirementIncomplete",
+            "MarkVolunteerFamilyAssignmentRequirementIncomplete": "#/components/schemas/MarkVolunteerFamilyAssignmentRequirementIncomplete",
             "StartArrangements": "#/components/schemas/StartArrangements",
             "TrackChildLocationChange": "#/components/schemas/TrackChildLocationChange",
             "UnassignIndividualVolunteer": "#/components/schemas/UnassignIndividualVolunteer",
             "UnassignVolunteerFamily": "#/components/schemas/UnassignVolunteerFamily",
-            "UnexemptArrangementRequirement": "#/components/schemas/UnexemptArrangementRequirement"
+            "UnexemptArrangementRequirement": "#/components/schemas/UnexemptArrangementRequirement",
+            "UnexemptIndividualVolunteerAssignmentRequirement": "#/components/schemas/UnexemptIndividualVolunteerAssignmentRequirement",
+            "UnexemptVolunteerFamilyAssignmentRequirement": "#/components/schemas/UnexemptVolunteerFamilyAssignmentRequirement"
           }
         },
         "x-abstract": true,
@@ -4151,6 +4157,94 @@
           }
         ]
       },
+      "ExemptIndividualVolunteerAssignmentRequirement": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "arrangementFunction": {
+                "type": "string"
+              },
+              "arrangementFunctionVariant": {
+                "type": "string",
+                "nullable": true
+              },
+              "volunteerFamilyId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "requirementName": {
+                "type": "string"
+              },
+              "dueDate": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "additionalComments": {
+                "type": "string"
+              },
+              "exemptionExpiresAtUtc": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "ExemptVolunteerFamilyAssignmentRequirement": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "arrangementFunction": {
+                "type": "string"
+              },
+              "arrangementFunctionVariant": {
+                "type": "string",
+                "nullable": true
+              },
+              "volunteerFamilyId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "requirementName": {
+                "type": "string"
+              },
+              "dueDate": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "additionalComments": {
+                "type": "string"
+              },
+              "exemptionExpiresAtUtc": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
       "MarkArrangementRequirementIncomplete": {
         "allOf": [
           {
@@ -4160,6 +4254,72 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+              "completedRequirementId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "requirementName": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "MarkIndividualVolunteerAssignmentRequirementIncomplete": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "arrangementFunction": {
+                "type": "string"
+              },
+              "arrangementFunctionVariant": {
+                "type": "string",
+                "nullable": true
+              },
+              "volunteerFamilyId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "completedRequirementId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "requirementName": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "MarkVolunteerFamilyAssignmentRequirementIncomplete": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "arrangementFunction": {
+                "type": "string"
+              },
+              "arrangementFunctionVariant": {
+                "type": "string",
+                "nullable": true
+              },
+              "volunteerFamilyId": {
+                "type": "string",
+                "format": "guid"
+              },
               "completedRequirementId": {
                 "type": "string",
                 "format": "guid"
@@ -4282,6 +4442,78 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+              "requirementName": {
+                "type": "string"
+              },
+              "dueDate": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "UnexemptIndividualVolunteerAssignmentRequirement": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "arrangementFunction": {
+                "type": "string"
+              },
+              "arrangementFunctionVariant": {
+                "type": "string",
+                "nullable": true
+              },
+              "volunteerFamilyId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "requirementName": {
+                "type": "string"
+              },
+              "dueDate": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "UnexemptVolunteerFamilyAssignmentRequirement": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "arrangementFunction": {
+                "type": "string"
+              },
+              "arrangementFunctionVariant": {
+                "type": "string",
+                "nullable": true
+              },
+              "volunteerFamilyId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
               "requirementName": {
                 "type": "string"
               },

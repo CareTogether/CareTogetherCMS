@@ -225,16 +225,94 @@ namespace CareTogether.Resources.Referrals
                                 CompletedRequirements = arrangementEntry.CompletedRequirements.RemoveAll(x =>
                                     x.RequirementName == c.RequirementName && x.CompletedRequirementId == c.CompletedRequirementId),
                             }, null),
+                            MarkVolunteerFamilyAssignmentRequirementIncomplete c => (arrangementEntry with
+                            {
+                                FamilyVolunteerAssignments = arrangementEntry.FamilyVolunteerAssignments.UpdateSingle(
+                                    fva => fva.ArrangementFunction == c.ArrangementFunction &&
+                                        fva.ArrangementFunctionVariant == c.ArrangementFunctionVariant &&
+                                        fva.FamilyId == c.VolunteerFamilyId,
+                                    fva => fva with
+                                    {
+                                        CompletedRequirements = fva.CompletedRequirements.RemoveAll(x =>
+                                            x.RequirementName == c.RequirementName && x.CompletedRequirementId == c.CompletedRequirementId),
+                                    })
+                            }, null),
+                            MarkIndividualVolunteerAssignmentRequirementIncomplete c => (arrangementEntry with
+                            {
+                                IndividualVolunteerAssignments = arrangementEntry.IndividualVolunteerAssignments.UpdateSingle(
+                                    iva => iva.ArrangementFunction == c.ArrangementFunction &&
+                                        iva.ArrangementFunctionVariant == c.ArrangementFunctionVariant &&
+                                        iva.FamilyId == c.VolunteerFamilyId &&
+                                        iva.PersonId == c.PersonId,
+                                    iva => iva with
+                                    {
+                                        CompletedRequirements = iva.CompletedRequirements.RemoveAll(x =>
+                                            x.RequirementName == c.RequirementName && x.CompletedRequirementId == c.CompletedRequirementId),
+                                    })
+                            }, null),
                             ExemptArrangementRequirement c => (arrangementEntry with
                             {
                                 ExemptedRequirements = arrangementEntry.ExemptedRequirements.Add(
                                     new ExemptedRequirementInfo(userId, timestampUtc, c.RequirementName, c.DueDate,
                                         c.AdditionalComments, c.ExemptionExpiresAtUtc))
                             }, null),
+                            ExemptVolunteerFamilyAssignmentRequirement c => (arrangementEntry with
+                            {
+                                FamilyVolunteerAssignments = arrangementEntry.FamilyVolunteerAssignments.UpdateSingle(
+                                    fva => fva.ArrangementFunction == c.ArrangementFunction &&
+                                        fva.ArrangementFunctionVariant == c.ArrangementFunctionVariant &&
+                                        fva.FamilyId == c.VolunteerFamilyId,
+                                    fva => fva with
+                                    {
+                                        ExemptedRequirements = fva.ExemptedRequirements.Add(
+                                            new ExemptedRequirementInfo(userId, timestampUtc, c.RequirementName, c.DueDate,
+                                                c.AdditionalComments, c.ExemptionExpiresAtUtc))
+                                    })
+
+                            }, null),
+                            ExemptIndividualVolunteerAssignmentRequirement c => (arrangementEntry with
+                            {
+                                IndividualVolunteerAssignments = arrangementEntry.IndividualVolunteerAssignments.UpdateSingle(
+                                    iva => iva.ArrangementFunction == c.ArrangementFunction &&
+                                        iva.ArrangementFunctionVariant == c.ArrangementFunctionVariant &&
+                                        iva.FamilyId == c.VolunteerFamilyId &&
+                                        iva.PersonId == c.PersonId,
+                                    iva => iva with
+                                    {
+                                        ExemptedRequirements = iva.ExemptedRequirements.Add(
+                                            new ExemptedRequirementInfo(userId, timestampUtc, c.RequirementName, c.DueDate,
+                                                c.AdditionalComments, c.ExemptionExpiresAtUtc))
+                                    })
+                            }, null),
                             UnexemptArrangementRequirement c => (arrangementEntry with
                             {
                                 ExemptedRequirements = arrangementEntry.ExemptedRequirements.RemoveAll(x =>
                                     x.RequirementName == c.RequirementName && x.DueDate == c.DueDate)
+                            }, null),
+                            UnexemptVolunteerFamilyAssignmentRequirement c => (arrangementEntry with
+                            {
+                                FamilyVolunteerAssignments = arrangementEntry.FamilyVolunteerAssignments.UpdateSingle(
+                                    fva => fva.ArrangementFunction == c.ArrangementFunction &&
+                                        fva.ArrangementFunctionVariant == c.ArrangementFunctionVariant &&
+                                        fva.FamilyId == c.VolunteerFamilyId,
+                                    fva => fva with
+                                    {
+                                        ExemptedRequirements = fva.ExemptedRequirements.RemoveAll(x =>
+                                            x.RequirementName == c.RequirementName && x.DueDate == c.DueDate)
+                                    })
+                            }, null),
+                            UnexemptIndividualVolunteerAssignmentRequirement c => (arrangementEntry with
+                            {
+                                IndividualVolunteerAssignments = arrangementEntry.IndividualVolunteerAssignments.UpdateSingle(
+                                    iva => iva.ArrangementFunction == c.ArrangementFunction &&
+                                        iva.ArrangementFunctionVariant == c.ArrangementFunctionVariant &&
+                                        iva.FamilyId == c.VolunteerFamilyId &&
+                                        iva.PersonId == c.PersonId,
+                                    iva => iva with
+                                    {
+                                        ExemptedRequirements = iva.ExemptedRequirements.RemoveAll(x =>
+                                            x.RequirementName == c.RequirementName && x.DueDate == c.DueDate)
+                                    })
                             }, null),
                             TrackChildLocationChange c => (arrangementEntry with
                             {

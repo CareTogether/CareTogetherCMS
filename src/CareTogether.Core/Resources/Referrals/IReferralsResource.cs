@@ -113,10 +113,34 @@ namespace CareTogether.Resources.Referrals
     public sealed record MarkArrangementRequirementIncomplete(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         Guid CompletedRequirementId, string RequirementName)
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+    public sealed record MarkVolunteerFamilyAssignmentRequirementIncomplete(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
+        string ArrangementFunction, string? ArrangementFunctionVariant, Guid VolunteerFamilyId,
+        Guid CompletedRequirementId, string RequirementName)
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+    public sealed record MarkIndividualVolunteerAssignmentRequirementIncomplete(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
+        string ArrangementFunction, string? ArrangementFunctionVariant, Guid VolunteerFamilyId, Guid PersonId,
+        Guid CompletedRequirementId, string RequirementName)
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
     public sealed record ExemptArrangementRequirement(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         string RequirementName, DateTime? DueDate, string AdditionalComments, DateTime? ExemptionExpiresAtUtc)
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+    public sealed record ExemptVolunteerFamilyAssignmentRequirement(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
+        string ArrangementFunction, string? ArrangementFunctionVariant, Guid VolunteerFamilyId, Guid PersonId,
+        string RequirementName, DateTime? DueDate, string AdditionalComments, DateTime? ExemptionExpiresAtUtc)
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+    public sealed record ExemptIndividualVolunteerAssignmentRequirement(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
+        string ArrangementFunction, string? ArrangementFunctionVariant, Guid VolunteerFamilyId, Guid PersonId,
+        string RequirementName, DateTime? DueDate, string AdditionalComments, DateTime? ExemptionExpiresAtUtc)
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
     public sealed record UnexemptArrangementRequirement(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
+        string RequirementName, DateTime? DueDate)
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+    public sealed record UnexemptVolunteerFamilyAssignmentRequirement(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
+        string ArrangementFunction, string? ArrangementFunctionVariant, Guid VolunteerFamilyId, Guid PersonId,
+        string RequirementName, DateTime? DueDate)
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+    public sealed record UnexemptIndividualVolunteerAssignmentRequirement(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
+        string ArrangementFunction, string? ArrangementFunctionVariant, Guid VolunteerFamilyId, Guid PersonId,
         string RequirementName, DateTime? DueDate)
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
     public sealed record TrackChildLocationChange(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
