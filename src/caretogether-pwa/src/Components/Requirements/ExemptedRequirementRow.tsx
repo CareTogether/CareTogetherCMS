@@ -37,7 +37,7 @@ export function ExemptedRequirementRow({ requirement, context }: ExemptedRequire
                 until {format(requirement.exemptionExpiresAtUtc, "M/d/yy")}
               </span>}
             <br />
-            <span style={{ lineHeight: '1.5em', paddingLeft: 30, fontStyle: 'italic' }}>
+            <span style={{ lineHeight: '1.5em', paddingLeft: 30, fontStyle: 'italic', display: 'inline-block' }}>
               {requirement.additionalComments}
             </span>
           </span>
