@@ -26,9 +26,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 utcNow: new System.DateTime(2022, 2, 1));
 
             AssertEx.SequenceIs(result,
-                new MissingArrangementRequirement("A", null, null),
-                new MissingArrangementRequirement("B", null, null),
-                new MissingArrangementRequirement("C", null, null));
+                new MissingArrangementRequirement(null, null, null, null, "A", null, null),
+                new MissingArrangementRequirement(null, null, null, null, "B", null, null),
+                new MissingArrangementRequirement(null, null, null, null, "C", null, null));
         }
 
         [TestMethod]
@@ -41,7 +41,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 utcNow: new System.DateTime(2022, 2, 1));
 
             AssertEx.SequenceIs(result,
-                new MissingArrangementRequirement("C", null, null));
+                new MissingArrangementRequirement(null, null, null, null, "C", null, null));
         }
 
         [TestMethod]
