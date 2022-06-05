@@ -35,10 +35,10 @@ export function UnassignArrangementFunctionDialog({
     await withBackdrop(async () => {
       if (assignment instanceof IndividualVolunteerAssignment) {
         await referralsModel.unassignIndividualVolunteer(partneringFamilyId, referralId, arrangement.id!,
-          assignment.familyId!, assignment.personId!, arrangementFunction.functionName!);
+          assignment.familyId!, assignment.personId!, arrangementFunction.functionName!, assignment.arrangementFunctionVariant);
       } else {
         await referralsModel.unassignVolunteerFamily(partneringFamilyId, referralId, arrangement.id!,
-          assignment.familyId!, arrangementFunction.functionName!);
+          assignment.familyId!, arrangementFunction.functionName!, assignment.arrangementFunctionVariant);
       }
       //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
       handle.closeDialog();

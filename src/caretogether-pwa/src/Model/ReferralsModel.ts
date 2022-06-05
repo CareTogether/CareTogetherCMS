@@ -235,7 +235,7 @@ export function useReferralsModel() {
     });
   const assignVolunteerFamily = useArrangementsCommandCallbackWithLocation(
     async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
-      volunteerFamilyId: string, arrangementFunction: string) => {
+      volunteerFamilyId: string, arrangementFunction: string, arrangementFunctionVariant?: string) => {
       const command = new AssignVolunteerFamily({
         familyId: partneringFamilyId,
         referralId: referralId,
@@ -243,11 +243,12 @@ export function useReferralsModel() {
       });
       command.volunteerFamilyId = volunteerFamilyId;
       command.arrangementFunction = arrangementFunction;
+      command.arrangementFunctionVariant = arrangementFunctionVariant;
       return command;
     });
   const assignIndividualVolunteer = useArrangementsCommandCallbackWithLocation(
     async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
-      volunteerFamilyId: string, personId: string, arrangementFunction: string) => {
+      volunteerFamilyId: string, personId: string, arrangementFunction: string, arrangementFunctionVariant?: string) => {
       const command = new AssignIndividualVolunteer({
         familyId: partneringFamilyId,
         referralId: referralId,
@@ -256,11 +257,12 @@ export function useReferralsModel() {
       command.volunteerFamilyId = volunteerFamilyId;
       command.personId = personId;
       command.arrangementFunction = arrangementFunction;
+      command.arrangementFunctionVariant = arrangementFunctionVariant;
       return command;
     });
   const unassignVolunteerFamily = useArrangementsCommandCallbackWithLocation(
     async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
-      volunteerFamilyId: string, arrangementFunction: string) => {
+      volunteerFamilyId: string, arrangementFunction: string, arrangementFunctionVariant?: string) => {
       const command = new UnassignVolunteerFamily({
         familyId: partneringFamilyId,
         referralId: referralId,
@@ -268,11 +270,12 @@ export function useReferralsModel() {
       });
       command.volunteerFamilyId = volunteerFamilyId;
       command.arrangementFunction = arrangementFunction;
+      command.arrangementFunctionVariant = arrangementFunctionVariant;
       return command;
     });
   const unassignIndividualVolunteer = useArrangementsCommandCallbackWithLocation(
     async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
-      volunteerFamilyId: string, personId: string, arrangementFunction: string) => {
+      volunteerFamilyId: string, personId: string, arrangementFunction: string, arrangementFunctionVariant?: string) => {
       const command = new UnassignIndividualVolunteer({
         familyId: partneringFamilyId,
         referralId: referralId,
@@ -281,6 +284,7 @@ export function useReferralsModel() {
       command.volunteerFamilyId = volunteerFamilyId;
       command.personId = personId;
       command.arrangementFunction = arrangementFunction;
+      command.arrangementFunctionVariant = arrangementFunctionVariant;
       return command;
     });
   const trackChildLocation = useArrangementsCommandCallbackWithLocation(
