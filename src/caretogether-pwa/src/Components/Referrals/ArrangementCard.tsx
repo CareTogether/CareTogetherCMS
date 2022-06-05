@@ -99,36 +99,71 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
     !arrangement.familyVolunteerAssignments?.some(x => x.arrangementFunction === functionPolicy.functionName) &&
     !arrangement.individualVolunteerAssignments?.some(x => x.arrangementFunction === functionPolicy.functionName))?.length || 0;
 
-  function contextFor(requirement: CompletedRequirementInfo | ExemptedRequirementInfo | MissingArrangementRequirement): RequirementContext {
-    if (requirement instanceof MissingArrangementRequirement) {
-      if (requirement.personId) {
-        return {
-          kind: "Individual Volunteer Assignment",
-          partneringFamilyId: partneringFamily.family!.id!,
-          referralId: referralId,
-          arrangementId: arrangement.id!,
-          assignment: arrangement.individualVolunteerAssignments!.find(iva =>
-            iva.arrangementFunction === requirement.arrangementFunction &&
-            iva.arrangementFunctionVariant === requirement.arrangementFunctionVariant &&
-            iva.familyId === requirement.volunteerFamilyId &&
-            iva.personId === requirement.personId)!
-        };
-      } else if (requirement.volunteerFamilyId) {
-        return {
-          kind: "Family Volunteer Assignment",
-          partneringFamilyId: partneringFamily.family!.id!,
-          referralId: referralId,
-          arrangementId: arrangement.id!,
-          assignment: arrangement.familyVolunteerAssignments!.find(iva =>
-            iva.arrangementFunction === requirement.arrangementFunction &&
-            iva.arrangementFunctionVariant === requirement.arrangementFunctionVariant &&
-            iva.familyId === requirement.volunteerFamilyId)!
-        };
-      }
-    }
-    return arrangementRequirementContext;
-  }
+  const completedRequirementsWithContext =
+    (arrangement.completedRequirements || []).map(cr =>
+      ({ completed: cr, context: arrangementRequirementContext as RequirementContext })).concat(
+    (arrangement.familyVolunteerAssignments || []).flatMap(fva => (fva.completedRequirements || []).map(cr =>
+      ({ completed: cr, context: {
+        kind: "Family Volunteer Assignment",
+        partneringFamilyId: partneringFamily.family!.id!,
+        referralId: referralId,
+        arrangementId: arrangement.id!,
+        assignment: fva } as RequirementContext})))).concat(
+    (arrangement.individualVolunteerAssignments || []).flatMap(iva => (iva.completedRequirements || []).map(cr =>
+      ({ completed: cr, context: {
+        kind: "Individual Volunteer Assignment",
+        partneringFamilyId: partneringFamily.family!.id!,
+        referralId: referralId,
+        arrangementId: arrangement.id!,
+        assignment: iva }}))));
+  
+  const exemptedRequirementsWithContext =
+    (arrangement.exemptedRequirements || []).map(er =>
+      ({ exempted: er, context: arrangementRequirementContext as RequirementContext })).concat(
+    (arrangement.familyVolunteerAssignments || []).flatMap(fva => (fva.exemptedRequirements || []).map(er =>
+      ({ exempted: er, context: {
+        kind: "Family Volunteer Assignment",
+        partneringFamilyId: partneringFamily.family!.id!,
+        referralId: referralId,
+        arrangementId: arrangement.id!,
+        assignment: fva } as RequirementContext})))).concat(
+    (arrangement.individualVolunteerAssignments || []).flatMap(iva => (iva.exemptedRequirements || []).map(er =>
+      ({ exempted: er, context: {
+        kind: "Individual Volunteer Assignment",
+        partneringFamilyId: partneringFamily.family!.id!,
+        referralId: referralId,
+        arrangementId: arrangement.id!,
+        assignment: iva }}))));
 
+  const missingRequirementsWithContext = (arrangement.missingRequirements || []).map(requirement => {
+    if (requirement.personId) {
+      return { missing: requirement, context: {
+        kind: "Individual Volunteer Assignment",
+        partneringFamilyId: partneringFamily.family!.id!,
+        referralId: referralId,
+        arrangementId: arrangement.id!,
+        assignment: arrangement.individualVolunteerAssignments!.find(iva =>
+          iva.arrangementFunction === requirement.arrangementFunction &&
+          iva.arrangementFunctionVariant === requirement.arrangementFunctionVariant &&
+          iva.familyId === requirement.volunteerFamilyId &&
+          iva.personId === requirement.personId)!
+      } as RequirementContext };
+    } else if (requirement.volunteerFamilyId) {
+      return { missing: requirement, context: {
+        kind: "Family Volunteer Assignment",
+        partneringFamilyId: partneringFamily.family!.id!,
+        referralId: referralId,
+        arrangementId: arrangement.id!,
+        assignment: arrangement.familyVolunteerAssignments!.find(iva =>
+          iva.arrangementFunction === requirement.arrangementFunction &&
+          iva.arrangementFunctionVariant === requirement.arrangementFunctionVariant &&
+          iva.familyId === requirement.volunteerFamilyId)!
+      } as RequirementContext };
+    } else {
+      return { missing: requirement, context: arrangementRequirementContext };
+    }
+  });
+  
   return (
     <Card variant="outlined">
       <ArrangementPhaseSummary phase={arrangement.phase!}
@@ -207,14 +242,14 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
               {arrangement.phase !== ArrangementPhase.Cancelled && (
                 <>
                   <Typography variant="body2" component="div">
-                    {arrangement.completedRequirements?.map((completed, i) =>
-                      <CompletedRequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} context={contextFor(completed)} />
+                    {completedRequirementsWithContext.map((x, i) =>
+                      <CompletedRequirementRow key={`${x.completed.completedRequirementId}:${i}`} requirement={x.completed} context={x.context} />
                     )}
-                    {arrangement.exemptedRequirements?.map((exempted, i) =>
-                      <ExemptedRequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={contextFor(exempted)} />
+                    {exemptedRequirementsWithContext.map((x, i) =>
+                      <ExemptedRequirementRow key={`${x.exempted.requirementName}:${i}`} requirement={x.exempted} context={x.context} />
                     )}
-                    {arrangement.missingRequirements?.map((missing, i) =>
-                      <MissingArrangementRequirementRow key={`${missing}:${i}`} requirement={missing} context={contextFor(missing)} />
+                    {missingRequirementsWithContext.map((x, i) =>
+                      <MissingArrangementRequirementRow key={`${x.missing.actionName}:${i}`} requirement={x.missing} context={x.context} />
                     )}
                   </Typography>
                 </>
