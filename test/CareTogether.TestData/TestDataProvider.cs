@@ -487,18 +487,6 @@ namespace CareTogether.TestData
                                     }.ToImmutableList(),
                                     EligiblePeople: ImmutableList<Guid>.Empty,
                                     Variants: ImmutableList<ArrangementFunctionVariant>.Empty),
-                                new ArrangementFunction("Parent and Host Family Friend", FunctionRequirement.ZeroOrMore,
-                                    EligibleIndividualVolunteerRoles: new List<string>
-                                    {
-                                        "Family Coach",
-                                        "Family Friend"
-                                    }.ToImmutableList(),
-                                    EligibleVolunteerFamilyRoles: new List<string>
-                                    {
-                                        "Host Family"
-                                    }.ToImmutableList(),
-                                    EligiblePeople: ImmutableList<Guid>.Empty,
-                                    Variants: ImmutableList<ArrangementFunctionVariant>.Empty),
                                 new ArrangementFunction("Staff Supervision", FunctionRequirement.ExactlyOne,
                                     EligibleIndividualVolunteerRoles: ImmutableList<string>.Empty,
                                     EligibleVolunteerFamilyRoles: ImmutableList<string>.Empty,
