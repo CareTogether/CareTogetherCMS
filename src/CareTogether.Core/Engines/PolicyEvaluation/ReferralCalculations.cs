@@ -165,6 +165,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .SelectMany(monitoringRequirement =>
                     (arrangement.StartedAtUtc.HasValue
                     ? CalculateMissingMonitoringRequirementInstances(monitoringRequirement.Recurrence,
+                        filterToFamilyId: null,
                         arrangement.StartedAtUtc.Value, arrangement.EndedAtUtc,
                         arrangement.CompletedRequirements
                             .Where(x => x.RequirementName == monitoringRequirement.ActionName)
@@ -198,6 +199,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                         .SelectMany(monitoringRequirement =>
                             (arrangement.StartedAtUtc.HasValue
                             ? CalculateMissingMonitoringRequirementInstances(monitoringRequirement.Recurrence,
+                                filterToFamilyId: fva.FamilyId,
                                 arrangement.StartedAtUtc.Value, arrangement.EndedAtUtc,
                                 fva.CompletedRequirements
                                     .Where(x => x.RequirementName == monitoringRequirement.ActionName)
@@ -233,6 +235,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                         .SelectMany(monitoringRequirement =>
                             (arrangement.StartedAtUtc.HasValue
                             ? CalculateMissingMonitoringRequirementInstances(monitoringRequirement.Recurrence,
+                                filterToFamilyId: iva.FamilyId,
                                 arrangement.StartedAtUtc.Value, arrangement.EndedAtUtc,
                                 iva.CompletedRequirements
                                     .Where(x => x.RequirementName == monitoringRequirement.ActionName)
@@ -261,7 +264,8 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
         internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementInstances(
-            RecurrencePolicy recurrence, DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc,
+            RecurrencePolicy recurrence, Guid? filterToFamilyId,
+            DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc,
             ImmutableList<DateTime> completions, ImmutableSortedSet<ChildLocationHistoryEntry> childLocationHistory,
             DateTime utcNow)
         {
@@ -272,7 +276,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                         durationStages, arrangementStartedAtUtc, arrangementEndedAtUtc, utcNow, completions),
                 DurationStagesPerChildLocationRecurrencePolicy durationStagesPerChildLocation =>
                     CalculateMissingMonitoringRequirementInstancesForDurationRecurrencePerChildLocation(
-                        durationStagesPerChildLocation, arrangementStartedAtUtc, arrangementEndedAtUtc, utcNow,
+                        durationStagesPerChildLocation, filterToFamilyId, arrangementStartedAtUtc, arrangementEndedAtUtc, utcNow,
                         completions, childLocationHistory),
                 ChildCareOccurrenceBasedRecurrencePolicy childCareOccurences =>
                     CalculateMissingMonitoringRequirementInstancesForChildCareOccurrences(
@@ -338,7 +342,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             return missingRequirements;
         }
         internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementInstancesForDurationRecurrencePerChildLocation(
-            DurationStagesPerChildLocationRecurrencePolicy recurrence,
+            DurationStagesPerChildLocationRecurrencePolicy recurrence, Guid? filterToFamilyId,
             DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc, DateTime utcNow,
             ImmutableList<DateTime> completions, ImmutableSortedSet<ChildLocationHistoryEntry> childLocationHistory)
         {
@@ -362,7 +366,8 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             // Determine which child care occurrences the requirement will apply to.
             var applicableOccurrences = childCareOccurrences
-                .Where(x => x.entry.Plan != ChildLocationPlan.WithParent)
+                .Where(x => x.entry.Plan != ChildLocationPlan.WithParent &&
+                    (filterToFamilyId == null || x.entry.ChildLocationFamilyId == filterToFamilyId))
                 .ToImmutableList();
 
             // Group the child care occurrences by child location (i.e., by the family caring for the child).

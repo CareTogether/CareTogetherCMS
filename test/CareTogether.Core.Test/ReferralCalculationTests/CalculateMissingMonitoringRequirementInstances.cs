@@ -19,6 +19,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))),
+                filterToFamilyId: null,
                 arrangementStartedAtUtc: new DateTime(2022, 1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
@@ -36,6 +37,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))),
+                filterToFamilyId: null,
                 arrangementStartedAtUtc: new DateTime(2022, 1, 1),
                 arrangementEndedAtUtc: new DateTime(2022, 2, 1),
                 completions: Helpers.Dates(),
@@ -50,6 +52,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
                 new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromDays(2), 3, 0, true),
+                filterToFamilyId: null,
                 arrangementStartedAtUtc: new DateTime(2022, 1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
@@ -80,6 +83,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
                 new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromDays(2), 3, 2, true),
+                filterToFamilyId: null,
                 arrangementStartedAtUtc: new DateTime(2022, 1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
@@ -110,6 +114,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
                 new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromDays(2), 3, 0, true),
+                filterToFamilyId: null,
                 arrangementStartedAtUtc: new DateTime(2022, 1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
@@ -131,6 +136,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
                 new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromDays(2), 3, 0, true),
+                filterToFamilyId: null,
                 arrangementStartedAtUtc: new DateTime(2022, 1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
@@ -155,6 +161,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))),
+                filterToFamilyId: null,
                 arrangementStartedAtUtc: new DateTime(2022, 1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 2)),
@@ -172,6 +179,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))),
+                filterToFamilyId: null,
                 arrangementStartedAtUtc: new DateTime(2022, 1, 1),
                 arrangementEndedAtUtc: new DateTime(2022, 2, 1),
                 completions: Helpers.Dates((1, 2)),
@@ -189,6 +197,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))),
+                filterToFamilyId: null,
                 arrangementStartedAtUtc: new DateTime(2022, 1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 2), (1, 2)),
@@ -206,6 +215,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))),
+                filterToFamilyId: null,
                 arrangementStartedAtUtc: new DateTime(2022, 1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 1), (1, 2)),
@@ -223,6 +233,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))),
+                filterToFamilyId: null,
                 arrangementStartedAtUtc: new DateTime(2022, 1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 2), (1, 9)),
@@ -240,6 +251,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))),
+                filterToFamilyId: null,
                 arrangementStartedAtUtc: new DateTime(2022, 1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 2), (1, 10)),
@@ -257,6 +269,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))),
+                filterToFamilyId: null,
                 arrangementStartedAtUtc: new DateTime(2022, 1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 2), (1, 20)),
@@ -274,6 +287,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))),
+                filterToFamilyId: null,
                 arrangementStartedAtUtc: new DateTime(2022, 1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 2), (1, 20), (2, 9)),
@@ -291,6 +305,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))),
+                filterToFamilyId: null,
                 arrangementStartedAtUtc: new DateTime(2022, 1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
@@ -308,6 +323,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))),
+                filterToFamilyId: null,
                 arrangementStartedAtUtc: new DateTime(2022, 1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
@@ -326,6 +342,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))),
+                filterToFamilyId: null,
                 arrangementStartedAtUtc: new DateTime(2022, 1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
@@ -346,6 +363,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))),
+                filterToFamilyId: null,
                 arrangementStartedAtUtc: new DateTime(2022, 1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
@@ -365,6 +383,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))),
+                filterToFamilyId: null,
                 arrangementStartedAtUtc: new DateTime(2022, 1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
