@@ -211,9 +211,9 @@ namespace CareTogether.TestData
                 new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 6, 8, 45, 30), new CompleteReferralRequirement(guid1, guid1, guid2, "Intake Coordinator Screening Call", new DateTime(2020, 3, 6, 8, 45, 30), adminId, null)),
                 new ReferralCommandExecuted(adminId, new DateTime(2020, 3, 6, 8, 45, 45), new UpdateReferralComments(guid1, guid1, "John and Jane seem eerily... generic.")),
                 new ArrangementsCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 12, 13), new CreateArrangement(guid1, guid1, ImmutableList.Create(guid1), "Hosting", new DateTime(2020, 3, 11), guid3)),
-                new ArrangementsCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 13, 14), new AssignIndividualVolunteer(guid1, guid1, ImmutableList.Create(guid1), guid4, guid4, "Family Coach")),
-                new ArrangementsCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 13, 55), new AssignVolunteerFamily(guid1, guid1, ImmutableList.Create(guid1), guid2, "Host Family")),
-                new ArrangementsCommandExecuted(adminId, new DateTime(2020, 3, 11, 12, 22, 21), new AssignVolunteerFamily(guid1, guid1, ImmutableList.Create(guid1), guid3, "Host Family Friend")),
+                new ArrangementsCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 13, 14), new AssignIndividualVolunteer(guid1, guid1, ImmutableList.Create(guid1), guid4, guid4, "Family Coach", null)),
+                new ArrangementsCommandExecuted(adminId, new DateTime(2020, 3, 11, 11, 13, 55), new AssignVolunteerFamily(guid1, guid1, ImmutableList.Create(guid1), guid2, "Host Family", "New Host Family")),
+                new ArrangementsCommandExecuted(adminId, new DateTime(2020, 3, 11, 12, 22, 21), new AssignVolunteerFamily(guid1, guid1, ImmutableList.Create(guid1), guid3, "Host Family Friend", "Familiar Host Family")),
                 new ArrangementsCommandExecuted(adminId, new DateTime(2020, 3, 12, 16, 55, 0), new StartArrangements(guid1, guid1, ImmutableList.Create(guid1), new DateTime(2020, 3, 12, 16, 55, 0))),
                 new ArrangementsCommandExecuted(adminId, new DateTime(2020, 3, 15, 8, 33, 34), new TrackChildLocationChange(guid1, guid1, ImmutableList.Create(guid1),
                     new DateTime(2020, 3, 15, 8, 33, 34), guid3, guid9, ChildLocationPlan.DaytimeChildCare, guid4)),
@@ -376,11 +376,14 @@ namespace CareTogether.TestData
                         "Email or text the Cognito Form link", new Uri("http://example.com/forms/intake-v1")),
                     ["Hosting Consent"] = new ActionRequirement(DocumentLinkRequirement.Required, NoteEntryRequirement.None,
                         "This must be notarized.", new Uri("http://example.com/forms/consent-v1")),
+                    ["Family Meeting"] = new ActionRequirement(DocumentLinkRequirement.None, NoteEntryRequirement.Required,
+                        null, null),
                     ["Medical POA"] = new ActionRequirement(DocumentLinkRequirement.Required, NoteEntryRequirement.None,
                         "This must be notarized.", new Uri("http://example.com/forms/medicalpoa-v2")),
                     ["Family Coach Safety Visit"] = new ActionRequirement(DocumentLinkRequirement.None, NoteEntryRequirement.Required, null, null),
                     ["Return of Child Form"] = new ActionRequirement(DocumentLinkRequirement.Required, NoteEntryRequirement.Allowed,
                         null, new Uri("http://example.com/forms/returnofchild-v1")),
+                    ["Host Family Debriefing"] = new ActionRequirement(DocumentLinkRequirement.Required, NoteEntryRequirement.Required, null, null),
                     ["Advocacy Agreement"] = new ActionRequirement(DocumentLinkRequirement.Required, NoteEntryRequirement.None,
                         null, new Uri("http://example.com/forms/advocacy-v1")),
                     ["Family Coach Checkin"] = new ActionRequirement(DocumentLinkRequirement.None, NoteEntryRequirement.Required, null, null),
@@ -426,14 +429,40 @@ namespace CareTogether.TestData
                                     {
                                         "Host Family"
                                     }.ToImmutableList(),
-                                    EligiblePeople: ImmutableList<Guid>.Empty),
+                                    EligiblePeople: ImmutableList<Guid>.Empty,
+                                    Variants: ImmutableList<ArrangementFunctionVariant>.Empty
+                                        .Add(new ArrangementFunctionVariant("New Host Family",
+                                            RequiredSetupActionNames: ImmutableList<string>.Empty
+                                                .Add("Family Meeting"),
+                                            RequiredMonitoringActions: ImmutableList<MonitoringRequirement>.Empty
+                                                .Add(new MonitoringRequirement("Family Coach Safety Visit",
+                                                    new DurationStagesPerChildLocationRecurrencePolicy(new List<RecurrencePolicyStage>
+                                                    {
+                                                        new RecurrencePolicyStage(TimeSpan.FromHours(48), 1),
+                                                        new RecurrencePolicyStage(TimeSpan.FromDays(7), 5),
+                                                        new RecurrencePolicyStage(TimeSpan.FromDays(14), null)
+                                                    }.ToImmutableList()))),
+                                            RequiredCloseoutActionNames: ImmutableList<string>.Empty
+                                                .Add("Host Family Debriefing")))
+                                        .Add(new ArrangementFunctionVariant("Familiar Host Family",
+                                            RequiredSetupActionNames: ImmutableList<string>.Empty,
+                                            RequiredMonitoringActions: ImmutableList<MonitoringRequirement>.Empty
+                                                .Add(new MonitoringRequirement("Family Coach Safety Visit",
+                                                    new DurationStagesPerChildLocationRecurrencePolicy(new List<RecurrencePolicyStage>
+                                                    {
+                                                        new RecurrencePolicyStage(TimeSpan.FromHours(48), 1),
+                                                        new RecurrencePolicyStage(TimeSpan.FromDays(14), null)
+                                                    }.ToImmutableList()))),
+                                            RequiredCloseoutActionNames: ImmutableList<string>.Empty
+                                                .Add("Host Family Debriefing")))),
                                 new ArrangementFunction("Family Coach", FunctionRequirement.ExactlyOne,
                                     EligibleIndividualVolunteerRoles: new List<string>
                                     {
                                         "Family Coach"
                                     }.ToImmutableList(),
                                     EligibleVolunteerFamilyRoles: ImmutableList<string>.Empty,
-                                    EligiblePeople: ImmutableList<Guid>.Empty),
+                                    EligiblePeople: ImmutableList<Guid>.Empty,
+                                    Variants: ImmutableList<ArrangementFunctionVariant>.Empty),
                                 new ArrangementFunction("Parent Friend", FunctionRequirement.ZeroOrMore,
                                     EligibleIndividualVolunteerRoles: new List<string>
                                     {
@@ -444,7 +473,8 @@ namespace CareTogether.TestData
                                     {
                                         "Host Family"
                                     }.ToImmutableList(),
-                                    EligiblePeople: ImmutableList<Guid>.Empty),
+                                    EligiblePeople: ImmutableList<Guid>.Empty,
+                                    Variants: ImmutableList<ArrangementFunctionVariant>.Empty),
                                 new ArrangementFunction("Host Family Friend", FunctionRequirement.ZeroOrMore,
                                     EligibleIndividualVolunteerRoles: new List<string>
                                     {
@@ -455,22 +485,13 @@ namespace CareTogether.TestData
                                     {
                                         "Host Family"
                                     }.ToImmutableList(),
-                                    EligiblePeople: ImmutableList<Guid>.Empty),
-                                new ArrangementFunction("Parent and Host Family Friend", FunctionRequirement.ZeroOrMore,
-                                    EligibleIndividualVolunteerRoles: new List<string>
-                                    {
-                                        "Family Coach",
-                                        "Family Friend"
-                                    }.ToImmutableList(),
-                                    EligibleVolunteerFamilyRoles: new List<string>
-                                    {
-                                        "Host Family"
-                                    }.ToImmutableList(),
-                                    EligiblePeople: ImmutableList<Guid>.Empty),
+                                    EligiblePeople: ImmutableList<Guid>.Empty,
+                                    Variants: ImmutableList<ArrangementFunctionVariant>.Empty),
                                 new ArrangementFunction("Staff Supervision", FunctionRequirement.ExactlyOne,
                                     EligibleIndividualVolunteerRoles: ImmutableList<string>.Empty,
                                     EligibleVolunteerFamilyRoles: ImmutableList<string>.Empty,
-                                    EligiblePeople: new[] { adminId }.ToImmutableList())
+                                    EligiblePeople: new[] { adminId }.ToImmutableList(),
+                                    Variants: ImmutableList<ArrangementFunctionVariant>.Empty)
                             }.ToImmutableList(),
                             RequiredSetupActionNames: new List<string>
                             {
@@ -479,13 +500,6 @@ namespace CareTogether.TestData
                             }.ToImmutableList(),
                             RequiredMonitoringActions: new List<MonitoringRequirement>
                             {
-                                new MonitoringRequirement("Family Coach Safety Visit",
-                                    new DurationStagesPerChildLocationRecurrencePolicy(new List<RecurrencePolicyStage>
-                                    {
-                                        new RecurrencePolicyStage(TimeSpan.FromHours(48), 1),
-                                        new RecurrencePolicyStage(TimeSpan.FromDays(7), 5),
-                                        new RecurrencePolicyStage(TimeSpan.FromDays(14), null)
-                                    }.ToImmutableList())),
                                 new MonitoringRequirement("Family Coach Supervision",
                                     new DurationStagesRecurrencePolicy(new List<RecurrencePolicyStage>
                                     {
@@ -505,18 +519,39 @@ namespace CareTogether.TestData
                                     {
                                         "Host Family"
                                     }.ToImmutableList(),
-                                    EligiblePeople: ImmutableList<Guid>.Empty),
+                                    EligiblePeople: ImmutableList<Guid>.Empty,
+                                    Variants: ImmutableList<ArrangementFunctionVariant>.Empty
+                                        .Add(new ArrangementFunctionVariant("New Host Family",
+                                            RequiredSetupActionNames: ImmutableList<string>.Empty
+                                                .Add("Family Meeting"),
+                                            RequiredMonitoringActions: ImmutableList<MonitoringRequirement>.Empty
+                                                .Add(new MonitoringRequirement("Family Coach Safety Visit",
+                                                    new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromHours(48), 3, 0, true)))
+                                                .Add(new MonitoringRequirement("Family Coach Checkin",
+                                                    new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromHours(48), 3, 0, false))),
+                                            RequiredCloseoutActionNames: ImmutableList<string>.Empty
+                                                .Add("Host Family Debriefing")))
+                                        .Add(new ArrangementFunctionVariant("Familiar Host Family",
+                                            RequiredSetupActionNames: ImmutableList<string>.Empty,
+                                            RequiredMonitoringActions: ImmutableList<MonitoringRequirement>.Empty
+                                                .Add(new MonitoringRequirement("Family Coach Safety Visit",
+                                                    new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromHours(48), 3, 2, true)))
+                                                .Add(new MonitoringRequirement("Family Coach Checkin",
+                                                    new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromHours(48), 3, 2, false))),
+                                            RequiredCloseoutActionNames: ImmutableList<string>.Empty))),
                                 new ArrangementFunction("Family Coach", FunctionRequirement.ExactlyOne,
                                     EligibleIndividualVolunteerRoles: new List<string>
                                     {
                                         "Family Coach"
                                     }.ToImmutableList(),
                                     EligibleVolunteerFamilyRoles: ImmutableList<string>.Empty,
-                                    EligiblePeople: ImmutableList<Guid>.Empty),
+                                    EligiblePeople: ImmutableList<Guid>.Empty,
+                                    Variants: ImmutableList<ArrangementFunctionVariant>.Empty),
                                 new ArrangementFunction("Staff Supervision", FunctionRequirement.ExactlyOne,
                                     EligibleIndividualVolunteerRoles: ImmutableList<string>.Empty,
                                     EligibleVolunteerFamilyRoles: ImmutableList<string>.Empty,
-                                    EligiblePeople: new[] { adminId }.ToImmutableList())
+                                    EligiblePeople: new[] { adminId }.ToImmutableList(),
+                                    Variants: ImmutableList<ArrangementFunctionVariant>.Empty)
                             }.ToImmutableList(),
                             RequiredSetupActionNames: new List<string>
                             {
@@ -524,10 +559,6 @@ namespace CareTogether.TestData
                             }.ToImmutableList(),
                             RequiredMonitoringActions: new List<MonitoringRequirement>
                             {
-                                new MonitoringRequirement("Family Coach Safety Visit",
-                                    new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromHours(48), 3, 2, true)),
-                                new MonitoringRequirement("Family Coach Checkin",
-                                    new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromHours(48), 3, 2, false)),
                                 new MonitoringRequirement("Family Coach Supervision",
                                     new DurationStagesRecurrencePolicy(new List<RecurrencePolicyStage>
                                     {
@@ -551,18 +582,21 @@ namespace CareTogether.TestData
                                     {
                                         "Host Family"
                                     }.ToImmutableList(),
-                                    EligiblePeople: ImmutableList<Guid>.Empty),
+                                    EligiblePeople: ImmutableList<Guid>.Empty,
+                                    Variants: ImmutableList<ArrangementFunctionVariant>.Empty),
                                 new ArrangementFunction("Family Coach", FunctionRequirement.ExactlyOne,
                                     EligibleIndividualVolunteerRoles: new List<string>
                                     {
                                         "Family Coach"
                                     }.ToImmutableList(),
                                     EligibleVolunteerFamilyRoles: ImmutableList<string>.Empty,
-                                    EligiblePeople: ImmutableList<Guid>.Empty),
+                                    EligiblePeople: ImmutableList<Guid>.Empty,
+                                    Variants: ImmutableList<ArrangementFunctionVariant>.Empty),
                                 new ArrangementFunction("Staff Supervision", FunctionRequirement.ExactlyOne,
                                     EligibleIndividualVolunteerRoles: ImmutableList<string>.Empty,
                                     EligibleVolunteerFamilyRoles: ImmutableList<string>.Empty,
-                                    EligiblePeople: new[] { adminId }.ToImmutableList())
+                                    EligiblePeople: new[] { adminId }.ToImmutableList(),
+                                    Variants: ImmutableList<ArrangementFunctionVariant>.Empty)
                             }.ToImmutableList(),
                             RequiredSetupActionNames: new List<string>
                             {

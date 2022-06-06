@@ -59,10 +59,17 @@ export function ArrangementFunctionRow({
           {assignments.map(assignment =>
             <IconRow key={JSON.stringify(assignment)} icon=''
               onClick={!summaryOnly && canComplete ? openUnassignDialog.bind(null, assignment) : undefined}>
-              {assignment instanceof FamilyVolunteerAssignment &&
-                <FamilyName family={familyLookup(assignment.familyId)} />}
-              {assignment instanceof IndividualVolunteerAssignment &&
-                <PersonName person={personLookup(assignment.familyId, assignment.personId)} />}
+              <>
+                {assignment instanceof FamilyVolunteerAssignment &&
+                  <FamilyName family={familyLookup(assignment.familyId)} />}
+                {assignment instanceof IndividualVolunteerAssignment &&
+                  <PersonName person={personLookup(assignment.familyId, assignment.personId)} />}
+                {assignment.arrangementFunctionVariant &&
+                  <>
+                    <br />
+                    <span style={{paddingLeft: '30px', fontStyle: 'italic'}}>{assignment.arrangementFunctionVariant}</span>
+                  </>}
+              </>
             </IconRow>)}
         </TableCell>
       </TableRow>

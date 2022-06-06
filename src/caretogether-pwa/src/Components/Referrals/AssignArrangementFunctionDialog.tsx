@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import makeStyles from '@mui/styles/makeStyles';
-import { Autocomplete, Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid, TextField } from '@mui/material';
+import { Autocomplete, Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@mui/material';
 import { ArrangementPolicy, Arrangement, ArrangementFunction, RoleApprovalStatus, Person, Family, ValueTupleOfPersonAndFamilyAdultRelationshipInfo } from '../../GeneratedClient';
 import { visibleFamiliesData } from '../../Model/ModelLoader';
 import { useRecoilValue } from 'recoil';
@@ -118,7 +118,8 @@ export function AssignArrangementFunctionDialog({
   });
   
   const [fields, setFields] = useState({
-    assigneeKey: ''
+    assigneeKey: '',
+    variant: null as string | null
   });
   const { assigneeKey } = fields;
   
@@ -136,10 +137,10 @@ export function AssignArrangementFunctionDialog({
       const assigneeInfo = candidateAssignees.find(ca => ca.key === assigneeKey);
       if (assigneeInfo?.personId == null) {
         await referralsModel.assignVolunteerFamily(familyId, referralId, arrangement.id!,
-          assigneeInfo!.familyId, arrangementFunction.functionName!);
+          assigneeInfo!.familyId, arrangementFunction.functionName!, fields.variant || undefined);
       } else {
         await referralsModel.assignIndividualVolunteer(familyId, referralId, arrangement.id!,
-          assigneeInfo!.familyId, assigneeInfo!.personId, arrangementFunction.functionName!);
+          assigneeInfo!.familyId, assigneeInfo!.personId, arrangementFunction.functionName!, fields.variant || undefined);
       }
       //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
     });
@@ -154,8 +155,23 @@ export function AssignArrangementFunctionDialog({
       <DialogContent classes={{root: classes.dialogContentRoot}}>
         <form className={classes.form} noValidate autoComplete="off">
           <Grid container spacing={2}>
+            {arrangementFunction.variants && arrangementFunction.variants.length > 0 &&
+              <Grid item xs={12}>
+                <FormControl required>
+                  <FormLabel id="variant">Variant</FormLabel>
+                  <RadioGroup
+                    aria-labelledby="variant"
+                    value={fields.variant}
+                    onChange={(event) => setFields({...fields, variant: (event.target as HTMLInputElement).value})}
+                  >
+                    {arrangementFunction.variants.map(variant =>
+                      <FormControlLabel key={variant.variantName} value={variant.variantName}
+                        control={<Radio />} label={variant.variantName!} />)}
+                  </RadioGroup>
+                </FormControl>
+              </Grid>}
             <Grid item xs={12}>
-               <FormControl required fullWidth size="small" sx={{marginTop: 1}}> 
+              <FormControl required fullWidth size="small" sx={{marginTop: 1}}> 
                 <Autocomplete
                   disablePortal
                   id="assignee"
@@ -170,9 +186,10 @@ export function AssignArrangementFunctionDialog({
                       candidateType: candidate.personId ? 'Individuals' : 'Families',
                     }
                   }).sort((a, b) => -b.candidateType.localeCompare(a.candidateType))}
+                  isOptionEqualToValue={(option, value) => option.id === value.id}
                   groupBy={(option) => option.candidateType}
                   sx={{ width: 400 }}
-                  renderInput={(params) => <TextField {...params} label="Select a family or individual to assign" />}
+                  renderInput={(params) => <TextField required {...params} label="Select a family or individual to assign" />}
                 />
               </FormControl>
             </Grid>
@@ -184,7 +201,8 @@ export function AssignArrangementFunctionDialog({
           Cancel
         </Button>
         <Button onClick={save} variant="contained" color="primary"
-          disabled={assigneeKey?.length === 0}>
+          disabled={assigneeKey?.length === 0 ||
+            (arrangementFunction.variants && arrangementFunction.variants.length > 0 && fields.variant == null)}>
           Assign
         </Button>
       </DialogActions>

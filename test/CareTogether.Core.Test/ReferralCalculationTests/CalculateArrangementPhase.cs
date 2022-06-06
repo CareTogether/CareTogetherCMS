@@ -57,7 +57,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 endedAtUtc: null,
                 cancelledAtUtc: null,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty
-                .Add(new MissingArrangementRequirement("A", null, null)),
+                .Add(new MissingArrangementRequirement(null, null, null, null, "A", null, null)),
                 missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty);
 
             Assert.AreEqual(ArrangementPhase.SettingUp, result);
@@ -71,7 +71,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 endedAtUtc: null,
                 cancelledAtUtc: DateTime.UtcNow,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty
-                .Add(new MissingArrangementRequirement("A", null, null)),
+                .Add(new MissingArrangementRequirement(null, null, null, null, "A", null, null)),
                 missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty);
 
             Assert.AreEqual(ArrangementPhase.Cancelled, result);
@@ -103,7 +103,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 endedAtUtc: null,
                 cancelledAtUtc: null,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty
-                .Add(new MissingArrangementRequirement("A", null, null)),
+                .Add(new MissingArrangementRequirement(null, null, null, null, "A", null, null)),
                 missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty
                 .Add(Helpers.FunctionWithoutEligibility("X", FunctionRequirement.OneOrMore)));
 
@@ -121,7 +121,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 endedAtUtc: DateTime.UtcNow,
                 cancelledAtUtc: null,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty
-                .Add(new MissingArrangementRequirement("A", null, null)),
+                .Add(new MissingArrangementRequirement(null, null, null, null, "A", null, null)),
                 missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty
                 .Add(Helpers.FunctionWithoutEligibility("X", FunctionRequirement.OneOrMore)));
 

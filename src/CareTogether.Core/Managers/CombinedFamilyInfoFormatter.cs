@@ -115,7 +115,7 @@ namespace CareTogether.Managers
                     entry.CompletedRequirements, entry.ExemptedRequirements,
                     status.MissingRequirements,
                     entry.IndividualVolunteerAssignments, entry.FamilyVolunteerAssignments,
-                    entry.ChildrenLocationHistory);
+                    entry.ChildLocationHistory);
         }
 
         private async Task<(VolunteerFamilyInfo?, ImmutableList<UploadedDocumentInfo>)> RenderVolunteerFamilyInfoAsync(Guid organizationId, Guid locationId,

@@ -30,19 +30,23 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add(new ArrangementFunction("Host Family", FunctionRequirement.OneOrMore,
                     EligibleIndividualVolunteerRoles: Helpers.From(),
                     EligibleVolunteerFamilyRoles: Helpers.From(),
-                EligiblePeople: ImmutableList<Guid>.Empty))
+                    EligiblePeople: ImmutableList<Guid>.Empty,
+                    Variants: ImmutableList<ArrangementFunctionVariant>.Empty))
                 .Add(new ArrangementFunction("Parent Ally", FunctionRequirement.ExactlyOne,
                     EligibleIndividualVolunteerRoles: Helpers.From(),
                     EligibleVolunteerFamilyRoles: Helpers.From(),
-                EligiblePeople: ImmutableList<Guid>.Empty))
+                    EligiblePeople: ImmutableList<Guid>.Empty,
+                    Variants: ImmutableList<ArrangementFunctionVariant>.Empty))
                 .Add(new ArrangementFunction("Family Coach", FunctionRequirement.OneOrMore,
                     EligibleIndividualVolunteerRoles: Helpers.From(),
                     EligibleVolunteerFamilyRoles: Helpers.From(),
-                EligiblePeople: ImmutableList<Guid>.Empty))
+                    EligiblePeople: ImmutableList<Guid>.Empty,
+                    Variants: ImmutableList<ArrangementFunctionVariant>.Empty))
                 .Add(new ArrangementFunction("Community Friend", FunctionRequirement.ZeroOrMore,
                     EligibleIndividualVolunteerRoles: Helpers.From(),
                     EligibleVolunteerFamilyRoles: Helpers.From(),
-                EligiblePeople: ImmutableList<Guid>.Empty)),
+                    EligiblePeople: ImmutableList<Guid>.Empty,
+                    Variants: ImmutableList<ArrangementFunctionVariant>.Empty)),
                 RequiredSetupActionNames: Helpers.From(),
                 RequiredMonitoringActions: ImmutableList<MonitoringRequirement>.Empty,
                 RequiredCloseoutActionNames: Helpers.From()))
@@ -51,19 +55,23 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add(new ArrangementFunction("Host Family", FunctionRequirement.OneOrMore,
                     EligibleIndividualVolunteerRoles: Helpers.From(),
                     EligibleVolunteerFamilyRoles: Helpers.From(),
-                EligiblePeople: ImmutableList<Guid>.Empty))
+                    EligiblePeople: ImmutableList<Guid>.Empty,
+                    Variants: ImmutableList<ArrangementFunctionVariant>.Empty))
                 .Add(new ArrangementFunction("Parent Ally", FunctionRequirement.ExactlyOne,
                     EligibleIndividualVolunteerRoles: Helpers.From(),
                     EligibleVolunteerFamilyRoles: Helpers.From(),
-                EligiblePeople: ImmutableList<Guid>.Empty))
+                    EligiblePeople: ImmutableList<Guid>.Empty,
+                    Variants: ImmutableList<ArrangementFunctionVariant>.Empty))
                 .Add(new ArrangementFunction("Family Coach", FunctionRequirement.OneOrMore,
                     EligibleIndividualVolunteerRoles: Helpers.From(),
                     EligibleVolunteerFamilyRoles: Helpers.From(),
-                EligiblePeople: ImmutableList<Guid>.Empty))
+                    EligiblePeople: ImmutableList<Guid>.Empty,
+                    Variants: ImmutableList<ArrangementFunctionVariant>.Empty))
                 .Add(new ArrangementFunction("Community Friend", FunctionRequirement.ZeroOrMore,
                     EligibleIndividualVolunteerRoles: Helpers.From(),
                     EligibleVolunteerFamilyRoles: Helpers.From(),
-                EligiblePeople: ImmutableList<Guid>.Empty)),
+                    EligiblePeople: ImmutableList<Guid>.Empty,
+                    Variants: ImmutableList<ArrangementFunctionVariant>.Empty)),
                 RequiredSetupActionNames: Helpers.From(),
                 RequiredMonitoringActions: ImmutableList<MonitoringRequirement>.Empty,
                 RequiredCloseoutActionNames: Helpers.From()))
@@ -72,11 +80,13 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add(new ArrangementFunction("Parent Ally", FunctionRequirement.ExactlyOne,
                     EligibleIndividualVolunteerRoles: Helpers.From(),
                     EligibleVolunteerFamilyRoles: Helpers.From(),
-                EligiblePeople: ImmutableList<Guid>.Empty))
+                    EligiblePeople: ImmutableList<Guid>.Empty,
+                    Variants: ImmutableList<ArrangementFunctionVariant>.Empty))
                 .Add(new ArrangementFunction("Community Friend", FunctionRequirement.ZeroOrMore,
                     EligibleIndividualVolunteerRoles: Helpers.From(),
                     EligibleVolunteerFamilyRoles: Helpers.From(),
-                EligiblePeople: ImmutableList<Guid>.Empty)),
+                    EligiblePeople: ImmutableList<Guid>.Empty,
+                    Variants: ImmutableList<ArrangementFunctionVariant>.Empty)),
                 RequiredSetupActionNames: Helpers.From(),
                 RequiredMonitoringActions: ImmutableList<MonitoringRequirement>.Empty,
                 RequiredCloseoutActionNames: Helpers.From())));

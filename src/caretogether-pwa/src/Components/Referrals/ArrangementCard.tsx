@@ -28,7 +28,7 @@ import { TrackChildLocationDialog } from './TrackChildLocationDialog';
 import { MissingArrangementRequirementRow } from "../Requirements/MissingArrangementRequirementRow";
 import { ExemptedRequirementRow } from "../Requirements/ExemptedRequirementRow";
 import { CompletedRequirementRow } from "../Requirements/CompletedRequirementRow";
-import { ArrangementContext } from "../Requirements/RequirementContext";
+import { ArrangementContext, RequirementContext } from "../Requirements/RequirementContext";
 import { ArrangementPhaseSummary } from './ArrangementPhaseSummary';
 import { ArrangementCardTitle } from './ArrangementCardTitle';
 import { ArrangementFunctionRow } from './ArrangementFunctionRow';
@@ -85,7 +85,7 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
 
   const [collapsed, setCollapsed] = useCollapsed(`arrangement-${referralId}-${arrangement.id}`, false);
 
-  const requirementContext: ArrangementContext = {
+  const arrangementRequirementContext: ArrangementContext = {
     kind: "Arrangement",
     partneringFamilyId: partneringFamily.family!.id!,
     referralId: referralId,
@@ -99,6 +99,71 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
     !arrangement.familyVolunteerAssignments?.some(x => x.arrangementFunction === functionPolicy.functionName) &&
     !arrangement.individualVolunteerAssignments?.some(x => x.arrangementFunction === functionPolicy.functionName))?.length || 0;
 
+  const completedRequirementsWithContext =
+    (arrangement.completedRequirements || []).map(cr =>
+      ({ completed: cr, context: arrangementRequirementContext as RequirementContext })).concat(
+    (arrangement.familyVolunteerAssignments || []).flatMap(fva => (fva.completedRequirements || []).map(cr =>
+      ({ completed: cr, context: {
+        kind: "Family Volunteer Assignment",
+        partneringFamilyId: partneringFamily.family!.id!,
+        referralId: referralId,
+        arrangementId: arrangement.id!,
+        assignment: fva } as RequirementContext})))).concat(
+    (arrangement.individualVolunteerAssignments || []).flatMap(iva => (iva.completedRequirements || []).map(cr =>
+      ({ completed: cr, context: {
+        kind: "Individual Volunteer Assignment",
+        partneringFamilyId: partneringFamily.family!.id!,
+        referralId: referralId,
+        arrangementId: arrangement.id!,
+        assignment: iva }}))));
+  
+  const exemptedRequirementsWithContext =
+    (arrangement.exemptedRequirements || []).map(er =>
+      ({ exempted: er, context: arrangementRequirementContext as RequirementContext })).concat(
+    (arrangement.familyVolunteerAssignments || []).flatMap(fva => (fva.exemptedRequirements || []).map(er =>
+      ({ exempted: er, context: {
+        kind: "Family Volunteer Assignment",
+        partneringFamilyId: partneringFamily.family!.id!,
+        referralId: referralId,
+        arrangementId: arrangement.id!,
+        assignment: fva } as RequirementContext})))).concat(
+    (arrangement.individualVolunteerAssignments || []).flatMap(iva => (iva.exemptedRequirements || []).map(er =>
+      ({ exempted: er, context: {
+        kind: "Individual Volunteer Assignment",
+        partneringFamilyId: partneringFamily.family!.id!,
+        referralId: referralId,
+        arrangementId: arrangement.id!,
+        assignment: iva }}))));
+
+  const missingRequirementsWithContext = (arrangement.missingRequirements || []).map(requirement => {
+    if (requirement.personId) {
+      return { missing: requirement, context: {
+        kind: "Individual Volunteer Assignment",
+        partneringFamilyId: partneringFamily.family!.id!,
+        referralId: referralId,
+        arrangementId: arrangement.id!,
+        assignment: arrangement.individualVolunteerAssignments!.find(iva =>
+          iva.arrangementFunction === requirement.arrangementFunction &&
+          iva.arrangementFunctionVariant === requirement.arrangementFunctionVariant &&
+          iva.familyId === requirement.volunteerFamilyId &&
+          iva.personId === requirement.personId)!
+      } as RequirementContext };
+    } else if (requirement.volunteerFamilyId) {
+      return { missing: requirement, context: {
+        kind: "Family Volunteer Assignment",
+        partneringFamilyId: partneringFamily.family!.id!,
+        referralId: referralId,
+        arrangementId: arrangement.id!,
+        assignment: arrangement.familyVolunteerAssignments!.find(iva =>
+          iva.arrangementFunction === requirement.arrangementFunction &&
+          iva.arrangementFunctionVariant === requirement.arrangementFunctionVariant &&
+          iva.familyId === requirement.volunteerFamilyId)!
+      } as RequirementContext };
+    } else {
+      return { missing: requirement, context: arrangementRequirementContext };
+    }
+  });
+  
   return (
     <Card variant="outlined">
       <ArrangementPhaseSummary phase={arrangement.phase!}
@@ -115,8 +180,8 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
                 ? <>
                     <PersonPinCircleIcon color='disabled' style={{float: 'right', marginLeft: 2, marginTop: 2}} />
                     <span style={{float: 'right', paddingTop: 4}}>{
-                      (arrangement.childrenLocationHistory && arrangement.childrenLocationHistory.length > 0)
-                      ? <FamilyName family={familyLookup(arrangement.childrenLocationHistory[arrangement.childrenLocationHistory.length - 1].childLocationFamilyId)} />
+                      (arrangement.childLocationHistory && arrangement.childLocationHistory.length > 0)
+                      ? <FamilyName family={familyLookup(arrangement.childLocationHistory[arrangement.childLocationHistory.length - 1].childLocationFamilyId)} />
                       : <strong>Location unspecified</strong>
                     }</span>
                   </>
@@ -125,8 +190,8 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
                       style={{float: 'right', marginTop: -10, marginRight: -10, textTransform: "initial"}}
                       endIcon={<PersonPinCircleIcon />}
                       onClick={(event) => setShowTrackChildLocationDialog(true)}>
-                      {(arrangement.childrenLocationHistory && arrangement.childrenLocationHistory.length > 0)
-                        ? <FamilyName family={familyLookup(arrangement.childrenLocationHistory[arrangement.childrenLocationHistory.length - 1].childLocationFamilyId)} />
+                      {(arrangement.childLocationHistory && arrangement.childLocationHistory.length > 0)
+                        ? <FamilyName family={familyLookup(arrangement.childLocationHistory[arrangement.childLocationHistory.length - 1].childLocationFamilyId)} />
                         : <strong>Location unspecified</strong>}
                     </Button>
                     {showTrackChildLocationDialog && <TrackChildLocationDialog
@@ -145,19 +210,19 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
               <Grid container>
                 <Grid item xs={4}>
                   <Badge color="success"
-                    badgeContent={arrangement.completedRequirements?.length}>
+                    badgeContent={completedRequirementsWithContext.length}>
                     ✅
                   </Badge>
                 </Grid>
                 <Grid item xs={4}>
                   <Badge color="warning"
-                    badgeContent={arrangement.exemptedRequirements?.length}>
+                    badgeContent={exemptedRequirementsWithContext.length}>
                     🚫
                   </Badge>
                 </Grid>
                 <Grid item xs={4}>
                   <Badge color="error"
-                    badgeContent={missingAssignmentFunctions + (arrangement.missingRequirements?.length || 0)}>
+                    badgeContent={missingAssignmentFunctions + missingRequirementsWithContext.length}>
                     ❌
                   </Badge>
                 </Grid>
@@ -177,14 +242,14 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
               {arrangement.phase !== ArrangementPhase.Cancelled && (
                 <>
                   <Typography variant="body2" component="div">
-                    {arrangement.completedRequirements?.map((completed, i) =>
-                      <CompletedRequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} context={requirementContext} />
+                    {completedRequirementsWithContext.map((x, i) =>
+                      <CompletedRequirementRow key={`${x.completed.completedRequirementId}:${i}`} requirement={x.completed} context={x.context} />
                     )}
-                    {arrangement.exemptedRequirements?.map((exempted, i) =>
-                      <ExemptedRequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={requirementContext} />
+                    {exemptedRequirementsWithContext.map((x, i) =>
+                      <ExemptedRequirementRow key={`${x.exempted.requirementName}:${i}`} requirement={x.exempted} context={x.context} />
                     )}
-                    {arrangement.missingRequirements?.map((missing, i) =>
-                      <MissingArrangementRequirementRow key={`${missing}:${i}`} requirement={missing} context={requirementContext} />
+                    {missingRequirementsWithContext.map((x, i) =>
+                      <MissingArrangementRequirementRow key={`${x.missing.actionName}:${i}`} requirement={x.missing} context={x.context} />
                     )}
                   </Typography>
                 </>

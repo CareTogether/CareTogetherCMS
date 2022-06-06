@@ -29,6 +29,12 @@ export function ExemptedRequirementDialog({
           case 'Arrangement':
             return referrals.unexemptArrangementRequirement(
               context.partneringFamilyId, context.referralId, context.arrangementId, requirement);
+          case 'Family Volunteer Assignment':
+            return referrals.unexemptVolunteerFamilyAssignmentRequirement(
+              context.partneringFamilyId, context.referralId, context.arrangementId, context.assignment, requirement);
+          case 'Individual Volunteer Assignment':
+            return referrals.unexemptIndividualVolunteerAssignmentRequirement(
+              context.partneringFamilyId, context.referralId, context.arrangementId, context.assignment, requirement);
           case 'Volunteer Family':
             return volunteers.unexemptVolunteerFamilyRequirement(
               context.volunteerFamilyId, requirement);

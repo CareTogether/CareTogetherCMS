@@ -71,7 +71,12 @@ namespace CareTogether.Resources.Policies
     public enum FunctionRequirement { ZeroOrMore, ExactlyOne, OneOrMore };
     public sealed record ArrangementFunction(string FunctionName, FunctionRequirement Requirement,
         ImmutableList<string> EligibleIndividualVolunteerRoles, ImmutableList<string> EligibleVolunteerFamilyRoles,
-        ImmutableList<Guid> EligiblePeople);
+        ImmutableList<Guid> EligiblePeople, ImmutableList<ArrangementFunctionVariant> Variants);
+
+    public sealed record ArrangementFunctionVariant(string VariantName,
+        ImmutableList<string> RequiredSetupActionNames,
+        ImmutableList<MonitoringRequirement> RequiredMonitoringActions,
+        ImmutableList<string> RequiredCloseoutActionNames);
 
     [JsonHierarchyBase]
     public abstract partial record RecurrencePolicy();

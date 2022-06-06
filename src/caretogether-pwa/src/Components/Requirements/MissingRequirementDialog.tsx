@@ -13,6 +13,7 @@ import { RequirementContext } from "./RequirementContext";
 import { a11yProps, TabPanel } from "../TabPanel";
 import { personNameString } from "../Families/PersonName";
 import { DialogHandle } from "../../useDialogHandle";
+import { familyNameString } from "../Families/FamilyName";
 
 type MissingRequirementDialogProps = {
   handle: DialogHandle
@@ -39,7 +40,9 @@ export function MissingRequirementDialog({
   const [exemptionExpiresAtLocal, setExemptionExpiresAtLocal] = useState(null as Date | null);
 
   const familyLookup = useFamilyLookup();
-  const contextFamilyId = context.kind === 'Referral' || context.kind === 'Arrangement'
+  const contextFamilyId =
+    context.kind === 'Referral' || context.kind === 'Arrangement' ||
+    context.kind === 'Family Volunteer Assignment' || context.kind === 'Individual Volunteer Assignment'
     ? context.partneringFamilyId
     : context.volunteerFamilyId;
   const contextFamily = familyLookup(contextFamilyId);
@@ -48,7 +51,21 @@ export function MissingRequirementDialog({
 
   const availableArrangements = requirement instanceof MissingArrangementRequirement
   ? contextFamily!.partneringFamilyInfo!.openReferral!.arrangements!.filter(arrangement =>
-      arrangement.missingRequirements?.some(x => x.actionName === requirement.actionName))
+      arrangement.missingRequirements?.some(x => {
+        if (context.kind === 'Family Volunteer Assignment')
+          return x.actionName === requirement.actionName &&
+            x.arrangementFunction === context.assignment.arrangementFunction &&
+            x.arrangementFunctionVariant === context.assignment.arrangementFunctionVariant &&
+            x.volunteerFamilyId === context.assignment.familyId;
+        else if (context.kind === 'Individual Volunteer Assignment')
+          return x.actionName === requirement.actionName &&
+            x.arrangementFunction === context.assignment.arrangementFunction &&
+            x.arrangementFunctionVariant === context.assignment.arrangementFunctionVariant &&
+            x.volunteerFamilyId === context.assignment.familyId &&
+            x.personId === context.assignment.personId;
+        else
+          return x.actionName === requirement.actionName;
+      }))
   : [];
   const [applyToArrangements, setApplyToArrangements] = useState(
     context.kind === 'Arrangement'
@@ -94,6 +111,18 @@ export function MissingRequirementDialog({
           applyToArrangements.map(arrangement => arrangement.id!),
           requirementName, policy, completedAtLocal!, document === "" ? null : document, note?.id || null);
         break;
+      case 'Family Volunteer Assignment':
+        await referrals.completeVolunteerFamilyAssignmentRequirement(contextFamilyId, context.referralId,
+          applyToArrangements.map(arrangement => arrangement.id!),
+          context.assignment,
+          requirementName, policy, completedAtLocal!, document === "" ? null : document, note?.id || null);
+        break;
+      case 'Individual Volunteer Assignment':
+        await referrals.completeIndividualVolunteerAssignmentRequirement(contextFamilyId, context.referralId,
+          applyToArrangements.map(arrangement => arrangement.id!),
+          context.assignment,
+          requirementName, policy, completedAtLocal!, document === "" ? null : document, note?.id || null);
+        break;
       case 'Volunteer Family':
         await volunteers.completeFamilyRequirement(contextFamilyId,
           requirementName, policy, completedAtLocal!, document === "" ? null : document, note?.id || null);
@@ -114,6 +143,18 @@ export function MissingRequirementDialog({
       case 'Arrangement':
         await referrals.exemptArrangementRequirement(contextFamilyId, context.referralId,
           applyToArrangements.map(arrangement => arrangement.id!),
+          requirement as MissingArrangementRequirement, additionalComments, exemptionExpiresAtLocal);
+        break;
+      case 'Family Volunteer Assignment':
+        await referrals.exemptVolunteerFamilyAssignmentRequirement(contextFamilyId, context.referralId,
+          applyToArrangements.map(arrangement => arrangement.id!),
+          context.assignment,
+          requirement as MissingArrangementRequirement, additionalComments, exemptionExpiresAtLocal);
+        break;
+      case 'Individual Volunteer Assignment':
+        await referrals.exemptIndividualVolunteerAssignmentRequirement(contextFamilyId, context.referralId,
+          applyToArrangements.map(arrangement => arrangement.id!),
+          context.assignment,
           requirement as MissingArrangementRequirement, additionalComments, exemptionExpiresAtLocal);
         break;
       case 'Volunteer Family':
@@ -170,7 +211,13 @@ export function MissingRequirementDialog({
                         checked={applyToArrangements.includes(arrangement)}
                         onChange={(_, checked) => toggleApplyToArrangement(arrangement, checked)}
                         name={arrangement.id!} />}
-                      label={`${arrangement.arrangementType} - ${personNameString(personLookup(arrangement.partneringFamilyPersonId))}`} />
+                      label={
+                        arrangement.arrangementType + " - " +
+                        personNameString(personLookup(arrangement.partneringFamilyPersonId)) +
+                        (context.kind === 'Family Volunteer Assignment'
+                          ? ` (${familyNameString(familyLookup(context.assignment.familyId))})` : '') +
+                        (context.kind === 'Individual Volunteer Assignment'
+                          ? ` (${personNameString(personLookup(context.assignment.personId))})` : '')} />
                   )}
                 </FormGroup>
               </FormControl>

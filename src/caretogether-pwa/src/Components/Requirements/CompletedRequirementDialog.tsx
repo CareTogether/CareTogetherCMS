@@ -29,6 +29,12 @@ export function CompletedRequirementDialog({
           case 'Arrangement':
             return referrals.markArrangementRequirementIncomplete(
               context.partneringFamilyId, context.referralId, context.arrangementId, requirement);
+          case 'Family Volunteer Assignment':
+            return referrals.markVolunteerFamilyAssignmentRequirementIncomplete(
+              context.partneringFamilyId, context.referralId, context.arrangementId, context.assignment, requirement);
+          case 'Individual Volunteer Assignment':
+            return referrals.markIndividualVolunteerAssignmentRequirementIncomplete(
+              context.partneringFamilyId, context.referralId, context.arrangementId, context.assignment, requirement);
           case 'Volunteer Family':
             return volunteers.markFamilyRequirementIncomplete(
               context.volunteerFamilyId, requirement);

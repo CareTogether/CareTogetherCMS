@@ -38,6 +38,6 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             string arrangementFunction, FunctionRequirement requirement) =>
             new ArrangementFunction(arrangementFunction, requirement,
                 ImmutableList<string>.Empty, ImmutableList<string>.Empty,
-                ImmutableList<Guid>.Empty);
+                ImmutableList<Guid>.Empty, ImmutableList<ArrangementFunctionVariant>.Empty);
     }
 }
