@@ -520,7 +520,25 @@ namespace CareTogether.TestData
                                         "Host Family"
                                     }.ToImmutableList(),
                                     EligiblePeople: ImmutableList<Guid>.Empty,
-                                    Variants: ImmutableList<ArrangementFunctionVariant>.Empty),
+                                    Variants: ImmutableList<ArrangementFunctionVariant>.Empty
+                                        .Add(new ArrangementFunctionVariant("New Host Family",
+                                            RequiredSetupActionNames: ImmutableList<string>.Empty
+                                                .Add("Family Meeting"),
+                                            RequiredMonitoringActions: ImmutableList<MonitoringRequirement>.Empty
+                                                .Add(new MonitoringRequirement("Family Coach Safety Visit",
+                                                    new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromHours(48), 3, 0, true)))
+                                                .Add(new MonitoringRequirement("Family Coach Checkin",
+                                                    new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromHours(48), 3, 0, false))),
+                                            RequiredCloseoutActionNames: ImmutableList<string>.Empty
+                                                .Add("Host Family Debriefing")))
+                                        .Add(new ArrangementFunctionVariant("Familiar Host Family",
+                                            RequiredSetupActionNames: ImmutableList<string>.Empty,
+                                            RequiredMonitoringActions: ImmutableList<MonitoringRequirement>.Empty
+                                                .Add(new MonitoringRequirement("Family Coach Safety Visit",
+                                                    new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromHours(48), 3, 2, true)))
+                                                .Add(new MonitoringRequirement("Family Coach Checkin",
+                                                    new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromHours(48), 3, 2, false))),
+                                            RequiredCloseoutActionNames: ImmutableList<string>.Empty))),
                                 new ArrangementFunction("Family Coach", FunctionRequirement.ExactlyOne,
                                     EligibleIndividualVolunteerRoles: new List<string>
                                     {
@@ -541,10 +559,6 @@ namespace CareTogether.TestData
                             }.ToImmutableList(),
                             RequiredMonitoringActions: new List<MonitoringRequirement>
                             {
-                                new MonitoringRequirement("Family Coach Safety Visit",
-                                    new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromHours(48), 3, 2, true)),
-                                new MonitoringRequirement("Family Coach Checkin",
-                                    new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromHours(48), 3, 2, false)),
                                 new MonitoringRequirement("Family Coach Supervision",
                                     new DurationStagesRecurrencePolicy(new List<RecurrencePolicyStage>
                                     {

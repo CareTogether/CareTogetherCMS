@@ -280,7 +280,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                         completions, childLocationHistory),
                 ChildCareOccurrenceBasedRecurrencePolicy childCareOccurences =>
                     CalculateMissingMonitoringRequirementInstancesForChildCareOccurrences(
-                        childCareOccurences, arrangementStartedAtUtc, arrangementEndedAtUtc,
+                        childCareOccurences, filterToFamilyId, arrangementStartedAtUtc, arrangementEndedAtUtc,
                         completions, childLocationHistory, utcNow),
                 _ => throw new NotImplementedException(
                     $"The recurrence policy type '{recurrence.GetType().FullName}' has not been implemented.")
@@ -513,7 +513,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         internal static ImmutableList<DateTime>
             CalculateMissingMonitoringRequirementInstancesForChildCareOccurrences(
-            ChildCareOccurrenceBasedRecurrencePolicy recurrence,
+            ChildCareOccurrenceBasedRecurrencePolicy recurrence, Guid? filterToFamilyId,
             DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc,
             ImmutableList<DateTime> completions, ImmutableSortedSet<ChildLocationHistoryEntry> childLocationHistory,
             DateTime utcNow)
@@ -532,7 +532,8 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             // Determine which child care occurrences the requirement will apply to.
             var applicableOccurrences = childCareOccurrences
-                .Where(x => x.entry.Plan != ChildLocationPlan.WithParent)
+                .Where(x => x.entry.Plan != ChildLocationPlan.WithParent &&
+                    (filterToFamilyId == null || x.entry.ChildLocationFamilyId == filterToFamilyId))
                 .Where((x, i) => recurrence.Positive
                     ? i % recurrence.Frequency == recurrence.InitialSkipCount
                     : i % recurrence.Frequency != recurrence.InitialSkipCount)
