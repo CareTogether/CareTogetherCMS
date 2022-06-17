@@ -1,6 +1,6 @@
 import makeStyles from '@mui/styles/makeStyles';
-import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, useMediaQuery, useTheme, Button, ButtonGroup, FormControlLabel, Switch, MenuItem, Select, ListItemText, Checkbox, FormControl, InputBase, SelectChangeEvent, IconButton } from '@mui/material';
-import { Gender, ExactAge, AgeInYears, RoleVersionApproval, CombinedFamilyInfo, RemovedRole, RoleRemovalReason } from '../../GeneratedClient';
+import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, useMediaQuery, useTheme, Button, ButtonGroup, FormControlLabel, Switch, MenuItem, Select, ListItemText, Checkbox, FormControl, InputBase, SelectChangeEvent, IconButton, Snackbar } from '@mui/material';
+import { Gender, ExactAge, AgeInYears, RoleVersionApproval, CombinedFamilyInfo, RemovedRole, RoleRemovalReason, EmailAddress } from '../../GeneratedClient';
 import { differenceInYears } from 'date-fns';
 import { atom, selector, useRecoilState, useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../../Model/VolunteersModel';
@@ -9,6 +9,7 @@ import { RoleApprovalStatus } from '../../GeneratedClient';
 import React, { useEffect, useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import SmsIcon from '@mui/icons-material/Sms';
+import EmailIcon from '@mui/icons-material/Email';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -242,6 +243,23 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     loc.id === locationId)?.smsSourcePhoneNumber;
   const [smsMode, setSmsMode] = useState(false);
   
+  function getSelectedFamiliesContactEmails() {
+    return selectedFamilies.map(family => {
+      const primaryContactPerson = family.family?.adults?.find(adult =>
+        adult.item1?.id === family.family?.primaryFamilyContactPersonId);
+      const preferredEmailAddress =  primaryContactPerson?.item1?.emailAddresses?.find(email =>
+        email.id === primaryContactPerson.item1?.preferredEmailAddressId);
+      return preferredEmailAddress;
+    }).filter(email => typeof email !== 'undefined') as EmailAddress[];
+  }
+
+  function copyEmailAddresses() {
+    const emailAddresses = getSelectedFamiliesContactEmails();
+    navigator.clipboard.writeText(emailAddresses.map(email => email.address).join("; "));
+    setNoticeOpen(true);
+  }
+  const [noticeOpen, setNoticeOpen] = useState(false);
+
   const windowSize = useWindowSize();
 
   return (
@@ -256,6 +274,15 @@ function VolunteerApproval(props: { onOpen: () => void }) {
             <Button color={location.pathname === "/volunteers/approval" ? 'secondary' : 'inherit'} component={Link} to={"/volunteers/approval"}>Approvals</Button>
             <Button color={location.pathname === "/volunteers/progress" ? 'secondary' : 'inherit'} component={Link} to={"/volunteers/progress"}>Progress</Button>
           </ButtonGroup>
+          <IconButton color="inherit" aria-label="copy email addresses"
+            onClick={() => copyEmailAddresses()} sx={{ }}>
+            <EmailIcon />
+          </IconButton>
+          <Snackbar
+            open={noticeOpen}
+            autoHideDuration={4000}
+            onClose={() => setNoticeOpen(false)}
+            message={`Found and copied ${getSelectedFamiliesContactEmails().length} email addresses for ${selectedFamilies.length} selected families to clipboard`} />
           {smsSourcePhoneNumber &&
             <IconButton color={smsMode ? 'secondary' : 'inherit'} aria-label="send bulk sms"
               onClick={() => setSmsMode(!smsMode)} sx={{ marginRight: 2 }}>
