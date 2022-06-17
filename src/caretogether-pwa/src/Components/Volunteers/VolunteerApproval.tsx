@@ -281,7 +281,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
           </IconButton>
           <Snackbar
             open={noticeOpen}
-            autoHideDuration={4000}
+            autoHideDuration={5000} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
             onClose={() => setNoticeOpen(false)}
             message={`Found and copied ${getSelectedFamiliesContactEmails().length} email addresses for ${selectedFamilies.length} selected families to clipboard`} />
           {smsSourcePhoneNumber &&
