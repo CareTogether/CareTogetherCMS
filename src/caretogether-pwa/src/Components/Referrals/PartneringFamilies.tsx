@@ -194,7 +194,7 @@ function PartneringFamilies() {
                   </TableRow>
                   { expandedView
                     ? (<TableRow onClick={() => openPartneringFamily(partneringFamily.family!.id!)}>
-                    <TableCell sx={{maxWidth: '400px'}}>
+                    <TableCell sx={{maxWidth: '400px', paddingLeft: 3}}>
                       {partneringFamily.partneringFamilyInfo?.openReferral?.comments}
                     </TableCell>
                     <TableCell>

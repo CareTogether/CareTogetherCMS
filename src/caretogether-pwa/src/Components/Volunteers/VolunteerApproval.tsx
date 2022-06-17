@@ -371,7 +371,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                         onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}
                         className={classes.adultRow}>
                         {smsMode && <TableCell />}
-                        <TableCell>{adult.item1.firstName}</TableCell>
+                        <TableCell sx={{paddingLeft:3}}>{adult.item1.firstName}</TableCell>
                         <TableCell>{adult.item1.lastName}</TableCell>
                         <TableCell>{typeof(adult.item1.gender) === 'undefined' ? "" : Gender[adult.item1.gender]}</TableCell>
                         <TableCell align="right">
@@ -394,7 +394,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                         onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}
                         className={classes.childRow}>
                         {smsMode && <TableCell />}
-                        <TableCell>{child.firstName}</TableCell>
+                        <TableCell sx={{paddingLeft:3}}>{child.firstName}</TableCell>
                         <TableCell>{child.lastName}</TableCell>
                         <TableCell>{typeof(child.gender) === 'undefined' ? "" : Gender[child.gender]}</TableCell>
                         <TableCell align="right">
