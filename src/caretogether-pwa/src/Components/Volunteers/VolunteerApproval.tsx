@@ -108,7 +108,8 @@ const useStyles = makeStyles((theme) => ({
     minWidth: 700,
   },
   familyRow: {
-    backgroundColor: '#eef'
+    backgroundColor: '#eef',
+    height: '39px'
   },
   adultRow: {
   },
@@ -302,7 +303,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
           <TableContainer>
             <Table className={classes.table} size="small">
               <TableHead>
-                <TableRow>
+                <TableRow sx={{ height: '40px' }}>
                   {smsMode && <TableCell sx={{ padding: 0, width: '36px' }}>
                     <Checkbox size='small' checked={uncheckedFamilies.length === 0}
                       onChange={e => e.target.checked
