@@ -1,4 +1,4 @@
-import { Divider, TextField } from "@mui/material";
+import { TextField } from "@mui/material";
 import { Arrangement, CombinedFamilyInfo } from "../../GeneratedClient";
 import { useReferralsModel } from "../../Model/ReferralsModel";
 import { useInlineEditor } from "../../useInlineEditor";
