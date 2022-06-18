@@ -110,12 +110,12 @@ namespace CareTogether.Resources.Policies
         ImmutableList<VolunteerFamilyApprovalRequirement> Requirements);
 
     public sealed record VolunteerApprovalRequirement(
-        RequirementStage Stage, string ActionName);
+        RequirementStage Stage, string ActionName, TimeSpan Validity);
 
     public enum RequirementStage { Application, Approval, Onboarding }
 
     public sealed record VolunteerFamilyApprovalRequirement(
-        RequirementStage Stage, string ActionName, VolunteerFamilyRequirementScope Scope);
+        RequirementStage Stage, string ActionName, TimeSpan Validity, VolunteerFamilyRequirementScope Scope);
 
     public enum VolunteerFamilyRequirementScope { OncePerFamily, AllAdultsInTheFamily, AllParticipatingAdultsInTheFamily };
 

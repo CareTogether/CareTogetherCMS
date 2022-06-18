@@ -44,7 +44,7 @@ namespace CareTogether.Managers
         string? Contents, NoteStatus Status);
 
     public sealed record VolunteerFamilyInfo(
-        ImmutableList<CompletedRequirementInfo> CompletedRequirements,
+        ImmutableList<CompletedRequirementInfoWithExpiration> CompletedRequirements,
         ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<RemovedRole> RemovedRoles,
         ImmutableList<string> MissingRequirements,
@@ -54,10 +54,14 @@ namespace CareTogether.Managers
         ImmutableList<Activity> History);
 
     public sealed record VolunteerInfo(
-        ImmutableList<CompletedRequirementInfo> CompletedRequirements,
+        ImmutableList<CompletedRequirementInfoWithExpiration> CompletedRequirements,
         ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<RemovedRole> RemovedRoles,
         ImmutableList<string> MissingRequirements,
         ImmutableList<string> AvailableApplications,
         ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> IndividualRoleApprovals);
+
+    public sealed record CompletedRequirementInfoWithExpiration(Guid UserId, DateTime TimestampUtc,
+        Guid CompletedRequirementId, string RequirementName, DateTime CompletedAtUtc, DateTime? ExpiresAtUtc,
+        Guid? UploadedDocumentId, Guid? NoteId);
 }
