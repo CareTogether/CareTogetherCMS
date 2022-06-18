@@ -11,6 +11,7 @@ namespace CareTogether.Engines.PolicyEvaluation
     public sealed record VolunteerFamilyApprovalStatus(
         ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> FamilyRoleApprovals,
         ImmutableList<RemovedRole> RemovedFamilyRoles,
+        ImmutableList<CompletedRequirementInfoWithExpiration> CompletedFamilyRequirementsWithExpiration,
         ImmutableList<string> MissingFamilyRequirements,
         ImmutableList<string> AvailableFamilyApplications,
         ImmutableDictionary<Guid, VolunteerApprovalStatus> IndividualVolunteers);
@@ -18,6 +19,7 @@ namespace CareTogether.Engines.PolicyEvaluation
     public sealed record VolunteerApprovalStatus(
         ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> IndividualRoleApprovals,
         ImmutableList<RemovedRole> RemovedIndividualRoles,
+        ImmutableList<CompletedRequirementInfoWithExpiration> CompletedIndividualRequirementsWithExpiration,
         ImmutableList<string> MissingIndividualRequirements,
         ImmutableList<string> AvailableIndividualApplications);
 

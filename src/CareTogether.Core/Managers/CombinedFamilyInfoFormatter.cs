@@ -142,7 +142,7 @@ namespace CareTogether.Managers
                 completedIndividualRequirements, exemptedIndividualRequirements, removedIndividualRoles);
 
             var volunteerFamilyInfo = new VolunteerFamilyInfo(
-                entry.CompletedRequirements, entry.ExemptedRequirements, entry.RemovedRoles,
+                volunteerFamilyApprovalStatus.CompletedFamilyRequirementsWithExpiration, entry.ExemptedRequirements, entry.RemovedRoles,
                 volunteerFamilyApprovalStatus.MissingFamilyRequirements,
                 volunteerFamilyApprovalStatus.AvailableFamilyApplications,
                 volunteerFamilyApprovalStatus.FamilyRoleApprovals,
@@ -152,7 +152,7 @@ namespace CareTogether.Managers
                     {
                         var hasEntry = entry.IndividualEntries.TryGetValue(x.Key, out var individualEntry);
                         return new VolunteerInfo(
-                            individualEntry?.CompletedRequirements ?? ImmutableList<CompletedRequirementInfo>.Empty,
+                            x.Value.CompletedIndividualRequirementsWithExpiration,
                             individualEntry?.ExemptedRequirements ?? ImmutableList<ExemptedRequirementInfo>.Empty,
                             individualEntry?.RemovedRoles ?? ImmutableList<RemovedRole>.Empty,
                             x.Value.MissingIndividualRequirements,

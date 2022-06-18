@@ -60,8 +60,4 @@ namespace CareTogether.Managers
         ImmutableList<string> MissingRequirements,
         ImmutableList<string> AvailableApplications,
         ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> IndividualRoleApprovals);
-
-    public sealed record CompletedRequirementInfoWithExpiration(Guid UserId, DateTime TimestampUtc,
-        Guid CompletedRequirementId, string RequirementName, DateTime CompletedAtUtc, DateTime? ExpiresAtUtc,
-        Guid? UploadedDocumentId, Guid? NoteId);
 }
