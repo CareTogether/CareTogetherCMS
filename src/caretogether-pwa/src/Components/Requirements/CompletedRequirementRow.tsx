@@ -42,6 +42,12 @@ export function CompletedRequirementRow({ requirement, context }: CompletedRequi
                   {format(requirement.completedAtUtc, "M/d/yy h:mm a")}
                 </span>}
             </span>
+            {requirement.expiresAtUtc &&
+              <><br /><span style={{ paddingLeft: '30px' }}>
+                {requirement.expiresAtUtc > new Date()
+                  ? `⏰ Expires ${format(requirement.expiresAtUtc, "M/d/yy h:mm a")}`
+                  : <span style={{ fontWeight: 'bold'}}>❌ Expired {format(requirement.expiresAtUtc, "M/d/yy h:mm a")}</span>}
+              </span></>}
             {context.kind === 'Family Volunteer Assignment' &&
               <><br/><span style={{ paddingLeft: '30px' }}>
                 <FamilyName family={familyLookup(context.assignment.familyId)} />
