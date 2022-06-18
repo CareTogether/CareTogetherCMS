@@ -240,8 +240,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 
   const locationId = useRecoilValue(currentLocationState);
   const organizationConfiguration = useRecoilValue(organizationConfigurationData);
-  const smsSourcePhoneNumber = organizationConfiguration.locations?.find(loc =>
-    loc.id === locationId)?.smsSourcePhoneNumber;
+  const smsSourcePhoneNumbers = organizationConfiguration.locations?.find(loc =>
+    loc.id === locationId)?.smsSourcePhoneNumbers;
   const [smsMode, setSmsMode] = useState(false);
   
   function getSelectedFamiliesContactEmails() {
@@ -284,7 +284,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
             autoHideDuration={5000} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
             onClose={() => setNoticeOpen(false)}
             message={`Found and copied ${getSelectedFamiliesContactEmails().length} email addresses for ${selectedFamilies.length} selected families to clipboard`} />
-          {smsSourcePhoneNumber &&
+          {smsSourcePhoneNumbers && smsSourcePhoneNumbers.length > 0 &&
             <IconButton color={smsMode ? 'secondary' : 'inherit'} aria-label="send bulk sms"
               onClick={() => setSmsMode(!smsMode)} sx={{ marginRight: 2 }}>
               <SmsIcon />
