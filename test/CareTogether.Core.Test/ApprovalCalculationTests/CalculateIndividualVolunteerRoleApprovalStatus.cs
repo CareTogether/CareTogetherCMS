@@ -249,7 +249,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.Exempted(("D", 30)));
 
             Assert.AreEqual(RoleApprovalStatus.Approved, status);
-            Assert.AreEqual(null, expiresAtUtc);
+            Assert.AreEqual(new DateTime(2022, 1, 30), expiresAtUtc);
             AssertEx.SequenceIs(missingRequirements, "E", "F");
             AssertEx.SequenceIs(availableApplications);
         }
@@ -356,7 +356,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.Exempted(("D", null), ("F", 30)));
 
             Assert.AreEqual(RoleApprovalStatus.Onboarded, status);
-            Assert.AreEqual(null, expiresAtUtc);
+            Assert.AreEqual(new DateTime(2022, 1, 30), expiresAtUtc);
             AssertEx.SequenceIs(missingRequirements);
             AssertEx.SequenceIs(availableApplications);
         }

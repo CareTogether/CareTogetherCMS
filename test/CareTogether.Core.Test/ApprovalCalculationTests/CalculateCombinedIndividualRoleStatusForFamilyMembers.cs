@@ -366,7 +366,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
             Assert.AreEqual(2, result.Count);
             AssertEx.DictionaryIs(result[guid1].IndividualRoleVersionApprovals,
                 ("Host", new RoleVersionApproval[] {
-                    new ("v1", RoleApprovalStatus.Approved, null),
+                    new ("v1", RoleApprovalStatus.Approved, new DateTime(2022, 1, 25)),
                     new ("v2", RoleApprovalStatus.Prospective, null) }),
                 ("Coach", new RoleVersionApproval[] {
                     new ("v1", RoleApprovalStatus.Prospective, null) }));
@@ -375,7 +375,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
             AssertEx.SequenceIs(result[guid1].AvailableIndividualApplications, "Aold");
             AssertEx.DictionaryIs(result[guid2].IndividualRoleVersionApprovals,
                 ("Host", new RoleVersionApproval[] {
-                    new ("v1", RoleApprovalStatus.Approved, null),
+                    new ("v1", RoleApprovalStatus.Approved, new DateTime(2022, 1, 26)),
                     new ("v2", RoleApprovalStatus.Prospective, null) }));
             AssertEx.SequenceIs(result[guid2].MissingIndividualRequirements, "Dv2", "E", "F");
             AssertEx.SequenceIs(result[guid2].RemovedIndividualRoles);

@@ -412,7 +412,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(RoleApprovalStatus.Approved, status);
-            Assert.AreEqual(null, expiresAtUtc);
+            Assert.AreEqual(new DateTime(2022, 1, 30), expiresAtUtc);
             AssertEx.SequenceIs(missingRequirements, "E");
             AssertEx.SequenceIs(availableApplications);
             AssertEx.DictionaryIs(missingIndividualRequirements,
@@ -599,7 +599,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(RoleApprovalStatus.Onboarded, status);
-            Assert.AreEqual(null, expiresAtUtc);
+            Assert.AreEqual(new DateTime(2022, 1, 30), expiresAtUtc);
             AssertEx.SequenceIs(missingRequirements);
             AssertEx.SequenceIs(availableApplications);
             AssertEx.DictionaryIs(missingIndividualRequirements);
