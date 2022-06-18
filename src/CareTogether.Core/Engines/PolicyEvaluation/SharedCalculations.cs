@@ -18,7 +18,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .Where(completed =>
                     completed.RequirementName == requirementName &&
                     (policySupersededAtUtc == null || completed.CompletedAtUtc < policySupersededAtUtc) &&
-                    completed.ExpiresAtUtc > utcNow)
+                    (completed.ExpiresAtUtc == null || completed.ExpiresAtUtc > utcNow))
                 .MaxBy(completed => completed.ExpiresAtUtc ?? DateTime.MaxValue);
 
             if (bestCompletion != null)
