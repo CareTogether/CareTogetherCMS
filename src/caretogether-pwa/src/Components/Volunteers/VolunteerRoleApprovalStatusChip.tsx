@@ -31,11 +31,4 @@ export function VolunteerRoleApprovalStatusChip({ roleName, roleVersionApprovals
           ? `${RoleApprovalStatus[determination]} ${roleName} until ${format(expiration, "M/d/yy")}`
           : `${RoleApprovalStatus[determination]} ${roleName}`} />
     : <></>;
-  return determination === RoleApprovalStatus.Onboarded
-    ? <Chip size="small" color="primary" label={"Onboarded " + roleName} />
-    : determination === RoleApprovalStatus.Approved
-      ? <Chip size="small" color="secondary" label={"Approved " + roleName} />
-      : determination === RoleApprovalStatus.Prospective
-        ? <Chip size="small" color="secondary" label={"Prospective " + roleName} />
-        : <></>;
 }
