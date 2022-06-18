@@ -31,7 +31,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             var policy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
 
             return ApprovalCalculations.CalculateVolunteerFamilyApprovalStatus(
-                policy.VolunteerPolicy, family, DateTime.UtcNow,
+                policy, family, DateTime.UtcNow,
                 completedFamilyRequirements, exemptedFamilyRequirements, removedFamilyRoles,
                 completedIndividualRequirements, exemptedIndividualRequirements, removedIndividualRoles);
         }

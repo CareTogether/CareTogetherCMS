@@ -44,7 +44,7 @@ namespace CareTogether.Resources.Policies
 
     public sealed record ActionRequirement(
         DocumentLinkRequirement DocumentLink, NoteEntryRequirement NoteEntry,
-        string? Instructions, Uri? InfoLink);
+        string? Instructions, Uri? InfoLink, TimeSpan? Validity);
 
     public sealed record ReferralPolicy(
         ImmutableList<string> RequiredIntakeActionNames,
@@ -110,12 +110,12 @@ namespace CareTogether.Resources.Policies
         ImmutableList<VolunteerFamilyApprovalRequirement> Requirements);
 
     public sealed record VolunteerApprovalRequirement(
-        RequirementStage Stage, string ActionName, TimeSpan Validity);
+        RequirementStage Stage, string ActionName);
 
     public enum RequirementStage { Application, Approval, Onboarding }
 
     public sealed record VolunteerFamilyApprovalRequirement(
-        RequirementStage Stage, string ActionName, TimeSpan Validity, VolunteerFamilyRequirementScope Scope);
+        RequirementStage Stage, string ActionName, VolunteerFamilyRequirementScope Scope);
 
     public enum VolunteerFamilyRequirementScope { OncePerFamily, AllAdultsInTheFamily, AllParticipatingAdultsInTheFamily };
 
