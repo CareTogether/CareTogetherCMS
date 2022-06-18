@@ -12,7 +12,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public static ImmutableList<CompletedRequirementInfo> Completed(params (string, int)[] completionsWithDates) =>
             completionsWithDates.Select(completion =>
                 new CompletedRequirementInfo(Guid.Empty, DateTime.MinValue,
-                    Guid.Empty, completion.Item1, new DateTime(2022, 1, completion.Item2), null, null))
+                    Guid.Empty, completion.Item1, new DateTime(2022, 1, completion.Item2), ExpiresAtUtc: null, null, null))
             .ToImmutableList();
 
         public static ImmutableList<ExemptedRequirementInfo> Exempted(params (string, int?)[] exemptionsWithExpirations) =>
