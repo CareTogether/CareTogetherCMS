@@ -1167,6 +1167,7 @@ export class ActionRequirement implements IActionRequirement {
     noteEntry?: NoteEntryRequirement;
     instructions?: string | undefined;
     infoLink?: string | undefined;
+    validity?: string | undefined;
 
     constructor(data?: IActionRequirement) {
         if (data) {
@@ -1183,6 +1184,7 @@ export class ActionRequirement implements IActionRequirement {
             this.noteEntry = _data["noteEntry"];
             this.instructions = _data["instructions"];
             this.infoLink = _data["infoLink"];
+            this.validity = _data["validity"];
         }
     }
 
@@ -1199,6 +1201,7 @@ export class ActionRequirement implements IActionRequirement {
         data["noteEntry"] = this.noteEntry;
         data["instructions"] = this.instructions;
         data["infoLink"] = this.infoLink;
+        data["validity"] = this.validity;
         return data;
     }
 }
@@ -1208,6 +1211,7 @@ export interface IActionRequirement {
     noteEntry?: NoteEntryRequirement;
     instructions?: string | undefined;
     infoLink?: string | undefined;
+    validity?: string | undefined;
 }
 
 export enum DocumentLinkRequirement {
@@ -4015,7 +4019,7 @@ export interface IChildLocationHistoryEntry {
 }
 
 export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
-    completedRequirements?: CompletedRequirementInfo[];
+    completedRequirements?: CompletedRequirementInfoWithExpiration[];
     exemptedRequirements?: ExemptedRequirementInfo[];
     removedRoles?: RemovedRole[];
     missingRequirements?: string[];
@@ -4038,7 +4042,7 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
             if (Array.isArray(_data["completedRequirements"])) {
                 this.completedRequirements = [] as any;
                 for (let item of _data["completedRequirements"])
-                    this.completedRequirements!.push(CompletedRequirementInfo.fromJS(item));
+                    this.completedRequirements!.push(CompletedRequirementInfoWithExpiration.fromJS(item));
             }
             if (Array.isArray(_data["exemptedRequirements"])) {
                 this.exemptedRequirements = [] as any;
@@ -4140,7 +4144,7 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
 }
 
 export interface IVolunteerFamilyInfo {
-    completedRequirements?: CompletedRequirementInfo[];
+    completedRequirements?: CompletedRequirementInfoWithExpiration[];
     exemptedRequirements?: ExemptedRequirementInfo[];
     removedRoles?: RemovedRole[];
     missingRequirements?: string[];
@@ -4148,6 +4152,70 @@ export interface IVolunteerFamilyInfo {
     familyRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
     individualVolunteers?: { [key: string]: VolunteerInfo; };
     history?: Activity[];
+}
+
+export class CompletedRequirementInfoWithExpiration implements ICompletedRequirementInfoWithExpiration {
+    userId?: string;
+    timestampUtc?: Date;
+    completedRequirementId?: string;
+    requirementName?: string;
+    completedAtUtc?: Date;
+    expiresAtUtc?: Date | undefined;
+    uploadedDocumentId?: string | undefined;
+    noteId?: string | undefined;
+
+    constructor(data?: ICompletedRequirementInfoWithExpiration) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
+            this.completedRequirementId = _data["completedRequirementId"];
+            this.requirementName = _data["requirementName"];
+            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
+            this.expiresAtUtc = _data["expiresAtUtc"] ? new Date(_data["expiresAtUtc"].toString()) : <any>undefined;
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
+            this.noteId = _data["noteId"];
+        }
+    }
+
+    static fromJS(data: any): CompletedRequirementInfoWithExpiration {
+        data = typeof data === 'object' ? data : {};
+        let result = new CompletedRequirementInfoWithExpiration();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
+        data["completedRequirementId"] = this.completedRequirementId;
+        data["requirementName"] = this.requirementName;
+        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
+        data["expiresAtUtc"] = this.expiresAtUtc ? this.expiresAtUtc.toISOString() : <any>undefined;
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
+        data["noteId"] = this.noteId;
+        return data;
+    }
+}
+
+export interface ICompletedRequirementInfoWithExpiration {
+    userId?: string;
+    timestampUtc?: Date;
+    completedRequirementId?: string;
+    requirementName?: string;
+    completedAtUtc?: Date;
+    expiresAtUtc?: Date | undefined;
+    uploadedDocumentId?: string | undefined;
+    noteId?: string | undefined;
 }
 
 export class RemovedRole implements IRemovedRole {
@@ -4203,6 +4271,7 @@ export enum RoleRemovalReason {
 export class RoleVersionApproval implements IRoleVersionApproval {
     version?: string;
     approvalStatus?: RoleApprovalStatus;
+    expiresAt?: Date | undefined;
 
     constructor(data?: IRoleVersionApproval) {
         if (data) {
@@ -4217,6 +4286,7 @@ export class RoleVersionApproval implements IRoleVersionApproval {
         if (_data) {
             this.version = _data["version"];
             this.approvalStatus = _data["approvalStatus"];
+            this.expiresAt = _data["expiresAt"] ? new Date(_data["expiresAt"].toString()) : <any>undefined;
         }
     }
 
@@ -4231,6 +4301,7 @@ export class RoleVersionApproval implements IRoleVersionApproval {
         data = typeof data === 'object' ? data : {};
         data["version"] = this.version;
         data["approvalStatus"] = this.approvalStatus;
+        data["expiresAt"] = this.expiresAt ? this.expiresAt.toISOString() : <any>undefined;
         return data;
     }
 }
@@ -4238,6 +4309,7 @@ export class RoleVersionApproval implements IRoleVersionApproval {
 export interface IRoleVersionApproval {
     version?: string;
     approvalStatus?: RoleApprovalStatus;
+    expiresAt?: Date | undefined;
 }
 
 export enum RoleApprovalStatus {
@@ -4247,7 +4319,7 @@ export enum RoleApprovalStatus {
 }
 
 export class VolunteerInfo implements IVolunteerInfo {
-    completedRequirements?: CompletedRequirementInfo[];
+    completedRequirements?: CompletedRequirementInfoWithExpiration[];
     exemptedRequirements?: ExemptedRequirementInfo[];
     removedRoles?: RemovedRole[];
     missingRequirements?: string[];
@@ -4268,7 +4340,7 @@ export class VolunteerInfo implements IVolunteerInfo {
             if (Array.isArray(_data["completedRequirements"])) {
                 this.completedRequirements = [] as any;
                 for (let item of _data["completedRequirements"])
-                    this.completedRequirements!.push(CompletedRequirementInfo.fromJS(item));
+                    this.completedRequirements!.push(CompletedRequirementInfoWithExpiration.fromJS(item));
             }
             if (Array.isArray(_data["exemptedRequirements"])) {
                 this.exemptedRequirements = [] as any;
@@ -4346,7 +4418,7 @@ export class VolunteerInfo implements IVolunteerInfo {
 }
 
 export interface IVolunteerInfo {
-    completedRequirements?: CompletedRequirementInfo[];
+    completedRequirements?: CompletedRequirementInfoWithExpiration[];
     exemptedRequirements?: ExemptedRequirementInfo[];
     removedRoles?: RemovedRole[];
     missingRequirements?: string[];

@@ -974,6 +974,11 @@
             "type": "string",
             "format": "uri",
             "nullable": true
+          },
+          "validity": {
+            "type": "string",
+            "format": "duration",
+            "nullable": true
           }
         }
       },
@@ -2430,7 +2435,7 @@
           "completedRequirements": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/CompletedRequirementInfo"
+              "$ref": "#/components/schemas/CompletedRequirementInfoWithExpiration"
             }
           },
           "exemptedRequirements": {
@@ -2480,6 +2485,46 @@
           }
         }
       },
+      "CompletedRequirementInfoWithExpiration": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "timestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedRequirementId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "requirementName": {
+            "type": "string"
+          },
+          "completedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "uploadedDocumentId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          },
+          "noteId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          }
+        }
+      },
       "RemovedRole": {
         "type": "object",
         "additionalProperties": false,
@@ -2519,6 +2564,11 @@
           },
           "approvalStatus": {
             "$ref": "#/components/schemas/RoleApprovalStatus"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           }
         }
       },
@@ -2543,7 +2593,7 @@
           "completedRequirements": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/CompletedRequirementInfo"
+              "$ref": "#/components/schemas/CompletedRequirementInfoWithExpiration"
             }
           },
           "exemptedRequirements": {
