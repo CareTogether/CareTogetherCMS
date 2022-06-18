@@ -33,6 +33,7 @@ import { ArrangementPhaseSummary } from './ArrangementPhaseSummary';
 import { ArrangementCardTitle } from './ArrangementCardTitle';
 import { ArrangementFunctionRow } from './ArrangementFunctionRow';
 import { useCollapsed } from '../../useCollapsed';
+import { ArrangementComments } from './ArrangementComments';
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -203,6 +204,7 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
         </Typography>
         {!summaryOnly && (<>
           <Box sx={{ height: '8px' }} />
+          <ArrangementComments partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement} />
           <Accordion expanded={!collapsed} onChange={(event, isExpanded) => setCollapsed(!isExpanded)}
             variant="outlined" square disableGutters sx={{marginLeft:-2, marginRight:-2, border: 'none' }}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}

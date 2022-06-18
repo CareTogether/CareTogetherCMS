@@ -23,7 +23,8 @@ namespace CareTogether.Resources.Referrals
         ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<IndividualVolunteerAssignment> IndividualVolunteerAssignments,
         ImmutableList<FamilyVolunteerAssignment> FamilyVolunteerAssignments,
-        ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationHistory);
+        ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationHistory,
+        string? Comments);
 
     public enum ReferralCloseReason { NotAppropriate, NoCapacity, NoLongerNeeded, Resourced, NeedMet };
 
@@ -151,6 +152,9 @@ namespace CareTogether.Resources.Referrals
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
     public sealed record CancelArrangementsSetup(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         DateTime CancelledAtUtc)
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+    public sealed record UpdateArrangementComments(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
+        string? Comments)
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
 
     /// <summary>

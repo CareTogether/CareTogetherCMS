@@ -172,6 +172,7 @@ namespace CareTogether.Engines.Authorization
                     TrackChildLocationChange => null,
                     EndArrangements => null,
                     CancelArrangementsSetup => null,
+                    UpdateArrangementComments => null,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented.")
                 });

@@ -37,7 +37,8 @@ namespace CareTogether.Managers
         ImmutableList<MissingArrangementRequirement> MissingRequirements,
         ImmutableList<IndividualVolunteerAssignment> IndividualVolunteerAssignments,
         ImmutableList<FamilyVolunteerAssignment> FamilyVolunteerAssignments,
-        ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationHistory);
+        ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationHistory,
+        string? Comments);
 
     public sealed record Note(Guid Id, Guid AuthorId, DateTime TimestampUtc,
         string? Contents, NoteStatus Status);

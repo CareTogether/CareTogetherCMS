@@ -239,7 +239,9 @@ namespace CareTogether.TestData
                 new ArrangementsCommandExecuted(adminId, new DateTime(2022, 3, 3, 10, 0, 0), new CreateArrangement(guid1, guid2, ImmutableList.Create(guid2), "Babysitting", new DateTime(2022, 3, 2), guid3)),
                 new ArrangementsCommandExecuted(adminId, new DateTime(2022, 3, 3, 10, 0, 0), new CreateArrangement(guid1, guid2, ImmutableList.Create(guid3), "Friending", new DateTime(2022, 4, 2), guid1)),
                 new ArrangementsCommandExecuted(adminId, new DateTime(2022, 3, 3, 10, 0, 0), new CreateArrangement(guid1, guid2, ImmutableList.Create(guid4), "Friending", new DateTime(2022, 5, 2), guid2)),
-                new ReferralCommandExecuted(adminId, new DateTime(2022, 3, 3, 10, 1, 0), new UpdateReferralComments(guid1, guid2, "The plan is to have babysitting start on Friday the 11th, and the friendings on Saturday the 12th. Should be just for the weekend until the Daylight Savings Time change is over."))
+                new ArrangementsCommandExecuted(adminId, new DateTime(2022, 3, 3, 10, 0, 0), new UpdateArrangementComments(guid1, guid2, ImmutableList.Create(guid2), "Start on Friday the 11th")),
+                new ArrangementsCommandExecuted(adminId, new DateTime(2022, 3, 3, 10, 0, 0), new UpdateArrangementComments(guid1, guid2, ImmutableList.Create(guid3, guid4), "Start on Saturday the 12th")),
+                new ReferralCommandExecuted(adminId, new DateTime(2022, 3, 3, 10, 1, 0), new UpdateReferralComments(guid1, guid2, "The plan is to have arrangements for the weekend until the Daylight Savings Time change is over."))
                 );
         }
 

@@ -145,7 +145,8 @@ namespace CareTogether.Resources.Referrals
                         c.PartneringFamilyPersonId,
                         ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<ExemptedRequirementInfo>.Empty,
                         ImmutableList<IndividualVolunteerAssignment>.Empty, ImmutableList<FamilyVolunteerAssignment>.Empty,
-                        ImmutableSortedSet<ChildLocationHistoryEntry>.Empty),
+                        ImmutableSortedSet<ChildLocationHistoryEntry>.Empty,
+                        Comments: null),
                         null),
                     _ => referralEntry.Arrangements.TryGetValue(arrangementId, out var arrangementEntry)
                         ? command switch
@@ -330,6 +331,10 @@ namespace CareTogether.Resources.Referrals
                             {
                                 //TODO: Enforce invariant - cannot cancel after starting
                                 CancelledAtUtc = c.CancelledAtUtc
+                            }, null),
+                            UpdateArrangementComments c => (arrangementEntry with
+                            {
+                                Comments = c.Comments
                             }, null),
                             _ => throw new NotImplementedException(
                                 $"The command type '{command.GetType().FullName}' has not been implemented.")
