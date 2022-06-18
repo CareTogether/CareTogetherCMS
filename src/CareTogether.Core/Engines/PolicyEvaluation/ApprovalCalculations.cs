@@ -409,30 +409,56 @@ namespace CareTogether.Engines.PolicyEvaluation
             ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
             ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles,
             ImmutableList<(Guid Id, ImmutableList<CompletedRequirementInfoWithExpiration> CompletedRequirementsWithExpiration,
-            ImmutableList<ExemptedRequirementInfo> ExemptedRequirements)> activeAdults) =>
-            activeAdults.Count > 0 && requirementScope switch
+                ImmutableList<ExemptedRequirementInfo> ExemptedRequirements)> activeAdults)
+        {
+            if (activeAdults.Count == 0)
+                return new SharedCalculations.RequirementCheckResult(false, null);
+
+            static SharedCalculations.RequirementCheckResult Combine(IEnumerable<SharedCalculations.RequirementCheckResult> values)
             {
-                VolunteerFamilyRequirementScope.AllAdultsInTheFamily => activeAdults.All(a =>
-                    SharedCalculations.RequirementMetOrExempted(requirementActionName, supersededAtUtc, utcNow,
-                        a.CompletedRequirementsWithExpiration, a.ExemptedRequirements)),
-                VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily => activeAdults.All(a =>
-                    (removedIndividualRoles.TryGetValue(a.Id, out var removedRoles)
-                            && removedRoles.Any(x => x.RoleName == roleName)) ||
-                    SharedCalculations.RequirementMetOrExempted(requirementActionName, supersededAtUtc, utcNow,
-                        a.CompletedRequirementsWithExpiration, a.ExemptedRequirements)),
-                VolunteerFamilyRequirementScope.OncePerFamily =>
-                    SharedCalculations.RequirementMetOrExempted(requirementActionName, supersededAtUtc, utcNow,
-                        completedFamilyRequirementsWithExpiration, exemptedFamilyRequirements),
-                _ => throw new NotImplementedException(
-                    $"The volunteer family requirement scope '{requirementScope}' has not been implemented.")
-            };
+                if (values.All(value => value.IsMetOrExempted))
+                    return new SharedCalculations.RequirementCheckResult(true,
+                        values.MinBy(value => value.ExpiresAtUtc ?? DateTime.MinValue)!.ExpiresAtUtc);
+                else
+                    return new SharedCalculations.RequirementCheckResult(false, null);
+            }
+
+            switch (requirementScope)
+            {
+                case VolunteerFamilyRequirementScope.AllAdultsInTheFamily:
+                    {
+                        var results = activeAdults
+                            .Select(a => SharedCalculations.RequirementMetOrExempted(requirementActionName, supersededAtUtc, utcNow,
+                                a.CompletedRequirementsWithExpiration, a.ExemptedRequirements));
+                        return Combine(results);
+                    }
+                case VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily:
+                    {
+                        var results = activeAdults
+                            .Where(a => !removedIndividualRoles.TryGetValue(a.Id, out var removedRoles) ||
+                                removedRoles.All(x => x.RoleName != roleName))
+                            .Select(a =>
+                                SharedCalculations.RequirementMetOrExempted(requirementActionName, supersededAtUtc, utcNow,
+                                    a.CompletedRequirementsWithExpiration, a.ExemptedRequirements));
+                        return Combine(results);
+                    }
+                case VolunteerFamilyRequirementScope.OncePerFamily:
+                    {
+                        return SharedCalculations.RequirementMetOrExempted(requirementActionName, supersededAtUtc, utcNow,
+                            completedFamilyRequirementsWithExpiration, exemptedFamilyRequirements);
+                    }
+                default:
+                    throw new NotImplementedException(
+                        $"The volunteer family requirement scope '{requirementScope}' has not been implemented.");
+            }
+        }
 
         internal static List<Guid> FamilyRequirementMissingForIndividuals(string roleName,
             VolunteerFamilyApprovalRequirement requirement,
             DateTime? supersededAtUtc, DateTime utcNow,
             ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles,
             ImmutableList<(Guid Id, ImmutableList<CompletedRequirementInfoWithExpiration> CompletedRequirementsWithExpiration,
-            ImmutableList<ExemptedRequirementInfo> ExemptedRequirements)> activeAdults) =>
+                ImmutableList<ExemptedRequirementInfo> ExemptedRequirements)> activeAdults) =>
             requirement.Scope switch
             {
                 VolunteerFamilyRequirementScope.AllAdultsInTheFamily => activeAdults.Where(a =>
