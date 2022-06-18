@@ -12,7 +12,7 @@ namespace CareTogether.Engines.PolicyEvaluation
     internal static class ApprovalCalculations
     {
         public static VolunteerFamilyApprovalStatus CalculateVolunteerFamilyApprovalStatus(
-            VolunteerPolicy volunteerPolicy, Family family, DateTime utcNow,
+            EffectiveLocationPolicy locationPolicy, Family family, DateTime utcNow,
             ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
             ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
             ImmutableList<RemovedRole> removedFamilyRoles,
@@ -20,18 +20,30 @@ namespace CareTogether.Engines.PolicyEvaluation
             ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>> exemptedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles)
         {
+            var completedFamilyRequirementsWithExpiration = completedFamilyRequirements
+                .Select(completed => CalculateCompletedRequirementExpiration(locationPolicy, completed))
+                .ToImmutableList();
+
+            var completedIndividualRequirementsWithExpiration = completedIndividualRequirements
+                .ToImmutableDictionary(
+                    entry => entry.Key,
+                    entry => entry.Value
+                        .Select(completed => CalculateCompletedRequirementExpiration(locationPolicy, completed))
+                        .ToImmutableList());
+
             var individualResults = CalculateCombinedIndividualRoleStatusForFamilyMembers(
-                volunteerPolicy.VolunteerRoles, family, utcNow,
-                completedIndividualRequirements, exemptedIndividualRequirements, removedIndividualRoles);
+                locationPolicy.VolunteerPolicy.VolunteerRoles, family, utcNow,
+                completedIndividualRequirementsWithExpiration, exemptedIndividualRequirements, removedIndividualRoles);
 
             var familyResult = CalculateCombinedFamilyRoleStatusForFamily(
-                volunteerPolicy, family, utcNow,
-                completedFamilyRequirements, exemptedFamilyRequirements, removedFamilyRoles,
-                completedIndividualRequirements, exemptedIndividualRequirements, removedIndividualRoles);
+                locationPolicy.VolunteerPolicy, family, utcNow,
+                completedFamilyRequirementsWithExpiration, exemptedFamilyRequirements, removedFamilyRoles,
+                completedIndividualRequirementsWithExpiration, exemptedIndividualRequirements, removedIndividualRoles);
 
             return new VolunteerFamilyApprovalStatus(
                 familyResult.FamilyRoleVersionApprovals,
                 familyResult.RemovedFamilyRoles,
+                completedFamilyRequirementsWithExpiration,
                 familyResult.MissingFamilyRequirements,
                 familyResult.AvailableFamilyApplications,
                 family.Adults.Select(adultFamilyEntry =>
@@ -53,11 +65,23 @@ namespace CareTogether.Engines.PolicyEvaluation
                     return new KeyValuePair<Guid, VolunteerApprovalStatus>(person.Id, new VolunteerApprovalStatus(
                         IndividualRoleApprovals: individualResult.IndividualRoleVersionApprovals,
                         RemovedIndividualRoles: individualResult.RemovedIndividualRoles,
+                        CompletedIndividualRequirementsWithExpiration: completedIndividualRequirementsWithExpiration[person.Id],
                         MissingIndividualRequirements: mergedMissingIndividualRequirements,
                         AvailableIndividualApplications: individualResult.AvailableIndividualApplications));
                 }).ToImmutableDictionary());
         }
 
+
+        internal static CompletedRequirementInfoWithExpiration CalculateCompletedRequirementExpiration(
+            EffectiveLocationPolicy locationPolicy, CompletedRequirementInfo completed)
+        {
+            var action = locationPolicy.ActionDefinitions[completed.RequirementName];
+            return new CompletedRequirementInfoWithExpiration(
+                completed.UserId, completed.TimestampUtc, completed.CompletedRequirementId,
+                completed.RequirementName, completed.CompletedAtUtc,
+                ExpiresAtUtc: action.Validity.HasValue ? completed.CompletedAtUtc + action.Validity : null,
+                completed.UploadedDocumentId, completed.NoteId);
+        }
 
         internal static ImmutableDictionary<Guid,
             (ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> IndividualRoleVersionApprovals,
@@ -66,7 +90,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             ImmutableList<string> AvailableIndividualApplications)>
             CalculateCombinedIndividualRoleStatusForFamilyMembers(
             ImmutableDictionary<string, VolunteerRolePolicy> volunteerRoles, Family family, DateTime utcNow,
-            ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements,
+            ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfoWithExpiration>> completedIndividualRequirementsWithExpiration,
             ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>> exemptedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles)
         {
@@ -74,7 +98,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             {
                 var (person, familyRelationship) = adultFamilyEntry;
 
-                var completedRequirements = completedIndividualRequirements.GetValueOrEmptyList(person.Id);
+                var completedRequirementsWithExpiration = completedIndividualRequirementsWithExpiration.GetValueOrEmptyList(person.Id);
                 var exemptedRequirements = exemptedIndividualRequirements.GetValueOrEmptyList(person.Id);
                 var removedRoles = removedIndividualRoles.GetValueOrEmptyList(person.Id);
 
@@ -83,10 +107,10 @@ namespace CareTogether.Engines.PolicyEvaluation
                     .Select(rolePolicy => (RoleName: rolePolicy.Key,
                         StatusByVersions: rolePolicy.Value.PolicyVersions.Select(policyVersion =>
                         {
-                            var (Status, MissingRequirements, AvailableApplications) =
+                            var (Status, ExpiresAtUtc, MissingRequirements, AvailableApplications) =
                                 CalculateIndividualVolunteerRoleApprovalStatus(
-                                    policyVersion, utcNow, completedRequirements, exemptedRequirements);
-                            return (PolicyVersion: policyVersion, Status, MissingRequirements, AvailableApplications);
+                                    policyVersion, utcNow, completedRequirementsWithExpiration, exemptedRequirements);
+                            return (PolicyVersion: policyVersion, Status, ExpiresAtUtc, MissingRequirements, AvailableApplications);
                         })
                         .ToImmutableList()))
                     .ToImmutableList();
@@ -98,7 +122,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                             x => x.RoleName,
                             x => x.StatusByVersions
                                 .Where(y => y.Status.HasValue)
-                                .Select(y => new RoleVersionApproval(y.PolicyVersion.Version, y.Status!.Value))
+                                .Select(y => new RoleVersionApproval(y.PolicyVersion.Version, y.Status!.Value, y.ExpiresAtUtc))
                                 .ToImmutableList()),
                     RemovedIndividualRoles: removedRoles,
                     MissingIndividualRequirements: allIndividualRoleApprovals
@@ -123,10 +147,10 @@ namespace CareTogether.Engines.PolicyEvaluation
             ImmutableDictionary<Guid, ImmutableList<string>> MissingIndividualRequirementsForFamilyRoles)
             CalculateCombinedFamilyRoleStatusForFamily(
             VolunteerPolicy volunteerPolicy, Family family, DateTime utcNow,
-            ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
+            ImmutableList<CompletedRequirementInfoWithExpiration> completedFamilyRequirementsWithExpiration,
             ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
             ImmutableList<RemovedRole> removedFamilyRoles,
-            ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements,
+            ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfoWithExpiration>> completedIndividualRequirementsWithExpiration,
             ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>> exemptedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles)
         {
@@ -135,13 +159,13 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .Select(rolePolicy => (RoleName: rolePolicy.Key,
                     StatusByVersions: rolePolicy.Value.PolicyVersions.Select(policyVersion =>
                     {
-                        var (Status, MissingRequirements, AvailableApplications, MissingIndividualRequirements) =
+                        var (Status, ExpiresAtUtc, MissingRequirements, AvailableApplications, MissingIndividualRequirements) =
                             CalculateFamilyVolunteerRoleApprovalStatus(
                                 rolePolicy.Key, policyVersion, utcNow, family,
-                                completedFamilyRequirements, exemptedFamilyRequirements,
-                                completedIndividualRequirements, exemptedIndividualRequirements,
+                                completedFamilyRequirementsWithExpiration, exemptedFamilyRequirements,
+                                completedIndividualRequirementsWithExpiration, exemptedIndividualRequirements,
                                 removedIndividualRoles);
-                        return (PolicyVersion: policyVersion, Status, MissingRequirements, AvailableApplications, MissingIndividualRequirements);
+                        return (PolicyVersion: policyVersion, Status, ExpiresAtUtc, MissingRequirements, AvailableApplications, MissingIndividualRequirements);
                     })
                     .ToImmutableList()))
                 .ToImmutableList();
@@ -153,7 +177,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                         x => x.RoleName,
                         x => x.StatusByVersions
                             .Where(y => y.Status.HasValue)
-                            .Select(y => new RoleVersionApproval(y.PolicyVersion.Version, y.Status!.Value))
+                            .Select(y => new RoleVersionApproval(y.PolicyVersion.Version, y.Status!.Value, y.ExpiresAtUtc))
                             .ToImmutableList()),
                 RemovedFamilyRoles: removedFamilyRoles,
                 MissingFamilyRequirements: allFamilyRoleApprovals
@@ -179,16 +203,17 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
         internal static
-            (RoleApprovalStatus? Status, ImmutableList<string> MissingRequirements, ImmutableList<string> AvailableApplications)
+            (RoleApprovalStatus? Status, DateTime? ExpiresAtUtc, ImmutableList<string> MissingRequirements, ImmutableList<string> AvailableApplications)
             CalculateIndividualVolunteerRoleApprovalStatus(
             VolunteerRolePolicyVersion policyVersion, DateTime utcNow,
-            ImmutableList<CompletedRequirementInfo> completedRequirements, ImmutableList<ExemptedRequirementInfo> exemptedRequirements)
+            ImmutableList<CompletedRequirementInfoWithExpiration> completedRequirementsWithExpiration,
+            ImmutableList<ExemptedRequirementInfo> exemptedRequirements)
         {
             var supersededAtUtc = policyVersion.SupersededAtUtc;
 
             var requirementCompletionStatus = policyVersion.Requirements.Select(requirement =>
                 (requirement.ActionName, requirement.Stage, RequirementMetOrExempted:
-                    SharedCalculations.RequirementMetOrExempted(requirement.ActionName, supersededAtUtc, utcNow, completedRequirements, exemptedRequirements)))
+                    SharedCalculations.RequirementMetOrExempted(requirement.ActionName, supersededAtUtc, utcNow, completedRequirementsWithExpiration, exemptedRequirements)))
                 .ToImmutableList();
 
             var status = CalculateRoleApprovalStatusFromRequirementCompletions(requirementCompletionStatus);
@@ -199,12 +224,13 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
         internal static
-            (RoleApprovalStatus? Status, ImmutableList<string> MissingRequirements, ImmutableList<string> AvailableApplications,
+            (RoleApprovalStatus? Status, DateTime? ExpiresAtUtc, ImmutableList<string> MissingRequirements, ImmutableList<string> AvailableApplications,
             ImmutableDictionary<Guid, ImmutableList<string>> MissingIndividualRequirements)
             CalculateFamilyVolunteerRoleApprovalStatus
             (string roleName, VolunteerFamilyRolePolicyVersion policyVersion, DateTime utcNow, Family family,
-            ImmutableList<CompletedRequirementInfo> completedFamilyRequirements, ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
-            ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements,
+            ImmutableList<CompletedRequirementInfoWithExpiration> completedFamilyRequirementsWithExpiration,
+            ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
+            ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfoWithExpiration>> completedIndividualRequirementsWithExpiration,
             ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>> exemptedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles)
         {
@@ -215,7 +241,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .Select(a =>
                 {
                     var (person, _) = a;
-                    var completedRequirements = completedIndividualRequirements.GetValueOrEmptyList(person.Id);
+                    var completedRequirements = completedIndividualRequirementsWithExpiration.GetValueOrEmptyList(person.Id);
                     var exemptedRequirements = exemptedIndividualRequirements.GetValueOrEmptyList(person.Id);
                     return (a.Item1.Id, CompletedRequirements: completedRequirements, ExemptedRequirements: exemptedRequirements);
                 })
@@ -224,7 +250,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             var requirementsMet = policyVersion.Requirements.Select(requirement =>
                 (requirement.ActionName, requirement.Stage, requirement.Scope,
                     RequirementMetOrExempted: FamilyRequirementMetOrExempted(roleName, requirement.ActionName, requirement.Scope, supersededAtUtc, utcNow,
-                        completedFamilyRequirements, exemptedFamilyRequirements, removedIndividualRoles,
+                        completedFamilyRequirementsWithExpiration, exemptedFamilyRequirements, removedIndividualRoles,
                         activeAdults),
                 RequirementMissingForIndividuals: FamilyRequirementMissingForIndividuals(roleName, requirement, supersededAtUtc, utcNow,
                     removedIndividualRoles,
@@ -358,23 +384,24 @@ namespace CareTogether.Engines.PolicyEvaluation
         internal static bool FamilyRequirementMetOrExempted(string roleName,
             string requirementActionName, VolunteerFamilyRequirementScope requirementScope,
             DateTime? supersededAtUtc, DateTime utcNow,
-            ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
+            ImmutableList<CompletedRequirementInfoWithExpiration> completedFamilyRequirementsWithExpiration,
             ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
             ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles,
-            ImmutableList<(Guid Id, ImmutableList<CompletedRequirementInfo> CompletedRequirements, ImmutableList<ExemptedRequirementInfo> ExemptedRequirements)> activeAdults) =>
+            ImmutableList<(Guid Id, ImmutableList<CompletedRequirementInfoWithExpiration> CompletedRequirementsWithExpiration,
+            ImmutableList<ExemptedRequirementInfo> ExemptedRequirements)> activeAdults) =>
             activeAdults.Count > 0 && requirementScope switch
             {
                 VolunteerFamilyRequirementScope.AllAdultsInTheFamily => activeAdults.All(a =>
                     SharedCalculations.RequirementMetOrExempted(requirementActionName, supersededAtUtc, utcNow,
-                        a.CompletedRequirements, a.ExemptedRequirements)),
+                        a.CompletedRequirementsWithExpiration, a.ExemptedRequirements)),
                 VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily => activeAdults.All(a =>
                     (removedIndividualRoles.TryGetValue(a.Id, out var removedRoles)
                             && removedRoles.Any(x => x.RoleName == roleName)) ||
                     SharedCalculations.RequirementMetOrExempted(requirementActionName, supersededAtUtc, utcNow,
-                        a.CompletedRequirements, a.ExemptedRequirements)),
+                        a.CompletedRequirementsWithExpiration, a.ExemptedRequirements)),
                 VolunteerFamilyRequirementScope.OncePerFamily =>
                     SharedCalculations.RequirementMetOrExempted(requirementActionName, supersededAtUtc, utcNow,
-                        completedFamilyRequirements, exemptedFamilyRequirements),
+                        completedFamilyRequirementsWithExpiration, exemptedFamilyRequirements),
                 _ => throw new NotImplementedException(
                     $"The volunteer family requirement scope '{requirementScope}' has not been implemented.")
             };
@@ -383,18 +410,19 @@ namespace CareTogether.Engines.PolicyEvaluation
             VolunteerFamilyApprovalRequirement requirement,
             DateTime? supersededAtUtc, DateTime utcNow,
             ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles,
-            ImmutableList<(Guid Id, ImmutableList<CompletedRequirementInfo> CompletedRequirements, ImmutableList<ExemptedRequirementInfo> ExemptedRequirements)> activeAdults) =>
+            ImmutableList<(Guid Id, ImmutableList<CompletedRequirementInfoWithExpiration> CompletedRequirementsWithExpiration,
+            ImmutableList<ExemptedRequirementInfo> ExemptedRequirements)> activeAdults) =>
             requirement.Scope switch
             {
                 VolunteerFamilyRequirementScope.AllAdultsInTheFamily => activeAdults.Where(a =>
                     !SharedCalculations.RequirementMetOrExempted(requirement.ActionName, supersededAtUtc, utcNow,
-                        a.CompletedRequirements, a.ExemptedRequirements))
+                        a.CompletedRequirementsWithExpiration, a.ExemptedRequirements))
                     .Select(a => a.Id).ToList(),
                 VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily => activeAdults.Where(a =>
                     !(removedIndividualRoles.TryGetValue(a.Id, out var removedRoles)
                         && removedRoles.Any(x => x.RoleName == roleName)) &&
                     !SharedCalculations.RequirementMetOrExempted(requirement.ActionName, supersededAtUtc, utcNow,
-                        a.CompletedRequirements, a.ExemptedRequirements))
+                        a.CompletedRequirementsWithExpiration, a.ExemptedRequirements))
                     .Select(a => a.Id).ToList(),
                 VolunteerFamilyRequirementScope.OncePerFamily => new List<Guid>(),
                 _ => throw new NotImplementedException(
