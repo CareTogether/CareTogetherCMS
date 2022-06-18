@@ -12,7 +12,9 @@ namespace CareTogether.Resources.Policies
 
     public sealed record LocationConfiguration(Guid Id, string Name,
         ImmutableList<string> Ethnicities, ImmutableList<string> AdultFamilyRelationships,
-        string? SmsSourcePhoneNumber);
+        ImmutableList<SourcePhoneNumberConfiguration> SmsSourcePhoneNumbers);
+
+    public sealed record SourcePhoneNumberConfiguration(string SourcePhoneNumber, string Description);
 
     public sealed record RoleDefinition(string RoleName, ImmutableList<Permission> Permissions);
 

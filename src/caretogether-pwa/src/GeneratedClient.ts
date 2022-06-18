@@ -848,7 +848,7 @@ export class LocationConfiguration implements ILocationConfiguration {
     name?: string;
     ethnicities?: string[];
     adultFamilyRelationships?: string[];
-    smsSourcePhoneNumber?: string | undefined;
+    smsSourcePhoneNumbers?: SourcePhoneNumberConfiguration[];
 
     constructor(data?: ILocationConfiguration) {
         if (data) {
@@ -873,7 +873,11 @@ export class LocationConfiguration implements ILocationConfiguration {
                 for (let item of _data["adultFamilyRelationships"])
                     this.adultFamilyRelationships!.push(item);
             }
-            this.smsSourcePhoneNumber = _data["smsSourcePhoneNumber"];
+            if (Array.isArray(_data["smsSourcePhoneNumbers"])) {
+                this.smsSourcePhoneNumbers = [] as any;
+                for (let item of _data["smsSourcePhoneNumbers"])
+                    this.smsSourcePhoneNumbers!.push(SourcePhoneNumberConfiguration.fromJS(item));
+            }
         }
     }
 
@@ -898,7 +902,11 @@ export class LocationConfiguration implements ILocationConfiguration {
             for (let item of this.adultFamilyRelationships)
                 data["adultFamilyRelationships"].push(item);
         }
-        data["smsSourcePhoneNumber"] = this.smsSourcePhoneNumber;
+        if (Array.isArray(this.smsSourcePhoneNumbers)) {
+            data["smsSourcePhoneNumbers"] = [];
+            for (let item of this.smsSourcePhoneNumbers)
+                data["smsSourcePhoneNumbers"].push(item.toJSON());
+        }
         return data;
     }
 }
@@ -908,7 +916,47 @@ export interface ILocationConfiguration {
     name?: string;
     ethnicities?: string[];
     adultFamilyRelationships?: string[];
-    smsSourcePhoneNumber?: string | undefined;
+    smsSourcePhoneNumbers?: SourcePhoneNumberConfiguration[];
+}
+
+export class SourcePhoneNumberConfiguration implements ISourcePhoneNumberConfiguration {
+    sourcePhoneNumber?: string;
+    description?: string;
+
+    constructor(data?: ISourcePhoneNumberConfiguration) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.sourcePhoneNumber = _data["sourcePhoneNumber"];
+            this.description = _data["description"];
+        }
+    }
+
+    static fromJS(data: any): SourcePhoneNumberConfiguration {
+        data = typeof data === 'object' ? data : {};
+        let result = new SourcePhoneNumberConfiguration();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["sourcePhoneNumber"] = this.sourcePhoneNumber;
+        data["description"] = this.description;
+        return data;
+    }
+}
+
+export interface ISourcePhoneNumberConfiguration {
+    sourcePhoneNumber?: string;
+    description?: string;
 }
 
 export class RoleDefinition implements IRoleDefinition {
@@ -6297,6 +6345,7 @@ export enum SmsResult {
 
 export class SendSmsToFamilyPrimaryContactsRequest implements ISendSmsToFamilyPrimaryContactsRequest {
     familyIds?: string[];
+    sourceNumber?: string;
     message?: string;
 
     constructor(data?: ISendSmsToFamilyPrimaryContactsRequest) {
@@ -6315,6 +6364,7 @@ export class SendSmsToFamilyPrimaryContactsRequest implements ISendSmsToFamilyPr
                 for (let item of _data["familyIds"])
                     this.familyIds!.push(item);
             }
+            this.sourceNumber = _data["sourceNumber"];
             this.message = _data["message"];
         }
     }
@@ -6333,6 +6383,7 @@ export class SendSmsToFamilyPrimaryContactsRequest implements ISendSmsToFamilyPr
             for (let item of this.familyIds)
                 data["familyIds"].push(item);
         }
+        data["sourceNumber"] = this.sourceNumber;
         data["message"] = this.message;
         return data;
     }
@@ -6340,6 +6391,7 @@ export class SendSmsToFamilyPrimaryContactsRequest implements ISendSmsToFamilyPr
 
 export interface ISendSmsToFamilyPrimaryContactsRequest {
     familyIds?: string[];
+    sourceNumber?: string;
     message?: string;
 }
 
