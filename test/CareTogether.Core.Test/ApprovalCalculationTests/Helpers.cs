@@ -17,6 +17,13 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     Guid.Empty, completion.Item1, new DateTime(2022, 1, completion.Item2), ExpiresAtUtc: null, null, null))
             .ToImmutableList();
 
+        public static ImmutableList<CompletedRequirementInfo> CompletedWithExpiry(params (string, int, int?)[] completionsWithDates) =>
+            completionsWithDates.Select(completion =>
+                new CompletedRequirementInfo(Guid.Empty, DateTime.MinValue,
+                    Guid.Empty, completion.Item1, new DateTime(2022, 1, completion.Item2),
+                    ExpiresAtUtc: completion.Item3.HasValue ? new DateTime(2022, 1, completion.Item3.Value) : null, null, null))
+            .ToImmutableList();
+
         public static ImmutableList<ExemptedRequirementInfo> Exempted(params (string, int?)[] exemptionsWithExpirations) =>
             exemptionsWithExpirations.Select(exemption =>
                 new ExemptedRequirementInfo(Guid.Empty, DateTime.MinValue,
