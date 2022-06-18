@@ -44,7 +44,7 @@ namespace CareTogether.Resources.Policies
 
     public sealed record ActionRequirement(
         DocumentLinkRequirement DocumentLink, NoteEntryRequirement NoteEntry,
-        string? Instructions, Uri? InfoLink);
+        string? Instructions, Uri? InfoLink, TimeSpan? Validity);
 
     public sealed record ReferralPolicy(
         ImmutableList<string> RequiredIntakeActionNames,
