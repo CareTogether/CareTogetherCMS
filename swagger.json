@@ -2269,6 +2269,10 @@
             "items": {
               "$ref": "#/components/schemas/ChildLocationHistoryEntry"
             }
+          },
+          "comments": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -3878,7 +3882,8 @@
             "UnassignVolunteerFamily": "#/components/schemas/UnassignVolunteerFamily",
             "UnexemptArrangementRequirement": "#/components/schemas/UnexemptArrangementRequirement",
             "UnexemptIndividualVolunteerAssignmentRequirement": "#/components/schemas/UnexemptIndividualVolunteerAssignmentRequirement",
-            "UnexemptVolunteerFamilyAssignmentRequirement": "#/components/schemas/UnexemptVolunteerFamilyAssignmentRequirement"
+            "UnexemptVolunteerFamilyAssignmentRequirement": "#/components/schemas/UnexemptVolunteerFamilyAssignmentRequirement",
+            "UpdateArrangementComments": "#/components/schemas/UpdateArrangementComments"
           }
         },
         "x-abstract": true,
@@ -4537,6 +4542,23 @@
               "dueDate": {
                 "type": "string",
                 "format": "date-time",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "UpdateArrangementComments": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "comments": {
+                "type": "string",
                 "nullable": true
               }
             }

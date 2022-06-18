@@ -3625,6 +3625,7 @@ export class Arrangement implements IArrangement {
     individualVolunteerAssignments?: IndividualVolunteerAssignment[];
     familyVolunteerAssignments?: FamilyVolunteerAssignment[];
     childLocationHistory?: ChildLocationHistoryEntry[];
+    comments?: string | undefined;
 
     constructor(data?: IArrangement) {
         if (data) {
@@ -3675,6 +3676,7 @@ export class Arrangement implements IArrangement {
                 for (let item of _data["childLocationHistory"])
                     this.childLocationHistory!.push(ChildLocationHistoryEntry.fromJS(item));
             }
+            this.comments = _data["comments"];
         }
     }
 
@@ -3725,6 +3727,7 @@ export class Arrangement implements IArrangement {
             for (let item of this.childLocationHistory)
                 data["childLocationHistory"].push(item.toJSON());
         }
+        data["comments"] = this.comments;
         return data;
     }
 }
@@ -3744,6 +3747,7 @@ export interface IArrangement {
     individualVolunteerAssignments?: IndividualVolunteerAssignment[];
     familyVolunteerAssignments?: FamilyVolunteerAssignment[];
     childLocationHistory?: ChildLocationHistoryEntry[];
+    comments?: string | undefined;
 }
 
 export enum ArrangementPhase {
@@ -6969,6 +6973,11 @@ export abstract class ArrangementsCommand implements IArrangementsCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "UpdateArrangementComments") {
+            let result = new UpdateArrangementComments();
+            result.init(data);
+            return result;
+        }
         throw new Error("The abstract class 'ArrangementsCommand' cannot be instantiated.");
     }
 
@@ -7996,6 +8005,40 @@ export interface IUnexemptVolunteerFamilyAssignmentRequirement extends IArrangem
     personId?: string;
     requirementName?: string;
     dueDate?: Date | undefined;
+}
+
+export class UpdateArrangementComments extends ArrangementsCommand implements IUpdateArrangementComments {
+    comments?: string | undefined;
+
+    constructor(data?: IUpdateArrangementComments) {
+        super(data);
+        this._discriminator = "UpdateArrangementComments";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.comments = _data["comments"];
+        }
+    }
+
+    static fromJS(data: any): UpdateArrangementComments {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateArrangementComments();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["comments"] = this.comments;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUpdateArrangementComments extends IArrangementsCommand {
+    comments?: string | undefined;
 }
 
 export class UserOrganizationAccess implements IUserOrganizationAccess {
