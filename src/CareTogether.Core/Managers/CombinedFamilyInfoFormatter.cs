@@ -185,12 +185,12 @@ namespace CareTogether.Managers
         internal static CompletedRequirementInfo ApplyValidityPolicyToCompletedRequirement(
             EffectiveLocationPolicy policy, CompletedRequirementInfo completed)
         {
-            var actionDefinition = policy.ActionDefinitions[completed.RequirementName];
-            return completed with
-            {
-                ExpiresAtUtc = actionDefinition.Validity.HasValue ? completed.CompletedAtUtc + actionDefinition.Validity : null
-            };
+            return policy.ActionDefinitions.TryGetValue(completed.RequirementName, out var actionDefinition)
+                ? completed with
+                {
+                    ExpiresAtUtc = actionDefinition.Validity.HasValue ? completed.CompletedAtUtc + actionDefinition.Validity : null
+                }
+                : completed;
         }
-
     }
 }
