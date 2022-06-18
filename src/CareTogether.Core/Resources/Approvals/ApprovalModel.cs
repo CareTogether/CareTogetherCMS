@@ -51,7 +51,7 @@ namespace CareTogether.Resources.Approvals
                 {
                     CompletedRequirements = volunteerFamilyEntry.CompletedRequirements.Add(
                         new CompletedRequirementInfo(userId, timestampUtc, c.CompletedRequirementId, c.RequirementName,
-                            c.CompletedAtUtc, c.UploadedDocumentId, c.NoteId))
+                            c.CompletedAtUtc, ExpiresAtUtc: null, c.UploadedDocumentId, c.NoteId))
                 },
                 MarkVolunteerFamilyRequirementIncomplete c => volunteerFamilyEntry with
                 {
@@ -116,7 +116,7 @@ namespace CareTogether.Resources.Approvals
                 {
                     CompletedRequirements = volunteerEntry.CompletedRequirements.Add(
                         new CompletedRequirementInfo(userId, timestampUtc, c.CompletedRequirementId, c.RequirementName,
-                            c.CompletedAtUtc, c.UploadedDocumentId, c.NoteId))
+                            c.CompletedAtUtc, ExpiresAtUtc: null, c.UploadedDocumentId, c.NoteId))
                 },
                 MarkVolunteerRequirementIncomplete c => volunteerEntry with
                 {
