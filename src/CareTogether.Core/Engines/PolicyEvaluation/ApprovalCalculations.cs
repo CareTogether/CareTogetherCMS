@@ -259,7 +259,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             {
                 if (values.All(value => value.RequirementMetOrExempted.IsMetOrExempted))
                     return (true,
-                        values.MinBy(value => value.RequirementMetOrExempted.ExpiresAtUtc ?? DateTime.MinValue).RequirementMetOrExempted.ExpiresAtUtc);
+                        values.MinBy(value => value.RequirementMetOrExempted.ExpiresAtUtc ?? DateTime.MaxValue).RequirementMetOrExempted.ExpiresAtUtc);
                 else
                     return (false, null);
             }

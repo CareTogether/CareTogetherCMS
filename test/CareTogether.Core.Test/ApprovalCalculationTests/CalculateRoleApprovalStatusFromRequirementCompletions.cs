@@ -3,6 +3,7 @@ using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Resources;
 using CareTogether.Resources.Policies;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 
 namespace CareTogether.Core.Test.ApprovalCalculationTests
 {
@@ -21,7 +22,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     ("E", RequirementStage.Onboarding, false),
                     ("F", RequirementStage.Onboarding, false)));
 
-            Assert.AreEqual(null, result);
+            Assert.AreEqual((null, null), result);
         }
 
         [TestMethod]
@@ -36,7 +37,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     ("E", RequirementStage.Onboarding, true),
                     ("F", RequirementStage.Onboarding, true)));
 
-            Assert.AreEqual(null, result);
+            Assert.AreEqual((null, null), result);
         }
 
         [TestMethod]
@@ -51,7 +52,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     ("E", RequirementStage.Onboarding, false),
                     ("F", RequirementStage.Onboarding, false)));
 
-            Assert.AreEqual(RoleApprovalStatus.Prospective, result);
+            Assert.AreEqual((RoleApprovalStatus.Prospective, null), result);
         }
 
         [TestMethod]
@@ -66,7 +67,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     ("E", RequirementStage.Onboarding, false),
                     ("F", RequirementStage.Onboarding, false)));
 
-            Assert.AreEqual(RoleApprovalStatus.Prospective, result);
+            Assert.AreEqual((RoleApprovalStatus.Prospective, null), result);
         }
 
         [TestMethod]
@@ -81,7 +82,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     ("E", RequirementStage.Onboarding, false),
                     ("F", RequirementStage.Onboarding, false)));
 
-            Assert.AreEqual(RoleApprovalStatus.Approved, result);
+            Assert.AreEqual((RoleApprovalStatus.Approved, null), result);
         }
 
         [TestMethod]
@@ -96,7 +97,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     ("E", RequirementStage.Onboarding, true),
                     ("F", RequirementStage.Onboarding, false)));
 
-            Assert.AreEqual(RoleApprovalStatus.Approved, result);
+            Assert.AreEqual((RoleApprovalStatus.Approved, null), result);
         }
 
         [TestMethod]
@@ -111,7 +112,37 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     ("E", RequirementStage.Onboarding, true),
                     ("F", RequirementStage.Onboarding, true)));
 
-            Assert.AreEqual(RoleApprovalStatus.Onboarded, result);
+            Assert.AreEqual((RoleApprovalStatus.Onboarded, null), result);
+        }
+
+        [TestMethod]
+        public void TestPartiallyOnboardedWithExpiry()
+        {
+            var result = ApprovalCalculations.CalculateRoleApprovalStatusFromRequirementCompletions(
+                Helpers.IndividualRequirementsMetWithExpiry(
+                    ("A", RequirementStage.Application, true, null),
+                    ("B", RequirementStage.Approval, true, 7),
+                    ("C", RequirementStage.Approval, true, 14),
+                    ("D", RequirementStage.Approval, true, 10),
+                    ("E", RequirementStage.Onboarding, true, 5),
+                    ("F", RequirementStage.Onboarding, false, null)));
+
+            Assert.AreEqual((RoleApprovalStatus.Approved, new DateTime(2022, 1, 7)), result);
+        }
+
+        [TestMethod]
+        public void TestFullyOnboardedWithExpiry()
+        {
+            var result = ApprovalCalculations.CalculateRoleApprovalStatusFromRequirementCompletions(
+                Helpers.IndividualRequirementsMetWithExpiry(
+                    ("A", RequirementStage.Application, true, null),
+                    ("B", RequirementStage.Approval, true, 7),
+                    ("C", RequirementStage.Approval, true, 14),
+                    ("D", RequirementStage.Approval, true, 10),
+                    ("E", RequirementStage.Onboarding, true, 5),
+                    ("F", RequirementStage.Onboarding, true, 12)));
+
+            Assert.AreEqual((RoleApprovalStatus.Onboarded, new DateTime(2022, 1, 5)), result);
         }
     }
 }
