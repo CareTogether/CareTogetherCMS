@@ -440,5 +440,35 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
             AssertEx.SequenceIs(result[guid2].RemovedIndividualRoles);
             AssertEx.SequenceIs(result[guid2].AvailableIndividualApplications, "Acoach", "Aold");
         }
+
+        [TestMethod]
+        public void TestOnboardedOnlyExpiring()
+        {
+            var result = ApprovalCalculations.CalculateCombinedIndividualRoleStatusForFamilyMembers(
+                volunteerRoles, family, utcNow: new DateTime(2022, 1, 20),
+                Helpers.CompletedIndividualRequirementsWithExpiry((guid1, "A", 1, null), (guid1, "Acoach", 1, null), (guid2, "A", 1, null),
+                    (guid1, "B", 5, null), (guid1, "C", 5, 25), (guid2, "Dv2", 5, null), (guid1, "D", 6, null), (guid2, "B", 6, null),
+                    (guid1, "E", 8, null), (guid1, "F", 8, null)),
+                Helpers.ExemptedIndividualRequirements(),
+                Helpers.RemovedIndividualRoles());
+
+            Assert.AreEqual(2, result.Count);
+            AssertEx.DictionaryIs(result[guid1].IndividualRoleVersionApprovals,
+                ("Host", new RoleVersionApproval[] {
+                new ("v1", RoleApprovalStatus.Onboarded, new DateTime(2022, 1, 25)),
+                new ("v2", RoleApprovalStatus.Prospective, null) }),
+                ("Coach", new RoleVersionApproval[] {
+                new ("v1", RoleApprovalStatus.Prospective, null) }));
+            AssertEx.SequenceIs(result[guid1].MissingIndividualRequirements, "Dv2", "Ccoach");
+            AssertEx.SequenceIs(result[guid1].RemovedIndividualRoles);
+            AssertEx.SequenceIs(result[guid1].AvailableIndividualApplications, "Aold");
+            AssertEx.DictionaryIs(result[guid2].IndividualRoleVersionApprovals,
+                ("Host", new RoleVersionApproval[] {
+                new ("v1", RoleApprovalStatus.Prospective, null),
+                new ("v2", RoleApprovalStatus.Prospective, null) }));
+            AssertEx.SequenceIs(result[guid2].MissingIndividualRequirements, "C", "D");
+            AssertEx.SequenceIs(result[guid2].RemovedIndividualRoles);
+            AssertEx.SequenceIs(result[guid2].AvailableIndividualApplications, "Acoach", "Aold");
+        }
     }
 }

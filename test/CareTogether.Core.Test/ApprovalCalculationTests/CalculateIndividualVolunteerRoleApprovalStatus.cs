@@ -255,6 +255,51 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         }
 
         [TestMethod]
+        public void TestApprovedOnlyByExemptionExpiringBeforeExemption()
+        {
+            var (status, expiresAtUtc, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(
+                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: null, requirements),
+                utcNow: new DateTime(2022, 1, 20),
+                Helpers.CompletedWithExpiry(("A", 1, 25), ("B", 2, 24), ("C", 3, 27)),
+                Helpers.Exempted(("D", 30)));
+
+            Assert.AreEqual(RoleApprovalStatus.Approved, status);
+            Assert.AreEqual(new DateTime(2022, 1, 24), expiresAtUtc);
+            AssertEx.SequenceIs(missingRequirements, "E", "F");
+            AssertEx.SequenceIs(availableApplications);
+        }
+
+        [TestMethod]
+        public void TestApprovedOnlyByExemptionExpiringAfterExemption()
+        {
+            var (status, expiresAtUtc, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(
+                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: null, requirements),
+                utcNow: new DateTime(2022, 1, 18),
+                Helpers.CompletedWithExpiry(("A", 1, 25), ("B", 2, 24), ("C", 3, 27)),
+                Helpers.Exempted(("D", 20)));
+
+            Assert.AreEqual(RoleApprovalStatus.Approved, status);
+            Assert.AreEqual(new DateTime(2022, 1, 20), expiresAtUtc);
+            AssertEx.SequenceIs(missingRequirements, "E", "F");
+            AssertEx.SequenceIs(availableApplications);
+        }
+
+        [TestMethod]
+        public void TestProspectiveOnlyBecauseExpired()
+        {
+            var (status, expiresAtUtc, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(
+                new VolunteerRolePolicyVersion("v1", SupersededAtUtc: null, requirements),
+                utcNow: new DateTime(2022, 2, 5),
+                Helpers.CompletedWithExpiry(("A", 1, null), ("B", 2, 24), ("C", 3, 27)),
+                Helpers.Exempted(("D", 30)));
+
+            Assert.AreEqual(RoleApprovalStatus.Prospective, status);
+            Assert.AreEqual(null, expiresAtUtc);
+            AssertEx.SequenceIs(missingRequirements, "B", "C", "D");
+            AssertEx.SequenceIs(availableApplications);
+        }
+
+        [TestMethod]
         public void TestNotApprovedBecauseExemptionExpired()
         {
             var (status, expiresAtUtc, missingRequirements, availableApplications) = ApprovalCalculations.CalculateIndividualVolunteerRoleApprovalStatus(

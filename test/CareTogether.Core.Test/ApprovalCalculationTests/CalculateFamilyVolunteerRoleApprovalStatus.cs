@@ -420,6 +420,48 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         }
 
         [TestMethod]
+        public void TestApprovedOnlyByExemptionExpiring()
+        {
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
+                ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
+                new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: null, requirements),
+                utcNow: new DateTime(2022, 1, 20), family,
+                Helpers.CompletedWithExpiry(("A", 1, 28)),
+                Helpers.Exempted(("B", 30)),
+                Helpers.CompletedIndividualRequirementsWithExpiry((guid1, "C", 3, 29), (guid1, "D", 4, null)),
+                Helpers.ExemptedIndividualRequirements((guid2, "C", 30)),
+                Helpers.RemovedIndividualRoles((guid2, "Role")));
+
+            Assert.AreEqual(RoleApprovalStatus.Approved, status);
+            Assert.AreEqual(new DateTime(2022, 1, 28), expiresAtUtc);
+            AssertEx.SequenceIs(missingRequirements, "E");
+            AssertEx.SequenceIs(availableApplications);
+            AssertEx.DictionaryIs(missingIndividualRequirements,
+                (guid1, new string[] { "F" }));
+        }
+
+        [TestMethod]
+        public void TestApprovedOnlyByExemptionExpiringEarlierIndividual()
+        {
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
+                ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
+                new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: null, requirements),
+                utcNow: new DateTime(2022, 1, 20), family,
+                Helpers.CompletedWithExpiry(("A", 1, 28)),
+                Helpers.Exempted(("B", 30)),
+                Helpers.CompletedIndividualRequirementsWithExpiry((guid1, "C", 3, 26), (guid1, "D", 4, null)),
+                Helpers.ExemptedIndividualRequirements((guid2, "C", 30)),
+                Helpers.RemovedIndividualRoles((guid2, "Role")));
+
+            Assert.AreEqual(RoleApprovalStatus.Approved, status);
+            Assert.AreEqual(new DateTime(2022, 1, 26), expiresAtUtc);
+            AssertEx.SequenceIs(missingRequirements, "E");
+            AssertEx.SequenceIs(availableApplications);
+            AssertEx.DictionaryIs(missingIndividualRequirements,
+                (guid1, new string[] { "F" }));
+        }
+
+        [TestMethod]
         public void TestNotApprovedBecauseExemptionExpired()
         {
             var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
@@ -437,6 +479,27 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
             AssertEx.SequenceIs(missingRequirements, "B");
             AssertEx.SequenceIs(availableApplications);
             AssertEx.DictionaryIs(missingIndividualRequirements);
+        }
+
+        [TestMethod]
+        public void TestNotApprovedBecauseExemptionExpiredExpired()
+        {
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
+                ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
+                new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: null, requirements),
+                utcNow: new DateTime(2022, 1, 20), family,
+                Helpers.CompletedWithExpiry(("A", 1, null)),
+                Helpers.Exempted(("B", 15)),
+                Helpers.CompletedIndividualRequirementsWithExpiry((guid1, "C", 3, 17), (guid1, "D", 4, 21)),
+                Helpers.ExemptedIndividualRequirements((guid2, "C", 30)),
+                Helpers.RemovedIndividualRoles((guid2, "Role")));
+
+            Assert.AreEqual(RoleApprovalStatus.Prospective, status);
+            Assert.AreEqual(null, expiresAtUtc);
+            AssertEx.SequenceIs(missingRequirements, "B");
+            AssertEx.SequenceIs(availableApplications);
+            AssertEx.DictionaryIs(missingIndividualRequirements,
+                (guid1, new string[] { "C" }));
         }
 
         [TestMethod]

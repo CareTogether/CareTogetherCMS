@@ -47,6 +47,19 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                         .ToImmutableList())));
 
         public static
+            ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>>
+            CompletedIndividualRequirementsWithExpiry(params (Guid, string, int, int?)[] completedIndividualRequirements) =>
+            ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>>.Empty.AddRange(
+                completedIndividualRequirements
+                    .GroupBy(completed => completed.Item1,
+                        completed => (completed.Item2, new DateTime(2022, 1, completed.Item3),
+                            completed.Item4.HasValue ? new DateTime(2022, 1, completed.Item4.Value) as DateTime? : null))
+                    .Select(completed => new KeyValuePair<Guid, ImmutableList<CompletedRequirementInfo>>(completed.Key,
+                        completed.Select(c => new CompletedRequirementInfo(Guid.Empty, DateTime.MinValue, new Guid(),
+                            c.Item1, c.Item2, ExpiresAtUtc: c.Item3, null, null))
+                        .ToImmutableList())));
+
+        public static
             ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>>
             ExemptedIndividualRequirements(params (Guid, string, int?)[] exemptedIndividualRequirements) =>
             ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>>.Empty.AddRange(
