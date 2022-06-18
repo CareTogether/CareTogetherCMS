@@ -17,7 +17,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 !SharedCalculations.RequirementMetOrExempted(requiredAction,
                     policySupersededAtUtc: null, utcNow: utcNow,
                     completedRequirements: referralEntry.CompletedRequirements,
-                    exemptedRequirements: referralEntry.ExemptedRequirements))
+                    exemptedRequirements: referralEntry.ExemptedRequirements).IsMetOrExempted)
                 .ToImmutableList();
 
             var missingCustomFields = referralPolicy.CustomFields.Where(customField =>
@@ -100,7 +100,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                     !SharedCalculations.RequirementMetOrExempted(requiredAction,
                         policySupersededAtUtc: null, utcNow: utcNow,
                         completedRequirements: arrangement.CompletedRequirements,
-                        exemptedRequirements: arrangement.ExemptedRequirements))
+                        exemptedRequirements: arrangement.ExemptedRequirements).IsMetOrExempted)
                 .Select(requiredAction => new MissingArrangementRequirement(
                     null, null, null, null,
                     requiredAction, null, null))
@@ -121,7 +121,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                             !SharedCalculations.RequirementMetOrExempted(requiredAction,
                                 policySupersededAtUtc: null, utcNow: utcNow,
                                 completedRequirements: fva.CompletedRequirements,
-                                exemptedRequirements: fva.ExemptedRequirements))
+                                exemptedRequirements: fva.ExemptedRequirements).IsMetOrExempted)
                         .Select(requiredAction => new MissingArrangementRequirement(
                             fva.ArrangementFunction, fva.ArrangementFunctionVariant, fva.FamilyId, null,
                             requiredAction, null, null))
@@ -144,7 +144,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                             !SharedCalculations.RequirementMetOrExempted(requiredAction,
                                 policySupersededAtUtc: null, utcNow: utcNow,
                                 completedRequirements: iva.CompletedRequirements,
-                                exemptedRequirements: iva.ExemptedRequirements))
+                                exemptedRequirements: iva.ExemptedRequirements).IsMetOrExempted)
                         .Select(requiredAction => new MissingArrangementRequirement(
                             iva.ArrangementFunction, iva.ArrangementFunctionVariant, iva.FamilyId, iva.PersonId,
                             requiredAction, null, null))
@@ -560,7 +560,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                     !SharedCalculations.RequirementMetOrExempted(requiredAction,
                         policySupersededAtUtc: null, utcNow: utcNow,
                         completedRequirements: arrangement.CompletedRequirements,
-                        exemptedRequirements: arrangement.ExemptedRequirements))
+                        exemptedRequirements: arrangement.ExemptedRequirements).IsMetOrExempted)
                 .Select(requiredAction => new MissingArrangementRequirement(
                     null, null, null, null,
                     requiredAction, null, null))
@@ -581,7 +581,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                             !SharedCalculations.RequirementMetOrExempted(requiredAction,
                                 policySupersededAtUtc: null, utcNow: utcNow,
                                 completedRequirements: fva.CompletedRequirements,
-                                exemptedRequirements: fva.ExemptedRequirements))
+                                exemptedRequirements: fva.ExemptedRequirements).IsMetOrExempted)
                         .Select(requiredAction => new MissingArrangementRequirement(
                             fva.ArrangementFunction, fva.ArrangementFunctionVariant, fva.FamilyId, null,
                             requiredAction, null, null))
@@ -604,7 +604,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                             !SharedCalculations.RequirementMetOrExempted(requiredAction,
                                 policySupersededAtUtc: null, utcNow: utcNow,
                                 completedRequirements: iva.CompletedRequirements,
-                                exemptedRequirements: iva.ExemptedRequirements))
+                                exemptedRequirements: iva.ExemptedRequirements).IsMetOrExempted)
                         .Select(requiredAction => new MissingArrangementRequirement(
                             iva.ArrangementFunction, iva.ArrangementFunctionVariant, iva.FamilyId, iva.PersonId,
                             requiredAction, null, null))

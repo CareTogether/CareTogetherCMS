@@ -14,6 +14,7 @@ import { a11yProps, TabPanel } from "../TabPanel";
 import { personNameString } from "../Families/PersonName";
 import { DialogHandle } from "../../useDialogHandle";
 import { familyNameString } from "../Families/FamilyName";
+import { add, format, formatDuration } from "date-fns";
 
 type MissingRequirementDialogProps = {
   handle: DialogHandle
@@ -27,6 +28,10 @@ export function MissingRequirementDialog({
   const directory = useDirectoryModel();
   const referrals = useReferralsModel();
   const volunteers = useVolunteersModel();
+
+  const validityDuration = policy.validity
+    ? { days: parseInt(policy.validity.split('.')[0]) }
+    : null;
 
   const [tabValue, setTabValue] = useState(0);
   const [documentFile, setDocumentFile] = useState<File | null>(null);
@@ -238,6 +243,9 @@ export function MissingRequirementDialog({
                 onChange={(date) => date && setCompletedAtLocal(date)}
                 showTodayButton
                 renderInput={(params) => <TextField fullWidth required {...params} />} />}
+            {validityDuration && (completedAtLocal
+              ? <p>This will be valid until {format(add(completedAtLocal, validityDuration), "M/d/yyyy h:mm a")}</p>
+              : <p>Valid for {formatDuration(validityDuration)}</p>)}
           </Grid>
           {(policy.documentLink === DocumentLinkRequirement.Allowed ||
             policy.documentLink === DocumentLinkRequirement.Required) &&

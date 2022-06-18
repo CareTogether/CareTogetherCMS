@@ -24,6 +24,12 @@ export function CompletedRequirementRow({ requirement, context }: CompletedRequi
   const canMarkIncomplete = context.kind === 'Referral' || context.kind === 'Arrangement'
     ? true //TODO: Implement these permissions!
     : permissions(Permission.EditApprovalRequirementCompletion);
+  
+  const dateFormat =
+    context.kind === "Arrangement" ||
+    context.kind === "Family Volunteer Assignment" ||
+    context.kind === "Individual Volunteer Assignment"
+    ? "M/d/yy h:mm a" : "M/d/yy";
 
   const familyLookup = useFamilyLookup();
   const personLookup = usePersonLookup();
@@ -39,9 +45,15 @@ export function CompletedRequirementRow({ requirement, context }: CompletedRequi
               {requirement.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               {requirement.completedAtUtc &&
                 <span style={{ float: 'right' }}>
-                  {format(requirement.completedAtUtc, "M/d/yy h:mm a")}
+                  {format(requirement.completedAtUtc, dateFormat)}
                 </span>}
             </span>
+            {requirement.expiresAtUtc &&
+              <><br /><span style={{ paddingLeft: '30px' }}>
+                {requirement.expiresAtUtc > new Date()
+                  ? `⏰ Expires ${format(requirement.expiresAtUtc, dateFormat)}`
+                  : <span style={{ fontWeight: 'bold'}}>❌ Expired {format(requirement.expiresAtUtc, dateFormat)}</span>}
+              </span></>}
             {context.kind === 'Family Volunteer Assignment' &&
               <><br/><span style={{ paddingLeft: '30px' }}>
                 <FamilyName family={familyLookup(context.assignment.familyId)} />

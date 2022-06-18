@@ -58,7 +58,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void TestNotApplied()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: null, requirements),
                 utcNow: new DateTime(2022, 1, 20), family,
@@ -69,6 +69,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(null, status);
+            Assert.AreEqual(null, expiresAtUtc);
             AssertEx.SequenceIs(missingRequirements);
             AssertEx.SequenceIs(availableApplications, "A");
             AssertEx.DictionaryIs(missingIndividualRequirements);
@@ -77,7 +78,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void TestNotAppliedWillBeSuperseded()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 5), family,
@@ -88,6 +89,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(null, status);
+            Assert.AreEqual(null, expiresAtUtc);
             AssertEx.SequenceIs(missingRequirements);
             AssertEx.SequenceIs(availableApplications, "A");
             AssertEx.DictionaryIs(missingIndividualRequirements);
@@ -96,7 +98,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void TestNotAppliedHasBeenSuperseded()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 20), family,
@@ -107,6 +109,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(null, status);
+            Assert.AreEqual(null, expiresAtUtc);
             AssertEx.SequenceIs(missingRequirements);
             AssertEx.SequenceIs(availableApplications, "A");
             AssertEx.DictionaryIs(missingIndividualRequirements);
@@ -115,7 +118,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void TestAppliedOnly()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: null, requirements),
                 utcNow: new DateTime(2022, 1, 20), family,
@@ -126,6 +129,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(RoleApprovalStatus.Prospective, status);
+            Assert.AreEqual(null, expiresAtUtc);
             AssertEx.SequenceIs(missingRequirements, "B");
             AssertEx.SequenceIs(availableApplications);
             AssertEx.DictionaryIs(missingIndividualRequirements,
@@ -136,7 +140,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void TestAppliedOnlyWillBeSuperseded()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 5), family,
@@ -147,6 +151,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(RoleApprovalStatus.Prospective, status);
+            Assert.AreEqual(null, expiresAtUtc);
             AssertEx.SequenceIs(missingRequirements, "B");
             AssertEx.SequenceIs(availableApplications);
             AssertEx.DictionaryIs(missingIndividualRequirements,
@@ -157,7 +162,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void TestAppliedOnlyHasBeenSuperseded()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 20), family,
@@ -168,6 +173,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(RoleApprovalStatus.Prospective, status);
+            Assert.AreEqual(null, expiresAtUtc);
             AssertEx.SequenceIs(missingRequirements, "B");
             AssertEx.SequenceIs(availableApplications);
             AssertEx.DictionaryIs(missingIndividualRequirements,
@@ -178,7 +184,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void TestAppliedOnlyAfterSupersededDateWillBeSuperseded()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 5), family,
@@ -189,6 +195,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(null, status);
+            Assert.AreEqual(null, expiresAtUtc);
             AssertEx.SequenceIs(missingRequirements);
             // Completing an application after the superseded date is not considered a valid completion for this policy version.
             // The superseded policy's requirements remain "available" for historical data entry purposes.
@@ -199,7 +206,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void TestAppliedOnlyAfterSupersededDateHasBeenSuperseded()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 20), family,
@@ -210,6 +217,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(null, status);
+            Assert.AreEqual(null, expiresAtUtc);
             AssertEx.SequenceIs(missingRequirements);
             // Completing an application after the superseded date is not considered a valid completion for this policy version.
             // The superseded policy's requirements remain "available" for historical data entry purposes.
@@ -220,7 +228,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void TestPartiallyApprovedOnly()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: null, requirements),
                 utcNow: new DateTime(2022, 1, 20), family,
@@ -231,6 +239,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(RoleApprovalStatus.Prospective, status);
+            Assert.AreEqual(null, expiresAtUtc);
             AssertEx.SequenceIs(missingRequirements);
             AssertEx.SequenceIs(availableApplications);
             AssertEx.DictionaryIs(missingIndividualRequirements,
@@ -240,7 +249,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void TestPartiallyApprovedWillBeSuperseded()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 5), family,
@@ -251,6 +260,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(RoleApprovalStatus.Prospective, status);
+            Assert.AreEqual(null, expiresAtUtc);
             AssertEx.SequenceIs(missingRequirements);
             AssertEx.SequenceIs(availableApplications);
             AssertEx.DictionaryIs(missingIndividualRequirements,
@@ -260,7 +270,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void TestPartiallyApprovedHasBeenSuperseded()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 20), family,
@@ -271,6 +281,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(RoleApprovalStatus.Prospective, status);
+            Assert.AreEqual(null, expiresAtUtc);
             AssertEx.SequenceIs(missingRequirements);
             AssertEx.SequenceIs(availableApplications);
             AssertEx.DictionaryIs(missingIndividualRequirements,
@@ -280,7 +291,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void TestPartiallyApprovedAfterSupersededDateWillBeSuperseded()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 5), family,
@@ -291,6 +302,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(RoleApprovalStatus.Prospective, status);
+            Assert.AreEqual(null, expiresAtUtc);
             // Requirements from superseded policies remain "available" for historical data entry purposes.
             AssertEx.SequenceIs(missingRequirements, "B");
             AssertEx.SequenceIs(availableApplications);
@@ -302,7 +314,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void TestPartiallyApprovedAfterSupersededDateHasBeenSuperseded()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 20), family,
@@ -313,6 +325,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(RoleApprovalStatus.Prospective, status);
+            Assert.AreEqual(null, expiresAtUtc);
             // Requirements from superseded policies remain "available" for historical data entry purposes.
             AssertEx.SequenceIs(missingRequirements, "B");
             AssertEx.SequenceIs(availableApplications);
@@ -324,7 +337,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void TestApprovedOnly()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: null, requirements),
                 utcNow: new DateTime(2022, 1, 20), family,
@@ -335,6 +348,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(RoleApprovalStatus.Approved, status);
+            Assert.AreEqual(null, expiresAtUtc);
             AssertEx.SequenceIs(missingRequirements, "E");
             AssertEx.SequenceIs(availableApplications);
             AssertEx.DictionaryIs(missingIndividualRequirements,
@@ -344,7 +358,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void TestNotApprovedOnlyWithoutRemovedRole()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: null, requirements),
                 utcNow: new DateTime(2022, 1, 20), family,
@@ -355,6 +369,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles());
 
             Assert.AreEqual(RoleApprovalStatus.Prospective, status);
+            Assert.AreEqual(null, expiresAtUtc);
             AssertEx.SequenceIs(missingRequirements);
             AssertEx.SequenceIs(availableApplications);
             AssertEx.DictionaryIs(missingIndividualRequirements,
@@ -364,7 +379,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void TestApprovedOnlyWithoutRemovedRole()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: null, requirements),
                 utcNow: new DateTime(2022, 1, 20), family,
@@ -375,6 +390,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles());
 
             Assert.AreEqual(RoleApprovalStatus.Approved, status);
+            Assert.AreEqual(null, expiresAtUtc);
             AssertEx.SequenceIs(missingRequirements, "E");
             AssertEx.SequenceIs(availableApplications);
             AssertEx.DictionaryIs(missingIndividualRequirements,
@@ -385,7 +401,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void TestApprovedOnlyByExemption()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: null, requirements),
                 utcNow: new DateTime(2022, 1, 20), family,
@@ -396,6 +412,49 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(RoleApprovalStatus.Approved, status);
+            Assert.AreEqual(new DateTime(2022, 1, 30), expiresAtUtc);
+            AssertEx.SequenceIs(missingRequirements, "E");
+            AssertEx.SequenceIs(availableApplications);
+            AssertEx.DictionaryIs(missingIndividualRequirements,
+                (guid1, new string[] { "F" }));
+        }
+
+        [TestMethod]
+        public void TestApprovedOnlyByExemptionExpiring()
+        {
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
+                ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
+                new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: null, requirements),
+                utcNow: new DateTime(2022, 1, 20), family,
+                Helpers.CompletedWithExpiry(("A", 1, 28)),
+                Helpers.Exempted(("B", 30)),
+                Helpers.CompletedIndividualRequirementsWithExpiry((guid1, "C", 3, 29), (guid1, "D", 4, null)),
+                Helpers.ExemptedIndividualRequirements((guid2, "C", 30)),
+                Helpers.RemovedIndividualRoles((guid2, "Role")));
+
+            Assert.AreEqual(RoleApprovalStatus.Approved, status);
+            Assert.AreEqual(new DateTime(2022, 1, 28), expiresAtUtc);
+            AssertEx.SequenceIs(missingRequirements, "E");
+            AssertEx.SequenceIs(availableApplications);
+            AssertEx.DictionaryIs(missingIndividualRequirements,
+                (guid1, new string[] { "F" }));
+        }
+
+        [TestMethod]
+        public void TestApprovedOnlyByExemptionExpiringEarlierIndividual()
+        {
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
+                ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
+                new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: null, requirements),
+                utcNow: new DateTime(2022, 1, 20), family,
+                Helpers.CompletedWithExpiry(("A", 1, 28)),
+                Helpers.Exempted(("B", 30)),
+                Helpers.CompletedIndividualRequirementsWithExpiry((guid1, "C", 3, 26), (guid1, "D", 4, null)),
+                Helpers.ExemptedIndividualRequirements((guid2, "C", 30)),
+                Helpers.RemovedIndividualRoles((guid2, "Role")));
+
+            Assert.AreEqual(RoleApprovalStatus.Approved, status);
+            Assert.AreEqual(new DateTime(2022, 1, 26), expiresAtUtc);
             AssertEx.SequenceIs(missingRequirements, "E");
             AssertEx.SequenceIs(availableApplications);
             AssertEx.DictionaryIs(missingIndividualRequirements,
@@ -405,7 +464,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void TestNotApprovedBecauseExemptionExpired()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: null, requirements),
                 utcNow: new DateTime(2022, 1, 20), family,
@@ -416,15 +475,37 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(RoleApprovalStatus.Prospective, status);
+            Assert.AreEqual(null, expiresAtUtc);
             AssertEx.SequenceIs(missingRequirements, "B");
             AssertEx.SequenceIs(availableApplications);
             AssertEx.DictionaryIs(missingIndividualRequirements);
         }
 
         [TestMethod]
+        public void TestNotApprovedBecauseExemptionExpiredExpired()
+        {
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
+                ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
+                new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: null, requirements),
+                utcNow: new DateTime(2022, 1, 20), family,
+                Helpers.CompletedWithExpiry(("A", 1, null)),
+                Helpers.Exempted(("B", 15)),
+                Helpers.CompletedIndividualRequirementsWithExpiry((guid1, "C", 3, 17), (guid1, "D", 4, 21)),
+                Helpers.ExemptedIndividualRequirements((guid2, "C", 30)),
+                Helpers.RemovedIndividualRoles((guid2, "Role")));
+
+            Assert.AreEqual(RoleApprovalStatus.Prospective, status);
+            Assert.AreEqual(null, expiresAtUtc);
+            AssertEx.SequenceIs(missingRequirements, "B");
+            AssertEx.SequenceIs(availableApplications);
+            AssertEx.DictionaryIs(missingIndividualRequirements,
+                (guid1, new string[] { "C" }));
+        }
+
+        [TestMethod]
         public void TestNotApprovedBecauseIndividualExemptionExpired()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: null, requirements),
                 utcNow: new DateTime(2022, 1, 20), family,
@@ -435,6 +516,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(RoleApprovalStatus.Prospective, status);
+            Assert.AreEqual(null, expiresAtUtc);
             AssertEx.SequenceIs(missingRequirements);
             AssertEx.SequenceIs(availableApplications);
             AssertEx.DictionaryIs(missingIndividualRequirements,
@@ -444,7 +526,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void TestApprovedWillBeSuperseded()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 5), family,
@@ -455,6 +537,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(RoleApprovalStatus.Approved, status);
+            Assert.AreEqual(null, expiresAtUtc);
             AssertEx.SequenceIs(missingRequirements, "E");
             AssertEx.SequenceIs(availableApplications);
             AssertEx.DictionaryIs(missingIndividualRequirements,
@@ -464,7 +547,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void TestApprovedHasBeenSuperseded()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 20), family,
@@ -475,6 +558,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(RoleApprovalStatus.Approved, status);
+            Assert.AreEqual(null, expiresAtUtc);
             AssertEx.SequenceIs(missingRequirements, "E");
             AssertEx.SequenceIs(availableApplications);
             AssertEx.DictionaryIs(missingIndividualRequirements,
@@ -484,7 +568,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void TestApprovedAfterSupersededDateWillBeSuperseded()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 5), family,
@@ -495,6 +579,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(RoleApprovalStatus.Prospective, status);
+            Assert.AreEqual(null, expiresAtUtc);
             // Requirements from superseded policies remain "available" for historical data entry purposes.
             AssertEx.SequenceIs(missingRequirements, "B");
             AssertEx.SequenceIs(availableApplications);
@@ -504,7 +589,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void TestApprovedIndividualAfterSupersededDateWillBeSuperseded()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 5), family,
@@ -515,6 +600,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(RoleApprovalStatus.Prospective, status);
+            Assert.AreEqual(null, expiresAtUtc);
             // Requirements from superseded policies remain "available" for historical data entry purposes.
             AssertEx.SequenceIs(missingRequirements);
             AssertEx.SequenceIs(availableApplications);
@@ -525,7 +611,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void TestApprovedAfterSupersededDateHasBeenSuperseded()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 20), family,
@@ -536,6 +622,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(RoleApprovalStatus.Prospective, status);
+            Assert.AreEqual(null, expiresAtUtc);
             // Requirements from superseded policies remain "available" for historical data entry purposes.
             AssertEx.SequenceIs(missingRequirements, "B");
             AssertEx.SequenceIs(availableApplications);
@@ -544,7 +631,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void TestOnboardedOnly()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: null, requirements),
                 utcNow: new DateTime(2022, 1, 20), family,
@@ -555,6 +642,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(RoleApprovalStatus.Onboarded, status);
+            Assert.AreEqual(null, expiresAtUtc);
             AssertEx.SequenceIs(missingRequirements);
             AssertEx.SequenceIs(availableApplications);
             AssertEx.DictionaryIs(missingIndividualRequirements);
@@ -563,7 +651,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void TestOnboardedOnlyByExemption()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: null, requirements),
                 utcNow: new DateTime(2022, 1, 20), family,
@@ -574,6 +662,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(RoleApprovalStatus.Onboarded, status);
+            Assert.AreEqual(new DateTime(2022, 1, 30), expiresAtUtc);
             AssertEx.SequenceIs(missingRequirements);
             AssertEx.SequenceIs(availableApplications);
             AssertEx.DictionaryIs(missingIndividualRequirements);
@@ -582,7 +671,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void TestNotOnboardedBecauseExemptionExpired()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: null, requirements),
                 utcNow: new DateTime(2022, 1, 20), family,
@@ -593,6 +682,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(RoleApprovalStatus.Approved, status);
+            Assert.AreEqual(null, expiresAtUtc);
             AssertEx.SequenceIs(missingRequirements);
             AssertEx.SequenceIs(availableApplications);
             AssertEx.DictionaryIs(missingIndividualRequirements,
@@ -602,7 +692,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void TestOnboardedWillBeSuperseded()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 5), family,
@@ -613,6 +703,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(RoleApprovalStatus.Onboarded, status);
+            Assert.AreEqual(null, expiresAtUtc);
             AssertEx.SequenceIs(missingRequirements);
             AssertEx.SequenceIs(availableApplications);
             AssertEx.DictionaryIs(missingIndividualRequirements);
@@ -621,7 +712,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void TestOnboardedHasBeenSuperseded()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 20), family,
@@ -632,6 +723,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(RoleApprovalStatus.Onboarded, status);
+            Assert.AreEqual(null, expiresAtUtc);
             AssertEx.SequenceIs(missingRequirements);
             AssertEx.SequenceIs(availableApplications);
             AssertEx.DictionaryIs(missingIndividualRequirements);
@@ -640,7 +732,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void TestOnboardedAfterSupersededDateWillBeSuperseded()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 5), family,
@@ -651,6 +743,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(RoleApprovalStatus.Approved, status);
+            Assert.AreEqual(null, expiresAtUtc);
             // Requirements from superseded policies remain "available" for historical data entry purposes.
             AssertEx.SequenceIs(missingRequirements, "E");
             AssertEx.SequenceIs(availableApplications);
@@ -660,7 +753,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void TestOnboardedAfterSupersededDateHasBeenSuperseded()
         {
-            var (status, missingRequirements, availableApplications, missingIndividualRequirements) =
+            var (status, expiresAtUtc, missingRequirements, availableApplications, missingIndividualRequirements) =
                 ApprovalCalculations.CalculateFamilyVolunteerRoleApprovalStatus("Role",
                 new VolunteerFamilyRolePolicyVersion("v1", SupersededAtUtc: new DateTime(2022, 1, 10), requirements),
                 utcNow: new DateTime(2022, 1, 20), family,
@@ -671,6 +764,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles((guid2, "Role")));
 
             Assert.AreEqual(RoleApprovalStatus.Approved, status);
+            Assert.AreEqual(null, expiresAtUtc);
             // Requirements from superseded policies remain "available" for historical data entry purposes.
             AssertEx.SequenceIs(missingRequirements, "E");
             AssertEx.SequenceIs(availableApplications);

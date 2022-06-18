@@ -67,7 +67,7 @@ namespace CareTogether.Resources.Referrals
                         {
                             CompletedRequirements = referralEntry.CompletedRequirements.Add(
                                 new CompletedRequirementInfo(userId, timestampUtc, c.CompletedRequirementId,
-                                    c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId, c.NoteId))
+                                    c.RequirementName, c.CompletedAtUtc, ExpiresAtUtc: null, c.UploadedDocumentId, c.NoteId))
                         }, new ReferralRequirementCompleted(userId, timestampUtc,
                             c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId, c.NoteId)),
                         MarkReferralRequirementIncomplete c => (referralEntry with
@@ -189,7 +189,7 @@ namespace CareTogether.Resources.Referrals
                             {
                                 CompletedRequirements = arrangementEntry.CompletedRequirements.Add(
                                     new CompletedRequirementInfo(userId, timestampUtc, c.CompletedRequirementId,
-                                        c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId, c.NoteId))
+                                        c.RequirementName, c.CompletedAtUtc, ExpiresAtUtc: null, c.UploadedDocumentId, c.NoteId))
                             }, new ArrangementRequirementCompleted(userId, timestampUtc, arrangementId,
                                 c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId, c.NoteId)),
                             CompleteVolunteerFamilyAssignmentRequirement c => (arrangementEntry with
@@ -202,7 +202,7 @@ namespace CareTogether.Resources.Referrals
                                     {
                                         CompletedRequirements = fva.CompletedRequirements.Add(
                                             new CompletedRequirementInfo(userId, timestampUtc, c.CompletedRequirementId,
-                                                c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId, c.NoteId))
+                                                c.RequirementName, c.CompletedAtUtc, ExpiresAtUtc: null, c.UploadedDocumentId, c.NoteId))
                                     })
                             }, new ArrangementRequirementCompleted(userId, timestampUtc, arrangementId,
                                 c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId, c.NoteId)),
@@ -217,7 +217,7 @@ namespace CareTogether.Resources.Referrals
                                     {
                                         CompletedRequirements = iva.CompletedRequirements.Add(
                                             new CompletedRequirementInfo(userId, timestampUtc, c.CompletedRequirementId,
-                                                c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId, c.NoteId))
+                                                c.RequirementName, c.CompletedAtUtc, ExpiresAtUtc: null, c.UploadedDocumentId, c.NoteId))
                                     })
                             }, new ArrangementRequirementCompleted(userId, timestampUtc, arrangementId,
                                 c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId, c.NoteId)),

@@ -1,4 +1,5 @@
 import { Chip } from "@mui/material";
+import { format } from "date-fns";
 import { RoleApprovalStatus, RoleVersionApproval } from "../../GeneratedClient";
 
 type VolunteerRoleApprovalStatusChipProps = {
@@ -7,11 +8,27 @@ type VolunteerRoleApprovalStatusChipProps = {
 };
 
 export function VolunteerRoleApprovalStatusChip({ roleName, roleVersionApprovals }: VolunteerRoleApprovalStatusChipProps) {
-  return roleVersionApprovals.some(x => x.approvalStatus === RoleApprovalStatus.Onboarded)
-    ? <Chip size="small" color="primary" label={"Onboarded " + roleName} />
+  const determination =
+    roleVersionApprovals.some(x => x.approvalStatus === RoleApprovalStatus.Onboarded)
+    ? RoleApprovalStatus.Onboarded
     : roleVersionApprovals.some(x => x.approvalStatus === RoleApprovalStatus.Approved)
-      ? <Chip size="small" color="secondary" label={"Approved " + roleName} />
-      : roleVersionApprovals.some(x => x.approvalStatus === RoleApprovalStatus.Prospective)
-        ? <Chip size="small" color="secondary" label={"Prospective " + roleName} />
-        : <></>;
+    ? RoleApprovalStatus.Approved
+    : roleVersionApprovals.some(x => x.approvalStatus === RoleApprovalStatus.Prospective)
+    ? RoleApprovalStatus.Prospective
+    : null;
+
+  const expiration = determination
+    ? roleVersionApprovals.reduce((earliestExpiration, rva) =>
+      rva.expiresAt && (!earliestExpiration || rva.expiresAt < earliestExpiration)
+      ? rva.expiresAt : earliestExpiration, null as Date | null)
+    : null;
+  
+  return determination
+    ? <Chip size="small"
+        color={determination === RoleApprovalStatus.Onboarded
+          ? "primary" : "secondary"}
+        label={expiration
+          ? `${RoleApprovalStatus[determination]} ${roleName} until ${format(expiration, "M/d/yy")}`
+          : `${RoleApprovalStatus[determination]} ${roleName}`} />
+    : <></>;
 }

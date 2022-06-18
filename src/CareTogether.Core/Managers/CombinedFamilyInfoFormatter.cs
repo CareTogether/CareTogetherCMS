@@ -4,6 +4,7 @@ using CareTogether.Resources;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
+using CareTogether.Resources.Policies;
 using CareTogether.Resources.Referrals;
 using Nito.AsyncEx;
 using System;
@@ -22,11 +23,12 @@ namespace CareTogether.Managers
         private readonly IReferralsResource referralsResource;
         private readonly IDirectoryResource directoryResource;
         private readonly INotesResource notesResource;
+        private readonly IPoliciesResource policiesResource;
 
 
         public CombinedFamilyInfoFormatter(IPolicyEvaluationEngine policyEvaluationEngine, IAuthorizationEngine authorizationEngine,
             IApprovalsResource approvalsResource, IReferralsResource referralsResource, IDirectoryResource directoryResource,
-            INotesResource notesResource)
+            INotesResource notesResource, IPoliciesResource policiesResource)
         {
             this.policyEvaluationEngine = policyEvaluationEngine;
             this.authorizationEngine = authorizationEngine;
@@ -34,18 +36,22 @@ namespace CareTogether.Managers
             this.referralsResource = referralsResource;
             this.directoryResource = directoryResource;
             this.notesResource = notesResource;
+            this.policiesResource = policiesResource;
         }
 
 
-        public async Task<CombinedFamilyInfo> RenderCombinedFamilyInfoAsync(Guid organizationId, Guid locationId, Guid familyId,
-            ClaimsPrincipal user)
+        public async Task<CombinedFamilyInfo> RenderCombinedFamilyInfoAsync(Guid organizationId, Guid locationId,
+            Guid familyId, ClaimsPrincipal user)
         {
+            var locationPolicy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
+
             var family = await directoryResource.FindFamilyAsync(organizationId, locationId, familyId);
             var disclosedFamily = await authorizationEngine.DiscloseFamilyAsync(user, family);
 
             var partneringFamilyInfo = await RenderPartneringFamilyInfoAsync(organizationId, locationId, family, user);
 
-            var (volunteerFamilyInfo, uploadedApprovalDocuments) = await RenderVolunteerFamilyInfoAsync(organizationId, locationId, family, user);
+            var (volunteerFamilyInfo, uploadedApprovalDocuments) = await RenderVolunteerFamilyInfoAsync(
+                organizationId, locationId, locationPolicy, family, user);
 
             var notes = await notesResource.ListFamilyNotesAsync(organizationId, locationId, familyId);
             var disclosedNotes = (await notes
@@ -119,7 +125,8 @@ namespace CareTogether.Managers
                     entry.Comments);
         }
 
-        private async Task<(VolunteerFamilyInfo?, ImmutableList<UploadedDocumentInfo>)> RenderVolunteerFamilyInfoAsync(Guid organizationId, Guid locationId,
+        private async Task<(VolunteerFamilyInfo?, ImmutableList<UploadedDocumentInfo>)> RenderVolunteerFamilyInfoAsync(
+            Guid organizationId, Guid locationId, EffectiveLocationPolicy locationPolicy,
             Family family, ClaimsPrincipal user)
         {
             var entry = await approvalsResource.TryGetVolunteerFamilyAsync(organizationId, locationId, family.Id);
@@ -137,12 +144,21 @@ namespace CareTogether.Managers
                 x => x.Key,
                 x => x.Value.RemovedRoles);
 
+            // Apply default action expiration policies to completed requirements before running approval calculations.
+            var applyValidity = (CompletedRequirementInfo completed) =>
+                ApplyValidityPolicyToCompletedRequirement(locationPolicy, completed);
+            var completedFamilyRequirementsWithExpiration = entry.CompletedRequirements
+                .Select(applyValidity).ToImmutableList();
+            var completedIndividualRequirementsWithExpiration = completedIndividualRequirements
+                .ToImmutableDictionary(entry => entry.Key, entry => entry.Value
+                    .Select(applyValidity).ToImmutableList());
+
             var volunteerFamilyApprovalStatus = await policyEvaluationEngine.CalculateVolunteerFamilyApprovalStatusAsync(
-                organizationId, locationId, family, entry.CompletedRequirements, entry.ExemptedRequirements, entry.RemovedRoles,
-                completedIndividualRequirements, exemptedIndividualRequirements, removedIndividualRoles);
+                organizationId, locationId, family, completedFamilyRequirementsWithExpiration, entry.ExemptedRequirements, entry.RemovedRoles,
+                completedIndividualRequirementsWithExpiration, exemptedIndividualRequirements, removedIndividualRoles);
 
             var volunteerFamilyInfo = new VolunteerFamilyInfo(
-                entry.CompletedRequirements, entry.ExemptedRequirements, entry.RemovedRoles,
+                completedFamilyRequirementsWithExpiration, entry.ExemptedRequirements, entry.RemovedRoles,
                 volunteerFamilyApprovalStatus.MissingFamilyRequirements,
                 volunteerFamilyApprovalStatus.AvailableFamilyApplications,
                 volunteerFamilyApprovalStatus.FamilyRoleApprovals,
@@ -150,9 +166,10 @@ namespace CareTogether.Managers
                     x => x.Key,
                     x =>
                     {
-                        var hasEntry = entry.IndividualEntries.TryGetValue(x.Key, out var individualEntry);
+                        entry.IndividualEntries.TryGetValue(x.Key, out var individualEntry);
+                        completedIndividualRequirementsWithExpiration.TryGetValue(x.Key, out var completedRequirements);
                         return new VolunteerInfo(
-                            individualEntry?.CompletedRequirements ?? ImmutableList<CompletedRequirementInfo>.Empty,
+                            completedRequirements ?? ImmutableList<CompletedRequirementInfo>.Empty,
                             individualEntry?.ExemptedRequirements ?? ImmutableList<ExemptedRequirementInfo>.Empty,
                             individualEntry?.RemovedRoles ?? ImmutableList<RemovedRole>.Empty,
                             x.Value.MissingIndividualRequirements,
@@ -164,5 +181,16 @@ namespace CareTogether.Managers
             var disclosedVolunteerFamilyInfo = await authorizationEngine.DiscloseVolunteerFamilyInfoAsync(user, volunteerFamilyInfo);
             return (disclosedVolunteerFamilyInfo, entry.UploadedDocuments);
         }
+
+        internal static CompletedRequirementInfo ApplyValidityPolicyToCompletedRequirement(
+            EffectiveLocationPolicy policy, CompletedRequirementInfo completed)
+        {
+            var actionDefinition = policy.ActionDefinitions[completed.RequirementName];
+            return completed with
+            {
+                ExpiresAtUtc = actionDefinition.Validity.HasValue ? completed.CompletedAtUtc + actionDefinition.Validity : null
+            };
+        }
+
     }
 }

@@ -1,4 +1,5 @@
-﻿using CareTogether.Resources;
+﻿using CareTogether.Engines.PolicyEvaluation;
+using CareTogether.Resources;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Policies;
 using System;
@@ -13,7 +14,14 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public static ImmutableList<CompletedRequirementInfo> Completed(params (string, int)[] completionsWithDates) =>
             completionsWithDates.Select(completion =>
                 new CompletedRequirementInfo(Guid.Empty, DateTime.MinValue,
-                    Guid.Empty, completion.Item1, new DateTime(2022, 1, completion.Item2), null, null))
+                    Guid.Empty, completion.Item1, new DateTime(2022, 1, completion.Item2), ExpiresAtUtc: null, null, null))
+            .ToImmutableList();
+
+        public static ImmutableList<CompletedRequirementInfo> CompletedWithExpiry(params (string, int, int?)[] completionsWithDates) =>
+            completionsWithDates.Select(completion =>
+                new CompletedRequirementInfo(Guid.Empty, DateTime.MinValue,
+                    Guid.Empty, completion.Item1, new DateTime(2022, 1, completion.Item2),
+                    ExpiresAtUtc: completion.Item3.HasValue ? new DateTime(2022, 1, completion.Item3.Value) : null, null, null))
             .ToImmutableList();
 
         public static ImmutableList<ExemptedRequirementInfo> Exempted(params (string, int?)[] exemptionsWithExpirations) =>
@@ -35,7 +43,20 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     .GroupBy(completed => completed.Item1, completed => (completed.Item2, new DateTime(2022, 1, completed.Item3)))
                     .Select(completed => new KeyValuePair<Guid, ImmutableList<CompletedRequirementInfo>>(completed.Key,
                         completed.Select(c => new CompletedRequirementInfo(Guid.Empty, DateTime.MinValue, new Guid(),
-                            c.Item1, c.Item2, null, null))
+                            c.Item1, c.Item2, ExpiresAtUtc: null, null, null))
+                        .ToImmutableList())));
+
+        public static
+            ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>>
+            CompletedIndividualRequirementsWithExpiry(params (Guid, string, int, int?)[] completedIndividualRequirements) =>
+            ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>>.Empty.AddRange(
+                completedIndividualRequirements
+                    .GroupBy(completed => completed.Item1,
+                        completed => (completed.Item2, new DateTime(2022, 1, completed.Item3),
+                            completed.Item4.HasValue ? new DateTime(2022, 1, completed.Item4.Value) as DateTime? : null))
+                    .Select(completed => new KeyValuePair<Guid, ImmutableList<CompletedRequirementInfo>>(completed.Key,
+                        completed.Select(c => new CompletedRequirementInfo(Guid.Empty, DateTime.MinValue, new Guid(),
+                            c.Item1, c.Item2, ExpiresAtUtc: c.Item3, null, null))
                         .ToImmutableList())));
 
         public static
@@ -70,8 +91,18 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
             requirementsMet.ToImmutableList();
 
         public static
-            ImmutableList<(string ActionName, RequirementStage Stage, bool RequirementMetOrExempted)>
+            ImmutableList<(string ActionName, RequirementStage Stage, SharedCalculations.RequirementCheckResult RequirementMetOrExempted)>
             IndividualRequirementsMet(params (string, RequirementStage, bool)[] requirementsMet) =>
+            requirementsMet.Select(x => (x.Item1, x.Item2, new SharedCalculations.RequirementCheckResult(x.Item3, null))).ToImmutableList();
+
+        public static
+            ImmutableList<(string ActionName, RequirementStage Stage, SharedCalculations.RequirementCheckResult RequirementMetOrExempted)>
+            IndividualRequirementsMetWithExpiry(params (string, RequirementStage, bool, int?)[] requirementsMet) =>
+            requirementsMet.Select(x => (x.Item1, x.Item2, new SharedCalculations.RequirementCheckResult(x.Item3, x.Item4.HasValue ? new DateTime(2022, 1, x.Item4.Value) : null))).ToImmutableList();
+
+        public static
+            ImmutableList<(string ActionName, RequirementStage Stage, bool RequirementMetOrExempted)>
+            IndividualRequirementsMetSimple(params (string, RequirementStage, bool)[] requirementsMet) =>
             requirementsMet.ToImmutableList();
 
         public static ImmutableList<VolunteerApprovalRequirement> IndividualApprovalRequirements(params (RequirementStage, string)[] requirements) =>

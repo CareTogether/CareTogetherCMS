@@ -119,7 +119,7 @@ namespace CareTogether.Api
 
             // Shared family info formatting logic used by all manager services
             var combinedFamilyInfoFormatter = new CombinedFamilyInfoFormatter(policyEvaluationEngine, authorizationEngine,
-                approvalsResource, referralsResource, directoryResource, notesResource);
+                approvalsResource, referralsResource, directoryResource, notesResource, policiesResource);
 
             // Manager services
             services.AddSingleton<IDirectoryManager>(new DirectoryManager(authorizationEngine, directoryResource,

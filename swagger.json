@@ -974,6 +974,11 @@
             "type": "string",
             "format": "uri",
             "nullable": true
+          },
+          "validity": {
+            "type": "string",
+            "format": "duration",
+            "nullable": true
           }
         }
       },
@@ -2128,6 +2133,11 @@
             "type": "string",
             "format": "date-time"
           },
+          "expiresAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "uploadedDocumentId": {
             "type": "string",
             "format": "guid",
@@ -2519,6 +2529,11 @@
           },
           "approvalStatus": {
             "$ref": "#/components/schemas/RoleApprovalStatus"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           }
         }
       },

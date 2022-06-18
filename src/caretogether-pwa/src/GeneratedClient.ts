@@ -1167,6 +1167,7 @@ export class ActionRequirement implements IActionRequirement {
     noteEntry?: NoteEntryRequirement;
     instructions?: string | undefined;
     infoLink?: string | undefined;
+    validity?: string | undefined;
 
     constructor(data?: IActionRequirement) {
         if (data) {
@@ -1183,6 +1184,7 @@ export class ActionRequirement implements IActionRequirement {
             this.noteEntry = _data["noteEntry"];
             this.instructions = _data["instructions"];
             this.infoLink = _data["infoLink"];
+            this.validity = _data["validity"];
         }
     }
 
@@ -1199,6 +1201,7 @@ export class ActionRequirement implements IActionRequirement {
         data["noteEntry"] = this.noteEntry;
         data["instructions"] = this.instructions;
         data["infoLink"] = this.infoLink;
+        data["validity"] = this.validity;
         return data;
     }
 }
@@ -1208,6 +1211,7 @@ export interface IActionRequirement {
     noteEntry?: NoteEntryRequirement;
     instructions?: string | undefined;
     infoLink?: string | undefined;
+    validity?: string | undefined;
 }
 
 export enum DocumentLinkRequirement {
@@ -3444,6 +3448,7 @@ export class CompletedRequirementInfo implements ICompletedRequirementInfo {
     completedRequirementId?: string;
     requirementName?: string;
     completedAtUtc?: Date;
+    expiresAtUtc?: Date | undefined;
     uploadedDocumentId?: string | undefined;
     noteId?: string | undefined;
 
@@ -3463,6 +3468,7 @@ export class CompletedRequirementInfo implements ICompletedRequirementInfo {
             this.completedRequirementId = _data["completedRequirementId"];
             this.requirementName = _data["requirementName"];
             this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
+            this.expiresAtUtc = _data["expiresAtUtc"] ? new Date(_data["expiresAtUtc"].toString()) : <any>undefined;
             this.uploadedDocumentId = _data["uploadedDocumentId"];
             this.noteId = _data["noteId"];
         }
@@ -3482,6 +3488,7 @@ export class CompletedRequirementInfo implements ICompletedRequirementInfo {
         data["completedRequirementId"] = this.completedRequirementId;
         data["requirementName"] = this.requirementName;
         data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
+        data["expiresAtUtc"] = this.expiresAtUtc ? this.expiresAtUtc.toISOString() : <any>undefined;
         data["uploadedDocumentId"] = this.uploadedDocumentId;
         data["noteId"] = this.noteId;
         return data;
@@ -3494,6 +3501,7 @@ export interface ICompletedRequirementInfo {
     completedRequirementId?: string;
     requirementName?: string;
     completedAtUtc?: Date;
+    expiresAtUtc?: Date | undefined;
     uploadedDocumentId?: string | undefined;
     noteId?: string | undefined;
 }
@@ -4203,6 +4211,7 @@ export enum RoleRemovalReason {
 export class RoleVersionApproval implements IRoleVersionApproval {
     version?: string;
     approvalStatus?: RoleApprovalStatus;
+    expiresAt?: Date | undefined;
 
     constructor(data?: IRoleVersionApproval) {
         if (data) {
@@ -4217,6 +4226,7 @@ export class RoleVersionApproval implements IRoleVersionApproval {
         if (_data) {
             this.version = _data["version"];
             this.approvalStatus = _data["approvalStatus"];
+            this.expiresAt = _data["expiresAt"] ? new Date(_data["expiresAt"].toString()) : <any>undefined;
         }
     }
 
@@ -4231,6 +4241,7 @@ export class RoleVersionApproval implements IRoleVersionApproval {
         data = typeof data === 'object' ? data : {};
         data["version"] = this.version;
         data["approvalStatus"] = this.approvalStatus;
+        data["expiresAt"] = this.expiresAt ? this.expiresAt.toISOString() : <any>undefined;
         return data;
     }
 }
@@ -4238,6 +4249,7 @@ export class RoleVersionApproval implements IRoleVersionApproval {
 export interface IRoleVersionApproval {
     version?: string;
     approvalStatus?: RoleApprovalStatus;
+    expiresAt?: Date | undefined;
 }
 
 export enum RoleApprovalStatus {

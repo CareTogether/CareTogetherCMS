@@ -14,7 +14,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         {
             var result = ApprovalCalculations.CalculateAvailableIndividualApplicationsFromRequirementCompletion(
                 status: null,
-                Helpers.IndividualRequirementsMet(
+                Helpers.IndividualRequirementsMetSimple(
                     ("A", RequirementStage.Application, true),
                     ("B", RequirementStage.Approval, true),
                     ("C", RequirementStage.Approval, true),
@@ -30,7 +30,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         {
             var result = ApprovalCalculations.CalculateAvailableIndividualApplicationsFromRequirementCompletion(
                 status: null,
-                Helpers.IndividualRequirementsMet(
+                Helpers.IndividualRequirementsMetSimple(
                     ("A", RequirementStage.Application, false),
                     ("B", RequirementStage.Approval, false),
                     ("C", RequirementStage.Approval, false),
@@ -46,7 +46,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         {
             var result = ApprovalCalculations.CalculateAvailableIndividualApplicationsFromRequirementCompletion(
                 status: RoleApprovalStatus.Prospective,
-                Helpers.IndividualRequirementsMet(
+                Helpers.IndividualRequirementsMetSimple(
                     ("A", RequirementStage.Application, true),
                     ("B", RequirementStage.Approval, true),
                     ("C", RequirementStage.Approval, true),
@@ -62,7 +62,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         {
             var result = ApprovalCalculations.CalculateAvailableIndividualApplicationsFromRequirementCompletion(
                 status: RoleApprovalStatus.Prospective,
-                Helpers.IndividualRequirementsMet(
+                Helpers.IndividualRequirementsMetSimple(
                     ("A", RequirementStage.Application, false),
                     ("B", RequirementStage.Approval, false),
                     ("C", RequirementStage.Approval, false),
@@ -78,7 +78,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         {
             var result = ApprovalCalculations.CalculateAvailableIndividualApplicationsFromRequirementCompletion(
                 status: RoleApprovalStatus.Approved,
-                Helpers.IndividualRequirementsMet(
+                Helpers.IndividualRequirementsMetSimple(
                     ("A", RequirementStage.Application, true),
                     ("B", RequirementStage.Approval, true),
                     ("C", RequirementStage.Approval, true),
@@ -94,7 +94,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         {
             var result = ApprovalCalculations.CalculateAvailableIndividualApplicationsFromRequirementCompletion(
                 status: RoleApprovalStatus.Approved,
-                Helpers.IndividualRequirementsMet(
+                Helpers.IndividualRequirementsMetSimple(
                     ("A", RequirementStage.Application, false),
                     ("B", RequirementStage.Approval, false),
                     ("C", RequirementStage.Approval, false),
@@ -110,7 +110,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         {
             var result = ApprovalCalculations.CalculateAvailableIndividualApplicationsFromRequirementCompletion(
                 status: RoleApprovalStatus.Onboarded,
-                Helpers.IndividualRequirementsMet(
+                Helpers.IndividualRequirementsMetSimple(
                     ("A", RequirementStage.Application, true),
                     ("B", RequirementStage.Approval, true),
                     ("C", RequirementStage.Approval, true),
@@ -126,7 +126,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         {
             var result = ApprovalCalculations.CalculateAvailableIndividualApplicationsFromRequirementCompletion(
                 status: RoleApprovalStatus.Onboarded,
-                Helpers.IndividualRequirementsMet(
+                Helpers.IndividualRequirementsMetSimple(
                     ("A", RequirementStage.Application, false),
                     ("B", RequirementStage.Approval, false),
                     ("C", RequirementStage.Approval, false),

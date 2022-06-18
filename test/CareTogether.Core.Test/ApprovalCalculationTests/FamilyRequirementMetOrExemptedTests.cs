@@ -31,7 +31,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles(),
                 Helpers.ActiveAdults());
 
-            Assert.IsFalse(result);
+            Assert.IsFalse(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -45,7 +46,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles(),
                 Helpers.ActiveAdults());
 
-            Assert.IsFalse(result);
+            Assert.IsFalse(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -59,7 +61,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles(),
                 Helpers.ActiveAdults());
 
-            Assert.IsFalse(result);
+            Assert.IsFalse(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -73,7 +76,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles(),
                 Helpers.ActiveAdults());
 
-            Assert.IsFalse(result);
+            Assert.IsFalse(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -89,7 +93,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     (guid1, Helpers.Completed(("A", 1), ("B", 1)), Helpers.Exempted()),
                     (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted())));
 
-            Assert.IsTrue(result);
+            Assert.IsTrue(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -105,7 +110,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     (guid1, Helpers.Completed(("A", 1), ("B", 1)), Helpers.Exempted()),
                     (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted())));
 
-            Assert.IsFalse(result);
+            Assert.IsFalse(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -121,7 +127,43 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     (guid1, Helpers.Completed(("A", 1), ("B", 1)), Helpers.Exempted()),
                     (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted())));
 
-            Assert.IsFalse(result);
+            Assert.IsFalse(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
+        }
+
+        [TestMethod]
+        public void TestAllAdultsRequirementMetAndExpiring()
+        {
+            var result = ApprovalCalculations.FamilyRequirementMetOrExempted("Role", "A",
+                VolunteerFamilyRequirementScope.AllAdultsInTheFamily,
+                supersededAtUtc: null, utcNow: new DateTime(2022, 1, 5),
+                Helpers.Completed(),
+                Helpers.Exempted(),
+                Helpers.RemovedIndividualRoles(),
+                Helpers.ActiveAdults(
+                    (guid1, Helpers.CompletedWithExpiry(("A", 1, 8), ("B", 1, 3)), Helpers.Exempted()),
+                    (guid2, Helpers.CompletedWithExpiry(("A", 1, 7)), Helpers.Exempted()),
+                    (guid3, Helpers.CompletedWithExpiry(("A", 1, 9)), Helpers.Exempted())));
+
+            Assert.IsTrue(result.IsMetOrExempted);
+            Assert.AreEqual(new DateTime(2022, 1, 7), result.ExpiresAtUtc);
+        }
+
+        [TestMethod]
+        public void TestAllAdultsRequirementMetButExpired()
+        {
+            var result = ApprovalCalculations.FamilyRequirementMetOrExempted("Role", "A",
+                VolunteerFamilyRequirementScope.AllAdultsInTheFamily,
+                supersededAtUtc: null, utcNow: new DateTime(2022, 1, 5),
+                Helpers.Completed(),
+                Helpers.Exempted(),
+                Helpers.RemovedIndividualRoles(),
+                Helpers.ActiveAdults(
+                    (guid1, Helpers.CompletedWithExpiry(("A", 1, 4), ("B", 1, null)), Helpers.Exempted()),
+                    (guid2, Helpers.CompletedWithExpiry(("A", 1, 3)), Helpers.Exempted())));
+
+            Assert.IsFalse(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -137,7 +179,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     (guid1, Helpers.Completed(("A", 1), ("B", 1)), Helpers.Exempted()),
                     (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted())));
 
-            Assert.IsFalse(result);
+            Assert.IsFalse(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -153,7 +196,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     (guid1, Helpers.Completed(("A", 1), ("B", 1)), Helpers.Exempted()),
                     (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted())));
 
-            Assert.IsTrue(result);
+            Assert.IsTrue(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -169,7 +213,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     (guid1, Helpers.Completed(("A", 1), ("B", 1)), Helpers.Exempted()),
                     (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted())));
 
-            Assert.IsFalse(result);
+            Assert.IsFalse(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -185,7 +230,43 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     (guid1, Helpers.Completed(("A", 1), ("B", 1)), Helpers.Exempted()),
                     (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted(("B", 10)))));
 
-            Assert.IsTrue(result);
+            Assert.IsTrue(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
+        }
+
+        [TestMethod]
+        public void TestAllParticipatingAdultsRequirementMetAndExpiringWithExemption()
+        {
+            var result = ApprovalCalculations.FamilyRequirementMetOrExempted("Role", "B",
+                VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily,
+                supersededAtUtc: null, utcNow: new DateTime(2022, 1, 2),
+                Helpers.Completed(),
+                Helpers.Exempted(),
+                Helpers.RemovedIndividualRoles(),
+                Helpers.ActiveAdults(
+                    (guid1, Helpers.CompletedWithExpiry(("A", 1, 2), ("B", 1, 4)), Helpers.Exempted()),
+                    (guid2, Helpers.CompletedWithExpiry(("A", 1, null)), Helpers.Exempted(("B", 10))),
+                    (guid3, Helpers.CompletedWithExpiry(("A", 1, 20), ("B", 1, 5)), Helpers.Exempted())));
+
+            Assert.IsTrue(result.IsMetOrExempted);
+            Assert.AreEqual(new DateTime(2022, 1, 4), result.ExpiresAtUtc);
+        }
+
+        [TestMethod]
+        public void TestAllParticipatingAdultsRequirementMetButExpiredWithExemption()
+        {
+            var result = ApprovalCalculations.FamilyRequirementMetOrExempted("Role", "B",
+                VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily,
+                supersededAtUtc: null, utcNow: new DateTime(2022, 1, 5),
+                Helpers.Completed(),
+                Helpers.Exempted(),
+                Helpers.RemovedIndividualRoles(),
+                Helpers.ActiveAdults(
+                    (guid1, Helpers.CompletedWithExpiry(("A", 1, 8), ("B", 1, 4)), Helpers.Exempted()),
+                    (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted(("B", 10)))));
+
+            Assert.IsFalse(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -201,7 +282,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     (guid1, Helpers.Completed(("A", 1), ("B", 1)), Helpers.Exempted()),
                     (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted(("B", 10)))));
 
-            Assert.IsFalse(result);
+            Assert.IsFalse(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -217,7 +299,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     (guid1, Helpers.Completed(("A", 1), ("B", 1)), Helpers.Exempted()),
                     (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted())));
 
-            Assert.IsFalse(result);
+            Assert.IsFalse(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -233,7 +316,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     (guid1, Helpers.Completed(("A", 1), ("B", 1)), Helpers.Exempted()),
                     (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted())));
 
-            Assert.IsTrue(result);
+            Assert.IsTrue(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -249,7 +333,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     (guid1, Helpers.Completed(("A", 1), ("B", 1)), Helpers.Exempted()),
                     (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted())));
 
-            Assert.IsTrue(result);
+            Assert.IsTrue(result.IsMetOrExempted);
+            Assert.AreEqual(new DateTime(2022, 1, 10), result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -265,7 +350,59 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     (guid1, Helpers.Completed(("A", 1), ("B", 1)), Helpers.Exempted()),
                     (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted())));
 
-            Assert.IsFalse(result);
+            Assert.IsFalse(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
+        }
+
+        [TestMethod]
+        public void TestOncePerFamilyRequirementMetAndExpiringBeforeExemptionVariant()
+        {
+            var result = ApprovalCalculations.FamilyRequirementMetOrExempted("Role", "C",
+                VolunteerFamilyRequirementScope.OncePerFamily,
+                supersededAtUtc: null, utcNow: new DateTime(2022, 1, 2),
+                Helpers.CompletedWithExpiry(("D", 1, 5)),
+                Helpers.Exempted(("C", 10)),
+                Helpers.RemovedIndividualRoles(),
+                Helpers.ActiveAdults(
+                    (guid1, Helpers.CompletedWithExpiry(("A", 1, 4), ("B", 1, 4)), Helpers.Exempted()),
+                    (guid2, Helpers.CompletedWithExpiry(("A", 1, 3)), Helpers.Exempted())));
+
+            Assert.IsTrue(result.IsMetOrExempted);
+            Assert.AreEqual(new DateTime(2022, 1, 10), result.ExpiresAtUtc);
+        }
+
+        [TestMethod]
+        public void TestOncePerFamilyRequirementMetAndExpiringAfterExemptionVariant()
+        {
+            var result = ApprovalCalculations.FamilyRequirementMetOrExempted("Role", "C",
+                VolunteerFamilyRequirementScope.OncePerFamily,
+                supersededAtUtc: null, utcNow: new DateTime(2022, 1, 2),
+                Helpers.Completed(("D", 1)),
+                Helpers.Exempted(("C", 10)),
+                Helpers.RemovedIndividualRoles(),
+                Helpers.ActiveAdults(
+                    (guid1, Helpers.CompletedWithExpiry(("A", 1, 14), ("B", 1, 14)), Helpers.Exempted()),
+                    (guid2, Helpers.CompletedWithExpiry(("A", 1, 13)), Helpers.Exempted())));
+
+            Assert.IsTrue(result.IsMetOrExempted);
+            Assert.AreEqual(new DateTime(2022, 1, 10), result.ExpiresAtUtc);
+        }
+
+        [TestMethod]
+        public void TestOncePerFamilyRequirementMetAndExpiredExemptionVariant()
+        {
+            var result = ApprovalCalculations.FamilyRequirementMetOrExempted("Role", "C",
+                VolunteerFamilyRequirementScope.OncePerFamily,
+                supersededAtUtc: null, utcNow: new DateTime(2022, 1, 5),
+                Helpers.CompletedWithExpiry(("D", 1, 3)),
+                Helpers.Exempted(("C", 10)),
+                Helpers.RemovedIndividualRoles(),
+                Helpers.ActiveAdults(
+                    (guid1, Helpers.CompletedWithExpiry(("A", 1, 3), ("B", 1, null)), Helpers.Exempted()),
+                    (guid2, Helpers.CompletedWithExpiry(("A", 1, null)), Helpers.Exempted())));
+
+            Assert.IsTrue(result.IsMetOrExempted);
+            Assert.AreEqual(new DateTime(2022, 1, 10), result.ExpiresAtUtc);
         }
     }
 }
