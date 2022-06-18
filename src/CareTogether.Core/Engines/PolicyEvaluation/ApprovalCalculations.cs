@@ -216,11 +216,15 @@ namespace CareTogether.Engines.PolicyEvaluation
                     SharedCalculations.RequirementMetOrExempted(requirement.ActionName, supersededAtUtc, utcNow, completedRequirementsWithExpiration, exemptedRequirements)))
                 .ToImmutableList();
 
-            var status = CalculateRoleApprovalStatusFromRequirementCompletions(requirementCompletionStatus);
-            var missingRequirements = CalculateMissingIndividualRequirementsFromRequirementCompletion(status, requirementCompletionStatus);
-            var availableApplications = CalculateAvailableIndividualApplicationsFromRequirementCompletion(status, requirementCompletionStatus);
+            var simpleRequirementCompletionStatus = requirementCompletionStatus
+                .Select(status => (status.ActionName, status.Stage, RequirementMetOrExempted: status.RequirementMetOrExempted.IsMetOrExempted))
+                .ToImmutableList();
 
-            return (Status: status, MissingRequirements: missingRequirements, AvailableApplications: availableApplications);
+            var status = CalculateRoleApprovalStatusFromRequirementCompletions(requirementCompletionStatus);
+            var missingRequirements = CalculateMissingIndividualRequirementsFromRequirementCompletion(status.Status, simpleRequirementCompletionStatus);
+            var availableApplications = CalculateAvailableIndividualApplicationsFromRequirementCompletion(status.Status, simpleRequirementCompletionStatus);
+
+            return (status.Status, status.ExpiresAtUtc, MissingRequirements: missingRequirements, AvailableApplications: availableApplications);
         }
 
         internal static
@@ -257,33 +261,50 @@ namespace CareTogether.Engines.PolicyEvaluation
                     activeAdults)))
                 .ToImmutableList();
 
+            var simpleRequirementsMet = requirementsMet
+                .Select(status => (status.ActionName, status.Stage, status.Scope, RequirementMetOrExempted: status.RequirementMetOrExempted.IsMetOrExempted, status.RequirementMissingForIndividuals))
+                .ToImmutableList();
+
             var status = CalculateRoleApprovalStatusFromRequirementCompletions(
                 requirementsMet.Select(x => (x.ActionName, x.Stage, x.RequirementMetOrExempted)).ToImmutableList());
-            var missingRequirements = CalculateMissingFamilyRequirementsFromRequirementCompletion(status, requirementsMet);
-            var availableApplications = CalculateAvailableFamilyApplicationsFromRequirementCompletion(status, requirementsMet);
-            var missingIndividualRequirements = CalculateMissingFamilyIndividualRequirementsFromRequirementCompletion(status, requirementsMet);
+            var missingRequirements = CalculateMissingFamilyRequirementsFromRequirementCompletion(status.Status, simpleRequirementsMet);
+            var availableApplications = CalculateAvailableFamilyApplicationsFromRequirementCompletion(status.Status, simpleRequirementsMet);
+            var missingIndividualRequirements = CalculateMissingFamilyIndividualRequirementsFromRequirementCompletion(status.Status, simpleRequirementsMet);
 
-            return (Status: status,
+            return (status.Status, status.ExpiresAtUtc,
                 MissingRequirements: missingRequirements,
                 AvailableApplications: availableApplications,
                 MissingIndividualRequirements: missingIndividualRequirements);
         }
 
-        internal static RoleApprovalStatus? CalculateRoleApprovalStatusFromRequirementCompletions(
-            ImmutableList<(string ActionName, RequirementStage Stage, bool RequirementMetOrExempted)> requirementCompletionStatus)
+        internal static (RoleApprovalStatus? Status, DateTime? ExpiresAtUtc) CalculateRoleApprovalStatusFromRequirementCompletions(
+            ImmutableList<(string ActionName, RequirementStage Stage, SharedCalculations.RequirementCheckResult RequirementMetOrExempted)> requirementCompletionStatus)
         {
-            if (requirementCompletionStatus.All(x => x.RequirementMetOrExempted))
-                return RoleApprovalStatus.Onboarded;
-            else if (requirementCompletionStatus
-                .Where(x => x.Stage == RequirementStage.Application || x.Stage == RequirementStage.Approval)
-                .All(x => x.RequirementMetOrExempted))
-                return RoleApprovalStatus.Approved;
-            else if (requirementCompletionStatus
-                .Where(x => x.Stage == RequirementStage.Application)
-                .All(x => x.RequirementMetOrExempted))
-                return RoleApprovalStatus.Prospective;
-            else
-                return null;
+            static (bool IsSatisfied, DateTime? ExpiresAtUtc) Evaluate(
+                IEnumerable<(string ActionName, RequirementStage Stage, SharedCalculations.RequirementCheckResult RequirementMetOrExempted)> values)
+            {
+                if (values.All(value => value.RequirementMetOrExempted.IsMetOrExempted))
+                    return (true,
+                        values.MinBy(value => value.RequirementMetOrExempted.ExpiresAtUtc ?? DateTime.MinValue).RequirementMetOrExempted.ExpiresAtUtc);
+                else
+                    return (false, null);
+            }
+
+            var onboarded = Evaluate(requirementCompletionStatus);
+            if (onboarded.IsSatisfied)
+                return (Status: RoleApprovalStatus.Onboarded, onboarded.ExpiresAtUtc);
+
+            var approved = Evaluate(requirementCompletionStatus
+                .Where(x => x.Stage == RequirementStage.Application || x.Stage == RequirementStage.Approval));
+            if (approved.IsSatisfied)
+                return (Status: RoleApprovalStatus.Approved, approved.ExpiresAtUtc);
+
+            var prospective = Evaluate(requirementCompletionStatus
+                .Where(x => x.Stage == RequirementStage.Application));
+            if (prospective.IsSatisfied)
+                return (Status: RoleApprovalStatus.Prospective, prospective.ExpiresAtUtc);
+
+            return (Status: null, ExpiresAtUtc: null);
         }
 
         internal static ImmutableList<string> CalculateAvailableIndividualApplicationsFromRequirementCompletion(RoleApprovalStatus? status,
@@ -381,7 +402,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             };
         }
 
-        internal static bool FamilyRequirementMetOrExempted(string roleName,
+        internal static SharedCalculations.RequirementCheckResult FamilyRequirementMetOrExempted(string roleName,
             string requirementActionName, VolunteerFamilyRequirementScope requirementScope,
             DateTime? supersededAtUtc, DateTime utcNow,
             ImmutableList<CompletedRequirementInfoWithExpiration> completedFamilyRequirementsWithExpiration,
@@ -416,13 +437,13 @@ namespace CareTogether.Engines.PolicyEvaluation
             {
                 VolunteerFamilyRequirementScope.AllAdultsInTheFamily => activeAdults.Where(a =>
                     !SharedCalculations.RequirementMetOrExempted(requirement.ActionName, supersededAtUtc, utcNow,
-                        a.CompletedRequirementsWithExpiration, a.ExemptedRequirements))
+                        a.CompletedRequirementsWithExpiration, a.ExemptedRequirements).IsMetOrExempted)
                     .Select(a => a.Id).ToList(),
                 VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily => activeAdults.Where(a =>
                     !(removedIndividualRoles.TryGetValue(a.Id, out var removedRoles)
                         && removedRoles.Any(x => x.RoleName == roleName)) &&
                     !SharedCalculations.RequirementMetOrExempted(requirement.ActionName, supersededAtUtc, utcNow,
-                        a.CompletedRequirementsWithExpiration, a.ExemptedRequirements))
+                        a.CompletedRequirementsWithExpiration, a.ExemptedRequirements).IsMetOrExempted)
                     .Select(a => a.Id).ToList(),
                 VolunteerFamilyRequirementScope.OncePerFamily => new List<Guid>(),
                 _ => throw new NotImplementedException(
