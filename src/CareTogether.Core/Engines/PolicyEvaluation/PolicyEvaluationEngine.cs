@@ -31,15 +31,6 @@ namespace CareTogether.Engines.PolicyEvaluation
         {
             var policy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
 
-            // Apply default action expiration policies to completed requirements before running approval calculations.
-            var applyValidity = (CompletedRequirementInfo completed) =>
-                SharedCalculations.ApplyValidityPolicyToCompletedRequirement(policy, completed);
-            var completedFamilyRequirementsWithExpiration = completedFamilyRequirements
-                .Select(applyValidity).ToImmutableList();
-            var completedIndividualRequirementsWithExpiration = completedIndividualRequirements
-                .ToImmutableDictionary(entry => entry.Key, entry => entry.Value
-                    .Select(applyValidity).ToImmutableList());
-
             return ApprovalCalculations.CalculateVolunteerFamilyApprovalStatus(
                 policy.VolunteerPolicy, family, DateTime.UtcNow,
                 completedFamilyRequirements, exemptedFamilyRequirements, removedFamilyRoles,
