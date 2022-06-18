@@ -15,7 +15,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 completedRequirements: Helpers.Completed(("A", 1), ("B", 2)),
                 exemptedRequirements: Helpers.Exempted(("C", 10)));
 
-            Assert.IsTrue(result);
+            Assert.IsTrue(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -26,7 +27,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 completedRequirements: Helpers.Completed(("A", 1), ("B", 2), ("A", 3)),
                 exemptedRequirements: Helpers.Exempted(("C", 10)));
 
-            Assert.IsTrue(result);
+            Assert.IsTrue(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -39,7 +41,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 completedRequirements: Helpers.Completed(("A", 1), ("B", 2), ("A", 3)),
                 exemptedRequirements: Helpers.Exempted(("C", 10)));
 
-            Assert.IsTrue(result);
+            Assert.IsTrue(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -50,7 +53,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 completedRequirements: Helpers.Completed(("A", 1), ("B", 2), ("A", 3)),
                 exemptedRequirements: Helpers.Exempted(("C", 10)));
 
-            Assert.IsFalse(result);
+            Assert.IsFalse(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -61,7 +65,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 completedRequirements: Helpers.Completed(("A", 1), ("B", 2), ("A", 3)),
                 exemptedRequirements: Helpers.Exempted(("C", 10)));
 
-            Assert.IsTrue(result);
+            Assert.IsTrue(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -72,7 +77,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 completedRequirements: Helpers.Completed(("A", 1), ("B", 2), ("A", 3)),
                 exemptedRequirements: Helpers.Exempted(("C", 10)));
 
-            Assert.IsFalse(result);
+            Assert.IsFalse(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -83,7 +89,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 completedRequirements: Helpers.Completed(("A", 1), ("B", 2), ("A", 3)),
                 exemptedRequirements: Helpers.Exempted(("C", 10)));
 
-            Assert.IsTrue(result);
+            Assert.IsTrue(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -94,7 +101,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 completedRequirements: Helpers.Completed(("A", 1), ("B", 22), ("A", 3)),
                 exemptedRequirements: Helpers.Exempted(("C", 10)));
 
-            Assert.IsFalse(result);
+            Assert.IsFalse(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
     }
 }

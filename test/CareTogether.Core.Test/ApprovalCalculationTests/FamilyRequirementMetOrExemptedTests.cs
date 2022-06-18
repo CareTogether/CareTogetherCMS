@@ -31,7 +31,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles(),
                 Helpers.ActiveAdults());
 
-            Assert.IsFalse(result);
+            Assert.IsFalse(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -45,7 +46,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles(),
                 Helpers.ActiveAdults());
 
-            Assert.IsFalse(result);
+            Assert.IsFalse(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -59,7 +61,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles(),
                 Helpers.ActiveAdults());
 
-            Assert.IsFalse(result);
+            Assert.IsFalse(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -73,7 +76,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Helpers.RemovedIndividualRoles(),
                 Helpers.ActiveAdults());
 
-            Assert.IsFalse(result);
+            Assert.IsFalse(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -89,7 +93,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     (guid1, Helpers.Completed(("A", 1), ("B", 1)), Helpers.Exempted()),
                     (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted())));
 
-            Assert.IsTrue(result);
+            Assert.IsTrue(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -105,7 +110,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     (guid1, Helpers.Completed(("A", 1), ("B", 1)), Helpers.Exempted()),
                     (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted())));
 
-            Assert.IsFalse(result);
+            Assert.IsFalse(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -121,7 +127,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     (guid1, Helpers.Completed(("A", 1), ("B", 1)), Helpers.Exempted()),
                     (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted())));
 
-            Assert.IsFalse(result);
+            Assert.IsFalse(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -137,7 +144,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     (guid1, Helpers.Completed(("A", 1), ("B", 1)), Helpers.Exempted()),
                     (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted())));
 
-            Assert.IsFalse(result);
+            Assert.IsFalse(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -153,7 +161,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     (guid1, Helpers.Completed(("A", 1), ("B", 1)), Helpers.Exempted()),
                     (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted())));
 
-            Assert.IsTrue(result);
+            Assert.IsTrue(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -169,7 +178,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     (guid1, Helpers.Completed(("A", 1), ("B", 1)), Helpers.Exempted()),
                     (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted())));
 
-            Assert.IsFalse(result);
+            Assert.IsFalse(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -185,7 +195,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     (guid1, Helpers.Completed(("A", 1), ("B", 1)), Helpers.Exempted()),
                     (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted(("B", 10)))));
 
-            Assert.IsTrue(result);
+            Assert.IsTrue(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -201,7 +212,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     (guid1, Helpers.Completed(("A", 1), ("B", 1)), Helpers.Exempted()),
                     (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted(("B", 10)))));
 
-            Assert.IsFalse(result);
+            Assert.IsFalse(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -217,7 +229,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     (guid1, Helpers.Completed(("A", 1), ("B", 1)), Helpers.Exempted()),
                     (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted())));
 
-            Assert.IsFalse(result);
+            Assert.IsFalse(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -233,7 +246,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     (guid1, Helpers.Completed(("A", 1), ("B", 1)), Helpers.Exempted()),
                     (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted())));
 
-            Assert.IsTrue(result);
+            Assert.IsTrue(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -249,7 +263,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     (guid1, Helpers.Completed(("A", 1), ("B", 1)), Helpers.Exempted()),
                     (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted())));
 
-            Assert.IsTrue(result);
+            Assert.IsTrue(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
 
         [TestMethod]
@@ -265,7 +280,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     (guid1, Helpers.Completed(("A", 1), ("B", 1)), Helpers.Exempted()),
                     (guid2, Helpers.Completed(("A", 1)), Helpers.Exempted())));
 
-            Assert.IsFalse(result);
+            Assert.IsFalse(result.IsMetOrExempted);
+            Assert.IsNull(result.ExpiresAtUtc);
         }
     }
 }

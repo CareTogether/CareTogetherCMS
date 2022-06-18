@@ -1,4 +1,5 @@
-﻿using CareTogether.Resources;
+﻿using CareTogether.Engines.PolicyEvaluation;
+using CareTogether.Resources;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Policies;
 using System;
@@ -70,8 +71,13 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
             requirementsMet.ToImmutableList();
 
         public static
-            ImmutableList<(string ActionName, RequirementStage Stage, bool RequirementMetOrExempted)>
+            ImmutableList<(string ActionName, RequirementStage Stage, SharedCalculations.RequirementCheckResult RequirementMetOrExempted)>
             IndividualRequirementsMet(params (string, RequirementStage, bool)[] requirementsMet) =>
+            requirementsMet.Select(x => (x.Item1, x.Item2, new SharedCalculations.RequirementCheckResult(x.Item3, null))).ToImmutableList();
+
+        public static
+            ImmutableList<(string ActionName, RequirementStage Stage, bool RequirementMetOrExempted)>
+            IndividualRequirementsMetSimple(params (string, RequirementStage, bool)[] requirementsMet) =>
             requirementsMet.ToImmutableList();
 
         public static ImmutableList<VolunteerApprovalRequirement> IndividualApprovalRequirements(params (RequirementStage, string)[] requirements) =>

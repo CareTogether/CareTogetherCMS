@@ -117,8 +117,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
 
             AssertEx.DictionaryIs(result.FamilyRoleVersionApprovals,
                 ("Host", new RoleVersionApproval[] {
-                    new ("v1", RoleApprovalStatus.Prospective),
-                    new ("v2", RoleApprovalStatus.Prospective) }));
+                    new ("v1", RoleApprovalStatus.Prospective, null),
+                    new ("v2", RoleApprovalStatus.Prospective, null) }));
             AssertEx.SequenceIs(result.AvailableFamilyApplications, "Acoach", "Aold");
             AssertEx.SequenceIs(result.RemovedFamilyRoles);
             AssertEx.SequenceIs(result.MissingFamilyRequirements, "B");
@@ -141,10 +141,10 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
 
             AssertEx.DictionaryIs(result.FamilyRoleVersionApprovals,
                 ("Host", new RoleVersionApproval[] {
-                    new ("v1", RoleApprovalStatus.Prospective),
-                    new ("v2", RoleApprovalStatus.Prospective) }),
+                    new ("v1", RoleApprovalStatus.Prospective, null),
+                    new ("v2", RoleApprovalStatus.Prospective, null) }),
                 ("Coach", new RoleVersionApproval[] {
-                    new ("v1", RoleApprovalStatus.Prospective) }));
+                    new ("v1", RoleApprovalStatus.Prospective, null) }));
             AssertEx.SequenceIs(result.AvailableFamilyApplications, "Aold");
             AssertEx.SequenceIs(result.RemovedFamilyRoles);
             AssertEx.SequenceIs(result.MissingFamilyRequirements, "B");
@@ -167,10 +167,10 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
 
             AssertEx.DictionaryIs(result.FamilyRoleVersionApprovals,
                 ("Host", new RoleVersionApproval[] {
-                    new ("v1", RoleApprovalStatus.Prospective),
-                    new ("v2", RoleApprovalStatus.Approved) }),
+                    new ("v1", RoleApprovalStatus.Prospective, null),
+                    new ("v2", RoleApprovalStatus.Approved, null) }),
                 ("Coach", new RoleVersionApproval[] {
-                    new ("v1", RoleApprovalStatus.Prospective) }));
+                    new ("v1", RoleApprovalStatus.Prospective, null) }));
             AssertEx.SequenceIs(result.AvailableFamilyApplications, "Aold");
             AssertEx.SequenceIs(result.RemovedFamilyRoles);
             AssertEx.SequenceIs(result.MissingFamilyRequirements, "F");
