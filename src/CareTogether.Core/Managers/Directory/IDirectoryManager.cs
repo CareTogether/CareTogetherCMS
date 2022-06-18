@@ -54,6 +54,7 @@ namespace CareTogether.Managers.Directory
             ClaimsPrincipal user, NoteCommand command);
 
         Task<ImmutableList<(Guid FamilyId, SmsMessageResult? Result)>> SendSmsToFamilyPrimaryContactsAsync(
-            Guid organizationId, Guid locationId, ClaimsPrincipal user, ImmutableList<Guid> familyIds, string message);
+            Guid organizationId, Guid locationId, ClaimsPrincipal user,
+            ImmutableList<Guid> familyIds, string sourceNumber, string message);
     }
 }

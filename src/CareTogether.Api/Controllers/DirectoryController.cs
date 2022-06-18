@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 namespace CareTogether.Api.Controllers
 {
     public sealed record SendSmsToFamilyPrimaryContactsRequest(
-        ImmutableList<Guid> FamilyIds, string Message);
+        ImmutableList<Guid> FamilyIds, string SourceNumber, string Message);
 
     [Authorize]
     [ApiController]
@@ -75,7 +75,7 @@ namespace CareTogether.Api.Controllers
             [FromBody] SendSmsToFamilyPrimaryContactsRequest request)
         {
             var result = await directoryManager.SendSmsToFamilyPrimaryContactsAsync(organizationId, locationId,
-                User, request.FamilyIds, request.Message);
+                User, request.FamilyIds, request.SourceNumber, request.Message);
             return result;
         }
     }

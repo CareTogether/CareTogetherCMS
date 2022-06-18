@@ -287,19 +287,22 @@ namespace CareTogether.Managers.Directory
         }
 
         public async Task<ImmutableList<(Guid FamilyId, SmsMessageResult? Result)>> SendSmsToFamilyPrimaryContactsAsync(
-            Guid organizationId, Guid locationId, ClaimsPrincipal user, ImmutableList<Guid> familyIds, string message)
+            Guid organizationId, Guid locationId, ClaimsPrincipal user,
+            ImmutableList<Guid> familyIds, string sourceNumber, string message)
         {
             if (!await authorizationEngine.AuthorizeSendSmsAsync(organizationId, locationId, user))
                 throw new Exception("The user is not authorized to perform this command.");
 
+            // Validate that the requested source number has been configured for the specified location.
             var configuration = await policiesResource.GetConfigurationAsync(organizationId);
             var sourcePhoneNumber = configuration.Locations
                 .Single(location => location.Id == locationId)
-                .SmsSourcePhoneNumber;
+                .SmsSourcePhoneNumbers.SingleOrDefault(number => number.SourcePhoneNumber == sourceNumber)
+                ?.SourcePhoneNumber;
 
             if (sourcePhoneNumber == null)
                 throw new InvalidOperationException(
-                    "The specified location does not have a source phone number configured for SMS messages.");
+                    "The specified location does not have the requested source phone number configured for SMS messages.");
 
             var families = await directoryResource.ListFamiliesAsync(organizationId, locationId);
 

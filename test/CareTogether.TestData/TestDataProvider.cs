@@ -342,17 +342,22 @@ namespace CareTogether.TestData
         public static async Task PopulateConfigurations(IObjectStore<OrganizationConfiguration> configurationStore,
             string? testSourceSmsPhoneNumber)
         {
+            var sourcePhoneNumbers = ImmutableList<SourcePhoneNumberConfiguration>.Empty;
+            if (testSourceSmsPhoneNumber != null)
+                sourcePhoneNumbers = sourcePhoneNumbers.Add(
+                    new SourcePhoneNumberConfiguration(testSourceSmsPhoneNumber, "Test Number"));
+
             await configurationStore.UpsertAsync(guid1, Guid.Empty, "config",
                 new OrganizationConfiguration("CareTogether",
                     ImmutableList<LocationConfiguration>.Empty
                         .Add(new LocationConfiguration(guid2, "Atlantis",
                             ImmutableList<string>.Empty.AddRange(new[] { "Atlantean", "Aquatic", "Norse" }),
                             ImmutableList<string>.Empty.AddRange(new[] { "Single", "Spouse", "Partner", "Dad", "Mom", "Relative", "Droid" }),
-                            testSourceSmsPhoneNumber))
+                            sourcePhoneNumbers))
                         .Add(new LocationConfiguration(guid3, "El Dorado",
                             ImmutableList<string>.Empty.AddRange(new[] { "Amazon", "Caucasian", "Other" }),
                             ImmutableList<string>.Empty.AddRange(new[] { "Single", "Spouse", "Partner", "Dad", "Mom", "Relative", "Domestic Worker" }),
-                            testSourceSmsPhoneNumber)),
+                            sourcePhoneNumbers)),
                     ImmutableList<RoleDefinition>.Empty
                         .Add(new RoleDefinition("NoteEnterer", ImmutableList<Permission>.Empty
                             .AddRange(new Permission[] { Permission.ViewLinkedFamilies }))),

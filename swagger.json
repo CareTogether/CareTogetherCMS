@@ -850,9 +850,23 @@
               "type": "string"
             }
           },
-          "smsSourcePhoneNumber": {
-            "type": "string",
-            "nullable": true
+          "smsSourcePhoneNumbers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SourcePhoneNumberConfiguration"
+            }
+          }
+        }
+      },
+      "SourcePhoneNumberConfiguration": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "sourcePhoneNumber": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
           }
         }
       },
@@ -3608,6 +3622,9 @@
               "type": "string",
               "format": "guid"
             }
+          },
+          "sourceNumber": {
+            "type": "string"
           },
           "message": {
             "type": "string"

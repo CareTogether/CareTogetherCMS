@@ -1,4 +1,4 @@
-import { Drawer, TextField, Button, Divider, useMediaQuery, useTheme } from "@mui/material";
+import { Drawer, TextField, Button, Divider, useMediaQuery, useTheme, FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 import { useState } from "react";
 import { useRecoilValue } from "recoil";
 import { authenticatingFetch } from "../../Auth";
@@ -33,8 +33,10 @@ export function BulkSmsSideSheet({ selectedFamilies, onClose }: BulkSmsSideSheet
     };
   });
 
-  const smsSourcePhoneNumber = organizationConfiguration.locations?.find(loc =>
-    loc.id === locationId)?.smsSourcePhoneNumber;
+  const smsSourcePhoneNumbers = organizationConfiguration.locations?.find(loc =>
+    loc.id === locationId)?.smsSourcePhoneNumbers;
+  
+  const [selectedSourceNumber, setSelectedSourceNumber] = useState("");
 
   const [smsMessage, setSmsMessage] = useState("");
   const [smsResults, setSmsResults] = useState<ValueTupleOfGuidAndSmsMessageResult[] | null>(null);
@@ -46,7 +48,11 @@ export function BulkSmsSideSheet({ selectedFamilies, onClose }: BulkSmsSideSheet
   
       const client = new DirectoryClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
       const sendSmsResults = await client.sendSmsToFamilyPrimaryContacts(organizationId, locationId,
-        new SendSmsToFamilyPrimaryContactsRequest({ familyIds: familyIds, message: smsMessage }));
+        new SendSmsToFamilyPrimaryContactsRequest({
+          familyIds: familyIds,
+          sourceNumber: selectedSourceNumber,
+          message: smsMessage
+        }));
       
       setSmsResults(sendSmsResults);
     });
@@ -64,19 +70,32 @@ export function BulkSmsSideSheet({ selectedFamilies, onClose }: BulkSmsSideSheet
         Send SMS to these {familiesSelectedForSms.length} families?
       </h3>
       <p>
-        Source number: {smsSourcePhoneNumber}
-      </p>
-      <p>
         The SMS will be sent to the preferred phone number on file for each family's primary contact person.
         If no preferred number is on file for the primary contact, that family will not be sent an SMS.
       </p>
+      <FormControl required fullWidth size="small">
+        <InputLabel id="sourcenumber-label">Source number</InputLabel>
+        <Select
+          labelId="sourcenumber-label" id="sourcenumber"
+          value={selectedSourceNumber}
+          onChange={e => setSelectedSourceNumber(e.target.value as string)}>
+            <MenuItem key="placeholder" value="" disabled>
+              Select a source number
+            </MenuItem>
+            {smsSourcePhoneNumbers?.map(smsSourcePhoneNumber =>
+              <MenuItem key={smsSourcePhoneNumber.sourcePhoneNumber} value={smsSourcePhoneNumber.sourcePhoneNumber}>
+                {smsSourcePhoneNumber.sourcePhoneNumber} - {smsSourcePhoneNumber.description}
+              </MenuItem>)}
+        </Select>
+      </FormControl>
+      <br />
       <TextField multiline maxRows={8} placeholder="Enter the SMS message to send. Remember to keep it short!"
         value={smsMessage} onChange={(event) => setSmsMessage(event.target.value)} />
       <Button onClick={() => { setSmsMessage(""); setSmsResults(null); onClose(); } } color="secondary">
         Cancel
       </Button>
       <Button onClick={sendSmsToVisibleFamilies} variant="contained" color="primary"
-        disabled={familiesSelectedForSms.length === 0 || smsMessage.length === 0}>
+        disabled={familiesSelectedForSms.length === 0 || smsMessage.length === 0 || selectedSourceNumber === ""}>
         Send Bulk SMS
       </Button>
       <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
