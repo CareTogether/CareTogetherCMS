@@ -392,7 +392,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             {
                 if (values.All(value => value.IsMetOrExempted))
                     return new SharedCalculations.RequirementCheckResult(true,
-                        values.MinBy(value => value.ExpiresAtUtc ?? DateTime.MinValue)!.ExpiresAtUtc);
+                        values.MinBy(value => value.ExpiresAtUtc ?? DateTime.MinValue)?.ExpiresAtUtc);
                 else
                     return new SharedCalculations.RequirementCheckResult(false, null);
             }
