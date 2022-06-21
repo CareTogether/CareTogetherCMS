@@ -79,6 +79,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [DataRow('4', true)]
         [DataRow('5', true)]
         [DataRow('6', true)]
+        [DataRow('7', true)]
+        [DataRow('8', true)]
+        [DataRow('9', true)]
         public async Task TestAnyPersonWithViewAllFamiliesPermission(char personId, bool expectedAccess)
         {
             var user = UserFromPermissions(Id(personId), Permission.ViewAllFamilies);

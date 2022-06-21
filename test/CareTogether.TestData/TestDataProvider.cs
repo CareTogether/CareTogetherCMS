@@ -84,10 +84,10 @@ namespace CareTogether.TestData
         public static async Task PopulateDirectoryEvents(IEventLog<DirectoryEvent> directoryEventLog)
         {
             await directoryEventLog.AppendEventsAsync(guid1, guid2,
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(adminId, adminId, "Administrator", "McTester", Gender.Male, new ExactAge(new DateTime(2021, 7, 1)), "Ethnic",
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid0, adminId, "Administrator", "McTester", Gender.Male, new ExactAge(new DateTime(2021, 7, 1)), "Ethnic",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, "Test", "ABC")),
-                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid0, adminId,
-                    ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty.Add((adminId, new FamilyAdultRelationshipInfo("Single", true))),
+                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid0, guid0,
+                    ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty.Add((guid0, new FamilyAdultRelationshipInfo("Single", true))),
                     ImmutableList<Guid>.Empty, ImmutableList<CustodialRelationship>.Empty)),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid1, null, "John", "Doe", Gender.Male, new ExactAge(new DateTime(1980, 7, 1)), "Ethnic",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, "DEF")),
@@ -364,7 +364,7 @@ namespace CareTogether.TestData
                         .Add(new RoleDefinition("NoteEnterer", ImmutableList<Permission>.Empty
                             .AddRange(new Permission[] { Permission.ViewLinkedFamilies }))),
                     ImmutableDictionary<Guid, UserAccessConfiguration>.Empty
-                        .Add(adminId, new UserAccessConfiguration(adminId, ImmutableList<UserLocationRole>.Empty
+                        .Add(adminId, new UserAccessConfiguration(guid0, ImmutableList<UserLocationRole>.Empty
                             .Add(new UserLocationRole(guid2, "OrganizationAdministrator"))
                             .Add(new UserLocationRole(guid3, "OrganizationAdministrator"))))
                         .Add(volunteerId, new UserAccessConfiguration(guid4, ImmutableList<UserLocationRole>.Empty
@@ -497,7 +497,7 @@ namespace CareTogether.TestData
                                 new ArrangementFunction("Staff Supervision", FunctionRequirement.ExactlyOne,
                                     EligibleIndividualVolunteerRoles: ImmutableList<string>.Empty,
                                     EligibleVolunteerFamilyRoles: ImmutableList<string>.Empty,
-                                    EligiblePeople: new[] { adminId }.ToImmutableList(),
+                                    EligiblePeople: new[] { guid0 }.ToImmutableList(),
                                     Variants: ImmutableList<ArrangementFunctionVariant>.Empty)
                             }.ToImmutableList(),
                             RequiredSetupActionNames: new List<string>
@@ -557,7 +557,7 @@ namespace CareTogether.TestData
                                 new ArrangementFunction("Staff Supervision", FunctionRequirement.ExactlyOne,
                                     EligibleIndividualVolunteerRoles: ImmutableList<string>.Empty,
                                     EligibleVolunteerFamilyRoles: ImmutableList<string>.Empty,
-                                    EligiblePeople: new[] { adminId }.ToImmutableList(),
+                                    EligiblePeople: new[] { guid0 }.ToImmutableList(),
                                     Variants: ImmutableList<ArrangementFunctionVariant>.Empty)
                             }.ToImmutableList(),
                             RequiredSetupActionNames: new List<string>
@@ -602,7 +602,7 @@ namespace CareTogether.TestData
                                 new ArrangementFunction("Staff Supervision", FunctionRequirement.ExactlyOne,
                                     EligibleIndividualVolunteerRoles: ImmutableList<string>.Empty,
                                     EligibleVolunteerFamilyRoles: ImmutableList<string>.Empty,
-                                    EligiblePeople: new[] { adminId }.ToImmutableList(),
+                                    EligiblePeople: new[] { guid0 }.ToImmutableList(),
                                     Variants: ImmutableList<ArrangementFunctionVariant>.Empty)
                             }.ToImmutableList(),
                             RequiredSetupActionNames: new List<string>
