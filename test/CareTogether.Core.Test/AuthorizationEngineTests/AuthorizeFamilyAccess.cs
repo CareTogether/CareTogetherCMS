@@ -72,23 +72,32 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         }
 
         [DataTestMethod]
-        [DataRow('0', true)]
-        [DataRow('1', true)]
-        [DataRow('2', true)]
-        [DataRow('3', true)]
-        [DataRow('4', true)]
-        [DataRow('5', true)]
-        [DataRow('6', true)]
-        [DataRow('7', true)]
-        [DataRow('8', true)]
-        [DataRow('9', true)]
-        public async Task TestAnyPersonWithViewAllFamiliesPermission(char personId, bool expectedAccess)
+        [DataRow('0', true, true, true, true, true)]
+        [DataRow('1', true, true, true, true, true)]
+        [DataRow('2', true, true, true, true, true)]
+        [DataRow('3', true, true, true, true, true)]
+        [DataRow('4', true, true, true, true, true)]
+        [DataRow('5', true, true, true, true, true)]
+        [DataRow('6', true, true, true, true, true)]
+        [DataRow('7', true, true, true, true, true)]
+        [DataRow('8', true, true, true, true, true)]
+        [DataRow('9', true, true, true, true, true)]
+        public async Task TestAnyPersonWithViewAllFamiliesPermission(char personId,
+            bool expected0, bool expected1, bool expected2, bool expected3, bool expected4)
         {
             var user = UserFromPermissions(Id(personId), Permission.ViewAllFamilies);
 
-            var result = await dut!.AuthorizeFamilyAccessAsync(guid1, guid2, user, guid3);
-            
-            Assert.AreEqual(expectedAccess, result);
+            var result0 = await dut!.AuthorizeFamilyAccessAsync(guid1, guid2, user, guid0);
+            var result1 = await dut!.AuthorizeFamilyAccessAsync(guid1, guid2, user, guid1);
+            var result2 = await dut!.AuthorizeFamilyAccessAsync(guid1, guid2, user, guid2);
+            var result3 = await dut!.AuthorizeFamilyAccessAsync(guid1, guid2, user, guid3);
+            var result4 = await dut!.AuthorizeFamilyAccessAsync(guid1, guid2, user, guid4);
+
+            Assert.AreEqual(expected0, result0);
+            Assert.AreEqual(expected1, result1);
+            Assert.AreEqual(expected2, result2);
+            Assert.AreEqual(expected3, result3);
+            Assert.AreEqual(expected4, result4);
         }
     }
 }
