@@ -21,7 +21,7 @@ namespace CareTogether.TestData
         /* Families
          * ======================
          * McTester - guid0
-         *   Administrator McTester - adminId - UserID adminId
+         *   Administrator McTester - guid0 - UserID adminId
          * Doe - guid1
          *   John Doe - guid1 - UserID guid4
          *   Jane Doe (Smith) - guid2 - UserID guid3
@@ -32,7 +32,7 @@ namespace CareTogether.TestData
          *   Han Solo - guid5
          *   Leia Skywalker - guid6
          *   Ben Solo - guid7
-         *   Luke Skywalker - guid0
+         *   Luke Skywalker - guidA
          * Riker - guid3
          *   William Riker - 8
          *   Deanna Riker - 9
@@ -51,7 +51,7 @@ namespace CareTogether.TestData
         static readonly Guid guid7 = Id('7');
         static readonly Guid guid8 = Id('8');
         static readonly Guid guid9 = Id('9');
-        static readonly Guid guida = Id('a');
+        static readonly Guid guidA = Id('a');
         static readonly Guid adminId = Guid.Parse("2b87864a-63e3-4406-bcbc-c0068a13ac05");
         static readonly Guid volunteerId = Guid.Parse("e3aaef77-0e97-47a6-b788-a67c237c781e");
 
@@ -84,120 +84,120 @@ namespace CareTogether.TestData
         public static async Task PopulateDirectoryEvents(IEventLog<DirectoryEvent> directoryEventLog)
         {
             await directoryEventLog.AppendEventsAsync(guid1, guid2,
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid0, adminId, "Administrator", "McTester", Gender.Male, new ExactAge(new DateTime(2021, 7, 1)), "Ethnic",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid0, adminId, "Administrator", "McTester", Gender.Male, new ExactAge(new DateTime(2021, 7, 1)), "Ethnic",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, "Test", "ABC")),
-                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid0, guid0,
+                new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreateFamily(guid0, guid0,
                     ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty.Add((guid0, new FamilyAdultRelationshipInfo("Single", true))),
                     ImmutableList<Guid>.Empty, ImmutableList<CustodialRelationship>.Empty)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid1, null, "John", "Doe", Gender.Male, new ExactAge(new DateTime(1980, 7, 1)), "Ethnic",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid1, null, "John", "Doe", Gender.Male, new ExactAge(new DateTime(1980, 7, 1)), "Ethnic",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, "DEF")),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid2, guid3, "Jane", "Smith", Gender.Female, new AgeInYears(42, new DateTime(2021, 1, 1)), "Ethnic",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid2, guid3, "Jane", "Smith", Gender.Female, new AgeInYears(42, new DateTime(2021, 1, 1)), "Ethnic",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonName(guid2, "Jane", "Doe")),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonAge(guid1, new ExactAge(new DateTime(1975, 1, 1)))),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonAge(guid2, new ExactAge(new DateTime(1979, 7, 1)))),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonUserLink(guid1, guid4)),
-                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid1, guid1,
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new UpdatePersonName(guid2, "Jane", "Doe")),
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new UpdatePersonAge(guid1, new ExactAge(new DateTime(1975, 1, 1)))),
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new UpdatePersonAge(guid2, new ExactAge(new DateTime(1979, 7, 1)))),
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new UpdatePersonUserLink(guid1, guid4)),
+                new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreateFamily(guid1, guid1,
                     ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty.Add((guid1, new FamilyAdultRelationshipInfo("Dad", true))),
                     ImmutableList<Guid>.Empty, ImmutableList<CustodialRelationship>.Empty)),
-                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddAdultToFamily(guid1, guid2, new FamilyAdultRelationshipInfo("Mom", true))),
+                new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new AddAdultToFamily(guid1, guid2, new FamilyAdultRelationshipInfo("Mom", true))),
                 new FamilyCommandExecuted(adminId, new DateTime(2020, 3, 5, 4, 15, 15), new UploadFamilyDocument(guid1, guid1, "Jane Doe referral info.pdf")),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid3, null, "Eric", "Doe", Gender.Male, new AgeInYears(12, new DateTime(2021, 1, 1)), "Ethnic",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid3, null, "Eric", "Doe", Gender.Male, new AgeInYears(12, new DateTime(2021, 1, 1)), "Ethnic",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
-                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddChildToFamily(guid1, guid3, ImmutableList<CustodialRelationship>.Empty
+                new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new AddChildToFamily(guid1, guid3, ImmutableList<CustodialRelationship>.Empty
                     .Add(new CustodialRelationship(guid3, guid1, CustodialRelationshipType.ParentWithCustody))
                     .Add(new CustodialRelationship(guid3, guid2, CustodialRelationshipType.ParentWithCustody)))),
-                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdateAdultRelationshipToFamily(guid1, guid1, new FamilyAdultRelationshipInfo("Dad", false))),
-                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new RemoveCustodialRelationship(guid1, guid3, guid1)),
-                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdateCustodialRelationshipType(guid1, guid3, guid2, CustodialRelationshipType.ParentWithCourtAppointedCustody)),
-                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddCustodialRelationship(guid1, new CustodialRelationship(guid3, guid1, CustodialRelationshipType.ParentWithCourtAppointedCustody))),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid4, volunteerId, "Emily", "Coachworthy", Gender.Female, new ExactAge(new DateTime(1980, 3, 19)), "Caucasian",
+                new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new UpdateAdultRelationshipToFamily(guid1, guid1, new FamilyAdultRelationshipInfo("Dad", false))),
+                new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new RemoveCustodialRelationship(guid1, guid3, guid1)),
+                new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new UpdateCustodialRelationshipType(guid1, guid3, guid2, CustodialRelationshipType.ParentWithCourtAppointedCustody)),
+                new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new AddCustodialRelationship(guid1, new CustodialRelationship(guid3, guid1, CustodialRelationshipType.ParentWithCourtAppointedCustody))),
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid4, volunteerId, "Emily", "Coachworthy", Gender.Female, new ExactAge(new DateTime(1980, 3, 19)), "Caucasian",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
-                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid4, guid4,
+                new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreateFamily(guid4, guid4,
                     ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty.Add((guid4, new FamilyAdultRelationshipInfo("Single", true))),
                     ImmutableList<Guid>.Empty, ImmutableList<CustodialRelationship>.Empty)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid5, null, "Han", "Solo", Gender.Male, new AgeInYears(30, new DateTime(2021, 7, 1)), "Corellian",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid5, null, "Han", "Solo", Gender.Male, new AgeInYears(30, new DateTime(2021, 7, 1)), "Corellian",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, "Smuggler", null)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid6, null, "Leia", "Skywalker", Gender.Male, new AgeInYears(28, new DateTime(2021, 7, 1)), "Tatooinian",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid6, null, "Leia", "Skywalker", Gender.Male, new AgeInYears(28, new DateTime(2021, 7, 1)), "Tatooinian",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, "Freedom fighter", "Uncertain claim to royalty")),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid7, null, "Ben", "Solo", Gender.Male, new AgeInYears(12, new DateTime(2021, 7, 1)), "Chandrilan",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid7, null, "Ben", "Solo", Gender.Male, new AgeInYears(12, new DateTime(2021, 7, 1)), "Chandrilan",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid0, null, "Luke", "Skywalker", Gender.Male, new AgeInYears(28, new DateTime(2021, 7, 1)), "Tatooinian",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guidA, null, "Luke", "Skywalker", Gender.Male, new AgeInYears(28, new DateTime(2021, 7, 1)), "Tatooinian",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
-                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid2, guid6,
+                new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreateFamily(guid2, guid6,
                     ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty
                         .Add((guid5, new FamilyAdultRelationshipInfo("Dad", true)))
                         .Add((guid6, new FamilyAdultRelationshipInfo("Mom", true)))
-                        .Add((guid0, new FamilyAdultRelationshipInfo("Sibling", false))),
+                        .Add((guidA, new FamilyAdultRelationshipInfo("Sibling", false))),
                     ImmutableList<Guid>.Empty.Add(guid7), ImmutableList<CustodialRelationship>.Empty
                         .Add(new CustodialRelationship(guid7, guid5, CustodialRelationshipType.ParentWithCustody))
                         .Add(new CustodialRelationship(guid7, guid6, CustodialRelationshipType.ParentWithCustody)))),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid8, null, "William", "Riker", Gender.Male, new ExactAge(new DateTime(1972, 1, 1)), "Alaskan",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid8, null, "William", "Riker", Gender.Male, new ExactAge(new DateTime(1972, 1, 1)), "Alaskan",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid9, null, "Deanna", "Riker", Gender.Female, new ExactAge(new DateTime(1970, 1, 1)), "Betazoid",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid9, null, "Deanna", "Riker", Gender.Female, new ExactAge(new DateTime(1970, 1, 1)), "Betazoid",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
-                new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid3, guid8,
+                new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreateFamily(guid3, guid8,
                     ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty
                         .Add((guid8, new FamilyAdultRelationshipInfo("Dad", true)))
                         .Add((guid9, new FamilyAdultRelationshipInfo("Mom", true))),
                     ImmutableList<Guid>.Empty, ImmutableList<CustodialRelationship>.Empty)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddPersonAddress(guid1,
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new AddPersonAddress(guid1,
                     new Address(guid3, "456 Old Ave.", null, "Bigtown", "TX", "67890"),
                     true)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddPersonPhoneNumber(guid1,
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new AddPersonPhoneNumber(guid1,
                     new PhoneNumber(guid2, "1235554567", PhoneNumberType.Mobile),
                     true)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddPersonEmailAddress(guid1,
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new AddPersonEmailAddress(guid1,
                     new EmailAddress(guid2, "personal@example.com", EmailAddressType.Personal),
                     true)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddPersonAddress(guid1,
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new AddPersonAddress(guid1,
                     new Address(guid2, "123 Main St.", "Apt. A", "Smallville", "NY", "12345"),
                     true)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonAddress(guid1,
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new UpdatePersonAddress(guid1,
                     new Address(guid3, "456 Old Ave.", null, "Bigtown", "TX", "67890"),
                     false)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddPersonPhoneNumber(guid1,
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new AddPersonPhoneNumber(guid1,
                     new PhoneNumber(guid3, "1235555555", PhoneNumberType.Home),
                     true)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonPhoneNumber(guid1,
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new UpdatePersonPhoneNumber(guid1,
                     new PhoneNumber(guid2, "1235554567", PhoneNumberType.Mobile),
                     false)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddPersonEmailAddress(guid1,
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new AddPersonEmailAddress(guid1,
                     new EmailAddress(guid3, "work@example.com", EmailAddressType.Work),
                     true)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonEmailAddress(guid1,
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new UpdatePersonEmailAddress(guid1,
                     new EmailAddress(guid2, "personal@example.com", EmailAddressType.Personal),
                     false)),
-                //new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonContactMethodPreferenceNotes(guid1,
+                //new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new UpdatePersonContactMethodPreferenceNotes(guid1,
                 //    "Cannot receive voicemails")),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 8, 1), new AddPersonAddress(guid4,
+                new PersonCommandExecuted(adminId, new DateTime(2021, 8, 1), new AddPersonAddress(guid4,
                     new Address(guid3, "456 Old Ave.", null, "Bigtown", "TX", "67890"),
                     true)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 8, 1), new AddPersonPhoneNumber(guid4,
+                new PersonCommandExecuted(adminId, new DateTime(2021, 8, 1), new AddPersonPhoneNumber(guid4,
                     new PhoneNumber(guid2, "1235554567", PhoneNumberType.Mobile),
                     true)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 8, 1), new AddPersonEmailAddress(guid4,
+                new PersonCommandExecuted(adminId, new DateTime(2021, 8, 1), new AddPersonEmailAddress(guid4,
                     new EmailAddress(guid2, "personal@example.com", EmailAddressType.Personal),
                     true)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 8, 1), new AddPersonAddress(guid4,
+                new PersonCommandExecuted(adminId, new DateTime(2021, 8, 1), new AddPersonAddress(guid4,
                     new Address(guid2, "123 Main St.", "Apt. A", "Smallville", "NY", "12345"),
                     true)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 8, 1), new UpdatePersonAddress(guid4,
+                new PersonCommandExecuted(adminId, new DateTime(2021, 8, 1), new UpdatePersonAddress(guid4,
                     new Address(guid3, "456 Old Ave.", null, "Bigtown", "TX", "67890"),
                     false)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 8, 1), new AddPersonPhoneNumber(guid4,
+                new PersonCommandExecuted(adminId, new DateTime(2021, 8, 1), new AddPersonPhoneNumber(guid4,
                     new PhoneNumber(guid3, "1235555555", PhoneNumberType.Home),
                     true)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 8, 1), new UpdatePersonPhoneNumber(guid4,
+                new PersonCommandExecuted(adminId, new DateTime(2021, 8, 1), new UpdatePersonPhoneNumber(guid4,
                     new PhoneNumber(guid2, "1235554567", PhoneNumberType.Mobile),
                     false)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 8, 1), new AddPersonEmailAddress(guid4,
+                new PersonCommandExecuted(adminId, new DateTime(2021, 8, 1), new AddPersonEmailAddress(guid4,
                     new EmailAddress(guid3, "work@example.com", EmailAddressType.Work),
                     true)),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 8, 1), new UpdatePersonEmailAddress(guid4,
+                new PersonCommandExecuted(adminId, new DateTime(2021, 8, 1), new UpdatePersonEmailAddress(guid4,
                     new EmailAddress(guid2, "personal@example.com", EmailAddressType.Personal),
                     false)),
-                //new PersonCommandExecuted(guid0, new DateTime(2021, 8, 1), new UpdatePersonContactMethodPreferenceNotes(guid4,
+                //new PersonCommandExecuted(adminId, new DateTime(2021, 8, 1), new UpdatePersonContactMethodPreferenceNotes(guid4,
                 //    "Cannot receive voicemails"))
                 new FamilyCommandExecuted(adminId, new DateTime(2022, 3, 2, 18, 0, 0), new UploadFamilyDocument(guid1, guid2, "Jane Doe second referral info.pdf"))
             );
@@ -328,7 +328,7 @@ namespace CareTogether.TestData
                 new NoteCommandExecuted(volunteerId, new DateTime(2020, 3, 24, 8, 57, 0), new EditDraftNote(guid1, guid3, null)),
                 new NoteCommandExecuted(volunteerId, new DateTime(2020, 3, 30, 18, 18, 18), new CreateDraftNote(guid1, guid8, null)),
                 new NoteCommandExecuted(adminId, new DateTime(2020, 3, 30, 18, 18, 18), new ApproveNote(guid1, guid8, "Mom met us and picked him up at DQ")),
-                new NoteCommandExecuted(adminId, new DateTime(2020, 3, 31, 10, 0, 0), new CreateDraftNote(guid1, guida, null)),
+                new NoteCommandExecuted(adminId, new DateTime(2020, 3, 31, 10, 0, 0), new CreateDraftNote(guid1, guidA, null)),
                 new NoteCommandExecuted(adminId, new DateTime(2021, 7, 10, 9, 30, 0), new CreateDraftNote(guid4, guid9, null)),
                 new NoteCommandExecuted(adminId, new DateTime(2021, 7, 10, 9, 32, 0), new ApproveNote(guid4, guid9, "I'm a little star-struck... Emily is *amazing*!!")));
         }
@@ -337,7 +337,7 @@ namespace CareTogether.TestData
         {
             await draftNotesStore.UpsertAsync(guid1, guid2, guid3.ToString(),
                 "Kids are doing better playing this morning. For some reason they're both really into \"lightsabers\" or something like that... 😅");
-            await draftNotesStore.UpsertAsync(guid1, guid2, guida.ToString(),
+            await draftNotesStore.UpsertAsync(guid1, guid2, guidA.ToString(),
                 "Jane said \"So long and thanks for all the fish.\" Not sure what to make of that.");
         }
 
