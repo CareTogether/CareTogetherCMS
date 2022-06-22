@@ -896,7 +896,9 @@
           "ViewApprovalStatus",
           "EditApprovalRequirementCompletion",
           "EditApprovalRequirementExemption",
-          "EditVolunteerRoleParticipation"
+          "EditVolunteerRoleParticipation",
+          "ViewApprovalProgress",
+          "ViewApprovalHistory"
         ],
         "enum": [
           1,
@@ -906,7 +908,9 @@
           200,
           201,
           202,
-          203
+          203,
+          204,
+          205
         ]
       },
       "UserAccessConfiguration": {

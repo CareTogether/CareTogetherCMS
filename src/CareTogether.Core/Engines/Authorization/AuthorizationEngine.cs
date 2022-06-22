@@ -1,4 +1,5 @@
 using CareTogether.Managers;
+using CareTogether.Resources;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
@@ -258,15 +259,44 @@ namespace CareTogether.Engines.Authorization
                 RemovedRoles = user.HasPermission(Permission.ViewApprovalStatus)
                     ? volunteerFamilyInfo.RemovedRoles
                     : ImmutableList<RemovedRole>.Empty,
-                IndividualVolunteers = user.HasPermission(Permission.ViewApprovalStatus)
-                    ? volunteerFamilyInfo.IndividualVolunteers
-                    : volunteerFamilyInfo.IndividualVolunteers.ToImmutableDictionary(
+                IndividualVolunteers = volunteerFamilyInfo.IndividualVolunteers.ToImmutableDictionary(
                         keySelector: kvp => kvp.Key,
                         elementSelector: kvp => kvp.Value with
                         {
-                            RemovedRoles = ImmutableList<RemovedRole>.Empty,
-                            IndividualRoleApprovals = ImmutableDictionary<string, ImmutableList<RoleVersionApproval>>.Empty
-                        })
+                            RemovedRoles = user.HasPermission(Permission.ViewApprovalStatus)
+                                ? kvp.Value.RemovedRoles
+                                : ImmutableList<RemovedRole>.Empty,
+                            IndividualRoleApprovals = user.HasPermission(Permission.ViewApprovalStatus)
+                                ? kvp.Value.IndividualRoleApprovals
+                                : ImmutableDictionary<string, ImmutableList<RoleVersionApproval>>.Empty,
+                            AvailableApplications = user.HasPermission(Permission.ViewApprovalProgress)
+                                ? kvp.Value.AvailableApplications
+                                : ImmutableList<string>.Empty,
+                            CompletedRequirements = user.HasPermission(Permission.ViewApprovalProgress)
+                                ? kvp.Value.CompletedRequirements
+                                : ImmutableList<CompletedRequirementInfo>.Empty,
+                            ExemptedRequirements = user.HasPermission(Permission.ViewApprovalProgress)
+                                ? kvp.Value.ExemptedRequirements
+                                : ImmutableList<ExemptedRequirementInfo>.Empty,
+                            MissingRequirements = user.HasPermission(Permission.ViewApprovalProgress)
+                                ? kvp.Value.MissingRequirements
+                                : ImmutableList<string>.Empty,
+                        }),
+                AvailableApplications = user.HasPermission(Permission.ViewApprovalProgress)
+                    ? volunteerFamilyInfo.AvailableApplications
+                    : ImmutableList<string>.Empty,
+                CompletedRequirements = user.HasPermission(Permission.ViewApprovalProgress)
+                    ? volunteerFamilyInfo.CompletedRequirements
+                    : ImmutableList<CompletedRequirementInfo>.Empty,
+                ExemptedRequirements = user.HasPermission(Permission.ViewApprovalProgress)
+                    ? volunteerFamilyInfo.ExemptedRequirements
+                    : ImmutableList<ExemptedRequirementInfo>.Empty,
+                MissingRequirements = user.HasPermission(Permission.ViewApprovalProgress)
+                    ? volunteerFamilyInfo.MissingRequirements
+                    : ImmutableList<string>.Empty,
+                History = user.HasPermission(Permission.ViewApprovalHistory)
+                    ? volunteerFamilyInfo.History
+                    : ImmutableList<Activity>.Empty
             };
         }
 
