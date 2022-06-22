@@ -246,26 +246,27 @@ namespace CareTogether.Engines.Authorization
             return arrangement;
         }
 
-        public async Task<VolunteerFamilyInfo> DiscloseVolunteerFamilyInfoAsync(ClaimsPrincipal user, VolunteerFamilyInfo volunteerFamilyInfo)
+        public async Task<VolunteerFamilyInfo> DiscloseVolunteerFamilyInfoAsync(ClaimsPrincipal user,
+            VolunteerFamilyInfo volunteerFamilyInfo)
         {
             await Task.Yield();
             return volunteerFamilyInfo with
             {
                 FamilyRoleApprovals = user.HasPermission(Permission.ViewApprovalStatus)
-                ? volunteerFamilyInfo.FamilyRoleApprovals
-                : ImmutableDictionary<string, ImmutableList<RoleVersionApproval>>.Empty,
+                    ? volunteerFamilyInfo.FamilyRoleApprovals
+                    : ImmutableDictionary<string, ImmutableList<RoleVersionApproval>>.Empty,
                 RemovedRoles = user.HasPermission(Permission.ViewApprovalStatus)
-                ? volunteerFamilyInfo.RemovedRoles
-                : ImmutableList<RemovedRole>.Empty,
+                    ? volunteerFamilyInfo.RemovedRoles
+                    : ImmutableList<RemovedRole>.Empty,
                 IndividualVolunteers = user.HasPermission(Permission.ViewApprovalStatus)
-                ? volunteerFamilyInfo.IndividualVolunteers
-                : volunteerFamilyInfo.IndividualVolunteers.ToImmutableDictionary(
-                    keySelector: kvp => kvp.Key,
-                    elementSelector: kvp => kvp.Value with
-                    {
-                        RemovedRoles = ImmutableList<RemovedRole>.Empty,
-                        IndividualRoleApprovals = ImmutableDictionary<string, ImmutableList<RoleVersionApproval>>.Empty
-                    })
+                    ? volunteerFamilyInfo.IndividualVolunteers
+                    : volunteerFamilyInfo.IndividualVolunteers.ToImmutableDictionary(
+                        keySelector: kvp => kvp.Key,
+                        elementSelector: kvp => kvp.Value with
+                        {
+                            RemovedRoles = ImmutableList<RemovedRole>.Empty,
+                            IndividualRoleApprovals = ImmutableDictionary<string, ImmutableList<RoleVersionApproval>>.Empty
+                        })
             };
         }
 
@@ -288,7 +289,7 @@ namespace CareTogether.Engines.Authorization
         }
 
 
-        private bool CheckPermission(Guid organizationId, Guid locationId, ClaimsPrincipal user,
+        private static bool CheckPermission(Guid organizationId, Guid locationId, ClaimsPrincipal user,
             Permission? permission)
         {
             //TODO: Handle multiple orgs/locations
