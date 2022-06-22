@@ -86,18 +86,43 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             bool expected0, bool expected1, bool expected2, bool expected3, bool expected4)
         {
             var user = UserFromPermissions(Id(personId), Permission.ViewAllFamilies);
+            await EvaluateAccess(user, personId, expected0, expected1, expected2, expected3, expected4);
+        }
 
+        [DataTestMethod]
+        [DataRow('0', true, false, false, false, false)]
+        [DataRow('1', false, true, false, false, false)]
+        [DataRow('2', false, true, false, false, false)]
+        [DataRow('3', false, true, false, false, false)]
+        [DataRow('4', false, false, false, false, true)]
+        [DataRow('5', false, false, true, false, false)]
+        [DataRow('6', false, false, true, false, false)]
+        [DataRow('7', false, false, true, false, false)]
+        [DataRow('8', false, false, false, true, false)]
+        [DataRow('9', false, false, false, true, false)]
+        [DataRow('a', false, false, true, false, false)]
+        public async Task TestPeopleWithoutAdditionalViewPermissionsCanSeeOnlyTheirOwnFamily(char personId,
+            bool expected0, bool expected1, bool expected2, bool expected3, bool expected4)
+        {
+            var user = UserFromPermissions(Id(personId));
+            await EvaluateAccess(user, personId, expected0, expected1, expected2, expected3, expected4);
+        }
+
+
+        private async Task EvaluateAccess(ClaimsPrincipal user, char personId,
+            bool expected0, bool expected1, bool expected2, bool expected3, bool expected4)
+        {
             var result0 = await dut!.AuthorizeFamilyAccessAsync(guid1, guid2, user, guid0);
             var result1 = await dut!.AuthorizeFamilyAccessAsync(guid1, guid2, user, guid1);
             var result2 = await dut!.AuthorizeFamilyAccessAsync(guid1, guid2, user, guid2);
             var result3 = await dut!.AuthorizeFamilyAccessAsync(guid1, guid2, user, guid3);
             var result4 = await dut!.AuthorizeFamilyAccessAsync(guid1, guid2, user, guid4);
 
-            Assert.AreEqual(expected0, result0);
-            Assert.AreEqual(expected1, result1);
-            Assert.AreEqual(expected2, result2);
-            Assert.AreEqual(expected3, result3);
-            Assert.AreEqual(expected4, result4);
+            Assert.AreEqual(expected0, result0, $"Person '{personId}' access to family '0' expected {expected0} but was {result0}");
+            Assert.AreEqual(expected1, result1, $"Person '{personId}' access to family '1' expected {expected1} but was {result1}");
+            Assert.AreEqual(expected2, result2, $"Person '{personId}' access to family '2' expected {expected2} but was {result2}");
+            Assert.AreEqual(expected3, result3, $"Person '{personId}' access to family '3' expected {expected3} but was {result3}");
+            Assert.AreEqual(expected4, result4, $"Person '{personId}' access to family '4' expected {expected4} but was {result4}");
         }
     }
 }
