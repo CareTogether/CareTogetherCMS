@@ -108,6 +108,29 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             await EvaluateAccess(user, personId, expected0, expected1, expected2, expected3, expected4);
         }
 
+        [DataTestMethod]
+        [DataRow('0', true, false, false, false, false)]
+        [DataRow('1', true, true, true, true, true)]
+        [DataRow('2', true, true, true, true, true)]
+        [DataRow('3', true, true, true, true, true)]
+        [DataRow('4', true, true, true, true, true)]
+        [DataRow('5', true, true, true, true, true)]
+        [DataRow('6', true, true, true, true, true)]
+        [DataRow('7', true, true, true, true, true)]
+        [DataRow('8', true, true, true, true, true)]
+        [DataRow('9', true, true, true, true, true)]
+        [DataRow('b', false, false, false, false, false)]
+        [DataRow('c', false, false, false, false, false)]
+        [DataRow('d', false, false, false, false, false)]
+        [DataRow('e', false, false, false, false, false)]
+        [DataRow('f', false, false, false, false, false)]
+        public async Task TestLinkedFamiliesPermissionGrantsAccessToAllFamiliesConnectedViaReferralAssignment(char personId,
+            bool expected0, bool expected1, bool expected2, bool expected3, bool expected4)
+        {
+            var user = UserFromPermissions(Id(personId), Permission.ViewLinkedFamilies);
+            await EvaluateAccess(user, personId, expected0, expected1, expected2, expected3, expected4);
+        }
+
 
         private async Task EvaluateAccess(ClaimsPrincipal user, char personId,
             bool expected0, bool expected1, bool expected2, bool expected3, bool expected4)
