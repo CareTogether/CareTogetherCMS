@@ -34,8 +34,11 @@ namespace CareTogether.TestData
          *   Ben Solo - guid7
          *   Luke Skywalker - guidA
          * Riker - guid3
-         *   William Riker - 8
-         *   Deanna Riker - 9
+         *   William Riker - guid8
+         *   Deanna Riker - guid9
+         * Brown - guid5
+         *   Emmett Brown - guidB
+         *   Marty McFly - guidC
          */
 
         #region Constructors & IDs
@@ -52,6 +55,8 @@ namespace CareTogether.TestData
         static readonly Guid guid8 = Id('8');
         static readonly Guid guid9 = Id('9');
         static readonly Guid guidA = Id('a');
+        static readonly Guid guidB = Id('b');
+        static readonly Guid guidC = Id('c');
         static readonly Guid adminId = Guid.Parse("2b87864a-63e3-4406-bcbc-c0068a13ac05");
         static readonly Guid volunteerId = Guid.Parse("e3aaef77-0e97-47a6-b788-a67c237c781e");
 
@@ -199,7 +204,16 @@ namespace CareTogether.TestData
                     false)),
                 //new PersonCommandExecuted(adminId, new DateTime(2021, 8, 1), new UpdatePersonContactMethodPreferenceNotes(guid4,
                 //    "Cannot receive voicemails"))
-                new FamilyCommandExecuted(adminId, new DateTime(2022, 3, 2, 18, 0, 0), new UploadFamilyDocument(guid1, guid2, "Jane Doe second referral info.pdf"))
+                new FamilyCommandExecuted(adminId, new DateTime(2022, 3, 2, 18, 0, 0), new UploadFamilyDocument(guid1, guid2, "Jane Doe second referral info.pdf")),
+                new PersonCommandExecuted(adminId, new DateTime(2022, 6, 21), new CreatePerson(guidB, null, "Emmett", "Brown", Gender.Male, new AgeInYears(60, new DateTime(2022, 6, 21)), "Caucasian",
+                    ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
+                new PersonCommandExecuted(adminId, new DateTime(2022, 6, 21), new CreatePerson(guidC, null, "Marty", "McFly", Gender.Male, new AgeInYears(14, new DateTime(2022, 6, 21)), "Caucasian",
+                    ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
+                new FamilyCommandExecuted(adminId, new DateTime(2022, 6, 21), new CreateFamily(guid5, guidB,
+                    ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty
+                        .Add((guidB, new FamilyAdultRelationshipInfo("Single", true))),
+                    ImmutableList<Guid>.Empty.Add(guidC), ImmutableList<CustodialRelationship>.Empty
+                        .Add(new CustodialRelationship(guidC, guidB, CustodialRelationshipType.LegalGuardian))))
             );
         }
 
@@ -241,8 +255,8 @@ namespace CareTogether.TestData
                 new ArrangementsCommandExecuted(adminId, new DateTime(2022, 3, 3, 10, 0, 0), new CreateArrangement(guid1, guid2, ImmutableList.Create(guid4), "Friending", new DateTime(2022, 5, 2), guid2)),
                 new ArrangementsCommandExecuted(adminId, new DateTime(2022, 3, 3, 10, 0, 0), new UpdateArrangementComments(guid1, guid2, ImmutableList.Create(guid2), "Start on Friday the 11th")),
                 new ArrangementsCommandExecuted(adminId, new DateTime(2022, 3, 3, 10, 0, 0), new UpdateArrangementComments(guid1, guid2, ImmutableList.Create(guid3, guid4), "Start on Saturday the 12th")),
-                new ReferralCommandExecuted(adminId, new DateTime(2022, 3, 3, 10, 1, 0), new UpdateReferralComments(guid1, guid2, "The plan is to have arrangements for the weekend until the Daylight Savings Time change is over."))
-                );
+                new ReferralCommandExecuted(adminId, new DateTime(2022, 6, 21, 20, 38, 0), new CreateReferral(guid5, guid3, new DateTime(2022, 6, 21, 20, 38, 0)))
+            );
         }
 
         public static async Task PopulateGoalEvents(IEventLog<GoalCommandExecutedEvent> goalsEventLog)
