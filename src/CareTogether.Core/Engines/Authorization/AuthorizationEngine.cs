@@ -1,6 +1,4 @@
-using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Managers;
-using CareTogether.Resources;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
@@ -73,7 +71,7 @@ namespace CareTogether.Engines.Authorization
                     }));
                 var allVisibleFamilies = allVisiblePartneringFamilies.Concat(allVisibleAssignedFamilies).ToImmutableHashSet();
 
-                return allVisibleFamilies.Contains(userFamily.Id);
+                return allVisibleFamilies.Contains(familyId);
             }
 
             return false;

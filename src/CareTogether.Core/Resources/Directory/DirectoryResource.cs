@@ -86,7 +86,9 @@ namespace CareTogether.Resources.Directory
         {
             using (var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId)))
             {
-                var result = lockedModel.Value.FindFamilies(f => f.Adults.Exists(a => a.Item1.Id == personId));
+                var result = lockedModel.Value.FindFamilies(f =>
+                    f.Adults.Exists(a => a.Item1.Id == personId) ||
+                    f.Children.Exists(c => c.Id == personId));
                 return result.SingleOrDefault(); //TODO: Should this be tightened down to always have a value?
             }
         }
