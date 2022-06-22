@@ -31,9 +31,9 @@ jobs:
         node-version: '14'
     - name: Install Azurite storage emulator
       run: npm install -g azurite
-    - name: Start Azurite blob endpoint
+    - name: Start Azurite storage emulator
       shell: bash
-      run: azurite-blob --loose &
+      run: azurite &
     - name: Restore .NET dependencies
       run: dotnet restore
     - name: Build .NET solution
