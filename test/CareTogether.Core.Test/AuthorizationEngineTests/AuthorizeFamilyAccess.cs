@@ -13,7 +13,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-namespace CareTogether.Core.Test.ReferralCalculationTests
+namespace CareTogether.Core.Test.AuthorizationEngineTests
 {
     [TestClass]
     public class AuthorizeFamilyAccess
@@ -25,7 +25,6 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         static readonly Guid guid3 = Id('3');
         static readonly Guid guid4 = Id('4');
         static readonly Guid guid5 = Id('5');
-        static readonly Guid guid6 = Id('6');
 
         private static ClaimsPrincipal UserFromPermissions(Guid personId, params Permission[] permissions) =>
             new(new ClaimsIdentity(
@@ -60,13 +59,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 userTenantAccessStore,
                 testSourceSmsPhoneNumber: null);
 
-            var approvalsResource = new ApprovalsResource(approvalsEventLog);
             var directoryResource = new DirectoryResource(directoryEventLog);
-            var goalsResource = new GoalsResource(goalsEventLog);
             var policiesResource = new PoliciesResource(configurationStore, policiesStore);
-            var accountsResource = new AccountsResource(userTenantAccessStore);
             var referralsResource = new ReferralsResource(referralsEventLog);
-            var notesResource = new NotesResource(notesEventLog, draftNotesStore);
 
             dut = new AuthorizationEngine(policiesResource, directoryResource, referralsResource);
         }
