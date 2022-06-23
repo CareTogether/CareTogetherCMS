@@ -84,16 +84,16 @@ namespace CareTogether.Engines.Authorization
             return await AuthorizeFamilyAccessAsync(organizationId, locationId, user, command.FamilyId) &&
                 CheckPermission(organizationId, locationId, user, command switch
                 {
-                    CreateFamily => null,
-                    AddAdultToFamily => null,
-                    AddChildToFamily => null,
-                    UpdateAdultRelationshipToFamily => null,
-                    AddCustodialRelationship => null,
-                    UpdateCustodialRelationshipType => null,
-                    RemoveCustodialRelationship => null,
+                    CreateFamily => Permission.EditFamilyInfo,
+                    AddAdultToFamily => Permission.EditFamilyInfo,
+                    AddChildToFamily => Permission.EditFamilyInfo,
+                    UpdateAdultRelationshipToFamily => Permission.EditFamilyInfo,
+                    AddCustodialRelationship => Permission.EditFamilyInfo,
+                    UpdateCustodialRelationshipType => Permission.EditFamilyInfo,
+                    RemoveCustodialRelationship => Permission.EditFamilyInfo,
                     UploadFamilyDocument => Permission.UploadStandaloneDocuments,
-                    DeleteUploadedFamilyDocument => null,
-                    ChangePrimaryFamilyContact => null,
+                    DeleteUploadedFamilyDocument => Permission.DeleteFamilyDocuments,
+                    ChangePrimaryFamilyContact => Permission.EditFamilyInfo,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented.")
                 });
@@ -105,21 +105,21 @@ namespace CareTogether.Engines.Authorization
             return await AuthorizeFamilyAccessAsync(organizationId, locationId, user, familyId) &&
                 CheckPermission(organizationId, locationId, user, command switch
                 {
-                    CreatePerson => null,
-                    UndoCreatePerson => null,
-                    UpdatePersonName => null,
-                    UpdatePersonGender => null,
-                    UpdatePersonAge => null,
-                    UpdatePersonEthnicity => null,
-                    UpdatePersonUserLink => null,
-                    UpdatePersonConcerns => null,
-                    UpdatePersonNotes => null,
-                    AddPersonAddress => null,
-                    UpdatePersonAddress => null,
-                    AddPersonPhoneNumber => null,
-                    UpdatePersonPhoneNumber => null,
-                    AddPersonEmailAddress => null,
-                    UpdatePersonEmailAddress => null,
+                    CreatePerson => Permission.EditFamilyInfo,
+                    UndoCreatePerson => Permission.EditFamilyInfo,
+                    UpdatePersonName => Permission.EditFamilyInfo,
+                    UpdatePersonGender => Permission.EditFamilyInfo,
+                    UpdatePersonAge => Permission.EditFamilyInfo,
+                    UpdatePersonEthnicity => Permission.EditFamilyInfo,
+                    UpdatePersonUserLink => Permission.EditPersonUserLink,
+                    UpdatePersonConcerns => Permission.EditPersonConcerns,
+                    UpdatePersonNotes => Permission.EditPersonNotes,
+                    AddPersonAddress => Permission.EditPersonContactInfo,
+                    UpdatePersonAddress => Permission.EditPersonContactInfo,
+                    AddPersonPhoneNumber => Permission.EditPersonContactInfo,
+                    UpdatePersonPhoneNumber => Permission.EditPersonContactInfo,
+                    AddPersonEmailAddress => Permission.EditPersonContactInfo,
+                    UpdatePersonEmailAddress => Permission.EditPersonContactInfo,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented.")
                 });
@@ -205,7 +205,7 @@ namespace CareTogether.Engines.Authorization
             return await AuthorizeFamilyAccessAsync(organizationId, locationId, user, command.FamilyId) &&
                 CheckPermission(organizationId, locationId, user, command switch
                 {
-                    ActivateVolunteerFamily => null,
+                    ActivateVolunteerFamily => Permission.ActivateVolunteerFamily,
                     CompleteVolunteerFamilyRequirement => Permission.EditApprovalRequirementCompletion,
                     MarkVolunteerFamilyRequirementIncomplete => Permission.EditApprovalRequirementCompletion,
                     ExemptVolunteerFamilyRequirement => Permission.EditApprovalRequirementExemption,
