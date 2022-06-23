@@ -141,7 +141,7 @@ export function PartneringFamilyScreen() {
         </HeaderTitle>
       </HeaderContent>
       <Toolbar variant="dense" disableGutters={true}>
-        {permissions(Permission.UploadStandaloneDocuments) && <Button
+        {permissions(Permission.UploadFamilyDocuments) && <Button
           onClick={() => setUploadDocumentDialogOpen(true)}
           variant="contained"
           size="small"

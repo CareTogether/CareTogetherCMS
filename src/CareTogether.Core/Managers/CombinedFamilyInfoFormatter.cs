@@ -46,7 +46,7 @@ namespace CareTogether.Managers
             var locationPolicy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
 
             var family = await directoryResource.FindFamilyAsync(organizationId, locationId, familyId);
-            var disclosedFamily = await authorizationEngine.DiscloseFamilyAsync(user, family);
+            var disclosedFamily = await authorizationEngine.DiscloseFamilyAsync(user, family, organizationId, locationId);
 
             var partneringFamilyInfo = await RenderPartneringFamilyInfoAsync(organizationId, locationId, family, user);
 
@@ -59,7 +59,8 @@ namespace CareTogether.Managers
                     ? note.ApprovedTimestampUtc!.Value
                     : note.LastEditTimestampUtc, note.Contents, note.Status))
                 .Select(async note =>
-                    (note, canDisclose: await authorizationEngine.DiscloseNoteAsync(user, familyId, note)))
+                    (note, canDisclose: await authorizationEngine.DiscloseNoteAsync(user,
+                        familyId, note, organizationId, locationId)))
                 .WhenAll())
                 .Where(result => result.canDisclose)
                 .Select(result => result.note)
@@ -99,8 +100,13 @@ namespace CareTogether.Managers
             var openReferral = referrals.SingleOrDefault(r => r.CloseReason == null);
             var closedReferrals = referrals.Where(r => r.CloseReason != null).ToImmutableList();
 
-            return new PartneringFamilyInfo(openReferral, closedReferrals,
+            var partneringFamilyInfo = new PartneringFamilyInfo(openReferral, closedReferrals,
                 referralEntries.SelectMany(entry => entry.History).ToImmutableList());
+
+            var disclosedPartneringFamilyInfo = await authorizationEngine.DisclosePartneringFamilyInfoAsync(
+                    user, partneringFamilyInfo, organizationId, locationId);
+
+            return disclosedPartneringFamilyInfo;
 
             async Task<Referral> ToReferralAsync(ReferralEntry entry)
             {
@@ -178,7 +184,8 @@ namespace CareTogether.Managers
                     }),
                 entry.History);
 
-            var disclosedVolunteerFamilyInfo = await authorizationEngine.DiscloseVolunteerFamilyInfoAsync(user, volunteerFamilyInfo);
+            var disclosedVolunteerFamilyInfo = await authorizationEngine.DiscloseVolunteerFamilyInfoAsync(user,
+                volunteerFamilyInfo, organizationId, locationId);
             return (disclosedVolunteerFamilyInfo, entry.UploadedDocuments);
         }
 

@@ -28,10 +28,10 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
 
         private static ClaimsPrincipal UserFromPermissions(Guid personId, params Permission[] permissions) =>
             new(new ClaimsIdentity(
-                new Claim[] { new Claim(Claims.PersonId.ToString(), personId.ToString()) }.Concat(
-                    permissions.Select(permission => new Claim(Claims.Permission, permission.ToString()))),
-                "Unit Test"));
-        
+                new Claim[] { new Claim(Claims.PersonId.ToString(), personId.ToString()) }
+                    .Concat(permissions.Select(permission => new Claim(Claims.Permission, permission.ToString()))),
+                $"{guid1}:{guid2}"));
+
         private AuthorizationEngine? dut;
 
         [TestInitialize]

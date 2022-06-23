@@ -39,16 +39,16 @@ namespace CareTogether.Engines.Authorization
         Task<bool> AuthorizeVolunteerCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, VolunteerCommand command);
 
-        Task<Referral> DiscloseReferralAsync(ClaimsPrincipal user, Referral referral);
+        Task<PartneringFamilyInfo> DisclosePartneringFamilyInfoAsync(ClaimsPrincipal user,
+            PartneringFamilyInfo partneringFamilyInfo, Guid organizationId, Guid locationId);
 
-        Task<Arrangement> DiscloseArrangementAsync(ClaimsPrincipal user, Arrangement arrangement);
+        Task<VolunteerFamilyInfo> DiscloseVolunteerFamilyInfoAsync(ClaimsPrincipal user,
+            VolunteerFamilyInfo volunteerFamilyInfo, Guid organizationId, Guid locationId);
 
-        Task<VolunteerFamilyInfo> DiscloseVolunteerFamilyInfoAsync(ClaimsPrincipal user, VolunteerFamilyInfo volunteerFamilyInfo);
+        Task<Family> DiscloseFamilyAsync(ClaimsPrincipal user,
+            Family family, Guid organizationId, Guid locationId);
 
-        Task<Family> DiscloseFamilyAsync(ClaimsPrincipal user, Family family);
-
-        Task<Person> DisclosePersonAsync(ClaimsPrincipal user, Person person);
-
-        Task<bool> DiscloseNoteAsync(ClaimsPrincipal user, Guid familyId, Note note);
+        Task<bool> DiscloseNoteAsync(ClaimsPrincipal user,
+            Guid familyId, Note note, Guid organizationId, Guid locationId);
     }
 }

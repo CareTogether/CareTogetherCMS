@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Resources.Accounts
 {
+    public sealed record UserTenantAccessSummary(Guid OrganizationId,
+        ImmutableList<Guid> LocationIds);
     public sealed record UserOrganizationAccess(Guid OrganizationId,
         ImmutableList<UserLocationAccess> LocationIds);
     public sealed record UserLocationAccess(Guid LocationId,
@@ -15,6 +17,8 @@ namespace CareTogether.Resources.Accounts
     /// </summary>
     public interface IAccountsResource
     {
+        Task<UserTenantAccessSummary> GetUserTenantAccessSummaryAsync(Guid userId);
+
         Task<UserOrganizationAccess> GetUserOrganizationAccessAsync(ClaimsPrincipal user);
     }
 }

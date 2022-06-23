@@ -1,4 +1,6 @@
+using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Managers;
+using CareTogether.Resources;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
@@ -32,11 +34,11 @@ namespace CareTogether.Engines.Authorization
             ClaimsPrincipal user, Guid familyId)
         {
             // Most common case for highly active users: the user has access to all families.
-            if (user.HasPermission(Permission.ViewAllFamilies))
+            if (user.HasPermission(organizationId, locationId, Permission.ViewAllFamilies))
                 return true;
 
             // Less common but simple case: the user is part of the target family.
-            var userPersonId = user.PersonId();
+            var userPersonId = user.PersonId(organizationId, locationId);
             var userFamily = await directoryResource.FindPersonFamilyAsync(organizationId, locationId, userPersonId);
             if (userFamily == null)
                 return false; // If the user is not part of a family, the remaining conditions are invalid.
@@ -46,7 +48,7 @@ namespace CareTogether.Engines.Authorization
                 return true;
 
             // General case: the user's family is linked to the target family through a referral.
-            if (user.HasPermission(Permission.ViewLinkedFamilies))
+            if (user.HasPermission(organizationId, locationId, Permission.ViewLinkedFamilies))
             {
                 var referrals = await referralsResource.ListReferralsAsync(organizationId, locationId);
 
@@ -81,18 +83,18 @@ namespace CareTogether.Engines.Authorization
             Guid organizationId, Guid locationId, ClaimsPrincipal user, FamilyCommand command)
         {
             return await AuthorizeFamilyAccessAsync(organizationId, locationId, user, command.FamilyId) &&
-                CheckPermission(organizationId, locationId, user, command switch
+                user.HasPermission(organizationId, locationId, command switch
                 {
-                    CreateFamily => null,
-                    AddAdultToFamily => null,
-                    AddChildToFamily => null,
-                    UpdateAdultRelationshipToFamily => null,
-                    AddCustodialRelationship => null,
-                    UpdateCustodialRelationshipType => null,
-                    RemoveCustodialRelationship => null,
-                    UploadFamilyDocument => Permission.UploadStandaloneDocuments,
-                    DeleteUploadedFamilyDocument => null,
-                    ChangePrimaryFamilyContact => null,
+                    CreateFamily => Permission.EditFamilyInfo,
+                    AddAdultToFamily => Permission.EditFamilyInfo,
+                    AddChildToFamily => Permission.EditFamilyInfo,
+                    UpdateAdultRelationshipToFamily => Permission.EditFamilyInfo,
+                    AddCustodialRelationship => Permission.EditFamilyInfo,
+                    UpdateCustodialRelationshipType => Permission.EditFamilyInfo,
+                    RemoveCustodialRelationship => Permission.EditFamilyInfo,
+                    UploadFamilyDocument => Permission.UploadFamilyDocuments,
+                    DeleteUploadedFamilyDocument => Permission.DeleteFamilyDocuments,
+                    ChangePrimaryFamilyContact => Permission.EditFamilyInfo,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented.")
                 });
@@ -102,23 +104,23 @@ namespace CareTogether.Engines.Authorization
             Guid organizationId, Guid locationId, ClaimsPrincipal user, Guid familyId, PersonCommand command)
         {
             return await AuthorizeFamilyAccessAsync(organizationId, locationId, user, familyId) &&
-                CheckPermission(organizationId, locationId, user, command switch
+                user.HasPermission(organizationId, locationId, command switch
                 {
-                    CreatePerson => null,
-                    UndoCreatePerson => null,
-                    UpdatePersonName => null,
-                    UpdatePersonGender => null,
-                    UpdatePersonAge => null,
-                    UpdatePersonEthnicity => null,
-                    UpdatePersonUserLink => null,
-                    UpdatePersonConcerns => null,
-                    UpdatePersonNotes => null,
-                    AddPersonAddress => null,
-                    UpdatePersonAddress => null,
-                    AddPersonPhoneNumber => null,
-                    UpdatePersonPhoneNumber => null,
-                    AddPersonEmailAddress => null,
-                    UpdatePersonEmailAddress => null,
+                    CreatePerson => Permission.EditFamilyInfo,
+                    UndoCreatePerson => Permission.EditFamilyInfo,
+                    UpdatePersonName => Permission.EditFamilyInfo,
+                    UpdatePersonGender => Permission.EditFamilyInfo,
+                    UpdatePersonAge => Permission.EditFamilyInfo,
+                    UpdatePersonEthnicity => Permission.EditFamilyInfo,
+                    UpdatePersonUserLink => Permission.EditPersonUserLink,
+                    UpdatePersonConcerns => Permission.EditPersonConcerns,
+                    UpdatePersonNotes => Permission.EditPersonNotes,
+                    AddPersonAddress => Permission.EditPersonContactInfo,
+                    UpdatePersonAddress => Permission.EditPersonContactInfo,
+                    AddPersonPhoneNumber => Permission.EditPersonContactInfo,
+                    UpdatePersonPhoneNumber => Permission.EditPersonContactInfo,
+                    AddPersonEmailAddress => Permission.EditPersonContactInfo,
+                    UpdatePersonEmailAddress => Permission.EditPersonContactInfo,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented.")
                 });
@@ -128,16 +130,16 @@ namespace CareTogether.Engines.Authorization
             Guid organizationId, Guid locationId, ClaimsPrincipal user, ReferralCommand command)
         {
             return await AuthorizeFamilyAccessAsync(organizationId, locationId, user, command.FamilyId) &&
-                CheckPermission(organizationId, locationId, user, command switch
+                user.HasPermission(organizationId, locationId, command switch
                 {
-                    CreateReferral => null,
-                    CompleteReferralRequirement => null,
-                    MarkReferralRequirementIncomplete => null,
-                    ExemptReferralRequirement => null,
-                    UnexemptReferralRequirement => null,
-                    UpdateCustomReferralField => null,
-                    UpdateReferralComments => null,
-                    CloseReferral => null,
+                    CreateReferral => Permission.CreateReferral,
+                    CompleteReferralRequirement => Permission.EditReferralRequirementCompletion,
+                    MarkReferralRequirementIncomplete => Permission.EditReferralRequirementCompletion,
+                    ExemptReferralRequirement => Permission.EditReferralRequirementExemption,
+                    UnexemptReferralRequirement => Permission.EditReferralRequirementExemption,
+                    UpdateCustomReferralField => Permission.EditReferral,
+                    UpdateReferralComments => Permission.EditReferral,
+                    CloseReferral => Permission.CloseReferral,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented.")
                 });
@@ -147,30 +149,30 @@ namespace CareTogether.Engines.Authorization
             Guid organizationId, Guid locationId, ClaimsPrincipal user, ArrangementsCommand command)
         {
             return await AuthorizeFamilyAccessAsync(organizationId, locationId, user, command.FamilyId) &&
-                CheckPermission(organizationId, locationId, user, command switch
+                user.HasPermission(organizationId, locationId, command switch
                 {
-                    CreateArrangement => null,
-                    AssignIndividualVolunteer => null,
-                    AssignVolunteerFamily => null,
-                    UnassignIndividualVolunteer => null,
-                    UnassignVolunteerFamily => null,
-                    StartArrangements => null,
-                    CompleteArrangementRequirement => null,
-                    CompleteVolunteerFamilyAssignmentRequirement => null,
-                    CompleteIndividualVolunteerAssignmentRequirement => null,
-                    MarkArrangementRequirementIncomplete => null,
-                    MarkVolunteerFamilyAssignmentRequirementIncomplete => null,
-                    MarkIndividualVolunteerAssignmentRequirementIncomplete => null,
-                    ExemptArrangementRequirement => null,
-                    ExemptVolunteerFamilyAssignmentRequirement => null,
-                    ExemptIndividualVolunteerAssignmentRequirement => null,
-                    UnexemptArrangementRequirement => null,
-                    UnexemptVolunteerFamilyAssignmentRequirement => null,
-                    UnexemptIndividualVolunteerAssignmentRequirement => null,
-                    TrackChildLocationChange => null,
-                    EndArrangements => null,
-                    CancelArrangementsSetup => null,
-                    UpdateArrangementComments => null,
+                    CreateArrangement => Permission.CreateArrangement,
+                    AssignIndividualVolunteer => Permission.EditAssignments,
+                    AssignVolunteerFamily => Permission.EditAssignments,
+                    UnassignIndividualVolunteer => Permission.EditAssignments,
+                    UnassignVolunteerFamily => Permission.EditAssignments,
+                    StartArrangements => Permission.EditArrangement,
+                    CompleteArrangementRequirement => Permission.EditArrangementRequirementCompletion,
+                    CompleteVolunteerFamilyAssignmentRequirement => Permission.EditArrangementRequirementCompletion,
+                    CompleteIndividualVolunteerAssignmentRequirement => Permission.EditArrangementRequirementCompletion,
+                    MarkArrangementRequirementIncomplete => Permission.EditArrangementRequirementCompletion,
+                    MarkVolunteerFamilyAssignmentRequirementIncomplete => Permission.EditArrangementRequirementCompletion,
+                    MarkIndividualVolunteerAssignmentRequirementIncomplete => Permission.EditArrangementRequirementCompletion,
+                    ExemptArrangementRequirement => Permission.EditArrangementRequirementExemption,
+                    ExemptVolunteerFamilyAssignmentRequirement => Permission.EditArrangementRequirementExemption,
+                    ExemptIndividualVolunteerAssignmentRequirement => Permission.EditArrangementRequirementExemption,
+                    UnexemptArrangementRequirement => Permission.EditArrangementRequirementExemption,
+                    UnexemptVolunteerFamilyAssignmentRequirement => Permission.EditArrangementRequirementExemption,
+                    UnexemptIndividualVolunteerAssignmentRequirement => Permission.EditArrangementRequirementExemption,
+                    TrackChildLocationChange => Permission.TrackChildLocationChange,
+                    EndArrangements => Permission.EditArrangement,
+                    CancelArrangementsSetup => Permission.EditArrangement,
+                    UpdateArrangementComments => Permission.EditArrangement,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented.")
                 });
@@ -180,12 +182,12 @@ namespace CareTogether.Engines.Authorization
             Guid organizationId, Guid locationId, ClaimsPrincipal user, NoteCommand command)
         {
             return await AuthorizeFamilyAccessAsync(organizationId, locationId, user, command.FamilyId) &&
-                CheckPermission(organizationId, locationId, user, command switch
+                user.HasPermission(organizationId, locationId, command switch
                 {
-                    CreateDraftNote => null,
-                    EditDraftNote => null,
-                    DiscardDraftNote => null,
-                    ApproveNote => null,
+                    CreateDraftNote => Permission.AddEditDraftNotes,
+                    EditDraftNote => Permission.AddEditDraftNotes,
+                    DiscardDraftNote => Permission.DiscardDraftNotes,
+                    ApproveNote => Permission.ApproveNotes,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented.")
                 });
@@ -194,22 +196,22 @@ namespace CareTogether.Engines.Authorization
         public Task<bool> AuthorizeSendSmsAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user)
         {
-            return Task.FromResult(CheckPermission(organizationId, locationId, user,
-                permission: null));
+            return Task.FromResult(
+                user.HasPermission(organizationId, locationId, Permission.SendBulkSms));
         }
 
         public async Task<bool> AuthorizeVolunteerFamilyCommandAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user, VolunteerFamilyCommand command)
         {
             return await AuthorizeFamilyAccessAsync(organizationId, locationId, user, command.FamilyId) &&
-                CheckPermission(organizationId, locationId, user, command switch
+                user.HasPermission(organizationId, locationId, command switch
                 {
-                    ActivateVolunteerFamily => null,
+                    ActivateVolunteerFamily => Permission.ActivateVolunteerFamily,
                     CompleteVolunteerFamilyRequirement => Permission.EditApprovalRequirementCompletion,
                     MarkVolunteerFamilyRequirementIncomplete => Permission.EditApprovalRequirementCompletion,
                     ExemptVolunteerFamilyRequirement => Permission.EditApprovalRequirementExemption,
                     UnexemptVolunteerFamilyRequirement => Permission.EditApprovalRequirementExemption,
-                    UploadVolunteerFamilyDocument => Permission.UploadStandaloneDocuments,
+                    UploadVolunteerFamilyDocument => Permission.UploadFamilyDocuments,
                     RemoveVolunteerFamilyRole => Permission.EditVolunteerRoleParticipation,
                     ResetVolunteerFamilyRole => Permission.EditVolunteerRoleParticipation,
                     _ => throw new NotImplementedException(
@@ -221,7 +223,7 @@ namespace CareTogether.Engines.Authorization
             Guid organizationId, Guid locationId, ClaimsPrincipal user, VolunteerCommand command)
         {
             return await AuthorizeFamilyAccessAsync(organizationId, locationId, user, command.FamilyId) &&
-                CheckPermission(organizationId, locationId, user, command switch
+                user.HasPermission(organizationId, locationId, command switch
                 {
                     CompleteVolunteerRequirement => Permission.EditApprovalRequirementCompletion,
                     MarkVolunteerRequirementIncomplete => Permission.EditApprovalRequirementCompletion,
@@ -233,66 +235,192 @@ namespace CareTogether.Engines.Authorization
                         $"The command type '{command.GetType().FullName}' has not been implemented.")
                 });
         }
-
-        public async Task<Referral> DiscloseReferralAsync(ClaimsPrincipal user, Referral referral)
+        
+        public Task<PartneringFamilyInfo> DisclosePartneringFamilyInfoAsync(ClaimsPrincipal user,
+            PartneringFamilyInfo partneringFamilyInfo, Guid organizationId, Guid locationId)
         {
-            await Task.Yield();
-            return referral;
-        }
-
-        public async Task<Arrangement> DiscloseArrangementAsync(ClaimsPrincipal user, Arrangement arrangement)
-        {
-            await Task.Yield();
-            return arrangement;
-        }
-
-        public async Task<VolunteerFamilyInfo> DiscloseVolunteerFamilyInfoAsync(ClaimsPrincipal user, VolunteerFamilyInfo volunteerFamilyInfo)
-        {
-            await Task.Yield();
-            return volunteerFamilyInfo with
+            return Task.FromResult(partneringFamilyInfo with
             {
-                FamilyRoleApprovals = user.HasPermission(Permission.ViewApprovalStatus)
-                ? volunteerFamilyInfo.FamilyRoleApprovals
-                : ImmutableDictionary<string, ImmutableList<RoleVersionApproval>>.Empty,
-                RemovedRoles = user.HasPermission(Permission.ViewApprovalStatus)
-                ? volunteerFamilyInfo.RemovedRoles
-                : ImmutableList<RemovedRole>.Empty,
-                IndividualVolunteers = user.HasPermission(Permission.ViewApprovalStatus)
-                ? volunteerFamilyInfo.IndividualVolunteers
-                : volunteerFamilyInfo.IndividualVolunteers.ToImmutableDictionary(
-                    keySelector: kvp => kvp.Key,
-                    elementSelector: kvp => kvp.Value with
-                    {
-                        RemovedRoles = ImmutableList<RemovedRole>.Empty,
-                        IndividualRoleApprovals = ImmutableDictionary<string, ImmutableList<RoleVersionApproval>>.Empty
-                    })
+                OpenReferral = partneringFamilyInfo.OpenReferral != null
+                    ? DiscloseReferral(user, partneringFamilyInfo.OpenReferral, organizationId, locationId)
+                    : null,
+                ClosedReferrals = partneringFamilyInfo.ClosedReferrals
+                    .Select(closedReferral => DiscloseReferral(user, closedReferral, organizationId, locationId))
+                    .ToImmutableList(),
+                History = user.HasPermission(organizationId, locationId, Permission.ViewReferralHistory)
+                    ? partneringFamilyInfo.History
+                    : ImmutableList<Activity>.Empty
+            });
+        }
+
+
+        internal Referral DiscloseReferral(ClaimsPrincipal user,
+            Referral referral, Guid organizationId, Guid locationId) =>
+            referral with
+            {
+                CompletedCustomFields = user.HasPermission(organizationId, locationId, Permission.ViewReferralCustomFields)
+                    ? referral.CompletedCustomFields
+                    : ImmutableList<CompletedCustomFieldInfo>.Empty,
+                MissingCustomFields = user.HasPermission(organizationId, locationId, Permission.ViewReferralCustomFields)
+                    ? referral.MissingCustomFields
+                    : ImmutableList<string>.Empty,
+                CompletedRequirements = user.HasPermission(organizationId, locationId, Permission.ViewReferralProgress)
+                    ? referral.CompletedRequirements
+                    : ImmutableList<CompletedRequirementInfo>.Empty,
+                ExemptedRequirements = user.HasPermission(organizationId, locationId, Permission.ViewReferralProgress)
+                    ? referral.ExemptedRequirements
+                    : ImmutableList<ExemptedRequirementInfo>.Empty,
+                MissingRequirements = user.HasPermission(organizationId, locationId, Permission.ViewReferralProgress)
+                    ? referral.MissingRequirements
+                    : ImmutableList<string>.Empty,
+                CloseReason = user.HasPermission(organizationId, locationId, Permission.ViewReferralComments)
+                    ? referral.CloseReason
+                    : null,
+                Comments = user.HasPermission(organizationId, locationId, Permission.ViewReferralComments)
+                    ? referral.Comments
+                    : null,
+                Arrangements = referral.Arrangements
+                    .Select(arrangement =>
+                        arrangement with
+                        {
+                            ChildLocationHistory = user.HasPermission(organizationId, locationId, Permission.ViewChildLocationHistory)
+                                ? arrangement.ChildLocationHistory
+                                : ImmutableSortedSet<ChildLocationHistoryEntry>.Empty,
+                            Comments = user.HasPermission(organizationId, locationId, Permission.ViewReferralComments)
+                                ? arrangement.Comments
+                                : null,
+                            CompletedRequirements = user.HasPermission(organizationId, locationId, Permission.ViewArrangementProgress)
+                                ? arrangement.CompletedRequirements
+                                : ImmutableList<CompletedRequirementInfo>.Empty,
+                            ExemptedRequirements = user.HasPermission(organizationId, locationId, Permission.ViewArrangementProgress)
+                                ? arrangement.ExemptedRequirements
+                                : ImmutableList<ExemptedRequirementInfo>.Empty,
+                            MissingRequirements = user.HasPermission(organizationId, locationId, Permission.ViewArrangementProgress)
+                                ? arrangement.MissingRequirements
+                                : ImmutableList<MissingArrangementRequirement>.Empty,
+                            IndividualVolunteerAssignments = user.HasPermission(organizationId, locationId, Permission.ViewAssignments)
+                                ? arrangement.IndividualVolunteerAssignments
+                                : ImmutableList<IndividualVolunteerAssignment>.Empty,
+                            FamilyVolunteerAssignments = user.HasPermission(organizationId, locationId, Permission.ViewAssignments)
+                                ? arrangement.FamilyVolunteerAssignments
+                                : ImmutableList<FamilyVolunteerAssignment>.Empty
+                        })
+                    .ToImmutableList()
             };
+
+        public Task<VolunteerFamilyInfo> DiscloseVolunteerFamilyInfoAsync(ClaimsPrincipal user,
+            VolunteerFamilyInfo volunteerFamilyInfo, Guid organizationId, Guid locationId)
+        {
+            return Task.FromResult(volunteerFamilyInfo with
+            {
+                FamilyRoleApprovals = user.HasPermission(organizationId, locationId, Permission.ViewApprovalStatus)
+                    ? volunteerFamilyInfo.FamilyRoleApprovals
+                    : ImmutableDictionary<string, ImmutableList<RoleVersionApproval>>.Empty,
+                RemovedRoles = user.HasPermission(organizationId, locationId, Permission.ViewApprovalStatus)
+                    ? volunteerFamilyInfo.RemovedRoles
+                    : ImmutableList<RemovedRole>.Empty,
+                IndividualVolunteers = volunteerFamilyInfo.IndividualVolunteers.ToImmutableDictionary(
+                        keySelector: kvp => kvp.Key,
+                        elementSelector: kvp => kvp.Value with
+                        {
+                            RemovedRoles = user.HasPermission(organizationId, locationId, Permission.ViewApprovalStatus)
+                                ? kvp.Value.RemovedRoles
+                                : ImmutableList<RemovedRole>.Empty,
+                            IndividualRoleApprovals = user.HasPermission(organizationId, locationId, Permission.ViewApprovalStatus)
+                                ? kvp.Value.IndividualRoleApprovals
+                                : ImmutableDictionary<string, ImmutableList<RoleVersionApproval>>.Empty,
+                            AvailableApplications = user.HasPermission(organizationId, locationId, Permission.ViewApprovalProgress)
+                                ? kvp.Value.AvailableApplications
+                                : ImmutableList<string>.Empty,
+                            CompletedRequirements = user.HasPermission(organizationId, locationId, Permission.ViewApprovalProgress)
+                                ? kvp.Value.CompletedRequirements
+                                : ImmutableList<CompletedRequirementInfo>.Empty,
+                            ExemptedRequirements = user.HasPermission(organizationId, locationId, Permission.ViewApprovalProgress)
+                                ? kvp.Value.ExemptedRequirements
+                                : ImmutableList<ExemptedRequirementInfo>.Empty,
+                            MissingRequirements = user.HasPermission(organizationId, locationId, Permission.ViewApprovalProgress)
+                                ? kvp.Value.MissingRequirements
+                                : ImmutableList<string>.Empty,
+                        }),
+                AvailableApplications = user.HasPermission(organizationId, locationId, Permission.ViewApprovalProgress)
+                    ? volunteerFamilyInfo.AvailableApplications
+                    : ImmutableList<string>.Empty,
+                CompletedRequirements = user.HasPermission(organizationId, locationId, Permission.ViewApprovalProgress)
+                    ? volunteerFamilyInfo.CompletedRequirements
+                    : ImmutableList<CompletedRequirementInfo>.Empty,
+                ExemptedRequirements = user.HasPermission(organizationId, locationId, Permission.ViewApprovalProgress)
+                    ? volunteerFamilyInfo.ExemptedRequirements
+                    : ImmutableList<ExemptedRequirementInfo>.Empty,
+                MissingRequirements = user.HasPermission(organizationId, locationId, Permission.ViewApprovalProgress)
+                    ? volunteerFamilyInfo.MissingRequirements
+                    : ImmutableList<string>.Empty,
+                History = user.HasPermission(organizationId, locationId, Permission.ViewApprovalHistory)
+                    ? volunteerFamilyInfo.History
+                    : ImmutableList<Activity>.Empty
+            });
         }
 
-        public async Task<Family> DiscloseFamilyAsync(ClaimsPrincipal user, Family family)
+        public Task<Family> DiscloseFamilyAsync(ClaimsPrincipal user,
+            Family family, Guid organizationId, Guid locationId)
         {
-            await Task.Yield();
-            return family;
+            return Task.FromResult(family with
+            {
+                Adults = family.Adults
+                    .Select(adult =>
+                        (DisclosePersonAsync(user, adult.Item1, organizationId, locationId),
+                            adult.Item2))
+                    .ToImmutableList(),
+                Children = family.Children
+                    .Select(child => DisclosePersonAsync(user, child, organizationId, locationId))
+                    .ToImmutableList(),
+                DeletedDocuments = user.HasPermission(organizationId, locationId, Permission.ViewFamilyDocumentMetadata)
+                    ? family.DeletedDocuments
+                    : ImmutableList<Guid>.Empty,
+                UploadedDocuments = user.HasPermission(organizationId, locationId, Permission.ViewFamilyDocumentMetadata)
+                    ? family.UploadedDocuments
+                    : ImmutableList<UploadedDocumentInfo>.Empty,
+                History = user.HasPermission(organizationId, locationId, Permission.ViewFamilyHistory)
+                    ? family.History
+                    : ImmutableList<Activity>.Empty
+            });
         }
 
-        public async Task<Person> DisclosePersonAsync(ClaimsPrincipal user, Person person)
-        {
-            await Task.Yield();
-            return person;
-        }
+        internal static Person DisclosePersonAsync(ClaimsPrincipal user,
+            Person person, Guid organizationId, Guid locationId) =>
+            person with
+            {
+                Concerns = user.HasPermission(organizationId, locationId, Permission.ViewPersonConcerns)
+                    ? person.Concerns
+                    : null,
+                Notes = user.HasPermission(organizationId, locationId, Permission.ViewPersonNotes)
+                    ? person.Notes
+                    : null,
+                Addresses = user.HasPermission(organizationId, locationId, Permission.ViewPersonContactInfo)
+                    ? person.Addresses
+                    : ImmutableList<Address>.Empty,
+                CurrentAddressId = user.HasPermission(organizationId, locationId, Permission.ViewPersonContactInfo)
+                    ? person.CurrentAddressId
+                    : null,
+                EmailAddresses = user.HasPermission(organizationId, locationId, Permission.ViewPersonContactInfo)
+                    ? person.EmailAddresses
+                    : ImmutableList<EmailAddress>.Empty,
+                PreferredEmailAddressId = user.HasPermission(organizationId, locationId, Permission.ViewPersonContactInfo)
+                    ? person.PreferredEmailAddressId
+                    : null,
+                PhoneNumbers = user.HasPermission(organizationId, locationId, Permission.ViewPersonContactInfo)
+                    ? person.PhoneNumbers
+                    : ImmutableList<PhoneNumber>.Empty,
+                PreferredPhoneNumberId = user.HasPermission(organizationId, locationId, Permission.ViewPersonContactInfo)
+                    ? person.PreferredPhoneNumberId
+                    : null
+            };
 
-        public async Task<bool> DiscloseNoteAsync(ClaimsPrincipal user, Guid familyId, Note note)
+        public Task<bool> DiscloseNoteAsync(ClaimsPrincipal user,
+            Guid familyId, Note note, Guid organizationId, Guid locationId)
         {
-            await Task.Yield();
-            return true;
-        }
-
-
-        private bool CheckPermission(Guid organizationId, Guid locationId, ClaimsPrincipal user,
-            Permission? permission)
-        {
-            //TODO: Handle multiple orgs/locations
-            return permission == null ? true : user.HasPermission(permission.Value);
+            return Task.FromResult(
+                note.Id == user.PersonId(organizationId, locationId) ||
+                user.HasPermission(organizationId, locationId, Permission.ViewAllNotes));
         }
     }
 }

@@ -37,20 +37,23 @@ namespace CareTogether
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException("The provided principal does not have a valid user ID claim.", ex);
+                throw new InvalidOperationException("The principal does not have a valid user ID claim.", ex);
             }
         }
 
-        public static Guid PersonId(this ClaimsPrincipal principal)
+        public static Guid PersonId(this ClaimsPrincipal principal,
+            Guid organizationId, Guid locationId)
         {
-            try
+            var locationIdentity = principal.LocationIdentity(organizationId, locationId);
+            if (locationIdentity != null)
             {
-                return Guid.Parse(principal.FindFirst(Claims.PersonId)!.Value);
+                var personIdClaim = locationIdentity.FindFirst(Claims.PersonId);
+                if (personIdClaim != null)
+                    return Guid.Parse(personIdClaim.Value);
             }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException("The provided principal does not have a valid person ID claim.", ex);
-            }
+
+            throw new InvalidOperationException(
+                $"The principal does not have a valid person ID claim for organization '{organizationId}' and location '{locationId}'.");
         }
 
         public static void AddClaimOnlyOnce(this ClaimsPrincipal principal,
@@ -60,11 +63,28 @@ namespace CareTogether
                 identity.AddClaim(new Claim(type, value));
         }
 
-        public static bool CanAccess(this ClaimsPrincipal user, Guid organizationId, Guid locationId) =>
-            user.HasClaim(Claims.OrganizationId, organizationId.ToString()) &&
-            user.HasClaim(Claims.LocationId, locationId.ToString());
+        public static bool CanAccess(this ClaimsPrincipal principal,
+            Guid organizationId, Guid locationId)
+        {
+            var locationIdentity = principal.LocationIdentity(organizationId, locationId);
 
-        public static bool HasPermission(this ClaimsPrincipal user, Permission permission) =>
-            user.HasClaim(Claims.Permission, permission.ToString());
+            return locationIdentity != null &&
+                locationIdentity.HasClaim(Claims.OrganizationId, organizationId.ToString()) &&
+                locationIdentity.HasClaim(Claims.LocationId, locationId.ToString());
+        }
+
+        public static bool HasPermission(this ClaimsPrincipal principal,
+            Guid organizationId, Guid locationId, Permission permission)
+        {
+            var locationIdentity = principal.LocationIdentity(organizationId, locationId);
+
+            return locationIdentity != null &&
+                locationIdentity.HasClaim(Claims.Permission, permission.ToString());
+        }
+
+        public static ClaimsIdentity? LocationIdentity(this ClaimsPrincipal principal,
+            Guid organizationId, Guid locationId) =>
+            principal.Identities
+                .SingleOrDefault(identity => identity.AuthenticationType == $"{organizationId}:{locationId}");
     }
 }
