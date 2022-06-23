@@ -26,7 +26,7 @@ namespace CareTogether.Api.Controllers
         [HttpGet("{documentId:guid}")]
         public async Task<ActionResult<Uri>> GetReadValetUrl(Guid organizationId, Guid locationId, Guid documentId)
         {
-            if (User.HasPermission(Permission.ReadDocuments, organizationId, locationId))
+            if (User.HasPermission(organizationId, locationId, Permission.ReadDocuments))
             {
                 //TODO: Authorize this via policy! Best to do this in the context of an associated referral or approval, instead of at this level.
                 var valetUrl = await fileStore.GetValetReadUrlAsync(organizationId, locationId, documentId);
@@ -39,8 +39,8 @@ namespace CareTogether.Api.Controllers
         [HttpPost("upload")]
         public async Task<ActionResult<DocumentUploadInfo>> GenerateUploadValetUrl(Guid organizationId, Guid locationId)
         {
-            if (User.HasPermission(Permission.UploadStandaloneDocuments, organizationId, locationId) ||
-                User.HasPermission(Permission.EditApprovalRequirementCompletion, organizationId, locationId))
+            if (User.HasPermission(organizationId, locationId, Permission.UploadStandaloneDocuments) ||
+                User.HasPermission(organizationId, locationId, Permission.EditApprovalRequirementCompletion))
             {
                 //TODO: Authorize this via policy! Best to do this in the context of an associated referral or approval, instead of at this level.
                 var documentId = Guid.NewGuid();

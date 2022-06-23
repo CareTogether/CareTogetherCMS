@@ -33,7 +33,7 @@ namespace CareTogether.Engines.Authorization
             ClaimsPrincipal user, Guid familyId)
         {
             // Most common case for highly active users: the user has access to all families.
-            if (user.HasPermission(Permission.ViewAllFamilies, organizationId, locationId))
+            if (user.HasPermission(organizationId, locationId, Permission.ViewAllFamilies))
                 return true;
 
             // Less common but simple case: the user is part of the target family.
@@ -47,7 +47,7 @@ namespace CareTogether.Engines.Authorization
                 return true;
 
             // General case: the user's family is linked to the target family through a referral.
-            if (user.HasPermission(Permission.ViewLinkedFamilies, organizationId, locationId))
+            if (user.HasPermission(organizationId, locationId, Permission.ViewLinkedFamilies))
             {
                 var referrals = await referralsResource.ListReferralsAsync(organizationId, locationId);
 
@@ -82,7 +82,7 @@ namespace CareTogether.Engines.Authorization
             Guid organizationId, Guid locationId, ClaimsPrincipal user, FamilyCommand command)
         {
             return await AuthorizeFamilyAccessAsync(organizationId, locationId, user, command.FamilyId) &&
-                CheckPermission(organizationId, locationId, user, command switch
+                user.HasPermission(organizationId, locationId, command switch
                 {
                     CreateFamily => Permission.EditFamilyInfo,
                     AddAdultToFamily => Permission.EditFamilyInfo,
@@ -103,7 +103,7 @@ namespace CareTogether.Engines.Authorization
             Guid organizationId, Guid locationId, ClaimsPrincipal user, Guid familyId, PersonCommand command)
         {
             return await AuthorizeFamilyAccessAsync(organizationId, locationId, user, familyId) &&
-                CheckPermission(organizationId, locationId, user, command switch
+                user.HasPermission(organizationId, locationId, command switch
                 {
                     CreatePerson => Permission.EditFamilyInfo,
                     UndoCreatePerson => Permission.EditFamilyInfo,
@@ -129,7 +129,7 @@ namespace CareTogether.Engines.Authorization
             Guid organizationId, Guid locationId, ClaimsPrincipal user, ReferralCommand command)
         {
             return await AuthorizeFamilyAccessAsync(organizationId, locationId, user, command.FamilyId) &&
-                CheckPermission(organizationId, locationId, user, command switch
+                user.HasPermission(organizationId, locationId, command switch
                 {
                     CreateReferral => Permission.CreateReferral,
                     CompleteReferralRequirement => Permission.EditReferralRequirementCompletion,
@@ -148,7 +148,7 @@ namespace CareTogether.Engines.Authorization
             Guid organizationId, Guid locationId, ClaimsPrincipal user, ArrangementsCommand command)
         {
             return await AuthorizeFamilyAccessAsync(organizationId, locationId, user, command.FamilyId) &&
-                CheckPermission(organizationId, locationId, user, command switch
+                user.HasPermission(organizationId, locationId, command switch
                 {
                     CreateArrangement => Permission.CreateArrangement,
                     AssignIndividualVolunteer => Permission.EditAssignments,
@@ -181,7 +181,7 @@ namespace CareTogether.Engines.Authorization
             Guid organizationId, Guid locationId, ClaimsPrincipal user, NoteCommand command)
         {
             return await AuthorizeFamilyAccessAsync(organizationId, locationId, user, command.FamilyId) &&
-                CheckPermission(organizationId, locationId, user, command switch
+                user.HasPermission(organizationId, locationId, command switch
                 {
                     CreateDraftNote => Permission.AddEditDraftNotes,
                     EditDraftNote => Permission.AddEditDraftNotes,
@@ -196,14 +196,14 @@ namespace CareTogether.Engines.Authorization
             Guid organizationId, Guid locationId, ClaimsPrincipal user)
         {
             return Task.FromResult(
-                CheckPermission(organizationId, locationId, user, Permission.SendBulkSms));
+                user.HasPermission(organizationId, locationId, Permission.SendBulkSms));
         }
 
         public async Task<bool> AuthorizeVolunteerFamilyCommandAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user, VolunteerFamilyCommand command)
         {
             return await AuthorizeFamilyAccessAsync(organizationId, locationId, user, command.FamilyId) &&
-                CheckPermission(organizationId, locationId, user, command switch
+                user.HasPermission(organizationId, locationId, command switch
                 {
                     ActivateVolunteerFamily => Permission.ActivateVolunteerFamily,
                     CompleteVolunteerFamilyRequirement => Permission.EditApprovalRequirementCompletion,
@@ -222,7 +222,7 @@ namespace CareTogether.Engines.Authorization
             Guid organizationId, Guid locationId, ClaimsPrincipal user, VolunteerCommand command)
         {
             return await AuthorizeFamilyAccessAsync(organizationId, locationId, user, command.FamilyId) &&
-                CheckPermission(organizationId, locationId, user, command switch
+                user.HasPermission(organizationId, locationId, command switch
                 {
                     CompleteVolunteerRequirement => Permission.EditApprovalRequirementCompletion,
                     MarkVolunteerRequirementIncomplete => Permission.EditApprovalRequirementCompletion,
@@ -252,48 +252,48 @@ namespace CareTogether.Engines.Authorization
         {
             return Task.FromResult(volunteerFamilyInfo with
             {
-                FamilyRoleApprovals = user.HasPermission(Permission.ViewApprovalStatus, organizationId, locationId)
+                FamilyRoleApprovals = user.HasPermission(organizationId, locationId, Permission.ViewApprovalStatus)
                     ? volunteerFamilyInfo.FamilyRoleApprovals
                     : ImmutableDictionary<string, ImmutableList<RoleVersionApproval>>.Empty,
-                RemovedRoles = user.HasPermission(Permission.ViewApprovalStatus, organizationId, locationId)
+                RemovedRoles = user.HasPermission(organizationId, locationId, Permission.ViewApprovalStatus)
                     ? volunteerFamilyInfo.RemovedRoles
                     : ImmutableList<RemovedRole>.Empty,
                 IndividualVolunteers = volunteerFamilyInfo.IndividualVolunteers.ToImmutableDictionary(
                         keySelector: kvp => kvp.Key,
                         elementSelector: kvp => kvp.Value with
                         {
-                            RemovedRoles = user.HasPermission(Permission.ViewApprovalStatus, organizationId, locationId)
+                            RemovedRoles = user.HasPermission(organizationId, locationId, Permission.ViewApprovalStatus)
                                 ? kvp.Value.RemovedRoles
                                 : ImmutableList<RemovedRole>.Empty,
-                            IndividualRoleApprovals = user.HasPermission(Permission.ViewApprovalStatus, organizationId, locationId)
+                            IndividualRoleApprovals = user.HasPermission(organizationId, locationId, Permission.ViewApprovalStatus)
                                 ? kvp.Value.IndividualRoleApprovals
                                 : ImmutableDictionary<string, ImmutableList<RoleVersionApproval>>.Empty,
-                            AvailableApplications = user.HasPermission(Permission.ViewApprovalProgress, organizationId, locationId)
+                            AvailableApplications = user.HasPermission(organizationId, locationId, Permission.ViewApprovalProgress)
                                 ? kvp.Value.AvailableApplications
                                 : ImmutableList<string>.Empty,
-                            CompletedRequirements = user.HasPermission(Permission.ViewApprovalProgress, organizationId, locationId)
+                            CompletedRequirements = user.HasPermission(organizationId, locationId, Permission.ViewApprovalProgress)
                                 ? kvp.Value.CompletedRequirements
                                 : ImmutableList<CompletedRequirementInfo>.Empty,
-                            ExemptedRequirements = user.HasPermission(Permission.ViewApprovalProgress, organizationId, locationId)
+                            ExemptedRequirements = user.HasPermission(organizationId, locationId, Permission.ViewApprovalProgress)
                                 ? kvp.Value.ExemptedRequirements
                                 : ImmutableList<ExemptedRequirementInfo>.Empty,
-                            MissingRequirements = user.HasPermission(Permission.ViewApprovalProgress, organizationId, locationId)
+                            MissingRequirements = user.HasPermission(organizationId, locationId, Permission.ViewApprovalProgress)
                                 ? kvp.Value.MissingRequirements
                                 : ImmutableList<string>.Empty,
                         }),
-                AvailableApplications = user.HasPermission(Permission.ViewApprovalProgress, organizationId, locationId)
+                AvailableApplications = user.HasPermission(organizationId, locationId, Permission.ViewApprovalProgress)
                     ? volunteerFamilyInfo.AvailableApplications
                     : ImmutableList<string>.Empty,
-                CompletedRequirements = user.HasPermission(Permission.ViewApprovalProgress, organizationId, locationId)
+                CompletedRequirements = user.HasPermission(organizationId, locationId, Permission.ViewApprovalProgress)
                     ? volunteerFamilyInfo.CompletedRequirements
                     : ImmutableList<CompletedRequirementInfo>.Empty,
-                ExemptedRequirements = user.HasPermission(Permission.ViewApprovalProgress, organizationId, locationId)
+                ExemptedRequirements = user.HasPermission(organizationId, locationId, Permission.ViewApprovalProgress)
                     ? volunteerFamilyInfo.ExemptedRequirements
                     : ImmutableList<ExemptedRequirementInfo>.Empty,
-                MissingRequirements = user.HasPermission(Permission.ViewApprovalProgress, organizationId, locationId)
+                MissingRequirements = user.HasPermission(organizationId, locationId, Permission.ViewApprovalProgress)
                     ? volunteerFamilyInfo.MissingRequirements
                     : ImmutableList<string>.Empty,
-                History = user.HasPermission(Permission.ViewApprovalHistory, organizationId, locationId)
+                History = user.HasPermission(organizationId, locationId, Permission.ViewApprovalHistory)
                     ? volunteerFamilyInfo.History
                     : ImmutableList<Activity>.Empty
             });
@@ -312,13 +312,13 @@ namespace CareTogether.Engines.Authorization
                 Children = family.Children
                     .Select(child => DisclosePersonAsync(user, child, organizationId, locationId))
                     .ToImmutableList(),
-                DeletedDocuments = user.HasPermission(Permission.ViewFamilyDocumentMetadata, organizationId, locationId)
+                DeletedDocuments = user.HasPermission(organizationId, locationId, Permission.ViewFamilyDocumentMetadata)
                     ? family.DeletedDocuments
                     : ImmutableList<Guid>.Empty,
-                UploadedDocuments = user.HasPermission(Permission.ViewFamilyDocumentMetadata, organizationId, locationId)
+                UploadedDocuments = user.HasPermission(organizationId, locationId, Permission.ViewFamilyDocumentMetadata)
                     ? family.UploadedDocuments
                     : ImmutableList<UploadedDocumentInfo>.Empty,
-                History = user.HasPermission(Permission.ViewFamilyHistory, organizationId, locationId)
+                History = user.HasPermission(organizationId, locationId, Permission.ViewFamilyHistory)
                     ? family.History
                     : ImmutableList<Activity>.Empty
             });
@@ -328,28 +328,28 @@ namespace CareTogether.Engines.Authorization
             Person person, Guid organizationId, Guid locationId) =>
             person with
             {
-                Concerns = user.HasPermission(Permission.ViewPersonConcerns, organizationId, locationId)
+                Concerns = user.HasPermission(organizationId, locationId, Permission.ViewPersonConcerns)
                     ? person.Concerns
                     : null,
-                Notes = user.HasPermission(Permission.ViewPersonNotes, organizationId, locationId)
+                Notes = user.HasPermission(organizationId, locationId, Permission.ViewPersonNotes)
                     ? person.Notes
                     : null,
-                Addresses = user.HasPermission(Permission.ViewPersonContactInfo, organizationId, locationId)
+                Addresses = user.HasPermission(organizationId, locationId, Permission.ViewPersonContactInfo)
                     ? person.Addresses
                     : ImmutableList<Address>.Empty,
-                CurrentAddressId = user.HasPermission(Permission.ViewPersonContactInfo, organizationId, locationId)
+                CurrentAddressId = user.HasPermission(organizationId, locationId, Permission.ViewPersonContactInfo)
                     ? person.CurrentAddressId
                     : null,
-                EmailAddresses = user.HasPermission(Permission.ViewPersonContactInfo, organizationId, locationId)
+                EmailAddresses = user.HasPermission(organizationId, locationId, Permission.ViewPersonContactInfo)
                     ? person.EmailAddresses
                     : ImmutableList<EmailAddress>.Empty,
-                PreferredEmailAddressId = user.HasPermission(Permission.ViewPersonContactInfo, organizationId, locationId)
+                PreferredEmailAddressId = user.HasPermission(organizationId, locationId, Permission.ViewPersonContactInfo)
                     ? person.PreferredEmailAddressId
                     : null,
-                PhoneNumbers = user.HasPermission(Permission.ViewPersonContactInfo, organizationId, locationId)
+                PhoneNumbers = user.HasPermission(organizationId, locationId, Permission.ViewPersonContactInfo)
                     ? person.PhoneNumbers
                     : ImmutableList<PhoneNumber>.Empty,
-                PreferredPhoneNumberId = user.HasPermission(Permission.ViewPersonContactInfo, organizationId, locationId)
+                PreferredPhoneNumberId = user.HasPermission(organizationId, locationId, Permission.ViewPersonContactInfo)
                     ? person.PreferredPhoneNumberId
                     : null
             };
@@ -358,14 +358,6 @@ namespace CareTogether.Engines.Authorization
             Guid familyId, Note note, Guid organizationId, Guid locationId)
         {
             return Task.FromResult(true);
-        }
-
-
-        private static bool CheckPermission(Guid organizationId, Guid locationId, ClaimsPrincipal user,
-            Permission? permission)
-        {
-            //TODO: Handle multiple orgs/locations
-            return permission == null ? true : user.HasPermission(permission.Value, organizationId, locationId);
         }
     }
 }
