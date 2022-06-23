@@ -932,6 +932,7 @@
           "ViewChildLocationHistory",
           "ViewArrangementProgress",
           "ViewAssignments",
+          "ViewReferralHistory",
           "SendBulkSms"
         ],
         "enum": [
@@ -978,6 +979,7 @@
           314,
           315,
           316,
+          317,
           400
         ]
       },

@@ -100,8 +100,13 @@ namespace CareTogether.Managers
             var openReferral = referrals.SingleOrDefault(r => r.CloseReason == null);
             var closedReferrals = referrals.Where(r => r.CloseReason != null).ToImmutableList();
 
-            return new PartneringFamilyInfo(openReferral, closedReferrals,
+            var partneringFamilyInfo = new PartneringFamilyInfo(openReferral, closedReferrals,
                 referralEntries.SelectMany(entry => entry.History).ToImmutableList());
+
+            var disclosedPartneringFamilyInfo = await authorizationEngine.DisclosePartneringFamilyInfoAsync(
+                    user, partneringFamilyInfo, organizationId, locationId);
+
+            return disclosedPartneringFamilyInfo;
 
             async Task<Referral> ToReferralAsync(ReferralEntry entry)
             {

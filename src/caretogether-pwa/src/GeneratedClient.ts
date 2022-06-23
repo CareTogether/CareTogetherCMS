@@ -1051,6 +1051,7 @@ export enum Permission {
     ViewChildLocationHistory = 314,
     ViewArrangementProgress = 315,
     ViewAssignments = 316,
+    ViewReferralHistory = 317,
     SendBulkSms = 400,
 }
 

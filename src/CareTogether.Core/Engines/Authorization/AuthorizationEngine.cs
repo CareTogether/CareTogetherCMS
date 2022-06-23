@@ -235,11 +235,28 @@ namespace CareTogether.Engines.Authorization
                         $"The command type '{command.GetType().FullName}' has not been implemented.")
                 });
         }
-
-        public Task<Referral> DiscloseReferralAsync(ClaimsPrincipal user,
-            Referral referral, Guid organizationId, Guid locationId)
+        
+        public Task<PartneringFamilyInfo> DisclosePartneringFamilyInfoAsync(ClaimsPrincipal user,
+            PartneringFamilyInfo partneringFamilyInfo, Guid organizationId, Guid locationId)
         {
-            return Task.FromResult(referral with
+            return Task.FromResult(partneringFamilyInfo with
+            {
+                OpenReferral = partneringFamilyInfo.OpenReferral != null
+                    ? DiscloseReferral(user, partneringFamilyInfo.OpenReferral, organizationId, locationId)
+                    : null,
+                ClosedReferrals = partneringFamilyInfo.ClosedReferrals
+                    .Select(closedReferral => DiscloseReferral(user, closedReferral, organizationId, locationId))
+                    .ToImmutableList(),
+                History = user.HasPermission(organizationId, locationId, Permission.ViewReferralHistory)
+                    ? partneringFamilyInfo.History
+                    : ImmutableList<Activity>.Empty
+            });
+        }
+
+
+        internal Referral DiscloseReferral(ClaimsPrincipal user,
+            Referral referral, Guid organizationId, Guid locationId) =>
+            referral with
             {
                 CompletedCustomFields = user.HasPermission(organizationId, locationId, Permission.ViewReferralCustomFields)
                     ? referral.CompletedCustomFields
@@ -289,8 +306,7 @@ namespace CareTogether.Engines.Authorization
                                 : ImmutableList<FamilyVolunteerAssignment>.Empty
                         })
                     .ToImmutableList()
-            });
-        }
+            };
 
         public Task<VolunteerFamilyInfo> DiscloseVolunteerFamilyInfoAsync(ClaimsPrincipal user,
             VolunteerFamilyInfo volunteerFamilyInfo, Guid organizationId, Guid locationId)

@@ -42,7 +42,7 @@ namespace CareTogether
         CreateReferral = 300,
         EditReferral = 301,
         CloseReferral = 302,
-        EditReferralRequirementCompletion = 303,
+        EditReferralRequirementCompletion = 303, // Requires UploadFamilyDocuments
         EditReferralRequirementExemption = 304,
         CreateArrangement = 305,
         EditArrangement = 306,
@@ -56,6 +56,7 @@ namespace CareTogether
         ViewChildLocationHistory = 314,
         ViewArrangementProgress = 315,
         ViewAssignments = 316,
+        ViewReferralHistory = 317,
 
         SendBulkSms = 400,
     }
