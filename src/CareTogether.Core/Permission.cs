@@ -3,6 +3,11 @@ namespace CareTogether
 {
     public enum Permission
     {
+        //NOTE: These permissions are currently *intentionally* more coarse-grained than the underlying
+        //      commands they map to. The intent is to simplify configuring roles with some opinionated
+        //      guidance. However, as CareTogether evolves, it is likely that new requirements will
+        //      emerge that in turn will lead to a more refined concept of permissions.
+
         ReadDocuments = 1,
         UploadStandaloneDocuments = 2, // Will become a prerequisite for upload-linked actions
         DeleteFamilyDocuments = 3,
@@ -20,6 +25,10 @@ namespace CareTogether
         EditPersonNotes = 157,
         EditPersonContactInfo = 158,
         EditPersonUserLink = 159,
+        
+        AddEditDraftNotes = 180,
+        DiscardDraftNotes = 181,
+        ApproveNotes = 182,
 
         ViewApprovalStatus = 200,
         EditApprovalRequirementCompletion = 201, // Requires UploadStandaloneDocuments
@@ -29,6 +38,18 @@ namespace CareTogether
         ViewApprovalHistory = 205,
         ActivateVolunteerFamily = 206,
 
-        SendBulkSms = 400
+        CreateReferral = 300,
+        EditReferral = 301,
+        CloseReferral = 302,
+        EditReferralRequirementCompletion = 303,
+        EditReferralRequirementExemption = 304,
+        CreateArrangement = 305,
+        EditArrangement = 306,
+        EditAssignments = 307,
+        EditArrangementRequirementCompletion = 308,
+        EditArrangementRequirementExemption = 309,
+        TrackChildLocationChange = 310,
+
+        SendBulkSms = 400,
     }
 }

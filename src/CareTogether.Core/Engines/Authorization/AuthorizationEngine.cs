@@ -131,14 +131,14 @@ namespace CareTogether.Engines.Authorization
             return await AuthorizeFamilyAccessAsync(organizationId, locationId, user, command.FamilyId) &&
                 CheckPermission(organizationId, locationId, user, command switch
                 {
-                    CreateReferral => null,
-                    CompleteReferralRequirement => null,
-                    MarkReferralRequirementIncomplete => null,
-                    ExemptReferralRequirement => null,
-                    UnexemptReferralRequirement => null,
-                    UpdateCustomReferralField => null,
-                    UpdateReferralComments => null,
-                    CloseReferral => null,
+                    CreateReferral => Permission.CreateReferral,
+                    CompleteReferralRequirement => Permission.EditReferralRequirementCompletion,
+                    MarkReferralRequirementIncomplete => Permission.EditReferralRequirementCompletion,
+                    ExemptReferralRequirement => Permission.EditReferralRequirementExemption,
+                    UnexemptReferralRequirement => Permission.EditReferralRequirementExemption,
+                    UpdateCustomReferralField => Permission.EditReferral,
+                    UpdateReferralComments => Permission.EditReferral,
+                    CloseReferral => Permission.CloseReferral,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented.")
                 });
@@ -150,28 +150,28 @@ namespace CareTogether.Engines.Authorization
             return await AuthorizeFamilyAccessAsync(organizationId, locationId, user, command.FamilyId) &&
                 CheckPermission(organizationId, locationId, user, command switch
                 {
-                    CreateArrangement => null,
-                    AssignIndividualVolunteer => null,
-                    AssignVolunteerFamily => null,
-                    UnassignIndividualVolunteer => null,
-                    UnassignVolunteerFamily => null,
-                    StartArrangements => null,
-                    CompleteArrangementRequirement => null,
-                    CompleteVolunteerFamilyAssignmentRequirement => null,
-                    CompleteIndividualVolunteerAssignmentRequirement => null,
-                    MarkArrangementRequirementIncomplete => null,
-                    MarkVolunteerFamilyAssignmentRequirementIncomplete => null,
-                    MarkIndividualVolunteerAssignmentRequirementIncomplete => null,
-                    ExemptArrangementRequirement => null,
-                    ExemptVolunteerFamilyAssignmentRequirement => null,
-                    ExemptIndividualVolunteerAssignmentRequirement => null,
-                    UnexemptArrangementRequirement => null,
-                    UnexemptVolunteerFamilyAssignmentRequirement => null,
-                    UnexemptIndividualVolunteerAssignmentRequirement => null,
-                    TrackChildLocationChange => null,
-                    EndArrangements => null,
-                    CancelArrangementsSetup => null,
-                    UpdateArrangementComments => null,
+                    CreateArrangement => Permission.CreateArrangement,
+                    AssignIndividualVolunteer => Permission.EditAssignments,
+                    AssignVolunteerFamily => Permission.EditAssignments,
+                    UnassignIndividualVolunteer => Permission.EditAssignments,
+                    UnassignVolunteerFamily => Permission.EditAssignments,
+                    StartArrangements => Permission.EditArrangement,
+                    CompleteArrangementRequirement => Permission.EditArrangementRequirementCompletion,
+                    CompleteVolunteerFamilyAssignmentRequirement => Permission.EditArrangementRequirementCompletion,
+                    CompleteIndividualVolunteerAssignmentRequirement => Permission.EditArrangementRequirementCompletion,
+                    MarkArrangementRequirementIncomplete => Permission.EditArrangementRequirementCompletion,
+                    MarkVolunteerFamilyAssignmentRequirementIncomplete => Permission.EditArrangementRequirementCompletion,
+                    MarkIndividualVolunteerAssignmentRequirementIncomplete => Permission.EditArrangementRequirementCompletion,
+                    ExemptArrangementRequirement => Permission.EditArrangementRequirementExemption,
+                    ExemptVolunteerFamilyAssignmentRequirement => Permission.EditArrangementRequirementExemption,
+                    ExemptIndividualVolunteerAssignmentRequirement => Permission.EditArrangementRequirementExemption,
+                    UnexemptArrangementRequirement => Permission.EditArrangementRequirementExemption,
+                    UnexemptVolunteerFamilyAssignmentRequirement => Permission.EditArrangementRequirementExemption,
+                    UnexemptIndividualVolunteerAssignmentRequirement => Permission.EditArrangementRequirementExemption,
+                    TrackChildLocationChange => Permission.TrackChildLocationChange,
+                    EndArrangements => Permission.EditArrangement,
+                    CancelArrangementsSetup => Permission.EditArrangement,
+                    UpdateArrangementComments => Permission.EditArrangement,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented.")
                 });
@@ -183,10 +183,10 @@ namespace CareTogether.Engines.Authorization
             return await AuthorizeFamilyAccessAsync(organizationId, locationId, user, command.FamilyId) &&
                 CheckPermission(organizationId, locationId, user, command switch
                 {
-                    CreateDraftNote => null,
-                    EditDraftNote => null,
-                    DiscardDraftNote => null,
-                    ApproveNote => null,
+                    CreateDraftNote => Permission.AddEditDraftNotes,
+                    EditDraftNote => Permission.AddEditDraftNotes,
+                    DiscardDraftNote => Permission.DiscardDraftNotes,
+                    ApproveNote => Permission.ApproveNotes,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented.")
                 });
