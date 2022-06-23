@@ -46,7 +46,7 @@ namespace CareTogether.Managers
             var locationPolicy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
 
             var family = await directoryResource.FindFamilyAsync(organizationId, locationId, familyId);
-            var disclosedFamily = await authorizationEngine.DiscloseFamilyAsync(user, family);
+            var disclosedFamily = await authorizationEngine.DiscloseFamilyAsync(user, family, organizationId, locationId);
 
             var partneringFamilyInfo = await RenderPartneringFamilyInfoAsync(organizationId, locationId, family, user);
 
@@ -59,7 +59,8 @@ namespace CareTogether.Managers
                     ? note.ApprovedTimestampUtc!.Value
                     : note.LastEditTimestampUtc, note.Contents, note.Status))
                 .Select(async note =>
-                    (note, canDisclose: await authorizationEngine.DiscloseNoteAsync(user, familyId, note)))
+                    (note, canDisclose: await authorizationEngine.DiscloseNoteAsync(user,
+                        familyId, note, organizationId, locationId)))
                 .WhenAll())
                 .Where(result => result.canDisclose)
                 .Select(result => result.note)

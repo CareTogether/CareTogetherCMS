@@ -9,6 +9,12 @@ namespace CareTogether
         ViewAllFamilies = 100,
         ViewLinkedFamilies = 101,
 
+        ViewFamilyDocumentMetadata = 150,
+        ViewFamilyHistory = 151,
+        ViewPersonConcerns = 152,
+        ViewPersonNotes = 153,
+        ViewPersonContactInfo = 154,
+
         ViewApprovalStatus = 200,
         EditApprovalRequirementCompletion = 201, // Requires UploadStandaloneDocuments
         EditApprovalRequirementExemption = 202,

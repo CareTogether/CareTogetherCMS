@@ -235,13 +235,15 @@ namespace CareTogether.Engines.Authorization
                 });
         }
 
-        public async Task<Referral> DiscloseReferralAsync(ClaimsPrincipal user, Referral referral)
+        public async Task<Referral> DiscloseReferralAsync(ClaimsPrincipal user,
+            Referral referral, Guid organizationId, Guid locationId)
         {
             await Task.Yield();
             return referral;
         }
 
-        public async Task<Arrangement> DiscloseArrangementAsync(ClaimsPrincipal user, Arrangement arrangement)
+        public async Task<Arrangement> DiscloseArrangementAsync(ClaimsPrincipal user,
+            Arrangement arrangement, Guid organizationId, Guid locationId)
         {
             await Task.Yield();
             return arrangement;
@@ -250,6 +252,7 @@ namespace CareTogether.Engines.Authorization
         public async Task<VolunteerFamilyInfo> DiscloseVolunteerFamilyInfoAsync(ClaimsPrincipal user,
             VolunteerFamilyInfo volunteerFamilyInfo, Guid organizationId, Guid locationId)
         {
+
             await Task.Yield();
             return volunteerFamilyInfo with
             {
@@ -300,19 +303,64 @@ namespace CareTogether.Engines.Authorization
             };
         }
 
-        public async Task<Family> DiscloseFamilyAsync(ClaimsPrincipal user, Family family)
+        public async Task<Family> DiscloseFamilyAsync(ClaimsPrincipal user,
+            Family family, Guid organizationId, Guid locationId)
         {
             await Task.Yield();
-            return family;
+            return family with
+            {
+                Adults = family.Adults
+                    .Select(adult =>
+                        (DisclosePersonAsync(user, adult.Item1, organizationId, locationId),
+                            adult.Item2))
+                    .ToImmutableList(),
+                Children = family.Children
+                    .Select(child => DisclosePersonAsync(user, child, organizationId, locationId))
+                    .ToImmutableList(),
+                DeletedDocuments = user.HasPermission(Permission.ViewFamilyDocumentMetadata, organizationId, locationId)
+                    ? family.DeletedDocuments
+                    : ImmutableList<Guid>.Empty,
+                UploadedDocuments = user.HasPermission(Permission.ViewFamilyDocumentMetadata, organizationId, locationId)
+                    ? family.UploadedDocuments
+                    : ImmutableList<UploadedDocumentInfo>.Empty,
+                History = user.HasPermission(Permission.ViewFamilyHistory, organizationId, locationId)
+                    ? family.History
+                    : ImmutableList<Activity>.Empty
+            };
         }
 
-        public async Task<Person> DisclosePersonAsync(ClaimsPrincipal user, Person person)
-        {
-            await Task.Yield();
-            return person;
-        }
+        internal static Person DisclosePersonAsync(ClaimsPrincipal user,
+            Person person, Guid organizationId, Guid locationId) =>
+            person with
+            {
+                Concerns = user.HasPermission(Permission.ViewPersonConcerns, organizationId, locationId)
+                    ? person.Concerns
+                    : null,
+                Notes = user.HasPermission(Permission.ViewPersonNotes, organizationId, locationId)
+                    ? person.Notes
+                    : null,
+                Addresses = user.HasPermission(Permission.ViewPersonContactInfo, organizationId, locationId)
+                    ? person.Addresses
+                    : ImmutableList<Address>.Empty,
+                CurrentAddressId = user.HasPermission(Permission.ViewPersonContactInfo, organizationId, locationId)
+                    ? person.CurrentAddressId
+                    : null,
+                EmailAddresses = user.HasPermission(Permission.ViewPersonContactInfo, organizationId, locationId)
+                    ? person.EmailAddresses
+                    : ImmutableList<EmailAddress>.Empty,
+                PreferredEmailAddressId = user.HasPermission(Permission.ViewPersonContactInfo, organizationId, locationId)
+                    ? person.PreferredEmailAddressId
+                    : null,
+                PhoneNumbers = user.HasPermission(Permission.ViewPersonContactInfo, organizationId, locationId)
+                    ? person.PhoneNumbers
+                    : ImmutableList<PhoneNumber>.Empty,
+                PreferredPhoneNumberId = user.HasPermission(Permission.ViewPersonContactInfo, organizationId, locationId)
+                    ? person.PreferredPhoneNumberId
+                    : null
+            };
 
-        public async Task<bool> DiscloseNoteAsync(ClaimsPrincipal user, Guid familyId, Note note)
+        public async Task<bool> DiscloseNoteAsync(ClaimsPrincipal user,
+            Guid familyId, Note note, Guid organizationId, Guid locationId)
         {
             await Task.Yield();
             return true;
