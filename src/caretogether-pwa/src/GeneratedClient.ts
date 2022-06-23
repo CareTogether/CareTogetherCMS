@@ -1044,6 +1044,12 @@ export enum Permission {
     EditArrangementRequirementCompletion = 308,
     EditArrangementRequirementExemption = 309,
     TrackChildLocationChange = 310,
+    ViewReferralCustomFields = 311,
+    ViewReferralProgress = 312,
+    ViewReferralComments = 313,
+    ViewChildLocationHistory = 314,
+    ViewArrangementProgress = 315,
+    ViewAssignments = 316,
     SendBulkSms = 400,
 }
 

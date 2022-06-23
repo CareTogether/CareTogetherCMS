@@ -1,3 +1,4 @@
+using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Managers;
 using CareTogether.Resources;
 using CareTogether.Resources.Approvals;
@@ -238,7 +239,57 @@ namespace CareTogether.Engines.Authorization
         public Task<Referral> DiscloseReferralAsync(ClaimsPrincipal user,
             Referral referral, Guid organizationId, Guid locationId)
         {
-            return Task.FromResult(referral);
+            return Task.FromResult(referral with
+            {
+                CompletedCustomFields = user.HasPermission(organizationId, locationId, Permission.ViewReferralCustomFields)
+                    ? referral.CompletedCustomFields
+                    : ImmutableList<CompletedCustomFieldInfo>.Empty,
+                MissingCustomFields = user.HasPermission(organizationId, locationId, Permission.ViewReferralCustomFields)
+                    ? referral.MissingCustomFields
+                    : ImmutableList<string>.Empty,
+                CompletedRequirements = user.HasPermission(organizationId, locationId, Permission.ViewReferralProgress)
+                    ? referral.CompletedRequirements
+                    : ImmutableList<CompletedRequirementInfo>.Empty,
+                ExemptedRequirements = user.HasPermission(organizationId, locationId, Permission.ViewReferralProgress)
+                    ? referral.ExemptedRequirements
+                    : ImmutableList<ExemptedRequirementInfo>.Empty,
+                MissingRequirements = user.HasPermission(organizationId, locationId, Permission.ViewReferralProgress)
+                    ? referral.MissingRequirements
+                    : ImmutableList<string>.Empty,
+                CloseReason = user.HasPermission(organizationId, locationId, Permission.ViewReferralComments)
+                    ? referral.CloseReason
+                    : null,
+                Comments = user.HasPermission(organizationId, locationId, Permission.ViewReferralComments)
+                    ? referral.Comments
+                    : null,
+                Arrangements = referral.Arrangements
+                    .Select(arrangement =>
+                        arrangement with
+                        {
+                            ChildLocationHistory = user.HasPermission(organizationId, locationId, Permission.ViewChildLocationHistory)
+                                ? arrangement.ChildLocationHistory
+                                : ImmutableSortedSet<ChildLocationHistoryEntry>.Empty,
+                            Comments = user.HasPermission(organizationId, locationId, Permission.ViewReferralComments)
+                                ? arrangement.Comments
+                                : null,
+                            CompletedRequirements = user.HasPermission(organizationId, locationId, Permission.ViewArrangementProgress)
+                                ? arrangement.CompletedRequirements
+                                : ImmutableList<CompletedRequirementInfo>.Empty,
+                            ExemptedRequirements = user.HasPermission(organizationId, locationId, Permission.ViewArrangementProgress)
+                                ? arrangement.ExemptedRequirements
+                                : ImmutableList<ExemptedRequirementInfo>.Empty,
+                            MissingRequirements = user.HasPermission(organizationId, locationId, Permission.ViewArrangementProgress)
+                                ? arrangement.MissingRequirements
+                                : ImmutableList<MissingArrangementRequirement>.Empty,
+                            IndividualVolunteerAssignments = user.HasPermission(organizationId, locationId, Permission.ViewAssignments)
+                                ? arrangement.IndividualVolunteerAssignments
+                                : ImmutableList<IndividualVolunteerAssignment>.Empty,
+                            FamilyVolunteerAssignments = user.HasPermission(organizationId, locationId, Permission.ViewAssignments)
+                                ? arrangement.FamilyVolunteerAssignments
+                                : ImmutableList<FamilyVolunteerAssignment>.Empty
+                        })
+                    .ToImmutableList()
+            });
         }
 
         public Task<Arrangement> DiscloseArrangementAsync(ClaimsPrincipal user,

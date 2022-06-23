@@ -925,6 +925,12 @@
           "EditArrangementRequirementCompletion",
           "EditArrangementRequirementExemption",
           "TrackChildLocationChange",
+          "ViewReferralCustomFields",
+          "ViewReferralProgress",
+          "ViewReferralComments",
+          "ViewChildLocationHistory",
+          "ViewArrangementProgress",
+          "ViewAssignments",
           "SendBulkSms"
         ],
         "enum": [
@@ -964,6 +970,12 @@
           308,
           309,
           310,
+          311,
+          312,
+          313,
+          314,
+          315,
+          316,
           400
         ]
       },
