@@ -235,26 +235,22 @@ namespace CareTogether.Engines.Authorization
                 });
         }
 
-        public async Task<Referral> DiscloseReferralAsync(ClaimsPrincipal user,
+        public Task<Referral> DiscloseReferralAsync(ClaimsPrincipal user,
             Referral referral, Guid organizationId, Guid locationId)
         {
-            await Task.Yield();
-            return referral;
+            return Task.FromResult(referral);
         }
 
-        public async Task<Arrangement> DiscloseArrangementAsync(ClaimsPrincipal user,
+        public Task<Arrangement> DiscloseArrangementAsync(ClaimsPrincipal user,
             Arrangement arrangement, Guid organizationId, Guid locationId)
         {
-            await Task.Yield();
-            return arrangement;
+            return Task.FromResult(arrangement);
         }
 
-        public async Task<VolunteerFamilyInfo> DiscloseVolunteerFamilyInfoAsync(ClaimsPrincipal user,
+        public Task<VolunteerFamilyInfo> DiscloseVolunteerFamilyInfoAsync(ClaimsPrincipal user,
             VolunteerFamilyInfo volunteerFamilyInfo, Guid organizationId, Guid locationId)
         {
-
-            await Task.Yield();
-            return volunteerFamilyInfo with
+            return Task.FromResult(volunteerFamilyInfo with
             {
                 FamilyRoleApprovals = user.HasPermission(Permission.ViewApprovalStatus, organizationId, locationId)
                     ? volunteerFamilyInfo.FamilyRoleApprovals
@@ -300,14 +296,13 @@ namespace CareTogether.Engines.Authorization
                 History = user.HasPermission(Permission.ViewApprovalHistory, organizationId, locationId)
                     ? volunteerFamilyInfo.History
                     : ImmutableList<Activity>.Empty
-            };
+            });
         }
 
-        public async Task<Family> DiscloseFamilyAsync(ClaimsPrincipal user,
+        public Task<Family> DiscloseFamilyAsync(ClaimsPrincipal user,
             Family family, Guid organizationId, Guid locationId)
         {
-            await Task.Yield();
-            return family with
+            return Task.FromResult(family with
             {
                 Adults = family.Adults
                     .Select(adult =>
@@ -326,7 +321,7 @@ namespace CareTogether.Engines.Authorization
                 History = user.HasPermission(Permission.ViewFamilyHistory, organizationId, locationId)
                     ? family.History
                     : ImmutableList<Activity>.Empty
-            };
+            });
         }
 
         internal static Person DisclosePersonAsync(ClaimsPrincipal user,
@@ -359,11 +354,10 @@ namespace CareTogether.Engines.Authorization
                     : null
             };
 
-        public async Task<bool> DiscloseNoteAsync(ClaimsPrincipal user,
+        public Task<bool> DiscloseNoteAsync(ClaimsPrincipal user,
             Guid familyId, Note note, Guid organizationId, Guid locationId)
         {
-            await Task.Yield();
-            return true;
+            return Task.FromResult(true);
         }
 
 
