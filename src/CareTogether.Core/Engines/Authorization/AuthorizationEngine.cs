@@ -402,7 +402,9 @@ namespace CareTogether.Engines.Authorization
         public Task<bool> DiscloseNoteAsync(ClaimsPrincipal user,
             Guid familyId, Note note, Guid organizationId, Guid locationId)
         {
-            return Task.FromResult(true);
+            return Task.FromResult(
+                note.Id == user.PersonId(organizationId, locationId) ||
+                user.HasPermission(organizationId, locationId, Permission.ViewAllNotes));
         }
     }
 }
