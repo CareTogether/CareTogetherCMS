@@ -27,9 +27,7 @@ namespace CareTogether.Api
                 var userId = principal.UserId();
 
                 // Look up the tenant access for the user.
-                //TODO: This is currently a not-quite-circular reference as AccountsResource looks up roles from the ClaimsPrincipal.
-                //      It works, the way this code is written, but it's messy and should be fixed when implementing org switching.
-                var userTenantAccess = await accountsResource.GetUserOrganizationAccessAsync(principal);
+                var userTenantAccess = await accountsResource.GetUserTenantAccessSummaryAsync(userId);
 
                 var organizationId = userTenantAccess.OrganizationId;
                 principal.AddClaimOnlyOnce(tenantUserIdentity, Claims.OrganizationId, organizationId.ToString());
@@ -39,6 +37,11 @@ namespace CareTogether.Api
                 var configuration = await policiesResource.GetConfigurationAsync(organizationId);
 
                 var userAccessConfiguration = configuration.Users[userId];
+                //TODO: There is an inconsistency here -- we are storing/controlling location access both from the
+                //      IAccountsResource *and* the IPoliciesResource.
+                //      This is a further argument that this method should really just call a method on the
+                //      IAuthorizationEngine to obtain the full map of the user's organization/location access,
+                //      roles, and permissions, and simply convert that information into ClaimsIdentity form here.
                 var locationUserIdentities = userAccessConfiguration.LocationRoles
                     .Select(locationRole =>
                     {
