@@ -9,7 +9,7 @@ namespace CareTogether
         //      emerge that in turn will lead to a more refined concept of permissions.
 
         ReadDocuments = 1,
-        UploadStandaloneDocuments = 2, // Will become a prerequisite for upload-linked actions
+        UploadFamilyDocuments = 2, // Will become a prerequisite for upload-linked actions
         DeleteFamilyDocuments = 3,
         
         ViewAllFamilies = 100,
@@ -32,7 +32,7 @@ namespace CareTogether
         ViewAllNotes = 183,
 
         ViewApprovalStatus = 200,
-        EditApprovalRequirementCompletion = 201, // Requires UploadStandaloneDocuments
+        EditApprovalRequirementCompletion = 201, // Requires UploadFamilyDocuments
         EditApprovalRequirementExemption = 202,
         EditVolunteerRoleParticipation = 203,
         ViewApprovalProgress = 204,

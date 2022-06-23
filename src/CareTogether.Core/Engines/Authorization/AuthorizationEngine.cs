@@ -92,7 +92,7 @@ namespace CareTogether.Engines.Authorization
                     AddCustodialRelationship => Permission.EditFamilyInfo,
                     UpdateCustodialRelationshipType => Permission.EditFamilyInfo,
                     RemoveCustodialRelationship => Permission.EditFamilyInfo,
-                    UploadFamilyDocument => Permission.UploadStandaloneDocuments,
+                    UploadFamilyDocument => Permission.UploadFamilyDocuments,
                     DeleteUploadedFamilyDocument => Permission.DeleteFamilyDocuments,
                     ChangePrimaryFamilyContact => Permission.EditFamilyInfo,
                     _ => throw new NotImplementedException(
@@ -211,7 +211,7 @@ namespace CareTogether.Engines.Authorization
                     MarkVolunteerFamilyRequirementIncomplete => Permission.EditApprovalRequirementCompletion,
                     ExemptVolunteerFamilyRequirement => Permission.EditApprovalRequirementExemption,
                     UnexemptVolunteerFamilyRequirement => Permission.EditApprovalRequirementExemption,
-                    UploadVolunteerFamilyDocument => Permission.UploadStandaloneDocuments,
+                    UploadVolunteerFamilyDocument => Permission.UploadFamilyDocuments,
                     RemoveVolunteerFamilyRole => Permission.EditVolunteerRoleParticipation,
                     ResetVolunteerFamilyRole => Permission.EditVolunteerRoleParticipation,
                     _ => throw new NotImplementedException(

@@ -890,7 +890,7 @@
         "description": "",
         "x-enumNames": [
           "ReadDocuments",
-          "UploadStandaloneDocuments",
+          "UploadFamilyDocuments",
           "DeleteFamilyDocuments",
           "ViewAllFamilies",
           "ViewLinkedFamilies",
