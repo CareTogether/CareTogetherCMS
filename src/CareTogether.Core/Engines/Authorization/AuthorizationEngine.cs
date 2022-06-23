@@ -292,12 +292,6 @@ namespace CareTogether.Engines.Authorization
             });
         }
 
-        public Task<Arrangement> DiscloseArrangementAsync(ClaimsPrincipal user,
-            Arrangement arrangement, Guid organizationId, Guid locationId)
-        {
-            return Task.FromResult(arrangement);
-        }
-
         public Task<VolunteerFamilyInfo> DiscloseVolunteerFamilyInfoAsync(ClaimsPrincipal user,
             VolunteerFamilyInfo volunteerFamilyInfo, Guid organizationId, Guid locationId)
         {

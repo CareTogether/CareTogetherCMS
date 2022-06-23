@@ -42,9 +42,6 @@ namespace CareTogether.Engines.Authorization
         Task<Referral> DiscloseReferralAsync(ClaimsPrincipal user,
             Referral referral, Guid organizationId, Guid locationId);
 
-        Task<Arrangement> DiscloseArrangementAsync(ClaimsPrincipal user,
-            Arrangement arrangement, Guid organizationId, Guid locationId);
-
         Task<VolunteerFamilyInfo> DiscloseVolunteerFamilyInfoAsync(ClaimsPrincipal user,
             VolunteerFamilyInfo volunteerFamilyInfo, Guid organizationId, Guid locationId);
 
