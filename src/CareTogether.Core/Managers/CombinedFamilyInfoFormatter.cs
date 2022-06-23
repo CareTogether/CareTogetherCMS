@@ -178,7 +178,8 @@ namespace CareTogether.Managers
                     }),
                 entry.History);
 
-            var disclosedVolunteerFamilyInfo = await authorizationEngine.DiscloseVolunteerFamilyInfoAsync(user, volunteerFamilyInfo);
+            var disclosedVolunteerFamilyInfo = await authorizationEngine.DiscloseVolunteerFamilyInfoAsync(user,
+                volunteerFamilyInfo, organizationId, locationId);
             return (disclosedVolunteerFamilyInfo, entry.UploadedDocuments);
         }
 

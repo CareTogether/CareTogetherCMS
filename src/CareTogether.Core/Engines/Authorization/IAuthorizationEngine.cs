@@ -43,7 +43,8 @@ namespace CareTogether.Engines.Authorization
 
         Task<Arrangement> DiscloseArrangementAsync(ClaimsPrincipal user, Arrangement arrangement);
 
-        Task<VolunteerFamilyInfo> DiscloseVolunteerFamilyInfoAsync(ClaimsPrincipal user, VolunteerFamilyInfo volunteerFamilyInfo);
+        Task<VolunteerFamilyInfo> DiscloseVolunteerFamilyInfoAsync(ClaimsPrincipal user,
+            VolunteerFamilyInfo volunteerFamilyInfo, Guid organizationId, Guid locationId);
 
         Task<Family> DiscloseFamilyAsync(ClaimsPrincipal user, Family family);
 

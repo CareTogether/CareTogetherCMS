@@ -33,11 +33,11 @@ namespace CareTogether.Engines.Authorization
             ClaimsPrincipal user, Guid familyId)
         {
             // Most common case for highly active users: the user has access to all families.
-            if (user.HasPermission(Permission.ViewAllFamilies))
+            if (user.HasPermission(Permission.ViewAllFamilies, organizationId, locationId))
                 return true;
 
             // Less common but simple case: the user is part of the target family.
-            var userPersonId = user.PersonId();
+            var userPersonId = user.PersonId(organizationId, locationId);
             var userFamily = await directoryResource.FindPersonFamilyAsync(organizationId, locationId, userPersonId);
             if (userFamily == null)
                 return false; // If the user is not part of a family, the remaining conditions are invalid.
@@ -47,7 +47,7 @@ namespace CareTogether.Engines.Authorization
                 return true;
 
             // General case: the user's family is linked to the target family through a referral.
-            if (user.HasPermission(Permission.ViewLinkedFamilies))
+            if (user.HasPermission(Permission.ViewLinkedFamilies, organizationId, locationId))
             {
                 var referrals = await referralsResource.ListReferralsAsync(organizationId, locationId);
 
@@ -248,53 +248,53 @@ namespace CareTogether.Engines.Authorization
         }
 
         public async Task<VolunteerFamilyInfo> DiscloseVolunteerFamilyInfoAsync(ClaimsPrincipal user,
-            VolunteerFamilyInfo volunteerFamilyInfo)
+            VolunteerFamilyInfo volunteerFamilyInfo, Guid organizationId, Guid locationId)
         {
             await Task.Yield();
             return volunteerFamilyInfo with
             {
-                FamilyRoleApprovals = user.HasPermission(Permission.ViewApprovalStatus)
+                FamilyRoleApprovals = user.HasPermission(Permission.ViewApprovalStatus, organizationId, locationId)
                     ? volunteerFamilyInfo.FamilyRoleApprovals
                     : ImmutableDictionary<string, ImmutableList<RoleVersionApproval>>.Empty,
-                RemovedRoles = user.HasPermission(Permission.ViewApprovalStatus)
+                RemovedRoles = user.HasPermission(Permission.ViewApprovalStatus, organizationId, locationId)
                     ? volunteerFamilyInfo.RemovedRoles
                     : ImmutableList<RemovedRole>.Empty,
                 IndividualVolunteers = volunteerFamilyInfo.IndividualVolunteers.ToImmutableDictionary(
                         keySelector: kvp => kvp.Key,
                         elementSelector: kvp => kvp.Value with
                         {
-                            RemovedRoles = user.HasPermission(Permission.ViewApprovalStatus)
+                            RemovedRoles = user.HasPermission(Permission.ViewApprovalStatus, organizationId, locationId)
                                 ? kvp.Value.RemovedRoles
                                 : ImmutableList<RemovedRole>.Empty,
-                            IndividualRoleApprovals = user.HasPermission(Permission.ViewApprovalStatus)
+                            IndividualRoleApprovals = user.HasPermission(Permission.ViewApprovalStatus, organizationId, locationId)
                                 ? kvp.Value.IndividualRoleApprovals
                                 : ImmutableDictionary<string, ImmutableList<RoleVersionApproval>>.Empty,
-                            AvailableApplications = user.HasPermission(Permission.ViewApprovalProgress)
+                            AvailableApplications = user.HasPermission(Permission.ViewApprovalProgress, organizationId, locationId)
                                 ? kvp.Value.AvailableApplications
                                 : ImmutableList<string>.Empty,
-                            CompletedRequirements = user.HasPermission(Permission.ViewApprovalProgress)
+                            CompletedRequirements = user.HasPermission(Permission.ViewApprovalProgress, organizationId, locationId)
                                 ? kvp.Value.CompletedRequirements
                                 : ImmutableList<CompletedRequirementInfo>.Empty,
-                            ExemptedRequirements = user.HasPermission(Permission.ViewApprovalProgress)
+                            ExemptedRequirements = user.HasPermission(Permission.ViewApprovalProgress, organizationId, locationId)
                                 ? kvp.Value.ExemptedRequirements
                                 : ImmutableList<ExemptedRequirementInfo>.Empty,
-                            MissingRequirements = user.HasPermission(Permission.ViewApprovalProgress)
+                            MissingRequirements = user.HasPermission(Permission.ViewApprovalProgress, organizationId, locationId)
                                 ? kvp.Value.MissingRequirements
                                 : ImmutableList<string>.Empty,
                         }),
-                AvailableApplications = user.HasPermission(Permission.ViewApprovalProgress)
+                AvailableApplications = user.HasPermission(Permission.ViewApprovalProgress, organizationId, locationId)
                     ? volunteerFamilyInfo.AvailableApplications
                     : ImmutableList<string>.Empty,
-                CompletedRequirements = user.HasPermission(Permission.ViewApprovalProgress)
+                CompletedRequirements = user.HasPermission(Permission.ViewApprovalProgress, organizationId, locationId)
                     ? volunteerFamilyInfo.CompletedRequirements
                     : ImmutableList<CompletedRequirementInfo>.Empty,
-                ExemptedRequirements = user.HasPermission(Permission.ViewApprovalProgress)
+                ExemptedRequirements = user.HasPermission(Permission.ViewApprovalProgress, organizationId, locationId)
                     ? volunteerFamilyInfo.ExemptedRequirements
                     : ImmutableList<ExemptedRequirementInfo>.Empty,
-                MissingRequirements = user.HasPermission(Permission.ViewApprovalProgress)
+                MissingRequirements = user.HasPermission(Permission.ViewApprovalProgress, organizationId, locationId)
                     ? volunteerFamilyInfo.MissingRequirements
                     : ImmutableList<string>.Empty,
-                History = user.HasPermission(Permission.ViewApprovalHistory)
+                History = user.HasPermission(Permission.ViewApprovalHistory, organizationId, locationId)
                     ? volunteerFamilyInfo.History
                     : ImmutableList<Activity>.Empty
             };
@@ -323,7 +323,7 @@ namespace CareTogether.Engines.Authorization
             Permission? permission)
         {
             //TODO: Handle multiple orgs/locations
-            return permission == null ? true : user.HasPermission(permission.Value);
+            return permission == null ? true : user.HasPermission(permission.Value, organizationId, locationId);
         }
     }
 }
