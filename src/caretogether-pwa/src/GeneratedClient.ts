@@ -1023,6 +1023,7 @@ export enum Permission {
     EditVolunteerRoleParticipation = 203,
     ViewApprovalProgress = 204,
     ViewApprovalHistory = 205,
+    SendBulkSms = 400,
 }
 
 export class UserAccessConfiguration implements IUserAccessConfiguration {

@@ -903,7 +903,8 @@
           "EditApprovalRequirementExemption",
           "EditVolunteerRoleParticipation",
           "ViewApprovalProgress",
-          "ViewApprovalHistory"
+          "ViewApprovalHistory",
+          "SendBulkSms"
         ],
         "enum": [
           1,
@@ -920,7 +921,8 @@
           202,
           203,
           204,
-          205
+          205,
+          400
         ]
       },
       "UserAccessConfiguration": {

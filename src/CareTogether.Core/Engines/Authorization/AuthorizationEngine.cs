@@ -195,8 +195,8 @@ namespace CareTogether.Engines.Authorization
         public Task<bool> AuthorizeSendSmsAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user)
         {
-            return Task.FromResult(CheckPermission(organizationId, locationId, user,
-                permission: null));
+            return Task.FromResult(
+                CheckPermission(organizationId, locationId, user, Permission.SendBulkSms));
         }
 
         public async Task<bool> AuthorizeVolunteerFamilyCommandAsync(
