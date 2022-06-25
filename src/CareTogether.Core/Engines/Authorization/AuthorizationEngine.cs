@@ -457,12 +457,12 @@ namespace CareTogether.Engines.Authorization
                     : null
             };
 
-        public Task<bool> DiscloseNoteAsync(ClaimsPrincipal user,
+        public async Task<bool> DiscloseNoteAsync(ClaimsPrincipal user,
             Guid familyId, Note note, Guid organizationId, Guid locationId)
         {
-            return Task.FromResult(
-                note.Id == user.PersonId(organizationId, locationId) ||
-                user.HasPermission(organizationId, locationId, Permission.ViewAllNotes));
+            var author = await directoryResource.FindUserAsync(organizationId, locationId, note.AuthorId);
+            return author.Id == user.PersonId(organizationId, locationId) ||
+                user.HasPermission(organizationId, locationId, Permission.ViewAllNotes);
         }
     }
 }

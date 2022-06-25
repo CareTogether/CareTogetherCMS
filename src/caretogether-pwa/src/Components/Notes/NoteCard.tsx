@@ -8,7 +8,7 @@ import {
 } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import React, { useState } from 'react';
-import { Note, NoteStatus } from '../../GeneratedClient';
+import { Note, NoteStatus, Permission } from '../../GeneratedClient';
 import { useUserLookup } from '../../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
@@ -17,6 +17,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import { AddEditNoteDialog } from './AddEditNoteDialog';
 import { ApproveNoteDialog } from './ApproveNoteDialog';
 import { DiscardNoteDialog } from './DiscardNoteDialog';
+import { usePermissions } from '../../Model/SessionModel';
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -64,6 +65,8 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
   const [showApproveNoteDialog, setShowApproveNoteDialog] = useState(false);
   const [showEditNoteDialog, setShowEditNoteDialog] = useState(false);
 
+  const permissions = usePermissions();
+
   return typeof note === 'undefined' ? null : (
     <Card className={classes.card} variant="outlined">
       <CardHeader className={classes.cardHeader}
@@ -78,7 +81,7 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
       </CardContent>
       {note.status === NoteStatus.Draft &&
         <CardActions className={classes.cardActions}>
-          <Button
+          {permissions(Permission.DiscardDraftNotes) && <Button
             onClick={() => setShowDiscardNoteDialog(true)}
             variant="contained"
             size="small"
@@ -86,23 +89,23 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
             className={classes.rightCardActionButton}
             startIcon={<DeleteForeverIcon />}>
             Delete
-          </Button>
-          <Button
+          </Button>}
+          {permissions(Permission.AddEditDraftNotes) && <Button
             onClick={() => setShowEditNoteDialog(true)}
             variant="contained"
             size="small"
             className={classes.rightCardActionButton}
             startIcon={<EditIcon />}>
             Edit
-          </Button>
-          <Button
+          </Button>}
+          {permissions(Permission.ApproveNotes) && <Button
             onClick={() => setShowApproveNoteDialog(true)}
             variant="contained"
             size="small"
             className={classes.rightCardActionButton}
             startIcon={<CheckIcon />}>
             Approve
-          </Button>
+          </Button>}
         </CardActions>}
       {(showDiscardNoteDialog && <DiscardNoteDialog familyId={familyId} note={note}
         onClose={() => setShowDiscardNoteDialog(false)} />) || null}
