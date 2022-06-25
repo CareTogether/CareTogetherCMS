@@ -1,6 +1,6 @@
 import makeStyles from '@mui/styles/makeStyles';
 import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, useMediaQuery, useTheme, Button, ButtonGroup, FormControlLabel, Switch, MenuItem, Select, ListItemText, Checkbox, FormControl, InputBase, SelectChangeEvent, IconButton, Snackbar } from '@mui/material';
-import { Gender, ExactAge, AgeInYears, RoleVersionApproval, CombinedFamilyInfo, RemovedRole, RoleRemovalReason, EmailAddress } from '../../GeneratedClient';
+import { Gender, ExactAge, AgeInYears, RoleVersionApproval, CombinedFamilyInfo, RemovedRole, RoleRemovalReason, EmailAddress, Permission } from '../../GeneratedClient';
 import { differenceInYears } from 'date-fns';
 import { atom, selector, useRecoilState, useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../../Model/VolunteersModel';
@@ -17,7 +17,7 @@ import { HeaderContent, HeaderTitle } from '../Header';
 import { SearchBar } from '../SearchBar';
 import { useLocalStorage } from '../../useLocalStorage';
 import { useScrollMemory } from '../../useScrollMemory';
-import { currentLocationState } from '../../Model/SessionModel';
+import { currentLocationState, usePermissions } from '../../Model/SessionModel';
 import { BulkSmsSideSheet } from './BulkSmsSideSheet';
 import { useWindowSize } from '../../useWindowSize';
 
@@ -263,6 +263,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 
   const windowSize = useWindowSize();
 
+  const permissions = usePermissions();
+
   return (
     <>
       <Grid container spacing={3} sx={{
@@ -414,10 +416,10 @@ function VolunteerApproval(props: { onOpen: () => void }) {
               </TableBody>
             </Table>
           </TableContainer>
-          <Fab color="primary" aria-label="add" className={classes.fabAdd}
+          {permissions(Permission.EditFamilyInfo) && <Fab color="primary" aria-label="add" className={classes.fabAdd}
             onClick={() => setCreateVolunteerFamilyDialogOpen(true)}>
             <AddIcon />
-          </Fab>
+          </Fab>}
           {createVolunteerFamilyDialogOpen && <CreateVolunteerFamilyDialog onClose={(volunteerFamilyId) => {
             setCreateVolunteerFamilyDialogOpen(false);
             volunteerFamilyId && openVolunteerFamily(volunteerFamilyId);

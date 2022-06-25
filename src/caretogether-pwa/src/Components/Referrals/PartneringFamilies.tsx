@@ -9,7 +9,7 @@ import { partneringFamiliesData } from '../../Model/ReferralsModel';
 import { format } from 'date-fns';
 import React, { useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
-import { ReferralCloseReason, PartneringFamilyInfo, Arrangement, ArrangementPhase } from '../../GeneratedClient';
+import { ReferralCloseReason, PartneringFamilyInfo, Arrangement, ArrangementPhase, Permission } from '../../GeneratedClient';
 import { useNavigate } from 'react-router-dom';
 import { FamilyName } from '../Families/FamilyName';
 import { ArrangementCard } from './ArrangementCard';
@@ -20,6 +20,7 @@ import { useLocalStorage } from '../../useLocalStorage';
 import { policyData } from '../../Model/ConfigurationModel';
 import { SearchBar } from '../SearchBar';
 import { filterFamiliesByText, sortFamiliesByLastNameDesc } from '../Families/FamilyUtils';
+import { usePermissions } from '../../Model/SessionModel';
 
 const useStyles = makeStyles((theme) => ({
   table: {
@@ -145,6 +146,8 @@ function PartneringFamilies() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
+  const permissions = usePermissions();
+
   return (
     <Grid container spacing={3}>
       <HeaderContent>
@@ -213,10 +216,10 @@ function PartneringFamilies() {
             </TableBody>
           </Table>
         </TableContainer>
-        <Fab color="primary" aria-label="add" className={classes.fabAdd}
+        {permissions(Permission.EditFamilyInfo) && <Fab color="primary" aria-label="add" className={classes.fabAdd}
           onClick={() => setCreatePartneringFamilyDialogOpen(true)}>
           <AddIcon />
-        </Fab>
+        </Fab>}
         {createPartneringFamilyDialogOpen && <CreatePartneringFamilyDialog onClose={(partneringFamilyId) => {
           setCreatePartneringFamilyDialogOpen(false);
           partneringFamilyId && openPartneringFamily(partneringFamilyId);

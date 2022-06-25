@@ -12,6 +12,8 @@ import { SearchBar } from '../SearchBar';
 import { useLocalStorage } from '../../useLocalStorage';
 import { useScrollMemory } from '../../useScrollMemory';
 import { filterFamiliesByText, familyLastName, sortFamiliesByLastNameDesc } from '../Families/FamilyUtils';
+import { usePermissions } from '../../Model/SessionModel';
+import { Permission } from '../../GeneratedClient';
 
 const useStyles = makeStyles((theme) => ({
   table: {
@@ -59,6 +61,8 @@ function VolunteerProgress(props: { onOpen: () => void }) {
   const location = useLocation();
   
   const [expandedView, setExpandedView] = useLocalStorage('volunteer-progress-expanded', true);
+
+  const permissions = usePermissions();
 
   return (
     <Grid container spacing={3}>
@@ -137,10 +141,10 @@ function VolunteerProgress(props: { onOpen: () => void }) {
             </TableBody>
           </Table>
         </TableContainer>
-        <Fab color="primary" aria-label="add" className={classes.fabAdd}
+        {permissions(Permission.EditFamilyInfo) && <Fab color="primary" aria-label="add" className={classes.fabAdd}
           onClick={() => setCreateVolunteerFamilyDialogOpen(true)}>
           <AddIcon />
-        </Fab>
+        </Fab>}
         {createVolunteerFamilyDialogOpen && <CreateVolunteerFamilyDialog onClose={(volunteerFamilyId) => {
           setCreateVolunteerFamilyDialogOpen(false);
           volunteerFamilyId && openVolunteerFamily(volunteerFamilyId);

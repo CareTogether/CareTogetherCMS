@@ -149,22 +149,22 @@ export function PartneringFamilyScreen() {
           startIcon={<CloudUploadIcon />}>
           Upload
         </Button>}
-        <Button
+        {permissions(Permission.EditFamilyInfo) && <Button
           onClick={() => setAddAdultDialogOpen(true)}
           variant="contained"
           size="small"
           className={classes.button}
           startIcon={<AddCircleIcon />}>
           Adult
-        </Button>
-        <Button
+        </Button>}
+        {permissions(Permission.EditFamilyInfo) && <Button
           onClick={() => setAddChildDialogOpen(true)}
           variant="contained"
           size="small"
           className={classes.button}
           startIcon={<AddCircleIcon />}>
           Child
-        </Button>
+        </Button>}
         <Button
           onClick={() => setAddNoteDialogOpen(true)}
           variant="contained"

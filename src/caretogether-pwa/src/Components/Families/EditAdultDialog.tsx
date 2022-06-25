@@ -1,5 +1,5 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
-import { ValueTupleOfPersonAndFamilyAdultRelationshipInfo } from '../../GeneratedClient';
+import { Permission, ValueTupleOfPersonAndFamilyAdultRelationshipInfo } from '../../GeneratedClient';
 import { useParams } from 'react-router-dom';
 import { DialogHandle, useDialogHandle } from '../../useDialogHandle';
 import { NameEditor } from './NameEditor';
@@ -15,6 +15,7 @@ import { AdultFamilyRelationshipEditor } from './AdultFamilyRelationshipEditor';
 import { AddressEditor } from './AddressEditor';
 import { PhoneNumberEditor } from './PhoneNumberEditor';
 import { EmailAddressEditor } from './EmailAddressEditor';
+import { usePermissions } from '../../Model/SessionModel';
 
 interface EditAdultDialogProps {
   handle: DialogHandle
@@ -30,6 +31,8 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
 
   const deleteDialogHandle = useDialogHandle();
 
+  const permissions = usePermissions();
+
   return (
     <Dialog open={handle.open} onClose={handle.closeDialog}
       fullWidth scroll='body' aria-labelledby="edit-adult-title">
@@ -42,20 +45,23 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
         <AgeEditor {...personEditorProps} />
         <EthnicityEditor {...personEditorProps} />
         <AdultFamilyRelationshipEditor relationship={adult.item2!} {...personEditorProps} />
-        <h4 style={{ marginBottom:0 }}>Phone Number(s):</h4>
-        {person.phoneNumbers?.map(phoneNumber =>
-          <PhoneNumberEditor key={phoneNumber.id!} phoneNumber={phoneNumber} {...personEditorProps } />)}
-        <PhoneNumberEditor add {...personEditorProps} />
-        <h4 style={{ marginBottom:0 }}>Email Address(es):</h4>
-        {person.emailAddresses?.map(emailAddress =>
-          <EmailAddressEditor key={emailAddress.id!} emailAddress={emailAddress} {...personEditorProps } />)}
-        <EmailAddressEditor add {...personEditorProps} />
-        <h4 style={{ marginBottom:0 }}>Address(es):</h4>
-        {person.addresses?.map(address =>
-          <AddressEditor key={address.id!} address={address} {...personEditorProps } />)}
-        <AddressEditor add {...personEditorProps } />
-        <NotesEditor {...personEditorProps} />
-        <ConcernsEditor {...personEditorProps} />
+        {permissions(Permission.ViewPersonContactInfo) &&
+          <>
+            <h4 style={{ marginBottom:0 }}>Phone Number(s):</h4>
+            {person.phoneNumbers?.map(phoneNumber =>
+              <PhoneNumberEditor key={phoneNumber.id!} phoneNumber={phoneNumber} {...personEditorProps } />)}
+            {permissions(Permission.EditPersonContactInfo) && <PhoneNumberEditor add {...personEditorProps} />}
+            <h4 style={{ marginBottom:0 }}>Email Address(es):</h4>
+            {person.emailAddresses?.map(emailAddress =>
+              <EmailAddressEditor key={emailAddress.id!} emailAddress={emailAddress} {...personEditorProps } />)}
+            {permissions(Permission.EditPersonContactInfo) && <EmailAddressEditor add {...personEditorProps} />}
+            <h4 style={{ marginBottom:0 }}>Address(es):</h4>
+            {person.addresses?.map(address =>
+              <AddressEditor key={address.id!} address={address} {...personEditorProps } />)}
+            {permissions(Permission.EditPersonContactInfo) && <AddressEditor add {...personEditorProps } />}
+          </>}
+        {permissions(Permission.ViewPersonNotes) && <NotesEditor {...personEditorProps} />}
+        {permissions(Permission.ViewPersonConcerns) && <ConcernsEditor {...personEditorProps} />}
       </DialogContent>
       <DialogActions>
         <Button onClick={deleteDialogHandle.openDialog} variant="contained" color="secondary"

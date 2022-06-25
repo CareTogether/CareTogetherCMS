@@ -8,7 +8,7 @@ import {
   Divider
 } from "@mui/material";
 import makeStyles from '@mui/styles/makeStyles';
-import { Gender, CombinedFamilyInfo } from "../../GeneratedClient";
+import { Gender, CombinedFamilyInfo, Permission } from "../../GeneratedClient";
 import { AgeText } from "../AgeText";
 import EditIcon from '@mui/icons-material/Edit';
 import { useRecoilValue } from "recoil";
@@ -17,6 +17,7 @@ import { ContactDisplay } from "../ContactDisplay";
 import { IconRow } from "../IconRow";
 import { useDialogHandle } from "../../useDialogHandle";
 import { EditAdultDialog } from "../Families/EditAdultDialog";
+import { usePermissions } from "../../Model/SessionModel";
 
 const useStyles = makeStyles((theme) => ({
   sectionChips: {
@@ -67,6 +68,8 @@ export function PartneringAdultCard({partneringFamilyId, personId}: PartneringAd
 
   const editDialogHandle = useDialogHandle();
 
+  const permissions = usePermissions();
+
   return <>{adult?.item1 && adult.item1.id && adult.item2 &&
     <Card variant="outlined" className={classes.card}>
       <CardHeader className={classes.cardHeader}
@@ -74,7 +77,7 @@ export function PartneringAdultCard({partneringFamilyId, personId}: PartneringAd
         subheader={<>
           Adult, <AgeText age={adult.item1.age} />, {typeof(adult.item1.gender) === 'undefined' ? "" : Gender[adult.item1.gender] + ","} {adult.item1.ethnicity}
         </>}
-        action={
+        action={permissions(Permission.EditFamilyInfo) &&
           <IconButton
             onClick={editDialogHandle.openDialog}
             size="medium">

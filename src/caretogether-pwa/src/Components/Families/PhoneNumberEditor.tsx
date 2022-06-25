@@ -3,8 +3,9 @@ import AddIcon from '@mui/icons-material/Add';
 import { useDirectoryModel } from '../../Model/DirectoryModel';
 import { useInlineEditor } from '../../useInlineEditor';
 import { PersonEditorProps } from "./PersonEditorProps";
-import { PhoneNumber, IPhoneNumber, PhoneNumberType } from '../../GeneratedClient';
+import { PhoneNumber, IPhoneNumber, PhoneNumberType, Permission } from '../../GeneratedClient';
 import { Favorite, FavoriteBorder } from '@mui/icons-material';
+import { usePermissions } from '../../Model/SessionModel';
 
 type PhoneNumberEditorProps = PersonEditorProps & {
   add?: boolean
@@ -46,6 +47,8 @@ export function PhoneNumberEditor({ familyId, person, add, phoneNumber }: PhoneN
     });
     editor.setEditing(true);
   }
+
+  const permissions = usePermissions();
 
   return (
     <Grid container rowSpacing={0} columnSpacing={2}>
@@ -97,7 +100,7 @@ export function PhoneNumberEditor({ familyId, person, add, phoneNumber }: PhoneN
                   ? <Favorite fontSize='small' color='disabled' sx={{verticalAlign: 'middle', marginRight: 1}} />
                   : <FavoriteBorder fontSize='small' color='disabled' sx={{verticalAlign: 'middle', marginRight: 1}} />}
                 {phoneNumber!.number} - {PhoneNumberType[phoneNumber!.type!]}
-                {editor.editButton}
+                {permissions(Permission.EditPersonContactInfo) && editor.editButton}
               </>}
         </Grid>}
     </Grid>
