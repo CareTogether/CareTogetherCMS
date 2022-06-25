@@ -10,14 +10,14 @@ namespace CareTogether
 
         // ---- Global ---- //
 
-        ReadDocuments = 1,
-        UploadFamilyDocuments = 2, // Will become a prerequisite for upload-linked actions
-        DeleteFamilyDocuments = 3,
+        ViewFamilyDocumentMetadata = 1,
+        ReadFamilyDocuments = 2,
+        UploadFamilyDocuments = 3, // Will become a prerequisite for upload-linked actions
+        DeleteFamilyDocuments = 4,
         
         ViewAllFamilies = 100,
         ViewLinkedFamilies = 101,
 
-        ViewFamilyDocumentMetadata = 150,
         ViewFamilyHistory = 151,
         ViewPersonConcerns = 152,
         ViewPersonNotes = 153,

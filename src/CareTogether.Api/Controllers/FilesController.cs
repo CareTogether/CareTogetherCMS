@@ -26,7 +26,7 @@ namespace CareTogether.Api.Controllers
         [HttpGet("{documentId:guid}")]
         public async Task<ActionResult<Uri>> GetReadValetUrl(Guid organizationId, Guid locationId, Guid documentId)
         {
-            if (User.HasPermission(organizationId, locationId, Permission.ReadDocuments))
+            if (User.HasPermission(organizationId, locationId, Permission.ReadFamilyDocuments))
             {
                 //TODO: Authorize this via policy! Best to do this in the context of an associated referral or approval, instead of at this level.
                 var valetUrl = await fileStore.GetValetReadUrlAsync(organizationId, locationId, documentId);

@@ -1008,12 +1008,12 @@ export interface IRoleDefinition {
 }
 
 export enum Permission {
-    ReadDocuments = 1,
-    UploadFamilyDocuments = 2,
-    DeleteFamilyDocuments = 3,
+    ViewFamilyDocumentMetadata = 1,
+    ReadFamilyDocuments = 2,
+    UploadFamilyDocuments = 3,
+    DeleteFamilyDocuments = 4,
     ViewAllFamilies = 100,
     ViewLinkedFamilies = 101,
-    ViewFamilyDocumentMetadata = 150,
     ViewFamilyHistory = 151,
     ViewPersonConcerns = 152,
     ViewPersonNotes = 153,

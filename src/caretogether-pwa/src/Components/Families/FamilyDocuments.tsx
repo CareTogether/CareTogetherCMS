@@ -38,7 +38,7 @@ export function FamilyDocuments({ family }: FamilyDocumentsProps) {
     <>
       <ul className={classes.familyDocumentsList}>
         {family.uploadedDocuments?.map((uploaded, i) =>
-          permissions(Permission.ReadDocuments)
+          permissions(Permission.ReadFamilyDocuments)
           ? <li key={i} style={{ clear: 'both' }}
               onContextMenu={(e) => { e.preventDefault(); setMoreMenuAnchor({ anchor: e.currentTarget, document: uploaded }); }}
               onClick={() => downloadFile(organizationId, locationId, uploaded.uploadedDocumentId!)}>
