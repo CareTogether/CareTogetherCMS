@@ -11,7 +11,7 @@ import { PartneringChildCard } from './PartneringChildCard';
 import { useState } from 'react';
 import { AddAdultDialog } from '../Families/AddAdultDialog';
 import { AddChildDialog } from '../Families/AddChildDialog';
-import { AddEditNoteDialog } from '../Families/AddEditNoteDialog';
+import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
 import { ArrangementCard } from './ArrangementCard';
 import { format } from 'date-fns';
 import { UploadFamilyDocumentsDialog } from '../Families/UploadFamilyDocumentsDialog';

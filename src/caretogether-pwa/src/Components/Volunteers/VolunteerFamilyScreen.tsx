@@ -27,7 +27,7 @@ import { ExemptedRequirementRow } from "../Requirements/ExemptedRequirementRow";
 import { CompletedRequirementRow } from "../Requirements/CompletedRequirementRow";
 import { VolunteerFamilyContext } from "../Requirements/RequirementContext";
 import { ActivityTimeline } from '../Activities/ActivityTimeline';
-import { AddEditNoteDialog } from '../Families/AddEditNoteDialog';
+import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
 import { PrimaryContactEditor } from '../Families/PrimaryContactEditor';
 
 const useStyles = makeStyles((theme) => ({
