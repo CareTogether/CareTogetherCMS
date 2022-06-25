@@ -239,10 +239,11 @@ export function VolunteerFamilyScreen() {
                 <ExemptedRequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={requirementContext} />
               )}
             </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <h3>Documents</h3>
-              <FamilyDocuments family={volunteerFamily} />
-            </Grid>
+            {permissions(Permission.ViewFamilyDocumentMetadata) &&
+              <Grid item xs={12} sm={6} md={4}>
+                <h3 style={{ marginBottom: 0 }}>Documents</h3>
+                <FamilyDocuments family={volunteerFamily} />
+              </Grid>}
           </Grid>
           <Grid container spacing={0}>
             <Grid item xs={12}>

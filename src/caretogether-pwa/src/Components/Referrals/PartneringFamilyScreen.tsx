@@ -271,10 +271,11 @@ export function PartneringFamilyScreen() {
                   )}
                 </Grid>
               </>}
-            <Grid item xs={12} sm={6} md={4}>
-              <h3 style={{ marginBottom: 0 }}>Documents</h3>
-              <FamilyDocuments family={partneringFamily} />
-            </Grid>
+            {permissions(Permission.ViewFamilyDocumentMetadata) &&
+              <Grid item xs={12} sm={6} md={4}>
+                <h3 style={{ marginBottom: 0 }}>Documents</h3>
+                <FamilyDocuments family={partneringFamily} />
+              </Grid>}
           </Grid>
           <Grid container spacing={0}>
             {partneringFamily.partneringFamilyInfo?.openReferral &&
