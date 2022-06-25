@@ -1048,10 +1048,11 @@ export enum Permission {
     ViewAssignments = 352,
     EditAssignments = 353,
     ViewArrangementProgress = 354,
-    EditArrangementRequirementCompletion = 355,
-    EditArrangementRequirementExemption = 356,
-    TrackChildLocationChange = 357,
-    ViewChildLocationHistory = 358,
+    ViewAssignedArrangementProgress = 355,
+    EditArrangementRequirementCompletion = 356,
+    EditArrangementRequirementExemption = 357,
+    ViewChildLocationHistory = 380,
+    TrackChildLocationChange = 381,
     SendBulkSms = 400,
 }
 

@@ -929,10 +929,11 @@
           "ViewAssignments",
           "EditAssignments",
           "ViewArrangementProgress",
+          "ViewAssignedArrangementProgress",
           "EditArrangementRequirementCompletion",
           "EditArrangementRequirementExemption",
-          "TrackChildLocationChange",
           "ViewChildLocationHistory",
+          "TrackChildLocationChange",
           "SendBulkSms"
         ],
         "enum": [
@@ -979,7 +980,8 @@
           355,
           356,
           357,
-          358,
+          380,
+          381,
           400
         ]
       },

@@ -35,7 +35,6 @@ namespace CareTogether
 
         // ---- Approvals ---- //
 
-        //TODO: ViewApprovals?
         ViewApprovalStatus = 200,
         EditApprovalRequirementCompletion = 201, // Requires UploadFamilyDocuments
         EditApprovalRequirementExemption = 202,
@@ -46,7 +45,6 @@ namespace CareTogether
 
         // ---- Referrals ---- //
 
-        //TODO: ViewReferrals?
         CreateReferral = 300,
         EditReferral = 301,
         CloseReferral = 302,
@@ -62,11 +60,12 @@ namespace CareTogether
         ViewAssignments = 352,
         EditAssignments = 353,
         ViewArrangementProgress = 354,
-        //TODO: ViewAssignedArrangementProgress? (See only items assigned to your own family?)
-        EditArrangementRequirementCompletion = 355,
-        EditArrangementRequirementExemption = 356,
-        TrackChildLocationChange = 357,
-        ViewChildLocationHistory = 358,
+        ViewAssignedArrangementProgress = 355, // See only items assigned to your own family
+        EditArrangementRequirementCompletion = 356,
+        EditArrangementRequirementExemption = 357,
+        
+        ViewChildLocationHistory = 380,
+        TrackChildLocationChange = 381,
 
         SendBulkSms = 400,
     }
