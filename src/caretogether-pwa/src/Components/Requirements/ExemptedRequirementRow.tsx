@@ -21,8 +21,12 @@ export function ExemptedRequirementRow({ requirement, context }: ExemptedRequire
   
   const dialogHandle = useDialogHandle();
 
-  const canExempt = context.kind === 'Referral' || context.kind === 'Arrangement'
-    ? true //TODO: Implement these permissions!
+  const canExempt = context.kind === 'Referral'
+    ? permissions(Permission.EditReferralRequirementExemption)
+    : context.kind === 'Arrangement' ||
+      context.kind === 'Family Volunteer Assignment' ||
+      context.kind === 'Individual Volunteer Assignment'
+    ? permissions(Permission.EditArrangementRequirementExemption)
     : permissions(Permission.EditApprovalRequirementExemption);
 
   const familyLookup = useFamilyLookup();

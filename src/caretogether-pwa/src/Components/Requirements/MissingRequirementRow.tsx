@@ -21,14 +21,22 @@ export function MissingRequirementRow({ requirement, context, isAvailableApplica
   
   const requirementPolicy = policy.actionDefinitions![requirement];
 
-  const canComplete = context.kind === 'Referral' || context.kind === 'Arrangement'
-    ? true //TODO: Implement these permissions!
+  if (context.kind === 'Arrangement' ||
+    context.kind === 'Family Volunteer Assignment' ||
+    context.kind === 'Individual Volunteer Assignment')
+    throw new Error(`Invalid missing requirement context '${context.kind}'`);
+
+  const canComplete = context.kind === 'Referral'
+    ? permissions(Permission.EditReferralRequirementCompletion)
     : permissions(Permission.EditApprovalRequirementCompletion);
+  const canExempt = context.kind === 'Referral'
+    ? permissions(Permission.EditReferralRequirementExemption)
+    : permissions(Permission.EditApprovalRequirementExemption);
   
   return (
     <>
       <IconRow icon={isAvailableApplication ? "💤" : "❌"}
-        onClick={canComplete ? dialogHandle.openDialog : undefined}>{requirement}</IconRow>
+        onClick={canComplete || canExempt ? dialogHandle.openDialog : undefined}>{requirement}</IconRow>
       {dialogHandle.open && <MissingRequirementDialog handle={dialogHandle}
         requirement={requirement} context={context} policy={requirementPolicy} />}
     </>
