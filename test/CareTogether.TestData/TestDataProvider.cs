@@ -374,14 +374,25 @@ namespace CareTogether.TestData
                             ImmutableList<string>.Empty.AddRange(new[] { "Single", "Spouse", "Partner", "Dad", "Mom", "Relative", "Domestic Worker" }),
                             sourcePhoneNumbers)),
                     ImmutableList<RoleDefinition>.Empty
-                        .Add(new RoleDefinition("NoteEnterer", ImmutableList<Permission>.Empty
-                            .AddRange(new Permission[] { Permission.ViewLinkedFamilies }))),
+                        .Add(new RoleDefinition("Volunteer", ImmutableList<Permission>.Empty
+                            .AddRange(new Permission[]
+                            {
+                                Permission.ViewLinkedFamilies,
+                                Permission.ViewPersonContactInfo,
+                                Permission.AddEditDraftNotes,
+                                Permission.DiscardDraftNotes,
+                                Permission.ViewApprovalProgress,
+                                Permission.ViewAssignments,
+                                Permission.ViewAssignedArrangementProgress,
+                                Permission.ViewChildLocationHistory,
+                                Permission.TrackChildLocationChange
+                            }))),
                     ImmutableDictionary<Guid, UserAccessConfiguration>.Empty
                         .Add(adminId, new UserAccessConfiguration(guid0, ImmutableList<UserLocationRole>.Empty
                             .Add(new UserLocationRole(guid2, "OrganizationAdministrator"))
                             .Add(new UserLocationRole(guid3, "OrganizationAdministrator"))))
                         .Add(volunteerId, new UserAccessConfiguration(guid4, ImmutableList<UserLocationRole>.Empty
-                            .Add(new UserLocationRole(guid2, "NoteEnterer"))))));
+                            .Add(new UserLocationRole(guid2, "Volunteer"))))));
         }
 
         public static async Task PopulatePolicies(IObjectStore<EffectiveLocationPolicy> policiesStore)
