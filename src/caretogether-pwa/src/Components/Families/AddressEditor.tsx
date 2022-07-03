@@ -3,8 +3,9 @@ import AddIcon from '@mui/icons-material/Add';
 import { useDirectoryModel } from '../../Model/DirectoryModel';
 import { useInlineEditor } from '../../useInlineEditor';
 import { PersonEditorProps } from "./PersonEditorProps";
-import { Address, IAddress } from '../../GeneratedClient';
+import { Address, IAddress, Permission } from '../../GeneratedClient';
 import { MyLocation, LocationSearching } from '@mui/icons-material';
+import { usePermissions } from '../../Model/SessionModel';
 
 type AddressEditorProps = PersonEditorProps & {
   add?: boolean
@@ -53,6 +54,8 @@ export function AddressEditor({ familyId, person, add, address }: AddressEditorP
     });
     editor.setEditing(true);
   }
+
+  const permissions = usePermissions();
   
   return (
     <Grid container rowSpacing={2} columnSpacing={2}>
@@ -116,7 +119,7 @@ export function AddressEditor({ familyId, person, add, address }: AddressEditorP
                   {address!.line2 && <>{address!.line2}<br /></>}
                   {address!.city},&nbsp;{address!.state}&nbsp;{address!.postalCode}
                 </p>
-                {editor.editButton}
+                {permissions(Permission.EditPersonContactInfo) && editor.editButton}
               </>}
         </Grid>}
     </Grid>

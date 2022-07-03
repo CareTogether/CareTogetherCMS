@@ -6,13 +6,14 @@ import {
   Typography,
 } from "@mui/material";
 import makeStyles from '@mui/styles/makeStyles';
-import { CustodialRelationshipType, Gender, CombinedFamilyInfo } from "../../GeneratedClient";
+import { CustodialRelationshipType, Gender, CombinedFamilyInfo, Permission } from "../../GeneratedClient";
 import { AgeText } from "../AgeText";
 import EditIcon from '@mui/icons-material/Edit';
 import { useRecoilValue } from "recoil";
 import { partneringFamiliesData } from "../../Model/ReferralsModel";
 import { useDialogHandle } from "../../useDialogHandle";
 import { EditChildDialog } from "../Families/EditChildDialog";
+import { usePermissions } from "../../Model/SessionModel";
 
 const useStyles = makeStyles((theme) => ({
   sectionChips: {
@@ -59,6 +60,8 @@ export function PartneringChildCard({partneringFamilyId, personId}: PartneringCh
   const child = partneringFamily.family?.children?.find(x => x.id === personId);
 
   const editDialogHandle = useDialogHandle();
+
+  const permissions = usePermissions();
   
   return <>{child &&
     <Card variant="outlined" className={classes.card}>
@@ -67,7 +70,7 @@ export function PartneringChildCard({partneringFamilyId, personId}: PartneringCh
         subheader={<>
           Child, <AgeText age={child.age} />, {typeof(child.gender) === 'undefined' ? "" : Gender[child.gender] + ","} {child.ethnicity}
         </>}
-        action={
+        action={permissions(Permission.EditFamilyInfo) &&
           <IconButton
             onClick={editDialogHandle.openDialog}
             size="medium">

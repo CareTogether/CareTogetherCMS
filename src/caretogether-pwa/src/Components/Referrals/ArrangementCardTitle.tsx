@@ -1,7 +1,8 @@
 import { Button } from "@mui/material";
 import { formatRelative } from "date-fns";
 import { useState } from "react";
-import { Arrangement, ArrangementPhase } from "../../GeneratedClient";
+import { Arrangement, ArrangementPhase, Permission } from "../../GeneratedClient";
+import { usePermissions } from "../../Model/SessionModel";
 import { CancelArrangementDialog } from "./CancelArrangementDialog";
 import { EndArrangementDialog } from "./EndArrangementDialog";
 import { StartArrangementDialog } from "./StartArrangementDialog";
@@ -14,6 +15,7 @@ type ArrangementCardTitleProps = {
 
 export function ArrangementCardTitle({ summaryOnly, referralId, arrangement }: ArrangementCardTitleProps) {
   const now = new Date();
+  const permissions = usePermissions();
 
   const [showStartArrangementDialog, setShowStartArrangementDialog] = useState(false);
   const [showEndArrangementDialog, setShowEndArrangementDialog] = useState(false);
@@ -39,13 +41,15 @@ export function ArrangementCardTitle({ summaryOnly, referralId, arrangement }: A
             : arrangement.phase === ArrangementPhase.SettingUp ?
               <>
                 Setting up
-                <Button variant="outlined" size="small"
-                  style={{marginLeft: 10}}
-                  onClick={() => setShowCancelArrangementDialog(true)}>
-                  Cancel
-                </Button>
+                {permissions(Permission.EditArrangement) &&
+                  <Button variant="outlined" size="small"
+                    style={{marginLeft: 10}}
+                    onClick={() => setShowCancelArrangementDialog(true)}>
+                    Cancel
+                  </Button>}
               </>
             : arrangement.phase === ArrangementPhase.ReadyToStart ?
+              permissions(Permission.EditArrangement) &&
               <>
                 <Button variant="outlined" size="small"
                   style={{marginLeft: 10}}
@@ -61,11 +65,12 @@ export function ArrangementCardTitle({ summaryOnly, referralId, arrangement }: A
             : arrangement.phase === ArrangementPhase.Started ?
               <>
                 <span>Started {formatRelative(arrangement.startedAtUtc!, now)}</span>
-                <Button variant="outlined" size="small"
-                  style={{marginLeft: 10}}
-                  onClick={() => setShowEndArrangementDialog(true)}>
-                  End
-                </Button>
+                {permissions(Permission.EditArrangement) &&
+                  <Button variant="outlined" size="small"
+                    style={{marginLeft: 10}}
+                    onClick={() => setShowEndArrangementDialog(true)}>
+                    End
+                  </Button>}
               </>
             : `Ended ${formatRelative(arrangement.endedAtUtc!, now)}`}
       </span>}

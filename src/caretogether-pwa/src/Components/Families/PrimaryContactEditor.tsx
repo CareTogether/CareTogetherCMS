@@ -1,8 +1,9 @@
 import { Box, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 import { useDirectoryModel } from '../../Model/DirectoryModel';
 import { useInlineEditor } from '../../useInlineEditor';
-import { CombinedFamilyInfo } from '../../GeneratedClient';
+import { CombinedFamilyInfo, Permission } from '../../GeneratedClient';
 import { PersonName } from './PersonName';
+import { usePermissions } from '../../Model/SessionModel';
 
 type PrimaryContactEditorProps = {
   family: CombinedFamilyInfo
@@ -18,6 +19,8 @@ export function PrimaryContactEditor({ family }: PrimaryContactEditorProps) {
     await directoryModel.updatePrimaryFamilyContact(family.family!.id!, adultId),
     primaryContactPerson.id!);
 
+  const permissions = usePermissions();
+  
   return (editor.editing
   ? <Box>
       <FormControl required fullWidth size="small">
@@ -40,6 +43,6 @@ export function PrimaryContactEditor({ family }: PrimaryContactEditorProps) {
     </Box>
   : <Box>
       Primary Contact: <PersonName person={primaryContactPerson} />
-      {editor.editButton}
+      {permissions(Permission.EditFamilyInfo) && editor.editButton}
     </Box>);
 }

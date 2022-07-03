@@ -11,7 +11,7 @@ import { PartneringChildCard } from './PartneringChildCard';
 import { useState } from 'react';
 import { AddAdultDialog } from '../Families/AddAdultDialog';
 import { AddChildDialog } from '../Families/AddChildDialog';
-import { AddEditNoteDialog } from '../Families/AddEditNoteDialog';
+import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
 import { ArrangementCard } from './ArrangementCard';
 import { format } from 'date-fns';
 import { UploadFamilyDocumentsDialog } from '../Families/UploadFamilyDocumentsDialog';
@@ -149,22 +149,22 @@ export function PartneringFamilyScreen() {
           startIcon={<CloudUploadIcon />}>
           Upload
         </Button>}
-        <Button
+        {permissions(Permission.EditFamilyInfo) && <Button
           onClick={() => setAddAdultDialogOpen(true)}
           variant="contained"
           size="small"
           className={classes.button}
           startIcon={<AddCircleIcon />}>
           Adult
-        </Button>
-        <Button
+        </Button>}
+        {permissions(Permission.EditFamilyInfo) && <Button
           onClick={() => setAddChildDialogOpen(true)}
           variant="contained"
           size="small"
           className={classes.button}
           startIcon={<AddCircleIcon />}>
           Child
-        </Button>
+        </Button>}
         <Button
           onClick={() => setAddNoteDialogOpen(true)}
           variant="contained"
@@ -193,22 +193,25 @@ export function PartneringFamilyScreen() {
           <Grid container spacing={0}>
             <Grid item xs={12} md={4}>
               <PrimaryContactEditor family={partneringFamily} />
-              <br />
-              {partneringFamily.partneringFamilyInfo?.openReferral
-                ? "Referral open since " + format(partneringFamily.partneringFamilyInfo.openReferral.openedAtUtc!, "M/d/yy")
-                : "Referral closed - " + ReferralCloseReason[partneringFamily.partneringFamilyInfo?.closedReferrals?.[partneringFamily.partneringFamilyInfo.closedReferrals.length-1]?.closeReason!]
-                //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closedUtc) -- needs a new calculated property
-              }
-              {(partneringFamily.partneringFamilyInfo!.closedReferrals?.length && (
+              {permissions(Permission.ViewReferralProgress) &&
                 <>
                   <br />
-                  {partneringFamily.partneringFamilyInfo!.closedReferrals?.map(referral => (
-                    <p key={referral.id}>Previous referral closed {format(referral.closedAtUtc!, "M/d/yy")} - {ReferralCloseReason[referral.closeReason!]}</p>
-                  ))}
-                </>
-              )) || null}
+                  {partneringFamily.partneringFamilyInfo?.openReferral
+                    ? "Referral open since " + format(partneringFamily.partneringFamilyInfo.openReferral.openedAtUtc!, "M/d/yy")
+                    : "Referral closed - " + ReferralCloseReason[partneringFamily.partneringFamilyInfo?.closedReferrals?.[partneringFamily.partneringFamilyInfo.closedReferrals.length-1]?.closeReason!]
+                    //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closedUtc) -- needs a new calculated property
+                  }
+                  {(partneringFamily.partneringFamilyInfo!.closedReferrals?.length && (
+                    <>
+                      <br />
+                      {partneringFamily.partneringFamilyInfo!.closedReferrals?.map(referral => (
+                        <p key={referral.id}>Previous referral closed {format(referral.closedAtUtc!, "M/d/yy")} - {ReferralCloseReason[referral.closeReason!]}</p>
+                      ))}
+                    </>
+                  )) || null}
+                </>}
             </Grid>
-            <Grid item xs={6} md={4}>
+            {permissions(Permission.ViewReferralCustomFields) && <Grid item xs={6} md={4}>
               {(partneringFamily.partneringFamilyInfo?.openReferral?.completedCustomFields ||
                 [] as Array<CompletedCustomFieldInfo | string>).concat(
                 partneringFamily.partneringFamilyInfo?.openReferral?.missingCustomFields || []).sort((a, b) =>
@@ -220,7 +223,7 @@ export function PartneringFamilyScreen() {
                 <ReferralCustomField key={typeof customField === 'string' ? customField : customField.customFieldName}
                   partneringFamilyId={familyId} referralId={partneringFamily.partneringFamilyInfo!.openReferral!.id!}
                   customField={customField} />)}
-            </Grid>
+            </Grid>}
             <Grid item xs={6} md={4}>
               {canCloseReferral && <Button
                 onClick={() => setCloseReferralDialogOpen(true)}
@@ -229,7 +232,7 @@ export function PartneringFamilyScreen() {
                 className={classes.button}>
                 Close Referral
               </Button>}
-              {!partneringFamily.partneringFamilyInfo?.openReferral && <Button
+              {!partneringFamily.partneringFamilyInfo?.openReferral && permissions(Permission.CreateReferral) && <Button
                 onClick={() => setOpenNewReferralDialogOpen(true)}
                 variant="contained"
                 size="small"
@@ -247,13 +250,13 @@ export function PartneringFamilyScreen() {
                   onClose={() => setOpenNewReferralDialogOpen(false)} />)}
             </Grid>
           </Grid>
-          {partneringFamily.partneringFamilyInfo?.openReferral &&
+          {permissions(Permission.ViewReferralComments) && partneringFamily.partneringFamilyInfo?.openReferral &&
             <Grid container spacing={0}>
               <ReferralComments partneringFamily={partneringFamily}
                 referralId={partneringFamily.partneringFamilyInfo.openReferral.id!} />
             </Grid>}
           <Grid container spacing={0}>
-            {partneringFamily.partneringFamilyInfo?.openReferral &&
+            {permissions(Permission.ViewReferralProgress) && partneringFamily.partneringFamilyInfo?.openReferral &&
               <>
                 <Grid item xs={12} sm={6} md={4} style={{paddingRight: 20}}>
                   <h3 style={{ marginBottom: 0 }}>Incomplete</h3>
@@ -271,10 +274,11 @@ export function PartneringFamilyScreen() {
                   )}
                 </Grid>
               </>}
-            <Grid item xs={12} sm={6} md={4}>
-              <h3 style={{ marginBottom: 0 }}>Documents</h3>
-              <FamilyDocuments family={partneringFamily} />
-            </Grid>
+            {permissions(Permission.ViewFamilyDocumentMetadata) &&
+              <Grid item xs={12} sm={6} md={4}>
+                <h3 style={{ marginBottom: 0 }}>Documents</h3>
+                <FamilyDocuments family={partneringFamily} />
+              </Grid>}
           </Grid>
           <Grid container spacing={0}>
             {partneringFamily.partneringFamilyInfo?.openReferral &&
@@ -288,7 +292,7 @@ export function PartneringFamilyScreen() {
                       partneringFamily={partneringFamily} referralId={partneringFamily.partneringFamilyInfo!.openReferral!.id!}
                       arrangement={arrangement} />
                   )) || false}
-                  <Box sx={{textAlign: 'center'}}>
+                  {permissions(Permission.CreateArrangement) && <Box sx={{textAlign: 'center'}}>
                     {partneringFamily.partneringFamilyInfo?.openReferral && policy.referralPolicy?.arrangementPolicies?.map(arrangementPolicy => (
                       <Box key={arrangementPolicy.arrangementType}>
                         <Button
@@ -301,7 +305,7 @@ export function PartneringFamilyScreen() {
                         </Button>
                       </Box>
                     ))}
-                  </Box>
+                  </Box>}
                 </Masonry>
                 {createArrangementDialogParameter &&
                   <CreateArrangementDialog

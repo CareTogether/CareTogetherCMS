@@ -1,6 +1,7 @@
 import { TextField } from "@mui/material";
-import { Arrangement, CombinedFamilyInfo } from "../../GeneratedClient";
+import { Arrangement, CombinedFamilyInfo, Permission } from "../../GeneratedClient";
 import { useReferralsModel } from "../../Model/ReferralsModel";
+import { usePermissions } from "../../Model/SessionModel";
 import { useInlineEditor } from "../../useInlineEditor";
 
 type ArrangementCommentsProps = {
@@ -13,6 +14,7 @@ export function ArrangementComments({ partneringFamily, referralId, arrangement 
   const savedValue = arrangement.comments;
 
   const referralsModel = useReferralsModel();
+  const permissions = usePermissions();
 
   const editor = useInlineEditor(async value => {
     await referralsModel.updateArrangementComments(
@@ -32,9 +34,12 @@ export function ArrangementComments({ partneringFamily, referralId, arrangement 
         : (savedValue && savedValue.length > 0)
         ? savedValue
         : "(no comments)"}
-      {editor.editButton}
-      {editor.cancelButton}
-      {editor.saveButton}
+      {permissions(Permission.EditArrangement) &&
+        <>
+          {editor.editButton}
+          {editor.cancelButton}
+          {editor.saveButton}
+        </>}
     </>
   );
 }

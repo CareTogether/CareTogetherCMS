@@ -27,7 +27,7 @@ import { ExemptedRequirementRow } from "../Requirements/ExemptedRequirementRow";
 import { CompletedRequirementRow } from "../Requirements/CompletedRequirementRow";
 import { VolunteerFamilyContext } from "../Requirements/RequirementContext";
 import { ActivityTimeline } from '../Activities/ActivityTimeline';
-import { AddEditNoteDialog } from '../Families/AddEditNoteDialog';
+import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
 import { PrimaryContactEditor } from '../Families/PrimaryContactEditor';
 
 const useStyles = makeStyles((theme) => ({
@@ -119,6 +119,10 @@ export function VolunteerFamilyScreen() {
 
   const permissions = usePermissions();
 
+  const participatingFamilyRoles =
+    Object.entries(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals || {}).filter(
+      ([role,]) => !volunteerFamily.volunteerFamilyInfo?.removedRoles?.find(x => x.roleName === role));
+  
   return (
     <Container maxWidth={false} sx={{paddingLeft: '12px'}}>
       <HeaderContent>
@@ -139,35 +143,36 @@ export function VolunteerFamilyScreen() {
           startIcon={<CloudUploadIcon />}>
           Upload
         </Button>}
-        <Button
+        {permissions(Permission.EditFamilyInfo) && <Button
           onClick={() => setAddAdultDialogOpen(true)}
           variant="contained"
           size="small"
           className={classes.button}
           startIcon={<AddCircleIcon />}>
           Adult
-        </Button>
-        <Button
+        </Button>}
+        {permissions(Permission.EditFamilyInfo) && <Button
           onClick={() => setAddChildDialogOpen(true)}
           variant="contained"
           size="small"
           className={classes.button}
           startIcon={<AddCircleIcon />}>
           Child
-        </Button>
-        <Button
+        </Button>}
+        {permissions(Permission.AddEditDraftNotes) && <Button
           onClick={() => setAddNoteDialogOpen(true)}
           variant="contained"
           size="small"
           className={classes.button}
           startIcon={<AddCircleIcon />}>
           Note
-        </Button>
-        <IconButton
+        </Button>}
+        {permissions(Permission.EditVolunteerRoleParticipation) &&
+          participatingFamilyRoles.length > 0 && <IconButton
           onClick={(event) => setFamilyMoreMenuAnchor(event.currentTarget)}
           size="large">
           <MoreVertIcon />
-        </IconButton>
+        </IconButton>}
         <Menu id="family-more-menu"
           anchorEl={familyMoreMenuAnchor}
           keepMounted
@@ -175,8 +180,7 @@ export function VolunteerFamilyScreen() {
           onClose={() => setFamilyMoreMenuAnchor(null)}>
           <MenuList dense={isDesktop}>
             {permissions(Permission.EditVolunteerRoleParticipation) &&
-              Object.entries(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals || {}).filter(([role, ]) =>
-              !volunteerFamily.volunteerFamilyInfo?.removedRoles?.find(x => x.roleName === role)).flatMap(([role, ]) => (
+              participatingFamilyRoles.flatMap(([role, ]) => (
               <MenuItem key={role} onClick={() => selectRemoveRole(role)}>
                 <ListItemText primary={`Remove from ${role} role`} />
               </MenuItem>
@@ -239,10 +243,11 @@ export function VolunteerFamilyScreen() {
                 <ExemptedRequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={requirementContext} />
               )}
             </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <h3>Documents</h3>
-              <FamilyDocuments family={volunteerFamily} />
-            </Grid>
+            {permissions(Permission.ViewFamilyDocumentMetadata) &&
+              <Grid item xs={12} sm={6} md={4}>
+                <h3 style={{ marginBottom: 0 }}>Documents</h3>
+                <FamilyDocuments family={volunteerFamily} />
+              </Grid>}
           </Grid>
           <Grid container spacing={0}>
             <Grid item xs={12}>

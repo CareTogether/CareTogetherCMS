@@ -6,7 +6,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import { usePersonLookup, useUserLookup } from "../../Model/DirectoryModel";
 import { PersonName } from "../Families/PersonName";
 import { Box } from "@mui/material";
-import { NoteCard } from "../Families/NoteCard";
+import { NoteCard } from "../Notes/NoteCard";
 
 type ActivityTimelineProps = {
   family: CombinedFamilyInfo

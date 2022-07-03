@@ -6,6 +6,7 @@ using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.Referrals;
+using Nito.AsyncEx;
 using System;
 using System.Collections.Immutable;
 using System.Linq;
@@ -236,27 +237,32 @@ namespace CareTogether.Engines.Authorization
                 });
         }
         
-        public Task<PartneringFamilyInfo> DisclosePartneringFamilyInfoAsync(ClaimsPrincipal user,
+        public async Task<PartneringFamilyInfo> DisclosePartneringFamilyInfoAsync(ClaimsPrincipal user,
             PartneringFamilyInfo partneringFamilyInfo, Guid organizationId, Guid locationId)
         {
-            return Task.FromResult(partneringFamilyInfo with
+            return partneringFamilyInfo with
             {
                 OpenReferral = partneringFamilyInfo.OpenReferral != null
-                    ? DiscloseReferral(user, partneringFamilyInfo.OpenReferral, organizationId, locationId)
+                    ? await DiscloseReferral(user, partneringFamilyInfo.OpenReferral, organizationId, locationId)
                     : null,
-                ClosedReferrals = partneringFamilyInfo.ClosedReferrals
+                ClosedReferrals = (await partneringFamilyInfo.ClosedReferrals
                     .Select(closedReferral => DiscloseReferral(user, closedReferral, organizationId, locationId))
+                    .WhenAll())
                     .ToImmutableList(),
                 History = user.HasPermission(organizationId, locationId, Permission.ViewReferralHistory)
                     ? partneringFamilyInfo.History
                     : ImmutableList<Activity>.Empty
-            });
+            };
         }
 
 
-        internal Referral DiscloseReferral(ClaimsPrincipal user,
-            Referral referral, Guid organizationId, Guid locationId) =>
-            referral with
+        internal async Task<Referral> DiscloseReferral(ClaimsPrincipal user,
+            Referral referral, Guid organizationId, Guid locationId)
+        {
+            var userPersonId = user.PersonId(organizationId, locationId);
+            var userFamily = await directoryResource.FindPersonFamilyAsync(organizationId, locationId, userPersonId);
+
+            return referral with
             {
                 CompletedCustomFields = user.HasPermission(organizationId, locationId, Permission.ViewReferralCustomFields)
                     ? referral.CompletedCustomFields
@@ -297,16 +303,52 @@ namespace CareTogether.Engines.Authorization
                                 : ImmutableList<ExemptedRequirementInfo>.Empty,
                             MissingRequirements = user.HasPermission(organizationId, locationId, Permission.ViewArrangementProgress)
                                 ? arrangement.MissingRequirements
+                                : user.HasPermission(organizationId, locationId, Permission.ViewAssignedArrangementProgress)
+                                    && userFamily != null
+                                ? arrangement.MissingRequirements
+                                    .Where(m => m.VolunteerFamilyId == userFamily.Id)
+                                    .ToImmutableList()
                                 : ImmutableList<MissingArrangementRequirement>.Empty,
                             IndividualVolunteerAssignments = user.HasPermission(organizationId, locationId, Permission.ViewAssignments)
                                 ? arrangement.IndividualVolunteerAssignments
+                                    .Select(iva => iva with
+                                    {
+                                        CompletedRequirements = user.HasPermission(organizationId, locationId, Permission.ViewArrangementProgress)
+                                            ? iva.CompletedRequirements
+                                            : user.HasPermission(organizationId, locationId, Permission.ViewAssignedArrangementProgress)
+                                                && iva.FamilyId == userFamily?.Id
+                                            ? iva.CompletedRequirements
+                                            : ImmutableList<CompletedRequirementInfo>.Empty,
+                                        ExemptedRequirements = user.HasPermission(organizationId, locationId, Permission.ViewArrangementProgress)
+                                            ? iva.ExemptedRequirements
+                                            : user.HasPermission(organizationId, locationId, Permission.ViewAssignedArrangementProgress)
+                                                && iva.FamilyId == userFamily?.Id
+                                            ? iva.ExemptedRequirements
+                                            : ImmutableList<ExemptedRequirementInfo>.Empty
+                                    }).ToImmutableList()
                                 : ImmutableList<IndividualVolunteerAssignment>.Empty,
                             FamilyVolunteerAssignments = user.HasPermission(organizationId, locationId, Permission.ViewAssignments)
                                 ? arrangement.FamilyVolunteerAssignments
+                                    .Select(fva => fva with
+                                    {
+                                        CompletedRequirements = user.HasPermission(organizationId, locationId, Permission.ViewArrangementProgress)
+                                            ? fva.CompletedRequirements
+                                            : user.HasPermission(organizationId, locationId, Permission.ViewAssignedArrangementProgress)
+                                                && fva.FamilyId == userFamily?.Id
+                                            ? fva.CompletedRequirements
+                                            : ImmutableList<CompletedRequirementInfo>.Empty,
+                                        ExemptedRequirements = user.HasPermission(organizationId, locationId, Permission.ViewArrangementProgress)
+                                            ? fva.ExemptedRequirements
+                                            : user.HasPermission(organizationId, locationId, Permission.ViewAssignedArrangementProgress)
+                                                && fva.FamilyId == userFamily?.Id
+                                            ? fva.ExemptedRequirements
+                                            : ImmutableList<ExemptedRequirementInfo>.Empty
+                                    }).ToImmutableList()
                                 : ImmutableList<FamilyVolunteerAssignment>.Empty
                         })
                     .ToImmutableList()
             };
+        }
 
         public Task<VolunteerFamilyInfo> DiscloseVolunteerFamilyInfoAsync(ClaimsPrincipal user,
             VolunteerFamilyInfo volunteerFamilyInfo, Guid organizationId, Guid locationId)
@@ -415,12 +457,12 @@ namespace CareTogether.Engines.Authorization
                     : null
             };
 
-        public Task<bool> DiscloseNoteAsync(ClaimsPrincipal user,
+        public async Task<bool> DiscloseNoteAsync(ClaimsPrincipal user,
             Guid familyId, Note note, Guid organizationId, Guid locationId)
         {
-            return Task.FromResult(
-                note.Id == user.PersonId(organizationId, locationId) ||
-                user.HasPermission(organizationId, locationId, Permission.ViewAllNotes));
+            var author = await directoryResource.FindUserAsync(organizationId, locationId, note.AuthorId);
+            return author.Id == user.PersonId(organizationId, locationId) ||
+                user.HasPermission(organizationId, locationId, Permission.ViewAllNotes);
         }
     }
 }

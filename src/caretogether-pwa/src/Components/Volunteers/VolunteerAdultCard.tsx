@@ -110,6 +110,14 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
   
   const permissions = usePermissions();
 
+  const participatingFamilyRoles =
+  Object.entries(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals || {}).filter(
+    ([role,]) => !volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles?.find(x => x.roleName === role));
+  const participatingIndividualRoles =
+    Object.entries(volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.individualRoleApprovals || {}).filter(
+      ([role,]) => !volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles?.find(x => x.roleName === role));
+  const removedRoles = volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles || [];
+
   return <>{adult?.item1 && adult.item1.id && adult.item2 &&
     <Card variant="outlined" className={classes.card}>
       <CardHeader className={classes.cardHeader}
@@ -121,16 +129,19 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         </>}
         action={
           <>
-            <IconButton
+            {permissions(Permission.EditFamilyInfo) && <IconButton
               onClick={editDialogHandle.openDialog}
               size="medium">
               <EditIcon color="primary" />
-            </IconButton>
-            <IconButton
+            </IconButton>}
+            {permissions(Permission.EditVolunteerRoleParticipation) &&
+              (participatingFamilyRoles.length > 0 ||
+                participatingIndividualRoles.length > 0 ||
+                removedRoles.length > 0) && <IconButton
               onClick={(event) => setAdultMoreMenuAnchor({anchor: event.currentTarget, adult: adult.item1 as Person})}
               size="large">
               <MoreVertIcon />
-            </IconButton>
+            </IconButton>}
           </>} />
       <CardContent className={classes.cardContent}>
         <Typography color="textSecondary" className={classes.sectionChips} component="div">
@@ -202,21 +213,19 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         open={Boolean(adultMoreMenuAnchor)}
         onClose={() => setAdultMoreMenuAnchor(null)}>
         {permissions(Permission.EditVolunteerRoleParticipation) &&
-          Object.entries(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals || {}).filter(([role, ]) =>
-          !volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles?.find(x => x.roleName === role)).flatMap(([role, ]) => (
+          participatingFamilyRoles.flatMap(([role, ]) => (
           <MenuItem key={role} onClick={() => adultMoreMenuAnchor?.adult && selectRemoveRole(adultMoreMenuAnchor.adult, role)}>
             <ListItemText primary={`Remove from ${role} role`} />
           </MenuItem>
         ))}
         {permissions(Permission.EditVolunteerRoleParticipation) &&
-          Object.entries(volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.individualRoleApprovals || {}).filter(([role, ]) =>
-          !volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles?.find(x => x.roleName === role)).flatMap(([role, ]) => (
+          participatingIndividualRoles.flatMap(([role, ]) => (
           <MenuItem key={role} onClick={() => adultMoreMenuAnchor?.adult && selectRemoveRole(adultMoreMenuAnchor.adult, role)}>
             <ListItemText primary={`Remove from ${role} role`} />
           </MenuItem>
         ))}
         {permissions(Permission.EditVolunteerRoleParticipation) &&
-          (volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles || []).map(removedRole => (
+          removedRoles.map(removedRole => (
           <MenuItem key={removedRole.roleName}
             onClick={() => adultMoreMenuAnchor?.adult && selectResetRole(adultMoreMenuAnchor.adult, removedRole.roleName!, removedRole.reason!, removedRole.additionalComments!)}>
             <ListItemText primary={`Reset ${removedRole.roleName} participation`} />

@@ -21,8 +21,12 @@ export function CompletedRequirementRow({ requirement, context }: CompletedRequi
 
   const dialogHandle = useDialogHandle();
 
-  const canMarkIncomplete = context.kind === 'Referral' || context.kind === 'Arrangement'
-    ? true //TODO: Implement these permissions!
+  const canMarkIncomplete = context.kind === 'Referral'
+    ? permissions(Permission.EditReferralRequirementCompletion)
+    : context.kind === 'Arrangement' ||
+      context.kind === 'Family Volunteer Assignment' ||
+      context.kind === 'Individual Volunteer Assignment'
+    ? permissions(Permission.EditArrangementRequirementCompletion)
     : permissions(Permission.EditApprovalRequirementCompletion);
   
   const dateFormat =

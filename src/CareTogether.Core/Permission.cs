@@ -8,14 +8,16 @@ namespace CareTogether
         //      guidance. However, as CareTogether evolves, it is likely that new requirements will
         //      emerge that in turn will lead to a more refined concept of permissions.
 
-        ReadDocuments = 1,
-        UploadFamilyDocuments = 2, // Will become a prerequisite for upload-linked actions
-        DeleteFamilyDocuments = 3,
+        // ---- Global ---- //
+
+        ViewFamilyDocumentMetadata = 1,
+        ReadFamilyDocuments = 2,
+        UploadFamilyDocuments = 3, // Will become a prerequisite for upload-linked actions
+        DeleteFamilyDocuments = 4,
         
         ViewAllFamilies = 100,
         ViewLinkedFamilies = 101,
 
-        ViewFamilyDocumentMetadata = 150,
         ViewFamilyHistory = 151,
         ViewPersonConcerns = 152,
         ViewPersonNotes = 153,
@@ -29,7 +31,9 @@ namespace CareTogether
         AddEditDraftNotes = 180,
         DiscardDraftNotes = 181,
         ApproveNotes = 182,
-        ViewAllNotes = 183,
+        ViewAllNotes = 183, // Viewing your own notes is implicitly allowed
+
+        // ---- Approvals ---- //
 
         ViewApprovalStatus = 200,
         EditApprovalRequirementCompletion = 201, // Requires UploadFamilyDocuments
@@ -39,24 +43,29 @@ namespace CareTogether
         ViewApprovalHistory = 205,
         ActivateVolunteerFamily = 206,
 
+        // ---- Referrals ---- //
+
         CreateReferral = 300,
         EditReferral = 301,
         CloseReferral = 302,
-        EditReferralRequirementCompletion = 303, // Requires UploadFamilyDocuments
-        EditReferralRequirementExemption = 304,
-        CreateArrangement = 305,
-        EditArrangement = 306,
-        EditAssignments = 307,
-        EditArrangementRequirementCompletion = 308,
-        EditArrangementRequirementExemption = 309,
-        TrackChildLocationChange = 310,
-        ViewReferralCustomFields = 311,
-        ViewReferralProgress = 312,
-        ViewReferralComments = 313,
-        ViewChildLocationHistory = 314,
-        ViewArrangementProgress = 315,
-        ViewAssignments = 316,
-        ViewReferralHistory = 317,
+        ViewReferralCustomFields = 303,
+        ViewReferralComments = 304,
+        ViewReferralProgress = 305,
+        EditReferralRequirementCompletion = 306, // Requires UploadFamilyDocuments
+        EditReferralRequirementExemption = 307,
+        ViewReferralHistory = 308,
+
+        CreateArrangement = 350,
+        EditArrangement = 351,
+        ViewAssignments = 352,
+        EditAssignments = 353,
+        ViewArrangementProgress = 354,
+        ViewAssignedArrangementProgress = 355, // See only items assigned to your own family
+        EditArrangementRequirementCompletion = 356,
+        EditArrangementRequirementExemption = 357,
+        
+        ViewChildLocationHistory = 380,
+        TrackChildLocationChange = 381,
 
         SendBulkSms = 400,
     }

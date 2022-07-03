@@ -38,9 +38,14 @@ export function FamilyDocuments({ family }: FamilyDocumentsProps) {
     <>
       <ul className={classes.familyDocumentsList}>
         {family.uploadedDocuments?.map((uploaded, i) =>
-          permissions(Permission.ReadDocuments)
-          ? <li key={i} style={{ clear: 'both' }}
-              onContextMenu={(e) => { e.preventDefault(); setMoreMenuAnchor({ anchor: e.currentTarget, document: uploaded }); }}
+          permissions(Permission.ReadFamilyDocuments)
+          ? <li key={i} style={{ clear: 'both', cursor: 'pointer' }}
+              onContextMenu={(e) => {
+                if (!permissions(Permission.DeleteFamilyDocuments))
+                  return;
+                e.preventDefault();
+                setMoreMenuAnchor({ anchor: e.currentTarget, document: uploaded });
+              }}
               onClick={() => downloadFile(organizationId, locationId, uploaded.uploadedDocumentId!)}>
               📃 {uploaded.uploadedFileName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               {uploaded.timestampUtc && <span style={{float:'right',marginRight:20}}>{format(uploaded.timestampUtc, "M/d/yy")}</span>}

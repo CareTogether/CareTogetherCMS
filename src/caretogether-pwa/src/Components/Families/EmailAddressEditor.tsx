@@ -3,8 +3,9 @@ import AddIcon from '@mui/icons-material/Add';
 import { useDirectoryModel } from '../../Model/DirectoryModel';
 import { useInlineEditor } from '../../useInlineEditor';
 import { PersonEditorProps } from "./PersonEditorProps";
-import { EmailAddress, IEmailAddress, EmailAddressType } from '../../GeneratedClient';
+import { EmailAddress, IEmailAddress, EmailAddressType, Permission } from '../../GeneratedClient';
 import { Favorite, FavoriteBorder } from '@mui/icons-material';
+import { usePermissions } from '../../Model/SessionModel';
 
 type EmailAddressEditorProps = PersonEditorProps & {
   add?: boolean
@@ -46,6 +47,8 @@ export function EmailAddressEditor({ familyId, person, add, emailAddress }: Emai
     });
     editor.setEditing(true);
   }
+
+  const permissions = usePermissions();
   
   return (
     <Grid container rowSpacing={0} columnSpacing={2}>
@@ -96,7 +99,7 @@ export function EmailAddressEditor({ familyId, person, add, emailAddress }: Emai
                   ? <Favorite fontSize='small' color='disabled' sx={{verticalAlign: 'middle', marginRight: 1}} />
                   : <FavoriteBorder fontSize='small' color='disabled' sx={{verticalAlign: 'middle', marginRight: 1}} />}
                 {emailAddress!.address} - {EmailAddressType[emailAddress!.type!]}
-                {editor.editButton}
+                {permissions(Permission.EditPersonContactInfo) && editor.editButton}
               </>}
         </Grid>}
     </Grid>

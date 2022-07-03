@@ -1,5 +1,5 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
-import { CustodialRelationship, Person } from '../../GeneratedClient';
+import { CustodialRelationship, Permission, Person } from '../../GeneratedClient';
 import { useParams } from 'react-router-dom';
 import { DialogHandle, useDialogHandle } from '../../useDialogHandle';
 import { NameEditor } from './NameEditor';
@@ -12,6 +12,7 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { DeletePersonDialog } from './DeletePersonDialog';
 import { EthnicityEditor } from './EthnicityEditor';
 import { ChildCustodyRelationshipEditor } from './ChildCustodyRelationshipEditor';
+import { usePermissions } from '../../Model/SessionModel';
 
 interface EditChildDialogProps {
   handle: DialogHandle
@@ -29,6 +30,8 @@ export function EditChildDialog({ handle, child, familyAdults, custodialRelation
 
   const deleteDialogHandle = useDialogHandle();
 
+  const permissions = usePermissions();
+  
   return (
     <Dialog open={handle.open} onClose={handle.closeDialog}
       fullWidth scroll='body' aria-labelledby="edit-child-title">
@@ -45,8 +48,8 @@ export function EditChildDialog({ handle, child, familyAdults, custodialRelation
           <ChildCustodyRelationshipEditor key={adult.id!}
             adult={adult} relationship={custodialRelationships?.find(r => r.personId === adult.id)}
             {...personEditorProps } />)}
-        <NotesEditor {...personEditorProps} />
-        <ConcernsEditor {...personEditorProps} />
+        {permissions(Permission.ViewPersonNotes) && <NotesEditor {...personEditorProps} />}
+        {permissions(Permission.ViewPersonConcerns) && <ConcernsEditor {...personEditorProps} />}
       </DialogContent>
       <DialogActions>
         <Button onClick={deleteDialogHandle.openDialog} variant="contained" color="secondary"

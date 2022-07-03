@@ -24,10 +24,13 @@ export function MissingArrangementRequirementRow({ requirement, context }: Missi
   
   const requirementPolicy = policy.actionDefinitions![requirement.actionName!];
   
-  const canComplete = context.kind === 'Referral' || context.kind === 'Arrangement' ||
-    context.kind === 'Family Volunteer Assignment' || context.kind === 'Individual Volunteer Assignment'
-    ? true //TODO: Implement these permissions!
-    : permissions(Permission.EditApprovalRequirementCompletion);
+  if (context.kind === 'Referral' ||
+    context.kind === 'Individual Volunteer' ||
+    context.kind === 'Volunteer Family')
+    throw new Error(`Invalid missing requirement context '${context.kind}'`);
+  
+  const canComplete = permissions(Permission.EditArrangementRequirementCompletion);
+  const canExempt = permissions(Permission.EditArrangementRequirementExemption);
 
   const familyLookup = useFamilyLookup();
   const personLookup = usePersonLookup();
@@ -35,7 +38,7 @@ export function MissingArrangementRequirementRow({ requirement, context }: Missi
   return (
     <>
       {requirement.dueBy
-        ? <IconRow icon='📅' onClick={canComplete ? dialogHandle.openDialog : undefined}>
+        ? <IconRow icon='📅' onClick={canComplete || canExempt ? dialogHandle.openDialog : undefined}>
           {requirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           <span style={{ float: 'right' }}>{format(requirement.dueBy, "M/d/yy h:mm a")}</span>
           {requirement.volunteerFamilyId && !requirement.personId &&
@@ -47,7 +50,7 @@ export function MissingArrangementRequirementRow({ requirement, context }: Missi
               <PersonName person={personLookup(requirement.volunteerFamilyId, requirement.personId)} />
             </span></>}
         </IconRow>
-        : <IconRow icon='❌' onClick={canComplete ? dialogHandle.openDialog : undefined}>
+        : <IconRow icon='❌' onClick={canComplete || canExempt ? dialogHandle.openDialog : undefined}>
           {requirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           {requirement.pastDueSince && <span style={{ float: 'right' }}>{format(requirement.pastDueSince, "M/d/yy h:mm a")}</span>}
           {requirement.volunteerFamilyId && !requirement.personId &&
