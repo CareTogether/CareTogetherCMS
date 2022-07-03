@@ -277,16 +277,17 @@ function VolunteerApproval(props: { onOpen: () => void }) {
             <Button color={location.pathname === "/volunteers/approval" ? 'secondary' : 'inherit'} component={Link} to={"/volunteers/approval"}>Approvals</Button>
             <Button color={location.pathname === "/volunteers/progress" ? 'secondary' : 'inherit'} component={Link} to={"/volunteers/progress"}>Progress</Button>
           </ButtonGroup>
-          <IconButton color="inherit" aria-label="copy email addresses"
-            onClick={() => copyEmailAddresses()} sx={{ }}>
-            <EmailIcon />
-          </IconButton>
+          {permissions(Permission.SendBulkSms) &&
+            <IconButton color="inherit" aria-label="copy email addresses"
+              onClick={() => copyEmailAddresses()} sx={{ }}>
+              <EmailIcon />
+            </IconButton>}
           <Snackbar
             open={noticeOpen}
             autoHideDuration={5000} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
             onClose={() => setNoticeOpen(false)}
             message={`Found and copied ${getSelectedFamiliesContactEmails().length} email addresses for ${selectedFamilies.length} selected families to clipboard`} />
-          {smsSourcePhoneNumbers && smsSourcePhoneNumbers.length > 0 &&
+          {permissions(Permission.SendBulkSms) && smsSourcePhoneNumbers && smsSourcePhoneNumbers.length > 0 &&
             <IconButton color={smsMode ? 'secondary' : 'inherit'} aria-label="send bulk sms"
               onClick={() => setSmsMode(!smsMode)} sx={{ marginRight: 2 }}>
               <SmsIcon />
