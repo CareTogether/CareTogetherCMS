@@ -461,7 +461,7 @@ namespace CareTogether.Engines.Authorization
             Guid familyId, Note note, Guid organizationId, Guid locationId)
         {
             var author = await directoryResource.FindUserAsync(organizationId, locationId, note.AuthorId);
-            return author.Id == user.PersonId(organizationId, locationId) ||
+            return author?.Id == user.PersonId(organizationId, locationId) ||
                 user.HasPermission(organizationId, locationId, Permission.ViewAllNotes);
         }
     }
