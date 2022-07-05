@@ -54,12 +54,12 @@ namespace CareTogether.Resources.Directory
             }
         }
 
-        public async Task<Person> FindUserAsync(Guid organizationId, Guid locationId, Guid userId)
+        public async Task<Person?> FindUserAsync(Guid organizationId, Guid locationId, Guid userId)
         {
             using (var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId)))
             {
                 var result = lockedModel.Value.FindPeople(p => p.UserId == userId);
-                return result.Single();
+                return result.SingleOrDefault();
                 //TODO: Handle the exception case where multiple people have the same user ID assigned, or
                 //      protect against that scenario in the domain model.
             }

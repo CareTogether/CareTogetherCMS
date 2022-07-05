@@ -20,6 +20,7 @@ namespace CareTogether.Core.Test
         static readonly Guid guid4 = Id('4');
         static readonly Guid guid5 = Id('5');
         static readonly Guid guid6 = Id('6');
+        static readonly Guid guid7 = Id('7');
 
 #nullable disable
         MemoryEventLog<DirectoryEvent> events;
@@ -79,9 +80,11 @@ namespace CareTogether.Core.Test
 
             var user2 = await dut.FindUserAsync(guid1, guid2, guid3);
             var user1 = await dut.FindUserAsync(guid1, guid2, guid4);
+            var nonexistentUser = await dut.FindUserAsync(guid1, guid2, guid7);
 
-            Assert.AreEqual(guid2, user2.Id);
-            Assert.AreEqual(guid1, user1.Id);
+            Assert.AreEqual(guid2, user2!.Id);
+            Assert.AreEqual(guid1, user1!.Id);
+            Assert.IsNull(nonexistentUser);
         }
 
         [TestMethod]

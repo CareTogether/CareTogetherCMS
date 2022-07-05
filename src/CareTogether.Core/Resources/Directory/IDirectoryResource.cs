@@ -118,7 +118,7 @@ namespace CareTogether.Resources.Directory
     /// </summary>
     public interface IDirectoryResource
     {
-        Task<Person> FindUserAsync(Guid organizationId, Guid locationId, Guid userId);
+        Task<Person?> FindUserAsync(Guid organizationId, Guid locationId, Guid userId);
 
         Task<ImmutableList<Person>> ListPeopleAsync(Guid organizationId, Guid locationId);
 
