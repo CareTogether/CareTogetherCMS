@@ -252,8 +252,11 @@ namespace CareTogether.TestData
                 new ArrangementsCommandExecuted(adminId, new DateTime(2022, 3, 3, 10, 0, 0), new CreateArrangement(guid1, guid2, ImmutableList.Create(guid2), "Babysitting", new DateTime(2022, 3, 2), guid3)),
                 new ArrangementsCommandExecuted(adminId, new DateTime(2022, 3, 3, 10, 0, 0), new CreateArrangement(guid1, guid2, ImmutableList.Create(guid3), "Friending", new DateTime(2022, 4, 2), guid1)),
                 new ArrangementsCommandExecuted(adminId, new DateTime(2022, 3, 3, 10, 0, 0), new CreateArrangement(guid1, guid2, ImmutableList.Create(guid4), "Friending", new DateTime(2022, 5, 2), guid2)),
+                new ArrangementsCommandExecuted(adminId, new DateTime(2022, 3, 3, 10, 0, 0), new CreateArrangement(guid1, guid2, ImmutableList.Create(guid5), "Hosting", new DateTime(2022, 3, 2), guid3)),
                 new ArrangementsCommandExecuted(adminId, new DateTime(2022, 3, 3, 10, 0, 0), new UpdateArrangementComments(guid1, guid2, ImmutableList.Create(guid2), "Start on Friday the 11th")),
                 new ArrangementsCommandExecuted(adminId, new DateTime(2022, 3, 3, 10, 0, 0), new UpdateArrangementComments(guid1, guid2, ImmutableList.Create(guid3, guid4), "Start on Saturday the 12th")),
+                new ArrangementsCommandExecuted(adminId, new DateTime(2022, 3, 3, 11, 0, 0), new AssignIndividualVolunteer(guid1, guid2, ImmutableList.Create(guid5), guid4, guid4, "Family Coach", null)),
+                new ArrangementsCommandExecuted(adminId, new DateTime(2022, 3, 3, 11, 0, 0), new AssignVolunteerFamily(guid1, guid2, ImmutableList.Create(guid5), guid2, "Host Family", null)), // Demonstrates invalid data (variant required by newer policy)
                 new ReferralCommandExecuted(adminId, new DateTime(2022, 6, 21, 20, 38, 0), new CreateReferral(guid5, guid3, new DateTime(2022, 6, 21, 20, 38, 0)))
             );
         }

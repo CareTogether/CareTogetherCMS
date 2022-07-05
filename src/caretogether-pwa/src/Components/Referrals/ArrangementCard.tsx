@@ -100,6 +100,14 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
     !arrangement.familyVolunteerAssignments?.some(x => x.arrangementFunction === functionPolicy.functionName) &&
     !arrangement.individualVolunteerAssignments?.some(x => x.arrangementFunction === functionPolicy.functionName))?.length || 0;
 
+  const assignmentsMissingVariants = arrangementPolicy?.arrangementFunctions?.filter(functionPolicy =>
+    functionPolicy.variants && functionPolicy.variants.length > 0).map(functionPolicy =>
+    (arrangement.familyVolunteerAssignments?.filter(fva =>
+      fva.arrangementFunction === functionPolicy.functionName && !fva.arrangementFunctionVariant)?.length || 0) +
+    (arrangement.individualVolunteerAssignments?.filter(iva =>
+      iva.arrangementFunction === functionPolicy.functionName && !iva.arrangementFunctionVariant)?.length || 0)).reduce(
+    (prev, curr) => prev + curr, 0) || 0;
+  
   const completedRequirementsWithContext =
     (arrangement.completedRequirements || []).map(cr =>
       ({ completed: cr, context: arrangementRequirementContext as RequirementContext })).concat(
@@ -224,7 +232,7 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
                 </Grid>
                 <Grid item xs={4}>
                   <Badge color="error"
-                    badgeContent={missingAssignmentFunctions + missingRequirementsWithContext.length}>
+                    badgeContent={missingAssignmentFunctions + assignmentsMissingVariants + missingRequirementsWithContext.length}>
                     ❌
                   </Badge>
                 </Grid>
