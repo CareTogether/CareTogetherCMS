@@ -47,11 +47,11 @@ namespace CareTogether.Api
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddApplicationInsightsTelemetry();
+
             services.AddSingleton<ITargetingContextAccessor, UserTargetingContextAccessor>();
             services.AddFeatureManagement()
                 .AddFeatureFilter<TargetingFilter>();
-
-            services.AddApplicationInsightsTelemetry();
 
             services.AddHealthChecks();
 
@@ -194,7 +194,9 @@ namespace CareTogether.Api
             }
             else
             {
-                app.UseExceptionHandler("/Error");
+                // Enable more detailed error response info for the time being.
+                app.UseDeveloperExceptionPage();
+                //app.UseExceptionHandler("/Error");
             }
 
             app.UseRouting();
