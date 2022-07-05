@@ -208,6 +208,10 @@ namespace CareTogether.Api
                 endpoints.MapHealthChecks("/health").AllowAnonymous();
 
                 endpoints.MapControllers();
+
+                // Accommodating the Azure App Service liveness check mechanism described here:
+                // https://docs.microsoft.com/en-us/azure/app-service/configure-language-dotnetcore?pivots=platform-linux#robots933456-in-logs
+                endpoints.MapHealthChecks("/robots933456.txt").AllowAnonymous();
             });
         }
     }
