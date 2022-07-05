@@ -194,7 +194,9 @@ namespace CareTogether.Api
             }
             else
             {
-                app.UseExceptionHandler("/Error");
+                // Enable more detailed error response info for the time being.
+                app.UseDeveloperExceptionPage();
+                //app.UseExceptionHandler("/Error");
             }
 
             app.UseRouting();
