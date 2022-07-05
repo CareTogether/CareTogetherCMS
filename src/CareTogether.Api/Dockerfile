@@ -14,7 +14,7 @@ COPY ["src/CareTogether.Core/CareTogether.Core.csproj", "src/CareTogether.Core/"
 RUN dotnet restore "src/CareTogether.Api/CareTogether.Api.csproj" -r linux-musl-x64
 COPY . .
 WORKDIR "/src/src/CareTogether.Api"
-RUN dotnet build "CareTogether.Api.csproj" -c Release -o /app/build -r linux-musl-x64 --no-restore
+RUN dotnet build "CareTogether.Api.csproj" -c Release -o /app/build -r linux-musl-x64 --self-contained false --no-restore
 
 FROM build AS publish
 RUN dotnet publish "CareTogether.Api.csproj" -c Release -o /app/publish -r linux-musl-x64 --self-contained false --no-restore
