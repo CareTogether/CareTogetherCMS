@@ -47,11 +47,11 @@ namespace CareTogether.Api
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddApplicationInsightsTelemetry();
+
             services.AddSingleton<ITargetingContextAccessor, UserTargetingContextAccessor>();
             services.AddFeatureManagement()
                 .AddFeatureFilter<TargetingFilter>();
-
-            services.AddApplicationInsightsTelemetry();
 
             services.AddHealthChecks();
 
