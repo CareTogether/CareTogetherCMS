@@ -67,8 +67,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             Assert.AreEqual(TL((1, 1)), dut.Subset(D(1), D(26)));
             Assert.ThrowsException<ArgumentException>(() => dut.Subset(D(8), null));
 
-            Assert.ThrowsException<ArgumentException>(() => dut.TryMapFrom(D(7), T(3)));
-            Assert.ThrowsException<ArgumentException>(() => dut.TryMapFrom(D(7), T(5)));
+            Assert.IsNull(dut.TryMapFrom(D(7), T(3)));
+            Assert.IsNull(dut.TryMapFrom(D(7), T(5)));
         }
 
         [TestMethod]
