@@ -71,9 +71,16 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         public DateTime? TryMapFrom(DateTime offset, TimeSpan duration)
         {
-            var subsetFromOffset = Subset(offset, DateTime.MaxValue);
-            var mappedDurationInSubset = subsetFromOffset.TryMap(duration);
-            return mappedDurationInSubset;
+            try
+            {
+                var subsetFromOffset = Subset(offset, DateTime.MaxValue);
+                var mappedDurationInSubset = subsetFromOffset.TryMap(duration);
+                return mappedDurationInSubset;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         public DateTime MapUnbounded(TimeSpan durationFromStart)
