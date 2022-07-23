@@ -60,11 +60,16 @@ namespace CareTogether.Api
 
             services.AddTransient<IClaimsTransformation, TenantUserClaimsTransformation>();
 
-            // Shared blob storage clients configured to authenticate according to the environment -
+            // Configure the shared blob storage clients to authenticate according to the environment -
             // one for mutable storage and one for immutable storage.
             // Note that this only has an effect when running in Azure; the local (Azurite) emulated storage is always mutable.
-            var immutableBlobServiceClient = new BlobServiceClient(Configuration["Persistence:ImmutableBlobStorageConnectionString"]);
-            var mutableBlobServiceClient = new BlobServiceClient(Configuration["Persistence:MutableBlobStorageConnectionString"]);
+            // Also note that we lock the blob storage service (API) version because Azurite occasionally lags behind in
+            // support for the newest versions. This service version should be reviewed at least once a year to keep it current.
+            var blobClientOptions = new BlobClientOptions(BlobClientOptions.ServiceVersion.V2021_06_08);
+            var immutableBlobServiceClient = new BlobServiceClient(
+                Configuration["Persistence:ImmutableBlobStorageConnectionString"], blobClientOptions);
+            var mutableBlobServiceClient = new BlobServiceClient(
+                Configuration["Persistence:MutableBlobStorageConnectionString"], blobClientOptions);
 
             // Data store services
             var directoryEventLog = new AppendBlobEventLog<DirectoryEvent>(immutableBlobServiceClient, "DirectoryEventLog");
