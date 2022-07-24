@@ -63,9 +63,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             Assert.AreEqual(MMaxMax, dut.MapUnbounded(T(11), T(19)));
 
             Assert.AreEqual(TL((1, 1)), dut.Subset(D(1), D(5)));
-            Assert.ThrowsException<ArgumentException>(() => dut.Subset(D(6), D(15)));
+            Assert.AreEqual(TL((6, 6)), dut.Subset(D(6), D(15)));
             Assert.AreEqual(TL((1, 1)), dut.Subset(D(1), D(26)));
-            Assert.ThrowsException<ArgumentException>(() => dut.Subset(D(8), null));
+            Assert.AreEqual(TL((8, 8)), dut.Subset(D(8), null));
 
             Assert.IsNull(dut.TryMapFrom(D(7), T(3)));
             Assert.IsNull(dut.TryMapFrom(D(7), T(5)));

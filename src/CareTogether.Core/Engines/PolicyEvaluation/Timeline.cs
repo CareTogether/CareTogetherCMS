@@ -36,6 +36,9 @@ namespace CareTogether.Engines.PolicyEvaluation
             if (terminatingStages.Count == 0)
                 throw new ArgumentException("At least one timeline stage is required.");
 
+            if (terminatingStages.Any(stage => stage.End < stage.Start))
+                throw new ArgumentException("All timeline stages must have start dates before their end dates.");
+
             stages = terminatingStages
                 .Select(stage => new AbsoluteTimeSpan(stage.Start, stage.End))
                 .ToImmutableList();
@@ -127,7 +130,11 @@ namespace CareTogether.Engines.PolicyEvaluation
                     End: subsetEnd < stage.End ? subsetEnd : stage.End))
                 .ToImmutableList();
 
-            return new Timeline(subsetStages);
+            // To protect against invalid timelines when the subset is empty,
+            // return a single-instant timeline starting at the requested start date.
+            return subsetStages.Count == 0
+                ? new Timeline(start, start)
+                : new Timeline(subsetStages);
         }
 
         public override bool Equals(object? obj)
