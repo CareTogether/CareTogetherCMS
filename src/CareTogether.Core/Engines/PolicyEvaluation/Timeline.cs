@@ -36,6 +36,9 @@ namespace CareTogether.Engines.PolicyEvaluation
             if (terminatingStages.Count == 0)
                 throw new ArgumentException("At least one timeline stage is required.");
 
+            if (terminatingStages.Any(stage => stage.End < stage.Start))
+                throw new ArgumentException("All timeline stages must have start dates before their end dates.");
+
             stages = terminatingStages
                 .Select(stage => new AbsoluteTimeSpan(stage.Start, stage.End))
                 .ToImmutableList();

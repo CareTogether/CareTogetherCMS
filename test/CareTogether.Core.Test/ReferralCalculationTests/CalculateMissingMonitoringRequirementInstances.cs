@@ -190,6 +190,22 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         }
 
         [TestMethod]
+        public void TestEdgeCaseOneCompletionAfterEnded()
+        {
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+                new DurationStagesRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null))),
+                filterToFamilyId: null,
+                arrangementStartedAtUtc: new DateTime(2022, 1, 3),
+                arrangementEndedAtUtc: new DateTime(2022, 1, 8),
+                completions: Helpers.Dates((1, 9)),
+                childLocationHistory: Helpers.LocationHistoryEntries(),
+                utcNow: new DateTime(2022, 2, 1));
+
+            AssertEx.SequenceIs(result, Helpers.Dates());
+        }
+
+        [TestMethod]
         public void TestTwoCompletionsInFirstStage()
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(

@@ -324,10 +324,17 @@ namespace CareTogether.Engines.PolicyEvaluation
             // unless the arrangement has ended, in which case use the end of the arrangement).
             // This represents the set of gaps between completions in which there could be missing requirement due dates.
             // Prepend this list with an entry representing the start of the arrangement.
-            var completionGaps = completions.Select((completion, i) =>
-                (start: completion, end: i + 1 >= completions.Count
-                    ? (arrangementEndedAtUtc.HasValue ? arrangementEndedAtUtc.Value : DateTime.MaxValue)
-                    : completions[i + 1]))
+            // There is an edge case where the last completion occurs *after* the end of the arrangement;
+            // in this case, exclude that completion from the list of gaps.
+            var completionGaps = completions
+                .Where((completion, i) =>
+                    i + 1 >= completions.Count && arrangementEndedAtUtc.HasValue
+                        ? completion < arrangementEndedAtUtc.Value
+                        : true)
+                .Select((completion, i) =>
+                    (start: completion, end: i + 1 >= completions.Count
+                        ? (arrangementEndedAtUtc.HasValue ? arrangementEndedAtUtc.Value : DateTime.MaxValue)
+                        : completions[i + 1]))
                 .Prepend((start: arrangementStartedAtUtc, end: completions.Count > 0
                     ? completions[0]
                     : (arrangementEndedAtUtc.HasValue ? arrangementEndedAtUtc.Value : DateTime.MaxValue)))
