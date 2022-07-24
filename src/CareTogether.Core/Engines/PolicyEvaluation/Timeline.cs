@@ -130,7 +130,11 @@ namespace CareTogether.Engines.PolicyEvaluation
                     End: subsetEnd < stage.End ? subsetEnd : stage.End))
                 .ToImmutableList();
 
-            return new Timeline(subsetStages);
+            // To protect against invalid timelines when the subset is empty,
+            // return a single-instant timeline starting at the requested start date.
+            return subsetStages.Count == 0
+                ? new Timeline(start, start)
+                : new Timeline(subsetStages);
         }
 
         public override bool Equals(object? obj)
