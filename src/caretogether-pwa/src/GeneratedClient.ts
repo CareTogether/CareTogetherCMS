@@ -1335,6 +1335,8 @@ export interface IReferralPolicy {
 export class CustomField implements ICustomField {
     name?: string;
     type?: CustomFieldType;
+    validation?: CustomFieldValidation | undefined;
+    validValues?: string[] | undefined;
 
     constructor(data?: ICustomField) {
         if (data) {
@@ -1349,6 +1351,12 @@ export class CustomField implements ICustomField {
         if (_data) {
             this.name = _data["name"];
             this.type = _data["type"];
+            this.validation = _data["validation"];
+            if (Array.isArray(_data["validValues"])) {
+                this.validValues = [] as any;
+                for (let item of _data["validValues"])
+                    this.validValues!.push(item);
+            }
         }
     }
 
@@ -1363,6 +1371,12 @@ export class CustomField implements ICustomField {
         data = typeof data === 'object' ? data : {};
         data["name"] = this.name;
         data["type"] = this.type;
+        data["validation"] = this.validation;
+        if (Array.isArray(this.validValues)) {
+            data["validValues"] = [];
+            for (let item of this.validValues)
+                data["validValues"].push(item);
+        }
         return data;
     }
 }
@@ -1370,11 +1384,17 @@ export class CustomField implements ICustomField {
 export interface ICustomField {
     name?: string;
     type?: CustomFieldType;
+    validation?: CustomFieldValidation | undefined;
+    validValues?: string[] | undefined;
 }
 
 export enum CustomFieldType {
     Boolean = 0,
     String = 1,
+}
+
+export enum CustomFieldValidation {
+    SuggestOnly = 0,
 }
 
 export class ArrangementPolicy implements IArrangementPolicy {

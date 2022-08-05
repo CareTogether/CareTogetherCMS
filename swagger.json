@@ -1119,6 +1119,21 @@
           },
           "type": {
             "$ref": "#/components/schemas/CustomFieldType"
+          },
+          "validation": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/CustomFieldValidation"
+              }
+            ]
+          },
+          "validValues": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -1132,6 +1147,16 @@
         "enum": [
           0,
           1
+        ]
+      },
+      "CustomFieldValidation": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "SuggestOnly"
+        ],
+        "enum": [
+          0
         ]
       },
       "ArrangementPolicy": {

@@ -52,12 +52,21 @@ namespace CareTogether.Resources.Policies
         ImmutableList<ArrangementPolicy> ArrangementPolicies);
         //TODO: Include referral close reasons
 
-    public sealed record CustomField(string Name, CustomFieldType Type);
+    public sealed record CustomField(
+        string Name,
+        CustomFieldType Type,
+        CustomFieldValidation? Validation,
+        ImmutableList<string>? ValidValues);
 
     public enum CustomFieldType
     {
         Boolean,
         String
+    }
+
+    public enum CustomFieldValidation
+    {
+        SuggestOnly
     }
 
     public sealed record ArrangementPolicy(string ArrangementType,

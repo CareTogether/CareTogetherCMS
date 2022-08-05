@@ -449,8 +449,9 @@ namespace CareTogether.TestData
                     }.ToImmutableList(),
                     new List<CustomField>
                     {
-                        new CustomField("Referral Source", CustomFieldType.String),
-                        new CustomField("Protective Order", CustomFieldType.Boolean)
+                        new CustomField("Referral Source", CustomFieldType.String, CustomFieldValidation.SuggestOnly,
+                            ImmutableList.Create("Shangri-La", "El Dorado", "Asgard")),
+                        new CustomField("Protective Order", CustomFieldType.Boolean, null, null)
                     }.ToImmutableList(),
                     new List<ArrangementPolicy>
                     {
