@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import ReactDOM from 'react-dom/client';
 import { InteractionType } from "@azure/msal-browser";
 import { MsalProvider, useMsalAuthentication, useIsAuthenticated } from '@azure/msal-react';
 import App from './App';
@@ -55,9 +55,8 @@ function AuthWrapper() {
   );
 }
 
-// Telemetry is sent to Azure Application Insights. For customization instructions, see
-// https://docs.microsoft.com/en-us/azure/azure-monitor/app/javascript-react-plugin
-ReactDOM.render(
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
   <React.StrictMode>
     <StyledEngineProvider injectFirst>
       <ThemeProvider theme={theme}>
