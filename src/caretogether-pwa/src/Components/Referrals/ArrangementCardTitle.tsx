@@ -7,16 +7,25 @@ import { CancelArrangementDialog } from "./CancelArrangementDialog";
 import { ReopenArrangementDialog } from "./ReopenArrangementDialog";
 import { EndArrangementDialog } from "./EndArrangementDialog";
 import { StartArrangementDialog } from "./StartArrangementDialog";
+import { useInlineEditor } from "../../useInlineEditor";
+import { useReferralsModel } from "../../Model/ReferralsModel";
 
 type ArrangementCardTitleProps = {
   summaryOnly?: boolean
+  partneringFamilyId: string
   referralId: string
   arrangement: Arrangement
 }
 
-export function ArrangementCardTitle({ summaryOnly, referralId, arrangement }: ArrangementCardTitleProps) {
+export function ArrangementCardTitle({ summaryOnly, partneringFamilyId, referralId, arrangement }: ArrangementCardTitleProps) {
   const now = new Date();
   const permissions = usePermissions();
+
+  const referralsModel = useReferralsModel();
+
+  const startedAtEditor = useInlineEditor(async value => {
+    await referralsModel.editArrangementStartTime(partneringFamilyId, referralId, arrangement.id!, value);
+  }, arrangement.startedAtUtc);
 
   const [showStartArrangementDialog, setShowStartArrangementDialog] = useState(false);
   const [showEndArrangementDialog, setShowEndArrangementDialog] = useState(false);
@@ -66,13 +75,25 @@ export function ArrangementCardTitle({ summaryOnly, referralId, arrangement }: A
               </>
             : arrangement.phase === ArrangementPhase.Started ?
               <>
-                <span>Started {formatRelative(arrangement.startedAtUtc!, now)}</span>
-                {permissions(Permission.EditArrangement) &&
-                  <Button variant="outlined" size="small"
-                    style={{marginLeft: 10}}
-                    onClick={() => setShowEndArrangementDialog(true)}>
-                    End
-                  </Button>}
+                {permissions(Permission.EditArrangement)
+                  ? <>
+                      {startedAtEditor.editing
+                        ? <>
+                            <span>Started: INPUT {formatRelative(arrangement.startedAtUtc!, now)}</span>
+                            {startedAtEditor.cancelButton}
+                            {startedAtEditor.saveButton}
+                          </>
+                        : <>
+                            <span>Started {formatRelative(arrangement.startedAtUtc!, now)}</span>
+                            {startedAtEditor.editButton}
+                          </>}
+                      <Button variant="outlined" size="small"
+                        style={{marginLeft: 10}}
+                        onClick={() => setShowEndArrangementDialog(true)}>
+                        End
+                      </Button>
+                    </>
+                  : <span>Started {formatRelative(arrangement.startedAtUtc!, now)}</span>}
               </>
             : <>
                 <span>Ended {formatRelative(arrangement.endedAtUtc!, now)}</span>

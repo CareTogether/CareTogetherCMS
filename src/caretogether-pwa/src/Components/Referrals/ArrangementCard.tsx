@@ -178,7 +178,8 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
       <ArrangementPhaseSummary phase={arrangement.phase!}
         requestedAtUtc={arrangement.requestedAtUtc!} startedAtUtc={arrangement.startedAtUtc} endedAtUtc={arrangement.endedAtUtc} />
       <CardHeader className={classes.cardHeader}
-        title={<ArrangementCardTitle summaryOnly={summaryOnly} referralId={referralId} arrangement={arrangement} />} />
+        title={<ArrangementCardTitle summaryOnly={summaryOnly}
+        partneringFamilyId={partneringFamily.family!.id!} referralId={referralId} arrangement={arrangement} />} />
       <CardContent className={classes.cardContent}>
         <Typography variant="body2" component="div">
           <strong><PersonName person={personLookup(partneringFamily.family!.id, arrangement.partneringFamilyPersonId)} /></strong>
