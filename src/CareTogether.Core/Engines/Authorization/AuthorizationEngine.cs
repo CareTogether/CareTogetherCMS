@@ -172,6 +172,7 @@ namespace CareTogether.Engines.Authorization
                     UnexemptVolunteerFamilyAssignmentRequirement => Permission.EditArrangementRequirementExemption,
                     UnexemptIndividualVolunteerAssignmentRequirement => Permission.EditArrangementRequirementExemption,
                     TrackChildLocationChange => Permission.TrackChildLocationChange,
+                    DeleteChildLocationChange => Permission.TrackChildLocationChange,
                     EndArrangements => Permission.EditArrangement,
                     ReopenArrangements => Permission.EditArrangement,
                     CancelArrangementsSetup => Permission.EditArrangement,

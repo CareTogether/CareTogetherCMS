@@ -150,6 +150,9 @@ namespace CareTogether.Resources.Referrals
     public sealed record TrackChildLocationChange(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         DateTime ChangedAtUtc, Guid ChildLocationFamilyId, Guid ChildLocationReceivingAdultId, ChildLocationPlan Plan, Guid? NoteId)
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+    public sealed record DeleteChildLocationChange(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
+        DateTime ChangedAtUtc, Guid ChildLocationFamilyId, Guid ChildLocationReceivingAdultId, Guid? NoteId)
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
     public sealed record EndArrangements(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         DateTime EndedAtUtc)
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);

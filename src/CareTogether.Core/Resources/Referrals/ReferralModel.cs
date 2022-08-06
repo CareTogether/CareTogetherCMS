@@ -326,6 +326,14 @@ namespace CareTogether.Resources.Referrals
                                         c.ChildLocationFamilyId, c.ChildLocationReceivingAdultId, c.Plan, c.NoteId))
                             }, new ChildLocationChanged(userId, timestampUtc, arrangementId,
                                 c.ChangedAtUtc, c.ChildLocationFamilyId, c.ChildLocationReceivingAdultId, c.Plan, c.NoteId)),
+                            DeleteChildLocationChange c => (arrangementEntry with
+                            {
+                                ChildLocationHistory = arrangementEntry.ChildLocationHistory.Remove(
+                                    arrangementEntry.ChildLocationHistory.Last(entry =>
+                                        entry.ChildLocationFamilyId == c.ChildLocationFamilyId &&
+                                        entry.ChildLocationReceivingAdultId == c.ChildLocationReceivingAdultId &&
+                                        entry.TimestampUtc == c.ChangedAtUtc))
+                            }, null),
                             EndArrangements c => (arrangementEntry with
                             {
                                 //TODO: Enforce invariant - cannot end before starting

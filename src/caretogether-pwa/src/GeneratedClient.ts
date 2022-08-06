@@ -6973,6 +6973,11 @@ export abstract class ArrangementsCommand implements IArrangementsCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "DeleteChildLocationChange") {
+            let result = new DeleteChildLocationChange();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "EditArrangementStartTime") {
             let result = new EditArrangementStartTime();
             result.init(data);
@@ -7421,6 +7426,52 @@ export interface ICreateArrangement extends IArrangementsCommand {
     arrangementType?: string;
     requestedAtUtc?: Date;
     partneringFamilyPersonId?: string;
+}
+
+export class DeleteChildLocationChange extends ArrangementsCommand implements IDeleteChildLocationChange {
+    changedAtUtc?: Date;
+    childLocationFamilyId?: string;
+    childLocationReceivingAdultId?: string;
+    noteId?: string | undefined;
+
+    constructor(data?: IDeleteChildLocationChange) {
+        super(data);
+        this._discriminator = "DeleteChildLocationChange";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.changedAtUtc = _data["changedAtUtc"] ? new Date(_data["changedAtUtc"].toString()) : <any>undefined;
+            this.childLocationFamilyId = _data["childLocationFamilyId"];
+            this.childLocationReceivingAdultId = _data["childLocationReceivingAdultId"];
+            this.noteId = _data["noteId"];
+        }
+    }
+
+    static fromJS(data: any): DeleteChildLocationChange {
+        data = typeof data === 'object' ? data : {};
+        let result = new DeleteChildLocationChange();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["changedAtUtc"] = this.changedAtUtc ? this.changedAtUtc.toISOString() : <any>undefined;
+        data["childLocationFamilyId"] = this.childLocationFamilyId;
+        data["childLocationReceivingAdultId"] = this.childLocationReceivingAdultId;
+        data["noteId"] = this.noteId;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IDeleteChildLocationChange extends IArrangementsCommand {
+    changedAtUtc?: Date;
+    childLocationFamilyId?: string;
+    childLocationReceivingAdultId?: string;
+    noteId?: string | undefined;
 }
 
 export class EditArrangementStartTime extends ArrangementsCommand implements IEditArrangementStartTime {
