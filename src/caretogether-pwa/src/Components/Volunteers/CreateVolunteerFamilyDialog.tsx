@@ -147,8 +147,8 @@ export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDial
                   label="Date of birth"
                   value={dateOfBirth} maxDate={subYears(new Date(), 18)} openTo="year"
                   disabled={ageType !== 'exact'} inputFormat="MM/dd/yyyy"
-                  onChange={(date) => date && setFields({...fields, dateOfBirth: date})}
-                  renderInput={(params) => <TextField size="small" required {...params} />} />
+                  onChange={(date: any) => date && setFields({...fields, dateOfBirth: date})}
+                  renderInput={(params: any) => <TextField size="small" required {...params} />} />
               </Grid>
               <Grid item>
                 <TextField

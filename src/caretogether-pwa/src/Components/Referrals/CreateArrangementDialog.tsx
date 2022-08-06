@@ -74,8 +74,8 @@ export function CreateArrangementDialog({referralId, arrangementPolicy, onClose}
                 label="Requested at"
                 value={requestedAtLocal} maxDate={new Date()}
                 inputFormat="MM/dd/yyyy"
-                onChange={(date) => date && setFields({...fields, requestedAtLocal: date})}
-                renderInput={(params) => <TextField size="small" required {...params} sx={{marginTop: 1}} />} />
+                onChange={(date: any) => date && setFields({...fields, requestedAtLocal: date})}
+                renderInput={(params: any) => <TextField size="small" required {...params} sx={{marginTop: 1}} />} />
             </Grid>
             <Grid item xs={12}>
               <FormControl required component="fieldset">

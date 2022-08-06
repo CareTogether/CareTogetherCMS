@@ -84,9 +84,9 @@ export function ArrangementCardTitle({ summaryOnly, partneringFamilyId, referral
                               label="When was this arrangement started?"
                               value={startedAtEditor.value}
                               disableFuture inputFormat="M/d/yyyy h:mma"
-                              onChange={(date) => date && startedAtEditor.setValue(date)}
+                              onChange={(date: any) => date && startedAtEditor.setValue(date)}
                               showTodayButton
-                              renderInput={(params) => <TextField fullWidth required {...params} sx={{marginTop: 1}} />} />
+                              renderInput={(params: any) => <TextField fullWidth required {...params} sx={{marginTop: 1}} />} />
                             {startedAtEditor.cancelButton}
                             {startedAtEditor.saveButton}
                           </>

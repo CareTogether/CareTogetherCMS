@@ -178,9 +178,9 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
                 label="What time did this person receive the child?"
                 value={changedAtLocal}
                 disableFuture inputFormat="M/d/yyyy h:mma"
-                onChange={(date) => date && setChangedAtLocal(date)}
+                onChange={(date: any) => date && setChangedAtLocal(date)}
                 showTodayButton
-                renderInput={(params) => <TextField fullWidth required {...params} />} />
+                renderInput={(params: any) => <TextField fullWidth required {...params} />} />
             </Grid>
             <Grid item xs={12}>
               <TextField

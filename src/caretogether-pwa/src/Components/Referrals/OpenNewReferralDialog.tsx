@@ -31,9 +31,9 @@ export function OpenNewReferralDialog({partneringFamilyId, onClose}: OpenNewRefe
               label="When was this referral opened?"
               value={openedAtLocal}
               disableFuture inputFormat="MM/dd/yyyy"
-              onChange={(date) => date && setFields({...fields, openedAtLocal: date})}
+              onChange={(date: any) => date && setFields({...fields, openedAtLocal: date})}
               showTodayButton
-              renderInput={(params) => <TextField fullWidth required {...params} sx={{marginTop: 1}} />} />
+              renderInput={(params: any) => <TextField fullWidth required {...params} sx={{marginTop: 1}} />} />
           </Grid>
         </Grid>
       </form>

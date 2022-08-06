@@ -40,9 +40,9 @@ export function CancelArrangementDialog({referralId, arrangement, onClose}: Canc
             label="When was this arrangement cancelled?"
             value={cancelledAtLocal}
             disableFuture inputFormat="M/d/yyyy h:mma"
-            onChange={(date) => date && setFields({ ...fields, cancelledAtLocal: date })}
+            onChange={(date: any) => date && setFields({ ...fields, cancelledAtLocal: date })}
             showTodayButton
-            renderInput={(params) => <TextField fullWidth required {...params} sx={{marginTop: 1}} />} />
+            renderInput={(params: any) => <TextField fullWidth required {...params} sx={{marginTop: 1}} />} />
         </Grid>
       </Grid>
     </UpdateDialog>

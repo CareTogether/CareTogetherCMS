@@ -140,8 +140,8 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
                   label="Date of birth"
                   value={dateOfBirth} minDate={addDays(subYears(new Date(), 18), 1)} maxDate={new Date()} openTo="year"
                   disabled={ageType !== 'exact'} inputFormat="MM/dd/yyyy"
-                  onChange={(date) => date && setFields({...fields, dateOfBirth: date})}
-                  renderInput={(params) => <TextField size="small" required {...params} />} />
+                  onChange={(date: any) => date && setFields({...fields, dateOfBirth: date})}
+                  renderInput={(params: any) => <TextField size="small" required {...params} />} />
               </Grid>
               <Grid item>
                 <TextField

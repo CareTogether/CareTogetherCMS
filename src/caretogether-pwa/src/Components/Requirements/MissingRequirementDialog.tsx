@@ -233,16 +233,16 @@ export function MissingRequirementDialog({
                 label="When was this requirement completed?"
                 value={completedAtLocal}
                 disableFuture inputFormat="M/d/yyyy h:mma"
-                onChange={(date) => date && setCompletedAtLocal(date)}
+                onChange={(date: any) => date && setCompletedAtLocal(date)}
                 showTodayButton
-                renderInput={(params) => <TextField fullWidth required {...params} />} />
+                renderInput={(params: any) => <TextField fullWidth required {...params} />} />
               : <DatePicker
                 label="When was this requirement completed?"
                 value={completedAtLocal}
                 disableFuture inputFormat="MM/dd/yyyy"
-                onChange={(date) => date && setCompletedAtLocal(date)}
+                onChange={(date: any) => date && setCompletedAtLocal(date)}
                 showTodayButton
-                renderInput={(params) => <TextField fullWidth required {...params} />} />}
+                renderInput={(params: any) => <TextField fullWidth required {...params} />} />}
             {validityDuration && (completedAtLocal
               ? <p>This will be valid until {format(add(completedAtLocal, validityDuration), "M/d/yyyy h:mm a")}</p>
               : <p>Valid for {formatDuration(validityDuration)}</p>)}
@@ -326,9 +326,9 @@ export function MissingRequirementDialog({
               label="When does this exemption expire? (Default is never)"
               value={exemptionExpiresAtLocal}
               inputFormat="MM/dd/yyyy"
-              onChange={(date) => date && setExemptionExpiresAtLocal(date)}
+              onChange={(date: any) => date && setExemptionExpiresAtLocal(date)}
               showTodayButton
-              renderInput={(params) => <TextField fullWidth {...params} />} />
+              renderInput={(params: any) => <TextField fullWidth {...params} />} />
           </Grid>
         </Grid>
       </TabPanel>

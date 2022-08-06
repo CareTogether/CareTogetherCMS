@@ -114,8 +114,8 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
             label="When was this referral opened?"
             value={referralOpenedAtLocal}
             disableFuture inputFormat="MM/dd/yyyy"
-            onChange={(date) => date && setFields({...fields, referralOpenedAtLocal: date})}
-            showTodayButton renderInput={(params) => <TextField fullWidth required {...params} />} />
+            onChange={(date: any) => date && setFields({...fields, referralOpenedAtLocal: date})}
+            showTodayButton renderInput={(params: any) => <TextField fullWidth required {...params} />} />
         </Grid>
         <DialogContentText>
           Provide the basic information needed for the first adult in the family.
@@ -157,8 +157,8 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
                   label="Date of birth"
                   value={dateOfBirth} maxDate={subYears(new Date(), 16)} openTo="year"
                   disabled={ageType !== 'exact'} inputFormat="MM/dd/yyyy"
-                  onChange={(date) => date && setFields({...fields, dateOfBirth: date})}
-                  renderInput={(params) => <TextField size="small" required {...params} />} />
+                  onChange={(date: any) => date && setFields({...fields, dateOfBirth: date})}
+                  renderInput={(params: any) => <TextField size="small" required {...params} />} />
               </Grid>
               <Grid item>
                 <TextField

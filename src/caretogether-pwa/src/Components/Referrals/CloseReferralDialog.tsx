@@ -48,9 +48,9 @@ export function CloseReferralDialog({partneringFamilyId, referralId, onClose}: C
               label="When was this referral closed?"
               value={closedAtLocal}
               disableFuture inputFormat="MM/dd/yyyy"
-              onChange={(date) => date && setFields({ ...fields, closedAtLocal: date })}
+              onChange={(date: any) => date && setFields({ ...fields, closedAtLocal: date })}
               showTodayButton
-              renderInput={(params) => <TextField {...params} />} />
+              renderInput={(params: any) => <TextField {...params} />} />
           </Grid>
         </Grid>
       </form>
