@@ -9,7 +9,6 @@ import { EndArrangementDialog } from "./EndArrangementDialog";
 import { StartArrangementDialog } from "./StartArrangementDialog";
 import { useInlineEditor } from "../../useInlineEditor";
 import { useReferralsModel } from "../../Model/ReferralsModel";
-import { EditOffRounded } from "@mui/icons-material";
 import { DateTimePicker } from "@mui/lab";
 
 type ArrangementCardTitleProps = {
