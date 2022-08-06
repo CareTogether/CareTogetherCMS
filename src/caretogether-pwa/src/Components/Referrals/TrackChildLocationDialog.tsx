@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControl, FormControlLabel, FormLabel, Grid, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@mui/material';
-import { CombinedFamilyInfo, Arrangement, Person, ChildLocationPlan, ChildInvolvement, Note } from '../../GeneratedClient';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControl, FormControlLabel, FormLabel, Grid, IconButton, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@mui/material';
+import { CombinedFamilyInfo, Arrangement, Person, ChildLocationPlan, ChildInvolvement, Note, ChildLocationHistoryEntry } from '../../GeneratedClient';
 import { DateTimePicker, Timeline, TimelineConnector, TimelineContent, TimelineDot, TimelineItem, TimelineOppositeContent, TimelineSeparator } from '@mui/lab';
+import DeleteIcon from '@mui/icons-material/Delete'
 import { useBackdrop } from '../../useBackdrop';
 import { useDirectoryModel, useFamilyLookup, usePersonLookup } from '../../Model/DirectoryModel';
 import { useReferralsModel } from '../../Model/ReferralsModel';
@@ -95,6 +96,13 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
     });
   }
 
+  async function deleteChildLocationEntry(historyEntry: ChildLocationHistoryEntry) {
+    await withBackdrop(async () => {
+      await referralsModel.deleteChildLocationEntry(partneringFamily.family?.id as string, referralId, arrangement.id!,
+        historyEntry.childLocationFamilyId!, historyEntry.childLocationReceivingAdultId!, historyEntry.timestampUtc!, null);
+    });
+  }
+
   return (
     <Dialog open={true} onClose={onClose} fullWidth maxWidth="md" aria-labelledby="track-child-location-title">
       <DialogTitle id="track-child-location-title">Location History for <PersonName person={child} /></DialogTitle>
@@ -106,9 +114,15 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
                 <TimelineItem key={i}>
                   <TimelineOppositeContent>
                     {format(historyEntry.timestampUtc!, "M/d/yy h:mm a")}
+                    <IconButton
+                      onClick={() => deleteChildLocationEntry(historyEntry)}
+                      size="small"
+                      color="primary">
+                      <DeleteIcon />
+                    </IconButton>
                   </TimelineOppositeContent>
                   <TimelineSeparator>
-                    <TimelineDot color={i === 0 ? "secondary" : "primary"} />
+                    <TimelineDot color={i === 0 ? "primary" : "grey"} />
                     <TimelineConnector />
                   </TimelineSeparator>
                   <TimelineContent>

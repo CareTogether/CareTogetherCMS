@@ -3985,6 +3985,7 @@
             "CompleteIndividualVolunteerAssignmentRequirement": "#/components/schemas/CompleteIndividualVolunteerAssignmentRequirement",
             "CompleteVolunteerFamilyAssignmentRequirement": "#/components/schemas/CompleteVolunteerFamilyAssignmentRequirement",
             "CreateArrangement": "#/components/schemas/CreateArrangement",
+            "DeleteChildLocationChange": "#/components/schemas/DeleteChildLocationChange",
             "EditArrangementStartTime": "#/components/schemas/EditArrangementStartTime",
             "EndArrangements": "#/components/schemas/EndArrangements",
             "ExemptArrangementRequirement": "#/components/schemas/ExemptArrangementRequirement",
@@ -4246,6 +4247,36 @@
               "partneringFamilyPersonId": {
                 "type": "string",
                 "format": "guid"
+              }
+            }
+          }
+        ]
+      },
+      "DeleteChildLocationChange": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "changedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "childLocationFamilyId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "childLocationReceivingAdultId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "noteId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
               }
             }
           }
