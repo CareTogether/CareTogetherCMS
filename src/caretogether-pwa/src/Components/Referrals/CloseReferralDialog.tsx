@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@mui/material';
 import { ReferralCloseReason } from '../../GeneratedClient';
 import { UpdateDialog } from '../UpdateDialog';
-import { DatePicker } from '@mui/lab';
+import { DatePicker } from '@mui/x-date-pickers';
 import { useReferralsModel } from '../../Model/ReferralsModel';
 
 interface CloseReferralDialogProps {

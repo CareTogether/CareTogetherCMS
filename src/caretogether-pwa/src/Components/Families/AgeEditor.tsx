@@ -5,7 +5,7 @@ import { PersonEditorProps } from "./PersonEditorProps";
 import { AgeInYears, ExactAge } from '../../GeneratedClient';
 import { AgeText } from '../AgeText';
 import { format } from 'date-fns';
-import { DatePicker } from '@mui/lab';
+import { DatePicker } from '@mui/x-date-pickers';
 
 export function AgeEditor({ familyId, person }: PersonEditorProps) {
   const directoryModel = useDirectoryModel();

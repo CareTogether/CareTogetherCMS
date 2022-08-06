@@ -9,7 +9,7 @@ import { EndArrangementDialog } from "./EndArrangementDialog";
 import { StartArrangementDialog } from "./StartArrangementDialog";
 import { useInlineEditor } from "../../useInlineEditor";
 import { useReferralsModel } from "../../Model/ReferralsModel";
-import { DateTimePicker } from "@mui/lab";
+import { DateTimePicker } from '@mui/x-date-pickers';
 
 type ArrangementCardTitleProps = {
   summaryOnly?: boolean
