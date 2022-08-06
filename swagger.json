@@ -3992,6 +3992,7 @@
             "MarkArrangementRequirementIncomplete": "#/components/schemas/MarkArrangementRequirementIncomplete",
             "MarkIndividualVolunteerAssignmentRequirementIncomplete": "#/components/schemas/MarkIndividualVolunteerAssignmentRequirementIncomplete",
             "MarkVolunteerFamilyAssignmentRequirementIncomplete": "#/components/schemas/MarkVolunteerFamilyAssignmentRequirementIncomplete",
+            "ReopenArrangements": "#/components/schemas/ReopenArrangements",
             "StartArrangements": "#/components/schemas/StartArrangements",
             "TrackChildLocationChange": "#/components/schemas/TrackChildLocationChange",
             "UnassignIndividualVolunteer": "#/components/schemas/UnassignIndividualVolunteer",
@@ -4464,6 +4465,24 @@
               },
               "requirementName": {
                 "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "ReopenArrangements": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "noteId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
               }
             }
           }

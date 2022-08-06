@@ -150,6 +150,9 @@ namespace CareTogether.Resources.Referrals
     public sealed record EndArrangements(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         DateTime EndedAtUtc)
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+    public sealed record ReopenArrangements(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
+        Guid? NoteId)
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
     public sealed record CancelArrangementsSetup(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         DateTime CancelledAtUtc)
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);

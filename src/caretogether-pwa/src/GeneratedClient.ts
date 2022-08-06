@@ -7008,6 +7008,11 @@ export abstract class ArrangementsCommand implements IArrangementsCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "ReopenArrangements") {
+            let result = new ReopenArrangements();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "StartArrangements") {
             let result = new StartArrangements();
             result.init(data);
@@ -7757,6 +7762,40 @@ export interface IMarkVolunteerFamilyAssignmentRequirementIncomplete extends IAr
     volunteerFamilyId?: string;
     completedRequirementId?: string;
     requirementName?: string;
+}
+
+export class ReopenArrangements extends ArrangementsCommand implements IReopenArrangements {
+    noteId?: string | undefined;
+
+    constructor(data?: IReopenArrangements) {
+        super(data);
+        this._discriminator = "ReopenArrangements";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.noteId = _data["noteId"];
+        }
+    }
+
+    static fromJS(data: any): ReopenArrangements {
+        data = typeof data === 'object' ? data : {};
+        let result = new ReopenArrangements();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["noteId"] = this.noteId;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IReopenArrangements extends IArrangementsCommand {
+    noteId?: string | undefined;
 }
 
 export class StartArrangements extends ArrangementsCommand implements IStartArrangements {

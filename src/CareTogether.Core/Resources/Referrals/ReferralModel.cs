@@ -327,6 +327,10 @@ namespace CareTogether.Resources.Referrals
                                 //TODO: Enforce invariant - cannot end before starting
                                 EndedAtUtc = c.EndedAtUtc
                             }, null),
+                            ReopenArrangements c => (arrangementEntry with
+                            {
+                                EndedAtUtc = null
+                            }, null),
                             CancelArrangementsSetup c => (arrangementEntry with
                             {
                                 //TODO: Enforce invariant - cannot cancel after starting
