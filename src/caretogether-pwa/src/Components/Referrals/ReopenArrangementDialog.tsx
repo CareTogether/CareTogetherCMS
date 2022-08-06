@@ -37,7 +37,7 @@ export function ReopenArrangementDialog({referralId, arrangement, onClose}: Reop
       <Grid container spacing={0}>
         <Grid item xs={12}>
           <TextField
-            id="notes" required
+            id="notes"
             label="Notes" placeholder="Space for any general notes"
             multiline fullWidth variant="outlined" minRows={6} size="medium"
             value={notes} onChange={e => setNotes(e.target.value)}

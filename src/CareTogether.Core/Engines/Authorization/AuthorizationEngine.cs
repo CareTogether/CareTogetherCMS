@@ -158,6 +158,7 @@ namespace CareTogether.Engines.Authorization
                     UnassignIndividualVolunteer => Permission.EditAssignments,
                     UnassignVolunteerFamily => Permission.EditAssignments,
                     StartArrangements => Permission.EditArrangement,
+                    EditArrangementStartTime => Permission.EditArrangement,
                     CompleteArrangementRequirement => Permission.EditArrangementRequirementCompletion,
                     CompleteVolunteerFamilyAssignmentRequirement => Permission.EditArrangementRequirementCompletion,
                     CompleteIndividualVolunteerAssignmentRequirement => Permission.EditArrangementRequirementCompletion,

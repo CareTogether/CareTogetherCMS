@@ -1,4 +1,4 @@
-import { Button } from "@mui/material";
+import { Button, TextField } from "@mui/material";
 import { formatRelative } from "date-fns";
 import { useState } from "react";
 import { Arrangement, ArrangementPhase, Permission } from "../../GeneratedClient";
@@ -7,16 +7,26 @@ import { CancelArrangementDialog } from "./CancelArrangementDialog";
 import { ReopenArrangementDialog } from "./ReopenArrangementDialog";
 import { EndArrangementDialog } from "./EndArrangementDialog";
 import { StartArrangementDialog } from "./StartArrangementDialog";
+import { useInlineEditor } from "../../useInlineEditor";
+import { useReferralsModel } from "../../Model/ReferralsModel";
+import { DateTimePicker } from "@mui/lab";
 
 type ArrangementCardTitleProps = {
   summaryOnly?: boolean
+  partneringFamilyId: string
   referralId: string
   arrangement: Arrangement
 }
 
-export function ArrangementCardTitle({ summaryOnly, referralId, arrangement }: ArrangementCardTitleProps) {
+export function ArrangementCardTitle({ summaryOnly, partneringFamilyId, referralId, arrangement }: ArrangementCardTitleProps) {
   const now = new Date();
   const permissions = usePermissions();
+
+  const referralsModel = useReferralsModel();
+
+  const startedAtEditor = useInlineEditor(async value => {
+    await referralsModel.editArrangementStartTime(partneringFamilyId, referralId, arrangement.id!, value);
+  }, arrangement.startedAtUtc);
 
   const [showStartArrangementDialog, setShowStartArrangementDialog] = useState(false);
   const [showEndArrangementDialog, setShowEndArrangementDialog] = useState(false);
@@ -66,13 +76,31 @@ export function ArrangementCardTitle({ summaryOnly, referralId, arrangement }: A
               </>
             : arrangement.phase === ArrangementPhase.Started ?
               <>
-                <span>Started {formatRelative(arrangement.startedAtUtc!, now)}</span>
-                {permissions(Permission.EditArrangement) &&
-                  <Button variant="outlined" size="small"
-                    style={{marginLeft: 10}}
-                    onClick={() => setShowEndArrangementDialog(true)}>
-                    End
-                  </Button>}
+                {permissions(Permission.EditArrangement)
+                  ? <>
+                      {startedAtEditor.editing
+                        ? <>
+                            <DateTimePicker
+                              label="When was this arrangement started?"
+                              value={startedAtEditor.value}
+                              disableFuture inputFormat="M/d/yyyy h:mma"
+                              onChange={(date) => date && startedAtEditor.setValue(date)}
+                              showTodayButton
+                              renderInput={(params) => <TextField fullWidth required {...params} sx={{marginTop: 1}} />} />
+                            {startedAtEditor.cancelButton}
+                            {startedAtEditor.saveButton}
+                          </>
+                        : <>
+                            <span>Started {formatRelative(arrangement.startedAtUtc!, now)}</span>
+                            {startedAtEditor.editButton}
+                          </>}
+                      <Button variant="outlined" size="small"
+                        style={{marginLeft: 10}}
+                        onClick={() => setShowEndArrangementDialog(true)}>
+                        End
+                      </Button>
+                    </>
+                  : <span>Started {formatRelative(arrangement.startedAtUtc!, now)}</span>}
               </>
             : <>
                 <span>Ended {formatRelative(arrangement.endedAtUtc!, now)}</span>

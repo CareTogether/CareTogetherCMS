@@ -1,6 +1,6 @@
 import { selector, useRecoilCallback } from "recoil";
 import { authenticatingFetch } from "../Auth";
-import { ReferralCommand, ReferralsClient, ArrangementsCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement, StartArrangements, EndArrangements, AssignVolunteerFamily, AssignIndividualVolunteer, ReferralCloseReason, CloseReferral, CreateReferral, TrackChildLocationChange, ChildLocationPlan, UpdateCustomReferralField, CustomField, ExemptReferralRequirement, UnexemptReferralRequirement, ExemptArrangementRequirement, UnexemptArrangementRequirement, MissingArrangementRequirement, ExemptedRequirementInfo, MarkReferralRequirementIncomplete, CompletedRequirementInfo, MarkArrangementRequirementIncomplete, CancelArrangementsSetup, UpdateReferralComments, UnassignVolunteerFamily, UnassignIndividualVolunteer, CompleteVolunteerFamilyAssignmentRequirement, CompleteIndividualVolunteerAssignmentRequirement, FamilyVolunteerAssignment, IndividualVolunteerAssignment, ExemptIndividualVolunteerAssignmentRequirement, ExemptVolunteerFamilyAssignmentRequirement, MarkIndividualVolunteerAssignmentRequirementIncomplete, MarkVolunteerFamilyAssignmentRequirementIncomplete, UnexemptIndividualVolunteerAssignmentRequirement, UnexemptVolunteerFamilyAssignmentRequirement, UpdateArrangementComments, ReopenArrangements } from "../GeneratedClient";
+import { ReferralCommand, ReferralsClient, ArrangementsCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement, StartArrangements, EndArrangements, AssignVolunteerFamily, AssignIndividualVolunteer, ReferralCloseReason, CloseReferral, CreateReferral, TrackChildLocationChange, ChildLocationPlan, UpdateCustomReferralField, CustomField, ExemptReferralRequirement, UnexemptReferralRequirement, ExemptArrangementRequirement, UnexemptArrangementRequirement, MissingArrangementRequirement, ExemptedRequirementInfo, MarkReferralRequirementIncomplete, CompletedRequirementInfo, MarkArrangementRequirementIncomplete, CancelArrangementsSetup, UpdateReferralComments, UnassignVolunteerFamily, UnassignIndividualVolunteer, CompleteVolunteerFamilyAssignmentRequirement, CompleteIndividualVolunteerAssignmentRequirement, FamilyVolunteerAssignment, IndividualVolunteerAssignment, ExemptIndividualVolunteerAssignmentRequirement, ExemptVolunteerFamilyAssignmentRequirement, MarkIndividualVolunteerAssignmentRequirementIncomplete, MarkVolunteerFamilyAssignmentRequirementIncomplete, UnexemptIndividualVolunteerAssignmentRequirement, UnexemptVolunteerFamilyAssignmentRequirement, UpdateArrangementComments, ReopenArrangements, EditArrangementStartTime } from "../GeneratedClient";
 import { visibleFamiliesData } from "./ModelLoader";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 
@@ -366,6 +366,17 @@ export function useReferralsModel() {
       command.startedAtUtc = startedAtLocal;
       return command;
     });
+  const editArrangementStartTime = useArrangementsCommandCallbackWithLocation(
+    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
+      startedAtLocal: Date) => {
+      const command = new EditArrangementStartTime({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementIds: [arrangementId]
+      });
+      command.startedAtUtc = startedAtLocal;
+      return command;
+    });
   const endArrangement = useArrangementsCommandCallbackWithLocation(
     async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
       endedAtLocal: Date) => {
@@ -524,6 +535,7 @@ export function useReferralsModel() {
     unexemptIndividualVolunteerAssignmentRequirement,
     createArrangement,
     startArrangement,
+    editArrangementStartTime,
     endArrangement,
     reopenArrangement,
     cancelArrangement,

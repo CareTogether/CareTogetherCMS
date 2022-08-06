@@ -3985,6 +3985,7 @@
             "CompleteIndividualVolunteerAssignmentRequirement": "#/components/schemas/CompleteIndividualVolunteerAssignmentRequirement",
             "CompleteVolunteerFamilyAssignmentRequirement": "#/components/schemas/CompleteVolunteerFamilyAssignmentRequirement",
             "CreateArrangement": "#/components/schemas/CreateArrangement",
+            "EditArrangementStartTime": "#/components/schemas/EditArrangementStartTime",
             "EndArrangements": "#/components/schemas/EndArrangements",
             "ExemptArrangementRequirement": "#/components/schemas/ExemptArrangementRequirement",
             "ExemptIndividualVolunteerAssignmentRequirement": "#/components/schemas/ExemptIndividualVolunteerAssignmentRequirement",
@@ -4245,6 +4246,23 @@
               "partneringFamilyPersonId": {
                 "type": "string",
                 "format": "guid"
+              }
+            }
+          }
+        ]
+      },
+      "EditArrangementStartTime": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "startedAtUtc": {
+                "type": "string",
+                "format": "date-time"
               }
             }
           }
