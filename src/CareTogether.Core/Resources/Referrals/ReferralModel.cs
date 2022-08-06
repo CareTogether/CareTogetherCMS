@@ -185,6 +185,10 @@ namespace CareTogether.Resources.Referrals
                             {
                                 StartedAtUtc = c.StartedAtUtc
                             }, null),
+                            EditArrangementStartTime c => (arrangementEntry with
+                            {
+                                StartedAtUtc = c.StartedAtUtc
+                            }, null),
                             CompleteArrangementRequirement c => (arrangementEntry with
                             {
                                 CompletedRequirements = arrangementEntry.CompletedRequirements.Add(

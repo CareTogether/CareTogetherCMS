@@ -6973,6 +6973,11 @@ export abstract class ArrangementsCommand implements IArrangementsCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "EditArrangementStartTime") {
+            let result = new EditArrangementStartTime();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "EndArrangements") {
             let result = new EndArrangements();
             result.init(data);
@@ -7416,6 +7421,40 @@ export interface ICreateArrangement extends IArrangementsCommand {
     arrangementType?: string;
     requestedAtUtc?: Date;
     partneringFamilyPersonId?: string;
+}
+
+export class EditArrangementStartTime extends ArrangementsCommand implements IEditArrangementStartTime {
+    startedAtUtc?: Date;
+
+    constructor(data?: IEditArrangementStartTime) {
+        super(data);
+        this._discriminator = "EditArrangementStartTime";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.startedAtUtc = _data["startedAtUtc"] ? new Date(_data["startedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): EditArrangementStartTime {
+        data = typeof data === 'object' ? data : {};
+        let result = new EditArrangementStartTime();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["startedAtUtc"] = this.startedAtUtc ? this.startedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IEditArrangementStartTime extends IArrangementsCommand {
+    startedAtUtc?: Date;
 }
 
 export class EndArrangements extends ArrangementsCommand implements IEndArrangements {

@@ -97,6 +97,9 @@ namespace CareTogether.Resources.Referrals
     public sealed record StartArrangements(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         DateTime StartedAtUtc)
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+    public sealed record EditArrangementStartTime(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
+        DateTime StartedAtUtc)
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
     public sealed record CompleteArrangementRequirement(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         Guid CompletedRequirementId, string RequirementName, DateTime CompletedAtUtc,
         Guid? UploadedDocumentId, Guid? NoteId)
