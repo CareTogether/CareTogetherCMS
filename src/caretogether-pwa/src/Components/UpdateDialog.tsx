@@ -8,6 +8,7 @@ type UpdateDialogProps = {
   onSave: () => Promise<void>
   enableSave?: () => boolean
   saveLabel?: string
+  children?: React.ReactNode
 }
 
 export const UpdateDialog: React.FC<UpdateDialogProps> = ({

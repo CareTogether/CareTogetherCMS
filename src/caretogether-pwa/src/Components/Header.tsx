@@ -7,7 +7,7 @@ import { HeaderContext } from './HeaderContext';
 
 const drawerWidth = 200;
 
-type HeaderTitleProps = {}
+type HeaderTitleProps = { children?: React.ReactNode }
 export const HeaderTitle: React.FC<HeaderTitleProps> = ({ children }) => (
   <Typography component="h1" variant="h6" color="inherit" noWrap style={{flexGrow: 1}}>
     {children}
@@ -49,7 +49,7 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-type HeaderContentProps = {}
+type HeaderContentProps = { children?: React.ReactNode }
 export const HeaderContent: React.FC<HeaderContentProps> = ({ children }) => (
   <HeaderContext.Consumer>
     {headerContainer =>

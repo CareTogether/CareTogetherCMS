@@ -3,6 +3,7 @@ import { Box } from "@mui/material";
 type IconRowProps = {
   icon: string
   onClick?: () => void
+  children?: React.ReactNode
 }
 
 export const IconRow: React.FC<IconRowProps> = ({
