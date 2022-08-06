@@ -1,20 +1,16 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { InteractionType } from "@azure/msal-browser";
-import { MsalProvider, useMsalAuthentication, useIsAuthenticated } from '@azure/msal-react';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
 import { RecoilRoot } from 'recoil';
-import { globalMsalInstance } from './Auth';
-import LocalizationProvider from '@mui/x-date-pickers';
+import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns as DateAdapter } from '@mui/x-date-pickers/AdapterDateFns';
-import { ModelLoader } from './Model/ModelLoader';
 import { CssBaseline } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from '@mui/material/styles';
-import ErrorBackdrop from './Components/ErrorBackdrop';
-import RequestBackdrop from './Components/RequestBackdrop';
 import { amber } from '@mui/material/colors';
+import AppAuthWrapper from './AppAuthWrapper';
+import RequestBackdrop from './Components/RequestBackdrop';
+import ErrorBackdrop from './Components/ErrorBackdrop';
+import reportWebVitals from './reportWebVitals';
 
 const theme = createTheme({
   palette: {
@@ -26,28 +22,6 @@ const theme = createTheme({
   }
 });
 
-function AuthWrapper() {
-  // Force the user to sign in if not already authenticated, then render the app.
-  // See https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-react/docs/hooks.md
-  useMsalAuthentication(InteractionType.Redirect);
-  const isAuthenticated = useIsAuthenticated();
-  
-  return (
-    <>
-      {isAuthenticated
-        ? <ModelLoader>
-            <React.Suspense fallback={<div>Loading...</div>}>
-              <App />
-            </React.Suspense>
-          </ModelLoader>
-        : <p>You are not signed in. You can try to refresh your page (F5) to reattempt signing in.</p>
-      }
-      <RequestBackdrop />
-      <ErrorBackdrop />
-    </>
-  );
-}
-
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
@@ -55,13 +29,13 @@ root.render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
       <CssBaseline enableColorScheme />
-      <MsalProvider instance={globalMsalInstance}>
         <LocalizationProvider dateAdapter={DateAdapter}>
           <RecoilRoot>
-            <AuthWrapper />
+            <AppAuthWrapper />
+            <RequestBackdrop />
+            <ErrorBackdrop />
           </RecoilRoot>
         </LocalizationProvider>
-      </MsalProvider>
     </ThemeProvider>
   </React.StrictMode>
 );
