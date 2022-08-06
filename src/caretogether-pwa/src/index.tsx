@@ -2,8 +2,6 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { InteractionType } from "@azure/msal-browser";
 import { MsalProvider, useMsalAuthentication, useIsAuthenticated } from '@azure/msal-react';
-import { AppInsightsContext } from "@microsoft/applicationinsights-react-js";
-import { aiReact } from './Components/AppInsights';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { RecoilRoot } from 'recoil';
@@ -63,15 +61,13 @@ ReactDOM.render(
   <React.StrictMode>
     <StyledEngineProvider injectFirst>
       <ThemeProvider theme={theme}>
-        <AppInsightsContext.Provider value={aiReact}>
-          <MsalProvider instance={globalMsalInstance}>
-            <LocalizationProvider dateAdapter={DateAdapter}>
-              <RecoilRoot>
-                <AuthWrapper />
-              </RecoilRoot>
-            </LocalizationProvider>
-          </MsalProvider>
-        </AppInsightsContext.Provider>
+        <MsalProvider instance={globalMsalInstance}>
+          <LocalizationProvider dateAdapter={DateAdapter}>
+            <RecoilRoot>
+              <AuthWrapper />
+            </RecoilRoot>
+          </LocalizationProvider>
+        </MsalProvider>
       </ThemeProvider>
     </StyledEngineProvider>
   </React.StrictMode>,
