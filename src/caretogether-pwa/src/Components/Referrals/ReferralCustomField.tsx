@@ -1,5 +1,5 @@
-import { Box, FormControlLabel, Radio, RadioGroup, TextField } from "@mui/material";
-import { CompletedCustomFieldInfo, CustomField, CustomFieldType } from "../../GeneratedClient";
+import { Autocomplete, Box, FormControlLabel, Radio, RadioGroup, TextField } from "@mui/material";
+import { CompletedCustomFieldInfo, CustomField, CustomFieldType, CustomFieldValidation } from "../../GeneratedClient";
 import { useReferralsModel } from "../../Model/ReferralsModel";
 import { useRecoilValue } from "recoil";
 import { policyData } from "../../Model/ConfigurationModel";
@@ -46,7 +46,17 @@ export function ReferralCustomField({ partneringFamilyId, referralId, customFiel
                   <FormControlLabel value="" control={<Radio />} label="(blank)" />
                 </RadioGroup>
               </>
-            : <TextField
+            : customFieldPolicy.validation === CustomFieldValidation.SuggestOnly
+              ? <Autocomplete
+                  freeSolo
+                  onInputChange={(event: any, newValue: string) => {
+                    editor.setValue(newValue)
+                  }}
+                  options={(customFieldPolicy.validValues || []).slice().sort((a, b) => -b.localeCompare(a))}
+                  renderInput={(params) => <TextField required {...params} />}
+                  inputValue={editor.value}
+                />
+              :  <TextField
                 variant="outlined" size="medium"
                 value={editor.value || ""}
                 onChange={e => editor.setValue(e.target.value)} />
