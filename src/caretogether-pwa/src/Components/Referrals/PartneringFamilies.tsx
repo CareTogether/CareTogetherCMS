@@ -1,4 +1,3 @@
-import makeStyles from '@mui/styles/makeStyles';
 import { Fab, FormControlLabel, Grid, Switch, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip, useMediaQuery, useTheme } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import PendingOutlinedIcon from '@mui/icons-material/PendingOutlined';
@@ -22,50 +21,6 @@ import { SearchBar } from '../SearchBar';
 import { filterFamiliesByText, sortFamiliesByLastNameDesc } from '../Families/FamilyUtils';
 import { usePermissions } from '../../Model/SessionModel';
 
-const useStyles = makeStyles((theme) => ({
-  table: {
-    minWidth: 700,
-  },
-  familyRow: {
-    backgroundColor: '#eef'
-  },
-  arrangementIconContainer: {
-    display: 'flex',
-    rowGap: '5px',
-    columnGap: '8px',
-    flexWrap: 'wrap',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-  },
-  iconTextSpace: {
-    marginRight: '3px',
-  },
-  arrangementIcon: {
-    display: 'inline-block',
-    verticalAlign: 'middle',
-  },
-  arrangementZero: {
-    color: 'lightGrey',
-  },
-  arrangementSettingUp: {
-    color: 'grey',
-  },
-  arrangementReady: {
-    color: '#E3AE01',
-  },
-  arrangementStarted: {
-    color: '#01ACFB',
-  },
-  arrangementEnded: {
-    color: 'green',
-  },
-  fabAdd: {
-    position: 'fixed',
-    right: '30px',
-    bottom: '70px'
-  }
-}));
-
 const arrangementPhaseText = new Map<number, string>([
   [ArrangementPhase.SettingUp, 'Setting Up'],
   [ArrangementPhase.ReadyToStart, 'Ready To Start'],
@@ -82,7 +37,6 @@ function allArrangements(partneringFamilyInfo: PartneringFamilyInfo) {
 }
 
 function PartneringFamilies() {
-  const classes = useStyles();
   const navigate = useNavigate();
 
   // The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
@@ -109,31 +63,46 @@ function PartneringFamilies() {
 
     let statusCountDiv;
 
+    const arrangementZero = 'lightGrey';
+    const arrangementSettingUp = 'grey';
+    const arrangementReady = '#E3AE01';
+    const arrangementStarted = '#01ACFB';
+    const arrangementEnded = 'green';
+
     if(statusCount > 0) {
-      statusCountDiv = <b className={`${statusCount===0 ? classes.arrangementZero 
-        : phase===ArrangementPhase.SettingUp ? classes.arrangementSettingUp 
-        : phase===ArrangementPhase.ReadyToStart ? classes.arrangementReady 
-        : phase===ArrangementPhase.Started ? classes.arrangementStarted 
-        : classes.arrangementEnded} ${classes.arrangementIcon}`}>{statusCount}</b>
+      statusCountDiv = <b style={{display: 'inline-block', verticalAlign: 'middle', color:
+        statusCount===0 ? arrangementZero 
+        : phase===ArrangementPhase.SettingUp ? arrangementSettingUp 
+        : phase===ArrangementPhase.ReadyToStart ? arrangementReady 
+        : phase===ArrangementPhase.Started ? arrangementStarted 
+        : arrangementEnded}}>{statusCount}</b>
     }
     
     return (
       <div>
         <Tooltip title={phaseText!}>
           {phase===ArrangementPhase.SettingUp ? 
-              <PendingOutlinedIcon className={`${classes.arrangementIcon} ${statusCount===0 ? 
-                classes.arrangementZero : classes.arrangementSettingUp} ${classes.iconTextSpace}`} 
-              />
+            <PendingOutlinedIcon sx={{
+              display: 'inline-block', verticalAlign: 'middle', marginRight: '3px', color:
+              statusCount===0 ? 
+              arrangementZero : arrangementSettingUp}}
+            />
           : phase===ArrangementPhase.ReadyToStart ? 
-              <AccessTimeIcon className={`${classes.arrangementIcon} ${statusCount===0 ? 
-                classes.arrangementZero : classes.arrangementReady} ${classes.iconTextSpace}`}
-              />
+            <AccessTimeIcon sx={{
+              display: 'inline-block', verticalAlign: 'middle', marginRight: '3px', color:
+              statusCount===0 ? 
+              arrangementZero : arrangementReady}}
+            />
           : phase===ArrangementPhase.Started ? 
-              <PlayCircleFilledIcon className={`${classes.arrangementIcon} ${statusCount===0 ? 
-                classes.arrangementZero : classes.arrangementStarted} ${classes.iconTextSpace}`}
-              />
-          : <CheckCircleOutlinedIcon className={`${classes.arrangementIcon} ${statusCount===0 ? 
-              classes.arrangementZero : classes.arrangementEnded} ${classes.iconTextSpace}`} 
+            <PlayCircleFilledIcon sx={{
+              display: 'inline-block', verticalAlign: 'middle', marginRight: '3px', color:
+              statusCount===0 ? 
+              arrangementZero : arrangementStarted}}
+            />
+          : <CheckCircleOutlinedIcon sx={{
+              display: 'inline-block', verticalAlign: 'middle', marginRight: '3px', color:
+              statusCount===0 ? 
+              arrangementZero : arrangementEnded}} 
             />}
         </Tooltip>
         {statusCountDiv}
@@ -159,7 +128,7 @@ function PartneringFamilies() {
       </HeaderContent>
       <Grid item xs={12}>
         <TableContainer>
-          <Table className={classes.table} size="small">
+          <Table sx={{minWidth: '700px'}} size="small">
             <TableHead>
               <TableRow>
                 <TableCell>Partnering Family</TableCell>
@@ -171,7 +140,7 @@ function PartneringFamilies() {
             <TableBody>
               {filteredPartneringFamilies.map((partneringFamily) => (
                 <React.Fragment key={partneringFamily.family?.id}>
-                  <TableRow className={classes.familyRow} onClick={() => openPartneringFamily(partneringFamily.family!.id!)}>
+                  <TableRow sx={{backgroundColor: '#eef'}} onClick={() => openPartneringFamily(partneringFamily.family!.id!)}>
                     <TableCell><FamilyName family={partneringFamily} /></TableCell>
                     <TableCell>{
                       partneringFamily.partneringFamilyInfo?.openReferral
@@ -181,7 +150,14 @@ function PartneringFamilies() {
                       }</TableCell>
                       {!expandedView ? arrangementTypes?.map((arrangementType) => (
                         <TableCell>
-                          <div className={classes.arrangementIconContainer}>
+                          <div style={{
+                            display: 'flex',
+                            rowGap: '5px',
+                            columnGap: '8px',
+                            flexWrap: 'wrap',
+                            justifyContent: 'flex-start',
+                            alignItems: 'center',
+                          }}>
                             {arrangementStatusSummary(partneringFamily.partneringFamilyInfo!,ArrangementPhase.SettingUp, arrangementType!)}
                           <div>
                             {arrangementStatusSummary(partneringFamily.partneringFamilyInfo!,ArrangementPhase.ReadyToStart, arrangementType!)}
@@ -216,7 +192,8 @@ function PartneringFamilies() {
             </TableBody>
           </Table>
         </TableContainer>
-        {permissions(Permission.EditFamilyInfo) && <Fab color="primary" aria-label="add" className={classes.fabAdd}
+        {permissions(Permission.EditFamilyInfo) && <Fab color="primary" aria-label="add"
+          sx={{position: 'fixed', right: '30px', bottom: '70px'}}
           onClick={() => setCreatePartneringFamilyDialogOpen(true)}>
           <AddIcon />
         </Fab>}

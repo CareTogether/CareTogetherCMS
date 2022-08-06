@@ -14,7 +14,6 @@ import {
   Badge,
   Grid
 } from "@mui/material";
-import makeStyles from '@mui/styles/makeStyles';
 import { useState } from "react";
 import { Gender, Person, CombinedFamilyInfo, RoleRemovalReason, Permission } from "../../GeneratedClient";
 import { AgeText } from "../AgeText";
@@ -37,50 +36,12 @@ import { useDialogHandle } from "../../useDialogHandle";
 import { EditAdultDialog } from "../Families/EditAdultDialog";
 import { useCollapsed } from "../../useCollapsed";
 
-const useStyles = makeStyles((theme) => ({
-  sectionChips: {
-    '& > div:first-child': {
-      marginLeft: 0
-    },
-    '& > *': {
-      margin: theme.spacing(0.5),
-    }
-  },
-  card: {
-    minWidth: 275,
-  },
-  cardHeader: {
-    paddingBottom: 0
-  },
-  cardContent: {
-    paddingTop: 8,
-    paddingBottom: 8,
-    '&:last-child': {
-      paddingBottom: 0
-    }
-  },
-  cardList: {
-    padding: 0,
-    margin: 0,
-    marginTop: 8,
-    listStyle: 'none',
-    '& > li': {
-      marginTop: 4
-    }
-  },
-  rightCardAction: {
-    marginLeft: 'auto !important'
-  }
-}));
-
 type VolunteerAdultCardProps = {
   volunteerFamilyId: string,
   personId: string
 }
 
 export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdultCardProps) {
-  const classes = useStyles();
-
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
 
   const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as CombinedFamilyInfo;
@@ -119,8 +80,8 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
   const removedRoles = volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles || [];
 
   return <>{adult?.item1 && adult.item1.id && adult.item2 &&
-    <Card variant="outlined" className={classes.card}>
-      <CardHeader className={classes.cardHeader}
+    <Card variant="outlined" sx={{minWidth: '275px'}}>
+      <CardHeader sx={{paddingBottom: 0}}
         title={<span>
           {adult.item1.firstName + " " + adult.item1.lastName}
         </span>}
@@ -143,8 +104,21 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
               <MoreVertIcon />
             </IconButton>}
           </>} />
-      <CardContent className={classes.cardContent}>
-        <Typography color="textSecondary" className={classes.sectionChips} component="div">
+      <CardContent sx={{
+        paddingTop: 1,
+        paddingBottom: 1,
+        '&:last-child': {
+          paddingBottom: 0
+        }
+      }}>
+        <Typography color="textSecondary" sx={{
+          '& > div:first-child': {
+            marginLeft: 0
+          },
+          '& > *': {
+            margin: 0.5,
+          }
+        }} component="div">
           {Object.entries(volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].individualRoleApprovals || {}).map(([role, roleVersionApprovals]) =>
             <VolunteerRoleApprovalStatusChip key={role} roleName={role} roleVersionApprovals={roleVersionApprovals} />)}
           {(volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles || []).map(removedRole =>

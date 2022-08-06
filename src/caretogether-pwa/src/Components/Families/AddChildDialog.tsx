@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import makeStyles from '@mui/styles/makeStyles';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@mui/material';
 import { CombinedFamilyInfo, Age, ExactAge, AgeInYears, Gender, CustodialRelationshipType, CustodialRelationship } from '../../GeneratedClient';
 import { visibleFamiliesData } from '../../Model/ModelLoader';
@@ -12,22 +11,11 @@ import { useParams } from 'react-router-dom';
 import { useBackdrop } from '../../useBackdrop';
 import { subYears, addDays } from 'date-fns';
 
-const useStyles = makeStyles((theme) => ({
-  form: {
-    '& .MuiFormControl-root': {
-    }
-  },
-  ageYears: {
-    width: '20ch'
-  }
-}));
-
 interface AddChildDialogProps {
   onClose: () => void
 }
 
 export function AddChildDialog({onClose}: AddChildDialogProps) {
-  const classes = useStyles();
   const { familyId } = useParams<{ familyId: string }>();
   const visibleFamilies = useRecoilValue(visibleFamiliesData);
   const family = visibleFamilies.find(x => x.family?.id === familyId) as CombinedFamilyInfo;
@@ -103,7 +91,7 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
         {/* <DialogContentText>
           Provide the basic information needed for this child.
         </DialogContentText> */}
-        <form className={classes.form} noValidate autoComplete="off">
+        <form noValidate autoComplete="off">
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
               <TextField required id="first-name" label="First Name" fullWidth size="small"
@@ -145,7 +133,7 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
               </Grid>
               <Grid item>
                 <TextField
-                  id="age-years" label="Age" className={classes.ageYears} size="small"
+                  id="age-years" label="Age" sx={{width: '20ch'}} size="small"
                   required type="number" disabled={ageType !== 'inYears'}
                   value={ageInYears == null ? "" : ageInYears} onChange={e => setFields({...fields, ageInYears: Number.parseInt(e.target.value)})}
                   InputProps={{

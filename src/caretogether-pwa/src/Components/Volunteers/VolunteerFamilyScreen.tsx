@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import makeStyles from '@mui/styles/makeStyles';
-import { Container, Toolbar, Button, Menu, MenuItem, Grid, useMediaQuery, useTheme, MenuList, IconButton, ListItemText, Chip, Divider } from '@mui/material';
+import { Container, Toolbar, Button, Menu, MenuItem, Grid, useMediaQuery, useTheme, MenuList, IconButton, ListItemText, Chip, Divider, Box } from '@mui/material';
 import { CombinedFamilyInfo, RoleRemovalReason, Permission } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
@@ -30,57 +29,7 @@ import { ActivityTimeline } from '../Activities/ActivityTimeline';
 import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
 import { PrimaryContactEditor } from '../Families/PrimaryContactEditor';
 
-const useStyles = makeStyles((theme) => ({
-  sectionHeading: {
-  },
-  sectionChips: {
-    '& > div:first-child': {
-      marginLeft: 0
-    },
-    '& > *': {
-      margin: theme.spacing(0.5),
-    }
-  },
-  button: {
-    margin: theme.spacing(1),
-  },
-  familyRequirementsList: {
-    listStyle: 'none',
-    paddingLeft: 22,
-    textIndent: -22
-  },
-  familyDocumentsList: {
-    listStyle: 'none',
-    paddingLeft: 22,
-    textIndent: -22
-  },
-  card: {
-    minWidth: 275,
-  },
-  cardHeader: {
-    paddingBottom: 0
-  },
-  cardContent: {
-    paddingTop: 8,
-    paddingBottom: 8
-  },
-  cardList: {
-    padding: 0,
-    margin: 0,
-    marginTop: 8,
-    listStyle: 'none',
-    '& > li': {
-      marginTop: 4
-    }
-  },
-  rightCardAction: {
-    marginLeft: 'auto !important'
-  }
-}));
-
 export function VolunteerFamilyScreen() {
-  const classes = useStyles();
-  
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
 
@@ -139,7 +88,7 @@ export function VolunteerFamilyScreen() {
           onClick={() => setUploadDocumentDialogOpen(true)}
           variant="contained"
           size="small"
-          className={classes.button}
+          sx={{margin: 1}}
           startIcon={<CloudUploadIcon />}>
           Upload
         </Button>}
@@ -147,7 +96,7 @@ export function VolunteerFamilyScreen() {
           onClick={() => setAddAdultDialogOpen(true)}
           variant="contained"
           size="small"
-          className={classes.button}
+          sx={{margin: 1}}
           startIcon={<AddCircleIcon />}>
           Adult
         </Button>}
@@ -155,7 +104,7 @@ export function VolunteerFamilyScreen() {
           onClick={() => setAddChildDialogOpen(true)}
           variant="contained"
           size="small"
-          className={classes.button}
+          sx={{margin: 1}}
           startIcon={<AddCircleIcon />}>
           Child
         </Button>}
@@ -163,7 +112,7 @@ export function VolunteerFamilyScreen() {
           onClick={() => setAddNoteDialogOpen(true)}
           variant="contained"
           size="small"
-          className={classes.button}
+          sx={{margin: 1}}
           startIcon={<AddCircleIcon />}>
           Note
         </Button>}
@@ -217,12 +166,19 @@ export function VolunteerFamilyScreen() {
               <PrimaryContactEditor family={volunteerFamily} />
             </Grid>
             <Grid item xs={12}>
-              <div className={classes.sectionChips}>
+              <Box sx={{
+                '& > div:first-child': {
+                  marginLeft: 0
+                },
+                '& > *': {
+                  margin: theme.spacing(0.5),
+                }
+              }}>
                 {Object.entries(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals || {}).flatMap(([role, roleVersionApprovals]) =>
                   <VolunteerRoleApprovalStatusChip key={role} roleName={role} roleVersionApprovals={roleVersionApprovals} />)}
                 {(volunteerFamily.volunteerFamilyInfo?.removedRoles || []).map(removedRole =>
                   <Chip key={removedRole.roleName} size="small" label={`${removedRole.roleName} - ${RoleRemovalReason[removedRole.reason!]} - ${removedRole.additionalComments}`} />)}
-              </div>
+              </Box>
             </Grid>
             <Grid item xs={12} sm={6} md={4} style={{paddingRight: 20}}>
               <h3>Incomplete</h3>

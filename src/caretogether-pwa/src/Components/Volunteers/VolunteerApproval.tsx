@@ -1,4 +1,3 @@
-import makeStyles from '@mui/styles/makeStyles';
 import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, useMediaQuery, useTheme, Button, ButtonGroup, FormControlLabel, Switch, MenuItem, Select, ListItemText, Checkbox, FormControl, InputBase, SelectChangeEvent, IconButton, Snackbar } from '@mui/material';
 import { Gender, ExactAge, AgeInYears, RoleVersionApproval, CombinedFamilyInfo, RemovedRole, RoleRemovalReason, EmailAddress, Permission } from '../../GeneratedClient';
 import { differenceInYears } from 'date-fns';
@@ -103,27 +102,6 @@ function RoleHeaderCell({roleFilter, setSelected}: RoleHeaderCellProps) {
   );
 }
 
-const useStyles = makeStyles((theme) => ({
-  table: {
-    minWidth: 700,
-  },
-  familyRow: {
-    backgroundColor: '#eef',
-    height: '39px'
-  },
-  adultRow: {
-  },
-  childRow: {
-    color: 'ddd',
-    fontStyle: 'italic'
-  },
-  fabAdd: {
-    position: 'fixed',
-    right: '30px',
-    bottom: '70px'
-  }
-}));
-
 interface CombinedApprovalStatusProps {
   summary: {Prospective:number,Approved:number,Onboarded:number}
 }
@@ -169,7 +147,6 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   const { onOpen } = props;
   useEffect(onOpen);
 
-  const classes = useStyles();
   const navigate = useNavigate();
   
   const [uncheckedFamilies, setUncheckedFamilies] = useState<string[]>([]);
@@ -304,7 +281,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
         </HeaderContent>
         <Grid item xs={12}>
           <TableContainer>
-            <Table className={classes.table} size="small">
+            <Table sx={{minWidth: '700px'}} size="small">
               <TableHead>
                 <TableRow sx={{ height: '40px' }}>
                   {smsMode && <TableCell sx={{ padding: 0, width: '36px' }}>
@@ -332,7 +309,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
               <TableBody>
                 {filteredVolunteerFamilies.map((volunteerFamily) => (
                   <React.Fragment key={volunteerFamily.family?.id}>
-                    <TableRow className={classes.familyRow} onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}>
+                    <TableRow sx={{backgroundColor: '#eef', height: '39px'}}
+                      onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}>
                       {smsMode && <TableCell key="-" sx={{ padding: 0, width: '36px' }}>
                         <Checkbox size='small' checked={!uncheckedFamilies.some(x => x === volunteerFamily.family!.id!)}
                           onChange={e => e.target.checked
@@ -371,8 +349,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                     </TableRow>
                     {expandedView && volunteerFamily.family?.adults?.map(adult => adult.item1 && adult.item1.active && (
                       <TableRow key={volunteerFamily.family?.id + ":" + adult.item1.id}
-                        onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}
-                        className={classes.adultRow}>
+                        onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}>
                         {smsMode && <TableCell />}
                         <TableCell sx={{paddingLeft:3}}>{adult.item1.firstName}</TableCell>
                         <TableCell>{adult.item1.lastName}</TableCell>
@@ -395,7 +372,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                     {expandedView && volunteerFamily.family?.children?.map(child => child.active && (
                       <TableRow key={volunteerFamily.family?.id + ":" + child.id}
                         onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}
-                        className={classes.childRow}>
+                        sx={{color: 'ddd', fontStyle: 'italic'}}>
                         {smsMode && <TableCell />}
                         <TableCell sx={{paddingLeft:3}}>{child.firstName}</TableCell>
                         <TableCell>{child.lastName}</TableCell>
@@ -417,7 +394,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
               </TableBody>
             </Table>
           </TableContainer>
-          {permissions(Permission.EditFamilyInfo) && <Fab color="primary" aria-label="add" className={classes.fabAdd}
+          {permissions(Permission.EditFamilyInfo) && <Fab color="primary" aria-label="add"
+            sx={{position: 'fixed', right: '30px', bottom: '70px'}}
             onClick={() => setCreateVolunteerFamilyDialogOpen(true)}>
             <AddIcon />
           </Fab>}

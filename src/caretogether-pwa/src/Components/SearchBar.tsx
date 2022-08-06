@@ -1,11 +1,17 @@
-import { Theme, alpha, InputBase } from "@mui/material";
-import makeStyles from '@mui/styles/makeStyles';
-import createStyles from '@mui/styles/createStyles';
+import { alpha, InputBase, useTheme, Box } from "@mui/material";
 import SearchIcon from '@mui/icons-material/Search';
 
-const useStyles = makeStyles((theme: Theme) =>
-  createStyles({
-    search: {
+interface SearchBarProps {
+  value: string;
+  onChange: (newValue: string) => void;
+}
+
+export function SearchBar(props: SearchBarProps) {
+  const { value, onChange } = props;
+  const theme = useTheme();
+
+  return (
+    <Box sx={{
       position: 'relative',
       borderRadius: theme.shape.borderRadius,
       backgroundColor: alpha(theme.palette.common.white, 0.15),
@@ -18,58 +24,39 @@ const useStyles = makeStyles((theme: Theme) =>
         marginLeft: theme.spacing(1),
         width: 'auto',
       },
-    },
-    searchIcon: {
-      padding: theme.spacing(0, 2),
-      height: '100%',
-      position: 'absolute',
-      pointerEvents: 'none',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    inputRoot: {
-      color: 'inherit',
-    },
-    inputInput: {
-      padding: theme.spacing(1, 1, 1, 0),
-      // vertical padding + font size from searchIcon
-      paddingLeft: `calc(1em + ${theme.spacing(4)})`,
-      transition: theme.transitions.create('width'),
-      width: '100%',
-      [theme.breakpoints.up('sm')]: {
-        width: '0ch',
-          '&:focus': {
-           width: '20ch',
-         },
-      },
-    },
-  }),
-);
-
-interface SearchBarProps {
-  value: string;
-  onChange: (newValue: string) => void;
-}
-
-export function SearchBar(props: SearchBarProps) {
-  const { value, onChange } = props;
-  const classes = useStyles();
-
-  return (
-    <div className={classes.search}>
-      <div className={classes.searchIcon}>
+    }}>
+      <Box sx={{
+        padding: theme.spacing(0, 2),
+        height: '100%',
+        position: 'absolute',
+        pointerEvents: 'none',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
         <SearchIcon />
-      </div>
+      </Box>
       <InputBase
-        classes={{
-          root: classes.inputRoot,
-          input: classes.inputInput,
+        sx={{
+          root: {color: 'inherit'},
+          input: {
+            padding: theme.spacing(1, 1, 1, 0),
+            // vertical padding + font size from searchIcon
+            paddingLeft: `calc(1em + ${theme.spacing(4)})`,
+            transition: theme.transitions.create('width'),
+            width: '100%',
+            [theme.breakpoints.up('sm')]: {
+              width: '0ch',
+                '&:focus': {
+                 width: '20ch',
+               },
+            },
+          }
         }}
         inputProps={{ 'aria-label': 'search' }}
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />
-    </div>
+    </Box>
   );
 }

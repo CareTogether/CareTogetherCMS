@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import makeStyles from '@mui/styles/makeStyles';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@mui/material';
 import { CombinedFamilyInfo, ArrangementPolicy, ChildInvolvement } from '../../GeneratedClient';
 import { visibleFamiliesData } from '../../Model/ModelLoader';
@@ -9,16 +8,6 @@ import { useParams } from 'react-router-dom';
 import { useBackdrop } from '../../useBackdrop';
 import { useReferralsModel } from '../../Model/ReferralsModel';
 
-const useStyles = makeStyles((theme) => ({
-  form: {
-    '& .MuiFormControl-root': {
-    }
-  },
-  ageYears: {
-    width: '20ch'
-  }
-}));
-
 interface CreateArrangementDialogProps {
   referralId: string,
   arrangementPolicy: ArrangementPolicy
@@ -26,7 +15,6 @@ interface CreateArrangementDialogProps {
 }
 
 export function CreateArrangementDialog({referralId, arrangementPolicy, onClose}: CreateArrangementDialogProps) {
-  const classes = useStyles();
   const { familyId } = useParams<{ familyId: string }>();
   const visibleFamilies = useRecoilValue(visibleFamiliesData);
   const family = visibleFamilies.find(x => x.family?.id === familyId) as CombinedFamilyInfo;
@@ -67,7 +55,7 @@ export function CreateArrangementDialog({referralId, arrangementPolicy, onClose}
         Create {arrangementPolicy.arrangementType}
       </DialogTitle>
       <DialogContent>
-        <form className={classes.form} noValidate autoComplete="off">
+        <form noValidate autoComplete="off">
           <Grid container spacing={2}>
             <Grid item>
               <DatePicker

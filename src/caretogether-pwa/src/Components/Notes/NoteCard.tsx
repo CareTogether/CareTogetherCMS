@@ -6,7 +6,6 @@ import {
   Button,
   Typography,
 } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
 import React, { useState } from 'react';
 import { Note, NoteStatus, Permission } from '../../GeneratedClient';
 import { useUserLookup } from '../../Model/DirectoryModel';
@@ -19,46 +18,12 @@ import { ApproveNoteDialog } from './ApproveNoteDialog';
 import { DiscardNoteDialog } from './DiscardNoteDialog';
 import { usePermissions } from '../../Model/SessionModel';
 
-const useStyles = makeStyles((theme) => ({
-  card: {
-    margin: 0
-  },
-  cardHeader: {
-    padding: 8
-  },
-  cardContent: {
-    padding: 8,
-    paddingTop: 0,
-    paddingBottom: 0,
-    whiteSpace: 'pre-wrap',
-    overflowWrap: 'anywhere'
-  },
-  cardActions: {
-    paddingTop: 0
-  },
-  cardList: {
-    padding: 0,
-    margin: 0,
-    marginTop: 8,
-    listStyle: 'none',
-    '& > li': {
-      marginTop: 4
-    }
-  },
-  rightCardActionButton: {
-    marginTop: 8,
-    marginLeft: 'auto !important'
-  }
-}));
-
 type NoteCardProps = {
   familyId: string;
   note?: Note;
 };
 
 export function NoteCard({ familyId, note }: NoteCardProps) {
-  const classes = useStyles();
-
   const userLookup = useUserLookup();
 
   const [showDiscardNoteDialog, setShowDiscardNoteDialog] = useState(false);
@@ -68,25 +33,31 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
   const permissions = usePermissions();
 
   return typeof note === 'undefined' ? null : (
-    <Card className={classes.card} variant="outlined">
-      <CardHeader className={classes.cardHeader}
+    <Card sx={{margin: 0}} variant="outlined">
+      <CardHeader sx={{padding: 1}}
         subheader={<>
           <PersonName person={userLookup(note.authorId)} />
           {note.status === NoteStatus.Draft ? " - DRAFT" : ""}
         </>} />
-      <CardContent className={classes.cardContent}>
+      <CardContent sx={{
+        padding: 1,
+        paddingTop: 0,
+        paddingBottom: 0,
+        whiteSpace: 'pre-wrap',
+        overflowWrap: 'anywhere'
+      }}>
         <Typography variant="body2" component="p">
           {note.contents}
         </Typography>
       </CardContent>
       {note.status === NoteStatus.Draft &&
-        <CardActions className={classes.cardActions}>
+        <CardActions sx={{paddingTop: 0}}>
           {permissions(Permission.DiscardDraftNotes) && <Button
             onClick={() => setShowDiscardNoteDialog(true)}
             variant="contained"
             size="small"
             color='secondary'
-            className={classes.rightCardActionButton}
+            sx={{marginTop: 1, marginLeft: 'auto !important'}}
             startIcon={<DeleteForeverIcon />}>
             Delete
           </Button>}
@@ -94,7 +65,7 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
             onClick={() => setShowEditNoteDialog(true)}
             variant="contained"
             size="small"
-            className={classes.rightCardActionButton}
+            sx={{marginTop: 1, marginLeft: 'auto !important'}}
             startIcon={<EditIcon />}>
             Edit
           </Button>}
@@ -102,7 +73,7 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
             onClick={() => setShowApproveNoteDialog(true)}
             variant="contained"
             size="small"
-            className={classes.rightCardActionButton}
+            sx={{marginTop: 1, marginLeft: 'auto !important'}}
             startIcon={<CheckIcon />}>
             Approve
           </Button>}

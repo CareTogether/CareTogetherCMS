@@ -1,4 +1,3 @@
-import makeStyles from '@mui/styles/makeStyles';
 import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, Button, ButtonGroup, useMediaQuery, useTheme, FormControlLabel, Switch } from '@mui/material';
 import { useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../../Model/VolunteersModel';
@@ -15,31 +14,10 @@ import { filterFamiliesByText, familyLastName, sortFamiliesByLastNameDesc } from
 import { usePermissions } from '../../Model/SessionModel';
 import { Permission } from '../../GeneratedClient';
 
-const useStyles = makeStyles((theme) => ({
-  table: {
-    minWidth: 700,
-  },
-  familyRow: {
-    backgroundColor: '#eef'
-  },
-  adultRow: {
-  },
-  childRow: {
-    color: 'ddd',
-    fontStyle: 'italic'
-  },
-  fabAdd: {
-    position: 'fixed',
-    right: '30px',
-    bottom: '70px'
-  }
-}));
-
 function VolunteerProgress(props: { onOpen: () => void }) {
   const { onOpen } = props;
   useEffect(onOpen);
 
-  const classes = useStyles();
   const navigate = useNavigate();
 
   // The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
@@ -80,7 +58,7 @@ function VolunteerProgress(props: { onOpen: () => void }) {
       </HeaderContent>
       <Grid item xs={12}>
         <TableContainer>
-          <Table className={classes.table} size="small">
+          <Table sx={{minWidth: '700px'}} size="small">
             <TableHead>
               <TableRow>
                 {expandedView
@@ -96,7 +74,7 @@ function VolunteerProgress(props: { onOpen: () => void }) {
             <TableBody>
               {filteredVolunteerFamilies.map(volunteerFamily => (
                 <React.Fragment key={volunteerFamily.family!.id!}>
-                  <TableRow className={classes.familyRow} onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}>
+                  <TableRow sx={{backgroundColor: '#eef'}} onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}>
                     <TableCell key="1" colSpan={expandedView ? 2 : 1}>{familyLastName(volunteerFamily) + " Family"
                     }</TableCell>
                     {allApprovalAndOnboardingRequirements.map(actionName =>
@@ -123,8 +101,7 @@ function VolunteerProgress(props: { onOpen: () => void }) {
                   </TableRow>
                   {expandedView && volunteerFamily.family!.adults!.map(adult => adult.item1 && adult.item1.active && (
                     <TableRow key={adult.item1.id}
-                      onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}
-                      className={classes.adultRow}>
+                      onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}>
                       <TableCell>{adult.item1.firstName}</TableCell>
                       <TableCell>{adult.item1.lastName}</TableCell>
                       {allApprovalAndOnboardingRequirements.map(actionName =>
@@ -141,7 +118,8 @@ function VolunteerProgress(props: { onOpen: () => void }) {
             </TableBody>
           </Table>
         </TableContainer>
-        {permissions(Permission.EditFamilyInfo) && <Fab color="primary" aria-label="add" className={classes.fabAdd}
+        {permissions(Permission.EditFamilyInfo) && <Fab color="primary" aria-label="add"
+          sx={{position: 'fixed', right: '30px', bottom: '70px'}}
           onClick={() => setCreateVolunteerFamilyDialogOpen(true)}>
           <AddIcon />
         </Fab>}

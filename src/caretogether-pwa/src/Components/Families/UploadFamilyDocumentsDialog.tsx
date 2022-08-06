@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import makeStyles from '@mui/styles/makeStyles';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { CombinedFamilyInfo } from '../../GeneratedClient';
 import { uploadFileToTenant } from '../../Model/FilesModel';
@@ -8,18 +7,12 @@ import { currentOrganizationState, currentLocationState } from '../../Model/Sess
 import { useBackdrop } from '../../useBackdrop';
 import { useDirectoryModel } from '../../Model/DirectoryModel';
 
-const useStyles = makeStyles((theme) => ({
-  fileInput: {
-  }
-}));
-
 interface UploadFamilyDocumentsDialogProps {
   family: CombinedFamilyInfo,
   onClose: () => void
 }
 
 export function UploadFamilyDocumentsDialog({family, onClose}: UploadFamilyDocumentsDialogProps) {
-  const classes = useStyles();
   const [documentFiles, setDocumentFiles] = useState<FileList>();
   const organizationId = useRecoilValue(currentOrganizationState);
   const locationId = useRecoilValue(currentLocationState);
@@ -49,7 +42,6 @@ export function UploadFamilyDocumentsDialog({family, onClose}: UploadFamilyDocum
         <DialogContentText>Select one or more documents to upload for this family.</DialogContentText>
         <input
           accept="*/*"
-          className={classes.fileInput}
           multiple={true}
           id="family-document-file"
           type="file"

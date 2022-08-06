@@ -1,4 +1,3 @@
-import makeStyles from '@mui/styles/makeStyles';
 // import { Grid, Paper, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Drawer } from '@mui/material';
 // import { VolunteerApprovalRequirement, VolunteerFamilyApprovalRequirement, RequirementStage } from '../GeneratedClient';
 // import { useRecoilValue } from 'recoil';
@@ -8,29 +7,31 @@ import makeStyles from '@mui/styles/makeStyles';
 // import React, { useState } from 'react';
 // import { useNavigate } from 'react-router-dom';
 
-const useStyles = makeStyles((theme) => ({
-  paper: {
-    padding: theme.spacing(2),
-    display: 'flex',
-    overflow: 'auto',
-    flexDirection: 'column',
-  },
-  fixedHeight: {
-    height: 240,
-  },
-  table: {
-    minWidth: 700,
-  },
-  familyRow: {
-    backgroundColor: '#eef'
-  },
-  adultRow: {
-  },
-  childRow: {
-    color: 'ddd',
-    fontStyle: 'italic'
-  }
-}));
+export {}
+
+// const useStyles = makeStyles((theme) => ({
+//   paper: {
+//     padding: theme.spacing(2),
+//     display: 'flex',
+//     overflow: 'auto',
+//     flexDirection: 'column',
+//   },
+//   fixedHeight: {
+//     height: 240,
+//   },
+//   table: {
+//     minWidth: 700,
+//   },
+//   familyRow: {
+//     backgroundColor: '#eef'
+//   },
+//   adultRow: {
+//   },
+//   childRow: {
+//     color: 'ddd',
+//     fontStyle: 'italic'
+//   }
+// }));
 
 // function VolunteerApplications() {
 //   const classes = useStyles();

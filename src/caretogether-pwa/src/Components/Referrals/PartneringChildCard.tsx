@@ -4,8 +4,7 @@ import {
   IconButton,
   CardContent,
   Typography,
-} from "@mui/material";
-import makeStyles from '@mui/styles/makeStyles';
+} from "@mui/material";;
 import { CustodialRelationshipType, Gender, CombinedFamilyInfo, Permission } from "../../GeneratedClient";
 import { AgeText } from "../AgeText";
 import EditIcon from '@mui/icons-material/Edit';
@@ -15,45 +14,12 @@ import { useDialogHandle } from "../../useDialogHandle";
 import { EditChildDialog } from "../Families/EditChildDialog";
 import { usePermissions } from "../../Model/SessionModel";
 
-const useStyles = makeStyles((theme) => ({
-  sectionChips: {
-    '& > div:first-child': {
-      marginLeft: 0
-    },
-    '& > *': {
-      margin: theme.spacing(0.5),
-    }
-  },
-  card: {
-    minWidth: 275,
-  },
-  cardHeader: {
-    paddingBottom: 0
-  },
-  cardContent: {
-    paddingTop: 8,
-    paddingBottom: 8,
-    maxWidth: 500
-  },
-  cardList: {
-    padding: 0,
-    margin: 0,
-    marginTop: 8,
-    listStyle: 'none',
-    '& > li': {
-      marginTop: 4
-    }
-  }
-}));
-
 type PartneringChildCardProps = {
   partneringFamilyId: string,
   personId: string
 }
 
 export function PartneringChildCard({partneringFamilyId, personId}: PartneringChildCardProps) {
-  const classes = useStyles();
-
   const partneringFamilies = useRecoilValue(partneringFamiliesData);
 
   const partneringFamily = partneringFamilies.find(x => x.family?.id === partneringFamilyId) as CombinedFamilyInfo;
@@ -64,8 +30,8 @@ export function PartneringChildCard({partneringFamilyId, personId}: PartneringCh
   const permissions = usePermissions();
   
   return <>{child &&
-    <Card variant="outlined" className={classes.card}>
-      <CardHeader className={classes.cardHeader}
+    <Card variant="outlined" sx={{minWidth: '275px'}}>
+      <CardHeader sx={{paddingBottom: 0}}
         title={child.firstName + " " + child.lastName}
         subheader={<>
           Child, <AgeText age={child.age} />, {typeof(child.gender) === 'undefined' ? "" : Gender[child.gender] + ","} {child.ethnicity}
@@ -76,16 +42,25 @@ export function PartneringChildCard({partneringFamilyId, personId}: PartneringCh
             size="medium">
             <EditIcon color="primary" />
           </IconButton>} />
-      <CardContent className={classes.cardContent}>
+      <CardContent sx={{
+        paddingTop: 1,
+        paddingBottom: 1,
+        maxWidth: '500px'
+      }}>
         <Typography variant="body2" component="div">
           {child.concerns && <><strong>⚠&nbsp;&nbsp;&nbsp;{child.concerns}</strong></>}
           {child.concerns && child.notes && <br />}
           {child.notes && <>📝&nbsp;{child.notes}</>}
         </Typography>
         <Typography variant="body2" component="div">
-          <ul className={classes.cardList}>
+          <ul style={{
+            padding: 0,
+            margin: 0,
+            marginTop: 8,
+            listStyle: 'none'
+          }}>
             {partneringFamily.family?.custodialRelationships?.filter(relationship => relationship.childId === child.id)?.map(relationship => (
-              <li key={relationship.personId}>
+              <li key={relationship.personId} style={{marginTop: 4}}>
                 {partneringFamily.family?.adults?.filter(x => x.item1?.id === relationship.personId)[0].item1?.firstName}:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <span style={{float:'right'}}>{relationship.type === CustodialRelationshipType.LegalGuardian
                   ? "legal guardian"

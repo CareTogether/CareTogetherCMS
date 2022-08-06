@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Menu, MenuItem } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
 import { format } from 'date-fns';
 import { useRecoilValue } from 'recoil';
 import { CombinedFamilyInfo, Permission, UploadedDocumentInfo } from '../../GeneratedClient';
@@ -8,20 +7,11 @@ import { downloadFile } from '../../Model/FilesModel';
 import { currentOrganizationState, currentLocationState, usePermissions } from '../../Model/SessionModel';
 import { DeleteDocumentDialog } from './DeleteDocumentDialog';
 
-const useStyles = makeStyles((theme) => ({
-  familyDocumentsList: {
-    listStyle: 'none',
-    paddingLeft: 22,
-    textIndent: -22
-  }
-}));
-
 type FamilyDocumentsProps = {
   family: CombinedFamilyInfo
 }
 
 export function FamilyDocuments({ family }: FamilyDocumentsProps) {
-  const classes = useStyles();
   const organizationId = useRecoilValue(currentOrganizationState);
   const locationId = useRecoilValue(currentLocationState);
 
@@ -36,7 +26,7 @@ export function FamilyDocuments({ family }: FamilyDocumentsProps) {
   
   return (
     <>
-      <ul className={classes.familyDocumentsList}>
+      <ul style={{listStyle: 'none', paddingLeft: 22, textIndent: -22}}>
         {family.uploadedDocuments?.map((uploaded, i) =>
           permissions(Permission.ReadFamilyDocuments)
           ? <li key={i} style={{ clear: 'both', cursor: 'pointer' }}

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import makeStyles from '@mui/styles/makeStyles';
 import { Autocomplete, Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@mui/material';
 import { ArrangementPolicy, Arrangement, ArrangementFunction, RoleApprovalStatus, Person, Family, ValueTupleOfPersonAndFamilyAdultRelationshipInfo } from '../../GeneratedClient';
 import { visibleFamiliesData } from '../../Model/ModelLoader';
@@ -9,22 +8,6 @@ import { useBackdrop } from '../../useBackdrop';
 import { DialogHandle } from "../../useDialogHandle";
 import { useReferralsModel } from '../../Model/ReferralsModel';
 import { usePersonAndFamilyLookup } from '../../Model/DirectoryModel';
-
-const useStyles = makeStyles((theme) => ({
-  form: {
-    '& .MuiFormControl-root': {
-    }
-  },
-  ageYears: {
-    width: '20ch'
-  },
-  paperFullWidth: {
-    overflowY: 'visible'
-  },
-  dialogContentRoot: {
-    overflowY: 'visible'
-  }
-}));
 
 interface AssignArrangementFunctionDialogProps {
   handle: DialogHandle
@@ -42,8 +25,6 @@ interface AssigneeOptionType {
 export function AssignArrangementFunctionDialog({
   handle, referralId, arrangement, arrangementPolicy, arrangementFunction
 }: AssignArrangementFunctionDialogProps) {
-  const classes = useStyles();
-  
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
   
@@ -148,12 +129,12 @@ export function AssignArrangementFunctionDialog({
 
   return (
     <Dialog maxWidth={"xs"} fullWidth={true} open={handle.open} onClose={handle.closeDialog} key={handle.key}
-      aria-labelledby="assign-volunteer-title" classes={{paperFullWidth: classes.paperFullWidth}} >
+      aria-labelledby="assign-volunteer-title" sx={{'& .MuiDialog-paperFullWidth': {overflowY: 'visible'}}} >
       <DialogTitle id="assign-volunteer-title" sx={{paddingBottom:"20px"}}>
         Assign {arrangementFunction.functionName}
       </DialogTitle>
-      <DialogContent classes={{root: classes.dialogContentRoot}}>
-        <form className={classes.form} noValidate autoComplete="off">
+      <DialogContent sx={{ '& .MuiDialogContent-root': { overflowY: 'visible' }}}>
+        <form noValidate autoComplete="off">
           <Grid container spacing={2}>
             {arrangementFunction.variants && arrangementFunction.variants.length > 0 &&
               <Grid item xs={12}>

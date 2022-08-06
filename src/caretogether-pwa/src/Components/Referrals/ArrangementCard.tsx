@@ -14,7 +14,6 @@ import {
   TableContainer,
   Typography,
 } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
 import { useState } from 'react';
 import { ArrangementPhase, Arrangement, CombinedFamilyInfo, ChildInvolvement, FunctionRequirement } from '../../GeneratedClient';
 import { useFamilyLookup, usePersonLookup } from '../../Model/DirectoryModel';
@@ -35,38 +34,6 @@ import { ArrangementFunctionRow } from './ArrangementFunctionRow';
 import { useCollapsed } from '../../useCollapsed';
 import { ArrangementComments } from './ArrangementComments';
 
-const useStyles = makeStyles((theme) => ({
-  card: {
-    minWidth: 275,
-  },
-  cardHeader: {
-    paddingTop: 4,
-    paddingBottom: 0,
-    '& .MuiCardHeader-title': {
-      fontSize: "16px"
-    }
-  },
-  cardContent: {
-    paddingTop: 8,
-    paddingBottom: 8,
-    '&:last-child': {
-      paddingBottom: 0
-    }
-  },
-  cardList: {
-    padding: 0,
-    margin: 0,
-    marginTop: 8,
-    listStyle: 'none',
-    '& > li': {
-      marginTop: 4
-    }
-  },
-  rightCardAction: {
-    marginLeft: 'auto !important'
-  }
-}));
-
 type ArrangementCardProps = {
   partneringFamily: CombinedFamilyInfo;
   referralId: string;
@@ -75,8 +42,6 @@ type ArrangementCardProps = {
 };
 
 export function ArrangementCard({ partneringFamily, referralId, arrangement, summaryOnly }: ArrangementCardProps) {
-  const classes = useStyles();
-
   const policy = useRecoilValue(policyData);
 
   const familyLookup = useFamilyLookup();
@@ -177,10 +142,22 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
     <Card variant="outlined">
       <ArrangementPhaseSummary phase={arrangement.phase!}
         requestedAtUtc={arrangement.requestedAtUtc!} startedAtUtc={arrangement.startedAtUtc} endedAtUtc={arrangement.endedAtUtc} />
-      <CardHeader className={classes.cardHeader}
+      <CardHeader sx={{
+        paddingTop: 0.5,
+        paddingBottom: 0,
+        '& .MuiCardHeader-title': {
+          fontSize: "16px"
+        }
+      }}
         title={<ArrangementCardTitle summaryOnly={summaryOnly}
         partneringFamilyId={partneringFamily.family!.id!} referralId={referralId} arrangement={arrangement} />} />
-      <CardContent className={classes.cardContent}>
+      <CardContent sx={{
+        paddingTop: 1,
+        paddingBottom: 1,
+        '&:last-child': {
+          paddingBottom: 0
+        }
+      }}>
         <Typography variant="body2" component="div">
           <strong><PersonName person={personLookup(partneringFamily.family!.id, arrangement.partneringFamilyPersonId)} /></strong>
           {arrangement.phase === ArrangementPhase.Started &&

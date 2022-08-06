@@ -1,4 +1,3 @@
-import makeStyles from '@mui/styles/makeStyles';
 import { BottomNavigation, BottomNavigationAction, Drawer, useTheme } from '@mui/material';
 import { Link, useLocation } from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -10,18 +9,8 @@ import { LocationSwitcher } from './LocationSwitcher';
 import { Copyright } from './Copyright';
 //import DashboardIcon from '@mui/icons-material/Dashboard';
 
-const useStyles = makeStyles((theme) => ({
-  stickToBottom: {
-    width: '100%',
-    position: 'fixed',
-    bottom: 0,
-    backgroundColor: theme.palette.grey[300]
-  },
-}));
-
 export function Footer(props: any) {
   const location = useLocation();
-  const classes = useStyles();
   
   const featureFlags = useFeatureFlags();
 
@@ -36,7 +25,12 @@ export function Footer(props: any) {
       <BottomNavigation
         value={selectedLink}
         showLabels
-        className={classes.stickToBottom}
+        sx={{
+          width: '100%',
+          position: 'fixed',
+          bottom: 0,
+          backgroundColor: theme.palette.grey[300]
+        }}
       >
         <BottomNavigationAction icon={<MenuIcon />} onClick={() => setDrawerOpen(true)} />
         {/* <BottomNavigationAction component={Link} to='/dashboard' label="Dashboard" icon={<DashboardIcon />} /> */}

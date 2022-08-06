@@ -1,5 +1,4 @@
 import { Container, Toolbar, Grid, Button, useMediaQuery, useTheme, IconButton, Box } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
 import { Arrangement, ArrangementPolicy, CombinedFamilyInfo, CompletedCustomFieldInfo, Permission, ReferralCloseReason } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../../Model/ReferralsModel';
@@ -34,62 +33,12 @@ import { ReferralComments } from './ReferralComments';
 import { ReferralCustomField } from './ReferralCustomField';
 import { PrimaryContactEditor } from '../Families/PrimaryContactEditor';
 
-const useStyles = makeStyles((theme) => ({
-  sectionHeading: {
-  },
-  sectionChips: {
-    '& > div:first-child': {
-      marginLeft: 0
-    },
-    '& > *': {
-      margin: theme.spacing(0.5),
-    }
-  },
-  button: {
-    margin: theme.spacing(1),
-  },
-  familyRequirementsList: {
-    listStyle: 'none',
-    paddingLeft: 22,
-    textIndent: -22
-  },
-  familyDocumentsList: {
-    listStyle: 'none',
-    paddingLeft: 22,
-    textIndent: -22
-  },
-  card: {
-    minWidth: 275,
-  },
-  cardHeader: {
-    paddingBottom: 0
-  },
-  cardContent: {
-    paddingTop: 8,
-    paddingBottom: 8
-  },
-  cardList: {
-    padding: 0,
-    margin: 0,
-    marginTop: 8,
-    listStyle: 'none',
-    '& > li': {
-      marginTop: 4
-    }
-  },
-  rightCardAction: {
-    marginLeft: 'auto !important'
-  }
-}));
-
 const sortArrangementsByStartDateDescThenCreateDateDesc = (a: Arrangement,b: Arrangement) => {
   return ((b.startedAtUtc ?? new Date()).getTime() - (a.startedAtUtc ?? new Date()).getTime()) || 
   ((b.requestedAtUtc ?? new Date()).getTime() - (a.requestedAtUtc ?? new Date()).getTime())
 };
 
 export function PartneringFamilyScreen() {
-  const classes = useStyles();
-  
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
 
@@ -145,7 +94,7 @@ export function PartneringFamilyScreen() {
           onClick={() => setUploadDocumentDialogOpen(true)}
           variant="contained"
           size="small"
-          className={classes.button}
+          sx={{margin: 1}}
           startIcon={<CloudUploadIcon />}>
           Upload
         </Button>}
@@ -153,7 +102,7 @@ export function PartneringFamilyScreen() {
           onClick={() => setAddAdultDialogOpen(true)}
           variant="contained"
           size="small"
-          className={classes.button}
+          sx={{margin: 1}}
           startIcon={<AddCircleIcon />}>
           Adult
         </Button>}
@@ -161,7 +110,7 @@ export function PartneringFamilyScreen() {
           onClick={() => setAddChildDialogOpen(true)}
           variant="contained"
           size="small"
-          className={classes.button}
+          sx={{margin: 1}}
           startIcon={<AddCircleIcon />}>
           Child
         </Button>}
@@ -169,7 +118,7 @@ export function PartneringFamilyScreen() {
           onClick={() => setAddNoteDialogOpen(true)}
           variant="contained"
           size="small"
-          className={classes.button}
+          sx={{margin: 1}}
           startIcon={<AddCircleIcon />}>
           Note
         </Button>
@@ -229,14 +178,14 @@ export function PartneringFamilyScreen() {
                 onClick={() => setCloseReferralDialogOpen(true)}
                 variant="contained"
                 size="small"
-                className={classes.button}>
+                sx={{margin: 1}}>
                 Close Referral
               </Button>}
               {!partneringFamily.partneringFamilyInfo?.openReferral && permissions(Permission.CreateReferral) && <Button
                 onClick={() => setOpenNewReferralDialogOpen(true)}
                 variant="contained"
                 size="small"
-                className={classes.button}>
+                sx={{margin: 1}}>
                 Open New Referral
               </Button>}
               {closeReferralDialogOpen && partneringFamily.partneringFamilyInfo?.openReferral && (
@@ -299,7 +248,7 @@ export function PartneringFamilyScreen() {
                           onClick={() => setCreateArrangementDialogParameter(arrangementPolicy)}
                           variant="contained"
                           size="small"
-                          className={classes.button}
+                          sx={{margin: 1}}
                           startIcon={<AddCircleIcon />}>
                           {arrangementPolicy.arrangementType}
                         </Button>

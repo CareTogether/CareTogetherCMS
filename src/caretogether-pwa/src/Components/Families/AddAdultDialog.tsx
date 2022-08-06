@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import makeStyles from '@mui/styles/makeStyles';
 import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@mui/material';
 import { Age, ExactAge, AgeInYears, Gender, EmailAddressType, PhoneNumberType, CombinedFamilyInfo } from '../../GeneratedClient';
 import { useDirectoryModel } from '../../Model/DirectoryModel';
@@ -12,16 +11,6 @@ import { useBackdrop } from '../../useBackdrop';
 import { visibleFamiliesData } from '../../Model/ModelLoader';
 import { subYears } from 'date-fns';
 
-const useStyles = makeStyles((theme) => ({
-  form: {
-    '& .MuiFormControl-root': {
-    }
-  },
-  ageYears: {
-    width: '20ch'
-  }
-}));
-
 interface AddAdultDialogProps {
   onClose: () => void
 }
@@ -31,7 +20,6 @@ function optional(arg: string) {
 }
 
 export function AddAdultDialog({onClose}: AddAdultDialogProps) {
-  const classes = useStyles();
   const { familyId } = useParams<{ familyId: string }>();
   const visibleFamilies = useRecoilValue(visibleFamiliesData);
   const family = visibleFamilies.find(x => x.family?.id === familyId) as CombinedFamilyInfo;
@@ -119,7 +107,7 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
         {/* <DialogContentText>
           Provide the basic information needed for this adult.
         </DialogContentText> */}
-        <form className={classes.form} noValidate autoComplete="off">
+        <form noValidate autoComplete="off">
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
               <TextField required id="first-name" label="First Name" fullWidth size="small"
@@ -161,7 +149,7 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
               </Grid>
               <Grid item>
                 <TextField
-                  id="age-years" label="Age" className={classes.ageYears} size="small"
+                  id="age-years" label="Age" sx={{width: '20ch'}} size="small"
                   required type="number" disabled={ageType !== 'inYears'}
                   value={ageInYears == null ? "" : ageInYears} onChange={e => setFields({...fields, ageInYears: Number.parseInt(e.target.value)})}
                   InputProps={{
