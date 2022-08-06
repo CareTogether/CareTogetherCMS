@@ -1,4 +1,4 @@
-import { Button } from "@mui/material";
+import { Button, TextField } from "@mui/material";
 import { formatRelative } from "date-fns";
 import { useState } from "react";
 import { Arrangement, ArrangementPhase, Permission } from "../../GeneratedClient";
@@ -9,6 +9,8 @@ import { EndArrangementDialog } from "./EndArrangementDialog";
 import { StartArrangementDialog } from "./StartArrangementDialog";
 import { useInlineEditor } from "../../useInlineEditor";
 import { useReferralsModel } from "../../Model/ReferralsModel";
+import { EditOffRounded } from "@mui/icons-material";
+import { DateTimePicker } from "@mui/lab";
 
 type ArrangementCardTitleProps = {
   summaryOnly?: boolean
@@ -79,7 +81,13 @@ export function ArrangementCardTitle({ summaryOnly, partneringFamilyId, referral
                   ? <>
                       {startedAtEditor.editing
                         ? <>
-                            <span>Started: INPUT {formatRelative(arrangement.startedAtUtc!, now)}</span>
+                            <DateTimePicker
+                              label="When was this arrangement started?"
+                              value={startedAtEditor.value}
+                              disableFuture inputFormat="M/d/yyyy h:mma"
+                              onChange={(date) => date && startedAtEditor.setValue(date)}
+                              showTodayButton
+                              renderInput={(params) => <TextField fullWidth required {...params} sx={{marginTop: 1}} />} />
                             {startedAtEditor.cancelButton}
                             {startedAtEditor.saveButton}
                           </>
