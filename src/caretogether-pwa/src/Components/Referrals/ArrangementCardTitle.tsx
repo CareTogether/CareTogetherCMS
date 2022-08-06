@@ -85,7 +85,6 @@ export function ArrangementCardTitle({ summaryOnly, partneringFamilyId, referral
                               value={startedAtEditor.value}
                               disableFuture inputFormat="M/d/yyyy h:mma"
                               onChange={(date: any) => date && startedAtEditor.setValue(date)}
-                              showTodayButton
                               renderInput={(params: any) => <TextField fullWidth required {...params} sx={{marginTop: 1}} />} />
                             {startedAtEditor.cancelButton}
                             {startedAtEditor.saveButton}

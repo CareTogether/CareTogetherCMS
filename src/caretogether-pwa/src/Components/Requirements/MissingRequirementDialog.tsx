@@ -234,14 +234,12 @@ export function MissingRequirementDialog({
                 value={completedAtLocal}
                 disableFuture inputFormat="M/d/yyyy h:mma"
                 onChange={(date: any) => date && setCompletedAtLocal(date)}
-                showTodayButton
                 renderInput={(params: any) => <TextField fullWidth required {...params} />} />
               : <DatePicker
                 label="When was this requirement completed?"
                 value={completedAtLocal}
                 disableFuture inputFormat="MM/dd/yyyy"
                 onChange={(date: any) => date && setCompletedAtLocal(date)}
-                showTodayButton
                 renderInput={(params: any) => <TextField fullWidth required {...params} />} />}
             {validityDuration && (completedAtLocal
               ? <p>This will be valid until {format(add(completedAtLocal, validityDuration), "M/d/yyyy h:mm a")}</p>
@@ -327,7 +325,6 @@ export function MissingRequirementDialog({
               value={exemptionExpiresAtLocal}
               inputFormat="MM/dd/yyyy"
               onChange={(date: any) => date && setExemptionExpiresAtLocal(date)}
-              showTodayButton
               renderInput={(params: any) => <TextField fullWidth {...params} />} />
           </Grid>
         </Grid>

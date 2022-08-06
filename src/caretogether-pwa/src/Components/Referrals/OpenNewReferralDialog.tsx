@@ -32,7 +32,6 @@ export function OpenNewReferralDialog({partneringFamilyId, onClose}: OpenNewRefe
               value={openedAtLocal}
               disableFuture inputFormat="MM/dd/yyyy"
               onChange={(date: any) => date && setFields({...fields, openedAtLocal: date})}
-              showTodayButton
               renderInput={(params: any) => <TextField fullWidth required {...params} sx={{marginTop: 1}} />} />
           </Grid>
         </Grid>

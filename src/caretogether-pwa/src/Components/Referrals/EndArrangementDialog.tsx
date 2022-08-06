@@ -39,7 +39,6 @@ export function EndArrangementDialog({referralId, arrangement, onClose}: EndArra
             value={endedAtLocal}
             disableFuture inputFormat="M/d/yyyy h:mma"
             onChange={(date: any) => date && setEndedAtLocal(date)}
-            showTodayButton
             renderInput={(params: any) => <TextField fullWidth required {...params} sx={{marginTop: 1}} />} />
         </Grid>
       </Grid>

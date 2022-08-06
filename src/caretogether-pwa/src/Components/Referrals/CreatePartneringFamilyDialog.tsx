@@ -115,7 +115,7 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
             value={referralOpenedAtLocal}
             disableFuture inputFormat="MM/dd/yyyy"
             onChange={(date: any) => date && setFields({...fields, referralOpenedAtLocal: date})}
-            showTodayButton renderInput={(params: any) => <TextField fullWidth required {...params} />} />
+            renderInput={(params: any) => <TextField fullWidth required {...params} />} />
         </Grid>
         <DialogContentText>
           Provide the basic information needed for the first adult in the family.
