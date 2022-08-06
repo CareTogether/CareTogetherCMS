@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Arrangement, ArrangementPhase, Permission } from "../../GeneratedClient";
 import { usePermissions } from "../../Model/SessionModel";
 import { CancelArrangementDialog } from "./CancelArrangementDialog";
+import { ReopenArrangementDialog } from "./ReopenArrangementDialog";
 import { EndArrangementDialog } from "./EndArrangementDialog";
 import { StartArrangementDialog } from "./StartArrangementDialog";
 
@@ -20,6 +21,7 @@ export function ArrangementCardTitle({ summaryOnly, referralId, arrangement }: A
   const [showStartArrangementDialog, setShowStartArrangementDialog] = useState(false);
   const [showEndArrangementDialog, setShowEndArrangementDialog] = useState(false);
   const [showCancelArrangementDialog, setShowCancelArrangementDialog] = useState(false);
+  const [showReopenArrangementDialog, setShowReopenArrangementDialog] = useState(false);
 
   return (
     <>
@@ -72,7 +74,15 @@ export function ArrangementCardTitle({ summaryOnly, referralId, arrangement }: A
                     End
                   </Button>}
               </>
-            : `Ended ${formatRelative(arrangement.endedAtUtc!, now)}`}
+            : <>
+                <span>Ended {formatRelative(arrangement.endedAtUtc!, now)}</span>
+                {permissions(Permission.EditArrangement) &&
+                  <Button variant="outlined" size="small"
+                    style={{marginLeft: 10}}
+                    onClick={() => setShowReopenArrangementDialog(true)}>
+                    Reopen
+                  </Button>}
+              </>}
       </span>}
       {(showStartArrangementDialog && <StartArrangementDialog referralId={referralId} arrangement={arrangement}
         onClose={() => setShowStartArrangementDialog(false)} />) || null}
@@ -80,6 +90,8 @@ export function ArrangementCardTitle({ summaryOnly, referralId, arrangement }: A
         onClose={() => setShowEndArrangementDialog(false)} />) || null}
       {(showCancelArrangementDialog && <CancelArrangementDialog referralId={referralId} arrangement={arrangement}
         onClose={() => setShowCancelArrangementDialog(false)} />) || null}
+      {(showReopenArrangementDialog && <ReopenArrangementDialog referralId={referralId} arrangement={arrangement}
+        onClose={() => setShowReopenArrangementDialog(false)} />) || null}
     </>
   );
 }

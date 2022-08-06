@@ -172,6 +172,7 @@ namespace CareTogether.Engines.Authorization
                     UnexemptIndividualVolunteerAssignmentRequirement => Permission.EditArrangementRequirementExemption,
                     TrackChildLocationChange => Permission.TrackChildLocationChange,
                     EndArrangements => Permission.EditArrangement,
+                    ReopenArrangements => Permission.EditArrangement,
                     CancelArrangementsSetup => Permission.EditArrangement,
                     UpdateArrangementComments => Permission.EditArrangement,
                     _ => throw new NotImplementedException(
