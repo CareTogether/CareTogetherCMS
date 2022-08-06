@@ -1,5 +1,5 @@
 import React from 'react';
-import { CssBaseline, useMediaQuery, useTheme } from '@mui/material';
+import { useMediaQuery, useTheme } from '@mui/material';
 import { BrowserRouter as Router } from "react-router-dom";
 import Header from './Components/Header';
 import { Footer } from './Components/Footer';
@@ -23,7 +23,6 @@ function App() {
 
   return (
     <div style={{display: 'flex'}}>
-      <CssBaseline />
       <HeaderContext.Provider value={headerContainer}>
         {/* <Router> needs to be defined after the <HeaderContext.Provider> and before <Header> to link it correctly */}
         <Router>

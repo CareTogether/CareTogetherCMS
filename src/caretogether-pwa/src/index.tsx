@@ -9,19 +9,12 @@ import { globalMsalInstance } from './Auth';
 import LocalizationProvider from '@mui/x-date-pickers';
 import { AdapterDateFns as DateAdapter } from '@mui/x-date-pickers/AdapterDateFns';
 import { ModelLoader } from './Model/ModelLoader';
-import { Theme, StyledEngineProvider } from '@mui/material';
+import { CssBaseline } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from '@mui/material/styles';
 import ErrorBackdrop from './Components/ErrorBackdrop';
 import RequestBackdrop from './Components/RequestBackdrop';
 import { amber } from '@mui/material/colors';
-
-
-declare module '@mui/styles/defaultTheme' {
-  // eslint-disable-next-line @typescript-eslint/no-empty-interface
-  interface DefaultTheme extends Theme {}
-}
-
 
 const theme = createTheme({
   palette: {
@@ -60,17 +53,16 @@ const root = ReactDOM.createRoot(
 );
 root.render(
   <React.StrictMode>
-    <StyledEngineProvider injectFirst>
-      <ThemeProvider theme={theme}>
-        <MsalProvider instance={globalMsalInstance}>
-          <LocalizationProvider dateAdapter={DateAdapter}>
-            <RecoilRoot>
-              <AuthWrapper />
-            </RecoilRoot>
-          </LocalizationProvider>
-        </MsalProvider>
-      </ThemeProvider>
-    </StyledEngineProvider>
+    <ThemeProvider theme={theme}>
+      <CssBaseline enableColorScheme />
+      <MsalProvider instance={globalMsalInstance}>
+        <LocalizationProvider dateAdapter={DateAdapter}>
+          <RecoilRoot>
+            <AuthWrapper />
+          </RecoilRoot>
+        </LocalizationProvider>
+      </MsalProvider>
+    </ThemeProvider>
   </React.StrictMode>
 );
 
