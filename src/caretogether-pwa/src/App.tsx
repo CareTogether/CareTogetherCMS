@@ -1,6 +1,5 @@
 import React from 'react';
 import { useMediaQuery, useTheme } from '@mui/material';
-import { BrowserRouter as Router } from "react-router-dom";
 import Header from './Components/Header';
 import { Footer } from './Components/Footer';
 import { HeaderContext } from './Components/HeaderContext';
@@ -24,8 +23,6 @@ function App() {
   return (
     <div style={{display: 'flex'}}>
       <HeaderContext.Provider value={headerContainer}>
-        {/* <Router> needs to be defined after the <HeaderContext.Provider> and before <Header> to link it correctly */}
-        <Router>
           <Header open={open} handleDrawerOpen={handleDrawerOpen} />
           {isMobile ? null :
             <MainDrawer open={open} handleDrawerClose={handleDrawerClose} />
@@ -41,7 +38,6 @@ function App() {
             </React.Suspense>
           </main>
           {isMobile && <Footer></Footer>}
-        </Router>
       </HeaderContext.Provider>
     </div>
   );

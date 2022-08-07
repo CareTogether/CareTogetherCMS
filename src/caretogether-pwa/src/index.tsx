@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { BrowserRouter as Router } from "react-router-dom";
 import { RecoilRoot } from 'recoil';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns as DateAdapter } from '@mui/x-date-pickers/AdapterDateFns';
@@ -31,7 +32,9 @@ root.render(
       <CssBaseline enableColorScheme />
         <LocalizationProvider dateAdapter={DateAdapter}>
           <RecoilRoot>
-            <AppAuthWrapper />
+            <Router>
+              <AppAuthWrapper />
+            </Router>
             <RequestBackdrop />
             <ErrorBackdrop />
           </RecoilRoot>
