@@ -13,7 +13,6 @@ import { useNavigate } from 'react-router-dom';
 import { FamilyName } from '../Families/FamilyName';
 import { ArrangementCard } from './ArrangementCard';
 import { CreatePartneringFamilyDialog } from './CreatePartneringFamilyDialog';
-import { HeaderContent, HeaderTitle } from '../Header';
 import { useScrollMemory } from '../../useScrollMemory';
 import { useLocalStorage } from '../../useLocalStorage';
 import { policyData } from '../../Model/ConfigurationModel';

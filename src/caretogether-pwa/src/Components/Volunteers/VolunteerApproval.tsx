@@ -12,7 +12,6 @@ import EmailIcon from '@mui/icons-material/Email';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { HeaderContent, HeaderTitle } from '../Header';
 import { SearchBar } from '../SearchBar';
 import { useLocalStorage } from '../../useLocalStorage';
 import { useScrollMemory } from '../../useScrollMemory';

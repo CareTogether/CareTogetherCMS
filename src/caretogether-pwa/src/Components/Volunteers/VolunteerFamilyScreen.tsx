@@ -16,7 +16,6 @@ import { VolunteerRoleApprovalStatusChip } from './VolunteerRoleApprovalStatusCh
 import { RemoveFamilyRoleDialog } from './RemoveFamilyRoleDialog';
 import { ResetFamilyRoleDialog } from './ResetFamilyRoleDialog';
 import { FamilyDocuments } from '../Families/FamilyDocuments';
-import { HeaderContent, HeaderTitle } from '../Header';
 import { useNavigate } from 'react-router-dom';
 import { ArrowBack } from '@mui/icons-material';
 import { usePermissions } from '../../Model/SessionModel';

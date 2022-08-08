@@ -6,7 +6,6 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import AddIcon from '@mui/icons-material/Add';
 import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';
-import { HeaderContent, HeaderTitle } from '../Header';
 import { SearchBar } from '../SearchBar';
 import { useLocalStorage } from '../../useLocalStorage';
 import { useScrollMemory } from '../../useScrollMemory';

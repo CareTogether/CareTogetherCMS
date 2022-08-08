@@ -19,7 +19,6 @@ import { CreateArrangementDialog } from './CreateArrangementDialog';
 import { CloseReferralDialog } from './CloseReferralDialog';
 import { OpenNewReferralDialog } from './OpenNewReferralDialog';
 import { FamilyDocuments } from '../Families/FamilyDocuments';
-import { HeaderContent, HeaderTitle } from '../Header';
 import { ArrowBack } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { usePermissions } from '../../Model/SessionModel';

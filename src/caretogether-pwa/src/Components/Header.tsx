@@ -1,23 +1,20 @@
 import React from 'react';
 import { AppBar, Toolbar, IconButton, Typography, useMediaQuery, useTheme, Portal } from "@mui/material";
 import MenuIcon from '@mui/icons-material/Menu';
-import { HeaderContext } from './HeaderContext';
 
 type HeaderTitleProps = { children?: React.ReactNode }
-export const HeaderTitle: React.FC<HeaderTitleProps> = ({ children }) => (
+const HeaderTitle: React.FC<HeaderTitleProps> = ({ children }) => (
   <Typography component="h1" variant="h6" color="inherit" noWrap style={{flexGrow: 1}}>
     {children}
   </Typography>
 );
 
 type HeaderContentProps = { children?: React.ReactNode }
-export const HeaderContent: React.FC<HeaderContentProps> = ({ children }) => (
-  <HeaderContext.Consumer>
-    {headerContainer =>
-      <Portal container={headerContainer?.current}>
-        {children}
-      </Portal>}
-  </HeaderContext.Consumer>
+const HeaderContent: React.FC<HeaderContentProps> = ({ children }) => (
+  {headerContainer =>
+    <Portal container={headerContainer?.current}>
+      {children}
+    </Portal>}
 );
 
 interface HeaderProps {
@@ -61,9 +58,7 @@ function Header(props: HeaderProps) {
           size="large">
           <MenuIcon />
         </IconButton>}
-        <HeaderContext.Consumer>
-          {headerContainer => <div ref={headerContainer} style={{ width: '100%', height: '100%', display: 'flex'}} />}
-        </HeaderContext.Consumer>
+        {headerContainer => <div ref={headerContainer} style={{ width: '100%', height: '100%', display: 'flex'}} />}
       </Toolbar>
     </AppBar>
   );
