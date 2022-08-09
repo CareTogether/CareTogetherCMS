@@ -1,12 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter as Router } from "react-router-dom";
-import { RecoilRoot } from 'recoil';
-import { LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterDateFns as DateAdapter } from '@mui/x-date-pickers/AdapterDateFns';
-import { CssBaseline } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import { theme } from './theme';
+import { CssBaseline } from '@mui/material';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDateFns as DateAdapter } from '@mui/x-date-pickers/AdapterDateFns';
+import { RecoilRoot } from 'recoil';
+import { BrowserRouter as Router } from "react-router-dom";
+import { MsalProvider } from '@azure/msal-react';
+import { globalMsalInstance } from './Authentication/Auth';
 import AuthenticationWrapper from './Authentication/AuthenticationWrapper';
 import { ModelLoader } from './Model/ModelLoader';
 import ShellRootLayout from './Components/Shell/ShellRootLayout';
@@ -22,9 +24,10 @@ root.render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
       <CssBaseline enableColorScheme />
-        <LocalizationProvider dateAdapter={DateAdapter}>
-          <RecoilRoot>
-            <Router>
+      <LocalizationProvider dateAdapter={DateAdapter}>
+        <RecoilRoot>
+          <Router>
+            <MsalProvider instance={globalMsalInstance}>
               <AuthenticationWrapper>
                 <ModelLoader>
                   <ShellRootLayout>
@@ -32,11 +35,12 @@ root.render(
                   </ShellRootLayout>
                 </ModelLoader>
               </AuthenticationWrapper>
-            </Router>
-            <RequestBackdrop />
-            <ErrorBackdrop />
-          </RecoilRoot>
-        </LocalizationProvider>
+            </MsalProvider>
+          </Router>
+          <RequestBackdrop />
+          <ErrorBackdrop />
+        </RecoilRoot>
+      </LocalizationProvider>
     </ThemeProvider>
   </React.StrictMode>
 );

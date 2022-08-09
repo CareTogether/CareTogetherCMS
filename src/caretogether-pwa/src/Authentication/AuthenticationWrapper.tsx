@@ -1,7 +1,6 @@
 import React from 'react';
 import { InteractionType } from "@azure/msal-browser";
-import { MsalProvider, useMsalAuthentication, useIsAuthenticated } from '@azure/msal-react';
-import { globalMsalInstance } from './Auth';
+import { useMsalAuthentication, useIsAuthenticated } from '@azure/msal-react';
 
 interface InnerAuthWrapperProps {
   children?: React.ReactNode
@@ -27,10 +26,8 @@ interface AuthenticationWrapperProps {
 }
 export default function AuthenticationWrapper({ children }: AuthenticationWrapperProps) {
   return (
-    <MsalProvider instance={globalMsalInstance}>
-      <InnerAuthWrapper>
-        {children}
-      </InnerAuthWrapper>
-    </MsalProvider>
+    <InnerAuthWrapper>
+      {children}
+    </InnerAuthWrapper>
   );
 }
