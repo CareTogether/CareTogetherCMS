@@ -1,6 +1,6 @@
 import { selector, useRecoilValue } from "recoil";
 import { ConfigurationClient, RequirementStage, VolunteerFamilyRequirementScope } from "../GeneratedClient";
-import { authenticatingFetch } from "../Authentication/Auth";
+import { authenticatingFetch } from "../Authentication/AuthenticatedHttp";
 import { currentLocationState, currentOrganizationState } from "./SessionModel";
 
 export const organizationConfigurationData = selector({

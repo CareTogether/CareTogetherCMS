@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { atom, useRecoilCallback, useRecoilState, useSetRecoilState } from "recoil";
-import { authenticatingFetch } from "../Authentication/Auth";
+import { authenticatingFetch } from "../Authentication/AuthenticatedHttp";
 import { CombinedFamilyInfo, DirectoryClient, UserLocationAccess, UsersClient } from "../GeneratedClient";
 import { useLocalStorage } from "../useLocalStorage";
 import { currentOrganizationState, currentLocationState, currentPermissionsState, availableLocationsState } from "./SessionModel";
