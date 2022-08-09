@@ -1,4 +1,4 @@
-import { Dashboard } from "./Components/Dashboard";
+import { Dashboard } from "./Dashboard";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Referrals } from "./Referrals/Referrals";
 import { Volunteers } from "./Volunteers/Volunteers";

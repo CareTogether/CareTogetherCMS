@@ -1,7 +1,7 @@
 import { Grid } from '@mui/material';
 import { useRecoilValue } from 'recoil';
-import { organizationConfigurationData } from '../Model/ConfigurationModel';
-import { currentLocationState } from '../Model/SessionModel';
+import { organizationConfigurationData } from './Model/ConfigurationModel';
+import { currentLocationState } from './Model/SessionModel';
 
 function Dashboard() {
   const organizationConfiguration = useRecoilValue(organizationConfigurationData);

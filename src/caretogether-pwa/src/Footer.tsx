@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu';
 import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
 import PeopleIcon from '@mui/icons-material/People';
-import { useFeatureFlags } from '../Model/ConfigurationModel';
+import { useFeatureFlags } from './Model/ConfigurationModel';
 import { useState } from 'react';
 import { LocationSwitcher } from './LocationSwitcher';
 import { Copyright } from './Copyright';

@@ -13,8 +13,8 @@ import AuthenticationWrapper from './Authentication/AuthenticationWrapper';
 import { ModelLoader } from './Model/ModelLoader';
 import ShellRootLayout from './Shell/ShellRootLayout';
 import { AppRoutes } from './AppRoutes';
-import RequestBackdrop from './Components/RequestBackdrop';
-import ErrorBackdrop from './Components/ErrorBackdrop';
+import RequestBackdrop from './RequestBackdrop';
+import ErrorBackdrop from './ErrorBackdrop';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(

@@ -3,8 +3,8 @@ import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
 import PeopleIcon from '@mui/icons-material/People';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { ListItemLink } from './ListItemLink';
-import { useFeatureFlags } from '../Model/ConfigurationModel';
-import { CurrentFeatureFlags } from '../GeneratedClient';
+import { useFeatureFlags } from './Model/ConfigurationModel';
+import { CurrentFeatureFlags } from './GeneratedClient';
 import { LocationSwitcher } from './LocationSwitcher';
 import { Copyright } from './Copyright';
 
