@@ -8,10 +8,11 @@ import { CssBaseline } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import { theme } from './theme';
 import AuthenticationWrapper from './Authentication/AuthenticationWrapper';
+import { ModelLoader } from './Model/ModelLoader';
+import ShellRootLayout from './Components/Shell/ShellRootLayout';
+import { AppRoutes } from './AppRoutes';
 import RequestBackdrop from './Components/RequestBackdrop';
 import ErrorBackdrop from './Components/ErrorBackdrop';
-import { ModelLoader } from './Model/ModelLoader';
-import App from './App';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(
@@ -26,7 +27,9 @@ root.render(
             <Router>
               <AuthenticationWrapper>
                 <ModelLoader>
-                  <App />
+                  <ShellRootLayout>
+                    <AppRoutes />
+                  </ShellRootLayout>
                 </ModelLoader>
               </AuthenticationWrapper>
             </Router>
