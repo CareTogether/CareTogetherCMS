@@ -15,7 +15,7 @@ function InnerAuthWrapper({ children }: InnerAuthWrapperProps) {
   return (
     <>
       {isAuthenticated
-        ? {children}
+        ? children
         : <p>You are not signed in. You can try to refresh your page (F5) to reattempt signing in.</p>
       }
     </>
