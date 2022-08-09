@@ -27,6 +27,7 @@ import { VolunteerFamilyContext } from "../Requirements/RequirementContext";
 import { ActivityTimeline } from '../Activities/ActivityTimeline';
 import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
 import { PrimaryContactEditor } from '../Families/PrimaryContactEditor';
+import useScreenTitle from '../Shell/ShellScreenTitle';
 
 export function VolunteerFamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
@@ -71,16 +72,14 @@ export function VolunteerFamilyScreen() {
     Object.entries(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals || {}).filter(
       ([role,]) => !volunteerFamily.volunteerFamilyInfo?.removedRoles?.find(x => x.roleName === role));
   
+  useScreenTitle(`${volunteerFamily?.family?.adults!.filter(adult => adult.item1!.id === volunteerFamily!.family!.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family`);
+  
   return (
     <Container maxWidth={false} sx={{paddingLeft: '12px'}}>
       <HeaderContent>
-        <HeaderTitle>
-          <IconButton color="inherit" onClick={() => navigate("..")} size="large">
-            <ArrowBack />
-          </IconButton>
-          &nbsp;
-          {volunteerFamily?.family?.adults!.filter(adult => adult.item1!.id === volunteerFamily!.family!.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family
-        </HeaderTitle>
+        <IconButton color="inherit" onClick={() => navigate("..")} size="large">
+          <ArrowBack />
+        </IconButton>
       </HeaderContent>
       <Toolbar variant="dense" disableGutters={true}>
         {permissions(Permission.UploadFamilyDocuments) && <Button

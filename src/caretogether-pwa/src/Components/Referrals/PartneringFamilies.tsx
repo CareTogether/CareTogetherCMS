@@ -19,6 +19,7 @@ import { policyData } from '../../Model/ConfigurationModel';
 import { SearchBar } from '../SearchBar';
 import { filterFamiliesByText, sortFamiliesByLastNameDesc } from '../Families/FamilyUtils';
 import { usePermissions } from '../../Model/SessionModel';
+import useScreenTitle from '../Shell/ShellScreenTitle';
 
 const arrangementPhaseText = new Map<number, string>([
   [ArrangementPhase.SettingUp, 'Setting Up'],
@@ -116,10 +117,11 @@ function PartneringFamilies() {
 
   const permissions = usePermissions();
 
+  useScreenTitle("Referrals");
+
   return (
     <Grid container spacing={3}>
       <HeaderContent>
-        {!isMobile && <HeaderTitle>Referrals</HeaderTitle>}
         <FormControlLabel
           control={<Switch checked={expandedView} onChange={(e) => setExpandedView(e.target.checked)} name="expandedView" />}
           label={isMobile ? "" : expandedView ? "Collapse" : "Expand" }/>

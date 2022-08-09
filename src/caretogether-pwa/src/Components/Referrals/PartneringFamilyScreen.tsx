@@ -31,6 +31,7 @@ import { ActivityTimeline } from '../Activities/ActivityTimeline';
 import { ReferralComments } from './ReferralComments';
 import { ReferralCustomField } from './ReferralCustomField';
 import { PrimaryContactEditor } from '../Families/PrimaryContactEditor';
+import useScreenTitle from '../Shell/ShellScreenTitle';
 
 const sortArrangementsByStartDateDescThenCreateDateDesc = (a: Arrangement,b: Arrangement) => {
   return ((b.startedAtUtc ?? new Date()).getTime() - (a.startedAtUtc ?? new Date()).getTime()) || 
@@ -77,16 +78,14 @@ export function PartneringFamilyScreen() {
 
   const permissions = usePermissions();
 
+  useScreenTitle(`${partneringFamily?.family?.adults!.filter(adult => adult.item1!.id === partneringFamily!.family!.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family`);
+
   return (
     <Container maxWidth={false} sx={{paddingLeft: '12px'}}>
       <HeaderContent>
-        <HeaderTitle>
-          <IconButton color="inherit" onClick={() => navigate("..")} size="large">
-            <ArrowBack />
-          </IconButton>
-          &nbsp;
-          {partneringFamily?.family?.adults!.filter(adult => adult.item1!.id === partneringFamily!.family!.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family
-        </HeaderTitle>
+        <IconButton color="inherit" onClick={() => navigate("..")} size="large">
+          <ArrowBack />
+        </IconButton>
       </HeaderContent>
       <Toolbar variant="dense" disableGutters={true}>
         {permissions(Permission.UploadFamilyDocuments) && <Button

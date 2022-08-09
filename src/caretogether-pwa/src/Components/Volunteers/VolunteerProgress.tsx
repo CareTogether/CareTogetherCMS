@@ -12,6 +12,7 @@ import { useScrollMemory } from '../../useScrollMemory';
 import { filterFamiliesByText, familyLastName, sortFamiliesByLastNameDesc } from '../Families/FamilyUtils';
 import { usePermissions } from '../../Model/SessionModel';
 import { Permission } from '../../GeneratedClient';
+import useScreenTitle from '../Shell/ShellScreenTitle';
 
 function VolunteerProgress(props: { onOpen: () => void }) {
   const { onOpen } = props;
@@ -41,10 +42,11 @@ function VolunteerProgress(props: { onOpen: () => void }) {
 
   const permissions = usePermissions();
 
+  useScreenTitle("Volunteers");
+
   return (
     <Grid container spacing={3}>
       <HeaderContent>
-        {!isMobile && <HeaderTitle>Volunteers</HeaderTitle>}
         <ButtonGroup variant="text" color="inherit" aria-label="text inherit button group" style={{flexGrow: 1}}>
           <Button color={location.pathname === "/volunteers/approval" ? 'secondary' : 'inherit'} component={Link} to={"/volunteers/approval"}>Approvals</Button>
           <Button color={location.pathname === "/volunteers/progress" ? 'secondary' : 'inherit'} component={Link} to={"/volunteers/progress"}>Progress</Button>

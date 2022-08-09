@@ -18,6 +18,7 @@ import { useScrollMemory } from '../../useScrollMemory';
 import { currentLocationState, usePermissions } from '../../Model/SessionModel';
 import { BulkSmsSideSheet } from './BulkSmsSideSheet';
 import { useWindowSize } from '../../useWindowSize';
+import useScreenTitle from '../Shell/ShellScreenTitle';
 
 type RoleFilter = {
   roleName: string
@@ -241,6 +242,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 
   const permissions = usePermissions();
 
+  useScreenTitle("Volunteers");
+
   return (
     <>
       <Grid container spacing={3} sx={{
@@ -248,7 +251,6 @@ function VolunteerApproval(props: { onOpen: () => void }) {
         height: smsMode && isMobile ? `${windowSize.height - 500 - 24}px` : null,
         overflow: smsMode && isMobile ? 'scroll' : null }}>
         <HeaderContent>
-          {!isMobile && <HeaderTitle>Volunteers</HeaderTitle>}
           <ButtonGroup variant="text" color="inherit" aria-label="text inherit button group" style={{flexGrow: 1}}>
             <Button color={location.pathname === "/volunteers/approval" ? 'secondary' : 'inherit'} component={Link} to={"/volunteers/approval"}>Approvals</Button>
             <Button color={location.pathname === "/volunteers/progress" ? 'secondary' : 'inherit'} component={Link} to={"/volunteers/progress"}>Progress</Button>
