@@ -1,4 +1,4 @@
-import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, Button, ButtonGroup, useMediaQuery, useTheme, FormControlLabel, Switch } from '@mui/material';
+import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, Button, ButtonGroup, useMediaQuery, useTheme, FormControlLabel, Switch, Toolbar } from '@mui/material';
 import { useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../../Model/VolunteersModel';
 import { allApprovalAndOnboardingRequirementsData } from '../../Model/ConfigurationModel';
@@ -46,7 +46,7 @@ function VolunteerProgress(props: { onOpen: () => void }) {
 
   return (
     <Grid container spacing={3}>
-      <HeaderContent>
+      <Toolbar>
         <ButtonGroup variant="text" color="inherit" aria-label="text inherit button group" style={{flexGrow: 1}}>
           <Button color={location.pathname === "/volunteers/approval" ? 'secondary' : 'inherit'} component={Link} to={"/volunteers/approval"}>Approvals</Button>
           <Button color={location.pathname === "/volunteers/progress" ? 'secondary' : 'inherit'} component={Link} to={"/volunteers/progress"}>Progress</Button>
@@ -56,7 +56,7 @@ function VolunteerProgress(props: { onOpen: () => void }) {
           label={isMobile ? "" : "Expand"}
         />
         <SearchBar value={filterText} onChange={setFilterText} />
-      </HeaderContent>
+      </Toolbar>
       <Grid item xs={12}>
         <TableContainer>
           <Table sx={{minWidth: '700px'}} size="small">

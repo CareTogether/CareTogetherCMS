@@ -1,4 +1,4 @@
-import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, useMediaQuery, useTheme, Button, ButtonGroup, FormControlLabel, Switch, MenuItem, Select, ListItemText, Checkbox, FormControl, InputBase, SelectChangeEvent, IconButton, Snackbar } from '@mui/material';
+import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, useMediaQuery, useTheme, Button, ButtonGroup, FormControlLabel, Switch, MenuItem, Select, ListItemText, Checkbox, FormControl, InputBase, SelectChangeEvent, IconButton, Snackbar, Toolbar } from '@mui/material';
 import { Gender, ExactAge, AgeInYears, RoleVersionApproval, CombinedFamilyInfo, RemovedRole, RoleRemovalReason, EmailAddress, Permission } from '../../GeneratedClient';
 import { differenceInYears } from 'date-fns';
 import { atom, selector, useRecoilState, useRecoilValue } from 'recoil';
@@ -250,7 +250,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
         paddingRight: smsMode && !isMobile ? '400px' : null,
         height: smsMode && isMobile ? `${windowSize.height - 500 - 24}px` : null,
         overflow: smsMode && isMobile ? 'scroll' : null }}>
-        <HeaderContent>
+        <Toolbar>
           <ButtonGroup variant="text" color="inherit" aria-label="text inherit button group" style={{flexGrow: 1}}>
             <Button color={location.pathname === "/volunteers/approval" ? 'secondary' : 'inherit'} component={Link} to={"/volunteers/approval"}>Approvals</Button>
             <Button color={location.pathname === "/volunteers/progress" ? 'secondary' : 'inherit'} component={Link} to={"/volunteers/progress"}>Progress</Button>
@@ -279,7 +279,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
             setUncheckedFamilies([]);
             setFilterText(value);
           }} />
-        </HeaderContent>
+        </Toolbar>
         <Grid item xs={12}>
           <TableContainer>
             <Table sx={{minWidth: '700px'}} size="small">

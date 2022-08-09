@@ -1,4 +1,4 @@
-import { Fab, FormControlLabel, Grid, Switch, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip, useMediaQuery, useTheme } from '@mui/material';
+import { Fab, FormControlLabel, Grid, Switch, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Toolbar, Tooltip, useMediaQuery, useTheme } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import PendingOutlinedIcon from '@mui/icons-material/PendingOutlined';
 import PlayCircleFilledIcon from '@mui/icons-material/PlayCircleFilled';
@@ -121,12 +121,12 @@ function PartneringFamilies() {
 
   return (
     <Grid container spacing={3}>
-      <HeaderContent>
+      <Toolbar>
         <FormControlLabel
           control={<Switch checked={expandedView} onChange={(e) => setExpandedView(e.target.checked)} name="expandedView" />}
           label={isMobile ? "" : expandedView ? "Collapse" : "Expand" }/>
         <SearchBar value={filterText} onChange={setFilterText} />
-      </HeaderContent>
+      </Toolbar>
       <Grid item xs={12}>
         <TableContainer>
           <Table sx={{minWidth: '700px'}} size="small">

@@ -82,11 +82,11 @@ export function PartneringFamilyScreen() {
 
   return (
     <Container maxWidth={false} sx={{paddingLeft: '12px'}}>
-      <HeaderContent>
+      <Toolbar>
         <IconButton color="inherit" onClick={() => navigate("..")} size="large">
           <ArrowBack />
         </IconButton>
-      </HeaderContent>
+      </Toolbar>
       <Toolbar variant="dense" disableGutters={true}>
         {permissions(Permission.UploadFamilyDocuments) && <Button
           onClick={() => setUploadDocumentDialogOpen(true)}
