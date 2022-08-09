@@ -3,7 +3,7 @@ import { CompletedCustomFieldInfo, CustomField, CustomFieldType, CustomFieldVali
 import { useReferralsModel } from "../Model/ReferralsModel";
 import { useRecoilValue } from "recoil";
 import { policyData } from "../Model/ConfigurationModel";
-import { useInlineEditor } from "../useInlineEditor";
+import { useInlineEditor } from "../Hooks/useInlineEditor";
 
 type ReferralCustomFieldProps = {
   partneringFamilyId: string

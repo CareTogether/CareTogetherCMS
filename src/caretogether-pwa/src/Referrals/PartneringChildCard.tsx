@@ -10,7 +10,7 @@ import { AgeText } from "../AgeText";
 import EditIcon from '@mui/icons-material/Edit';
 import { useRecoilValue } from "recoil";
 import { partneringFamiliesData } from "../Model/ReferralsModel";
-import { useDialogHandle } from "../useDialogHandle";
+import { useDialogHandle } from "../Hooks/useDialogHandle";
 import { EditChildDialog } from "../Families/EditChildDialog";
 import { usePermissions } from "../Model/SessionModel";
 

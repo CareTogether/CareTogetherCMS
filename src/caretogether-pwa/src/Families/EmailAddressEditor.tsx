@@ -1,7 +1,7 @@
 import { Button, Checkbox, Divider, FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { useDirectoryModel } from '../Model/DirectoryModel';
-import { useInlineEditor } from '../useInlineEditor';
+import { useInlineEditor } from '../Hooks/useInlineEditor';
 import { PersonEditorProps } from "./PersonEditorProps";
 import { EmailAddress, IEmailAddress, EmailAddressType, Permission } from '../GeneratedClient';
 import { Favorite, FavoriteBorder } from '@mui/icons-material';

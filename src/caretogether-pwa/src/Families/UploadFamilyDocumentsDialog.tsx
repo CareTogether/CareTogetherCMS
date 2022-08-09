@@ -4,7 +4,7 @@ import { CombinedFamilyInfo } from '../GeneratedClient';
 import { uploadFileToTenant } from '../Model/FilesModel';
 import { useRecoilValue } from 'recoil';
 import { currentOrganizationState, currentLocationState } from '../Model/SessionModel';
-import { useBackdrop } from '../useBackdrop';
+import { useBackdrop } from '../Hooks/useBackdrop';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 
 interface UploadFamilyDocumentsDialogProps {

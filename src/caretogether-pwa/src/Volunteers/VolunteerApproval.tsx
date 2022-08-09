@@ -13,11 +13,11 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { SearchBar } from '../SearchBar';
-import { useLocalStorage } from '../useLocalStorage';
-import { useScrollMemory } from '../useScrollMemory';
+import { useLocalStorage } from '../Hooks/useLocalStorage';
+import { useScrollMemory } from '../Hooks/useScrollMemory';
 import { currentLocationState, usePermissions } from '../Model/SessionModel';
 import { BulkSmsSideSheet } from './BulkSmsSideSheet';
-import { useWindowSize } from '../useWindowSize';
+import { useWindowSize } from '../Hooks/useWindowSize';
 import useScreenTitle from '../Shell/ShellScreenTitle';
 
 type RoleFilter = {

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Arrangement, ArrangementFunction, ArrangementPolicy, FamilyVolunteerAssignment, FunctionRequirement, IndividualVolunteerAssignment, Permission } from "../GeneratedClient";
 import { useFamilyLookup, usePersonLookup } from "../Model/DirectoryModel";
 import { usePermissions } from "../Model/SessionModel";
-import { useDialogHandle } from "../useDialogHandle";
+import { useDialogHandle } from "../Hooks/useDialogHandle";
 import { FamilyName } from "../Families/FamilyName";
 import { PersonName } from "../Families/PersonName";
 import { IconRow } from "../IconRow";

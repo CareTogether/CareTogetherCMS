@@ -7,7 +7,7 @@ import { CancelArrangementDialog } from "./CancelArrangementDialog";
 import { ReopenArrangementDialog } from "./ReopenArrangementDialog";
 import { EndArrangementDialog } from "./EndArrangementDialog";
 import { StartArrangementDialog } from "./StartArrangementDialog";
-import { useInlineEditor } from "../useInlineEditor";
+import { useInlineEditor } from "../Hooks/useInlineEditor";
 import { useReferralsModel } from "../Model/ReferralsModel";
 import { DateTimePicker } from '@mui/x-date-pickers';
 

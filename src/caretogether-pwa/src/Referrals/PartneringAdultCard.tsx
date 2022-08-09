@@ -14,7 +14,7 @@ import { useRecoilValue } from "recoil";
 import { partneringFamiliesData } from "../Model/ReferralsModel";
 import { ContactDisplay } from "../ContactDisplay";
 import { IconRow } from "../IconRow";
-import { useDialogHandle } from "../useDialogHandle";
+import { useDialogHandle } from "../Hooks/useDialogHandle";
 import { EditAdultDialog } from "../Families/EditAdultDialog";
 import { usePermissions } from "../Model/SessionModel";
 

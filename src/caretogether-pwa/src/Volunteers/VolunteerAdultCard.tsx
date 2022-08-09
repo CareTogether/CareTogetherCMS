@@ -32,9 +32,9 @@ import { MissingRequirementRow } from "../Requirements/MissingRequirementRow";
 import { ExemptedRequirementRow } from "../Requirements/ExemptedRequirementRow";
 import { CompletedRequirementRow } from "../Requirements/CompletedRequirementRow";
 import { IndividualVolunteerContext } from "../Requirements/RequirementContext";
-import { useDialogHandle } from "../useDialogHandle";
+import { useDialogHandle } from "../Hooks/useDialogHandle";
 import { EditAdultDialog } from "../Families/EditAdultDialog";
-import { useCollapsed } from "../useCollapsed";
+import { useCollapsed } from "../Hooks/useCollapsed";
 
 type VolunteerAdultCardProps = {
   volunteerFamilyId: string,

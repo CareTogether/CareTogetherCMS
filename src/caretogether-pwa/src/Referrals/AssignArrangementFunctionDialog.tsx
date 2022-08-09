@@ -4,8 +4,8 @@ import { ArrangementPolicy, Arrangement, ArrangementFunction, RoleApprovalStatus
 import { visibleFamiliesData } from '../Model/ModelLoader';
 import { useRecoilValue } from 'recoil';
 import { useParams } from 'react-router-dom';
-import { useBackdrop } from '../useBackdrop';
-import { DialogHandle } from "../useDialogHandle";
+import { useBackdrop } from '../Hooks/useBackdrop';
+import { DialogHandle } from "../Hooks/useDialogHandle";
 import { useReferralsModel } from '../Model/ReferralsModel';
 import { usePersonAndFamilyLookup } from '../Model/DirectoryModel';
 

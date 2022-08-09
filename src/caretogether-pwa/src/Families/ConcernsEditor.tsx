@@ -1,7 +1,7 @@
 import { Grid, InputAdornment, TextField } from '@mui/material';
 import { Permission } from '../GeneratedClient';
 import { useDirectoryModel } from '../Model/DirectoryModel';
-import { useInlineEditor } from '../useInlineEditor';
+import { useInlineEditor } from '../Hooks/useInlineEditor';
 import { PersonEditorProps } from "./PersonEditorProps";
 import WarningIcon from '@mui/icons-material/Warning';
 import { usePermissions } from '../Model/SessionModel';

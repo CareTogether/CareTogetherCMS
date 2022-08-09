@@ -6,7 +6,7 @@ import { CombinedFamilyInfo, DirectoryClient, SendSmsToFamilyPrimaryContactsRequ
 import { organizationConfigurationData } from "../Model/ConfigurationModel";
 import { useFamilyLookup } from "../Model/DirectoryModel";
 import { currentOrganizationState, currentLocationState } from "../Model/SessionModel";
-import { useBackdrop } from "../useBackdrop";
+import { useBackdrop } from "../Hooks/useBackdrop";
 import { FamilyName } from "../Families/FamilyName";
 
 type BulkSmsSideSheetProps = {

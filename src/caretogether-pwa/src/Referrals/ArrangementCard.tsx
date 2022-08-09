@@ -31,7 +31,7 @@ import { ArrangementContext, RequirementContext } from "../Requirements/Requirem
 import { ArrangementPhaseSummary } from './ArrangementPhaseSummary';
 import { ArrangementCardTitle } from './ArrangementCardTitle';
 import { ArrangementFunctionRow } from './ArrangementFunctionRow';
-import { useCollapsed } from '../useCollapsed';
+import { useCollapsed } from '../Hooks/useCollapsed';
 import { ArrangementComments } from './ArrangementComments';
 
 type ArrangementCardProps = {

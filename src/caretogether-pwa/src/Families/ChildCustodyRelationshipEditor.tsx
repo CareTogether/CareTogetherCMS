@@ -1,6 +1,6 @@
 import { FormControl, Grid, MenuItem, Select } from '@mui/material';
 import { useDirectoryModel } from '../Model/DirectoryModel';
-import { useInlineEditor } from '../useInlineEditor';
+import { useInlineEditor } from '../Hooks/useInlineEditor';
 import { PersonEditorProps } from "./PersonEditorProps";
 import { CustodialRelationship, CustodialRelationshipType, Person } from '../GeneratedClient';
 import { PersonName } from './PersonName';

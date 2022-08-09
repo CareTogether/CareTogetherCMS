@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { atom, useRecoilCallback, useRecoilState, useSetRecoilState } from "recoil";
 import { authenticatingFetch } from "../Authentication/AuthenticatedHttp";
 import { CombinedFamilyInfo, DirectoryClient, UserLocationAccess, UsersClient } from "../GeneratedClient";
-import { useLocalStorage } from "../useLocalStorage";
+import { useLocalStorage } from "../Hooks/useLocalStorage";
 import { currentOrganizationState, currentLocationState, currentPermissionsState, availableLocationsState } from "./SessionModel";
 
 export const visibleFamiliesData = atom<CombinedFamilyInfo[]>({

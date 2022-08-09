@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { organizationConfigurationData, organizationNameData } from './Model/ConfigurationModel';
 import { availableLocationsState, currentLocationState } from './Model/SessionModel';
-import { useLocalStorage } from './useLocalStorage';
+import { useLocalStorage } from './Hooks/useLocalStorage';
 
 export function LocationSwitcher() {
   const theme = useTheme();

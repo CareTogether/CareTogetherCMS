@@ -1,6 +1,6 @@
 import { Grid, TextField } from '@mui/material';
 import { useDirectoryModel } from '../Model/DirectoryModel';
-import { useInlineEditor } from '../useInlineEditor';
+import { useInlineEditor } from '../Hooks/useInlineEditor';
 import { PersonEditorProps } from "./PersonEditorProps";
 import { AgeInYears, ExactAge } from '../GeneratedClient';
 import { AgeText } from '../AgeText';

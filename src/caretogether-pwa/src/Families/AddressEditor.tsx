@@ -1,7 +1,7 @@
 import { Button, Checkbox, Divider, FormControlLabel, Grid, TextField } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { useDirectoryModel } from '../Model/DirectoryModel';
-import { useInlineEditor } from '../useInlineEditor';
+import { useInlineEditor } from '../Hooks/useInlineEditor';
 import { PersonEditorProps } from "./PersonEditorProps";
 import { Address, IAddress, Permission } from '../GeneratedClient';
 import { MyLocation, LocationSearching } from '@mui/icons-material';

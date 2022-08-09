@@ -2,7 +2,7 @@ import { Grid, TextField } from '@mui/material';
 import { Permission } from '../GeneratedClient';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { usePermissions } from '../Model/SessionModel';
-import { useInlineEditor } from '../useInlineEditor';
+import { useInlineEditor } from '../Hooks/useInlineEditor';
 import { PersonEditorProps } from "./PersonEditorProps";
 
 export function NotesEditor({ familyId, person }: PersonEditorProps) {

@@ -1,7 +1,7 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { CustodialRelationship, Permission, Person } from '../GeneratedClient';
 import { useParams } from 'react-router-dom';
-import { DialogHandle, useDialogHandle } from '../useDialogHandle';
+import { DialogHandle, useDialogHandle } from '../Hooks/useDialogHandle';
 import { NameEditor } from './NameEditor';
 import { PersonEditorProps } from './PersonEditorProps';
 import { GenderEditor } from './GenderEditor';

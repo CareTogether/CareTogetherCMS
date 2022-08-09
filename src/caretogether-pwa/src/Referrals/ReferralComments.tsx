@@ -2,7 +2,7 @@ import { TextField } from "@mui/material";
 import { CombinedFamilyInfo, Permission } from "../GeneratedClient";
 import { useReferralsModel } from "../Model/ReferralsModel";
 import { usePermissions } from "../Model/SessionModel";
-import { useInlineEditor } from "../useInlineEditor";
+import { useInlineEditor } from "../Hooks/useInlineEditor";
 
 type ReferralCommentsProps = {
   partneringFamily: CombinedFamilyInfo

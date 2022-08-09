@@ -12,7 +12,7 @@ import { UpdateDialog } from "../UpdateDialog";
 import { RequirementContext } from "./RequirementContext";
 import { a11yProps, TabPanel } from "../TabPanel";
 import { personNameString } from "../Families/PersonName";
-import { DialogHandle } from "../useDialogHandle";
+import { DialogHandle } from "../Hooks/useDialogHandle";
 import { familyNameString } from "../Families/FamilyName";
 import { add, format, formatDuration } from "date-fns";
 

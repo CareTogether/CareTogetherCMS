@@ -2,7 +2,7 @@ import { DialogContentText } from "@mui/material";
 import { ExemptedRequirementInfo } from "../GeneratedClient";
 import { useReferralsModel } from "../Model/ReferralsModel";
 import { useVolunteersModel } from "../Model/VolunteersModel";
-import { DialogHandle } from "../useDialogHandle";
+import { DialogHandle } from "../Hooks/useDialogHandle";
 import { UpdateDialog } from "../UpdateDialog";
 import { RequirementContext } from "./RequirementContext";
 
