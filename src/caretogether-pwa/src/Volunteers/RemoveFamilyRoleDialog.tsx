@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@mui/material';
-import { RoleRemovalReason } from '../../GeneratedClient';
-import { useVolunteersModel } from '../../Model/VolunteersModel';
+import { RoleRemovalReason } from '../GeneratedClient';
+import { useVolunteersModel } from '../Model/VolunteersModel';
 import { UpdateDialog } from '../UpdateDialog';
 
 interface RemoveFamilyRoleDialogProps {

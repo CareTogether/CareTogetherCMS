@@ -15,26 +15,26 @@ import {
   Grid
 } from "@mui/material";
 import { useState } from "react";
-import { Gender, Person, CombinedFamilyInfo, RoleRemovalReason, Permission } from "../../GeneratedClient";
+import { Gender, Person, CombinedFamilyInfo, RoleRemovalReason, Permission } from "../GeneratedClient";
 import { AgeText } from "../AgeText";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import EditIcon from '@mui/icons-material/Edit';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useRecoilValue } from "recoil";
-import { volunteerFamiliesData } from "../../Model/VolunteersModel";
+import { volunteerFamiliesData } from "../Model/VolunteersModel";
 import { ContactDisplay } from "../ContactDisplay";
 import { IconRow } from "../IconRow";
 import { VolunteerRoleApprovalStatusChip } from "./VolunteerRoleApprovalStatusChip";
 import { RemoveIndividualRoleDialog } from "./RemoveIndividualRoleDialog";
 import { ResetIndividualRoleDialog } from "./ResetIndividualRoleDialog";
-import { usePermissions } from "../../Model/SessionModel";
+import { usePermissions } from "../Model/SessionModel";
 import { MissingRequirementRow } from "../Requirements/MissingRequirementRow";
 import { ExemptedRequirementRow } from "../Requirements/ExemptedRequirementRow";
 import { CompletedRequirementRow } from "../Requirements/CompletedRequirementRow";
 import { IndividualVolunteerContext } from "../Requirements/RequirementContext";
-import { useDialogHandle } from "../../useDialogHandle";
+import { useDialogHandle } from "../useDialogHandle";
 import { EditAdultDialog } from "../Families/EditAdultDialog";
-import { useCollapsed } from "../../useCollapsed";
+import { useCollapsed } from "../useCollapsed";
 
 type VolunteerAdultCardProps = {
   volunteerFamilyId: string,

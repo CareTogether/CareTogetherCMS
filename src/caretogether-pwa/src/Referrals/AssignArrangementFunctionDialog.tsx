@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Autocomplete, Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@mui/material';
-import { ArrangementPolicy, Arrangement, ArrangementFunction, RoleApprovalStatus, Person, Family, ValueTupleOfPersonAndFamilyAdultRelationshipInfo } from '../../GeneratedClient';
-import { visibleFamiliesData } from '../../Model/ModelLoader';
+import { ArrangementPolicy, Arrangement, ArrangementFunction, RoleApprovalStatus, Person, Family, ValueTupleOfPersonAndFamilyAdultRelationshipInfo } from '../GeneratedClient';
+import { visibleFamiliesData } from '../Model/ModelLoader';
 import { useRecoilValue } from 'recoil';
 import { useParams } from 'react-router-dom';
-import { useBackdrop } from '../../useBackdrop';
-import { DialogHandle } from "../../useDialogHandle";
-import { useReferralsModel } from '../../Model/ReferralsModel';
-import { usePersonAndFamilyLookup } from '../../Model/DirectoryModel';
+import { useBackdrop } from '../useBackdrop';
+import { DialogHandle } from "../useDialogHandle";
+import { useReferralsModel } from '../Model/ReferralsModel';
+import { usePersonAndFamilyLookup } from '../Model/DirectoryModel';
 
 interface AssignArrangementFunctionDialogProps {
   handle: DialogHandle

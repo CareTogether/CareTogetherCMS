@@ -1,8 +1,8 @@
 import { FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup } from '@mui/material';
-import { useDirectoryModel } from '../../Model/DirectoryModel';
-import { useInlineEditor } from '../../useInlineEditor';
+import { useDirectoryModel } from '../Model/DirectoryModel';
+import { useInlineEditor } from '../useInlineEditor';
 import { PersonEditorProps } from "./PersonEditorProps";
-import { Gender } from '../../GeneratedClient';
+import { Gender } from '../GeneratedClient';
 
 export function GenderEditor({ familyId, person }: PersonEditorProps) {
   const directoryModel = useDirectoryModel();

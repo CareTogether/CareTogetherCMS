@@ -1,17 +1,17 @@
 import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, Button, ButtonGroup, useMediaQuery, useTheme, FormControlLabel, Switch, Toolbar } from '@mui/material';
 import { useRecoilValue } from 'recoil';
-import { volunteerFamiliesData } from '../../Model/VolunteersModel';
-import { allApprovalAndOnboardingRequirementsData } from '../../Model/ConfigurationModel';
+import { volunteerFamiliesData } from '../Model/VolunteersModel';
+import { allApprovalAndOnboardingRequirementsData } from '../Model/ConfigurationModel';
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import AddIcon from '@mui/icons-material/Add';
 import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';
 import { SearchBar } from '../SearchBar';
-import { useLocalStorage } from '../../useLocalStorage';
-import { useScrollMemory } from '../../useScrollMemory';
+import { useLocalStorage } from '../useLocalStorage';
+import { useScrollMemory } from '../useScrollMemory';
 import { filterFamiliesByText, familyLastName, sortFamiliesByLastNameDesc } from '../Families/FamilyUtils';
-import { usePermissions } from '../../Model/SessionModel';
-import { Permission } from '../../GeneratedClient';
+import { usePermissions } from '../Model/SessionModel';
+import { Permission } from '../GeneratedClient';
 import useScreenTitle from '../Shell/ShellScreenTitle';
 
 function VolunteerProgress(props: { onOpen: () => void }) {

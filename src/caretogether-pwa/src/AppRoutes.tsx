@@ -1,7 +1,7 @@
 import { Dashboard } from "./Components/Dashboard";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { Referrals } from "./Components/Referrals/Referrals";
-import { Volunteers } from "./Components/Volunteers/Volunteers";
+import { Referrals } from "./Referrals/Referrals";
+import { Volunteers } from "./Volunteers/Volunteers";
 
 export function AppRoutes() {
   return (

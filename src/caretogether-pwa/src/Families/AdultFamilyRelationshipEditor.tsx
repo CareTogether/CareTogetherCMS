@@ -1,10 +1,10 @@
 import { Checkbox, FormControl, FormControlLabel, FormGroup, Grid, InputLabel, MenuItem, Select } from '@mui/material';
-import { useDirectoryModel } from '../../Model/DirectoryModel';
-import { useInlineEditor } from '../../useInlineEditor';
+import { useDirectoryModel } from '../Model/DirectoryModel';
+import { useInlineEditor } from '../useInlineEditor';
 import { PersonEditorProps } from "./PersonEditorProps";
 import { useRecoilValue } from 'recoil';
-import { adultFamilyRelationshipsData } from '../../Model/ConfigurationModel';
-import { FamilyAdultRelationshipInfo } from '../../GeneratedClient';
+import { adultFamilyRelationshipsData } from '../Model/ConfigurationModel';
+import { FamilyAdultRelationshipInfo } from '../GeneratedClient';
 
 type AdultFamilyRelationshipEditorProps = PersonEditorProps & {
   relationship: FamilyAdultRelationshipInfo

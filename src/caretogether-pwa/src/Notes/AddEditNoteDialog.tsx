@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Grid, TextField } from '@mui/material';
-import { useDirectoryModel } from '../../Model/DirectoryModel';
+import { useDirectoryModel } from '../Model/DirectoryModel';
 import { UpdateDialog } from '../UpdateDialog';
-import { Note } from '../../GeneratedClient';
+import { Note } from '../GeneratedClient';
 
 interface AddEditNoteDialogProps {
   familyId: string,

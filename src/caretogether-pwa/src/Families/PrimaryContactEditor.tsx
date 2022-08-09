@@ -1,9 +1,9 @@
 import { Box, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
-import { useDirectoryModel } from '../../Model/DirectoryModel';
-import { useInlineEditor } from '../../useInlineEditor';
-import { CombinedFamilyInfo, Permission } from '../../GeneratedClient';
+import { useDirectoryModel } from '../Model/DirectoryModel';
+import { useInlineEditor } from '../useInlineEditor';
+import { CombinedFamilyInfo, Permission } from '../GeneratedClient';
 import { PersonName } from './PersonName';
-import { usePermissions } from '../../Model/SessionModel';
+import { usePermissions } from '../Model/SessionModel';
 
 type PrimaryContactEditorProps = {
   family: CombinedFamilyInfo

@@ -1,10 +1,10 @@
 import { Grid, InputAdornment, TextField } from '@mui/material';
-import { Permission } from '../../GeneratedClient';
-import { useDirectoryModel } from '../../Model/DirectoryModel';
-import { useInlineEditor } from '../../useInlineEditor';
+import { Permission } from '../GeneratedClient';
+import { useDirectoryModel } from '../Model/DirectoryModel';
+import { useInlineEditor } from '../useInlineEditor';
 import { PersonEditorProps } from "./PersonEditorProps";
 import WarningIcon from '@mui/icons-material/Warning';
-import { usePermissions } from '../../Model/SessionModel';
+import { usePermissions } from '../Model/SessionModel';
 
 export function ConcernsEditor({ familyId, person }: PersonEditorProps) {
   const directoryModel = useDirectoryModel();

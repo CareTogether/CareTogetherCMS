@@ -1,6 +1,6 @@
 import { Chip } from "@mui/material";
 import { format } from "date-fns";
-import { RoleApprovalStatus, RoleVersionApproval } from "../../GeneratedClient";
+import { RoleApprovalStatus, RoleVersionApproval } from "../GeneratedClient";
 
 type VolunteerRoleApprovalStatusChipProps = {
   roleName: string;

@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
-import { CombinedFamilyInfo } from '../../GeneratedClient';
-import { uploadFileToTenant } from '../../Model/FilesModel';
+import { CombinedFamilyInfo } from '../GeneratedClient';
+import { uploadFileToTenant } from '../Model/FilesModel';
 import { useRecoilValue } from 'recoil';
-import { currentOrganizationState, currentLocationState } from '../../Model/SessionModel';
-import { useBackdrop } from '../../useBackdrop';
-import { useDirectoryModel } from '../../Model/DirectoryModel';
+import { currentOrganizationState, currentLocationState } from '../Model/SessionModel';
+import { useBackdrop } from '../useBackdrop';
+import { useDirectoryModel } from '../Model/DirectoryModel';
 
 interface UploadFamilyDocumentsDialogProps {
   family: CombinedFamilyInfo,

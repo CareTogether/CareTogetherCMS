@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControl, FormControlLabel, FormLabel, Grid, IconButton, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@mui/material';
-import { CombinedFamilyInfo, Arrangement, Person, ChildLocationPlan, ChildInvolvement, Note, ChildLocationHistoryEntry } from '../../GeneratedClient';
+import { CombinedFamilyInfo, Arrangement, Person, ChildLocationPlan, ChildInvolvement, Note, ChildLocationHistoryEntry } from '../GeneratedClient';
 import { DateTimePicker } from '@mui/x-date-pickers';
 
 import {
@@ -14,13 +14,13 @@ import {
 } from '@mui/lab';
 
 import DeleteIcon from '@mui/icons-material/Delete'
-import { useBackdrop } from '../../useBackdrop';
-import { useDirectoryModel, useFamilyLookup, usePersonLookup } from '../../Model/DirectoryModel';
-import { useReferralsModel } from '../../Model/ReferralsModel';
+import { useBackdrop } from '../useBackdrop';
+import { useDirectoryModel, useFamilyLookup, usePersonLookup } from '../Model/DirectoryModel';
+import { useReferralsModel } from '../Model/ReferralsModel';
 import { FamilyName } from '../Families/FamilyName';
 import { PersonName } from '../Families/PersonName';
 import { useRecoilValue } from 'recoil';
-import { policyData } from '../../Model/ConfigurationModel';
+import { policyData } from '../Model/ConfigurationModel';
 import { format } from 'date-fns';
 
 interface TrackChildLocationDialogProps {

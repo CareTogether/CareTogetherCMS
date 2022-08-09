@@ -11,7 +11,7 @@ import { MsalProvider } from '@azure/msal-react';
 import { globalMsalInstance } from './Authentication/Auth';
 import AuthenticationWrapper from './Authentication/AuthenticationWrapper';
 import { ModelLoader } from './Model/ModelLoader';
-import ShellRootLayout from './Components/Shell/ShellRootLayout';
+import ShellRootLayout from './Shell/ShellRootLayout';
 import { AppRoutes } from './AppRoutes';
 import RequestBackdrop from './Components/RequestBackdrop';
 import ErrorBackdrop from './Components/ErrorBackdrop';

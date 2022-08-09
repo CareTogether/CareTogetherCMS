@@ -1,9 +1,9 @@
 import { Timeline, TimelineItem, TimelineOppositeContent, TimelineSeparator, TimelineDot, TimelineConnector, TimelineContent } from "@mui/lab";
 import { format } from "date-fns";
-import { Activity, ArrangementRequirementCompleted, ChildLocationChanged, ChildLocationPlan, CombinedFamilyInfo, ReferralOpened, ReferralRequirementCompleted } from "../../GeneratedClient";
+import { Activity, ArrangementRequirementCompleted, ChildLocationChanged, ChildLocationPlan, CombinedFamilyInfo, ReferralOpened, ReferralRequirementCompleted } from "../GeneratedClient";
 import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
 import EditIcon from '@mui/icons-material/Edit';
-import { usePersonLookup, useUserLookup } from "../../Model/DirectoryModel";
+import { usePersonLookup, useUserLookup } from "../Model/DirectoryModel";
 import { PersonName } from "../Families/PersonName";
 import { Box } from "@mui/material";
 import { NoteCard } from "../Notes/NoteCard";

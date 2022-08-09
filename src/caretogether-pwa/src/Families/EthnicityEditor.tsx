@@ -1,8 +1,8 @@
 import { FormControl, Grid, InputLabel, MenuItem, Select } from '@mui/material';
-import { useDirectoryModel } from '../../Model/DirectoryModel';
-import { useInlineEditor } from '../../useInlineEditor';
+import { useDirectoryModel } from '../Model/DirectoryModel';
+import { useInlineEditor } from '../useInlineEditor';
 import { PersonEditorProps } from "./PersonEditorProps";
-import { ethnicitiesData } from '../../Model/ConfigurationModel';
+import { ethnicitiesData } from '../Model/ConfigurationModel';
 import { useRecoilValue } from 'recoil';
 
 export function EthnicityEditor({ familyId, person }: PersonEditorProps) {

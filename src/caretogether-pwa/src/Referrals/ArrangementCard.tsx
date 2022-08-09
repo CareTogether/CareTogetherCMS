@@ -15,12 +15,12 @@ import {
   Typography,
 } from '@mui/material';
 import { useState } from 'react';
-import { ArrangementPhase, Arrangement, CombinedFamilyInfo, ChildInvolvement, FunctionRequirement } from '../../GeneratedClient';
-import { useFamilyLookup, usePersonLookup } from '../../Model/DirectoryModel';
+import { ArrangementPhase, Arrangement, CombinedFamilyInfo, ChildInvolvement, FunctionRequirement } from '../GeneratedClient';
+import { useFamilyLookup, usePersonLookup } from '../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
 import { FamilyName } from '../Families/FamilyName';
 import { useRecoilValue } from 'recoil';
-import { policyData } from '../../Model/ConfigurationModel';
+import { policyData } from '../Model/ConfigurationModel';
 import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { TrackChildLocationDialog } from './TrackChildLocationDialog';
@@ -31,7 +31,7 @@ import { ArrangementContext, RequirementContext } from "../Requirements/Requirem
 import { ArrangementPhaseSummary } from './ArrangementPhaseSummary';
 import { ArrangementCardTitle } from './ArrangementCardTitle';
 import { ArrangementFunctionRow } from './ArrangementFunctionRow';
-import { useCollapsed } from '../../useCollapsed';
+import { useCollapsed } from '../useCollapsed';
 import { ArrangementComments } from './ArrangementComments';
 
 type ArrangementCardProps = {

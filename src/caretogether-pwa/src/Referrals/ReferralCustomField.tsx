@@ -1,9 +1,9 @@
 import { Autocomplete, Box, FormControlLabel, Radio, RadioGroup, TextField } from "@mui/material";
-import { CompletedCustomFieldInfo, CustomField, CustomFieldType, CustomFieldValidation } from "../../GeneratedClient";
-import { useReferralsModel } from "../../Model/ReferralsModel";
+import { CompletedCustomFieldInfo, CustomField, CustomFieldType, CustomFieldValidation } from "../GeneratedClient";
+import { useReferralsModel } from "../Model/ReferralsModel";
 import { useRecoilValue } from "recoil";
-import { policyData } from "../../Model/ConfigurationModel";
-import { useInlineEditor } from "../../useInlineEditor";
+import { policyData } from "../Model/ConfigurationModel";
+import { useInlineEditor } from "../useInlineEditor";
 
 type ReferralCustomFieldProps = {
   partneringFamilyId: string

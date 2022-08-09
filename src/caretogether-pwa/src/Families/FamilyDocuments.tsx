@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Menu, MenuItem } from '@mui/material';
 import { format } from 'date-fns';
 import { useRecoilValue } from 'recoil';
-import { CombinedFamilyInfo, Permission, UploadedDocumentInfo } from '../../GeneratedClient';
-import { downloadFile } from '../../Model/FilesModel';
-import { currentOrganizationState, currentLocationState, usePermissions } from '../../Model/SessionModel';
+import { CombinedFamilyInfo, Permission, UploadedDocumentInfo } from '../GeneratedClient';
+import { downloadFile } from '../Model/FilesModel';
+import { currentOrganizationState, currentLocationState, usePermissions } from '../Model/SessionModel';
 import { DeleteDocumentDialog } from './DeleteDocumentDialog';
 
 type FamilyDocumentsProps = {

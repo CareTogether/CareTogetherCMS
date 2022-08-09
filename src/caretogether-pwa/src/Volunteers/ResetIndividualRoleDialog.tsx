@@ -1,5 +1,5 @@
-import { Person, RoleRemovalReason } from '../../GeneratedClient';
-import { useVolunteersModel } from '../../Model/VolunteersModel';
+import { Person, RoleRemovalReason } from '../GeneratedClient';
+import { useVolunteersModel } from '../Model/VolunteersModel';
 import { UpdateDialog } from '../UpdateDialog';
 
 interface ResetIndividualRoleDialogProps {

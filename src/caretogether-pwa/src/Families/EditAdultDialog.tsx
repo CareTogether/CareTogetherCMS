@@ -1,7 +1,7 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
-import { Permission, ValueTupleOfPersonAndFamilyAdultRelationshipInfo } from '../../GeneratedClient';
+import { Permission, ValueTupleOfPersonAndFamilyAdultRelationshipInfo } from '../GeneratedClient';
 import { useParams } from 'react-router-dom';
-import { DialogHandle, useDialogHandle } from '../../useDialogHandle';
+import { DialogHandle, useDialogHandle } from '../useDialogHandle';
 import { NameEditor } from './NameEditor';
 import { PersonEditorProps } from './PersonEditorProps';
 import { GenderEditor } from './GenderEditor';
@@ -15,7 +15,7 @@ import { AdultFamilyRelationshipEditor } from './AdultFamilyRelationshipEditor';
 import { AddressEditor } from './AddressEditor';
 import { PhoneNumberEditor } from './PhoneNumberEditor';
 import { EmailAddressEditor } from './EmailAddressEditor';
-import { usePermissions } from '../../Model/SessionModel';
+import { usePermissions } from '../Model/SessionModel';
 
 interface EditAdultDialogProps {
   handle: DialogHandle

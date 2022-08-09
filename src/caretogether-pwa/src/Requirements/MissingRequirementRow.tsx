@@ -1,8 +1,8 @@
 import { useRecoilValue } from "recoil";
-import { Permission } from "../../GeneratedClient";
-import { policyData } from "../../Model/ConfigurationModel";
-import { usePermissions } from "../../Model/SessionModel";
-import { useDialogHandle } from "../../useDialogHandle";
+import { Permission } from "../GeneratedClient";
+import { policyData } from "../Model/ConfigurationModel";
+import { usePermissions } from "../Model/SessionModel";
+import { useDialogHandle } from "../useDialogHandle";
 import { IconRow } from "../IconRow";
 import { MissingRequirementDialog } from "./MissingRequirementDialog";
 import { RequirementContext } from "./RequirementContext";

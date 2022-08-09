@@ -1,14 +1,14 @@
 import { Button, TextField } from "@mui/material";
 import { formatRelative } from "date-fns";
 import { useState } from "react";
-import { Arrangement, ArrangementPhase, Permission } from "../../GeneratedClient";
-import { usePermissions } from "../../Model/SessionModel";
+import { Arrangement, ArrangementPhase, Permission } from "../GeneratedClient";
+import { usePermissions } from "../Model/SessionModel";
 import { CancelArrangementDialog } from "./CancelArrangementDialog";
 import { ReopenArrangementDialog } from "./ReopenArrangementDialog";
 import { EndArrangementDialog } from "./EndArrangementDialog";
 import { StartArrangementDialog } from "./StartArrangementDialog";
-import { useInlineEditor } from "../../useInlineEditor";
-import { useReferralsModel } from "../../Model/ReferralsModel";
+import { useInlineEditor } from "../useInlineEditor";
+import { useReferralsModel } from "../Model/ReferralsModel";
 import { DateTimePicker } from '@mui/x-date-pickers';
 
 type ArrangementCardTitleProps = {

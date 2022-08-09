@@ -7,8 +7,8 @@ import {
   Typography,
 } from '@mui/material';
 import React, { useState } from 'react';
-import { Note, NoteStatus, Permission } from '../../GeneratedClient';
-import { useUserLookup } from '../../Model/DirectoryModel';
+import { Note, NoteStatus, Permission } from '../GeneratedClient';
+import { useUserLookup } from '../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import CheckIcon from '@mui/icons-material/Check';
@@ -16,7 +16,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import { AddEditNoteDialog } from './AddEditNoteDialog';
 import { ApproveNoteDialog } from './ApproveNoteDialog';
 import { DiscardNoteDialog } from './DiscardNoteDialog';
-import { usePermissions } from '../../Model/SessionModel';
+import { usePermissions } from '../Model/SessionModel';
 
 type NoteCardProps = {
   familyId: string;

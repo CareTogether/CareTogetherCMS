@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@mui/material';
-import { Age, ExactAge, AgeInYears, Gender, PhoneNumberType, EmailAddressType } from '../../GeneratedClient';
-import { useDirectoryModel } from '../../Model/DirectoryModel';
+import { Age, ExactAge, AgeInYears, Gender, PhoneNumberType, EmailAddressType } from '../GeneratedClient';
+import { useDirectoryModel } from '../Model/DirectoryModel';
 import WarningIcon from '@mui/icons-material/Warning';
 import { DatePicker } from '@mui/x-date-pickers';
 import { useRecoilValue } from 'recoil';
-import { adultFamilyRelationshipsData, ethnicitiesData } from '../../Model/ConfigurationModel';
-import { useBackdrop } from '../../useBackdrop';
+import { adultFamilyRelationshipsData, ethnicitiesData } from '../Model/ConfigurationModel';
+import { useBackdrop } from '../useBackdrop';
 import { subYears } from 'date-fns';
 
 interface CreateVolunteerFamilyDialogProps {

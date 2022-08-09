@@ -1,5 +1,5 @@
 import React from 'react';
-import { Person } from '../../GeneratedClient';
+import { Person } from '../GeneratedClient';
 
 type PersonNameProps = {
   person?: Person

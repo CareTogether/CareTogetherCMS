@@ -1,9 +1,9 @@
 import { Tooltip } from "@mui/material";
 import { format } from "date-fns";
-import { CompletedRequirementInfo, Permission } from "../../GeneratedClient";
-import { useFamilyLookup, usePersonLookup, useUserLookup } from "../../Model/DirectoryModel";
-import { usePermissions } from "../../Model/SessionModel";
-import { useDialogHandle } from "../../useDialogHandle";
+import { CompletedRequirementInfo, Permission } from "../GeneratedClient";
+import { useFamilyLookup, usePersonLookup, useUserLookup } from "../Model/DirectoryModel";
+import { usePermissions } from "../Model/SessionModel";
+import { useDialogHandle } from "../useDialogHandle";
 import { FamilyName } from "../Families/FamilyName";
 import { PersonName } from "../Families/PersonName";
 import { IconRow } from "../IconRow";

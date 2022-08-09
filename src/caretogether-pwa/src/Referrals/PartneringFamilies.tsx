@@ -4,21 +4,21 @@ import PendingOutlinedIcon from '@mui/icons-material/PendingOutlined';
 import PlayCircleFilledIcon from '@mui/icons-material/PlayCircleFilled';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import { useRecoilValue } from 'recoil';
-import { partneringFamiliesData } from '../../Model/ReferralsModel';
+import { partneringFamiliesData } from '../Model/ReferralsModel';
 import { format } from 'date-fns';
 import React, { useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
-import { ReferralCloseReason, PartneringFamilyInfo, Arrangement, ArrangementPhase, Permission } from '../../GeneratedClient';
+import { ReferralCloseReason, PartneringFamilyInfo, Arrangement, ArrangementPhase, Permission } from '../GeneratedClient';
 import { useNavigate } from 'react-router-dom';
 import { FamilyName } from '../Families/FamilyName';
 import { ArrangementCard } from './ArrangementCard';
 import { CreatePartneringFamilyDialog } from './CreatePartneringFamilyDialog';
-import { useScrollMemory } from '../../useScrollMemory';
-import { useLocalStorage } from '../../useLocalStorage';
-import { policyData } from '../../Model/ConfigurationModel';
+import { useScrollMemory } from '../useScrollMemory';
+import { useLocalStorage } from '../useLocalStorage';
+import { policyData } from '../Model/ConfigurationModel';
 import { SearchBar } from '../SearchBar';
 import { filterFamiliesByText, sortFamiliesByLastNameDesc } from '../Families/FamilyUtils';
-import { usePermissions } from '../../Model/SessionModel';
+import { usePermissions } from '../Model/SessionModel';
 import useScreenTitle from '../Shell/ShellScreenTitle';
 
 const arrangementPhaseText = new Map<number, string>([

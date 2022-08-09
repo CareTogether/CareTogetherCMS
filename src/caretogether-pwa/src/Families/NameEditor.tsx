@@ -1,6 +1,6 @@
 import { Grid, TextField } from '@mui/material';
-import { useDirectoryModel } from '../../Model/DirectoryModel';
-import { useInlineEditor } from '../../useInlineEditor';
+import { useDirectoryModel } from '../Model/DirectoryModel';
+import { useInlineEditor } from '../useInlineEditor';
 import { PersonName } from './PersonName';
 import { PersonEditorProps } from "./PersonEditorProps";
 

@@ -1,8 +1,8 @@
 import { DialogContentText } from "@mui/material";
-import { CompletedRequirementInfo } from "../../GeneratedClient";
-import { useReferralsModel } from "../../Model/ReferralsModel";
-import { useVolunteersModel } from "../../Model/VolunteersModel";
-import { DialogHandle } from "../../useDialogHandle";
+import { CompletedRequirementInfo } from "../GeneratedClient";
+import { useReferralsModel } from "../Model/ReferralsModel";
+import { useVolunteersModel } from "../Model/VolunteersModel";
+import { DialogHandle } from "../useDialogHandle";
 import { UpdateDialog } from "../UpdateDialog";
 import { RequirementContext } from "./RequirementContext";
 

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Grid, TextField } from '@mui/material';
 import { UpdateDialog } from '../UpdateDialog';
 import { DatePicker } from '@mui/x-date-pickers';
-import { useReferralsModel } from '../../Model/ReferralsModel';
+import { useReferralsModel } from '../Model/ReferralsModel';
 
 interface OpenNewReferralDialogProps {
   partneringFamilyId: string,

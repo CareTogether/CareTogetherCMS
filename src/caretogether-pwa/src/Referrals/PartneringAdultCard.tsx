@@ -7,16 +7,16 @@ import {
   Chip,
   Divider
 } from "@mui/material";
-import { Gender, CombinedFamilyInfo, Permission } from "../../GeneratedClient";
+import { Gender, CombinedFamilyInfo, Permission } from "../GeneratedClient";
 import { AgeText } from "../AgeText";
 import EditIcon from '@mui/icons-material/Edit';
 import { useRecoilValue } from "recoil";
-import { partneringFamiliesData } from "../../Model/ReferralsModel";
+import { partneringFamiliesData } from "../Model/ReferralsModel";
 import { ContactDisplay } from "../ContactDisplay";
 import { IconRow } from "../IconRow";
-import { useDialogHandle } from "../../useDialogHandle";
+import { useDialogHandle } from "../useDialogHandle";
 import { EditAdultDialog } from "../Families/EditAdultDialog";
-import { usePermissions } from "../../Model/SessionModel";
+import { usePermissions } from "../Model/SessionModel";
 
 type PartneringAdultCardProps = {
   partneringFamilyId: string,

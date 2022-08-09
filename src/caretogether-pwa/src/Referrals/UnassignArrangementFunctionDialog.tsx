@@ -1,9 +1,9 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
-import { ArrangementPolicy, Arrangement, ArrangementFunction, Person, FamilyVolunteerAssignment, IndividualVolunteerAssignment } from '../../GeneratedClient';
-import { useBackdrop } from '../../useBackdrop';
-import { DialogHandle } from "../../useDialogHandle";
-import { useReferralsModel } from '../../Model/ReferralsModel';
-import { useFamilyLookup, usePersonLookup } from '../../Model/DirectoryModel';
+import { ArrangementPolicy, Arrangement, ArrangementFunction, Person, FamilyVolunteerAssignment, IndividualVolunteerAssignment } from '../GeneratedClient';
+import { useBackdrop } from '../useBackdrop';
+import { DialogHandle } from "../useDialogHandle";
+import { useReferralsModel } from '../Model/ReferralsModel';
+import { useFamilyLookup, usePersonLookup } from '../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
 import { FamilyName } from '../Families/FamilyName';
 

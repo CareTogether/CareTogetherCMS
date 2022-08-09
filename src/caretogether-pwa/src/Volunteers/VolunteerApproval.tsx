@@ -1,10 +1,10 @@
 import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, useMediaQuery, useTheme, Button, ButtonGroup, FormControlLabel, Switch, MenuItem, Select, ListItemText, Checkbox, FormControl, InputBase, SelectChangeEvent, IconButton, Snackbar, Toolbar } from '@mui/material';
-import { Gender, ExactAge, AgeInYears, RoleVersionApproval, CombinedFamilyInfo, RemovedRole, RoleRemovalReason, EmailAddress, Permission } from '../../GeneratedClient';
+import { Gender, ExactAge, AgeInYears, RoleVersionApproval, CombinedFamilyInfo, RemovedRole, RoleRemovalReason, EmailAddress, Permission } from '../GeneratedClient';
 import { differenceInYears } from 'date-fns';
 import { atom, selector, useRecoilState, useRecoilValue } from 'recoil';
-import { volunteerFamiliesData } from '../../Model/VolunteersModel';
-import { organizationConfigurationData, policyData } from '../../Model/ConfigurationModel';
-import { RoleApprovalStatus } from '../../GeneratedClient';
+import { volunteerFamiliesData } from '../Model/VolunteersModel';
+import { organizationConfigurationData, policyData } from '../Model/ConfigurationModel';
+import { RoleApprovalStatus } from '../GeneratedClient';
 import React, { useEffect, useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import SmsIcon from '@mui/icons-material/Sms';
@@ -13,11 +13,11 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { SearchBar } from '../SearchBar';
-import { useLocalStorage } from '../../useLocalStorage';
-import { useScrollMemory } from '../../useScrollMemory';
-import { currentLocationState, usePermissions } from '../../Model/SessionModel';
+import { useLocalStorage } from '../useLocalStorage';
+import { useScrollMemory } from '../useScrollMemory';
+import { currentLocationState, usePermissions } from '../Model/SessionModel';
 import { BulkSmsSideSheet } from './BulkSmsSideSheet';
-import { useWindowSize } from '../../useWindowSize';
+import { useWindowSize } from '../useWindowSize';
 import useScreenTitle from '../Shell/ShellScreenTitle';
 
 type RoleFilter = {

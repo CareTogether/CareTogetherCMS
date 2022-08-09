@@ -1,8 +1,8 @@
 import { Grid, TextField } from '@mui/material';
-import { useDirectoryModel } from '../../Model/DirectoryModel';
-import { useInlineEditor } from '../../useInlineEditor';
+import { useDirectoryModel } from '../Model/DirectoryModel';
+import { useInlineEditor } from '../useInlineEditor';
 import { PersonEditorProps } from "./PersonEditorProps";
-import { AgeInYears, ExactAge } from '../../GeneratedClient';
+import { AgeInYears, ExactAge } from '../GeneratedClient';
 import { AgeText } from '../AgeText';
 import { format } from 'date-fns';
 import { DatePicker } from '@mui/x-date-pickers';

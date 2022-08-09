@@ -1,11 +1,11 @@
 import { Button, Checkbox, Divider, FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { useDirectoryModel } from '../../Model/DirectoryModel';
-import { useInlineEditor } from '../../useInlineEditor';
+import { useDirectoryModel } from '../Model/DirectoryModel';
+import { useInlineEditor } from '../useInlineEditor';
 import { PersonEditorProps } from "./PersonEditorProps";
-import { EmailAddress, IEmailAddress, EmailAddressType, Permission } from '../../GeneratedClient';
+import { EmailAddress, IEmailAddress, EmailAddressType, Permission } from '../GeneratedClient';
 import { Favorite, FavoriteBorder } from '@mui/icons-material';
-import { usePermissions } from '../../Model/SessionModel';
+import { usePermissions } from '../Model/SessionModel';
 
 type EmailAddressEditorProps = PersonEditorProps & {
   add?: boolean

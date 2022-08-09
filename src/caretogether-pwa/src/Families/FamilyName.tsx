@@ -1,5 +1,5 @@
 import React from 'react';
-import { CombinedFamilyInfo } from '../../GeneratedClient';
+import { CombinedFamilyInfo } from '../GeneratedClient';
 import { personNameString } from './PersonName';
 
 type FamilyNameProps = {

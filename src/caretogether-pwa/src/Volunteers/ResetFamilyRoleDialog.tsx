@@ -1,5 +1,5 @@
-import { RoleRemovalReason } from '../../GeneratedClient';
-import { useVolunteersModel } from '../../Model/VolunteersModel';
+import { RoleRemovalReason } from '../GeneratedClient';
+import { useVolunteersModel } from '../Model/VolunteersModel';
 import { UpdateDialog } from '../UpdateDialog';
 
 interface ResetFamilyRoleDialogProps {

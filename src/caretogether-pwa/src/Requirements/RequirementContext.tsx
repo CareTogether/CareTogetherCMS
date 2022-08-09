@@ -1,4 +1,4 @@
-import { FamilyVolunteerAssignment, IndividualVolunteerAssignment } from "../../GeneratedClient";
+import { FamilyVolunteerAssignment, IndividualVolunteerAssignment } from "../GeneratedClient";
 
 export interface ReferralContext {
   kind: "Referral";

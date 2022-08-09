@@ -5,14 +5,14 @@ import {
   CardContent,
   Typography,
 } from "@mui/material";
-import { CustodialRelationshipType, Gender, CombinedFamilyInfo, Permission } from "../../GeneratedClient";
+import { CustodialRelationshipType, Gender, CombinedFamilyInfo, Permission } from "../GeneratedClient";
 import { AgeText } from "../AgeText";
 import EditIcon from '@mui/icons-material/Edit';
 import { useRecoilValue } from "recoil";
-import { volunteerFamiliesData } from "../../Model/VolunteersModel";
-import { useDialogHandle } from "../../useDialogHandle";
+import { volunteerFamiliesData } from "../Model/VolunteersModel";
+import { useDialogHandle } from "../useDialogHandle";
 import { EditChildDialog } from "../Families/EditChildDialog";
-import { usePermissions } from "../../Model/SessionModel";
+import { usePermissions } from "../Model/SessionModel";
 
 type VolunteerChildCardProps = {
   volunteerFamilyId: string,

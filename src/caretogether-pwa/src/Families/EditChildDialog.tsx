@@ -1,7 +1,7 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
-import { CustodialRelationship, Permission, Person } from '../../GeneratedClient';
+import { CustodialRelationship, Permission, Person } from '../GeneratedClient';
 import { useParams } from 'react-router-dom';
-import { DialogHandle, useDialogHandle } from '../../useDialogHandle';
+import { DialogHandle, useDialogHandle } from '../useDialogHandle';
 import { NameEditor } from './NameEditor';
 import { PersonEditorProps } from './PersonEditorProps';
 import { GenderEditor } from './GenderEditor';
@@ -12,7 +12,7 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { DeletePersonDialog } from './DeletePersonDialog';
 import { EthnicityEditor } from './EthnicityEditor';
 import { ChildCustodyRelationshipEditor } from './ChildCustodyRelationshipEditor';
-import { usePermissions } from '../../Model/SessionModel';
+import { usePermissions } from '../Model/SessionModel';
 
 interface EditChildDialogProps {
   handle: DialogHandle

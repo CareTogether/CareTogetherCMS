@@ -1,10 +1,10 @@
 import { format } from "date-fns";
 import { useRecoilValue } from "recoil";
-import { MissingArrangementRequirement, Permission } from "../../GeneratedClient";
-import { policyData } from "../../Model/ConfigurationModel";
-import { useFamilyLookup, usePersonLookup } from "../../Model/DirectoryModel";
-import { usePermissions } from "../../Model/SessionModel";
-import { useDialogHandle } from "../../useDialogHandle";
+import { MissingArrangementRequirement, Permission } from "../GeneratedClient";
+import { policyData } from "../Model/ConfigurationModel";
+import { useFamilyLookup, usePersonLookup } from "../Model/DirectoryModel";
+import { usePermissions } from "../Model/SessionModel";
+import { useDialogHandle } from "../useDialogHandle";
 import { FamilyName } from "../Families/FamilyName";
 import { PersonName } from "../Families/PersonName";
 import { IconRow } from "../IconRow";

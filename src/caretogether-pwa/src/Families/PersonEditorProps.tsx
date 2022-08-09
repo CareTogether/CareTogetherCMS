@@ -1,4 +1,4 @@
-import { Person } from '../../GeneratedClient';
+import { Person } from '../GeneratedClient';
 
 export type PersonEditorProps = {
   familyId: string

@@ -1,8 +1,8 @@
 import { FormControl, Grid, MenuItem, Select } from '@mui/material';
-import { useDirectoryModel } from '../../Model/DirectoryModel';
-import { useInlineEditor } from '../../useInlineEditor';
+import { useDirectoryModel } from '../Model/DirectoryModel';
+import { useInlineEditor } from '../useInlineEditor';
 import { PersonEditorProps } from "./PersonEditorProps";
-import { CustodialRelationship, CustodialRelationshipType, Person } from '../../GeneratedClient';
+import { CustodialRelationship, CustodialRelationshipType, Person } from '../GeneratedClient';
 import { PersonName } from './PersonName';
 
 type ChildCustodyRelationshipEditorProps = PersonEditorProps & {
