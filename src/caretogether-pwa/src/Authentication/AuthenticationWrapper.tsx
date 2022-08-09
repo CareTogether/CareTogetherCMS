@@ -2,10 +2,11 @@ import React from 'react';
 import { InteractionType } from "@azure/msal-browser";
 import { MsalProvider, useMsalAuthentication, useIsAuthenticated } from '@azure/msal-react';
 import { globalMsalInstance } from './Auth';
-import { ModelLoader } from './Model/ModelLoader';
-import App from './App';
 
-function InnerAuthWrapper() {
+interface InnerAuthWrapperProps {
+  children?: React.ReactNode
+}
+function InnerAuthWrapper({ children }: InnerAuthWrapperProps) {
   // Force the user to sign in if not already authenticated, then render the app.
   // See https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-react/docs/hooks.md
   useMsalAuthentication(InteractionType.Redirect);
@@ -14,21 +15,22 @@ function InnerAuthWrapper() {
   return (
     <>
       {isAuthenticated
-        ? <ModelLoader>
-            <React.Suspense fallback={<div>Loading...</div>}>
-              <App />
-            </React.Suspense>
-          </ModelLoader>
+        ? {children}
         : <p>You are not signed in. You can try to refresh your page (F5) to reattempt signing in.</p>
       }
     </>
   );
 }
 
-export default function AppAuthWrapper() {
+interface AuthenticationWrapperProps {
+  children?: React.ReactNode
+}
+export default function AuthenticationWrapper({ children }: AuthenticationWrapperProps) {
   return (
     <MsalProvider instance={globalMsalInstance}>
-      <InnerAuthWrapper />
+      <InnerAuthWrapper>
+        {children}
+      </InnerAuthWrapper>
     </MsalProvider>
   );
 }

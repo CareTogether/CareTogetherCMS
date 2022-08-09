@@ -6,22 +6,13 @@ import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns as DateAdapter } from '@mui/x-date-pickers/AdapterDateFns';
 import { CssBaseline } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
-import { createTheme } from '@mui/material/styles';
-import { amber } from '@mui/material/colors';
-import AppAuthWrapper from './AppAuthWrapper';
+import { theme } from './theme';
+import AuthenticationWrapper from './Authentication/AuthenticationWrapper';
 import RequestBackdrop from './Components/RequestBackdrop';
 import ErrorBackdrop from './Components/ErrorBackdrop';
+import { ModelLoader } from './Model/ModelLoader';
+import App from './App';
 import reportWebVitals from './reportWebVitals';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#00838f',
-    },
-    secondary: amber,
-    tonalOffset: 0.6
-  }
-});
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -33,7 +24,11 @@ root.render(
         <LocalizationProvider dateAdapter={DateAdapter}>
           <RecoilRoot>
             <Router>
-              <AppAuthWrapper />
+              <AuthenticationWrapper>
+                <ModelLoader>
+                  <App />
+                </ModelLoader>
+              </AuthenticationWrapper>
             </Router>
             <RequestBackdrop />
             <ErrorBackdrop />

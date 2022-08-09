@@ -1,7 +1,7 @@
 import { Drawer, TextField, Button, Divider, useMediaQuery, useTheme, FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 import { useState } from "react";
 import { useRecoilValue } from "recoil";
-import { authenticatingFetch } from "../../Auth";
+import { authenticatingFetch } from "../../Authentication/Auth";
 import { CombinedFamilyInfo, DirectoryClient, SendSmsToFamilyPrimaryContactsRequest, SmsResult, ValueTupleOfGuidAndSmsMessageResult } from "../../GeneratedClient";
 import { organizationConfigurationData } from "../../Model/ConfigurationModel";
 import { useFamilyLookup } from "../../Model/DirectoryModel";
