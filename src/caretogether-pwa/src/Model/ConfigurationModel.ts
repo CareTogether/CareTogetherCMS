@@ -1,5 +1,5 @@
 import { selector, useRecoilValue } from "recoil";
-import { ConfigurationClient, RequirementStage, VolunteerFamilyRequirementScope } from "../GeneratedClient";
+import { ConfigurationClient, CurrentFeatureFlags, RequirementStage, VolunteerFamilyRequirementScope } from "../GeneratedClient";
 import { authenticatingFetch } from "../Authentication/AuthenticatedHttp";
 import { currentLocationState, currentOrganizationState } from "./SessionModel";
 
@@ -120,9 +120,10 @@ const featureFlagData = selector({
   get: async ({get}) => {
     const organizationId = get(currentOrganizationState);
     const locationId = get(currentLocationState);
-    const configurationClient = new ConfigurationClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-    const dataResponse = await configurationClient.getLocationFlags(organizationId, locationId);
-    return dataResponse;
+    // const configurationClient = new ConfigurationClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+    // const dataResponse = await configurationClient.getLocationFlags(organizationId, locationId);
+    // return dataResponse;
+    return new CurrentFeatureFlags();
   }});
 
 export function useFeatureFlags() {

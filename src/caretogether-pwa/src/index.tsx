@@ -29,11 +29,12 @@ root.render(
           <Router>
             <MsalProvider instance={globalMsalInstance}>
               <AuthenticationWrapper>
-                <ModelLoader>
+                {/* <ModelLoader> */}
                   <ShellRootLayout>
-                    <AppRoutes />
+                    <p>Test</p>
+                    {/* <AppRoutes /> */}
                   </ShellRootLayout>
-                </ModelLoader>
+                {/* </ModelLoader> */}
               </AuthenticationWrapper>
             </MsalProvider>
           </Router>

@@ -6,7 +6,7 @@ import { useFeatureFlags } from '../Model/ConfigurationModel';
 import { Copyright } from '../Copyright';
 
 function SideNavigationMenu() {
-  const flags = useFeatureFlags();
+  const flags = {} as any;//useFeatureFlags();
 
   return (
     //  <List aria-label="main navigation">

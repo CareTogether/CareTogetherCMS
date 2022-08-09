@@ -1,7 +1,9 @@
 import { Stack, Typography } from '@mui/material';
+import { useRecoilValue } from 'recoil';
+import { organizationNameData } from '../Model/ConfigurationModel';
 
 export function ShellContextSwitcher() {
-  const organization = "Organization";
+  const organization = "Test";//useRecoilValue(organizationNameData);
   const location = "Location";
 
   return (

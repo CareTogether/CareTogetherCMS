@@ -1,3 +1,4 @@
+import React from "react";
 import { useState, useEffect } from "react";
 import { atom, useRecoilCallback, useRecoilState, useSetRecoilState } from "recoil";
 import { authenticatingFetch } from "../Authentication/AuthenticatedHttp";
@@ -62,6 +63,8 @@ export function ModelLoader({children}: ModelLoaderProps) {
   }, [organizationId, locationId, setVisibleFamilies]);
 
   return loaded
-    ? <>{children}</>
+    ? <React.Suspense fallback={<p>Still loading, please wait...</p>}>
+        {children}
+      </React.Suspense>
     : <p>Loading model...</p>;
 }
