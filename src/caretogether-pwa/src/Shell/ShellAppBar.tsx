@@ -19,7 +19,7 @@ export function ShellAppBar({ menuDrawerOpen, setMenuDrawerOpen, drawerWidth }: 
 
   const [openMobileSearch, setOpenMobileSearch] = useState(false);
 
-  const screenTitle = "Test";//useRecoilValue(screenTitleState);
+  const screenTitle = useRecoilValue(screenTitleState);
 
   return (
     <AppBar position='fixed' sx={{
