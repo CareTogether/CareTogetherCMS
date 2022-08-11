@@ -1,5 +1,26 @@
-import { atom, useRecoilValue } from "recoil";
-import { Permission, UserLocationAccess } from "../GeneratedClient";
+import { atom, selector, useRecoilValue } from "recoil";
+import { authenticatingFetch } from "../Authentication/AuthenticatedHttp";
+import { Permission, UserLocationAccess, UsersClient } from "../GeneratedClient";
+
+export const initializeModelRootState = atom<null | true>({
+  key: 'initializeModelRootState',
+  default: null
+});
+
+export const userOrganizationAccessQuery = selector({
+  key: 'userOrganizationAccessQuery',
+  get: async ({get}) => {
+    const initializeUi = get(initializeModelRootState);
+    console.log("userOrganizationAccessQuery - initializeUi: " + JSON.stringify(initializeUi));
+    if (initializeUi) {
+      const usersClient = new UsersClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+      const userResponse = await usersClient.getUserOrganizationAccess();
+      return userResponse;
+    } else {
+      return null;
+    }
+  }
+});
 
 export const currentOrganizationState = atom({
   key: 'currentOrganizationState',
