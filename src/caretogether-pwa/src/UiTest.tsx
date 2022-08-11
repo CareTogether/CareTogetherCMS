@@ -18,9 +18,9 @@ export function UiTest() {
       <p>UI Test</p>
       {data.state === 'hasValue' && data.contents !== null
         ? <pre>{JSON.stringify(data.contents)}</pre>
-        : <Skeleton variant="rectangular" width={400} height={24} />}
-        {/* // : data.state === 'hasError'
-        // ? <p><strong>ERROR: <pre>{JSON.stringify(data.contents)}</pre></strong></p> */}
+        : data.state === 'hasError'
+          ? <p><strong>ERROR: <pre>{JSON.stringify(data.contents)}</pre></strong></p>
+          : <Skeleton variant="rectangular" width={400} height={24} />}
     </>
   );
 }
