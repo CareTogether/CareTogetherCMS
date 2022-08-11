@@ -1,6 +1,6 @@
 import { Skeleton } from "@mui/material";
 import { useEffect } from "react";
-import { atom, selector, useRecoilValue, useSetRecoilState } from "recoil";
+import { atom, selector, useRecoilValueLoadable, useSetRecoilState } from "recoil";
 import { authenticatingFetch } from "./Authentication/AuthenticatedHttp";
 import { UsersClient } from "./GeneratedClient";
 
@@ -38,8 +38,8 @@ export function UiTest() {
   // const [loaded, setLoaded] = useState(false);
 
   const setInitializeUi = useSetRecoilState(initializeUiState);
-  const data = useRecoilValue(userOrganizationAccessQuery);
-
+  const data = useRecoilValueLoadable(userOrganizationAccessQuery);
+  
   useEffect(() => {
     console.log("Setting initializeUi to true...");
     setInitializeUi(true);
@@ -49,9 +49,11 @@ export function UiTest() {
   return (
     <>
       <p>UI Test</p>
-      {data === null
+      {data.state === 'loading'
         ? <Skeleton variant="rectangular" width={400} height={24} />
-        : <pre>{JSON.stringify(data)}</pre>}
+        : data.state === 'hasError'
+        ? <p><strong>ERROR: <pre>{JSON.stringify(data.contents)}</pre></strong></p>
+        : <pre>{JSON.stringify(data.contents)}</pre>}
     </>
   );
 }

@@ -30,9 +30,7 @@ root.render(
               <AuthenticationWrapper>
                 {/* <ModelLoader> */}
                   <ShellRootLayout>
-                    <React.Suspense>
-                      <UiTest />
-                    </React.Suspense>
+                    <UiTest />
                     {/* <AppRoutes /> */}
                   </ShellRootLayout>
                 {/* </ModelLoader> */}
