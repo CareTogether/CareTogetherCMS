@@ -10,9 +10,7 @@ import { BrowserRouter as Router } from "react-router-dom";
 import { MsalProvider } from '@azure/msal-react';
 import { globalMsalInstance } from './Authentication/Auth';
 import AuthenticationWrapper from './Authentication/AuthenticationWrapper';
-import { ModelLoader } from './Model/ModelLoader';
 import ShellRootLayout from './Shell/ShellRootLayout';
-import { AppRoutes } from './AppRoutes';
 // import RequestBackdrop from './RequestBackdrop';
 // import ErrorBackdrop from './ErrorBackdrop';
 import reportWebVitals from './reportWebVitals';
@@ -32,7 +30,9 @@ root.render(
               <AuthenticationWrapper>
                 {/* <ModelLoader> */}
                   <ShellRootLayout>
-                    <UiTest />
+                    <React.Suspense>
+                      <UiTest />
+                    </React.Suspense>
                     {/* <AppRoutes /> */}
                   </ShellRootLayout>
                 {/* </ModelLoader> */}
