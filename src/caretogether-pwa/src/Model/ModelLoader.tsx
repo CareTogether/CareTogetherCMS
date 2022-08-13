@@ -6,6 +6,40 @@ import { CombinedFamilyInfo, DirectoryClient, UserLocationAccess, UsersClient } 
 import { useLocalStorage } from "../Hooks/useLocalStorage";
 import { currentOrganizationState, currentLocationState, currentPermissionsState, availableLocationsState, initializeModelRootState } from "./SessionModel";
 
+class ModelErrorBoundary extends React.Component<{ children?: React.ReactNode }, { hasError: boolean, error: any }> {
+  constructor(props: {}) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: any) {
+    // Update state so the next render will show the fallback UI.
+    return { hasError: true, error: error };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    // You can also log the error to an error reporting service
+    console.log("error");
+    console.log(error);
+    console.log("errorInfo");
+    console.log(errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      // You can render any custom fallback UI
+      return (
+        <>
+          <h1>Something went wrong.</h1>
+          <pre>{JSON.stringify(this.state.error)}</pre>
+        </>
+      );
+    }
+
+    return this.props.children; 
+  }
+}
+
 export const visibleFamiliesData = atom<CombinedFamilyInfo[]>({
   key: 'visibleFamiliesData',
   default: []
@@ -25,7 +59,9 @@ export function ModelLoader({children}: ModelLoaderProps) {
 
   return (
     <>
-      {children}
+      <ModelErrorBoundary>
+        {children}
+      </ModelErrorBoundary>
     </>
   );
 
