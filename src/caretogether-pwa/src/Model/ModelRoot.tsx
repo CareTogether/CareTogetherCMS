@@ -1,7 +1,11 @@
 import { useAccount } from "@azure/msal-react";
-import { useEffect } from "react";
-import { useSetRecoilState } from "recoil";
-import { activeAccountState } from "./SessionModel";
+import { useEffect, useState } from "react";
+import { useRecoilCallback, useRecoilState, useSetRecoilState } from "recoil";
+import { authenticatingFetch } from "../Authentication/AuthenticatedHttp";
+import { UserLocationAccess, UsersClient, DirectoryClient } from "../GeneratedClient";
+import { useLocalStorage } from "../Hooks/useLocalStorage";
+import { visibleFamiliesData } from "./DirectoryModel";
+import { userIdState, availableLocationsState, currentLocationState, currentOrganizationState, currentPermissionsState } from "./SessionModel";
 
 interface ModelLoaderProps {
   children?: React.ReactNode
@@ -9,61 +13,48 @@ interface ModelLoaderProps {
 
 export function ModelRoot({children}: ModelLoaderProps) {
   const activeAccount = useAccount();
-  const setActiveAccountState = useSetRecoilState(activeAccountState);
+  const [userId, setUserId] = useRecoilState(userIdState);
+  
+  const [savedLocationId, setSavedLocationId] = useLocalStorage<string | null>('locationId', null);
+  const [locationId, ] = useRecoilState(currentLocationState);
+  const [, setCurrentPermissions] = useRecoilState(currentPermissionsState);
+  const setVisibleFamilies = useSetRecoilState(visibleFamiliesData);
 
   useEffect(() => {
-    setActiveAccountState(activeAccount);
-  }, [activeAccount, setActiveAccountState]);
+    setUserId(activeAccount?.localAccountId ?? null);
+  }, [activeAccount, userId, setUserId]);
+
+  const selectLocation = useRecoilCallback(({snapshot, set}) => (locations: UserLocationAccess[]) => {
+    // Default to the most recently selected location, or the first available location
+    // if none was previously saved or the saved location is no longer available.
+    const selectedLocation =
+      (savedLocationId == null || !locations.some(loc => loc.locationId === savedLocationId))
+      ? locations[0]
+      : locations.find(location => location.locationId === savedLocationId);
+    setSavedLocationId(selectedLocation!.locationId!);
+    set(currentLocationState, selectedLocation!.locationId!);
+    setCurrentPermissions(selectedLocation!.permissions!);
+  }, []);
+
+  // selectLocation(userResponse.locationIds!);
+  
+  useEffect(() => {
+    const loadInitialData = async () => {
+      if (userId && organizationId.length > 0 && locationId.length > 0) {
+        console.log("Loading initial data...")
+        const directoryClient = new DirectoryClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+        const dataResponse = await directoryClient.listVisibleFamilies(organizationId, locationId);
+        setVisibleFamilies(dataResponse);
+
+        //setLoaded(true);
+      }
+    }
+    loadInitialData();
+  }, [userId, organizationId, locationId, setVisibleFamilies]);
 
   return (
     <>
       {children}
     </>
   );
-
-  // const [organizationId, setOrganizationId] = useRecoilState(currentOrganizationState);
-  // const [savedLocationId, setSavedLocationId] = useLocalStorage<string | null>('locationId', null);
-  // const [locationId, ] = useRecoilState(currentLocationState);
-  // const [, setCurrentPermissions] = useRecoilState(currentPermissionsState);
-  // const [, setAvailableLocations] = useRecoilState(availableLocationsState)
-  // const [loaded, setLoaded] = useState(false);
-  
-  // const setVisibleFamilies = useSetRecoilState(visibleFamiliesData);
-
-  // const selectLocation = useRecoilCallback(({snapshot, set}) => (locations: UserLocationAccess[]) => {
-  //   // Default to the most recently selected location, or the first available location
-  //   // if none was previously saved or the saved location is no longer available.
-  //   const selectedLocation =
-  //     (savedLocationId == null || !locations.some(loc => loc.locationId === savedLocationId))
-  //     ? locations[0]
-  //     : locations.find(location => location.locationId === savedLocationId);
-  //   setSavedLocationId(selectedLocation!.locationId!);
-  //   set(currentLocationState, selectedLocation!.locationId!);
-  //   setCurrentPermissions(selectedLocation!.permissions!);
-  // }, []);
-
-  // //TODO: Consider useRecoilSnapshot here instead
-  // useEffect(() => {
-  //   const loadInitialLocation = async () => {
-  //     const usersClient = new UsersClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-  //     const userResponse = await usersClient.getUserOrganizationAccess();
-  //     setOrganizationId(userResponse.organizationId!);
-  //     setAvailableLocations(userResponse.locationIds!);
-  //     selectLocation(userResponse.locationIds!);
-  //   }
-  //   loadInitialLocation();
-  // }, [setOrganizationId, setAvailableLocations, selectLocation, setCurrentPermissions]);
-
-  // useEffect(() => {
-  //   const loadInitialData = async () => {
-  //     if (organizationId.length > 0 && locationId.length > 0) {
-  //       const directoryClient = new DirectoryClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-  //       const dataResponse = await directoryClient.listVisibleFamilies(organizationId, locationId);
-  //       setVisibleFamilies(dataResponse);
-
-  //       setLoaded(true);
-  //     }
-  //   }
-  //   loadInitialData();
-  // }, [organizationId, locationId, setVisibleFamilies]);
 }

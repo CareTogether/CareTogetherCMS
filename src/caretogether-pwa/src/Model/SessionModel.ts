@@ -3,15 +3,15 @@ import { atom, selector, useRecoilValue } from "recoil";
 import { authenticatingFetch } from "../Authentication/AuthenticatedHttp";
 import { Permission, UserLocationAccess, UsersClient } from "../GeneratedClient";
 
-export const activeAccountState = atom<AccountInfo | null>({
-  key: 'activeAccountState',
+export const userIdState = atom<string | null>({
+  key: 'userIdState',
   default: null
 });
 
 export const userOrganizationAccessQuery = selector({
   key: 'userOrganizationAccessQuery',
   get: async ({get}) => {
-    const activeAccount = get(activeAccountState);
+    const activeAccount = get(userIdState);
     if (activeAccount) {
       const usersClient = new UsersClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
       const userResponse = await usersClient.getUserOrganizationAccess();
@@ -22,22 +22,28 @@ export const userOrganizationAccessQuery = selector({
   }
 });
 
-export const currentOrganizationState = atom({
+export const currentOrganizationState = selector({//TODO: rename to 'query'
   key: 'currentOrganizationState',
-  default: ''
+  get: ({get}) => {
+    const userOrganizationAccess = get(userOrganizationAccessQuery);
+    return userOrganizationAccess?.organizationId ?? null;
+  }
 });
 
-export const availableLocationsState = atom({
+export const availableLocationsState = selector({//TODO: rename to 'query'
   key: 'availableLocationsState',
-  default: [] as UserLocationAccess[]
+  get: ({get}) => {
+    const userOrganizationAccess = get(userOrganizationAccessQuery);
+    return userOrganizationAccess?.locationIds ?? null;
+  }
 });
 
-export const currentLocationState = atom({
+export const currentLocationState = atom({//TODO: Make this 'selectedLocationState'
   key: 'currentLocationState',
   default: ''
 });
 
-export const currentPermissionsState = atom({
+export const currentPermissionsState = atom({//TODO: Make this a query off userOrganizationAccessQuery and selectedLocationState
   key: 'currentPermissionsState',
   default: [] as Permission[]
 });
