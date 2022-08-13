@@ -7,6 +7,7 @@ import { theme } from './theme';
 import { CssBaseline } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns as DateAdapter } from '@mui/x-date-pickers/AdapterDateFns';
+import { GlobalErrorBoundary } from './GlobalErrorBoundary';
 import { RecoilRoot } from 'recoil';
 import { BrowserRouter as Router } from "react-router-dom";
 import { MsalProvider } from '@azure/msal-react';
@@ -14,8 +15,8 @@ import { globalMsalInstance } from './Authentication/Auth';
 import AuthenticationWrapper from './Authentication/AuthenticationWrapper';
 import { ModelLoader } from './Model/ModelLoader';
 import ShellRootLayout from './Shell/ShellRootLayout';
-// import RequestBackdrop from './RequestBackdrop';
-// import ErrorBackdrop from './ErrorBackdrop';
+import RequestBackdrop from './RequestBackdrop';
+import ErrorBackdrop from './ErrorBackdrop';
 import reportWebVitals from './reportWebVitals';
 import { UiTest } from './UiTest';
 
@@ -28,22 +29,24 @@ root.render(
       <ThemeProvider theme={theme}>
         <CssBaseline enableColorScheme />
         <LocalizationProvider dateAdapter={DateAdapter}>
-          <RecoilRoot>
-            <Router>
-              <MsalProvider instance={globalMsalInstance}>
-                <AuthenticationWrapper>
-                  <ModelLoader>
-                    <ShellRootLayout>
-                      <UiTest />
-                      {/* <AppRoutes /> */}
-                    </ShellRootLayout>
-                  </ModelLoader>
-                </AuthenticationWrapper>
-              </MsalProvider>
-            </Router>
-            {/* <RequestBackdrop />
-            <ErrorBackdrop /> */}
-          </RecoilRoot>
+          <GlobalErrorBoundary>
+            <RecoilRoot>
+              <Router>
+                <MsalProvider instance={globalMsalInstance}>
+                  <AuthenticationWrapper>
+                    <ModelLoader>
+                      <ShellRootLayout>
+                        <UiTest />
+                        {/* <AppRoutes /> */}
+                      </ShellRootLayout>
+                    </ModelLoader>
+                  </AuthenticationWrapper>
+                </MsalProvider>
+              </Router>
+              <RequestBackdrop />
+              <ErrorBackdrop />
+            </RecoilRoot>
+          </GlobalErrorBoundary>
         </LocalizationProvider>
       </ThemeProvider>
     </AppInsightsContext.Provider>
