@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { ApplicationInsights } from '@microsoft/applicationinsights-web';
-import { ReactPlugin, withAITracking } from '@microsoft/applicationinsights-react-js';
+import { AppInsightsContext } from '@microsoft/applicationinsights-react-js';
+import { aiReactPlugin } from './ApplicationInsightsService';
 import { ThemeProvider } from '@mui/material/styles';
 import { theme } from './theme';
 import { CssBaseline } from '@mui/material';
@@ -19,42 +19,34 @@ import ShellRootLayout from './Shell/ShellRootLayout';
 import reportWebVitals from './reportWebVitals';
 import { UiTest } from './UiTest';
 
-var reactPlugin = new ReactPlugin();
-var appInsights = new ApplicationInsights({
-  config: {
-    connectionString: process.env.REACT_APP_APPINSIGHTS_CONNECTIONSTRING,
-    enableAutoRouteTracking: true,
-    extensions: [reactPlugin]
-  }
-});
-appInsights.loadAppInsights();
-
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 root.render(
   <React.StrictMode>
-    <ThemeProvider theme={theme}>
-      <CssBaseline enableColorScheme />
-      <LocalizationProvider dateAdapter={DateAdapter}>
-        <RecoilRoot>
-          <Router>
-            <MsalProvider instance={globalMsalInstance}>
-              <AuthenticationWrapper>
-                <ModelLoader>
-                  <ShellRootLayout>
-                    <UiTest />
-                    {/* <AppRoutes /> */}
-                  </ShellRootLayout>
-                </ModelLoader>
-              </AuthenticationWrapper>
-            </MsalProvider>
-          </Router>
-          {/* <RequestBackdrop />
-          <ErrorBackdrop /> */}
-        </RecoilRoot>
-      </LocalizationProvider>
-    </ThemeProvider>
+    <AppInsightsContext.Provider value={aiReactPlugin}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline enableColorScheme />
+        <LocalizationProvider dateAdapter={DateAdapter}>
+          <RecoilRoot>
+            <Router>
+              <MsalProvider instance={globalMsalInstance}>
+                <AuthenticationWrapper>
+                  <ModelLoader>
+                    <ShellRootLayout>
+                      <UiTest />
+                      {/* <AppRoutes /> */}
+                    </ShellRootLayout>
+                  </ModelLoader>
+                </AuthenticationWrapper>
+              </MsalProvider>
+            </Router>
+            {/* <RequestBackdrop />
+            <ErrorBackdrop /> */}
+          </RecoilRoot>
+        </LocalizationProvider>
+      </ThemeProvider>
+    </AppInsightsContext.Provider>
   </React.StrictMode>
 );
 

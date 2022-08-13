@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { InteractionType } from "@azure/msal-browser";
 import { useMsalAuthentication, useIsAuthenticated } from '@azure/msal-react';
+import { globalMsalInstance } from './Auth';
 
 function SignInScreen() {
   // Force the user to sign in if not already authenticated, then render the app.
@@ -17,6 +18,12 @@ interface AuthenticationWrapperProps {
 }
 export default function AuthenticationWrapper({ children }: AuthenticationWrapperProps) {
   const isAuthenticated = useIsAuthenticated();
+
+  useEffect(() => {
+    const accounts = globalMsalInstance.getAllAccounts();
+    const accountToActivate = accounts.length > 0 ? accounts[0] : null;
+    globalMsalInstance.setActiveAccount(accountToActivate);
+  }, [ isAuthenticated ]);
 
   return (
     <>
