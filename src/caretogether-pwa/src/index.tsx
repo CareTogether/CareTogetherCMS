@@ -18,7 +18,6 @@ import ShellRootLayout from './Shell/ShellRootLayout';
 import RequestBackdrop from './RequestBackdrop';
 import ErrorBackdrop from './ErrorBackdrop';
 import reportWebVitals from './reportWebVitals';
-import { UiTest } from './UiTest';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -36,7 +35,6 @@ root.render(
                   <AuthenticationWrapper>
                     <ModelRoot>
                       <ShellRootLayout>
-                        <UiTest />
                         {/* <AppRoutes /> */}
                       </ShellRootLayout>
                     </ModelRoot>

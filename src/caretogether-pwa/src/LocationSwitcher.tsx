@@ -2,7 +2,7 @@ import { Select, MenuItem, useMediaQuery, useTheme } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { organizationConfigurationData, organizationNameData } from './Model/ConfigurationModel';
-import { availableLocationsState, currentLocationState } from './Model/SessionModel';
+import { availableLocationsState, selectedLocationIdState } from './Model/SessionModel';
 import { useLocalStorage } from './Hooks/useLocalStorage';
 
 export function LocationSwitcher() {
@@ -12,7 +12,7 @@ export function LocationSwitcher() {
   const organizationName = useRecoilValue(organizationNameData);
   const organizationConfiguration = useRecoilValue(organizationConfigurationData);
 
-  const [currentLocationId, setCurrentLocationId] = useRecoilState(currentLocationState);
+  const [currentLocationId, setCurrentLocationId] = useRecoilState(selectedLocationIdState);
   const [, setSavedLocationId] = useLocalStorage<string | null>('locationId', null);
   const availableLocations = useRecoilValue(availableLocationsState);
 

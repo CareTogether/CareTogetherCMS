@@ -8,6 +8,19 @@ export const visibleFamiliesData = atom<CombinedFamilyInfo[]>({
   key: 'visibleFamiliesData',
   default: []
 });
+// useEffect(() => {
+//   const loadInitialData = async () => {
+//     if (userId && organizationId.length > 0 && locationId.length > 0) {
+//       console.log("Loading initial data...")
+//       const directoryClient = new DirectoryClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+//       const dataResponse = await directoryClient.listVisibleFamilies(organizationId, locationId);
+//       setVisibleFamilies(dataResponse);
+
+//       //setLoaded(true);
+//     }
+//   }
+//   loadInitialData();
+// }, [userId, organizationId, locationId, setVisibleFamilies]);
 
 export function usePersonLookup() {
   const visibleFamilies = useRecoilValue(visibleFamiliesData);
