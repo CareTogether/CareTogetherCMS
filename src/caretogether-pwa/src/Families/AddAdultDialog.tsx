@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@mui/material';
 import { Age, ExactAge, AgeInYears, Gender, EmailAddressType, PhoneNumberType, CombinedFamilyInfo } from '../GeneratedClient';
-import { useDirectoryModel } from '../Model/DirectoryModel';
+import { visibleFamiliesData, useDirectoryModel } from '../Model/DirectoryModel';
 import WarningIcon from '@mui/icons-material/Warning';
 import { DatePicker } from '@mui/x-date-pickers';
 import { useRecoilValue } from 'recoil';
 import { adultFamilyRelationshipsData, ethnicitiesData } from '../Model/ConfigurationModel';
 import { useParams } from 'react-router-dom';
 import { useBackdrop } from '../Hooks/useBackdrop';
-import { visibleFamiliesData } from '../Model/ModelRoot';
 import { subYears } from 'date-fns';
 
 interface AddAdultDialogProps {

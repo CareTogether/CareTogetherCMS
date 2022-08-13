@@ -1,16 +1,7 @@
-import { useAccount, useMsal } from "@azure/msal-react";
-import React from "react";
-import { useState, useEffect } from "react";
-import { atom, selector, useRecoilCallback, useRecoilState, useSetRecoilState } from "recoil";
-import { authenticatingFetch } from "../Authentication/AuthenticatedHttp";
-import { CombinedFamilyInfo, DirectoryClient, UserLocationAccess, UsersClient } from "../GeneratedClient";
-import { useLocalStorage } from "../Hooks/useLocalStorage";
-import { activeAccountState, currentOrganizationState, currentLocationState, currentPermissionsState, availableLocationsState } from "./SessionModel";
-
-export const visibleFamiliesData = atom<CombinedFamilyInfo[]>({
-  key: 'visibleFamiliesData',
-  default: []
-});
+import { useAccount } from "@azure/msal-react";
+import { useEffect } from "react";
+import { useSetRecoilState } from "recoil";
+import { activeAccountState } from "./SessionModel";
 
 interface ModelLoaderProps {
   children?: React.ReactNode
