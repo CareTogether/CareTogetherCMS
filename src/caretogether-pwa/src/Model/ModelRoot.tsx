@@ -1,10 +1,11 @@
+import { useAccount, useMsal } from "@azure/msal-react";
 import React from "react";
 import { useState, useEffect } from "react";
 import { atom, selector, useRecoilCallback, useRecoilState, useSetRecoilState } from "recoil";
 import { authenticatingFetch } from "../Authentication/AuthenticatedHttp";
 import { CombinedFamilyInfo, DirectoryClient, UserLocationAccess, UsersClient } from "../GeneratedClient";
 import { useLocalStorage } from "../Hooks/useLocalStorage";
-import { currentOrganizationState, currentLocationState, currentPermissionsState, availableLocationsState, initializeModelRootState } from "./SessionModel";
+import { activeAccountState, currentOrganizationState, currentLocationState, currentPermissionsState, availableLocationsState } from "./SessionModel";
 
 export const visibleFamiliesData = atom<CombinedFamilyInfo[]>({
   key: 'visibleFamiliesData',
@@ -16,11 +17,12 @@ interface ModelLoaderProps {
 }
 
 export function ModelRoot({children}: ModelLoaderProps) {
-  const setInitializeModelRoot = useSetRecoilState(initializeModelRootState);
+  const activeAccount = useAccount();
+  const setActiveAccountState = useSetRecoilState(activeAccountState);
 
   useEffect(() => {
-    setInitializeModelRoot(true);
-  }, [setInitializeModelRoot]);
+    setActiveAccountState(activeAccount);
+  }, [activeAccount, setActiveAccountState]);
 
   return (
     <>
