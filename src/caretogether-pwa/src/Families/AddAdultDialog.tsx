@@ -8,7 +8,7 @@ import { useRecoilValue } from 'recoil';
 import { adultFamilyRelationshipsData, ethnicitiesData } from '../Model/ConfigurationModel';
 import { useParams } from 'react-router-dom';
 import { useBackdrop } from '../Hooks/useBackdrop';
-import { visibleFamiliesData } from '../Model/ModelLoader';
+import { visibleFamiliesData } from '../Model/ModelRoot';
 import { subYears } from 'date-fns';
 
 interface AddAdultDialogProps {
