@@ -1,5 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { ApplicationInsights } from '@microsoft/applicationinsights-web';
+import { ReactPlugin, withAITracking } from '@microsoft/applicationinsights-react-js';
 import { ThemeProvider } from '@mui/material/styles';
 import { theme } from './theme';
 import { CssBaseline } from '@mui/material';
@@ -16,6 +18,16 @@ import ShellRootLayout from './Shell/ShellRootLayout';
 // import ErrorBackdrop from './ErrorBackdrop';
 import reportWebVitals from './reportWebVitals';
 import { UiTest } from './UiTest';
+
+var reactPlugin = new ReactPlugin();
+var appInsights = new ApplicationInsights({
+  config: {
+    connectionString: process.env.REACT_APP_APPINSIGHTS_CONNECTIONSTRING,
+    enableAutoRouteTracking: true,
+    extensions: [reactPlugin]
+  }
+});
+appInsights.loadAppInsights();
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
