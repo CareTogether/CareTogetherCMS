@@ -1,17 +1,6 @@
 import { Skeleton } from "@mui/material";
-import { RecoilValue, useRecoilValueLoadable } from "recoil";
 import { userOrganizationAccessQuery } from "./Model/SessionModel";
-
-function useModel<T>(value: RecoilValue<T | null>) {
-  const loadableValue = useRecoilValueLoadable(value);
-  if (loadableValue.state === 'hasValue' && loadableValue.contents !== null) {
-    return loadableValue.contents;
-  } else if (loadableValue.state === 'hasError') {
-    throw loadableValue.contents;
-  } else {
-    return null;
-  }
-}
+import { useLoadable } from "./Hooks/useLoadable";
 
 export function UiTest() {
   // const [organizationId, setOrganizationId] = useRecoilState(currentOrganizationState);
@@ -21,7 +10,7 @@ export function UiTest() {
   // const [, setAvailableLocations] = useRecoilState(availableLocationsState);
   // const [loaded, setLoaded] = useState(false);
 
-  const data = useModel(userOrganizationAccessQuery);
+  const data = useLoadable(userOrganizationAccessQuery);
   
   console.log("Rendering... data = " + JSON.stringify(data).substring(0, 100));
   return (
