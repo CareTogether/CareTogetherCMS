@@ -8242,7 +8242,7 @@ export interface IUpdateArrangementComments extends IArrangementsCommand {
 
 export class UserOrganizationAccess implements IUserOrganizationAccess {
     organizationId?: string;
-    locationIds?: UserLocationAccess[];
+    locations?: UserLocationAccess[];
 
     constructor(data?: IUserOrganizationAccess) {
         if (data) {
@@ -8256,10 +8256,10 @@ export class UserOrganizationAccess implements IUserOrganizationAccess {
     init(_data?: any) {
         if (_data) {
             this.organizationId = _data["organizationId"];
-            if (Array.isArray(_data["locationIds"])) {
-                this.locationIds = [] as any;
-                for (let item of _data["locationIds"])
-                    this.locationIds!.push(UserLocationAccess.fromJS(item));
+            if (Array.isArray(_data["locations"])) {
+                this.locations = [] as any;
+                for (let item of _data["locations"])
+                    this.locations!.push(UserLocationAccess.fromJS(item));
             }
         }
     }
@@ -8274,10 +8274,10 @@ export class UserOrganizationAccess implements IUserOrganizationAccess {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["organizationId"] = this.organizationId;
-        if (Array.isArray(this.locationIds)) {
-            data["locationIds"] = [];
-            for (let item of this.locationIds)
-                data["locationIds"].push(item.toJSON());
+        if (Array.isArray(this.locations)) {
+            data["locations"] = [];
+            for (let item of this.locations)
+                data["locations"].push(item.toJSON());
         }
         return data;
     }
@@ -8285,7 +8285,7 @@ export class UserOrganizationAccess implements IUserOrganizationAccess {
 
 export interface IUserOrganizationAccess {
     organizationId?: string;
-    locationIds?: UserLocationAccess[];
+    locations?: UserLocationAccess[];
 }
 
 export class UserLocationAccess implements IUserLocationAccess {

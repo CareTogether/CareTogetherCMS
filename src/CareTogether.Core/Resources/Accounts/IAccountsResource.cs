@@ -8,7 +8,7 @@ namespace CareTogether.Resources.Accounts
     public sealed record UserTenantAccessSummary(Guid OrganizationId,
         ImmutableList<Guid> LocationIds);
     public sealed record UserOrganizationAccess(Guid OrganizationId,
-        ImmutableList<UserLocationAccess> LocationIds);
+        ImmutableList<UserLocationAccess> Locations);
     public sealed record UserLocationAccess(Guid LocationId,
         ImmutableList<string> Roles, ImmutableList<Permission> Permissions);
 
