@@ -31,7 +31,7 @@ function ListItemLink(props: ListItemLinkProps) {
 
   return (
     <li>
-      <ListItem button component={renderLink} selected={match !== null}>
+      <ListItem button component={renderLink} selected={match !== null} sx={{paddingLeft: 1.5}}>
         {icon ? <ListItemIcon>{icon}</ListItemIcon> : null}
         <ListItemText primary={primary} />
       </ListItem>
