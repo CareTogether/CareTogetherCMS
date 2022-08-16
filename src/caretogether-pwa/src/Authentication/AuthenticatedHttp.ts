@@ -1,18 +1,34 @@
 import { IPublicClientApplication } from "@azure/msal-browser";
+import { atom, selector } from "recoil";
 import { globalMsalInstance } from "./Auth";
 
+export const accessTokenState = atom<string>({
+  key: 'accessTokenState',
+  effects: [
+    //TODO: Print to console whenever this updates?
+  ]
+});
+
 const acquireAccessToken = async (msalInstance: IPublicClientApplication) => {
+  const activeAccount = msalInstance.getActiveAccount();
+  const accounts = msalInstance.getAllAccounts();
+
+  if (!activeAccount && accounts.length === 0) {
+    /*
+    * User is not signed in. Throw error or wait for user to login.
+    * Do not attempt to log a user in outside of the context of MsalProvider
+    */
+    throw new Error("User is not signed in.");
+  }
   const request = {
-    scopes: [process.env.REACT_APP_AUTH_SCOPES]
+    scopes: [process.env.REACT_APP_AUTH_SCOPES],
+    account: activeAccount || accounts[0]
   };
 
-  try {
-    const authResponse = await msalInstance.acquireTokenSilent(request);
-    return authResponse.accessToken;
-  } catch (error) {
-    // Fall back to interaction if the silent call fails.
-    await msalInstance.acquireTokenRedirect(request);
-  }
+  // This will throw an exception on failure.
+  const authResult = await msalInstance.acquireTokenSilent(request);
+
+  return authResult.accessToken
 };
 
 class AuthenticatedHttp {
@@ -28,3 +44,22 @@ class AuthenticatedHttp {
 }
 
 export const authenticatingFetch = new AuthenticatedHttp();
+
+class AccessTokenHttp {
+  constructor(private accessToken: string) { }
+  async fetch(url: RequestInfo, init?: RequestInit): Promise<Response> {
+    init && (init.headers = {
+      ...init.headers,
+      Authorization: `Bearer ${this.accessToken}`
+    });
+    return window.fetch(url, init);
+  }
+}
+
+export const accessTokenFetchQuery = selector({
+  key: 'accessTokenFetch',
+  get: ({get}) => {
+    const accessToken = get(accessTokenState);
+    return new AccessTokenHttp(accessToken);
+  }
+})

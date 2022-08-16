@@ -1,38 +1,34 @@
-import { atom, selector, useRecoilValue } from "recoil";
-import { authenticatingFetch } from "../Authentication/AuthenticatedHttp";
+import { atom, selector } from "recoil";
+import { accessTokenFetchQuery } from "../Authentication/AuthenticatedHttp";
 import { Permission, UserLocationAccess, UsersClient } from "../GeneratedClient";
+import { useLoadable } from "../Hooks/useLoadable";
 
 export const userIdState = atom<string | null>({
-  key: 'userIdState',
-  default: null
+  key: 'userIdState'
 });
 
 export const userOrganizationAccessQuery = selector({
   key: 'userOrganizationAccessQuery',
   get: async ({get}) => {
-    const activeAccount = get(userIdState);
-    if (activeAccount) {
-      const usersClient = new UsersClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const userResponse = await usersClient.getUserOrganizationAccess();
-      return userResponse;
-    } else {
-      return null;
-    }
+    const accessTokenFetch = get(accessTokenFetchQuery);
+    const usersClient = new UsersClient(process.env.REACT_APP_API_HOST, accessTokenFetch);
+    const userResponse = await usersClient.getUserOrganizationAccess();
+    return userResponse;
   }
 });
 
-export const currentOrganizationQuery = selector({
+export const currentOrganizationIdQuery = selector({
   key: 'currentOrganizationQuery',
   get: ({get}) => {
     const userOrganizationAccess = get(userOrganizationAccessQuery);
-    return userOrganizationAccess?.organizationId ?? null;
+    return userOrganizationAccess.organizationId!;
   }
 });
 
 export const currentOrganizationState = selector({//TODO: Deprecated
   key: 'COMPATIBILITY__currentOrganizationState',
   get: ({get}) => {
-    const value = get(currentOrganizationQuery);
+    const value = get(currentOrganizationIdQuery);
     return value ?? '';
   }
 });
@@ -53,9 +49,8 @@ export const availableLocationsState = selector({//TODO: Deprecated
   }
 });
 
-export const selectedLocationIdState = atom<string | null>({
-  key: 'selectedLocationIdState',
-  default: null
+export const selectedLocationIdState = atom<string>({
+  key: 'selectedLocationIdState'
 })
 
 export const currentLocationQuery = selector({
@@ -63,11 +58,7 @@ export const currentLocationQuery = selector({
   get: ({get}) => {
     const userOrganizationAccess = get(userOrganizationAccessQuery);
     const selectedLocationId = get(selectedLocationIdState);
-    if (userOrganizationAccess == null || userOrganizationAccess.locations == null || selectedLocationId == null) {
-      return null;
-    } else {
-      return userOrganizationAccess.locations.find(location => location.locationId === selectedLocationId) || null;
-    }
+    return userOrganizationAccess.locations!.find(location => location.locationId === selectedLocationId)!;
   }
 });
 
@@ -75,7 +66,7 @@ export const currentLocationState = selector({//TODO: Deprecated
   key: 'COMPATIBILITY__currentLocationState',
   get: ({get}) => {
     const value = get(currentLocationQuery);
-    return value?.locationId || '';
+    return value.locationId!;
   }
 });
 
@@ -83,7 +74,7 @@ export const currentPermissionsQuery = selector({
   key: 'currentPermissionsQuery',
   get: ({get}) => {
     const currentLocation = get(currentLocationQuery);
-    return currentLocation?.permissions || [];
+    return currentLocation.permissions!;
   }
 });
 
@@ -96,6 +87,8 @@ export const currentPermissionsState = selector({//TODO: Deprecated
 });
 
 export function usePermissions() {
-  const currentPermissions = useRecoilValue(currentPermissionsQuery);
-  return (permission: Permission) => currentPermissions.includes(permission);
+  const currentPermissions = useLoadable(currentPermissionsQuery);
+  //TODO: If we want to expose a "not-yet-loaded" state, update this to return 'null' from
+  //      the callback when 'currentPermissions' is null.
+  return (permission: Permission) => (currentPermissions || []).includes(permission);
 }

@@ -15,8 +15,6 @@ import { globalMsalInstance } from './Authentication/Auth';
 import AuthenticationWrapper from './Authentication/AuthenticationWrapper';
 import { ModelRoot } from './Model/ModelRoot';
 import ShellRootLayout from './Shell/ShellRootLayout';
-import RequestBackdrop from './RequestBackdrop';
-import ErrorBackdrop from './ErrorBackdrop';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(
@@ -41,8 +39,8 @@ root.render(
                   </AuthenticationWrapper>
                 </MsalProvider>
               </Router>
-              <RequestBackdrop />
-              <ErrorBackdrop />
+              {/* <RequestBackdrop />
+              <ErrorBackdrop /> */}
             </RecoilRoot>
           </GlobalErrorBoundary>
         </LocalizationProvider>

@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { AppBar, Box, IconButton, Toolbar, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { AppBar, Box, IconButton, Skeleton, Toolbar, Typography, useMediaQuery, useTheme } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { ShellSearchBar } from './ShellSearchBar';
-import { ShellUserProfileMenu } from './ShellUserProfileMenu';
 import { ShellContextSwitcher } from './ShellContextSwitcher';
 import { screenTitleState } from './ShellScreenTitle';
 import { useRecoilValue } from 'recoil';
@@ -51,16 +50,18 @@ export function ShellAppBar({ menuDrawerOpen, setMenuDrawerOpen, drawerWidth }: 
           >
             <MenuIcon />
           </IconButton>)}
-        <Typography variant='h6' component="h3" noWrap sx={{
-            display: { xs: openMobileSearch ? 'none' : 'block', md: 'block' },
-            marginLeft: isDesktop ? (menuDrawerOpen ? 3 : 1) : 0
-          }}>
-          {screenTitle}
-        </Typography>
+        {screenTitle
+          ? <Typography variant='h6' component="h3" noWrap sx={{
+                display: { xs: openMobileSearch ? 'none' : 'block', md: 'block' },
+                marginLeft: isDesktop ? (menuDrawerOpen ? 3 : 1) : 0
+              }}>
+              {screenTitle}
+            </Typography>
+          : <Skeleton variant="text" sx={{fontSize: theme.typography.h6, marginLeft: 1}} width={200} />}
         <ShellSearchBar
           openMobileSearch={openMobileSearch}
           setOpenMobileSearch={setOpenMobileSearch} />
-        <ShellUserProfileMenu />
+        {/* <ShellUserProfileMenu /> */}
       </Toolbar>
     </AppBar>
   );

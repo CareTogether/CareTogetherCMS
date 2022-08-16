@@ -5,7 +5,7 @@ import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
 import PeopleIcon from '@mui/icons-material/People';
 import { useFeatureFlags } from './Model/ConfigurationModel';
 import { useState } from 'react';
-import { LocationSwitcher } from './LocationSwitcher';
+// import { LocationSwitcher } from './LocationSwitcher';
 import { Copyright } from './Copyright';
 //import DashboardIcon from '@mui/icons-material/Dashboard';
 
@@ -34,7 +34,7 @@ export function Footer(props: any) {
       >
         <BottomNavigationAction icon={<MenuIcon />} onClick={() => setDrawerOpen(true)} />
         {/* <BottomNavigationAction component={Link} to='/dashboard' label="Dashboard" icon={<DashboardIcon />} /> */}
-        {featureFlags.viewReferrals && <BottomNavigationAction component={Link} to='/referrals' label="Referrals" icon={<PermPhoneMsgIcon />} />}
+        {featureFlags?.viewReferrals && <BottomNavigationAction component={Link} to='/referrals' label="Referrals" icon={<PermPhoneMsgIcon />} />}
         <BottomNavigationAction component={Link} to='/volunteers' label="Volunteers" icon={<PeopleIcon />} />
       </BottomNavigation>
       <Drawer
@@ -42,7 +42,7 @@ export function Footer(props: any) {
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
       >
-        <LocationSwitcher />
+        {/* <LocationSwitcher /> */}
         <Copyright />
       </Drawer>
     </>

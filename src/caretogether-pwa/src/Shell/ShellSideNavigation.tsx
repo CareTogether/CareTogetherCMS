@@ -1,20 +1,44 @@
-import { Drawer, List, Stack, useTheme } from '@mui/material';
+import { Drawer, List, Skeleton, Stack, useTheme } from '@mui/material';
 import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
 import PeopleIcon from '@mui/icons-material/People';
 import { ListItemLink } from '../ListItemLink';
-import { useFeatureFlags } from '../Model/ConfigurationModel';
+import { featureFlagQuery, organizationConfigurationQuery } from '../Model/ConfigurationModel';
 import { Copyright } from '../Copyright';
+import { useLoadable } from '../Hooks/useLoadable';
 
-function SideNavigationMenu() {
-  const flags = {} as any;//useFeatureFlags();
+interface SideNavigationMenuProps {
+  open: boolean;
+}
+function SideNavigationMenu({ open }: SideNavigationMenuProps) {
+  //const flags = useFeatureFlags(); //TODO: Why was this not enough?
+  const flags = useLoadable(featureFlagQuery);
+  const config = useLoadable(organizationConfigurationQuery); //TODO: Why is this (or a rerender) needed to trigger featureFlagQuery?
+  console.log(config?.organizationName); //TODO: This is just here as a placeholder to avoid warnings.
 
   return (
     //  <List aria-label="main navigation">
     //    <ListItemLink to="/dashboard" primary="Dashboard" icon={<DashboardIcon />} />
     //  </List>
     <List aria-label="secondary navigation">
-      {flags.viewReferrals && <ListItemLink to="/referrals" primary="Referrals" icon={<PermPhoneMsgIcon />} />}
-      <ListItemLink to="/volunteers" primary="Volunteers" icon={<PeopleIcon />} />
+      {flags === null
+        ? <>
+            <Stack padding={1} spacing={1}>
+              <Stack direction='row'>
+                <Skeleton variant="circular" width={30} height={30} />
+                {open &&
+                  <Skeleton variant="rounded" width={100} height={24} sx={{marginLeft: 2, marginTop: 0.5}} />}
+              </Stack>
+              <Stack direction='row'>
+                <Skeleton variant="circular" width={30} height={30} />
+                {open &&
+                  <Skeleton variant="rounded" width={100} height={24} sx={{marginLeft: 2, marginTop: 0.5}} />}
+              </Stack>
+            </Stack>
+          </>
+        : <>
+            {flags?.viewReferrals && <ListItemLink to="/referrals" primary="Referrals" icon={<PermPhoneMsgIcon />} />}
+            <ListItemLink to="/volunteers" primary="Volunteers" icon={<PeopleIcon />} />
+          </>}
     </List>
   );
 }
@@ -64,7 +88,7 @@ export function ShellSideNavigation({ open, width }: ShellSideNavigationProps) {
         }
       }}>
       <Stack sx={{ width: width, paddingTop: { xs: 7, sm: 8, md: 6 } }}>
-        <SideNavigationMenu />
+        <SideNavigationMenu open={open} />
         <div style={{ position: 'fixed', bottom: 0, marginLeft: 10}}>
           <Copyright />
         </div>

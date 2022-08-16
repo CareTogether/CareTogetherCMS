@@ -1,40 +1,64 @@
-import { selector, useRecoilValue } from "recoil";
-import { ConfigurationClient, CurrentFeatureFlags, RequirementStage, VolunteerFamilyRequirementScope } from "../GeneratedClient";
-import { authenticatingFetch } from "../Authentication/AuthenticatedHttp";
-import { currentLocationState, currentOrganizationState } from "./SessionModel";
+import { selector } from "recoil";
+import { ConfigurationClient, RequirementStage, VolunteerFamilyRequirementScope } from "../GeneratedClient";
+import { accessTokenFetchQuery } from "../Authentication/AuthenticatedHttp";
+import { currentLocationState, currentOrganizationIdQuery, currentOrganizationState, selectedLocationIdState } from "./SessionModel";
+import { useLoadable } from "../Hooks/useLoadable";
 
-export const organizationConfigurationData = selector({
-  key: 'organizationConfigurationData',
+export const organizationConfigurationQuery = selector({
+  key: 'organizationConfigurationQuery',
   get: async ({get}) => {
-    const organizationId = get(currentOrganizationState);
-    const configurationClient = new ConfigurationClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+    const organizationId = get(currentOrganizationIdQuery);
+    const accessTokenFetch = get(accessTokenFetchQuery);
+    const configurationClient = new ConfigurationClient(process.env.REACT_APP_API_HOST, accessTokenFetch);
     const dataResponse = await configurationClient.getOrganizationConfiguration(organizationId);
     return dataResponse;
   }});
 
-export const organizationNameData = selector({
-  key: 'organizationNameData',
+export const organizationConfigurationData = selector({//TODO: Deprecated
+  key: 'COMPATIBILITY__organizationConfigurationData',
+  get: async ({get}) => {
+    const organizationConfiguration = get(organizationConfigurationQuery);
+    return organizationConfiguration;
+  }});
+
+export const organizationNameQuery = selector({
+  key: 'organizationNameQuery',
   get: ({get}) => {
-    const organizationConfiguration = get(organizationConfigurationData);
-    return organizationConfiguration.organizationName as string;
+    const organizationConfiguration = get(organizationConfigurationQuery);
+    return organizationConfiguration.organizationName!;
   }
 })
 
-export const ethnicitiesData = selector({
-  key: 'ethnicitiesData',
+export const locationConfigurationQuery = selector({
+  key: 'locationConfigurationQuery',
   get: ({get}) => {
-    const organizationConfiguration = get(organizationConfigurationData);
-    const currentLocationId = get(currentLocationState);
-    return organizationConfiguration.locations?.find(x => x.id === currentLocationId)?.ethnicities as string[];
+    const organizationConfiguration = get(organizationConfigurationQuery);
+    const selectedLocation = get(selectedLocationIdState);
+    return organizationConfiguration.locations!.find(x => x.id === selectedLocation)!;
+  }
+});
+
+export const locationNameQuery = selector({
+  key: 'locationNameQuery',
+  get: ({get}) => {
+    const locationConfiguration = get(locationConfigurationQuery);
+    return locationConfiguration.name!;
   }
 })
 
-export const adultFamilyRelationshipsData = selector({
-  key: 'adultFamilyRelationshipsData',
+export const ethnicitiesData = selector({//TODO: Rename to 'query'
+  key: 'COMPATIBILITY__ethnicitiesData',
   get: ({get}) => {
-    const organizationConfiguration = get(organizationConfigurationData);
-    const currentLocationId = get(currentLocationState);
-    return organizationConfiguration.locations?.find(x => x.id === currentLocationId)?.adultFamilyRelationships as string[];
+    const locationConfiguration = get(locationConfigurationQuery);
+    return locationConfiguration.ethnicities!;
+  }
+})
+
+export const adultFamilyRelationshipsData = selector({//TODO: Rename to 'query'
+  key: 'COMPATIBILITY__adultFamilyRelationshipsData',
+  get: ({get}) => {
+    const locationConfiguration = get(locationConfigurationQuery);
+    return locationConfiguration.adultFamilyRelationships!;
   }
 })
 
@@ -43,7 +67,8 @@ export const policyData = selector({
   get: async ({get}) => {
     const organizationId = get(currentOrganizationState);
     const locationId = get(currentLocationState);
-    const configurationClient = new ConfigurationClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+    const accessTokenFetch = get(accessTokenFetchQuery);
+    const configurationClient = new ConfigurationClient(process.env.REACT_APP_API_HOST, accessTokenFetch);
     const dataResponse = await configurationClient.getEffectiveLocationPolicy(organizationId, locationId);
     return dataResponse;
   }});
@@ -115,18 +140,17 @@ export const adultRequirementsData = selector({
         .sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
   }});
 
-const featureFlagData = selector({
-  key: 'featureFlagData',
+export const featureFlagQuery = selector({
+  key: 'featureFlagQuery',
   get: async ({get}) => {
-    const organizationId = get(currentOrganizationState);
-    const locationId = get(currentLocationState);
-    // const configurationClient = new ConfigurationClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-    // const dataResponse = await configurationClient.getLocationFlags(organizationId, locationId);
-    // return dataResponse;
-    return new CurrentFeatureFlags();
+    const organizationId = get(currentOrganizationIdQuery);
+    const locationId = get(selectedLocationIdState);
+    const accessTokenFetch = get(accessTokenFetchQuery);
+    const configurationClient = new ConfigurationClient(process.env.REACT_APP_API_HOST, accessTokenFetch);
+    const dataResponse = await configurationClient.getLocationFlags(organizationId, locationId);
+    return dataResponse;
   }});
 
 export function useFeatureFlags() {
-  const featureFlags = useRecoilValue(featureFlagData);
-  return featureFlags;
+  return useLoadable(featureFlagQuery);
 }

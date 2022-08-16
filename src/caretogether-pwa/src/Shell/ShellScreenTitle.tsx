@@ -1,8 +1,8 @@
 import { atom, useSetRecoilState } from "recoil";
 
-export const screenTitleState = atom({
+export const screenTitleState = atom<string | null>({
   key: 'screenTitleState',
-  default: "CareTogether"
+  default: null
 });
 
 export default function useScreenTitle(title: string) {
