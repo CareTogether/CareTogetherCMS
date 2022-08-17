@@ -14,7 +14,6 @@ export function ShellSearchBar({ openMobileSearch, setOpenMobileSearch }: ShellS
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
 
   const options = useLoadable(searchOptionsQuery) || [];
-  console.log(options);
 
   const searchBoxRef = useRef<any | null>(null);
 

@@ -1,4 +1,4 @@
-import { atom, AtomEffect, selector, useRecoilCallback, useRecoilValue } from "recoil";
+import { atom, selector, useRecoilCallback, useRecoilValue } from "recoil";
 import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, DirectoryCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, DirectoryClient, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, NoteCommandResult, UpdatePersonGender, UpdatePersonAge, UpdatePersonEthnicity, UpdateAdultRelationshipToFamily, CustodialRelationshipType, UpdateCustodialRelationshipType, RemoveCustodialRelationship, ChangePrimaryFamilyContact, CombinedFamilyInfo } from "../GeneratedClient";
 import { accessTokenFetchQuery, authenticatingFetch } from "../Authentication/AuthenticatedHttp";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
@@ -7,20 +7,18 @@ import { currentOrganizationAndLocationIdsQuery, organizationConfigurationData, 
 export const directoryClientQuery = selector({
   key: 'directoryClientQuery',
   get: ({get}) => {
-    console.log("directoryClientQuery");
     const accessTokenFetch = get(accessTokenFetchQuery);
     return new DirectoryClient(process.env.REACT_APP_API_HOST, accessTokenFetch);
   }
 });
 
-export const visibleFamiliesQuery = selector({ //TODO: Reinitialize as needed (on location/account change?)
+//TODO: Maintain a local collection of "edited" families that are incorporated into the query for final result?
+
+export const visibleFamiliesQuery = selector({ //TODO: Imperatively reinitialize the atom on location/account change?
   key: 'visibleFamiliesQuery',
   get: async ({get}) => {
-    console.log("visibleFamiliesQuery");
     get(organizationConfigurationQuery);
-    console.log("..."); //TODO: Why do we not get here??
     const {organizationId, locationId} = get(currentOrganizationAndLocationIdsQuery);
-    console.log(organizationId + "::" + locationId);
     const directoryClient = get(directoryClientQuery);
     return await directoryClient.listVisibleFamilies(organizationId, locationId);
   }
@@ -28,21 +26,21 @@ export const visibleFamiliesQuery = selector({ //TODO: Reinitialize as needed (o
 
 export const visibleFamiliesData = atom<CombinedFamilyInfo[]>({
   key: 'visibleFamiliesData',
-  //default: []
-  effects: [
-    (params) => {
-      console.log("visibleFamiliesData:effect[0]");
-      const initialData = params.getPromise(visibleFamiliesQuery);
-      console.log(initialData);
-      params.setSelf(initialData);
-    }
-  ]
+  default: []
+  // effects: [
+  //   (params) => {
+  //     console.log("visibleFamiliesData:effect[0]");
+  //     const initialData = params.getPromise(visibleFamiliesQuery);
+  //     console.log(initialData);
+  //     params.setSelf(initialData);
+  //   }
+  // ]
 });
 
 export const searchOptionsQuery = selector({
   key: 'searchOptionsQuery',
   get: ({get}) => {
-    const visibleFamilies = get(visibleFamiliesData);
+    const visibleFamilies = get(visibleFamiliesQuery); //TODO: Use the atom instead
     return visibleFamilies.map(cfi => cfi.family!.id!);
   }
 })
