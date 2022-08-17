@@ -36,3 +36,42 @@ export function ShellBottomNavigation() {
     </Paper>
   );
 }
+// export function Footer(props: any) {
+//   const location = useLocation();
+  
+//   const featureFlags = useFeatureFlags();
+
+//   const links = [/*'/dashboard',*/ '/referrals', '/volunteers'];
+//   const selectedLink = links.findIndex(link => location.pathname.startsWith(link));
+
+//   const [drawerOpen, setDrawerOpen] = useState(false);
+//   const theme = useTheme();
+
+//   return (
+//     <>
+//       <BottomNavigation
+//         value={selectedLink}
+//         showLabels
+//         sx={{
+//           width: '100%',
+//           position: 'fixed',
+//           bottom: 0,
+//           backgroundColor: theme.palette.grey[300]
+//         }}
+//       >
+//         <BottomNavigationAction icon={<MenuIcon />} onClick={() => setDrawerOpen(true)} />
+//         {/* <BottomNavigationAction component={Link} to='/dashboard' label="Dashboard" icon={<DashboardIcon />} /> */}
+//         {featureFlags?.viewReferrals && <BottomNavigationAction component={Link} to='/referrals' label="Referrals" icon={<PermPhoneMsgIcon />} />}
+//         <BottomNavigationAction component={Link} to='/volunteers' label="Volunteers" icon={<PeopleIcon />} />
+//       </BottomNavigation>
+//       <Drawer
+//         sx={{ zIndex: theme.zIndex.drawer + 2, '& .MuiDrawer-paper': { padding: 2 }}}
+//         open={drawerOpen}
+//         onClose={() => setDrawerOpen(false)}
+//       >
+//         {/* <LocationSwitcher /> */}
+//         <Copyright />
+//       </Drawer>
+//     </>
+//   );
+// }
