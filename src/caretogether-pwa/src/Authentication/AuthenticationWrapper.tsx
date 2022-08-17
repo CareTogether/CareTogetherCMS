@@ -39,6 +39,7 @@ export default function AuthenticationWrapper({ children }: AuthenticationWrappe
     globalMsalInstance.setActiveAccount(accountToActivate);
   }, [ isAuthenticated ]);
   
+  // Track the most recently acquired access token as shared state for API clients to reference.
   useEffect(() => {
     const callbackId = instance.addEventCallback((event: any) => {
       if (event.eventType === EventType.ACQUIRE_TOKEN_SUCCESS) {

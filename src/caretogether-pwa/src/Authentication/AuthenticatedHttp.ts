@@ -5,7 +5,9 @@ import { globalMsalInstance } from "./Auth";
 export const accessTokenState = atom<string>({
   key: 'accessTokenState',
   effects: [
-    //TODO: Print to console whenever this updates?
+  //   ({onSet}) => {
+  //     onSet(newToken => console.log("ACCESS_TOKEN: " + newToken?.substring(0,10)))
+  //   }
   ]
 });
 

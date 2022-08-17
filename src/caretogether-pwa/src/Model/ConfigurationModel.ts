@@ -4,12 +4,19 @@ import { accessTokenFetchQuery } from "../Authentication/AuthenticatedHttp";
 import { currentLocationState, currentOrganizationIdQuery, currentOrganizationState, selectedLocationIdState } from "./SessionModel";
 import { useLoadable } from "../Hooks/useLoadable";
 
+export const configurationClientQuery = selector({
+  key: 'configurationClient',
+  get: ({get}) => {
+    const accessTokenFetch = get(accessTokenFetchQuery);
+    return new ConfigurationClient(process.env.REACT_APP_API_HOST, accessTokenFetch);
+  }
+});
+
 export const organizationConfigurationQuery = selector({
   key: 'organizationConfigurationQuery',
   get: async ({get}) => {
     const organizationId = get(currentOrganizationIdQuery);
-    const accessTokenFetch = get(accessTokenFetchQuery);
-    const configurationClient = new ConfigurationClient(process.env.REACT_APP_API_HOST, accessTokenFetch);
+    const configurationClient = get(configurationClientQuery);
     const dataResponse = await configurationClient.getOrganizationConfiguration(organizationId);
     return dataResponse;
   }});
@@ -67,8 +74,7 @@ export const policyData = selector({
   get: async ({get}) => {
     const organizationId = get(currentOrganizationState);
     const locationId = get(currentLocationState);
-    const accessTokenFetch = get(accessTokenFetchQuery);
-    const configurationClient = new ConfigurationClient(process.env.REACT_APP_API_HOST, accessTokenFetch);
+    const configurationClient = get(configurationClientQuery);
     const dataResponse = await configurationClient.getEffectiveLocationPolicy(organizationId, locationId);
     return dataResponse;
   }});
@@ -140,13 +146,25 @@ export const adultRequirementsData = selector({
         .sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
   }});
 
+export interface LocationContext {
+  organizationId: string
+  locationId: string
+}
+export const currentOrganizationAndLocationIdsQuery = selector<LocationContext>({
+  key: 'currentOrganizationAndLocationIdsQuery',
+  get: ({get}) => {
+    get(organizationConfigurationQuery); //TODO: Figure out why Recoil needs this.
+    const organizationId = get(currentOrganizationIdQuery);
+    const locationId = get(selectedLocationIdState);
+    return { organizationId, locationId };
+  }
+})
+
 export const featureFlagQuery = selector({
   key: 'featureFlagQuery',
   get: async ({get}) => {
-    const organizationId = get(currentOrganizationIdQuery);
-    const locationId = get(selectedLocationIdState);
-    const accessTokenFetch = get(accessTokenFetchQuery);
-    const configurationClient = new ConfigurationClient(process.env.REACT_APP_API_HOST, accessTokenFetch);
+    const {organizationId, locationId} = get(currentOrganizationAndLocationIdsQuery);
+    const configurationClient = get(configurationClientQuery);
     const dataResponse = await configurationClient.getLocationFlags(organizationId, locationId);
     return dataResponse;
   }});

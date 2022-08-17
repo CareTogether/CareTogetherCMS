@@ -2,18 +2,14 @@ import { Drawer, List, Skeleton, Stack, useTheme } from '@mui/material';
 import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
 import PeopleIcon from '@mui/icons-material/People';
 import { ListItemLink } from '../ListItemLink';
-import { featureFlagQuery, organizationConfigurationQuery } from '../Model/ConfigurationModel';
+import { useFeatureFlags } from '../Model/ConfigurationModel';
 import { Copyright } from '../Copyright';
-import { useLoadable } from '../Hooks/useLoadable';
 
 interface SideNavigationMenuProps {
   open: boolean;
 }
 function SideNavigationMenu({ open }: SideNavigationMenuProps) {
-  //const flags = useFeatureFlags(); //TODO: Why was this not enough?
-  const flags = useLoadable(featureFlagQuery);
-  const config = useLoadable(organizationConfigurationQuery); //TODO: Why is this (or a rerender) needed to trigger featureFlagQuery?
-  console.log(config?.organizationName); //TODO: This is just here as a placeholder to avoid warnings.
+  const flags = useFeatureFlags();
 
   return (
     //  <List aria-label="main navigation">

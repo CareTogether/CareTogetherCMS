@@ -3,6 +3,14 @@ import { accessTokenFetchQuery } from "../Authentication/AuthenticatedHttp";
 import { Permission, UserLocationAccess, UsersClient } from "../GeneratedClient";
 import { useLoadable } from "../Hooks/useLoadable";
 
+export const usersClientQuery = selector({
+  key: 'usersClient',
+  get: ({get}) => {
+    const accessTokenFetch = get(accessTokenFetchQuery);
+    return new UsersClient(process.env.REACT_APP_API_HOST, accessTokenFetch);
+  }
+});
+
 export const userIdState = atom<string | null>({
   key: 'userIdState'
 });
@@ -10,8 +18,7 @@ export const userIdState = atom<string | null>({
 export const userOrganizationAccessQuery = selector({
   key: 'userOrganizationAccessQuery',
   get: async ({get}) => {
-    const accessTokenFetch = get(accessTokenFetchQuery);
-    const usersClient = new UsersClient(process.env.REACT_APP_API_HOST, accessTokenFetch);
+    const usersClient = get(usersClientQuery);
     const userResponse = await usersClient.getUserOrganizationAccess();
     return userResponse;
   }
@@ -37,7 +44,7 @@ export const availableLocationsQuery = selector({
   key: 'availableLocationsQuery',
   get: ({get}) => {
     const userOrganizationAccess = get(userOrganizationAccessQuery);
-    return userOrganizationAccess?.locations ?? null;
+    return userOrganizationAccess?.locations ?? null; //TODO: Fix unnecessary nulls
   }
 });
 
@@ -50,7 +57,12 @@ export const availableLocationsState = selector({//TODO: Deprecated
 });
 
 export const selectedLocationIdState = atom<string>({
-  key: 'selectedLocationIdState'
+  key: 'selectedLocationIdState',
+  effects: [
+  //   ({onSet}) => {
+  //     onSet(newId => console.log("LOC_ID: " + newId))
+  //   }
+  ]
 })
 
 export const currentLocationQuery = selector({
