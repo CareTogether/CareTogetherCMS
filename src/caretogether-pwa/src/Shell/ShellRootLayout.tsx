@@ -23,7 +23,8 @@ function ShellRootLayout({ children }: ShellRootLayoutProps) {
       <Box sx={{ flexGrow: 1, marginLeft: isDesktop ? drawerWidth + 'px' : null }}>
         <Container maxWidth={false} sx={{
             marginTop: { xs: 7, sm: 8, md: 6 },
-            marginBottom: isDesktop ? 0 : 7
+            marginBottom: isDesktop ? 0 : 7,
+            backgroundColor: '#fff'
           }}>
           {children}
         </Container>

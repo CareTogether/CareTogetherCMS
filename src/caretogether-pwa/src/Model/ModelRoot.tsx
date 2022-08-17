@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useSetRecoilState } from "recoil";
 import { useLoadable } from "../Hooks/useLoadable";
 import { useLocalStorage } from "../Hooks/useLocalStorage";
+import { visibleFamiliesData, visibleFamiliesInitializationQuery } from "./DirectoryModel";
 import { userIdState, selectedLocationIdState, availableLocationsQuery } from "./SessionModel";
 
 interface ModelLoaderProps {
@@ -15,6 +16,8 @@ export function ModelRoot({children}: ModelLoaderProps) {
   const availableLocations = useLoadable(availableLocationsQuery);
   const [savedLocationId, setSavedLocationId] = useLocalStorage<string | null>('locationId', null);
   const setSelectedLocationId = useSetRecoilState(selectedLocationIdState);
+  const visibleFamilies = useLoadable(visibleFamiliesInitializationQuery);
+  const setVisibleFamiliesData = useSetRecoilState(visibleFamiliesData);
   
   // Initialize the root of the model's dataflow graph with the active account's user ID.
   // If the active account is changed, the model will automatically repopulate.
@@ -39,6 +42,12 @@ export function ModelRoot({children}: ModelLoaderProps) {
       setSelectedLocationId(locationIdToSelect);
     }
   }, [availableLocations, savedLocationId, setSavedLocationId, setSelectedLocationId]);
+
+  // Initialize the families atom that will be used to track family state mutations.
+  //TODO: Trigger a refresh when changing locations.
+  useEffect(() => {
+    setVisibleFamiliesData(visibleFamilies || []);
+  }, [visibleFamilies, setVisibleFamiliesData]);
 
   return (
     <>

@@ -7,10 +7,6 @@ import { useSetRecoilState } from 'recoil';
 import { accessTokenState } from './AuthenticatedHttp';
 
 function SignInScreen() {
-  // Force the user to sign in if not already authenticated, then render the app.
-  // See https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-react/docs/hooks.md
-  useMsalAuthentication(InteractionType.Redirect); /*, {} as RedirectRequest*/
-
   return (
     <ProgressBackdrop opaque>
       <p>Signing in...</p>
@@ -23,7 +19,11 @@ interface AuthenticationWrapperProps {
   children?: React.ReactNode
 }
 export default function AuthenticationWrapper({ children }: AuthenticationWrapperProps) {
-  useMsalAuthentication(InteractionType.None, {
+  // Force the user to sign in if not already authenticated, then render the app.
+  // See https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-react/docs/hooks.md
+  //TODO: Handle token/session expiration to intercept the automatic redirect and prompt the user first?
+  //TODO: Smoother handling of deeplink routing (integrating with React Router)?
+  useMsalAuthentication(InteractionType.Redirect, {
     scopes: [process.env.REACT_APP_AUTH_SCOPES]
   });
   const isAuthenticated = useIsAuthenticated();
@@ -38,14 +38,19 @@ export default function AuthenticationWrapper({ children }: AuthenticationWrappe
     const accountToActivate = accounts.length > 0 ? accounts[0] : null;
     globalMsalInstance.setActiveAccount(accountToActivate);
   }, [ isAuthenticated ]);
-  
+
   // Track the most recently acquired access token as shared state for API clients to reference.
   useEffect(() => {
     const callbackId = instance.addEventCallback((event: any) => {
-      if (event.eventType === EventType.ACQUIRE_TOKEN_SUCCESS) {
+      //TODO: Log sanitized events via App Insights
+      if (event.eventType === EventType.LOGIN_SUCCESS) {
+        globalMsalInstance.setActiveAccount(event.payload.account);
+      }
+      if (event.eventType === EventType.ACQUIRE_TOKEN_SUCCESS ||
+        event.eventType === EventType.LOGIN_SUCCESS ||
+        event.eventType === EventType.SSO_SILENT_SUCCESS) {
         const accessToken = event.payload.accessToken as string;
         setAccessToken(accessToken);
-        //TODO: Register callbacks on expiration?
       }
     });
 

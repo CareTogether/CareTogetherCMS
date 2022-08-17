@@ -12,10 +12,8 @@ export const directoryClientQuery = selector({
   }
 });
 
-//TODO: Maintain a local collection of "edited" families that are incorporated into the query for final result?
-
-export const visibleFamiliesQuery = selector({ //TODO: Imperatively reinitialize the atom on location/account change?
-  key: 'visibleFamiliesQuery',
+export const visibleFamiliesInitializationQuery = selector({
+  key: 'visibleFamiliesInitializationQuery',
   get: async ({get}) => {
     get(organizationConfigurationQuery);
     const {organizationId, locationId} = get(currentOrganizationAndLocationIdsQuery);
@@ -27,20 +25,12 @@ export const visibleFamiliesQuery = selector({ //TODO: Imperatively reinitialize
 export const visibleFamiliesData = atom<CombinedFamilyInfo[]>({
   key: 'visibleFamiliesData',
   default: []
-  // effects: [
-  //   (params) => {
-  //     console.log("visibleFamiliesData:effect[0]");
-  //     const initialData = params.getPromise(visibleFamiliesQuery);
-  //     console.log(initialData);
-  //     params.setSelf(initialData);
-  //   }
-  // ]
 });
 
 export const searchOptionsQuery = selector({
   key: 'searchOptionsQuery',
   get: ({get}) => {
-    const visibleFamilies = get(visibleFamiliesQuery); //TODO: Use the atom instead
+    const visibleFamilies = get(visibleFamiliesData);
     return visibleFamilies.map(cfi => cfi.family!.id!);
   }
 })

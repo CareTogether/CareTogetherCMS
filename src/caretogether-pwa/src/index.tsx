@@ -40,8 +40,6 @@ root.render(
                   </AuthenticationWrapper>
                 </MsalProvider>
               </Router>
-              {/* <RequestBackdrop />
-              <ErrorBackdrop /> */}
             </RecoilRoot>
           </GlobalErrorBoundary>
         </LocalizationProvider>
