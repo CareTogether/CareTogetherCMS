@@ -1,9 +1,11 @@
 import { useRef } from 'react';
 import { flushSync } from 'react-dom';
-import { Autocomplete, Container, IconButton, InputAdornment, Paper, TextField, useMediaQuery, useTheme } from '@mui/material';
+import { Autocomplete, Container, FilterOptionsState, IconButton, InputAdornment, Paper, TextField, useMediaQuery, useTheme } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { useLoadable } from '../Hooks/useLoadable';
-import { searchOptionsQuery } from '../Model/DirectoryModel';
+import { visibleFamiliesData } from '../Model/DirectoryModel';
+import { familyNameString } from '../Families/FamilyName';
+import { CombinedFamilyInfo } from '../GeneratedClient';
 
 interface ShellSearchBarProps {
   openMobileSearch: boolean;
@@ -13,7 +15,7 @@ export function ShellSearchBar({ openMobileSearch, setOpenMobileSearch }: ShellS
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
 
-  const options = useLoadable(searchOptionsQuery) || [];
+  const families = useLoadable(visibleFamiliesData) || [];
 
   const searchBoxRef = useRef<any | null>(null);
 
@@ -24,16 +26,33 @@ export function ShellSearchBar({ openMobileSearch, setOpenMobileSearch }: ShellS
     searchBoxRef.current.click();
   }
 
+  function filterFamilies(families: CombinedFamilyInfo[], state: FilterOptionsState<CombinedFamilyInfo>) {
+    const searchQueryLowercase = state.inputValue.toLowerCase();
+    return families.filter(family => {
+      const familyName = familyNameString(family);
+      return familyName?.toLowerCase().includes(searchQueryLowercase);
+    });
+  }
+
+  function selectFamily(event: React.SyntheticEvent, family: CombinedFamilyInfo | null) {
+    console.log(family);
+    //TODO: Navigate to the selected family
+  }
+
   const searchInner = (
     <Autocomplete
       ref={searchBoxRef}
       size={isDesktop ? 'small' : 'medium'}
       fullWidth
       onBlur={() => setOpenMobileSearch(false)}
-      freeSolo
       autoHighlight
-      options={options}
+      options={families}
       openOnFocus
+      filterOptions={filterFamilies}
+      getOptionLabel={(family) => {
+        return familyNameString(family) || family.family!.id!;
+      }}
+      onChange={selectFamily}
       PaperComponent={(params) => <Paper {...params}
         sx={{
           backgroundColor: theme.palette.primary.light,

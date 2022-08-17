@@ -27,14 +27,6 @@ export const visibleFamiliesData = atom<CombinedFamilyInfo[]>({
   default: []
 });
 
-export const searchOptionsQuery = selector({
-  key: 'searchOptionsQuery',
-  get: ({get}) => {
-    const visibleFamilies = get(visibleFamiliesData);
-    return visibleFamilies.map(cfi => cfi.family!.id!);
-  }
-})
-
 export function usePersonLookup() {
   const visibleFamilies = useRecoilValue(visibleFamiliesData);
 
