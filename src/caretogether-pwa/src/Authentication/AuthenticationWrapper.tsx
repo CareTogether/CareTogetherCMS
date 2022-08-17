@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { EventType, InteractionType } from "@azure/msal-browser";
 import { useMsalAuthentication, useIsAuthenticated, useAccount, useMsal } from '@azure/msal-react';
 import { globalMsalInstance } from './Auth';
-import { ProgressBackdrop } from '../ProgressBackdrop';
+import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useSetRecoilState } from 'recoil';
 import { accessTokenState } from './AuthenticatedHttp';
 

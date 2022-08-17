@@ -1,9 +1,9 @@
 import { Drawer, List, Skeleton, Stack, useTheme } from '@mui/material';
 import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
 import PeopleIcon from '@mui/icons-material/People';
-import { ListItemLink } from '../ListItemLink';
+import { ListItemLink } from './ListItemLink';
 import { useFeatureFlags } from '../Model/ConfigurationModel';
-import { Copyright } from '../Copyright';
+import { Copyright } from './Copyright';
 
 interface SideNavigationMenuProps {
   open: boolean;

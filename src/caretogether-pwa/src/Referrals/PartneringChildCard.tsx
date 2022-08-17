@@ -4,7 +4,7 @@ import {
   IconButton,
   CardContent,
   Typography,
-} from "@mui/material";;
+} from "@mui/material";
 import { CustodialRelationshipType, Gender, CombinedFamilyInfo, Permission } from "../GeneratedClient";
 import { AgeText } from "../AgeText";
 import EditIcon from '@mui/icons-material/Edit';

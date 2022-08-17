@@ -15,6 +15,7 @@ import { globalMsalInstance } from './Authentication/Auth';
 import AuthenticationWrapper from './Authentication/AuthenticationWrapper';
 import { ModelRoot } from './Model/ModelRoot';
 import ShellRootLayout from './Shell/ShellRootLayout';
+import { AppRoutes } from './AppRoutes';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(
@@ -33,7 +34,7 @@ root.render(
                   <AuthenticationWrapper>
                     <ModelRoot>
                       <ShellRootLayout>
-                        {/* <AppRoutes /> */}
+                        <AppRoutes />
                       </ShellRootLayout>
                     </ModelRoot>
                   </AuthenticationWrapper>
