@@ -76,18 +76,19 @@ export function ShellSideNavigation({ open, width }: ShellSideNavigationProps) {
         width: width,
         flexShrink: 0,
         whiteSpace: 'nowrap',
-        boxSizing: 'border-box',
         overflowX: 'hidden',
         '& .MuiDrawer-paper': {
           backgroundColor: theme.palette.primary.dark,
-          color: theme.palette.primary.contrastText
+          color: theme.palette.primary.contrastText,
+          overflowX: 'hidden'
         }
       }}>
       <Stack sx={{ width: width, paddingTop: { xs: 7, sm: 8, md: 6 } }}>
         <SideNavigationMenu open={open} />
-        <div style={{ position: 'fixed', bottom: 0, marginLeft: 10}}>
-          <Copyright />
-        </div>
+        {open &&
+          <div style={{ overflowX: 'hidden', width: width - 4, position: 'fixed', bottom: 0, marginLeft: 4}}>
+            <Copyright />
+          </div>}
       </Stack>
     </Drawer>
   );

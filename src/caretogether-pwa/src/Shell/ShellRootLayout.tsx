@@ -1,8 +1,8 @@
-import { useState } from 'react';
 import { Box, Container, useMediaQuery, useTheme } from '@mui/material';
 import { ShellBottomNavigation } from './ShellBottomNavigation';
 import { ShellAppBar } from './ShellAppBar';
 import { ShellSideNavigation } from './ShellSideNavigation';
+import { useLocalStorage } from '../Hooks/useLocalStorage';
 
 interface ShellRootLayoutProps {
   children?: React.ReactNode
@@ -11,9 +11,9 @@ function ShellRootLayout({ children }: ShellRootLayoutProps) {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
 
-  const [menuDrawerOpen, setMenuDrawerOpen] = useState(isDesktop);
+  const [menuDrawerOpen, setMenuDrawerOpen] = useLocalStorage('menuDrawerOpen', isDesktop);
 
-  const drawerWidth = menuDrawerOpen ? 180 : 48;
+  const drawerWidth = menuDrawerOpen ? 190 : 48;
 
   return (
     <Box sx={{ flexGrow: 1 }}>
