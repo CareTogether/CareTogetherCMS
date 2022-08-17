@@ -1,26 +1,51 @@
-import { atom, useRecoilCallback, useRecoilValue } from "recoil";
+import { atom, AtomEffect, selector, useRecoilCallback, useRecoilValue } from "recoil";
 import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, DirectoryCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, DirectoryClient, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, NoteCommandResult, UpdatePersonGender, UpdatePersonAge, UpdatePersonEthnicity, UpdateAdultRelationshipToFamily, CustodialRelationshipType, UpdateCustodialRelationshipType, RemoveCustodialRelationship, ChangePrimaryFamilyContact, CombinedFamilyInfo } from "../GeneratedClient";
-import { authenticatingFetch } from "../Authentication/AuthenticatedHttp";
+import { accessTokenFetchQuery, authenticatingFetch } from "../Authentication/AuthenticatedHttp";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
-import { organizationConfigurationData } from "./ConfigurationModel";
+import { currentOrganizationAndLocationIdsQuery, organizationConfigurationData, organizationConfigurationQuery } from "./ConfigurationModel";
+
+export const directoryClientQuery = selector({
+  key: 'directoryClientQuery',
+  get: ({get}) => {
+    console.log("directoryClientQuery");
+    const accessTokenFetch = get(accessTokenFetchQuery);
+    return new DirectoryClient(process.env.REACT_APP_API_HOST, accessTokenFetch);
+  }
+});
+
+export const visibleFamiliesQuery = selector({ //TODO: Reinitialize as needed (on location/account change?)
+  key: 'visibleFamiliesQuery',
+  get: async ({get}) => {
+    console.log("visibleFamiliesQuery");
+    get(organizationConfigurationQuery);
+    console.log("..."); //TODO: Why do we not get here??
+    const {organizationId, locationId} = get(currentOrganizationAndLocationIdsQuery);
+    console.log(organizationId + "::" + locationId);
+    const directoryClient = get(directoryClientQuery);
+    return await directoryClient.listVisibleFamilies(organizationId, locationId);
+  }
+});
 
 export const visibleFamiliesData = atom<CombinedFamilyInfo[]>({
   key: 'visibleFamiliesData',
-  default: []
+  //default: []
+  effects: [
+    (params) => {
+      console.log("visibleFamiliesData:effect[0]");
+      const initialData = params.getPromise(visibleFamiliesQuery);
+      console.log(initialData);
+      params.setSelf(initialData);
+    }
+  ]
 });
-// useEffect(() => {
-//   const loadInitialData = async () => {
-//     if (userId && organizationId.length > 0 && locationId.length > 0) {
-//       console.log("Loading initial data...")
-//       const directoryClient = new DirectoryClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-//       const dataResponse = await directoryClient.listVisibleFamilies(organizationId, locationId);
-//       setVisibleFamilies(dataResponse);
 
-//       //setLoaded(true);
-//     }
-//   }
-//   loadInitialData();
-// }, [userId, organizationId, locationId, setVisibleFamilies]);
+export const searchOptionsQuery = selector({
+  key: 'searchOptionsQuery',
+  get: ({get}) => {
+    const visibleFamilies = get(visibleFamiliesData);
+    return visibleFamilies.map(cfi => cfi.family!.id!);
+  }
+})
 
 export function usePersonLookup() {
   const visibleFamilies = useRecoilValue(visibleFamiliesData);

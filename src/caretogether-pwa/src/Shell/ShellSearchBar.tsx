@@ -2,6 +2,8 @@ import { useRef } from 'react';
 import { flushSync } from 'react-dom';
 import { Autocomplete, Container, IconButton, InputAdornment, Paper, TextField, useMediaQuery, useTheme } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import { useLoadable } from '../Hooks/useLoadable';
+import { searchOptionsQuery } from '../Model/DirectoryModel';
 
 interface ShellSearchBarProps {
   openMobileSearch: boolean;
@@ -11,7 +13,8 @@ export function ShellSearchBar({ openMobileSearch, setOpenMobileSearch }: ShellS
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
 
-  const options = ["Test", "ABC", "DEF"];
+  const options = useLoadable(searchOptionsQuery) || [];
+  console.log(options);
 
   const searchBoxRef = useRef<any | null>(null);
 
