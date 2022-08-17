@@ -48,7 +48,7 @@ export function ShellSearchBar({ openMobileSearch, setOpenMobileSearch }: ShellS
             color: theme.palette.primary.contrastText
           },
           '& .MuiOutlinedInput-notchedOutline, .Mui-focused & .MuiOutlinedInput-notchedOutline': {
-            borderColor: theme.palette.primary.contrastText
+            borderColor: '#fff8'
           }
         }}
         InputProps={{

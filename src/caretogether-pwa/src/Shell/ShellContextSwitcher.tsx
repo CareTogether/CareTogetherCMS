@@ -60,7 +60,7 @@ export function ShellContextSwitcher() {
                   backgroundColor: theme.palette.primary.dark
                 },
                 '& .MuiOutlinedInput-notchedOutline, .Mui-focused & .MuiOutlinedInput-notchedOutline': {
-                  borderColor: theme.palette.primary.contrastText
+                  borderColor: '#fff8'
                 }
               }}
               MenuProps={{ MenuListProps: { sx: {

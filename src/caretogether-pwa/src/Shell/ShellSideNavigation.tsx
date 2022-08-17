@@ -13,7 +13,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
 
   return (
     //  <List aria-label="main navigation">
-    //    <ListItemLink to="/dashboard" primary="Dashboard" icon={<DashboardIcon />} />
+    //    <ListItemLink to="/dashboard" primary="Dashboard" icon={<DashboardIcon sx={{color: '#fff'}} />} />
     //  </List>
     <List aria-label="secondary navigation">
       {flags === null
@@ -32,8 +32,9 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
             </Stack>
           </>
         : <>
-            {flags?.viewReferrals && <ListItemLink to="/referrals" primary="Referrals" icon={<PermPhoneMsgIcon />} />}
-            <ListItemLink to="/volunteers" primary="Volunteers" icon={<PeopleIcon />} />
+            {flags?.viewReferrals &&
+              <ListItemLink to="/referrals" primary="Referrals" icon={<PermPhoneMsgIcon sx={{color: '#fff8'}} />} />}
+            <ListItemLink to="/volunteers" primary="Volunteers" icon={<PeopleIcon sx={{color: '#fff8'}} />} />
           </>}
     </List>
   );
