@@ -45,13 +45,13 @@ export function ShellContextSwitcher() {
           ? <Select size={isDesktop ? 'small' : 'medium'}
               variant='outlined'
               sx={{
-                marginLeft: 0.5, marginTop: -1,
-                height: 24,
+                marginLeft: 0.5, marginTop: isDesktop ? -1 : 0,
+                height: isDesktop ? 24 : 56,
                 '& .MuiInputBase-input': {
                   backgroundColor: theme.palette.primary.main,
                   color: theme.palette.primary.contrastText,
-                  paddingTop: 0, paddingBottom: 0,
-                  paddingLeft: .5, paddingRight: .5
+                  paddingTop: isDesktop ? 0 : 2, paddingBottom: isDesktop ? 0 : 2,
+                  paddingLeft: isDesktop ? .5 : 2, paddingRight: isDesktop ? .5 : 2
                 },
                 '.MuiSelect-iconOutlined': {
                   color: theme.palette.primary.contrastText
