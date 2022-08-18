@@ -1,12 +1,22 @@
-import { useState } from 'react';
+// import { useState } from 'react';
 import { BottomNavigation, BottomNavigationAction, Paper, useTheme } from '@mui/material';
-import RestoreIcon from '@mui/icons-material/Restore';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
+import PeopleIcon from '@mui/icons-material/People';
+import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
+// import DashboardIcon from '@mui/icons-material/Dashboard';
+// import MenuIcon from '@mui/icons-material/Menu';
+import { useFeatureFlags } from '../Model/ConfigurationModel';
+import { Link, useLocation } from 'react-router-dom';
 
 export function ShellBottomNavigation() {
   const theme = useTheme();
-  const [value, setValue] = useState(0);
+  
+  const location = useLocation();
+  
+  const featureFlags = useFeatureFlags();
+
+  const links = [/*'/dashboard',*/ '/referrals', '/volunteers'];
+  const selectedLink = links.findIndex(link => location.pathname.startsWith(link));
+  //   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
     <Paper elevation={3} sx={{
@@ -15,10 +25,16 @@ export function ShellBottomNavigation() {
     }}>
       <BottomNavigation
         showLabels
-        value={value}
-        onChange={(event, newValue) => {
-          setValue(newValue);
-        }}
+        value={selectedLink}
+        // onChange={(event, newValue) => {
+        //   setValue(newValue);
+        // }}
+//         sx={{
+//           width: '100%',
+//           position: 'fixed',
+//           bottom: 0,
+//           backgroundColor: theme.palette.grey[300]
+//         }}
         sx={{
           backgroundColor: theme.palette.primary.dark,
           '.MuiBottomNavigationAction-root': {
@@ -29,41 +45,15 @@ export function ShellBottomNavigation() {
           }
         }}
       >
-        <BottomNavigationAction label="Recents" icon={<RestoreIcon />} />
-        <BottomNavigationAction label="Favorites" icon={<FavoriteIcon />} />
-        <BottomNavigationAction label="Nearby" icon={<LocationOnIcon />} />
+        {/* <BottomNavigationAction icon={<MenuIcon />} onClick={() => setDrawerOpen(true)} /> */}
+        {/* <BottomNavigationAction component={Link} to='/dashboard' label="Dashboard" icon={<DashboardIcon />} /> */}
+        {featureFlags?.viewReferrals && <BottomNavigationAction component={Link} to='/referrals' label="Referrals" icon={<PermPhoneMsgIcon />} />}
+        <BottomNavigationAction component={Link} to='/volunteers' label="Volunteers" icon={<PeopleIcon />} />
       </BottomNavigation>
     </Paper>
   );
 }
-// export function Footer(props: any) {
-//   const location = useLocation();
-  
-//   const featureFlags = useFeatureFlags();
 
-//   const links = [/*'/dashboard',*/ '/referrals', '/volunteers'];
-//   const selectedLink = links.findIndex(link => location.pathname.startsWith(link));
-
-//   const [drawerOpen, setDrawerOpen] = useState(false);
-//   const theme = useTheme();
-
-//   return (
-//     <>
-//       <BottomNavigation
-//         value={selectedLink}
-//         showLabels
-//         sx={{
-//           width: '100%',
-//           position: 'fixed',
-//           bottom: 0,
-//           backgroundColor: theme.palette.grey[300]
-//         }}
-//       >
-//         <BottomNavigationAction icon={<MenuIcon />} onClick={() => setDrawerOpen(true)} />
-//         {/* <BottomNavigationAction component={Link} to='/dashboard' label="Dashboard" icon={<DashboardIcon />} /> */}
-//         {featureFlags?.viewReferrals && <BottomNavigationAction component={Link} to='/referrals' label="Referrals" icon={<PermPhoneMsgIcon />} />}
-//         <BottomNavigationAction component={Link} to='/volunteers' label="Volunteers" icon={<PeopleIcon />} />
-//       </BottomNavigation>
 //       <Drawer
 //         sx={{ zIndex: theme.zIndex.drawer + 2, '& .MuiDrawer-paper': { padding: 2 }}}
 //         open={drawerOpen}
@@ -72,6 +62,3 @@ export function ShellBottomNavigation() {
 //         {/* <LocationSwitcher /> */}
 //         <Copyright />
 //       </Drawer>
-//     </>
-//   );
-// }
