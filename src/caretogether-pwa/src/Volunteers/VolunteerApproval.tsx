@@ -21,6 +21,8 @@ import { useWindowSize } from '../Hooks/useWindowSize';
 import useScreenTitle from '../Shell/ShellScreenTitle';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
+import { useLoadable } from '../Hooks/useLoadable';
+import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 
 type RoleFilter = {
   roleName: string
@@ -182,7 +184,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   }
   
   // The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
-  const volunteerFamilies = useRecoilValue(volunteerFamiliesData).map(x => x).sort((a, b) =>
+  const volunteerFamiliesLoadable = useLoadable(volunteerFamiliesData);
+  const volunteerFamilies = (volunteerFamiliesLoadable || []).map(x => x).sort((a, b) =>
     familyLastName(a) < familyLastName(b) ? -1 : familyLastName(a) > familyLastName(b) ? 1 : 0);
   
   const [filterText, setFilterText] = useState("");
@@ -254,8 +257,11 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 
   useScreenTitle("Volunteers");
 
-  return (
-    <>
+  return (!volunteerFamiliesLoadable
+  ? <ProgressBackdrop>
+      <p>Loading families...</p>
+    </ProgressBackdrop>
+  : <>
       <Grid container sx={{
         paddingRight: smsMode && !isMobile ? '400px' : null,
         height: smsMode && isMobile ? `${windowSize.height - 500 - 24}px` : null,

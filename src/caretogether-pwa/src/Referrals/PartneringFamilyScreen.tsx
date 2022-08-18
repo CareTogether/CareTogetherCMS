@@ -31,6 +31,7 @@ import { ReferralCustomField } from './ReferralCustomField';
 import { PrimaryContactEditor } from '../Families/PrimaryContactEditor';
 import useScreenTitle from '../Shell/ShellScreenTitle';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
+import { useLoadable } from '../Hooks/useLoadable';
 
 const sortArrangementsByStartDateDescThenCreateDateDesc = (a: Arrangement,b: Arrangement) => {
   return ((b.startedAtUtc ?? new Date()).getTime() - (a.startedAtUtc ?? new Date()).getTime()) || 
@@ -41,10 +42,10 @@ export function PartneringFamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
 
-  const partneringFamilies = useRecoilValue(partneringFamiliesData);
+  const partneringFamilies = useLoadable(partneringFamiliesData);
   const policy = useRecoilValue(policyData);
 
-  const partneringFamily = partneringFamilies.find(x => x.family?.id === familyId);
+  const partneringFamily = partneringFamilies?.find(x => x.family?.id === familyId);
 
   const canCloseReferral = partneringFamily?.partneringFamilyInfo?.openReferral &&
     !partneringFamily.partneringFamilyInfo.openReferral.closeReason &&
