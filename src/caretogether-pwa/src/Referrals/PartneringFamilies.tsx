@@ -3,7 +3,6 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import PendingOutlinedIcon from '@mui/icons-material/PendingOutlined';
 import PlayCircleFilledIcon from '@mui/icons-material/PlayCircleFilled';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
-import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../Model/ReferralsModel';
 import { format } from 'date-fns';
 import React, { useState } from 'react';
@@ -22,6 +21,8 @@ import { usePermissions } from '../Model/SessionModel';
 import useScreenTitle from '../Shell/ShellScreenTitle';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
+import { useLoadable } from '../Hooks/useLoadable';
+import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 
 const arrangementPhaseText = new Map<number, string>([
   [ArrangementPhase.SettingUp, 'Setting Up'],
@@ -42,10 +43,11 @@ function PartneringFamilies() {
   const navigate = useNavigate();
 
   // The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
-  const partneringFamilies = sortFamiliesByLastNameDesc(useRecoilValue(partneringFamiliesData));
+  const partneringFamiliesLoadable = useLoadable(partneringFamiliesData);
+  const partneringFamilies = sortFamiliesByLastNameDesc(partneringFamiliesLoadable || []);
 
-  const arrangementTypes = useRecoilValue(policyData).referralPolicy?.arrangementPolicies?.map((a) => {
-    return a.arrangementType;
+  const arrangementTypes = useLoadable(policyData)?.referralPolicy?.arrangementPolicies?.map((a) => {
+    return a.arrangementType!;
   });
 
   const [filterText, setFilterText] = useState("");
@@ -130,7 +132,11 @@ function PartneringFamilies() {
 
   useScreenTitle("Referrals");
 
-  return (
+  return (!partneringFamiliesLoadable || !arrangementTypes
+    ? <ProgressBackdrop>
+        <p>Loading families...</p>
+      </ProgressBackdrop>
+    : 
     <Grid container>
       <Grid item xs={12}>
         <Stack direction='row-reverse' sx={{marginTop: 1}}>

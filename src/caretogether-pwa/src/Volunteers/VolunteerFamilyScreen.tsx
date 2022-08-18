@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Container, Toolbar, Button, Menu, MenuItem, Grid, useMediaQuery, useTheme, MenuList, IconButton, ListItemText, Chip, Divider, Box } from '@mui/material';
 import { RoleRemovalReason, Permission } from '../GeneratedClient';
-import { useRecoilValue } from 'recoil';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
@@ -27,14 +26,15 @@ import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
 import { PrimaryContactEditor } from '../Families/PrimaryContactEditor';
 import useScreenTitle from '../Shell/ShellScreenTitle';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
+import { useLoadable } from '../Hooks/useLoadable';
 
 export function VolunteerFamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
 
-  const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
+  const volunteerFamilies = useLoadable(volunteerFamiliesData);
 
-  const volunteerFamily = volunteerFamilies.find(x => x.family?.id === familyId);
+  const volunteerFamily = volunteerFamilies?.find(x => x.family?.id === familyId);
   
   const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] = useState(false);
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);

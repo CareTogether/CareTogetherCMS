@@ -1,5 +1,4 @@
 import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, Button, ButtonGroup, useMediaQuery, useTheme, Stack, ToggleButton, ToggleButtonGroup } from '@mui/material';
-import { useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../Model/VolunteersModel';
 import { allApprovalAndOnboardingRequirementsData } from '../Model/ConfigurationModel';
 import React, { useEffect, useState } from 'react';
@@ -15,6 +14,8 @@ import { Permission } from '../GeneratedClient';
 import useScreenTitle from '../Shell/ShellScreenTitle';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
+import { useLoadable } from '../Hooks/useLoadable';
+import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 
 function VolunteerProgress(props: { onOpen: () => void }) {
   const { onOpen } = props;
@@ -23,8 +24,9 @@ function VolunteerProgress(props: { onOpen: () => void }) {
   const navigate = useNavigate();
 
   // The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
-  const volunteerFamilies = sortFamiliesByLastNameDesc(useRecoilValue(volunteerFamiliesData));
-  const allApprovalAndOnboardingRequirements = useRecoilValue(allApprovalAndOnboardingRequirementsData);
+  const volunteerFamiliesLoadable = useLoadable(volunteerFamiliesData);
+  const volunteerFamilies = sortFamiliesByLastNameDesc(volunteerFamiliesLoadable || []);
+  const allApprovalAndOnboardingRequirements = useLoadable(allApprovalAndOnboardingRequirementsData);
 
   const [filterText, setFilterText] = useState("");
   const filteredVolunteerFamilies = filterFamiliesByText(volunteerFamilies, filterText);
@@ -54,8 +56,11 @@ function VolunteerProgress(props: { onOpen: () => void }) {
 
   useScreenTitle("Volunteers");
 
-  return (
-    <Grid container>
+  return (!volunteerFamiliesLoadable || !allApprovalAndOnboardingRequirements
+  ? <ProgressBackdrop>
+      <p>Loading families...</p>
+    </ProgressBackdrop>
+  : <Grid container>
       <Grid item xs={12}>
         <Stack direction='row-reverse' sx={{marginTop: 1}}>
           <ToggleButtonGroup value={expandedView} exclusive onChange={handleExpandCollapse}
