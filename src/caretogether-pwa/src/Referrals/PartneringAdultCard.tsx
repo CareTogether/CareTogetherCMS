@@ -52,7 +52,7 @@ export function PartneringAdultCard({partneringFamilyId, personId}: PartneringAd
         maxWidth: '500px'
       }}>
         <Typography color="textSecondary" sx={{
-          '& > div:first-child': {
+          '& > div:first-of-type': {
             marginLeft: 0
           },
           '& > *': {

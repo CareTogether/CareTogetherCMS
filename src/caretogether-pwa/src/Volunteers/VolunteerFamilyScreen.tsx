@@ -165,7 +165,7 @@ export function VolunteerFamilyScreen() {
             </Grid>
             <Grid item xs={12}>
               <Box sx={{
-                '& > div:first-child': {
+                '& > div:first-of-type': {
                   marginLeft: 0
                 },
                 '& > *': {

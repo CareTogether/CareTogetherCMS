@@ -112,7 +112,7 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
         }
       }}>
         <Typography color="textSecondary" sx={{
-          '& > div:first-child': {
+          '& > div:first-of-type': {
             marginLeft: 0
           },
           '& > *': {
