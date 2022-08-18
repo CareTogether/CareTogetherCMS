@@ -1,8 +1,7 @@
 import { MenuItem, Select, Skeleton, Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { useRecoilStateLoadable } from 'recoil';
+import { useRecoilState } from 'recoil';
 import { useLoadable } from '../Hooks/useLoadable';
-import { useLocalStorage } from '../Hooks/useLocalStorage';
 import { locationNameQuery, organizationConfigurationQuery, organizationNameQuery } from '../Model/ConfigurationModel';
 import { selectedLocationIdState, availableLocationsQuery } from '../Model/SessionModel';
 
@@ -11,8 +10,7 @@ export function ShellContextSwitcher() {
   const locationName = useLoadable(locationNameQuery);
 
   const organizationConfiguration = useLoadable(organizationConfigurationQuery);
-  const [selectedLocationId, setSelectedLocationId] = useRecoilStateLoadable(selectedLocationIdState);
-  const [, setSavedLocationId] = useLocalStorage<string | null>('locationId', null);
+  const [selectedLocationId, setSelectedLocationId] = useRecoilState(selectedLocationIdState);
   const availableLocations = useLoadable(availableLocationsQuery);
 
   const locations = organizationConfiguration?.locations!.map(location => ({
@@ -25,7 +23,6 @@ export function ShellContextSwitcher() {
   
   function switchLocation(locationId: string) {
     setSelectedLocationId(locationId);
-    setSavedLocationId(locationId);
     navigate("/");
   }
   
@@ -67,7 +64,7 @@ export function ShellContextSwitcher() {
                 backgroundColor: theme.palette.primary.light,
                 color: theme.palette.primary.contrastText
               }}}}
-              value={selectedLocationId?.contents}
+              value={selectedLocationId}
               onChange={e => switchLocation(e.target.value as string)}>
                 {locations.map(location =>
                   <MenuItem key={location.id} value={location.id}

@@ -1,8 +1,7 @@
 import { useAccount } from "@azure/msal-react";
 import { useEffect } from "react";
-import { useSetRecoilState } from "recoil";
+import { useRecoilState, useSetRecoilState } from "recoil";
 import { useLoadable } from "../Hooks/useLoadable";
-import { useLocalStorage } from "../Hooks/useLocalStorage";
 import { visibleFamiliesData, visibleFamiliesInitializationQuery } from "./DirectoryModel";
 import { userIdState, selectedLocationIdState, availableLocationsQuery } from "./SessionModel";
 
@@ -14,8 +13,7 @@ export function ModelRoot({children}: ModelLoaderProps) {
   const activeAccount = useAccount();
   const setUserId = useSetRecoilState(userIdState);
   const availableLocations = useLoadable(availableLocationsQuery);
-  const [savedLocationId, setSavedLocationId] = useLocalStorage<string | null>('locationId', null);
-  const setSelectedLocationId = useSetRecoilState(selectedLocationIdState);
+  const [selectedLocationId, setSelectedLocationId] = useRecoilState(selectedLocationIdState);
   const visibleFamilies = useLoadable(visibleFamiliesInitializationQuery);
   const setVisibleFamiliesData = useSetRecoilState(visibleFamiliesData);
   
@@ -33,15 +31,14 @@ export function ModelRoot({children}: ModelLoaderProps) {
     const selectedLocation =
       availableLocations == null
       ? null
-      : (savedLocationId == null || !availableLocations.some(loc => loc.locationId === savedLocationId))  
+      : (selectedLocationId == null || !availableLocations.some(loc => loc.locationId === selectedLocationId))  
         ? availableLocations[0]
-        : availableLocations.find(loc => loc.locationId === savedLocationId) || null;
+        : availableLocations.find(loc => loc.locationId === selectedLocationId) || null;
     const locationIdToSelect = selectedLocation?.locationId || null;
     if (locationIdToSelect) {
-      setSavedLocationId(locationIdToSelect);
       setSelectedLocationId(locationIdToSelect);
     }
-  }, [availableLocations, savedLocationId, setSavedLocationId, setSelectedLocationId]);
+  }, [availableLocations, selectedLocationId, setSelectedLocationId]);
 
   // Initialize the families atom that will be used to track family state mutations.
   //TODO: Trigger a refresh when changing locations.

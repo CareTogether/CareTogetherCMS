@@ -2,6 +2,7 @@ import { atom, selector } from "recoil";
 import { accessTokenFetchQuery } from "../Authentication/AuthenticatedHttp";
 import { Permission, UserLocationAccess, UsersClient } from "../GeneratedClient";
 import { useLoadable } from "../Hooks/useLoadable";
+import { localStorageEffect } from "../Utilities/localStorageEffect";
 
 export const usersClientQuery = selector({
   key: 'usersClient',
@@ -59,9 +60,10 @@ export const availableLocationsState = selector({//TODO: Deprecated
 export const selectedLocationIdState = atom<string>({
   key: 'selectedLocationIdState',
   effects: [
-  //   ({onSet}) => {
-  //     onSet(newId => console.log("LOC_ID: " + newId))
-  //   }
+    localStorageEffect('locationId'),
+    // ({onSet}) => {
+    //   onSet(newId => console.log("SEL_LOC_ID: " + newId))
+    // }
   ]
 })
 
