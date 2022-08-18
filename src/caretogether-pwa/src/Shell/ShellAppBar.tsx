@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { AppBar, Box, IconButton, Skeleton, Toolbar, Typography, useMediaQuery, useTheme } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import { ShellSearchBar } from './ShellSearchBar';
 import { ShellContextSwitcher } from './ShellContextSwitcher';
 import { screenTitleState } from './ShellScreenTitle';
 import { useRecoilValue } from 'recoil';
@@ -16,7 +15,7 @@ export function ShellAppBar({ menuDrawerOpen, setMenuDrawerOpen, drawerWidth }: 
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
 
-  const [openMobileSearch, setOpenMobileSearch] = useState(false);
+  const [openMobileSearch, /*setOpenMobileSearch*/] = useState(false);
 
   const screenTitle = useRecoilValue(screenTitleState);
 
