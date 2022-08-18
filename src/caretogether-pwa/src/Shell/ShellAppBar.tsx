@@ -58,9 +58,9 @@ export function ShellAppBar({ menuDrawerOpen, setMenuDrawerOpen, drawerWidth }: 
               {screenTitle}
             </Typography>
           : <Skeleton variant="text" sx={{fontSize: theme.typography.h6, marginLeft: 1}} width={200} />}
-        <ShellSearchBar
+        {/* <ShellSearchBar
           openMobileSearch={openMobileSearch}
-          setOpenMobileSearch={setOpenMobileSearch} />
+          setOpenMobileSearch={setOpenMobileSearch} /> */}
         {/* <ShellUserProfileMenu /> */}
       </Toolbar>
     </AppBar>
