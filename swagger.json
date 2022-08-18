@@ -4757,7 +4757,7 @@
             "type": "string",
             "format": "guid"
           },
-          "locationIds": {
+          "locations": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/UserLocationAccess"

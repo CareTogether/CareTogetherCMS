@@ -1,5 +1,5 @@
 import { AnonymousCredential, BlockBlobClient } from "@azure/storage-blob";
-import { authenticatingFetch } from "../Auth";
+import { authenticatingFetch } from "../Authentication/AuthenticatedHttp";
 import { FilesClient } from "../GeneratedClient";
 
 export async function uploadFileToTenant(organizationId: string, locationId: string, formFile: File) {

@@ -1,9 +1,31 @@
-import { useRecoilCallback, useRecoilValue } from "recoil";
-import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, DirectoryCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, DirectoryClient, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, NoteCommandResult, UpdatePersonGender, UpdatePersonAge, UpdatePersonEthnicity, UpdateAdultRelationshipToFamily, CustodialRelationshipType, UpdateCustodialRelationshipType, RemoveCustodialRelationship, ChangePrimaryFamilyContact } from "../GeneratedClient";
-import { authenticatingFetch } from "../Auth";
+import { atom, selector, useRecoilCallback, useRecoilValue } from "recoil";
+import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, DirectoryCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, DirectoryClient, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, NoteCommandResult, UpdatePersonGender, UpdatePersonAge, UpdatePersonEthnicity, UpdateAdultRelationshipToFamily, CustodialRelationshipType, UpdateCustodialRelationshipType, RemoveCustodialRelationship, ChangePrimaryFamilyContact, CombinedFamilyInfo } from "../GeneratedClient";
+import { accessTokenFetchQuery, authenticatingFetch } from "../Authentication/AuthenticatedHttp";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
-import { visibleFamiliesData } from "./ModelLoader";
-import { organizationConfigurationData } from "./ConfigurationModel";
+import { currentOrganizationAndLocationIdsQuery, organizationConfigurationData, organizationConfigurationQuery } from "./ConfigurationModel";
+
+export const directoryClientQuery = selector({
+  key: 'directoryClientQuery',
+  get: ({get}) => {
+    const accessTokenFetch = get(accessTokenFetchQuery);
+    return new DirectoryClient(process.env.REACT_APP_API_HOST, accessTokenFetch);
+  }
+});
+
+export const visibleFamiliesInitializationQuery = selector({
+  key: 'visibleFamiliesInitializationQuery',
+  get: async ({get}) => {
+    get(organizationConfigurationQuery);
+    const {organizationId, locationId} = get(currentOrganizationAndLocationIdsQuery);
+    const directoryClient = get(directoryClientQuery);
+    return await directoryClient.listVisibleFamilies(organizationId, locationId);
+  }
+});
+
+export const visibleFamiliesData = atom<CombinedFamilyInfo[]>({
+  key: 'visibleFamiliesData',
+  default: []
+});
 
 export function usePersonLookup() {
   const visibleFamilies = useRecoilValue(visibleFamiliesData);

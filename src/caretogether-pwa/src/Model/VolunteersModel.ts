@@ -1,8 +1,8 @@
 import { selector, useRecoilCallback } from "recoil";
 import { ActionRequirement, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, VolunteerCommand, VolunteersClient, VolunteerFamilyCommand, RoleRemovalReason, RemoveVolunteerRole, ResetVolunteerRole, RemoveVolunteerFamilyRole, ResetVolunteerFamilyRole, MarkVolunteerFamilyRequirementIncomplete, CompletedRequirementInfo, MarkVolunteerRequirementIncomplete, ExemptVolunteerRequirement, UnexemptVolunteerRequirement, ExemptVolunteerFamilyRequirement, UnexemptVolunteerFamilyRequirement, ExemptedRequirementInfo } from "../GeneratedClient";
-import { authenticatingFetch } from "../Auth";
+import { authenticatingFetch } from "../Authentication/AuthenticatedHttp";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
-import { visibleFamiliesData } from "./ModelLoader";
+import { visibleFamiliesData } from "./DirectoryModel";
 
 export const volunteerFamiliesData = selector({
   key: 'volunteerFamiliesData',

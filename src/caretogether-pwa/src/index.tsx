@@ -1,81 +1,53 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
-import { InteractionType } from "@azure/msal-browser";
-import { MsalProvider, useMsalAuthentication, useIsAuthenticated } from '@azure/msal-react';
-import { AppInsightsContext } from "@microsoft/applicationinsights-react-js";
-import { aiReact } from './Components/AppInsights';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
-import { RecoilRoot } from 'recoil';
-import { globalMsalInstance } from './Auth';
-import LocalizationProvider from '@mui/lab/LocalizationProvider';
-import DateAdapter from '@mui/lab/AdapterDateFns';
-import { ModelLoader } from './Model/ModelLoader';
-import { Theme, StyledEngineProvider } from '@mui/material';
+import ReactDOM from 'react-dom/client';
+import { AppInsightsContext } from '@microsoft/applicationinsights-react-js';
+import { aiReactPlugin } from './ApplicationInsightsService';
 import { ThemeProvider } from '@mui/material/styles';
-import { createTheme } from '@mui/material/styles';
-import ErrorBackdrop from './Components/ErrorBackdrop';
-import RequestBackdrop from './Components/RequestBackdrop';
-import { amber } from '@mui/material/colors';
+import { theme } from './theme';
+import { CssBaseline } from '@mui/material';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDateFns as DateAdapter } from '@mui/x-date-pickers/AdapterDateFns';
+import { GlobalErrorBoundary } from './GlobalErrorBoundary';
+import { RecoilRoot } from 'recoil';
+import { BrowserRouter as Router } from "react-router-dom";
+import { MsalProvider } from '@azure/msal-react';
+import { globalMsalInstance } from './Authentication/Auth';
+import AuthenticationWrapper from './Authentication/AuthenticationWrapper';
+import { ModelRoot } from './Model/ModelRoot';
+import ShellRootLayout from './Shell/ShellRootLayout';
+import { AppRoutes } from './AppRoutes';
+import RequestBackdrop from './RequestBackdrop';
+import reportWebVitals from './reportWebVitals';
 
-
-declare module '@mui/styles/defaultTheme' {
-  // eslint-disable-next-line @typescript-eslint/no-empty-interface
-  interface DefaultTheme extends Theme {}
-}
-
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#00838f',
-    },
-    secondary: amber,
-    tonalOffset: 0.6
-  }
-});
-
-function AuthWrapper() {
-  // Force the user to sign in if not already authenticated, then render the app.
-  // See https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-react/docs/hooks.md
-  useMsalAuthentication(InteractionType.Redirect);
-  const isAuthenticated = useIsAuthenticated();
-  
-  return (
-    <>
-      {isAuthenticated
-        ? <ModelLoader>
-            <React.Suspense fallback={<div>Loading...</div>}>
-              <App />
-            </React.Suspense>
-          </ModelLoader>
-        : <p>You are not signed in. You can try to refresh your page (F5) to reattempt signing in.</p>
-      }
-      <RequestBackdrop />
-      <ErrorBackdrop />
-    </>
-  );
-}
-
-// Telemetry is sent to Azure Application Insights. For customization instructions, see
-// https://docs.microsoft.com/en-us/azure/azure-monitor/app/javascript-react-plugin
-ReactDOM.render(
+const root = ReactDOM.createRoot(
+  document.getElementById('root') as HTMLElement
+);
+root.render(
   <React.StrictMode>
-    <StyledEngineProvider injectFirst>
+    <AppInsightsContext.Provider value={aiReactPlugin}>
       <ThemeProvider theme={theme}>
-        <AppInsightsContext.Provider value={aiReact}>
-          <MsalProvider instance={globalMsalInstance}>
-            <LocalizationProvider dateAdapter={DateAdapter}>
-              <RecoilRoot>
-                <AuthWrapper />
-              </RecoilRoot>
-            </LocalizationProvider>
-          </MsalProvider>
-        </AppInsightsContext.Provider>
+        <CssBaseline enableColorScheme />
+        <LocalizationProvider dateAdapter={DateAdapter}>
+          <GlobalErrorBoundary>
+            <RecoilRoot>
+              <Router>
+                <MsalProvider instance={globalMsalInstance}>
+                  <AuthenticationWrapper>
+                    <ModelRoot>
+                      <ShellRootLayout>
+                        <AppRoutes />
+                      </ShellRootLayout>
+                    </ModelRoot>
+                  </AuthenticationWrapper>
+                </MsalProvider>
+              </Router>
+              <RequestBackdrop />
+            </RecoilRoot>
+          </GlobalErrorBoundary>
+        </LocalizationProvider>
       </ThemeProvider>
-    </StyledEngineProvider>
-  </React.StrictMode>,
-  document.getElementById('root')
+    </AppInsightsContext.Provider>
+  </React.StrictMode>
 );
 
 // If you want to start measuring performance in your app, pass a function
