@@ -153,7 +153,6 @@ export function AssignArrangementFunctionDialog({
             <Grid item xs={12}>
               <FormControl required fullWidth size="small" sx={{marginTop: 1}}> 
                 <Autocomplete
-                  disablePortal
                   id="assignee"
                   clearOnEscape
                   onChange={(event: any, newValue: AssigneeOptionType | null) => {
