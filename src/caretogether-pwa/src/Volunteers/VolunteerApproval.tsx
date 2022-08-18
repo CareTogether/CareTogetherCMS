@@ -1,4 +1,4 @@
-import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, useMediaQuery, useTheme, Button, ButtonGroup, FormControlLabel, Switch, MenuItem, Select, ListItemText, Checkbox, FormControl, InputBase, SelectChangeEvent, IconButton, Snackbar, Toolbar } from '@mui/material';
+import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, useMediaQuery, useTheme, Button, ButtonGroup, MenuItem, Select, ListItemText, Checkbox, FormControl, InputBase, SelectChangeEvent, IconButton, Snackbar, Stack, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { Gender, ExactAge, AgeInYears, RoleVersionApproval, CombinedFamilyInfo, RemovedRole, RoleRemovalReason, EmailAddress, Permission } from '../GeneratedClient';
 import { differenceInYears } from 'date-fns';
 import { atom, selector, useRecoilState, useRecoilValue } from 'recoil';
@@ -19,6 +19,8 @@ import { currentLocationState, usePermissions } from '../Model/SessionModel';
 import { BulkSmsSideSheet } from './BulkSmsSideSheet';
 import { useWindowSize } from '../Hooks/useWindowSize';
 import useScreenTitle from '../Shell/ShellScreenTitle';
+import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
+import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 
 type RoleFilter = {
   roleName: string
@@ -214,6 +216,14 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   const location = useLocation();
     
   const [expandedView, setExpandedView] = useLocalStorage('volunteer-approval-expanded', true);
+  const handleExpandCollapse = (
+    event: React.MouseEvent<HTMLElement>,
+    newExpandedView: boolean | null,
+  ) => {
+    if (newExpandedView !== null) {
+      setExpandedView(newExpandedView);
+    }
+  };
 
   const locationId = useRecoilValue(currentLocationState);
   const organizationConfiguration = useRecoilValue(organizationConfigurationData);
@@ -246,40 +256,42 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 
   return (
     <>
-      <Grid container spacing={3} sx={{
+      <Grid container sx={{
         paddingRight: smsMode && !isMobile ? '400px' : null,
         height: smsMode && isMobile ? `${windowSize.height - 500 - 24}px` : null,
         overflow: smsMode && isMobile ? 'scroll' : null }}>
-        <Toolbar>
-          <ButtonGroup variant="text" color="inherit" aria-label="text inherit button group" style={{flexGrow: 1}}>
-            <Button color={location.pathname === "/volunteers/approval" ? 'secondary' : 'inherit'} component={Link} to={"/volunteers/approval"}>Approvals</Button>
-            <Button color={location.pathname === "/volunteers/progress" ? 'secondary' : 'inherit'} component={Link} to={"/volunteers/progress"}>Progress</Button>
-          </ButtonGroup>
-          {permissions(Permission.SendBulkSms) &&
-            <IconButton color="inherit" aria-label="copy email addresses"
-              onClick={() => copyEmailAddresses()} sx={{ }}>
-              <EmailIcon />
-            </IconButton>}
-          <Snackbar
-            open={noticeOpen}
-            autoHideDuration={5000} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-            onClose={() => setNoticeOpen(false)}
-            message={`Found and copied ${getSelectedFamiliesContactEmails().length} email addresses for ${selectedFamilies.length} selected families to clipboard`} />
-          {permissions(Permission.SendBulkSms) && smsSourcePhoneNumbers && smsSourcePhoneNumbers.length > 0 &&
-            <IconButton color={smsMode ? 'secondary' : 'inherit'} aria-label="send bulk sms"
+        <Grid item xs={12}>
+          <Stack direction='row-reverse' sx={{marginTop: 1}}>
+            <ToggleButtonGroup value={expandedView} exclusive onChange={handleExpandCollapse}
+              size={isMobile ? 'medium' : 'small'} aria-label="row expansion">
+              <ToggleButton value={true} aria-label="expanded"><UnfoldMoreIcon /></ToggleButton>
+              <ToggleButton value={false} aria-label="collapsed"><UnfoldLessIcon /></ToggleButton>
+            </ToggleButtonGroup>
+            <SearchBar value={filterText} onChange={value => {
+              setUncheckedFamilies([]);
+              setFilterText(value);
+            }} />
+            {permissions(Permission.SendBulkSms) &&
+              <IconButton color="inherit" aria-label="copy email addresses"
+                onClick={() => copyEmailAddresses()} sx={{ }}>
+                <EmailIcon />
+              </IconButton>}
+            {permissions(Permission.SendBulkSms) && smsSourcePhoneNumbers && smsSourcePhoneNumbers.length > 0 &&
+              <IconButton color={smsMode ? 'secondary' : 'inherit'} aria-label="send bulk sms"
               onClick={() => setSmsMode(!smsMode)} sx={{ marginRight: 2 }}>
-              <SmsIcon />
-            </IconButton>}
-          <FormControlLabel
-            control={<Switch checked={expandedView} onChange={(e) => setExpandedView(e.target.checked)}
-              name="expandedView" sx={{ marginRight: 1 }} />}
-            label={isMobile ? "" : "Expand"}
-          />
-          <SearchBar value={filterText} onChange={value => {
-            setUncheckedFamilies([]);
-            setFilterText(value);
-          }} />
-        </Toolbar>
+                <SmsIcon sx={{ position: 'relative', top: 1 }} />
+              </IconButton>}
+            <Snackbar
+              open={noticeOpen}
+              autoHideDuration={5000} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+              onClose={() => setNoticeOpen(false)}
+              message={`Found and copied ${getSelectedFamiliesContactEmails().length} email addresses for ${selectedFamilies.length} selected families to clipboard`} />
+            <ButtonGroup variant="text" color="inherit" aria-label="text inherit button group" style={{flexGrow: 1}}>
+              <Button color={location.pathname === "/volunteers/approval" ? 'secondary' : 'inherit'} component={Link} to={"/volunteers/approval"}>Approvals</Button>
+              <Button color={location.pathname === "/volunteers/progress" ? 'secondary' : 'inherit'} component={Link} to={"/volunteers/progress"}>Progress</Button>
+            </ButtonGroup>
+          </Stack>
+        </Grid>
         <Grid item xs={12}>
           <TableContainer>
             <Table sx={{minWidth: '700px'}} size="small">

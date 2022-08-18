@@ -1,4 +1,4 @@
-import { Fab, FormControlLabel, Grid, Switch, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Toolbar, Tooltip, useMediaQuery, useTheme } from '@mui/material';
+import { Fab, Grid, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, ToggleButton, ToggleButtonGroup, Tooltip, useMediaQuery, useTheme } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import PendingOutlinedIcon from '@mui/icons-material/PendingOutlined';
 import PlayCircleFilledIcon from '@mui/icons-material/PlayCircleFilled';
@@ -20,6 +20,8 @@ import { SearchBar } from '../SearchBar';
 import { filterFamiliesByText, sortFamiliesByLastNameDesc } from '../Families/FamilyUtils';
 import { usePermissions } from '../Model/SessionModel';
 import useScreenTitle from '../Shell/ShellScreenTitle';
+import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
+import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 
 const arrangementPhaseText = new Map<number, string>([
   [ArrangementPhase.SettingUp, 'Setting Up'],
@@ -79,7 +81,7 @@ function PartneringFamilies() {
     }
     
     return (
-      <div>
+      <div style={{width: 36}}>
         <Tooltip title={phaseText!}>
           {phase===ArrangementPhase.SettingUp ? 
             <PendingOutlinedIcon sx={{
@@ -111,6 +113,15 @@ function PartneringFamilies() {
 
   const [createPartneringFamilyDialogOpen, setCreatePartneringFamilyDialogOpen] = useState(false);
   const [expandedView, setExpandedView] = useLocalStorage('partnering-families-expanded', true);
+  
+  const handleExpandCollapse = (
+    event: React.MouseEvent<HTMLElement>,
+    newExpandedView: boolean | null,
+  ) => {
+    if (newExpandedView !== null) {
+      setExpandedView(newExpandedView);
+    }
+  };
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -120,13 +131,17 @@ function PartneringFamilies() {
   useScreenTitle("Referrals");
 
   return (
-    <Grid container spacing={3}>
-      <Toolbar>
-        <FormControlLabel
-          control={<Switch checked={expandedView} onChange={(e) => setExpandedView(e.target.checked)} name="expandedView" />}
-          label={isMobile ? "" : expandedView ? "Collapse" : "Expand" }/>
-        <SearchBar value={filterText} onChange={setFilterText} />
-      </Toolbar>
+    <Grid container>
+      <Grid item xs={12}>
+        <Stack direction='row-reverse' sx={{marginTop: 1}}>
+          <ToggleButtonGroup value={expandedView} exclusive onChange={handleExpandCollapse}
+            size={isMobile ? 'medium' : 'small'} aria-label="row expansion">
+            <ToggleButton value={true} aria-label="expanded"><UnfoldMoreIcon /></ToggleButton>
+            <ToggleButton value={false} aria-label="collapsed"><UnfoldLessIcon /></ToggleButton>
+          </ToggleButtonGroup>
+          <SearchBar value={filterText} onChange={setFilterText} />
+        </Stack>
+      </Grid>
       <Grid item xs={12}>
         <TableContainer>
           <Table sx={{minWidth: '700px'}} size="small">
@@ -135,7 +150,7 @@ function PartneringFamilies() {
                 <TableCell>Partnering Family</TableCell>
                 <TableCell>Referral Status</TableCell>
                 { !expandedView ? arrangementTypes?.map((arrangementType) => 
-                  (<TableCell>{arrangementType}</TableCell>)) : <></>}
+                  (<TableCell key={arrangementType}>{arrangementType}</TableCell>)) : <></>}
               </TableRow>
             </TableHead>
             <TableBody>
@@ -150,7 +165,7 @@ function PartneringFamilies() {
                       //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closedUtc) -- needs a new calculated property
                       }</TableCell>
                       {!expandedView ? arrangementTypes?.map((arrangementType) => (
-                        <TableCell>
+                        <TableCell key={arrangementType}>
                           <div style={{
                             display: 'flex',
                             rowGap: '5px',

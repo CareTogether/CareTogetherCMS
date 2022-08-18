@@ -1,4 +1,4 @@
-import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, Button, ButtonGroup, useMediaQuery, useTheme, FormControlLabel, Switch, Toolbar } from '@mui/material';
+import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, Button, ButtonGroup, useMediaQuery, useTheme, Stack, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../Model/VolunteersModel';
 import { allApprovalAndOnboardingRequirementsData } from '../Model/ConfigurationModel';
@@ -13,6 +13,8 @@ import { filterFamiliesByText, familyLastName, sortFamiliesByLastNameDesc } from
 import { usePermissions } from '../Model/SessionModel';
 import { Permission } from '../GeneratedClient';
 import useScreenTitle from '../Shell/ShellScreenTitle';
+import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
+import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 
 function VolunteerProgress(props: { onOpen: () => void }) {
   const { onOpen } = props;
@@ -39,24 +41,35 @@ function VolunteerProgress(props: { onOpen: () => void }) {
   const location = useLocation();
   
   const [expandedView, setExpandedView] = useLocalStorage('volunteer-progress-expanded', true);
+  const handleExpandCollapse = (
+    event: React.MouseEvent<HTMLElement>,
+    newExpandedView: boolean | null,
+  ) => {
+    if (newExpandedView !== null) {
+      setExpandedView(newExpandedView);
+    }
+  };
 
   const permissions = usePermissions();
 
   useScreenTitle("Volunteers");
 
   return (
-    <Grid container spacing={3}>
-      <Toolbar>
-        <ButtonGroup variant="text" color="inherit" aria-label="text inherit button group" style={{flexGrow: 1}}>
-          <Button color={location.pathname === "/volunteers/approval" ? 'secondary' : 'inherit'} component={Link} to={"/volunteers/approval"}>Approvals</Button>
-          <Button color={location.pathname === "/volunteers/progress" ? 'secondary' : 'inherit'} component={Link} to={"/volunteers/progress"}>Progress</Button>
-        </ButtonGroup>
-        <FormControlLabel
-          control={<Switch checked={expandedView} onChange={(e) => setExpandedView(e.target.checked)} name="expandedView" />}
-          label={isMobile ? "" : "Expand"}
-        />
-        <SearchBar value={filterText} onChange={setFilterText} />
-      </Toolbar>
+    <Grid container>
+      <Grid item xs={12}>
+        <Stack direction='row-reverse' sx={{marginTop: 1}}>
+          <ToggleButtonGroup value={expandedView} exclusive onChange={handleExpandCollapse}
+            size={isMobile ? 'medium' : 'small'} aria-label="row expansion">
+            <ToggleButton value={true} aria-label="expanded"><UnfoldMoreIcon /></ToggleButton>
+            <ToggleButton value={false} aria-label="collapsed"><UnfoldLessIcon /></ToggleButton>
+          </ToggleButtonGroup>
+          <SearchBar value={filterText} onChange={setFilterText} />
+          <ButtonGroup variant="text" color="inherit" aria-label="text inherit button group" style={{flexGrow: 1}}>
+            <Button color={location.pathname === "/volunteers/approval" ? 'secondary' : 'inherit'} component={Link} to={"/volunteers/approval"}>Approvals</Button>
+            <Button color={location.pathname === "/volunteers/progress" ? 'secondary' : 'inherit'} component={Link} to={"/volunteers/progress"}>Progress</Button>
+          </ButtonGroup>
+        </Stack>
+      </Grid>
       <Grid item xs={12}>
         <TableContainer>
           <Table sx={{minWidth: '700px'}} size="small">
