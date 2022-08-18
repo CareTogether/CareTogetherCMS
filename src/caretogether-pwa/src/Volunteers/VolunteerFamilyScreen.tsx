@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Container, Toolbar, Button, Menu, MenuItem, Grid, useMediaQuery, useTheme, MenuList, IconButton, ListItemText, Chip, Divider, Box } from '@mui/material';
-import { CombinedFamilyInfo, RoleRemovalReason, Permission } from '../GeneratedClient';
+import { RoleRemovalReason, Permission } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -26,6 +26,7 @@ import { ActivityTimeline } from '../Activities/ActivityTimeline';
 import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
 import { PrimaryContactEditor } from '../Families/PrimaryContactEditor';
 import useScreenTitle from '../Shell/ShellScreenTitle';
+import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 
 export function VolunteerFamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
@@ -33,7 +34,7 @@ export function VolunteerFamilyScreen() {
 
   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
 
-  const volunteerFamily = volunteerFamilies.find(x => x.family?.id === familyId) as CombinedFamilyInfo;
+  const volunteerFamily = volunteerFamilies.find(x => x.family?.id === familyId);
   
   const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] = useState(false);
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
@@ -65,13 +66,18 @@ export function VolunteerFamilyScreen() {
   const permissions = usePermissions();
 
   const participatingFamilyRoles =
-    Object.entries(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals || {}).filter(
-      ([role,]) => !volunteerFamily.volunteerFamilyInfo?.removedRoles?.find(x => x.roleName === role));
+    Object.entries(volunteerFamily?.volunteerFamilyInfo?.familyRoleApprovals || {}).filter(
+      ([role,]) => !volunteerFamily?.volunteerFamilyInfo?.removedRoles?.find(x => x.roleName === role));
   
-  useScreenTitle(`${volunteerFamily?.family?.adults!.filter(adult => adult.item1!.id === volunteerFamily!.family!.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family`);
+  useScreenTitle(volunteerFamily
+    ? `${volunteerFamily.family?.adults!.filter(adult => adult.item1!.id === volunteerFamily.family!.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family`
+    : "...");
   
-  return (
-    <Container maxWidth={false} sx={{paddingLeft: '12px'}}>
+  return (!volunteerFamily
+  ? <ProgressBackdrop>
+      <p>Loading family...</p>
+    </ProgressBackdrop>
+  : <Container maxWidth={false} sx={{paddingLeft: '12px'}}>
       <Toolbar variant="dense" disableGutters={true}>
         {permissions(Permission.UploadFamilyDocuments) && <Button
           onClick={() => setUploadDocumentDialogOpen(true)}

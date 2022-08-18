@@ -1,5 +1,5 @@
 import { Container, Toolbar, Grid, Button, useMediaQuery, useTheme, Box } from '@mui/material';
-import { Arrangement, ArrangementPolicy, CombinedFamilyInfo, CompletedCustomFieldInfo, Permission, ReferralCloseReason } from '../GeneratedClient';
+import { Arrangement, ArrangementPolicy, CompletedCustomFieldInfo, Permission, ReferralCloseReason } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../Model/ReferralsModel';
 import { useParams } from 'react-router';
@@ -30,6 +30,7 @@ import { ReferralComments } from './ReferralComments';
 import { ReferralCustomField } from './ReferralCustomField';
 import { PrimaryContactEditor } from '../Families/PrimaryContactEditor';
 import useScreenTitle from '../Shell/ShellScreenTitle';
+import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 
 const sortArrangementsByStartDateDescThenCreateDateDesc = (a: Arrangement,b: Arrangement) => {
   return ((b.startedAtUtc ?? new Date()).getTime() - (a.startedAtUtc ?? new Date()).getTime()) || 
@@ -43,9 +44,9 @@ export function PartneringFamilyScreen() {
   const partneringFamilies = useRecoilValue(partneringFamiliesData);
   const policy = useRecoilValue(policyData);
 
-  const partneringFamily = partneringFamilies.find(x => x.family?.id === familyId) as CombinedFamilyInfo;
+  const partneringFamily = partneringFamilies.find(x => x.family?.id === familyId);
 
-  const canCloseReferral = partneringFamily.partneringFamilyInfo?.openReferral &&
+  const canCloseReferral = partneringFamily?.partneringFamilyInfo?.openReferral &&
     !partneringFamily.partneringFamilyInfo.openReferral.closeReason &&
     !partneringFamily.partneringFamilyInfo.openReferral.arrangements?.some(arrangement =>
       !arrangement.endedAtUtc && !arrangement.cancelledAtUtc);
@@ -58,7 +59,7 @@ export function PartneringFamilyScreen() {
   const [addNoteDialogOpen, setAddNoteDialogOpen] = useState(false);
   
   let requirementContext: ReferralContext | undefined;
-  if (partneringFamily.partneringFamilyInfo?.openReferral) {
+  if (partneringFamily?.partneringFamilyInfo?.openReferral) {
     requirementContext = {
       kind: "Referral",
       partneringFamilyId: familyId,
@@ -74,10 +75,15 @@ export function PartneringFamilyScreen() {
 
   const permissions = usePermissions();
 
-  useScreenTitle(`${partneringFamily?.family?.adults!.filter(adult => adult.item1!.id === partneringFamily!.family!.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family`);
+  useScreenTitle(partneringFamily
+    ? `${partneringFamily.family?.adults!.filter(adult => adult.item1!.id === partneringFamily.family!.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family`
+    : "...");
 
-  return (
-    <Container maxWidth={false} sx={{paddingLeft: '12px'}}>
+  return (!partneringFamily
+  ? <ProgressBackdrop>
+      <p>Loading family...</p>
+    </ProgressBackdrop>
+  : <Container maxWidth={false} sx={{paddingLeft: '12px'}}>
       <Toolbar variant="dense" disableGutters={true}>
         {permissions(Permission.UploadFamilyDocuments) && <Button
           onClick={() => setUploadDocumentDialogOpen(true)}
