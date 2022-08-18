@@ -13,7 +13,7 @@ export function ProgressBackdrop({ children, open, opaque }: ProgressBackdropPro
     sx={opaque
       ? { backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText }
       : undefined}
-    // style={{zIndex: 10000}}
+    style={{zIndex: 10000}}
     open={ typeof open === 'undefined' ? true : open }>
     <Container sx={{ textAlign: 'center' }}>
       <Stack>

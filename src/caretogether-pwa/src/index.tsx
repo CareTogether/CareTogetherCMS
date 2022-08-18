@@ -16,6 +16,7 @@ import AuthenticationWrapper from './Authentication/AuthenticationWrapper';
 import { ModelRoot } from './Model/ModelRoot';
 import ShellRootLayout from './Shell/ShellRootLayout';
 import { AppRoutes } from './AppRoutes';
+import RequestBackdrop from './RequestBackdrop';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(
@@ -40,6 +41,7 @@ root.render(
                   </AuthenticationWrapper>
                 </MsalProvider>
               </Router>
+              <RequestBackdrop />
             </RecoilRoot>
           </GlobalErrorBoundary>
         </LocalizationProvider>
