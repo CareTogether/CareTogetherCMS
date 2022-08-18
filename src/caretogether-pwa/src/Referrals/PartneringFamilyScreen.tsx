@@ -19,8 +19,6 @@ import { CreateArrangementDialog } from './CreateArrangementDialog';
 import { CloseReferralDialog } from './CloseReferralDialog';
 import { OpenNewReferralDialog } from './OpenNewReferralDialog';
 import { FamilyDocuments } from '../Families/FamilyDocuments';
-import { ArrowBack } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
 import { usePermissions } from '../Model/SessionModel';
 import { Masonry } from '@mui/lab';
 import { MissingRequirementRow } from "../Requirements/MissingRequirementRow";
@@ -74,19 +72,12 @@ export function PartneringFamilyScreen() {
   const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));
   const isWideScreen = useMediaQuery(theme.breakpoints.up('xl'));
 
-  const navigate = useNavigate();
-
   const permissions = usePermissions();
 
   useScreenTitle(`${partneringFamily?.family?.adults!.filter(adult => adult.item1!.id === partneringFamily!.family!.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family`);
 
   return (
     <Container maxWidth={false} sx={{paddingLeft: '12px'}}>
-      <Toolbar>
-        <IconButton color="inherit" onClick={() => navigate("..")} size="large">
-          <ArrowBack />
-        </IconButton>
-      </Toolbar>
       <Toolbar variant="dense" disableGutters={true}>
         {permissions(Permission.UploadFamilyDocuments) && <Button
           onClick={() => setUploadDocumentDialogOpen(true)}

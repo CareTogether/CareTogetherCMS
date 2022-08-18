@@ -16,8 +16,6 @@ import { VolunteerRoleApprovalStatusChip } from './VolunteerRoleApprovalStatusCh
 import { RemoveFamilyRoleDialog } from './RemoveFamilyRoleDialog';
 import { ResetFamilyRoleDialog } from './ResetFamilyRoleDialog';
 import { FamilyDocuments } from '../Families/FamilyDocuments';
-import { useNavigate } from 'react-router-dom';
-import { ArrowBack } from '@mui/icons-material';
 import { usePermissions } from '../Model/SessionModel';
 import { Masonry } from '@mui/lab';
 import { MissingRequirementRow } from "../Requirements/MissingRequirementRow";
@@ -63,8 +61,6 @@ export function VolunteerFamilyScreen() {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));
   const isWideScreen = useMediaQuery(theme.breakpoints.up('xl'));
-  
-  const navigate = useNavigate();
 
   const permissions = usePermissions();
 
@@ -76,11 +72,6 @@ export function VolunteerFamilyScreen() {
   
   return (
     <Container maxWidth={false} sx={{paddingLeft: '12px'}}>
-      <Toolbar>
-        <IconButton color="inherit" onClick={() => navigate("..")} size="large">
-          <ArrowBack />
-        </IconButton>
-      </Toolbar>
       <Toolbar variant="dense" disableGutters={true}>
         {permissions(Permission.UploadFamilyDocuments) && <Button
           onClick={() => setUploadDocumentDialogOpen(true)}
