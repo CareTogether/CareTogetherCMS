@@ -1,6 +1,6 @@
 import { useAccount } from "@azure/msal-react";
 import { useEffect } from "react";
-import { useRecoilState, useSetRecoilState } from "recoil";
+import { useRecoilStateLoadable, useSetRecoilState } from "recoil";
 import { useLoadable } from "../Hooks/useLoadable";
 import { useScopedTrace } from "../Hooks/useScopedTrace";
 import { visibleFamiliesData, visibleFamiliesInitializationQuery } from "./DirectoryModel";
@@ -18,7 +18,8 @@ export function ModelRoot({children}: ModelLoaderProps) {
   trace(`activeAccount: ${activeAccount?.localAccountId}`);
   const setUserId = useSetRecoilState(userIdState);
   const availableLocations = useLoadable(availableLocationsQuery);
-  const [selectedLocationId, setSelectedLocationId] = useRecoilState(selectedLocationIdState);
+  trace(`availableLocations.length: ${availableLocations?.length}`);
+  const [selectedLocationId, setSelectedLocationId] = useRecoilStateLoadable(selectedLocationIdState);
   trace(`selectedLocationId: ${selectedLocationId.state} -- ${selectedLocationId.contents}`);
   const visibleFamilies = useLoadable(visibleFamiliesInitializationQuery);
   trace(`visibleFamilies.length: ${visibleFamilies?.length}`);
@@ -39,9 +40,10 @@ export function ModelRoot({children}: ModelLoaderProps) {
     const selectedLocation =
       availableLocations == null
       ? null
-      : (selectedLocationId == null || !availableLocations.some(loc => loc.locationId === selectedLocationId))  
-        ? availableLocations[0]
-        : availableLocations.find(loc => loc.locationId === selectedLocationId) || null;
+      : (selectedLocationId.state === 'hasValue' &&
+          availableLocations.some(loc => loc.locationId === selectedLocationId.contents))  
+        ? availableLocations.find(loc => loc.locationId === selectedLocationId.contents) || null
+        : availableLocations[0];
     const locationIdToSelect = selectedLocation?.locationId || null;
     trace(`locationIdToSelect: ${locationIdToSelect}`);
     if (locationIdToSelect) {
