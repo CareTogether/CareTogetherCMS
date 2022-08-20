@@ -5,6 +5,7 @@ import { globalMsalInstance } from './Auth';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useSetRecoilState } from 'recoil';
 import { accessTokenState } from './AuthenticatedHttp';
+import { useScopedTrace } from '../Hooks/useScopedTrace';
 
 function SignInScreen() {
   return (
@@ -19,6 +20,9 @@ interface AuthenticationWrapperProps {
   children?: React.ReactNode
 }
 export default function AuthenticationWrapper({ children }: AuthenticationWrapperProps) {
+  const trace = useScopedTrace("AuthenticationWrapper");
+  trace("start");
+  
   // Force the user to sign in if not already authenticated, then render the app.
   // See https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-react/docs/hooks.md
   //TODO: Handle token/session expiration to intercept the automatic redirect and prompt the user first?
@@ -30,19 +34,21 @@ export default function AuthenticationWrapper({ children }: AuthenticationWrappe
   const defaultAccount = useAccount();
   const { instance } = useMsal();
   const setAccessToken = useSetRecoilState(accessTokenState);
+  trace(`isAuthenticated: ${isAuthenticated} -- defaultAccount: ${defaultAccount?.localAccountId}`);
 
   // Before rendering any child components, ensure that the user is authenticated and
   // that the default account is set correctly in MSAL.
   useEffect(() => {
     const accounts = globalMsalInstance.getAllAccounts();
     const accountToActivate = accounts.length > 0 ? accounts[0] : null;
+    trace(`setActiveAccount: ${accountToActivate?.localAccountId}`);
     globalMsalInstance.setActiveAccount(accountToActivate);
   }, [ isAuthenticated ]);
 
   // Track the most recently acquired access token as shared state for API clients to reference.
   useEffect(() => {
     const callbackId = instance.addEventCallback((event: any) => {
-      //TODO: Log sanitized events via App Insights
+      trace(event); //TODO: Sanitize the event before logging
       if (event.eventType === EventType.LOGIN_SUCCESS) {
         globalMsalInstance.setActiveAccount(event.payload.account);
       }
@@ -61,6 +67,7 @@ export default function AuthenticationWrapper({ children }: AuthenticationWrappe
     }
   }, [ instance, setAccessToken ]);
 
+  trace("render");
   return (
     <>
       {isAuthenticated && defaultAccount
