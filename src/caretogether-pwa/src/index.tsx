@@ -18,6 +18,7 @@ import ShellRootLayout from './Shell/ShellRootLayout';
 import { AppRoutes } from './AppRoutes';
 import RequestBackdrop from './RequestBackdrop';
 import reportWebVitals from './reportWebVitals';
+import { ProgressBackdrop } from './Shell/ProgressBackdrop';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -34,9 +35,14 @@ root.render(
                 <MsalProvider instance={globalMsalInstance}>
                   <AuthenticationWrapper>
                     <ModelRoot>
-                      <ShellRootLayout>
-                        <AppRoutes />
-                      </ShellRootLayout>
+                      <React.Suspense fallback={
+                        <ProgressBackdrop opaque>
+                          <p>Initializing...</p>
+                        </ProgressBackdrop>}>
+                        <ShellRootLayout>
+                          <AppRoutes />
+                        </ShellRootLayout>
+                      </React.Suspense>
                     </ModelRoot>
                   </AuthenticationWrapper>
                 </MsalProvider>

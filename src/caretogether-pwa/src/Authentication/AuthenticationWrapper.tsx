@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
 import { EventType, InteractionType } from "@azure/msal-browser";
 import { useMsalAuthentication, useIsAuthenticated, useAccount, useMsal } from '@azure/msal-react';
-import { globalMsalInstance } from './Auth';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useSetRecoilState } from 'recoil';
 import { accessTokenState } from './AuthenticatedHttp';
+import { useScopedTrace } from '../Hooks/useScopedTrace';
 
 function SignInScreen() {
   return (
@@ -19,6 +19,9 @@ interface AuthenticationWrapperProps {
   children?: React.ReactNode
 }
 export default function AuthenticationWrapper({ children }: AuthenticationWrapperProps) {
+  const trace = useScopedTrace("AuthenticationWrapper");
+  trace("start");
+  
   // Force the user to sign in if not already authenticated, then render the app.
   // See https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-react/docs/hooks.md
   //TODO: Handle token/session expiration to intercept the automatic redirect and prompt the user first?
@@ -30,21 +33,23 @@ export default function AuthenticationWrapper({ children }: AuthenticationWrappe
   const defaultAccount = useAccount();
   const { instance } = useMsal();
   const setAccessToken = useSetRecoilState(accessTokenState);
+  trace(`isAuthenticated: ${isAuthenticated} -- defaultAccount: ${defaultAccount?.localAccountId}`);
 
   // Before rendering any child components, ensure that the user is authenticated and
   // that the default account is set correctly in MSAL.
   useEffect(() => {
-    const accounts = globalMsalInstance.getAllAccounts();
+    const accounts = instance.getAllAccounts();
     const accountToActivate = accounts.length > 0 ? accounts[0] : null;
-    globalMsalInstance.setActiveAccount(accountToActivate);
-  }, [ isAuthenticated ]);
+    trace(`setActiveAccount: ${accountToActivate?.localAccountId}`);
+    instance.setActiveAccount(accountToActivate);
+  }, [ instance, isAuthenticated, trace ]);
 
   // Track the most recently acquired access token as shared state for API clients to reference.
   useEffect(() => {
     const callbackId = instance.addEventCallback((event: any) => {
-      //TODO: Log sanitized events via App Insights
+      trace(`event: ${event?.eventType}`);
       if (event.eventType === EventType.LOGIN_SUCCESS) {
-        globalMsalInstance.setActiveAccount(event.payload.account);
+        instance.setActiveAccount(event.payload.account);
       }
       if (event.eventType === EventType.ACQUIRE_TOKEN_SUCCESS ||
         event.eventType === EventType.LOGIN_SUCCESS ||
@@ -53,14 +58,16 @@ export default function AuthenticationWrapper({ children }: AuthenticationWrappe
         setAccessToken(accessToken);
       }
     });
+    trace(`addEventCallback: ${callbackId}`);
 
     return () => {
       if (callbackId) {
         instance.removeEventCallback(callbackId);
       }
     }
-  }, [ instance, setAccessToken ]);
+  }, [ instance, setAccessToken, trace ]);
 
+  trace("render");
   return (
     <>
       {isAuthenticated && defaultAccount
