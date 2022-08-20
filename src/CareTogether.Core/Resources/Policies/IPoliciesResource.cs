@@ -8,6 +8,8 @@ namespace CareTogether.Resources.Policies
     public sealed record OrganizationConfiguration(string OrganizationName,
         ImmutableList<LocationConfiguration> Locations,
         ImmutableList<RoleDefinition> Roles,
+        ImmutableList<NoteSharingLevel> NoteSharingLevels,
+        ImmutableList<DocumentSharingLevel> DocumentSharingLevels,
         ImmutableDictionary<Guid, UserAccessConfiguration> Users);
 
     public sealed record LocationConfiguration(Guid Id, string Name,
@@ -15,6 +17,13 @@ namespace CareTogether.Resources.Policies
         ImmutableList<SourcePhoneNumberConfiguration> SmsSourcePhoneNumbers);
 
     public sealed record SourcePhoneNumberConfiguration(string SourcePhoneNumber, string Description);
+    public sealed record NoteSharingLevel(string Name,
+        ImmutableList<string> EligibleAuthorRoles, ImmutableList<string> EligibleReadRoles,
+        ImmutableList<string> EligibleApproveRoles, ImmutableList<string> EligibleDeleteRoles);
+
+    public sealed record DocumentSharingLevel(string Name,
+        ImmutableList<string> EligibleUploadRoles, ImmutableList<string> EligibleMetadataViewerRoles,
+        ImmutableList<string> EligibleDownloadRoles, ImmutableList<string> EligibleDeleteRoles);
 
     public sealed record RoleDefinition(string RoleName,
         ImmutableList<ContextualPermissionSet> PermissionSets);
