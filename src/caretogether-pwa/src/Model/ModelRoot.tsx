@@ -31,7 +31,7 @@ export function ModelRoot({children}: ModelLoaderProps) {
     const value = activeAccount?.localAccountId ?? null;
     trace(`setUserId: ${value}`);
     setUserId(value);
-  }, [activeAccount, setUserId]);
+  }, [activeAccount, setUserId, trace]);
 
   // Mark the correct location as the currently selected one.
   // This will be the most recently selected location, or the first available location
@@ -50,13 +50,14 @@ export function ModelRoot({children}: ModelLoaderProps) {
       trace(`Setting selected location ID: ${locationIdToSelect}`);
       setSelectedLocationId(locationIdToSelect);
     }
-  }, [availableLocations, selectedLocationId, setSelectedLocationId]);
+  }, [availableLocations, selectedLocationId, setSelectedLocationId, trace]);
 
   // Initialize the families atom that will be used to track family state mutations.
   //TODO: Trigger a refresh when changing locations.
   useEffect(() => {
+    trace(`setVisibleFamiliesData: ${visibleFamilies?.length}`)
     setVisibleFamiliesData(visibleFamilies || []);
-  }, [visibleFamilies, setVisibleFamiliesData]);
+  }, [visibleFamilies, setVisibleFamiliesData, trace]);
 
   trace("render");
   return (

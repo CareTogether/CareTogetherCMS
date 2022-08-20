@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { EventType, InteractionType } from "@azure/msal-browser";
 import { useMsalAuthentication, useIsAuthenticated, useAccount, useMsal } from '@azure/msal-react';
-import { globalMsalInstance } from './Auth';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useSetRecoilState } from 'recoil';
 import { accessTokenState } from './AuthenticatedHttp';
@@ -39,18 +38,18 @@ export default function AuthenticationWrapper({ children }: AuthenticationWrappe
   // Before rendering any child components, ensure that the user is authenticated and
   // that the default account is set correctly in MSAL.
   useEffect(() => {
-    const accounts = globalMsalInstance.getAllAccounts();
+    const accounts = instance.getAllAccounts();
     const accountToActivate = accounts.length > 0 ? accounts[0] : null;
     trace(`setActiveAccount: ${accountToActivate?.localAccountId}`);
-    globalMsalInstance.setActiveAccount(accountToActivate);
-  }, [ isAuthenticated ]);
+    instance.setActiveAccount(accountToActivate);
+  }, [ instance, isAuthenticated, trace ]);
 
   // Track the most recently acquired access token as shared state for API clients to reference.
   useEffect(() => {
     const callbackId = instance.addEventCallback((event: any) => {
-      trace(event); //TODO: Sanitize the event before logging
+      trace(`event: ${event?.eventType}`);
       if (event.eventType === EventType.LOGIN_SUCCESS) {
-        globalMsalInstance.setActiveAccount(event.payload.account);
+        instance.setActiveAccount(event.payload.account);
       }
       if (event.eventType === EventType.ACQUIRE_TOKEN_SUCCESS ||
         event.eventType === EventType.LOGIN_SUCCESS ||
@@ -59,13 +58,14 @@ export default function AuthenticationWrapper({ children }: AuthenticationWrappe
         setAccessToken(accessToken);
       }
     });
+    trace(`addEventCallback: ${callbackId}`);
 
     return () => {
       if (callbackId) {
         instance.removeEventCallback(callbackId);
       }
     }
-  }, [ instance, setAccessToken ]);
+  }, [ instance, setAccessToken, trace ]);
 
   trace("render");
   return (
