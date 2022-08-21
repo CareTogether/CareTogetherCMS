@@ -33,33 +33,31 @@ namespace CareTogether.Api
 
             // Then look up the organization-managed role access and person ID for that user.
             var configuration = await policiesResource.GetConfigurationAsync(organizationId);
-
+            
+            // To represent the ability for users to have different sets of roles by location,
+            // each location gets its own claims identity, named using a fixed convention for
+            // easy lookup later.
             var userAccessConfiguration = configuration.Users[userId];
-            //TODO: There is an inconsistency here -- we are storing/controlling location access both from the
-            //      IAccountsResource *and* the IPoliciesResource.
-            //      This is a further argument that this method should really just call a method on the
-            //      IAuthorizationEngine to obtain the full map of the user's organization/location access,
-            //      roles, and permissions, and simply convert that information into ClaimsIdentity form here.
             var locationUserIdentities = userAccessConfiguration.LocationRoles
-                .Select(locationRole =>
+                .Select(locationRoles =>
                 {
-                    var locationUserIdentity = new ClaimsIdentity($"{organizationId}:{locationRole.LocationId}");
+                    var locationUserIdentity = new ClaimsIdentity($"{organizationId}:{locationRoles.LocationId}");
                     locationUserIdentity.Label = "User Location Access";
 
                     var locationClaims = new Claim[]
                     {
-                        new(Claims.LocationId, locationRole.LocationId.ToString()),
-                        new(tenantUserIdentity.RoleClaimType, locationRole.RoleName),
+                        new(Claims.LocationId, locationRoles.LocationId.ToString()),
                         new(Claims.PersonId, userAccessConfiguration.PersonId.ToString())
                     };
                     locationUserIdentity.AddClaims(locationClaims);
 
-                    var rolePermissions = configuration.Roles
-                        .Single(role => role.RoleName == locationRole.RoleName)
-                        .Permissions;
-                    var permissionClaims = rolePermissions
-                        .Select(rolePermission => new Claim(Claims.Permission, rolePermission.ToString()));
-                    locationUserIdentity.AddClaims(permissionClaims);
+                    //Note: We can't map the complicated role definitions into simple string-based permission claims,
+                    //      so instead just map the role names to the location user identity.
+                    //      The role definitions are known to the AuthorizationEngine service.
+                    var locationRoleClaims = locationRoles.RoleNames
+                        .Select(roleName => new Claim(tenantUserIdentity.RoleClaimType, roleName))
+                        .ToArray();
+                    locationUserIdentity.AddClaims(locationRoleClaims);
 
                     return locationUserIdentity;
                 });

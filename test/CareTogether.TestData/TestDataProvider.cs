@@ -412,11 +412,11 @@ namespace CareTogether.TestData
                                     Permission.ViewPersonContactInfo
                                 ))))),
                     ImmutableDictionary<Guid, UserAccessConfiguration>.Empty
-                        .Add(adminId, new UserAccessConfiguration(guid0, ImmutableList<UserLocationRole>.Empty
-                            .Add(new UserLocationRole(guid2, "OrganizationAdministrator"))
-                            .Add(new UserLocationRole(guid3, "OrganizationAdministrator"))))
-                        .Add(volunteerId, new UserAccessConfiguration(guid4, ImmutableList<UserLocationRole>.Empty
-                            .Add(new UserLocationRole(guid2, "Volunteer"))))));
+                        .Add(adminId, new UserAccessConfiguration(guid0, ImmutableList<UserLocationRoles>.Empty
+                            .Add(new UserLocationRoles(guid2, ImmutableList.Create("OrganizationAdministrator")))
+                            .Add(new UserLocationRoles(guid3, ImmutableList.Create("OrganizationAdministrator")))))
+                        .Add(volunteerId, new UserAccessConfiguration(guid4, ImmutableList<UserLocationRoles>.Empty
+                            .Add(new UserLocationRoles(guid2, ImmutableList.Create("Volunteer")))))));
         }
 
         public static async Task PopulatePolicies(IObjectStore<EffectiveLocationPolicy> policiesStore)

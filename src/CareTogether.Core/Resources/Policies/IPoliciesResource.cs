@@ -34,9 +34,9 @@ namespace CareTogether.Resources.Policies
 
 
     public sealed record UserAccessConfiguration(Guid PersonId,
-        ImmutableList<UserLocationRole> LocationRoles);
+        ImmutableList<UserLocationRoles> LocationRoles);
 
-    public sealed record UserLocationRole(Guid LocationId, string RoleName);
+    public sealed record UserLocationRoles(Guid LocationId, ImmutableList<string> RoleNames);
 
     public sealed record EffectiveLocationPolicy(
         ImmutableDictionary<string, ActionRequirement> ActionDefinitions,
