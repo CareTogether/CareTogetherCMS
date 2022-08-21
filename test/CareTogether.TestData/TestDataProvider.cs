@@ -379,16 +379,16 @@ namespace CareTogether.TestData
                     ImmutableList<RoleDefinition>.Empty
                         .Add(new RoleDefinition("Volunteer", ImmutableList<ContextualPermissionSet>.Empty
                             .Add(new ContextualPermissionSet(new GlobalPermissionContext(),
-                                ImmutableList.Create<Permission>(
+                                ImmutableList.Create(
                                     Permission.ViewLinkedFamilies
                                 )))
                             .Add(new ContextualPermissionSet(new OwnFamilyPermissionContext(),
-                                ImmutableList.Create<Permission>(
+                                ImmutableList.Create(
                                     Permission.ViewPersonContactInfo,
                                     Permission.ViewApprovalProgress
                                 )))
                             .Add(new ContextualPermissionSet(
-                                new AssignedFunctionsInOpenReferralPartneringFamilyPermissionContext(ImmutableList.Create<string>(
+                                new AssignedFunctionsInOpenReferralPartneringFamilyPermissionContext(ImmutableList.Create(
                                     "Host Family",
                                     "Family Coach",
                                     "Family Friend",
@@ -396,7 +396,7 @@ namespace CareTogether.TestData
                                     "Host Family Friend",
                                     "Staff Supervision"
                                 )),
-                                ImmutableList.Create<Permission>(
+                                ImmutableList.Create(
                                     Permission.AddEditDraftNotes,
                                     Permission.DiscardDraftNotes,
                                     Permission.ViewAssignments,
@@ -406,7 +406,7 @@ namespace CareTogether.TestData
                                 )))
                             .Add(new ContextualPermissionSet(
                                 new CoAssigneesInOpenReferralPartneringFamilyPermissionContext(null),
-                                ImmutableList.Create<Permission>(
+                                ImmutableList.Create(
                                     Permission.ViewPersonContactInfo
                                 ))))),
                     ImmutableDictionary<Guid, UserAccessConfiguration>.Empty
