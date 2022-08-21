@@ -27,10 +27,13 @@ namespace CareTogether.Resources.Policies
     public sealed record OwnFamilyPermissionContext() : PermissionContext();
     public sealed record AllVolunteerFamiliesPermissionContext() : PermissionContext();
     public sealed record AllPartneringFamiliesPermissionContext() : PermissionContext();
-    public sealed record AssignedFunctionsInOpenReferralPartneringFamilyPermissionContext(ImmutableList<string>? WhenOwnFunctionIsIn) : PermissionContext();
-    public sealed record CoAssigneesInOpenReferralPartneringFamilyPermissionContext(ImmutableList<string>? WhenOwnFunctionIsIn) : PermissionContext();
-    public sealed record AssignedFunctionsInClosedReferralPartneringFamilyPermissionContext(ImmutableList<string>? WhenOwnFunctionIsIn) : PermissionContext();
-    public sealed record CoAssigneesInClosedReferralPartneringFamilyPermissionContext(ImmutableList<string>? WhenOwnFunctionIsIn) : PermissionContext();
+    public sealed record AssignedFunctionsInReferralPartneringFamilyPermissionContext(
+        bool? WhenReferralIsOpen, ImmutableList<string>? WhenOwnFunctionIsIn) : PermissionContext();
+    public sealed record OwnReferralAssigneeFamiliesPermissionContext(
+        bool? WhenReferralIsOpen, ImmutableList<string>? WhenAssigneeFunctionIsIn) : PermissionContext();
+    public sealed record AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext(
+        bool? WhenReferralIsOpen, ImmutableList<string>? WhenOwnFunctionIsIn, ImmutableList<string>? WhenAssigneeFunctionIsIn)
+        : PermissionContext();
 
 
     public sealed record UserAccessConfiguration(Guid PersonId,

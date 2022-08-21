@@ -388,14 +388,15 @@ namespace CareTogether.TestData
                                     Permission.ViewFamilyDocumentMetadata
                                 )))
                             .Add(new ContextualPermissionSet(
-                                new AssignedFunctionsInOpenReferralPartneringFamilyPermissionContext(ImmutableList.Create(
-                                    "Host Family",
-                                    "Family Coach",
-                                    "Family Friend",
-                                    "Parent Friend",
-                                    "Host Family Friend",
-                                    "Staff Supervision"
-                                )),
+                                new AssignedFunctionsInReferralPartneringFamilyPermissionContext(WhenReferralIsOpen: true,
+                                    WhenOwnFunctionIsIn: ImmutableList.Create(
+                                        "Host Family",
+                                        "Family Coach",
+                                        "Family Friend",
+                                        "Parent Friend",
+                                        "Host Family Friend",
+                                        "Staff Supervision"
+                                    )),
                                 ImmutableList.Create(
                                     Permission.AddEditDraftNotes,
                                     Permission.DiscardDraftNotes,
@@ -407,7 +408,8 @@ namespace CareTogether.TestData
                                     Permission.ViewPersonNotes
                                 )))
                             .Add(new ContextualPermissionSet(
-                                new CoAssigneesInOpenReferralPartneringFamilyPermissionContext(null),
+                                new AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext(WhenReferralIsOpen: null,
+                                    WhenOwnFunctionIsIn: null, WhenAssigneeFunctionIsIn: null),
                                 ImmutableList.Create(
                                     Permission.ViewPersonContactInfo
                                 ))))),

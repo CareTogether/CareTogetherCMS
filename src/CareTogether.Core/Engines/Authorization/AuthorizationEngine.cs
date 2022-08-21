@@ -20,64 +20,100 @@ namespace CareTogether.Engines.Authorization
         private readonly IPoliciesResource policiesResource;
         private readonly IDirectoryResource directoryResource;
         private readonly IReferralsResource referralsResource;
+        private readonly IApprovalsResource approvalsResource;
 
 
         public AuthorizationEngine(IPoliciesResource policiesResource,
-            IDirectoryResource directoryResource, IReferralsResource referralsResource)
+            IDirectoryResource directoryResource, IReferralsResource referralsResource,
+            IApprovalsResource approvalsResource)
         {
             this.policiesResource = policiesResource;
             this.directoryResource = directoryResource;
             this.referralsResource = referralsResource;
+            this.approvalsResource = approvalsResource;
         }
 
 
         public async Task<bool> AuthorizeFamilyAccessAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, Guid familyId)
         {
-            // Most common case for highly active users: the user has access to all families.
-            if (user.HasPermission(organizationId, locationId, Permission.ViewAllFamilies))
-                return true;
+            // The user must have access to this organization and location.
+            var userLocalIdentity = user.LocationIdentity(organizationId, locationId);
+            if (userLocalIdentity == null)
+                return false;
 
-            // Less common but simple case: the user is part of the target family.
+            // Look up the user's family and the target family, which will be referenced several times.
             var userPersonId = user.PersonId(organizationId, locationId);
             var userFamily = await directoryResource.FindPersonFamilyAsync(organizationId, locationId, userPersonId);
-            if (userFamily == null)
-                return false; // If the user is not part of a family, the remaining conditions are invalid.
-
             var targetFamily = await directoryResource.FindFamilyAsync(organizationId, locationId, familyId);
-            if (targetFamily.Id == userFamily.Id)
-                return true;
+            var targetFamilyVolunteerInfo = await approvalsResource.TryGetVolunteerFamilyAsync(organizationId, locationId, familyId);
+            //TODO: This could be optimized to find only the user family's referrals or the target family's referrals.
+            var referrals = await referralsResource.ListReferralsAsync(organizationId, locationId);
+            var userFamilyReferrals = referrals.Where(referral => referral.FamilyId == userFamily?.Id).ToImmutableList();
+            var targetFamilyReferrals = referrals.Where(referral => referral.FamilyId == targetFamily.Id).ToImmutableList();
+            var assignedReferrals = referrals.Where(referral => referral.Arrangements.Any(arrangement =>
+                arrangement.Value.FamilyVolunteerAssignments.Exists(assignment => assignment.FamilyId == userFamily?.Id) ||
+                arrangement.Value.IndividualVolunteerAssignments.Exists(assignment => assignment.FamilyId == userFamily?.Id)));
 
-            // General case: the user's family is linked to the target family through a referral.
-            if (user.HasPermission(organizationId, locationId, Permission.ViewLinkedFamilies))
-            {
-                var referrals = await referralsResource.ListReferralsAsync(organizationId, locationId);
+            // We need to evaluate each of the user's roles to determine which permission sets
+            // apply to the user's context with this family.
+            var config = await policiesResource.GetConfigurationAsync(organizationId);
+            var userPermissionSets = config.Roles
+                .Where(role => userLocalIdentity.HasClaim(userLocalIdentity.RoleClaimType, role.RoleName))
+                .SelectMany(role => role.PermissionSets)
+                .ToImmutableList();
+            var applicablePermissionSets = userPermissionSets
+                .Where(permissionSet => permissionSet.Context switch //TODO: Extract this predicate to a static method and unit-test it.
+                {
+                    GlobalPermissionContext c => true,
+                    OwnFamilyPermissionContext c => userFamily != null && userFamily.Id == targetFamily.Id,
+                    AllVolunteerFamiliesPermissionContext c => targetFamilyVolunteerInfo != null,
+                    AllPartneringFamiliesPermissionContext c => !targetFamilyReferrals.IsEmpty,
+                    //TODO: Should the following be restricted so only the assigned individual, or in the case of a family assignment,
+                    //      only the participating individuals, can access the partnering family?
+                    AssignedFunctionsInReferralPartneringFamilyPermissionContext c =>
+                        targetFamilyReferrals.Any(referral => //TODO: The individual logic blocks here can be extracted to helper methods.
+                            (c.WhenReferralIsOpen == null || c.WhenReferralIsOpen == (referral.ClosedAtUtc == null)) &&
+                            referral.Arrangements.Any(arrangement =>
+                                arrangement.Value.FamilyVolunteerAssignments.Any(fva =>
+                                    fva.FamilyId == userFamily?.Id &&
+                                    (c.WhenOwnFunctionIsIn == null || c.WhenOwnFunctionIsIn.Contains(fva.ArrangementFunction))) ||
+                                arrangement.Value.IndividualVolunteerAssignments.Any(iva =>
+                                    iva.FamilyId == userFamily?.Id &&
+                                    (c.WhenOwnFunctionIsIn == null || c.WhenOwnFunctionIsIn.Contains(iva.ArrangementFunction))))),
+                    OwnReferralAssigneeFamiliesPermissionContext c =>
+                        userFamilyReferrals.Any(referral =>
+                            (c.WhenReferralIsOpen == null || c.WhenReferralIsOpen == (referral.ClosedAtUtc == null)) &&
+                            referral.Arrangements.Any(arrangement =>
+                                arrangement.Value.FamilyVolunteerAssignments.Any(fva =>
+                                    fva.FamilyId == targetFamily.Id &&
+                                    (c.WhenAssigneeFunctionIsIn == null || c.WhenAssigneeFunctionIsIn.Contains(fva.ArrangementFunction))) ||
+                                arrangement.Value.IndividualVolunteerAssignments.Any(iva =>
+                                    iva.FamilyId == targetFamily.Id &&
+                                    (c.WhenAssigneeFunctionIsIn == null || c.WhenAssigneeFunctionIsIn.Contains(iva.ArrangementFunction))))),
+                    AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext c =>
+                        assignedReferrals.Any(referral =>
+                            (c.WhenReferralIsOpen == null || c.WhenReferralIsOpen == (referral.ClosedAtUtc == null)) &&
+                            referral.Arrangements.Any(arrangement =>
+                                arrangement.Value.FamilyVolunteerAssignments.Any(fva =>
+                                    fva.FamilyId == userFamily?.Id &&
+                                    (c.WhenOwnFunctionIsIn == null || c.WhenOwnFunctionIsIn.Contains(fva.ArrangementFunction))) ||
+                                arrangement.Value.IndividualVolunteerAssignments.Any(iva =>
+                                    iva.FamilyId == userFamily?.Id &&
+                                    (c.WhenOwnFunctionIsIn == null || c.WhenOwnFunctionIsIn.Contains(iva.ArrangementFunction)))) &&
+                            referral.Arrangements.Any(arrangement =>
+                                arrangement.Value.FamilyVolunteerAssignments.Any(fva =>
+                                    fva.FamilyId == targetFamily.Id &&
+                                    (c.WhenAssigneeFunctionIsIn == null || c.WhenAssigneeFunctionIsIn.Contains(fva.ArrangementFunction))) ||
+                                arrangement.Value.IndividualVolunteerAssignments.Any(iva =>
+                                    iva.FamilyId == targetFamily.Id &&
+                                    (c.WhenAssigneeFunctionIsIn == null || c.WhenAssigneeFunctionIsIn.Contains(iva.ArrangementFunction))))),
+                    _ => throw new NotImplementedException(
+                        $"The permission context type '{permissionSet.Context.GetType().FullName}' has not been implemented.")
+                })
+                .ToImmutableList();
 
-                // Find all linked referrals - that is, referrals where either the user's family is the partnering
-                // family or someone from the user's family is assigned to a volunteer role in the referral.
-                //TODO: Should the latter case be restricted so only the assigned individual can see others' info?
-                //TODO: Should the latter case be restricted so only participating individuals in the family can see others' info?
-                var ownReferrals = referrals.Where(referral => referral.FamilyId == userFamily.Id);
-                var assignedReferrals = referrals.Where(referral => referral.Arrangements.Any(arrangement =>
-                    arrangement.Value.FamilyVolunteerAssignments.Exists(assignment => assignment.FamilyId == userFamily.Id) ||
-                    arrangement.Value.IndividualVolunteerAssignments.Exists(assignment => assignment.FamilyId == userFamily.Id)));
-                var allLinkedReferrals = ownReferrals.Concat(assignedReferrals).ToImmutableHashSet();
-
-                // Find all families connected to the linked referrals (as either partnering families and assigned volunteers).
-                var allVisiblePartneringFamilies = allLinkedReferrals.Select(referral => referral.FamilyId);
-                var allVisibleAssignedFamilies = allLinkedReferrals.SelectMany(referral =>
-                    referral.Arrangements.SelectMany(arrangement =>
-                    {
-                        var linkedFamilies = arrangement.Value.FamilyVolunteerAssignments.Select(assignment => assignment.FamilyId);
-                        var linkedIndividualFamilies = arrangement.Value.IndividualVolunteerAssignments.Select(assignment => assignment.FamilyId);
-                        return linkedFamilies.Concat(linkedIndividualFamilies);
-                    }));
-                var allVisibleFamilies = allVisiblePartneringFamilies.Concat(allVisibleAssignedFamilies).ToImmutableHashSet();
-
-                return allVisibleFamilies.Contains(familyId);
-            }
-
-            return false;
+            return !applicablePermissionSets.IsEmpty; //TODO: Return the actual permission sets for further evaluation.
         }
 
         public async Task<bool> AuthorizeFamilyCommandAsync(
