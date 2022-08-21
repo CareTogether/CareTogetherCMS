@@ -383,7 +383,6 @@ namespace CareTogether.TestData
                                 )))
                             .Add(new ContextualPermissionSet(new OwnFamilyPermissionContext(),
                                 ImmutableList.Create(
-                                    Permission.ViewFamilies,
                                     Permission.ViewPersonContactInfo,
                                     Permission.ViewApprovalProgress,
                                     Permission.ViewFamilyDocumentMetadata
@@ -398,7 +397,6 @@ namespace CareTogether.TestData
                                     "Staff Supervision"
                                 )),
                                 ImmutableList.Create(
-                                    Permission.ViewFamilies,
                                     Permission.AddEditDraftNotes,
                                     Permission.DiscardDraftNotes,
                                     Permission.ViewAssignments,
@@ -411,7 +409,6 @@ namespace CareTogether.TestData
                             .Add(new ContextualPermissionSet(
                                 new CoAssigneesInOpenReferralPartneringFamilyPermissionContext(null),
                                 ImmutableList.Create(
-                                    Permission.ViewFamilies,
                                     Permission.ViewPersonContactInfo
                                 ))))),
                     ImmutableDictionary<Guid, UserAccessConfiguration>.Empty
