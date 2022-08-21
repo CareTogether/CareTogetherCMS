@@ -24,9 +24,13 @@ namespace CareTogether.Resources.Policies
     [JsonHierarchyBase]
     public abstract partial record PermissionContext();
     public sealed record GlobalPermissionContext() : PermissionContext();
+    public sealed record OwnFamilyPermissionContext() : PermissionContext();
     public sealed record AllVolunteerFamiliesPermissionContext() : PermissionContext();
     public sealed record AllPartneringFamiliesPermissionContext() : PermissionContext();
-    public sealed record AssignedFunctionsInOpenReferralPermissionContext(ImmutableList<string> FunctionNames);
+    public sealed record AssignedFunctionsInOpenReferralPartneringFamilyPermissionContext(ImmutableList<string>? WhenOwnFunctionIsIn) : PermissionContext();
+    public sealed record CoAssigneesInOpenReferralPartneringFamilyPermissionContext(ImmutableList<string>? WhenOwnFunctionIsIn) : PermissionContext();
+    public sealed record AssignedFunctionsInClosedReferralPartneringFamilyPermissionContext(ImmutableList<string>? WhenOwnFunctionIsIn) : PermissionContext();
+    public sealed record CoAssigneesInClosedReferralPartneringFamilyPermissionContext(ImmutableList<string>? WhenOwnFunctionIsIn) : PermissionContext();
 
 
     public sealed record UserAccessConfiguration(Guid PersonId,

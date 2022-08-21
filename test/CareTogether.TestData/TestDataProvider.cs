@@ -377,19 +377,38 @@ namespace CareTogether.TestData
                             ImmutableList<string>.Empty.AddRange(new[] { "Single", "Spouse", "Partner", "Dad", "Mom", "Relative", "Domestic Worker" }),
                             sourcePhoneNumbers)),
                     ImmutableList<RoleDefinition>.Empty
-                        .Add(new RoleDefinition("Volunteer", ImmutableList<Permission>.Empty
-                            .AddRange(new Permission[]
-                            {
-                                Permission.ViewLinkedFamilies,
-                                Permission.ViewPersonContactInfo,
-                                Permission.AddEditDraftNotes,
-                                Permission.DiscardDraftNotes,
-                                Permission.ViewApprovalProgress,
-                                Permission.ViewAssignments,
-                                Permission.ViewAssignedArrangementProgress,
-                                Permission.ViewChildLocationHistory,
-                                Permission.TrackChildLocationChange
-                            }))),
+                        .Add(new RoleDefinition("Volunteer", ImmutableList<ContextualPermissionSet>.Empty
+                            .Add(new ContextualPermissionSet(new GlobalPermissionContext(),
+                                ImmutableList.Create<Permission>(
+                                    Permission.ViewLinkedFamilies
+                                )))
+                            .Add(new ContextualPermissionSet(new OwnFamilyPermissionContext(),
+                                ImmutableList.Create<Permission>(
+                                    Permission.ViewPersonContactInfo,
+                                    Permission.ViewApprovalProgress
+                                )))
+                            .Add(new ContextualPermissionSet(
+                                new AssignedFunctionsInOpenReferralPartneringFamilyPermissionContext(ImmutableList.Create<string>(
+                                    "Host Family",
+                                    "Family Coach",
+                                    "Family Friend",
+                                    "Parent Friend",
+                                    "Host Family Friend",
+                                    "Staff Supervision"
+                                )),
+                                ImmutableList.Create<Permission>(
+                                    Permission.AddEditDraftNotes,
+                                    Permission.DiscardDraftNotes,
+                                    Permission.ViewAssignments,
+                                    Permission.ViewAssignedArrangementProgress,
+                                    Permission.ViewChildLocationHistory,
+                                    Permission.TrackChildLocationChange
+                                )))
+                            .Add(new ContextualPermissionSet(
+                                new CoAssigneesInOpenReferralPartneringFamilyPermissionContext(null),
+                                ImmutableList.Create<Permission>(
+                                    Permission.ViewPersonContactInfo
+                                ))))),
                     ImmutableDictionary<Guid, UserAccessConfiguration>.Empty
                         .Add(adminId, new UserAccessConfiguration(guid0, ImmutableList<UserLocationRole>.Empty
                             .Add(new UserLocationRole(guid2, "OrganizationAdministrator"))
