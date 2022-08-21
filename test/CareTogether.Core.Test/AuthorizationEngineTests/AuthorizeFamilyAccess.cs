@@ -62,8 +62,10 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             var directoryResource = new DirectoryResource(directoryEventLog);
             var policiesResource = new PoliciesResource(configurationStore, policiesStore);
             var referralsResource = new ReferralsResource(referralsEventLog);
+            var approvalsResource = new ApprovalsResource(approvalsEventLog);
 
-            dut = new AuthorizationEngine(policiesResource, directoryResource, referralsResource);
+            dut = new AuthorizationEngine(policiesResource, directoryResource,
+                referralsResource, approvalsResource);
         }
 
         [DataTestMethod]
