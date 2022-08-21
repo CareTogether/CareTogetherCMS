@@ -13,7 +13,7 @@ namespace CareTogether.Engines.Authorization
 {
     public interface IAuthorizationEngine
     {
-        Task<ImmutableList<ContextualPermissionSet>> AuthorizeFamilyAccessAsync(
+        Task<ImmutableList<Permission>> AuthorizeFamilyAccessAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user, Guid familyId);
 
         Task<bool> AuthorizeFamilyCommandAsync(Guid organizationId, Guid locationId,

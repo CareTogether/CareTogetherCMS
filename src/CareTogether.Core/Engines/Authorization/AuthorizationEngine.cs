@@ -34,13 +34,13 @@ namespace CareTogether.Engines.Authorization
         }
 
 
-        public async Task<ImmutableList<ContextualPermissionSet>> AuthorizeFamilyAccessAsync(
+        public async Task<ImmutableList<Permission>> AuthorizeFamilyAccessAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user, Guid familyId)
         {
             // The user must have access to this organization and location.
             var userLocalIdentity = user.LocationIdentity(organizationId, locationId);
             if (userLocalIdentity == null)
-                return ImmutableList<ContextualPermissionSet>.Empty;
+                return ImmutableList<Permission>.Empty;
 
             // Look up the user's family and the target family, which will be referenced several times.
             var userPersonId = user.PersonId(organizationId, locationId);
@@ -70,7 +70,10 @@ namespace CareTogether.Engines.Authorization
                     targetFamilyReferrals, assignedReferrals))
                 .ToImmutableList();
 
-            return applicablePermissionSets;
+            return applicablePermissionSets
+                .SelectMany(permissionSet => permissionSet.Permissions)
+                .Distinct()
+                .ToImmutableList();
         }
 
         internal static bool IsPermissionSetApplicable(ContextualPermissionSet permissionSet,
