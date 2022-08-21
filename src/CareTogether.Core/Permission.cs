@@ -15,8 +15,7 @@ namespace CareTogether
         UploadFamilyDocuments = 3, // Will become a prerequisite for upload-linked actions
         DeleteFamilyDocuments = 4,
         
-        ViewAllFamilies = 100,
-        ViewLinkedFamilies = 101,
+        ViewFamilies = 100,
 
         ViewFamilyHistory = 151,
         ViewPersonConcerns = 152,
