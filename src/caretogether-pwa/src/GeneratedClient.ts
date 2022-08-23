@@ -1389,6 +1389,8 @@ export enum Permission {
     ReadFamilyDocuments = 2,
     UploadFamilyDocuments = 3,
     DeleteFamilyDocuments = 4,
+    AccessVolunteersScreen = 100,
+    AccessPartneringFamiliesScreen = 101,
     ViewFamilyHistory = 151,
     ViewPersonConcerns = 152,
     ViewPersonNotes = 153,
@@ -2699,6 +2701,7 @@ export class CombinedFamilyInfo implements ICombinedFamilyInfo {
     volunteerFamilyInfo?: VolunteerFamilyInfo | undefined;
     notes?: Note[];
     uploadedDocuments?: UploadedDocumentInfo[];
+    userPermissions?: Permission[];
 
     constructor(data?: ICombinedFamilyInfo) {
         if (data) {
@@ -2723,6 +2726,11 @@ export class CombinedFamilyInfo implements ICombinedFamilyInfo {
                 this.uploadedDocuments = [] as any;
                 for (let item of _data["uploadedDocuments"])
                     this.uploadedDocuments!.push(UploadedDocumentInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["userPermissions"])) {
+                this.userPermissions = [] as any;
+                for (let item of _data["userPermissions"])
+                    this.userPermissions!.push(item);
             }
         }
     }
@@ -2749,6 +2757,11 @@ export class CombinedFamilyInfo implements ICombinedFamilyInfo {
             for (let item of this.uploadedDocuments)
                 data["uploadedDocuments"].push(item.toJSON());
         }
+        if (Array.isArray(this.userPermissions)) {
+            data["userPermissions"] = [];
+            for (let item of this.userPermissions)
+                data["userPermissions"].push(item);
+        }
         return data;
     }
 }
@@ -2759,6 +2772,7 @@ export interface ICombinedFamilyInfo {
     volunteerFamilyInfo?: VolunteerFamilyInfo | undefined;
     notes?: Note[];
     uploadedDocuments?: UploadedDocumentInfo[];
+    userPermissions?: Permission[];
 }
 
 export class Family implements IFamily {
@@ -8674,7 +8688,9 @@ export interface IUserOrganizationAccess {
 export class UserLocationAccess implements IUserLocationAccess {
     locationId?: string;
     roles?: string[];
-    permissions?: Permission[];
+    globalContextPermissions?: Permission[];
+    allVolunteerFamiliesContextPermissions?: Permission[];
+    allPartneringFamiliesContextPermissions?: Permission[];
 
     constructor(data?: IUserLocationAccess) {
         if (data) {
@@ -8693,10 +8709,20 @@ export class UserLocationAccess implements IUserLocationAccess {
                 for (let item of _data["roles"])
                     this.roles!.push(item);
             }
-            if (Array.isArray(_data["permissions"])) {
-                this.permissions = [] as any;
-                for (let item of _data["permissions"])
-                    this.permissions!.push(item);
+            if (Array.isArray(_data["globalContextPermissions"])) {
+                this.globalContextPermissions = [] as any;
+                for (let item of _data["globalContextPermissions"])
+                    this.globalContextPermissions!.push(item);
+            }
+            if (Array.isArray(_data["allVolunteerFamiliesContextPermissions"])) {
+                this.allVolunteerFamiliesContextPermissions = [] as any;
+                for (let item of _data["allVolunteerFamiliesContextPermissions"])
+                    this.allVolunteerFamiliesContextPermissions!.push(item);
+            }
+            if (Array.isArray(_data["allPartneringFamiliesContextPermissions"])) {
+                this.allPartneringFamiliesContextPermissions = [] as any;
+                for (let item of _data["allPartneringFamiliesContextPermissions"])
+                    this.allPartneringFamiliesContextPermissions!.push(item);
             }
         }
     }
@@ -8716,10 +8742,20 @@ export class UserLocationAccess implements IUserLocationAccess {
             for (let item of this.roles)
                 data["roles"].push(item);
         }
-        if (Array.isArray(this.permissions)) {
-            data["permissions"] = [];
-            for (let item of this.permissions)
-                data["permissions"].push(item);
+        if (Array.isArray(this.globalContextPermissions)) {
+            data["globalContextPermissions"] = [];
+            for (let item of this.globalContextPermissions)
+                data["globalContextPermissions"].push(item);
+        }
+        if (Array.isArray(this.allVolunteerFamiliesContextPermissions)) {
+            data["allVolunteerFamiliesContextPermissions"] = [];
+            for (let item of this.allVolunteerFamiliesContextPermissions)
+                data["allVolunteerFamiliesContextPermissions"].push(item);
+        }
+        if (Array.isArray(this.allPartneringFamiliesContextPermissions)) {
+            data["allPartneringFamiliesContextPermissions"] = [];
+            for (let item of this.allPartneringFamiliesContextPermissions)
+                data["allPartneringFamiliesContextPermissions"].push(item);
         }
         return data;
     }
@@ -8728,7 +8764,9 @@ export class UserLocationAccess implements IUserLocationAccess {
 export interface IUserLocationAccess {
     locationId?: string;
     roles?: string[];
-    permissions?: Permission[];
+    globalContextPermissions?: Permission[];
+    allVolunteerFamiliesContextPermissions?: Permission[];
+    allPartneringFamiliesContextPermissions?: Permission[];
 }
 
 export abstract class VolunteerFamilyCommand implements IVolunteerFamilyCommand {

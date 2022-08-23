@@ -2,7 +2,7 @@ import { Button, TextField } from "@mui/material";
 import { formatRelative } from "date-fns";
 import { useState } from "react";
 import { Arrangement, ArrangementPhase, Permission } from "../GeneratedClient";
-import { usePermissions } from "../Model/SessionModel";
+import { useFamilyIdPermissions } from "../Model/SessionModel";
 import { CancelArrangementDialog } from "./CancelArrangementDialog";
 import { ReopenArrangementDialog } from "./ReopenArrangementDialog";
 import { EndArrangementDialog } from "./EndArrangementDialog";
@@ -20,7 +20,7 @@ type ArrangementCardTitleProps = {
 
 export function ArrangementCardTitle({ summaryOnly, partneringFamilyId, referralId, arrangement }: ArrangementCardTitleProps) {
   const now = new Date();
-  const permissions = usePermissions();
+  const permissions = useFamilyIdPermissions(partneringFamilyId);
 
   const referralsModel = useReferralsModel();
 

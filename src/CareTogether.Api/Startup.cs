@@ -121,6 +121,7 @@ namespace CareTogether.Api
             // Engine services
             var authorizationEngine = new AuthorizationEngine(policiesResource, directoryResource,
                 referralsResource, approvalsResource);
+            services.AddSingleton<IAuthorizationEngine>(authorizationEngine); //TODO: Temporary workaround for UsersController
             var policyEvaluationEngine = new PolicyEvaluationEngine(policiesResource);
 
             // Shared family info formatting logic used by all manager services

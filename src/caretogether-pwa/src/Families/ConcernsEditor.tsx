@@ -4,7 +4,7 @@ import { useDirectoryModel } from '../Model/DirectoryModel';
 import { useInlineEditor } from '../Hooks/useInlineEditor';
 import { PersonEditorProps } from "./PersonEditorProps";
 import WarningIcon from '@mui/icons-material/Warning';
-import { usePermissions } from '../Model/SessionModel';
+import { useFamilyIdPermissions } from '../Model/SessionModel';
 
 export function ConcernsEditor({ familyId, person }: PersonEditorProps) {
   const directoryModel = useDirectoryModel();
@@ -14,7 +14,7 @@ export function ConcernsEditor({ familyId, person }: PersonEditorProps) {
       concerns != null && concerns.length > 0 ? concerns : null),
     typeof person.concerns === 'undefined' ? null : person.concerns);
 
-  const permissions = usePermissions();
+  const permissions = useFamilyIdPermissions(familyId);
   
   return (
     <Grid container spacing={2}>

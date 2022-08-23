@@ -19,7 +19,7 @@ import { CreateArrangementDialog } from './CreateArrangementDialog';
 import { CloseReferralDialog } from './CloseReferralDialog';
 import { OpenNewReferralDialog } from './OpenNewReferralDialog';
 import { FamilyDocuments } from '../Families/FamilyDocuments';
-import { usePermissions } from '../Model/SessionModel';
+import { useFamilyPermissions } from '../Model/SessionModel';
 import { Masonry } from '@mui/lab';
 import { MissingRequirementRow } from "../Requirements/MissingRequirementRow";
 import { ExemptedRequirementRow } from "../Requirements/ExemptedRequirementRow";
@@ -74,7 +74,7 @@ export function PartneringFamilyScreen() {
   const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));
   const isWideScreen = useMediaQuery(theme.breakpoints.up('xl'));
 
-  const permissions = usePermissions();
+  const permissions = useFamilyPermissions(partneringFamily);
 
   useScreenTitle(partneringFamily
     ? `${partneringFamily.family?.adults!.filter(adult => adult.item1!.id === partneringFamily.family!.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family`

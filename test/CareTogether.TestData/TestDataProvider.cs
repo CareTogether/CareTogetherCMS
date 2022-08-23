@@ -380,6 +380,8 @@ namespace CareTogether.TestData
                         .Add(new RoleDefinition("Volunteer", ImmutableList<ContextualPermissionSet>.Empty
                             .Add(new ContextualPermissionSet(new GlobalPermissionContext(),
                                 ImmutableList.Create<Permission>(
+                                    Permission.AccessPartneringFamiliesScreen,
+                                    Permission.AccessVolunteersScreen
                                 )))
                             .Add(new ContextualPermissionSet(new OwnFamilyPermissionContext(),
                                 ImmutableList.Create(

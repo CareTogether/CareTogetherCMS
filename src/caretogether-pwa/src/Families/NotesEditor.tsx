@@ -1,7 +1,7 @@
 import { Grid, TextField } from '@mui/material';
 import { Permission } from '../GeneratedClient';
 import { useDirectoryModel } from '../Model/DirectoryModel';
-import { usePermissions } from '../Model/SessionModel';
+import { useFamilyIdPermissions } from '../Model/SessionModel';
 import { useInlineEditor } from '../Hooks/useInlineEditor';
 import { PersonEditorProps } from "./PersonEditorProps";
 
@@ -13,7 +13,7 @@ export function NotesEditor({ familyId, person }: PersonEditorProps) {
       notes != null && notes.length > 0 ? notes : null),
     typeof person.notes === 'undefined' ? null : person.notes);
 
-  const permissions = usePermissions();
+  const permissions = useFamilyIdPermissions(familyId);
 
   return (
     <Grid container spacing={2}>

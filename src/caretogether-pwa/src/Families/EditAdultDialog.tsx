@@ -15,7 +15,7 @@ import { AdultFamilyRelationshipEditor } from './AdultFamilyRelationshipEditor';
 import { AddressEditor } from './AddressEditor';
 import { PhoneNumberEditor } from './PhoneNumberEditor';
 import { EmailAddressEditor } from './EmailAddressEditor';
-import { usePermissions } from '../Model/SessionModel';
+import { useFamilyIdPermissions } from '../Model/SessionModel';
 
 interface EditAdultDialogProps {
   handle: DialogHandle
@@ -31,7 +31,7 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
 
   const deleteDialogHandle = useDialogHandle();
 
-  const permissions = usePermissions();
+  const permissions = useFamilyIdPermissions(familyId!);
 
   return (
     <Dialog open={handle.open} onClose={handle.closeDialog}

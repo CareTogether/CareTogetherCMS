@@ -1,7 +1,7 @@
 import { useRecoilValue } from "recoil";
 import { Permission } from "../GeneratedClient";
 import { policyData } from "../Model/ConfigurationModel";
-import { usePermissions } from "../Model/SessionModel";
+import { useFamilyIdPermissions } from "../Model/SessionModel";
 import { useDialogHandle } from "../Hooks/useDialogHandle";
 import { IconRow } from "../IconRow";
 import { MissingRequirementDialog } from "./MissingRequirementDialog";
@@ -15,7 +15,14 @@ type MissingRequirementRowProps = {
 
 export function MissingRequirementRow({ requirement, context, isAvailableApplication }: MissingRequirementRowProps) {
   const policy = useRecoilValue(policyData);
-  const permissions = usePermissions();
+  const permissions = useFamilyIdPermissions(
+    context.kind === 'Referral' ||
+    context.kind === 'Arrangement' ||
+    context.kind === 'Family Volunteer Assignment' ||
+    context.kind === 'Individual Volunteer Assignment'
+    ? context.partneringFamilyId
+    : context.volunteerFamilyId
+  );
   
   const dialogHandle = useDialogHandle();
   

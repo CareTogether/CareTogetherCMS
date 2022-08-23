@@ -46,7 +46,6 @@ namespace CareTogether.Managers
             var locationPolicy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
 
             var family = await directoryResource.FindFamilyAsync(organizationId, locationId, familyId);
-            var disclosedFamily = await authorizationEngine.DiscloseFamilyAsync(user, family, organizationId, locationId);
 
             var partneringFamilyInfo = await RenderPartneringFamilyInfoAsync(organizationId, locationId, family, user);
 
@@ -54,16 +53,10 @@ namespace CareTogether.Managers
                 organizationId, locationId, locationPolicy, family, user);
 
             var notes = await notesResource.ListFamilyNotesAsync(organizationId, locationId, familyId);
-            var disclosedNotes = (await notes
+            var renderedNotes = notes
                 .Select(note => new Note(note.Id, note.AuthorId, TimestampUtc: note.Status == NoteStatus.Approved
                     ? note.ApprovedTimestampUtc!.Value
                     : note.LastEditTimestampUtc, note.Contents, note.Status))
-                .Select(async note =>
-                    (note, canDisclose: await authorizationEngine.DiscloseNoteAsync(user,
-                        familyId, note, organizationId, locationId)))
-                .WhenAll())
-                .Where(result => result.canDisclose)
-                .Select(result => result.note)
                 .ToImmutableList();
 
             // COMPATIBILITY: This step is required to merge previously separated document upload info lists.
@@ -74,12 +67,15 @@ namespace CareTogether.Managers
             // resource service. At some point a data migration could be run to convert the approvals events to directory events,
             // at which point this compatibility step can then be removed.
             var allUploadedDocuments = uploadedApprovalDocuments
-                .Concat(disclosedFamily.UploadedDocuments)
+                .Concat(family.UploadedDocuments)
                 .Where(udi => !family.DeletedDocuments.Contains(udi.UploadedDocumentId))
                 .ToImmutableList();
 
-            return new CombinedFamilyInfo(disclosedFamily, partneringFamilyInfo, volunteerFamilyInfo, disclosedNotes,
-                allUploadedDocuments);
+            var renderedFamily = new CombinedFamilyInfo(family, partneringFamilyInfo, volunteerFamilyInfo, renderedNotes,
+                allUploadedDocuments, ImmutableList<Permission>.Empty);
+
+            var disclosedFamily = await authorizationEngine.DiscloseFamilyAsync(user, organizationId, locationId, renderedFamily);
+            return disclosedFamily;
         }
 
 
@@ -103,10 +99,7 @@ namespace CareTogether.Managers
             var partneringFamilyInfo = new PartneringFamilyInfo(openReferral, closedReferrals,
                 referralEntries.SelectMany(entry => entry.History).ToImmutableList());
 
-            var disclosedPartneringFamilyInfo = await authorizationEngine.DisclosePartneringFamilyInfoAsync(
-                    user, partneringFamilyInfo, organizationId, locationId);
-
-            return disclosedPartneringFamilyInfo;
+            return partneringFamilyInfo;
 
             async Task<Referral> ToReferralAsync(ReferralEntry entry)
             {
@@ -184,9 +177,7 @@ namespace CareTogether.Managers
                     }),
                 entry.History);
 
-            var disclosedVolunteerFamilyInfo = await authorizationEngine.DiscloseVolunteerFamilyInfoAsync(user,
-                volunteerFamilyInfo, organizationId, locationId);
-            return (disclosedVolunteerFamilyInfo, entry.UploadedDocuments);
+            return (volunteerFamilyInfo, entry.UploadedDocuments);
         }
 
         internal static CompletedRequirementInfo ApplyValidityPolicyToCompletedRequirement(

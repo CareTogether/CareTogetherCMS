@@ -5,7 +5,7 @@ import { useInlineEditor } from '../Hooks/useInlineEditor';
 import { PersonEditorProps } from "./PersonEditorProps";
 import { PhoneNumber, IPhoneNumber, PhoneNumberType, Permission } from '../GeneratedClient';
 import { Favorite, FavoriteBorder } from '@mui/icons-material';
-import { usePermissions } from '../Model/SessionModel';
+import { useFamilyIdPermissions } from '../Model/SessionModel';
 
 type PhoneNumberEditorProps = PersonEditorProps & {
   add?: boolean
@@ -48,7 +48,7 @@ export function PhoneNumberEditor({ familyId, person, add, phoneNumber }: PhoneN
     editor.setEditing(true);
   }
 
-  const permissions = usePermissions();
+  const permissions = useFamilyIdPermissions(familyId);
 
   return (
     <Grid container rowSpacing={0} columnSpacing={2}>

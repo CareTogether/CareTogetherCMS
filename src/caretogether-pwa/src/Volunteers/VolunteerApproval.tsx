@@ -15,7 +15,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { SearchBar } from '../SearchBar';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
 import { useScrollMemory } from '../Hooks/useScrollMemory';
-import { currentLocationState, usePermissions } from '../Model/SessionModel';
+import { currentLocationState, useAllVolunteerFamiliesPermissions } from '../Model/SessionModel';
 import { BulkSmsSideSheet } from './BulkSmsSideSheet';
 import { useWindowSize } from '../Hooks/useWindowSize';
 import useScreenTitle from '../Shell/ShellScreenTitle';
@@ -253,7 +253,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 
   const windowSize = useWindowSize();
 
-  const permissions = usePermissions();
+  const permissions = useAllVolunteerFamiliesPermissions();
 
   useScreenTitle("Volunteers");
 

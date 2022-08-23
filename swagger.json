@@ -1056,6 +1056,8 @@
           "ReadFamilyDocuments",
           "UploadFamilyDocuments",
           "DeleteFamilyDocuments",
+          "AccessVolunteersScreen",
+          "AccessPartneringFamiliesScreen",
           "ViewFamilyHistory",
           "ViewPersonConcerns",
           "ViewPersonNotes",
@@ -1102,6 +1104,8 @@
           2,
           3,
           4,
+          100,
+          101,
           151,
           152,
           153,
@@ -1748,6 +1752,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/UploadedDocumentInfo"
+            }
+          },
+          "userPermissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Permission"
             }
           }
         }
@@ -4941,7 +4951,19 @@
               "type": "string"
             }
           },
-          "permissions": {
+          "globalContextPermissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Permission"
+            }
+          },
+          "allVolunteerFamiliesContextPermissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Permission"
+            }
+          },
+          "allPartneringFamiliesContextPermissions": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Permission"

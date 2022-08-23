@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 namespace CareTogether.Core.Test.AuthorizationEngineTests
 {
     [TestClass]
-    public class AuthorizeFamilyAccess
+    public class AuthorizeUserAccess
     {
         private static Guid Id(char x) => Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
         static readonly Guid guid0 = Id('0');
@@ -26,6 +26,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
         static readonly Guid guid4 = Id('4');
         static readonly Guid guid5 = Id('5');
 
+        //TODO: This approach to testing authorization is no longer valid.
         private static ClaimsPrincipal UserFromPermissions(Guid personId, params Permission[] permissions) =>
             new(new ClaimsIdentity(
                 new Claim[] { new Claim(Claims.PersonId.ToString(), personId.ToString()) }
@@ -88,7 +89,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
         public async Task TestAnyPersonWithViewAllFamiliesPermission(char personId,
             bool expected0, bool expected1, bool expected2, bool expected3, bool expected4, bool expected5)
         {
-            var user = UserFromPermissions(Id(personId), Permission.ViewAllFamilies);
+            var user = UserFromPermissions(Id(personId), Permission.ReadFamilyDocuments);
             await EvaluateAccess(user, personId, expected0, expected1, expected2, expected3, expected4, expected5);
         }
 
@@ -136,7 +137,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
         public async Task TestLinkedFamiliesPermissionGrantsAccessToAllFamiliesConnectedViaReferralAssignment(char personId,
             bool expected0, bool expected1, bool expected2, bool expected3, bool expected4, bool expected5)
         {
-            var user = UserFromPermissions(Id(personId), Permission.ViewLinkedFamilies);
+            var user = UserFromPermissions(Id(personId), Permission.ReadFamilyDocuments);
             await EvaluateAccess(user, personId, expected0, expected1, expected2, expected3, expected4, expected5);
         }
 
@@ -144,12 +145,12 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
         private async Task EvaluateAccess(ClaimsPrincipal user, char personId,
             bool expected0, bool expected1, bool expected2, bool expected3, bool expected4, bool expected5)
         {
-            var result0 = await dut!.AuthorizeFamilyAccessAsync(guid1, guid2, user, guid0);
-            var result1 = await dut!.AuthorizeFamilyAccessAsync(guid1, guid2, user, guid1);
-            var result2 = await dut!.AuthorizeFamilyAccessAsync(guid1, guid2, user, guid2);
-            var result3 = await dut!.AuthorizeFamilyAccessAsync(guid1, guid2, user, guid3);
-            var result4 = await dut!.AuthorizeFamilyAccessAsync(guid1, guid2, user, guid4);
-            var result5 = await dut!.AuthorizeFamilyAccessAsync(guid1, guid2, user, guid5);
+            var result0 = await dut!.AuthorizeUserAccessAsync(guid1, guid2, user, new FamilyAuthorizationContext(guid0));
+            var result1 = await dut!.AuthorizeUserAccessAsync(guid1, guid2, user, new FamilyAuthorizationContext(guid1));
+            var result2 = await dut!.AuthorizeUserAccessAsync(guid1, guid2, user, new FamilyAuthorizationContext(guid2));
+            var result3 = await dut!.AuthorizeUserAccessAsync(guid1, guid2, user, new FamilyAuthorizationContext(guid3));
+            var result4 = await dut!.AuthorizeUserAccessAsync(guid1, guid2, user, new FamilyAuthorizationContext(guid4));
+            var result5 = await dut!.AuthorizeUserAccessAsync(guid1, guid2, user, new FamilyAuthorizationContext(guid5));
 
             Assert.AreEqual(expected0, result0, $"Person '{personId}' access to family '0' expected {expected0} but was {result0}");
             Assert.AreEqual(expected1, result1, $"Person '{personId}' access to family '1' expected {expected1} but was {result1}");

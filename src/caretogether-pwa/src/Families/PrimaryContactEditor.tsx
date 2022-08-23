@@ -3,7 +3,7 @@ import { useDirectoryModel } from '../Model/DirectoryModel';
 import { useInlineEditor } from '../Hooks/useInlineEditor';
 import { CombinedFamilyInfo, Permission } from '../GeneratedClient';
 import { PersonName } from './PersonName';
-import { usePermissions } from '../Model/SessionModel';
+import { useFamilyPermissions } from '../Model/SessionModel';
 
 type PrimaryContactEditorProps = {
   family: CombinedFamilyInfo
@@ -19,7 +19,7 @@ export function PrimaryContactEditor({ family }: PrimaryContactEditorProps) {
     await directoryModel.updatePrimaryFamilyContact(family.family!.id!, adultId),
     primaryContactPerson.id!);
 
-  const permissions = usePermissions();
+  const permissions = useFamilyPermissions(family);
   
   return (editor.editing
   ? <Box>

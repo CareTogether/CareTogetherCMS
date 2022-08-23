@@ -1,7 +1,7 @@
 import { TextField } from "@mui/material";
 import { CombinedFamilyInfo, Permission } from "../GeneratedClient";
 import { useReferralsModel } from "../Model/ReferralsModel";
-import { usePermissions } from "../Model/SessionModel";
+import { useFamilyPermissions } from "../Model/SessionModel";
 import { useInlineEditor } from "../Hooks/useInlineEditor";
 
 type ReferralCommentsProps = {
@@ -13,7 +13,7 @@ export function ReferralComments({ partneringFamily, referralId }: ReferralComme
   const savedValue = partneringFamily.partneringFamilyInfo?.openReferral?.comments;
 
   const referralsModel = useReferralsModel();
-  const permissions = usePermissions();
+  const permissions = useFamilyPermissions(partneringFamily);
 
   const editor = useInlineEditor(async value => {
     await referralsModel.updateReferralComments(partneringFamily.family!.id!, referralId, value);

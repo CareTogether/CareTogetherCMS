@@ -12,7 +12,7 @@ import { useRecoilValue } from "recoil";
 import { partneringFamiliesData } from "../Model/ReferralsModel";
 import { useDialogHandle } from "../Hooks/useDialogHandle";
 import { EditChildDialog } from "../Families/EditChildDialog";
-import { usePermissions } from "../Model/SessionModel";
+import { useFamilyIdPermissions } from "../Model/SessionModel";
 
 type PartneringChildCardProps = {
   partneringFamilyId: string,
@@ -27,7 +27,7 @@ export function PartneringChildCard({partneringFamilyId, personId}: PartneringCh
 
   const editDialogHandle = useDialogHandle();
 
-  const permissions = usePermissions();
+  const permissions = useFamilyIdPermissions(partneringFamilyId);
   
   return <>{child &&
     <Card variant="outlined" sx={{minWidth: '275px'}}>

@@ -12,7 +12,8 @@ namespace CareTogether.Managers
 {
     public sealed record CombinedFamilyInfo(Family Family,
         PartneringFamilyInfo? PartneringFamilyInfo, VolunteerFamilyInfo? VolunteerFamilyInfo,
-        ImmutableList<Note> Notes, ImmutableList<UploadedDocumentInfo> UploadedDocuments);
+        ImmutableList<Note> Notes, ImmutableList<UploadedDocumentInfo> UploadedDocuments,
+        ImmutableList<Permission> UserPermissions);
 
     public sealed record PartneringFamilyInfo(
         Referral? OpenReferral,

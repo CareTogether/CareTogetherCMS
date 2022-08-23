@@ -16,7 +16,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import { AddEditNoteDialog } from './AddEditNoteDialog';
 import { ApproveNoteDialog } from './ApproveNoteDialog';
 import { DiscardNoteDialog } from './DiscardNoteDialog';
-import { usePermissions } from '../Model/SessionModel';
+import { useFamilyIdPermissions } from '../Model/SessionModel';
 
 type NoteCardProps = {
   familyId: string;
@@ -30,7 +30,7 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
   const [showApproveNoteDialog, setShowApproveNoteDialog] = useState(false);
   const [showEditNoteDialog, setShowEditNoteDialog] = useState(false);
 
-  const permissions = usePermissions();
+  const permissions = useFamilyIdPermissions(familyId);
 
   return typeof note === 'undefined' ? null : (
     <Card sx={{margin: 0}} variant="outlined">
