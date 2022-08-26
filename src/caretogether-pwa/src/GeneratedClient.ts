@@ -1391,6 +1391,8 @@ export enum Permission {
     DeleteFamilyDocuments = 4,
     AccessVolunteersScreen = 100,
     AccessPartneringFamiliesScreen = 101,
+    AccessSettingsScreen = 102,
+    EditRoles = 103,
     ViewFamilyHistory = 151,
     ViewPersonConcerns = 152,
     ViewPersonNotes = 153,
