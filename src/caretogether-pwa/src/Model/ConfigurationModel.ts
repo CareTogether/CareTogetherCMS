@@ -1,5 +1,5 @@
-import { selector } from "recoil";
-import { ConfigurationClient, RequirementStage, VolunteerFamilyRequirementScope } from "../GeneratedClient";
+import { atom, selector } from "recoil";
+import { ConfigurationClient, OrganizationConfiguration, RequirementStage, RoleDefinition, VolunteerFamilyRequirementScope } from "../GeneratedClient";
 import { accessTokenFetchQuery } from "../Authentication/AuthenticatedHttp";
 import { currentLocationState, currentOrganizationIdQuery, currentOrganizationState, selectedLocationIdState } from "./SessionModel";
 import { useLoadable } from "../Hooks/useLoadable";
@@ -12,13 +12,24 @@ export const configurationClientQuery = selector({
   }
 });
 
+//TODO: Distinguish by organization ID
+export const organizationConfigurationEdited = atom<OrganizationConfiguration | null>({
+  key: 'organizationConfigurationEdited',
+  default: null
+});
+
 export const organizationConfigurationQuery = selector({
   key: 'organizationConfigurationQuery',
   get: async ({get}) => {
     const organizationId = get(currentOrganizationIdQuery);
     const configurationClient = get(configurationClientQuery);
-    const dataResponse = await configurationClient.getOrganizationConfiguration(organizationId);
-    return dataResponse;
+    const edited = get(organizationConfigurationEdited);
+    if (edited) {
+      return edited;
+    } else {
+      const dataResponse = await configurationClient.getOrganizationConfiguration(organizationId);
+      return dataResponse;
+    }
   }});
 
 export const organizationConfigurationData = selector({//TODO: Deprecated

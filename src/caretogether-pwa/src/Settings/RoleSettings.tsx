@@ -1,26 +1,31 @@
-import { Grid, Table, TableContainer, TableBody, TableHead, TableRow, Stack, Select, InputLabel, FormControl, MenuItem, FormHelperText, TableCell, IconButton } from '@mui/material';
+import { Grid, Table, TableContainer, TableBody, TableHead, TableRow, Stack, Select, InputLabel, FormControl, MenuItem, FormHelperText, TableCell, IconButton, Button } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { AllPartneringFamiliesPermissionContext, AllVolunteerFamiliesPermissionContext, AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext, AssignedFunctionsInReferralPartneringFamilyPermissionContext, GlobalPermissionContext, OwnFamilyPermissionContext, OwnReferralAssigneeFamiliesPermissionContext, Permission, RoleDefinition } from '../GeneratedClient';
 import { useLoadable } from '../Hooks/useLoadable';
-import { organizationConfigurationQuery } from '../Model/ConfigurationModel';
-import { useGlobalPermissions } from '../Model/SessionModel';
+import { configurationClientQuery, organizationConfigurationEdited, organizationConfigurationQuery } from '../Model/ConfigurationModel';
+import { currentOrganizationIdQuery, useGlobalPermissions } from '../Model/SessionModel';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import useScreenTitle from '../Shell/ShellScreenTitle';
 import DeleteIcon from '@mui/icons-material/Delete'
+import { useBackdrop } from '../Hooks/useBackdrop';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
 
 function RoleSettings() {
   const configuration = useLoadable(organizationConfigurationQuery);
+  const configurationClient = useLoadable(configurationClientQuery);
+  const organizationId = useRecoilValue(currentOrganizationIdQuery);
+  const storeEdits = useSetRecoilState(organizationConfigurationEdited);
   const roles = configuration?.roles;
   
   const permissions = useGlobalPermissions();
 
   const [selectedRoleName, setSelectedRoleName] = useState("");
   const [workingRole, setWorkingRole] = useState<RoleDefinition | null>(null);
+  const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
     const selectedRole = roles?.find(role => role.roleName === selectedRoleName);
     if (selectedRole) {
-      console.log("setWorkingRole");
       setWorkingRole(selectedRole);
     }
   }, [roles, selectedRoleName, setWorkingRole]);
@@ -29,7 +34,28 @@ function RoleSettings() {
     workingRole.roleName !== "OrganizationAdministrator";
 
   function deletePermissionSetAtIndex(i: number) {
-    //workingRole?.permissionSets?.splice(i, 1); //TODO: Implement this, correctly.
+    const newPermissionSets = workingRole!.permissionSets!.filter((_, j) => j !== i);
+    const newWorkingRole = {
+      roleName: workingRole!.roleName,
+      permissionSets: newPermissionSets
+    } as RoleDefinition;
+    setWorkingRole(newWorkingRole);
+    setDirty(true);
+  }
+
+  function cancel() {
+    const selectedRole = roles?.find(role => role.roleName === selectedRoleName);
+    setWorkingRole(selectedRole || null);
+    setDirty(false);
+  }
+
+  const withBackdrop = useBackdrop();
+  function save() {
+    withBackdrop(async () => {
+      const newConfig = await configurationClient!.putRoleDefinition(
+        organizationId, workingRole!.roleName!, workingRole!);
+      storeEdits(newConfig);
+    });
   }
 
   useScreenTitle("Roles");
@@ -55,8 +81,8 @@ function RoleSettings() {
             </Select>
             <FormHelperText>{!workingRole && "Select a role to edit"}</FormHelperText>
           </FormControl>
-          {/* <Button color='secondary'>Cancel</Button>
-          <Button color='primary'>Save</Button> */}
+          {isEditable && <Button color='secondary' disabled={!dirty} onClick={cancel}>Cancel</Button>}
+          {isEditable && <Button color='primary' disabled={!dirty} onClick={save}>Save</Button>}
         </Stack>
       </Grid>
       <Grid item xs={12}>
@@ -71,7 +97,7 @@ function RoleSettings() {
             </TableHead>
             <TableBody>
               {workingRole?.permissionSets?.map((permissionSet, i) => (
-                <TableRow>
+                <TableRow key={`${workingRole.permissionSets?.length}-${i}`}>
                   <TableCell>
                     {isEditable
                       ? <IconButton onClick={() => deletePermissionSetAtIndex(i)}>
@@ -80,7 +106,7 @@ function RoleSettings() {
                       : <></>}
                   </TableCell>
                   <TableCell>
-                    {permissionSet.context instanceof GlobalPermissionContext
+                    { permissionSet.context instanceof GlobalPermissionContext
                       ? "Global"
                       : permissionSet.context instanceof OwnFamilyPermissionContext
                       ? "Own Family"

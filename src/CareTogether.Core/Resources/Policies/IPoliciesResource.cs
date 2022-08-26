@@ -156,6 +156,9 @@ namespace CareTogether.Resources.Policies
     {
         Task<OrganizationConfiguration> GetConfigurationAsync(Guid organizationId);
 
+        Task<OrganizationConfiguration> UpsertRoleDefinitionAsync(Guid organizationId,
+            string roleName, RoleDefinition role);
+
         Task<EffectiveLocationPolicy> GetCurrentPolicy(Guid organizationId, Guid locationId);
     }
 }
