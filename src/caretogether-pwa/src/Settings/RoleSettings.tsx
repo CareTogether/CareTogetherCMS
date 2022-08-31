@@ -1,4 +1,4 @@
-import { Grid, Table, TableContainer, TableBody, TableHead, TableRow, Stack, Select, InputLabel, FormControl, MenuItem, FormHelperText, TableCell, IconButton, Button, Menu, List, ListItem, ListItemText, Divider } from '@mui/material';
+import { Grid, Table, TableContainer, TableBody, TableHead, TableRow, Stack, Select, InputLabel, FormControl, MenuItem, FormHelperText, TableCell, IconButton, Button, Menu, List, ListItem, ListItemText, Divider, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { AllPartneringFamiliesPermissionContext, AllVolunteerFamiliesPermissionContext, AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext, AssignedFunctionsInReferralPartneringFamilyPermissionContext, ContextualPermissionSet, GlobalPermissionContext, OwnFamilyPermissionContext, OwnReferralAssigneeFamiliesPermissionContext, Permission, PermissionContext, RoleDefinition } from '../GeneratedClient';
 import { useLoadable } from '../Hooks/useLoadable';
@@ -166,19 +166,46 @@ function RoleSettings() {
                   </TableCell>
                   <TableCell>
                     { permissionSet.context instanceof GlobalPermissionContext
-                      ? "Global"
+                      ? <Stack>
+                          <Typography variant='h6'>Global</Typography>
+                        </Stack>
                       : permissionSet.context instanceof OwnFamilyPermissionContext
-                      ? "Own Family"
+                      ? <Stack>
+                          <Typography variant='h6'>Own Family</Typography>
+                        </Stack>
                       : permissionSet.context instanceof AllVolunteerFamiliesPermissionContext
-                      ? "All Volunteer Families"
+                      ? <Stack>
+                          <Typography variant='h6'>All Volunteer Families</Typography>
+                        </Stack>
                       : permissionSet.context instanceof AllPartneringFamiliesPermissionContext
-                      ? "All Partnering Families"
+                      ? <Stack>
+                          <Typography variant='h6'>All Partnering Families</Typography>
+                        </Stack>
                       : permissionSet.context instanceof AssignedFunctionsInReferralPartneringFamilyPermissionContext
-                      ? "Assigned Functions in Referral - Partnering Family"
+                      ? <Stack>
+                          <Typography variant='h6'>Assigned Functions in Referral - Partnering Family</Typography>
+                          <Stack dir='row'>
+                            {permissionSet.context.whenOwnFunctionIsIn}
+                            {permissionSet.context.whenReferralIsOpen}
+                          </Stack>
+                        </Stack>
                       : permissionSet.context instanceof AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext
-                      ? "Assigned Functions in Referral - Co-Assigned Families"
+                      ? <Stack>
+                          <Typography variant='h6'>Assigned Functions in Referral - Co-Assigned Families</Typography>
+                          <Stack dir='row'>
+                            {permissionSet.context.whenAssigneeFunctionIsIn}
+                            {permissionSet.context.whenOwnFunctionIsIn}
+                            {permissionSet.context.whenReferralIsOpen}
+                          </Stack>
+                        </Stack>
                       : permissionSet.context instanceof OwnReferralAssigneeFamiliesPermissionContext
-                      ? "Own Referral - Assigned Families"
+                      ? <Stack>
+                          <Typography variant='h6'>Own Referral - Assigned Families</Typography>
+                          <Stack dir='row'>
+                            {permissionSet.context.whenAssigneeFunctionIsIn}
+                            {permissionSet.context.whenReferralIsOpen}
+                          </Stack>
+                        </Stack>
                       : JSON.stringify(permissionSet.context) }
                   </TableCell>
                   <TableCell>
