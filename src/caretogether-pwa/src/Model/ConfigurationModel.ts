@@ -1,5 +1,5 @@
 import { atom, selector } from "recoil";
-import { ConfigurationClient, OrganizationConfiguration, RequirementStage, RoleDefinition, VolunteerFamilyRequirementScope } from "../GeneratedClient";
+import { ConfigurationClient, OrganizationConfiguration, RequirementStage, VolunteerFamilyRequirementScope } from "../GeneratedClient";
 import { accessTokenFetchQuery } from "../Authentication/AuthenticatedHttp";
 import { currentLocationState, currentOrganizationIdQuery, currentOrganizationState, selectedLocationIdState } from "./SessionModel";
 import { useLoadable } from "../Hooks/useLoadable";
