@@ -157,6 +157,14 @@ export const adultRequirementsData = selector({
         .sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
   }});
 
+export const allFunctionsInPolicyQuery = selector({
+  key: 'allFunctionsInPolicyQuery',
+  get: ({get}) => {
+    const policy = get(policyData);
+    return policy.referralPolicy?.arrangementPolicies?.flatMap(arrangement =>
+      arrangement.arrangementFunctions?.map(arrangementFunction => arrangementFunction.functionName!) || []) || [];
+  }});
+
 export interface LocationContext {
   organizationId: string
   locationId: string

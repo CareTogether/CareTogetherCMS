@@ -1,15 +1,15 @@
-import { Grid, Table, TableContainer, TableBody, TableHead, TableRow, Stack, Select, InputLabel, FormControl, MenuItem, FormHelperText, TableCell, IconButton, Button, Menu, List, ListItem, ListItemText, Divider, Typography } from '@mui/material';
+import { Grid, Table, TableContainer, TableBody, TableHead, TableRow, Stack, Select, InputLabel, FormControl, MenuItem, FormHelperText, TableCell, IconButton, Button, Menu } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { AllPartneringFamiliesPermissionContext, AllVolunteerFamiliesPermissionContext, AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext, AssignedFunctionsInReferralPartneringFamilyPermissionContext, ContextualPermissionSet, GlobalPermissionContext, OwnFamilyPermissionContext, OwnReferralAssigneeFamiliesPermissionContext, Permission, PermissionContext, RoleDefinition } from '../GeneratedClient';
+import { AllPartneringFamiliesPermissionContext, AllVolunteerFamiliesPermissionContext, AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext, AssignedFunctionsInReferralPartneringFamilyPermissionContext, ContextualPermissionSet, GlobalPermissionContext, IContextualPermissionSet, OwnFamilyPermissionContext, OwnReferralAssigneeFamiliesPermissionContext, Permission, PermissionContext, RoleDefinition } from '../GeneratedClient';
 import { useLoadable } from '../Hooks/useLoadable';
 import { configurationClientQuery, organizationConfigurationEdited, organizationConfigurationQuery } from '../Model/ConfigurationModel';
 import { currentOrganizationIdQuery, useGlobalPermissions } from '../Model/SessionModel';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import useScreenTitle from '../Shell/ShellScreenTitle';
-import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { ContextualPermissionSetRow } from './ContextualPermissionSetRow';
 
 function RoleSettings() {
   const configuration = useLoadable(organizationConfigurationQuery);
@@ -31,8 +31,8 @@ function RoleSettings() {
     }
   }, [roles, selectedRoleName, setWorkingRole]);
 
-  const isEditable = workingRole && permissions(Permission.EditRoles) &&
-    workingRole.roleName !== "OrganizationAdministrator";
+  const isEditable = (workingRole && permissions(Permission.EditRoles) &&
+    workingRole.roleName !== "OrganizationAdministrator") || false;
 
   function cancel() {
     const selectedRole = roles?.find(role => role.roleName === selectedRoleName);
@@ -60,13 +60,8 @@ function RoleSettings() {
     setDirty(true);
   }
 
-  function removePermissionFromPermissionSet(i: number, permission: Permission) {
-    const newPermissionSets = workingRole!.permissionSets!.map((set, j) => j === i
-      ? {
-          context: set.context,
-          permissions: set.permissions!.filter(p => p !== permission)
-        } as ContextualPermissionSet
-      : set);
+  function updatePermissionSetAtIndex(i: number, newValue: IContextualPermissionSet) {
+    const newPermissionSets = workingRole!.permissionSets!.map((oldValue, j) => j === i ? newValue : oldValue);
     const newWorkingRole = {
       roleName: workingRole!.roleName,
       permissionSets: newPermissionSets
@@ -76,18 +71,6 @@ function RoleSettings() {
   }
 
   const [addPermissionSetMenuAnchorEl, setAddPermissionSetMenuAnchorEl] = useState<null | HTMLElement>(null);
-  const [addPermissionMenuAnchorEl, setAddPermissionMenuAnchorEl] = useState<null | HTMLElement>(null);
-
-  const [currentPermissionSet, setCurrentPermissionSet] = useState<null | ContextualPermissionSet>(null);
-  function openAddPermissionMenu(permissionSet: ContextualPermissionSet, anchorElement: HTMLElement) {
-    setAddPermissionMenuAnchorEl(anchorElement);
-    setCurrentPermissionSet(permissionSet);
-  }
-
-  function closeAddPermissionMenu() {
-    setAddPermissionMenuAnchorEl(null);
-    setCurrentPermissionSet(null);
-  }
 
   function addPermissionSet<T extends PermissionContext>(factory: () => T) {
     const newContext = factory();
@@ -99,22 +82,6 @@ function RoleSettings() {
     setWorkingRole(newWorkingRole);
     setDirty(true);
     setAddPermissionSetMenuAnchorEl(null);
-  }
-
-  function addPermission(permission: Permission) {
-    const newPermissionSets = workingRole!.permissionSets!.map(set => set === currentPermissionSet
-      ? {
-          context: set.context,
-          permissions: set.permissions!.concat(permission)
-        } as ContextualPermissionSet
-      : set);
-    const newWorkingRole = {
-      roleName: workingRole!.roleName,
-      permissionSets: newPermissionSets
-    } as RoleDefinition;
-    setWorkingRole(newWorkingRole);
-    setDirty(true);
-    closeAddPermissionMenu();
   }
 
   useScreenTitle("Roles");
@@ -156,78 +123,13 @@ function RoleSettings() {
             </TableHead>
             <TableBody>
               {workingRole?.permissionSets?.map((permissionSet, i) => (
-                <TableRow key={`${workingRole.permissionSets?.length}-${i}`}>
-                  <TableCell>
-                    {isEditable
-                      ? <IconButton onClick={() => deletePermissionSetAtIndex(i)}>
-                          <DeleteIcon />
-                        </IconButton>
-                      : <></>}
-                  </TableCell>
-                  <TableCell>
-                    { permissionSet.context instanceof GlobalPermissionContext
-                      ? <Stack>
-                          <Typography variant='h6'>Global</Typography>
-                        </Stack>
-                      : permissionSet.context instanceof OwnFamilyPermissionContext
-                      ? <Stack>
-                          <Typography variant='h6'>Own Family</Typography>
-                        </Stack>
-                      : permissionSet.context instanceof AllVolunteerFamiliesPermissionContext
-                      ? <Stack>
-                          <Typography variant='h6'>All Volunteer Families</Typography>
-                        </Stack>
-                      : permissionSet.context instanceof AllPartneringFamiliesPermissionContext
-                      ? <Stack>
-                          <Typography variant='h6'>All Partnering Families</Typography>
-                        </Stack>
-                      : permissionSet.context instanceof AssignedFunctionsInReferralPartneringFamilyPermissionContext
-                      ? <Stack>
-                          <Typography variant='h6'>Assigned Functions in Referral - Partnering Family</Typography>
-                          <Stack dir='row'>
-                            {permissionSet.context.whenOwnFunctionIsIn}
-                            {permissionSet.context.whenReferralIsOpen}
-                          </Stack>
-                        </Stack>
-                      : permissionSet.context instanceof AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext
-                      ? <Stack>
-                          <Typography variant='h6'>Assigned Functions in Referral - Co-Assigned Families</Typography>
-                          <Stack dir='row'>
-                            {permissionSet.context.whenAssigneeFunctionIsIn}
-                            {permissionSet.context.whenOwnFunctionIsIn}
-                            {permissionSet.context.whenReferralIsOpen}
-                          </Stack>
-                        </Stack>
-                      : permissionSet.context instanceof OwnReferralAssigneeFamiliesPermissionContext
-                      ? <Stack>
-                          <Typography variant='h6'>Own Referral - Assigned Families</Typography>
-                          <Stack dir='row'>
-                            {permissionSet.context.whenAssigneeFunctionIsIn}
-                            {permissionSet.context.whenReferralIsOpen}
-                          </Stack>
-                        </Stack>
-                      : JSON.stringify(permissionSet.context) }
-                  </TableCell>
-                  <TableCell>
-                    <List dense>
-                      {permissionSet.permissions?.map(permission => (
-                        <ListItem key={permission.toString()} disablePadding>
-                          {isEditable &&
-                            <IconButton edge='start' onClick={() => removePermissionFromPermissionSet(i, permission)}>
-                              <DeleteIcon />
-                            </IconButton>}
-                          <ListItemText>{Permission[permission]}</ListItemText>
-                        </ListItem>
-                      ))}
-                      {isEditable &&
-                        <ListItem disablePadding>
-                          <IconButton edge='start' onClick={(event) => openAddPermissionMenu(permissionSet, event.currentTarget)}>
-                            <AddIcon />
-                          </IconButton>
-                        </ListItem>}
-                    </List>
-                  </TableCell>
-                </TableRow>
+                <ContextualPermissionSetRow
+                  key={`${workingRole.permissionSets?.length}-${i}`}
+                  editable={isEditable}
+                  permissionSet={permissionSet}
+                  onDelete={() => deletePermissionSetAtIndex(i)}
+                  onUpdate={(newValue: IContextualPermissionSet) => updatePermissionSetAtIndex(i, newValue)}
+                />
               ))}
               {isEditable &&
                 <TableRow>
@@ -253,24 +155,6 @@ function RoleSettings() {
           <MenuItem dense onClick={() => addPermissionSet(() => new AssignedFunctionsInReferralPartneringFamilyPermissionContext())}>Assigned Functions in Referral - Partnering Family</MenuItem>
           <MenuItem dense onClick={() => addPermissionSet(() => new AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext())}>Assigned Functions in Referral - Co-Assigned Families</MenuItem>
           <MenuItem dense onClick={() => addPermissionSet(() => new OwnReferralAssigneeFamiliesPermissionContext())}>Own Referral - Assigned Families</MenuItem>
-        </Menu>
-        <Menu
-          open={Boolean(addPermissionMenuAnchorEl)}
-          anchorEl={addPermissionMenuAnchorEl}
-          onClose={closeAddPermissionMenu}>
-          {Object.entries(Permission).filter(permission =>
-            typeof permission[1] !== 'string' &&
-            !currentPermissionSet?.permissions?.some(p => p === permission[1])).map((permission, i, all) => {
-              const permissionMenuItem = (
-                <MenuItem key={permission[0]} dense
-                  onClick={() => addPermission(permission[1] as Permission)}>
-                  {permission[0]}
-                </MenuItem>);
-              // Group similar permission items
-              return i > 0 && Math.floor((all[i-1][1] as number)/100) < Math.floor((permission[1] as number)/100)
-                ? [<Divider />, permissionMenuItem]
-                : permissionMenuItem;
-            })}
         </Menu>
       </Grid>
     </Grid>
