@@ -5,6 +5,19 @@ import AddIcon from '@mui/icons-material/Add';
 import { ContextualPermissionSet, IContextualPermissionSet, Permission, PermissionContext } from "../GeneratedClient";
 import { PermissionContextCell } from "./PermissionContextCell";
 
+function spacesBeforeCapitalLetters(value: string) {
+  let result = "";
+  for (let c of value) {
+    result += (result.length > 0 && c.toUpperCase() === c)
+      ? " " + c
+      : c;
+    if (result === "Add Edit") {
+      result = "Add/Edit";
+    }
+  }
+  return result;
+}
+
 interface ContextualPermissionSetRowProps {
   editable: boolean
   permissionSet: ContextualPermissionSet
@@ -42,9 +55,11 @@ export function ContextualPermissionSetRow({
   }
 
   function addPermission(permission: Permission) {
+    closeAddPermissionMenu();
     onUpdate({
       context: permissionSet.context,
-      permissions: permissionSet.permissions!.concat(permission)
+      permissions: permissionSet.permissions!.concat(permission).sort((a, b) =>
+        a < b ? -1 : a > b ? 1 : 0)
     });
   }
 
@@ -63,15 +78,20 @@ export function ContextualPermissionSetRow({
       </TableCell>
       <TableCell>
         <List dense>
-          {permissionSet.permissions?.map(permission => (
-            <ListItem key={permission.toString()} disablePadding>
-              {editable &&
-                <IconButton edge='start' onClick={() => removePermission(permission)}>
-                  <DeleteIcon />
-                </IconButton>}
-              <ListItemText>{Permission[permission]}</ListItemText>
-            </ListItem>
-          ))}
+          {permissionSet.permissions?.map((permission, i, all) => {
+            const permissionListItem = (
+              <ListItem key={permission.toString()} disablePadding>
+                {editable &&
+                  <IconButton edge='start' onClick={() => removePermission(permission)}>
+                    <DeleteIcon />
+                  </IconButton>}
+                <ListItemText>{spacesBeforeCapitalLetters(Permission[permission])}</ListItemText>
+              </ListItem>);
+            // Group similar permission items
+            return i > 0 && Math.floor((all[i-1] as number)/100) < Math.floor((permission as number)/100)
+              ? [<Divider />, permissionListItem]
+              : permissionListItem;
+          })}
           {editable &&
             <ListItem disablePadding>
               <IconButton edge='start' onClick={(event) => openAddPermissionMenu(permissionSet, event.currentTarget)}>
@@ -89,7 +109,7 @@ export function ContextualPermissionSetRow({
               const permissionMenuItem = (
                 <MenuItem key={permission[0]} dense
                   onClick={() => addPermission(permission[1] as Permission)}>
-                  {permission[0]}
+                  {spacesBeforeCapitalLetters(permission[0])}
                 </MenuItem>);
               // Group similar permission items
               return i > 0 && Math.floor((all[i-1][1] as number)/100) < Math.floor((permission[1] as number)/100)

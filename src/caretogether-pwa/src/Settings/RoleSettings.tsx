@@ -24,12 +24,11 @@ function RoleSettings() {
   const [workingRole, setWorkingRole] = useState<RoleDefinition | null>(null);
   const [dirty, setDirty] = useState(false);
 
-  useEffect(() => {
-    const selectedRole = roles?.find(role => role.roleName === selectedRoleName);
-    if (selectedRole) {
-      setWorkingRole(selectedRole);
-    }
-  }, [roles, selectedRoleName, setWorkingRole]);
+  function selectRole(roleName: string) {
+    setSelectedRoleName(roleName);
+    const selectedRole = roles?.find(role => role.roleName === roleName);
+    setWorkingRole(selectedRole || null);
+  }
 
   const isEditable = (workingRole && permissions(Permission.EditRoles) &&
     workingRole.roleName !== "OrganizationAdministrator") || false;
@@ -100,7 +99,7 @@ function RoleSettings() {
               labelId='role-select-label'
               label="Role"
               value={selectedRoleName}
-              onChange={e => setSelectedRoleName(e.target.value)}>
+              onChange={e => selectRole(e.target.value)}>
               {roles.map(role => (
                 <MenuItem key={role.roleName} value={role.roleName}>{role.roleName}</MenuItem>
               ))}

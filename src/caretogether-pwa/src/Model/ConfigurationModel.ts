@@ -161,8 +161,11 @@ export const allFunctionsInPolicyQuery = selector({
   key: 'allFunctionsInPolicyQuery',
   get: ({get}) => {
     const policy = get(policyData);
-    return policy.referralPolicy?.arrangementPolicies?.flatMap(arrangement =>
+    const allFunctions = policy.referralPolicy?.arrangementPolicies?.flatMap(arrangement =>
       arrangement.arrangementFunctions?.map(arrangementFunction => arrangementFunction.functionName!) || []) || [];
+    const uniqueFunctions = allFunctions.sort((a, b) => a < b ? -1 : a > b ? 1 : 0).filter(v =>
+      allFunctions.filter(x => x === v).length === 1);
+    return uniqueFunctions;
   }});
 
 export interface LocationContext {
