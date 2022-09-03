@@ -377,25 +377,50 @@ namespace CareTogether.TestData
                             ImmutableList<string>.Empty.AddRange(new[] { "Single", "Spouse", "Partner", "Dad", "Mom", "Relative", "Domestic Worker" }),
                             sourcePhoneNumbers)),
                     ImmutableList<RoleDefinition>.Empty
-                        .Add(new RoleDefinition("Volunteer", ImmutableList<Permission>.Empty
-                            .AddRange(new Permission[]
-                            {
-                                Permission.ViewLinkedFamilies,
-                                Permission.ViewPersonContactInfo,
-                                Permission.AddEditDraftNotes,
-                                Permission.DiscardDraftNotes,
-                                Permission.ViewApprovalProgress,
-                                Permission.ViewAssignments,
-                                Permission.ViewAssignedArrangementProgress,
-                                Permission.ViewChildLocationHistory,
-                                Permission.TrackChildLocationChange
-                            }))),
+                        .Add(new RoleDefinition("Volunteer", ImmutableList<ContextualPermissionSet>.Empty
+                            .Add(new ContextualPermissionSet(new GlobalPermissionContext(),
+                                ImmutableList.Create<Permission>(
+                                    Permission.AccessPartneringFamiliesScreen,
+                                    Permission.AccessVolunteersScreen
+                                )))
+                            .Add(new ContextualPermissionSet(new OwnFamilyPermissionContext(),
+                                ImmutableList.Create(
+                                    Permission.ViewPersonContactInfo,
+                                    Permission.ViewApprovalProgress,
+                                    Permission.ViewFamilyDocumentMetadata
+                                )))
+                            .Add(new ContextualPermissionSet(
+                                new AssignedFunctionsInReferralPartneringFamilyPermissionContext(WhenReferralIsOpen: true,
+                                    WhenOwnFunctionIsIn: ImmutableList.Create(
+                                        "Host Family",
+                                        "Family Coach",
+                                        "Family Friend",
+                                        "Parent Friend",
+                                        "Host Family Friend",
+                                        "Staff Supervision"
+                                    )),
+                                ImmutableList.Create(
+                                    Permission.AddEditDraftNotes,
+                                    Permission.DiscardDraftNotes,
+                                    Permission.ViewAssignments,
+                                    Permission.ViewAssignedArrangementProgress,
+                                    Permission.ViewChildLocationHistory,
+                                    Permission.TrackChildLocationChange,
+                                    Permission.ViewPersonConcerns,
+                                    Permission.ViewPersonNotes
+                                )))
+                            .Add(new ContextualPermissionSet(
+                                new AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext(WhenReferralIsOpen: null,
+                                    WhenOwnFunctionIsIn: null, WhenAssigneeFunctionIsIn: null),
+                                ImmutableList.Create(
+                                    Permission.ViewPersonContactInfo
+                                ))))),
                     ImmutableDictionary<Guid, UserAccessConfiguration>.Empty
-                        .Add(adminId, new UserAccessConfiguration(guid0, ImmutableList<UserLocationRole>.Empty
-                            .Add(new UserLocationRole(guid2, "OrganizationAdministrator"))
-                            .Add(new UserLocationRole(guid3, "OrganizationAdministrator"))))
-                        .Add(volunteerId, new UserAccessConfiguration(guid4, ImmutableList<UserLocationRole>.Empty
-                            .Add(new UserLocationRole(guid2, "Volunteer"))))));
+                        .Add(adminId, new UserAccessConfiguration(guid0, ImmutableList<UserLocationRoles>.Empty
+                            .Add(new UserLocationRoles(guid2, ImmutableList.Create("OrganizationAdministrator")))
+                            .Add(new UserLocationRoles(guid3, ImmutableList.Create("OrganizationAdministrator")))))
+                        .Add(volunteerId, new UserAccessConfiguration(guid4, ImmutableList<UserLocationRoles>.Empty
+                            .Add(new UserLocationRoles(guid2, ImmutableList.Create("Volunteer")))))));
         }
 
         public static async Task PopulatePolicies(IObjectStore<EffectiveLocationPolicy> policiesStore)

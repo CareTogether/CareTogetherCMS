@@ -16,7 +16,7 @@ import { ContactDisplay } from "../ContactDisplay";
 import { IconRow } from "../IconRow";
 import { useDialogHandle } from "../Hooks/useDialogHandle";
 import { EditAdultDialog } from "../Families/EditAdultDialog";
-import { usePermissions } from "../Model/SessionModel";
+import { useFamilyIdPermissions } from "../Model/SessionModel";
 
 type PartneringAdultCardProps = {
   partneringFamilyId: string,
@@ -31,7 +31,7 @@ export function PartneringAdultCard({partneringFamilyId, personId}: PartneringAd
 
   const editDialogHandle = useDialogHandle();
 
-  const permissions = usePermissions();
+  const permissions = useFamilyIdPermissions(partneringFamilyId);
 
   return <>{adult?.item1 && adult.item1.id && adult.item2 &&
     <Card variant="outlined" sx={{minWidth: '275px'}}>

@@ -1,15 +1,19 @@
-import { Drawer, List, Skeleton, Stack, useTheme } from '@mui/material';
+import { Divider, Drawer, List, Skeleton, Stack, useTheme } from '@mui/material';
 import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
 import PeopleIcon from '@mui/icons-material/People';
+import SettingsIcon from '@mui/icons-material/Settings';
 import { ListItemLink } from './ListItemLink';
 import { useFeatureFlags } from '../Model/ConfigurationModel';
 import { Copyright } from './Copyright';
+import { useGlobalPermissions } from '../Model/SessionModel';
+import { Permission } from '../GeneratedClient';
 
 interface SideNavigationMenuProps {
   open: boolean;
 }
 function SideNavigationMenu({ open }: SideNavigationMenuProps) {
   const flags = useFeatureFlags();
+  const permissions = useGlobalPermissions();
 
   return (
     //  <List aria-label="main navigation">
@@ -32,9 +36,15 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
             </Stack>
           </>
         : <>
-            {flags?.viewReferrals &&
+            {permissions(Permission.AccessPartneringFamiliesScreen) && flags?.viewReferrals &&
               <ListItemLink to="/referrals" primary="Referrals" icon={<PermPhoneMsgIcon sx={{color: '#fff8'}} />} />}
-            <ListItemLink to="/volunteers" primary="Volunteers" icon={<PeopleIcon sx={{color: '#fff8'}} />} />
+            {permissions(Permission.AccessVolunteersScreen) &&
+              <ListItemLink to="/volunteers" primary="Volunteers" icon={<PeopleIcon sx={{color: '#fff8'}} />} />}
+            {permissions(Permission.AccessSettingsScreen) &&
+              <>
+                <Divider  />
+                <ListItemLink to="/settings" primary="Settings" icon={<SettingsIcon sx={{color: '#fff8'}} />} />
+              </>}
           </>}
     </List>
   );

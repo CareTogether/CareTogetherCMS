@@ -17,7 +17,7 @@ import { useLocalStorage } from '../Hooks/useLocalStorage';
 import { policyData } from '../Model/ConfigurationModel';
 import { SearchBar } from '../SearchBar';
 import { filterFamiliesByText, sortFamiliesByLastNameDesc } from '../Families/FamilyUtils';
-import { usePermissions } from '../Model/SessionModel';
+import { useAllPartneringFamiliesPermissions } from '../Model/SessionModel';
 import useScreenTitle from '../Shell/ShellScreenTitle';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
@@ -128,7 +128,7 @@ function PartneringFamilies() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-  const permissions = usePermissions();
+  const permissions = useAllPartneringFamiliesPermissions();
 
   useScreenTitle("Referrals");
 

@@ -27,7 +27,7 @@ import { IconRow } from "../IconRow";
 import { VolunteerRoleApprovalStatusChip } from "./VolunteerRoleApprovalStatusChip";
 import { RemoveIndividualRoleDialog } from "./RemoveIndividualRoleDialog";
 import { ResetIndividualRoleDialog } from "./ResetIndividualRoleDialog";
-import { usePermissions } from "../Model/SessionModel";
+import { useFamilyPermissions } from "../Model/SessionModel";
 import { MissingRequirementRow } from "../Requirements/MissingRequirementRow";
 import { ExemptedRequirementRow } from "../Requirements/ExemptedRequirementRow";
 import { CompletedRequirementRow } from "../Requirements/CompletedRequirementRow";
@@ -69,7 +69,7 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
     setResetRoleParameter({volunteerFamilyId, person: adult, role: role, removalReason: removalReason, removalAdditionalComments: removalAdditionalComments});
   }
   
-  const permissions = usePermissions();
+  const permissions = useFamilyPermissions(volunteerFamily);
 
   const participatingFamilyRoles =
   Object.entries(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals || {}).filter(

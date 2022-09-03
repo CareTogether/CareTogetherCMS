@@ -2,7 +2,7 @@ import { Tooltip } from "@mui/material";
 import { format } from "date-fns";
 import { ExemptedRequirementInfo, Permission } from "../GeneratedClient";
 import { useFamilyLookup, usePersonLookup, useUserLookup } from "../Model/DirectoryModel";
-import { usePermissions } from "../Model/SessionModel";
+import { useFamilyIdPermissions } from "../Model/SessionModel";
 import { useDialogHandle } from "../Hooks/useDialogHandle";
 import { FamilyName } from "../Families/FamilyName";
 import { PersonName } from "../Families/PersonName";
@@ -17,7 +17,14 @@ type ExemptedRequirementRowProps = {
 
 export function ExemptedRequirementRow({ requirement, context }: ExemptedRequirementRowProps) {
   const userLookup = useUserLookup();
-  const permissions = usePermissions();
+  const permissions = useFamilyIdPermissions(
+    context.kind === 'Referral' ||
+    context.kind === 'Arrangement' ||
+    context.kind === 'Family Volunteer Assignment' ||
+    context.kind === 'Individual Volunteer Assignment'
+    ? context.partneringFamilyId
+    : context.volunteerFamilyId
+  );
   
   const dialogHandle = useDialogHandle();
 

@@ -1,4 +1,5 @@
-﻿using CareTogether.Resources;
+﻿using CareTogether.Engines.Authorization;
+using CareTogether.Resources;
 using CareTogether.Resources.Policies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.FeatureManagement;
@@ -14,12 +15,16 @@ namespace CareTogether.Api.Controllers
     {
         private readonly IPoliciesResource policiesResource;
         private readonly IFeatureManager featureManager;
+        private readonly IAuthorizationEngine authorizationEngine;
 
 
-        public ConfigurationController(IPoliciesResource policiesResource, IFeatureManager featureManager)
+        public ConfigurationController(IPoliciesResource policiesResource,
+            IFeatureManager featureManager, IAuthorizationEngine authorizationEngine)
         {
+            //TODO: Delegate this controller's methods to a manager service
             this.policiesResource = policiesResource;
             this.featureManager = featureManager;
+            this.authorizationEngine = authorizationEngine;
         }
 
 
@@ -27,6 +32,16 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<OrganizationConfiguration>> GetOrganizationConfiguration(Guid organizationId)
         {
             var result = await policiesResource.GetConfigurationAsync(organizationId);
+            return Ok(result);
+        }
+
+        [HttpPut("/api/{organizationId:guid}/[controller]/roles/{roleName}")]
+        public async Task<ActionResult<OrganizationConfiguration>> PutRoleDefinition(Guid organizationId,
+            string roleName, [FromBody] RoleDefinition role)
+        {
+            if (!User.IsInRole("OrganizationAdministrator"))
+                return Forbid();
+            var result = await policiesResource.UpsertRoleDefinitionAsync(organizationId, roleName, role);
             return Ok(result);
         }
 

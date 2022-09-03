@@ -9,7 +9,7 @@ import { SearchBar } from '../SearchBar';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
 import { useScrollMemory } from '../Hooks/useScrollMemory';
 import { filterFamiliesByText, familyLastName, sortFamiliesByLastNameDesc } from '../Families/FamilyUtils';
-import { usePermissions } from '../Model/SessionModel';
+import { useAllVolunteerFamiliesPermissions } from '../Model/SessionModel';
 import { Permission } from '../GeneratedClient';
 import useScreenTitle from '../Shell/ShellScreenTitle';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
@@ -52,7 +52,7 @@ function VolunteerProgress(props: { onOpen: () => void }) {
     }
   };
 
-  const permissions = usePermissions();
+  const permissions = useAllVolunteerFamiliesPermissions();
 
   useScreenTitle("Volunteers");
 

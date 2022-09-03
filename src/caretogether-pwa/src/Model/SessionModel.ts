@@ -1,8 +1,9 @@
 import { atom, selector } from "recoil";
 import { accessTokenFetchQuery } from "../Authentication/AuthenticatedHttp";
-import { Permission, UserLocationAccess, UsersClient } from "../GeneratedClient";
+import { CombinedFamilyInfo, Permission, UserLocationAccess, UsersClient } from "../GeneratedClient";
 import { useLoadable } from "../Hooks/useLoadable";
 import { localStorageEffect } from "../Utilities/localStorageEffect";
+import { useFamilyLookup } from "./DirectoryModel";
 
 export const usersClientQuery = selector({
   key: 'usersClient',
@@ -84,25 +85,33 @@ export const currentLocationState = selector({//TODO: Deprecated
   }
 });
 
-export const currentPermissionsQuery = selector({
-  key: 'currentPermissionsQuery',
-  get: ({get}) => {
-    const currentLocation = get(currentLocationQuery);
-    return currentLocation.permissions!;
-  }
-});
-
-export const currentPermissionsState = selector({//TODO: Deprecated
-  key: 'COMPATIBILITY__currentPermissionsState',
-  get: ({get}) => {
-    const value = get(currentPermissionsQuery);
-    return value;
-  }
-});
-
-export function usePermissions() {
-  const currentPermissions = useLoadable(currentPermissionsQuery);
+function usePermissions(applicablePermissions?: Permission[]) {
   //TODO: If we want to expose a "not-yet-loaded" state, update this to return 'null' from
-  //      the callback when 'currentPermissions' is null.
-  return (permission: Permission) => (currentPermissions || []).includes(permission);
+  //      the callback when 'applicablePermissions' is null (as opposed to undefined).
+  return (permission: Permission) => (applicablePermissions || []).includes(permission);
+}
+
+export function useGlobalPermissions() {
+  const currentLocation = useLoadable(currentLocationQuery);
+  return usePermissions(currentLocation?.globalContextPermissions);
+}
+
+export function useAllPartneringFamiliesPermissions() {
+  const currentLocation = useLoadable(currentLocationQuery);
+  return usePermissions(currentLocation?.allPartneringFamiliesContextPermissions);
+}
+
+export function useAllVolunteerFamiliesPermissions() {
+  const currentLocation = useLoadable(currentLocationQuery);
+  return usePermissions(currentLocation?.allVolunteerFamiliesContextPermissions);
+}
+
+export function useFamilyIdPermissions(familyId: string) {
+  const familyLookup = useFamilyLookup();
+  const family = familyLookup(familyId);
+  return usePermissions(family?.userPermissions);
+}
+
+export function useFamilyPermissions(family?: CombinedFamilyInfo) {
+  return usePermissions(family?.userPermissions);
 }

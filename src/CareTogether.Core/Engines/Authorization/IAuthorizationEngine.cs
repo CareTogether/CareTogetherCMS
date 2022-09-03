@@ -1,19 +1,28 @@
 ﻿using CareTogether.Managers;
-using CareTogether.Resources;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Referrals;
+using JsonPolymorph;
 using System;
+using System.Collections.Immutable;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace CareTogether.Engines.Authorization
 {
+    [JsonHierarchyBase]
+    public abstract partial record AuthorizationContext();
+    public sealed record GlobalAuthorizationContext() : AuthorizationContext;
+    public sealed record AllPartneringFamiliesAuthorizationContext() : AuthorizationContext;
+    public sealed record AllVolunteerFamiliesAuthorizationContext() : AuthorizationContext;
+    public sealed record FamilyAuthorizationContext(Guid FamilyId) : AuthorizationContext;
+
+
     public interface IAuthorizationEngine
     {
-        Task<bool> AuthorizeFamilyAccessAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, Guid familyId);
+        Task<ImmutableList<Permission>> AuthorizeUserAccessAsync(
+            Guid organizationId, Guid locationId, ClaimsPrincipal user, AuthorizationContext context);
 
         Task<bool> AuthorizeFamilyCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, FamilyCommand command);
@@ -39,16 +48,7 @@ namespace CareTogether.Engines.Authorization
         Task<bool> AuthorizeVolunteerCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, VolunteerCommand command);
 
-        Task<PartneringFamilyInfo> DisclosePartneringFamilyInfoAsync(ClaimsPrincipal user,
-            PartneringFamilyInfo partneringFamilyInfo, Guid organizationId, Guid locationId);
-
-        Task<VolunteerFamilyInfo> DiscloseVolunteerFamilyInfoAsync(ClaimsPrincipal user,
-            VolunteerFamilyInfo volunteerFamilyInfo, Guid organizationId, Guid locationId);
-
-        Task<Family> DiscloseFamilyAsync(ClaimsPrincipal user,
-            Family family, Guid organizationId, Guid locationId);
-
-        Task<bool> DiscloseNoteAsync(ClaimsPrincipal user,
-            Guid familyId, Note note, Guid organizationId, Guid locationId);
+        Task<CombinedFamilyInfo> DiscloseFamilyAsync(ClaimsPrincipal user,
+            Guid organizationId, Guid locationId, CombinedFamilyInfo family);
     }
 }

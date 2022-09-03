@@ -3,7 +3,7 @@ import { useRecoilValue } from "recoil";
 import { MissingArrangementRequirement, Permission } from "../GeneratedClient";
 import { policyData } from "../Model/ConfigurationModel";
 import { useFamilyLookup, usePersonLookup } from "../Model/DirectoryModel";
-import { usePermissions } from "../Model/SessionModel";
+import { useFamilyIdPermissions } from "../Model/SessionModel";
 import { useDialogHandle } from "../Hooks/useDialogHandle";
 import { FamilyName } from "../Families/FamilyName";
 import { PersonName } from "../Families/PersonName";
@@ -18,7 +18,14 @@ type MissingArrangementRequirementRowProps = {
 
 export function MissingArrangementRequirementRow({ requirement, context }: MissingArrangementRequirementRowProps) {
   const policy = useRecoilValue(policyData);
-  const permissions = usePermissions();
+  const permissions = useFamilyIdPermissions(
+    context.kind === 'Referral' ||
+    context.kind === 'Arrangement' ||
+    context.kind === 'Family Volunteer Assignment' ||
+    context.kind === 'Individual Volunteer Assignment'
+    ? context.partneringFamilyId
+    : context.volunteerFamilyId
+  );
   
   const dialogHandle = useDialogHandle();
   

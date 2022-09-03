@@ -47,6 +47,60 @@
         }
       }
     },
+    "/api/{organizationId}/Configuration/roles/{roleName}": {
+      "put": {
+        "tags": [
+          "Configuration"
+        ],
+        "operationId": "Configuration_PutRoleDefinition",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "roleName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 2
+          }
+        ],
+        "requestBody": {
+          "x-name": "role",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleDefinition"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 3
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationConfiguration"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/{organizationId}/{locationId}/Configuration/policy": {
       "get": {
         "tags": [
@@ -877,6 +931,21 @@
           "roleName": {
             "type": "string"
           },
+          "permissionSets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContextualPermissionSet"
+            }
+          }
+        }
+      },
+      "ContextualPermissionSet": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "$ref": "#/components/schemas/PermissionContext"
+          },
           "permissions": {
             "type": "array",
             "items": {
@@ -884,6 +953,154 @@
             }
           }
         }
+      },
+      "PermissionContext": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "discriminator",
+          "mapping": {
+            "AllPartneringFamiliesPermissionContext": "#/components/schemas/AllPartneringFamiliesPermissionContext",
+            "AllVolunteerFamiliesPermissionContext": "#/components/schemas/AllVolunteerFamiliesPermissionContext",
+            "AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext": "#/components/schemas/AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext",
+            "AssignedFunctionsInReferralPartneringFamilyPermissionContext": "#/components/schemas/AssignedFunctionsInReferralPartneringFamilyPermissionContext",
+            "GlobalPermissionContext": "#/components/schemas/GlobalPermissionContext",
+            "OwnFamilyPermissionContext": "#/components/schemas/OwnFamilyPermissionContext",
+            "OwnReferralAssigneeFamiliesPermissionContext": "#/components/schemas/OwnReferralAssigneeFamiliesPermissionContext"
+          }
+        },
+        "x-abstract": true,
+        "additionalProperties": false,
+        "required": [
+          "discriminator"
+        ],
+        "properties": {
+          "discriminator": {
+            "type": "string"
+          }
+        }
+      },
+      "AllPartneringFamiliesPermissionContext": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PermissionContext"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false
+          }
+        ]
+      },
+      "AllVolunteerFamiliesPermissionContext": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PermissionContext"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false
+          }
+        ]
+      },
+      "AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PermissionContext"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "whenReferralIsOpen": {
+                "type": "boolean",
+                "nullable": true
+              },
+              "whenOwnFunctionIsIn": {
+                "type": "array",
+                "nullable": true,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "whenAssigneeFunctionIsIn": {
+                "type": "array",
+                "nullable": true,
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "AssignedFunctionsInReferralPartneringFamilyPermissionContext": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PermissionContext"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "whenReferralIsOpen": {
+                "type": "boolean",
+                "nullable": true
+              },
+              "whenOwnFunctionIsIn": {
+                "type": "array",
+                "nullable": true,
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "GlobalPermissionContext": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PermissionContext"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false
+          }
+        ]
+      },
+      "OwnFamilyPermissionContext": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PermissionContext"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false
+          }
+        ]
+      },
+      "OwnReferralAssigneeFamiliesPermissionContext": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PermissionContext"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "whenReferralIsOpen": {
+                "type": "boolean",
+                "nullable": true
+              },
+              "whenAssigneeFunctionIsIn": {
+                "type": "array",
+                "nullable": true,
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ]
       },
       "Permission": {
         "type": "integer",
@@ -893,8 +1110,10 @@
           "ReadFamilyDocuments",
           "UploadFamilyDocuments",
           "DeleteFamilyDocuments",
-          "ViewAllFamilies",
-          "ViewLinkedFamilies",
+          "AccessVolunteersScreen",
+          "AccessPartneringFamiliesScreen",
+          "AccessSettingsScreen",
+          "EditRoles",
           "ViewFamilyHistory",
           "ViewPersonConcerns",
           "ViewPersonNotes",
@@ -943,6 +1162,8 @@
           4,
           100,
           101,
+          102,
+          103,
           151,
           152,
           153,
@@ -996,12 +1217,12 @@
           "locationRoles": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/UserLocationRole"
+              "$ref": "#/components/schemas/UserLocationRoles"
             }
           }
         }
       },
-      "UserLocationRole": {
+      "UserLocationRoles": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -1009,8 +1230,11 @@
             "type": "string",
             "format": "guid"
           },
-          "roleName": {
-            "type": "string"
+          "roleNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -1586,6 +1810,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/UploadedDocumentInfo"
+            }
+          },
+          "userPermissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Permission"
             }
           }
         }
@@ -4779,7 +5009,19 @@
               "type": "string"
             }
           },
-          "permissions": {
+          "globalContextPermissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Permission"
+            }
+          },
+          "allVolunteerFamiliesContextPermissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Permission"
+            }
+          },
+          "allPartneringFamiliesContextPermissions": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Permission"

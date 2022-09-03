@@ -15,7 +15,7 @@ import { VolunteerRoleApprovalStatusChip } from './VolunteerRoleApprovalStatusCh
 import { RemoveFamilyRoleDialog } from './RemoveFamilyRoleDialog';
 import { ResetFamilyRoleDialog } from './ResetFamilyRoleDialog';
 import { FamilyDocuments } from '../Families/FamilyDocuments';
-import { usePermissions } from '../Model/SessionModel';
+import { useFamilyPermissions } from '../Model/SessionModel';
 import { Masonry } from '@mui/lab';
 import { MissingRequirementRow } from "../Requirements/MissingRequirementRow";
 import { ExemptedRequirementRow } from "../Requirements/ExemptedRequirementRow";
@@ -63,7 +63,7 @@ export function VolunteerFamilyScreen() {
   const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));
   const isWideScreen = useMediaQuery(theme.breakpoints.up('xl'));
 
-  const permissions = usePermissions();
+  const permissions = useFamilyPermissions(volunteerFamily);
 
   const participatingFamilyRoles =
     Object.entries(volunteerFamily?.volunteerFamilyInfo?.familyRoleApprovals || {}).filter(

@@ -12,7 +12,7 @@ import { useRecoilValue } from "recoil";
 import { volunteerFamiliesData } from "../Model/VolunteersModel";
 import { useDialogHandle } from "../Hooks/useDialogHandle";
 import { EditChildDialog } from "../Families/EditChildDialog";
-import { usePermissions } from "../Model/SessionModel";
+import { useFamilyPermissions } from "../Model/SessionModel";
 
 type VolunteerChildCardProps = {
   volunteerFamilyId: string,
@@ -27,7 +27,7 @@ export function VolunteerChildCard({volunteerFamilyId, personId}: VolunteerChild
 
   const editDialogHandle = useDialogHandle();
 
-  const permissions = usePermissions();
+  const permissions = useFamilyPermissions(volunteerFamily);
 
   return <>{child &&
     <Card variant="outlined" sx={{minWidth: '275px'}}>

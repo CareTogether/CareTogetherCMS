@@ -55,6 +55,50 @@ export class ConfigurationClient {
         return Promise.resolve<OrganizationConfiguration>(null as any);
     }
 
+    putRoleDefinition(organizationId: string, roleName: string | null, role: RoleDefinition): Promise<OrganizationConfiguration> {
+        let url_ = this.baseUrl + "/api/{organizationId}/Configuration/roles/{roleName}";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (roleName === undefined || roleName === null)
+            throw new Error("The parameter 'roleName' must be defined.");
+        url_ = url_.replace("{roleName}", encodeURIComponent("" + roleName));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(role);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processPutRoleDefinition(_response);
+        });
+    }
+
+    protected processPutRoleDefinition(response: Response): Promise<OrganizationConfiguration> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = OrganizationConfiguration.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<OrganizationConfiguration>(null as any);
+    }
+
     getEffectiveLocationPolicy(organizationId: string, locationId: string): Promise<EffectiveLocationPolicy> {
         let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Configuration/policy";
         if (organizationId === undefined || organizationId === null)
@@ -961,7 +1005,7 @@ export interface ISourcePhoneNumberConfiguration {
 
 export class RoleDefinition implements IRoleDefinition {
     roleName?: string;
-    permissions?: Permission[];
+    permissionSets?: ContextualPermissionSet[];
 
     constructor(data?: IRoleDefinition) {
         if (data) {
@@ -975,10 +1019,10 @@ export class RoleDefinition implements IRoleDefinition {
     init(_data?: any) {
         if (_data) {
             this.roleName = _data["roleName"];
-            if (Array.isArray(_data["permissions"])) {
-                this.permissions = [] as any;
-                for (let item of _data["permissions"])
-                    this.permissions!.push(item);
+            if (Array.isArray(_data["permissionSets"])) {
+                this.permissionSets = [] as any;
+                for (let item of _data["permissionSets"])
+                    this.permissionSets!.push(ContextualPermissionSet.fromJS(item));
             }
         }
     }
@@ -993,6 +1037,54 @@ export class RoleDefinition implements IRoleDefinition {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["roleName"] = this.roleName;
+        if (Array.isArray(this.permissionSets)) {
+            data["permissionSets"] = [];
+            for (let item of this.permissionSets)
+                data["permissionSets"].push(item.toJSON());
+        }
+        return data;
+    }
+}
+
+export interface IRoleDefinition {
+    roleName?: string;
+    permissionSets?: ContextualPermissionSet[];
+}
+
+export class ContextualPermissionSet implements IContextualPermissionSet {
+    context?: PermissionContext;
+    permissions?: Permission[];
+
+    constructor(data?: IContextualPermissionSet) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.context = _data["context"] ? PermissionContext.fromJS(_data["context"]) : <any>undefined;
+            if (Array.isArray(_data["permissions"])) {
+                this.permissions = [] as any;
+                for (let item of _data["permissions"])
+                    this.permissions!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): ContextualPermissionSet {
+        data = typeof data === 'object' ? data : {};
+        let result = new ContextualPermissionSet();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["context"] = this.context ? this.context.toJSON() : <any>undefined;
         if (Array.isArray(this.permissions)) {
             data["permissions"] = [];
             for (let item of this.permissions)
@@ -1002,9 +1094,338 @@ export class RoleDefinition implements IRoleDefinition {
     }
 }
 
-export interface IRoleDefinition {
-    roleName?: string;
+export interface IContextualPermissionSet {
+    context?: PermissionContext;
     permissions?: Permission[];
+}
+
+export abstract class PermissionContext implements IPermissionContext {
+
+    protected _discriminator: string;
+
+    constructor(data?: IPermissionContext) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        this._discriminator = "PermissionContext";
+    }
+
+    init(_data?: any) {
+    }
+
+    static fromJS(data: any): PermissionContext {
+        data = typeof data === 'object' ? data : {};
+        if (data["discriminator"] === "AllPartneringFamiliesPermissionContext") {
+            let result = new AllPartneringFamiliesPermissionContext();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "AllVolunteerFamiliesPermissionContext") {
+            let result = new AllVolunteerFamiliesPermissionContext();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext") {
+            let result = new AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "AssignedFunctionsInReferralPartneringFamilyPermissionContext") {
+            let result = new AssignedFunctionsInReferralPartneringFamilyPermissionContext();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "GlobalPermissionContext") {
+            let result = new GlobalPermissionContext();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "OwnFamilyPermissionContext") {
+            let result = new OwnFamilyPermissionContext();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "OwnReferralAssigneeFamiliesPermissionContext") {
+            let result = new OwnReferralAssigneeFamiliesPermissionContext();
+            result.init(data);
+            return result;
+        }
+        throw new Error("The abstract class 'PermissionContext' cannot be instantiated.");
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["discriminator"] = this._discriminator;
+        return data;
+    }
+}
+
+export interface IPermissionContext {
+}
+
+export class AllPartneringFamiliesPermissionContext extends PermissionContext implements IAllPartneringFamiliesPermissionContext {
+
+    constructor(data?: IAllPartneringFamiliesPermissionContext) {
+        super(data);
+        this._discriminator = "AllPartneringFamiliesPermissionContext";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+    }
+
+    static fromJS(data: any): AllPartneringFamiliesPermissionContext {
+        data = typeof data === 'object' ? data : {};
+        let result = new AllPartneringFamiliesPermissionContext();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IAllPartneringFamiliesPermissionContext extends IPermissionContext {
+}
+
+export class AllVolunteerFamiliesPermissionContext extends PermissionContext implements IAllVolunteerFamiliesPermissionContext {
+
+    constructor(data?: IAllVolunteerFamiliesPermissionContext) {
+        super(data);
+        this._discriminator = "AllVolunteerFamiliesPermissionContext";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+    }
+
+    static fromJS(data: any): AllVolunteerFamiliesPermissionContext {
+        data = typeof data === 'object' ? data : {};
+        let result = new AllVolunteerFamiliesPermissionContext();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IAllVolunteerFamiliesPermissionContext extends IPermissionContext {
+}
+
+export class AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext extends PermissionContext implements IAssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext {
+    whenReferralIsOpen?: boolean | undefined;
+    whenOwnFunctionIsIn?: string[] | undefined;
+    whenAssigneeFunctionIsIn?: string[] | undefined;
+
+    constructor(data?: IAssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext) {
+        super(data);
+        this._discriminator = "AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.whenReferralIsOpen = _data["whenReferralIsOpen"];
+            if (Array.isArray(_data["whenOwnFunctionIsIn"])) {
+                this.whenOwnFunctionIsIn = [] as any;
+                for (let item of _data["whenOwnFunctionIsIn"])
+                    this.whenOwnFunctionIsIn!.push(item);
+            }
+            if (Array.isArray(_data["whenAssigneeFunctionIsIn"])) {
+                this.whenAssigneeFunctionIsIn = [] as any;
+                for (let item of _data["whenAssigneeFunctionIsIn"])
+                    this.whenAssigneeFunctionIsIn!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext {
+        data = typeof data === 'object' ? data : {};
+        let result = new AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["whenReferralIsOpen"] = this.whenReferralIsOpen;
+        if (Array.isArray(this.whenOwnFunctionIsIn)) {
+            data["whenOwnFunctionIsIn"] = [];
+            for (let item of this.whenOwnFunctionIsIn)
+                data["whenOwnFunctionIsIn"].push(item);
+        }
+        if (Array.isArray(this.whenAssigneeFunctionIsIn)) {
+            data["whenAssigneeFunctionIsIn"] = [];
+            for (let item of this.whenAssigneeFunctionIsIn)
+                data["whenAssigneeFunctionIsIn"].push(item);
+        }
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IAssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext extends IPermissionContext {
+    whenReferralIsOpen?: boolean | undefined;
+    whenOwnFunctionIsIn?: string[] | undefined;
+    whenAssigneeFunctionIsIn?: string[] | undefined;
+}
+
+export class AssignedFunctionsInReferralPartneringFamilyPermissionContext extends PermissionContext implements IAssignedFunctionsInReferralPartneringFamilyPermissionContext {
+    whenReferralIsOpen?: boolean | undefined;
+    whenOwnFunctionIsIn?: string[] | undefined;
+
+    constructor(data?: IAssignedFunctionsInReferralPartneringFamilyPermissionContext) {
+        super(data);
+        this._discriminator = "AssignedFunctionsInReferralPartneringFamilyPermissionContext";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.whenReferralIsOpen = _data["whenReferralIsOpen"];
+            if (Array.isArray(_data["whenOwnFunctionIsIn"])) {
+                this.whenOwnFunctionIsIn = [] as any;
+                for (let item of _data["whenOwnFunctionIsIn"])
+                    this.whenOwnFunctionIsIn!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): AssignedFunctionsInReferralPartneringFamilyPermissionContext {
+        data = typeof data === 'object' ? data : {};
+        let result = new AssignedFunctionsInReferralPartneringFamilyPermissionContext();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["whenReferralIsOpen"] = this.whenReferralIsOpen;
+        if (Array.isArray(this.whenOwnFunctionIsIn)) {
+            data["whenOwnFunctionIsIn"] = [];
+            for (let item of this.whenOwnFunctionIsIn)
+                data["whenOwnFunctionIsIn"].push(item);
+        }
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IAssignedFunctionsInReferralPartneringFamilyPermissionContext extends IPermissionContext {
+    whenReferralIsOpen?: boolean | undefined;
+    whenOwnFunctionIsIn?: string[] | undefined;
+}
+
+export class GlobalPermissionContext extends PermissionContext implements IGlobalPermissionContext {
+
+    constructor(data?: IGlobalPermissionContext) {
+        super(data);
+        this._discriminator = "GlobalPermissionContext";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+    }
+
+    static fromJS(data: any): GlobalPermissionContext {
+        data = typeof data === 'object' ? data : {};
+        let result = new GlobalPermissionContext();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IGlobalPermissionContext extends IPermissionContext {
+}
+
+export class OwnFamilyPermissionContext extends PermissionContext implements IOwnFamilyPermissionContext {
+
+    constructor(data?: IOwnFamilyPermissionContext) {
+        super(data);
+        this._discriminator = "OwnFamilyPermissionContext";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+    }
+
+    static fromJS(data: any): OwnFamilyPermissionContext {
+        data = typeof data === 'object' ? data : {};
+        let result = new OwnFamilyPermissionContext();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IOwnFamilyPermissionContext extends IPermissionContext {
+}
+
+export class OwnReferralAssigneeFamiliesPermissionContext extends PermissionContext implements IOwnReferralAssigneeFamiliesPermissionContext {
+    whenReferralIsOpen?: boolean | undefined;
+    whenAssigneeFunctionIsIn?: string[] | undefined;
+
+    constructor(data?: IOwnReferralAssigneeFamiliesPermissionContext) {
+        super(data);
+        this._discriminator = "OwnReferralAssigneeFamiliesPermissionContext";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.whenReferralIsOpen = _data["whenReferralIsOpen"];
+            if (Array.isArray(_data["whenAssigneeFunctionIsIn"])) {
+                this.whenAssigneeFunctionIsIn = [] as any;
+                for (let item of _data["whenAssigneeFunctionIsIn"])
+                    this.whenAssigneeFunctionIsIn!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): OwnReferralAssigneeFamiliesPermissionContext {
+        data = typeof data === 'object' ? data : {};
+        let result = new OwnReferralAssigneeFamiliesPermissionContext();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["whenReferralIsOpen"] = this.whenReferralIsOpen;
+        if (Array.isArray(this.whenAssigneeFunctionIsIn)) {
+            data["whenAssigneeFunctionIsIn"] = [];
+            for (let item of this.whenAssigneeFunctionIsIn)
+                data["whenAssigneeFunctionIsIn"].push(item);
+        }
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IOwnReferralAssigneeFamiliesPermissionContext extends IPermissionContext {
+    whenReferralIsOpen?: boolean | undefined;
+    whenAssigneeFunctionIsIn?: string[] | undefined;
 }
 
 export enum Permission {
@@ -1012,8 +1433,10 @@ export enum Permission {
     ReadFamilyDocuments = 2,
     UploadFamilyDocuments = 3,
     DeleteFamilyDocuments = 4,
-    ViewAllFamilies = 100,
-    ViewLinkedFamilies = 101,
+    AccessVolunteersScreen = 100,
+    AccessPartneringFamiliesScreen = 101,
+    AccessSettingsScreen = 102,
+    EditRoles = 103,
     ViewFamilyHistory = 151,
     ViewPersonConcerns = 152,
     ViewPersonNotes = 153,
@@ -1058,7 +1481,7 @@ export enum Permission {
 
 export class UserAccessConfiguration implements IUserAccessConfiguration {
     personId?: string;
-    locationRoles?: UserLocationRole[];
+    locationRoles?: UserLocationRoles[];
 
     constructor(data?: IUserAccessConfiguration) {
         if (data) {
@@ -1075,7 +1498,7 @@ export class UserAccessConfiguration implements IUserAccessConfiguration {
             if (Array.isArray(_data["locationRoles"])) {
                 this.locationRoles = [] as any;
                 for (let item of _data["locationRoles"])
-                    this.locationRoles!.push(UserLocationRole.fromJS(item));
+                    this.locationRoles!.push(UserLocationRoles.fromJS(item));
             }
         }
     }
@@ -1101,14 +1524,14 @@ export class UserAccessConfiguration implements IUserAccessConfiguration {
 
 export interface IUserAccessConfiguration {
     personId?: string;
-    locationRoles?: UserLocationRole[];
+    locationRoles?: UserLocationRoles[];
 }
 
-export class UserLocationRole implements IUserLocationRole {
+export class UserLocationRoles implements IUserLocationRoles {
     locationId?: string;
-    roleName?: string;
+    roleNames?: string[];
 
-    constructor(data?: IUserLocationRole) {
+    constructor(data?: IUserLocationRoles) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -1120,13 +1543,17 @@ export class UserLocationRole implements IUserLocationRole {
     init(_data?: any) {
         if (_data) {
             this.locationId = _data["locationId"];
-            this.roleName = _data["roleName"];
+            if (Array.isArray(_data["roleNames"])) {
+                this.roleNames = [] as any;
+                for (let item of _data["roleNames"])
+                    this.roleNames!.push(item);
+            }
         }
     }
 
-    static fromJS(data: any): UserLocationRole {
+    static fromJS(data: any): UserLocationRoles {
         data = typeof data === 'object' ? data : {};
-        let result = new UserLocationRole();
+        let result = new UserLocationRoles();
         result.init(data);
         return result;
     }
@@ -1134,14 +1561,18 @@ export class UserLocationRole implements IUserLocationRole {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["locationId"] = this.locationId;
-        data["roleName"] = this.roleName;
+        if (Array.isArray(this.roleNames)) {
+            data["roleNames"] = [];
+            for (let item of this.roleNames)
+                data["roleNames"].push(item);
+        }
         return data;
     }
 }
 
-export interface IUserLocationRole {
+export interface IUserLocationRoles {
     locationId?: string;
-    roleName?: string;
+    roleNames?: string[];
 }
 
 export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
@@ -2316,6 +2747,7 @@ export class CombinedFamilyInfo implements ICombinedFamilyInfo {
     volunteerFamilyInfo?: VolunteerFamilyInfo | undefined;
     notes?: Note[];
     uploadedDocuments?: UploadedDocumentInfo[];
+    userPermissions?: Permission[];
 
     constructor(data?: ICombinedFamilyInfo) {
         if (data) {
@@ -2340,6 +2772,11 @@ export class CombinedFamilyInfo implements ICombinedFamilyInfo {
                 this.uploadedDocuments = [] as any;
                 for (let item of _data["uploadedDocuments"])
                     this.uploadedDocuments!.push(UploadedDocumentInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["userPermissions"])) {
+                this.userPermissions = [] as any;
+                for (let item of _data["userPermissions"])
+                    this.userPermissions!.push(item);
             }
         }
     }
@@ -2366,6 +2803,11 @@ export class CombinedFamilyInfo implements ICombinedFamilyInfo {
             for (let item of this.uploadedDocuments)
                 data["uploadedDocuments"].push(item.toJSON());
         }
+        if (Array.isArray(this.userPermissions)) {
+            data["userPermissions"] = [];
+            for (let item of this.userPermissions)
+                data["userPermissions"].push(item);
+        }
         return data;
     }
 }
@@ -2376,6 +2818,7 @@ export interface ICombinedFamilyInfo {
     volunteerFamilyInfo?: VolunteerFamilyInfo | undefined;
     notes?: Note[];
     uploadedDocuments?: UploadedDocumentInfo[];
+    userPermissions?: Permission[];
 }
 
 export class Family implements IFamily {
@@ -8291,7 +8734,9 @@ export interface IUserOrganizationAccess {
 export class UserLocationAccess implements IUserLocationAccess {
     locationId?: string;
     roles?: string[];
-    permissions?: Permission[];
+    globalContextPermissions?: Permission[];
+    allVolunteerFamiliesContextPermissions?: Permission[];
+    allPartneringFamiliesContextPermissions?: Permission[];
 
     constructor(data?: IUserLocationAccess) {
         if (data) {
@@ -8310,10 +8755,20 @@ export class UserLocationAccess implements IUserLocationAccess {
                 for (let item of _data["roles"])
                     this.roles!.push(item);
             }
-            if (Array.isArray(_data["permissions"])) {
-                this.permissions = [] as any;
-                for (let item of _data["permissions"])
-                    this.permissions!.push(item);
+            if (Array.isArray(_data["globalContextPermissions"])) {
+                this.globalContextPermissions = [] as any;
+                for (let item of _data["globalContextPermissions"])
+                    this.globalContextPermissions!.push(item);
+            }
+            if (Array.isArray(_data["allVolunteerFamiliesContextPermissions"])) {
+                this.allVolunteerFamiliesContextPermissions = [] as any;
+                for (let item of _data["allVolunteerFamiliesContextPermissions"])
+                    this.allVolunteerFamiliesContextPermissions!.push(item);
+            }
+            if (Array.isArray(_data["allPartneringFamiliesContextPermissions"])) {
+                this.allPartneringFamiliesContextPermissions = [] as any;
+                for (let item of _data["allPartneringFamiliesContextPermissions"])
+                    this.allPartneringFamiliesContextPermissions!.push(item);
             }
         }
     }
@@ -8333,10 +8788,20 @@ export class UserLocationAccess implements IUserLocationAccess {
             for (let item of this.roles)
                 data["roles"].push(item);
         }
-        if (Array.isArray(this.permissions)) {
-            data["permissions"] = [];
-            for (let item of this.permissions)
-                data["permissions"].push(item);
+        if (Array.isArray(this.globalContextPermissions)) {
+            data["globalContextPermissions"] = [];
+            for (let item of this.globalContextPermissions)
+                data["globalContextPermissions"].push(item);
+        }
+        if (Array.isArray(this.allVolunteerFamiliesContextPermissions)) {
+            data["allVolunteerFamiliesContextPermissions"] = [];
+            for (let item of this.allVolunteerFamiliesContextPermissions)
+                data["allVolunteerFamiliesContextPermissions"].push(item);
+        }
+        if (Array.isArray(this.allPartneringFamiliesContextPermissions)) {
+            data["allPartneringFamiliesContextPermissions"] = [];
+            for (let item of this.allPartneringFamiliesContextPermissions)
+                data["allPartneringFamiliesContextPermissions"].push(item);
         }
         return data;
     }
@@ -8345,7 +8810,9 @@ export class UserLocationAccess implements IUserLocationAccess {
 export interface IUserLocationAccess {
     locationId?: string;
     roles?: string[];
-    permissions?: Permission[];
+    globalContextPermissions?: Permission[];
+    allVolunteerFamiliesContextPermissions?: Permission[];
+    allPartneringFamiliesContextPermissions?: Permission[];
 }
 
 export abstract class VolunteerFamilyCommand implements IVolunteerFamilyCommand {

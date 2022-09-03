@@ -73,15 +73,6 @@ namespace CareTogether
                 locationIdentity.HasClaim(Claims.LocationId, locationId.ToString());
         }
 
-        public static bool HasPermission(this ClaimsPrincipal principal,
-            Guid organizationId, Guid locationId, Permission permission)
-        {
-            var locationIdentity = principal.LocationIdentity(organizationId, locationId);
-
-            return locationIdentity != null &&
-                locationIdentity.HasClaim(Claims.Permission, permission.ToString());
-        }
-
         public static ClaimsIdentity? LocationIdentity(this ClaimsPrincipal principal,
             Guid organizationId, Guid locationId) =>
             principal.Identities

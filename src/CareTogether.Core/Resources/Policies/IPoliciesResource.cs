@@ -16,12 +16,30 @@ namespace CareTogether.Resources.Policies
 
     public sealed record SourcePhoneNumberConfiguration(string SourcePhoneNumber, string Description);
 
-    public sealed record RoleDefinition(string RoleName, ImmutableList<Permission> Permissions);
+    public sealed record RoleDefinition(string RoleName,
+        ImmutableList<ContextualPermissionSet> PermissionSets);
+
+    public sealed record ContextualPermissionSet(PermissionContext Context, ImmutableList<Permission> Permissions);
+
+    [JsonHierarchyBase]
+    public abstract partial record PermissionContext();
+    public sealed record GlobalPermissionContext() : PermissionContext();
+    public sealed record OwnFamilyPermissionContext() : PermissionContext();
+    public sealed record AllVolunteerFamiliesPermissionContext() : PermissionContext();
+    public sealed record AllPartneringFamiliesPermissionContext() : PermissionContext();
+    public sealed record AssignedFunctionsInReferralPartneringFamilyPermissionContext(
+        bool? WhenReferralIsOpen, ImmutableList<string>? WhenOwnFunctionIsIn) : PermissionContext();
+    public sealed record OwnReferralAssigneeFamiliesPermissionContext(
+        bool? WhenReferralIsOpen, ImmutableList<string>? WhenAssigneeFunctionIsIn) : PermissionContext();
+    public sealed record AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext(
+        bool? WhenReferralIsOpen, ImmutableList<string>? WhenOwnFunctionIsIn, ImmutableList<string>? WhenAssigneeFunctionIsIn)
+        : PermissionContext();
+
 
     public sealed record UserAccessConfiguration(Guid PersonId,
-        ImmutableList<UserLocationRole> LocationRoles);
+        ImmutableList<UserLocationRoles> LocationRoles);
 
-    public sealed record UserLocationRole(Guid LocationId, string RoleName);
+    public sealed record UserLocationRoles(Guid LocationId, ImmutableList<string> RoleNames);
 
     public sealed record EffectiveLocationPolicy(
         ImmutableDictionary<string, ActionRequirement> ActionDefinitions,
@@ -137,6 +155,9 @@ namespace CareTogether.Resources.Policies
     public interface IPoliciesResource
     {
         Task<OrganizationConfiguration> GetConfigurationAsync(Guid organizationId);
+
+        Task<OrganizationConfiguration> UpsertRoleDefinitionAsync(Guid organizationId,
+            string roleName, RoleDefinition role);
 
         Task<EffectiveLocationPolicy> GetCurrentPolicy(Guid organizationId, Guid locationId);
     }

@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { useRecoilValue } from 'recoil';
 import { CombinedFamilyInfo, Permission, UploadedDocumentInfo } from '../GeneratedClient';
 import { downloadFile } from '../Model/FilesModel';
-import { currentOrganizationState, currentLocationState, usePermissions } from '../Model/SessionModel';
+import { currentOrganizationState, currentLocationState, useFamilyPermissions } from '../Model/SessionModel';
 import { DeleteDocumentDialog } from './DeleteDocumentDialog';
 
 type FamilyDocumentsProps = {
@@ -22,7 +22,7 @@ export function FamilyDocuments({ family }: FamilyDocumentsProps) {
     setDeleteParameter({familyId: family.family!.id!, document: document});
   }
 
-  const permissions = usePermissions();
+  const permissions = useFamilyPermissions(family);
   
   return (
     <>

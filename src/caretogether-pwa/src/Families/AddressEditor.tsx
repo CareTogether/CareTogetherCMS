@@ -5,7 +5,7 @@ import { useInlineEditor } from '../Hooks/useInlineEditor';
 import { PersonEditorProps } from "./PersonEditorProps";
 import { Address, IAddress, Permission } from '../GeneratedClient';
 import { MyLocation, LocationSearching } from '@mui/icons-material';
-import { usePermissions } from '../Model/SessionModel';
+import { useFamilyIdPermissions } from '../Model/SessionModel';
 
 type AddressEditorProps = PersonEditorProps & {
   add?: boolean
@@ -55,7 +55,7 @@ export function AddressEditor({ familyId, person, add, address }: AddressEditorP
     editor.setEditing(true);
   }
 
-  const permissions = usePermissions();
+  const permissions = useFamilyIdPermissions(familyId);
   
   return (
     <Grid container rowSpacing={2} columnSpacing={2}>

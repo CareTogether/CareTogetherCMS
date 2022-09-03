@@ -46,11 +46,14 @@ namespace CareTogether.Managers.Directory
             var families = await directoryResource.ListFamiliesAsync(organizationId, locationId);
 
             var visibleFamilies = (await families.Select(async family =>
-                await authorizationEngine.AuthorizeFamilyAccessAsync(organizationId, locationId, user, family.Id)
-                ? family
-                : null)
+                {
+                    var permissions = await authorizationEngine.AuthorizeUserAccessAsync(organizationId, locationId, user,
+                        new FamilyAuthorizationContext(family.Id));
+                    return (family, hasPermissions: !permissions.IsEmpty);
+                })
                 .WhenAll())
-                .Where(family => family != null)
+                .Where(x => x.hasPermissions)
+                .Select(x => x.family)
                 .Cast<Family>()
                 .ToImmutableList();
 

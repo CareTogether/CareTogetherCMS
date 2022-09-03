@@ -1,4 +1,5 @@
-﻿using CareTogether.Utilities.FileStore;
+﻿using CareTogether.Engines.Authorization;
+using CareTogether.Utilities.FileStore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -12,23 +13,26 @@ namespace CareTogether.Api.Controllers
     public class FilesController : ControllerBase
     {
         private readonly IFileStore fileStore;
+        private readonly IAuthorizationEngine authorizationEngine;
 
 
         public sealed record DocumentUploadInfo(Guid DocumentId, Uri ValetUrl);
 
 
-        public FilesController(IFileStore fileStore)
+        public FilesController(IFileStore fileStore, IAuthorizationEngine authorizationEngine)
         {
             this.fileStore = fileStore;
+            this.authorizationEngine = authorizationEngine;
         }
 
 
         [HttpGet("{documentId:guid}")]
         public async Task<ActionResult<Uri>> GetReadValetUrl(Guid organizationId, Guid locationId, Guid documentId)
         {
-            if (User.HasPermission(organizationId, locationId, Permission.ReadFamilyDocuments))
+            var contextPermissions = await authorizationEngine.AuthorizeUserAccessAsync(
+                organizationId, locationId, User, new GlobalAuthorizationContext()); //TODO: Authorize this in the context of the associated family.
+            if (contextPermissions.Contains(Permission.ReadFamilyDocuments))
             {
-                //TODO: Authorize this via policy! Best to do this in the context of an associated referral or approval, instead of at this level.
                 var valetUrl = await fileStore.GetValetReadUrlAsync(organizationId, locationId, documentId);
                 return Ok(valetUrl);
             }
@@ -39,9 +43,10 @@ namespace CareTogether.Api.Controllers
         [HttpPost("upload")]
         public async Task<ActionResult<DocumentUploadInfo>> GenerateUploadValetUrl(Guid organizationId, Guid locationId)
         {
-            if (User.HasPermission(organizationId, locationId, Permission.UploadFamilyDocuments))
+            var contextPermissions = await authorizationEngine.AuthorizeUserAccessAsync(
+                organizationId, locationId, User, new GlobalAuthorizationContext()); //TODO: Authorize this in the context of the associated family.
+            if (contextPermissions.Contains(Permission.UploadFamilyDocuments))
             {
-                //TODO: Authorize this via policy! Best to do this in the context of an associated referral or approval, instead of at this level.
                 var documentId = Guid.NewGuid();
                 var valetUrl = await fileStore.GetValetCreateUrlAsync(organizationId, locationId, documentId);
                 return Ok(new DocumentUploadInfo(documentId, valetUrl));

@@ -12,7 +12,7 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { DeletePersonDialog } from './DeletePersonDialog';
 import { EthnicityEditor } from './EthnicityEditor';
 import { ChildCustodyRelationshipEditor } from './ChildCustodyRelationshipEditor';
-import { usePermissions } from '../Model/SessionModel';
+import { useFamilyIdPermissions } from '../Model/SessionModel';
 
 interface EditChildDialogProps {
   handle: DialogHandle
@@ -30,7 +30,7 @@ export function EditChildDialog({ handle, child, familyAdults, custodialRelation
 
   const deleteDialogHandle = useDialogHandle();
 
-  const permissions = usePermissions();
+  const permissions = useFamilyIdPermissions(familyId!);
   
   return (
     <Dialog open={handle.open} onClose={handle.closeDialog}

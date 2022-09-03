@@ -1,5 +1,5 @@
-import { selector } from "recoil";
-import { ConfigurationClient, RequirementStage, VolunteerFamilyRequirementScope } from "../GeneratedClient";
+import { atom, selector } from "recoil";
+import { ConfigurationClient, OrganizationConfiguration, RequirementStage, VolunteerFamilyRequirementScope } from "../GeneratedClient";
 import { accessTokenFetchQuery } from "../Authentication/AuthenticatedHttp";
 import { currentLocationState, currentOrganizationIdQuery, currentOrganizationState, selectedLocationIdState } from "./SessionModel";
 import { useLoadable } from "../Hooks/useLoadable";
@@ -12,13 +12,24 @@ export const configurationClientQuery = selector({
   }
 });
 
+//TODO: Distinguish by organization ID
+export const organizationConfigurationEdited = atom<OrganizationConfiguration | null>({
+  key: 'organizationConfigurationEdited',
+  default: null
+});
+
 export const organizationConfigurationQuery = selector({
   key: 'organizationConfigurationQuery',
   get: async ({get}) => {
     const organizationId = get(currentOrganizationIdQuery);
     const configurationClient = get(configurationClientQuery);
-    const dataResponse = await configurationClient.getOrganizationConfiguration(organizationId);
-    return dataResponse;
+    const edited = get(organizationConfigurationEdited);
+    if (edited) {
+      return edited;
+    } else {
+      const dataResponse = await configurationClient.getOrganizationConfiguration(organizationId);
+      return dataResponse;
+    }
   }});
 
 export const organizationConfigurationData = selector({//TODO: Deprecated
@@ -144,6 +155,17 @@ export const adultRequirementsData = selector({
             : previous.concat(individualApprovalRequirement);
         }, [] as string[])
         .sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
+  }});
+
+export const allFunctionsInPolicyQuery = selector({
+  key: 'allFunctionsInPolicyQuery',
+  get: ({get}) => {
+    const policy = get(policyData);
+    const allFunctions = policy.referralPolicy?.arrangementPolicies?.flatMap(arrangement =>
+      arrangement.arrangementFunctions?.map(arrangementFunction => arrangementFunction.functionName!) || []) || [];
+    const uniqueFunctions = allFunctions.sort((a, b) => a < b ? -1 : a > b ? 1 : 0).filter(v =>
+      allFunctions.filter(x => x === v).length === 1);
+    return uniqueFunctions;
   }});
 
 export interface LocationContext {
