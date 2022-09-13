@@ -122,7 +122,7 @@ namespace CareTogether.Resources.Directory
 
         Task<ImmutableList<Person>> ListPeopleAsync(Guid organizationId, Guid locationId);
 
-        Task<Family> FindFamilyAsync(Guid organizationId, Guid locationId, Guid familyId);
+        Task<Family?> FindFamilyAsync(Guid organizationId, Guid locationId, Guid familyId);
 
         Task<Family?> FindPersonFamilyAsync(Guid organizationId, Guid locationId, Guid personId);
 

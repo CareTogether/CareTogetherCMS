@@ -73,12 +73,12 @@ namespace CareTogether.Resources.Directory
             }
         }
 
-        public async Task<Family> FindFamilyAsync(Guid organizationId, Guid locationId, Guid familyId)
+        public async Task<Family?> FindFamilyAsync(Guid organizationId, Guid locationId, Guid familyId)
         {
             using (var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId)))
             {
                 var result = lockedModel.Value.FindFamilies(f => f.Id == familyId);
-                return result.Single();
+                return result.SingleOrDefault();
             }
         }
 

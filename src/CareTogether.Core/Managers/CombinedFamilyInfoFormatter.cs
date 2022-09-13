@@ -46,6 +46,8 @@ namespace CareTogether.Managers
             var locationPolicy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
 
             var family = await directoryResource.FindFamilyAsync(organizationId, locationId, familyId);
+            if (family == null)
+                throw new InvalidOperationException("The specified family ID was not found.");
 
             var partneringFamilyInfo = await RenderPartneringFamilyInfoAsync(organizationId, locationId, family, user);
 
