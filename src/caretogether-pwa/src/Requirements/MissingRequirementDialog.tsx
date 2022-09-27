@@ -43,6 +43,7 @@ export function MissingRequirementDialog({
   const locationId = useRecoilValue(currentLocationState);
   const [additionalComments, setAdditionalComments] = useState("");
   const [exemptionExpiresAtLocal, setExemptionExpiresAtLocal] = useState(null as Date | null);
+  const [exemptAll, setExemptAll] = useState(false);
 
   const familyLookup = useFamilyLookup();
   const contextFamilyId =
@@ -148,7 +149,7 @@ export function MissingRequirementDialog({
       case 'Arrangement':
         await referrals.exemptArrangementRequirement(contextFamilyId, context.referralId,
           applyToArrangements.map(arrangement => arrangement.id!),
-          requirement as MissingArrangementRequirement, additionalComments, exemptionExpiresAtLocal);
+          requirement as MissingArrangementRequirement, exemptAll, additionalComments, exemptionExpiresAtLocal);
         break;
       case 'Family Volunteer Assignment':
         await referrals.exemptVolunteerFamilyAssignmentRequirement(contextFamilyId, context.referralId,
@@ -309,6 +310,19 @@ export function MissingRequirementDialog({
                       label={`${arrangement.arrangementType} - ${personNameString(personLookup(arrangement.partneringFamilyPersonId))}`} />
                   )}
                 </FormGroup>
+              </FormControl>
+            </Grid>}
+          {requirement instanceof MissingArrangementRequirement &&
+            (requirement.dueBy || requirement.pastDueSince) &&
+            <Grid item xs={12}>
+              <Divider sx={{marginBottom: 1}} />
+              <FormControl component="fieldset" variant="standard">
+                <FormControlLabel
+                  control={<Checkbox size="medium"
+                    checked={exemptAll}
+                    onChange={(_, checked) => setExemptAll(checked)}
+                    name='exempt-all' />}
+                  label="Exempt ALL instances of this requirement for the selected arrangement(s)?" />
               </FormControl>
             </Grid>}
           <Grid item xs={12}>

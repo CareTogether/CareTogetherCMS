@@ -166,7 +166,7 @@ export function useReferralsModel() {
     });
   const exemptArrangementRequirement = useArrangementsCommandCallbackWithLocation(
     async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementIds: string[],
-      requirement: MissingArrangementRequirement,
+      requirement: MissingArrangementRequirement, exemptAll: Boolean,
       additionalComments: string, exemptionExpiresAtLocal: Date | null) => {
       const command = new ExemptArrangementRequirement({
         familyId: partneringFamilyId,
@@ -174,7 +174,9 @@ export function useReferralsModel() {
         arrangementIds: arrangementIds
       });
       command.requirementName = requirement.actionName;
-      command.dueDate = requirement.dueBy || requirement.pastDueSince;
+      command.dueDate = exemptAll
+        ? undefined
+        : requirement.dueBy || requirement.pastDueSince;
       command.additionalComments = additionalComments;
       command.exemptionExpiresAtUtc = exemptionExpiresAtLocal ?? undefined;
       return command;

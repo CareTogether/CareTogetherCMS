@@ -47,6 +47,7 @@ export function ExemptedRequirementRow({ requirement, context }: ExemptedRequire
         </>}>
           <>
             <span>
+              {!requirement.dueDate && <span style={{fontWeight:'bold'}}>All&nbsp;</span>}
               {requirement.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               {requirement.exemptionExpiresAtUtc &&
                 <span style={{ float: 'right' }}>
