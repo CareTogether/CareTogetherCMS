@@ -3,6 +3,7 @@ namespace CareTogether.Api
 {
     public enum FeatureFlags
     {
-        ViewReferrals
+        ViewReferrals,
+        ExemptAll
     }
 }

@@ -15,6 +15,7 @@ import { personNameString } from "../Families/PersonName";
 import { DialogHandle } from "../Hooks/useDialogHandle";
 import { familyNameString } from "../Families/FamilyName";
 import { add, format, formatDuration } from "date-fns";
+import { useFeatureFlags } from '../Model/ConfigurationModel';
 
 type MissingRequirementDialogProps = {
   handle: DialogHandle
@@ -28,6 +29,8 @@ export function MissingRequirementDialog({
   const directory = useDirectoryModel();
   const referrals = useReferralsModel();
   const volunteers = useVolunteersModel();
+
+  const featureFlags = useFeatureFlags();
 
   const validityDuration = policy.validity
     ? { days: parseInt(policy.validity.split('.')[0]) }
@@ -312,7 +315,8 @@ export function MissingRequirementDialog({
                 </FormGroup>
               </FormControl>
             </Grid>}
-          {requirement instanceof MissingArrangementRequirement &&
+          {featureFlags?.exemptAll &&
+            requirement instanceof MissingArrangementRequirement &&
             (requirement.dueBy || requirement.pastDueSince) &&
             <Grid item xs={12}>
               <Divider sx={{marginBottom: 1}} />
