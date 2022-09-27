@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Api.Controllers
 {
-    public sealed record CurrentFeatureFlags(bool ViewReferrals);
+    public sealed record CurrentFeatureFlags(bool ViewReferrals, bool ExemptAll);
 
     [ApiController]
     public class ConfigurationController : ControllerBase
@@ -56,7 +56,8 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<CurrentFeatureFlags>> GetLocationFlags(Guid organizationId)
         {
             var result = new CurrentFeatureFlags(
-                ViewReferrals: await featureManager.IsEnabledAsync(nameof(FeatureFlags.ViewReferrals))
+                ViewReferrals: await featureManager.IsEnabledAsync(nameof(FeatureFlags.ViewReferrals)),
+                ExemptAll: await featureManager.IsEnabledAsync(nameof(FeatureFlags.ExemptAll))
                 );
             return Ok(result);
         }

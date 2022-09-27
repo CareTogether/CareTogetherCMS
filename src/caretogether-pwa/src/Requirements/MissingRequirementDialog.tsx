@@ -15,6 +15,7 @@ import { personNameString } from "../Families/PersonName";
 import { DialogHandle } from "../Hooks/useDialogHandle";
 import { familyNameString } from "../Families/FamilyName";
 import { add, format, formatDuration } from "date-fns";
+import { useFeatureFlags } from '../Model/ConfigurationModel';
 
 type MissingRequirementDialogProps = {
   handle: DialogHandle
@@ -28,6 +29,8 @@ export function MissingRequirementDialog({
   const directory = useDirectoryModel();
   const referrals = useReferralsModel();
   const volunteers = useVolunteersModel();
+
+  const featureFlags = useFeatureFlags();
 
   const validityDuration = policy.validity
     ? { days: parseInt(policy.validity.split('.')[0]) }
@@ -43,6 +46,7 @@ export function MissingRequirementDialog({
   const locationId = useRecoilValue(currentLocationState);
   const [additionalComments, setAdditionalComments] = useState("");
   const [exemptionExpiresAtLocal, setExemptionExpiresAtLocal] = useState(null as Date | null);
+  const [exemptAll, setExemptAll] = useState(false);
 
   const familyLookup = useFamilyLookup();
   const contextFamilyId =
@@ -148,7 +152,7 @@ export function MissingRequirementDialog({
       case 'Arrangement':
         await referrals.exemptArrangementRequirement(contextFamilyId, context.referralId,
           applyToArrangements.map(arrangement => arrangement.id!),
-          requirement as MissingArrangementRequirement, additionalComments, exemptionExpiresAtLocal);
+          requirement as MissingArrangementRequirement, exemptAll, additionalComments, exemptionExpiresAtLocal);
         break;
       case 'Family Volunteer Assignment':
         await referrals.exemptVolunteerFamilyAssignmentRequirement(contextFamilyId, context.referralId,
@@ -309,6 +313,20 @@ export function MissingRequirementDialog({
                       label={`${arrangement.arrangementType} - ${personNameString(personLookup(arrangement.partneringFamilyPersonId))}`} />
                   )}
                 </FormGroup>
+              </FormControl>
+            </Grid>}
+          {featureFlags?.exemptAll &&
+            requirement instanceof MissingArrangementRequirement &&
+            (requirement.dueBy || requirement.pastDueSince) && // Only monitoring requirements will have one of these dates set.
+            <Grid item xs={12}>
+              <Divider sx={{marginBottom: 1}} />
+              <FormControl component="fieldset" variant="standard">
+                <FormControlLabel
+                  control={<Checkbox size="medium"
+                    checked={exemptAll}
+                    onChange={(_, checked) => setExemptAll(checked)}
+                    name='exempt-all' />}
+                  label="Exempt ALL instances of this requirement for the selected arrangement(s)?" />
               </FormControl>
             </Grid>}
           <Grid item xs={12}>
