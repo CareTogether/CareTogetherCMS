@@ -9,6 +9,8 @@ import { PersonName } from "../Families/PersonName";
 import { IconRow } from "../IconRow";
 import { ExemptedRequirementDialog } from "./ExemptedRequirementDialog";
 import { RequirementContext } from "./RequirementContext";
+import { useRecoilValue } from "recoil";
+import { policyData } from "../Model/ConfigurationModel";
 
 type ExemptedRequirementRowProps = {
   requirement: ExemptedRequirementInfo;
@@ -38,7 +40,24 @@ export function ExemptedRequirementRow({ requirement, context }: ExemptedRequire
 
   const familyLookup = useFamilyLookup();
   const personLookup = usePersonLookup();
-  
+
+  const policy = useRecoilValue(policyData);
+
+  const [partneringFamilyId, referralId, arrangementId] =
+    (context.kind === 'Arrangement' ||
+      context.kind === 'Family Volunteer Assignment' ||
+      context.kind === 'Individual Volunteer Assignment')
+    ? [context.partneringFamilyId, context.referralId, context.arrangementId]
+    : [undefined, undefined, undefined];
+  const partneringFamilyInfo = familyLookup(partneringFamilyId)?.partneringFamilyInfo;
+  const referral = partneringFamilyInfo?.closedReferrals?.concat(
+    partneringFamilyInfo.openReferral || []).find(r => r.id === referralId);
+  const arrangement = referral?.arrangements?.find(a => a.id === arrangementId);
+  const arrangementPolicy = policy.referralPolicy?.arrangementPolicies?.find(a => a.arrangementType === arrangement?.arrangementType);
+  const allMonitoringRequirements = arrangementPolicy?.requiredMonitoringActions?.concat(
+    arrangementPolicy.arrangementFunctions?.flatMap(f => f.variants?.flatMap(v => v.requiredMonitoringActions || []) || []) || []);
+  const isArrangementMonitoringRequirement = allMonitoringRequirements?.some(r => r.actionName === requirement.requirementName);
+
   return (
     <>
       <IconRow icon="🚫" onClick={canExempt ? dialogHandle.openDialog : undefined}>
@@ -47,7 +66,8 @@ export function ExemptedRequirementRow({ requirement, context }: ExemptedRequire
         </>}>
           <>
             <span>
-              {!requirement.dueDate && <span style={{fontWeight:'bold'}}>All&nbsp;</span>}
+              {isArrangementMonitoringRequirement && !requirement.dueDate &&
+                <span style={{fontWeight:'bold'}}>All&nbsp;</span>}
               {requirement.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               {requirement.exemptionExpiresAtUtc &&
                 <span style={{ float: 'right' }}>

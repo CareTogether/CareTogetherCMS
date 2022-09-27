@@ -317,7 +317,7 @@ export function MissingRequirementDialog({
             </Grid>}
           {featureFlags?.exemptAll &&
             requirement instanceof MissingArrangementRequirement &&
-            (requirement.dueBy || requirement.pastDueSince) &&
+            (requirement.dueBy || requirement.pastDueSince) && // Only monitoring requirements will have one of these dates set.
             <Grid item xs={12}>
               <Divider sx={{marginBottom: 1}} />
               <FormControl component="fieldset" variant="standard">
