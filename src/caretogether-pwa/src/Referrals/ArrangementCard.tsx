@@ -160,7 +160,7 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
       }}>
         <Typography variant="body2" component="div">
           <strong><PersonName person={personLookup(partneringFamily.family!.id, arrangement.partneringFamilyPersonId)} /></strong>
-          {arrangement.phase === ArrangementPhase.Started &&
+          {(arrangement.phase === ArrangementPhase.Started || arrangement.phase === ArrangementPhase.Ended) &&
             (arrangementPolicy?.childInvolvement === ChildInvolvement.ChildHousing || arrangementPolicy?.childInvolvement === ChildInvolvement.DaytimeChildCareOnly) && (
             <>
               {summaryOnly
