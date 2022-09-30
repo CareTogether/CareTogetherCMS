@@ -234,7 +234,7 @@ export function useReferralsModel() {
   const exemptVolunteerFamilyAssignmentRequirement = useArrangementsCommandCallbackWithLocation(
     async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementIds: string[],
       assignment: FamilyVolunteerAssignment,
-      requirement: MissingArrangementRequirement,
+      requirement: MissingArrangementRequirement, exemptAll: Boolean,
       additionalComments: string, exemptionExpiresAtLocal: Date | null) => {
       const command = new ExemptVolunteerFamilyAssignmentRequirement({
         familyId: partneringFamilyId,
@@ -245,7 +245,9 @@ export function useReferralsModel() {
       command.arrangementFunctionVariant = assignment.arrangementFunctionVariant;
       command.volunteerFamilyId = assignment.familyId;
       command.requirementName = requirement.actionName;
-      command.dueDate = requirement.dueBy || requirement.pastDueSince;
+      command.dueDate = exemptAll
+        ? undefined
+        : requirement.dueBy || requirement.pastDueSince;
       command.additionalComments = additionalComments;
       command.exemptionExpiresAtUtc = exemptionExpiresAtLocal ?? undefined;
       return command;
@@ -309,7 +311,7 @@ export function useReferralsModel() {
   const exemptIndividualVolunteerAssignmentRequirement = useArrangementsCommandCallbackWithLocation(
     async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementIds: string[],
       assignment: IndividualVolunteerAssignment,
-      requirement: MissingArrangementRequirement,
+      requirement: MissingArrangementRequirement, exemptAll: Boolean,
       additionalComments: string, exemptionExpiresAtLocal: Date | null) => {
       const command = new ExemptIndividualVolunteerAssignmentRequirement({
         familyId: partneringFamilyId,
@@ -321,7 +323,9 @@ export function useReferralsModel() {
       command.volunteerFamilyId = assignment.familyId;
       command.personId = assignment.personId;
       command.requirementName = requirement.actionName;
-      command.dueDate = requirement.dueBy || requirement.pastDueSince;
+      command.dueDate = exemptAll
+        ? undefined
+        : requirement.dueBy || requirement.pastDueSince;
       command.additionalComments = additionalComments;
       command.exemptionExpiresAtUtc = exemptionExpiresAtLocal ?? undefined;
       return command;

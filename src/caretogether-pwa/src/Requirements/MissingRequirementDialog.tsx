@@ -97,6 +97,7 @@ export function MissingRequirementDialog({
     (notes !== "" || policy.noteEntry !== NoteEntryRequirement.Required) &&
     ((availableArrangements.length === 0) !== (applyToArrangements.length > 0)) // logical XOR
     : // grant exemption
+    ((availableArrangements.length === 0) !== (applyToArrangements.length > 0)) && // logical XOR
     additionalComments !== "";
 
   const requirementName = requirement instanceof MissingArrangementRequirement ? requirement.actionName! : requirement;
@@ -158,13 +159,13 @@ export function MissingRequirementDialog({
         await referrals.exemptVolunteerFamilyAssignmentRequirement(contextFamilyId, context.referralId,
           applyToArrangements.map(arrangement => arrangement.id!),
           context.assignment,
-          requirement as MissingArrangementRequirement, additionalComments, exemptionExpiresAtLocal);
+          requirement as MissingArrangementRequirement, exemptAll, additionalComments, exemptionExpiresAtLocal);
         break;
       case 'Individual Volunteer Assignment':
         await referrals.exemptIndividualVolunteerAssignmentRequirement(contextFamilyId, context.referralId,
           applyToArrangements.map(arrangement => arrangement.id!),
           context.assignment,
-          requirement as MissingArrangementRequirement, additionalComments, exemptionExpiresAtLocal);
+          requirement as MissingArrangementRequirement, exemptAll, additionalComments, exemptionExpiresAtLocal);
         break;
       case 'Volunteer Family':
         await volunteers.exemptVolunteerFamilyRequirement(contextFamilyId,
