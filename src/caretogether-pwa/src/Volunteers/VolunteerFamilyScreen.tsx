@@ -112,7 +112,9 @@ export function VolunteerFamilyScreen() {
           Note
         </Button>}
         {permissions(Permission.EditVolunteerRoleParticipation) &&
-          (participatingFamilyRoles.length > 0 || (volunteerFamily.volunteerFamilyInfo?.removedRoles?.length ?? 0 > 0)) &&
+          (participatingFamilyRoles.length > 0 ||
+            (volunteerFamily.volunteerFamilyInfo?.removedRoles &&
+              volunteerFamily.volunteerFamilyInfo.removedRoles.length > 0)) &&
           <IconButton
             onClick={(event) => setFamilyMoreMenuAnchor(event.currentTarget)}
             size="large">
