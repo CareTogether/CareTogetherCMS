@@ -97,6 +97,7 @@ export function MissingRequirementDialog({
     (notes !== "" || policy.noteEntry !== NoteEntryRequirement.Required) &&
     ((availableArrangements.length === 0) !== (applyToArrangements.length > 0)) // logical XOR
     : // grant exemption
+    ((availableArrangements.length === 0) !== (applyToArrangements.length > 0)) && // logical XOR
     additionalComments !== "";
 
   const requirementName = requirement instanceof MissingArrangementRequirement ? requirement.actionName! : requirement;
