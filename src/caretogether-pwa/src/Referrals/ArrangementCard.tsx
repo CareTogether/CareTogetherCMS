@@ -12,10 +12,11 @@ import {
   Table,
   TableBody,
   TableContainer,
+  TextField,
   Typography,
 } from '@mui/material';
 import { useState } from 'react';
-import { ArrangementPhase, Arrangement, CombinedFamilyInfo, ChildInvolvement, FunctionRequirement } from '../GeneratedClient';
+import { ArrangementPhase, Arrangement, CombinedFamilyInfo, ChildInvolvement, FunctionRequirement, Permission } from '../GeneratedClient';
 import { useFamilyLookup, usePersonLookup } from '../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
 import { FamilyName } from '../Families/FamilyName';
@@ -33,6 +34,11 @@ import { ArrangementCardTitle } from './ArrangementCardTitle';
 import { ArrangementFunctionRow } from './ArrangementFunctionRow';
 import { useCollapsed } from '../Hooks/useCollapsed';
 import { ArrangementComments } from './ArrangementComments';
+import { useInlineEditor } from '../Hooks/useInlineEditor';
+import { useReferralsModel } from '../Model/ReferralsModel';
+import { useFamilyIdPermissions } from '../Model/SessionModel';
+import { format } from 'date-fns';
+import { DatePicker } from '@mui/x-date-pickers';
 
 type ArrangementCardProps = {
   partneringFamily: CombinedFamilyInfo;
@@ -43,6 +49,7 @@ type ArrangementCardProps = {
 
 export function ArrangementCard({ partneringFamily, referralId, arrangement, summaryOnly }: ArrangementCardProps) {
   const policy = useRecoilValue(policyData);
+  const referralsModel = useReferralsModel();
 
   const familyLookup = useFamilyLookup();
   const personLookup = usePersonLookup();
@@ -51,15 +58,71 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
 
   const [collapsed, setCollapsed] = useCollapsed(`arrangement-${referralId}-${arrangement.id}`, false);
 
+  const partneringFamilyId = partneringFamily.family!.id!;
+  const permissions = useFamilyIdPermissions(partneringFamilyId);
+
   const arrangementRequirementContext: ArrangementContext = {
     kind: "Arrangement",
-    partneringFamilyId: partneringFamily.family!.id!,
+    partneringFamilyId: partneringFamilyId,
     referralId: referralId,
     arrangementId: arrangement.id!
   };
   
   const arrangementPolicy = policy.referralPolicy?.arrangementPolicies?.find(a => a.arrangementType === arrangement.arrangementType);
 
+  const plannedStartEditor = useInlineEditor(async value => {
+    await referralsModel.planArrangementStart(partneringFamilyId, referralId, arrangement.id!, value);
+  }, arrangement.plannedStartUtc || null);
+  
+  const plannedEndEditor = useInlineEditor(async value => {
+    await referralsModel.planArrangementEnd(partneringFamilyId, referralId, arrangement.id!, value);
+  }, arrangement.plannedEndUtc || null);
+
+  function ArrangementPlanDates() {
+    return (
+      <Box>
+        <span>Planned duration:&nbsp;</span>
+        {(!summaryOnly && permissions(Permission.EditArrangement))
+          ? <>
+              {plannedStartEditor.editing
+                ? <>
+                    <DatePicker
+                      label="Planned start"
+                      value={plannedStartEditor.value}
+                      onChange={(value: any) => plannedStartEditor.setValue(value)}
+                      renderInput={(params: any) => <TextField size='small' margin='dense' {...params} />} />
+                    {plannedStartEditor.cancelButton}
+                    {plannedStartEditor.saveButton}
+                  </>
+                : <>
+                    {plannedStartEditor.value ? format(plannedStartEditor.value, "M/d/yyyy") : "________"}
+                    {plannedStartEditor.editButton}
+                  </>}
+              <span>&nbsp;to&nbsp;</span>
+              {plannedEndEditor.editing
+                ? <>
+                    <DatePicker
+                      label="Planned end"
+                      value={plannedEndEditor.value}
+                      onChange={(value: any) => plannedEndEditor.setValue(value)}
+                      renderInput={(params: any) => <TextField size='small' margin='dense' {...params} />} />
+                    {plannedEndEditor.cancelButton}
+                    {plannedEndEditor.saveButton}
+                  </>
+                : <>
+                    {plannedEndEditor.value ? format(plannedEndEditor.value, "M/d/yyyy") : "________"}
+                    {plannedEndEditor.editButton}
+                  </>}
+            </>
+          : <>
+              {plannedStartEditor.value ? format(plannedStartEditor.value, "M/d/yyyy") : "________"}
+              <span>&nbsp;to&nbsp;</span>
+              {plannedEndEditor.value ? format(plannedEndEditor.value, "M/d/yyyy") : "________"}
+            </>}
+      </Box>
+    )
+  }
+  
   const missingAssignmentFunctions = arrangementPolicy?.arrangementFunctions?.filter(functionPolicy =>
     (functionPolicy.requirement === FunctionRequirement.ExactlyOne || functionPolicy.requirement === FunctionRequirement.OneOrMore) &&
     !arrangement.familyVolunteerAssignments?.some(x => x.arrangementFunction === functionPolicy.functionName) &&
@@ -188,8 +251,11 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
             </>
           )}
         </Typography>
+        {(arrangement.phase === ArrangementPhase.SettingUp ||
+          arrangement.phase === ArrangementPhase.ReadyToStart ||
+          arrangement.phase === ArrangementPhase.Started) &&
+          ArrangementPlanDates()}
         {!summaryOnly && (<>
-          <Box sx={{ height: '8px' }} />
           <ArrangementComments partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement} />
           <Accordion expanded={!collapsed} onChange={(event, isExpanded) => setCollapsed(!isExpanded)}
             variant="outlined" square disableGutters sx={{marginLeft:-2, marginRight:-2, border: 'none' }}>

@@ -5,8 +5,18 @@ import UndoIcon from '@mui/icons-material/Undo';
 import { useState } from "react";
 import { useBackdrop } from "./useBackdrop";
 
+export interface IInlineEditor<T> {
+  value: T | undefined
+  setValue: React.Dispatch<React.SetStateAction<T | undefined>>
+  editing: boolean
+  setEditing: React.Dispatch<React.SetStateAction<boolean>>
+  editButton: false | JSX.Element
+  cancelButton: false | JSX.Element
+  saveButton: false | JSX.Element
+}
+
 export function useInlineEditor<T, U>(onSave: (value: T) => Promise<U>, savedValue?: T,
-  validate?: (value?: T) => boolean) {
+  validate?: (value?: T) => boolean): IInlineEditor<T> {
   const withBackdrop = useBackdrop();
 
   const [editing, setEditing] = useState(false);

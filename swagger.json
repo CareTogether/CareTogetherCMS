@@ -2578,6 +2578,16 @@
             "format": "date-time",
             "nullable": true
           },
+          "plannedStartUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "plannedEndUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "completedRequirements": {
             "type": "array",
             "items": {
@@ -2609,6 +2619,12 @@
             }
           },
           "childLocationHistory": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChildLocationHistoryEntry"
+            }
+          },
+          "childLocationPlan": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ChildLocationHistoryEntry"

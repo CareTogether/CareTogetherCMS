@@ -4132,12 +4132,15 @@ export class Arrangement implements IArrangement {
     startedAtUtc?: Date | undefined;
     endedAtUtc?: Date | undefined;
     cancelledAtUtc?: Date | undefined;
+    plannedStartUtc?: Date | undefined;
+    plannedEndUtc?: Date | undefined;
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
     missingRequirements?: MissingArrangementRequirement[];
     individualVolunteerAssignments?: IndividualVolunteerAssignment[];
     familyVolunteerAssignments?: FamilyVolunteerAssignment[];
     childLocationHistory?: ChildLocationHistoryEntry[];
+    childLocationPlan?: ChildLocationHistoryEntry[];
     comments?: string | undefined;
 
     constructor(data?: IArrangement) {
@@ -4159,6 +4162,8 @@ export class Arrangement implements IArrangement {
             this.startedAtUtc = _data["startedAtUtc"] ? new Date(_data["startedAtUtc"].toString()) : <any>undefined;
             this.endedAtUtc = _data["endedAtUtc"] ? new Date(_data["endedAtUtc"].toString()) : <any>undefined;
             this.cancelledAtUtc = _data["cancelledAtUtc"] ? new Date(_data["cancelledAtUtc"].toString()) : <any>undefined;
+            this.plannedStartUtc = _data["plannedStartUtc"] ? new Date(_data["plannedStartUtc"].toString()) : <any>undefined;
+            this.plannedEndUtc = _data["plannedEndUtc"] ? new Date(_data["plannedEndUtc"].toString()) : <any>undefined;
             if (Array.isArray(_data["completedRequirements"])) {
                 this.completedRequirements = [] as any;
                 for (let item of _data["completedRequirements"])
@@ -4189,6 +4194,11 @@ export class Arrangement implements IArrangement {
                 for (let item of _data["childLocationHistory"])
                     this.childLocationHistory!.push(ChildLocationHistoryEntry.fromJS(item));
             }
+            if (Array.isArray(_data["childLocationPlan"])) {
+                this.childLocationPlan = [] as any;
+                for (let item of _data["childLocationPlan"])
+                    this.childLocationPlan!.push(ChildLocationHistoryEntry.fromJS(item));
+            }
             this.comments = _data["comments"];
         }
     }
@@ -4210,6 +4220,8 @@ export class Arrangement implements IArrangement {
         data["startedAtUtc"] = this.startedAtUtc ? this.startedAtUtc.toISOString() : <any>undefined;
         data["endedAtUtc"] = this.endedAtUtc ? this.endedAtUtc.toISOString() : <any>undefined;
         data["cancelledAtUtc"] = this.cancelledAtUtc ? this.cancelledAtUtc.toISOString() : <any>undefined;
+        data["plannedStartUtc"] = this.plannedStartUtc ? this.plannedStartUtc.toISOString() : <any>undefined;
+        data["plannedEndUtc"] = this.plannedEndUtc ? this.plannedEndUtc.toISOString() : <any>undefined;
         if (Array.isArray(this.completedRequirements)) {
             data["completedRequirements"] = [];
             for (let item of this.completedRequirements)
@@ -4240,6 +4252,11 @@ export class Arrangement implements IArrangement {
             for (let item of this.childLocationHistory)
                 data["childLocationHistory"].push(item.toJSON());
         }
+        if (Array.isArray(this.childLocationPlan)) {
+            data["childLocationPlan"] = [];
+            for (let item of this.childLocationPlan)
+                data["childLocationPlan"].push(item.toJSON());
+        }
         data["comments"] = this.comments;
         return data;
     }
@@ -4254,12 +4271,15 @@ export interface IArrangement {
     startedAtUtc?: Date | undefined;
     endedAtUtc?: Date | undefined;
     cancelledAtUtc?: Date | undefined;
+    plannedStartUtc?: Date | undefined;
+    plannedEndUtc?: Date | undefined;
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
     missingRequirements?: MissingArrangementRequirement[];
     individualVolunteerAssignments?: IndividualVolunteerAssignment[];
     familyVolunteerAssignments?: FamilyVolunteerAssignment[];
     childLocationHistory?: ChildLocationHistoryEntry[];
+    childLocationPlan?: ChildLocationHistoryEntry[];
     comments?: string | undefined;
 }
 
