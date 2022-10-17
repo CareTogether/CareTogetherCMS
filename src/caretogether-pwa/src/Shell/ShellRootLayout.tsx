@@ -24,6 +24,7 @@ function ShellRootLayout({ children }: ShellRootLayoutProps) {
         <Container maxWidth={false} sx={{
             marginTop: { xs: 7, sm: 8, md: 6 },
             marginBottom: isDesktop ? 0 : 7,
+            paddingBottom: isDesktop ? 0 : 7,
             backgroundColor: '#fff'
           }}>
           {children}
