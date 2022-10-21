@@ -1,4 +1,4 @@
-import { Container, Toolbar, Grid, Button, useMediaQuery, useTheme, Box } from '@mui/material';
+import { Container, Toolbar, Grid, Button, useMediaQuery, useTheme, Box, Popover, IconButton, FormControl, FormLabel, FormGroup, FormControlLabel, Checkbox } from '@mui/material';
 import { Arrangement, ArrangementPolicy, CompletedCustomFieldInfo, Permission, ReferralCloseReason } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { partneringFamiliesData } from '../Model/ReferralsModel';
@@ -7,7 +7,7 @@ import AddCircleIcon from '@mui/icons-material/AddCircle';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { PartneringAdultCard } from './PartneringAdultCard';
 import { PartneringChildCard } from './PartneringChildCard';
-import { useState } from 'react';
+import { ChangeEvent, useState } from 'react';
 import { AddAdultDialog } from '../Families/AddAdultDialog';
 import { AddChildDialog } from '../Families/AddChildDialog';
 import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
@@ -32,6 +32,8 @@ import { PrimaryContactEditor } from '../Families/PrimaryContactEditor';
 import useScreenTitle from '../Shell/ShellScreenTitle';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useLoadable } from '../Hooks/useLoadable';
+import { FilterAlt } from '@mui/icons-material';
+import { IFilterOption } from '../Model/IFilterOption';
 
 const sortArrangementsByStartDateDescThenCreateDateDesc = (a: Arrangement,b: Arrangement) => {
   return ((b.startedAtUtc ?? new Date()).getTime() - (a.startedAtUtc ?? new Date()).getTime()) || 
@@ -79,6 +81,68 @@ export function PartneringFamilyScreen() {
   useScreenTitle(partneringFamily
     ? `${partneringFamily.family?.adults!.filter(adult => adult.item1!.id === partneringFamily.family!.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family`
     : "...");
+
+  //#region Arrangement Filtering
+  const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
+  const handleFilterClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleFilterClose = () => {
+    setAnchorEl(null);
+  };
+
+  const open = Boolean(anchorEl);
+  const id = open ? 'Filter' : undefined;
+
+  enum ArrangementFilterType {
+    Active = "Active",
+    Cancelled = "Cancelled"
+  }
+  const defaultArrangementTypes = [ArrangementFilterType.Active];
+  const [arrangementFilterOptions, setArrangementFilterOptions] = useState<IFilterOption[]>(
+    Object.keys(ArrangementFilterType).map(k => {
+      return {
+        key: k,
+        text: k,
+        selected: defaultArrangementTypes.includes(k as ArrangementFilterType)
+      }
+    })
+  );
+
+  const filterArrangements = (event: ChangeEvent<HTMLInputElement>, checked: boolean) => {
+    setArrangementFilterOptions(arrangementFilterOptions.map(o => {
+      if (o.text === event.target.name) {
+        o.selected = !o.selected;
+      }
+      return o;
+    }));
+  }
+
+  const meetsArrangementFilterCriteria = (arrangement: Arrangement): boolean => {
+    // TODO: Reduce the number of times this method fires on the initial page load
+    let result = false;
+    const selectedOptions = arrangementFilterOptions.filter(o => o.selected).map(o => o.text);    
+    if (selectedOptions.length) {
+      selectedOptions.forEach((option) => {
+        switch(option as ArrangementFilterType) {
+          case ArrangementFilterType.Active:
+            if (arrangement.cancelledAtUtc === undefined) {
+              result = true;
+            }
+            break;
+          case ArrangementFilterType.Cancelled:
+            if (arrangement.cancelledAtUtc !== undefined) {
+              result = true;
+            }
+            break;
+          default:
+            break;
+        }
+      });
+    } 
+    return result;
+  }
+  //#endregion
 
   return (!partneringFamily
   ? <ProgressBackdrop>
@@ -228,26 +292,65 @@ export function PartneringFamilyScreen() {
           <Grid container spacing={0}>
             {partneringFamily.partneringFamilyInfo?.openReferral &&
               <Grid item xs={12}>
-                <div style={{ display: `flex`, justifyContent: `space-between`}}>
-                  <h3 style={{ marginBottom: 0, display: `flex`, alignSelf: `center` }}>Arrangements</h3>
-                    {permissions(Permission.CreateArrangement) && (
-                    <Box sx={{textAlign: 'center', display: `flex`, flexDirection: `row`}}>
-                        {partneringFamily.partneringFamilyInfo?.openReferral && policy.referralPolicy?.arrangementPolicies?.map(arrangementPolicy => (
-                          <Box key={arrangementPolicy.arrangementType}>
-                            <Button
-                              onClick={() => setCreateArrangementDialogParameter(arrangementPolicy)}
-                              variant="contained"
-                              size="small"
-                              sx={{margin: 1}}
-                              startIcon={<AddCircleIcon />}>
-                              {arrangementPolicy.arrangementType}
-                            </Button>
-                          </Box>
-                        ))}
-                      </Box>)}
+                <div style={{ display: `flex`, justifyContent: `space-between`, maxWidth: `100%`, flexWrap: `wrap` }}>
+                  <div style={{ display: `flex`, justifyContent: `flex-start`, maxWidth: `100%`, flexWrap: `wrap` }}>
+                    <h3 style={{ margin: 0, display: `flex`, alignSelf: `center` }}>Arrangements</h3>
+                    <IconButton  
+                      aria-describedby={id}  
+                      onClick={handleFilterClick}
+                      size="small"
+                      color="primary" 
+                    >
+                      <FilterAlt />
+                    </IconButton>
+                    <Popover
+                      id={id}
+                      open={open}
+                      anchorEl={anchorEl}
+                      onClose={handleFilterClose}
+                      anchorOrigin={{
+                        vertical: 'bottom',
+                        horizontal: 'left',
+                      }}
+                    >
+                      <FormControl sx={{ m: 3 }} component="fieldset" variant="standard">
+                        <FormLabel component="legend">Filter Arrangements</FormLabel>
+                        <FormGroup>
+                          {
+                          arrangementFilterOptions.map((o) => {
+                            return (
+                            <FormControlLabel
+                              key={o.key}
+                              control={
+                                <Checkbox checked={o.selected} onChange={filterArrangements} name={o.text} />
+                              }
+                              label={o.text}
+                            />
+                            );
+                          })}
+                        </FormGroup>
+                      </FormControl>
+                    </Popover>
+                  </div>
+                  {permissions(Permission.CreateArrangement) && (
+                  <Box sx={{textAlign: 'center', display: `flex`, flexDirection: `row`, maxWidth: `100%`, flexWrap: `wrap` }}>
+                    {partneringFamily.partneringFamilyInfo?.openReferral && policy.referralPolicy?.arrangementPolicies?.map(arrangementPolicy => (
+                      <Box key={arrangementPolicy.arrangementType}>
+                        <Button
+                          onClick={() => setCreateArrangementDialogParameter(arrangementPolicy)}
+                          variant="contained"
+                          size="small"
+                          sx={{margin: 1}}
+                          startIcon={<AddCircleIcon />}>
+                          {arrangementPolicy.arrangementType}
+                        </Button>
+                      </Box>
+                    ))}
+                  </Box>)}
                 </div>                
                 <Masonry columns={isDesktop ? isWideScreen ? 3 : 2 : 1} spacing={2}>
                   {partneringFamily.partneringFamilyInfo?.openReferral?.arrangements?.slice()
+                  .filter(a => meetsArrangementFilterCriteria(a))
                   .sort((a,b) => sortArrangementsByStartDateDescThenCreateDateDesc(a,b))
                   .map(arrangement => (
                     <ArrangementCard key={arrangement.id}
