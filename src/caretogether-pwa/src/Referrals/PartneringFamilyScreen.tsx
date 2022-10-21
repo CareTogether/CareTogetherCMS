@@ -228,7 +228,24 @@ export function PartneringFamilyScreen() {
           <Grid container spacing={0}>
             {partneringFamily.partneringFamilyInfo?.openReferral &&
               <Grid item xs={12}>
-                <h3 style={{ marginBottom: 0 }}>Arrangements</h3>
+                <div style={{ display: `flex`, justifyContent: `space-between`}}>
+                  <h3 style={{ marginBottom: 0, display: `flex`, alignSelf: `center` }}>Arrangements</h3>
+                    {permissions(Permission.CreateArrangement) && (
+                    <Box sx={{textAlign: 'center', display: `flex`, flexDirection: `row`}}>
+                        {partneringFamily.partneringFamilyInfo?.openReferral && policy.referralPolicy?.arrangementPolicies?.map(arrangementPolicy => (
+                          <Box key={arrangementPolicy.arrangementType}>
+                            <Button
+                              onClick={() => setCreateArrangementDialogParameter(arrangementPolicy)}
+                              variant="contained"
+                              size="small"
+                              sx={{margin: 1}}
+                              startIcon={<AddCircleIcon />}>
+                              {arrangementPolicy.arrangementType}
+                            </Button>
+                          </Box>
+                        ))}
+                      </Box>)}
+                </div>                
                 <Masonry columns={isDesktop ? isWideScreen ? 3 : 2 : 1} spacing={2}>
                   {partneringFamily.partneringFamilyInfo?.openReferral?.arrangements?.slice()
                   .sort((a,b) => sortArrangementsByStartDateDescThenCreateDateDesc(a,b))
@@ -236,21 +253,7 @@ export function PartneringFamilyScreen() {
                     <ArrangementCard key={arrangement.id}
                       partneringFamily={partneringFamily} referralId={partneringFamily.partneringFamilyInfo!.openReferral!.id!}
                       arrangement={arrangement} />
-                  )) || false}
-                  {permissions(Permission.CreateArrangement) && <Box sx={{textAlign: 'center'}}>
-                    {partneringFamily.partneringFamilyInfo?.openReferral && policy.referralPolicy?.arrangementPolicies?.map(arrangementPolicy => (
-                      <Box key={arrangementPolicy.arrangementType}>
-                        <Button
-                          onClick={() => setCreateArrangementDialogParameter(arrangementPolicy)}
-                          variant="contained"
-                          size="small"
-                          sx={{margin: 1}}
-                          startIcon={<AddCircleIcon />}>
-                          {arrangementPolicy.arrangementType}
-                        </Button>
-                      </Box>
-                    ))}
-                  </Box>}
+                  )) || false}                  
                 </Masonry>
                 {createArrangementDialogParameter &&
                   <CreateArrangementDialog
