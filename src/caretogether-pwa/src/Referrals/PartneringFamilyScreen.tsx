@@ -87,8 +87,7 @@ export function PartneringFamilyScreen() {
 		Active = "Active",
 		Cancelled = "Cancelled"
 	}
-	const defaultOptionLabels = [ArrangementFilterOptionLabel.Active];
-	const { arrangementFilterOptions, handleFilterArrangements } = useFilterMenu(Object.keys(ArrangementFilterOptionLabel), defaultOptionLabels);	
+	const { arrangementFilterOptions, handleFilterArrangements } = useFilterMenu(Object.keys(ArrangementFilterOptionLabel), [ArrangementFilterOptionLabel.Active]);	
 	const meetsArrangementFilterCriteria = (arrangement: Arrangement): boolean => {
 		let result = false;
 		const selectedOptions = arrangementFilterOptions.filter(o => o.selected).map(o => o.text);    
