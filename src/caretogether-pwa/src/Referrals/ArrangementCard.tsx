@@ -16,7 +16,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useState } from 'react';
-import { ArrangementPhase, Arrangement, CombinedFamilyInfo, ChildInvolvement, FunctionRequirement, Permission } from '../GeneratedClient';
+import { ArrangementPhase, Arrangement, CombinedFamilyInfo, ChildInvolvement, FunctionRequirement, Permission, ArrangementPolicy } from '../GeneratedClient';
 import { useFamilyLookup, usePersonLookup } from '../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
 import { FamilyName } from '../Families/FamilyName';
@@ -40,6 +40,50 @@ import { useFamilyIdPermissions } from '../Model/SessionModel';
 import { format } from 'date-fns';
 import { DatePicker } from '@mui/x-date-pickers';
 
+interface ChildLocationIndicatorProps {
+  partneringFamily: CombinedFamilyInfo
+  referralId: string
+  arrangement: Arrangement
+  arrangementPolicy: ArrangementPolicy
+  summaryOnly?: boolean
+}
+function ChildLocationIndicator({ partneringFamily, referralId, arrangement, arrangementPolicy, summaryOnly }: ChildLocationIndicatorProps) {
+  const familyLookup = useFamilyLookup();
+  const [showTrackChildLocationDialog, setShowTrackChildLocationDialog] = useState(false);
+
+  const currentLocationFamily = arrangement.childLocationHistory && arrangement.childLocationHistory.length > 0
+    ? familyLookup(arrangement.childLocationHistory[arrangement.childLocationHistory.length - 1].childLocationFamilyId)!
+    : null;
+
+  return (
+    <>
+      {summaryOnly
+        ? <>
+            <PersonPinCircleIcon color='disabled' style={{float: 'right', marginLeft: 2, marginTop: 2}} />
+            <span style={{float: 'right', paddingTop: 4}}>{
+              currentLocationFamily
+              ? <FamilyName family={currentLocationFamily} />
+              : <strong>Location unspecified</strong>
+            }</span>
+          </>
+        : <>
+            <Button size="large" variant="text"
+              style={{float: 'right', marginTop: -10, marginRight: -10, textTransform: "initial"}}
+              endIcon={<PersonPinCircleIcon />}
+              onClick={(event) => setShowTrackChildLocationDialog(true)}>
+              {currentLocationFamily
+                ? <FamilyName family={currentLocationFamily} />
+                : <strong>Location unspecified</strong>}
+            </Button>
+            {showTrackChildLocationDialog && <TrackChildLocationDialog
+              partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement}
+              onClose={() => setShowTrackChildLocationDialog(false)} />}
+            <br />
+          </>}
+    </>
+  );
+}
+
 type ArrangementCardProps = {
   partneringFamily: CombinedFamilyInfo;
   referralId: string;
@@ -51,11 +95,8 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
   const policy = useRecoilValue(policyData);
   const referralsModel = useReferralsModel();
 
-  const familyLookup = useFamilyLookup();
   const personLookup = usePersonLookup();
   
-  const [showTrackChildLocationDialog, setShowTrackChildLocationDialog] = useState(false);
-
   const [collapsed, setCollapsed] = useCollapsed(`arrangement-${referralId}-${arrangement.id}`, false);
 
   const partneringFamilyId = partneringFamily.family!.id!;
@@ -224,32 +265,9 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
         <Typography variant="body2" component="div" sx={{mb:1}}>
           <strong><PersonName person={personLookup(partneringFamily.family!.id, arrangement.partneringFamilyPersonId)} /></strong>
           {(arrangement.phase === ArrangementPhase.Started || arrangement.phase === ArrangementPhase.Ended) &&
-            (arrangementPolicy?.childInvolvement === ChildInvolvement.ChildHousing || arrangementPolicy?.childInvolvement === ChildInvolvement.DaytimeChildCareOnly) && (
-            <>
-              {summaryOnly
-                ? <>
-                    <PersonPinCircleIcon color='disabled' style={{float: 'right', marginLeft: 2, marginTop: 2}} />
-                    <span style={{float: 'right', paddingTop: 4}}>{
-                      (arrangement.childLocationHistory && arrangement.childLocationHistory.length > 0)
-                      ? <FamilyName family={familyLookup(arrangement.childLocationHistory[arrangement.childLocationHistory.length - 1].childLocationFamilyId)} />
-                      : <strong>Location unspecified</strong>
-                    }</span>
-                  </>
-                : <>
-                    <Button size="large" variant="text"
-                      style={{float: 'right', marginTop: -10, marginRight: -10, textTransform: "initial"}}
-                      endIcon={<PersonPinCircleIcon />}
-                      onClick={(event) => setShowTrackChildLocationDialog(true)}>
-                      {(arrangement.childLocationHistory && arrangement.childLocationHistory.length > 0)
-                        ? <FamilyName family={familyLookup(arrangement.childLocationHistory[arrangement.childLocationHistory.length - 1].childLocationFamilyId)} />
-                        : <strong>Location unspecified</strong>}
-                    </Button>
-                    {showTrackChildLocationDialog && <TrackChildLocationDialog
-                      partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement}
-                      onClose={() => setShowTrackChildLocationDialog(false)} />}
-                  </>}
-            </>
-          )}
+            (arrangementPolicy?.childInvolvement === ChildInvolvement.ChildHousing || arrangementPolicy?.childInvolvement === ChildInvolvement.DaytimeChildCareOnly) && 
+            <ChildLocationIndicator partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement}
+              arrangementPolicy={arrangementPolicy} summaryOnly={summaryOnly} />}
         </Typography>
         {(arrangement.phase === ArrangementPhase.SettingUp ||
           arrangement.phase === ArrangementPhase.ReadyToStart ||
