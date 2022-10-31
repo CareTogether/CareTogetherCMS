@@ -14,6 +14,7 @@ import {
 } from '@mui/lab';
 
 import DeleteIcon from '@mui/icons-material/Delete'
+import InputIcon from '@mui/icons-material/Input';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useDirectoryModel, useFamilyLookup, usePersonLookup } from '../Model/DirectoryModel';
 import { useReferralsModel } from '../Model/ReferralsModel';
@@ -28,8 +29,9 @@ interface ChildLocationTimelineProps {
   partneringFamily: CombinedFamilyInfo,
   referralId: string
   arrangement: Arrangement
+  recordChildLocationPlan: (entry: ChildLocationHistoryEntry) => void
 }
-function ChildLocationTimeline({ partneringFamily, referralId, arrangement }: ChildLocationTimelineProps) {
+function ChildLocationTimeline({ partneringFamily, referralId, arrangement, recordChildLocationPlan }: ChildLocationTimelineProps) {
   const familyLookup = useFamilyLookup();
   const referralsModel = useReferralsModel();
   const withBackdrop = useBackdrop();
@@ -40,34 +42,58 @@ function ChildLocationTimeline({ partneringFamily, referralId, arrangement }: Ch
         historyEntry.childLocationFamilyId!, historyEntry.childLocationReceivingAdultId!, historyEntry.timestampUtc!, null);
     });
   }
+  
+  async function deleteChildLocationPlan(planEntry: ChildLocationHistoryEntry) {
+    await withBackdrop(async () => {
+      await referralsModel.deleteChildLocationPlan(partneringFamily.family?.id as string, referralId, arrangement.id!,
+        planEntry.childLocationFamilyId!, planEntry.childLocationReceivingAdultId!, planEntry.timestampUtc!);
+    });
+  }
+
+  const allEntries = (arrangement.childLocationHistory || []).concat(arrangement.childLocationPlan || []).sort((a, b) =>
+    a.timestampUtc! < b.timestampUtc! ? 1 : a.timestampUtc! > b.timestampUtc! ? -1 : 0);
+  
+  const firstHistoryEntryIndex = allEntries.findIndex(entry => entry.noteId);
 
   return (
     <Timeline position="right">
-      {arrangement.childLocationHistory?.slice().reverse().map((historyEntry, i) => <TimelineItem key={i}>
-        <TimelineOppositeContent>
-          {format(historyEntry.timestampUtc!, "M/d/yy h:mm a")}
-          <IconButton
-            onClick={() => deleteChildLocationEntry(historyEntry)}
-            size="small"
-            color="primary">
-            <DeleteIcon />
-          </IconButton>
-        </TimelineOppositeContent>
-        <TimelineSeparator>
-          <TimelineDot color={i === 0 ? "primary" : "grey"} />
-          <TimelineConnector />
-        </TimelineSeparator>
-        <TimelineContent>
-          <FamilyName family={familyLookup(historyEntry.childLocationFamilyId)} />
-          <br />
-          <span style={{ fontStyle: "italic" }}>
-            {historyEntry.plan === ChildLocationPlan.DaytimeChildCare ? "daytime child care"
-              : historyEntry.plan === ChildLocationPlan.OvernightHousing ? "overnight housing"
-                : "with parent"}
-          </span>
-        </TimelineContent>
-      </TimelineItem>
-      )}
+      {allEntries.map((entry, i) =>
+        <TimelineItem key={i}>
+          <TimelineOppositeContent>
+            <span style={{ fontWeight: i === firstHistoryEntryIndex ? 'bold' : 'normal' }}>
+              {format(entry.timestampUtc!, "M/d/yy h:mm a")}
+            </span>
+            {!entry.noteId &&
+              <IconButton
+                onClick={() => recordChildLocationPlan(entry)}
+                size="small"
+                color="primary">
+                <InputIcon />
+              </IconButton>
+            }
+            <IconButton
+              onClick={() => entry.noteId ? deleteChildLocationEntry(entry) : deleteChildLocationPlan(entry)}
+              size="small"
+              color="primary">
+              <DeleteIcon />
+            </IconButton>
+          </TimelineOppositeContent>
+          <TimelineSeparator>
+            <TimelineDot variant={entry.noteId ? 'filled' : 'outlined'} color={i === firstHistoryEntryIndex ? "primary" : "grey"} />
+            <TimelineConnector sx={{ opacity: entry.noteId ? 1.0 : 0.5 }} />
+          </TimelineSeparator>
+          <TimelineContent>
+            <span style={{ fontWeight: i === firstHistoryEntryIndex ? 'bold' : 'normal' }}>
+              <FamilyName family={familyLookup(entry.childLocationFamilyId)} />
+            </span>
+            <br />
+            <span style={{ fontStyle: "italic" }}>
+              {entry.plan === ChildLocationPlan.DaytimeChildCare ? "daytime child care"
+                : entry.plan === ChildLocationPlan.OvernightHousing ? "overnight housing"
+                  : "with parent"}
+            </span>
+          </TimelineContent>
+        </TimelineItem>)}
     </Timeline>
   );
 }
@@ -93,6 +119,13 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
   const [changeAtLocal, setChangeAtLocal] = useState(null as Date | null);
   const [plan, setPlan] = useState<ChildLocationPlan | null>(null);
   const [notes, setNotes] = useState("");
+
+  function recordChildLocationPlan(entry: ChildLocationHistoryEntry) {
+    setTabValue(0);
+    setSelectedAssigneeKey(`${entry.childLocationFamilyId!}|${entry.childLocationReceivingAdultId!}`);
+    setChangeAtLocal(entry.timestampUtc!);
+    setPlan(entry.plan!);
+  }
 
   function candidateItem(candidate: {familyId: string, adult: Person}) {
     return {
@@ -202,7 +235,8 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
       <DialogContent>
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
-            <ChildLocationTimeline partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement} />
+            <ChildLocationTimeline partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement}
+              recordChildLocationPlan={recordChildLocationPlan} />
           </Grid>
           <Grid item container spacing={2} xs={12} md={6}>
             <Grid item xs={12}>
@@ -307,7 +341,7 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
                     <DateTimePicker
                       label="What time will this person receive the child?"
                       value={changeAtLocal}
-                      disableFuture inputFormat="M/d/yyyy h:mma"
+                      inputFormat="M/d/yyyy h:mma"
                       onChange={(date: any) => date && setChangeAtLocal(date)}
                       renderInput={(params: any) => <TextField fullWidth required {...params} />} />
                   </Grid>
