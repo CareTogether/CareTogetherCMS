@@ -13,6 +13,8 @@ import {
   TimelineSeparator,
 } from '@mui/lab';
 
+import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
+import EventIcon from '@mui/icons-material/Event';
 import DeleteIcon from '@mui/icons-material/Delete'
 import InputIcon from '@mui/icons-material/Input';
 import { useBackdrop } from '../Hooks/useBackdrop';
@@ -79,7 +81,11 @@ function ChildLocationTimeline({ partneringFamily, referralId, arrangement, reco
             </IconButton>
           </TimelineOppositeContent>
           <TimelineSeparator>
-            <TimelineDot variant={entry.noteId ? 'filled' : 'outlined'} color={i === firstHistoryEntryIndex ? "primary" : "grey"} />
+            <TimelineDot color={i === firstHistoryEntryIndex ? "primary" : entry.noteId ? "info" : "grey"}>
+              {entry.noteId
+                ? <PersonPinCircleIcon />
+                : <EventIcon fontSize='small' />}
+            </TimelineDot>
             <TimelineConnector sx={{ opacity: entry.noteId ? 1.0 : 0.5 }} />
           </TimelineSeparator>
           <TimelineContent>
