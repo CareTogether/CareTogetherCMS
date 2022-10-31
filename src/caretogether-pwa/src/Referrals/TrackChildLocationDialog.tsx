@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControl, FormControlLabel, FormLabel, Grid, IconButton, InputLabel, MenuItem, Radio, RadioGroup, Select, Tab, Tabs, TextField } from '@mui/material';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControl, FormControlLabel, FormLabel, Grid, IconButton, InputLabel, MenuItem, Radio, RadioGroup, Select, Stack, Tab, Tabs, TextField } from '@mui/material';
 import { CombinedFamilyInfo, Arrangement, Person, ChildLocationPlan, ChildInvolvement, Note, ChildLocationHistoryEntry } from '../GeneratedClient';
 import { DateTimePicker } from '@mui/x-date-pickers';
 
@@ -20,7 +20,6 @@ import InputIcon from '@mui/icons-material/Input';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useDirectoryModel, useFamilyLookup, usePersonLookup } from '../Model/DirectoryModel';
 import { useReferralsModel } from '../Model/ReferralsModel';
-import { FamilyName } from '../Families/FamilyName';
 import { PersonName } from '../Families/PersonName';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../Model/ConfigurationModel';
@@ -34,7 +33,7 @@ interface ChildLocationTimelineProps {
   recordChildLocationPlan: (entry: ChildLocationHistoryEntry) => void
 }
 function ChildLocationTimeline({ partneringFamily, referralId, arrangement, recordChildLocationPlan }: ChildLocationTimelineProps) {
-  const familyLookup = useFamilyLookup();
+  const personLookup = usePersonLookup();
   const referralsModel = useReferralsModel();
   const withBackdrop = useBackdrop();
   
@@ -52,17 +51,23 @@ function ChildLocationTimeline({ partneringFamily, referralId, arrangement, reco
     });
   }
 
+  // Planned entries will have null noteId values; actual history entries will have non-null noteId values.
   const allEntries = (arrangement.childLocationHistory || []).concat(arrangement.childLocationPlan || []).sort((a, b) =>
     a.timestampUtc! < b.timestampUtc! ? 1 : a.timestampUtc! > b.timestampUtc! ? -1 : 0);
   
-  const firstHistoryEntryIndex = allEntries.findIndex(entry => entry.noteId);
-
+  const currentLocationEntryIndex = allEntries.findIndex(entry => entry.noteId);
+  const currentLocationEntry = allEntries[currentLocationEntryIndex];
+  const nextPlannedChange = allEntries.slice(0, currentLocationEntryIndex).reverse().find(entry =>
+    !entry.noteId && entry.childLocationFamilyId !== currentLocationEntry.childLocationFamilyId);
+  
+  const now = new Date();
+  
   return (
     <Timeline position="right">
       {allEntries.map((entry, i) =>
         <TimelineItem key={i}>
           <TimelineOppositeContent>
-            <span style={{ fontWeight: i === firstHistoryEntryIndex ? 'bold' : 'normal' }}>
+            <span style={{ fontWeight: entry === currentLocationEntry ? 'bold' : 'normal' }}>
               {format(entry.timestampUtc!, "M/d/yy h:mm a")}
             </span>
             {!entry.noteId &&
@@ -81,7 +86,8 @@ function ChildLocationTimeline({ partneringFamily, referralId, arrangement, reco
             </IconButton>
           </TimelineOppositeContent>
           <TimelineSeparator>
-            <TimelineDot color={i === firstHistoryEntryIndex ? "primary" : entry.noteId ? "info" : "grey"}>
+            <TimelineDot color={entry === currentLocationEntry ? "primary" : entry.noteId ? "info" : entry === nextPlannedChange && entry.timestampUtc! < now ? "error" : "grey"}
+              variant={entry.timestampUtc! < now ? 'filled' : 'outlined'}>
               {entry.noteId
                 ? <PersonPinCircleIcon />
                 : <EventIcon fontSize='small' />}
@@ -89,11 +95,11 @@ function ChildLocationTimeline({ partneringFamily, referralId, arrangement, reco
             <TimelineConnector sx={{ opacity: entry.noteId ? 1.0 : 0.5 }} />
           </TimelineSeparator>
           <TimelineContent>
-            <span style={{ fontWeight: i === firstHistoryEntryIndex ? 'bold' : 'normal' }}>
-              <FamilyName family={familyLookup(entry.childLocationFamilyId)} />
+            <span style={{ fontWeight: entry === currentLocationEntry ? 'bold' : 'normal' }}>
+              <PersonName person={personLookup(entry.childLocationFamilyId, entry.childLocationReceivingAdultId)} />
             </span>
             <br />
-            <span style={{ fontStyle: "italic" }}>
+            <span style={{ fontStyle: "italic", color: 'grey' }}>
               {entry.plan === ChildLocationPlan.DaytimeChildCare ? "daytime child care"
                 : entry.plan === ChildLocationPlan.OvernightHousing ? "overnight housing"
                   : "with parent"}
@@ -244,8 +250,8 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
             <ChildLocationTimeline partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement}
               recordChildLocationPlan={recordChildLocationPlan} />
           </Grid>
-          <Grid item container spacing={2} xs={12} md={6}>
-            <Grid item xs={12}>
+          <Grid item spacing={2} xs={12} md={6}>
+            <Stack direction='column'>
               <Tabs value={tabValue}
                 onChange={(_, newValue) => setTabValue(newValue)}
                 indicatorColor="secondary"
@@ -253,8 +259,6 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
                 <Tab label="Record a Location Change" {...a11yProps(0)} />
                 <Tab label="Plan a Future Change" {...a11yProps(1)} />
               </Tabs>
-            </Grid>
-            <Grid item xs={12}>
               <TabPanel value={tabValue} index={0}>
                 <Grid container spacing={2}>
                   <Grid item xs={12}>
@@ -353,7 +357,7 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
                   </Grid>
                 </Grid>
               </TabPanel>
-            </Grid>
+            </Stack>
           </Grid>
         </Grid>
       </DialogContent>
