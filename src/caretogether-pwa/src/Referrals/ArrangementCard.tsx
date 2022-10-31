@@ -74,6 +74,8 @@ function ChildLocationIndicator({ partneringFamily, referralId, arrangement, arr
       null
     : null;
 
+  const nextPlanIsPastDue = nextPlannedLocation && nextPlannedLocation.timestampUtc! < new Date();
+
   return (
     <>
       {summaryOnly
@@ -100,11 +102,13 @@ function ChildLocationIndicator({ partneringFamily, referralId, arrangement, arr
             <Typography variant='body1' style={{float:'right', clear:'right'}}>
               {nextPlannedLocation == null
                 ? <span>No upcoming plans</span>
-                : <span>
+                : <span style={nextPlanIsPastDue ? { fontWeight: 'bold', color: 'red' } : {}}>
+                    {nextPlanIsPastDue && "PAST DUE - "}
                     <FamilyName family={familyLookup(nextPlannedLocation.childLocationFamilyId)} />
                     &nbsp;on {format(nextPlannedLocation.timestampUtc!, 'M/d/yyyy')}
                   </span>}
-              <EventIcon sx={{ position: 'relative', top: 7, marginTop: -1, marginRight: -0.5, marginLeft: 1 }} />
+              <EventIcon sx={{ position: 'relative', top: 7, marginTop: -1, marginRight: -0.5, marginLeft: 1,
+                color: nextPlanIsPastDue ? 'red' : null }} />
             </Typography>
           </>}
     </>
