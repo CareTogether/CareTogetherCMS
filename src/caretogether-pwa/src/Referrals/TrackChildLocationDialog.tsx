@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControl, FormControlLabel, FormLabel, Grid, IconButton, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@mui/material';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControl, FormControlLabel, FormLabel, Grid, IconButton, InputLabel, MenuItem, Radio, RadioGroup, Select, Tab, Tabs, TextField } from '@mui/material';
 import { CombinedFamilyInfo, Arrangement, Person, ChildLocationPlan, ChildInvolvement, Note, ChildLocationHistoryEntry } from '../GeneratedClient';
 import { DateTimePicker } from '@mui/x-date-pickers';
 
@@ -22,6 +22,7 @@ import { PersonName } from '../Families/PersonName';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../Model/ConfigurationModel';
 import { format } from 'date-fns';
+import { a11yProps, TabPanel } from "../TabPanel";
 
 interface ChildLocationTimelineProps {
   partneringFamily: CombinedFamilyInfo,
@@ -87,8 +88,9 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
   
   const child = personLookup(partneringFamily.family!.id, arrangement.partneringFamilyPersonId);
 
+  const [tabValue, setTabValue] = useState(0);
   const [selectedAssigneeKey, setSelectedAssigneeKey] = useState('');
-  const [changedAtLocal, setChangedAtLocal] = useState(null as Date | null);
+  const [changeAtLocal, setChangeAtLocal] = useState(null as Date | null);
   const [plan, setPlan] = useState<ChildLocationPlan | null>(null);
   const [notes, setNotes] = useState("");
 
@@ -131,7 +133,28 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
   const directoryModel = useDirectoryModel();
   
   const withBackdrop = useBackdrop();
+
+  function canSave() {
+    if (tabValue === 0) {
+      return selectedAssigneeKey !== '' &&
+        plan != null &&
+        notes !== "" &&
+        changeAtLocal != null;
+    } else {
+      return selectedAssigneeKey !== '' &&
+        plan != null &&
+        changeAtLocal != null;
+    }
+  }
   
+  async function onSave() {
+    if (tabValue === 0) {
+      return trackChildLocation();
+    } else {
+      return planChildLocationChange();
+    }
+  }
+
   async function trackChildLocation() {
     await withBackdrop(async () => {
       if (selectedAssigneeKey === '') {
@@ -139,8 +162,8 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
       } else if (plan == null) {
         alert("No plan was selected. Please try again.");
       } else if (notes === "") {
-        alert("You must enter a note for this requirement.");
-      } else if (changedAtLocal == null) {
+        alert("You must enter a note for this child location change.");
+      } else if (changeAtLocal == null) {
         alert("No date was entered. Please try again.");
       } else {
         const assigneeInfo = candidatePartneringFamilyAssignees.concat(deduplicatedCandidateVolunteerAssignees).find(ca => ca.key === selectedAssigneeKey);
@@ -148,7 +171,25 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
         if (notes !== "")
           note = (await directoryModel.createDraftNote(partneringFamily.family?.id as string, notes)).note;
         await referralsModel.trackChildLocation(partneringFamily.family?.id as string, referralId, arrangement.id!,
-          assigneeInfo!.familyId, assigneeInfo!.personId, changedAtLocal, plan, note?.id || null);
+          assigneeInfo!.familyId, assigneeInfo!.personId, changeAtLocal, plan, note?.id || null);
+        //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
+        onClose();
+      }
+    });
+  }
+
+  async function planChildLocationChange() {
+    await withBackdrop(async () => {
+      if (selectedAssigneeKey === '') {
+        alert("No family was selected. Please try again.");
+      } else if (plan == null) {
+        alert("No plan was selected. Please try again.");
+      } else if (changeAtLocal == null) {
+        alert("No date was entered. Please try again.");
+      } else {
+        const assigneeInfo = candidatePartneringFamilyAssignees.concat(deduplicatedCandidateVolunteerAssignees).find(ca => ca.key === selectedAssigneeKey);
+        await referralsModel.planChildLocation(partneringFamily.family?.id as string, referralId, arrangement.id!,
+          assigneeInfo!.familyId, assigneeInfo!.personId, changeAtLocal, plan);
         //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
         onClose();
       }
@@ -165,54 +206,113 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
           </Grid>
           <Grid item container spacing={2} xs={12} md={6}>
             <Grid item xs={12}>
-              <p style={{fontSize: 16, fontWeight: 'bold'}}>Track a new location change</p>
-              <FormControl required fullWidth size="small">
-                <InputLabel id="assignee-label">Receiving Adult</InputLabel>
-                <Select
-                  labelId="assignee-label" id="assignee"
-                  value={selectedAssigneeKey}
-                  onChange={e => updateAssignee(e.target.value as string)}>
-                    <MenuItem key="placeholder" value="" disabled>
-                      Select the adult who received the child
-                    </MenuItem>
-                    {candidatePartneringFamilyAssignees.map(candidate =>
-                      <MenuItem key={candidate.key} value={candidate.key}>{candidate.displayName}</MenuItem>)}
-                    <Divider />
-                    {deduplicatedCandidateVolunteerAssignees.map(candidate =>
-                      <MenuItem key={candidate.key} value={candidate.key}>{candidate.displayName}</MenuItem>)}
-                </Select>
-              </FormControl>
+              <Tabs value={tabValue}
+                onChange={(_, newValue) => setTabValue(newValue)}
+                indicatorColor="secondary"
+                variant="fullWidth">
+                <Tab label="Record a Location Change" {...a11yProps(0)} />
+                <Tab label="Plan a Future Change" {...a11yProps(1)} />
+              </Tabs>
             </Grid>
             <Grid item xs={12}>
-              <FormControl component="fieldset" required>
-                <FormLabel component="legend">Plan for the location change:</FormLabel>
-                <RadioGroup aria-label="plan" name="plan" row
-                  value={plan == null ? '' : ChildLocationPlan[plan]}
-                  onChange={e => setPlan(ChildLocationPlan[e.target.value as keyof typeof ChildLocationPlan])}>
-                  <FormControlLabel value={ChildLocationPlan[ChildLocationPlan.DaytimeChildCare]} control={<Radio size="small" />} label="Daytime Child Care"
-                    disabled={assigneeIsFromPartneringFamily} />
-                  <FormControlLabel value={ChildLocationPlan[ChildLocationPlan.OvernightHousing]} control={<Radio size="small" />} label="Overnight Housing"
-                    disabled={assigneeIsFromPartneringFamily || arrangementPolicy?.childInvolvement === ChildInvolvement.DaytimeChildCareOnly} />
-                  <FormControlLabel value={ChildLocationPlan[ChildLocationPlan.WithParent]} control={<Radio size="small" />} label="With Parent"
-                    disabled={!assigneeIsFromPartneringFamily} />
-                </RadioGroup>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12}>
-              <DateTimePicker
-                label="What time did this person receive the child?"
-                value={changedAtLocal}
-                disableFuture inputFormat="M/d/yyyy h:mma"
-                onChange={(date: any) => date && setChangedAtLocal(date)}
-                renderInput={(params: any) => <TextField fullWidth required {...params} />} />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                id="notes" required
-                label="Notes" placeholder="Space for any general notes"
-                multiline fullWidth variant="outlined" minRows={6} size="medium"
-                value={notes} onChange={e => setNotes(e.target.value)}
-              />
+              <TabPanel value={tabValue} index={0}>
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <FormControl required fullWidth size="small">
+                      <InputLabel id="assignee-label">Receiving Adult</InputLabel>
+                      <Select
+                        labelId="assignee-label" id="assignee"
+                        value={selectedAssigneeKey}
+                        onChange={e => updateAssignee(e.target.value as string)}>
+                          <MenuItem key="placeholder" value="" disabled>
+                            Select the adult who received the child
+                          </MenuItem>
+                          {candidatePartneringFamilyAssignees.map(candidate =>
+                            <MenuItem key={candidate.key} value={candidate.key}>{candidate.displayName}</MenuItem>)}
+                          <Divider />
+                          {deduplicatedCandidateVolunteerAssignees.map(candidate =>
+                            <MenuItem key={candidate.key} value={candidate.key}>{candidate.displayName}</MenuItem>)}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <FormControl component="fieldset" required>
+                      <FormLabel component="legend">Plan for the location change:</FormLabel>
+                      <RadioGroup aria-label="plan" name="plan" row
+                        value={plan == null ? '' : ChildLocationPlan[plan]}
+                        onChange={e => setPlan(ChildLocationPlan[e.target.value as keyof typeof ChildLocationPlan])}>
+                        <FormControlLabel value={ChildLocationPlan[ChildLocationPlan.DaytimeChildCare]} control={<Radio size="small" />} label="Daytime Child Care"
+                          disabled={assigneeIsFromPartneringFamily} />
+                        <FormControlLabel value={ChildLocationPlan[ChildLocationPlan.OvernightHousing]} control={<Radio size="small" />} label="Overnight Housing"
+                          disabled={assigneeIsFromPartneringFamily || arrangementPolicy?.childInvolvement === ChildInvolvement.DaytimeChildCareOnly} />
+                        <FormControlLabel value={ChildLocationPlan[ChildLocationPlan.WithParent]} control={<Radio size="small" />} label="With Parent"
+                          disabled={!assigneeIsFromPartneringFamily} />
+                      </RadioGroup>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <DateTimePicker
+                      label="What time did this person receive the child?"
+                      value={changeAtLocal}
+                      disableFuture inputFormat="M/d/yyyy h:mma"
+                      onChange={(date: any) => date && setChangeAtLocal(date)}
+                      renderInput={(params: any) => <TextField fullWidth required {...params} />} />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      id="notes" required
+                      label="Notes" placeholder="Space for any general notes"
+                      multiline fullWidth variant="outlined" minRows={6} size="medium"
+                      value={notes} onChange={e => setNotes(e.target.value)}
+                    />
+                  </Grid>
+                </Grid>
+              </TabPanel>
+              <TabPanel value={tabValue} index={1}>
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <FormControl required fullWidth size="small">
+                      <InputLabel id="assignee-label">Planned Receiving Adult</InputLabel>
+                      <Select
+                        labelId="assignee-label" id="assignee"
+                        value={selectedAssigneeKey}
+                        onChange={e => updateAssignee(e.target.value as string)}>
+                          <MenuItem key="placeholder" value="" disabled>
+                            Select the adult who will receive the child
+                          </MenuItem>
+                          {candidatePartneringFamilyAssignees.map(candidate =>
+                            <MenuItem key={candidate.key} value={candidate.key}>{candidate.displayName}</MenuItem>)}
+                          <Divider />
+                          {deduplicatedCandidateVolunteerAssignees.map(candidate =>
+                            <MenuItem key={candidate.key} value={candidate.key}>{candidate.displayName}</MenuItem>)}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <FormControl component="fieldset" required>
+                      <FormLabel component="legend">Plan for the future location change:</FormLabel>
+                      <RadioGroup aria-label="plan" name="plan" row
+                        value={plan == null ? '' : ChildLocationPlan[plan]}
+                        onChange={e => setPlan(ChildLocationPlan[e.target.value as keyof typeof ChildLocationPlan])}>
+                        <FormControlLabel value={ChildLocationPlan[ChildLocationPlan.DaytimeChildCare]} control={<Radio size="small" />} label="Daytime Child Care"
+                          disabled={assigneeIsFromPartneringFamily} />
+                        <FormControlLabel value={ChildLocationPlan[ChildLocationPlan.OvernightHousing]} control={<Radio size="small" />} label="Overnight Housing"
+                          disabled={assigneeIsFromPartneringFamily || arrangementPolicy?.childInvolvement === ChildInvolvement.DaytimeChildCareOnly} />
+                        <FormControlLabel value={ChildLocationPlan[ChildLocationPlan.WithParent]} control={<Radio size="small" />} label="With Parent"
+                          disabled={!assigneeIsFromPartneringFamily} />
+                      </RadioGroup>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <DateTimePicker
+                      label="What time will this person receive the child?"
+                      value={changeAtLocal}
+                      disableFuture inputFormat="M/d/yyyy h:mma"
+                      onChange={(date: any) => date && setChangeAtLocal(date)}
+                      renderInput={(params: any) => <TextField fullWidth required {...params} />} />
+                  </Grid>
+                </Grid>
+              </TabPanel>
             </Grid>
           </Grid>
         </Grid>
@@ -221,7 +321,7 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
         <Button onClick={onClose} color="secondary">
           Cancel
         </Button>
-        <Button onClick={trackChildLocation} variant="contained" color="primary">
+        <Button onClick={onSave} disabled={!canSave()} variant="contained" color="primary">
           Save
         </Button>
       </DialogActions>
