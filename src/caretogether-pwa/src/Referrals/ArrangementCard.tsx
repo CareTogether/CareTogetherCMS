@@ -23,6 +23,7 @@ import { FamilyName } from '../Families/FamilyName';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../Model/ConfigurationModel';
 import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
+import EventIcon from '@mui/icons-material/Event';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { TrackChildLocationDialog } from './TrackChildLocationDialog';
 import { MissingArrangementRequirementRow } from "../Requirements/MissingArrangementRequirementRow";
@@ -51,8 +52,24 @@ function ChildLocationIndicator({ partneringFamily, referralId, arrangement, arr
   const familyLookup = useFamilyLookup();
   const [showTrackChildLocationDialog, setShowTrackChildLocationDialog] = useState(false);
 
-  const currentLocationFamily = arrangement.childLocationHistory && arrangement.childLocationHistory.length > 0
-    ? familyLookup(arrangement.childLocationHistory[arrangement.childLocationHistory.length - 1].childLocationFamilyId)!
+  const currentLocation = arrangement.childLocationHistory && arrangement.childLocationHistory.length > 0
+    ? arrangement.childLocationHistory[arrangement.childLocationHistory.length - 1]
+    : null;
+  
+  // The planned location that is of interest is always the next one after the stay with the current family.
+  // This means that, whether the current location change happened before, on, or after the corresponding planned change,
+  // the next planned location to display will always be whatever other family the child is set to go to next.
+  // The only times when this would not return a result would be when there are no further plans (result is null),
+  // or when the only remaining planned change is already past-due. In that case, we need to instead find the
+  // most recently missed planned change.
+  const nextPlannedLocation = arrangement.childLocationPlan && arrangement.childLocationPlan.length > 0
+    ? arrangement.childLocationPlan.find(entry =>
+        currentLocation == null ||
+        (entry.timestampUtc! > currentLocation.timestampUtc! &&
+          entry.childLocationFamilyId !== currentLocation.childLocationFamilyId)) ||
+      arrangement.childLocationPlan.slice().reverse().find(entry =>
+        entry.childLocationFamilyId !== currentLocation?.childLocationFamilyId) ||
+      null
     : null;
 
   return (
@@ -61,8 +78,8 @@ function ChildLocationIndicator({ partneringFamily, referralId, arrangement, arr
         ? <>
             <PersonPinCircleIcon color='disabled' style={{float: 'right', marginLeft: 2, marginTop: 2}} />
             <span style={{float: 'right', paddingTop: 4}}>{
-              currentLocationFamily
-              ? <FamilyName family={currentLocationFamily} />
+              currentLocation
+              ? <FamilyName family={familyLookup(currentLocation.childLocationFamilyId)} />
               : <strong>Location unspecified</strong>
             }</span>
           </>
@@ -71,14 +88,22 @@ function ChildLocationIndicator({ partneringFamily, referralId, arrangement, arr
               style={{float: 'right', marginTop: -10, marginRight: -10, textTransform: "initial"}}
               endIcon={<PersonPinCircleIcon />}
               onClick={(event) => setShowTrackChildLocationDialog(true)}>
-              {currentLocationFamily
-                ? <FamilyName family={currentLocationFamily} />
+              {currentLocation
+                ? <FamilyName family={familyLookup(currentLocation.childLocationFamilyId)} />
                 : <strong>Location unspecified</strong>}
             </Button>
             {showTrackChildLocationDialog && <TrackChildLocationDialog
               partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement}
               onClose={() => setShowTrackChildLocationDialog(false)} />}
-            <br />
+            <Typography variant='body1' style={{float:'right', clear:'right'}}>
+              {nextPlannedLocation == null
+                ? <span>No upcoming plans</span>
+                : <span>
+                    <FamilyName family={familyLookup(nextPlannedLocation.childLocationFamilyId)} />
+                    &nbsp;on {format(nextPlannedLocation.timestampUtc!, 'M/d/yyyy')}
+                  </span>}
+              <EventIcon sx={{ position: 'relative', top: 7, marginTop: -1, marginRight: -0.5, marginLeft: 1 }} />
+            </Typography>
           </>}
     </>
   );
