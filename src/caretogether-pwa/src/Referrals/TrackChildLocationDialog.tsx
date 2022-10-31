@@ -23,6 +23,54 @@ import { useRecoilValue } from 'recoil';
 import { policyData } from '../Model/ConfigurationModel';
 import { format } from 'date-fns';
 
+interface ChildLocationTimelineProps {
+  partneringFamily: CombinedFamilyInfo,
+  referralId: string
+  arrangement: Arrangement
+}
+function ChildLocationTimeline({ partneringFamily, referralId, arrangement }: ChildLocationTimelineProps) {
+  const familyLookup = useFamilyLookup();
+  const referralsModel = useReferralsModel();
+  const withBackdrop = useBackdrop();
+  
+  async function deleteChildLocationEntry(historyEntry: ChildLocationHistoryEntry) {
+    await withBackdrop(async () => {
+      await referralsModel.deleteChildLocationEntry(partneringFamily.family?.id as string, referralId, arrangement.id!,
+        historyEntry.childLocationFamilyId!, historyEntry.childLocationReceivingAdultId!, historyEntry.timestampUtc!, null);
+    });
+  }
+
+  return (
+    <Timeline position="right">
+      {arrangement.childLocationHistory?.slice().reverse().map((historyEntry, i) => <TimelineItem key={i}>
+        <TimelineOppositeContent>
+          {format(historyEntry.timestampUtc!, "M/d/yy h:mm a")}
+          <IconButton
+            onClick={() => deleteChildLocationEntry(historyEntry)}
+            size="small"
+            color="primary">
+            <DeleteIcon />
+          </IconButton>
+        </TimelineOppositeContent>
+        <TimelineSeparator>
+          <TimelineDot color={i === 0 ? "primary" : "grey"} />
+          <TimelineConnector />
+        </TimelineSeparator>
+        <TimelineContent>
+          <FamilyName family={familyLookup(historyEntry.childLocationFamilyId)} />
+          <br />
+          <span style={{ fontStyle: "italic" }}>
+            {historyEntry.plan === ChildLocationPlan.DaytimeChildCare ? "daytime child care"
+              : historyEntry.plan === ChildLocationPlan.OvernightHousing ? "overnight housing"
+                : "with parent"}
+          </span>
+        </TimelineContent>
+      </TimelineItem>
+      )}
+    </Timeline>
+  );
+}
+
 interface TrackChildLocationDialogProps {
   partneringFamily: CombinedFamilyInfo,
   referralId: string,
@@ -107,47 +155,13 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
     });
   }
 
-  async function deleteChildLocationEntry(historyEntry: ChildLocationHistoryEntry) {
-    await withBackdrop(async () => {
-      await referralsModel.deleteChildLocationEntry(partneringFamily.family?.id as string, referralId, arrangement.id!,
-        historyEntry.childLocationFamilyId!, historyEntry.childLocationReceivingAdultId!, historyEntry.timestampUtc!, null);
-    });
-  }
-
   return (
     <Dialog open={true} onClose={onClose} fullWidth maxWidth="md" aria-labelledby="track-child-location-title">
       <DialogTitle id="track-child-location-title">Location History for <PersonName person={child} /></DialogTitle>
       <DialogContent>
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
-            <Timeline position="right">
-              {arrangement.childLocationHistory?.slice().reverse().map((historyEntry, i) =>
-                <TimelineItem key={i}>
-                  <TimelineOppositeContent>
-                    {format(historyEntry.timestampUtc!, "M/d/yy h:mm a")}
-                    <IconButton
-                      onClick={() => deleteChildLocationEntry(historyEntry)}
-                      size="small"
-                      color="primary">
-                      <DeleteIcon />
-                    </IconButton>
-                  </TimelineOppositeContent>
-                  <TimelineSeparator>
-                    <TimelineDot color={i === 0 ? "primary" : "grey"} />
-                    <TimelineConnector />
-                  </TimelineSeparator>
-                  <TimelineContent>
-                    <FamilyName family={familyLookup(historyEntry.childLocationFamilyId)} />
-                    <br />
-                    <span style={{fontStyle: "italic"}}>
-                      {historyEntry.plan === ChildLocationPlan.DaytimeChildCare ? "daytime child care"
-                      : historyEntry.plan === ChildLocationPlan.OvernightHousing ? "overnight housing"
-                      : "with parent"}
-                    </span>
-                  </TimelineContent>
-                </TimelineItem>
-              )}
-            </Timeline>
+            <ChildLocationTimeline partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement} />
           </Grid>
           <Grid item container spacing={2} xs={12} md={6}>
             <Grid item xs={12}>
