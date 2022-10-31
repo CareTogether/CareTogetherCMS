@@ -99,18 +99,19 @@ function ChildLocationIndicator({ partneringFamily, referralId, arrangement, arr
             {showTrackChildLocationDialog && <TrackChildLocationDialog
               partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement}
               onClose={() => setShowTrackChildLocationDialog(false)} />}
-            <Typography variant='body1' style={{float:'right', clear:'right'}}>
-              {nextPlannedLocation == null
-                ? <span>No upcoming plans</span>
-                : <span style={nextPlanIsPastDue ? { fontWeight: 'bold', color: 'red' } : {}}>
-                    {nextPlanIsPastDue && "PAST DUE - "}
-                    <FamilyName family={familyLookup(nextPlannedLocation.childLocationFamilyId)} />
-                    &nbsp;on {format(nextPlannedLocation.timestampUtc!, 'M/d/yyyy')}
-                  </span>}
-              <EventIcon sx={{ position: 'relative', top: 7, marginTop: -1, marginRight: -0.5, marginLeft: 1,
-                color: nextPlanIsPastDue ? 'red' : null }} />
-            </Typography>
           </>}
+      <Typography variant={summaryOnly ? 'body2' : 'body1'} style={{float:'right', clear:'right'}}>
+        {nextPlannedLocation == null
+          ? <span>No upcoming plans</span>
+          : <span style={nextPlanIsPastDue ? { fontWeight: 'bold', color: 'red' } : {}}>
+              {nextPlanIsPastDue && "PAST DUE - "}
+              <FamilyName family={familyLookup(nextPlannedLocation.childLocationFamilyId)} />
+              &nbsp;on {format(nextPlannedLocation.timestampUtc!, 'M/d/yyyy')}
+            </span>}
+        <EventIcon sx={{ position: 'relative', top: 7,
+          marginTop: summaryOnly ? -0.5 : -1, marginRight: summaryOnly ? 0 : -0.5, marginLeft: summaryOnly ? 0.25 : 1,
+          color: nextPlanIsPastDue ? 'red' : summaryOnly ? '#00000042' : null }} />
+      </Typography>
     </>
   );
 }
