@@ -8,20 +8,24 @@ import {
   Card,
   CardContent,
   CardHeader,
+  Divider,
   Grid,
+  Stack,
   Table,
   TableBody,
   TableContainer,
+  TextField,
   Typography,
 } from '@mui/material';
 import { useState } from 'react';
-import { ArrangementPhase, Arrangement, CombinedFamilyInfo, ChildInvolvement, FunctionRequirement } from '../GeneratedClient';
+import { ArrangementPhase, Arrangement, CombinedFamilyInfo, ChildInvolvement, FunctionRequirement, Permission, ArrangementPolicy } from '../GeneratedClient';
 import { useFamilyLookup, usePersonLookup } from '../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
 import { FamilyName } from '../Families/FamilyName';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../Model/ConfigurationModel';
 import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
+import EventIcon from '@mui/icons-material/Event';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { TrackChildLocationDialog } from './TrackChildLocationDialog';
 import { MissingArrangementRequirementRow } from "../Requirements/MissingArrangementRequirementRow";
@@ -33,6 +37,153 @@ import { ArrangementCardTitle } from './ArrangementCardTitle';
 import { ArrangementFunctionRow } from './ArrangementFunctionRow';
 import { useCollapsed } from '../Hooks/useCollapsed';
 import { ArrangementComments } from './ArrangementComments';
+import { useInlineEditor } from '../Hooks/useInlineEditor';
+import { useReferralsModel } from '../Model/ReferralsModel';
+import { useFamilyIdPermissions } from '../Model/SessionModel';
+import { format } from 'date-fns';
+import { DatePicker } from '@mui/x-date-pickers';
+
+interface ChildLocationIndicatorProps {
+  partneringFamily: CombinedFamilyInfo
+  referralId: string
+  arrangement: Arrangement
+  arrangementPolicy: ArrangementPolicy
+  summaryOnly?: boolean
+}
+function ChildLocationIndicator({ partneringFamily, referralId, arrangement, arrangementPolicy, summaryOnly }: ChildLocationIndicatorProps) {
+  const familyLookup = useFamilyLookup();
+  const [showTrackChildLocationDialog, setShowTrackChildLocationDialog] = useState(false);
+
+  const currentLocation = arrangement.childLocationHistory && arrangement.childLocationHistory.length > 0
+    ? arrangement.childLocationHistory[arrangement.childLocationHistory.length - 1]
+    : null;
+  
+  // The planned location that is of interest is always the next one after the stay with the current family.
+  // This means that, whether the current location change happened before, on, or after the corresponding planned change,
+  // the next planned location to display will always be whatever other family the child is set to go to next.
+  // The only times when this would not return a result would be when there are no further plans (result is null),
+  // or when the only remaining planned change is already past-due. In that case, we need to instead find the
+  // most recently missed planned change.
+  const nextPlannedLocation = arrangement.childLocationPlan && arrangement.childLocationPlan.length > 0
+    ? arrangement.childLocationPlan.find(entry =>
+        currentLocation == null ||
+        (entry.timestampUtc! > currentLocation.timestampUtc! &&
+          entry.childLocationFamilyId !== currentLocation.childLocationFamilyId)) ||
+      arrangement.childLocationPlan.slice().reverse().find(entry =>
+        entry.childLocationFamilyId !== currentLocation?.childLocationFamilyId) ||
+      null
+    : null;
+
+  const nextPlanIsPastDue = nextPlannedLocation && nextPlannedLocation.timestampUtc! < new Date();
+
+  return (
+    <>
+      {summaryOnly
+        ? <>
+            <PersonPinCircleIcon color='disabled' style={{float: 'right', marginLeft: 2, marginTop: 2}} />
+            <span style={{float: 'right', paddingTop: 4}}>{
+              currentLocation
+              ? <FamilyName family={familyLookup(currentLocation.childLocationFamilyId)} />
+              : <strong>Location unspecified</strong>
+            }</span>
+          </>
+        : <>
+            <Button size="large" variant="text"
+              style={{float: 'right', marginTop: -10, marginRight: -10, textTransform: "initial"}}
+              endIcon={<PersonPinCircleIcon />}
+              onClick={(event) => setShowTrackChildLocationDialog(true)}>
+              {currentLocation
+                ? <FamilyName family={familyLookup(currentLocation.childLocationFamilyId)} />
+                : <strong>Location unspecified</strong>}
+            </Button>
+            {showTrackChildLocationDialog && <TrackChildLocationDialog
+              partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement}
+              onClose={() => setShowTrackChildLocationDialog(false)} />}
+          </>}
+      <Typography variant={summaryOnly ? 'body2' : 'body1'} style={{float:'right', clear:'right'}}>
+        {nextPlannedLocation == null
+          ? <span>No upcoming plans</span>
+          : <span style={nextPlanIsPastDue ? { fontWeight: 'bold', color: 'red' } : {}}>
+              {nextPlanIsPastDue && "PAST DUE - "}
+              <FamilyName family={familyLookup(nextPlannedLocation.childLocationFamilyId)} />
+              &nbsp;on {format(nextPlannedLocation.timestampUtc!, 'M/d/yyyy')}
+            </span>}
+        <EventIcon sx={{ position: 'relative', top: 7,
+          marginTop: summaryOnly ? -0.5 : -1, marginRight: summaryOnly ? 0 : -0.5, marginLeft: summaryOnly ? 0.25 : 1,
+          color: nextPlanIsPastDue ? 'red' : summaryOnly ? '#00000042' : null }} />
+      </Typography>
+    </>
+  );
+}
+
+interface ArrangementPlannedDurationProps {
+  partneringFamily: CombinedFamilyInfo
+  referralId: string
+  arrangement: Arrangement
+  summaryOnly?: boolean
+}
+function ArrangementPlannedDuration({ partneringFamily, referralId, arrangement, summaryOnly }: ArrangementPlannedDurationProps) {
+  const referralsModel = useReferralsModel();
+
+  const partneringFamilyId = partneringFamily.family!.id!;
+  const permissions = useFamilyIdPermissions(partneringFamilyId);
+
+  const plannedStartEditor = useInlineEditor(async value => {
+    await referralsModel.planArrangementStart(partneringFamilyId, referralId, arrangement.id!, value);
+  }, arrangement.plannedStartUtc || null);
+  
+  const plannedEndEditor = useInlineEditor(async value => {
+    await referralsModel.planArrangementEnd(partneringFamilyId, referralId, arrangement.id!, value);
+  }, arrangement.plannedEndUtc || null);
+
+  return (
+    <Stack direction='column' sx={{ clear: 'both' }}>
+      <Box>
+        <span>Planned start:&nbsp;</span>
+        {(!summaryOnly && permissions(Permission.EditArrangement))
+          ? plannedStartEditor.editing
+            ? <>
+                <DatePicker
+                  label="Planned start"
+                  value={plannedStartEditor.value}
+                  onChange={(value: any) => plannedStartEditor.setValue(value)}
+                  renderInput={(params: any) => <TextField size='small' margin='dense' {...params} />} />
+                {plannedStartEditor.cancelButton}
+                {plannedStartEditor.saveButton}
+              </>
+            : <>
+                {plannedStartEditor.value ? format(plannedStartEditor.value, "M/d/yyyy") : "-"}
+                {plannedStartEditor.editButton}
+              </>
+          : <>
+              {plannedStartEditor.value ? format(plannedStartEditor.value, "M/d/yyyy") : "-"}
+            </>
+        }
+      </Box>
+      <Box>
+        <span>Planned end:&nbsp;</span>
+        {(!summaryOnly && permissions(Permission.EditArrangement))
+          ? plannedEndEditor.editing
+            ? <>
+                <DatePicker
+                  label="Planned end"
+                  value={plannedEndEditor.value}
+                  onChange={(value: any) => plannedEndEditor.setValue(value)}
+                  renderInput={(params: any) => <TextField size='small' margin='dense' {...params} />} />
+                {plannedEndEditor.cancelButton}
+                {plannedEndEditor.saveButton}
+              </>
+            : <>
+                {plannedEndEditor.value ? format(plannedEndEditor.value, "M/d/yyyy") : "-"}
+                {plannedEndEditor.editButton}
+              </>
+          : <>
+              {plannedEndEditor.value ? format(plannedEndEditor.value, "M/d/yyyy") : "-"}
+            </>}
+      </Box>
+    </Stack>
+  );
+}
 
 type ArrangementCardProps = {
   partneringFamily: CombinedFamilyInfo;
@@ -43,23 +194,21 @@ type ArrangementCardProps = {
 
 export function ArrangementCard({ partneringFamily, referralId, arrangement, summaryOnly }: ArrangementCardProps) {
   const policy = useRecoilValue(policyData);
-
-  const familyLookup = useFamilyLookup();
   const personLookup = usePersonLookup();
-  
-  const [showTrackChildLocationDialog, setShowTrackChildLocationDialog] = useState(false);
 
   const [collapsed, setCollapsed] = useCollapsed(`arrangement-${referralId}-${arrangement.id}`, false);
 
+  const partneringFamilyId = partneringFamily.family!.id!;
+
   const arrangementRequirementContext: ArrangementContext = {
     kind: "Arrangement",
-    partneringFamilyId: partneringFamily.family!.id!,
+    partneringFamilyId: partneringFamilyId,
     referralId: referralId,
     arrangementId: arrangement.id!
   };
   
   const arrangementPolicy = policy.referralPolicy?.arrangementPolicies?.find(a => a.arrangementType === arrangement.arrangementType);
-
+  
   const missingAssignmentFunctions = arrangementPolicy?.arrangementFunctions?.filter(functionPolicy =>
     (functionPolicy.requirement === FunctionRequirement.ExactlyOne || functionPolicy.requirement === FunctionRequirement.OneOrMore) &&
     !arrangement.familyVolunteerAssignments?.some(x => x.arrangementFunction === functionPolicy.functionName) &&
@@ -158,38 +307,20 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
           paddingBottom: 0
         }
       }}>
-        <Typography variant="body2" component="div">
+        <Typography variant="body2" component="div" sx={{mb:1}}>
           <strong><PersonName person={personLookup(partneringFamily.family!.id, arrangement.partneringFamilyPersonId)} /></strong>
           {(arrangement.phase === ArrangementPhase.Started || arrangement.phase === ArrangementPhase.Ended) &&
-            (arrangementPolicy?.childInvolvement === ChildInvolvement.ChildHousing || arrangementPolicy?.childInvolvement === ChildInvolvement.DaytimeChildCareOnly) && (
-            <>
-              {summaryOnly
-                ? <>
-                    <PersonPinCircleIcon color='disabled' style={{float: 'right', marginLeft: 2, marginTop: 2}} />
-                    <span style={{float: 'right', paddingTop: 4}}>{
-                      (arrangement.childLocationHistory && arrangement.childLocationHistory.length > 0)
-                      ? <FamilyName family={familyLookup(arrangement.childLocationHistory[arrangement.childLocationHistory.length - 1].childLocationFamilyId)} />
-                      : <strong>Location unspecified</strong>
-                    }</span>
-                  </>
-                : <>
-                    <Button size="large" variant="text"
-                      style={{float: 'right', marginTop: -10, marginRight: -10, textTransform: "initial"}}
-                      endIcon={<PersonPinCircleIcon />}
-                      onClick={(event) => setShowTrackChildLocationDialog(true)}>
-                      {(arrangement.childLocationHistory && arrangement.childLocationHistory.length > 0)
-                        ? <FamilyName family={familyLookup(arrangement.childLocationHistory[arrangement.childLocationHistory.length - 1].childLocationFamilyId)} />
-                        : <strong>Location unspecified</strong>}
-                    </Button>
-                    {showTrackChildLocationDialog && <TrackChildLocationDialog
-                      partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement}
-                      onClose={() => setShowTrackChildLocationDialog(false)} />}
-                  </>}
-            </>
-          )}
+            (arrangementPolicy?.childInvolvement === ChildInvolvement.ChildHousing || arrangementPolicy?.childInvolvement === ChildInvolvement.DaytimeChildCareOnly) && 
+            <ChildLocationIndicator partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement}
+              arrangementPolicy={arrangementPolicy} summaryOnly={summaryOnly} />}
         </Typography>
+        {(arrangement.phase === ArrangementPhase.SettingUp ||
+          arrangement.phase === ArrangementPhase.ReadyToStart ||
+          arrangement.phase === ArrangementPhase.Started) &&
+          <ArrangementPlannedDuration partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement}
+            summaryOnly={summaryOnly} />}
         {!summaryOnly && (<>
-          <Box sx={{ height: '8px' }} />
+          <Divider />
           <ArrangementComments partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement} />
           <Accordion expanded={!collapsed} onChange={(event, isExpanded) => setCollapsed(!isExpanded)}
             variant="outlined" square disableGutters sx={{marginLeft:-2, marginRight:-2, border: 'none' }}>

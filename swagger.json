@@ -2578,6 +2578,16 @@
             "format": "date-time",
             "nullable": true
           },
+          "plannedStartUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "plannedEndUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "completedRequirements": {
             "type": "array",
             "items": {
@@ -2609,6 +2619,12 @@
             }
           },
           "childLocationHistory": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChildLocationHistoryEntry"
+            }
+          },
+          "childLocationPlan": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ChildLocationHistoryEntry"
@@ -4219,6 +4235,7 @@
             "CompleteVolunteerFamilyAssignmentRequirement": "#/components/schemas/CompleteVolunteerFamilyAssignmentRequirement",
             "CreateArrangement": "#/components/schemas/CreateArrangement",
             "DeleteChildLocationChange": "#/components/schemas/DeleteChildLocationChange",
+            "DeletePlannedChildLocationChange": "#/components/schemas/DeletePlannedChildLocationChange",
             "EditArrangementStartTime": "#/components/schemas/EditArrangementStartTime",
             "EndArrangements": "#/components/schemas/EndArrangements",
             "ExemptArrangementRequirement": "#/components/schemas/ExemptArrangementRequirement",
@@ -4227,6 +4244,9 @@
             "MarkArrangementRequirementIncomplete": "#/components/schemas/MarkArrangementRequirementIncomplete",
             "MarkIndividualVolunteerAssignmentRequirementIncomplete": "#/components/schemas/MarkIndividualVolunteerAssignmentRequirementIncomplete",
             "MarkVolunteerFamilyAssignmentRequirementIncomplete": "#/components/schemas/MarkVolunteerFamilyAssignmentRequirementIncomplete",
+            "PlanArrangementEnd": "#/components/schemas/PlanArrangementEnd",
+            "PlanArrangementStart": "#/components/schemas/PlanArrangementStart",
+            "PlanChildLocationChange": "#/components/schemas/PlanChildLocationChange",
             "ReopenArrangements": "#/components/schemas/ReopenArrangements",
             "StartArrangements": "#/components/schemas/StartArrangements",
             "TrackChildLocationChange": "#/components/schemas/TrackChildLocationChange",
@@ -4515,6 +4535,31 @@
           }
         ]
       },
+      "DeletePlannedChildLocationChange": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "plannedChangeUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "childLocationFamilyId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "childLocationReceivingAdultId": {
+                "type": "string",
+                "format": "guid"
+              }
+            }
+          }
+        ]
+      },
       "EditArrangementStartTime": {
         "allOf": [
           {
@@ -4747,6 +4792,70 @@
               },
               "requirementName": {
                 "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "PlanArrangementEnd": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "plannedEndUtc": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "PlanArrangementStart": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "plannedStartUtc": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "PlanChildLocationChange": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "plannedChangeUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "childLocationFamilyId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "childLocationReceivingAdultId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "plan": {
+                "$ref": "#/components/schemas/ChildLocationPlan"
               }
             }
           }

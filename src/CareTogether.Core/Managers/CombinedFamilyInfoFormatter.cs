@@ -119,10 +119,11 @@ namespace CareTogether.Managers
             static Arrangement ToArrangement(ArrangementEntry entry, ArrangementStatus status) =>
                 new(entry.Id, entry.ArrangementType, entry.PartneringFamilyPersonId, status.Phase,
                     entry.RequestedAtUtc, entry.StartedAtUtc, entry.EndedAtUtc, entry.CancelledAtUtc,
+                    entry.PlannedStartUtc, entry.PlannedEndUtc,
                     entry.CompletedRequirements, entry.ExemptedRequirements,
                     status.MissingRequirements,
                     entry.IndividualVolunteerAssignments, entry.FamilyVolunteerAssignments,
-                    entry.ChildLocationHistory,
+                    entry.ChildLocationHistory, entry.ChildLocationPlan,
                     entry.Comments);
         }
 

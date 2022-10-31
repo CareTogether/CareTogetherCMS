@@ -17,13 +17,14 @@ namespace CareTogether.Resources.Referrals
 
     public record ArrangementEntry(Guid Id, string ArrangementType,
         DateTime RequestedAtUtc, DateTime? StartedAtUtc, DateTime? EndedAtUtc,
-        DateTime? CancelledAtUtc,
+        DateTime? CancelledAtUtc, DateTime? PlannedStartUtc, DateTime? PlannedEndUtc,
         Guid PartneringFamilyPersonId,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<IndividualVolunteerAssignment> IndividualVolunteerAssignments,
         ImmutableList<FamilyVolunteerAssignment> FamilyVolunteerAssignments,
         ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationHistory,
+        ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationPlan,
         string? Comments);
 
     public enum ReferralCloseReason { NotAppropriate, NoCapacity, NoLongerNeeded, Resourced, NeedMet };
@@ -94,6 +95,9 @@ namespace CareTogether.Resources.Referrals
     public sealed record UnassignVolunteerFamily(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         Guid VolunteerFamilyId, string ArrangementFunction, string? ArrangementFunctionVariant)
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+    public sealed record PlanArrangementStart(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
+        DateTime? PlannedStartUtc)
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
     public sealed record StartArrangements(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         DateTime StartedAtUtc)
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
@@ -147,11 +151,20 @@ namespace CareTogether.Resources.Referrals
         string ArrangementFunction, string? ArrangementFunctionVariant, Guid VolunteerFamilyId, Guid PersonId,
         string RequirementName, DateTime? DueDate)
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+    public sealed record PlanChildLocationChange(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
+        DateTime PlannedChangeUtc, Guid ChildLocationFamilyId, Guid ChildLocationReceivingAdultId, ChildLocationPlan Plan)
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+    public sealed record DeletePlannedChildLocationChange(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
+        DateTime PlannedChangeUtc, Guid ChildLocationFamilyId, Guid ChildLocationReceivingAdultId)
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
     public sealed record TrackChildLocationChange(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         DateTime ChangedAtUtc, Guid ChildLocationFamilyId, Guid ChildLocationReceivingAdultId, ChildLocationPlan Plan, Guid? NoteId)
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
     public sealed record DeleteChildLocationChange(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         DateTime ChangedAtUtc, Guid ChildLocationFamilyId, Guid ChildLocationReceivingAdultId, Guid? NoteId)
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+    public sealed record PlanArrangementEnd(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
+        DateTime? PlannedEndUtc)
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
     public sealed record EndArrangements(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         DateTime EndedAtUtc)

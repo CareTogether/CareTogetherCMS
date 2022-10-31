@@ -32,13 +32,14 @@ namespace CareTogether.Managers
 
     public sealed record Arrangement(Guid Id, string ArrangementType, Guid PartneringFamilyPersonId,
         ArrangementPhase Phase, DateTime RequestedAtUtc, DateTime? StartedAtUtc, DateTime? EndedAtUtc,
-        DateTime? CancelledAtUtc,
+        DateTime? CancelledAtUtc, DateTime? PlannedStartUtc, DateTime? PlannedEndUtc,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<MissingArrangementRequirement> MissingRequirements,
         ImmutableList<IndividualVolunteerAssignment> IndividualVolunteerAssignments,
         ImmutableList<FamilyVolunteerAssignment> FamilyVolunteerAssignments,
         ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationHistory,
+        ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationPlan,
         string? Comments);
 
     public sealed record Note(Guid Id, Guid AuthorId, DateTime TimestampUtc,

@@ -4132,12 +4132,15 @@ export class Arrangement implements IArrangement {
     startedAtUtc?: Date | undefined;
     endedAtUtc?: Date | undefined;
     cancelledAtUtc?: Date | undefined;
+    plannedStartUtc?: Date | undefined;
+    plannedEndUtc?: Date | undefined;
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
     missingRequirements?: MissingArrangementRequirement[];
     individualVolunteerAssignments?: IndividualVolunteerAssignment[];
     familyVolunteerAssignments?: FamilyVolunteerAssignment[];
     childLocationHistory?: ChildLocationHistoryEntry[];
+    childLocationPlan?: ChildLocationHistoryEntry[];
     comments?: string | undefined;
 
     constructor(data?: IArrangement) {
@@ -4159,6 +4162,8 @@ export class Arrangement implements IArrangement {
             this.startedAtUtc = _data["startedAtUtc"] ? new Date(_data["startedAtUtc"].toString()) : <any>undefined;
             this.endedAtUtc = _data["endedAtUtc"] ? new Date(_data["endedAtUtc"].toString()) : <any>undefined;
             this.cancelledAtUtc = _data["cancelledAtUtc"] ? new Date(_data["cancelledAtUtc"].toString()) : <any>undefined;
+            this.plannedStartUtc = _data["plannedStartUtc"] ? new Date(_data["plannedStartUtc"].toString()) : <any>undefined;
+            this.plannedEndUtc = _data["plannedEndUtc"] ? new Date(_data["plannedEndUtc"].toString()) : <any>undefined;
             if (Array.isArray(_data["completedRequirements"])) {
                 this.completedRequirements = [] as any;
                 for (let item of _data["completedRequirements"])
@@ -4189,6 +4194,11 @@ export class Arrangement implements IArrangement {
                 for (let item of _data["childLocationHistory"])
                     this.childLocationHistory!.push(ChildLocationHistoryEntry.fromJS(item));
             }
+            if (Array.isArray(_data["childLocationPlan"])) {
+                this.childLocationPlan = [] as any;
+                for (let item of _data["childLocationPlan"])
+                    this.childLocationPlan!.push(ChildLocationHistoryEntry.fromJS(item));
+            }
             this.comments = _data["comments"];
         }
     }
@@ -4210,6 +4220,8 @@ export class Arrangement implements IArrangement {
         data["startedAtUtc"] = this.startedAtUtc ? this.startedAtUtc.toISOString() : <any>undefined;
         data["endedAtUtc"] = this.endedAtUtc ? this.endedAtUtc.toISOString() : <any>undefined;
         data["cancelledAtUtc"] = this.cancelledAtUtc ? this.cancelledAtUtc.toISOString() : <any>undefined;
+        data["plannedStartUtc"] = this.plannedStartUtc ? this.plannedStartUtc.toISOString() : <any>undefined;
+        data["plannedEndUtc"] = this.plannedEndUtc ? this.plannedEndUtc.toISOString() : <any>undefined;
         if (Array.isArray(this.completedRequirements)) {
             data["completedRequirements"] = [];
             for (let item of this.completedRequirements)
@@ -4240,6 +4252,11 @@ export class Arrangement implements IArrangement {
             for (let item of this.childLocationHistory)
                 data["childLocationHistory"].push(item.toJSON());
         }
+        if (Array.isArray(this.childLocationPlan)) {
+            data["childLocationPlan"] = [];
+            for (let item of this.childLocationPlan)
+                data["childLocationPlan"].push(item.toJSON());
+        }
         data["comments"] = this.comments;
         return data;
     }
@@ -4254,12 +4271,15 @@ export interface IArrangement {
     startedAtUtc?: Date | undefined;
     endedAtUtc?: Date | undefined;
     cancelledAtUtc?: Date | undefined;
+    plannedStartUtc?: Date | undefined;
+    plannedEndUtc?: Date | undefined;
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
     missingRequirements?: MissingArrangementRequirement[];
     individualVolunteerAssignments?: IndividualVolunteerAssignment[];
     familyVolunteerAssignments?: FamilyVolunteerAssignment[];
     childLocationHistory?: ChildLocationHistoryEntry[];
+    childLocationPlan?: ChildLocationHistoryEntry[];
     comments?: string | undefined;
 }
 
@@ -7425,6 +7445,11 @@ export abstract class ArrangementsCommand implements IArrangementsCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "DeletePlannedChildLocationChange") {
+            let result = new DeletePlannedChildLocationChange();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "EditArrangementStartTime") {
             let result = new EditArrangementStartTime();
             result.init(data);
@@ -7462,6 +7487,21 @@ export abstract class ArrangementsCommand implements IArrangementsCommand {
         }
         if (data["discriminator"] === "MarkVolunteerFamilyAssignmentRequirementIncomplete") {
             let result = new MarkVolunteerFamilyAssignmentRequirementIncomplete();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "PlanArrangementEnd") {
+            let result = new PlanArrangementEnd();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "PlanArrangementStart") {
+            let result = new PlanArrangementStart();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "PlanChildLocationChange") {
+            let result = new PlanChildLocationChange();
             result.init(data);
             return result;
         }
@@ -7921,6 +7961,48 @@ export interface IDeleteChildLocationChange extends IArrangementsCommand {
     noteId?: string | undefined;
 }
 
+export class DeletePlannedChildLocationChange extends ArrangementsCommand implements IDeletePlannedChildLocationChange {
+    plannedChangeUtc?: Date;
+    childLocationFamilyId?: string;
+    childLocationReceivingAdultId?: string;
+
+    constructor(data?: IDeletePlannedChildLocationChange) {
+        super(data);
+        this._discriminator = "DeletePlannedChildLocationChange";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.plannedChangeUtc = _data["plannedChangeUtc"] ? new Date(_data["plannedChangeUtc"].toString()) : <any>undefined;
+            this.childLocationFamilyId = _data["childLocationFamilyId"];
+            this.childLocationReceivingAdultId = _data["childLocationReceivingAdultId"];
+        }
+    }
+
+    static fromJS(data: any): DeletePlannedChildLocationChange {
+        data = typeof data === 'object' ? data : {};
+        let result = new DeletePlannedChildLocationChange();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["plannedChangeUtc"] = this.plannedChangeUtc ? this.plannedChangeUtc.toISOString() : <any>undefined;
+        data["childLocationFamilyId"] = this.childLocationFamilyId;
+        data["childLocationReceivingAdultId"] = this.childLocationReceivingAdultId;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IDeletePlannedChildLocationChange extends IArrangementsCommand {
+    plannedChangeUtc?: Date;
+    childLocationFamilyId?: string;
+    childLocationReceivingAdultId?: string;
+}
+
 export class EditArrangementStartTime extends ArrangementsCommand implements IEditArrangementStartTime {
     startedAtUtc?: Date;
 
@@ -8299,6 +8381,120 @@ export interface IMarkVolunteerFamilyAssignmentRequirementIncomplete extends IAr
     volunteerFamilyId?: string;
     completedRequirementId?: string;
     requirementName?: string;
+}
+
+export class PlanArrangementEnd extends ArrangementsCommand implements IPlanArrangementEnd {
+    plannedEndUtc?: Date | undefined;
+
+    constructor(data?: IPlanArrangementEnd) {
+        super(data);
+        this._discriminator = "PlanArrangementEnd";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.plannedEndUtc = _data["plannedEndUtc"] ? new Date(_data["plannedEndUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): PlanArrangementEnd {
+        data = typeof data === 'object' ? data : {};
+        let result = new PlanArrangementEnd();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["plannedEndUtc"] = this.plannedEndUtc ? this.plannedEndUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IPlanArrangementEnd extends IArrangementsCommand {
+    plannedEndUtc?: Date | undefined;
+}
+
+export class PlanArrangementStart extends ArrangementsCommand implements IPlanArrangementStart {
+    plannedStartUtc?: Date | undefined;
+
+    constructor(data?: IPlanArrangementStart) {
+        super(data);
+        this._discriminator = "PlanArrangementStart";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.plannedStartUtc = _data["plannedStartUtc"] ? new Date(_data["plannedStartUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): PlanArrangementStart {
+        data = typeof data === 'object' ? data : {};
+        let result = new PlanArrangementStart();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["plannedStartUtc"] = this.plannedStartUtc ? this.plannedStartUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IPlanArrangementStart extends IArrangementsCommand {
+    plannedStartUtc?: Date | undefined;
+}
+
+export class PlanChildLocationChange extends ArrangementsCommand implements IPlanChildLocationChange {
+    plannedChangeUtc?: Date;
+    childLocationFamilyId?: string;
+    childLocationReceivingAdultId?: string;
+    plan?: ChildLocationPlan;
+
+    constructor(data?: IPlanChildLocationChange) {
+        super(data);
+        this._discriminator = "PlanChildLocationChange";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.plannedChangeUtc = _data["plannedChangeUtc"] ? new Date(_data["plannedChangeUtc"].toString()) : <any>undefined;
+            this.childLocationFamilyId = _data["childLocationFamilyId"];
+            this.childLocationReceivingAdultId = _data["childLocationReceivingAdultId"];
+            this.plan = _data["plan"];
+        }
+    }
+
+    static fromJS(data: any): PlanChildLocationChange {
+        data = typeof data === 'object' ? data : {};
+        let result = new PlanChildLocationChange();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["plannedChangeUtc"] = this.plannedChangeUtc ? this.plannedChangeUtc.toISOString() : <any>undefined;
+        data["childLocationFamilyId"] = this.childLocationFamilyId;
+        data["childLocationReceivingAdultId"] = this.childLocationReceivingAdultId;
+        data["plan"] = this.plan;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IPlanChildLocationChange extends IArrangementsCommand {
+    plannedChangeUtc?: Date;
+    childLocationFamilyId?: string;
+    childLocationReceivingAdultId?: string;
+    plan?: ChildLocationPlan;
 }
 
 export class ReopenArrangements extends ArrangementsCommand implements IReopenArrangements {
