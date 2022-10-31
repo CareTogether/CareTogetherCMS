@@ -8,7 +8,9 @@ import {
   Card,
   CardContent,
   CardHeader,
+  Divider,
   Grid,
+  Stack,
   Table,
   TableBody,
   TableContainer,
@@ -109,32 +111,17 @@ function ChildLocationIndicator({ partneringFamily, referralId, arrangement, arr
   );
 }
 
-type ArrangementCardProps = {
-  partneringFamily: CombinedFamilyInfo;
-  referralId: string;
-  arrangement: Arrangement;
-  summaryOnly?: boolean;
-};
-
-export function ArrangementCard({ partneringFamily, referralId, arrangement, summaryOnly }: ArrangementCardProps) {
-  const policy = useRecoilValue(policyData);
+interface ArrangementPlannedDurationProps {
+  partneringFamily: CombinedFamilyInfo
+  referralId: string
+  arrangement: Arrangement
+  summaryOnly?: boolean
+}
+function ArrangementPlannedDuration({ partneringFamily, referralId, arrangement, summaryOnly }: ArrangementPlannedDurationProps) {
   const referralsModel = useReferralsModel();
-
-  const personLookup = usePersonLookup();
-  
-  const [collapsed, setCollapsed] = useCollapsed(`arrangement-${referralId}-${arrangement.id}`, false);
 
   const partneringFamilyId = partneringFamily.family!.id!;
   const permissions = useFamilyIdPermissions(partneringFamilyId);
-
-  const arrangementRequirementContext: ArrangementContext = {
-    kind: "Arrangement",
-    partneringFamilyId: partneringFamilyId,
-    referralId: referralId,
-    arrangementId: arrangement.id!
-  };
-  
-  const arrangementPolicy = policy.referralPolicy?.arrangementPolicies?.find(a => a.arrangementType === arrangement.arrangementType);
 
   const plannedStartEditor = useInlineEditor(async value => {
     await referralsModel.planArrangementStart(partneringFamilyId, referralId, arrangement.id!, value);
@@ -144,50 +131,78 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
     await referralsModel.planArrangementEnd(partneringFamilyId, referralId, arrangement.id!, value);
   }, arrangement.plannedEndUtc || null);
 
-  function ArrangementPlanDates() {
-    return (
+  return (
+    <Stack direction='column' sx={{ clear: 'both' }}>
       <Box>
-        <span>Planned duration:&nbsp;</span>
+        <span>Planned start:&nbsp;</span>
         {(!summaryOnly && permissions(Permission.EditArrangement))
-          ? <>
-              {plannedStartEditor.editing
-                ? <>
-                    <DatePicker
-                      label="Planned start"
-                      value={plannedStartEditor.value}
-                      onChange={(value: any) => plannedStartEditor.setValue(value)}
-                      renderInput={(params: any) => <TextField size='small' margin='dense' {...params} />} />
-                    {plannedStartEditor.cancelButton}
-                    {plannedStartEditor.saveButton}
-                  </>
-                : <>
-                    {plannedStartEditor.value ? format(plannedStartEditor.value, "M/d/yyyy") : "________"}
-                    {plannedStartEditor.editButton}
-                  </>}
-              <span>&nbsp;to&nbsp;</span>
-              {plannedEndEditor.editing
-                ? <>
-                    <DatePicker
-                      label="Planned end"
-                      value={plannedEndEditor.value}
-                      onChange={(value: any) => plannedEndEditor.setValue(value)}
-                      renderInput={(params: any) => <TextField size='small' margin='dense' {...params} />} />
-                    {plannedEndEditor.cancelButton}
-                    {plannedEndEditor.saveButton}
-                  </>
-                : <>
-                    {plannedEndEditor.value ? format(plannedEndEditor.value, "M/d/yyyy") : "________"}
-                    {plannedEndEditor.editButton}
-                  </>}
-            </>
+          ? plannedStartEditor.editing
+            ? <>
+                <DatePicker
+                  label="Planned start"
+                  value={plannedStartEditor.value}
+                  onChange={(value: any) => plannedStartEditor.setValue(value)}
+                  renderInput={(params: any) => <TextField size='small' margin='dense' {...params} />} />
+                {plannedStartEditor.cancelButton}
+                {plannedStartEditor.saveButton}
+              </>
+            : <>
+                {plannedStartEditor.value ? format(plannedStartEditor.value, "M/d/yyyy") : "-"}
+                {plannedStartEditor.editButton}
+              </>
           : <>
-              {plannedStartEditor.value ? format(plannedStartEditor.value, "M/d/yyyy") : "________"}
-              <span>&nbsp;to&nbsp;</span>
-              {plannedEndEditor.value ? format(plannedEndEditor.value, "M/d/yyyy") : "________"}
+              {plannedStartEditor.value ? format(plannedStartEditor.value, "M/d/yyyy") : "-"}
+            </>
+        }
+      </Box>
+      <Box>
+        <span>Planned end:&nbsp;</span>
+        {(!summaryOnly && permissions(Permission.EditArrangement))
+          ? plannedEndEditor.editing
+            ? <>
+                <DatePicker
+                  label="Planned end"
+                  value={plannedEndEditor.value}
+                  onChange={(value: any) => plannedEndEditor.setValue(value)}
+                  renderInput={(params: any) => <TextField size='small' margin='dense' {...params} />} />
+                {plannedEndEditor.cancelButton}
+                {plannedEndEditor.saveButton}
+              </>
+            : <>
+                {plannedEndEditor.value ? format(plannedEndEditor.value, "M/d/yyyy") : "-"}
+                {plannedEndEditor.editButton}
+              </>
+          : <>
+              {plannedEndEditor.value ? format(plannedEndEditor.value, "M/d/yyyy") : "-"}
             </>}
       </Box>
-    )
-  }
+    </Stack>
+  );
+}
+
+type ArrangementCardProps = {
+  partneringFamily: CombinedFamilyInfo;
+  referralId: string;
+  arrangement: Arrangement;
+  summaryOnly?: boolean;
+};
+
+export function ArrangementCard({ partneringFamily, referralId, arrangement, summaryOnly }: ArrangementCardProps) {
+  const policy = useRecoilValue(policyData);
+  const personLookup = usePersonLookup();
+
+  const [collapsed, setCollapsed] = useCollapsed(`arrangement-${referralId}-${arrangement.id}`, false);
+
+  const partneringFamilyId = partneringFamily.family!.id!;
+
+  const arrangementRequirementContext: ArrangementContext = {
+    kind: "Arrangement",
+    partneringFamilyId: partneringFamilyId,
+    referralId: referralId,
+    arrangementId: arrangement.id!
+  };
+  
+  const arrangementPolicy = policy.referralPolicy?.arrangementPolicies?.find(a => a.arrangementType === arrangement.arrangementType);
   
   const missingAssignmentFunctions = arrangementPolicy?.arrangementFunctions?.filter(functionPolicy =>
     (functionPolicy.requirement === FunctionRequirement.ExactlyOne || functionPolicy.requirement === FunctionRequirement.OneOrMore) &&
@@ -297,8 +312,10 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
         {(arrangement.phase === ArrangementPhase.SettingUp ||
           arrangement.phase === ArrangementPhase.ReadyToStart ||
           arrangement.phase === ArrangementPhase.Started) &&
-          ArrangementPlanDates()}
+          <ArrangementPlannedDuration partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement}
+            summaryOnly={summaryOnly} />}
         {!summaryOnly && (<>
+          <Divider />
           <ArrangementComments partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement} />
           <Accordion expanded={!collapsed} onChange={(event, isExpanded) => setCollapsed(!isExpanded)}
             variant="outlined" square disableGutters sx={{marginLeft:-2, marginRight:-2, border: 'none' }}>
