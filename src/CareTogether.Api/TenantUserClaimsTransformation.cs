@@ -20,12 +20,16 @@ namespace CareTogether.Api
 
         public async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
         {
+            // Skip claims transformations if the principal is not a tenant user (e.g., if it is an API key client).
+            var userId = principal.UserIdOrDefault();
+            if (userId == null)
+                return principal;
+
             var tenantUserIdentity = new ClaimsIdentity();
             tenantUserIdentity.Label = "Tenant User";
-            var userId = principal.UserId();
 
             // Look up the tenant access for the user.
-            var userTenantAccess = await accountsResource.GetUserTenantAccessSummaryAsync(userId);
+            var userTenantAccess = await accountsResource.GetUserTenantAccessSummaryAsync(userId.Value);
 
             var organizationId = userTenantAccess.OrganizationId;
             principal.AddClaimOnlyOnce(tenantUserIdentity, Claims.OrganizationId, organizationId.ToString());
@@ -37,7 +41,7 @@ namespace CareTogether.Api
             // To represent the ability for users to have different sets of roles by location,
             // each location gets its own claims identity, named using a fixed convention for
             // easy lookup later.
-            var userAccessConfiguration = configuration.Users[userId];
+            var userAccessConfiguration = configuration.Users[userId.Value];
             var locationUserIdentities = userAccessConfiguration.LocationRoles
                 .Select(locationRoles =>
                 {

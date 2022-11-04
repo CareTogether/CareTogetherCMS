@@ -17,6 +17,7 @@ using CareTogether.Utilities.EventLog;
 using CareTogether.Utilities.FileStore;
 using CareTogether.Utilities.ObjectStore;
 using CareTogether.Utilities.Telephony;
+using idunno.Authentication.Basic;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -32,6 +33,8 @@ using Microsoft.FeatureManagement;
 using Microsoft.FeatureManagement.FeatureFilters;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Logging;
+using System;
+using System.Security.Claims;
 
 namespace CareTogether.Api
 {
@@ -57,11 +60,6 @@ namespace CareTogether.Api
 
             services.AddHealthChecks();
 
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddMicrosoftIdentityWebApi(Configuration.GetSection("AzureAdB2C"));
-
-            services.AddTransient<IClaimsTransformation, TenantUserClaimsTransformation>();
-
             // Configure the shared blob storage clients to authenticate according to the environment -
             // one for mutable storage and one for immutable storage.
             // Note that this only has an effect when running in Azure; the local (Azurite) emulated storage is always mutable.
@@ -83,6 +81,7 @@ namespace CareTogether.Api
             var configurationStore = new JsonBlobObjectStore<OrganizationConfiguration>(immutableBlobServiceClient, "Configuration");
             var policiesStore = new JsonBlobObjectStore<EffectiveLocationPolicy>(immutableBlobServiceClient, "LocationPolicies");
             var userTenantAccessStore = new JsonBlobObjectStore<UserTenantAccessSummary>(immutableBlobServiceClient, "UserTenantAccess");
+            var organizationSecretsStore = new JsonBlobObjectStore<OrganizationSecrets>(immutableBlobServiceClient, "Configuration");
 
             if (Configuration["OpenApiGen"] != "true")
             {
@@ -99,6 +98,7 @@ namespace CareTogether.Api
                     configurationStore,
                     policiesStore,
                     userTenantAccessStore,
+                    organizationSecretsStore,
                     Configuration["TestData:SourceSmsPhoneNumber"]).Wait();
             }
 
@@ -111,7 +111,7 @@ namespace CareTogether.Api
             var approvalsResource = new ApprovalsResource(approvalsEventLog);
             var directoryResource = new DirectoryResource(directoryEventLog);
             var goalsResource = new GoalsResource(goalsEventLog);
-            var policiesResource = new PoliciesResource(configurationStore, policiesStore);
+            var policiesResource = new PoliciesResource(configurationStore, policiesStore, organizationSecretsStore);
             var accountsResource = new AccountsResource(userTenantAccessStore);
             var referralsResource = new ReferralsResource(referralsEventLog);
             var notesResource = new NotesResource(notesEventLog, draftNotesStore);
@@ -141,6 +141,46 @@ namespace CareTogether.Api
 
             // Utility providers
             services.AddSingleton<IFileStore>(new BlobFileStore(immutableBlobServiceClient, "Uploads"));
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddBasic("Basic", options =>
+                {
+                    options.AllowInsecureProtocol = true; //TODO: Development only...
+                    options.Realm = "CareTogether OData Feed";
+                    options.Events = new BasicAuthenticationEvents
+                    {
+                        OnValidateCredentials = async context =>
+                        {
+                            if (!Guid.TryParse(context.Username, out var assertedOrganizationId))
+                            {
+                                context.Fail("The username must be an organization ID in GUID format.");
+                                return;
+                            }
+
+                            try
+                            {
+                                // Note that it may be possible to leak valid organization IDs here via a timing attack.
+                                var organizationSecrets = await policiesResource.GetOrganizationSecretsAsync(assertedOrganizationId);
+                                if (organizationSecrets.ApiKey?.Length >= 32 && context.Password == organizationSecrets.ApiKey)
+                                {
+                                    context.Principal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+                                    {
+                                        new Claim(Claims.OrganizationId, context.Username)
+                                    }, "API Key"));
+                                    context.Success();
+                                    return;
+                                }
+                            }
+                            catch { }
+
+                            context.Fail("The API key is invalid.");
+                            return;
+                        }
+                    };
+                })
+                .AddMicrosoftIdentityWebApi(Configuration.GetSection("AzureAdB2C"));
+
+            services.AddTransient<IClaimsTransformation, TenantUserClaimsTransformation>();
 
             // Use legacy Newtonsoft JSON to support JsonPolymorph & NSwag for polymorphic serialization.
             // Since we are using OData, .AddODataNewtonsoftJson() replaces .AddNewtonsoftJson().

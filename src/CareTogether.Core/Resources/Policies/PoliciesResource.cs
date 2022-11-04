@@ -1,5 +1,6 @@
 ﻿using CareTogether.Utilities.ObjectStore;
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 
@@ -9,19 +10,23 @@ namespace CareTogether.Resources.Policies
     {
         private const string CONFIG = "config";
         private const string POLICY = "policy";
+        private const string SECRETS = "secrets";
         private const string ORGANIZATION_ADMINISTRATOR = "OrganizationAdministrator";
 
 
         private readonly IObjectStore<OrganizationConfiguration> configurationStore;
         private readonly IObjectStore<EffectiveLocationPolicy> locationPoliciesStore;
+        private readonly IObjectStore<OrganizationSecrets> organizationSecretsStore;
 
 
         public PoliciesResource(
             IObjectStore<OrganizationConfiguration> configurationStore,
-            IObjectStore<EffectiveLocationPolicy> locationPoliciesStore)
+            IObjectStore<EffectiveLocationPolicy> locationPoliciesStore,
+            IObjectStore<OrganizationSecrets> organizationSecretsStore)
         {
             this.configurationStore = configurationStore;
             this.locationPoliciesStore = locationPoliciesStore;
+            this.organizationSecretsStore = organizationSecretsStore;
         }
 
 
@@ -49,6 +54,12 @@ namespace CareTogether.Resources.Policies
         public async Task<EffectiveLocationPolicy> GetCurrentPolicy(Guid organizationId, Guid locationId)
         {
             var result = await locationPoliciesStore.GetAsync(organizationId, locationId, POLICY);
+            return result;
+        }
+
+        public async Task<OrganizationSecrets> GetOrganizationSecretsAsync(Guid organizationId)
+        {
+            var result = await organizationSecretsStore.GetAsync(organizationId, Guid.Empty, SECRETS);
             return result;
         }
 

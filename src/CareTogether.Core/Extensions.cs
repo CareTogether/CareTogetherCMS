@@ -41,6 +41,12 @@ namespace CareTogether
             }
         }
 
+        public static Guid? UserIdOrDefault(this ClaimsPrincipal principal)
+        {
+            var userId = principal.FindFirst(Claims.UserId)?.Value;
+            return userId == null ? null : Guid.Parse(userId);
+        }
+
         public static Guid PersonId(this ClaimsPrincipal principal,
             Guid organizationId, Guid locationId)
         {

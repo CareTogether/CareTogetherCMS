@@ -1,6 +1,7 @@
 ﻿using CareTogether.Managers;
 using CareTogether.Managers.Directory;
 using CareTogether.Resources.Policies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 using NSwag.Annotations;
@@ -27,6 +28,7 @@ namespace CareTogether.Api.OData
 
     [Route("api/odata")]
     [OpenApiIgnore]
+    [Authorize(AuthenticationSchemes = "Basic")]
     public class ODataModelController : ODataController
     {
         private readonly IPoliciesResource policiesResource;
@@ -47,12 +49,8 @@ namespace CareTogether.Api.OData
             var organizations = await Task.WhenAll(userOrganizationIds.Select(async organizationId =>
             {
                 var organizationConfiguration = await policiesResource.GetConfigurationAsync(organizationId);
-                var userAvailableLocations = organizationConfiguration.Users[User.UserId()].LocationRoles
-                    .Select(locationRole => locationRole.LocationId)
-                    .ToArray();
 
                 var locations = await Task.WhenAll(organizationConfiguration.Locations
-                    .Where(location => userAvailableLocations.Contains(location.Id))
                     .Select(async location =>
                     {
                         var familyRecords = await directoryManager.ListVisibleFamiliesAsync(
