@@ -1,14 +1,11 @@
 using Azure.Storage.Blobs;
+using CareTogether.Api.OData;
 using CareTogether.Engines.Authorization;
 using CareTogether.Engines.PolicyEvaluation;
-using CareTogether.Utilities.EventLog;
-using CareTogether.Utilities.FileStore;
-using CareTogether.Utilities.ObjectStore;
 using CareTogether.Managers;
 using CareTogether.Managers.Approval;
 using CareTogether.Managers.Directory;
 using CareTogether.Managers.Referrals;
-using CareTogether.Resources;
 using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
@@ -16,12 +13,18 @@ using CareTogether.Resources.Goals;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.Referrals;
+using CareTogether.Utilities.EventLog;
+using CareTogether.Utilities.FileStore;
+using CareTogether.Utilities.ObjectStore;
+using CareTogether.Utilities.Telephony;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.OData;
+using Microsoft.AspNetCore.OData.NewtonsoftJson;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -29,10 +32,6 @@ using Microsoft.FeatureManagement;
 using Microsoft.FeatureManagement.FeatureFilters;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Logging;
-using CareTogether.Utilities.Telephony;
-using Microsoft.AspNetCore.OData;
-using Microsoft.AspNetCore.OData.NewtonsoftJson;
-using CareTogether.Api.OData;
 
 namespace CareTogether.Api
 {
