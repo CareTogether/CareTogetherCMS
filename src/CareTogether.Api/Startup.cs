@@ -30,6 +30,9 @@ using Microsoft.FeatureManagement.FeatureFilters;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Logging;
 using CareTogether.Utilities.Telephony;
+using Microsoft.AspNetCore.OData;
+using Microsoft.AspNetCore.OData.NewtonsoftJson;
+using CareTogether.Api.OData;
 
 namespace CareTogether.Api
 {
@@ -140,8 +143,16 @@ namespace CareTogether.Api
             // Utility providers
             services.AddSingleton<IFileStore>(new BlobFileStore(immutableBlobServiceClient, "Uploads"));
 
-            // Use legacy Newtonsoft JSON to support JsonPolymorph & NSwag for polymorphic serialization
-            services.AddControllers().AddNewtonsoftJson();
+            // Use legacy Newtonsoft JSON to support JsonPolymorph & NSwag for polymorphic serialization.
+            // Since we are using OData, .AddODataNewtonsoftJson() replaces .AddNewtonsoftJson().
+            services
+                .AddControllers()
+                .AddOData(options =>
+                {
+                    options.EnableQueryFeatures();
+                    options.AddRouteComponents("api/odata", ODataModelProvider.GetEdmModel());
+                })
+                .AddODataNewtonsoftJson();
 
             services.AddAuthorization(options =>
             {
@@ -185,6 +196,8 @@ namespace CareTogether.Api
             {
                 IdentityModelEventSource.ShowPII = true;
                 app.UseDeveloperExceptionPage();
+
+                app.UseODataRouteDebug();
 
                 app.UseOpenApi();
                 // ReDoc supports discriminators/polymorphism so we use that instead of Swagger UI.
