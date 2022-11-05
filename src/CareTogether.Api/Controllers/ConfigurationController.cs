@@ -1,6 +1,8 @@
 ﻿using CareTogether.Engines.Authorization;
 using CareTogether.Resources;
 using CareTogether.Resources.Policies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.FeatureManagement;
 using System;
@@ -11,6 +13,7 @@ namespace CareTogether.Api.Controllers
     public sealed record CurrentFeatureFlags(bool ViewReferrals, bool ExemptAll);
 
     [ApiController]
+    [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class ConfigurationController : ControllerBase
     {
         private readonly IPoliciesResource policiesResource;

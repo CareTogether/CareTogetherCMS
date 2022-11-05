@@ -195,6 +195,10 @@ namespace CareTogether.Api
 
             services.AddAuthorization(options =>
             {
+                options.AddPolicy(Policies.ForbidAnonymous, new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .Build());
+
                 // Require all users to be authenticated and have access to the specified tenant -
                 // the organization ID and location ID (if specified).
                 options.FallbackPolicy = new AuthorizationPolicyBuilder()

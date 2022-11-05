@@ -28,7 +28,7 @@ namespace CareTogether.Api.OData
 
     [Route("api/odata")]
     [OpenApiIgnore]
-    [Authorize(AuthenticationSchemes = "Basic")]
+    [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = "Basic")]
     public class ODataModelController : ODataController
     {
         private readonly IPoliciesResource policiesResource;

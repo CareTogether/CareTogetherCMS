@@ -1,14 +1,14 @@
-﻿using CareTogether.Resources;
+﻿using CareTogether.Engines.Authorization;
 using CareTogether.Resources.Accounts;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Immutable;
-using System.Security.Claims;
-using System;
-using System.Threading.Tasks;
-using System.Linq;
-using CareTogether.Engines.Authorization;
 using Nito.AsyncEx;
-using CareTogether.Resources.Directory;
+using System;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace CareTogether.Api.Controllers
 {
@@ -21,6 +21,7 @@ namespace CareTogether.Api.Controllers
         ImmutableList<Permission> AllPartneringFamiliesContextPermissions);
 
     [ApiController]
+    [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class UsersController : ControllerBase
     {
         private readonly IAccountsResource accountsResource;

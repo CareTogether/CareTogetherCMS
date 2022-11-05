@@ -1,5 +1,6 @@
 ﻿using CareTogether.Engines.Authorization;
 using CareTogether.Utilities.FileStore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -7,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Api.Controllers
 {
-    [Authorize]
     [ApiController]
     [Route("/api/{organizationId:guid}/{locationId:guid}/[controller]")]
+    [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class FilesController : ControllerBase
     {
         private readonly IFileStore fileStore;
