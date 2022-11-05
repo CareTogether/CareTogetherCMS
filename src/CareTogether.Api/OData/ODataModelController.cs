@@ -3,6 +3,7 @@ using CareTogether.Managers.Directory;
 using CareTogether.Resources.Policies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Query;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 using NSwag.Annotations;
 using System;
@@ -43,6 +44,7 @@ namespace CareTogether.Api.OData
 
 
         [HttpGet("Organizations")]
+        [EnableQuery(MaxExpansionDepth = int.MaxValue, MaxAnyAllExpressionDepth = int.MaxValue)]
         public async Task<Organization[]> GetOrganizations()
         {
             var userOrganizationIds = GetUserOrganizationIds();
