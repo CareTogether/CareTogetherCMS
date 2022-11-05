@@ -37,6 +37,11 @@ namespace CareTogether.Engines.Authorization
         public async Task<ImmutableList<Permission>> AuthorizeUserAccessAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user, AuthorizationContext context)
         {
+            // If the caller is using an API key, give full access.
+            if (user.Identity?.AuthenticationType == "API Key" &&
+                user.HasClaim(Claims.OrganizationId, organizationId.ToString()))
+                return Enum.GetValues<Permission>().ToImmutableList();
+
             // The user must have access to this organization and location.
             var userLocalIdentity = user.LocationIdentity(organizationId, locationId);
             if (userLocalIdentity == null)
