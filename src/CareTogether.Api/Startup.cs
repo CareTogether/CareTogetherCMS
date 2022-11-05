@@ -142,7 +142,7 @@ namespace CareTogether.Api
             // Utility providers
             services.AddSingleton<IFileStore>(new BlobFileStore(immutableBlobServiceClient, "Uploads"));
 
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            services.AddAuthentication("Basic")
                 .AddBasic("Basic", options =>
                 {
                     options.AllowInsecureProtocol = true; //TODO: Development only...
