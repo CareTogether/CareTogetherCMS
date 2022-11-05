@@ -49,7 +49,8 @@ namespace CareTogether.Engines.Authorization
 
             // Look up the user's family, which will be referenced several times.
             var userPersonId = user.PersonId(organizationId, locationId);
-            var userFamily = await directoryResource.FindPersonFamilyAsync(organizationId, locationId, userPersonId);
+            var userFamily = userPersonId == null ? null :
+                await directoryResource.FindPersonFamilyAsync(organizationId, locationId, userPersonId.Value);
 
             // If in a family authorization context, look up the target family, which will be referenced several times.
             var familyId = (context as FamilyAuthorizationContext)?.FamilyId;
@@ -332,7 +333,8 @@ namespace CareTogether.Engines.Authorization
             Guid organizationId, Guid locationId, CombinedFamilyInfo family)
         {
             var userPersonId = user.PersonId(organizationId, locationId);
-            var userFamily = await directoryResource.FindPersonFamilyAsync(organizationId, locationId, userPersonId);
+            var userFamily = userPersonId == null ? null
+                : await directoryResource.FindPersonFamilyAsync(organizationId, locationId, userPersonId.Value);
 
             var contextPermissions = await AuthorizeUserAccessAsync(organizationId, locationId, user,
                 new FamilyAuthorizationContext(family.Family.Id));
@@ -569,10 +571,10 @@ namespace CareTogether.Engines.Authorization
             };
 
         internal async Task<bool> DiscloseNoteAsync(Note note, Guid organizationId, Guid locationId,
-            Guid userPersonId, ImmutableList<Permission> contextPermissions)
+            Guid? userPersonId, ImmutableList<Permission> contextPermissions)
         {
             var author = await directoryResource.FindUserAsync(organizationId, locationId, note.AuthorId);
-            return author?.Id == userPersonId ||
+            return userPersonId != null && author?.Id == userPersonId.Value ||
                 contextPermissions.Contains(Permission.ViewAllNotes);
         }
     }

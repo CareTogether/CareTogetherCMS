@@ -47,7 +47,7 @@ namespace CareTogether
             return userId == null ? null : Guid.Parse(userId);
         }
 
-        public static Guid PersonId(this ClaimsPrincipal principal,
+        public static Guid? PersonId(this ClaimsPrincipal principal,
             Guid organizationId, Guid locationId)
         {
             var locationIdentity = principal.LocationIdentity(organizationId, locationId);
@@ -58,8 +58,7 @@ namespace CareTogether
                     return Guid.Parse(personIdClaim.Value);
             }
 
-            throw new InvalidOperationException(
-                $"The principal does not have a valid person ID claim for organization '{organizationId}' and location '{locationId}'.");
+            return null;
         }
 
         public static void AddClaimOnlyOnce(this ClaimsPrincipal principal,
