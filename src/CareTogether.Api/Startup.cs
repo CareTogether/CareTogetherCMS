@@ -145,7 +145,7 @@ namespace CareTogether.Api
             services.AddAuthentication("Basic")
                 .AddBasic("Basic", options =>
                 {
-                    options.AllowInsecureProtocol = true; //TODO: Development only...
+                    options.AllowInsecureProtocol = HostEnvironment.IsDevelopment();
                     options.Realm = "CareTogether OData Feed";
                     options.Events = new BasicAuthenticationEvents
                     {
