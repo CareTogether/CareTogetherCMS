@@ -11,7 +11,9 @@ namespace CareTogether.Api.OData
             builder.Namespace = "CareTogether";
             builder.ContainerName = "CareTogether Data";
 
-            builder.EntitySet<Organization>("Organizations");
+            builder.EntitySet<Location>("Locations");
+            builder.EntitySet<Family>("Families");
+            builder.EntitySet<Person>("People");
 
             return builder.GetEdmModel();
         }

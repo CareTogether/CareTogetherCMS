@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace CareTogether
 {
@@ -82,5 +85,36 @@ namespace CareTogether
             Guid organizationId, Guid locationId) =>
             principal.Identities
                 .SingleOrDefault(identity => identity.AuthenticationType == $"{organizationId}:{locationId}");
+
+
+        public static async IAsyncEnumerable<U> SelectManyAsync<T, U>(this IEnumerable<T> values,
+            Func<T, Task<IEnumerable<U>>> selector)
+        {
+            foreach (var value in values)
+            {
+                var results = await selector(value);
+                foreach (var result in results)
+                    yield return result;
+            }
+        }
+
+        public static async IAsyncEnumerable<(T, U)> ZipSelectManyAsync<T, U>(this IEnumerable<T> values,
+            Func<T, Task<ImmutableList<U>>> selector)
+        {
+            foreach (var value in values)
+            {
+                var results = await selector(value);
+                foreach (var result in results)
+                    yield return (value, result);
+            }
+        }
+
+        public static async IAsyncEnumerable<U> SelectManyAsync<T, U>(this IEnumerable<T> values,
+            Func<T, IAsyncEnumerable<U>> selector)
+        {
+            foreach (var value in values)
+                await foreach (var result in selector(value))
+                    yield return result;
+        }
     }
 }
