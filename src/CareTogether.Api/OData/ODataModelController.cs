@@ -14,17 +14,13 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Api.OData
 {
-    public sealed record Organization(Guid Id, string Name,
-        IEnumerable<Location> Locations)
-    {
-        [Key]
-        public Guid ODataId => Id;
-    }
+    public sealed record Organization([property: Key] Guid Id, string Name,
+        IEnumerable<Location> Locations);
 
-    public sealed record Location(Guid Id, string Name,
+    public sealed record Location([property: Key] Guid Id, string Name,
         IEnumerable<Family> Families);
 
-    public sealed record Family(Guid Id, string Name);
+    public sealed record Family([property: Key] Guid Id, string Name);
 
 
     [Route("api/odata")]
