@@ -23,15 +23,15 @@ namespace CareTogether.Api.OData
     public sealed record Family([property: Key] Guid Id, string Name);
 
 
-    [Route("api/odata")]
+    [Route("api/odata/live")]
     [OpenApiIgnore]
     [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = "Basic")]
-    public class ODataModelController : ODataController
+    public class LiveODataModelController : ODataController
     {
         private readonly IPoliciesResource policiesResource;
         private readonly IDirectoryManager directoryManager;
 
-        public ODataModelController(IPoliciesResource policiesResource,
+        public LiveODataModelController(IPoliciesResource policiesResource,
             IDirectoryManager directoryManager)
         {
             this.policiesResource = policiesResource;

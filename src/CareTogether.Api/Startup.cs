@@ -189,7 +189,7 @@ namespace CareTogether.Api
                 .AddOData(options =>
                 {
                     options.EnableQueryFeatures();
-                    options.AddRouteComponents("api/odata", ODataModelProvider.GetEdmModel());
+                    options.AddRouteComponents("api/odata/live", ODataModelProvider.GetLiveEdmModel());
                 })
                 .AddODataNewtonsoftJson();
 

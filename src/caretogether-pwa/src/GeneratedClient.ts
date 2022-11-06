@@ -822,7 +822,7 @@ export class MetadataClient {
     }
 
     getMetadata(): Promise<IEdmModel> {
-        let url_ = this.baseUrl + "/api/odata/$metadata";
+        let url_ = this.baseUrl + "/api/odata/live/$metadata";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -856,7 +856,7 @@ export class MetadataClient {
     }
 
     getServiceDocument(): Promise<ODataServiceDocument> {
-        let url_ = this.baseUrl + "/api/odata";
+        let url_ = this.baseUrl + "/api/odata/live";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {

@@ -5,7 +5,7 @@ namespace CareTogether.Api.OData
 {
     public class ODataModelProvider
     {
-        public static IEdmModel GetEdmModel()
+        public static IEdmModel GetLiveEdmModel()
         {
             var builder = new ODataConventionModelBuilder();
             builder.Namespace = "CareTogether";

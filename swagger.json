@@ -851,7 +851,7 @@
         }
       }
     },
-    "/api/odata/$metadata": {
+    "/api/odata/live/$metadata": {
       "get": {
         "tags": [
           "Metadata"
@@ -871,7 +871,7 @@
         }
       }
     },
-    "/api/odata": {
+    "/api/odata/live": {
       "get": {
         "tags": [
           "Metadata"
