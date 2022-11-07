@@ -10,25 +10,25 @@ using NSwag.Annotations;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace CareTogether.Api.OData
 {
-    public sealed record Location([property: Key] Guid Id, Guid OrganizationId, string Name);
+    public sealed record Location(Guid Id,
+        Guid OrganizationId, string Name);
 
-    public sealed record Family([property: Key] Guid Id, Location Location, string Name,
-        string? PrimaryEmail, string? PrimaryPhoneNumber, Address? PrimaryAddress)
-    {
-        public Guid LocationId => Location.Id;
-    };
+    public sealed record Family(Guid Id,
+        [property: ForeignKey("LocationId")] Location Location, Guid LocationId, string Name,
+        string? PrimaryEmail, string? PrimaryPhoneNumber, Address? PrimaryAddress);
 
-    public sealed record Person([property: Key] Guid Id, Family Family, string FirstName, string LastName)
-    {
-        public Guid FamilyId => Family.Id;
-    };
+    public sealed record Person(Guid Id,
+        [property: ForeignKey("FamilyId")] Family Family, Guid FamilyId,
+        string FirstName, string LastName);
 
-    public sealed record Address(string Line1, string? Line2, string City, string State, string ZipCode);
+    public sealed record Address(
+        string Line1, string? Line2, string City, string State, string ZipCode);
 
     public sealed record LiveModel(IEnumerable<Location> Locations,
         IEnumerable<Family> Families, IEnumerable<Person> People);
@@ -123,16 +123,16 @@ namespace CareTogether.Api.OData
             var primaryPhoneNumber = primaryContactPerson.PhoneNumbers
                 .SingleOrDefault(x => x.Id == primaryContactPerson.PreferredPhoneNumberId)?.Number;
 
-            return (family, new Family(family.Family.Id, location, familyName,
+            return (family, new Family(family.Family.Id, location, location.Id, familyName,
                 primaryEmail, primaryPhoneNumber, primaryAddress));
         }
 
         private static IEnumerable<Person> RenderPeople(CombinedFamilyInfo familyInfo, Family family)
         {
             return familyInfo.Family.Adults
-                .Select(adult => new Person(adult.Item1.Id, family, adult.Item1.FirstName, adult.Item1.LastName))
+                .Select(adult => new Person(adult.Item1.Id, family, family.Id, adult.Item1.FirstName, adult.Item1.LastName))
                 .Concat(familyInfo.Family.Children
-                    .Select(child => new Person(child.Id, family, child.FirstName, child.LastName)));
+                    .Select(child => new Person(child.Id, family, family.Id, child.FirstName, child.LastName)));
         }
     }
 }
