@@ -1,5 +1,4 @@
-﻿using CareTogether.Engines;
-using CareTogether.Managers;
+﻿using CareTogether.Managers;
 using CareTogether.Managers.Directory;
 using CareTogether.Resources.Policies;
 using Microsoft.AspNetCore.Authorization;
@@ -33,18 +32,20 @@ namespace CareTogether.Api.OData
     public sealed record FamilyRoleApproval(
         [property: ForeignKey("FamilyId")] Family Family, [property: Key] Guid FamilyId,
         [property: ForeignKey("RoleName")] Role Role, [property: Key] string RoleName,
-        RoleApprovalStatus ApprovalStatus);
+        RoleApprovalStage ApprovalStage);
 
     public sealed record IndividualRoleApproval(
         [property: ForeignKey("PersonId")] Person Person, [property: Key] Guid PersonId,
         [property: ForeignKey("RoleName")] Role Role, [property: Key] string RoleName,
-        RoleApprovalStatus ApprovalStatus);
+        RoleApprovalStage ApprovalStage);
 
     public sealed record Role([property: Key] string Name);
 
+    public sealed record RoleApprovalStage([property: Key] string Name);
+
     public sealed record LiveModel(IEnumerable<Location> Locations,
         IEnumerable<Family> Families, IEnumerable<Person> People,
-        IEnumerable<Role> Roles,
+        IEnumerable<Role> Roles, IEnumerable<RoleApprovalStage> ApprovalStages,
         IEnumerable<FamilyRoleApproval> FamilyRoleApprovals,
         IEnumerable<IndividualRoleApproval> IndividualRoleApprovals);
 
@@ -108,6 +109,13 @@ namespace CareTogether.Api.OData
             return liveModel.IndividualRoleApprovals;
         }
 
+        [HttpGet("ApprovalStages")]
+        public async Task<IEnumerable<RoleApprovalStage>> GetApprovalStagesAsync()
+        {
+            var liveModel = await RenderLiveModelAsync();
+            return liveModel.ApprovalStages;
+        }
+
 
         private async Task<LiveModel> RenderLiveModelAsync()
         {
@@ -126,9 +134,11 @@ namespace CareTogether.Api.OData
                     var policy = await policiesResource.GetCurrentPolicy(organizationId, location.Id);
                     return policy.VolunteerPolicy.VolunteerRoles.Select(role => role.Value.VolunteerRoleType)
                         .Concat(policy.VolunteerPolicy.VolunteerFamilyRoles.Select(role => role.Value.VolunteerFamilyRoleType))
-                        .Distinct()
                         .Select(roleName => new Role(roleName));
-                }).ToArrayAsync();
+                }).Distinct().ToArrayAsync();
+
+            var approvalStages = Enum.GetNames<Engines.RoleApprovalStatus>()
+                .Select(ras => new RoleApprovalStage(ras)).ToArray();
 
             var locations = organizationConfiguration.Locations
                 .Select(location => new Location(location.Id, organizationId, location.Name))
@@ -144,12 +154,12 @@ namespace CareTogether.Api.OData
             var people = familiesWithInfo.SelectMany(x => RenderPeople(x.Item1, x.Item2)).ToArray();
 
             var familyRoleApprovals = familiesWithInfo
-                .SelectMany(x => RenderFamilyRoleApprovals(x.Item1, x.Item2, roles)).ToArray();
+                .SelectMany(x => RenderFamilyRoleApprovals(x.Item1, x.Item2, roles, approvalStages)).ToArray();
             var individualRoleApprovals = familiesWithInfo
-                .SelectMany(x => RenderIndividualRoleApprovals(x.Item1, x.Item2, people, roles)).ToArray();
+                .SelectMany(x => RenderIndividualRoleApprovals(x.Item1, x.Item2, people, roles, approvalStages)).ToArray();
 
             return new LiveModel(locations, families, people,
-                roles, familyRoleApprovals, individualRoleApprovals);
+                roles, approvalStages, familyRoleApprovals, individualRoleApprovals);
         }
 
         private Guid GetUserSingleOrganizationId()
@@ -188,23 +198,25 @@ namespace CareTogether.Api.OData
         }
 
         private static IEnumerable<FamilyRoleApproval> RenderFamilyRoleApprovals(
-            CombinedFamilyInfo familyInfo, Family family, Role[] roles)
+            CombinedFamilyInfo familyInfo, Family family, Role[] roles, RoleApprovalStage[] approvalStages)
         {
             return familyInfo.VolunteerFamilyInfo?.FamilyRoleApprovals
                 .SelectMany(fra => fra.Value.Select(approval =>
                     new FamilyRoleApproval(family, family.Id,
-                        roles.Single(role => role.Name == fra.Key), fra.Key, approval.ApprovalStatus)))
+                        roles.Single(role => role.Name == fra.Key), fra.Key,
+                        approvalStages.Single(ras => ras.Name == approval.ApprovalStatus.ToString()))))
                 ?? Enumerable.Empty<FamilyRoleApproval>(); //TODO: Render expiration & handle role versions!
         }
 
         private static IEnumerable<IndividualRoleApproval> RenderIndividualRoleApprovals(
-            CombinedFamilyInfo familyInfo, Family family, Person[] people, Role[] roles)
+            CombinedFamilyInfo familyInfo, Family family, Person[] people, Role[] roles, RoleApprovalStage[] approvalStages)
         {
             return familyInfo.VolunteerFamilyInfo?.IndividualVolunteers
                 .SelectMany(individual => individual.Value.IndividualRoleApprovals
                     .SelectMany(ira => ira.Value.Select(approval =>
                         new IndividualRoleApproval(people.Single(person => person.Id == individual.Key), individual.Key,
-                            roles.Single(role => role.Name == ira.Key), ira.Key, approval.ApprovalStatus))))
+                            roles.Single(role => role.Name == ira.Key), ira.Key,
+                            approvalStages.Single(ras => ras.Name == approval.ApprovalStatus.ToString())))))
                 ?? Enumerable.Empty<IndividualRoleApproval>(); //TODO: Render expiration & handle role versions!
         }
     }
