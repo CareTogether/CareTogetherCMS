@@ -28,7 +28,7 @@ namespace CareTogether.Api.OData
         string FirstName, string LastName);
 
     public sealed record Address(
-        string Line1, string? Line2, string City, string State, string ZipCode);
+        string Line1, string? Line2, string City, string State, string PostalCode);
 
     public sealed record LiveModel(IEnumerable<Location> Locations,
         IEnumerable<Family> Families, IEnumerable<Person> People);
