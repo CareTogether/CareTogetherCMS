@@ -18,9 +18,15 @@ namespace CareTogether.Api.OData
     public sealed record Location([property: Key] Guid Id, Guid OrganizationId, string Name);
 
     public sealed record Family([property: Key] Guid Id, Location Location, string Name,
-        string? PrimaryEmail, string? PrimaryPhoneNumber, Address? PrimaryAddress);
+        string? PrimaryEmail, string? PrimaryPhoneNumber, Address? PrimaryAddress)
+    {
+        public Guid LocationId => Location.Id;
+    };
 
-    public sealed record Person([property: Key] Guid Id, Family Family, string FirstName, string LastName);
+    public sealed record Person([property: Key] Guid Id, Family Family, string FirstName, string LastName)
+    {
+        public Guid FamilyId => Family.Id;
+    };
 
     public sealed record Address(string Line1, string? Line2, string City, string State, string ZipCode);
 
