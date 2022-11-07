@@ -1,6 +1,6 @@
-﻿using CareTogether.Managers;
+﻿using CareTogether.Engines;
+using CareTogether.Managers;
 using CareTogether.Managers.Directory;
-using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -30,8 +30,23 @@ namespace CareTogether.Api.OData
     public sealed record Address(
         string Line1, string? Line2, string City, string State, string PostalCode);
 
+    public sealed record FamilyRoleApproval(
+        [property: ForeignKey("FamilyId")] Family Family, [property: Key] Guid FamilyId,
+        [property: ForeignKey("RoleName")] Role Role, [property: Key] string RoleName,
+        RoleApprovalStatus ApprovalStatus);
+
+    public sealed record IndividualRoleApproval(
+        [property: ForeignKey("PersonId")] Person Person, [property: Key] Guid PersonId,
+        [property: ForeignKey("RoleName")] Role Role, [property: Key] string RoleName,
+        RoleApprovalStatus ApprovalStatus);
+
+    public sealed record Role([property: Key] string Name);
+
     public sealed record LiveModel(IEnumerable<Location> Locations,
-        IEnumerable<Family> Families, IEnumerable<Person> People);
+        IEnumerable<Family> Families, IEnumerable<Person> People,
+        IEnumerable<Role> Roles,
+        IEnumerable<FamilyRoleApproval> FamilyRoleApprovals,
+        IEnumerable<IndividualRoleApproval> IndividualRoleApprovals);
 
 
     [Route("api/odata/live")]
@@ -72,6 +87,27 @@ namespace CareTogether.Api.OData
             return liveModel.People;
         }
 
+        [HttpGet("Roles")]
+        public async Task<IEnumerable<Role>> GetRolesAsync()
+        {
+            var liveModel = await RenderLiveModelAsync();
+            return liveModel.Roles;
+        }
+
+        [HttpGet("FamilyRoleApprovals")]
+        public async Task<IEnumerable<FamilyRoleApproval>> GetFamilyRoleApprovalsAsync()
+        {
+            var liveModel = await RenderLiveModelAsync();
+            return liveModel.FamilyRoleApprovals;
+        }
+
+        [HttpGet("IndividualRoleApprovals")]
+        public async Task<IEnumerable<IndividualRoleApproval>> GetIndividualRoleApprovalsAsync()
+        {
+            var liveModel = await RenderLiveModelAsync();
+            return liveModel.IndividualRoleApprovals;
+        }
+
 
         private async Task<LiveModel> RenderLiveModelAsync()
         {
@@ -83,6 +119,16 @@ namespace CareTogether.Api.OData
             var organizationId = GetUserSingleOrganizationId();
 
             var organizationConfiguration = await policiesResource.GetConfigurationAsync(organizationId);
+
+            var roles = await organizationConfiguration.Locations
+                .SelectManyAsync(async location =>
+                {
+                    var policy = await policiesResource.GetCurrentPolicy(organizationId, location.Id);
+                    return policy.VolunteerPolicy.VolunteerRoles.Select(role => role.Value.VolunteerRoleType)
+                        .Concat(policy.VolunteerPolicy.VolunteerFamilyRoles.Select(role => role.Value.VolunteerFamilyRoleType))
+                        .Distinct()
+                        .Select(roleName => new Role(roleName));
+                }).ToArrayAsync();
 
             var locations = organizationConfiguration.Locations
                 .Select(location => new Location(location.Id, organizationId, location.Name))
@@ -97,7 +143,13 @@ namespace CareTogether.Api.OData
 
             var people = familiesWithInfo.SelectMany(x => RenderPeople(x.Item1, x.Item2)).ToArray();
 
-            return new LiveModel(locations, families, people);
+            var familyRoleApprovals = familiesWithInfo
+                .SelectMany(x => RenderFamilyRoleApprovals(x.Item1, x.Item2, roles)).ToArray();
+            var individualRoleApprovals = familiesWithInfo
+                .SelectMany(x => RenderIndividualRoleApprovals(x.Item1, x.Item2, people, roles)).ToArray();
+
+            return new LiveModel(locations, families, people,
+                roles, familyRoleApprovals, individualRoleApprovals);
         }
 
         private Guid GetUserSingleOrganizationId()
@@ -133,6 +185,27 @@ namespace CareTogether.Api.OData
                 .Select(adult => new Person(adult.Item1.Id, family, family.Id, adult.Item1.FirstName, adult.Item1.LastName))
                 .Concat(familyInfo.Family.Children
                     .Select(child => new Person(child.Id, family, family.Id, child.FirstName, child.LastName)));
+        }
+
+        private static IEnumerable<FamilyRoleApproval> RenderFamilyRoleApprovals(
+            CombinedFamilyInfo familyInfo, Family family, Role[] roles)
+        {
+            return familyInfo.VolunteerFamilyInfo?.FamilyRoleApprovals
+                .SelectMany(fra => fra.Value.Select(approval =>
+                    new FamilyRoleApproval(family, family.Id,
+                        roles.Single(role => role.Name == fra.Key), fra.Key, approval.ApprovalStatus)))
+                ?? Enumerable.Empty<FamilyRoleApproval>(); //TODO: Render expiration & handle role versions!
+        }
+
+        private static IEnumerable<IndividualRoleApproval> RenderIndividualRoleApprovals(
+            CombinedFamilyInfo familyInfo, Family family, Person[] people, Role[] roles)
+        {
+            return familyInfo.VolunteerFamilyInfo?.IndividualVolunteers
+                .SelectMany(individual => individual.Value.IndividualRoleApprovals
+                    .SelectMany(ira => ira.Value.Select(approval =>
+                        new IndividualRoleApproval(people.Single(person => person.Id == individual.Key), individual.Key,
+                            roles.Single(role => role.Name == ira.Key), ira.Key, approval.ApprovalStatus))))
+                ?? Enumerable.Empty<IndividualRoleApproval>(); //TODO: Render expiration & handle role versions!
         }
     }
 }

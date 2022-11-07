@@ -14,6 +14,9 @@ namespace CareTogether.Api.OData
             builder.EntitySet<Location>("Locations");
             builder.EntitySet<Family>("Families");
             builder.EntitySet<Person>("People");
+            builder.EntitySet<Role>("Roles");
+            builder.EntitySet<FamilyRoleApproval>("FamilyRoleApprovals");
+            builder.EntitySet<IndividualRoleApproval>("IndividualRoleApprovals");
 
             return builder.GetEdmModel();
         }
