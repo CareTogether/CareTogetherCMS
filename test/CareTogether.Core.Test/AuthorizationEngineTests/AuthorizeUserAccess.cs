@@ -48,6 +48,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             var configurationStore = new MemoryObjectStore<OrganizationConfiguration>();
             var policiesStore = new MemoryObjectStore<EffectiveLocationPolicy>();
             var userTenantAccessStore = new MemoryObjectStore<UserTenantAccessSummary>();
+            var organizationSecretsStore = new MemoryObjectStore<OrganizationSecrets>();
 
             await TestDataProvider.PopulateTestDataAsync(
                 directoryEventLog,
@@ -59,10 +60,11 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 configurationStore,
                 policiesStore,
                 userTenantAccessStore,
+                organizationSecretsStore,
                 testSourceSmsPhoneNumber: null);
 
             var directoryResource = new DirectoryResource(directoryEventLog);
-            var policiesResource = new PoliciesResource(configurationStore, policiesStore);
+            var policiesResource = new PoliciesResource(configurationStore, policiesStore, organizationSecretsStore);
             var referralsResource = new ReferralsResource(referralsEventLog);
             var approvalsResource = new ApprovalsResource(approvalsEventLog);
 

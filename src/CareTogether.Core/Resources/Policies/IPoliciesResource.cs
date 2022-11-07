@@ -35,11 +35,14 @@ namespace CareTogether.Resources.Policies
         bool? WhenReferralIsOpen, ImmutableList<string>? WhenOwnFunctionIsIn, ImmutableList<string>? WhenAssigneeFunctionIsIn)
         : PermissionContext();
 
-
     public sealed record UserAccessConfiguration(Guid PersonId,
         ImmutableList<UserLocationRoles> LocationRoles);
 
     public sealed record UserLocationRoles(Guid LocationId, ImmutableList<string> RoleNames);
+
+
+    public sealed record OrganizationSecrets(string ApiKey);
+
 
     public sealed record EffectiveLocationPolicy(
         ImmutableDictionary<string, ActionRequirement> ActionDefinitions,
@@ -158,6 +161,8 @@ namespace CareTogether.Resources.Policies
 
         Task<OrganizationConfiguration> UpsertRoleDefinitionAsync(Guid organizationId,
             string roleName, RoleDefinition role);
+
+        Task<OrganizationSecrets> GetOrganizationSecretsAsync(Guid organizationId);
 
         Task<EffectiveLocationPolicy> GetCurrentPolicy(Guid organizationId, Guid locationId);
     }

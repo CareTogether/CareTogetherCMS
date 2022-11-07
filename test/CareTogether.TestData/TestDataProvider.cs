@@ -70,6 +70,7 @@ namespace CareTogether.TestData
             IObjectStore<OrganizationConfiguration> configurationStore,
             IObjectStore<EffectiveLocationPolicy> policiesStore,
             IObjectStore<UserTenantAccessSummary> userTenantAccessStore,
+            IObjectStore<OrganizationSecrets> organizationSecretsStore,
             string? testSourceSmsPhoneNumber)
         {
             await PopulateDirectoryEvents(directoryEventLog);
@@ -78,7 +79,7 @@ namespace CareTogether.TestData
             await PopulateApprovalEvents(approvalsEventLog);
             await PopulateNoteEvents(notesEventLog);
             await PopulateDraftNotes(draftNotesStore);
-            await PopulateConfigurations(configurationStore, testSourceSmsPhoneNumber);
+            await PopulateConfigurations(configurationStore, testSourceSmsPhoneNumber, organizationSecretsStore);
             await PopulatePolicies(policiesStore);
             await PopulateUserTenantAccess(userTenantAccessStore);
         }
@@ -358,7 +359,7 @@ namespace CareTogether.TestData
         }
 
         public static async Task PopulateConfigurations(IObjectStore<OrganizationConfiguration> configurationStore,
-            string? testSourceSmsPhoneNumber)
+            string? testSourceSmsPhoneNumber, IObjectStore<OrganizationSecrets> organizationSecretsStore)
         {
             var sourcePhoneNumbers = ImmutableList<SourcePhoneNumberConfiguration>.Empty;
             if (testSourceSmsPhoneNumber != null)
@@ -421,6 +422,9 @@ namespace CareTogether.TestData
                             .Add(new UserLocationRoles(guid3, ImmutableList.Create("OrganizationAdministrator")))))
                         .Add(volunteerId, new UserAccessConfiguration(guid4, ImmutableList<UserLocationRoles>.Empty
                             .Add(new UserLocationRoles(guid2, ImmutableList.Create("Volunteer")))))));
+
+            await organizationSecretsStore.UpsertAsync(guid1, Guid.Empty, "secrets",
+                new OrganizationSecrets("0123456789abcdef0123456789abcdef"));
         }
 
         public static async Task PopulatePolicies(IObjectStore<EffectiveLocationPolicy> policiesStore)

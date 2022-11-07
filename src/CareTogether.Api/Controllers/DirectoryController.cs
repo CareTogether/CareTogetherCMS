@@ -4,6 +4,7 @@ using CareTogether.Resources;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Utilities.Telephony;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -16,9 +17,9 @@ namespace CareTogether.Api.Controllers
     public sealed record SendSmsToFamilyPrimaryContactsRequest(
         ImmutableList<Guid> FamilyIds, string SourceNumber, string Message);
 
-    [Authorize]
     [ApiController]
     [Route("/api/{organizationId:guid}/{locationId:guid}/[controller]")]
+    [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class DirectoryController : ControllerBase
     {
         private readonly IDirectoryManager directoryManager;

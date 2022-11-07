@@ -1,7 +1,7 @@
 ﻿using CareTogether.Managers;
 using CareTogether.Managers.Referrals;
-using CareTogether.Resources;
 using CareTogether.Resources.Referrals;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.FeatureManagement.Mvc;
@@ -10,10 +10,10 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Api.Controllers
 {
-    [Authorize]
     [ApiController]
     [FeatureGate(FeatureFlags.ViewReferrals)]
     [Route("/api/{organizationId:guid}/{locationId:guid}/[controller]")]
+    [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class ReferralsController : ControllerBase
     {
         private readonly IReferralsManager referralsManager;
