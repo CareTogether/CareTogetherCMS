@@ -11,13 +11,13 @@ namespace CareTogether.Api.OData
             builder.Namespace = "CareTogether";
             builder.ContainerName = "CareTogether Data";
 
-            builder.EntitySet<Location>("Locations");
-            builder.EntitySet<Family>("Families");
-            builder.EntitySet<Person>("People");
-            builder.EntitySet<Role>("Roles");
+            builder.EntitySet<Location>("Location");
+            builder.EntitySet<Family>("Family");
+            builder.EntitySet<Person>("Person");
+            builder.EntitySet<Role>("Role");
             builder.EntitySet<FamilyRoleApproval>("FamilyRoleApprovals");
             builder.EntitySet<IndividualRoleApproval>("IndividualRoleApprovals");
-            builder.EntitySet<RoleApprovalStage>("ApprovalStages");
+            builder.EntitySet<ApprovalStage>("ApprovalStage");
 
             return builder.GetEdmModel();
         }
