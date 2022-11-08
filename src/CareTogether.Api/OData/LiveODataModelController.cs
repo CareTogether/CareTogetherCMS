@@ -41,7 +41,7 @@ namespace CareTogether.Api.OData
 
     public sealed record Role([property: Key] string Name);
 
-    public sealed record ApprovalStage([property: Key] string Name);
+    public sealed record ApprovalStage([property: Key] string Name, int Order);
 
     public sealed record LiveModel(IEnumerable<Location> Locations,
         IEnumerable<Family> Families, IEnumerable<Person> People,
@@ -138,7 +138,7 @@ namespace CareTogether.Api.OData
                 }).Distinct().ToArrayAsync();
 
             var approvalStages = Enum.GetNames<Engines.RoleApprovalStatus>()
-                .Select(ras => new ApprovalStage(ras)).ToArray();
+                .Select(ras => new ApprovalStage(ras, (int)Enum.Parse<Engines.RoleApprovalStatus>(ras))).ToArray();
 
             var locations = organizationConfiguration.Locations
                 .Select(location => new Location(location.Id, organizationId, location.Name))
