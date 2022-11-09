@@ -32,20 +32,20 @@ namespace CareTogether.Api.OData
     public sealed record FamilyRoleApproval(
         [property: ForeignKey("FamilyId")] Family Family, [property: Key] Guid FamilyId,
         [property: ForeignKey("RoleName")] Role Role, [property: Key] string RoleName,
-        RoleApprovalStage ApprovalStage);
+        ApprovalStage ApprovalStage);
 
     public sealed record IndividualRoleApproval(
         [property: ForeignKey("PersonId")] Person Person, [property: Key] Guid PersonId,
         [property: ForeignKey("RoleName")] Role Role, [property: Key] string RoleName,
-        RoleApprovalStage ApprovalStage);
+        ApprovalStage ApprovalStage);
 
     public sealed record Role([property: Key] string Name);
 
-    public sealed record RoleApprovalStage([property: Key] string Name);
+    public sealed record ApprovalStage([property: Key] string Name, int Order);
 
     public sealed record LiveModel(IEnumerable<Location> Locations,
         IEnumerable<Family> Families, IEnumerable<Person> People,
-        IEnumerable<Role> Roles, IEnumerable<RoleApprovalStage> ApprovalStages,
+        IEnumerable<Role> Roles, IEnumerable<ApprovalStage> ApprovalStages,
         IEnumerable<FamilyRoleApproval> FamilyRoleApprovals,
         IEnumerable<IndividualRoleApproval> IndividualRoleApprovals);
 
@@ -67,28 +67,28 @@ namespace CareTogether.Api.OData
         }
 
 
-        [HttpGet("Locations")]
+        [HttpGet("Location")]
         public async Task<IEnumerable<Location>> GetLocationsAsync()
         {
             var liveModel = await RenderLiveModelAsync();
             return liveModel.Locations;
         }
 
-        [HttpGet("Families")]
+        [HttpGet("Family")]
         public async Task<IEnumerable<Family>> GetFamiliesAsync()
         {
             var liveModel = await RenderLiveModelAsync();
             return liveModel.Families;
         }
 
-        [HttpGet("People")]
+        [HttpGet("Person")]
         public async Task<IEnumerable<Person>> GetPeopleAsync()
         {
             var liveModel = await RenderLiveModelAsync();
             return liveModel.People;
         }
 
-        [HttpGet("Roles")]
+        [HttpGet("Role")]
         public async Task<IEnumerable<Role>> GetRolesAsync()
         {
             var liveModel = await RenderLiveModelAsync();
@@ -109,8 +109,8 @@ namespace CareTogether.Api.OData
             return liveModel.IndividualRoleApprovals;
         }
 
-        [HttpGet("ApprovalStages")]
-        public async Task<IEnumerable<RoleApprovalStage>> GetApprovalStagesAsync()
+        [HttpGet("ApprovalStage")]
+        public async Task<IEnumerable<ApprovalStage>> GetApprovalStagesAsync()
         {
             var liveModel = await RenderLiveModelAsync();
             return liveModel.ApprovalStages;
@@ -138,7 +138,7 @@ namespace CareTogether.Api.OData
                 }).Distinct().ToArrayAsync();
 
             var approvalStages = Enum.GetNames<Engines.RoleApprovalStatus>()
-                .Select(ras => new RoleApprovalStage(ras)).ToArray();
+                .Select(ras => new ApprovalStage(ras, (int)Enum.Parse<Engines.RoleApprovalStatus>(ras))).ToArray();
 
             var locations = organizationConfiguration.Locations
                 .Select(location => new Location(location.Id, organizationId, location.Name))
@@ -198,7 +198,7 @@ namespace CareTogether.Api.OData
         }
 
         private static IEnumerable<FamilyRoleApproval> RenderFamilyRoleApprovals(
-            CombinedFamilyInfo familyInfo, Family family, Role[] roles, RoleApprovalStage[] approvalStages)
+            CombinedFamilyInfo familyInfo, Family family, Role[] roles, ApprovalStage[] approvalStages)
         {
             return familyInfo.VolunteerFamilyInfo?.FamilyRoleApprovals
                 .SelectMany(fra => fra.Value.Select(approval =>
@@ -209,7 +209,7 @@ namespace CareTogether.Api.OData
         }
 
         private static IEnumerable<IndividualRoleApproval> RenderIndividualRoleApprovals(
-            CombinedFamilyInfo familyInfo, Family family, Person[] people, Role[] roles, RoleApprovalStage[] approvalStages)
+            CombinedFamilyInfo familyInfo, Family family, Person[] people, Role[] roles, ApprovalStage[] approvalStages)
         {
             return familyInfo.VolunteerFamilyInfo?.IndividualVolunteers
                 .SelectMany(individual => individual.Value.IndividualRoleApprovals
