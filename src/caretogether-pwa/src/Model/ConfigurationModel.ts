@@ -163,8 +163,7 @@ export const allFunctionsInPolicyQuery = selector({
     const policy = get(policyData);
     const allFunctions = policy.referralPolicy?.arrangementPolicies?.flatMap(arrangement =>
       arrangement.arrangementFunctions?.map(arrangementFunction => arrangementFunction.functionName!) || []) || [];
-    const uniqueFunctions = allFunctions.sort((a, b) => a < b ? -1 : a > b ? 1 : 0).filter(v =>
-      allFunctions.filter(x => x === v).length === 1);
+    const uniqueFunctions = Array.from(new Set(allFunctions));
     return uniqueFunctions;
   }});
 
