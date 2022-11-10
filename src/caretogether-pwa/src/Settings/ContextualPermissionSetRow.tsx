@@ -89,7 +89,7 @@ export function ContextualPermissionSetRow({
               </ListItem>);
             // Group similar permission items
             return i > 0 && Math.floor((all[i-1] as number)/100) < Math.floor((permission as number)/100)
-              ? [<Divider />, permissionListItem]
+              ? [<Divider key={i} />, permissionListItem]
               : permissionListItem;
           })}
           {editable &&
