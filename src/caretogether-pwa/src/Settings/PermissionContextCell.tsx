@@ -13,19 +13,22 @@ function ReferralOpenSelector({ context, factory, onUpdate }: ContextSelectorPro
   AssignedFunctionsInReferralPartneringFamilyPermissionContext |
   AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext |
   OwnReferralAssigneeFamiliesPermissionContext>) {
+  const hasValue = typeof context.whenReferralIsOpen !== 'undefined' && context.whenReferralIsOpen !== null;
+
   return (
     <FormGroup>
       <FormControlLabel control={
-        <Switch size='small' checked={typeof context.whenReferralIsOpen !== 'undefined'}
+        <Switch size='small'
+          checked={hasValue}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
             const newContext = factory();
             newContext.whenReferralIsOpen = event.target.checked
               ? true : undefined;
             onUpdate(newContext);
           }} />}
-        label={typeof context.whenReferralIsOpen !== 'undefined'
+        label={hasValue
           ? "Only matching referral status:" : "Any referral status"} />
-      {typeof context.whenReferralIsOpen !== 'undefined' &&
+      {hasValue &&
         <FormControlLabel control={
           <Checkbox size='small' checked={context.whenReferralIsOpen || false}
             onChange={(event) => {
@@ -44,6 +47,7 @@ function OwnFunctionSelector({ context, factory, onUpdate }: ContextSelectorProp
   AssignedFunctionsInReferralPartneringFamilyPermissionContext |
   AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext>) {
   const allFunctionsInPolicy = useLoadable(allFunctionsInPolicyQuery);
+  const hasValue = typeof context.whenOwnFunctionIsIn !== 'undefined' && context.whenOwnFunctionIsIn !== null;
 
   return (
     <FormGroup>
@@ -51,16 +55,17 @@ function OwnFunctionSelector({ context, factory, onUpdate }: ContextSelectorProp
         ? <Skeleton />
         : <>
             <FormControlLabel control={
-              <Switch size='small' checked={typeof context.whenOwnFunctionIsIn !== 'undefined'}
+              <Switch size='small'
+                checked={hasValue}
                 onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                   const newContext = factory();
                   newContext.whenOwnFunctionIsIn = event.target.checked
                     ? allFunctionsInPolicy : undefined;
                   onUpdate(newContext);
                 }} />}
-              label={typeof context.whenOwnFunctionIsIn !== 'undefined'
+              label={hasValue
                 ? "Only when own function is:" : "When assigned any function"} />
-            {typeof context.whenOwnFunctionIsIn !== 'undefined' &&
+            {hasValue &&
               <FormGroup>
                 {allFunctionsInPolicy.map(f => (
                   <FormControlLabel key={f} control={
@@ -87,6 +92,7 @@ function AssigneeFunctionSelector({ context, factory, onUpdate }: ContextSelecto
   AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext |
   OwnReferralAssigneeFamiliesPermissionContext>) {
   const allFunctionsInPolicy = useLoadable(allFunctionsInPolicyQuery);
+  const hasValue = typeof context.whenAssigneeFunctionIsIn !== 'undefined' && context.whenAssigneeFunctionIsIn !== null;
 
   return (
     <FormGroup>
@@ -94,16 +100,16 @@ function AssigneeFunctionSelector({ context, factory, onUpdate }: ContextSelecto
         ? <Skeleton />
         : <>
             <FormControlLabel control={
-              <Switch size='small' checked={typeof context.whenAssigneeFunctionIsIn !== 'undefined'}
+              <Switch size='small' checked={hasValue}
                 onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                   const newContext = factory();
                   newContext.whenAssigneeFunctionIsIn = event.target.checked
                     ? allFunctionsInPolicy : undefined;
                   onUpdate(newContext);
                 }} />}
-              label={typeof context.whenAssigneeFunctionIsIn !== 'undefined'
+              label={hasValue
                 ? "Only when assignee's function is:" : "Any assignee function"} />
-            {typeof context.whenAssigneeFunctionIsIn !== 'undefined' &&
+            {hasValue &&
               <FormGroup>
                 {allFunctionsInPolicy.map(f => (
                   <FormControlLabel key={f} control={
@@ -153,7 +159,7 @@ export function PermissionContextCell({ context, editable, onUpdate }: Permissio
     context: AssignedFunctionsInReferralPartneringFamilyPermissionContext) {
     const result = new AssignedFunctionsInReferralPartneringFamilyPermissionContext()
     result.whenReferralIsOpen = context.whenReferralIsOpen;
-    result.whenOwnFunctionIsIn = context.whenOwnFunctionIsIn;
+    result.whenOwnFunctionIsIn = context.whenOwnFunctionIsIn?.slice();
     return result;
   }
   
@@ -161,8 +167,8 @@ export function PermissionContextCell({ context, editable, onUpdate }: Permissio
     context: AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext) {
     const result = new AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext()
     result.whenReferralIsOpen = context.whenReferralIsOpen;
-    result.whenOwnFunctionIsIn = context.whenOwnFunctionIsIn;
-    result.whenAssigneeFunctionIsIn = context.whenAssigneeFunctionIsIn;
+    result.whenOwnFunctionIsIn = context.whenOwnFunctionIsIn?.slice();
+    result.whenAssigneeFunctionIsIn = context.whenAssigneeFunctionIsIn?.slice();
     return result;
   }
   
@@ -170,7 +176,7 @@ export function PermissionContextCell({ context, editable, onUpdate }: Permissio
     context: OwnReferralAssigneeFamiliesPermissionContext) {
     const result = new OwnReferralAssigneeFamiliesPermissionContext()
     result.whenReferralIsOpen = context.whenReferralIsOpen;
-    result.whenAssigneeFunctionIsIn = context.whenAssigneeFunctionIsIn;
+    result.whenAssigneeFunctionIsIn = context.whenAssigneeFunctionIsIn?.slice();
     return result;
   }
   
