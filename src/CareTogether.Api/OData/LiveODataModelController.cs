@@ -49,13 +49,13 @@ namespace CareTogether.Api.OData
 
     public sealed record Referral(Guid Id,
         [property: ForeignKey("FamilyId")] Family Family, Guid FamilyId,
-        DateOnly OpenedUtc, DateOnly? ClosedUtc,
+        DateOnly Opened, DateOnly? Closed,
         ReferralCloseReason? CloseReason);
 
     public sealed record Arrangement(Guid Id, string Type,
         [property: ForeignKey("ReferralId")] Referral Referral, Guid ReferralId,
         [property: ForeignKey("PersonId")] Person Person, Guid PersonId,
-        DateOnly RequestedUtc, DateTime? StartedUtc, DateTime? EndedUtc,
+        DateOnly Requested, DateTime? StartedUtc, DateTime? EndedUtc,
         string Phase);
 
 
