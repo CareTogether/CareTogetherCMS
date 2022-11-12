@@ -1,6 +1,7 @@
 ﻿using CareTogether.Managers;
 using CareTogether.Managers.Directory;
 using CareTogether.Resources.Policies;
+using CareTogether.Resources.Referrals;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.OData.Routing.Controllers;
 using NSwag.Annotations;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
@@ -43,11 +45,25 @@ namespace CareTogether.Api.OData
 
     public sealed record ApprovalStage([property: Key] string Name, int Order);
 
+    public sealed record Referral(Guid Id,
+        [property: ForeignKey("FamilyId")] Family Family, Guid FamilyId,
+        DateOnly OpenedUtc, DateOnly? ClosedUtc,
+        ReferralCloseReason? CloseReason);
+
+    public sealed record Arrangement(Guid Id, string Type,
+        [property: ForeignKey("ReferralId")] Referral Referral, Guid ReferralId,
+        [property: ForeignKey("PersonId")] Person Person, Guid PersonId,
+        DateOnly RequestedUtc, DateTime? StartedUtc, DateTime? EndedUtc,
+        string Phase);
+
+
     public sealed record LiveModel(IEnumerable<Location> Locations,
         IEnumerable<Family> Families, IEnumerable<Person> People,
         IEnumerable<Role> Roles, IEnumerable<ApprovalStage> ApprovalStages,
         IEnumerable<FamilyRoleApproval> FamilyRoleApprovals,
-        IEnumerable<IndividualRoleApproval> IndividualRoleApprovals);
+        IEnumerable<IndividualRoleApproval> IndividualRoleApprovals,
+        IEnumerable<Referral> Referrals,
+        IEnumerable<Arrangement> Arrangements);
 
 
     [Route("api/odata/live")]
@@ -116,14 +132,23 @@ namespace CareTogether.Api.OData
             return liveModel.ApprovalStages;
         }
 
+        [HttpGet("Referral")]
+        public async Task<IEnumerable<Referral>> GetReferralsAsync()
+        {
+            var liveModel = await RenderLiveModelAsync();
+            return liveModel.Referrals;
+        }
+
+        [HttpGet("Arrangement")]
+        public async Task<IEnumerable<Arrangement>> GetArrangementsAsync()
+        {
+            var liveModel = await RenderLiveModelAsync();
+            return liveModel.Arrangements;
+        }
+
 
         private async Task<LiveModel> RenderLiveModelAsync()
         {
-            //TODO: Cache the results of this, and invalidate only when a records-changed event is received.
-
-            //TODO: If performance is a concern, consider building the model using dictionaries
-            //      (instead of arrays that need to be searched) and returing .Values in the LiveModel.
-
             var organizationId = GetUserSingleOrganizationId();
 
             var organizationConfiguration = await policiesResource.GetConfigurationAsync(organizationId);
@@ -158,8 +183,13 @@ namespace CareTogether.Api.OData
             var individualRoleApprovals = familiesWithInfo
                 .SelectMany(x => RenderIndividualRoleApprovals(x.Item1, x.Item2, people, roles, approvalStages)).ToArray();
 
+            var referrals = familiesWithInfo.SelectMany(x => RenderReferrals(x.Item1, x.Item2)).ToArray();
+
+            var arrangements = familiesWithInfo.SelectMany(x => RenderArrangements(x.Item1, x.Item2, people, referrals)).ToArray();
+
             return new LiveModel(locations, families, people,
-                roles, approvalStages, familyRoleApprovals, individualRoleApprovals);
+                roles, approvalStages, familyRoleApprovals, individualRoleApprovals,
+                referrals, arrangements);
         }
 
         private Guid GetUserSingleOrganizationId()
@@ -205,7 +235,7 @@ namespace CareTogether.Api.OData
                     new FamilyRoleApproval(family, family.Id,
                         roles.Single(role => role.Name == fra.Key), fra.Key,
                         approvalStages.Single(ras => ras.Name == approval.ApprovalStatus.ToString()))))
-                ?? Enumerable.Empty<FamilyRoleApproval>(); //TODO: Render expiration & handle role versions!
+                ?? Enumerable.Empty<FamilyRoleApproval>();
         }
 
         private static IEnumerable<IndividualRoleApproval> RenderIndividualRoleApprovals(
@@ -217,7 +247,39 @@ namespace CareTogether.Api.OData
                         new IndividualRoleApproval(people.Single(person => person.Id == individual.Key), individual.Key,
                             roles.Single(role => role.Name == ira.Key), ira.Key,
                             approvalStages.Single(ras => ras.Name == approval.ApprovalStatus.ToString())))))
-                ?? Enumerable.Empty<IndividualRoleApproval>(); //TODO: Render expiration & handle role versions!
+                ?? Enumerable.Empty<IndividualRoleApproval>();
+        }
+
+        private static IEnumerable<Referral> RenderReferrals(
+            CombinedFamilyInfo familyInfo, Family family)
+        {
+            var allReferralsInfo = (familyInfo.PartneringFamilyInfo?.ClosedReferrals ?? ImmutableList.Create<Managers.Referral>()).AddRange(
+                familyInfo.PartneringFamilyInfo?.OpenReferral == null
+                ? Array.Empty<Managers.Referral>() : new[] { familyInfo.PartneringFamilyInfo.OpenReferral });
+            return allReferralsInfo.Select(referralInfo => new Referral(referralInfo.Id, family, family.Id,
+                DateOnly.FromDateTime(referralInfo.OpenedAtUtc),
+                referralInfo.ClosedAtUtc.HasValue ? DateOnly.FromDateTime(referralInfo.ClosedAtUtc.Value) : null,
+                referralInfo.CloseReason));
+        }
+
+        private static IEnumerable<Arrangement> RenderArrangements(
+            CombinedFamilyInfo familyInfo, Family family, Person[] people, Referral[] referrals)
+        {
+            var allReferralsInfo = (familyInfo.PartneringFamilyInfo?.ClosedReferrals ?? ImmutableList.Create<Managers.Referral>()).AddRange(
+                familyInfo.PartneringFamilyInfo?.OpenReferral == null
+                ? Array.Empty<Managers.Referral>() : new[] { familyInfo.PartneringFamilyInfo.OpenReferral });
+            return allReferralsInfo.SelectMany(referralInfo =>
+            {
+                var referral = referrals.Single(r => r.Id == referralInfo.Id);
+                return referralInfo.Arrangements.Select(arrangement =>
+                {
+                    var arrangementPerson = people.Single(p => p.Id == arrangement.PartneringFamilyPersonId);
+                    return new Arrangement(arrangement.Id, arrangement.ArrangementType, referral, referral.Id,
+                        arrangementPerson, arrangement.PartneringFamilyPersonId,
+                        DateOnly.FromDateTime(arrangement.RequestedAtUtc),
+                        arrangement.StartedAtUtc, arrangement.EndedAtUtc, arrangement.Phase.ToString());
+                });
+            });
         }
     }
 }

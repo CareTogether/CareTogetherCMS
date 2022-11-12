@@ -18,6 +18,8 @@ namespace CareTogether.Api.OData
             builder.EntitySet<FamilyRoleApproval>("FamilyRoleApprovals");
             builder.EntitySet<IndividualRoleApproval>("IndividualRoleApprovals");
             builder.EntitySet<ApprovalStage>("ApprovalStage");
+            builder.EntitySet<Referral>("Referral");
+            builder.EntitySet<Arrangement>("Arrangement");
 
             return builder.GetEdmModel();
         }
