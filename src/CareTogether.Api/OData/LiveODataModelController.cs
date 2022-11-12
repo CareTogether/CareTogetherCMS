@@ -1,5 +1,6 @@
 ﻿using CareTogether.Managers;
 using CareTogether.Managers.Directory;
+using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.Referrals;
 using Microsoft.AspNetCore.Authorization;
@@ -26,7 +27,8 @@ namespace CareTogether.Api.OData
 
     public sealed record Person(Guid Id,
         [property: ForeignKey("FamilyId")] Family Family, Guid FamilyId,
-        string FirstName, string LastName);
+        string FirstName, string LastName,
+        string? Ethnicity, DateOnly? DateOfBirth);
 
     public sealed record Address(
         string Line1, string? Line2, string City, string State, string PostalCode);
@@ -222,9 +224,15 @@ namespace CareTogether.Api.OData
         private static IEnumerable<Person> RenderPeople(CombinedFamilyInfo familyInfo, Family family)
         {
             return familyInfo.Family.Adults
-                .Select(adult => new Person(adult.Item1.Id, family, family.Id, adult.Item1.FirstName, adult.Item1.LastName))
+                .Select(adult => new Person(adult.Item1.Id, family, family.Id,
+                    adult.Item1.FirstName, adult.Item1.LastName,
+                    adult.Item1.Ethnicity,
+                    adult.Item1.Age is ExactAge ? DateOnly.FromDateTime((adult.Item1.Age as ExactAge)!.DateOfBirth) : null))
                 .Concat(familyInfo.Family.Children
-                    .Select(child => new Person(child.Id, family, family.Id, child.FirstName, child.LastName)));
+                    .Select(child => new Person(child.Id, family, family.Id,
+                        child.FirstName, child.LastName,
+                        child.Ethnicity,
+                        child.Age is ExactAge ? DateOnly.FromDateTime((child.Age as ExactAge)!.DateOfBirth) : null)));
         }
 
         private static IEnumerable<FamilyRoleApproval> RenderFamilyRoleApprovals(
