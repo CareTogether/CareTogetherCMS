@@ -17,7 +17,12 @@ namespace CareTogether.Api.OData
             builder.EntitySet<Role>("Role");
             builder.EntitySet<FamilyRoleApproval>("FamilyRoleApprovals");
             builder.EntitySet<IndividualRoleApproval>("IndividualRoleApprovals");
-            builder.EntitySet<ApprovalStage>("ApprovalStage");
+            builder.EntitySet<Referral>("Referral");
+            builder.EntitySet<Arrangement>("Arrangement");
+            builder.EntitySet<ArrangementType>("ArrangementType");
+            builder.EntitySet<ChildLocationRecord>("ChildLocationRecords");
+            builder.EntitySet<FamilyFunctionAssignment>("FamilyFunctionAssignments");
+            builder.EntitySet<IndividualFunctionAssignment>("IndividualFunctionAssignments");
 
             return builder.GetEdmModel();
         }
