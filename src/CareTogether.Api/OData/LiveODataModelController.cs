@@ -300,10 +300,20 @@ namespace CareTogether.Api.OData
             CombinedFamilyInfo familyInfo, Family family, Role[] roles)
         {
             return familyInfo.VolunteerFamilyInfo?.FamilyRoleApprovals
-                .SelectMany(fra => fra.Value.Select(approval =>
-                    new FamilyRoleApproval(family, family.Id,
-                        roles.Single(role => role.Name == fra.Key), fra.Key,
-                        approval.ApprovalStatus)))
+                .SelectMany(fra =>
+                {
+                    var bestCurrentApproval = fra.Value
+                        .Where(rva => rva.ExpiresAt == null || rva.ExpiresAt > DateTime.Now)
+                        .MaxBy(rva => rva.ApprovalStatus);
+                    return bestCurrentApproval == null
+                        ? Enumerable.Empty<FamilyRoleApproval>()
+                        : new[]
+                        {
+                            new FamilyRoleApproval(family, family.Id,
+                                roles.Single(role => role.Name == fra.Key), fra.Key,
+                                bestCurrentApproval.ApprovalStatus)
+                        };
+                })
                 ?? Enumerable.Empty<FamilyRoleApproval>();
         }
 
@@ -312,10 +322,21 @@ namespace CareTogether.Api.OData
         {
             return familyInfo.VolunteerFamilyInfo?.IndividualVolunteers
                 .SelectMany(individual => individual.Value.IndividualRoleApprovals
-                    .SelectMany(ira => ira.Value.Select(approval =>
-                        new IndividualRoleApproval(people.Single(person => person.Id == individual.Key), individual.Key,
-                            roles.Single(role => role.Name == ira.Key), ira.Key,
-                            approval.ApprovalStatus))))
+                    .SelectMany(ira =>
+                    {
+                        var bestCurrentApproval = ira.Value
+                            .Where(rva => rva.ExpiresAt == null || rva.ExpiresAt > DateTime.Now)
+                            .MaxBy(rva => rva.ApprovalStatus);
+                        return bestCurrentApproval == null
+                            ? Enumerable.Empty<IndividualRoleApproval>()
+                            : new[]
+                            {
+                                new IndividualRoleApproval(
+                                    people.Single(person => person.Id == individual.Key), individual.Key,
+                                    roles.Single(role => role.Name == ira.Key), ira.Key,
+                                    bestCurrentApproval.ApprovalStatus)
+                            };
+                    }))
                 ?? Enumerable.Empty<IndividualRoleApproval>();
         }
 
