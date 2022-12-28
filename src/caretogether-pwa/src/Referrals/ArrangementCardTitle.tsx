@@ -10,6 +10,7 @@ import { StartArrangementDialog } from "./StartArrangementDialog";
 import { useInlineEditor } from "../Hooks/useInlineEditor";
 import { useReferralsModel } from "../Model/ReferralsModel";
 import { DateTimePicker } from '@mui/x-date-pickers';
+import { DeleteArrangementDialog } from "./DeleteArrangementDialog";
 
 type ArrangementCardTitleProps = {
   summaryOnly?: boolean
@@ -32,6 +33,7 @@ export function ArrangementCardTitle({ summaryOnly, partneringFamilyId, referral
   const [showEndArrangementDialog, setShowEndArrangementDialog] = useState(false);
   const [showCancelArrangementDialog, setShowCancelArrangementDialog] = useState(false);
   const [showReopenArrangementDialog, setShowReopenArrangementDialog] = useState(false);
+  const [showDeleteArrangementDialog, setShowDeleteArrangementDialog] = useState(false);
 
   return (
     <>
@@ -110,6 +112,14 @@ export function ArrangementCardTitle({ summaryOnly, partneringFamilyId, referral
                     Reopen
                   </Button>}
               </>}
+        {permissions(Permission.DeleteArrangement) &&
+        <>
+          <Button variant="outlined" size="small" color="warning"
+            style={{marginLeft: 10}}
+            onClick={() => setShowDeleteArrangementDialog(true)}>
+            Delete
+          </Button>
+        </>}
       </span>}
       {(showStartArrangementDialog && <StartArrangementDialog referralId={referralId} arrangement={arrangement}
         onClose={() => setShowStartArrangementDialog(false)} />) || null}
@@ -119,6 +129,8 @@ export function ArrangementCardTitle({ summaryOnly, partneringFamilyId, referral
         onClose={() => setShowCancelArrangementDialog(false)} />) || null}
       {(showReopenArrangementDialog && <ReopenArrangementDialog referralId={referralId} arrangement={arrangement}
         onClose={() => setShowReopenArrangementDialog(false)} />) || null}
+      {(showDeleteArrangementDialog && <DeleteArrangementDialog referralId={referralId} arrangement={arrangement}
+        onClose={() => setShowDeleteArrangementDialog(false)} />) || null}
     </>
   );
 }
