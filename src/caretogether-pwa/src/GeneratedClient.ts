@@ -1553,6 +1553,7 @@ export enum Permission {
     ViewAssignedArrangementProgress = 355,
     EditArrangementRequirementCompletion = 356,
     EditArrangementRequirementExemption = 357,
+    DeleteArrangement = 358,
     ViewChildLocationHistory = 380,
     TrackChildLocationChange = 381,
     SendBulkSms = 400,
@@ -7519,6 +7520,11 @@ export abstract class ArrangementsCommand implements IArrangementsCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "DeleteArrangements") {
+            let result = new DeleteArrangements();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "DeleteChildLocationChange") {
             let result = new DeleteChildLocationChange();
             result.init(data);
@@ -7992,6 +7998,34 @@ export interface ICreateArrangement extends IArrangementsCommand {
     arrangementType?: string;
     requestedAtUtc?: Date;
     partneringFamilyPersonId?: string;
+}
+
+export class DeleteArrangements extends ArrangementsCommand implements IDeleteArrangements {
+
+    constructor(data?: IDeleteArrangements) {
+        super(data);
+        this._discriminator = "DeleteArrangements";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+    }
+
+    static fromJS(data: any): DeleteArrangements {
+        data = typeof data === 'object' ? data : {};
+        let result = new DeleteArrangements();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IDeleteArrangements extends IArrangementsCommand {
 }
 
 export class DeleteChildLocationChange extends ArrangementsCommand implements IDeleteChildLocationChange {

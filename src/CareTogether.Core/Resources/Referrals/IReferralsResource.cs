@@ -15,7 +15,7 @@ namespace CareTogether.Resources.Referrals
         ImmutableList<Activity> History,
         string? Comments);
 
-    public record ArrangementEntry(Guid Id, string ArrangementType,
+    public record ArrangementEntry(Guid Id, string ArrangementType, bool Active,
         DateTime RequestedAtUtc, DateTime? StartedAtUtc, DateTime? EndedAtUtc,
         DateTime? CancelledAtUtc, DateTime? PlannedStartUtc, DateTime? PlannedEndUtc,
         Guid PartneringFamilyPersonId,
@@ -177,6 +177,8 @@ namespace CareTogether.Resources.Referrals
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
     public sealed record UpdateArrangementComments(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         string? Comments)
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+    public sealed record DeleteArrangements(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds)
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
 
     /// <summary>
