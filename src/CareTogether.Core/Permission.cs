@@ -65,6 +65,7 @@ namespace CareTogether
         ViewAssignedArrangementProgress = 355, // See only items assigned to your own family
         EditArrangementRequirementCompletion = 356,
         EditArrangementRequirementExemption = 357,
+        DeleteArrangement = 358,
         
         ViewChildLocationHistory = 380,
         TrackChildLocationChange = 381,

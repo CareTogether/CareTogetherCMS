@@ -22,7 +22,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingSetupRequirements(
                 SetupRequirements("A", "B", "C"),
-                new ArrangementEntry(Guid.Empty, "", DateTime.MinValue,
+                new ArrangementEntry(Guid.Empty, "", true, DateTime.MinValue,
                     StartedAtUtc: null, EndedAtUtc: null,
                     null, null, null, Guid.Empty,
                     Helpers.Completed(),
@@ -45,7 +45,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingSetupRequirements(
                 SetupRequirements("A", "B", "C"),
-                new ArrangementEntry(Guid.Empty, "", DateTime.MinValue,
+                new ArrangementEntry(Guid.Empty, "", true, DateTime.MinValue,
                     StartedAtUtc: null, EndedAtUtc: null,
                     null, null, null, Guid.Empty,
                     Helpers.Completed(("A", 1), ("A", 2), ("B", 3)),
@@ -66,7 +66,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingSetupRequirements(
                 SetupRequirements("A", "B", "C"),
-                new ArrangementEntry(Guid.Empty, "", DateTime.MinValue,
+                new ArrangementEntry(Guid.Empty, "", true, DateTime.MinValue,
                     StartedAtUtc: null, EndedAtUtc: null,
                     null, null, null, Guid.Empty,
                     Helpers.Completed(("A", 1), ("A", 2), ("B", 3), ("C", 12)),

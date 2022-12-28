@@ -139,7 +139,7 @@ namespace CareTogether.Resources.Referrals
             var arrangementEntriesToUpsert = command.ArrangementIds.Select<Guid, (ArrangementEntry, Activity?)>(arrangementId =>
                 command switch
                 {
-                    CreateArrangement c => (new ArrangementEntry(arrangementId, c.ArrangementType,
+                    CreateArrangement c => (new ArrangementEntry(arrangementId, c.ArrangementType, Active: true,
                         RequestedAtUtc: c.RequestedAtUtc, StartedAtUtc: null, EndedAtUtc: null,
                         CancelledAtUtc: null, PlannedStartUtc: null, PlannedEndUtc: null,
                         c.PartneringFamilyPersonId,
@@ -373,6 +373,10 @@ namespace CareTogether.Resources.Referrals
                             UpdateArrangementComments c => (arrangementEntry with
                             {
                                 Comments = c.Comments
+                            }, null),
+                            DeleteArrangements c => (arrangementEntry with
+                            {
+                                Active = false
                             }, null),
                             _ => throw new NotImplementedException(
                                 $"The command type '{command.GetType().FullName}' has not been implemented.")

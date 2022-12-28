@@ -111,6 +111,7 @@ namespace CareTogether.Managers
                     entry.CompletedRequirements, entry.ExemptedRequirements, referralStatus.MissingIntakeRequirements,
                     entry.CompletedCustomFields.Values.ToImmutableList(), referralStatus.MissingCustomFields,
                     entry.Arrangements
+                        .Where(a => a.Value.Active)
                         .Select(a => ToArrangement(a.Value, referralStatus.IndividualArrangements[a.Key]))
                         .ToImmutableList(),
                     entry.Comments);

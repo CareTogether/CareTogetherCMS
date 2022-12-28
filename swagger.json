@@ -1191,6 +1191,7 @@
           "ViewAssignedArrangementProgress",
           "EditArrangementRequirementCompletion",
           "EditArrangementRequirementExemption",
+          "DeleteArrangement",
           "ViewChildLocationHistory",
           "TrackChildLocationChange",
           "SendBulkSms"
@@ -1241,6 +1242,7 @@
           355,
           356,
           357,
+          358,
           380,
           381,
           400
@@ -4274,6 +4276,7 @@
             "CompleteIndividualVolunteerAssignmentRequirement": "#/components/schemas/CompleteIndividualVolunteerAssignmentRequirement",
             "CompleteVolunteerFamilyAssignmentRequirement": "#/components/schemas/CompleteVolunteerFamilyAssignmentRequirement",
             "CreateArrangement": "#/components/schemas/CreateArrangement",
+            "DeleteArrangements": "#/components/schemas/DeleteArrangements",
             "DeleteChildLocationChange": "#/components/schemas/DeleteChildLocationChange",
             "DeletePlannedChildLocationChange": "#/components/schemas/DeletePlannedChildLocationChange",
             "EditArrangementStartTime": "#/components/schemas/EditArrangementStartTime",
@@ -4542,6 +4545,17 @@
                 "format": "guid"
               }
             }
+          }
+        ]
+      },
+      "DeleteArrangements": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false
           }
         ]
       },
