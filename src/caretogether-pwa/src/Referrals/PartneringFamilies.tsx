@@ -10,7 +10,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { ReferralCloseReason, PartneringFamilyInfo, Arrangement, ArrangementPhase, Permission } from '../GeneratedClient';
 import { useNavigate } from 'react-router-dom';
 import { FamilyName } from '../Families/FamilyName';
-import { ArrangementCard } from './ArrangementCard';
+import { ArrangementCard } from './Arrangements/ArrangementCard';
 import { CreatePartneringFamilyDialog } from './CreatePartneringFamilyDialog';
 import { useScrollMemory } from '../Hooks/useScrollMemory';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
@@ -55,8 +55,8 @@ function PartneringFamilies() {
     
   useScrollMemory();
 
-  function openPartneringFamily(partneringFamilyId: string) {
-    navigate(`/referrals/family/${partneringFamilyId}`);
+  function openFamily(familyId: string) {
+    navigate(`/families/${familyId}`);
   }
 
   function arrangementStatusSummary(partneringFamily: PartneringFamilyInfo, phase: ArrangementPhase, type: string) {
@@ -162,7 +162,7 @@ function PartneringFamilies() {
             <TableBody>
               {filteredPartneringFamilies.map((partneringFamily) => (
                 <React.Fragment key={partneringFamily.family?.id}>
-                  <TableRow sx={{backgroundColor: '#eef'}} onClick={() => openPartneringFamily(partneringFamily.family!.id!)}>
+                  <TableRow sx={{backgroundColor: '#eef'}} onClick={() => openFamily(partneringFamily.family!.id!)}>
                     <TableCell><FamilyName family={partneringFamily} /></TableCell>
                     <TableCell>{
                       partneringFamily.partneringFamilyInfo?.openReferral
@@ -194,7 +194,7 @@ function PartneringFamilies() {
                         </TableCell>)) : <></> }
                   </TableRow>
                   { expandedView
-                    ? (<TableRow onClick={() => openPartneringFamily(partneringFamily.family!.id!)}>
+                    ? (<TableRow onClick={() => openFamily(partneringFamily.family!.id!)}>
                     <TableCell sx={{maxWidth: '400px', paddingLeft: 3}}>
                       {partneringFamily.partneringFamilyInfo?.openReferral?.comments}
                     </TableCell>
@@ -221,7 +221,7 @@ function PartneringFamilies() {
         </Fab>}
         {createPartneringFamilyDialogOpen && <CreatePartneringFamilyDialog onClose={(partneringFamilyId) => {
           setCreatePartneringFamilyDialogOpen(false);
-          partneringFamilyId && openPartneringFamily(partneringFamilyId);
+          partneringFamilyId && openFamily(partneringFamilyId);
         }} />}
       </Grid>
     </Grid>

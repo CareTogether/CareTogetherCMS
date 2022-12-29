@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControl, FormControlLabel, FormLabel, Grid, IconButton, InputLabel, MenuItem, Radio, RadioGroup, Select, Stack, Tab, Tabs, TextField } from '@mui/material';
-import { CombinedFamilyInfo, Arrangement, Person, ChildLocationPlan, ChildInvolvement, Note, ChildLocationHistoryEntry } from '../GeneratedClient';
+import { CombinedFamilyInfo, Arrangement, Person, ChildLocationPlan, ChildInvolvement, Note, ChildLocationHistoryEntry } from '../../GeneratedClient';
 import { DateTimePicker } from '@mui/x-date-pickers';
 
 import {
@@ -17,14 +17,14 @@ import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
 import EventIcon from '@mui/icons-material/Event';
 import DeleteIcon from '@mui/icons-material/Delete'
 import InputIcon from '@mui/icons-material/Input';
-import { useBackdrop } from '../Hooks/useBackdrop';
-import { useDirectoryModel, useFamilyLookup, usePersonLookup } from '../Model/DirectoryModel';
-import { useReferralsModel } from '../Model/ReferralsModel';
-import { PersonName } from '../Families/PersonName';
+import { useBackdrop } from '../../Hooks/useBackdrop';
+import { useDirectoryModel, useFamilyLookup, usePersonLookup } from '../../Model/DirectoryModel';
+import { useReferralsModel } from '../../Model/ReferralsModel';
+import { PersonName } from '../../Families/PersonName';
 import { useRecoilValue } from 'recoil';
-import { policyData } from '../Model/ConfigurationModel';
+import { policyData } from '../../Model/ConfigurationModel';
 import { format } from 'date-fns';
-import { a11yProps, TabPanel } from "../TabPanel";
+import { a11yProps, TabPanel } from '../../TabPanel';
 
 interface ChildLocationTimelineProps {
   partneringFamily: CombinedFamilyInfo,

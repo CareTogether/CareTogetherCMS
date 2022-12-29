@@ -1,10 +1,10 @@
 import { Grid, TextField } from '@mui/material';
 import { useState } from 'react';
 import { useParams } from 'react-router';
-import { Arrangement, Note, Person } from '../GeneratedClient';
-import { useDirectoryModel, usePersonLookup } from '../Model/DirectoryModel';
-import { useReferralsModel } from '../Model/ReferralsModel';
-import { UpdateDialog } from '../UpdateDialog';
+import { Arrangement, Note, Person } from '../../GeneratedClient';
+import { useDirectoryModel, usePersonLookup } from '../../Model/DirectoryModel';
+import { useReferralsModel } from '../../Model/ReferralsModel';
+import { UpdateDialog } from '../../UpdateDialog';
 
 interface ReopenArrangementDialogProps {
   referralId: string,

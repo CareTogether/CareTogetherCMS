@@ -1,7 +1,7 @@
 import {
   Tooltip,
 } from '@mui/material';
-import { ArrangementPhase } from '../GeneratedClient';
+import { ArrangementPhase } from '../../GeneratedClient';
 import { format } from 'date-fns';
 
 type ArrangementPhaseSummaryProps = {

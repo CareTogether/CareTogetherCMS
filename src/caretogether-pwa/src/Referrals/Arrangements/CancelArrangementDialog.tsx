@@ -2,10 +2,10 @@ import { Grid, TextField } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers';
 import { useState } from 'react';
 import { useParams } from 'react-router';
-import { Arrangement, Person } from '../GeneratedClient';
-import { usePersonLookup } from '../Model/DirectoryModel';
-import { useReferralsModel } from '../Model/ReferralsModel';
-import { UpdateDialog } from '../UpdateDialog';
+import { Arrangement, Person } from '../../GeneratedClient';
+import { usePersonLookup } from '../../Model/DirectoryModel';
+import { useReferralsModel } from '../../Model/ReferralsModel';
+import { UpdateDialog } from '../../UpdateDialog';
 
 interface CancelArrangementDialogProps {
   referralId: string,

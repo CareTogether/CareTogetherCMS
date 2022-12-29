@@ -2,7 +2,6 @@ import { Navigate, Route, Routes, useMatch } from 'react-router-dom';
 import { VolunteerApproval } from './VolunteerApproval';
 //import { VolunteerApplications } from './VolunteerApplications';
 import { VolunteerProgress } from './VolunteerProgress';
-import { VolunteerFamilyScreen } from './VolunteerFamilyScreen';
 import { useSessionStorage } from '../Hooks/useSessionStorage';
 
 function Volunteers() {
@@ -12,12 +11,14 @@ function Volunteers() {
 
   const [lastVolunteersScreen, setLastVolunteersScreen] = useSessionStorage<'approval' | 'progress'>('volunteer-lastScreen', selectedScreen);
 
+  const familyId = useMatch('/volunteers/family/:familyId');
+
   return (
     <Routes>
       <Route path="approval" element={<VolunteerApproval onOpen={() => setLastVolunteersScreen('approval')} />} />
       {/* <Route path="applications" element={<VolunteerApplications />} /> */}
       <Route path="progress" element={<VolunteerProgress onOpen={() => setLastVolunteersScreen('progress')} />} />
-      <Route path="family/:familyId" element={<VolunteerFamilyScreen />} />
+      <Route path="family/:familyId" element={<Navigate to={`/families/${familyId?.params.familyId}`} />} />
       <Route path="*" element={<Navigate to={`../${lastVolunteersScreen}`} replace />} />
     </Routes>
   );
