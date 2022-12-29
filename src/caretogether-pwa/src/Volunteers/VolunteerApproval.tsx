@@ -209,8 +209,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 
   useScrollMemory();
   
-  function openVolunteerFamily(volunteerFamilyId: string) {
-    navigate(`../family/${volunteerFamilyId}`);
+  function openFamily(familyId: string) {
+    navigate(`/families/${familyId}`);
   }
   const [createVolunteerFamilyDialogOpen, setCreateVolunteerFamilyDialogOpen] = useState(false);
   
@@ -329,7 +329,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                 {filteredVolunteerFamilies.map((volunteerFamily) => (
                   <React.Fragment key={volunteerFamily.family?.id}>
                     <TableRow sx={{backgroundColor: '#eef', height: '39px'}}
-                      onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}>
+                      onClick={() => openFamily(volunteerFamily.family!.id!)}>
                       {smsMode && <TableCell key="-" sx={{ padding: 0, width: '36px' }}>
                         <Checkbox size='small' checked={!uncheckedFamilies.some(x => x === volunteerFamily.family!.id!)}
                           onChange={e => e.target.checked
@@ -368,7 +368,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                     </TableRow>
                     {expandedView && volunteerFamily.family?.adults?.map(adult => adult.item1 && adult.item1.active && (
                       <TableRow key={volunteerFamily.family?.id + ":" + adult.item1.id}
-                        onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}>
+                        onClick={() => openFamily(volunteerFamily.family!.id!)}>
                         {smsMode && <TableCell />}
                         <TableCell sx={{paddingLeft:3}}>{adult.item1.firstName}</TableCell>
                         <TableCell>{adult.item1.lastName}</TableCell>
@@ -390,7 +390,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                     ))}
                     {expandedView && volunteerFamily.family?.children?.map(child => child.active && (
                       <TableRow key={volunteerFamily.family?.id + ":" + child.id}
-                        onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}
+                        onClick={() => openFamily(volunteerFamily.family!.id!)}
                         sx={{color: 'ddd', fontStyle: 'italic'}}>
                         {smsMode && <TableCell />}
                         <TableCell sx={{paddingLeft:3}}>{child.firstName}</TableCell>
@@ -420,7 +420,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
           </Fab>}
           {createVolunteerFamilyDialogOpen && <CreateVolunteerFamilyDialog onClose={(volunteerFamilyId) => {
             setCreateVolunteerFamilyDialogOpen(false);
-            volunteerFamilyId && openVolunteerFamily(volunteerFamilyId);
+            volunteerFamilyId && openFamily(volunteerFamilyId);
           }} />}
         </Grid>
       </Grid>

@@ -33,8 +33,8 @@ function VolunteerProgress(props: { onOpen: () => void }) {
 
   useScrollMemory();
 
-  function openVolunteerFamily(volunteerFamilyId: string) {
-    navigate(`/volunteers/family/${volunteerFamilyId}`);
+  function openFamily(familyId: string) {
+    navigate(`/families/${familyId}`);
   }
   const [createVolunteerFamilyDialogOpen, setCreateVolunteerFamilyDialogOpen] = useState(false);
   
@@ -93,7 +93,7 @@ function VolunteerProgress(props: { onOpen: () => void }) {
             <TableBody>
               {filteredVolunteerFamilies.map(volunteerFamily => (
                 <React.Fragment key={volunteerFamily.family!.id!}>
-                  <TableRow sx={{backgroundColor: '#eef'}} onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}>
+                  <TableRow sx={{backgroundColor: '#eef'}} onClick={() => openFamily(volunteerFamily.family!.id!)}>
                     <TableCell key="1" colSpan={expandedView ? 2 : 1}>{familyLastName(volunteerFamily) + " Family"
                     }</TableCell>
                     {allApprovalAndOnboardingRequirements.map(actionName =>
@@ -120,7 +120,7 @@ function VolunteerProgress(props: { onOpen: () => void }) {
                   </TableRow>
                   {expandedView && volunteerFamily.family!.adults!.map(adult => adult.item1 && adult.item1.active && (
                     <TableRow key={adult.item1.id}
-                      onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}>
+                      onClick={() => openFamily(volunteerFamily.family!.id!)}>
                       <TableCell>{adult.item1.firstName}</TableCell>
                       <TableCell>{adult.item1.lastName}</TableCell>
                       {allApprovalAndOnboardingRequirements.map(actionName =>
@@ -144,7 +144,7 @@ function VolunteerProgress(props: { onOpen: () => void }) {
         </Fab>}
         {createVolunteerFamilyDialogOpen && <CreateVolunteerFamilyDialog onClose={(volunteerFamilyId) => {
           setCreateVolunteerFamilyDialogOpen(false);
-          volunteerFamilyId && openVolunteerFamily(volunteerFamilyId);
+          volunteerFamilyId && openFamily(volunteerFamilyId);
         }} />}
       </Grid>
     </Grid>
