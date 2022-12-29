@@ -10,7 +10,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { ReferralCloseReason, PartneringFamilyInfo, Arrangement, ArrangementPhase, Permission } from '../GeneratedClient';
 import { useNavigate } from 'react-router-dom';
 import { FamilyName } from '../Families/FamilyName';
-import { ArrangementCard } from './ArrangementCard';
+import { ArrangementCard } from './Arrangements/ArrangementCard';
 import { CreatePartneringFamilyDialog } from './CreatePartneringFamilyDialog';
 import { useScrollMemory } from '../Hooks/useScrollMemory';
 import { useLocalStorage } from '../Hooks/useLocalStorage';

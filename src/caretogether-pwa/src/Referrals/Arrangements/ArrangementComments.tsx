@@ -1,8 +1,8 @@
 import { TextField } from "@mui/material";
-import { Arrangement, CombinedFamilyInfo, Permission } from "../GeneratedClient";
-import { useReferralsModel } from "../Model/ReferralsModel";
-import { useFamilyPermissions } from "../Model/SessionModel";
-import { useInlineEditor } from "../Hooks/useInlineEditor";
+import { Arrangement, CombinedFamilyInfo, Permission } from "../../GeneratedClient";
+import { useReferralsModel } from "../../Model/ReferralsModel";
+import { useFamilyPermissions } from "../../Model/SessionModel";
+import { useInlineEditor } from "../../Hooks/useInlineEditor";
 
 type ArrangementCommentsProps = {
   partneringFamily: CombinedFamilyInfo
