@@ -6,7 +6,7 @@ import { useParams } from 'react-router';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { PartneringAdultCard } from './PartneringAdultCard';
-import { PartneringChildCard } from './PartneringChildCard';
+import { ChildCard } from '../Families/ChildCard';
 import { useState } from 'react';
 import { AddAdultDialog } from '../Families/AddAdultDialog';
 import { AddChildDialog } from '../Families/AddChildDialog';
@@ -265,7 +265,7 @@ export function PartneringFamilyScreen() {
                   <PartneringAdultCard key={adult.item1.id} partneringFamilyId={familyId} personId={adult.item1.id} />
                 ))}
                 {partneringFamily.family?.children?.map(child => child.active && (
-                  <PartneringChildCard key={child.id!} partneringFamilyId={familyId} personId={child.id!} />
+                  <ChildCard key={child.id!} familyId={familyId} personId={child.id!} />
                 ))}
               </Masonry>
             </Grid>
