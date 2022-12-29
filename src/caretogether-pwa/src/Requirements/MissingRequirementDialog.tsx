@@ -14,7 +14,7 @@ import { a11yProps, TabPanel } from "../TabPanel";
 import { personNameString } from "../Families/PersonName";
 import { DialogHandle } from "../Hooks/useDialogHandle";
 import { familyNameString } from "../Families/FamilyName";
-import { add, format, formatDuration } from "date-fns";
+import { add, format, formatDuration, isValid } from "date-fns";
 import { useFeatureFlags } from '../Model/ConfigurationModel';
 
 type MissingRequirementDialogProps = {
@@ -246,7 +246,7 @@ export function MissingRequirementDialog({
                 disableFuture inputFormat="MM/dd/yyyy"
                 onChange={(date: any) => date && setCompletedAtLocal(date)}
                 renderInput={(params: any) => <TextField fullWidth required {...params} />} />}
-            {validityDuration && (completedAtLocal
+            {validityDuration && ((completedAtLocal && isValid(completedAtLocal))
               ? <p>This will be valid until {format(add(completedAtLocal, validityDuration), "M/d/yyyy h:mm a")}</p>
               : <p>Valid for {formatDuration(validityDuration)}</p>)}
           </Grid>
