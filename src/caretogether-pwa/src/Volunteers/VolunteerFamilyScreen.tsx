@@ -8,7 +8,7 @@ import { volunteerFamiliesData } from '../Model/VolunteersModel';
 import { AddAdultDialog } from '../Families/AddAdultDialog';
 import { AddChildDialog } from '../Families/AddChildDialog';
 import { useParams } from 'react-router';
-import { VolunteerAdultCard } from './VolunteerAdultCard';
+import { AdultCard } from '../Families/AdultCard';
 import { ChildCard } from '../Families/ChildCard';
 import { UploadFamilyDocumentsDialog } from '../Families/UploadFamilyDocumentsDialog';
 import { VolunteerRoleApprovalStatusChip } from './VolunteerRoleApprovalStatusChip';
@@ -207,7 +207,7 @@ export function VolunteerFamilyScreen() {
             <Grid item xs={12}>
               <Masonry columns={isDesktop ? isWideScreen ? 3 : 2 : 1} spacing={2}>
                 {volunteerFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item1.active && adult.item2 && (
-                  <VolunteerAdultCard key={adult.item1.id} volunteerFamilyId={familyId} personId={adult.item1.id} />
+                  <AdultCard key={adult.item1.id} familyId={familyId} personId={adult.item1.id} />
                 ))}
                 {volunteerFamily.family?.children?.map(child => child.active && (
                   <ChildCard key={child.id!} familyId={familyId} personId={child.id!} />

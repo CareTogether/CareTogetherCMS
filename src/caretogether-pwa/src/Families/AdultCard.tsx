@@ -15,76 +15,73 @@ import {
   Grid
 } from "@mui/material";
 import { useState } from "react";
-import { Gender, Person, CombinedFamilyInfo, RoleRemovalReason, Permission } from "../GeneratedClient";
+import { Gender, Person, RoleRemovalReason, Permission } from "../GeneratedClient";
 import { AgeText } from "../AgeText";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import EditIcon from '@mui/icons-material/Edit';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { useRecoilValue } from "recoil";
-import { volunteerFamiliesData } from "../Model/VolunteersModel";
 import { ContactDisplay } from "../ContactDisplay";
 import { IconRow } from "../IconRow";
-import { VolunteerRoleApprovalStatusChip } from "./VolunteerRoleApprovalStatusChip";
-import { RemoveIndividualRoleDialog } from "./RemoveIndividualRoleDialog";
-import { ResetIndividualRoleDialog } from "./ResetIndividualRoleDialog";
+import { VolunteerRoleApprovalStatusChip } from "../Volunteers/VolunteerRoleApprovalStatusChip";
+import { RemoveIndividualRoleDialog } from "../Volunteers/RemoveIndividualRoleDialog";
+import { ResetIndividualRoleDialog } from "../Volunteers/ResetIndividualRoleDialog";
 import { useFamilyPermissions } from "../Model/SessionModel";
 import { MissingRequirementRow } from "../Requirements/MissingRequirementRow";
 import { ExemptedRequirementRow } from "../Requirements/ExemptedRequirementRow";
 import { CompletedRequirementRow } from "../Requirements/CompletedRequirementRow";
 import { IndividualVolunteerContext } from "../Requirements/RequirementContext";
 import { useDialogHandle } from "../Hooks/useDialogHandle";
-import { EditAdultDialog } from "../Families/EditAdultDialog";
+import { EditAdultDialog } from "./EditAdultDialog";
 import { useCollapsed } from "../Hooks/useCollapsed";
+import { useFamilyLookup } from "../Model/DirectoryModel";
 
-type VolunteerAdultCardProps = {
-  volunteerFamilyId: string,
+type AdultCardProps = {
+  familyId: string,
   personId: string
 }
 
-export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdultCardProps) {
-  const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
+export function AdultCard({familyId, personId}: AdultCardProps) {
+  const familyLookup = useFamilyLookup();
+  const family = familyLookup(familyId)!;
 
-  const volunteerFamily = volunteerFamilies.find(x => x.family?.id === volunteerFamilyId) as CombinedFamilyInfo;
-  const adult = volunteerFamily.family?.adults?.find(x => x.item1?.id === personId);
+  const adult = family.family?.adults?.find(x => x.item1?.id === personId);
+
+  const permissions = useFamilyPermissions(family);
+
+  const editDialogHandle = useDialogHandle();
 
   const requirementContext: IndividualVolunteerContext = {
     kind: "Individual Volunteer",
-    volunteerFamilyId: volunteerFamilyId,
+    volunteerFamilyId: familyId,
     personId: personId
   };
 
-  const [collapsed, setCollapsed] = useCollapsed(`person-${volunteerFamilyId}-${personId}`, false);
-
-  const editDialogHandle = useDialogHandle();
+  const [collapsed, setCollapsed] = useCollapsed(`person-${familyId}-${personId}`, false);
   
   const [adultMoreMenuAnchor, setAdultMoreMenuAnchor] = useState<{anchor: Element, adult: Person} | null>(null);
   const [removeRoleParameter, setRemoveRoleParameter] = useState<{volunteerFamilyId: string, person: Person, role: string} | null>(null);
   function selectRemoveRole(adult: Person, role: string) {
     setAdultMoreMenuAnchor(null);
-    setRemoveRoleParameter({volunteerFamilyId, person: adult, role: role});
+    setRemoveRoleParameter({volunteerFamilyId: familyId, person: adult, role: role});
   }
   const [resetRoleParameter, setResetRoleParameter] = useState<{volunteerFamilyId: string, person: Person, role: string, removalReason: RoleRemovalReason, removalAdditionalComments: string} | null>(null);
   function selectResetRole(adult: Person, role: string, removalReason: RoleRemovalReason, removalAdditionalComments: string) {
     setAdultMoreMenuAnchor(null);
-    setResetRoleParameter({volunteerFamilyId, person: adult, role: role, removalReason: removalReason, removalAdditionalComments: removalAdditionalComments});
+    setResetRoleParameter({volunteerFamilyId: familyId, person: adult, role: role, removalReason: removalReason, removalAdditionalComments: removalAdditionalComments});
   }
-  
-  const permissions = useFamilyPermissions(volunteerFamily);
 
   const participatingFamilyRoles =
-  Object.entries(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals || {}).filter(
-    ([role,]) => !volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles?.find(x => x.roleName === role));
+    Object.entries(family.volunteerFamilyInfo?.familyRoleApprovals || {}).filter(
+      ([role,]) => !family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles?.find(x => x.roleName === role));
   const participatingIndividualRoles =
-    Object.entries(volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.individualRoleApprovals || {}).filter(
-      ([role,]) => !volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles?.find(x => x.roleName === role));
-  const removedRoles = volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles || [];
+    Object.entries(family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.individualRoleApprovals || {}).filter(
+      ([role,]) => !family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles?.find(x => x.roleName === role));
+  const removedRoles = family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles || [];
 
   return <>{adult?.item1 && adult.item1.id && adult.item2 &&
     <Card variant="outlined" sx={{minWidth: '275px'}}>
       <CardHeader sx={{paddingBottom: 0}}
-        title={<span>
-          {adult.item1.firstName + " " + adult.item1.lastName}
-        </span>}
+        title={adult.item1.firstName + " " + adult.item1.lastName}
         subheader={<>
           Adult, <AgeText age={adult.item1.age} />, {typeof(adult.item1.gender) === 'undefined' ? "" : Gender[adult.item1.gender] + ","} {adult.item1.ethnicity}
         </>}
@@ -119,9 +116,9 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
             margin: 0.5,
           }
         }} component="div">
-          {Object.entries(volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].individualRoleApprovals || {}).map(([role, roleVersionApprovals]) =>
+          {Object.entries(family.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].individualRoleApprovals || {}).map(([role, roleVersionApprovals]) =>
             <VolunteerRoleApprovalStatusChip key={role} roleName={role} roleVersionApprovals={roleVersionApprovals} />)}
-          {(volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles || []).map(removedRole =>
+          {(family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles || []).map(removedRole =>
             <Chip key={removedRole.roleName} size="small" label={`${removedRole.roleName} - ${RoleRemovalReason[removedRole.reason!]} - ${removedRole.additionalComments}`} />)}
           {(adult.item2.relationshipToFamily && <Chip size="small" label={adult.item2.relationshipToFamily} />) || null}
           {adult.item2.isInHousehold && <Chip size="small" label="In Household" />}
@@ -139,25 +136,25 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
             <Grid container>
               <Grid item xs={3}>
                 <Badge color="success"
-                  badgeContent={volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].completedRequirements?.length}>
+                  badgeContent={family.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].completedRequirements?.length}>
                   ✅
                 </Badge>
               </Grid>
               <Grid item xs={3}>
                 <Badge color="warning"
-                  badgeContent={volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].exemptedRequirements?.length}>
+                  badgeContent={family.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].exemptedRequirements?.length}>
                   🚫
                 </Badge>
               </Grid>
               <Grid item xs={3}>
                 <Badge color="error"
-                  badgeContent={volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].missingRequirements?.length}>
+                  badgeContent={family.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].missingRequirements?.length}>
                   ❌
                 </Badge>
               </Grid>
               <Grid item xs={3}>
                 <Badge color="info"
-                  badgeContent={volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].availableApplications?.length}>
+                  badgeContent={family.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].availableApplications?.length}>
                   💤
                 </Badge>
               </Grid>
@@ -165,16 +162,16 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
           </AccordionSummary>
           <AccordionDetails>
             <Typography variant="body2" component="div">
-              {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].completedRequirements?.map((completed, i) =>
+              {family.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].completedRequirements?.map((completed, i) =>
                 <CompletedRequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} context={requirementContext} />
               )}
-              {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].exemptedRequirements?.map((exempted, i) =>
+              {family.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].exemptedRequirements?.map((exempted, i) =>
                 <ExemptedRequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={requirementContext} />
               )}
-              {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].missingRequirements?.map((missing, i) =>
+              {family.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].missingRequirements?.map((missing, i) =>
                 <MissingRequirementRow key={`${missing}:${i}`} requirement={missing} context={requirementContext} />
               )}
-              {volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].availableApplications?.map((application, i) =>
+              {family.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].availableApplications?.map((application, i) =>
                 <MissingRequirementRow key={`${application}:${i}`} requirement={application} context={requirementContext} isAvailableApplication={true} />
               )}
             </Typography>
@@ -206,9 +203,9 @@ export function VolunteerAdultCard({volunteerFamilyId, personId}: VolunteerAdult
           </MenuItem>
         ))}
       </Menu>
-      {(removeRoleParameter && <RemoveIndividualRoleDialog volunteerFamilyId={volunteerFamilyId} person={removeRoleParameter.person} role={removeRoleParameter.role}
+      {(removeRoleParameter && <RemoveIndividualRoleDialog volunteerFamilyId={familyId} person={removeRoleParameter.person} role={removeRoleParameter.role}
         onClose={() => setRemoveRoleParameter(null)} />) || null}
-      {(resetRoleParameter && <ResetIndividualRoleDialog volunteerFamilyId={volunteerFamilyId} person={resetRoleParameter.person} role={resetRoleParameter.role}
+      {(resetRoleParameter && <ResetIndividualRoleDialog volunteerFamilyId={familyId} person={resetRoleParameter.person} role={resetRoleParameter.role}
         removalReason={resetRoleParameter.removalReason} removalAdditionalComments={resetRoleParameter.removalAdditionalComments}
         onClose={() => setResetRoleParameter(null)} />) || null}
       {editDialogHandle.open && <EditAdultDialog handle={editDialogHandle} key={editDialogHandle.key}

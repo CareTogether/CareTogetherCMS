@@ -5,7 +5,7 @@ import { partneringFamiliesData } from '../Model/ReferralsModel';
 import { useParams } from 'react-router';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import { PartneringAdultCard } from './PartneringAdultCard';
+import { AdultCard } from '../Families/AdultCard';
 import { ChildCard } from '../Families/ChildCard';
 import { useState } from 'react';
 import { AddAdultDialog } from '../Families/AddAdultDialog';
@@ -262,7 +262,7 @@ export function PartneringFamilyScreen() {
               <h3 style={{ marginBottom: 0 }}>Family Members</h3>
               <Masonry columns={isDesktop ? isWideScreen ? 3 : 2 : 1} spacing={2}>
                 {partneringFamily.family?.adults?.map(adult => adult.item1 && adult.item1.id && adult.item1.active && adult.item2 && (
-                  <PartneringAdultCard key={adult.item1.id} partneringFamilyId={familyId} personId={adult.item1.id} />
+                  <AdultCard key={adult.item1.id} familyId={familyId} personId={adult.item1.id} />
                 ))}
                 {partneringFamily.family?.children?.map(child => child.active && (
                   <ChildCard key={child.id!} familyId={familyId} personId={child.id!} />
