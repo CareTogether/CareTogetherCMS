@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { PartneringFamilies } from './PartneringFamilies';
-import { FamilyScreen } from './PartneringFamilyScreen';
+import { FamilyScreen } from '../Families/FamilyScreen';
 
 function Referrals() {
   return (

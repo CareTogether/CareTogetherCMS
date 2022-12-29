@@ -5,20 +5,20 @@ import { useParams } from 'react-router';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import { AdultCard } from '../Families/AdultCard';
-import { ChildCard } from '../Families/ChildCard';
+import { AdultCard } from './AdultCard';
+import { ChildCard } from './ChildCard';
 import { useState } from 'react';
-import { AddAdultDialog } from '../Families/AddAdultDialog';
-import { AddChildDialog } from '../Families/AddChildDialog';
+import { AddAdultDialog } from './AddAdultDialog';
+import { AddChildDialog } from './AddChildDialog';
 import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
-import { ArrangementCard } from './Arrangements/ArrangementCard';
+import { ArrangementCard } from '../Referrals/Arrangements/ArrangementCard';
 import { format } from 'date-fns';
-import { UploadFamilyDocumentsDialog } from '../Families/UploadFamilyDocumentsDialog';
+import { UploadFamilyDocumentsDialog } from './UploadFamilyDocumentsDialog';
 import { policyData } from '../Model/ConfigurationModel';
-import { CreateArrangementDialog } from './Arrangements/CreateArrangementDialog';
-import { CloseReferralDialog } from './CloseReferralDialog';
-import { OpenNewReferralDialog } from './OpenNewReferralDialog';
-import { FamilyDocuments } from '../Families/FamilyDocuments';
+import { CreateArrangementDialog } from '../Referrals/Arrangements/CreateArrangementDialog';
+import { CloseReferralDialog } from '../Referrals/CloseReferralDialog';
+import { OpenNewReferralDialog } from '../Referrals/OpenNewReferralDialog';
+import { FamilyDocuments } from './FamilyDocuments';
 import { useFamilyPermissions } from '../Model/SessionModel';
 import { Masonry } from '@mui/lab';
 import { MissingRequirementRow } from "../Requirements/MissingRequirementRow";
@@ -26,9 +26,9 @@ import { ExemptedRequirementRow } from "../Requirements/ExemptedRequirementRow";
 import { CompletedRequirementRow } from "../Requirements/CompletedRequirementRow";
 import { ReferralContext, VolunteerFamilyContext } from "../Requirements/RequirementContext";
 import { ActivityTimeline } from '../Activities/ActivityTimeline';
-import { ReferralComments } from './ReferralComments';
-import { ReferralCustomField } from './ReferralCustomField';
-import { PrimaryContactEditor } from '../Families/PrimaryContactEditor';
+import { ReferralComments } from '../Referrals/ReferralComments';
+import { ReferralCustomField } from '../Referrals/ReferralCustomField';
+import { PrimaryContactEditor } from './PrimaryContactEditor';
 import useScreenTitle from '../Shell/ShellScreenTitle';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useFamilyLookup } from '../Model/DirectoryModel';
@@ -194,7 +194,7 @@ export function FamilyScreen() {
           <Grid container spacing={0}>
             <Grid item xs={12} md={4}>
               <PrimaryContactEditor family={family} />
-              {permissions(Permission.ViewReferralProgress) &&
+              {permissions(Permission.ViewReferralProgress) && family.partneringFamilyInfo &&
                 <>
                   <br />
                   {family.partneringFamilyInfo?.openReferral
@@ -202,7 +202,7 @@ export function FamilyScreen() {
                     : "Referral closed - " + ReferralCloseReason[family.partneringFamilyInfo?.closedReferrals?.[family.partneringFamilyInfo.closedReferrals.length-1]?.closeReason!]
                     //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closedUtc) -- needs a new calculated property
                   }
-                  {(family.partneringFamilyInfo!.closedReferrals?.length && (
+                  {(family.partneringFamilyInfo?.closedReferrals?.length && (
                     <>
                       <br />
                       {family.partneringFamilyInfo!.closedReferrals?.map(referral => (
