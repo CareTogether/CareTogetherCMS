@@ -1,6 +1,7 @@
 using CareTogether.Resources;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
+using CareTogether.Resources.Referrals;
 using CareTogether.Utilities.Telephony;
 using JsonPolymorph;
 using System;
@@ -9,7 +10,7 @@ using System.Collections.Immutable;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-namespace CareTogether.Managers.Directory
+namespace CareTogether.Managers.Records
 {
     [JsonHierarchyBase]
     public abstract partial record DirectoryCommand();
@@ -56,5 +57,11 @@ namespace CareTogether.Managers.Directory
         Task<ImmutableList<(Guid FamilyId, SmsMessageResult? Result)>> SendSmsToFamilyPrimaryContactsAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user,
             ImmutableList<Guid> familyIds, string sourceNumber, string message);
+
+        Task<CombinedFamilyInfo> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, ReferralCommand command);
+
+        Task<CombinedFamilyInfo> ExecuteArrangementsCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, ArrangementsCommand command);
     }
 }

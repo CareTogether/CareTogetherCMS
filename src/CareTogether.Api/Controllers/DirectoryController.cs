@@ -1,5 +1,5 @@
 ﻿using CareTogether.Managers;
-using CareTogether.Managers.Directory;
+using CareTogether.Managers.Records;
 using CareTogether.Resources;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
@@ -22,18 +22,18 @@ namespace CareTogether.Api.Controllers
     [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class DirectoryController : ControllerBase
     {
-        private readonly IRecordsManager directoryManager;
+        private readonly IRecordsManager recordsManager;
 
-        public DirectoryController(IRecordsManager directoryManager)
+        public DirectoryController(IRecordsManager recordsManager)
         {
-            this.directoryManager = directoryManager;
+            this.recordsManager = recordsManager;
         }
 
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CombinedFamilyInfo>>> ListVisibleFamiliesAsync(Guid organizationId, Guid locationId)
         {
-            var referrals = await directoryManager.ListVisibleFamiliesAsync(User, organizationId, locationId);
+            var referrals = await recordsManager.ListVisibleFamiliesAsync(User, organizationId, locationId);
 
             return Ok(referrals);
         }
@@ -42,7 +42,7 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<CombinedFamilyInfo>> SubmitDirectoryCommandAsync(Guid organizationId, Guid locationId,
             [FromBody] DirectoryCommand command)
         {
-            var result = await directoryManager.ExecuteDirectoryCommandAsync(organizationId, locationId, User, command);
+            var result = await recordsManager.ExecuteDirectoryCommandAsync(organizationId, locationId, User, command);
             return result;
         }
 
@@ -50,7 +50,7 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<CombinedFamilyInfo>> SubmitFamilyCommandAsync(Guid organizationId, Guid locationId,
             Guid familyId, [FromBody] FamilyCommand command)
         {
-            var result = await directoryManager.ExecuteFamilyCommandAsync(organizationId, locationId, User, command);
+            var result = await recordsManager.ExecuteFamilyCommandAsync(organizationId, locationId, User, command);
             return result;
         }
 
@@ -58,7 +58,7 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<CombinedFamilyInfo>> SubmitPersonCommandAsync(Guid organizationId, Guid locationId,
             Guid familyId, [FromBody] PersonCommand command)
         {
-            var result = await directoryManager.ExecutePersonCommandAsync(organizationId, locationId, User, familyId, command);
+            var result = await recordsManager.ExecutePersonCommandAsync(organizationId, locationId, User, familyId, command);
             return result;
         }
 
@@ -66,7 +66,7 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<NoteCommandResult>> SubmitNoteCommandAsync(
             Guid organizationId, Guid locationId, [FromBody] NoteCommand command)
         {
-            var result = await directoryManager.ExecuteNoteCommandAsync(organizationId, locationId, User, command);
+            var result = await recordsManager.ExecuteNoteCommandAsync(organizationId, locationId, User, command);
             return result;
         }
 
@@ -75,7 +75,7 @@ namespace CareTogether.Api.Controllers
             SendSmsToFamilyPrimaryContactsAsync(Guid organizationId, Guid locationId,
             [FromBody] SendSmsToFamilyPrimaryContactsRequest request)
         {
-            var result = await directoryManager.SendSmsToFamilyPrimaryContactsAsync(organizationId, locationId,
+            var result = await recordsManager.SendSmsToFamilyPrimaryContactsAsync(organizationId, locationId,
                 User, request.FamilyIds, request.SourceNumber, request.Message);
             return result;
         }

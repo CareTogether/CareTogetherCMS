@@ -1,7 +1,7 @@
 ﻿using CareTogether.Engines;
 using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Managers;
-using CareTogether.Managers.Directory;
+using CareTogether.Managers.Records;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.Referrals;
@@ -102,13 +102,13 @@ namespace CareTogether.Api.OData
     public class LiveODataModelController : ODataController
     {
         private readonly IPoliciesResource policiesResource;
-        private readonly IRecordsManager directoryManager;
+        private readonly IRecordsManager recordsManager;
 
         public LiveODataModelController(IPoliciesResource policiesResource,
-            IRecordsManager directoryManager)
+            IRecordsManager recordsManager)
         {
             this.policiesResource = policiesResource;
-            this.directoryManager = directoryManager;
+            this.recordsManager = recordsManager;
         }
 
 
@@ -220,7 +220,7 @@ namespace CareTogether.Api.OData
                 .ToArray();
 
             var familiesByLocation = await locations.ZipSelectManyAsync(location =>
-                directoryManager.ListVisibleFamiliesAsync(User, location.OrganizationId, location.Id))
+                recordsManager.ListVisibleFamiliesAsync(User, location.OrganizationId, location.Id))
                 .ToArrayAsync();
 
             var familiesWithInfo = familiesByLocation.Select(x => RenderFamily(x.Item1, x.Item2)).ToArray();

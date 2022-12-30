@@ -12,7 +12,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-namespace CareTogether.Managers.Directory
+namespace CareTogether.Managers.Records
 {
     public sealed class RecordsManager : IRecordsManager
     {
@@ -335,6 +335,47 @@ namespace CareTogether.Managers.Directory
             }).ToImmutableList();
 
             return allFamilyResults;
+        }
+
+        public async Task<CombinedFamilyInfo> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, ReferralCommand command)
+        {
+            command = command switch
+            {
+                CreateReferral c => c with { ReferralId = Guid.NewGuid() },
+                CompleteReferralRequirement c => c with { CompletedRequirementId = Guid.NewGuid() },
+                UpdateCustomReferralField c => c with { CompletedCustomFieldId = Guid.NewGuid() },
+                _ => command
+            };
+
+            if (!await authorizationEngine.AuthorizeReferralCommandAsync(
+                organizationId, locationId, user, command))
+                throw new Exception("The user is not authorized to perform this command.");
+
+            _ = await referralsResource.ExecuteReferralCommandAsync(organizationId, locationId, command, user.UserId());
+
+            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, command.FamilyId, user);
+            return familyResult;
+        }
+
+        public async Task<CombinedFamilyInfo> ExecuteArrangementsCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, ArrangementsCommand command)
+        {
+            command = command switch
+            {
+                CreateArrangement c => c with { ArrangementIds = ImmutableList.Create(Guid.NewGuid()) },
+                CompleteArrangementRequirement c => c with { CompletedRequirementId = Guid.NewGuid() },
+                _ => command
+            };
+
+            if (!await authorizationEngine.AuthorizeArrangementsCommandAsync(
+                organizationId, locationId, user, command))
+                throw new Exception("The user is not authorized to perform this command.");
+
+            _ = await referralsResource.ExecuteArrangementsCommandAsync(organizationId, locationId, command, user.UserId());
+
+            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, command.FamilyId, user);
+            return familyResult;
         }
     }
 }

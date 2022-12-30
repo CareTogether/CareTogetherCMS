@@ -4,8 +4,7 @@ using CareTogether.Engines.Authorization;
 using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Managers;
 using CareTogether.Managers.Approval;
-using CareTogether.Managers.Directory;
-using CareTogether.Managers.Referrals;
+using CareTogether.Managers.Records;
 using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
@@ -133,8 +132,6 @@ namespace CareTogether.Api
             // Manager services
             services.AddSingleton<IRecordsManager>(new RecordsManager(authorizationEngine, directoryResource,
                 approvalsResource, referralsResource, notesResource, policiesResource, telephony,
-                combinedFamilyInfoFormatter));
-            services.AddSingleton<IReferralsManager>(new ReferralsManager(authorizationEngine, referralsResource,
                 combinedFamilyInfoFormatter));
             services.AddSingleton<IApprovalManager>(new ApprovalManager(authorizationEngine, approvalsResource,
                 combinedFamilyInfoFormatter));
