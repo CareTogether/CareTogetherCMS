@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Managers.Directory
 {
-    public sealed class DirectoryManager : IDirectoryManager
+    public sealed class RecordsManager : IRecordsManager
     {
         private readonly IAuthorizationEngine authorizationEngine;
         private readonly IDirectoryResource directoryResource;
@@ -26,7 +26,7 @@ namespace CareTogether.Managers.Directory
         private readonly CombinedFamilyInfoFormatter combinedFamilyInfoFormatter;
 
 
-        public DirectoryManager(IAuthorizationEngine authorizationEngine, IDirectoryResource directoryResource,
+        public RecordsManager(IAuthorizationEngine authorizationEngine, IDirectoryResource directoryResource,
             IApprovalsResource approvalsResource, IReferralsResource referralsResource, INotesResource notesResource,
             IPoliciesResource policiesResource, ITelephony telephony, CombinedFamilyInfoFormatter combinedFamilyInfoFormatter)
         {

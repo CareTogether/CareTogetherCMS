@@ -102,10 +102,10 @@ namespace CareTogether.Api.OData
     public class LiveODataModelController : ODataController
     {
         private readonly IPoliciesResource policiesResource;
-        private readonly IDirectoryManager directoryManager;
+        private readonly IRecordsManager directoryManager;
 
         public LiveODataModelController(IPoliciesResource policiesResource,
-            IDirectoryManager directoryManager)
+            IRecordsManager directoryManager)
         {
             this.policiesResource = policiesResource;
             this.directoryManager = directoryManager;

@@ -36,7 +36,7 @@ namespace CareTogether.Managers.Directory
 
     public sealed record NoteCommandResult(CombinedFamilyInfo Family, Note? Note);
 
-    public interface IDirectoryManager
+    public interface IRecordsManager
     {
         Task<ImmutableList<CombinedFamilyInfo>> ListVisibleFamiliesAsync(
             ClaimsPrincipal user, Guid organizationId, Guid locationId);

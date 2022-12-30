@@ -22,9 +22,9 @@ namespace CareTogether.Api.Controllers
     [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class DirectoryController : ControllerBase
     {
-        private readonly IDirectoryManager directoryManager;
+        private readonly IRecordsManager directoryManager;
 
-        public DirectoryController(IDirectoryManager directoryManager)
+        public DirectoryController(IRecordsManager directoryManager)
         {
             this.directoryManager = directoryManager;
         }
