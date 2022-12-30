@@ -234,26 +234,6 @@ namespace CareTogether.Managers.Records
             }
         }
 
-        public async Task<CombinedFamilyInfo> ExecuteNoteCommandAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, NoteCommand command)
-        {
-            command = command switch
-            {
-                CreateDraftNote c => c with { NoteId = Guid.NewGuid() },
-                _ => command
-            };
-
-            if (!await authorizationEngine.AuthorizeNoteCommandAsync(
-                organizationId, locationId, user, command))
-                throw new Exception("The user is not authorized to perform this command.");
-
-            var noteEntry = await notesResource.ExecuteNoteCommandAsync(organizationId, locationId, command, user.UserId());
-
-            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, command.FamilyId, user);
-
-            return familyResult;
-        }
-
         public async Task<ImmutableList<(Guid FamilyId, SmsMessageResult? Result)>> SendSmsToFamilyPrimaryContactsAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user,
             ImmutableList<Guid> familyIds, string sourceNumber, string message)
@@ -363,6 +343,8 @@ namespace CareTogether.Managers.Records
                     organizationId, locationId, user, c.Command),
                 ArrangementRecordsCommand c => authorizationEngine.AuthorizeArrangementsCommandAsync(
                     organizationId, locationId, user, c.Command),
+                NoteRecordsCommand c => authorizationEngine.AuthorizeNoteCommandAsync(
+                    organizationId, locationId, user, c.Command),
                 _ => throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented.")
             };
@@ -383,6 +365,8 @@ namespace CareTogether.Managers.Records
                     organizationId, locationId, c.Command, user.UserId()),
                 ArrangementRecordsCommand c => referralsResource.ExecuteArrangementsCommandAsync(
                     organizationId, locationId, c.Command, user.UserId()),
+                NoteRecordsCommand c => notesResource.ExecuteNoteCommandAsync(
+                    organizationId, locationId, c.Command, user.UserId()),
                 _ => throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented.")
             };
@@ -396,6 +380,7 @@ namespace CareTogether.Managers.Records
                 IndividualApprovalRecordsCommand c => c.Command.FamilyId,
                 ReferralRecordsCommand c => c.Command.FamilyId,
                 ArrangementRecordsCommand c => c.Command.FamilyId,
+                NoteRecordsCommand c => c.Command.FamilyId,
                 _ => throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented.")
             };

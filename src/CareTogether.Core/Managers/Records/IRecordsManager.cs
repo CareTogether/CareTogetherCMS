@@ -49,6 +49,8 @@ namespace CareTogether.Managers.Records
         : RecordsCommand();
     public sealed record ArrangementRecordsCommand(ArrangementsCommand Command)
         : RecordsCommand();
+    public sealed record NoteRecordsCommand(NoteCommand Command)
+        : RecordsCommand();
 
     public interface IRecordsManager
     {
@@ -57,9 +59,6 @@ namespace CareTogether.Managers.Records
 
         Task<CombinedFamilyInfo> ExecuteDirectoryCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, DirectoryCommand command); //TODO: Replace these with regular FamilyCommand primitives?
-
-        Task<CombinedFamilyInfo> ExecuteNoteCommandAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, NoteCommand command);
 
         Task<ImmutableList<(Guid FamilyId, SmsMessageResult? Result)>> SendSmsToFamilyPrimaryContactsAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user,

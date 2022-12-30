@@ -68,7 +68,8 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<CombinedFamilyInfo>> SubmitNoteCommandAsync(
             Guid organizationId, Guid locationId, [FromBody] NoteCommand command)
         {
-            var result = await recordsManager.ExecuteNoteCommandAsync(organizationId, locationId, User, command);
+            var result = await recordsManager.ExecuteRecordsCommandAsync(organizationId, locationId, User,
+                new NoteRecordsCommand(command));
             return result;
         }
 
