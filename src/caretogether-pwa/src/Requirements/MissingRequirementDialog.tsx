@@ -2,7 +2,7 @@ import { DatePicker, DateTimePicker } from '@mui/x-date-pickers';
 import { Checkbox, DialogContentText, Divider, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputLabel, Link, MenuItem, Select, Tab, Tabs, TextField } from "@mui/material";
 import { useState } from "react";
 import { useRecoilValue } from "recoil";
-import { ActionRequirement, Arrangement, DocumentLinkRequirement, MissingArrangementRequirement, Note, NoteEntryRequirement } from "../GeneratedClient";
+import { ActionRequirement, Arrangement, DocumentLinkRequirement, MissingArrangementRequirement, NoteEntryRequirement } from "../GeneratedClient";
 import { useDirectoryModel, useFamilyLookup, usePersonLookup } from "../Model/DirectoryModel";
 import { uploadFileToTenant } from "../Model/FilesModel";
 import { useReferralsModel } from "../Model/ReferralsModel";
@@ -108,38 +108,38 @@ export function MissingRequirementDialog({
       document = await uploadFileToTenant(organizationId, locationId, documentFile!);
       await directory.uploadFamilyDocument(contextFamilyId, document, documentFile!.name);
     }
-    let note: Note | undefined = undefined;
+    let noteId: string | undefined = undefined;
     if (notes !== "")
-      note = (await directory.createDraftNote(contextFamilyId as string, notes)).note;
+      noteId = await directory.createDraftNote(contextFamilyId as string, notes);
     switch (context.kind) {
       case 'Referral':
         await referrals.completeReferralRequirement(contextFamilyId, context.referralId,
-          requirementName, policy, completedAtLocal!, document === "" ? null : document, note?.id || null);
+          requirementName, policy, completedAtLocal!, document === "" ? null : document, noteId || null);
         break;
       case 'Arrangement':
         await referrals.completeArrangementRequirement(contextFamilyId, context.referralId,
           applyToArrangements.map(arrangement => arrangement.id!),
-          requirementName, policy, completedAtLocal!, document === "" ? null : document, note?.id || null);
+          requirementName, policy, completedAtLocal!, document === "" ? null : document, noteId || null);
         break;
       case 'Family Volunteer Assignment':
         await referrals.completeVolunteerFamilyAssignmentRequirement(contextFamilyId, context.referralId,
           applyToArrangements.map(arrangement => arrangement.id!),
           context.assignment,
-          requirementName, policy, completedAtLocal!, document === "" ? null : document, note?.id || null);
+          requirementName, policy, completedAtLocal!, document === "" ? null : document, noteId || null);
         break;
       case 'Individual Volunteer Assignment':
         await referrals.completeIndividualVolunteerAssignmentRequirement(contextFamilyId, context.referralId,
           applyToArrangements.map(arrangement => arrangement.id!),
           context.assignment,
-          requirementName, policy, completedAtLocal!, document === "" ? null : document, note?.id || null);
+          requirementName, policy, completedAtLocal!, document === "" ? null : document, noteId || null);
         break;
       case 'Volunteer Family':
         await volunteers.completeFamilyRequirement(contextFamilyId,
-          requirementName, policy, completedAtLocal!, document === "" ? null : document, note?.id || null);
+          requirementName, policy, completedAtLocal!, document === "" ? null : document, noteId || null);
         break;
       case 'Individual Volunteer':
         await volunteers.completeIndividualRequirement(contextFamilyId, context.personId,
-          requirementName, policy, completedAtLocal!, document === "" ? null : document, note?.id || null);
+          requirementName, policy, completedAtLocal!, document === "" ? null : document, noteId || null);
         break;
     }
   }

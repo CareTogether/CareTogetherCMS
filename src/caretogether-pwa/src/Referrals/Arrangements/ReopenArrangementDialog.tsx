@@ -1,7 +1,7 @@
 import { Grid, TextField } from '@mui/material';
 import { useState } from 'react';
 import { useParams } from 'react-router';
-import { Arrangement, Note, Person } from '../../GeneratedClient';
+import { Arrangement, Person } from '../../GeneratedClient';
 import { useDirectoryModel, usePersonLookup } from '../../Model/DirectoryModel';
 import { useReferralsModel } from '../../Model/ReferralsModel';
 import { UpdateDialog } from '../../UpdateDialog';
@@ -25,10 +25,10 @@ export function ReopenArrangementDialog({referralId, arrangement, onClose}: Reop
   const [notes, setNotes] = useState("");
 
   async function save() {
-    let note: Note | undefined = undefined;
+    let noteId: string | undefined = undefined;
     if (notes !== "")
-      note = (await directoryModel.createDraftNote(familyId as string, notes)).note;
-      await referralsModel.reopenArrangement(familyId, referralId, arrangement.id!, note?.id || null);
+      noteId = await directoryModel.createDraftNote(familyId as string, notes);
+      await referralsModel.reopenArrangement(familyId, referralId, arrangement.id!, noteId || null);
   }
 
   return (

@@ -234,7 +234,7 @@ namespace CareTogether.Managers.Records
             }
         }
 
-        public async Task<NoteCommandResult> ExecuteNoteCommandAsync(Guid organizationId, Guid locationId,
+        public async Task<CombinedFamilyInfo> ExecuteNoteCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, NoteCommand command)
         {
             command = command switch
@@ -251,8 +251,7 @@ namespace CareTogether.Managers.Records
 
             var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, command.FamilyId, user);
 
-            var note = familyResult.Notes.SingleOrDefault(note => note.Id == noteEntry?.Id);
-            return new NoteCommandResult(familyResult, note);
+            return familyResult;
         }
 
         public async Task<ImmutableList<(Guid FamilyId, SmsMessageResult? Result)>> SendSmsToFamilyPrimaryContactsAsync(

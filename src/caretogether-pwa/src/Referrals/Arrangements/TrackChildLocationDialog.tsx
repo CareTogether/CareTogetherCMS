@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControl, FormControlLabel, FormLabel, Grid, IconButton, InputLabel, MenuItem, Radio, RadioGroup, Select, Stack, Tab, Tabs, TextField } from '@mui/material';
-import { CombinedFamilyInfo, Arrangement, Person, ChildLocationPlan, ChildInvolvement, Note, ChildLocationHistoryEntry } from '../../GeneratedClient';
+import { CombinedFamilyInfo, Arrangement, Person, ChildLocationPlan, ChildInvolvement, ChildLocationHistoryEntry } from '../../GeneratedClient';
 import { DateTimePicker } from '@mui/x-date-pickers';
 
 import {
@@ -212,11 +212,11 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
         alert("No date was entered. Please try again.");
       } else {
         const assigneeInfo = candidatePartneringFamilyAssignees.concat(deduplicatedCandidateVolunteerAssignees).find(ca => ca.key === selectedAssigneeKey);
-        let note: Note | undefined = undefined;
+        let noteId: string | undefined = undefined;
         if (notes !== "")
-          note = (await directoryModel.createDraftNote(partneringFamily.family?.id as string, notes)).note;
+          noteId = await directoryModel.createDraftNote(partneringFamily.family?.id as string, notes);
         await referralsModel.trackChildLocation(partneringFamily.family?.id as string, referralId, arrangement.id!,
-          assigneeInfo!.familyId, assigneeInfo!.personId, changeAtLocal, plan, note?.id || null);
+          assigneeInfo!.familyId, assigneeInfo!.personId, changeAtLocal, plan, noteId || null);
         //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
         onClose();
       }

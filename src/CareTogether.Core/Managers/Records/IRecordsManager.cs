@@ -35,8 +35,6 @@ namespace CareTogether.Managers.Records
         string? Concerns, string? Notes)
         : DirectoryCommand;
 
-    public sealed record NoteCommandResult(CombinedFamilyInfo Family, Note? Note);
-
     [JsonHierarchyBase]
     public abstract partial record RecordsCommand();
     public sealed record FamilyRecordsCommand(FamilyCommand Command)
@@ -60,7 +58,7 @@ namespace CareTogether.Managers.Records
         Task<CombinedFamilyInfo> ExecuteDirectoryCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, DirectoryCommand command); //TODO: Replace these with regular FamilyCommand primitives?
 
-        Task<NoteCommandResult> ExecuteNoteCommandAsync(Guid organizationId, Guid locationId,
+        Task<CombinedFamilyInfo> ExecuteNoteCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, NoteCommand command);
 
         Task<ImmutableList<(Guid FamilyId, SmsMessageResult? Result)>> SendSmsToFamilyPrimaryContactsAsync(
