@@ -234,40 +234,6 @@ namespace CareTogether.Managers.Records
             }
         }
 
-        public async Task<CombinedFamilyInfo> ExecuteFamilyCommandAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, FamilyCommand command)
-        {
-            if (!await authorizationEngine.AuthorizeFamilyCommandAsync(
-                organizationId, locationId, user, command))
-                throw new Exception("The user is not authorized to perform this command.");
-
-            _ = await directoryResource.ExecuteFamilyCommandAsync(organizationId, locationId, command, user.UserId());
-
-            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, command.FamilyId, user);
-            return familyResult;
-        }
-
-        public async Task<CombinedFamilyInfo> ExecutePersonCommandAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, Guid familyId, PersonCommand command)
-        {
-            command = command switch
-            {
-                AddPersonPhoneNumber c => c with { PhoneNumber = c.PhoneNumber with { Id = Guid.NewGuid() } },
-                AddPersonEmailAddress c => c with { EmailAddress = c.EmailAddress with { Id = Guid.NewGuid() } },
-                AddPersonAddress c => c with { Address = c.Address with { Id = Guid.NewGuid() } },
-                _ => command
-            };
-
-            if (!await authorizationEngine.AuthorizePersonCommandAsync(
-                organizationId, locationId, user, familyId, command))
-                throw new Exception("The user is not authorized to perform this command.");
-
-            _ = await directoryResource.ExecutePersonCommandAsync(organizationId, locationId, command, user.UserId());
-
-            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, familyId, user);
-            return familyResult;
-        }
-
         public async Task<NoteCommandResult> ExecuteNoteCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, NoteCommand command)
         {
@@ -336,83 +302,103 @@ namespace CareTogether.Managers.Records
 
             return allFamilyResults;
         }
-        public async Task<CombinedFamilyInfo> ExecuteVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, VolunteerFamilyCommand command)
-        {
-            command = command switch
-            {
-                CompleteVolunteerFamilyRequirement c => c with { CompletedRequirementId = Guid.NewGuid() },
-                _ => command
-            };
 
-            if (!await authorizationEngine.AuthorizeVolunteerFamilyCommandAsync(
-                organizationId, locationId, user, command))
+        public async Task<CombinedFamilyInfo> ExecuteRecordsCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, RecordsCommand command)
+        {
+            command = GenerateNewServerGuidsForNewIds(command);
+
+            if (!await AuthorizeCommandAsync(organizationId, locationId, user, command))
                 throw new Exception("The user is not authorized to perform this command.");
 
-            _ = await approvalsResource.ExecuteVolunteerFamilyCommandAsync(organizationId, locationId, command, user.UserId());
+            await ExecuteCommandAsync(organizationId, locationId, user, command);
 
-            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, command.FamilyId, user);
+            var familyId = GetFamilyIdFromCommand(command);
+
+            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
+                organizationId, locationId, familyId, user);
+
             return familyResult;
         }
 
-        public async Task<CombinedFamilyInfo> ExecuteVolunteerCommandAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, VolunteerCommand command)
-        {
-            command = command switch
+
+        private RecordsCommand GenerateNewServerGuidsForNewIds(RecordsCommand command) =>
+            command switch
             {
-                CompleteVolunteerRequirement c => c with { CompletedRequirementId = Guid.NewGuid() },
+                PersonRecordsCommand c when c.Command is AddPersonPhoneNumber x =>
+                    c with { Command = x with { PhoneNumber = x.PhoneNumber with { Id = Guid.NewGuid() } } },
+                PersonRecordsCommand c when c.Command is AddPersonEmailAddress x =>
+                    c with { Command = x with { EmailAddress = x.EmailAddress with { Id = Guid.NewGuid() } } },
+                PersonRecordsCommand c when c.Command is AddPersonAddress x =>
+                    c with { Command = x with { Address = x.Address with { Id = Guid.NewGuid() } } },
+                FamilyApprovalRecordsCommand c when c.Command is CompleteVolunteerFamilyRequirement x =>
+                    c with { Command = x with { CompletedRequirementId = Guid.NewGuid() } },
+                IndividualApprovalRecordsCommand c when c.Command is CompleteVolunteerRequirement x =>
+                    c with { Command = x with { CompletedRequirementId = Guid.NewGuid() } },
+                ReferralRecordsCommand c when c.Command is CreateReferral x =>
+                    c with { Command = x with { ReferralId = Guid.NewGuid() } },
+                ReferralRecordsCommand c when c.Command is CompleteReferralRequirement x =>
+                    c with { Command = x with { CompletedRequirementId = Guid.NewGuid() } },
+                ReferralRecordsCommand c when c.Command is UpdateCustomReferralField x =>
+                    c with { Command = x with { CompletedCustomFieldId = Guid.NewGuid() } },
+                ArrangementRecordsCommand c when c.Command is CreateArrangement x =>
+                    c with { Command = x with { ArrangementIds = ImmutableList.Create(Guid.NewGuid()) } },
+                ArrangementRecordsCommand c when c.Command is CompleteArrangementRequirement x =>
+                    c with { Command = x with { CompletedRequirementId = Guid.NewGuid() } },
                 _ => command
             };
 
-            if (!await authorizationEngine.AuthorizeVolunteerCommandAsync(
-                organizationId, locationId, user, command))
-                throw new Exception("The user is not authorized to perform this command.");
-
-            _ = await approvalsResource.ExecuteVolunteerCommandAsync(organizationId, locationId, command, user.UserId());
-
-            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, command.FamilyId, user);
-            return familyResult;
-        }
-
-        public async Task<CombinedFamilyInfo> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, ReferralCommand command)
-        {
-            command = command switch
+        private Task<bool> AuthorizeCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, RecordsCommand command) =>
+            command switch
             {
-                CreateReferral c => c with { ReferralId = Guid.NewGuid() },
-                CompleteReferralRequirement c => c with { CompletedRequirementId = Guid.NewGuid() },
-                UpdateCustomReferralField c => c with { CompletedCustomFieldId = Guid.NewGuid() },
-                _ => command
+                FamilyRecordsCommand c => authorizationEngine.AuthorizeFamilyCommandAsync(
+                    organizationId, locationId, user, c.Command),
+                PersonRecordsCommand c => authorizationEngine.AuthorizePersonCommandAsync(
+                    organizationId, locationId, user, c.FamilyId, c.Command),
+                FamilyApprovalRecordsCommand c => authorizationEngine.AuthorizeVolunteerFamilyCommandAsync(
+                    organizationId, locationId, user, c.Command),
+                IndividualApprovalRecordsCommand c => authorizationEngine.AuthorizeVolunteerCommandAsync(
+                    organizationId, locationId, user, c.Command),
+                ReferralRecordsCommand c => authorizationEngine.AuthorizeReferralCommandAsync(
+                    organizationId, locationId, user, c.Command),
+                ArrangementRecordsCommand c => authorizationEngine.AuthorizeArrangementsCommandAsync(
+                    organizationId, locationId, user, c.Command),
+                _ => throw new NotImplementedException(
+                    $"The command type '{command.GetType().FullName}' has not been implemented.")
             };
 
-            if (!await authorizationEngine.AuthorizeReferralCommandAsync(
-                organizationId, locationId, user, command))
-                throw new Exception("The user is not authorized to perform this command.");
-
-            _ = await referralsResource.ExecuteReferralCommandAsync(organizationId, locationId, command, user.UserId());
-
-            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, command.FamilyId, user);
-            return familyResult;
-        }
-
-        public async Task<CombinedFamilyInfo> ExecuteArrangementsCommandAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, ArrangementsCommand command)
-        {
-            command = command switch
+        private Task ExecuteCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, RecordsCommand command) =>
+            command switch
             {
-                CreateArrangement c => c with { ArrangementIds = ImmutableList.Create(Guid.NewGuid()) },
-                CompleteArrangementRequirement c => c with { CompletedRequirementId = Guid.NewGuid() },
-                _ => command
+                FamilyRecordsCommand c => directoryResource.ExecuteFamilyCommandAsync(
+                    organizationId, locationId, c.Command, user.UserId()),
+                PersonRecordsCommand c => directoryResource.ExecutePersonCommandAsync(
+                    organizationId, locationId, c.Command, user.UserId()),
+                FamilyApprovalRecordsCommand c => approvalsResource.ExecuteVolunteerFamilyCommandAsync(
+                    organizationId, locationId, c.Command, user.UserId()),
+                IndividualApprovalRecordsCommand c => approvalsResource.ExecuteVolunteerCommandAsync(
+                    organizationId, locationId, c.Command, user.UserId()),
+                ReferralRecordsCommand c => referralsResource.ExecuteReferralCommandAsync(
+                    organizationId, locationId, c.Command, user.UserId()),
+                ArrangementRecordsCommand c => referralsResource.ExecuteArrangementsCommandAsync(
+                    organizationId, locationId, c.Command, user.UserId()),
+                _ => throw new NotImplementedException(
+                    $"The command type '{command.GetType().FullName}' has not been implemented.")
             };
 
-            if (!await authorizationEngine.AuthorizeArrangementsCommandAsync(
-                organizationId, locationId, user, command))
-                throw new Exception("The user is not authorized to perform this command.");
-
-            _ = await referralsResource.ExecuteArrangementsCommandAsync(organizationId, locationId, command, user.UserId());
-
-            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, command.FamilyId, user);
-            return familyResult;
-        }
+        private Guid GetFamilyIdFromCommand(RecordsCommand command) =>
+            command switch
+            {
+                FamilyRecordsCommand c => c.Command.FamilyId,
+                PersonRecordsCommand c => c.FamilyId,
+                FamilyApprovalRecordsCommand c => c.Command.FamilyId,
+                IndividualApprovalRecordsCommand c => c.Command.FamilyId,
+                ReferralRecordsCommand c => c.Command.FamilyId,
+                ArrangementRecordsCommand c => c.Command.FamilyId,
+                _ => throw new NotImplementedException(
+                    $"The command type '{command.GetType().FullName}' has not been implemented.")
+            };
     }
 }

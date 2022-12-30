@@ -1,4 +1,3 @@
-using CareTogether.Resources;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
@@ -38,6 +37,21 @@ namespace CareTogether.Managers.Records
 
     public sealed record NoteCommandResult(CombinedFamilyInfo Family, Note? Note);
 
+    [JsonHierarchyBase]
+    public abstract partial record RecordsCommand();
+    public sealed record FamilyRecordsCommand(FamilyCommand Command)
+        : RecordsCommand();
+    public sealed record PersonRecordsCommand(Guid FamilyId, PersonCommand Command)
+        : RecordsCommand();
+    public sealed record FamilyApprovalRecordsCommand(VolunteerFamilyCommand Command)
+        : RecordsCommand();
+    public sealed record IndividualApprovalRecordsCommand(VolunteerCommand Command)
+        : RecordsCommand();
+    public sealed record ReferralRecordsCommand(ReferralCommand Command)
+        : RecordsCommand();
+    public sealed record ArrangementRecordsCommand(ArrangementsCommand Command)
+        : RecordsCommand();
+
     public interface IRecordsManager
     {
         Task<ImmutableList<CombinedFamilyInfo>> ListVisibleFamiliesAsync(
@@ -46,12 +60,6 @@ namespace CareTogether.Managers.Records
         Task<CombinedFamilyInfo> ExecuteDirectoryCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, DirectoryCommand command); //TODO: Replace these with regular FamilyCommand primitives?
 
-        Task<CombinedFamilyInfo> ExecuteFamilyCommandAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, FamilyCommand command);
-
-        Task<CombinedFamilyInfo> ExecutePersonCommandAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, Guid familyId, PersonCommand command);
-
         Task<NoteCommandResult> ExecuteNoteCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, NoteCommand command);
 
@@ -59,16 +67,7 @@ namespace CareTogether.Managers.Records
             Guid organizationId, Guid locationId, ClaimsPrincipal user,
             ImmutableList<Guid> familyIds, string sourceNumber, string message);
 
-        Task<CombinedFamilyInfo> ExecuteVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, VolunteerFamilyCommand command);
-
-        Task<CombinedFamilyInfo> ExecuteVolunteerCommandAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, VolunteerCommand command);
-
-        Task<CombinedFamilyInfo> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, ReferralCommand command);
-
-        Task<CombinedFamilyInfo> ExecuteArrangementsCommandAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, ArrangementsCommand command);
+        Task<CombinedFamilyInfo> ExecuteRecordsCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, RecordsCommand command);
     }
 }

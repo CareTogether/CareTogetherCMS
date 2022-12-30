@@ -28,7 +28,8 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<CombinedFamilyInfo>> SubmitReferralCommandAsync(Guid organizationId, Guid locationId,
             [FromBody] ReferralCommand command)
         {
-            var result = await recordsManager.ExecuteReferralCommandAsync(organizationId, locationId, User, command);
+            var result = await recordsManager.ExecuteRecordsCommandAsync(organizationId, locationId, User,
+                new ReferralRecordsCommand(command));
             return result;
         }
 
@@ -36,7 +37,8 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<CombinedFamilyInfo>> SubmitArrangementsCommandAsync(Guid organizationId, Guid locationId,
             [FromBody] ArrangementsCommand command)
         {
-            var result = await recordsManager.ExecuteArrangementsCommandAsync(organizationId, locationId, User, command);
+            var result = await recordsManager.ExecuteRecordsCommandAsync(organizationId, locationId, User,
+                new ArrangementRecordsCommand(command));
             return result;
         }
     }
