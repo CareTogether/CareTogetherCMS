@@ -3,7 +3,6 @@ using CareTogether.Api.OData;
 using CareTogether.Engines.Authorization;
 using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Managers;
-using CareTogether.Managers.Approval;
 using CareTogether.Managers.Records;
 using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Approvals;
@@ -132,8 +131,6 @@ namespace CareTogether.Api
             // Manager services
             services.AddSingleton<IRecordsManager>(new RecordsManager(authorizationEngine, directoryResource,
                 approvalsResource, referralsResource, notesResource, policiesResource, telephony,
-                combinedFamilyInfoFormatter));
-            services.AddSingleton<IApprovalManager>(new ApprovalManager(authorizationEngine, approvalsResource,
                 combinedFamilyInfoFormatter));
 
             // Utility providers

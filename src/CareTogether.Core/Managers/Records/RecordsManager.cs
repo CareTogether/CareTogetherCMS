@@ -336,6 +336,43 @@ namespace CareTogether.Managers.Records
 
             return allFamilyResults;
         }
+        public async Task<CombinedFamilyInfo> ExecuteVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, VolunteerFamilyCommand command)
+        {
+            command = command switch
+            {
+                CompleteVolunteerFamilyRequirement c => c with { CompletedRequirementId = Guid.NewGuid() },
+                _ => command
+            };
+
+            if (!await authorizationEngine.AuthorizeVolunteerFamilyCommandAsync(
+                organizationId, locationId, user, command))
+                throw new Exception("The user is not authorized to perform this command.");
+
+            _ = await approvalsResource.ExecuteVolunteerFamilyCommandAsync(organizationId, locationId, command, user.UserId());
+
+            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, command.FamilyId, user);
+            return familyResult;
+        }
+
+        public async Task<CombinedFamilyInfo> ExecuteVolunteerCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, VolunteerCommand command)
+        {
+            command = command switch
+            {
+                CompleteVolunteerRequirement c => c with { CompletedRequirementId = Guid.NewGuid() },
+                _ => command
+            };
+
+            if (!await authorizationEngine.AuthorizeVolunteerCommandAsync(
+                organizationId, locationId, user, command))
+                throw new Exception("The user is not authorized to perform this command.");
+
+            _ = await approvalsResource.ExecuteVolunteerCommandAsync(organizationId, locationId, command, user.UserId());
+
+            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, command.FamilyId, user);
+            return familyResult;
+        }
 
         public async Task<CombinedFamilyInfo> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, ReferralCommand command)
