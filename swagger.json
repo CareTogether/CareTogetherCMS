@@ -455,7 +455,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NoteCommandResult"
+                  "$ref": "#/components/schemas/CombinedFamilyInfo"
                 }
               }
             }
@@ -3873,23 +3873,6 @@
             }
           }
         ]
-      },
-      "NoteCommandResult": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "family": {
-            "$ref": "#/components/schemas/CombinedFamilyInfo"
-          },
-          "note": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/Note"
-              }
-            ]
-          }
-        }
       },
       "NoteCommand": {
         "type": "object",

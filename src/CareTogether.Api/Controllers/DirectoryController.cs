@@ -1,5 +1,5 @@
 ﻿using CareTogether.Managers;
-using CareTogether.Managers.Directory;
+using CareTogether.Managers.Records;
 using CareTogether.Resources;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
@@ -22,18 +22,18 @@ namespace CareTogether.Api.Controllers
     [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class DirectoryController : ControllerBase
     {
-        private readonly IDirectoryManager directoryManager;
+        private readonly IRecordsManager recordsManager;
 
-        public DirectoryController(IDirectoryManager directoryManager)
+        public DirectoryController(IRecordsManager recordsManager)
         {
-            this.directoryManager = directoryManager;
+            this.recordsManager = recordsManager;
         }
 
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CombinedFamilyInfo>>> ListVisibleFamiliesAsync(Guid organizationId, Guid locationId)
         {
-            var referrals = await directoryManager.ListVisibleFamiliesAsync(User, organizationId, locationId);
+            var referrals = await recordsManager.ListVisibleFamiliesAsync(User, organizationId, locationId);
 
             return Ok(referrals);
         }
@@ -42,7 +42,7 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<CombinedFamilyInfo>> SubmitDirectoryCommandAsync(Guid organizationId, Guid locationId,
             [FromBody] DirectoryCommand command)
         {
-            var result = await directoryManager.ExecuteDirectoryCommandAsync(organizationId, locationId, User, command);
+            var result = await recordsManager.ExecuteDirectoryCommandAsync(organizationId, locationId, User, command);
             return result;
         }
 
@@ -50,7 +50,8 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<CombinedFamilyInfo>> SubmitFamilyCommandAsync(Guid organizationId, Guid locationId,
             Guid familyId, [FromBody] FamilyCommand command)
         {
-            var result = await directoryManager.ExecuteFamilyCommandAsync(organizationId, locationId, User, command);
+            var result = await recordsManager.ExecuteRecordsCommandAsync(organizationId, locationId, User,
+                new FamilyRecordsCommand(command));
             return result;
         }
 
@@ -58,15 +59,17 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<CombinedFamilyInfo>> SubmitPersonCommandAsync(Guid organizationId, Guid locationId,
             Guid familyId, [FromBody] PersonCommand command)
         {
-            var result = await directoryManager.ExecutePersonCommandAsync(organizationId, locationId, User, familyId, command);
+            var result = await recordsManager.ExecuteRecordsCommandAsync(organizationId, locationId, User,
+                new PersonRecordsCommand(familyId, command));
             return result;
         }
 
         [HttpPost("noteCommand")]
-        public async Task<ActionResult<NoteCommandResult>> SubmitNoteCommandAsync(
+        public async Task<ActionResult<CombinedFamilyInfo>> SubmitNoteCommandAsync(
             Guid organizationId, Guid locationId, [FromBody] NoteCommand command)
         {
-            var result = await directoryManager.ExecuteNoteCommandAsync(organizationId, locationId, User, command);
+            var result = await recordsManager.ExecuteRecordsCommandAsync(organizationId, locationId, User,
+                new NoteRecordsCommand(command));
             return result;
         }
 
@@ -75,7 +78,7 @@ namespace CareTogether.Api.Controllers
             SendSmsToFamilyPrimaryContactsAsync(Guid organizationId, Guid locationId,
             [FromBody] SendSmsToFamilyPrimaryContactsRequest request)
         {
-            var result = await directoryManager.SendSmsToFamilyPrimaryContactsAsync(organizationId, locationId,
+            var result = await recordsManager.SendSmsToFamilyPrimaryContactsAsync(organizationId, locationId,
                 User, request.FamilyIds, request.SourceNumber, request.Message);
             return result;
         }

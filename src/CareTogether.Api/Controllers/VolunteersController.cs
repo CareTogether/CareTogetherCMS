@@ -1,5 +1,5 @@
 ﻿using CareTogether.Managers;
-using CareTogether.Managers.Approval;
+using CareTogether.Managers.Records;
 using CareTogether.Resources.Approvals;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -14,11 +14,11 @@ namespace CareTogether.Api.Controllers
     [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class VolunteersController : ControllerBase
     {
-        private readonly IApprovalManager approvalManager;
+        private readonly IRecordsManager recordsManager;
 
-        public VolunteersController(IApprovalManager approvalManager)
+        public VolunteersController(IRecordsManager recordsManager)
         {
-            this.approvalManager = approvalManager;
+            this.recordsManager = recordsManager;
         }
 
 
@@ -26,7 +26,8 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<CombinedFamilyInfo>> SubmitVolunteerFamilyCommandAsync(Guid organizationId, Guid locationId,
             [FromBody] VolunteerFamilyCommand command)
         {
-            var result = await approvalManager.ExecuteVolunteerFamilyCommandAsync(organizationId, locationId, User, command);
+            var result = await recordsManager.ExecuteRecordsCommandAsync(organizationId, locationId, User,
+                new FamilyApprovalRecordsCommand(command));
             return result;
         }
 
@@ -34,7 +35,8 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<CombinedFamilyInfo>> SubmitVolunteerCommandAsync(Guid organizationId, Guid locationId,
             [FromBody] VolunteerCommand command)
         {
-            var result = await approvalManager.ExecuteVolunteerCommandAsync(organizationId, locationId, User, command);
+            var result = await recordsManager.ExecuteRecordsCommandAsync(organizationId, locationId, User,
+                new IndividualApprovalRecordsCommand(command));
             return result;
         }
     }

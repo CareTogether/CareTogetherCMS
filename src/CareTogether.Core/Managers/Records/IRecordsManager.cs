@@ -1,6 +1,7 @@
-using CareTogether.Resources;
+using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
+using CareTogether.Resources.Referrals;
 using CareTogether.Utilities.Telephony;
 using JsonPolymorph;
 using System;
@@ -9,7 +10,7 @@ using System.Collections.Immutable;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-namespace CareTogether.Managers.Directory
+namespace CareTogether.Managers.Records
 {
     [JsonHierarchyBase]
     public abstract partial record DirectoryCommand();
@@ -34,9 +35,24 @@ namespace CareTogether.Managers.Directory
         string? Concerns, string? Notes)
         : DirectoryCommand;
 
-    public sealed record NoteCommandResult(CombinedFamilyInfo Family, Note? Note);
+    [JsonHierarchyBase]
+    public abstract partial record RecordsCommand();
+    public sealed record FamilyRecordsCommand(FamilyCommand Command)
+        : RecordsCommand();
+    public sealed record PersonRecordsCommand(Guid FamilyId, PersonCommand Command)
+        : RecordsCommand();
+    public sealed record FamilyApprovalRecordsCommand(VolunteerFamilyCommand Command)
+        : RecordsCommand();
+    public sealed record IndividualApprovalRecordsCommand(VolunteerCommand Command)
+        : RecordsCommand();
+    public sealed record ReferralRecordsCommand(ReferralCommand Command)
+        : RecordsCommand();
+    public sealed record ArrangementRecordsCommand(ArrangementsCommand Command)
+        : RecordsCommand();
+    public sealed record NoteRecordsCommand(NoteCommand Command)
+        : RecordsCommand();
 
-    public interface IDirectoryManager
+    public interface IRecordsManager
     {
         Task<ImmutableList<CombinedFamilyInfo>> ListVisibleFamiliesAsync(
             ClaimsPrincipal user, Guid organizationId, Guid locationId);
@@ -44,17 +60,11 @@ namespace CareTogether.Managers.Directory
         Task<CombinedFamilyInfo> ExecuteDirectoryCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, DirectoryCommand command); //TODO: Replace these with regular FamilyCommand primitives?
 
-        Task<CombinedFamilyInfo> ExecuteFamilyCommandAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, FamilyCommand command);
-
-        Task<CombinedFamilyInfo> ExecutePersonCommandAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, Guid familyId, PersonCommand command);
-
-        Task<NoteCommandResult> ExecuteNoteCommandAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, NoteCommand command);
-
         Task<ImmutableList<(Guid FamilyId, SmsMessageResult? Result)>> SendSmsToFamilyPrimaryContactsAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user,
             ImmutableList<Guid> familyIds, string sourceNumber, string message);
+
+        Task<CombinedFamilyInfo> ExecuteRecordsCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, RecordsCommand command);
     }
 }

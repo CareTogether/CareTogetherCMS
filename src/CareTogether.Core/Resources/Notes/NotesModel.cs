@@ -52,6 +52,10 @@ namespace CareTogether.Resources.Notes
         public (NoteCommandExecuted Event, long SequenceNumber, NoteEntry? NoteEntry, Action OnCommit)
             ExecuteNoteCommand(NoteCommand command, Guid userId, DateTime timestampUtc)
         {
+            if (command is CreateDraftNote && notes.ContainsKey(command.NoteId))
+                throw new InvalidOperationException(
+                    "A new note with the requested note ID could not be created because a note with that ID already exists.");
+
             var noteEntryToUpsert = command switch
             {
                 CreateDraftNote c => new NoteEntry(c.NoteId, c.FamilyId, userId, timestampUtc, NoteStatus.Draft,
