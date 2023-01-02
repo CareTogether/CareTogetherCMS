@@ -5029,6 +5029,7 @@ export enum NoteStatus {
 }
 
 export abstract class DirectoryCommand implements IDirectoryCommand {
+    familyId?: string;
 
     protected _discriminator: string;
 
@@ -5043,6 +5044,9 @@ export abstract class DirectoryCommand implements IDirectoryCommand {
     }
 
     init(_data?: any) {
+        if (_data) {
+            this.familyId = _data["familyId"];
+        }
     }
 
     static fromJS(data: any): DirectoryCommand {
@@ -5073,15 +5077,17 @@ export abstract class DirectoryCommand implements IDirectoryCommand {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["discriminator"] = this._discriminator;
+        data["familyId"] = this.familyId;
         return data;
     }
 }
 
 export interface IDirectoryCommand {
+    familyId?: string;
 }
 
 export class AddAdultToFamilyCommand extends DirectoryCommand implements IAddAdultToFamilyCommand {
-    familyId?: string;
+    personId?: string;
     firstName?: string;
     lastName?: string;
     gender?: Gender;
@@ -5102,7 +5108,7 @@ export class AddAdultToFamilyCommand extends DirectoryCommand implements IAddAdu
     init(_data?: any) {
         super.init(_data);
         if (_data) {
-            this.familyId = _data["familyId"];
+            this.personId = _data["personId"];
             this.firstName = _data["firstName"];
             this.lastName = _data["lastName"];
             this.gender = _data["gender"];
@@ -5126,7 +5132,7 @@ export class AddAdultToFamilyCommand extends DirectoryCommand implements IAddAdu
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["familyId"] = this.familyId;
+        data["personId"] = this.personId;
         data["firstName"] = this.firstName;
         data["lastName"] = this.lastName;
         data["gender"] = this.gender;
@@ -5144,7 +5150,7 @@ export class AddAdultToFamilyCommand extends DirectoryCommand implements IAddAdu
 }
 
 export interface IAddAdultToFamilyCommand extends IDirectoryCommand {
-    familyId?: string;
+    personId?: string;
     firstName?: string;
     lastName?: string;
     gender?: Gender;
@@ -5159,7 +5165,7 @@ export interface IAddAdultToFamilyCommand extends IDirectoryCommand {
 }
 
 export class AddChildToFamilyCommand extends DirectoryCommand implements IAddChildToFamilyCommand {
-    familyId?: string;
+    personId?: string;
     firstName?: string;
     lastName?: string;
     gender?: Gender;
@@ -5177,7 +5183,7 @@ export class AddChildToFamilyCommand extends DirectoryCommand implements IAddChi
     init(_data?: any) {
         super.init(_data);
         if (_data) {
-            this.familyId = _data["familyId"];
+            this.personId = _data["personId"];
             this.firstName = _data["firstName"];
             this.lastName = _data["lastName"];
             this.gender = _data["gender"];
@@ -5202,7 +5208,7 @@ export class AddChildToFamilyCommand extends DirectoryCommand implements IAddChi
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["familyId"] = this.familyId;
+        data["personId"] = this.personId;
         data["firstName"] = this.firstName;
         data["lastName"] = this.lastName;
         data["gender"] = this.gender;
@@ -5221,7 +5227,7 @@ export class AddChildToFamilyCommand extends DirectoryCommand implements IAddChi
 }
 
 export interface IAddChildToFamilyCommand extends IDirectoryCommand {
-    familyId?: string;
+    personId?: string;
     firstName?: string;
     lastName?: string;
     gender?: Gender;
@@ -5233,6 +5239,8 @@ export interface IAddChildToFamilyCommand extends IDirectoryCommand {
 }
 
 export class CreatePartneringFamilyWithNewAdultCommand extends DirectoryCommand implements ICreatePartneringFamilyWithNewAdultCommand {
+    personId?: string;
+    referralId?: string;
     referralOpenedAtUtc?: Date;
     firstName?: string;
     lastName?: string;
@@ -5254,6 +5262,8 @@ export class CreatePartneringFamilyWithNewAdultCommand extends DirectoryCommand 
     init(_data?: any) {
         super.init(_data);
         if (_data) {
+            this.personId = _data["personId"];
+            this.referralId = _data["referralId"];
             this.referralOpenedAtUtc = _data["referralOpenedAtUtc"] ? new Date(_data["referralOpenedAtUtc"].toString()) : <any>undefined;
             this.firstName = _data["firstName"];
             this.lastName = _data["lastName"];
@@ -5278,6 +5288,8 @@ export class CreatePartneringFamilyWithNewAdultCommand extends DirectoryCommand 
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
+        data["personId"] = this.personId;
+        data["referralId"] = this.referralId;
         data["referralOpenedAtUtc"] = this.referralOpenedAtUtc ? this.referralOpenedAtUtc.toISOString() : <any>undefined;
         data["firstName"] = this.firstName;
         data["lastName"] = this.lastName;
@@ -5296,6 +5308,8 @@ export class CreatePartneringFamilyWithNewAdultCommand extends DirectoryCommand 
 }
 
 export interface ICreatePartneringFamilyWithNewAdultCommand extends IDirectoryCommand {
+    personId?: string;
+    referralId?: string;
     referralOpenedAtUtc?: Date;
     firstName?: string;
     lastName?: string;
@@ -5311,6 +5325,7 @@ export interface ICreatePartneringFamilyWithNewAdultCommand extends IDirectoryCo
 }
 
 export class CreateVolunteerFamilyWithNewAdultCommand extends DirectoryCommand implements ICreateVolunteerFamilyWithNewAdultCommand {
+    personId?: string;
     firstName?: string;
     lastName?: string;
     gender?: Gender;
@@ -5331,6 +5346,7 @@ export class CreateVolunteerFamilyWithNewAdultCommand extends DirectoryCommand i
     init(_data?: any) {
         super.init(_data);
         if (_data) {
+            this.personId = _data["personId"];
             this.firstName = _data["firstName"];
             this.lastName = _data["lastName"];
             this.gender = _data["gender"];
@@ -5354,6 +5370,7 @@ export class CreateVolunteerFamilyWithNewAdultCommand extends DirectoryCommand i
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
+        data["personId"] = this.personId;
         data["firstName"] = this.firstName;
         data["lastName"] = this.lastName;
         data["gender"] = this.gender;
@@ -5371,6 +5388,7 @@ export class CreateVolunteerFamilyWithNewAdultCommand extends DirectoryCommand i
 }
 
 export interface ICreateVolunteerFamilyWithNewAdultCommand extends IDirectoryCommand {
+    personId?: string;
     firstName?: string;
     lastName?: string;
     gender?: Gender;

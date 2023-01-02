@@ -13,27 +13,28 @@ using System.Threading.Tasks;
 namespace CareTogether.Managers.Records
 {
     [JsonHierarchyBase]
-    public abstract partial record DirectoryCommand();
-    public sealed record CreateVolunteerFamilyWithNewAdultCommand(
+    public abstract partial record DirectoryCommand(Guid FamilyId);
+    public sealed record CreateVolunteerFamilyWithNewAdultCommand(Guid FamilyId, Guid PersonId,
         string FirstName, string LastName, Gender Gender, Age Age, string Ethnicity,
         FamilyAdultRelationshipInfo FamilyAdultRelationshipInfo, string? Concerns, string? Notes,
         Address Address, PhoneNumber PhoneNumber, EmailAddress EmailAddress)
-        : DirectoryCommand;
-    public sealed record CreatePartneringFamilyWithNewAdultCommand(DateTime ReferralOpenedAtUtc,
+        : DirectoryCommand(FamilyId);
+    public sealed record CreatePartneringFamilyWithNewAdultCommand(Guid FamilyId, Guid PersonId,
+        Guid ReferralId, DateTime ReferralOpenedAtUtc,
         string FirstName, string LastName, Gender Gender, Age Age, string Ethnicity,
         FamilyAdultRelationshipInfo FamilyAdultRelationshipInfo, string? Concerns, string? Notes,
         Address Address, PhoneNumber PhoneNumber, EmailAddress EmailAddress)
-        : DirectoryCommand;
-    public sealed record AddAdultToFamilyCommand(Guid FamilyId,
+        : DirectoryCommand(FamilyId);
+    public sealed record AddAdultToFamilyCommand(Guid FamilyId, Guid PersonId,
         string FirstName, string LastName, Gender Gender, Age Age, string Ethnicity,
         FamilyAdultRelationshipInfo FamilyAdultRelationshipInfo, string? Concerns, string? Notes,
         Address? Address, PhoneNumber? PhoneNumber, EmailAddress? EmailAddress)
-        : DirectoryCommand;
-    public sealed record AddChildToFamilyCommand(Guid FamilyId,
+        : DirectoryCommand(FamilyId);
+    public sealed record AddChildToFamilyCommand(Guid FamilyId, Guid PersonId,
         string FirstName, string LastName, Gender Gender, Age Age, string Ethnicity,
         List<CustodialRelationship> CustodialRelationships,
         string? Concerns, string? Notes)
-        : DirectoryCommand;
+        : DirectoryCommand(FamilyId);
 
     [JsonHierarchyBase]
     public abstract partial record RecordsCommand();

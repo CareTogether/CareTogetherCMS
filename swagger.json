@@ -3042,6 +3042,10 @@
           "discriminator"
         ],
         "properties": {
+          "familyId": {
+            "type": "string",
+            "format": "guid"
+          },
           "discriminator": {
             "type": "string"
           }
@@ -3056,7 +3060,7 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
-              "familyId": {
+              "personId": {
                 "type": "string",
                 "format": "guid"
               },
@@ -3123,7 +3127,7 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
-              "familyId": {
+              "personId": {
                 "type": "string",
                 "format": "guid"
               },
@@ -3169,6 +3173,14 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "referralId": {
+                "type": "string",
+                "format": "guid"
+              },
               "referralOpenedAtUtc": {
                 "type": "string",
                 "format": "date-time"
@@ -3221,6 +3233,10 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
               "firstName": {
                 "type": "string"
               },

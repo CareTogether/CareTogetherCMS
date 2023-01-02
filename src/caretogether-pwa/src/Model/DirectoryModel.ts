@@ -347,6 +347,7 @@ export function useDirectoryModel() {
         notes?: string, concerns?: string) => {
       const command = new AddAdultToFamilyCommand();
       command.familyId = familyId;
+      command.personId = crypto.randomUUID();
       command.firstName = firstName;
       command.lastName = lastName;
       command.gender = gender;
@@ -360,6 +361,7 @@ export function useDirectoryModel() {
       });
       if (addressLine1 != null) {
         command.address = new Address();
+        command.address.id = crypto.randomUUID();
         command.address.line1 = addressLine1;
         command.address.line2 = addressLine2 || undefined;
         command.address.city = city || undefined;
@@ -368,11 +370,13 @@ export function useDirectoryModel() {
       }
       if (phoneNumber != null) {
         command.phoneNumber = new PhoneNumber();
+        command.phoneNumber.id = crypto.randomUUID();
         command.phoneNumber.number = phoneNumber;
         command.phoneNumber.type = phoneType || undefined;
       }
       if (emailAddress != null) {
         command.emailAddress = new EmailAddress();
+        command.emailAddress.id = crypto.randomUUID();
         command.emailAddress.address = emailAddress;
         command.emailAddress.type = emailType || undefined;
       }
@@ -384,12 +388,16 @@ export function useDirectoryModel() {
         notes?: string, concerns?: string) => {
       const command = new AddChildToFamilyCommand();
       command.familyId = familyId;
+      command.personId = crypto.randomUUID();
       command.firstName = firstName;
       command.lastName = lastName;
       command.gender = gender;
       command.age = age;
       command.ethnicity = ethnicity;
-      command.custodialRelationships = custodialRelationships;
+      command.custodialRelationships = custodialRelationships.map(cr => {
+        cr.childId = command.personId;
+        return cr;
+      });
       command.concerns = concerns;
       command.notes = notes;
       return command;
@@ -401,6 +409,8 @@ export function useDirectoryModel() {
       phoneNumber: string, phoneType: PhoneNumberType, emailAddress?: string, emailType?: EmailAddressType,
       notes?: string, concerns?: string) => {
       const command = new CreateVolunteerFamilyWithNewAdultCommand();
+      command.familyId = crypto.randomUUID();
+      command.personId = crypto.randomUUID();
       command.firstName = firstName;
       command.lastName = lastName;
       command.gender = gender
@@ -413,15 +423,18 @@ export function useDirectoryModel() {
         relationshipToFamily: relationshipToFamily
       });
       command.address = new Address();
+      command.address.id = crypto.randomUUID();
       command.address.line1 = addressLine1;
       command.address.line2 = addressLine2 === null ? undefined : addressLine2;
       command.address.city = city;
       command.address.state = state;
       command.address.postalCode = postalCode;
       command.phoneNumber = new PhoneNumber();
+      command.phoneNumber.id = crypto.randomUUID();
       command.phoneNumber.number = phoneNumber;
       command.phoneNumber.type = phoneType;
       command.emailAddress = new EmailAddress();
+      command.emailAddress.id = crypto.randomUUID();
       command.emailAddress.address = emailAddress;
       command.emailAddress.type = emailType;
       return command;
@@ -433,6 +446,9 @@ export function useDirectoryModel() {
       phoneNumber: string, phoneType: PhoneNumberType, emailAddress?: string, emailType?: EmailAddressType,
       notes?: string, concerns?: string) => {
       const command = new CreatePartneringFamilyWithNewAdultCommand();
+      command.familyId = crypto.randomUUID();
+      command.personId = crypto.randomUUID();
+      command.referralId = crypto.randomUUID();
       command.referralOpenedAtUtc = referralOpenedAtUtc;
       command.firstName = firstName;
       command.lastName = lastName;
@@ -446,15 +462,18 @@ export function useDirectoryModel() {
         relationshipToFamily: relationshipToFamily
       });
       command.address = new Address();
+      command.address.id = crypto.randomUUID();
       command.address.line1 = addressLine1;
       command.address.line2 = addressLine2 === null ? undefined : addressLine2;
       command.address.city = city;
       command.address.state = state;
       command.address.postalCode = postalCode;
       command.phoneNumber = new PhoneNumber();
+      command.phoneNumber.id = crypto.randomUUID();
       command.phoneNumber.number = phoneNumber;
       command.phoneNumber.type = phoneType;
       command.emailAddress = new EmailAddress();
+      command.emailAddress.id = crypto.randomUUID();
       command.emailAddress.address = emailAddress;
       command.emailAddress.type = emailType;
       return command;

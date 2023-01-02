@@ -66,30 +66,23 @@ namespace CareTogether.Managers.Records
         public async Task<CombinedFamilyInfo> ExecuteDirectoryCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, DirectoryCommand command)
         {
-            Guid familyId;
-
             switch (command)
             {
                 case AddAdultToFamilyCommand c:
                     {
-                        familyId = c.FamilyId;
-                        var adultPersonId = Guid.NewGuid(); //TODO: Client-side!!
-                        var address = c.Address == null ? null : c.Address with { Id = Guid.NewGuid() }; //TODO: Client-side!!
-                        var phoneNumber = c.PhoneNumber == null ? null : c.PhoneNumber with { Id = Guid.NewGuid() }; //TODO: Client-side!!
-                        var emailAddress = c.EmailAddress == null ? null : c.EmailAddress with { Id = Guid.NewGuid() }; //TODO: Client-side!!
-                        var addresses = address == null ? ImmutableList<Address>.Empty : ImmutableList<Address>.Empty.Add(address);
-                        var phoneNumbers = phoneNumber == null ? ImmutableList<PhoneNumber>.Empty : ImmutableList<PhoneNumber>.Empty.Add(phoneNumber);
-                        var emailAddresses = emailAddress == null ? ImmutableList<EmailAddress>.Empty : ImmutableList<EmailAddress>.Empty.Add(emailAddress);
+                        var addresses = c.Address == null ? ImmutableList<Address>.Empty : ImmutableList<Address>.Empty.Add(c.Address);
+                        var phoneNumbers = c.PhoneNumber == null ? ImmutableList<PhoneNumber>.Empty : ImmutableList<PhoneNumber>.Empty.Add(c.PhoneNumber);
+                        var emailAddresses = c.EmailAddress == null ? ImmutableList<EmailAddress>.Empty : ImmutableList<EmailAddress>.Empty.Add(c.EmailAddress);
 
                         var createPersonSubcommand = new PersonRecordsCommand(c.FamilyId,
-                            new CreatePerson(adultPersonId, null, c.FirstName, c.LastName,
+                            new CreatePerson(c.PersonId, null, c.FirstName, c.LastName,
                                 c.Gender, c.Age, c.Ethnicity,
-                                addresses, address?.Id,
-                                phoneNumbers, phoneNumber?.Id,
-                                emailAddresses, emailAddress?.Id,
+                                addresses, c.Address?.Id,
+                                phoneNumbers, c.PhoneNumber?.Id,
+                                emailAddresses, c.EmailAddress?.Id,
                                 c.Concerns, c.Notes));
                         var addAdultToFamilySubcommand = new FamilyRecordsCommand(
-                            new AddAdultToFamily(c.FamilyId, adultPersonId, c.FamilyAdultRelationshipInfo));
+                            new AddAdultToFamily(c.FamilyId, c.PersonId, c.FamilyAdultRelationshipInfo));
 
                         if (!await AuthorizeCommandAsync(organizationId, locationId, user, createPersonSubcommand) ||
                             !await AuthorizeCommandAsync(organizationId, locationId, user, addAdultToFamilySubcommand))
@@ -102,19 +95,15 @@ namespace CareTogether.Managers.Records
                     }
                 case AddChildToFamilyCommand c:
                     {
-                        familyId = c.FamilyId;
-                        var childPersonId = Guid.NewGuid(); //TODO: Client-side!!
-
                         var createPersonSubcommand = new PersonRecordsCommand(c.FamilyId,
-                            new CreatePerson(childPersonId, null, c.FirstName, c.LastName,
+                            new CreatePerson(c.PersonId, null, c.FirstName, c.LastName,
                                 c.Gender, c.Age, c.Ethnicity,
                                 ImmutableList<Address>.Empty, null,
                                 ImmutableList<PhoneNumber>.Empty, null,
                                 ImmutableList<EmailAddress>.Empty, null,
                                 c.Concerns, c.Notes));
                         var addChildToFamilySubcommand = new FamilyRecordsCommand(
-                            new AddChildToFamily(c.FamilyId, childPersonId, c.CustodialRelationships.Select(cr =>
-                                cr with { ChildId = childPersonId }).ToImmutableList()));
+                            new AddChildToFamily(c.FamilyId, c.PersonId, c.CustodialRelationships.ToImmutableList()));
 
                         if (!await AuthorizeCommandAsync(organizationId, locationId, user, createPersonSubcommand) ||
                             !await AuthorizeCommandAsync(organizationId, locationId, user, addChildToFamilySubcommand))
@@ -127,29 +116,24 @@ namespace CareTogether.Managers.Records
                     }
                 case CreateVolunteerFamilyWithNewAdultCommand c:
                     {
-                        familyId = Guid.NewGuid(); //TODO: Client-side!!
-                        var adultPersonId = Guid.NewGuid(); //TODO: Client-side!!
-                        var address = c.Address == null ? null : c.Address with { Id = Guid.NewGuid() }; //TODO: Client-side!!
-                        var phoneNumber = c.PhoneNumber == null ? null : c.PhoneNumber with { Id = Guid.NewGuid() }; //TODO: Client-side!!
-                        var emailAddress = c.EmailAddress == null ? null : c.EmailAddress with { Id = Guid.NewGuid() }; //TODO: Client-side!!
-                        var addresses = address == null ? ImmutableList<Address>.Empty : ImmutableList<Address>.Empty.Add(address);
-                        var phoneNumbers = phoneNumber == null ? ImmutableList<PhoneNumber>.Empty : ImmutableList<PhoneNumber>.Empty.Add(phoneNumber);
-                        var emailAddresses = emailAddress == null ? ImmutableList<EmailAddress>.Empty : ImmutableList<EmailAddress>.Empty.Add(emailAddress);
-
-                        var createPersonSubcommand = new PersonRecordsCommand(familyId,
-                            new CreatePerson(adultPersonId, null, c.FirstName, c.LastName,
+                        var addresses = c.Address == null ? ImmutableList<Address>.Empty : ImmutableList<Address>.Empty.Add(c.Address);
+                        var phoneNumbers = c.PhoneNumber == null ? ImmutableList<PhoneNumber>.Empty : ImmutableList<PhoneNumber>.Empty.Add(c.PhoneNumber);
+                        var emailAddresses = c.EmailAddress == null ? ImmutableList<EmailAddress>.Empty : ImmutableList<EmailAddress>.Empty.Add(c.EmailAddress);
+                        
+                        var createPersonSubcommand = new PersonRecordsCommand(c.FamilyId,
+                            new CreatePerson(c.PersonId, null, c.FirstName, c.LastName,
                                 c.Gender, c.Age, c.Ethnicity,
-                                addresses, address?.Id,
-                                phoneNumbers, phoneNumber?.Id,
-                                emailAddresses, emailAddress?.Id,
+                                addresses, c.Address?.Id,
+                                phoneNumbers, c.PhoneNumber?.Id,
+                                emailAddresses, c.EmailAddress?.Id,
                                 c.Concerns, c.Notes));
                         var createFamilySubcommand = new FamilyRecordsCommand(
-                            new CreateFamily(familyId, adultPersonId,
-                                ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty.Add((adultPersonId, c.FamilyAdultRelationshipInfo)),
+                            new CreateFamily(c.FamilyId, c.PersonId,
+                                ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty.Add((c.PersonId, c.FamilyAdultRelationshipInfo)),
                                 ImmutableList<Guid>.Empty,
                                 ImmutableList<CustodialRelationship>.Empty));
                         var activateVolunteerFamilySubcommand = new FamilyApprovalRecordsCommand(
-                            new ActivateVolunteerFamily(familyId));
+                            new ActivateVolunteerFamily(c.FamilyId));
 
                         if (!await AuthorizeCommandAsync(organizationId, locationId, user, createPersonSubcommand) ||
                             !await AuthorizeCommandAsync(organizationId, locationId, user, createFamilySubcommand) ||
@@ -164,30 +148,24 @@ namespace CareTogether.Managers.Records
                     }
                 case CreatePartneringFamilyWithNewAdultCommand c:
                     {
-                        familyId = Guid.NewGuid(); //TODO: Client-side!!
-                        var adultPersonId = Guid.NewGuid();
-                        var referralId = Guid.NewGuid();
-                        var address = c.Address == null ? null : c.Address with { Id = Guid.NewGuid() };
-                        var phoneNumber = c.PhoneNumber == null ? null : c.PhoneNumber with { Id = Guid.NewGuid() };
-                        var emailAddress = c.EmailAddress == null ? null : c.EmailAddress with { Id = Guid.NewGuid() };
-                        var addresses = address == null ? ImmutableList<Address>.Empty : ImmutableList<Address>.Empty.Add(address);
-                        var phoneNumbers = phoneNumber == null ? ImmutableList<PhoneNumber>.Empty : ImmutableList<PhoneNumber>.Empty.Add(phoneNumber);
-                        var emailAddresses = emailAddress == null ? ImmutableList<EmailAddress>.Empty : ImmutableList<EmailAddress>.Empty.Add(emailAddress);
+                        var addresses = c.Address == null ? ImmutableList<Address>.Empty : ImmutableList<Address>.Empty.Add(c.Address);
+                        var phoneNumbers = c.PhoneNumber == null ? ImmutableList<PhoneNumber>.Empty : ImmutableList<PhoneNumber>.Empty.Add(c.PhoneNumber);
+                        var emailAddresses = c.EmailAddress == null ? ImmutableList<EmailAddress>.Empty : ImmutableList<EmailAddress>.Empty.Add(c.EmailAddress);
 
-                        var createPersonSubcommand = new PersonRecordsCommand(familyId,
-                            new CreatePerson(adultPersonId, null, c.FirstName, c.LastName,
+                        var createPersonSubcommand = new PersonRecordsCommand(c.FamilyId,
+                            new CreatePerson(c.PersonId, null, c.FirstName, c.LastName,
                                 c.Gender, c.Age, c.Ethnicity,
-                                addresses, address?.Id,
-                                phoneNumbers, phoneNumber?.Id,
-                                emailAddresses, emailAddress?.Id,
+                                addresses, c.Address?.Id,
+                                phoneNumbers, c.PhoneNumber?.Id,
+                                emailAddresses, c.EmailAddress?.Id,
                                 c.Concerns, c.Notes));
                         var createFamilySubcommand = new FamilyRecordsCommand(
-                            new CreateFamily(familyId, adultPersonId,
-                                ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty.Add((adultPersonId, c.FamilyAdultRelationshipInfo)),
+                            new CreateFamily(c.FamilyId, c.PersonId,
+                                ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty.Add((c.PersonId, c.FamilyAdultRelationshipInfo)),
                                 ImmutableList<Guid>.Empty,
                                 ImmutableList<CustodialRelationship>.Empty));
                         var createReferralSubcommand = new ReferralRecordsCommand(
-                            new CreateReferral(familyId, referralId, c.ReferralOpenedAtUtc));
+                            new CreateReferral(c.FamilyId, c.ReferralId, c.ReferralOpenedAtUtc));
 
                         if (!await AuthorizeCommandAsync(organizationId, locationId, user, createPersonSubcommand) ||
                             !await AuthorizeCommandAsync(organizationId, locationId, user, createFamilySubcommand) ||
@@ -206,7 +184,7 @@ namespace CareTogether.Managers.Records
             }
 
             var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
-                organizationId, locationId, familyId, user);
+                organizationId, locationId, command.FamilyId, user);
 
             return familyResult;
         }
