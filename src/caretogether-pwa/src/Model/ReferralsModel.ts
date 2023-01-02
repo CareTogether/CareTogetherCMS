@@ -75,6 +75,7 @@ export function useReferralsModel() {
         familyId: partneringFamilyId,
         referralId: referralId,
       });
+      command.completedRequirementId = crypto.randomUUID();
       command.requirementName = requirementName;
       command.completedAtUtc = completedAtLocal;
       if (documentId != null)
@@ -121,6 +122,7 @@ export function useReferralsModel() {
         familyId: partneringFamilyId,
         referralId: referralId,
       });
+      command.completedCustomFieldId = crypto.randomUUID();
       command.customFieldName = customField.name;
       command.customFieldType = customField.type;
       command.value = value;
@@ -144,6 +146,7 @@ export function useReferralsModel() {
         referralId: referralId,
         arrangementIds: arrangementIds
       });
+      command.completedRequirementId = crypto.randomUUID();
       command.requirementName = requirementName;
       command.completedAtUtc = completedAtLocal;
       if (documentId != null)
@@ -356,6 +359,7 @@ export function useReferralsModel() {
         referralId: referralId,
         arrangementIds: []
       });
+      command.arrangementIds = [crypto.randomUUID()];
       command.arrangementType = arrangementType;
       command.requestedAtUtc = requestedAtLocal;
       command.partneringFamilyPersonId = partneringFamilyPersonId;
@@ -591,6 +595,7 @@ export function useReferralsModel() {
         const command = new CreateReferral({
           familyId: partneringFamilyId
         });
+        command.referralId = crypto.randomUUID();
         command.openedAtUtc = openedAtLocal;
         return command;
       });

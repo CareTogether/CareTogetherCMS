@@ -289,7 +289,7 @@ export function useDirectoryModel() {
       const command = new AddPersonPhoneNumber({
         personId: personId
       });
-      command.phoneNumber = new PhoneNumber({ number: phoneNumber, type: phoneType })
+      command.phoneNumber = new PhoneNumber({ id: crypto.randomUUID(), number: phoneNumber, type: phoneType })
       command.isPreferredPhoneNumber = isPreferred;
       return command;
     });
@@ -307,7 +307,7 @@ export function useDirectoryModel() {
       const command = new AddPersonEmailAddress({
         personId: personId
       });
-      command.emailAddress = new EmailAddress({ address: emailAddress, type: phoneType })
+      command.emailAddress = new EmailAddress({ id: crypto.randomUUID(), address: emailAddress, type: phoneType })
       command.isPreferredEmailAddress = isPreferred;
       return command;
     });
@@ -325,7 +325,7 @@ export function useDirectoryModel() {
       const command = new AddPersonAddress({
         personId: personId
       });
-      command.address = new Address({ line1: line1, line2: line2 == null ? undefined : line2, city: city, state: state, postalCode: postalCode })
+      command.address = new Address({ id: crypto.randomUUID(), line1: line1, line2: line2 == null ? undefined : line2, city: city, state: state, postalCode: postalCode })
       command.isCurrentAddress = isCurrent;
       return command;
     });

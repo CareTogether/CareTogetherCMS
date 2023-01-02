@@ -74,6 +74,7 @@ export function useVolunteersModel() {
       const command = new CompleteVolunteerFamilyRequirement({
         familyId: volunteerFamilyId
       });
+      command.completedRequirementId = crypto.randomUUID();
       command.requirementName = requirementName;
       command.completedAtUtc = completedAtLocal;
       if (documentId != null)
@@ -139,6 +140,7 @@ export function useVolunteersModel() {
         familyId: volunteerFamilyId,
         personId: personId
       });
+      command.completedRequirementId = crypto.randomUUID();
       command.requirementName = requirementName;
       command.completedAtUtc = completedAtLocal;
       if (documentId != null)
