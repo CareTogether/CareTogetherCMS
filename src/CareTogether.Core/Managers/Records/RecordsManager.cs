@@ -66,124 +66,106 @@ namespace CareTogether.Managers.Records
         public async Task<CombinedFamilyInfo> ExecuteDirectoryCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, DirectoryCommand command)
         {
+            Guid familyId;
+
             switch (command)
             {
                 case AddAdultToFamilyCommand c:
                     {
-                        var adultPersonId = Guid.NewGuid();
-                        var address = c.Address == null ? null : c.Address with { Id = Guid.NewGuid() };
-                        var phoneNumber = c.PhoneNumber == null ? null : c.PhoneNumber with { Id = Guid.NewGuid() };
-                        var emailAddress = c.EmailAddress == null ? null : c.EmailAddress with { Id = Guid.NewGuid() };
+                        familyId = c.FamilyId;
+                        var adultPersonId = Guid.NewGuid(); //TODO: Client-side!!
+                        var address = c.Address == null ? null : c.Address with { Id = Guid.NewGuid() }; //TODO: Client-side!!
+                        var phoneNumber = c.PhoneNumber == null ? null : c.PhoneNumber with { Id = Guid.NewGuid() }; //TODO: Client-side!!
+                        var emailAddress = c.EmailAddress == null ? null : c.EmailAddress with { Id = Guid.NewGuid() }; //TODO: Client-side!!
                         var addresses = address == null ? ImmutableList<Address>.Empty : ImmutableList<Address>.Empty.Add(address);
                         var phoneNumbers = phoneNumber == null ? ImmutableList<PhoneNumber>.Empty : ImmutableList<PhoneNumber>.Empty.Add(phoneNumber);
                         var emailAddresses = emailAddress == null ? ImmutableList<EmailAddress>.Empty : ImmutableList<EmailAddress>.Empty.Add(emailAddress);
 
-                        var createPersonSubcommand = new CreatePerson(adultPersonId, null, c.FirstName, c.LastName,
-                            c.Gender, c.Age, c.Ethnicity,
-                            addresses, address?.Id,
-                            phoneNumbers, phoneNumber?.Id,
-                            emailAddresses, emailAddress?.Id,
-                            c.Concerns, c.Notes);
-                        var addAdultToFamilySubcommand = new AddAdultToFamily(c.FamilyId, adultPersonId, c.FamilyAdultRelationshipInfo);
+                        var createPersonSubcommand = new PersonRecordsCommand(c.FamilyId,
+                            new CreatePerson(adultPersonId, null, c.FirstName, c.LastName,
+                                c.Gender, c.Age, c.Ethnicity,
+                                addresses, address?.Id,
+                                phoneNumbers, phoneNumber?.Id,
+                                emailAddresses, emailAddress?.Id,
+                                c.Concerns, c.Notes));
+                        var addAdultToFamilySubcommand = new FamilyRecordsCommand(
+                            new AddAdultToFamily(c.FamilyId, adultPersonId, c.FamilyAdultRelationshipInfo));
 
-                        if (!await authorizationEngine.AuthorizePersonCommandAsync(
-                            organizationId, locationId, user, c.FamilyId, createPersonSubcommand))
+                        if (!await AuthorizeCommandAsync(organizationId, locationId, user, createPersonSubcommand) ||
+                            !await AuthorizeCommandAsync(organizationId, locationId, user, addAdultToFamilySubcommand))
                             throw new Exception("The user is not authorized to perform this command.");
 
-                        if (!await authorizationEngine.AuthorizeFamilyCommandAsync(
-                            organizationId, locationId, user, addAdultToFamilySubcommand))
-                            throw new Exception("The user is not authorized to perform this command.");
+                        await ExecuteCommandAsync(organizationId, locationId, user, createPersonSubcommand);
+                        await ExecuteCommandAsync(organizationId, locationId, user, addAdultToFamilySubcommand);
 
-                        _ = await directoryResource.ExecutePersonCommandAsync(organizationId, locationId,
-                            createPersonSubcommand, user.UserId());
-
-                        _ = await directoryResource.ExecuteFamilyCommandAsync(organizationId, locationId,
-                            addAdultToFamilySubcommand, user.UserId());
-
-                        var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, c.FamilyId, user);
-                        return familyResult;
+                        break;
                     }
                 case AddChildToFamilyCommand c:
                     {
-                        var childPersonId = Guid.NewGuid();
+                        familyId = c.FamilyId;
+                        var childPersonId = Guid.NewGuid(); //TODO: Client-side!!
 
-                        var createPersonSubcommand = new CreatePerson(childPersonId, null, c.FirstName, c.LastName,
-                            c.Gender, c.Age, c.Ethnicity,
-                            ImmutableList<Address>.Empty, null,
-                            ImmutableList<PhoneNumber>.Empty, null,
-                            ImmutableList<EmailAddress>.Empty, null,
-                            c.Concerns, c.Notes);
-                        var addChildToFamilySubcommand = new AddChildToFamily(c.FamilyId, childPersonId, c.CustodialRelationships.Select(cr =>
-                            cr with { ChildId = childPersonId }).ToImmutableList());
+                        var createPersonSubcommand = new PersonRecordsCommand(c.FamilyId,
+                            new CreatePerson(childPersonId, null, c.FirstName, c.LastName,
+                                c.Gender, c.Age, c.Ethnicity,
+                                ImmutableList<Address>.Empty, null,
+                                ImmutableList<PhoneNumber>.Empty, null,
+                                ImmutableList<EmailAddress>.Empty, null,
+                                c.Concerns, c.Notes));
+                        var addChildToFamilySubcommand = new FamilyRecordsCommand(
+                            new AddChildToFamily(c.FamilyId, childPersonId, c.CustodialRelationships.Select(cr =>
+                                cr with { ChildId = childPersonId }).ToImmutableList()));
 
-                        if (!await authorizationEngine.AuthorizePersonCommandAsync(
-                            organizationId, locationId, user, c.FamilyId, createPersonSubcommand))
+                        if (!await AuthorizeCommandAsync(organizationId, locationId, user, createPersonSubcommand) ||
+                            !await AuthorizeCommandAsync(organizationId, locationId, user, addChildToFamilySubcommand))
                             throw new Exception("The user is not authorized to perform this command.");
 
-                        if (!await authorizationEngine.AuthorizeFamilyCommandAsync(
-                            organizationId, locationId, user, addChildToFamilySubcommand))
-                            throw new Exception("The user is not authorized to perform this command.");
+                        await ExecuteCommandAsync(organizationId, locationId, user, createPersonSubcommand);
+                        await ExecuteCommandAsync(organizationId, locationId, user, addChildToFamilySubcommand);
 
-                        _ = await directoryResource.ExecutePersonCommandAsync(organizationId, locationId,
-                            createPersonSubcommand, user.UserId());
-
-                        _ = await directoryResource.ExecuteFamilyCommandAsync(organizationId, locationId,
-                            addChildToFamilySubcommand, user.UserId());
-
-                        var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, c.FamilyId, user);
-                        return familyResult;
+                        break;
                     }
                 case CreateVolunteerFamilyWithNewAdultCommand c:
                     {
-                        var adultPersonId = Guid.NewGuid();
-                        var familyId = Guid.NewGuid();
-                        var address = c.Address == null ? null : c.Address with { Id = Guid.NewGuid() };
-                        var phoneNumber = c.PhoneNumber == null ? null : c.PhoneNumber with { Id = Guid.NewGuid() };
-                        var emailAddress = c.EmailAddress == null ? null : c.EmailAddress with { Id = Guid.NewGuid() };
+                        familyId = Guid.NewGuid(); //TODO: Client-side!!
+                        var adultPersonId = Guid.NewGuid(); //TODO: Client-side!!
+                        var address = c.Address == null ? null : c.Address with { Id = Guid.NewGuid() }; //TODO: Client-side!!
+                        var phoneNumber = c.PhoneNumber == null ? null : c.PhoneNumber with { Id = Guid.NewGuid() }; //TODO: Client-side!!
+                        var emailAddress = c.EmailAddress == null ? null : c.EmailAddress with { Id = Guid.NewGuid() }; //TODO: Client-side!!
                         var addresses = address == null ? ImmutableList<Address>.Empty : ImmutableList<Address>.Empty.Add(address);
                         var phoneNumbers = phoneNumber == null ? ImmutableList<PhoneNumber>.Empty : ImmutableList<PhoneNumber>.Empty.Add(phoneNumber);
                         var emailAddresses = emailAddress == null ? ImmutableList<EmailAddress>.Empty : ImmutableList<EmailAddress>.Empty.Add(emailAddress);
 
-                        var createPersonSubcommand = new CreatePerson(adultPersonId, null, c.FirstName, c.LastName,
-                            c.Gender, c.Age, c.Ethnicity,
-                            addresses, address?.Id,
-                            phoneNumbers, phoneNumber?.Id,
-                            emailAddresses, emailAddress?.Id,
-                            c.Concerns, c.Notes);
-                        var createFamilySubcommand = new CreateFamily(familyId, adultPersonId,
-                            ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty.Add((adultPersonId, c.FamilyAdultRelationshipInfo)),
-                            ImmutableList<Guid>.Empty,
-                            ImmutableList<CustodialRelationship>.Empty);
-                        var activateVolunteerFamilySubcommand = new ActivateVolunteerFamily(familyId);
+                        var createPersonSubcommand = new PersonRecordsCommand(familyId,
+                            new CreatePerson(adultPersonId, null, c.FirstName, c.LastName,
+                                c.Gender, c.Age, c.Ethnicity,
+                                addresses, address?.Id,
+                                phoneNumbers, phoneNumber?.Id,
+                                emailAddresses, emailAddress?.Id,
+                                c.Concerns, c.Notes));
+                        var createFamilySubcommand = new FamilyRecordsCommand(
+                            new CreateFamily(familyId, adultPersonId,
+                                ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty.Add((adultPersonId, c.FamilyAdultRelationshipInfo)),
+                                ImmutableList<Guid>.Empty,
+                                ImmutableList<CustodialRelationship>.Empty));
+                        var activateVolunteerFamilySubcommand = new FamilyApprovalRecordsCommand(
+                            new ActivateVolunteerFamily(familyId));
 
-                        if (!await authorizationEngine.AuthorizePersonCommandAsync(
-                            organizationId, locationId, user, familyId, createPersonSubcommand))
+                        if (!await AuthorizeCommandAsync(organizationId, locationId, user, createPersonSubcommand) ||
+                            !await AuthorizeCommandAsync(organizationId, locationId, user, createFamilySubcommand) ||
+                            !await AuthorizeCommandAsync(organizationId, locationId, user, activateVolunteerFamilySubcommand))
                             throw new Exception("The user is not authorized to perform this command.");
 
-                        if (!await authorizationEngine.AuthorizeFamilyCommandAsync(
-                            organizationId, locationId, user, createFamilySubcommand))
-                            throw new Exception("The user is not authorized to perform this command.");
+                        await ExecuteCommandAsync(organizationId, locationId, user, createPersonSubcommand);
+                        await ExecuteCommandAsync(organizationId, locationId, user, createFamilySubcommand);
+                        await ExecuteCommandAsync(organizationId, locationId, user, activateVolunteerFamilySubcommand);
 
-                        if (!await authorizationEngine.AuthorizeVolunteerFamilyCommandAsync(
-                            organizationId, locationId, user, activateVolunteerFamilySubcommand))
-                            throw new Exception("The user is not authorized to perform this command.");
-
-                        _ = await directoryResource.ExecutePersonCommandAsync(organizationId, locationId,
-                            createPersonSubcommand, user.UserId());
-
-                        _ = await directoryResource.ExecuteFamilyCommandAsync(organizationId, locationId,
-                            createFamilySubcommand, user.UserId());
-
-                        _ = await approvalsResource.ExecuteVolunteerFamilyCommandAsync(organizationId, locationId,
-                            activateVolunteerFamilySubcommand, user.UserId());
-
-                        var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, familyId, user);
-                        return familyResult;
+                        break;
                     }
                 case CreatePartneringFamilyWithNewAdultCommand c:
                     {
+                        familyId = Guid.NewGuid(); //TODO: Client-side!!
                         var adultPersonId = Guid.NewGuid();
-                        var familyId = Guid.NewGuid();
                         var referralId = Guid.NewGuid();
                         var address = c.Address == null ? null : c.Address with { Id = Guid.NewGuid() };
                         var phoneNumber = c.PhoneNumber == null ? null : c.PhoneNumber with { Id = Guid.NewGuid() };
@@ -192,46 +174,41 @@ namespace CareTogether.Managers.Records
                         var phoneNumbers = phoneNumber == null ? ImmutableList<PhoneNumber>.Empty : ImmutableList<PhoneNumber>.Empty.Add(phoneNumber);
                         var emailAddresses = emailAddress == null ? ImmutableList<EmailAddress>.Empty : ImmutableList<EmailAddress>.Empty.Add(emailAddress);
 
-                        var createPersonSubcommand = new CreatePerson(adultPersonId, null, c.FirstName, c.LastName,
-                            c.Gender, c.Age, c.Ethnicity,
-                            addresses, address?.Id,
-                            phoneNumbers, phoneNumber?.Id,
-                            emailAddresses, emailAddress?.Id,
-                            c.Concerns, c.Notes);
-                        var createFamilySubcommand = new CreateFamily(familyId, adultPersonId,
-                            ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty.Add((adultPersonId, c.FamilyAdultRelationshipInfo)),
-                            ImmutableList<Guid>.Empty,
-                            ImmutableList<CustodialRelationship>.Empty);
-                        var createReferralSubcommand = new CreateReferral(familyId, referralId, c.ReferralOpenedAtUtc);
+                        var createPersonSubcommand = new PersonRecordsCommand(familyId,
+                            new CreatePerson(adultPersonId, null, c.FirstName, c.LastName,
+                                c.Gender, c.Age, c.Ethnicity,
+                                addresses, address?.Id,
+                                phoneNumbers, phoneNumber?.Id,
+                                emailAddresses, emailAddress?.Id,
+                                c.Concerns, c.Notes));
+                        var createFamilySubcommand = new FamilyRecordsCommand(
+                            new CreateFamily(familyId, adultPersonId,
+                                ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty.Add((adultPersonId, c.FamilyAdultRelationshipInfo)),
+                                ImmutableList<Guid>.Empty,
+                                ImmutableList<CustodialRelationship>.Empty));
+                        var createReferralSubcommand = new ReferralRecordsCommand(
+                            new CreateReferral(familyId, referralId, c.ReferralOpenedAtUtc));
 
-                        if (!await authorizationEngine.AuthorizePersonCommandAsync(
-                            organizationId, locationId, user, familyId, createPersonSubcommand))
+                        if (!await AuthorizeCommandAsync(organizationId, locationId, user, createPersonSubcommand) ||
+                            !await AuthorizeCommandAsync(organizationId, locationId, user, createFamilySubcommand) ||
+                            !await AuthorizeCommandAsync(organizationId, locationId, user, createReferralSubcommand))
                             throw new Exception("The user is not authorized to perform this command.");
 
-                        if (!await authorizationEngine.AuthorizeFamilyCommandAsync(
-                            organizationId, locationId, user, createFamilySubcommand))
-                            throw new Exception("The user is not authorized to perform this command.");
+                        await ExecuteCommandAsync(organizationId, locationId, user, createPersonSubcommand);
+                        await ExecuteCommandAsync(organizationId, locationId, user, createFamilySubcommand);
+                        await ExecuteCommandAsync(organizationId, locationId, user, createReferralSubcommand);
 
-                        if (!await authorizationEngine.AuthorizeReferralCommandAsync(
-                            organizationId, locationId, user, createReferralSubcommand))
-                            throw new Exception("The user is not authorized to perform this command.");
-
-                        _ = await directoryResource.ExecutePersonCommandAsync(organizationId, locationId,
-                            createPersonSubcommand, user.UserId());
-
-                        _ = await directoryResource.ExecuteFamilyCommandAsync(organizationId, locationId,
-                            createFamilySubcommand, user.UserId());
-
-                        _ = await referralsResource.ExecuteReferralCommandAsync(organizationId, locationId,
-                            createReferralSubcommand, user.UserId());
-
-                        var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, familyId, user);
-                        return familyResult;
+                        break;
                     }
                 default:
                     throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented.");
             }
+
+            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
+                organizationId, locationId, familyId, user);
+
+            return familyResult;
         }
 
         public async Task<ImmutableList<(Guid FamilyId, SmsMessageResult? Result)>> SendSmsToFamilyPrimaryContactsAsync(
