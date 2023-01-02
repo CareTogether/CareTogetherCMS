@@ -1,5 +1,5 @@
 import { atom, selector, useRecoilCallback, useRecoilValue } from "recoil";
-import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, CompositeRecordsCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, RecordsClient, CommunicationsClient, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, UpdatePersonGender, UpdatePersonAge, UpdatePersonEthnicity, UpdateAdultRelationshipToFamily, CustodialRelationshipType, UpdateCustodialRelationshipType, RemoveCustodialRelationship, ChangePrimaryFamilyContact, CombinedFamilyInfo } from "../GeneratedClient";
+import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, CompositeRecordsCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, RecordsClient, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, UpdatePersonGender, UpdatePersonAge, UpdatePersonEthnicity, UpdateAdultRelationshipToFamily, CustodialRelationshipType, UpdateCustodialRelationshipType, RemoveCustodialRelationship, ChangePrimaryFamilyContact, CombinedFamilyInfo, FamilyRecordsCommand, PersonRecordsCommand, NoteRecordsCommand } from "../GeneratedClient";
 import { accessTokenFetchQuery, authenticatingFetch } from "../Authentication/AuthenticatedHttp";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { currentOrganizationAndLocationIdsQuery, organizationConfigurationData, organizationConfigurationQuery } from "./ConfigurationModel";
@@ -84,7 +84,8 @@ function useFamilyCommandCallback<T extends unknown[]>(
       const command = await callback(familyId, ...args);
 
       const client = new RecordsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedFamily = await client.submitFamilyCommand(organizationId, locationId, familyId, command);
+      const updatedFamily = await client.submitAtomicRecordsCommand(organizationId, locationId,
+        new FamilyRecordsCommand({ command: command }));
 
       set(visibleFamiliesData, current =>
         current.some(currentEntry => currentEntry.family?.id === familyId)
@@ -109,7 +110,8 @@ function usePersonCommandCallback<T extends unknown[]>(
       const command = await callback(familyId, personId, ...args);
 
       const client = new RecordsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedFamily = await client.submitPersonCommand(organizationId, locationId, familyId, command);
+      const updatedFamily = await client.submitAtomicRecordsCommand(organizationId, locationId,
+        new PersonRecordsCommand({ command: command }));
 
       set(visibleFamiliesData, current =>
         current.some(currentEntry => currentEntry.family?.id === familyId)
@@ -134,7 +136,7 @@ function useDirectoryCommandCallback<T extends unknown[]>(
       const command = await callback(familyId, ...args);
 
       const client = new RecordsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedFamily = await client.submitDirectoryCommand(organizationId, locationId, command);
+      const updatedFamily = await client.submitCompositeRecordsCommand(organizationId, locationId, command);
 
       set(visibleFamiliesData, current =>
         current.some(currentEntry => currentEntry.family?.id === familyId)
@@ -159,7 +161,8 @@ function useNoteCommandCallback<T extends unknown[]>(
       const command = await callback(familyId, ...args);
 
       const client = new RecordsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedFamily = await client.submitNoteCommand(organizationId, locationId, command);
+      const updatedFamily = await client.submitAtomicRecordsCommand(organizationId, locationId,
+        new NoteRecordsCommand({ command: command }));
 
       set(visibleFamiliesData, current =>
         current.some(currentEntry => currentEntry.family?.id === familyId)

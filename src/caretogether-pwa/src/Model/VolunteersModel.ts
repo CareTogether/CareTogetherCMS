@@ -1,5 +1,5 @@
 import { selector, useRecoilCallback } from "recoil";
-import { ActionRequirement, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, VolunteerCommand, RecordsClient, VolunteerFamilyCommand, RoleRemovalReason, RemoveVolunteerRole, ResetVolunteerRole, RemoveVolunteerFamilyRole, ResetVolunteerFamilyRole, MarkVolunteerFamilyRequirementIncomplete, CompletedRequirementInfo, MarkVolunteerRequirementIncomplete, ExemptVolunteerRequirement, UnexemptVolunteerRequirement, ExemptVolunteerFamilyRequirement, UnexemptVolunteerFamilyRequirement, ExemptedRequirementInfo } from "../GeneratedClient";
+import { ActionRequirement, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, VolunteerCommand, RecordsClient, VolunteerFamilyCommand, RoleRemovalReason, RemoveVolunteerRole, ResetVolunteerRole, RemoveVolunteerFamilyRole, ResetVolunteerFamilyRole, MarkVolunteerFamilyRequirementIncomplete, CompletedRequirementInfo, MarkVolunteerRequirementIncomplete, ExemptVolunteerRequirement, UnexemptVolunteerRequirement, ExemptVolunteerFamilyRequirement, UnexemptVolunteerFamilyRequirement, ExemptedRequirementInfo, FamilyApprovalRecordsCommand, IndividualApprovalRecordsCommand } from "../GeneratedClient";
 import { authenticatingFetch } from "../Authentication/AuthenticatedHttp";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { visibleFamiliesData } from "./DirectoryModel";
@@ -21,7 +21,8 @@ function useVolunteerFamilyCommandCallbackWithLocation<T extends unknown[]>(
       const command = await callback(organizationId, locationId, volunteerFamilyId, ...args);
 
       const client = new RecordsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedFamily = await client.submitVolunteerFamilyCommand(organizationId, locationId, command);
+      const updatedFamily = await client.submitAtomicRecordsCommand(organizationId, locationId,
+        new FamilyApprovalRecordsCommand({ command: command }));
 
       set(visibleFamiliesData, current => {
         return current.map(currentEntry => currentEntry.family?.id === volunteerFamilyId
@@ -49,7 +50,8 @@ function useVolunteerCommandCallbackWithLocation<T extends unknown[]>(
       const command = await callback(organizationId, locationId, volunteerFamilyId, personId, ...args);
 
       const client = new RecordsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedFamily = await client.submitVolunteerCommand(organizationId, locationId, command);
+      const updatedFamily = await client.submitAtomicRecordsCommand(organizationId, locationId,
+        new IndividualApprovalRecordsCommand({ command: command }));
 
       set(visibleFamiliesData, current => {
         return current.map(currentEntry => currentEntry.family?.id === volunteerFamilyId

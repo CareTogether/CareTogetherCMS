@@ -1,6 +1,6 @@
 import { selector, useRecoilCallback } from "recoil";
 import { authenticatingFetch } from "../Authentication/AuthenticatedHttp";
-import { ReferralCommand, RecordsClient, ArrangementsCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement, StartArrangements, EndArrangements, AssignVolunteerFamily, AssignIndividualVolunteer, ReferralCloseReason, CloseReferral, CreateReferral, TrackChildLocationChange, ChildLocationPlan, UpdateCustomReferralField, CustomField, ExemptReferralRequirement, UnexemptReferralRequirement, ExemptArrangementRequirement, UnexemptArrangementRequirement, MissingArrangementRequirement, ExemptedRequirementInfo, MarkReferralRequirementIncomplete, CompletedRequirementInfo, MarkArrangementRequirementIncomplete, CancelArrangementsSetup, UpdateReferralComments, UnassignVolunteerFamily, UnassignIndividualVolunteer, CompleteVolunteerFamilyAssignmentRequirement, CompleteIndividualVolunteerAssignmentRequirement, FamilyVolunteerAssignment, IndividualVolunteerAssignment, ExemptIndividualVolunteerAssignmentRequirement, ExemptVolunteerFamilyAssignmentRequirement, MarkIndividualVolunteerAssignmentRequirementIncomplete, MarkVolunteerFamilyAssignmentRequirementIncomplete, UnexemptIndividualVolunteerAssignmentRequirement, UnexemptVolunteerFamilyAssignmentRequirement, UpdateArrangementComments, ReopenArrangements, EditArrangementStartTime, DeleteChildLocationChange, PlanArrangementStart, PlanArrangementEnd, PlanChildLocationChange, DeletePlannedChildLocationChange, DeleteArrangements } from "../GeneratedClient";
+import { ReferralCommand, RecordsClient, ArrangementsCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement, StartArrangements, EndArrangements, AssignVolunteerFamily, AssignIndividualVolunteer, ReferralCloseReason, CloseReferral, CreateReferral, TrackChildLocationChange, ChildLocationPlan, UpdateCustomReferralField, CustomField, ExemptReferralRequirement, UnexemptReferralRequirement, ExemptArrangementRequirement, UnexemptArrangementRequirement, MissingArrangementRequirement, ExemptedRequirementInfo, MarkReferralRequirementIncomplete, CompletedRequirementInfo, MarkArrangementRequirementIncomplete, CancelArrangementsSetup, UpdateReferralComments, UnassignVolunteerFamily, UnassignIndividualVolunteer, CompleteVolunteerFamilyAssignmentRequirement, CompleteIndividualVolunteerAssignmentRequirement, FamilyVolunteerAssignment, IndividualVolunteerAssignment, ExemptIndividualVolunteerAssignmentRequirement, ExemptVolunteerFamilyAssignmentRequirement, MarkIndividualVolunteerAssignmentRequirementIncomplete, MarkVolunteerFamilyAssignmentRequirementIncomplete, UnexemptIndividualVolunteerAssignmentRequirement, UnexemptVolunteerFamilyAssignmentRequirement, UpdateArrangementComments, ReopenArrangements, EditArrangementStartTime, DeleteChildLocationChange, PlanArrangementStart, PlanArrangementEnd, PlanChildLocationChange, DeletePlannedChildLocationChange, DeleteArrangements, ReferralRecordsCommand, ArrangementRecordsCommand } from "../GeneratedClient";
 import { visibleFamiliesData } from "./DirectoryModel";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 
@@ -21,7 +21,8 @@ function useReferralCommandCallbackWithLocation<T extends unknown[]>(
       const command = await callback(organizationId, locationId, partneringFamilyId, ...args);
 
       const client = new RecordsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedFamily = await client.submitReferralCommand(organizationId, locationId, command);
+      const updatedFamily = await client.submitAtomicRecordsCommand(organizationId, locationId,
+        new ReferralRecordsCommand({ command: command }));
 
       set(visibleFamiliesData, current => {
         return current.map(currentEntry => currentEntry.family?.id === partneringFamilyId
@@ -49,7 +50,8 @@ function useArrangementsCommandCallbackWithLocation<T extends unknown[]>(
       const command = await callback(organizationId, locationId, partneringFamilyId, referralId, ...args);
 
       const client = new RecordsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedFamily = await client.submitArrangementsCommand(organizationId, locationId, command);
+      const updatedFamily = await client.submitAtomicRecordsCommand(organizationId, locationId,
+        new ArrangementRecordsCommand({ command: command }));
 
       set(visibleFamiliesData, current => {
         return current.map(currentEntry => currentEntry.family?.id === partneringFamilyId
