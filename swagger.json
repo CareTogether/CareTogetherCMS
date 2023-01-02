@@ -15,6 +15,63 @@
     "version": "v1"
   },
   "paths": {
+    "/api/{organizationId}/{locationId}/Communications/sendSmsToFamilyPrimaryContacts": {
+      "post": {
+        "tags": [
+          "Communications"
+        ],
+        "operationId": "Communications_SendSmsToFamilyPrimaryContacts",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendSmsToFamilyPrimaryContactsRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 3
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ValueTupleOfGuidAndSmsMessageResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/{organizationId}/Configuration": {
       "get": {
         "tags": [
@@ -184,342 +241,6 @@
         }
       }
     },
-    "/api/{organizationId}/{locationId}/Directory": {
-      "get": {
-        "tags": [
-          "Directory"
-        ],
-        "operationId": "Directory_ListVisibleFamilies",
-        "parameters": [
-          {
-            "name": "organizationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          },
-          {
-            "name": "locationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 2
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CombinedFamilyInfo"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/{organizationId}/{locationId}/Directory/directoryCommand": {
-      "post": {
-        "tags": [
-          "Directory"
-        ],
-        "operationId": "Directory_SubmitDirectoryCommand",
-        "parameters": [
-          {
-            "name": "organizationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          },
-          {
-            "name": "locationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 2
-          }
-        ],
-        "requestBody": {
-          "x-name": "command",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CompositeRecordsCommand"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 3
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CombinedFamilyInfo"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/{organizationId}/{locationId}/Directory/familyCommand": {
-      "post": {
-        "tags": [
-          "Directory"
-        ],
-        "operationId": "Directory_SubmitFamilyCommand",
-        "parameters": [
-          {
-            "name": "organizationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          },
-          {
-            "name": "locationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 2
-          },
-          {
-            "name": "familyId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 3
-          }
-        ],
-        "requestBody": {
-          "x-name": "command",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/FamilyCommand"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 4
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CombinedFamilyInfo"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/{organizationId}/{locationId}/Directory/personCommand": {
-      "post": {
-        "tags": [
-          "Directory"
-        ],
-        "operationId": "Directory_SubmitPersonCommand",
-        "parameters": [
-          {
-            "name": "organizationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          },
-          {
-            "name": "locationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 2
-          },
-          {
-            "name": "familyId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 3
-          }
-        ],
-        "requestBody": {
-          "x-name": "command",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PersonCommand"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 4
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CombinedFamilyInfo"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/{organizationId}/{locationId}/Directory/noteCommand": {
-      "post": {
-        "tags": [
-          "Directory"
-        ],
-        "operationId": "Directory_SubmitNoteCommand",
-        "parameters": [
-          {
-            "name": "organizationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          },
-          {
-            "name": "locationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 2
-          }
-        ],
-        "requestBody": {
-          "x-name": "command",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NoteCommand"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 3
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CombinedFamilyInfo"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/{organizationId}/{locationId}/Directory/sendSmsToFamilyPrimaryContacts": {
-      "post": {
-        "tags": [
-          "Directory"
-        ],
-        "operationId": "Directory_SendSmsToFamilyPrimaryContacts",
-        "parameters": [
-          {
-            "name": "organizationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          },
-          {
-            "name": "locationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 2
-          }
-        ],
-        "requestBody": {
-          "x-name": "request",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SendSmsToFamilyPrimaryContactsRequest"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 3
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ValueTupleOfGuidAndSmsMessageResult"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/{organizationId}/{locationId}/Files/{documentId}": {
       "get": {
         "tags": [
@@ -615,12 +336,57 @@
         }
       }
     },
-    "/api/{organizationId}/{locationId}/Referrals/referralCommand": {
+    "/api/{organizationId}/{locationId}/Records": {
+      "get": {
+        "tags": [
+          "Records"
+        ],
+        "operationId": "Records_ListVisibleFamilies",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CombinedFamilyInfo"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/{organizationId}/{locationId}/Records/atomicRecordsCommand": {
       "post": {
         "tags": [
-          "Referrals"
+          "Records"
         ],
-        "operationId": "Referrals_SubmitReferralCommand",
+        "operationId": "Records_SubmitAtomicRecordsCommand",
         "parameters": [
           {
             "name": "organizationId",
@@ -648,7 +414,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ReferralCommand"
+                "$ref": "#/components/schemas/AtomicRecordsCommand"
               }
             }
           },
@@ -669,12 +435,12 @@
         }
       }
     },
-    "/api/{organizationId}/{locationId}/Referrals/arrangementCommand": {
+    "/api/{organizationId}/{locationId}/Records/compositeRecordsCommand": {
       "post": {
         "tags": [
-          "Referrals"
+          "Records"
         ],
-        "operationId": "Referrals_SubmitArrangementsCommand",
+        "operationId": "Records_SubmitCompositeRecordsCommand",
         "parameters": [
           {
             "name": "organizationId",
@@ -702,7 +468,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ArrangementsCommand"
+                "$ref": "#/components/schemas/CompositeRecordsCommand"
               }
             }
           },
@@ -736,114 +502,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UserOrganizationAccess"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/{organizationId}/{locationId}/Volunteers/volunteerFamilyCommand": {
-      "post": {
-        "tags": [
-          "Volunteers"
-        ],
-        "operationId": "Volunteers_SubmitVolunteerFamilyCommand",
-        "parameters": [
-          {
-            "name": "organizationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          },
-          {
-            "name": "locationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 2
-          }
-        ],
-        "requestBody": {
-          "x-name": "command",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/VolunteerFamilyCommand"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 3
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CombinedFamilyInfo"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/{organizationId}/{locationId}/Volunteers/volunteerCommand": {
-      "post": {
-        "tags": [
-          "Volunteers"
-        ],
-        "operationId": "Volunteers_SubmitVolunteerCommand",
-        "parameters": [
-          {
-            "name": "organizationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          },
-          {
-            "name": "locationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 2
-          }
-        ],
-        "requestBody": {
-          "x-name": "command",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/VolunteerCommand"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 3
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CombinedFamilyInfo"
                 }
               }
             }
@@ -894,6 +552,66 @@
   },
   "components": {
     "schemas": {
+      "ValueTupleOfGuidAndSmsMessageResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "item1": {
+            "type": "string",
+            "format": "guid"
+          },
+          "item2": {
+            "$ref": "#/components/schemas/SmsMessageResult"
+          }
+        }
+      },
+      "SmsMessageResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "phoneNumber": {
+            "type": "string"
+          },
+          "result": {
+            "$ref": "#/components/schemas/SmsResult"
+          }
+        }
+      },
+      "SmsResult": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "InvalidSourcePhoneNumber",
+          "InvalidDestinationPhoneNumber",
+          "SendFailure",
+          "SendSuccess"
+        ],
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      "SendSmsToFamilyPrimaryContactsRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "familyIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "guid"
+            }
+          },
+          "sourceNumber": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
       "OrganizationConfiguration": {
         "type": "object",
         "additionalProperties": false,
@@ -1819,6 +1537,20 @@
           },
           "exemptAll": {
             "type": "boolean"
+          }
+        }
+      },
+      "DocumentUploadInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "documentId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "valetUrl": {
+            "type": "string",
+            "format": "uri"
           }
         }
       },
@@ -3025,15 +2757,18 @@
           1
         ]
       },
-      "CompositeRecordsCommand": {
+      "AtomicRecordsCommand": {
         "type": "object",
         "discriminator": {
           "propertyName": "discriminator",
           "mapping": {
-            "AddAdultToFamilyCommand": "#/components/schemas/AddAdultToFamilyCommand",
-            "AddChildToFamilyCommand": "#/components/schemas/AddChildToFamilyCommand",
-            "CreatePartneringFamilyWithNewAdultCommand": "#/components/schemas/CreatePartneringFamilyWithNewAdultCommand",
-            "CreateVolunteerFamilyWithNewAdultCommand": "#/components/schemas/CreateVolunteerFamilyWithNewAdultCommand"
+            "ArrangementRecordsCommand": "#/components/schemas/ArrangementRecordsCommand",
+            "FamilyApprovalRecordsCommand": "#/components/schemas/FamilyApprovalRecordsCommand",
+            "FamilyRecordsCommand": "#/components/schemas/FamilyRecordsCommand",
+            "IndividualApprovalRecordsCommand": "#/components/schemas/IndividualApprovalRecordsCommand",
+            "NoteRecordsCommand": "#/components/schemas/NoteRecordsCommand",
+            "PersonRecordsCommand": "#/components/schemas/PersonRecordsCommand",
+            "ReferralRecordsCommand": "#/components/schemas/ReferralRecordsCommand"
           }
         },
         "x-abstract": true,
@@ -3042,1222 +2777,22 @@
           "discriminator"
         ],
         "properties": {
-          "familyId": {
-            "type": "string",
-            "format": "guid"
-          },
           "discriminator": {
             "type": "string"
           }
         }
       },
-      "AddAdultToFamilyCommand": {
+      "ArrangementRecordsCommand": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/CompositeRecordsCommand"
+            "$ref": "#/components/schemas/AtomicRecordsCommand"
           },
           {
             "type": "object",
             "additionalProperties": false,
             "properties": {
-              "personId": {
-                "type": "string",
-                "format": "guid"
-              },
-              "firstName": {
-                "type": "string"
-              },
-              "lastName": {
-                "type": "string"
-              },
-              "gender": {
-                "$ref": "#/components/schemas/Gender"
-              },
-              "age": {
-                "$ref": "#/components/schemas/Age"
-              },
-              "ethnicity": {
-                "type": "string"
-              },
-              "familyAdultRelationshipInfo": {
-                "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
-              },
-              "concerns": {
-                "type": "string",
-                "nullable": true
-              },
-              "notes": {
-                "type": "string",
-                "nullable": true
-              },
-              "address": {
-                "nullable": true,
-                "oneOf": [
-                  {
-                    "$ref": "#/components/schemas/Address"
-                  }
-                ]
-              },
-              "phoneNumber": {
-                "nullable": true,
-                "oneOf": [
-                  {
-                    "$ref": "#/components/schemas/PhoneNumber"
-                  }
-                ]
-              },
-              "emailAddress": {
-                "nullable": true,
-                "oneOf": [
-                  {
-                    "$ref": "#/components/schemas/EmailAddress"
-                  }
-                ]
-              }
-            }
-          }
-        ]
-      },
-      "AddChildToFamilyCommand": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/CompositeRecordsCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "personId": {
-                "type": "string",
-                "format": "guid"
-              },
-              "firstName": {
-                "type": "string"
-              },
-              "lastName": {
-                "type": "string"
-              },
-              "gender": {
-                "$ref": "#/components/schemas/Gender"
-              },
-              "age": {
-                "$ref": "#/components/schemas/Age"
-              },
-              "ethnicity": {
-                "type": "string"
-              },
-              "custodialRelationships": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/CustodialRelationship"
-                }
-              },
-              "concerns": {
-                "type": "string",
-                "nullable": true
-              },
-              "notes": {
-                "type": "string",
-                "nullable": true
-              }
-            }
-          }
-        ]
-      },
-      "CreatePartneringFamilyWithNewAdultCommand": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/CompositeRecordsCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "personId": {
-                "type": "string",
-                "format": "guid"
-              },
-              "referralId": {
-                "type": "string",
-                "format": "guid"
-              },
-              "referralOpenedAtUtc": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "firstName": {
-                "type": "string"
-              },
-              "lastName": {
-                "type": "string"
-              },
-              "gender": {
-                "$ref": "#/components/schemas/Gender"
-              },
-              "age": {
-                "$ref": "#/components/schemas/Age"
-              },
-              "ethnicity": {
-                "type": "string"
-              },
-              "familyAdultRelationshipInfo": {
-                "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
-              },
-              "concerns": {
-                "type": "string",
-                "nullable": true
-              },
-              "notes": {
-                "type": "string",
-                "nullable": true
-              },
-              "address": {
-                "$ref": "#/components/schemas/Address"
-              },
-              "phoneNumber": {
-                "$ref": "#/components/schemas/PhoneNumber"
-              },
-              "emailAddress": {
-                "$ref": "#/components/schemas/EmailAddress"
-              }
-            }
-          }
-        ]
-      },
-      "CreateVolunteerFamilyWithNewAdultCommand": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/CompositeRecordsCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "personId": {
-                "type": "string",
-                "format": "guid"
-              },
-              "firstName": {
-                "type": "string"
-              },
-              "lastName": {
-                "type": "string"
-              },
-              "gender": {
-                "$ref": "#/components/schemas/Gender"
-              },
-              "age": {
-                "$ref": "#/components/schemas/Age"
-              },
-              "ethnicity": {
-                "type": "string"
-              },
-              "familyAdultRelationshipInfo": {
-                "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
-              },
-              "concerns": {
-                "type": "string",
-                "nullable": true
-              },
-              "notes": {
-                "type": "string",
-                "nullable": true
-              },
-              "address": {
-                "$ref": "#/components/schemas/Address"
-              },
-              "phoneNumber": {
-                "$ref": "#/components/schemas/PhoneNumber"
-              },
-              "emailAddress": {
-                "$ref": "#/components/schemas/EmailAddress"
-              }
-            }
-          }
-        ]
-      },
-      "FamilyCommand": {
-        "type": "object",
-        "discriminator": {
-          "propertyName": "discriminator",
-          "mapping": {
-            "AddAdultToFamily": "#/components/schemas/AddAdultToFamily",
-            "AddChildToFamily": "#/components/schemas/AddChildToFamily",
-            "AddCustodialRelationship": "#/components/schemas/AddCustodialRelationship",
-            "ChangePrimaryFamilyContact": "#/components/schemas/ChangePrimaryFamilyContact",
-            "CreateFamily": "#/components/schemas/CreateFamily",
-            "DeleteUploadedFamilyDocument": "#/components/schemas/DeleteUploadedFamilyDocument",
-            "RemoveCustodialRelationship": "#/components/schemas/RemoveCustodialRelationship",
-            "UpdateAdultRelationshipToFamily": "#/components/schemas/UpdateAdultRelationshipToFamily",
-            "UpdateCustodialRelationshipType": "#/components/schemas/UpdateCustodialRelationshipType",
-            "UploadFamilyDocument": "#/components/schemas/UploadFamilyDocument"
-          }
-        },
-        "x-abstract": true,
-        "additionalProperties": false,
-        "required": [
-          "discriminator"
-        ],
-        "properties": {
-          "familyId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "discriminator": {
-            "type": "string"
-          }
-        }
-      },
-      "AddAdultToFamily": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/FamilyCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "adultPersonId": {
-                "type": "string",
-                "format": "guid"
-              },
-              "relationshipToFamily": {
-                "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
-              }
-            }
-          }
-        ]
-      },
-      "AddChildToFamily": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/FamilyCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "childPersonId": {
-                "type": "string",
-                "format": "guid"
-              },
-              "custodialRelationships": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/CustodialRelationship"
-                }
-              }
-            }
-          }
-        ]
-      },
-      "AddCustodialRelationship": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/FamilyCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "custodialRelationship": {
-                "$ref": "#/components/schemas/CustodialRelationship"
-              }
-            }
-          }
-        ]
-      },
-      "ChangePrimaryFamilyContact": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/FamilyCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "adultId": {
-                "type": "string",
-                "format": "guid"
-              }
-            }
-          }
-        ]
-      },
-      "CreateFamily": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/FamilyCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "primaryFamilyContactPersonId": {
-                "type": "string",
-                "format": "guid"
-              },
-              "adults": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/ValueTupleOfGuidAndFamilyAdultRelationshipInfo"
-                }
-              },
-              "children": {
-                "type": "array",
-                "items": {
-                  "type": "string",
-                  "format": "guid"
-                }
-              },
-              "custodialRelationships": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/CustodialRelationship"
-                }
-              }
-            }
-          }
-        ]
-      },
-      "ValueTupleOfGuidAndFamilyAdultRelationshipInfo": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "item1": {
-            "type": "string",
-            "format": "guid"
-          },
-          "item2": {
-            "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
-          }
-        }
-      },
-      "DeleteUploadedFamilyDocument": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/FamilyCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "uploadedDocumentId": {
-                "type": "string",
-                "format": "guid"
-              }
-            }
-          }
-        ]
-      },
-      "RemoveCustodialRelationship": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/FamilyCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "childPersonId": {
-                "type": "string",
-                "format": "guid"
-              },
-              "adultPersonId": {
-                "type": "string",
-                "format": "guid"
-              }
-            }
-          }
-        ]
-      },
-      "UpdateAdultRelationshipToFamily": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/FamilyCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "adultPersonId": {
-                "type": "string",
-                "format": "guid"
-              },
-              "relationshipToFamily": {
-                "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
-              }
-            }
-          }
-        ]
-      },
-      "UpdateCustodialRelationshipType": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/FamilyCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "childPersonId": {
-                "type": "string",
-                "format": "guid"
-              },
-              "adultPersonId": {
-                "type": "string",
-                "format": "guid"
-              },
-              "type": {
-                "$ref": "#/components/schemas/CustodialRelationshipType"
-              }
-            }
-          }
-        ]
-      },
-      "UploadFamilyDocument": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/FamilyCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "uploadedDocumentId": {
-                "type": "string",
-                "format": "guid"
-              },
-              "uploadedFileName": {
-                "type": "string"
-              }
-            }
-          }
-        ]
-      },
-      "PersonCommand": {
-        "type": "object",
-        "discriminator": {
-          "propertyName": "discriminator",
-          "mapping": {
-            "AddPersonAddress": "#/components/schemas/AddPersonAddress",
-            "AddPersonEmailAddress": "#/components/schemas/AddPersonEmailAddress",
-            "AddPersonPhoneNumber": "#/components/schemas/AddPersonPhoneNumber",
-            "CreatePerson": "#/components/schemas/CreatePerson",
-            "UndoCreatePerson": "#/components/schemas/UndoCreatePerson",
-            "UpdatePersonAddress": "#/components/schemas/UpdatePersonAddress",
-            "UpdatePersonAge": "#/components/schemas/UpdatePersonAge",
-            "UpdatePersonConcerns": "#/components/schemas/UpdatePersonConcerns",
-            "UpdatePersonEmailAddress": "#/components/schemas/UpdatePersonEmailAddress",
-            "UpdatePersonEthnicity": "#/components/schemas/UpdatePersonEthnicity",
-            "UpdatePersonGender": "#/components/schemas/UpdatePersonGender",
-            "UpdatePersonName": "#/components/schemas/UpdatePersonName",
-            "UpdatePersonNotes": "#/components/schemas/UpdatePersonNotes",
-            "UpdatePersonPhoneNumber": "#/components/schemas/UpdatePersonPhoneNumber",
-            "UpdatePersonUserLink": "#/components/schemas/UpdatePersonUserLink"
-          }
-        },
-        "x-abstract": true,
-        "additionalProperties": false,
-        "required": [
-          "discriminator"
-        ],
-        "properties": {
-          "personId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "discriminator": {
-            "type": "string"
-          }
-        }
-      },
-      "AddPersonAddress": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/PersonCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "address": {
-                "$ref": "#/components/schemas/Address"
-              },
-              "isCurrentAddress": {
-                "type": "boolean"
-              }
-            }
-          }
-        ]
-      },
-      "AddPersonEmailAddress": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/PersonCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "emailAddress": {
-                "$ref": "#/components/schemas/EmailAddress"
-              },
-              "isPreferredEmailAddress": {
-                "type": "boolean"
-              }
-            }
-          }
-        ]
-      },
-      "AddPersonPhoneNumber": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/PersonCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "phoneNumber": {
-                "$ref": "#/components/schemas/PhoneNumber"
-              },
-              "isPreferredPhoneNumber": {
-                "type": "boolean"
-              }
-            }
-          }
-        ]
-      },
-      "CreatePerson": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/PersonCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "userId": {
-                "type": "string",
-                "format": "guid",
-                "nullable": true
-              },
-              "firstName": {
-                "type": "string"
-              },
-              "lastName": {
-                "type": "string"
-              },
-              "gender": {
-                "$ref": "#/components/schemas/Gender"
-              },
-              "age": {
-                "$ref": "#/components/schemas/Age"
-              },
-              "ethnicity": {
-                "type": "string"
-              },
-              "addresses": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/Address"
-                }
-              },
-              "currentAddressId": {
-                "type": "string",
-                "format": "guid",
-                "nullable": true
-              },
-              "phoneNumbers": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/PhoneNumber"
-                }
-              },
-              "preferredPhoneNumberId": {
-                "type": "string",
-                "format": "guid",
-                "nullable": true
-              },
-              "emailAddresses": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/EmailAddress"
-                }
-              },
-              "preferredEmailAddressId": {
-                "type": "string",
-                "format": "guid",
-                "nullable": true
-              },
-              "concerns": {
-                "type": "string",
-                "nullable": true
-              },
-              "notes": {
-                "type": "string",
-                "nullable": true
-              }
-            }
-          }
-        ]
-      },
-      "UndoCreatePerson": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/PersonCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false
-          }
-        ]
-      },
-      "UpdatePersonAddress": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/PersonCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "address": {
-                "$ref": "#/components/schemas/Address"
-              },
-              "isCurrentAddress": {
-                "type": "boolean"
-              }
-            }
-          }
-        ]
-      },
-      "UpdatePersonAge": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/PersonCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "age": {
-                "$ref": "#/components/schemas/Age"
-              }
-            }
-          }
-        ]
-      },
-      "UpdatePersonConcerns": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/PersonCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "concerns": {
-                "type": "string",
-                "nullable": true
-              }
-            }
-          }
-        ]
-      },
-      "UpdatePersonEmailAddress": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/PersonCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "emailAddress": {
-                "$ref": "#/components/schemas/EmailAddress"
-              },
-              "isPreferredEmailAddress": {
-                "type": "boolean"
-              }
-            }
-          }
-        ]
-      },
-      "UpdatePersonEthnicity": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/PersonCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "ethnicity": {
-                "type": "string"
-              }
-            }
-          }
-        ]
-      },
-      "UpdatePersonGender": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/PersonCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "gender": {
-                "$ref": "#/components/schemas/Gender"
-              }
-            }
-          }
-        ]
-      },
-      "UpdatePersonName": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/PersonCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "firstName": {
-                "type": "string"
-              },
-              "lastName": {
-                "type": "string"
-              }
-            }
-          }
-        ]
-      },
-      "UpdatePersonNotes": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/PersonCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "notes": {
-                "type": "string",
-                "nullable": true
-              }
-            }
-          }
-        ]
-      },
-      "UpdatePersonPhoneNumber": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/PersonCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "phoneNumber": {
-                "$ref": "#/components/schemas/PhoneNumber"
-              },
-              "isPreferredPhoneNumber": {
-                "type": "boolean"
-              }
-            }
-          }
-        ]
-      },
-      "UpdatePersonUserLink": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/PersonCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "userId": {
-                "type": "string",
-                "format": "guid",
-                "nullable": true
-              }
-            }
-          }
-        ]
-      },
-      "NoteCommand": {
-        "type": "object",
-        "discriminator": {
-          "propertyName": "discriminator",
-          "mapping": {
-            "ApproveNote": "#/components/schemas/ApproveNote",
-            "CreateDraftNote": "#/components/schemas/CreateDraftNote",
-            "DiscardDraftNote": "#/components/schemas/DiscardDraftNote",
-            "EditDraftNote": "#/components/schemas/EditDraftNote"
-          }
-        },
-        "x-abstract": true,
-        "additionalProperties": false,
-        "required": [
-          "discriminator"
-        ],
-        "properties": {
-          "familyId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "noteId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "discriminator": {
-            "type": "string"
-          }
-        }
-      },
-      "ApproveNote": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/NoteCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "finalizedNoteContents": {
-                "type": "string"
-              }
-            }
-          }
-        ]
-      },
-      "CreateDraftNote": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/NoteCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "draftNoteContents": {
-                "type": "string",
-                "nullable": true
-              }
-            }
-          }
-        ]
-      },
-      "DiscardDraftNote": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/NoteCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false
-          }
-        ]
-      },
-      "EditDraftNote": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/NoteCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "draftNoteContents": {
-                "type": "string",
-                "nullable": true
-              }
-            }
-          }
-        ]
-      },
-      "ValueTupleOfGuidAndSmsMessageResult": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "item1": {
-            "type": "string",
-            "format": "guid"
-          },
-          "item2": {
-            "$ref": "#/components/schemas/SmsMessageResult"
-          }
-        }
-      },
-      "SmsMessageResult": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "phoneNumber": {
-            "type": "string"
-          },
-          "result": {
-            "$ref": "#/components/schemas/SmsResult"
-          }
-        }
-      },
-      "SmsResult": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "InvalidSourcePhoneNumber",
-          "InvalidDestinationPhoneNumber",
-          "SendFailure",
-          "SendSuccess"
-        ],
-        "enum": [
-          0,
-          1,
-          2,
-          3
-        ]
-      },
-      "SendSmsToFamilyPrimaryContactsRequest": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "familyIds": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "guid"
-            }
-          },
-          "sourceNumber": {
-            "type": "string"
-          },
-          "message": {
-            "type": "string"
-          }
-        }
-      },
-      "DocumentUploadInfo": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "documentId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "valetUrl": {
-            "type": "string",
-            "format": "uri"
-          }
-        }
-      },
-      "ReferralCommand": {
-        "type": "object",
-        "discriminator": {
-          "propertyName": "discriminator",
-          "mapping": {
-            "CloseReferral": "#/components/schemas/CloseReferral",
-            "CompleteReferralRequirement": "#/components/schemas/CompleteReferralRequirement",
-            "CreateReferral": "#/components/schemas/CreateReferral",
-            "ExemptReferralRequirement": "#/components/schemas/ExemptReferralRequirement",
-            "MarkReferralRequirementIncomplete": "#/components/schemas/MarkReferralRequirementIncomplete",
-            "UnexemptReferralRequirement": "#/components/schemas/UnexemptReferralRequirement",
-            "UpdateCustomReferralField": "#/components/schemas/UpdateCustomReferralField",
-            "UpdateReferralComments": "#/components/schemas/UpdateReferralComments"
-          }
-        },
-        "x-abstract": true,
-        "additionalProperties": false,
-        "required": [
-          "discriminator"
-        ],
-        "properties": {
-          "familyId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "referralId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "discriminator": {
-            "type": "string"
-          }
-        }
-      },
-      "CloseReferral": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ReferralCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "closeReason": {
-                "$ref": "#/components/schemas/ReferralCloseReason"
-              },
-              "closedAtUtc": {
-                "type": "string",
-                "format": "date-time"
-              }
-            }
-          }
-        ]
-      },
-      "CompleteReferralRequirement": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ReferralCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "completedRequirementId": {
-                "type": "string",
-                "format": "guid"
-              },
-              "requirementName": {
-                "type": "string"
-              },
-              "completedAtUtc": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "uploadedDocumentId": {
-                "type": "string",
-                "format": "guid",
-                "nullable": true
-              },
-              "noteId": {
-                "type": "string",
-                "format": "guid",
-                "nullable": true
-              }
-            }
-          }
-        ]
-      },
-      "CreateReferral": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ReferralCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "openedAtUtc": {
-                "type": "string",
-                "format": "date-time"
-              }
-            }
-          }
-        ]
-      },
-      "ExemptReferralRequirement": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ReferralCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "requirementName": {
-                "type": "string"
-              },
-              "additionalComments": {
-                "type": "string"
-              },
-              "exemptionExpiresAtUtc": {
-                "type": "string",
-                "format": "date-time",
-                "nullable": true
-              }
-            }
-          }
-        ]
-      },
-      "MarkReferralRequirementIncomplete": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ReferralCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "completedRequirementId": {
-                "type": "string",
-                "format": "guid"
-              },
-              "requirementName": {
-                "type": "string"
-              }
-            }
-          }
-        ]
-      },
-      "UnexemptReferralRequirement": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ReferralCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "requirementName": {
-                "type": "string"
-              }
-            }
-          }
-        ]
-      },
-      "UpdateCustomReferralField": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ReferralCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "completedCustomFieldId": {
-                "type": "string",
-                "format": "guid"
-              },
-              "customFieldName": {
-                "type": "string"
-              },
-              "customFieldType": {
-                "$ref": "#/components/schemas/CustomFieldType"
-              },
-              "value": {
-                "nullable": true
-              }
-            }
-          }
-        ]
-      },
-      "UpdateReferralComments": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ReferralCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "comments": {
-                "type": "string",
-                "nullable": true
+              "command": {
+                "$ref": "#/components/schemas/ArrangementsCommand"
               }
             }
           }
@@ -5144,55 +3679,21 @@
           }
         ]
       },
-      "UserOrganizationAccess": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "organizationId": {
-            "type": "string",
-            "format": "guid"
+      "FamilyApprovalRecordsCommand": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AtomicRecordsCommand"
           },
-          "locations": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UserLocationAccess"
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "command": {
+                "$ref": "#/components/schemas/VolunteerFamilyCommand"
+              }
             }
           }
-        }
-      },
-      "UserLocationAccess": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "locationId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "roles": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "globalContextPermissions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Permission"
-            }
-          },
-          "allVolunteerFamiliesContextPermissions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Permission"
-            }
-          },
-          "allPartneringFamiliesContextPermissions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Permission"
-            }
-          }
-        }
+        ]
       },
       "VolunteerFamilyCommand": {
         "type": "object",
@@ -5388,6 +3889,297 @@
           }
         ]
       },
+      "FamilyRecordsCommand": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AtomicRecordsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "command": {
+                "$ref": "#/components/schemas/FamilyCommand"
+              }
+            }
+          }
+        ]
+      },
+      "FamilyCommand": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "discriminator",
+          "mapping": {
+            "AddAdultToFamily": "#/components/schemas/AddAdultToFamily",
+            "AddChildToFamily": "#/components/schemas/AddChildToFamily",
+            "AddCustodialRelationship": "#/components/schemas/AddCustodialRelationship",
+            "ChangePrimaryFamilyContact": "#/components/schemas/ChangePrimaryFamilyContact",
+            "CreateFamily": "#/components/schemas/CreateFamily",
+            "DeleteUploadedFamilyDocument": "#/components/schemas/DeleteUploadedFamilyDocument",
+            "RemoveCustodialRelationship": "#/components/schemas/RemoveCustodialRelationship",
+            "UpdateAdultRelationshipToFamily": "#/components/schemas/UpdateAdultRelationshipToFamily",
+            "UpdateCustodialRelationshipType": "#/components/schemas/UpdateCustodialRelationshipType",
+            "UploadFamilyDocument": "#/components/schemas/UploadFamilyDocument"
+          }
+        },
+        "x-abstract": true,
+        "additionalProperties": false,
+        "required": [
+          "discriminator"
+        ],
+        "properties": {
+          "familyId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "discriminator": {
+            "type": "string"
+          }
+        }
+      },
+      "AddAdultToFamily": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/FamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "adultPersonId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "relationshipToFamily": {
+                "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
+              }
+            }
+          }
+        ]
+      },
+      "AddChildToFamily": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/FamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "childPersonId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "custodialRelationships": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CustodialRelationship"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "AddCustodialRelationship": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/FamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "custodialRelationship": {
+                "$ref": "#/components/schemas/CustodialRelationship"
+              }
+            }
+          }
+        ]
+      },
+      "ChangePrimaryFamilyContact": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/FamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "adultId": {
+                "type": "string",
+                "format": "guid"
+              }
+            }
+          }
+        ]
+      },
+      "CreateFamily": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/FamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "primaryFamilyContactPersonId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "adults": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ValueTupleOfGuidAndFamilyAdultRelationshipInfo"
+                }
+              },
+              "children": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "guid"
+                }
+              },
+              "custodialRelationships": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CustodialRelationship"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "ValueTupleOfGuidAndFamilyAdultRelationshipInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "item1": {
+            "type": "string",
+            "format": "guid"
+          },
+          "item2": {
+            "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
+          }
+        }
+      },
+      "DeleteUploadedFamilyDocument": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/FamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "uploadedDocumentId": {
+                "type": "string",
+                "format": "guid"
+              }
+            }
+          }
+        ]
+      },
+      "RemoveCustodialRelationship": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/FamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "childPersonId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "adultPersonId": {
+                "type": "string",
+                "format": "guid"
+              }
+            }
+          }
+        ]
+      },
+      "UpdateAdultRelationshipToFamily": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/FamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "adultPersonId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "relationshipToFamily": {
+                "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
+              }
+            }
+          }
+        ]
+      },
+      "UpdateCustodialRelationshipType": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/FamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "childPersonId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "adultPersonId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "type": {
+                "$ref": "#/components/schemas/CustodialRelationshipType"
+              }
+            }
+          }
+        ]
+      },
+      "UploadFamilyDocument": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/FamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "uploadedDocumentId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "uploadedFileName": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "IndividualApprovalRecordsCommand": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AtomicRecordsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "command": {
+                "$ref": "#/components/schemas/VolunteerCommand"
+              }
+            }
+          }
+        ]
+      },
       "VolunteerCommand": {
         "type": "object",
         "discriminator": {
@@ -5552,6 +4344,1013 @@
             }
           }
         ]
+      },
+      "NoteRecordsCommand": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AtomicRecordsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "command": {
+                "$ref": "#/components/schemas/NoteCommand"
+              }
+            }
+          }
+        ]
+      },
+      "NoteCommand": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "discriminator",
+          "mapping": {
+            "ApproveNote": "#/components/schemas/ApproveNote",
+            "CreateDraftNote": "#/components/schemas/CreateDraftNote",
+            "DiscardDraftNote": "#/components/schemas/DiscardDraftNote",
+            "EditDraftNote": "#/components/schemas/EditDraftNote"
+          }
+        },
+        "x-abstract": true,
+        "additionalProperties": false,
+        "required": [
+          "discriminator"
+        ],
+        "properties": {
+          "familyId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "noteId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "discriminator": {
+            "type": "string"
+          }
+        }
+      },
+      "ApproveNote": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/NoteCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "finalizedNoteContents": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "CreateDraftNote": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/NoteCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "draftNoteContents": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "DiscardDraftNote": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/NoteCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false
+          }
+        ]
+      },
+      "EditDraftNote": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/NoteCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "draftNoteContents": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "PersonRecordsCommand": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AtomicRecordsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "familyId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "command": {
+                "$ref": "#/components/schemas/PersonCommand"
+              }
+            }
+          }
+        ]
+      },
+      "PersonCommand": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "discriminator",
+          "mapping": {
+            "AddPersonAddress": "#/components/schemas/AddPersonAddress",
+            "AddPersonEmailAddress": "#/components/schemas/AddPersonEmailAddress",
+            "AddPersonPhoneNumber": "#/components/schemas/AddPersonPhoneNumber",
+            "CreatePerson": "#/components/schemas/CreatePerson",
+            "UndoCreatePerson": "#/components/schemas/UndoCreatePerson",
+            "UpdatePersonAddress": "#/components/schemas/UpdatePersonAddress",
+            "UpdatePersonAge": "#/components/schemas/UpdatePersonAge",
+            "UpdatePersonConcerns": "#/components/schemas/UpdatePersonConcerns",
+            "UpdatePersonEmailAddress": "#/components/schemas/UpdatePersonEmailAddress",
+            "UpdatePersonEthnicity": "#/components/schemas/UpdatePersonEthnicity",
+            "UpdatePersonGender": "#/components/schemas/UpdatePersonGender",
+            "UpdatePersonName": "#/components/schemas/UpdatePersonName",
+            "UpdatePersonNotes": "#/components/schemas/UpdatePersonNotes",
+            "UpdatePersonPhoneNumber": "#/components/schemas/UpdatePersonPhoneNumber",
+            "UpdatePersonUserLink": "#/components/schemas/UpdatePersonUserLink"
+          }
+        },
+        "x-abstract": true,
+        "additionalProperties": false,
+        "required": [
+          "discriminator"
+        ],
+        "properties": {
+          "personId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "discriminator": {
+            "type": "string"
+          }
+        }
+      },
+      "AddPersonAddress": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "address": {
+                "$ref": "#/components/schemas/Address"
+              },
+              "isCurrentAddress": {
+                "type": "boolean"
+              }
+            }
+          }
+        ]
+      },
+      "AddPersonEmailAddress": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "emailAddress": {
+                "$ref": "#/components/schemas/EmailAddress"
+              },
+              "isPreferredEmailAddress": {
+                "type": "boolean"
+              }
+            }
+          }
+        ]
+      },
+      "AddPersonPhoneNumber": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "phoneNumber": {
+                "$ref": "#/components/schemas/PhoneNumber"
+              },
+              "isPreferredPhoneNumber": {
+                "type": "boolean"
+              }
+            }
+          }
+        ]
+      },
+      "CreatePerson": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "userId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              },
+              "firstName": {
+                "type": "string"
+              },
+              "lastName": {
+                "type": "string"
+              },
+              "gender": {
+                "$ref": "#/components/schemas/Gender"
+              },
+              "age": {
+                "$ref": "#/components/schemas/Age"
+              },
+              "ethnicity": {
+                "type": "string"
+              },
+              "addresses": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Address"
+                }
+              },
+              "currentAddressId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              },
+              "phoneNumbers": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/PhoneNumber"
+                }
+              },
+              "preferredPhoneNumberId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              },
+              "emailAddresses": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/EmailAddress"
+                }
+              },
+              "preferredEmailAddressId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              },
+              "concerns": {
+                "type": "string",
+                "nullable": true
+              },
+              "notes": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "UndoCreatePerson": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false
+          }
+        ]
+      },
+      "UpdatePersonAddress": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "address": {
+                "$ref": "#/components/schemas/Address"
+              },
+              "isCurrentAddress": {
+                "type": "boolean"
+              }
+            }
+          }
+        ]
+      },
+      "UpdatePersonAge": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "age": {
+                "$ref": "#/components/schemas/Age"
+              }
+            }
+          }
+        ]
+      },
+      "UpdatePersonConcerns": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "concerns": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "UpdatePersonEmailAddress": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "emailAddress": {
+                "$ref": "#/components/schemas/EmailAddress"
+              },
+              "isPreferredEmailAddress": {
+                "type": "boolean"
+              }
+            }
+          }
+        ]
+      },
+      "UpdatePersonEthnicity": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "ethnicity": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "UpdatePersonGender": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "gender": {
+                "$ref": "#/components/schemas/Gender"
+              }
+            }
+          }
+        ]
+      },
+      "UpdatePersonName": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "firstName": {
+                "type": "string"
+              },
+              "lastName": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "UpdatePersonNotes": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "notes": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "UpdatePersonPhoneNumber": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "phoneNumber": {
+                "$ref": "#/components/schemas/PhoneNumber"
+              },
+              "isPreferredPhoneNumber": {
+                "type": "boolean"
+              }
+            }
+          }
+        ]
+      },
+      "UpdatePersonUserLink": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "userId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "ReferralRecordsCommand": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AtomicRecordsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "command": {
+                "$ref": "#/components/schemas/ReferralCommand"
+              }
+            }
+          }
+        ]
+      },
+      "ReferralCommand": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "discriminator",
+          "mapping": {
+            "CloseReferral": "#/components/schemas/CloseReferral",
+            "CompleteReferralRequirement": "#/components/schemas/CompleteReferralRequirement",
+            "CreateReferral": "#/components/schemas/CreateReferral",
+            "ExemptReferralRequirement": "#/components/schemas/ExemptReferralRequirement",
+            "MarkReferralRequirementIncomplete": "#/components/schemas/MarkReferralRequirementIncomplete",
+            "UnexemptReferralRequirement": "#/components/schemas/UnexemptReferralRequirement",
+            "UpdateCustomReferralField": "#/components/schemas/UpdateCustomReferralField",
+            "UpdateReferralComments": "#/components/schemas/UpdateReferralComments"
+          }
+        },
+        "x-abstract": true,
+        "additionalProperties": false,
+        "required": [
+          "discriminator"
+        ],
+        "properties": {
+          "familyId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "referralId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "discriminator": {
+            "type": "string"
+          }
+        }
+      },
+      "CloseReferral": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "closeReason": {
+                "$ref": "#/components/schemas/ReferralCloseReason"
+              },
+              "closedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "CompleteReferralRequirement": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "completedRequirementId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "requirementName": {
+                "type": "string"
+              },
+              "completedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "uploadedDocumentId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              },
+              "noteId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "CreateReferral": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "openedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "ExemptReferralRequirement": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "requirementName": {
+                "type": "string"
+              },
+              "additionalComments": {
+                "type": "string"
+              },
+              "exemptionExpiresAtUtc": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "MarkReferralRequirementIncomplete": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "completedRequirementId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "requirementName": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "UnexemptReferralRequirement": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "requirementName": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "UpdateCustomReferralField": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "completedCustomFieldId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "customFieldName": {
+                "type": "string"
+              },
+              "customFieldType": {
+                "$ref": "#/components/schemas/CustomFieldType"
+              },
+              "value": {
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "UpdateReferralComments": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "comments": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "CompositeRecordsCommand": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "discriminator",
+          "mapping": {
+            "AddAdultToFamilyCommand": "#/components/schemas/AddAdultToFamilyCommand",
+            "AddChildToFamilyCommand": "#/components/schemas/AddChildToFamilyCommand",
+            "CreatePartneringFamilyWithNewAdultCommand": "#/components/schemas/CreatePartneringFamilyWithNewAdultCommand",
+            "CreateVolunteerFamilyWithNewAdultCommand": "#/components/schemas/CreateVolunteerFamilyWithNewAdultCommand"
+          }
+        },
+        "x-abstract": true,
+        "additionalProperties": false,
+        "required": [
+          "discriminator"
+        ],
+        "properties": {
+          "familyId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "discriminator": {
+            "type": "string"
+          }
+        }
+      },
+      "AddAdultToFamilyCommand": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CompositeRecordsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "firstName": {
+                "type": "string"
+              },
+              "lastName": {
+                "type": "string"
+              },
+              "gender": {
+                "$ref": "#/components/schemas/Gender"
+              },
+              "age": {
+                "$ref": "#/components/schemas/Age"
+              },
+              "ethnicity": {
+                "type": "string"
+              },
+              "familyAdultRelationshipInfo": {
+                "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
+              },
+              "concerns": {
+                "type": "string",
+                "nullable": true
+              },
+              "notes": {
+                "type": "string",
+                "nullable": true
+              },
+              "address": {
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/Address"
+                  }
+                ]
+              },
+              "phoneNumber": {
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/PhoneNumber"
+                  }
+                ]
+              },
+              "emailAddress": {
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/EmailAddress"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "AddChildToFamilyCommand": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CompositeRecordsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "firstName": {
+                "type": "string"
+              },
+              "lastName": {
+                "type": "string"
+              },
+              "gender": {
+                "$ref": "#/components/schemas/Gender"
+              },
+              "age": {
+                "$ref": "#/components/schemas/Age"
+              },
+              "ethnicity": {
+                "type": "string"
+              },
+              "custodialRelationships": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CustodialRelationship"
+                }
+              },
+              "concerns": {
+                "type": "string",
+                "nullable": true
+              },
+              "notes": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "CreatePartneringFamilyWithNewAdultCommand": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CompositeRecordsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "referralId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "referralOpenedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "firstName": {
+                "type": "string"
+              },
+              "lastName": {
+                "type": "string"
+              },
+              "gender": {
+                "$ref": "#/components/schemas/Gender"
+              },
+              "age": {
+                "$ref": "#/components/schemas/Age"
+              },
+              "ethnicity": {
+                "type": "string"
+              },
+              "familyAdultRelationshipInfo": {
+                "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
+              },
+              "concerns": {
+                "type": "string",
+                "nullable": true
+              },
+              "notes": {
+                "type": "string",
+                "nullable": true
+              },
+              "address": {
+                "$ref": "#/components/schemas/Address"
+              },
+              "phoneNumber": {
+                "$ref": "#/components/schemas/PhoneNumber"
+              },
+              "emailAddress": {
+                "$ref": "#/components/schemas/EmailAddress"
+              }
+            }
+          }
+        ]
+      },
+      "CreateVolunteerFamilyWithNewAdultCommand": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CompositeRecordsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "firstName": {
+                "type": "string"
+              },
+              "lastName": {
+                "type": "string"
+              },
+              "gender": {
+                "$ref": "#/components/schemas/Gender"
+              },
+              "age": {
+                "$ref": "#/components/schemas/Age"
+              },
+              "ethnicity": {
+                "type": "string"
+              },
+              "familyAdultRelationshipInfo": {
+                "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
+              },
+              "concerns": {
+                "type": "string",
+                "nullable": true
+              },
+              "notes": {
+                "type": "string",
+                "nullable": true
+              },
+              "address": {
+                "$ref": "#/components/schemas/Address"
+              },
+              "phoneNumber": {
+                "$ref": "#/components/schemas/PhoneNumber"
+              },
+              "emailAddress": {
+                "$ref": "#/components/schemas/EmailAddress"
+              }
+            }
+          }
+        ]
+      },
+      "UserOrganizationAccess": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "organizationId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "locations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserLocationAccess"
+            }
+          }
+        }
+      },
+      "UserLocationAccess": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "locationId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "globalContextPermissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Permission"
+            }
+          },
+          "allVolunteerFamiliesContextPermissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Permission"
+            }
+          },
+          "allPartneringFamiliesContextPermissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Permission"
+            }
+          }
+        }
       },
       "IEdmModel": {
         "type": "object",
