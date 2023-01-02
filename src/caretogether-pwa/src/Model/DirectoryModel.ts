@@ -4,7 +4,7 @@ import { accessTokenFetchQuery, authenticatingFetch } from "../Authentication/Au
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { currentOrganizationAndLocationIdsQuery, organizationConfigurationData, organizationConfigurationQuery } from "./ConfigurationModel";
 
-export const directoryClientQuery = selector({//TODO: Rename!
+export const recordsClientQuery = selector({
   key: 'directoryClientQuery',
   get: ({get}) => {
     const accessTokenFetch = get(accessTokenFetchQuery);
@@ -17,8 +17,8 @@ export const visibleFamiliesInitializationQuery = selector({
   get: async ({get}) => {
     get(organizationConfigurationQuery);
     const {organizationId, locationId} = get(currentOrganizationAndLocationIdsQuery);
-    const directoryClient = get(directoryClientQuery);
-    return await directoryClient.listVisibleFamilies(organizationId, locationId);
+    const recordsClient = get(recordsClientQuery);
+    return await recordsClient.listVisibleFamilies(organizationId, locationId);
   }
 });
 
