@@ -237,7 +237,7 @@ export class DirectoryClient {
         return Promise.resolve<CombinedFamilyInfo[]>(null as any);
     }
 
-    submitDirectoryCommand(organizationId: string, locationId: string, command: DirectoryCommand): Promise<CombinedFamilyInfo> {
+    submitDirectoryCommand(organizationId: string, locationId: string, command: CompositeRecordsCommand): Promise<CombinedFamilyInfo> {
         let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Directory/directoryCommand";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
@@ -5028,19 +5028,19 @@ export enum NoteStatus {
     Approved = 1,
 }
 
-export abstract class DirectoryCommand implements IDirectoryCommand {
+export abstract class CompositeRecordsCommand implements ICompositeRecordsCommand {
     familyId?: string;
 
     protected _discriminator: string;
 
-    constructor(data?: IDirectoryCommand) {
+    constructor(data?: ICompositeRecordsCommand) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
                     (<any>this)[property] = (<any>data)[property];
             }
         }
-        this._discriminator = "DirectoryCommand";
+        this._discriminator = "CompositeRecordsCommand";
     }
 
     init(_data?: any) {
@@ -5049,7 +5049,7 @@ export abstract class DirectoryCommand implements IDirectoryCommand {
         }
     }
 
-    static fromJS(data: any): DirectoryCommand {
+    static fromJS(data: any): CompositeRecordsCommand {
         data = typeof data === 'object' ? data : {};
         if (data["discriminator"] === "AddAdultToFamilyCommand") {
             let result = new AddAdultToFamilyCommand();
@@ -5071,7 +5071,7 @@ export abstract class DirectoryCommand implements IDirectoryCommand {
             result.init(data);
             return result;
         }
-        throw new Error("The abstract class 'DirectoryCommand' cannot be instantiated.");
+        throw new Error("The abstract class 'CompositeRecordsCommand' cannot be instantiated.");
     }
 
     toJSON(data?: any) {
@@ -5082,11 +5082,11 @@ export abstract class DirectoryCommand implements IDirectoryCommand {
     }
 }
 
-export interface IDirectoryCommand {
+export interface ICompositeRecordsCommand {
     familyId?: string;
 }
 
-export class AddAdultToFamilyCommand extends DirectoryCommand implements IAddAdultToFamilyCommand {
+export class AddAdultToFamilyCommand extends CompositeRecordsCommand implements IAddAdultToFamilyCommand {
     personId?: string;
     firstName?: string;
     lastName?: string;
@@ -5149,7 +5149,7 @@ export class AddAdultToFamilyCommand extends DirectoryCommand implements IAddAdu
     }
 }
 
-export interface IAddAdultToFamilyCommand extends IDirectoryCommand {
+export interface IAddAdultToFamilyCommand extends ICompositeRecordsCommand {
     personId?: string;
     firstName?: string;
     lastName?: string;
@@ -5164,7 +5164,7 @@ export interface IAddAdultToFamilyCommand extends IDirectoryCommand {
     emailAddress?: EmailAddress | undefined;
 }
 
-export class AddChildToFamilyCommand extends DirectoryCommand implements IAddChildToFamilyCommand {
+export class AddChildToFamilyCommand extends CompositeRecordsCommand implements IAddChildToFamilyCommand {
     personId?: string;
     firstName?: string;
     lastName?: string;
@@ -5226,7 +5226,7 @@ export class AddChildToFamilyCommand extends DirectoryCommand implements IAddChi
     }
 }
 
-export interface IAddChildToFamilyCommand extends IDirectoryCommand {
+export interface IAddChildToFamilyCommand extends ICompositeRecordsCommand {
     personId?: string;
     firstName?: string;
     lastName?: string;
@@ -5238,7 +5238,7 @@ export interface IAddChildToFamilyCommand extends IDirectoryCommand {
     notes?: string | undefined;
 }
 
-export class CreatePartneringFamilyWithNewAdultCommand extends DirectoryCommand implements ICreatePartneringFamilyWithNewAdultCommand {
+export class CreatePartneringFamilyWithNewAdultCommand extends CompositeRecordsCommand implements ICreatePartneringFamilyWithNewAdultCommand {
     personId?: string;
     referralId?: string;
     referralOpenedAtUtc?: Date;
@@ -5307,7 +5307,7 @@ export class CreatePartneringFamilyWithNewAdultCommand extends DirectoryCommand 
     }
 }
 
-export interface ICreatePartneringFamilyWithNewAdultCommand extends IDirectoryCommand {
+export interface ICreatePartneringFamilyWithNewAdultCommand extends ICompositeRecordsCommand {
     personId?: string;
     referralId?: string;
     referralOpenedAtUtc?: Date;
@@ -5324,7 +5324,7 @@ export interface ICreatePartneringFamilyWithNewAdultCommand extends IDirectoryCo
     emailAddress?: EmailAddress;
 }
 
-export class CreateVolunteerFamilyWithNewAdultCommand extends DirectoryCommand implements ICreateVolunteerFamilyWithNewAdultCommand {
+export class CreateVolunteerFamilyWithNewAdultCommand extends CompositeRecordsCommand implements ICreateVolunteerFamilyWithNewAdultCommand {
     personId?: string;
     firstName?: string;
     lastName?: string;
@@ -5387,7 +5387,7 @@ export class CreateVolunteerFamilyWithNewAdultCommand extends DirectoryCommand i
     }
 }
 
-export interface ICreateVolunteerFamilyWithNewAdultCommand extends IDirectoryCommand {
+export interface ICreateVolunteerFamilyWithNewAdultCommand extends ICompositeRecordsCommand {
     personId?: string;
     firstName?: string;
     lastName?: string;

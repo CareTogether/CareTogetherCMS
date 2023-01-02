@@ -262,7 +262,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/DirectoryCommand"
+                "$ref": "#/components/schemas/CompositeRecordsCommand"
               }
             }
           },
@@ -3025,7 +3025,7 @@
           1
         ]
       },
-      "DirectoryCommand": {
+      "CompositeRecordsCommand": {
         "type": "object",
         "discriminator": {
           "propertyName": "discriminator",
@@ -3054,7 +3054,7 @@
       "AddAdultToFamilyCommand": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/DirectoryCommand"
+            "$ref": "#/components/schemas/CompositeRecordsCommand"
           },
           {
             "type": "object",
@@ -3121,7 +3121,7 @@
       "AddChildToFamilyCommand": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/DirectoryCommand"
+            "$ref": "#/components/schemas/CompositeRecordsCommand"
           },
           {
             "type": "object",
@@ -3167,7 +3167,7 @@
       "CreatePartneringFamilyWithNewAdultCommand": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/DirectoryCommand"
+            "$ref": "#/components/schemas/CompositeRecordsCommand"
           },
           {
             "type": "object",
@@ -3227,7 +3227,7 @@
       "CreateVolunteerFamilyWithNewAdultCommand": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/DirectoryCommand"
+            "$ref": "#/components/schemas/CompositeRecordsCommand"
           },
           {
             "type": "object",
