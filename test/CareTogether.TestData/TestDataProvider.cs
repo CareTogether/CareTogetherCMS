@@ -362,7 +362,7 @@ namespace CareTogether.TestData
             string? testSourceSmsPhoneNumber, IObjectStore<OrganizationSecrets> organizationSecretsStore)
         {
             var sourcePhoneNumbers = ImmutableList<SourcePhoneNumberConfiguration>.Empty;
-            if (testSourceSmsPhoneNumber != null)
+            if (!string.IsNullOrWhiteSpace(testSourceSmsPhoneNumber))
                 sourcePhoneNumbers = sourcePhoneNumbers.Add(
                     new SourcePhoneNumberConfiguration(testSourceSmsPhoneNumber, "Test Number"));
 
