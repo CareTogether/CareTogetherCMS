@@ -29,11 +29,10 @@ npm install -g azurite
 
 ## Development
 1. Clone the repository into any local directory on your device, e.g. `D:\Code\CareTogetherCMS`.
-2. Start Azurite from the command line with the `--loose` flag:
+2. Start Azurite from the command line:
    ```
-   azurite --loose
+   azurite
    ```
-   This will run Azurite with the default Blob service endpoint (we don't use the Queue or Table storage endpoints currently). Add a `--silent` parameter if you don't want to see individual requests logged to the terminal. The `--loose` parameter is currently required to support valet key access from the browser.
 3. Run the _CareTogether.Api_ project:
    - If using **Visual Studio**, you can open the _CareTogetherCMS.sln_ solution and hit F5 to start debugging.
    - If using **Visual Studio Code**, you may first need to perform a `dotnet build` before you can debug.

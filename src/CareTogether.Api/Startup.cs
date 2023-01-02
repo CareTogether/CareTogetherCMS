@@ -63,7 +63,7 @@ namespace CareTogether.Api
             // Note that this only has an effect when running in Azure; the local (Azurite) emulated storage is always mutable.
             // Also note that we lock the blob storage service (API) version because Azurite occasionally lags behind in
             // support for the newest versions. This service version should be reviewed at least once a year to keep it current.
-            var blobClientOptions = new BlobClientOptions(BlobClientOptions.ServiceVersion.V2021_06_08);
+            var blobClientOptions = new BlobClientOptions(BlobClientOptions.ServiceVersion.V2021_10_04);
             var immutableBlobServiceClient = new BlobServiceClient(
                 Configuration["Persistence:ImmutableBlobStorageConnectionString"], blobClientOptions);
             var mutableBlobServiceClient = new BlobServiceClient(
