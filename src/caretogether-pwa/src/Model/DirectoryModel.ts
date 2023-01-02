@@ -84,8 +84,9 @@ function useFamilyCommandCallback<T extends unknown[]>(
       const command = await callback(familyId, ...args);
 
       const client = new RecordsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedFamily = await client.submitAtomicRecordsCommand(organizationId, locationId,
-        new FamilyRecordsCommand({ command: command }));
+      var c = new FamilyRecordsCommand();
+      c.command = command;
+      const updatedFamily = await client.submitAtomicRecordsCommand(organizationId, locationId, c);
 
       set(visibleFamiliesData, current =>
         current.some(currentEntry => currentEntry.family?.id === familyId)
@@ -110,8 +111,9 @@ function usePersonCommandCallback<T extends unknown[]>(
       const command = await callback(familyId, personId, ...args);
 
       const client = new RecordsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedFamily = await client.submitAtomicRecordsCommand(organizationId, locationId,
-        new PersonRecordsCommand({ command: command }));
+      var c = new PersonRecordsCommand();
+      c.command = command;
+      const updatedFamily = await client.submitAtomicRecordsCommand(organizationId, locationId, c);
 
       set(visibleFamiliesData, current =>
         current.some(currentEntry => currentEntry.family?.id === familyId)
@@ -161,8 +163,9 @@ function useNoteCommandCallback<T extends unknown[]>(
       const command = await callback(familyId, ...args);
 
       const client = new RecordsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedFamily = await client.submitAtomicRecordsCommand(organizationId, locationId,
-        new NoteRecordsCommand({ command: command }));
+      var c = new NoteRecordsCommand();
+      c.command = command;
+      const updatedFamily = await client.submitAtomicRecordsCommand(organizationId, locationId, c);
 
       set(visibleFamiliesData, current =>
         current.some(currentEntry => currentEntry.family?.id === familyId)

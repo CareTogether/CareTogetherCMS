@@ -21,8 +21,9 @@ function useReferralCommandCallbackWithLocation<T extends unknown[]>(
       const command = await callback(organizationId, locationId, partneringFamilyId, ...args);
 
       const client = new RecordsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedFamily = await client.submitAtomicRecordsCommand(organizationId, locationId,
-        new ReferralRecordsCommand({ command: command }));
+      var c = new ReferralRecordsCommand();
+      c.command = command;
+      const updatedFamily = await client.submitAtomicRecordsCommand(organizationId, locationId, c);
 
       set(visibleFamiliesData, current => {
         return current.map(currentEntry => currentEntry.family?.id === partneringFamilyId
@@ -50,8 +51,9 @@ function useArrangementsCommandCallbackWithLocation<T extends unknown[]>(
       const command = await callback(organizationId, locationId, partneringFamilyId, referralId, ...args);
 
       const client = new RecordsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedFamily = await client.submitAtomicRecordsCommand(organizationId, locationId,
-        new ArrangementRecordsCommand({ command: command }));
+      var c = new ArrangementRecordsCommand();
+      c.command = command;
+      const updatedFamily = await client.submitAtomicRecordsCommand(organizationId, locationId, c);
 
       set(visibleFamiliesData, current => {
         return current.map(currentEntry => currentEntry.family?.id === partneringFamilyId
