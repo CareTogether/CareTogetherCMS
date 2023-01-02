@@ -1,6 +1,6 @@
 ﻿using CareTogether.Managers;
+using CareTogether.Managers.Communications;
 using CareTogether.Managers.Records;
-using CareTogether.Resources;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Utilities.Telephony;
@@ -22,10 +22,13 @@ namespace CareTogether.Api.Controllers
     [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class DirectoryController : ControllerBase
     {
+        private readonly ICommunicationsManager communicationsManager;
         private readonly IRecordsManager recordsManager;
 
-        public DirectoryController(IRecordsManager recordsManager)
+        public DirectoryController(
+            ICommunicationsManager communicationsManager, IRecordsManager recordsManager)
         {
+            this.communicationsManager = communicationsManager;
             this.recordsManager = recordsManager;
         }
 
@@ -78,7 +81,7 @@ namespace CareTogether.Api.Controllers
             SendSmsToFamilyPrimaryContactsAsync(Guid organizationId, Guid locationId,
             [FromBody] SendSmsToFamilyPrimaryContactsRequest request)
         {
-            var result = await recordsManager.SendSmsToFamilyPrimaryContactsAsync(organizationId, locationId,
+            var result = await communicationsManager.SendSmsToFamilyPrimaryContactsAsync(organizationId, locationId,
                 User, request.FamilyIds, request.SourceNumber, request.Message);
             return result;
         }

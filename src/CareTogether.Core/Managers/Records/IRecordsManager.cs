@@ -2,7 +2,6 @@ using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Referrals;
-using CareTogether.Utilities.Telephony;
 using JsonPolymorph;
 using System;
 using System.Collections.Generic;
@@ -60,10 +59,6 @@ namespace CareTogether.Managers.Records
 
         Task<CombinedFamilyInfo> ExecuteCompositeRecordsCommand(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, CompositeRecordsCommand command);
-
-        Task<ImmutableList<(Guid FamilyId, SmsMessageResult? Result)>> SendSmsToFamilyPrimaryContactsAsync(
-            Guid organizationId, Guid locationId, ClaimsPrincipal user,
-            ImmutableList<Guid> familyIds, string sourceNumber, string message);
 
         Task<CombinedFamilyInfo> ExecuteAtomicRecordsCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, AtomicRecordsCommand command);
