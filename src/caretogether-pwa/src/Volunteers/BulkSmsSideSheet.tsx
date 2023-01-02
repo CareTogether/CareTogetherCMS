@@ -2,7 +2,7 @@ import { Drawer, TextField, Button, Divider, useMediaQuery, useTheme, FormContro
 import { useState } from "react";
 import { useRecoilValue } from "recoil";
 import { authenticatingFetch } from "../Authentication/AuthenticatedHttp";
-import { CombinedFamilyInfo, DirectoryClient, SendSmsToFamilyPrimaryContactsRequest, SmsResult, ValueTupleOfGuidAndSmsMessageResult } from "../GeneratedClient";
+import { CombinedFamilyInfo, CommunicationsClient, SendSmsToFamilyPrimaryContactsRequest, SmsResult, ValueTupleOfGuidAndSmsMessageResult } from "../GeneratedClient";
 import { organizationConfigurationData } from "../Model/ConfigurationModel";
 import { useFamilyLookup } from "../Model/DirectoryModel";
 import { currentOrganizationState, currentLocationState } from "../Model/SessionModel";
@@ -46,7 +46,7 @@ export function BulkSmsSideSheet({ selectedFamilies, onClose }: BulkSmsSideSheet
     await withBackdrop(async () => {
       const familyIds = familiesSelectedForSms.map(family => family.family!.family!.id!);
   
-      const client = new DirectoryClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+      const client = new CommunicationsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
       const sendSmsResults = await client.sendSmsToFamilyPrimaryContacts(organizationId, locationId,
         new SendSmsToFamilyPrimaryContactsRequest({
           familyIds: familyIds,
