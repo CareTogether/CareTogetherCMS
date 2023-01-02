@@ -21,7 +21,7 @@ export function AddEditNoteDialog({familyId, note, onClose}: AddEditNoteDialogPr
     if (note)
       await directoryModel.editDraftNote(familyId, note.id!, contents);
     else
-      await directoryModel.createDraftNote(familyId, contents);
+      await directoryModel.createDraftNote(familyId, crypto.randomUUID(), contents);
   }
 
   return (

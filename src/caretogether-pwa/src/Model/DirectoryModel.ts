@@ -1,5 +1,5 @@
 import { atom, selector, useRecoilCallback, useRecoilValue } from "recoil";
-import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, CompositeRecordsCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, RecordsClient, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, UpdatePersonGender, UpdatePersonAge, UpdatePersonEthnicity, UpdateAdultRelationshipToFamily, CustodialRelationshipType, UpdateCustodialRelationshipType, RemoveCustodialRelationship, ChangePrimaryFamilyContact, CombinedFamilyInfo, FamilyRecordsCommand, PersonRecordsCommand, NoteRecordsCommand } from "../GeneratedClient";
+import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, CompositeRecordsCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, RecordsClient, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, UpdatePersonGender, UpdatePersonAge, UpdatePersonEthnicity, UpdateAdultRelationshipToFamily, CustodialRelationshipType, UpdateCustodialRelationshipType, RemoveCustodialRelationship, ChangePrimaryFamilyContact, CombinedFamilyInfo, FamilyRecordsCommand, PersonRecordsCommand, NoteRecordsCommand, AtomicRecordsCommand } from "../GeneratedClient";
 import { accessTokenFetchQuery, authenticatingFetch } from "../Authentication/AuthenticatedHttp";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { currentOrganizationAndLocationIdsQuery, organizationConfigurationData, organizationConfigurationQuery } from "./ConfigurationModel";
@@ -155,6 +155,15 @@ function useDirectoryCommandCallback<T extends unknown[]>(
 
 function useNoteCommandCallback<T extends unknown[]>(
   callback: (familyId: string, ...args: T) => Promise<NoteCommand>) {
+  return useAtomicRecordsCommandCallback(async (familyId, ...args: T) => {
+    var command = new NoteRecordsCommand();
+    command.command = await callback(familyId, ...args);
+    return command;
+  });
+}
+
+function useAtomicRecordsCommandCallback<T extends unknown[], U extends AtomicRecordsCommand>(
+  callback: (familyId: string, ...args: T) => Promise<U>) {
   return useRecoilCallback(({snapshot, set}) => {
     const asyncCallback = async (familyId: string, ...args: T) => {
       const organizationId = await snapshot.getPromise(currentOrganizationState);
@@ -163,9 +172,7 @@ function useNoteCommandCallback<T extends unknown[]>(
       const command = await callback(familyId, ...args);
 
       const client = new RecordsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      var c = new NoteRecordsCommand();
-      c.command = command;
-      const updatedFamily = await client.submitAtomicRecordsCommand(organizationId, locationId, c);
+      const updatedFamily = await client.submitAtomicRecordsCommand(organizationId, locationId, command);
 
       set(visibleFamiliesData, current =>
         current.some(currentEntry => currentEntry.family?.id === familyId)
@@ -174,7 +181,7 @@ function useNoteCommandCallback<T extends unknown[]>(
           : currentEntry)
         : current.concat(updatedFamily));
       
-      return command.noteId;
+      return updatedFamily;
     };
     return asyncCallback;
   })
@@ -485,12 +492,13 @@ export function useDirectoryModel() {
       return command;
     });
   const createDraftNote = useNoteCommandCallback(
-    async (familyId, draftNoteContents: string) => {
+    async (familyId, noteId: string, draftNoteContents: string) => {
       const command = new CreateDraftNote({
-        familyId: familyId
+        familyId: familyId,
+        noteId: noteId
       });
       command.draftNoteContents = draftNoteContents;
-      command.noteId = crypto.randomUUID();
+      command.noteId = noteId;
       return command;
     });
   const editDraftNote = useNoteCommandCallback(

@@ -213,8 +213,10 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
       } else {
         const assigneeInfo = candidatePartneringFamilyAssignees.concat(deduplicatedCandidateVolunteerAssignees).find(ca => ca.key === selectedAssigneeKey);
         let noteId: string | undefined = undefined;
-        if (notes !== "")
-          noteId = await directoryModel.createDraftNote(partneringFamily.family?.id as string, notes);
+        if (notes !== "") {
+          noteId = crypto.randomUUID();
+          await directoryModel.createDraftNote(partneringFamily.family?.id as string, noteId, notes);
+        }
         await referralsModel.trackChildLocation(partneringFamily.family?.id as string, referralId, arrangement.id!,
           assigneeInfo!.familyId, assigneeInfo!.personId, changeAtLocal, plan, noteId || null);
         //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
