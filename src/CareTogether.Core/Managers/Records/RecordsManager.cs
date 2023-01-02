@@ -285,8 +285,6 @@ namespace CareTogether.Managers.Records
         public async Task<CombinedFamilyInfo> ExecuteRecordsCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, RecordsCommand command)
         {
-            command = GenerateNewServerGuidsForNewIds(command);
-
             if (!await AuthorizeCommandAsync(organizationId, locationId, user, command))
                 throw new Exception("The user is not authorized to perform this command.");
 
@@ -300,32 +298,6 @@ namespace CareTogether.Managers.Records
             return familyResult;
         }
 
-
-        private RecordsCommand GenerateNewServerGuidsForNewIds(RecordsCommand command) =>
-            command switch
-            {
-                PersonRecordsCommand c when c.Command is AddPersonPhoneNumber x =>
-                    c with { Command = x with { PhoneNumber = x.PhoneNumber with { Id = Guid.NewGuid() } } },
-                PersonRecordsCommand c when c.Command is AddPersonEmailAddress x =>
-                    c with { Command = x with { EmailAddress = x.EmailAddress with { Id = Guid.NewGuid() } } },
-                PersonRecordsCommand c when c.Command is AddPersonAddress x =>
-                    c with { Command = x with { Address = x.Address with { Id = Guid.NewGuid() } } },
-                FamilyApprovalRecordsCommand c when c.Command is CompleteVolunteerFamilyRequirement x =>
-                    c with { Command = x with { CompletedRequirementId = Guid.NewGuid() } },
-                IndividualApprovalRecordsCommand c when c.Command is CompleteVolunteerRequirement x =>
-                    c with { Command = x with { CompletedRequirementId = Guid.NewGuid() } },
-                ReferralRecordsCommand c when c.Command is CreateReferral x =>
-                    c with { Command = x with { ReferralId = Guid.NewGuid() } },
-                ReferralRecordsCommand c when c.Command is CompleteReferralRequirement x =>
-                    c with { Command = x with { CompletedRequirementId = Guid.NewGuid() } },
-                ReferralRecordsCommand c when c.Command is UpdateCustomReferralField x =>
-                    c with { Command = x with { CompletedCustomFieldId = Guid.NewGuid() } },
-                ArrangementRecordsCommand c when c.Command is CreateArrangement x =>
-                    c with { Command = x with { ArrangementIds = ImmutableList.Create(Guid.NewGuid()) } },
-                ArrangementRecordsCommand c when c.Command is CompleteArrangementRequirement x =>
-                    c with { Command = x with { CompletedRequirementId = Guid.NewGuid() } },
-                _ => command
-            };
 
         private Task<bool> AuthorizeCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, RecordsCommand command) =>
