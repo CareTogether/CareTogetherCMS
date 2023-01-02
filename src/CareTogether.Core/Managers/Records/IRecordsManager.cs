@@ -13,58 +13,59 @@ using System.Threading.Tasks;
 namespace CareTogether.Managers.Records
 {
     [JsonHierarchyBase]
-    public abstract partial record DirectoryCommand();
-    public sealed record CreateVolunteerFamilyWithNewAdultCommand(
+    public abstract partial record CompositeRecordsCommand(Guid FamilyId);
+    public sealed record CreateVolunteerFamilyWithNewAdultCommand(Guid FamilyId, Guid PersonId,
         string FirstName, string LastName, Gender Gender, Age Age, string Ethnicity,
         FamilyAdultRelationshipInfo FamilyAdultRelationshipInfo, string? Concerns, string? Notes,
         Address Address, PhoneNumber PhoneNumber, EmailAddress EmailAddress)
-        : DirectoryCommand;
-    public sealed record CreatePartneringFamilyWithNewAdultCommand(DateTime ReferralOpenedAtUtc,
+        : CompositeRecordsCommand(FamilyId);
+    public sealed record CreatePartneringFamilyWithNewAdultCommand(Guid FamilyId, Guid PersonId,
+        Guid ReferralId, DateTime ReferralOpenedAtUtc,
         string FirstName, string LastName, Gender Gender, Age Age, string Ethnicity,
         FamilyAdultRelationshipInfo FamilyAdultRelationshipInfo, string? Concerns, string? Notes,
         Address Address, PhoneNumber PhoneNumber, EmailAddress EmailAddress)
-        : DirectoryCommand;
-    public sealed record AddAdultToFamilyCommand(Guid FamilyId,
+        : CompositeRecordsCommand(FamilyId);
+    public sealed record AddAdultToFamilyCommand(Guid FamilyId, Guid PersonId,
         string FirstName, string LastName, Gender Gender, Age Age, string Ethnicity,
         FamilyAdultRelationshipInfo FamilyAdultRelationshipInfo, string? Concerns, string? Notes,
         Address? Address, PhoneNumber? PhoneNumber, EmailAddress? EmailAddress)
-        : DirectoryCommand;
-    public sealed record AddChildToFamilyCommand(Guid FamilyId,
+        : CompositeRecordsCommand(FamilyId);
+    public sealed record AddChildToFamilyCommand(Guid FamilyId, Guid PersonId,
         string FirstName, string LastName, Gender Gender, Age Age, string Ethnicity,
         List<CustodialRelationship> CustodialRelationships,
         string? Concerns, string? Notes)
-        : DirectoryCommand;
+        : CompositeRecordsCommand(FamilyId);
 
     [JsonHierarchyBase]
-    public abstract partial record RecordsCommand();
+    public abstract partial record AtomicRecordsCommand();
     public sealed record FamilyRecordsCommand(FamilyCommand Command)
-        : RecordsCommand();
+        : AtomicRecordsCommand();
     public sealed record PersonRecordsCommand(Guid FamilyId, PersonCommand Command)
-        : RecordsCommand();
+        : AtomicRecordsCommand();
     public sealed record FamilyApprovalRecordsCommand(VolunteerFamilyCommand Command)
-        : RecordsCommand();
+        : AtomicRecordsCommand();
     public sealed record IndividualApprovalRecordsCommand(VolunteerCommand Command)
-        : RecordsCommand();
+        : AtomicRecordsCommand();
     public sealed record ReferralRecordsCommand(ReferralCommand Command)
-        : RecordsCommand();
+        : AtomicRecordsCommand();
     public sealed record ArrangementRecordsCommand(ArrangementsCommand Command)
-        : RecordsCommand();
+        : AtomicRecordsCommand();
     public sealed record NoteRecordsCommand(NoteCommand Command)
-        : RecordsCommand();
+        : AtomicRecordsCommand();
 
     public interface IRecordsManager
     {
         Task<ImmutableList<CombinedFamilyInfo>> ListVisibleFamiliesAsync(
             ClaimsPrincipal user, Guid organizationId, Guid locationId);
 
-        Task<CombinedFamilyInfo> ExecuteDirectoryCommandAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, DirectoryCommand command); //TODO: Replace these with regular FamilyCommand primitives?
+        Task<CombinedFamilyInfo> ExecuteCompositeRecordsCommand(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, CompositeRecordsCommand command);
 
         Task<ImmutableList<(Guid FamilyId, SmsMessageResult? Result)>> SendSmsToFamilyPrimaryContactsAsync(
             Guid organizationId, Guid locationId, ClaimsPrincipal user,
             ImmutableList<Guid> familyIds, string sourceNumber, string message);
 
-        Task<CombinedFamilyInfo> ExecuteRecordsCommandAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, RecordsCommand command);
+        Task<CombinedFamilyInfo> ExecuteAtomicRecordsCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, AtomicRecordsCommand command);
     }
 }

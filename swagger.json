@@ -262,7 +262,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/DirectoryCommand"
+                "$ref": "#/components/schemas/CompositeRecordsCommand"
               }
             }
           },
@@ -3025,7 +3025,7 @@
           1
         ]
       },
-      "DirectoryCommand": {
+      "CompositeRecordsCommand": {
         "type": "object",
         "discriminator": {
           "propertyName": "discriminator",
@@ -3042,6 +3042,10 @@
           "discriminator"
         ],
         "properties": {
+          "familyId": {
+            "type": "string",
+            "format": "guid"
+          },
           "discriminator": {
             "type": "string"
           }
@@ -3050,13 +3054,13 @@
       "AddAdultToFamilyCommand": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/DirectoryCommand"
+            "$ref": "#/components/schemas/CompositeRecordsCommand"
           },
           {
             "type": "object",
             "additionalProperties": false,
             "properties": {
-              "familyId": {
+              "personId": {
                 "type": "string",
                 "format": "guid"
               },
@@ -3117,13 +3121,13 @@
       "AddChildToFamilyCommand": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/DirectoryCommand"
+            "$ref": "#/components/schemas/CompositeRecordsCommand"
           },
           {
             "type": "object",
             "additionalProperties": false,
             "properties": {
-              "familyId": {
+              "personId": {
                 "type": "string",
                 "format": "guid"
               },
@@ -3163,12 +3167,20 @@
       "CreatePartneringFamilyWithNewAdultCommand": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/DirectoryCommand"
+            "$ref": "#/components/schemas/CompositeRecordsCommand"
           },
           {
             "type": "object",
             "additionalProperties": false,
             "properties": {
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "referralId": {
+                "type": "string",
+                "format": "guid"
+              },
               "referralOpenedAtUtc": {
                 "type": "string",
                 "format": "date-time"
@@ -3215,12 +3227,16 @@
       "CreateVolunteerFamilyWithNewAdultCommand": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/DirectoryCommand"
+            "$ref": "#/components/schemas/CompositeRecordsCommand"
           },
           {
             "type": "object",
             "additionalProperties": false,
             "properties": {
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
               "firstName": {
                 "type": "string"
               },
