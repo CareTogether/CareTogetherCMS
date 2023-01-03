@@ -60,6 +60,9 @@ namespace CareTogether.Managers.Records
         Task<CombinedFamilyInfo> ExecuteCompositeRecordsCommand(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, CompositeRecordsCommand command);
 
+        //TODO: When adding the CommunityRecordsCommand, the return type of this method will need to be updated to
+        //      an abstract "ScopedCommandResult" that can be either "FamilyScopedCommandResult" of "CombinedFamilyInfo"
+        //      or "CommunityScopedCommandResult" of "CommunityInfo" (and potentially other scope types as well, e.g. settings).
         Task<CombinedFamilyInfo> ExecuteAtomicRecordsCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, AtomicRecordsCommand command);
     }
