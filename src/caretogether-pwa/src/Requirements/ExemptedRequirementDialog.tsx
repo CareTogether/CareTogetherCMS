@@ -24,23 +24,29 @@ export function ExemptedRequirementDialog({
       onSave={async () => {
         switch (context.kind) {
           case 'Referral':
-            return referrals.unexemptReferralRequirement(
+            await referrals.unexemptReferralRequirement(
               context.partneringFamilyId, context.referralId, requirement);
+            break;
           case 'Arrangement':
-            return referrals.unexemptArrangementRequirement(
+            await referrals.unexemptArrangementRequirement(
               context.partneringFamilyId, context.referralId, context.arrangementId, requirement);
+            break;
           case 'Family Volunteer Assignment':
-            return referrals.unexemptVolunteerFamilyAssignmentRequirement(
+            await referrals.unexemptVolunteerFamilyAssignmentRequirement(
               context.partneringFamilyId, context.referralId, context.arrangementId, context.assignment, requirement);
+            break;
           case 'Individual Volunteer Assignment':
-            return referrals.unexemptIndividualVolunteerAssignmentRequirement(
+            await referrals.unexemptIndividualVolunteerAssignmentRequirement(
               context.partneringFamilyId, context.referralId, context.arrangementId, context.assignment, requirement);
+            break;
           case 'Volunteer Family':
-            return volunteers.unexemptVolunteerFamilyRequirement(
+            await volunteers.unexemptVolunteerFamilyRequirement(
               context.volunteerFamilyId, requirement);
+            break;
           case 'Individual Volunteer':
-            return volunteers.unexemptVolunteerRequirement(
+            await volunteers.unexemptVolunteerRequirement(
               context.volunteerFamilyId, context.personId, requirement);
+            break;
         }
       }}>
       <DialogContentText>{`${context.kind} Requirement: ${requirement.requirementName}`}</DialogContentText>

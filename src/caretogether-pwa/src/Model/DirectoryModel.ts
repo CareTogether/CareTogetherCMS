@@ -101,7 +101,7 @@ function useNoteCommandCallback<T extends unknown[]>(
   });
 }
 
-function useAtomicRecordsCommandCallback<T extends unknown[], U extends AtomicRecordsCommand>(
+export function useAtomicRecordsCommandCallback<T extends unknown[], U extends AtomicRecordsCommand>(
   callback: (familyId: string, ...args: T) => Promise<U>) {
   return useRecoilCallback(({snapshot, set}) => {
     const asyncCallback = async (familyId: string, ...args: T) => {
