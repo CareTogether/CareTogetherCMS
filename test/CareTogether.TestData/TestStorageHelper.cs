@@ -17,9 +17,12 @@ namespace CareTogether.TestData
                 foreach (var blob in blobPage.Values)
                     tenantContainer.DeleteBlobIfExists(blob.Name, DeleteSnapshotsOption.IncludeSnapshots);
 
-            blobServiceClient.SetProperties(new BlobServiceProperties
+            //TODO: Fix the following logic so it works properly in Azure as well (API issue)
+            if (blobServiceClient.AccountName == "devstoreaccount1")
             {
-                Cors = new System.Collections.Generic.List<BlobCorsRule> { new BlobCorsRule
+                blobServiceClient.SetProperties(new BlobServiceProperties
+                {
+                    Cors = new System.Collections.Generic.List<BlobCorsRule> { new BlobCorsRule
                 {
                     AllowedHeaders = "*",
                     AllowedMethods = "GET,PUT",
@@ -27,11 +30,12 @@ namespace CareTogether.TestData
                     ExposedHeaders = "*",
                     MaxAgeInSeconds = 10
                 } },
-                Logging = new BlobAnalyticsLogging
-                {
-                    Version = "1.0"
-                }
-            });
+                    Logging = new BlobAnalyticsLogging
+                    {
+                        Version = "1.0"
+                    }
+                });
+            }
         }
 
         private static Guid Id(char x) => Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
