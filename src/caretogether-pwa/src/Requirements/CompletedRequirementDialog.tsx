@@ -24,23 +24,29 @@ export function CompletedRequirementDialog({
       onSave={async () => {
         switch (context.kind) {
           case 'Referral':
-            return referrals.markReferralRequirementIncomplete(
+            await referrals.markReferralRequirementIncomplete(
               context.partneringFamilyId, context.referralId, requirement);
+            break;
           case 'Arrangement':
-            return referrals.markArrangementRequirementIncomplete(
+            await referrals.markArrangementRequirementIncomplete(
               context.partneringFamilyId, context.referralId, context.arrangementId, requirement);
+            break;
           case 'Family Volunteer Assignment':
-            return referrals.markVolunteerFamilyAssignmentRequirementIncomplete(
+            await referrals.markVolunteerFamilyAssignmentRequirementIncomplete(
               context.partneringFamilyId, context.referralId, context.arrangementId, context.assignment, requirement);
+            break;
           case 'Individual Volunteer Assignment':
-            return referrals.markIndividualVolunteerAssignmentRequirementIncomplete(
+            await referrals.markIndividualVolunteerAssignmentRequirementIncomplete(
               context.partneringFamilyId, context.referralId, context.arrangementId, context.assignment, requirement);
+            break;
           case 'Volunteer Family':
-            return volunteers.markFamilyRequirementIncomplete(
+            await volunteers.markFamilyRequirementIncomplete(
               context.volunteerFamilyId, requirement);
+            break;
           case 'Individual Volunteer':
-            return volunteers.markIndividualRequirementIncomplete(
+            await volunteers.markIndividualRequirementIncomplete(
               context.volunteerFamilyId, context.personId, requirement);
+            break;
         }
       }}>
       <DialogContentText>{`${context.kind} Requirement: ${requirement.requirementName}`}</DialogContentText>

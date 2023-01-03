@@ -26,9 +26,11 @@ export function ReopenArrangementDialog({referralId, arrangement, onClose}: Reop
 
   async function save() {
     let noteId: string | undefined = undefined;
-    if (notes !== "")
-      noteId = await directoryModel.createDraftNote(familyId as string, notes);
-      await referralsModel.reopenArrangement(familyId, referralId, arrangement.id!, noteId || null);
+    if (notes !== "") {
+      noteId = crypto.randomUUID();
+      await directoryModel.createDraftNote(familyId as string, noteId, notes);
+    }
+    await referralsModel.reopenArrangement(familyId, referralId, arrangement.id!, noteId || null);
   }
 
   return (

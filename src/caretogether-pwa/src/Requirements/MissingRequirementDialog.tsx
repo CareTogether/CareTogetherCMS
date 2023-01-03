@@ -109,8 +109,10 @@ export function MissingRequirementDialog({
       await directory.uploadFamilyDocument(contextFamilyId, document, documentFile!.name);
     }
     let noteId: string | undefined = undefined;
-    if (notes !== "")
-      noteId = await directory.createDraftNote(contextFamilyId as string, notes);
+    if (notes !== "") {
+      noteId = crypto.randomUUID();
+      await directory.createDraftNote(contextFamilyId as string, noteId, notes);
+    }
     switch (context.kind) {
       case 'Referral':
         await referrals.completeReferralRequirement(contextFamilyId, context.referralId,
