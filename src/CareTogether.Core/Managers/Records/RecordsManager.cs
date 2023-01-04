@@ -3,6 +3,7 @@ using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Referrals;
+using Microsoft.Extensions.Caching.Memory;
 using Nito.AsyncEx;
 using System;
 using System.Collections.Generic;
@@ -20,18 +21,20 @@ namespace CareTogether.Managers.Records
         private readonly IApprovalsResource approvalsResource;
         private readonly IReferralsResource referralsResource;
         private readonly INotesResource notesResource;
+        private readonly IMemoryCache memoryCache;
         private readonly CombinedFamilyInfoFormatter combinedFamilyInfoFormatter;
 
 
         public RecordsManager(IAuthorizationEngine authorizationEngine, IDirectoryResource directoryResource,
             IApprovalsResource approvalsResource, IReferralsResource referralsResource, INotesResource notesResource,
-            CombinedFamilyInfoFormatter combinedFamilyInfoFormatter)
+            IMemoryCache memoryCache, CombinedFamilyInfoFormatter combinedFamilyInfoFormatter)
         {
             this.authorizationEngine = authorizationEngine;
             this.directoryResource = directoryResource;
             this.approvalsResource = approvalsResource;
             this.referralsResource = referralsResource;
             this.notesResource = notesResource;
+            this.memoryCache = memoryCache;
             this.combinedFamilyInfoFormatter = combinedFamilyInfoFormatter;
         }
 
@@ -41,11 +44,11 @@ namespace CareTogether.Managers.Records
             var families = await directoryResource.ListFamiliesAsync(organizationId, locationId);
 
             var visibleFamilies = (await families.Select(async family =>
-                {
-                    var permissions = await authorizationEngine.AuthorizeUserAccessAsync(organizationId, locationId, user,
-                        new FamilyAuthorizationContext(family.Id));
-                    return (family, hasPermissions: !permissions.IsEmpty);
-                })
+            {
+                var permissions = await authorizationEngine.AuthorizeUserAccessAsync(organizationId, locationId, user,
+                    new FamilyAuthorizationContext(family.Id));
+                return (family, hasPermissions: !permissions.IsEmpty);
+            })
                 .WhenAll())
                 .Where(x => x.hasPermissions)
                 .Select(x => x.family)
@@ -53,7 +56,7 @@ namespace CareTogether.Managers.Records
                 .ToImmutableList();
 
             var result = await visibleFamilies
-                .Select(family => combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, family.Id, user))
+                .Select(family => RenderFamilyAsync(organizationId, locationId, family.Id, user))
                 .WhenAll();
             return result.ToImmutableList();
         }
@@ -70,11 +73,26 @@ namespace CareTogether.Managers.Records
             foreach (var atomicCommand in atomicCommands)
                 await ExecuteCommandAsync(organizationId, locationId, user, atomicCommand);
 
-            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
-                organizationId, locationId, command.FamilyId, user);
+            var familyResult = await RenderFamilyAsync(organizationId, locationId, command.FamilyId, user);
 
             return familyResult;
         }
+
+
+        private async Task<CombinedFamilyInfo> RenderFamilyAsync(Guid organizationId, Guid locationId, Guid familyId, ClaimsPrincipal user)
+        {
+            if (memoryCache.TryGetValue<CombinedFamilyInfo>(CacheKey(organizationId, locationId, familyId), out var cachedValue) &&
+                cachedValue != null)
+                return cachedValue;
+
+            var result = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, familyId, user);
+            
+            memoryCache.Set(CacheKey(organizationId, locationId, familyId), result);
+            return result;
+        }
+
+        private static string CacheKey(Guid organizationId, Guid locationId, Guid familyId) =>
+            $"{organizationId}_{locationId}_{familyId}";
 
         private IEnumerable<AtomicRecordsCommand> GenerateAtomicCommandsForCompositeCommand(CompositeRecordsCommand command)
         {
@@ -169,6 +187,8 @@ namespace CareTogether.Managers.Records
             await ExecuteCommandAsync(organizationId, locationId, user, command);
 
             var familyId = GetFamilyIdFromCommand(command);
+
+            memoryCache.Remove(familyId);
 
             var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
                 organizationId, locationId, familyId, user);

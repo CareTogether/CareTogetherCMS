@@ -72,8 +72,10 @@ namespace CareTogether.Api
             var mutableBlobServiceClient = new BlobServiceClient(
                 Configuration["Persistence:MutableBlobStorageConnectionString"], blobClientOptions);
 
-            // Data store services
+            //TODO: Maybe this would be better incorporated into the services' implementations?
             var defaultMemoryCacheOptions = Options.Create(new MemoryCacheOptions());
+
+            // Data store services
             var directoryEventLog = new AppendBlobEventLog<DirectoryEvent>(immutableBlobServiceClient, "DirectoryEventLog");
             var goalsEventLog = new AppendBlobEventLog<GoalCommandExecutedEvent>(immutableBlobServiceClient, "GoalsEventLog");
             var referralsEventLog = new AppendBlobEventLog<ReferralEvent>(immutableBlobServiceClient, "ReferralsEventLog");
@@ -142,7 +144,7 @@ namespace CareTogether.Api
                 policiesResource, telephony));
             services.AddSingleton<IRecordsManager>(new RecordsManager(authorizationEngine, directoryResource,
                 approvalsResource, referralsResource, notesResource,
-                combinedFamilyInfoFormatter));
+                new MemoryCache(defaultMemoryCacheOptions), combinedFamilyInfoFormatter));
 
             // Utility providers
             services.AddSingleton<IFileStore>(new BlobFileStore(immutableBlobServiceClient, "Uploads"));
