@@ -78,6 +78,24 @@ namespace CareTogether.Managers.Records
             return familyResult;
         }
 
+        public async Task<CombinedFamilyInfo> ExecuteAtomicRecordsCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, AtomicRecordsCommand command)
+        {
+            if (!await AuthorizeCommandAsync(organizationId, locationId, user, command))
+                throw new Exception("The user is not authorized to perform this command.");
+
+            await ExecuteCommandAsync(organizationId, locationId, user, command);
+
+            var familyId = GetFamilyIdFromCommand(command);
+
+            memoryCache.Remove(familyId);
+
+            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
+                organizationId, locationId, familyId, user);
+
+            return familyResult;
+        }
+
 
         private async Task<CombinedFamilyInfo> RenderFamilyAsync(Guid organizationId, Guid locationId, Guid familyId, ClaimsPrincipal user)
         {
@@ -86,7 +104,7 @@ namespace CareTogether.Managers.Records
                 return cachedValue;
 
             var result = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, familyId, user);
-            
+
             memoryCache.Set(CacheKey(organizationId, locationId, familyId), result);
             return result;
         }
@@ -177,25 +195,6 @@ namespace CareTogether.Managers.Records
                         $"The command type '{command.GetType().FullName}' has not been implemented.");
             }
         }
-
-        public async Task<CombinedFamilyInfo> ExecuteAtomicRecordsCommandAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, AtomicRecordsCommand command)
-        {
-            if (!await AuthorizeCommandAsync(organizationId, locationId, user, command))
-                throw new Exception("The user is not authorized to perform this command.");
-
-            await ExecuteCommandAsync(organizationId, locationId, user, command);
-
-            var familyId = GetFamilyIdFromCommand(command);
-
-            memoryCache.Remove(familyId);
-
-            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
-                organizationId, locationId, familyId, user);
-
-            return familyResult;
-        }
-
 
         private Task<bool> AuthorizeCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, AtomicRecordsCommand command) =>
