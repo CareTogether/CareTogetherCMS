@@ -25,9 +25,11 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.OData;
 using Microsoft.AspNetCore.OData.NewtonsoftJson;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using Microsoft.FeatureManagement;
 using Microsoft.FeatureManagement.FeatureFilters;
 using Microsoft.Identity.Web;
@@ -71,16 +73,22 @@ namespace CareTogether.Api
                 Configuration["Persistence:MutableBlobStorageConnectionString"], blobClientOptions);
 
             // Data store services
+            var defaultMemoryCacheOptions = Options.Create(new MemoryCacheOptions());
             var directoryEventLog = new AppendBlobEventLog<DirectoryEvent>(immutableBlobServiceClient, "DirectoryEventLog");
             var goalsEventLog = new AppendBlobEventLog<GoalCommandExecutedEvent>(immutableBlobServiceClient, "GoalsEventLog");
             var referralsEventLog = new AppendBlobEventLog<ReferralEvent>(immutableBlobServiceClient, "ReferralsEventLog");
             var approvalsEventLog = new AppendBlobEventLog<ApprovalEvent>(immutableBlobServiceClient, "ApprovalsEventLog");
             var notesEventLog = new AppendBlobEventLog<NotesEvent>(immutableBlobServiceClient, "NotesEventLog");
-            var draftNotesStore = new JsonBlobObjectStore<string?>(mutableBlobServiceClient, "DraftNotes");
-            var configurationStore = new JsonBlobObjectStore<OrganizationConfiguration>(immutableBlobServiceClient, "Configuration");
-            var policiesStore = new JsonBlobObjectStore<EffectiveLocationPolicy>(immutableBlobServiceClient, "LocationPolicies");
-            var userTenantAccessStore = new JsonBlobObjectStore<UserTenantAccessSummary>(immutableBlobServiceClient, "UserTenantAccess");
-            var organizationSecretsStore = new JsonBlobObjectStore<OrganizationSecrets>(immutableBlobServiceClient, "Configuration");
+            var draftNotesStore = new JsonBlobObjectStore<string?>(mutableBlobServiceClient, "DraftNotes",
+                new MemoryCache(defaultMemoryCacheOptions), TimeSpan.FromMinutes(30));
+            var configurationStore = new JsonBlobObjectStore<OrganizationConfiguration>(immutableBlobServiceClient, "Configuration",
+                new MemoryCache(defaultMemoryCacheOptions), TimeSpan.FromMinutes(1));
+            var policiesStore = new JsonBlobObjectStore<EffectiveLocationPolicy>(immutableBlobServiceClient, "LocationPolicies",
+                new MemoryCache(defaultMemoryCacheOptions), TimeSpan.FromMinutes(1));
+            var userTenantAccessStore = new JsonBlobObjectStore<UserTenantAccessSummary>(immutableBlobServiceClient, "UserTenantAccess",
+                new MemoryCache(defaultMemoryCacheOptions), TimeSpan.FromMinutes(1));
+            var organizationSecretsStore = new JsonBlobObjectStore<OrganizationSecrets>(immutableBlobServiceClient, "Configuration",
+                new MemoryCache(defaultMemoryCacheOptions), TimeSpan.FromMinutes(1));
 
             if (Configuration["OpenApiGen"] != "true")
             {
