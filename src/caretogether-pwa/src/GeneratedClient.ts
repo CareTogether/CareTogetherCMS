@@ -2959,9 +2959,9 @@ export class Person implements IPerson {
     active?: boolean;
     firstName?: string;
     lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
+    gender?: Gender | undefined;
+    age?: Age | undefined;
+    ethnicity?: string | undefined;
     addresses?: Address[];
     currentAddressId?: string | undefined;
     phoneNumbers?: PhoneNumber[];
@@ -3060,9 +3060,9 @@ export interface IPerson {
     active?: boolean;
     firstName?: string;
     lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
+    gender?: Gender | undefined;
+    age?: Age | undefined;
+    ethnicity?: string | undefined;
     addresses?: Address[];
     currentAddressId?: string | undefined;
     phoneNumbers?: PhoneNumber[];
@@ -8400,9 +8400,9 @@ export class CreatePerson extends PersonCommand implements ICreatePerson {
     userId?: string | undefined;
     firstName?: string;
     lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
+    gender?: Gender | undefined;
+    age?: Age | undefined;
+    ethnicity?: string | undefined;
     addresses?: Address[];
     currentAddressId?: string | undefined;
     phoneNumbers?: PhoneNumber[];
@@ -8493,9 +8493,9 @@ export interface ICreatePerson extends IPersonCommand {
     userId?: string | undefined;
     firstName?: string;
     lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
+    gender?: Gender | undefined;
+    age?: Age | undefined;
+    ethnicity?: string | undefined;
     addresses?: Address[];
     currentAddressId?: string | undefined;
     phoneNumbers?: PhoneNumber[];
@@ -9384,9 +9384,9 @@ export class AddAdultToFamilyCommand extends CompositeRecordsCommand implements 
     personId?: string;
     firstName?: string;
     lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
+    gender?: Gender | undefined;
+    age?: Age | undefined;
+    ethnicity?: string | undefined;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
     concerns?: string | undefined;
     notes?: string | undefined;
@@ -9447,9 +9447,9 @@ export interface IAddAdultToFamilyCommand extends ICompositeRecordsCommand {
     personId?: string;
     firstName?: string;
     lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
+    gender?: Gender | undefined;
+    age?: Age | undefined;
+    ethnicity?: string | undefined;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
     concerns?: string | undefined;
     notes?: string | undefined;
@@ -9462,9 +9462,9 @@ export class AddChildToFamilyCommand extends CompositeRecordsCommand implements 
     personId?: string;
     firstName?: string;
     lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
+    gender?: Gender | undefined;
+    age?: Age | undefined;
+    ethnicity?: string | undefined;
     custodialRelationships?: CustodialRelationship[];
     concerns?: string | undefined;
     notes?: string | undefined;
@@ -9524,9 +9524,9 @@ export interface IAddChildToFamilyCommand extends ICompositeRecordsCommand {
     personId?: string;
     firstName?: string;
     lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
+    gender?: Gender | undefined;
+    age?: Age | undefined;
+    ethnicity?: string | undefined;
     custodialRelationships?: CustodialRelationship[];
     concerns?: string | undefined;
     notes?: string | undefined;
@@ -9538,15 +9538,15 @@ export class CreatePartneringFamilyWithNewAdultCommand extends CompositeRecordsC
     referralOpenedAtUtc?: Date;
     firstName?: string;
     lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
+    gender?: Gender | undefined;
+    age?: Age | undefined;
+    ethnicity?: string | undefined;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
     concerns?: string | undefined;
     notes?: string | undefined;
-    address?: Address;
-    phoneNumber?: PhoneNumber;
-    emailAddress?: EmailAddress;
+    address?: Address | undefined;
+    phoneNumber?: PhoneNumber | undefined;
+    emailAddress?: EmailAddress | undefined;
 
     constructor(data?: ICreatePartneringFamilyWithNewAdultCommand) {
         super(data);
@@ -9607,30 +9607,30 @@ export interface ICreatePartneringFamilyWithNewAdultCommand extends ICompositeRe
     referralOpenedAtUtc?: Date;
     firstName?: string;
     lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
+    gender?: Gender | undefined;
+    age?: Age | undefined;
+    ethnicity?: string | undefined;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
     concerns?: string | undefined;
     notes?: string | undefined;
-    address?: Address;
-    phoneNumber?: PhoneNumber;
-    emailAddress?: EmailAddress;
+    address?: Address | undefined;
+    phoneNumber?: PhoneNumber | undefined;
+    emailAddress?: EmailAddress | undefined;
 }
 
 export class CreateVolunteerFamilyWithNewAdultCommand extends CompositeRecordsCommand implements ICreateVolunteerFamilyWithNewAdultCommand {
     personId?: string;
     firstName?: string;
     lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
+    gender?: Gender | undefined;
+    age?: Age | undefined;
+    ethnicity?: string | undefined;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
     concerns?: string | undefined;
     notes?: string | undefined;
-    address?: Address;
-    phoneNumber?: PhoneNumber;
-    emailAddress?: EmailAddress;
+    address?: Address | undefined;
+    phoneNumber?: PhoneNumber | undefined;
+    emailAddress?: EmailAddress | undefined;
 
     constructor(data?: ICreateVolunteerFamilyWithNewAdultCommand) {
         super(data);
@@ -9685,15 +9685,15 @@ export interface ICreateVolunteerFamilyWithNewAdultCommand extends ICompositeRec
     personId?: string;
     firstName?: string;
     lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
+    gender?: Gender | undefined;
+    age?: Age | undefined;
+    ethnicity?: string | undefined;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
     concerns?: string | undefined;
     notes?: string | undefined;
-    address?: Address;
-    phoneNumber?: PhoneNumber;
-    emailAddress?: EmailAddress;
+    address?: Address | undefined;
+    phoneNumber?: PhoneNumber | undefined;
+    emailAddress?: EmailAddress | undefined;
 }
 
 export class UserOrganizationAccess implements IUserOrganizationAccess {
