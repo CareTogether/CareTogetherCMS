@@ -268,7 +268,7 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
           </Grid>
         </form>
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={{marginBottom: 4}}>
         <Button onClick={() => onClose()} color="secondary">
           Cancel
         </Button>
