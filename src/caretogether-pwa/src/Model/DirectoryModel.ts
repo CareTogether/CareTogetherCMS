@@ -317,7 +317,7 @@ export function useDirectoryModel() {
       return command;
     });
   const addAdult = useCompositeRecordsCommandCallback(
-    async (familyId, firstName: string, lastName: string, gender: Gender, age: Age, ethnicity: string,
+    async (familyId, firstName: string, lastName: string, gender: Gender | null, age: Age | null, ethnicity: string | null,
         isInHousehold: boolean, relationshipToFamily: string,
         addressLine1: string | null, addressLine2: string | null, city: string | null, state: string | null, postalCode: string | null, country: string | null,
         phoneNumber: string | null, phoneType: PhoneNumberType | null, emailAddress: string | null, emailType: EmailAddressType | null,
@@ -327,9 +327,9 @@ export function useDirectoryModel() {
       command.personId = crypto.randomUUID();
       command.firstName = firstName;
       command.lastName = lastName;
-      command.gender = gender;
-      command.age = age;
-      command.ethnicity = ethnicity;
+      command.gender = gender || undefined;
+      command.age = age || undefined;
+      command.ethnicity = ethnicity || undefined;
       command.concerns = concerns;
       command.notes = notes;
       command.familyAdultRelationshipInfo = new FamilyAdultRelationshipInfo({
@@ -360,7 +360,7 @@ export function useDirectoryModel() {
       return command;
     });
   const addChild = useCompositeRecordsCommandCallback(
-    async (familyId, firstName: string, lastName: string, gender: Gender, age: Age, ethnicity: string,
+    async (familyId, firstName: string, lastName: string, gender: Gender | null, age: Age | null, ethnicity: string | null,
         custodialRelationships: CustodialRelationship[],
         notes?: string, concerns?: string) => {
       const command = new AddChildToFamilyCommand();
@@ -368,9 +368,9 @@ export function useDirectoryModel() {
       command.personId = crypto.randomUUID();
       command.firstName = firstName;
       command.lastName = lastName;
-      command.gender = gender;
-      command.age = age;
-      command.ethnicity = ethnicity;
+      command.gender = gender || undefined;
+      command.age = age || undefined;
+      command.ethnicity = ethnicity || undefined;
       command.custodialRelationships = custodialRelationships.map(cr => {
         cr.childId = command.personId;
         return cr;
@@ -380,47 +380,53 @@ export function useDirectoryModel() {
       return command;
     });
   const createVolunteerFamilyWithNewAdult = useCompositeRecordsCommandCallback(
-    async (familyId: string, firstName: string, lastName: string, gender: Gender, age: Age, ethnicity: string,
+    async (familyId: string, firstName: string, lastName: string, gender: Gender | null, age: Age | null, ethnicity: string | null,
       isInHousehold: boolean, relationshipToFamily: string,
-      addressLine1: string, addressLine2: string | null, city: string, state: string, postalCode: string, country: string,
-      phoneNumber: string, phoneType: PhoneNumberType, emailAddress?: string, emailType?: EmailAddressType,
+      addressLine1: string | null, addressLine2: string | null, city: string | null, state: string | null, postalCode: string | null, country: string | null,
+      phoneNumber: string | null, phoneType: PhoneNumberType | null, emailAddress: string | null, emailType: EmailAddressType | null,
       notes?: string, concerns?: string) => {
       const command = new CreateVolunteerFamilyWithNewAdultCommand();
       command.familyId = crypto.randomUUID();
       command.personId = crypto.randomUUID();
       command.firstName = firstName;
       command.lastName = lastName;
-      command.gender = gender
-      command.age = age;
-      command.ethnicity = ethnicity;
+      command.gender = gender || undefined;
+      command.age = age || undefined;
+      command.ethnicity = ethnicity || undefined;
       command.concerns = concerns;
       command.notes = notes;
       command.familyAdultRelationshipInfo = new FamilyAdultRelationshipInfo({
         isInHousehold: isInHousehold,
         relationshipToFamily: relationshipToFamily
       });
-      command.address = new Address();
-      command.address.id = crypto.randomUUID();
-      command.address.line1 = addressLine1;
-      command.address.line2 = addressLine2 === null ? undefined : addressLine2;
-      command.address.city = city;
-      command.address.state = state;
-      command.address.postalCode = postalCode;
-      command.phoneNumber = new PhoneNumber();
-      command.phoneNumber.id = crypto.randomUUID();
-      command.phoneNumber.number = phoneNumber;
-      command.phoneNumber.type = phoneType;
-      command.emailAddress = new EmailAddress();
-      command.emailAddress.id = crypto.randomUUID();
-      command.emailAddress.address = emailAddress;
-      command.emailAddress.type = emailType;
+      if (addressLine1 != null) {
+        command.address = new Address();
+        command.address.id = crypto.randomUUID();
+        command.address.line1 = addressLine1;
+        command.address.line2 = addressLine2 || undefined;
+        command.address.city = city || undefined;
+        command.address.state = state || undefined;
+        command.address.postalCode = postalCode || undefined;
+      }
+      if (phoneNumber != null) {
+        command.phoneNumber = new PhoneNumber();
+        command.phoneNumber.id = crypto.randomUUID();
+        command.phoneNumber.number = phoneNumber;
+        command.phoneNumber.type = phoneType || undefined;
+      }
+      if (emailAddress != null) {
+        command.emailAddress = new EmailAddress();
+        command.emailAddress.id = crypto.randomUUID();
+        command.emailAddress.address = emailAddress;
+        command.emailAddress.type = emailType || undefined;
+      }
       return command;
     });
   const createPartneringFamilyWithNewAdult = useCompositeRecordsCommandCallback(
-    async (familyId: string, referralOpenedAtUtc: Date, firstName: string, lastName: string, gender: Gender, age: Age, ethnicity: string,
+    async (familyId: string, referralOpenedAtUtc: Date, firstName: string, lastName: string, gender: Gender | null, age: Age | null, ethnicity: string | null,
       isInHousehold: boolean, relationshipToFamily: string,
-      addressLine1: string, addressLine2: string | null, city: string, state: string, postalCode: string, country: string,
-      phoneNumber: string, phoneType: PhoneNumberType, emailAddress?: string, emailType?: EmailAddressType,
+      addressLine1: string | null, addressLine2: string | null, city: string | null, state: string | null, postalCode: string | null, country: string | null,
+      phoneNumber: string | null, phoneType: PhoneNumberType | null, emailAddress: string | null, emailType: EmailAddressType | null,
       notes?: string, concerns?: string) => {
       const command = new CreatePartneringFamilyWithNewAdultCommand();
       command.familyId = crypto.randomUUID();
@@ -429,30 +435,36 @@ export function useDirectoryModel() {
       command.referralOpenedAtUtc = referralOpenedAtUtc;
       command.firstName = firstName;
       command.lastName = lastName;
-      command.gender = gender
-      command.age = age;
-      command.ethnicity = ethnicity;
+      command.gender = gender || undefined;
+      command.age = age || undefined;
+      command.ethnicity = ethnicity || undefined;
       command.concerns = concerns;
       command.notes = notes;
       command.familyAdultRelationshipInfo = new FamilyAdultRelationshipInfo({
         isInHousehold: isInHousehold,
         relationshipToFamily: relationshipToFamily
       });
-      command.address = new Address();
-      command.address.id = crypto.randomUUID();
-      command.address.line1 = addressLine1;
-      command.address.line2 = addressLine2 === null ? undefined : addressLine2;
-      command.address.city = city;
-      command.address.state = state;
-      command.address.postalCode = postalCode;
-      command.phoneNumber = new PhoneNumber();
-      command.phoneNumber.id = crypto.randomUUID();
-      command.phoneNumber.number = phoneNumber;
-      command.phoneNumber.type = phoneType;
-      command.emailAddress = new EmailAddress();
-      command.emailAddress.id = crypto.randomUUID();
-      command.emailAddress.address = emailAddress;
-      command.emailAddress.type = emailType;
+      if (addressLine1 != null) {
+        command.address = new Address();
+        command.address.id = crypto.randomUUID();
+        command.address.line1 = addressLine1;
+        command.address.line2 = addressLine2 || undefined;
+        command.address.city = city || undefined;
+        command.address.state = state || undefined;
+        command.address.postalCode = postalCode || undefined;
+      }
+      if (phoneNumber != null) {
+        command.phoneNumber = new PhoneNumber();
+        command.phoneNumber.id = crypto.randomUUID();
+        command.phoneNumber.number = phoneNumber;
+        command.phoneNumber.type = phoneType || undefined;
+      }
+      if (emailAddress != null) {
+        command.emailAddress = new EmailAddress();
+        command.emailAddress.id = crypto.randomUUID();
+        command.emailAddress.address = emailAddress;
+        command.emailAddress.type = emailType || undefined;
+      }
       return command;
     });
   const createDraftNote = useNoteCommandCallback(

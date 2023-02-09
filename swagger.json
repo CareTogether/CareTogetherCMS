@@ -1683,13 +1683,24 @@
             "type": "string"
           },
           "gender": {
-            "$ref": "#/components/schemas/Gender"
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Gender"
+              }
+            ]
           },
           "age": {
-            "$ref": "#/components/schemas/Age"
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Age"
+              }
+            ]
           },
           "ethnicity": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "addresses": {
             "type": "array",
@@ -4587,13 +4598,24 @@
                 "type": "string"
               },
               "gender": {
-                "$ref": "#/components/schemas/Gender"
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/Gender"
+                  }
+                ]
               },
               "age": {
-                "$ref": "#/components/schemas/Age"
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/Age"
+                  }
+                ]
               },
               "ethnicity": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "addresses": {
                 "type": "array",
@@ -5097,13 +5119,24 @@
                 "type": "string"
               },
               "gender": {
-                "$ref": "#/components/schemas/Gender"
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/Gender"
+                  }
+                ]
               },
               "age": {
-                "$ref": "#/components/schemas/Age"
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/Age"
+                  }
+                ]
               },
               "ethnicity": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "familyAdultRelationshipInfo": {
                 "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
@@ -5164,13 +5197,24 @@
                 "type": "string"
               },
               "gender": {
-                "$ref": "#/components/schemas/Gender"
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/Gender"
+                  }
+                ]
               },
               "age": {
-                "$ref": "#/components/schemas/Age"
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/Age"
+                  }
+                ]
               },
               "ethnicity": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "custodialRelationships": {
                 "type": "array",
@@ -5218,13 +5262,24 @@
                 "type": "string"
               },
               "gender": {
-                "$ref": "#/components/schemas/Gender"
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/Gender"
+                  }
+                ]
               },
               "age": {
-                "$ref": "#/components/schemas/Age"
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/Age"
+                  }
+                ]
               },
               "ethnicity": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "familyAdultRelationshipInfo": {
                 "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
@@ -5238,13 +5293,28 @@
                 "nullable": true
               },
               "address": {
-                "$ref": "#/components/schemas/Address"
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/Address"
+                  }
+                ]
               },
               "phoneNumber": {
-                "$ref": "#/components/schemas/PhoneNumber"
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/PhoneNumber"
+                  }
+                ]
               },
               "emailAddress": {
-                "$ref": "#/components/schemas/EmailAddress"
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/EmailAddress"
+                  }
+                ]
               }
             }
           }
@@ -5270,13 +5340,24 @@
                 "type": "string"
               },
               "gender": {
-                "$ref": "#/components/schemas/Gender"
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/Gender"
+                  }
+                ]
               },
               "age": {
-                "$ref": "#/components/schemas/Age"
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/Age"
+                  }
+                ]
               },
               "ethnicity": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "familyAdultRelationshipInfo": {
                 "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
@@ -5290,13 +5371,28 @@
                 "nullable": true
               },
               "address": {
-                "$ref": "#/components/schemas/Address"
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/Address"
+                  }
+                ]
               },
               "phoneNumber": {
-                "$ref": "#/components/schemas/PhoneNumber"
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/PhoneNumber"
+                  }
+                ]
               },
               "emailAddress": {
-                "$ref": "#/components/schemas/EmailAddress"
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/EmailAddress"
+                  }
+                ]
               }
             }
           }

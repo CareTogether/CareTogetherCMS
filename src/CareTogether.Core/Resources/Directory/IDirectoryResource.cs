@@ -16,7 +16,7 @@ namespace CareTogether.Resources.Directory
         ImmutableList<Guid> DeletedDocuments,
         ImmutableList<Activity> History);
     public sealed record Person(Guid Id, Guid? UserId, bool Active,
-        string FirstName, string LastName, Gender Gender, Age Age, string Ethnicity,
+        string FirstName, string LastName, Gender? Gender, Age? Age, string? Ethnicity,
         ImmutableList<Address> Addresses, Guid? CurrentAddressId,
         ImmutableList<PhoneNumber> PhoneNumbers, Guid? PreferredPhoneNumberId,
         ImmutableList<EmailAddress> EmailAddresses, Guid? PreferredEmailAddressId,
@@ -77,7 +77,7 @@ namespace CareTogether.Resources.Directory
     [JsonHierarchyBase]
     public abstract partial record PersonCommand(Guid PersonId);
     public sealed record CreatePerson(Guid PersonId, Guid? UserId, string FirstName, string LastName,
-        Gender Gender, Age Age, string Ethnicity,
+        Gender? Gender, Age? Age, string? Ethnicity,
         ImmutableList<Address> Addresses, Guid? CurrentAddressId,
         ImmutableList<PhoneNumber> PhoneNumbers, Guid? PreferredPhoneNumberId,
         ImmutableList<EmailAddress> EmailAddresses, Guid? PreferredEmailAddressId,

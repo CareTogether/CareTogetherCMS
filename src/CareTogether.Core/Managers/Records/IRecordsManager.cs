@@ -14,23 +14,23 @@ namespace CareTogether.Managers.Records
     [JsonHierarchyBase]
     public abstract partial record CompositeRecordsCommand(Guid FamilyId);
     public sealed record CreateVolunteerFamilyWithNewAdultCommand(Guid FamilyId, Guid PersonId,
-        string FirstName, string LastName, Gender Gender, Age Age, string Ethnicity,
+        string FirstName, string LastName, Gender? Gender, Age? Age, string? Ethnicity,
         FamilyAdultRelationshipInfo FamilyAdultRelationshipInfo, string? Concerns, string? Notes,
-        Address Address, PhoneNumber PhoneNumber, EmailAddress EmailAddress)
+        Address? Address, PhoneNumber? PhoneNumber, EmailAddress? EmailAddress)
         : CompositeRecordsCommand(FamilyId);
     public sealed record CreatePartneringFamilyWithNewAdultCommand(Guid FamilyId, Guid PersonId,
         Guid ReferralId, DateTime ReferralOpenedAtUtc,
-        string FirstName, string LastName, Gender Gender, Age Age, string Ethnicity,
+        string FirstName, string LastName, Gender? Gender, Age? Age, string? Ethnicity,
         FamilyAdultRelationshipInfo FamilyAdultRelationshipInfo, string? Concerns, string? Notes,
-        Address Address, PhoneNumber PhoneNumber, EmailAddress EmailAddress)
+        Address? Address, PhoneNumber? PhoneNumber, EmailAddress? EmailAddress)
         : CompositeRecordsCommand(FamilyId);
     public sealed record AddAdultToFamilyCommand(Guid FamilyId, Guid PersonId,
-        string FirstName, string LastName, Gender Gender, Age Age, string Ethnicity,
+        string FirstName, string LastName, Gender? Gender, Age? Age, string? Ethnicity,
         FamilyAdultRelationshipInfo FamilyAdultRelationshipInfo, string? Concerns, string? Notes,
         Address? Address, PhoneNumber? PhoneNumber, EmailAddress? EmailAddress)
         : CompositeRecordsCommand(FamilyId);
     public sealed record AddChildToFamilyCommand(Guid FamilyId, Guid PersonId,
-        string FirstName, string LastName, Gender Gender, Age Age, string Ethnicity,
+        string FirstName, string LastName, Gender? Gender, Age? Age, string? Ethnicity,
         List<CustodialRelationship> CustodialRelationships,
         string? Concerns, string? Notes)
         : CompositeRecordsCommand(FamilyId);

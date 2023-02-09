@@ -33,7 +33,7 @@ namespace CareTogether.Resources.Directory
         }
 
         internal record PersonEntry(Guid Id, Guid? UserId, bool Active, string FirstName, string LastName,
-            Gender Gender, Age Age, string Ethnicity,
+            Gender? Gender, Age? Age, string? Ethnicity,
             ImmutableList<Address> Addresses, Guid? CurrentAddressId,
             ImmutableList<PhoneNumber> PhoneNumbers, Guid? PreferredPhoneNumberId,
             ImmutableList<EmailAddress> EmailAddresses, Guid? PreferredEmailAddressId,
