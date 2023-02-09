@@ -63,16 +63,6 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
     await withBackdrop(async () => {
       if (firstName.length <= 0 || lastName.length <= 0) {
         alert("First and last name are required. Try again.");
-      } else if (gender == null) {
-        alert("Gender was not selected. Try again.");
-      } else if (ageType === 'exact' && dateOfBirth == null) {
-        alert("Date of birth was not specified. Try again.");
-      } else if (ageType === 'inYears' && ageInYears == null) {
-        alert("Age in years was not specified. Try again.");
-      } else if (ageType === 'inYears' && ageInYears != null && ageInYears < 16) {
-        alert("Age in years must be at least 16. Try again.");
-      } else if (ethnicity === '') {
-        alert("Ethnicity was not selected. Try again.");
       } else if (relationshipToFamily === '') { //TODO: Actual validation!
         alert("Family relationship was not selected. Try again.");
       } else {
@@ -86,7 +76,7 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
           (age as AgeInYears).asOf = new Date();
         }
         await directoryModel.addAdult(family.family!.id!,
-          firstName, lastName, gender as Gender, age, ethnicity,
+          firstName, lastName, gender, age, optional(ethnicity),
           isInHousehold, relationshipToFamily,
           optional(addressLine1), optional(addressLine2), optional(city), optional(state), optional(postalCode), optional(country),
           optional(phoneNumber), phoneType, optional(emailAddress), emailType,

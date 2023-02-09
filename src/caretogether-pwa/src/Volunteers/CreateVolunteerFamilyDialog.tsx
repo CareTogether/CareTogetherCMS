@@ -13,6 +13,10 @@ interface CreateVolunteerFamilyDialogProps {
   onClose: (volunteerFamilyId?: string) => void
 }
 
+function optional(arg: string) {
+  return arg.length > 0 ? arg : null;
+}
+
 export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDialogProps) {
   const [fields, setFields] = useState({
     firstName: '',
@@ -54,16 +58,6 @@ export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDial
     await withBackdrop(async () => {
       if (firstName.length <= 0 || lastName.length <= 0) {
         alert("First and last name are required. Try again.");
-      } else if (gender == null) {
-        alert("Gender was not selected. Try again.");
-      } else if (ageType === 'exact' && dateOfBirth == null) {
-        alert("Date of birth was not specified. Try again.");
-      } else if (ageType === 'inYears' && ageInYears == null) {
-        alert("Age in years was not specified. Try again.");
-      } else if (ageType === 'inYears' && ageInYears != null && ageInYears < 18) {
-        alert("Age in years must be at least 18. Try again.");
-      } else if (ethnicity === '') {
-        alert("Ethnicity was not selected. Try again.");
       } else if (relationshipToFamily === '') { //TODO: Actual validation!
         alert("Family relationship was not selected. Try again.");
       } else {
@@ -77,10 +71,10 @@ export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDial
           (age as AgeInYears).asOf = new Date();
         }
         const newFamily = await directoryModel.createVolunteerFamilyWithNewAdult("NEW",
-          firstName, lastName, gender as Gender, age, ethnicity,
+          firstName, lastName, gender, age, optional(ethnicity),
           isInHousehold, relationshipToFamily,
-          addressLine1, addressLine2.length > 0 ? addressLine2 : null, city, state, postalCode, country,
-          phoneNumber, phoneType, emailAddress, emailType,
+          optional(addressLine1), optional(addressLine2), optional(city), optional(state), optional(postalCode), optional(country),
+          optional(phoneNumber), phoneType, optional(emailAddress), emailType,
           (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
         //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
         //TODO: Retrieve the created volunteer family and return it through this onClose callback!

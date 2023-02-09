@@ -46,16 +46,6 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
     await withBackdrop(async () => {
       if (firstName.length <= 0 || lastName.length <= 0) {
         alert("First and last name are required. Try again.");
-      } else if (gender == null) {
-        alert("Gender was not selected. Try again.");
-      } else if (ageType === 'exact' && dateOfBirth == null) {
-        alert("Date of birth was not specified. Try again.");
-      } else if (ageType === 'inYears' && ageInYears == null) {
-        alert("Age in years was not specified. Try again.");
-      } else if (ageType === 'inYears' && ageInYears != null && ageInYears >= 18) {
-        alert("Age in years must be less than 18. Try again.");
-      } else if (ethnicity === '') {
-        alert("Ethnicity was not selected. Try again.");
       } else {
         let age: Age;
         if (ageType === 'exact') {
