@@ -83,7 +83,7 @@ export function AdultCard({familyId, personId}: AdultCardProps) {
       <CardHeader sx={{paddingBottom: 0}}
         title={adult.item1.firstName + " " + adult.item1.lastName}
         subheader={<>
-          Adult, <AgeText age={adult.item1.age} />, {typeof(adult.item1.gender) === 'undefined' ? "" : Gender[adult.item1.gender] + ","} {adult.item1.ethnicity}
+          Adult, <AgeText age={adult.item1.age} /> {adult.item1.gender ? ", " + Gender[adult.item1.gender] : ""} {adult.item1.ethnicity ? ", " + adult.item1.ethnicity : ""}
         </>}
         action={
           <>
