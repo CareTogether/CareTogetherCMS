@@ -103,7 +103,7 @@ export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDial
                 value={lastName} onChange={e => setFields({...fields, lastName: e.target.value})} />
             </Grid>
             <Grid item xs={12}>
-              <FormControl required component="fieldset">
+              <FormControl component="fieldset">
                 <FormLabel component="legend">Gender:</FormLabel>
                 <RadioGroup aria-label="genderType" name="genderType" row
                   value={gender == null ? null : Gender[gender]} onChange={e => setFields({...fields, gender: Gender[e.target.value as keyof typeof Gender]})}>
@@ -114,7 +114,7 @@ export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDial
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={4}>
-              <FormControl required component="fieldset">
+              <FormControl component="fieldset">
                 <FormLabel component="legend">Specify age as:</FormLabel>
                 <RadioGroup aria-label="ageType" name="ageType"
                   value={ageType} onChange={e => setAgeType(e.target.value as 'exact' | 'inYears')}>
@@ -143,7 +143,7 @@ export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDial
                 </Grid>
             </Grid>
             <Grid item xs={12} sm={6}>
-              <FormControl required fullWidth size="small">
+              <FormControl fullWidth size="small">
                 <InputLabel id="ethnicity-label">Ethnicity</InputLabel>
                 <Select
                   labelId="ethnicity-label" id="ethnicity"
@@ -182,11 +182,11 @@ export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDial
               </FormGroup>
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField required id="phone-number" label="Phone Number" fullWidth size="small" type="tel"
+              <TextField id="phone-number" label="Phone Number" fullWidth size="small" type="tel"
                 value={phoneNumber} onChange={e => setFields({...fields, phoneNumber: e.target.value})} />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <FormControl required component="fieldset">
+              <FormControl component="fieldset">
                 <FormLabel component="legend">Phone Type:</FormLabel>
                 <RadioGroup aria-label="phoneType" name="phoneType" row
                   value={PhoneNumberType[phoneType]} onChange={e => setFields({...fields, phoneType: PhoneNumberType[e.target.value as keyof typeof PhoneNumberType]})}>
@@ -212,7 +212,7 @@ export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDial
               </FormControl>
             </Grid>
             <Grid item xs={12}>
-              <TextField required id="address-line1" label="Address Line 1" fullWidth size="small"
+              <TextField id="address-line1" label="Address Line 1" fullWidth size="small"
                 value={addressLine1} onChange={e => setFields({...fields, addressLine1: e.target.value})} />
             </Grid>
             <Grid item xs={12}>
@@ -220,15 +220,15 @@ export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDial
                 value={addressLine2} onChange={e => setFields({...fields, addressLine2: e.target.value})} />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField required id="address-city" label="City" fullWidth size="small"
+              <TextField id="address-city" label="City" fullWidth size="small"
                 value={city} onChange={e => setFields({...fields, city: e.target.value})} />
             </Grid>
             <Grid item xs={12} sm={2}>
-              <TextField required id="address-state" label="State" fullWidth size="small"
+              <TextField id="address-state" label="State" fullWidth size="small"
                 value={state} onChange={e => setFields({...fields, state: e.target.value})} />
             </Grid>
             <Grid item xs={12} sm={4}>
-              <TextField required id="address-postalcode" label="ZIP/Postal Code" fullWidth size="small"
+              <TextField id="address-postalcode" label="ZIP/Postal Code" fullWidth size="small"
                 value={postalCode} onChange={e => setFields({...fields, postalCode: e.target.value})} />
             </Grid>
             <Grid item xs={12}>

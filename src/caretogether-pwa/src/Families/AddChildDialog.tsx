@@ -91,7 +91,7 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
                 value={lastName} onChange={e => setFields({...fields, lastName: e.target.value})} />
             </Grid>
             <Grid item xs={12}>
-              <FormControl required component="fieldset">
+              <FormControl component="fieldset">
                 <FormLabel component="legend">Gender:</FormLabel>
                 <RadioGroup aria-label="genderType" name="genderType" row
                   value={gender == null ? null : Gender[gender]} onChange={e => setFields({...fields, gender: Gender[e.target.value as keyof typeof Gender]})}>
@@ -102,7 +102,7 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={4}>
-              <FormControl required component="fieldset">
+              <FormControl component="fieldset">
                 <FormLabel component="legend">Specify age as:</FormLabel>
                 <RadioGroup aria-label="ageType" name="ageType"
                   value={ageType} onChange={e => setAgeType(e.target.value as 'exact' | 'inYears')}>
@@ -131,7 +131,7 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
                 </Grid>
             </Grid>
             <Grid item xs={12} sm={6}>
-              <FormControl required fullWidth size="small">
+              <FormControl fullWidth size="small">
                 <InputLabel id="ethnicity-label">Ethnicity</InputLabel>
                 <Select
                   labelId="ethnicity-label" id="ethnicity"
