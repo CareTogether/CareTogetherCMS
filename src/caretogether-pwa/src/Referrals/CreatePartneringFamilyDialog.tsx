@@ -149,7 +149,7 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
                 value={dateOfBirth} maxDate={subYears(new Date(), 16)} openTo="year"
                 inputFormat="MM/dd/yyyy"
                 onChange={(date: any) => date && setFields({...fields, dateOfBirth: date})}
-                renderInput={(params: any) => <TextField size="small" fullWidth required {...params} />} />
+                renderInput={(params: any) => <TextField size="small" fullWidth {...params} />} />
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth size="small">
