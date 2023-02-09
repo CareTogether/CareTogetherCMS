@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@mui/material';
-import { CombinedFamilyInfo, Age, ExactAge, AgeInYears, Gender, CustodialRelationshipType, CustodialRelationship } from '../GeneratedClient';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControl, FormControlLabel, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@mui/material';
+import { CombinedFamilyInfo, ExactAge, Gender, CustodialRelationshipType, CustodialRelationship } from '../GeneratedClient';
 import { visibleFamiliesData, useDirectoryModel } from '../Model/DirectoryModel';
 import WarningIcon from '@mui/icons-material/Warning';
 import { DatePicker } from '@mui/x-date-pickers';
@@ -8,7 +8,7 @@ import { useRecoilValue } from 'recoil';
 import { ethnicitiesData } from '../Model/ConfigurationModel';
 import { useParams } from 'react-router-dom';
 import { useBackdrop } from '../Hooks/useBackdrop';
-import { subYears, addDays } from 'date-fns';
+import { subYears } from 'date-fns';
 
 interface AddChildDialogProps {
   onClose: () => void
@@ -24,7 +24,6 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
     lastName: '',
     gender: null as Gender | null,
     dateOfBirth: null as Date | null,
-    ageInYears: null as number | null,
     ethnicity: '',
     custodialRelationships: family.family!.adults!.filter(adult => adult.item1!.active).map(adult =>
       ({ adult: adult.item1!, relationship: CustodialRelationshipType.ParentWithCustody as CustodialRelationshipType | -1 })),
@@ -32,10 +31,9 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
     concerns: null as string | null
   });
   const {
-    firstName, lastName, gender, dateOfBirth, ageInYears, ethnicity,
+    firstName, lastName, gender, dateOfBirth, ethnicity,
     custodialRelationships,
     notes, concerns } = fields;
-  const [ageType, setAgeType] = useState<'exact' | 'inYears'>('exact');
   const directoryModel = useDirectoryModel();
 
   const ethnicities = useRecoilValue(ethnicitiesData);
@@ -47,15 +45,9 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
       if (firstName.length <= 0 || lastName.length <= 0) {
         alert("First and last name are required. Try again.");
       } else {
-        let age: Age;
-        if (ageType === 'exact') {
-          age = new ExactAge();
-          (age as ExactAge).dateOfBirth = (dateOfBirth == null ? undefined : dateOfBirth);
-        } else {
-          age = new AgeInYears();
-          (age as AgeInYears).years = (ageInYears == null ? undefined : ageInYears);
-          (age as AgeInYears).asOf = new Date();
-        }
+        let age = dateOfBirth == null ? null : new ExactAge();
+        if (dateOfBirth != null)
+          age!.dateOfBirth = dateOfBirth;
         await directoryModel.addChild(family.family?.id as string,
           firstName, lastName, gender as Gender, age, ethnicity,
           custodialRelationships.filter(cr => cr.relationship !== -1).map(cr => {
@@ -91,61 +83,6 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
                 value={lastName} onChange={e => setFields({...fields, lastName: e.target.value})} />
             </Grid>
             <Grid item xs={12}>
-              <FormControl component="fieldset">
-                <FormLabel component="legend">Gender:</FormLabel>
-                <RadioGroup aria-label="genderType" name="genderType" row
-                  value={gender == null ? null : Gender[gender]} onChange={e => setFields({...fields, gender: Gender[e.target.value as keyof typeof Gender]})}>
-                  <FormControlLabel value={Gender[Gender.Male]} control={<Radio size="small" />} label="Male" />
-                  <FormControlLabel value={Gender[Gender.Female]} control={<Radio size="small" />} label="Female" />
-                  <FormControlLabel value={Gender[Gender.SeeNotes]} control={<Radio size="small" />} label="See Notes" />
-                </RadioGroup>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <FormControl component="fieldset">
-                <FormLabel component="legend">Specify age as:</FormLabel>
-                <RadioGroup aria-label="ageType" name="ageType"
-                  value={ageType} onChange={e => setAgeType(e.target.value as 'exact' | 'inYears')}>
-                  <FormControlLabel value="exact" control={<Radio size="small" />} label="Date of birth:" />
-                  <FormControlLabel value="inYears" control={<Radio size="small" />} label="Years old today:" />
-                </RadioGroup>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={8} container direction="column" spacing={0}>
-              <Grid item>
-                <DatePicker
-                  label="Date of birth"
-                  value={dateOfBirth} minDate={addDays(subYears(new Date(), 18), 1)} maxDate={new Date()} openTo="year"
-                  disabled={ageType !== 'exact'} inputFormat="MM/dd/yyyy"
-                  onChange={(date: any) => date && setFields({...fields, dateOfBirth: date})}
-                  renderInput={(params: any) => <TextField size="small" required {...params} />} />
-              </Grid>
-              <Grid item>
-                <TextField
-                  id="age-years" label="Age" sx={{width: '20ch'}} size="small"
-                  required type="number" disabled={ageType !== 'inYears'}
-                  value={ageInYears == null ? "" : ageInYears} onChange={e => setFields({...fields, ageInYears: Number.parseInt(e.target.value)})}
-                  InputProps={{
-                    endAdornment: <InputAdornment position="end">years</InputAdornment>,
-                  }} />
-                </Grid>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth size="small">
-                <InputLabel id="ethnicity-label">Ethnicity</InputLabel>
-                <Select
-                  labelId="ethnicity-label" id="ethnicity"
-                  value={ethnicity}
-                  onChange={e => setFields({...fields, ethnicity: e.target.value as string})}>
-                    <MenuItem key="placeholder" value="" disabled>
-                      Select an ethnicity
-                    </MenuItem>
-                    {ethnicities.map(ethnicity =>
-                      <MenuItem key={ethnicity} value={ethnicity}>{ethnicity}</MenuItem>)}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12}>
               <table>
                 <thead>
                   <tr>
@@ -176,6 +113,45 @@ export function AddChildDialog({onClose}: AddChildDialogProps) {
                   ))}
                 </tbody>
               </table>
+            </Grid>
+            <Grid item xs={12}>
+              <Divider />
+            </Grid>
+            <Grid item xs={12}>
+              <FormControl component="fieldset">
+                <FormLabel component="legend">Gender:</FormLabel>
+                <RadioGroup aria-label="genderType" name="genderType" row
+                  value={gender == null ? null : Gender[gender]} onChange={e => setFields({...fields, gender: Gender[e.target.value as keyof typeof Gender]})}>
+                  <FormControlLabel value={Gender[Gender.Male]} control={<Radio size="small" />} label="Male" />
+                  <FormControlLabel value={Gender[Gender.Female]} control={<Radio size="small" />} label="Female" />
+                  <FormControlLabel value={Gender[Gender.SeeNotes]} control={<Radio size="small" />} label="See Notes" />
+                </RadioGroup>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <DatePicker
+                label="Date of birth"
+                value={dateOfBirth} maxDate={subYears(new Date(), 18)} openTo="year"
+                inputFormat="MM/dd/yyyy"
+                onChange={(date: any) => date && setFields({...fields, dateOfBirth: date})}
+                renderInput={(params: any) => <TextField size="small" fullWidth {...params} />} />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth size="small">
+                <InputLabel id="ethnicity-label">Ethnicity</InputLabel>
+                <Select
+                  labelId="ethnicity-label" id="ethnicity"
+                  value={ethnicity}
+                  onChange={e => setFields({...fields, ethnicity: e.target.value as string})}>
+                    <MenuItem key="placeholder" value="" disabled>
+                      Select an ethnicity
+                    </MenuItem>
+                    {ethnicities.map(ethnicity =>
+                      <MenuItem key={ethnicity} value={ethnicity}>{ethnicity}</MenuItem>)}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12}>
             </Grid>
             <Grid item xs={12}>
               <TextField

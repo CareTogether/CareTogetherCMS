@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@mui/material';
-import { Age, ExactAge, AgeInYears, Gender, PhoneNumberType, EmailAddressType } from '../GeneratedClient';
+import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@mui/material';
+import { ExactAge, Gender, PhoneNumberType, EmailAddressType } from '../GeneratedClient';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import WarningIcon from '@mui/icons-material/Warning';
 import { DatePicker } from '@mui/x-date-pickers';
@@ -24,7 +24,6 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
     lastName: '',
     gender: null as Gender | null,
     dateOfBirth: null as Date | null,
-    ageInYears: null as number | null,
     ethnicity: '',
     isInHousehold: true,
     relationshipToFamily: '',
@@ -43,12 +42,11 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
   });
   const {
     referralOpenedAtLocal,
-    firstName, lastName, gender, dateOfBirth, ageInYears, ethnicity,
+    firstName, lastName, gender, dateOfBirth, ethnicity,
     isInHousehold, relationshipToFamily,
     addressLine1, addressLine2, city, state, postalCode, country,
     phoneNumber, phoneType, emailAddress, emailType,
     notes, concerns } = fields;
-  const [ageType, setAgeType] = useState<'exact' | 'inYears'>('exact');
   const directoryModel = useDirectoryModel();
 
   const relationshipTypes = useRecoilValue(adultFamilyRelationshipsData);
@@ -63,15 +61,9 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
       } else if (relationshipToFamily === '') { //TODO: Actual validation!
         alert("Family relationship was not selected. Try again.");
       } else {
-        let age: Age;
-        if (ageType === 'exact') {
-          age = new ExactAge();
-          (age as ExactAge).dateOfBirth = (dateOfBirth == null ? undefined : dateOfBirth);
-        } else {
-          age = new AgeInYears();
-          (age as AgeInYears).years = (ageInYears == null ? undefined : ageInYears);
-          (age as AgeInYears).asOf = new Date();
-        }
+        let age = dateOfBirth == null ? null : new ExactAge();
+        if (dateOfBirth != null)
+          age!.dateOfBirth = dateOfBirth;
         const newFamily = await directoryModel.createPartneringFamilyWithNewAdult("NEW",
           referralOpenedAtLocal,
           firstName, lastName, gender, age, optional(ethnicity),
@@ -92,7 +84,7 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
         Create Partnering Family - First Adult
       </DialogTitle>
       <DialogContent>
-        <Grid item xs={12}>
+        <Grid item xs={12} sx={{paddingTop: 1}}>
           <DatePicker
             label="When was this referral opened?"
             value={referralOpenedAtLocal}
@@ -113,6 +105,33 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
               <TextField required id="last-name" label="Last Name" fullWidth size="small"
                 value={lastName} onChange={e => setFields({...fields, lastName: e.target.value})} />
             </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl required fullWidth size="small">
+                <InputLabel id="family-relationship-label">Relationship to Family</InputLabel>
+                <Select
+                  labelId="family-relationship-label" id="family-relationship"
+                  value={relationshipToFamily}
+                  onChange={e => setFields({...fields, relationshipToFamily: e.target.value as string})}>
+                    <MenuItem key="placeholder" value="" disabled>
+                      Select a relationship type
+                    </MenuItem>
+                    {relationshipTypes.map(relationshipType =>
+                      <MenuItem key={relationshipType} value={relationshipType}>{relationshipType}</MenuItem>)}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormGroup row>
+                <FormControlLabel
+                  control={<Checkbox checked={isInHousehold} onChange={e => setFields({...fields, isInHousehold: e.target.checked})}
+                    name="isInHousehold" color="primary" size="small" />}
+                  label="In Household"
+                />
+              </FormGroup>
+            </Grid>
+            <Grid item xs={12}>
+              <Divider />
+            </Grid>
             <Grid item xs={12}>
               <FormControl component="fieldset">
                 <FormLabel component="legend">Gender:</FormLabel>
@@ -124,34 +143,13 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
                 </RadioGroup>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={4}>
-              <FormControl component="fieldset">
-                <FormLabel component="legend">Specify age as:</FormLabel>
-                <RadioGroup aria-label="ageType" name="ageType"
-                  value={ageType} onChange={e => setAgeType(e.target.value as 'exact' | 'inYears')}>
-                  <FormControlLabel value="exact" control={<Radio size="small" />} label="Date of birth:" />
-                  <FormControlLabel value="inYears" control={<Radio size="small" />} label="Years old today:" />
-                </RadioGroup>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={8} container direction="column" spacing={0}>
-              <Grid item>
-                <DatePicker
-                  label="Date of birth"
-                  value={dateOfBirth} maxDate={subYears(new Date(), 16)} openTo="year"
-                  disabled={ageType !== 'exact'} inputFormat="MM/dd/yyyy"
-                  onChange={(date: any) => date && setFields({...fields, dateOfBirth: date})}
-                  renderInput={(params: any) => <TextField size="small" required {...params} />} />
-              </Grid>
-              <Grid item>
-                <TextField
-                  id="age-years" label="Age" sx={{width: '20ch'}} size="small"
-                  required type="number" disabled={ageType !== 'inYears'}
-                  value={ageInYears == null ? "" : ageInYears} onChange={e => setFields({...fields, ageInYears: Number.parseInt(e.target.value)})}
-                  InputProps={{
-                    endAdornment: <InputAdornment position="end">years</InputAdornment>,
-                  }} />
-                </Grid>
+            <Grid item xs={12} sm={6}>
+              <DatePicker
+                label="Date of birth"
+                value={dateOfBirth} maxDate={subYears(new Date(), 16)} openTo="year"
+                inputFormat="MM/dd/yyyy"
+                onChange={(date: any) => date && setFields({...fields, dateOfBirth: date})}
+                renderInput={(params: any) => <TextField size="small" fullWidth required {...params} />} />
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth size="small">
@@ -168,29 +166,7 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl required fullWidth size="small">
-                <InputLabel id="family-relationship-label">Relationship to Family</InputLabel>
-                <Select
-                  labelId="family-relationship-label" id="family-relationship"
-                  value={relationshipToFamily}
-                  onChange={e => setFields({...fields, relationshipToFamily: e.target.value as string})}>
-                    <MenuItem key="placeholder" value="" disabled>
-                      Select a relationship type
-                    </MenuItem>
-                    {relationshipTypes.map(relationshipType =>
-                      <MenuItem key={relationshipType} value={relationshipType}>{relationshipType}</MenuItem>)}
-                </Select>
-              </FormControl>
-            </Grid>
             <Grid item xs={12}>
-              <FormGroup row>
-                <FormControlLabel
-                  control={<Checkbox checked={isInHousehold} onChange={e => setFields({...fields, isInHousehold: e.target.checked})}
-                    name="isInHousehold" color="primary" size="small" />}
-                  label="In Household"
-                />
-              </FormGroup>
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField id="phone-number" label="Phone Number" fullWidth size="small" type="tel"
@@ -198,7 +174,6 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl component="fieldset">
-                <FormLabel component="legend">Phone Type:</FormLabel>
                 <RadioGroup aria-label="phoneType" name="phoneType" row
                   value={PhoneNumberType[phoneType]} onChange={e => setFields({...fields, phoneType: PhoneNumberType[e.target.value as keyof typeof PhoneNumberType]})}>
                   <FormControlLabel value={PhoneNumberType[PhoneNumberType.Mobile]} control={<Radio size="small" />} label="Mobile" />
@@ -214,13 +189,14 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl component="fieldset">
-                <FormLabel component="legend">Email Type:</FormLabel>
                 <RadioGroup aria-label="emailType" name="emailType" row
                   value={EmailAddressType[emailType]} onChange={e => setFields({...fields, emailType: EmailAddressType[e.target.value as keyof typeof EmailAddressType]})}>
                   <FormControlLabel value={EmailAddressType[EmailAddressType.Personal]} control={<Radio size="small" />} label="Personal" />
                   <FormControlLabel value={EmailAddressType[EmailAddressType.Work]} control={<Radio size="small" />} label="Work" />
                 </RadioGroup>
               </FormControl>
+            </Grid>
+            <Grid item xs={12}>
             </Grid>
             <Grid item xs={12}>
               <TextField id="address-line1" label="Address Line 1" fullWidth size="small"
@@ -241,6 +217,8 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
             <Grid item xs={12} sm={4}>
               <TextField id="address-postalcode" label="ZIP/Postal Code" fullWidth size="small"
                 value={postalCode} onChange={e => setFields({...fields, postalCode: e.target.value})} />
+            </Grid>
+            <Grid item xs={12}>
             </Grid>
             <Grid item xs={12}>
               <TextField
