@@ -49,6 +49,11 @@ namespace CareTogether.Managers
             if (family == null)
                 throw new InvalidOperationException("The specified family ID was not found.");
 
+            var missingCustomFamilyFields = locationPolicy.CustomFamilyFields
+                .Where(customField => !family.CompletedCustomFields.Any(completed => completed.Key == customField.Name))
+                .Select(customField => customField.Name)
+                .ToImmutableList();
+
             var partneringFamilyInfo = await RenderPartneringFamilyInfoAsync(organizationId, locationId, family, user);
 
             var (volunteerFamilyInfo, uploadedApprovalDocuments) = await RenderVolunteerFamilyInfoAsync(
@@ -74,7 +79,7 @@ namespace CareTogether.Managers
                 .ToImmutableList();
 
             var renderedFamily = new CombinedFamilyInfo(family, partneringFamilyInfo, volunteerFamilyInfo, renderedNotes,
-                allUploadedDocuments, ImmutableList<Permission>.Empty);
+                allUploadedDocuments, missingCustomFamilyFields, ImmutableList<Permission>.Empty);
 
             var disclosedFamily = await authorizationEngine.DiscloseFamilyAsync(user, organizationId, locationId, renderedFamily);
             return disclosedFamily;
