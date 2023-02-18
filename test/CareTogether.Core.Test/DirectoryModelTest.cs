@@ -134,7 +134,8 @@ namespace CareTogether.Core.Test
                 ImmutableList<CustodialRelationship>.Empty
                     .Add(new CustodialRelationship(guid6, guid2, CustodialRelationshipType.ParentWithCourtAppointedCustody))
                     .Add(new CustodialRelationship(guid6, guid1, CustodialRelationshipType.ParentWithCourtAppointedCustody)),
-                ImmutableList<UploadedDocumentInfo>.Empty, ImmutableList<Guid>.Empty, ImmutableList<Activity>.Empty);
+                ImmutableList<UploadedDocumentInfo>.Empty, ImmutableList<Guid>.Empty,
+                ImmutableDictionary<string, CompletedCustomFieldInfo>.Empty, ImmutableList<Activity>.Empty);
             Assert.AreEqual(expectedFamily.Id, actualFamily.Id);
             Assert.AreEqual(expectedFamily.Adults.Count, actualFamily.Adults.Count);
             Assert.AreEqual(expectedFamily.Adults[0], actualFamily.Adults[0]);

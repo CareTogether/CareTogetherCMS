@@ -49,7 +49,8 @@ namespace CareTogether.Core.Test
                 .Add(new CustodialRelationship(guid4, guid2, CustodialRelationshipType.ParentWithCustody))
                 .Add(new CustodialRelationship(guid5, guid1, CustodialRelationshipType.LegalGuardian))
                 .Add(new CustodialRelationship(guid5, guid2, CustodialRelationshipType.LegalGuardian)),
-            ImmutableList<UploadedDocumentInfo>.Empty, ImmutableList<Guid>.Empty, ImmutableList<Activity>.Empty);
+            ImmutableList<UploadedDocumentInfo>.Empty, ImmutableList<Guid>.Empty,
+            ImmutableDictionary<string, CompletedCustomFieldInfo>.Empty, ImmutableList<Activity>.Empty);
 
         private static MemoryObjectStore<EffectiveLocationPolicy> policiesStore =
             new MemoryObjectStore<EffectiveLocationPolicy>();
