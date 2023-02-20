@@ -2834,7 +2834,7 @@ export class Family implements IFamily {
     custodialRelationships?: CustodialRelationship[];
     uploadedDocuments?: UploadedDocumentInfo[];
     deletedDocuments?: string[];
-    completedCustomFields?: { [key: string]: CompletedCustomFieldInfo; };
+    completedCustomFields?: CompletedCustomFieldInfo[];
     history?: Activity[];
 
     constructor(data?: IFamily) {
@@ -2875,12 +2875,10 @@ export class Family implements IFamily {
                 for (let item of _data["deletedDocuments"])
                     this.deletedDocuments!.push(item);
             }
-            if (_data["completedCustomFields"]) {
-                this.completedCustomFields = {} as any;
-                for (let key in _data["completedCustomFields"]) {
-                    if (_data["completedCustomFields"].hasOwnProperty(key))
-                        (<any>this.completedCustomFields)![key] = _data["completedCustomFields"][key] ? CompletedCustomFieldInfo.fromJS(_data["completedCustomFields"][key]) : new CompletedCustomFieldInfo();
-                }
+            if (Array.isArray(_data["completedCustomFields"])) {
+                this.completedCustomFields = [] as any;
+                for (let item of _data["completedCustomFields"])
+                    this.completedCustomFields!.push(CompletedCustomFieldInfo.fromJS(item));
             }
             if (Array.isArray(_data["history"])) {
                 this.history = [] as any;
@@ -2926,12 +2924,10 @@ export class Family implements IFamily {
             for (let item of this.deletedDocuments)
                 data["deletedDocuments"].push(item);
         }
-        if (this.completedCustomFields) {
-            data["completedCustomFields"] = {};
-            for (let key in this.completedCustomFields) {
-                if (this.completedCustomFields.hasOwnProperty(key))
-                    (<any>data["completedCustomFields"])[key] = this.completedCustomFields[key] ? this.completedCustomFields[key].toJSON() : <any>undefined;
-            }
+        if (Array.isArray(this.completedCustomFields)) {
+            data["completedCustomFields"] = [];
+            for (let item of this.completedCustomFields)
+                data["completedCustomFields"].push(item.toJSON());
         }
         if (Array.isArray(this.history)) {
             data["history"] = [];
@@ -2950,7 +2946,7 @@ export interface IFamily {
     custodialRelationships?: CustodialRelationship[];
     uploadedDocuments?: UploadedDocumentInfo[];
     deletedDocuments?: string[];
-    completedCustomFields?: { [key: string]: CompletedCustomFieldInfo; };
+    completedCustomFields?: CompletedCustomFieldInfo[];
     history?: Activity[];
 }
 

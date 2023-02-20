@@ -50,7 +50,7 @@ namespace CareTogether.Managers
                 throw new InvalidOperationException("The specified family ID was not found.");
 
             var missingCustomFamilyFields = locationPolicy.CustomFamilyFields
-                .Where(customField => !family.CompletedCustomFields.Any(completed => completed.Key == customField.Name))
+                .Where(customField => !family.CompletedCustomFields.Any(completed => completed.CustomFieldName == customField.Name))
                 .Select(customField => customField.Name)
                 .ToImmutableList();
 

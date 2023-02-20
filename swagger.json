@@ -1655,8 +1655,8 @@
             }
           },
           "completedCustomFields": {
-            "type": "object",
-            "additionalProperties": {
+            "type": "array",
+            "items": {
               "$ref": "#/components/schemas/CompletedCustomFieldInfo"
             }
           },

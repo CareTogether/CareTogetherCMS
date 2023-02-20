@@ -541,7 +541,7 @@ namespace CareTogether.Engines.Authorization
                     : ImmutableList<UploadedDocumentInfo>.Empty,
                 CompletedCustomFields = contextPermissions.Contains(Permission.ViewFamilyCustomFields)
                     ? family.CompletedCustomFields
-                    : ImmutableDictionary<string, CompletedCustomFieldInfo>.Empty,
+                    : ImmutableList<CompletedCustomFieldInfo>.Empty,
                 History = contextPermissions.Contains(Permission.ViewFamilyHistory)
                     ? family.History
                     : ImmutableList<Activity>.Empty

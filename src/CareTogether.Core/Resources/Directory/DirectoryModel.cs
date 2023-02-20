@@ -30,7 +30,7 @@ namespace CareTogether.Resources.Directory
                     AdultRelationships.Select(ar => (people[ar.Key].ToPerson(), ar.Value)).ToImmutableList(),
                     Children.Select(c => people[c].ToPerson()).ToImmutableList(),
                     CustodialRelationships.Select(cr => new CustodialRelationship(cr.Key.ChildId, cr.Key.AdultId, cr.Value)).ToImmutableList(),
-                    UploadedDocuments, DeletedDocuments, CompletedCustomFields, History);
+                    UploadedDocuments, DeletedDocuments, CompletedCustomFields.Values.ToImmutableList(), History);
         }
 
         internal record PersonEntry(Guid Id, Guid? UserId, bool Active, string FirstName, string LastName,
