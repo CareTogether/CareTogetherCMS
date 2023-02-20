@@ -35,11 +35,11 @@ export function CustomFieldEditor({ customFieldPolicy, completedCustomFieldInfo,
               ? <Autocomplete
                   freeSolo
                   onInputChange={(event: any, newValue: string) => {
-                    editor.setValue(newValue)
+                    editor.setValue(newValue.length > 0 ? newValue : null);
                   }}
                   options={(customFieldPolicy.validValues || []).slice().sort((a, b) => -b.localeCompare(a))}
                   renderInput={(params) => <TextField required {...params} />}
-                  inputValue={editor.value}
+                  inputValue={editor.value || ""}
                 />
               :  <TextField
                 variant="outlined" size="medium"
