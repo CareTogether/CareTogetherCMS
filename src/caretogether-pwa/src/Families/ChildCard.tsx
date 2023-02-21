@@ -33,7 +33,7 @@ export function ChildCard({familyId, personId}: ChildCardProps) {
       <CardHeader sx={{paddingBottom: 0}}
         title={child.firstName + " " + child.lastName}
         subheader={<>
-          Child, <AgeText age={child.age} />, {typeof(child.gender) === 'undefined' ? "" : Gender[child.gender] + ","} {child.ethnicity}
+          Child, <AgeText age={child.age} /> {child.gender ? ", " + Gender[child.gender] : ""} {child.ethnicity ? ", " + child.ethnicity : ""}
         </>}
         action={permissions(Permission.EditFamilyInfo) &&
           <IconButton

@@ -1372,6 +1372,7 @@ export enum Permission {
     AccessPartneringFamiliesScreen = 101,
     AccessSettingsScreen = 102,
     EditRoles = 103,
+    ViewFamilyCustomFields = 150,
     ViewFamilyHistory = 151,
     ViewPersonConcerns = 152,
     ViewPersonNotes = 153,
@@ -1513,6 +1514,7 @@ export interface IUserLocationRoles {
 
 export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
     actionDefinitions?: { [key: string]: ActionRequirement; };
+    customFamilyFields?: CustomField[];
     referralPolicy?: ReferralPolicy;
     volunteerPolicy?: VolunteerPolicy;
 
@@ -1533,6 +1535,11 @@ export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
                     if (_data["actionDefinitions"].hasOwnProperty(key))
                         (<any>this.actionDefinitions)![key] = _data["actionDefinitions"][key] ? ActionRequirement.fromJS(_data["actionDefinitions"][key]) : new ActionRequirement();
                 }
+            }
+            if (Array.isArray(_data["customFamilyFields"])) {
+                this.customFamilyFields = [] as any;
+                for (let item of _data["customFamilyFields"])
+                    this.customFamilyFields!.push(CustomField.fromJS(item));
             }
             this.referralPolicy = _data["referralPolicy"] ? ReferralPolicy.fromJS(_data["referralPolicy"]) : <any>undefined;
             this.volunteerPolicy = _data["volunteerPolicy"] ? VolunteerPolicy.fromJS(_data["volunteerPolicy"]) : <any>undefined;
@@ -1555,6 +1562,11 @@ export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
                     (<any>data["actionDefinitions"])[key] = this.actionDefinitions[key] ? this.actionDefinitions[key].toJSON() : <any>undefined;
             }
         }
+        if (Array.isArray(this.customFamilyFields)) {
+            data["customFamilyFields"] = [];
+            for (let item of this.customFamilyFields)
+                data["customFamilyFields"].push(item.toJSON());
+        }
         data["referralPolicy"] = this.referralPolicy ? this.referralPolicy.toJSON() : <any>undefined;
         data["volunteerPolicy"] = this.volunteerPolicy ? this.volunteerPolicy.toJSON() : <any>undefined;
         return data;
@@ -1563,6 +1575,7 @@ export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
 
 export interface IEffectiveLocationPolicy {
     actionDefinitions?: { [key: string]: ActionRequirement; };
+    customFamilyFields?: CustomField[];
     referralPolicy?: ReferralPolicy;
     volunteerPolicy?: VolunteerPolicy;
 }
@@ -1631,6 +1644,71 @@ export enum NoteEntryRequirement {
     Required = 2,
 }
 
+export class CustomField implements ICustomField {
+    name?: string;
+    type?: CustomFieldType;
+    validation?: CustomFieldValidation | undefined;
+    validValues?: string[] | undefined;
+
+    constructor(data?: ICustomField) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.name = _data["name"];
+            this.type = _data["type"];
+            this.validation = _data["validation"];
+            if (Array.isArray(_data["validValues"])) {
+                this.validValues = [] as any;
+                for (let item of _data["validValues"])
+                    this.validValues!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): CustomField {
+        data = typeof data === 'object' ? data : {};
+        let result = new CustomField();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["name"] = this.name;
+        data["type"] = this.type;
+        data["validation"] = this.validation;
+        if (Array.isArray(this.validValues)) {
+            data["validValues"] = [];
+            for (let item of this.validValues)
+                data["validValues"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface ICustomField {
+    name?: string;
+    type?: CustomFieldType;
+    validation?: CustomFieldValidation | undefined;
+    validValues?: string[] | undefined;
+}
+
+export enum CustomFieldType {
+    Boolean = 0,
+    String = 1,
+}
+
+export enum CustomFieldValidation {
+    SuggestOnly = 0,
+}
+
 export class ReferralPolicy implements IReferralPolicy {
     requiredIntakeActionNames?: string[];
     customFields?: CustomField[];
@@ -1697,71 +1775,6 @@ export interface IReferralPolicy {
     requiredIntakeActionNames?: string[];
     customFields?: CustomField[];
     arrangementPolicies?: ArrangementPolicy[];
-}
-
-export class CustomField implements ICustomField {
-    name?: string;
-    type?: CustomFieldType;
-    validation?: CustomFieldValidation | undefined;
-    validValues?: string[] | undefined;
-
-    constructor(data?: ICustomField) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.name = _data["name"];
-            this.type = _data["type"];
-            this.validation = _data["validation"];
-            if (Array.isArray(_data["validValues"])) {
-                this.validValues = [] as any;
-                for (let item of _data["validValues"])
-                    this.validValues!.push(item);
-            }
-        }
-    }
-
-    static fromJS(data: any): CustomField {
-        data = typeof data === 'object' ? data : {};
-        let result = new CustomField();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["name"] = this.name;
-        data["type"] = this.type;
-        data["validation"] = this.validation;
-        if (Array.isArray(this.validValues)) {
-            data["validValues"] = [];
-            for (let item of this.validValues)
-                data["validValues"].push(item);
-        }
-        return data;
-    }
-}
-
-export interface ICustomField {
-    name?: string;
-    type?: CustomFieldType;
-    validation?: CustomFieldValidation | undefined;
-    validValues?: string[] | undefined;
-}
-
-export enum CustomFieldType {
-    Boolean = 0,
-    String = 1,
-}
-
-export enum CustomFieldValidation {
-    SuggestOnly = 0,
 }
 
 export class ArrangementPolicy implements IArrangementPolicy {
@@ -2727,6 +2740,7 @@ export class CombinedFamilyInfo implements ICombinedFamilyInfo {
     volunteerFamilyInfo?: VolunteerFamilyInfo | undefined;
     notes?: Note[];
     uploadedDocuments?: UploadedDocumentInfo[];
+    missingCustomFields?: string[];
     userPermissions?: Permission[];
 
     constructor(data?: ICombinedFamilyInfo) {
@@ -2752,6 +2766,11 @@ export class CombinedFamilyInfo implements ICombinedFamilyInfo {
                 this.uploadedDocuments = [] as any;
                 for (let item of _data["uploadedDocuments"])
                     this.uploadedDocuments!.push(UploadedDocumentInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["missingCustomFields"])) {
+                this.missingCustomFields = [] as any;
+                for (let item of _data["missingCustomFields"])
+                    this.missingCustomFields!.push(item);
             }
             if (Array.isArray(_data["userPermissions"])) {
                 this.userPermissions = [] as any;
@@ -2783,6 +2802,11 @@ export class CombinedFamilyInfo implements ICombinedFamilyInfo {
             for (let item of this.uploadedDocuments)
                 data["uploadedDocuments"].push(item.toJSON());
         }
+        if (Array.isArray(this.missingCustomFields)) {
+            data["missingCustomFields"] = [];
+            for (let item of this.missingCustomFields)
+                data["missingCustomFields"].push(item);
+        }
         if (Array.isArray(this.userPermissions)) {
             data["userPermissions"] = [];
             for (let item of this.userPermissions)
@@ -2798,6 +2822,7 @@ export interface ICombinedFamilyInfo {
     volunteerFamilyInfo?: VolunteerFamilyInfo | undefined;
     notes?: Note[];
     uploadedDocuments?: UploadedDocumentInfo[];
+    missingCustomFields?: string[];
     userPermissions?: Permission[];
 }
 
@@ -2809,6 +2834,7 @@ export class Family implements IFamily {
     custodialRelationships?: CustodialRelationship[];
     uploadedDocuments?: UploadedDocumentInfo[];
     deletedDocuments?: string[];
+    completedCustomFields?: CompletedCustomFieldInfo[];
     history?: Activity[];
 
     constructor(data?: IFamily) {
@@ -2848,6 +2874,11 @@ export class Family implements IFamily {
                 this.deletedDocuments = [] as any;
                 for (let item of _data["deletedDocuments"])
                     this.deletedDocuments!.push(item);
+            }
+            if (Array.isArray(_data["completedCustomFields"])) {
+                this.completedCustomFields = [] as any;
+                for (let item of _data["completedCustomFields"])
+                    this.completedCustomFields!.push(CompletedCustomFieldInfo.fromJS(item));
             }
             if (Array.isArray(_data["history"])) {
                 this.history = [] as any;
@@ -2893,6 +2924,11 @@ export class Family implements IFamily {
             for (let item of this.deletedDocuments)
                 data["deletedDocuments"].push(item);
         }
+        if (Array.isArray(this.completedCustomFields)) {
+            data["completedCustomFields"] = [];
+            for (let item of this.completedCustomFields)
+                data["completedCustomFields"].push(item.toJSON());
+        }
         if (Array.isArray(this.history)) {
             data["history"] = [];
             for (let item of this.history)
@@ -2910,6 +2946,7 @@ export interface IFamily {
     custodialRelationships?: CustodialRelationship[];
     uploadedDocuments?: UploadedDocumentInfo[];
     deletedDocuments?: string[];
+    completedCustomFields?: CompletedCustomFieldInfo[];
     history?: Activity[];
 }
 
@@ -2959,9 +2996,9 @@ export class Person implements IPerson {
     active?: boolean;
     firstName?: string;
     lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
+    gender?: Gender | undefined;
+    age?: Age | undefined;
+    ethnicity?: string | undefined;
     addresses?: Address[];
     currentAddressId?: string | undefined;
     phoneNumbers?: PhoneNumber[];
@@ -3060,9 +3097,9 @@ export interface IPerson {
     active?: boolean;
     firstName?: string;
     lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
+    gender?: Gender | undefined;
+    age?: Age | undefined;
+    ethnicity?: string | undefined;
     addresses?: Address[];
     currentAddressId?: string | undefined;
     phoneNumbers?: PhoneNumber[];
@@ -3485,6 +3522,62 @@ export interface IUploadedDocumentInfo {
     timestampUtc?: Date;
     uploadedDocumentId?: string;
     uploadedFileName?: string;
+}
+
+export class CompletedCustomFieldInfo implements ICompletedCustomFieldInfo {
+    userId?: string;
+    timestampUtc?: Date;
+    completedCustomFieldId?: string;
+    customFieldName?: string;
+    customFieldType?: CustomFieldType;
+    value?: any | undefined;
+
+    constructor(data?: ICompletedCustomFieldInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
+            this.completedCustomFieldId = _data["completedCustomFieldId"];
+            this.customFieldName = _data["customFieldName"];
+            this.customFieldType = _data["customFieldType"];
+            this.value = _data["value"];
+        }
+    }
+
+    static fromJS(data: any): CompletedCustomFieldInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new CompletedCustomFieldInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
+        data["completedCustomFieldId"] = this.completedCustomFieldId;
+        data["customFieldName"] = this.customFieldName;
+        data["customFieldType"] = this.customFieldType;
+        data["value"] = this.value;
+        return data;
+    }
+}
+
+export interface ICompletedCustomFieldInfo {
+    userId?: string;
+    timestampUtc?: Date;
+    completedCustomFieldId?: string;
+    customFieldName?: string;
+    customFieldType?: CustomFieldType;
+    value?: any | undefined;
 }
 
 export abstract class Activity implements IActivity {
@@ -4041,62 +4134,6 @@ export interface IExemptedRequirementInfo {
     dueDate?: Date | undefined;
     additionalComments?: string;
     exemptionExpiresAtUtc?: Date | undefined;
-}
-
-export class CompletedCustomFieldInfo implements ICompletedCustomFieldInfo {
-    userId?: string;
-    timestampUtc?: Date;
-    completedCustomFieldId?: string;
-    customFieldName?: string;
-    customFieldType?: CustomFieldType;
-    value?: any | undefined;
-
-    constructor(data?: ICompletedCustomFieldInfo) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.userId = _data["userId"];
-            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
-            this.completedCustomFieldId = _data["completedCustomFieldId"];
-            this.customFieldName = _data["customFieldName"];
-            this.customFieldType = _data["customFieldType"];
-            this.value = _data["value"];
-        }
-    }
-
-    static fromJS(data: any): CompletedCustomFieldInfo {
-        data = typeof data === 'object' ? data : {};
-        let result = new CompletedCustomFieldInfo();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["userId"] = this.userId;
-        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
-        data["completedCustomFieldId"] = this.completedCustomFieldId;
-        data["customFieldName"] = this.customFieldName;
-        data["customFieldType"] = this.customFieldType;
-        data["value"] = this.value;
-        return data;
-    }
-}
-
-export interface ICompletedCustomFieldInfo {
-    userId?: string;
-    timestampUtc?: Date;
-    completedCustomFieldId?: string;
-    customFieldName?: string;
-    customFieldType?: CustomFieldType;
-    value?: any | undefined;
 }
 
 export class Arrangement implements IArrangement {
@@ -7087,6 +7124,11 @@ export abstract class FamilyCommand implements IFamilyCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "UpdateCustomFamilyField") {
+            let result = new UpdateCustomFamilyField();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "UploadFamilyDocument") {
             let result = new UploadFamilyDocument();
             result.init(data);
@@ -7519,6 +7561,52 @@ export interface IUpdateCustodialRelationshipType extends IFamilyCommand {
     childPersonId?: string;
     adultPersonId?: string;
     type?: CustodialRelationshipType;
+}
+
+export class UpdateCustomFamilyField extends FamilyCommand implements IUpdateCustomFamilyField {
+    completedCustomFieldId?: string;
+    customFieldName?: string;
+    customFieldType?: CustomFieldType;
+    value?: any | undefined;
+
+    constructor(data?: IUpdateCustomFamilyField) {
+        super(data);
+        this._discriminator = "UpdateCustomFamilyField";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.completedCustomFieldId = _data["completedCustomFieldId"];
+            this.customFieldName = _data["customFieldName"];
+            this.customFieldType = _data["customFieldType"];
+            this.value = _data["value"];
+        }
+    }
+
+    static fromJS(data: any): UpdateCustomFamilyField {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateCustomFamilyField();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["completedCustomFieldId"] = this.completedCustomFieldId;
+        data["customFieldName"] = this.customFieldName;
+        data["customFieldType"] = this.customFieldType;
+        data["value"] = this.value;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUpdateCustomFamilyField extends IFamilyCommand {
+    completedCustomFieldId?: string;
+    customFieldName?: string;
+    customFieldType?: CustomFieldType;
+    value?: any | undefined;
 }
 
 export class UploadFamilyDocument extends FamilyCommand implements IUploadFamilyDocument {
@@ -8400,9 +8488,9 @@ export class CreatePerson extends PersonCommand implements ICreatePerson {
     userId?: string | undefined;
     firstName?: string;
     lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
+    gender?: Gender | undefined;
+    age?: Age | undefined;
+    ethnicity?: string | undefined;
     addresses?: Address[];
     currentAddressId?: string | undefined;
     phoneNumbers?: PhoneNumber[];
@@ -8493,9 +8581,9 @@ export interface ICreatePerson extends IPersonCommand {
     userId?: string | undefined;
     firstName?: string;
     lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
+    gender?: Gender | undefined;
+    age?: Age | undefined;
+    ethnicity?: string | undefined;
     addresses?: Address[];
     currentAddressId?: string | undefined;
     phoneNumbers?: PhoneNumber[];
@@ -9384,9 +9472,9 @@ export class AddAdultToFamilyCommand extends CompositeRecordsCommand implements 
     personId?: string;
     firstName?: string;
     lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
+    gender?: Gender | undefined;
+    age?: Age | undefined;
+    ethnicity?: string | undefined;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
     concerns?: string | undefined;
     notes?: string | undefined;
@@ -9447,9 +9535,9 @@ export interface IAddAdultToFamilyCommand extends ICompositeRecordsCommand {
     personId?: string;
     firstName?: string;
     lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
+    gender?: Gender | undefined;
+    age?: Age | undefined;
+    ethnicity?: string | undefined;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
     concerns?: string | undefined;
     notes?: string | undefined;
@@ -9462,9 +9550,9 @@ export class AddChildToFamilyCommand extends CompositeRecordsCommand implements 
     personId?: string;
     firstName?: string;
     lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
+    gender?: Gender | undefined;
+    age?: Age | undefined;
+    ethnicity?: string | undefined;
     custodialRelationships?: CustodialRelationship[];
     concerns?: string | undefined;
     notes?: string | undefined;
@@ -9524,9 +9612,9 @@ export interface IAddChildToFamilyCommand extends ICompositeRecordsCommand {
     personId?: string;
     firstName?: string;
     lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
+    gender?: Gender | undefined;
+    age?: Age | undefined;
+    ethnicity?: string | undefined;
     custodialRelationships?: CustodialRelationship[];
     concerns?: string | undefined;
     notes?: string | undefined;
@@ -9538,15 +9626,15 @@ export class CreatePartneringFamilyWithNewAdultCommand extends CompositeRecordsC
     referralOpenedAtUtc?: Date;
     firstName?: string;
     lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
+    gender?: Gender | undefined;
+    age?: Age | undefined;
+    ethnicity?: string | undefined;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
     concerns?: string | undefined;
     notes?: string | undefined;
-    address?: Address;
-    phoneNumber?: PhoneNumber;
-    emailAddress?: EmailAddress;
+    address?: Address | undefined;
+    phoneNumber?: PhoneNumber | undefined;
+    emailAddress?: EmailAddress | undefined;
 
     constructor(data?: ICreatePartneringFamilyWithNewAdultCommand) {
         super(data);
@@ -9607,30 +9695,30 @@ export interface ICreatePartneringFamilyWithNewAdultCommand extends ICompositeRe
     referralOpenedAtUtc?: Date;
     firstName?: string;
     lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
+    gender?: Gender | undefined;
+    age?: Age | undefined;
+    ethnicity?: string | undefined;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
     concerns?: string | undefined;
     notes?: string | undefined;
-    address?: Address;
-    phoneNumber?: PhoneNumber;
-    emailAddress?: EmailAddress;
+    address?: Address | undefined;
+    phoneNumber?: PhoneNumber | undefined;
+    emailAddress?: EmailAddress | undefined;
 }
 
 export class CreateVolunteerFamilyWithNewAdultCommand extends CompositeRecordsCommand implements ICreateVolunteerFamilyWithNewAdultCommand {
     personId?: string;
     firstName?: string;
     lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
+    gender?: Gender | undefined;
+    age?: Age | undefined;
+    ethnicity?: string | undefined;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
     concerns?: string | undefined;
     notes?: string | undefined;
-    address?: Address;
-    phoneNumber?: PhoneNumber;
-    emailAddress?: EmailAddress;
+    address?: Address | undefined;
+    phoneNumber?: PhoneNumber | undefined;
+    emailAddress?: EmailAddress | undefined;
 
     constructor(data?: ICreateVolunteerFamilyWithNewAdultCommand) {
         super(data);
@@ -9685,15 +9773,15 @@ export interface ICreateVolunteerFamilyWithNewAdultCommand extends ICompositeRec
     personId?: string;
     firstName?: string;
     lastName?: string;
-    gender?: Gender;
-    age?: Age;
-    ethnicity?: string;
+    gender?: Gender | undefined;
+    age?: Age | undefined;
+    ethnicity?: string | undefined;
     familyAdultRelationshipInfo?: FamilyAdultRelationshipInfo;
     concerns?: string | undefined;
     notes?: string | undefined;
-    address?: Address;
-    phoneNumber?: PhoneNumber;
-    emailAddress?: EmailAddress;
+    address?: Address | undefined;
+    phoneNumber?: PhoneNumber | undefined;
+    emailAddress?: EmailAddress | undefined;
 }
 
 export class UserOrganizationAccess implements IUserOrganizationAccess {

@@ -20,6 +20,7 @@ namespace CareTogether
         AccessSettingsScreen = 102,
         EditRoles = 103,
 
+        ViewFamilyCustomFields = 150,
         ViewFamilyHistory = 151,
         ViewPersonConcerns = 152,
         ViewPersonNotes = 153,
@@ -29,7 +30,7 @@ namespace CareTogether
         EditPersonNotes = 157,
         EditPersonContactInfo = 158,
         EditPersonUserLink = 159,
-        
+
         AddEditDraftNotes = 180,
         DiscardDraftNotes = 181,
         ApproveNotes = 182,

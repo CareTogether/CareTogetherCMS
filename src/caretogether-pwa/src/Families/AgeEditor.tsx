@@ -26,9 +26,11 @@ export function AgeEditor({ familyId, person }: PersonEditorProps) {
         ? <>
             <Grid item xs={12}>
               Saved age: <AgeText age={person.age} />
-              {person.age instanceof ExactAge
-                ? ` (date of birth: ${format(dateOfBirth!, " (M/d/yyyy)")}`
-                : ` (${ageInYears} as of ${format(ageAsOf!, "M/d/yy")})` }
+              {person.age
+                ? person.age instanceof ExactAge
+                  ? ` (date of birth: ${format(dateOfBirth!, " (M/d/yyyy)")}`
+                  : ` (${ageInYears} as of ${format(ageAsOf!, "M/d/yy")})`
+                : ``}
             </Grid>
             <Grid item xs={12} sm={6}>
               <DatePicker
@@ -45,9 +47,11 @@ export function AgeEditor({ familyId, person }: PersonEditorProps) {
           </>
         : <Grid item xs={12}>
             Age: <AgeText age={person.age} />
-            {person.age instanceof ExactAge
-              ? ` (date of birth: ${format(dateOfBirth!, " (M/d/yyyy)")}`
-              : ` (${ageInYears} as of ${format(ageAsOf!, "M/d/yy")})` }
+            {person.age
+              ? person.age instanceof ExactAge
+                ? ` (date of birth: ${format(dateOfBirth!, " (M/d/yyyy)")}`
+                : ` (${ageInYears} as of ${format(ageAsOf!, "M/d/yy")})`
+              : ``}
             {editor.editButton}
         </Grid>}
     </Grid>
