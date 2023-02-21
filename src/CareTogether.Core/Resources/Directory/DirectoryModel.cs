@@ -21,15 +21,16 @@ namespace CareTogether.Resources.Directory
             ImmutableDictionary<Guid, FamilyAdultRelationshipInfo> AdultRelationships,
             ImmutableList<Guid> Children,
             ImmutableDictionary<(Guid ChildId, Guid AdultId), CustodialRelationshipType> CustodialRelationships,
-            ImmutableList<UploadedDocumentInfo> UploadedDocuments,
-            ImmutableList<Guid> DeletedDocuments, ImmutableList<Activity> History)
+            ImmutableList<UploadedDocumentInfo> UploadedDocuments, ImmutableList<Guid> DeletedDocuments,
+            ImmutableDictionary<string, CompletedCustomFieldInfo> CompletedCustomFields,
+            ImmutableList<Activity> History)
         {
             internal Family ToFamily(ImmutableDictionary<Guid, PersonEntry> people) =>
                 new(Id, PrimaryFamilyContactPersonId,
                     AdultRelationships.Select(ar => (people[ar.Key].ToPerson(), ar.Value)).ToImmutableList(),
                     Children.Select(c => people[c].ToPerson()).ToImmutableList(),
                     CustodialRelationships.Select(cr => new CustodialRelationship(cr.Key.ChildId, cr.Key.AdultId, cr.Value)).ToImmutableList(),
-                    UploadedDocuments, DeletedDocuments, History);
+                    UploadedDocuments, DeletedDocuments, CompletedCustomFields.Values.ToImmutableList(), History);
         }
 
         internal record PersonEntry(Guid Id, Guid? UserId, bool Active, string FirstName, string LastName,
@@ -82,6 +83,7 @@ namespace CareTogether.Resources.Directory
                             new KeyValuePair<(Guid ChildId, Guid AdultId), CustodialRelationshipType>((cr.ChildId, cr.PersonId), cr.Type))
                         ?? new List<KeyValuePair<(Guid ChildId, Guid AdultId), CustodialRelationshipType>>()),
                         ImmutableList<UploadedDocumentInfo>.Empty, DeletedDocuments: ImmutableList<Guid>.Empty,
+                        CompletedCustomFields: ImmutableDictionary<string, CompletedCustomFieldInfo>.Empty,
                         ImmutableList<Activity>.Empty),
                 _ => families.TryGetValue(command.FamilyId, out var familyEntry)
                     ? command switch
@@ -136,6 +138,13 @@ namespace CareTogether.Resources.Directory
                         ChangePrimaryFamilyContact c => familyEntry with
                         {
                             PrimaryFamilyContactPersonId = c.AdultId
+                        },
+                        UpdateCustomFamilyField c => familyEntry with
+                        {
+                            CompletedCustomFields = familyEntry.CompletedCustomFields.SetItem(
+                                c.CustomFieldName,
+                                new CompletedCustomFieldInfo(userId, timestampUtc, c.CompletedCustomFieldId,
+                                    c.CustomFieldName, c.CustomFieldType, c.Value))
                         },
                         _ => throw new NotImplementedException(
                             $"The command type '{command.GetType().FullName}' has not been implemented.")

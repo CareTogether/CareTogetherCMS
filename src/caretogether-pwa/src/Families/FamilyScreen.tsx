@@ -35,6 +35,7 @@ import { useFamilyLookup } from '../Model/DirectoryModel';
 import { RemoveFamilyRoleDialog } from '../Volunteers/RemoveFamilyRoleDialog';
 import { ResetFamilyRoleDialog } from '../Volunteers/ResetFamilyRoleDialog';
 import { VolunteerRoleApprovalStatusChip } from '../Volunteers/VolunteerRoleApprovalStatusChip';
+import { FamilyCustomField } from './FamilyCustomField';
 
 const sortArrangementsByStartDateDescThenCreateDateDesc = (a: Arrangement,b: Arrangement) => {
   return ((b.startedAtUtc ?? new Date()).getTime() - (a.startedAtUtc ?? new Date()).getTime()) || 
@@ -212,19 +213,31 @@ export function FamilyScreen() {
                   )) || null}
                 </>}
             </Grid>
-            {permissions(Permission.ViewReferralCustomFields) && <Grid item xs={6} md={4}>
-              {(family.partneringFamilyInfo?.openReferral?.completedCustomFields ||
-                [] as Array<CompletedCustomFieldInfo | string>).concat(
-                family.partneringFamilyInfo?.openReferral?.missingCustomFields || []).sort((a, b) =>
-                  (a instanceof CompletedCustomFieldInfo ? a.customFieldName! : a) <
-                  (b instanceof CompletedCustomFieldInfo ? b.customFieldName! : b) ? -1
-                  : (a instanceof CompletedCustomFieldInfo ? a.customFieldName! : a) >
-                  (b instanceof CompletedCustomFieldInfo ? b.customFieldName! : b) ? 1
-                  : 0).map(customField =>
-                <ReferralCustomField key={typeof customField === 'string' ? customField : customField.customFieldName}
-                  partneringFamilyId={familyId} referralId={family.partneringFamilyInfo!.openReferral!.id!}
-                  customField={customField} />)}
-            </Grid>}
+            <Grid item xs={6} md={4}>
+              {permissions(Permission.ViewFamilyCustomFields) &&
+                (family.family!.completedCustomFields ||
+                  [] as Array<CompletedCustomFieldInfo | string>).concat(
+                  family.missingCustomFields || []).sort((a, b) =>
+                    (a instanceof CompletedCustomFieldInfo ? a.customFieldName! : a) <
+                    (b instanceof CompletedCustomFieldInfo ? b.customFieldName! : b) ? -1
+                    : (a instanceof CompletedCustomFieldInfo ? a.customFieldName! : a) >
+                    (b instanceof CompletedCustomFieldInfo ? b.customFieldName! : b) ? 1
+                    : 0).map(customField =>
+                  <FamilyCustomField key={typeof customField === 'string' ? customField : customField.customFieldName}
+                    familyId={familyId} customField={customField} />)}
+              {permissions(Permission.ViewReferralCustomFields) &&
+                (family.partneringFamilyInfo?.openReferral?.completedCustomFields ||
+                  [] as Array<CompletedCustomFieldInfo | string>).concat(
+                  family.partneringFamilyInfo?.openReferral?.missingCustomFields || []).sort((a, b) =>
+                    (a instanceof CompletedCustomFieldInfo ? a.customFieldName! : a) <
+                    (b instanceof CompletedCustomFieldInfo ? b.customFieldName! : b) ? -1
+                    : (a instanceof CompletedCustomFieldInfo ? a.customFieldName! : a) >
+                    (b instanceof CompletedCustomFieldInfo ? b.customFieldName! : b) ? 1
+                    : 0).map(customField =>
+                  <ReferralCustomField key={typeof customField === 'string' ? customField : customField.customFieldName}
+                    partneringFamilyId={familyId} referralId={family.partneringFamilyInfo!.openReferral!.id!}
+                    customField={customField} />)}
+            </Grid>
             <Grid item xs={6} md={4}>
               {canCloseReferral && <Button
                 onClick={() => setCloseReferralDialogOpen(true)}

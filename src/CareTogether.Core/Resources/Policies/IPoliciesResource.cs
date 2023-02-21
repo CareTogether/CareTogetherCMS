@@ -46,6 +46,7 @@ namespace CareTogether.Resources.Policies
 
     public sealed record EffectiveLocationPolicy(
         ImmutableDictionary<string, ActionRequirement> ActionDefinitions,
+        ImmutableList<CustomField> CustomFamilyFields,
         ReferralPolicy ReferralPolicy,
         VolunteerPolicy VolunteerPolicy);
 

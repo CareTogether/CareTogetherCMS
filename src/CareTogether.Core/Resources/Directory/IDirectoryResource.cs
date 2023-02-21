@@ -1,3 +1,5 @@
+using CareTogether.Resources.Policies;
+using CareTogether.Resources.Referrals;
 using JsonPolymorph;
 using System;
 using System.Collections.Generic;
@@ -14,6 +16,7 @@ namespace CareTogether.Resources.Directory
         // COMPATIBILITY: This is included so we don't have to duplicate a delete command for the old approvals document model,
         // and can instead just merge the deletions in the CombinedFamilyInfoFormatter.
         ImmutableList<Guid> DeletedDocuments,
+        ImmutableList<CompletedCustomFieldInfo> CompletedCustomFields,
         ImmutableList<Activity> History);
     public sealed record Person(Guid Id, Guid? UserId, bool Active,
         string FirstName, string LastName, Gender? Gender, Age? Age, string? Ethnicity,
@@ -72,6 +75,9 @@ namespace CareTogether.Resources.Directory
         : FamilyCommand(FamilyId);
     public sealed record ChangePrimaryFamilyContact(Guid FamilyId,
         Guid AdultId)
+        : FamilyCommand(FamilyId);
+    public sealed record UpdateCustomFamilyField(Guid FamilyId,
+        Guid CompletedCustomFieldId, string CustomFieldName, CustomFieldType CustomFieldType, object? Value)
         : FamilyCommand(FamilyId);
 
     [JsonHierarchyBase]

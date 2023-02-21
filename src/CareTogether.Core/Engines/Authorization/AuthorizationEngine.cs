@@ -174,6 +174,7 @@ namespace CareTogether.Engines.Authorization
                 UploadFamilyDocument => Permission.UploadFamilyDocuments,
                 DeleteUploadedFamilyDocument => Permission.DeleteFamilyDocuments,
                 ChangePrimaryFamilyContact => Permission.EditFamilyInfo,
+                UpdateCustomFamilyField => Permission.EditFamilyInfo,
                 _ => throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented.")
             });
@@ -355,6 +356,8 @@ namespace CareTogether.Engines.Authorization
                     .Select(x => x.note)
                     .ToImmutableList(),
                 UploadedDocuments = family.UploadedDocuments, //TODO: Disclosure logic is needed here as well,
+                MissingCustomFields = contextPermissions.Contains(Permission.ViewFamilyCustomFields)
+                    ? family.MissingCustomFields : ImmutableList<string>.Empty,
                 UserPermissions = contextPermissions
             };
         }
@@ -536,6 +539,9 @@ namespace CareTogether.Engines.Authorization
                 UploadedDocuments = contextPermissions.Contains(Permission.ViewFamilyDocumentMetadata)
                     ? family.UploadedDocuments
                     : ImmutableList<UploadedDocumentInfo>.Empty,
+                CompletedCustomFields = contextPermissions.Contains(Permission.ViewFamilyCustomFields)
+                    ? family.CompletedCustomFields
+                    : ImmutableList<CompletedCustomFieldInfo>.Empty,
                 History = contextPermissions.Contains(Permission.ViewFamilyHistory)
                     ? family.History
                     : ImmutableList<Activity>.Empty

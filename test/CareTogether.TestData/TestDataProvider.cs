@@ -469,6 +469,9 @@ namespace CareTogether.TestData
                     ["Host Family Interview"] = new ActionRequirement(DocumentLinkRequirement.Allowed, NoteEntryRequirement.Required, null, null, null),
                     ["Meet & Greet"] = new ActionRequirement(DocumentLinkRequirement.Required, NoteEntryRequirement.Allowed, null, new Uri("http://example.com/forms/mag"), null)
                 }.ToImmutableDictionary(),
+                ImmutableList<CustomField>.Empty
+                    .Add(new("Has Pool", CustomFieldType.Boolean, null, null))
+                    .Add(new("Home Church", CustomFieldType.String, CustomFieldValidation.SuggestOnly, ImmutableList<string>.Empty.Add("Mega Church").Add("Mini Church"))),
                 new ReferralPolicy(
                     new List<string>
                     {

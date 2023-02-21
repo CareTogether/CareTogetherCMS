@@ -872,6 +872,7 @@
           "AccessPartneringFamiliesScreen",
           "AccessSettingsScreen",
           "EditRoles",
+          "ViewFamilyCustomFields",
           "ViewFamilyHistory",
           "ViewPersonConcerns",
           "ViewPersonNotes",
@@ -923,6 +924,7 @@
           101,
           102,
           103,
+          150,
           151,
           152,
           153,
@@ -1008,6 +1010,12 @@
               "$ref": "#/components/schemas/ActionRequirement"
             }
           },
+          "customFamilyFields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomField"
+            }
+          },
           "referralPolicy": {
             "$ref": "#/components/schemas/ReferralPolicy"
           },
@@ -1070,30 +1078,6 @@
           2
         ]
       },
-      "ReferralPolicy": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "requiredIntakeActionNames": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "customFields": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CustomField"
-            }
-          },
-          "arrangementPolicies": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ArrangementPolicy"
-            }
-          }
-        }
-      },
       "CustomField": {
         "type": "object",
         "additionalProperties": false,
@@ -1142,6 +1126,30 @@
         "enum": [
           0
         ]
+      },
+      "ReferralPolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "requiredIntakeActionNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "customFields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomField"
+            }
+          },
+          "arrangementPolicies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArrangementPolicy"
+            }
+          }
+        }
       },
       "ArrangementPolicy": {
         "type": "object",
@@ -1589,6 +1597,12 @@
               "$ref": "#/components/schemas/UploadedDocumentInfo"
             }
           },
+          "missingCustomFields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "userPermissions": {
             "type": "array",
             "items": {
@@ -1638,6 +1652,12 @@
             "items": {
               "type": "string",
               "format": "guid"
+            }
+          },
+          "completedCustomFields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompletedCustomFieldInfo"
             }
           },
           "history": {
@@ -1964,6 +1984,33 @@
           },
           "uploadedFileName": {
             "type": "string"
+          }
+        }
+      },
+      "CompletedCustomFieldInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "timestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedCustomFieldId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "customFieldName": {
+            "type": "string"
+          },
+          "customFieldType": {
+            "$ref": "#/components/schemas/CustomFieldType"
+          },
+          "value": {
+            "nullable": true
           }
         }
       },
@@ -2295,33 +2342,6 @@
           "exemptionExpiresAtUtc": {
             "type": "string",
             "format": "date-time",
-            "nullable": true
-          }
-        }
-      },
-      "CompletedCustomFieldInfo": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "userId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "timestampUtc": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "completedCustomFieldId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "customFieldName": {
-            "type": "string"
-          },
-          "customFieldType": {
-            "$ref": "#/components/schemas/CustomFieldType"
-          },
-          "value": {
             "nullable": true
           }
         }
@@ -3930,6 +3950,7 @@
             "RemoveCustodialRelationship": "#/components/schemas/RemoveCustodialRelationship",
             "UpdateAdultRelationshipToFamily": "#/components/schemas/UpdateAdultRelationshipToFamily",
             "UpdateCustodialRelationshipType": "#/components/schemas/UpdateCustodialRelationshipType",
+            "UpdateCustomFamilyField": "#/components/schemas/UpdateCustomFamilyField",
             "UploadFamilyDocument": "#/components/schemas/UploadFamilyDocument"
           }
         },
@@ -4150,6 +4171,32 @@
               },
               "type": {
                 "$ref": "#/components/schemas/CustodialRelationshipType"
+              }
+            }
+          }
+        ]
+      },
+      "UpdateCustomFamilyField": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/FamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "completedCustomFieldId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "customFieldName": {
+                "type": "string"
+              },
+              "customFieldType": {
+                "$ref": "#/components/schemas/CustomFieldType"
+              },
+              "value": {
+                "nullable": true
               }
             }
           }

@@ -52,7 +52,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
             ImmutableList<CustodialRelationship>.Empty
                 .Add(new CustodialRelationship(guid5, guid1, CustodialRelationshipType.ParentWithCustody))
                 .Add(new CustodialRelationship(guid5, guid2, CustodialRelationshipType.ParentWithCustody)),
-            ImmutableList<UploadedDocumentInfo>.Empty, ImmutableList<Guid>.Empty, ImmutableList<Activity>.Empty);
+            ImmutableList<UploadedDocumentInfo>.Empty, ImmutableList<Guid>.Empty,
+            ImmutableList<CompletedCustomFieldInfo>.Empty, ImmutableList<Activity>.Empty);
 
 
         [TestMethod]
