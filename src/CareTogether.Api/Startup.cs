@@ -137,15 +137,16 @@ namespace CareTogether.Api
             var combinedFamilyInfoFormatter = new CombinedFamilyInfoFormatter(policyEvaluationEngine, authorizationEngine,
                 approvalsResource, referralsResource, directoryResource, notesResource, policiesResource);
 
+            // Utility providers
+            var uploadsStore = new BlobFileStore(immutableBlobServiceClient, "Uploads");
+            services.AddSingleton<IFileStore>(uploadsStore);
+
             // Manager services
             services.AddSingleton<ICommunicationsManager>(new CommunicationsManager(authorizationEngine, directoryResource,
                 policiesResource, telephony));
             services.AddSingleton<IRecordsManager>(new RecordsManager(authorizationEngine, directoryResource,
                 approvalsResource, referralsResource, notesResource,
-                combinedFamilyInfoFormatter));
-
-            // Utility providers
-            services.AddSingleton<IFileStore>(new BlobFileStore(immutableBlobServiceClient, "Uploads"));
+                combinedFamilyInfoFormatter, uploadsStore));
 
             services.AddAuthentication("Basic")
                 .AddBasic("Basic", options =>

@@ -252,14 +252,17 @@ export class FilesClient {
         this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
     }
 
-    getReadValetUrl(organizationId: string, locationId: string, documentId: string): Promise<string> {
-        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Files/{documentId}";
+    getReadValetUrl(organizationId: string, locationId: string, familyId: string, documentId: string): Promise<string> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Files/family/{familyId}/{documentId}";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
         url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
         if (locationId === undefined || locationId === null)
             throw new Error("The parameter 'locationId' must be defined.");
         url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
+        if (familyId === undefined || familyId === null)
+            throw new Error("The parameter 'familyId' must be defined.");
+        url_ = url_.replace("{familyId}", encodeURIComponent("" + familyId));
         if (documentId === undefined || documentId === null)
             throw new Error("The parameter 'documentId' must be defined.");
         url_ = url_.replace("{documentId}", encodeURIComponent("" + documentId));
@@ -296,14 +299,20 @@ export class FilesClient {
         return Promise.resolve<string>(null as any);
     }
 
-    generateUploadValetUrl(organizationId: string, locationId: string): Promise<DocumentUploadInfo> {
-        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Files/upload";
+    generateUploadValetUrl(organizationId: string, locationId: string, familyId: string, documentId: string): Promise<DocumentUploadInfo> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Files/upload/family/{familyId}/{documentId}";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
         url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
         if (locationId === undefined || locationId === null)
             throw new Error("The parameter 'locationId' must be defined.");
         url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
+        if (familyId === undefined || familyId === null)
+            throw new Error("The parameter 'familyId' must be defined.");
+        url_ = url_.replace("{familyId}", encodeURIComponent("" + familyId));
+        if (documentId === undefined || documentId === null)
+            throw new Error("The parameter 'documentId' must be defined.");
+        url_ = url_.replace("{documentId}", encodeURIComponent("" + documentId));
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {

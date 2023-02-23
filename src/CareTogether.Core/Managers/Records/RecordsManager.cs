@@ -3,6 +3,7 @@ using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Referrals;
+using CareTogether.Utilities.FileStore;
 using Nito.AsyncEx;
 using System;
 using System.Collections.Generic;
@@ -20,12 +21,13 @@ namespace CareTogether.Managers.Records
         private readonly IApprovalsResource approvalsResource;
         private readonly IReferralsResource referralsResource;
         private readonly INotesResource notesResource;
+        private readonly IFileStore fileStore;
         private readonly CombinedFamilyInfoFormatter combinedFamilyInfoFormatter;
 
 
         public RecordsManager(IAuthorizationEngine authorizationEngine, IDirectoryResource directoryResource,
             IApprovalsResource approvalsResource, IReferralsResource referralsResource, INotesResource notesResource,
-            CombinedFamilyInfoFormatter combinedFamilyInfoFormatter)
+            CombinedFamilyInfoFormatter combinedFamilyInfoFormatter, IFileStore fileStore)
         {
             this.authorizationEngine = authorizationEngine;
             this.directoryResource = directoryResource;
@@ -33,6 +35,7 @@ namespace CareTogether.Managers.Records
             this.referralsResource = referralsResource;
             this.notesResource = notesResource;
             this.combinedFamilyInfoFormatter = combinedFamilyInfoFormatter;
+            this.fileStore = fileStore;
         }
 
 
@@ -75,6 +78,60 @@ namespace CareTogether.Managers.Records
 
             return familyResult;
         }
+
+        public async Task<CombinedFamilyInfo> ExecuteAtomicRecordsCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, AtomicRecordsCommand command)
+        {
+            if (!await AuthorizeCommandAsync(organizationId, locationId, user, command))
+                throw new Exception("The user is not authorized to perform this command.");
+
+            await ExecuteCommandAsync(organizationId, locationId, user, command);
+
+            var familyId = GetFamilyIdFromCommand(command);
+
+            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
+                organizationId, locationId, familyId, user);
+
+            return familyResult;
+        }
+
+        public async Task<Uri> GetFamilyDocumentReadValetUrl(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, Guid familyId, Guid documentId)
+        {
+            var contextPermissions = await authorizationEngine.AuthorizeUserAccessAsync(organizationId, locationId, user,
+                new FamilyAuthorizationContext(familyId));
+
+            if (!contextPermissions.Contains(Permission.ReadFamilyDocuments))
+                throw new Exception("The user is not authorized to perform this command.");
+
+            //TODO: This logic should be handled by IDirectoryResource, to combine better with document reference consistency responsibility!
+            var family = await directoryResource.FindFamilyAsync(organizationId, locationId, familyId);
+            if (family == null || !family.UploadedDocuments.Any(doc => doc.UploadedDocumentId == documentId)) //TODO: Check for being in 'DeletedDocuments'?
+                throw new Exception("The specified family document does not exist.");
+            var valetUrl = await fileStore.GetValetReadUrlAsync(organizationId, locationId, documentId); //TODO: Concatenate 'family-' and the family ID with the 'documentId' itself to prevent hostile overwrites
+
+            return valetUrl;
+        }
+
+        public async Task<Uri> GenerateFamilyDocumentUploadValetUrl(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, Guid familyId, Guid documentId)
+        {
+            var contextPermissions = await authorizationEngine.AuthorizeUserAccessAsync(organizationId, locationId, user,
+                new FamilyAuthorizationContext(familyId));
+
+            if (!contextPermissions.Contains(Permission.UploadFamilyDocuments))
+                throw new Exception("The user is not authorized to perform this command.");
+
+            //TODO: This logic should be handled by IDirectoryResource, to combine better with document reference consistency responsibility!
+            var family = await directoryResource.FindFamilyAsync(organizationId, locationId, familyId);
+            if (family == null || family.UploadedDocuments.Any(doc => doc.UploadedDocumentId == documentId)) //TODO: Check for being in 'DeletedDocuments'?
+                throw new Exception("The specified family document already exists.");
+            //TODO: Can't ensure user uploads that doc but can ensure the doc ID is tied to that family (again, DirectoryResource should handle that)
+            var valetUrl = await fileStore.GetValetCreateUrlAsync(organizationId, locationId, documentId); //TODO: Concatenate 'family-' and the family ID with the 'documentId' itself to prevent hostile overwrites
+
+            return valetUrl;
+        }
+
 
         private IEnumerable<AtomicRecordsCommand> GenerateAtomicCommandsForCompositeCommand(CompositeRecordsCommand command)
         {
@@ -159,23 +216,6 @@ namespace CareTogether.Managers.Records
                         $"The command type '{command.GetType().FullName}' has not been implemented.");
             }
         }
-
-        public async Task<CombinedFamilyInfo> ExecuteAtomicRecordsCommandAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, AtomicRecordsCommand command)
-        {
-            if (!await AuthorizeCommandAsync(organizationId, locationId, user, command))
-                throw new Exception("The user is not authorized to perform this command.");
-
-            await ExecuteCommandAsync(organizationId, locationId, user, command);
-
-            var familyId = GetFamilyIdFromCommand(command);
-
-            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
-                organizationId, locationId, familyId, user);
-
-            return familyResult;
-        }
-
 
         private Task<bool> AuthorizeCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, AtomicRecordsCommand command) =>
