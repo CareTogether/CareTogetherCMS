@@ -19,6 +19,7 @@ namespace CareTogether
         AccessPartneringFamiliesScreen = 101,
         AccessSettingsScreen = 102,
         EditRoles = 103,
+        AccessCommunitiesScreen = 104,
 
         ViewFamilyCustomFields = 150,
         ViewFamilyHistory = 151,
@@ -71,6 +72,20 @@ namespace CareTogether
         ViewChildLocationHistory = 380,
         TrackChildLocationChange = 381,
 
+        // ---- Communications ---- //
+
         SendBulkSms = 400,
+
+        // ---- Communities ---- //
+
+        CreateCommunity = 500,
+        EditCommunity = 501,
+        DeleteCommunity = 502,
+        EditCommunityMemberFamilies = 503,
+        EditCommunityRoleAssignments = 504,
+        ViewCommunityDocumentMetadata = 505,
+        ReadCommunityDocuments = 506,
+        UploadCommunityDocuments = 507,
+        DeleteCommunityDocuments = 508,
     }
 }

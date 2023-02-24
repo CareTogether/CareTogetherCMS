@@ -66,12 +66,16 @@ namespace CareTogether.Managers.Records
         Task<CombinedFamilyInfo> ExecuteAtomicRecordsCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, AtomicRecordsCommand command);
 
-        //TODO: When adding community documents, the 'familyId' argument of this method can be changed to an abstract 'documentContext'
-        //      that can be either "FamilyDocumentContext" of "FamilyId" or "CommunityDocumentContext" of "CommunityId", etc.
         Task<Uri> GetFamilyDocumentReadValetUrl(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, Guid familyId, Guid documentId);
 
         Task<Uri> GenerateFamilyDocumentUploadValetUrl(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, Guid familyId, Guid documentId);
+
+        Task<Uri> GetCommunityDocumentReadValetUrl(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, Guid communityId, Guid documentId);
+
+        Task<Uri> GenerateCommunityDocumentUploadValetUrl(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, Guid communityId, Guid documentId);
     }
 }

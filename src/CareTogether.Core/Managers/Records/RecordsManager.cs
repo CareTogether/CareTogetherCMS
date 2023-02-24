@@ -122,6 +122,36 @@ namespace CareTogether.Managers.Records
             return valetUrl;
         }
 
+        public async Task<Uri> GetCommunityDocumentReadValetUrl(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, Guid communityId, Guid documentId)
+        {
+            var contextPermissions = await authorizationEngine.AuthorizeUserAccessAsync(organizationId, locationId, user,
+                new CommunityAuthorizationContext(communityId));
+
+            if (!contextPermissions.Contains(Permission.ReadCommunityDocuments))
+                throw new Exception("The user is not authorized to perform this command.");
+
+            var valetUrl = await communityResource.GetCommunityDocumentReadValetUrl(organizationId, locationId,
+                communityId, documentId);
+
+            return valetUrl;
+        }
+
+        public async Task<Uri> GenerateCommunityDocumentUploadValetUrl(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, Guid communityId, Guid documentId)
+        {
+            var contextPermissions = await authorizationEngine.AuthorizeUserAccessAsync(organizationId, locationId, user,
+                new CommunityAuthorizationContext(communityId));
+
+            if (!contextPermissions.Contains(Permission.UploadCommunityDocuments))
+                throw new Exception("The user is not authorized to perform this command.");
+
+            var valetUrl = await communityResource.GetCommunityDocumentUploadValetUrl(organizationId, locationId,
+                communityId, documentId);
+
+            return valetUrl;
+        }
+
 
         private IEnumerable<AtomicRecordsCommand> GenerateAtomicCommandsForCompositeCommand(CompositeRecordsCommand command)
         {
