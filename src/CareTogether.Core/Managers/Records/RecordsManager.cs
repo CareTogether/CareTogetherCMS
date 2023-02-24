@@ -76,6 +76,53 @@ namespace CareTogether.Managers.Records
             return familyResult;
         }
 
+        public async Task<CombinedFamilyInfo> ExecuteAtomicRecordsCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, AtomicRecordsCommand command)
+        {
+            if (!await AuthorizeCommandAsync(organizationId, locationId, user, command))
+                throw new Exception("The user is not authorized to perform this command.");
+
+            await ExecuteCommandAsync(organizationId, locationId, user, command);
+
+            var familyId = GetFamilyIdFromCommand(command);
+
+            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
+                organizationId, locationId, familyId, user);
+
+            return familyResult;
+        }
+
+        public async Task<Uri> GetFamilyDocumentReadValetUrl(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, Guid familyId, Guid documentId)
+        {
+            var contextPermissions = await authorizationEngine.AuthorizeUserAccessAsync(organizationId, locationId, user,
+                new FamilyAuthorizationContext(familyId));
+
+            if (!contextPermissions.Contains(Permission.ReadFamilyDocuments))
+                throw new Exception("The user is not authorized to perform this command.");
+
+            var valetUrl = await directoryResource.GetFamilyDocumentReadValetUrl(organizationId, locationId,
+                familyId, documentId);
+            
+            return valetUrl;
+        }
+
+        public async Task<Uri> GenerateFamilyDocumentUploadValetUrl(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, Guid familyId, Guid documentId)
+        {
+            var contextPermissions = await authorizationEngine.AuthorizeUserAccessAsync(organizationId, locationId, user,
+                new FamilyAuthorizationContext(familyId));
+
+            if (!contextPermissions.Contains(Permission.UploadFamilyDocuments))
+                throw new Exception("The user is not authorized to perform this command.");
+
+            var valetUrl = await directoryResource.GetFamilyDocumentUploadValetUrl(organizationId, locationId,
+                familyId, documentId);
+
+            return valetUrl;
+        }
+
+
         private IEnumerable<AtomicRecordsCommand> GenerateAtomicCommandsForCompositeCommand(CompositeRecordsCommand command)
         {
             switch (command)
@@ -159,23 +206,6 @@ namespace CareTogether.Managers.Records
                         $"The command type '{command.GetType().FullName}' has not been implemented.");
             }
         }
-
-        public async Task<CombinedFamilyInfo> ExecuteAtomicRecordsCommandAsync(Guid organizationId, Guid locationId,
-            ClaimsPrincipal user, AtomicRecordsCommand command)
-        {
-            if (!await AuthorizeCommandAsync(organizationId, locationId, user, command))
-                throw new Exception("The user is not authorized to perform this command.");
-
-            await ExecuteCommandAsync(organizationId, locationId, user, command);
-
-            var familyId = GetFamilyIdFromCommand(command);
-
-            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
-                organizationId, locationId, familyId, user);
-
-            return familyResult;
-        }
-
 
         private Task<bool> AuthorizeCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, AtomicRecordsCommand command) =>

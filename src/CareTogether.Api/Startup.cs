@@ -72,6 +72,9 @@ namespace CareTogether.Api
             var mutableBlobServiceClient = new BlobServiceClient(
                 Configuration["Persistence:MutableBlobStorageConnectionString"], blobClientOptions);
 
+            // Utility providers
+            var uploadsStore = new BlobFileStore(immutableBlobServiceClient, "Uploads");
+
             // Data store services
             var defaultMemoryCacheOptions = Options.Create(new MemoryCacheOptions());
             var directoryEventLog = new AppendBlobEventLog<DirectoryEvent>(immutableBlobServiceClient, "DirectoryEventLog");
@@ -116,7 +119,7 @@ namespace CareTogether.Api
 
             // Resource services
             var approvalsResource = new ApprovalsResource(approvalsEventLog);
-            var directoryResource = new DirectoryResource(directoryEventLog);
+            var directoryResource = new DirectoryResource(directoryEventLog, uploadsStore);
             var goalsResource = new GoalsResource(goalsEventLog);
             var policiesResource = new PoliciesResource(configurationStore, policiesStore, organizationSecretsStore);
             var accountsResource = new AccountsResource(userTenantAccessStore);
@@ -141,11 +144,7 @@ namespace CareTogether.Api
             services.AddSingleton<ICommunicationsManager>(new CommunicationsManager(authorizationEngine, directoryResource,
                 policiesResource, telephony));
             services.AddSingleton<IRecordsManager>(new RecordsManager(authorizationEngine, directoryResource,
-                approvalsResource, referralsResource, notesResource,
-                combinedFamilyInfoFormatter));
-
-            // Utility providers
-            services.AddSingleton<IFileStore>(new BlobFileStore(immutableBlobServiceClient, "Uploads"));
+                approvalsResource, referralsResource, notesResource, combinedFamilyInfoFormatter));
 
             services.AddAuthentication("Basic")
                 .AddBasic("Basic", options =>

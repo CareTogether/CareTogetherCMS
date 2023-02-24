@@ -105,7 +105,7 @@ export function MissingRequirementDialog({
   async function markComplete() {
     let document = documentId;
     if (documentId === UPLOAD_NEW) {
-      document = await uploadFileToTenant(organizationId, locationId, documentFile!);
+      document = await uploadFileToTenant(organizationId, locationId, contextFamilyId, documentFile!);
       await directory.uploadFamilyDocument(contextFamilyId, document, documentFile!.name);
     }
     let noteId: string | undefined = undefined;
