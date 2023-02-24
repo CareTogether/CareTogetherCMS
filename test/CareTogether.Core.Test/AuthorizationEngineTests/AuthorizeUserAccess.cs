@@ -7,7 +7,9 @@ using CareTogether.Resources.Notes;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.Referrals;
 using CareTogether.TestData;
+using CareTogether.Utilities.FileStore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using System;
 using System.Linq;
 using System.Security.Claims;
@@ -63,7 +65,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 organizationSecretsStore,
                 testSourceSmsPhoneNumber: null);
 
-            var directoryResource = new DirectoryResource(directoryEventLog);
+            var directoryResource = new DirectoryResource(directoryEventLog, Mock.Of<IFileStore>());
             var policiesResource = new PoliciesResource(configurationStore, policiesStore, organizationSecretsStore);
             var referralsResource = new ReferralsResource(referralsEventLog);
             var approvalsResource = new ApprovalsResource(approvalsEventLog);

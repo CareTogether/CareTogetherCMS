@@ -1,6 +1,8 @@
 using CareTogether.Resources;
 using CareTogether.Resources.Directory;
+using CareTogether.Utilities.FileStore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -66,7 +68,7 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public async Task TestListPeople()
         {
-            var dut = new DirectoryResource(events);
+            var dut = new DirectoryResource(events, Mock.Of<IFileStore>());
 
             var people = await dut.ListPeopleAsync(guid1, guid2);
 
@@ -76,7 +78,7 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public async Task TestFindUser()
         {
-            var dut = new DirectoryResource(events);
+            var dut = new DirectoryResource(events, Mock.Of<IFileStore>());
 
             var user2 = await dut.FindUserAsync(guid1, guid2, guid3);
             var user1 = await dut.FindUserAsync(guid1, guid2, guid4);
@@ -90,7 +92,7 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public async Task TestListFamilies()
         {
-            var dut = new DirectoryResource(events);
+            var dut = new DirectoryResource(events, Mock.Of<IFileStore>());
 
             var families1 = await dut.ListFamiliesAsync(guid1, guid2);
             var families2 = await dut.ListFamiliesAsync(guid2, guid1);
@@ -102,7 +104,7 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public async Task TestExecutePersonCommand()
         {
-            var dut = new DirectoryResource(events);
+            var dut = new DirectoryResource(events, Mock.Of<IFileStore>());
 
             var result1 = await dut.ExecutePersonCommandAsync(guid1, guid2, new UpdatePersonAge(guid6, new ExactAge(new DateTime(2021, 7, 1))), guid0);
             await Assert.ThrowsExceptionAsync<KeyNotFoundException>(() => dut.ExecutePersonCommandAsync(guid1, guid2, new UpdatePersonAge(guid5, new ExactAge(new DateTime(2021, 7, 2))), guid0));
