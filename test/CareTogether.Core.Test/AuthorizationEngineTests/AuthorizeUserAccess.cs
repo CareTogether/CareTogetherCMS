@@ -1,6 +1,7 @@
 ﻿using CareTogether.Engines.Authorization;
 using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Approvals;
+using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Goals;
 using CareTogether.Resources.Notes;
@@ -46,6 +47,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             var referralsEventLog = new MemoryEventLog<ReferralEvent>();
             var approvalsEventLog = new MemoryEventLog<ApprovalEvent>();
             var notesEventLog = new MemoryEventLog<NotesEvent>();
+            var communitiesEventLog = new MemoryEventLog<CommunityCommandExecutedEvent>();
             var draftNotesStore = new MemoryObjectStore<string?>();
             var configurationStore = new MemoryObjectStore<OrganizationConfiguration>();
             var policiesStore = new MemoryObjectStore<EffectiveLocationPolicy>();
@@ -58,6 +60,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 referralsEventLog,
                 approvalsEventLog,
                 notesEventLog,
+                communitiesEventLog,
                 draftNotesStore,
                 configurationStore,
                 policiesStore,
