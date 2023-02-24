@@ -76,7 +76,7 @@ namespace CareTogether.Engines.Authorization
                 .ToImmutableList();
             var applicablePermissionSets = userPermissionSets
                 .Where(permissionSet => IsPermissionSetApplicable(permissionSet,
-                    context, userFamily, targetFamily,
+                    context, userFamily, targetFamily, //TODO: Need to include target community & families' community memberships!
                     targetFamilyVolunteerInfo, userFamilyReferrals,
                     targetFamilyReferrals, assignedReferrals))
                 .ToImmutableList();
@@ -152,6 +152,12 @@ namespace CareTogether.Engines.Authorization
                             arrangement.Value.IndividualVolunteerAssignments.Any(iva =>
                                 iva.FamilyId == targetFamily.Id &&
                                 (c.WhenAssigneeFunctionIsIn == null || c.WhenAssigneeFunctionIsIn.Contains(iva.ArrangementFunction))))),
+                CommunityMemberPermissionContext c =>
+                    context is CommunityAuthorizationContext, //TODO: also look at FamilyAuthorizationContext (for community members)
+                    //userFamily.CommunityMemberships.Any(communityId => communityId == context.CommunityId),
+                CommunityCoMemberFamiliesPermissionContext c =>
+                    context is FamilyAuthorizationContext, //TODO: also look at FamilyAuthorizationContext (for community members)
+                    //TODO: userFamily.CommunityMemberships.Any(communityId => communityId == context.CommunityId),
                 _ => throw new NotImplementedException(
                     $"The permission context type '{permissionSet.Context.GetType().FullName}' has not been implemented.")
             };

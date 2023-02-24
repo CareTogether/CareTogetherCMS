@@ -365,7 +365,7 @@ namespace CareTogether.TestData
                 new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 14, 0), new AddCommunityRoleAssignment(guid1, guid4, "Community Organizer")),
                 new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 14, 0), new AddCommunityRoleAssignment(guid1, guid8, "Community Organizer")),
                 new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 15, 0), new RemoveCommunityRoleAssignment(guid1, guid4, "Community Organizer")),
-                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 15, 30), new AddCommunityRoleAssignment(guid1, guid4, "Community Organizer")),
+                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 15, 30), new AddCommunityRoleAssignment(guid1, guid4, "Community Co-Organizer")),
                 new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 16, 0), new UploadCommunityDocument(guid1, guid1, "Five-card stud rules.pdf")),
                 new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 16, 30), new DeleteUploadedCommunityDocument(guid1, guid1)),
                 new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 18, 12), new UploadCommunityDocument(guid1, guid2, "Revised five-card stud rules.pdf")));
@@ -401,7 +401,7 @@ namespace CareTogether.TestData
                     ImmutableList<RoleDefinition>.Empty
                         .Add(new RoleDefinition("Volunteer", ImmutableList<ContextualPermissionSet>.Empty
                             .Add(new ContextualPermissionSet(new GlobalPermissionContext(),
-                                ImmutableList.Create<Permission>(
+                                ImmutableList.Create(
                                     Permission.AccessPartneringFamiliesScreen,
                                     Permission.AccessVolunteersScreen
                                 )))
@@ -436,7 +436,33 @@ namespace CareTogether.TestData
                                     WhenOwnFunctionIsIn: null, WhenAssigneeFunctionIsIn: null),
                                 ImmutableList.Create(
                                     Permission.ViewPersonContactInfo
-                                ))))),
+                                )))
+                            .Add(new ContextualPermissionSet(
+                                new CommunityMemberPermissionContext(
+                                    WhenOwnCommunityRoleIsIn: null),
+                                ImmutableList.Create(
+                                    Permission.ViewCommunityDocumentMetadata)))
+                            .Add(new ContextualPermissionSet(
+                                new CommunityMemberPermissionContext(
+                                    WhenOwnCommunityRoleIsIn: ImmutableList.Create("Community Organizer", "Community Co-Organizer")),
+                                ImmutableList.Create(
+                                    Permission.ReadCommunityDocuments)))
+                            .Add(new ContextualPermissionSet(
+                                new CommunityCoMemberFamiliesPermissionContext(
+                                    WhenOwnCommunityRoleIsIn: null),
+                                ImmutableList.Create(
+                                    Permission.ViewPersonContactInfo,
+                                    Permission.ViewApprovalStatus)))
+                            .Add(new ContextualPermissionSet(
+                                new CommunityCoMemberFamiliesPermissionContext(
+                                    WhenOwnCommunityRoleIsIn: ImmutableList.Create("Community Organizer")),
+                                ImmutableList.Create(
+                                    Permission.ViewApprovalProgress,
+                                    Permission.ViewReferralProgress,
+                                    Permission.ViewArrangementProgress))))),
+                    ImmutableList<string>.Empty
+                        .Add("Community Organizer")
+                        .Add("Community Co-Organizer"),
                     ImmutableDictionary<Guid, UserAccessConfiguration>.Empty
                         .Add(adminId, new UserAccessConfiguration(guid0, ImmutableList<UserLocationRoles>.Empty
                             .Add(new UserLocationRoles(guid2, ImmutableList.Create("OrganizationAdministrator")))

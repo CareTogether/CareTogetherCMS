@@ -8,6 +8,7 @@ namespace CareTogether.Resources.Policies
     public sealed record OrganizationConfiguration(string OrganizationName,
         ImmutableList<LocationConfiguration> Locations,
         ImmutableList<RoleDefinition> Roles,
+        ImmutableList<string> CommunityRoles,
         ImmutableDictionary<Guid, UserAccessConfiguration> Users);
 
     public sealed record LocationConfiguration(Guid Id, string Name,
@@ -34,6 +35,10 @@ namespace CareTogether.Resources.Policies
     public sealed record AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext(
         bool? WhenReferralIsOpen, ImmutableList<string>? WhenOwnFunctionIsIn, ImmutableList<string>? WhenAssigneeFunctionIsIn)
         : PermissionContext();
+    public sealed record CommunityMemberPermissionContext(
+        ImmutableList<string>? WhenOwnCommunityRoleIsIn) : PermissionContext();
+    public sealed record CommunityCoMemberFamiliesPermissionContext(
+        ImmutableList<string>? WhenOwnCommunityRoleIsIn) : PermissionContext();
 
     public sealed record UserAccessConfiguration(Guid PersonId,
         ImmutableList<UserLocationRoles> LocationRoles);
