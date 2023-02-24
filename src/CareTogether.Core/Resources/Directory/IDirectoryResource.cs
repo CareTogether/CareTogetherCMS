@@ -4,6 +4,7 @@ using JsonPolymorph;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace CareTogether.Resources.Directory
@@ -137,5 +138,10 @@ namespace CareTogether.Resources.Directory
         Task<Family> ExecuteFamilyCommandAsync(Guid organizationId, Guid locationId, FamilyCommand command, Guid userId);
 
         Task<Person> ExecutePersonCommandAsync(Guid organizationId, Guid locationId, PersonCommand command, Guid userId);
+
+        Task<Uri> GetFamilyDocumentReadValetUrl(Guid organizationId, Guid locationId, Guid familyId, Guid documentId);
+
+        //TODO: Rename to 'UploadFamilyDocumentViaValetUrl' and merge in FamilyCommand functionality to ensure consistency
+        Task<Uri> GetFamilyDocumentUploadValetUrl(Guid organizationId, Guid locationId, Guid familyId, Guid documentId);
     }
 }

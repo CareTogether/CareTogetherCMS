@@ -241,7 +241,7 @@
         }
       }
     },
-    "/api/{organizationId}/{locationId}/Files/{documentId}": {
+    "/api/{organizationId}/{locationId}/Files/family/{familyId}/{documentId}": {
       "get": {
         "tags": [
           "Files"
@@ -269,7 +269,7 @@
             "x-position": 2
           },
           {
-            "name": "documentId",
+            "name": "familyId",
             "in": "path",
             "required": true,
             "schema": {
@@ -277,6 +277,16 @@
               "format": "guid"
             },
             "x-position": 3
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 4
           }
         ],
         "responses": {
@@ -294,7 +304,7 @@
         }
       }
     },
-    "/api/{organizationId}/{locationId}/Files/upload": {
+    "/api/{organizationId}/{locationId}/Files/upload/family/{familyId}/{documentId}": {
       "post": {
         "tags": [
           "Files"
@@ -320,6 +330,26 @@
               "format": "guid"
             },
             "x-position": 2
+          },
+          {
+            "name": "familyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 3
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 4
           }
         ],
         "responses": {

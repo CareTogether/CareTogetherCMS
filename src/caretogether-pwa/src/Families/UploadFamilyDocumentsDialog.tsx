@@ -26,7 +26,7 @@ export function UploadFamilyDocumentsDialog({family, onClose}: UploadFamilyDocum
         alert("No files were selected. Try again.");
       } else {
         await Promise.all(Array.from(documentFiles).map(async documentFile => {
-          const documentId = await uploadFileToTenant(organizationId, locationId, documentFile);
+          const documentId = await uploadFileToTenant(organizationId, locationId, family.family!.id!, documentFile);
           await directoryModel.uploadFamilyDocument(family.family!.id!, documentId, documentFile.name);
         }));
         //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)

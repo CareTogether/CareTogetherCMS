@@ -36,7 +36,7 @@ export function FamilyDocuments({ family }: FamilyDocumentsProps) {
                 e.preventDefault();
                 setMoreMenuAnchor({ anchor: e.currentTarget, document: uploaded });
               }}
-              onClick={() => downloadFile(organizationId, locationId, uploaded.uploadedDocumentId!)}>
+              onClick={() => downloadFile(organizationId, locationId, family.family!.id!, uploaded.uploadedDocumentId!)}>
               📃 {uploaded.uploadedFileName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               {uploaded.timestampUtc && <span style={{float:'right',marginRight:20}}>{format(uploaded.timestampUtc, "M/d/yy")}</span>}
             </li>
