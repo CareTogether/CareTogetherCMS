@@ -17,6 +17,7 @@ namespace CareTogether.Engines.Authorization
     public sealed record AllPartneringFamiliesAuthorizationContext() : AuthorizationContext;
     public sealed record AllVolunteerFamiliesAuthorizationContext() : AuthorizationContext;
     public sealed record FamilyAuthorizationContext(Guid FamilyId) : AuthorizationContext;
+    public sealed record CommunityAuthorizationContext(Guid CommunityId) : AuthorizationContext;
 
 
     public interface IAuthorizationEngine

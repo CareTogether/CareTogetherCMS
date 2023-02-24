@@ -1,5 +1,6 @@
-﻿using CareTogether.Resources.Accounts;
+using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Approvals;
+using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Goals;
 using CareTogether.Resources.Notes;
@@ -66,6 +67,7 @@ namespace CareTogether.TestData
             IEventLog<ReferralEvent> referralsEventLog,
             IEventLog<ApprovalEvent> approvalsEventLog,
             IEventLog<NotesEvent> notesEventLog,
+            IEventLog<CommunityCommandExecutedEvent> communitiesEventLog,
             IObjectStore<string?> draftNotesStore,
             IObjectStore<OrganizationConfiguration> configurationStore,
             IObjectStore<EffectiveLocationPolicy> policiesStore,
@@ -78,6 +80,7 @@ namespace CareTogether.TestData
             await PopulateReferralEvents(referralsEventLog);
             await PopulateApprovalEvents(approvalsEventLog);
             await PopulateNoteEvents(notesEventLog);
+            await PopulateCommunityEvents(communitiesEventLog);
             await PopulateDraftNotes(draftNotesStore);
             await PopulateConfigurations(configurationStore, testSourceSmsPhoneNumber, organizationSecretsStore);
             await PopulatePolicies(policiesStore);
@@ -348,6 +351,11 @@ namespace CareTogether.TestData
                 new NoteCommandExecuted(adminId, new DateTime(2020, 3, 31, 10, 0, 0), new CreateDraftNote(guid1, guidA, null)),
                 new NoteCommandExecuted(adminId, new DateTime(2021, 7, 10, 9, 30, 0), new CreateDraftNote(guid4, guid9, null)),
                 new NoteCommandExecuted(adminId, new DateTime(2021, 7, 10, 9, 32, 0), new ApproveNote(guid4, guid9, "I'm a little star-struck... Emily is *amazing*!!")));
+        }
+
+        public static async Task PopulateCommunityEvents(IEventLog<CommunityCommandExecutedEvent> communitiesEventLog)
+        {
+            await communitiesEventLog.AppendEventsAsync(guid1, guid2,
         }
 
         public static async Task PopulateDraftNotes(IObjectStore<string?> draftNotesStore)

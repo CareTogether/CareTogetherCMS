@@ -40,5 +40,9 @@ namespace CareTogether.Resources.Communities
         Task<Community> ExecuteCommunityCommandAsync(Guid organizationId, Guid locationId, CommunityCommand command, Guid userId);
 
         Task<ImmutableList<Community>> ListLocationCommunitiesAsync(Guid organizationId, Guid locationId);
+
+        Task<Uri> GetCommunityDocumentReadValetUrl(Guid organizationId, Guid locationId, Guid communityId, Guid documentId);
+
+        Task<Uri> GetCommunityDocumentUploadValetUrl(Guid organizationId, Guid locationId, Guid communityId, Guid documentId);
     }
 }

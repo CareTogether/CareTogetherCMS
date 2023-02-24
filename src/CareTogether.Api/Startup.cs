@@ -7,6 +7,7 @@ using CareTogether.Managers.Communications;
 using CareTogether.Managers.Records;
 using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Approvals;
+using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Goals;
 using CareTogether.Resources.Notes;
@@ -82,6 +83,7 @@ namespace CareTogether.Api
             var referralsEventLog = new AppendBlobEventLog<ReferralEvent>(immutableBlobServiceClient, "ReferralsEventLog");
             var approvalsEventLog = new AppendBlobEventLog<ApprovalEvent>(immutableBlobServiceClient, "ApprovalsEventLog");
             var notesEventLog = new AppendBlobEventLog<NotesEvent>(immutableBlobServiceClient, "NotesEventLog");
+            var communitiesEventLog = new AppendBlobEventLog<CommunityCommandExecutedEvent>(immutableBlobServiceClient, "CommunitiesEventLog");
             var draftNotesStore = new JsonBlobObjectStore<string?>(mutableBlobServiceClient, "DraftNotes",
                 new MemoryCache(defaultMemoryCacheOptions), TimeSpan.FromMinutes(30));
             var configurationStore = new JsonBlobObjectStore<OrganizationConfiguration>(immutableBlobServiceClient, "Configuration",
@@ -104,6 +106,7 @@ namespace CareTogether.Api
                     referralsEventLog,
                     approvalsEventLog,
                     notesEventLog,
+                    communitiesEventLog,
                     draftNotesStore,
                     configurationStore,
                     policiesStore,
@@ -125,6 +128,7 @@ namespace CareTogether.Api
             var accountsResource = new AccountsResource(userTenantAccessStore);
             var referralsResource = new ReferralsResource(referralsEventLog);
             var notesResource = new NotesResource(notesEventLog, draftNotesStore);
+            var communitiesResource = new CommunitiesResource(communitiesEventLog, uploadsStore);
 
             //TODO: If we want to be strict about conventions, this should have a manager intermediary for authz.
             services.AddSingleton<IPoliciesResource>(policiesResource);
@@ -144,7 +148,7 @@ namespace CareTogether.Api
             services.AddSingleton<ICommunicationsManager>(new CommunicationsManager(authorizationEngine, directoryResource,
                 policiesResource, telephony));
             services.AddSingleton<IRecordsManager>(new RecordsManager(authorizationEngine, directoryResource,
-                approvalsResource, referralsResource, notesResource, combinedFamilyInfoFormatter));
+                approvalsResource, referralsResource, notesResource, communitiesResource, combinedFamilyInfoFormatter));
 
             services.AddAuthentication("Basic")
                 .AddBasic("Basic", options =>

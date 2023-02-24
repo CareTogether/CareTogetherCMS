@@ -1,5 +1,6 @@
 ﻿using CareTogether.Engines.Authorization;
 using CareTogether.Resources.Approvals;
+using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Referrals;
@@ -20,18 +21,20 @@ namespace CareTogether.Managers.Records
         private readonly IApprovalsResource approvalsResource;
         private readonly IReferralsResource referralsResource;
         private readonly INotesResource notesResource;
+        private readonly ICommunitiesResource communitiesResource;
         private readonly CombinedFamilyInfoFormatter combinedFamilyInfoFormatter;
 
 
         public RecordsManager(IAuthorizationEngine authorizationEngine, IDirectoryResource directoryResource,
             IApprovalsResource approvalsResource, IReferralsResource referralsResource, INotesResource notesResource,
-            CombinedFamilyInfoFormatter combinedFamilyInfoFormatter)
+            ICommunitiesResource communitiesResource, CombinedFamilyInfoFormatter combinedFamilyInfoFormatter)
         {
             this.authorizationEngine = authorizationEngine;
             this.directoryResource = directoryResource;
             this.approvalsResource = approvalsResource;
             this.referralsResource = referralsResource;
             this.notesResource = notesResource;
+            this.communitiesResource = communitiesResource;
             this.combinedFamilyInfoFormatter = combinedFamilyInfoFormatter;
         }
 
@@ -131,7 +134,7 @@ namespace CareTogether.Managers.Records
             if (!contextPermissions.Contains(Permission.ReadCommunityDocuments))
                 throw new Exception("The user is not authorized to perform this command.");
 
-            var valetUrl = await communityResource.GetCommunityDocumentReadValetUrl(organizationId, locationId,
+            var valetUrl = await communitiesResource.GetCommunityDocumentReadValetUrl(organizationId, locationId,
                 communityId, documentId);
 
             return valetUrl;
@@ -146,7 +149,7 @@ namespace CareTogether.Managers.Records
             if (!contextPermissions.Contains(Permission.UploadCommunityDocuments))
                 throw new Exception("The user is not authorized to perform this command.");
 
-            var valetUrl = await communityResource.GetCommunityDocumentUploadValetUrl(organizationId, locationId,
+            var valetUrl = await communitiesResource.GetCommunityDocumentUploadValetUrl(organizationId, locationId,
                 communityId, documentId);
 
             return valetUrl;
