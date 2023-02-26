@@ -23,14 +23,14 @@ namespace CareTogether.Api.Controllers
 
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CombinedFamilyInfo>>> ListVisibleFamiliesAsync(Guid organizationId, Guid locationId)
+        public async Task<ActionResult<IEnumerable<RecordsAggregate>>> ListVisibleFamiliesAsync(Guid organizationId, Guid locationId)
         {
             var referrals = await recordsManager.ListVisibleFamiliesAsync(User, organizationId, locationId);
             return Ok(referrals);
         }
 
         [HttpPost("atomicRecordsCommand")]
-        public async Task<ActionResult<CombinedFamilyInfo>> SubmitAtomicRecordsCommandAsync(Guid organizationId, Guid locationId,
+        public async Task<ActionResult<RecordsAggregate>> SubmitAtomicRecordsCommandAsync(Guid organizationId, Guid locationId,
             [FromBody] AtomicRecordsCommand command)
         {
             var result = await recordsManager.ExecuteAtomicRecordsCommandAsync(organizationId, locationId, User, command);
@@ -38,7 +38,7 @@ namespace CareTogether.Api.Controllers
         }
 
         [HttpPost("compositeRecordsCommand")]
-        public async Task<ActionResult<CombinedFamilyInfo>> SubmitCompositeRecordsCommandAsync(Guid organizationId, Guid locationId,
+        public async Task<ActionResult<RecordsAggregate>> SubmitCompositeRecordsCommandAsync(Guid organizationId, Guid locationId,
             [FromBody] CompositeRecordsCommand command)
         {
             var result = await recordsManager.ExecuteCompositeRecordsCommand(organizationId, locationId, User, command);

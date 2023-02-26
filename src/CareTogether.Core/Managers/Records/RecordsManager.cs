@@ -39,7 +39,7 @@ namespace CareTogether.Managers.Records
         }
 
 
-        public async Task<ImmutableList<CombinedFamilyInfo>> ListVisibleFamiliesAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId)
+        public async Task<ImmutableList<RecordsAggregate>> ListVisibleFamiliesAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId)
         {
             var families = await directoryResource.ListFamiliesAsync(organizationId, locationId);
 
@@ -58,10 +58,13 @@ namespace CareTogether.Managers.Records
             var result = await visibleFamilies
                 .Select(family => combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, family.Id, user))
                 .WhenAll();
-            return result.ToImmutableList();
+
+            return result
+                .Select(family => (RecordsAggregate)new FamilyRecordsAggregate(family))
+                .ToImmutableList();
         }
 
-        public async Task<CombinedFamilyInfo> ExecuteCompositeRecordsCommand(Guid organizationId, Guid locationId,
+        public async Task<RecordsAggregate> ExecuteCompositeRecordsCommand(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, CompositeRecordsCommand command)
         {
             var atomicCommands = GenerateAtomicCommandsForCompositeCommand(command).ToImmutableList();
@@ -76,10 +79,10 @@ namespace CareTogether.Managers.Records
             var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
                 organizationId, locationId, command.FamilyId, user);
 
-            return familyResult;
+            return new FamilyRecordsAggregate(familyResult);
         }
 
-        public async Task<CombinedFamilyInfo> ExecuteAtomicRecordsCommandAsync(Guid organizationId, Guid locationId,
+        public async Task<RecordsAggregate> ExecuteAtomicRecordsCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, AtomicRecordsCommand command)
         {
             if (!await AuthorizeCommandAsync(organizationId, locationId, user, command))
@@ -279,7 +282,7 @@ namespace CareTogether.Managers.Records
                     $"The command type '{command.GetType().FullName}' has not been implemented.")
             };
 
-        private async Task<CombinedFamilyInfo> RenderCommandResultAsync(Guid organizationId, Guid locationId,
+        private async Task<RecordsAggregate> RenderCommandResultAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, AtomicRecordsCommand command)
         {
             var familyId = GetFamilyIdFromCommand(command);
@@ -287,7 +290,7 @@ namespace CareTogether.Managers.Records
             var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
                 organizationId, locationId, familyId, user);
 
-            return familyResult;
+            return new FamilyRecordsAggregate(familyResult);
         }
 
         private Guid GetFamilyIdFromCommand(AtomicRecordsCommand command) =>

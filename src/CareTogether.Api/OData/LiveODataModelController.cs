@@ -221,9 +221,11 @@ namespace CareTogether.Api.OData
 
             var familiesByLocation = await locations.ZipSelectManyAsync(location =>
                 recordsManager.ListVisibleFamiliesAsync(User, location.OrganizationId, location.Id))
+                .Where(zipResult => zipResult.Item2 is FamilyRecordsAggregate)
+                .Select(zipResult => (zipResult.Item1, (FamilyRecordsAggregate)zipResult.Item2))
                 .ToArrayAsync();
 
-            var familiesWithInfo = familiesByLocation.Select(x => RenderFamily(x.Item1, x.Item2)).ToArray();
+            var familiesWithInfo = familiesByLocation.Select(x => RenderFamily(x.Item1, x.Item2.Family)).ToArray();
             var families = familiesWithInfo.Select(family => family.Item2).ToArray();
 
             var people = familiesWithInfo.SelectMany(x => RenderPeople(x.Item1, x.Item2)).ToArray();
