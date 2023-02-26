@@ -87,12 +87,7 @@ namespace CareTogether.Managers.Records
 
             await ExecuteCommandAsync(organizationId, locationId, user, command);
 
-            var familyId = GetFamilyIdFromCommand(command);
-
-            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
-                organizationId, locationId, familyId, user);
-
-            return familyResult;
+            return await RenderCommandResultAsync(organizationId, locationId, user, command);
         }
 
         public async Task<Uri> GetFamilyDocumentReadValetUrl(Guid organizationId, Guid locationId,
@@ -283,6 +278,17 @@ namespace CareTogether.Managers.Records
                 _ => throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented.")
             };
+
+        private async Task<CombinedFamilyInfo> RenderCommandResultAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, AtomicRecordsCommand command)
+        {
+            var familyId = GetFamilyIdFromCommand(command);
+
+            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
+                organizationId, locationId, familyId, user);
+
+            return familyResult;
+        }
 
         private Guid GetFamilyIdFromCommand(AtomicRecordsCommand command) =>
             command switch
