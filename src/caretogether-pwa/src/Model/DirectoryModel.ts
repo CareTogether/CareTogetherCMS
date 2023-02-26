@@ -1,5 +1,5 @@
 import { atom, selector, useRecoilCallback, useRecoilValue } from "recoil";
-import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, CompositeRecordsCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, RecordsClient, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, UpdatePersonGender, UpdatePersonAge, UpdatePersonEthnicity, UpdateAdultRelationshipToFamily, CustodialRelationshipType, UpdateCustodialRelationshipType, RemoveCustodialRelationship, ChangePrimaryFamilyContact, CombinedFamilyInfo, FamilyRecordsCommand, PersonRecordsCommand, NoteRecordsCommand, AtomicRecordsCommand, CustomField, UpdateCustomFamilyField } from "../GeneratedClient";
+import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, CompositeRecordsCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, RecordsClient, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, UpdatePersonGender, UpdatePersonAge, UpdatePersonEthnicity, UpdateAdultRelationshipToFamily, CustodialRelationshipType, UpdateCustodialRelationshipType, RemoveCustodialRelationship, ChangePrimaryFamilyContact, CombinedFamilyInfo, FamilyRecordsCommand, PersonRecordsCommand, NoteRecordsCommand, AtomicRecordsCommand, CustomField, UpdateCustomFamilyField, FamilyRecordsAggregate } from "../GeneratedClient";
 import { accessTokenFetchQuery, authenticatingFetch } from "../Authentication/AuthenticatedHttp";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { currentOrganizationAndLocationIdsQuery, organizationConfigurationData, organizationConfigurationQuery } from "./ConfigurationModel";
@@ -18,7 +18,9 @@ export const visibleFamiliesInitializationQuery = selector({
     get(organizationConfigurationQuery);
     const {organizationId, locationId} = get(currentOrganizationAndLocationIdsQuery);
     const recordsClient = get(recordsClientQuery);
-    return await recordsClient.listVisibleFamilies(organizationId, locationId);
+    const familyAggregates = await recordsClient.listVisibleFamilies(organizationId, locationId);
+    return familyAggregates.filter(aggregate => aggregate instanceof FamilyRecordsAggregate).map(aggregate =>
+      (aggregate as FamilyRecordsAggregate).family!);
   }
 });
 
@@ -111,7 +113,9 @@ export function useAtomicRecordsCommandCallback<T extends unknown[], U extends A
       const command = await callback(familyId, ...args);
 
       const client = new RecordsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedFamily = await client.submitAtomicRecordsCommand(organizationId, locationId, command);
+      const updatedAggregate = await client.submitAtomicRecordsCommand(organizationId, locationId, command);
+      
+      const updatedFamily = (updatedAggregate as FamilyRecordsAggregate).family!;
 
       set(visibleFamiliesData, current =>
         current.some(currentEntry => currentEntry.family?.id === familyId)
@@ -136,7 +140,9 @@ function useCompositeRecordsCommandCallback<T extends unknown[]>(
       const command = await callback(familyId, ...args);
 
       const client = new RecordsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedFamily = await client.submitCompositeRecordsCommand(organizationId, locationId, command);
+      const updatedAggregate = await client.submitCompositeRecordsCommand(organizationId, locationId, command);
+      
+      const updatedFamily = (updatedAggregate as FamilyRecordsAggregate).family!;
 
       set(visibleFamiliesData, current =>
         current.some(currentEntry => currentEntry.family?.id === familyId)
