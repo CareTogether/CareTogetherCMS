@@ -402,7 +402,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/CombinedFamilyInfo"
+                    "$ref": "#/components/schemas/RecordsAggregate"
                   }
                 }
               }
@@ -457,7 +457,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CombinedFamilyInfo"
+                  "$ref": "#/components/schemas/RecordsAggregate"
                 }
               }
             }
@@ -511,7 +511,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CombinedFamilyInfo"
+                  "$ref": "#/components/schemas/RecordsAggregate"
                 }
               }
             }
@@ -661,6 +661,12 @@
               "$ref": "#/components/schemas/RoleDefinition"
             }
           },
+          "communityRoles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "users": {
             "type": "object",
             "additionalProperties": {
@@ -751,6 +757,8 @@
             "AllVolunteerFamiliesPermissionContext": "#/components/schemas/AllVolunteerFamiliesPermissionContext",
             "AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext": "#/components/schemas/AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext",
             "AssignedFunctionsInReferralPartneringFamilyPermissionContext": "#/components/schemas/AssignedFunctionsInReferralPartneringFamilyPermissionContext",
+            "CommunityCoMemberFamiliesPermissionContext": "#/components/schemas/CommunityCoMemberFamiliesPermissionContext",
+            "CommunityMemberPermissionContext": "#/components/schemas/CommunityMemberPermissionContext",
             "GlobalPermissionContext": "#/components/schemas/GlobalPermissionContext",
             "OwnFamilyPermissionContext": "#/components/schemas/OwnFamilyPermissionContext",
             "OwnReferralAssigneeFamiliesPermissionContext": "#/components/schemas/OwnReferralAssigneeFamiliesPermissionContext"
@@ -844,6 +852,46 @@
           }
         ]
       },
+      "CommunityCoMemberFamiliesPermissionContext": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PermissionContext"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "whenOwnCommunityRoleIsIn": {
+                "type": "array",
+                "nullable": true,
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "CommunityMemberPermissionContext": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PermissionContext"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "whenOwnCommunityRoleIsIn": {
+                "type": "array",
+                "nullable": true,
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ]
+      },
       "GlobalPermissionContext": {
         "allOf": [
           {
@@ -902,6 +950,7 @@
           "AccessPartneringFamiliesScreen",
           "AccessSettingsScreen",
           "EditRoles",
+          "AccessCommunitiesScreen",
           "ViewFamilyCustomFields",
           "ViewFamilyHistory",
           "ViewPersonConcerns",
@@ -943,7 +992,16 @@
           "DeleteArrangement",
           "ViewChildLocationHistory",
           "TrackChildLocationChange",
-          "SendBulkSms"
+          "SendBulkSms",
+          "CreateCommunity",
+          "EditCommunity",
+          "DeleteCommunity",
+          "EditCommunityMemberFamilies",
+          "EditCommunityRoleAssignments",
+          "ViewCommunityDocumentMetadata",
+          "ReadCommunityDocuments",
+          "UploadCommunityDocuments",
+          "DeleteCommunityDocuments"
         ],
         "enum": [
           1,
@@ -954,6 +1012,7 @@
           101,
           102,
           103,
+          104,
           150,
           151,
           152,
@@ -995,7 +1054,16 @@
           358,
           380,
           381,
-          400
+          400,
+          500,
+          501,
+          502,
+          503,
+          504,
+          505,
+          506,
+          507,
+          508
         ]
       },
       "UserAccessConfiguration": {
@@ -1592,6 +1660,127 @@
           }
         }
       },
+      "RecordsAggregate": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "discriminator",
+          "mapping": {
+            "CommunityRecordsAggregate": "#/components/schemas/CommunityRecordsAggregate",
+            "FamilyRecordsAggregate": "#/components/schemas/FamilyRecordsAggregate"
+          }
+        },
+        "x-abstract": true,
+        "additionalProperties": false,
+        "required": [
+          "discriminator"
+        ],
+        "properties": {
+          "discriminator": {
+            "type": "string"
+          }
+        }
+      },
+      "CommunityRecordsAggregate": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/RecordsAggregate"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "community": {
+                "$ref": "#/components/schemas/Community"
+              }
+            }
+          }
+        ]
+      },
+      "Community": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "memberFamilies": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "guid"
+            }
+          },
+          "communityRoleAssignments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CommunityRoleAssignment"
+            }
+          },
+          "uploadedDocuments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UploadedDocumentInfo"
+            }
+          }
+        }
+      },
+      "CommunityRoleAssignment": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "personId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "communityRole": {
+            "type": "string"
+          }
+        }
+      },
+      "UploadedDocumentInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "timestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "uploadedDocumentId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "uploadedFileName": {
+            "type": "string"
+          }
+        }
+      },
+      "FamilyRecordsAggregate": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/RecordsAggregate"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "family": {
+                "$ref": "#/components/schemas/CombinedFamilyInfo"
+              }
+            }
+          }
+        ]
+      },
       "CombinedFamilyInfo": {
         "type": "object",
         "additionalProperties": false,
@@ -1995,27 +2184,6 @@
           1,
           2
         ]
-      },
-      "UploadedDocumentInfo": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "userId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "timestampUtc": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "uploadedDocumentId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "uploadedFileName": {
-            "type": "string"
-          }
-        }
       },
       "CompletedCustomFieldInfo": {
         "type": "object",
