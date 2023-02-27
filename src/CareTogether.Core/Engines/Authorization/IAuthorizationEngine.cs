@@ -1,5 +1,6 @@
 ﻿using CareTogether.Managers;
 using CareTogether.Resources.Approvals;
+using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Referrals;
@@ -49,7 +50,13 @@ namespace CareTogether.Engines.Authorization
         Task<bool> AuthorizeVolunteerCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, VolunteerCommand command);
 
+        Task<bool> AuthorizeCommunityCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, CommunityCommand command);
+
         Task<CombinedFamilyInfo> DiscloseFamilyAsync(ClaimsPrincipal user,
             Guid organizationId, Guid locationId, CombinedFamilyInfo family);
+
+        Task<Community> DiscloseCommunityAsync(ClaimsPrincipal user,
+            Guid organizationId, Guid locationId, Community community);
     }
 }

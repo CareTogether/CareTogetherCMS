@@ -52,6 +52,8 @@ namespace CareTogether.Managers.Records
         : AtomicRecordsCommand();
     public sealed record NoteRecordsCommand(NoteCommand Command)
         : AtomicRecordsCommand();
+    public sealed record CommunityRecordsCommand(CommunityCommand Command)
+        : AtomicRecordsCommand();
 
     [JsonHierarchyBase]
     public abstract partial record RecordsAggregate();

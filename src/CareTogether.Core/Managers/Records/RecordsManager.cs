@@ -256,6 +256,8 @@ namespace CareTogether.Managers.Records
                     organizationId, locationId, user, c.Command),
                 NoteRecordsCommand c => authorizationEngine.AuthorizeNoteCommandAsync(
                     organizationId, locationId, user, c.Command),
+                CommunityRecordsCommand c => authorizationEngine.AuthorizeCommunityCommandAsync(
+                    organizationId, locationId, user, c.Command),
                 _ => throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented.")
             };
@@ -278,6 +280,8 @@ namespace CareTogether.Managers.Records
                     organizationId, locationId, c.Command, user.UserId()),
                 NoteRecordsCommand c => notesResource.ExecuteNoteCommandAsync(
                     organizationId, locationId, c.Command, user.UserId()),
+                CommunityRecordsCommand c => communitiesResource.ExecuteCommunityCommandAsync(
+                    organizationId, locationId, c.Command, user.UserId()),
                 _ => throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented.")
             };
@@ -285,12 +289,28 @@ namespace CareTogether.Managers.Records
         private async Task<RecordsAggregate> RenderCommandResultAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, AtomicRecordsCommand command)
         {
-            var familyId = GetFamilyIdFromCommand(command);
+            if (command is CommunityRecordsCommand c)
+            {
+                var communityId = c.Command.CommunityId;
 
-            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
-                organizationId, locationId, familyId, user);
+                var communities = await communitiesResource.ListLocationCommunitiesAsync(
+                    organizationId, locationId);
+                var communityResult = communities.Single(community => community.Id == communityId);
 
-            return new FamilyRecordsAggregate(familyResult);
+                var community = await authorizationEngine.DiscloseCommunityAsync(user,
+                    organizationId, locationId, communityResult);
+
+                return new CommunityRecordsAggregate(community);
+            }
+            else
+            {
+                var familyId = GetFamilyIdFromCommand(command);
+
+                var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
+                    organizationId, locationId, familyId, user);
+
+                return new FamilyRecordsAggregate(familyResult);
+            }
         }
 
         private Guid GetFamilyIdFromCommand(AtomicRecordsCommand command) =>

@@ -2,6 +2,7 @@ using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Managers;
 using CareTogether.Resources;
 using CareTogether.Resources.Approvals;
+using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Policies;
@@ -68,7 +69,7 @@ namespace CareTogether.Engines.Authorization
                 .ToImmutableList();
 
             // We need to evaluate each of the user's roles to determine which permission sets
-            // apply to the user's context with this family.
+            // apply to the user's current context.
             var config = await policiesResource.GetConfigurationAsync(organizationId);
             var userPermissionSets = config.Roles
                 .Where(role => userLocalIdentity.HasClaim(userLocalIdentity.RoleClaimType, role.RoleName))
@@ -337,6 +338,27 @@ namespace CareTogether.Engines.Authorization
             });
         }
 
+        public async Task<bool> AuthorizeCommunityCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, CommunityCommand command)
+        {
+            var permissions = await AuthorizeUserAccessAsync(organizationId, locationId, user,
+                new CommunityAuthorizationContext(command.CommunityId));
+            return permissions.Contains(command switch
+            {
+                CreateCommunity => Permission.CreateCommunity,
+                RenameCommunity => Permission.EditCommunity,
+                EditCommunityDescription => Permission.EditCommunity,
+                AddCommunityMemberFamily => Permission.EditCommunityMemberFamilies,
+                RemoveCommunityMemberFamily => Permission.EditCommunityMemberFamilies,
+                AddCommunityRoleAssignment => Permission.EditCommunityRoleAssignments,
+                RemoveCommunityRoleAssignment => Permission.EditCommunityRoleAssignments,
+                UploadCommunityDocument => Permission.UploadCommunityDocuments,
+                DeleteUploadedCommunityDocument => Permission.DeleteCommunityDocuments,
+                _ => throw new NotImplementedException(
+                    $"The command type '{command.GetType().FullName}' has not been implemented.")
+            });
+        }
+
         public async Task<CombinedFamilyInfo> DiscloseFamilyAsync(ClaimsPrincipal user,
             Guid organizationId, Guid locationId, CombinedFamilyInfo family)
         {
@@ -365,6 +387,19 @@ namespace CareTogether.Engines.Authorization
                 MissingCustomFields = contextPermissions.Contains(Permission.ViewFamilyCustomFields)
                     ? family.MissingCustomFields : ImmutableList<string>.Empty,
                 UserPermissions = contextPermissions
+            };
+        }
+
+        public async Task<Community> DiscloseCommunityAsync(ClaimsPrincipal user,
+            Guid organizationId, Guid locationId, Community community)
+        {
+            var contextPermissions = await AuthorizeUserAccessAsync(organizationId, locationId, user,
+                new CommunityAuthorizationContext(community.Id));
+
+            return community with
+            {
+                UploadedDocuments = contextPermissions.Contains(Permission.ViewCommunityDocumentMetadata)
+                    ? community.UploadedDocuments : ImmutableList<UploadedDocumentInfo>.Empty,
             };
         }
 

@@ -2992,6 +2992,7 @@
           "propertyName": "discriminator",
           "mapping": {
             "ArrangementRecordsCommand": "#/components/schemas/ArrangementRecordsCommand",
+            "CommunityRecordsCommand": "#/components/schemas/CommunityRecordsCommand",
             "FamilyApprovalRecordsCommand": "#/components/schemas/FamilyApprovalRecordsCommand",
             "FamilyRecordsCommand": "#/components/schemas/FamilyRecordsCommand",
             "IndividualApprovalRecordsCommand": "#/components/schemas/IndividualApprovalRecordsCommand",
@@ -3903,6 +3904,215 @@
               "comments": {
                 "type": "string",
                 "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "CommunityRecordsCommand": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AtomicRecordsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "command": {
+                "$ref": "#/components/schemas/CommunityCommand"
+              }
+            }
+          }
+        ]
+      },
+      "CommunityCommand": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "discriminator",
+          "mapping": {
+            "AddCommunityMemberFamily": "#/components/schemas/AddCommunityMemberFamily",
+            "AddCommunityRoleAssignment": "#/components/schemas/AddCommunityRoleAssignment",
+            "CreateCommunity": "#/components/schemas/CreateCommunity",
+            "DeleteUploadedCommunityDocument": "#/components/schemas/DeleteUploadedCommunityDocument",
+            "EditCommunityDescription": "#/components/schemas/EditCommunityDescription",
+            "RemoveCommunityMemberFamily": "#/components/schemas/RemoveCommunityMemberFamily",
+            "RemoveCommunityRoleAssignment": "#/components/schemas/RemoveCommunityRoleAssignment",
+            "RenameCommunity": "#/components/schemas/RenameCommunity",
+            "UploadCommunityDocument": "#/components/schemas/UploadCommunityDocument"
+          }
+        },
+        "x-abstract": true,
+        "additionalProperties": false,
+        "required": [
+          "discriminator"
+        ],
+        "properties": {
+          "communityId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "discriminator": {
+            "type": "string"
+          }
+        }
+      },
+      "AddCommunityMemberFamily": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CommunityCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "familyId": {
+                "type": "string",
+                "format": "guid"
+              }
+            }
+          }
+        ]
+      },
+      "AddCommunityRoleAssignment": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CommunityCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "communityRole": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "CreateCommunity": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CommunityCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "DeleteUploadedCommunityDocument": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CommunityCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "uploadedDocumentId": {
+                "type": "string",
+                "format": "guid"
+              }
+            }
+          }
+        ]
+      },
+      "EditCommunityDescription": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CommunityCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "description": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "RemoveCommunityMemberFamily": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CommunityCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "familyId": {
+                "type": "string",
+                "format": "guid"
+              }
+            }
+          }
+        ]
+      },
+      "RemoveCommunityRoleAssignment": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CommunityCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "communityRole": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "RenameCommunity": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CommunityCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "UploadCommunityDocument": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CommunityCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "uploadedDocumentId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "uploadedFileName": {
+                "type": "string"
               }
             }
           }
