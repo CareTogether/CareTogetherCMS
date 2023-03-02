@@ -57,8 +57,12 @@ namespace CareTogether.Engines.Authorization
             var familyId = (context as FamilyAuthorizationContext)?.FamilyId;
             var targetFamily = familyId.HasValue
                 ? await directoryResource.FindFamilyAsync(organizationId, locationId, familyId.Value) : null;
-            var targetFamilyVolunteerInfo = familyId.HasValue
-                ? await approvalsResource.TryGetVolunteerFamilyAsync(organizationId, locationId, familyId.Value) : null;
+
+            // Look up the target family's volunteer info to determine if they are a volunteer family.
+            var targetFamilyIsVolunteerFamily = familyId.HasValue
+                && await approvalsResource.TryGetVolunteerFamilyAsync(organizationId, locationId, familyId.Value) != null;
+
+            // Look up the referrals info for both the user's family and the target family.
             //TODO: This could be optimized to find only the user family's referrals or the target family's referrals.
             var referrals = await referralsResource.ListReferralsAsync(organizationId, locationId);
             var userFamilyReferrals = referrals.Where(referral => referral.FamilyId == userFamily?.Id).ToImmutableList();
@@ -78,7 +82,7 @@ namespace CareTogether.Engines.Authorization
             var applicablePermissionSets = userPermissionSets
                 .Where(permissionSet => IsPermissionSetApplicable(permissionSet,
                     context, userFamily, targetFamily, //TODO: Need to include target community & families' community memberships!
-                    targetFamilyVolunteerInfo, userFamilyReferrals,
+                    targetFamilyIsVolunteerFamily, userFamilyReferrals,
                     targetFamilyReferrals, assignedReferrals))
                 .ToImmutableList();
 
@@ -90,7 +94,7 @@ namespace CareTogether.Engines.Authorization
 
         internal static bool IsPermissionSetApplicable(ContextualPermissionSet permissionSet,
             AuthorizationContext context, Family? userFamily, Family? targetFamily,
-            VolunteerFamilyEntry? targetFamilyVolunteerInfo, ImmutableList<ReferralEntry> userFamilyReferrals,
+            bool targetFamilyIsVolunteerFamily, ImmutableList<ReferralEntry> userFamilyReferrals,
             ImmutableList<ReferralEntry> targetFamilyReferrals, ImmutableList<ReferralEntry> assignedReferrals)
         {
             return permissionSet.Context switch
@@ -102,7 +106,7 @@ namespace CareTogether.Engines.Authorization
                 AllVolunteerFamiliesPermissionContext c => context switch
                 {
                     FamilyAuthorizationContext or AllVolunteerFamiliesAuthorizationContext =>
-                        targetFamily != null && targetFamilyVolunteerInfo != null,
+                        targetFamily != null && targetFamilyIsVolunteerFamily,
                     _ => false
                 },
                 AllPartneringFamiliesPermissionContext c => context switch
