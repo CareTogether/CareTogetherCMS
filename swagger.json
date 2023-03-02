@@ -371,7 +371,7 @@
         "tags": [
           "Records"
         ],
-        "operationId": "Records_ListVisibleFamilies",
+        "operationId": "Records_ListVisibleAggregates",
         "parameters": [
           {
             "name": "organizationId",

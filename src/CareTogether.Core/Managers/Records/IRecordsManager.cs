@@ -65,7 +65,7 @@ namespace CareTogether.Managers.Records
 
     public interface IRecordsManager
     {
-        Task<ImmutableList<RecordsAggregate>> ListVisibleFamiliesAsync(
+        Task<ImmutableList<RecordsAggregate>> ListVisibleAggregatesAsync(
             ClaimsPrincipal user, Guid organizationId, Guid locationId);
 
         //TODO: Support returning *multiple* aggregates to upsert

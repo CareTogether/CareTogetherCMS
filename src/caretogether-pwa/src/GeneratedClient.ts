@@ -356,7 +356,7 @@ export class RecordsClient {
         this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
     }
 
-    listVisibleFamilies(organizationId: string, locationId: string): Promise<RecordsAggregate[]> {
+    listVisibleAggregates(organizationId: string, locationId: string): Promise<RecordsAggregate[]> {
         let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Records";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
@@ -374,11 +374,11 @@ export class RecordsClient {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processListVisibleFamilies(_response);
+            return this.processListVisibleAggregates(_response);
         });
     }
 
-    protected processListVisibleFamilies(response: Response): Promise<RecordsAggregate[]> {
+    protected processListVisibleAggregates(response: Response): Promise<RecordsAggregate[]> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {

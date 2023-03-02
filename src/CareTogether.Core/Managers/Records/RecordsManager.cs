@@ -39,7 +39,7 @@ namespace CareTogether.Managers.Records
         }
 
 
-        public async Task<ImmutableList<RecordsAggregate>> ListVisibleFamiliesAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId)
+        public async Task<ImmutableList<RecordsAggregate>> ListVisibleAggregatesAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId)
         {
             var families = await directoryResource.ListFamiliesAsync(organizationId, locationId);
 
@@ -52,15 +52,42 @@ namespace CareTogether.Managers.Records
                 .WhenAll())
                 .Where(x => x.hasPermissions)
                 .Select(x => x.family)
-                .Cast<Family>()
                 .ToImmutableList();
 
-            var result = await visibleFamilies
-                .Select(family => combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, family.Id, user))
+            var renderedFamilies = await visibleFamilies
+                .Select(async family =>
+                {
+                    var renderedFamily = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
+                        organizationId, locationId, family.Id, user);
+                    return new FamilyRecordsAggregate(renderedFamily);
+                })
                 .WhenAll();
 
-            return result
-                .Select(family => (RecordsAggregate)new FamilyRecordsAggregate(family))
+            var communities = await communitiesResource.ListLocationCommunitiesAsync(organizationId, locationId);
+
+            var visibleCommunities = (await communities.Select(async community =>
+                {
+                    var permissions = await authorizationEngine.AuthorizeUserAccessAsync(organizationId, locationId, user,
+                        new CommunityAuthorizationContext(community.Id));
+                    return (community, hasPermissions: !permissions.IsEmpty);
+                })
+                .WhenAll())
+                .Where(x => x.hasPermissions)
+                .Select(x => x.community)
+                .ToImmutableList();
+
+            var renderedCommunities = await visibleCommunities
+                .Select(async community =>
+                {
+                    //TODO: Rendering actions (e.g., permissions - which can be on a base aggregate type along with ID!)
+                    var renderedCommunity = await Task.FromResult(community);
+                    return new CommunityRecordsAggregate(renderedCommunity);
+                })
+                .WhenAll();
+
+            return renderedFamilies
+                .Cast<RecordsAggregate>()
+                .Concat(renderedCommunities)
                 .ToImmutableList();
         }
 

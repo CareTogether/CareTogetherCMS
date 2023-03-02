@@ -220,7 +220,7 @@ namespace CareTogether.Api.OData
                 .ToArray();
 
             var familiesByLocation = await locations.ZipSelectManyAsync(location =>
-                recordsManager.ListVisibleFamiliesAsync(User, location.OrganizationId, location.Id))
+                recordsManager.ListVisibleAggregatesAsync(User, location.OrganizationId, location.Id))
                 .Where(zipResult => zipResult.Item2 is FamilyRecordsAggregate)
                 .Select(zipResult => (zipResult.Item1, (FamilyRecordsAggregate)zipResult.Item2))
                 .ToArrayAsync();
