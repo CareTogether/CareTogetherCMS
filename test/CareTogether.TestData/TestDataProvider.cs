@@ -1,4 +1,4 @@
-﻿using CareTogether.Resources.Accounts;
+using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
@@ -368,7 +368,8 @@ namespace CareTogether.TestData
                 new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 15, 30), new AddCommunityRoleAssignment(guid1, guid4, "Community Co-Organizer")),
                 new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 16, 0), new UploadCommunityDocument(guid1, guid1, "Five-card stud rules.pdf")),
                 new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 16, 30), new DeleteUploadedCommunityDocument(guid1, guid1)),
-                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 18, 12), new UploadCommunityDocument(guid1, guid2, "Revised five-card stud rules.pdf")));
+                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 18, 12), new UploadCommunityDocument(guid1, guid2, "Revised five-card stud rules.pdf")),
+                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 2, 0, 0, 0), new CreateCommunity(guid2, "Fight Club", "Don't talk about it.")));
         }
 
         public static async Task PopulateDraftNotes(IObjectStore<string?> draftNotesStore)
