@@ -22,16 +22,18 @@ namespace CareTogether.Engines.Authorization
         private readonly IDirectoryResource directoryResource;
         private readonly IReferralsResource referralsResource;
         private readonly IApprovalsResource approvalsResource;
+        private readonly ICommunitiesResource communitiesResource;
 
 
         public AuthorizationEngine(IPoliciesResource policiesResource,
             IDirectoryResource directoryResource, IReferralsResource referralsResource,
-            IApprovalsResource approvalsResource)
+            IApprovalsResource approvalsResource, ICommunitiesResource communitiesResource)
         {
             this.policiesResource = policiesResource;
             this.directoryResource = directoryResource;
             this.referralsResource = referralsResource;
             this.approvalsResource = approvalsResource;
+            this.communitiesResource = communitiesResource;
         }
 
 
@@ -72,6 +74,26 @@ namespace CareTogether.Engines.Authorization
                 arrangement.Value.IndividualVolunteerAssignments.Exists(assignment => assignment.FamilyId == userFamily?.Id)))
                 .ToImmutableList();
 
+            // Look up the user's family's and target family's community memberships
+            var communities = await communitiesResource.ListLocationCommunitiesAsync(organizationId, locationId);
+            var userFamilyCommunities = userFamily != null
+                ? communities
+                    .Where(community => community.MemberFamilies.Contains(userFamily.Id))
+                    .Select(community => community.Id)
+                    .ToImmutableList()
+                : ImmutableList<Guid>.Empty;
+            var targetFamilyCommunities = targetFamily != null
+                ? communities
+                    .Where(community => community.MemberFamilies.Contains(targetFamily.Id))
+                    .Select(community => community.Id)
+                    .ToImmutableList()
+                : ImmutableList<Guid>.Empty;
+            var userCommunityRoleAssignments = communities
+                .SelectMany(community => community.CommunityRoleAssignments
+                    .Where(assignment => assignment.PersonId == userPersonId)
+                    .Select(assignment => (community.Id, assignment.CommunityRole)))
+                .ToImmutableList();
+
             // We need to evaluate each of the user's roles to determine which permission sets
             // apply to the user's current context.
             var config = await policiesResource.GetConfigurationAsync(organizationId);
@@ -81,9 +103,10 @@ namespace CareTogether.Engines.Authorization
                 .ToImmutableList();
             var applicablePermissionSets = userPermissionSets
                 .Where(permissionSet => IsPermissionSetApplicable(permissionSet,
-                    context, userFamily, targetFamily, //TODO: Need to include target community & families' community memberships!
+                    context, userFamily, targetFamily,
                     targetFamilyIsVolunteerFamily, userFamilyReferrals,
-                    targetFamilyReferrals, assignedReferrals))
+                    targetFamilyReferrals, assignedReferrals,
+                    userFamilyCommunities, targetFamilyCommunities, userCommunityRoleAssignments))
                 .ToImmutableList();
 
             return applicablePermissionSets
@@ -95,7 +118,9 @@ namespace CareTogether.Engines.Authorization
         internal static bool IsPermissionSetApplicable(ContextualPermissionSet permissionSet,
             AuthorizationContext context, Family? userFamily, Family? targetFamily,
             bool targetFamilyIsVolunteerFamily, ImmutableList<ReferralEntry> userFamilyReferrals,
-            ImmutableList<ReferralEntry> targetFamilyReferrals, ImmutableList<ReferralEntry> assignedReferrals)
+            ImmutableList<ReferralEntry> targetFamilyReferrals, ImmutableList<ReferralEntry> assignedReferrals,
+            ImmutableList<Guid> userFamilyCommunities, ImmutableList<Guid> targetFamilyCommunities,
+            ImmutableList<(Guid Id, string CommunityRole)> userCommunityRoleAssignments)
         {
             return permissionSet.Context switch
             {
@@ -158,11 +183,16 @@ namespace CareTogether.Engines.Authorization
                                 iva.FamilyId == targetFamily.Id &&
                                 (c.WhenAssigneeFunctionIsIn == null || c.WhenAssigneeFunctionIsIn.Contains(iva.ArrangementFunction))))),
                 CommunityMemberPermissionContext c =>
-                    context is CommunityAuthorizationContext, //TODO: also look at FamilyAuthorizationContext (for community members)
-                    //userFamily.CommunityMemberships.Any(communityId => communityId == context.CommunityId),
+                    context is CommunityAuthorizationContext auth &&
+                        userFamilyCommunities.Contains(auth.CommunityId) &&
+                        (c.WhenOwnCommunityRoleIsIn == null || c.WhenOwnCommunityRoleIsIn.Any(cr =>
+                            userCommunityRoleAssignments.Any(cra => cra.Id == auth.CommunityId && cra.CommunityRole == cr))),
                 CommunityCoMemberFamiliesPermissionContext c =>
-                    context is FamilyAuthorizationContext, //TODO: also look at FamilyAuthorizationContext (for community members)
-                    //TODO: userFamily.CommunityMemberships.Any(communityId => communityId == context.CommunityId),
+                    context is FamilyAuthorizationContext &&
+                        userFamilyCommunities.Intersect(targetFamilyCommunities).Any(community =>
+                            c.WhenOwnCommunityRoleIsIn == null ||
+                            c.WhenOwnCommunityRoleIsIn.Any(cr =>
+                                userCommunityRoleAssignments.Any(cra => cra.Id == community && cra.CommunityRole == cr))),
                 _ => throw new NotImplementedException(
                     $"The permission context type '{permissionSet.Context.GetType().FullName}' has not been implemented.")
             };

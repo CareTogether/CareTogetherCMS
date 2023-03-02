@@ -136,7 +136,7 @@ namespace CareTogether.Api
 
             // Engine services
             var authorizationEngine = new AuthorizationEngine(policiesResource, directoryResource,
-                referralsResource, approvalsResource);
+                referralsResource, approvalsResource, communitiesResource);
             services.AddSingleton<IAuthorizationEngine>(authorizationEngine); //TODO: Temporary workaround for UsersController
             var policyEvaluationEngine = new PolicyEvaluationEngine(policiesResource);
 

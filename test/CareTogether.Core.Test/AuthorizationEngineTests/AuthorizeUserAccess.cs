@@ -1,4 +1,4 @@
-﻿using CareTogether.Engines.Authorization;
+using CareTogether.Engines.Authorization;
 using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Communities;
@@ -72,9 +72,10 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             var policiesResource = new PoliciesResource(configurationStore, policiesStore, organizationSecretsStore);
             var referralsResource = new ReferralsResource(referralsEventLog);
             var approvalsResource = new ApprovalsResource(approvalsEventLog);
+            var communitiesResource = new CommunitiesResource(communitiesEventLog, Mock.Of<IFileStore>());
 
             dut = new AuthorizationEngine(policiesResource, directoryResource,
-                referralsResource, approvalsResource);
+                referralsResource, approvalsResource, communitiesResource);
         }
 
         [DataTestMethod]
