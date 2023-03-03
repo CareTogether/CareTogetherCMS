@@ -17,6 +17,8 @@ using CareTogether.Utilities.FileStore;
 using CareTogether.Utilities.ObjectStore;
 using CareTogether.Utilities.Telephony;
 using idunno.Authentication.Basic;
+using LazyCache;
+using LazyCache.Providers;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -60,6 +62,20 @@ namespace CareTogether.Api
                 .AddFeatureFilter<TargetingFilter>();
 
             services.AddHealthChecks();
+
+            // Registers IAppCache for thread-safe caching of expensive calculations
+            services.AddSingleton<IAppCache>(provider =>
+            {
+                //HACK: This works around an issue with NSwag's command-line generation process
+                //      (see https://github.com/RicoSuter/NSwag/issues/2309).
+                //      The default LazyCache service registration (services.AddLazyCache()) assumes
+                //      that no IMemoryCache already exists in the dependency injection container, but
+                //      NSwag injects an IMemoryCache instance of its own when generating the OpenAPI model.
+                //      If not for this conflict, we could just call services.AddLazyCache() and be done.
+                var memoryCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
+                var memoryCacheProvider = new MemoryCacheProvider(memoryCache);
+                return new CachingService(memoryCacheProvider);
+            });
 
             // Configure the shared blob storage clients to authenticate according to the environment -
             // one for mutable storage and one for immutable storage.
