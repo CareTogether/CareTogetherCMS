@@ -1,5 +1,5 @@
 import { atom, selector, useRecoilCallback, useRecoilValue } from "recoil";
-import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, CompositeRecordsCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, RecordsClient, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, UpdatePersonGender, UpdatePersonAge, UpdatePersonEthnicity, UpdateAdultRelationshipToFamily, CustodialRelationshipType, UpdateCustodialRelationshipType, RemoveCustodialRelationship, ChangePrimaryFamilyContact, CombinedFamilyInfo, FamilyRecordsCommand, PersonRecordsCommand, NoteRecordsCommand, AtomicRecordsCommand, CustomField, UpdateCustomFamilyField, FamilyRecordsAggregate } from "../GeneratedClient";
+import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, CompositeRecordsCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, RecordsClient, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, UpdatePersonGender, UpdatePersonAge, UpdatePersonEthnicity, UpdateAdultRelationshipToFamily, CustodialRelationshipType, UpdateCustodialRelationshipType, RemoveCustodialRelationship, ChangePrimaryFamilyContact, FamilyRecordsCommand, PersonRecordsCommand, NoteRecordsCommand, AtomicRecordsCommand, CustomField, UpdateCustomFamilyField, FamilyRecordsAggregate, RecordsAggregate, CommunityRecordsAggregate } from "../GeneratedClient";
 import { accessTokenFetchQuery, authenticatingFetch } from "../Authentication/AuthenticatedHttp";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { currentOrganizationAndLocationIdsQuery, organizationConfigurationData, organizationConfigurationQuery } from "./ConfigurationModel";
@@ -12,21 +12,38 @@ export const recordsClientQuery = selector({
   }
 });
 
-export const visibleFamiliesInitializationQuery = selector({
-  key: 'visibleFamiliesInitializationQuery',
+export const visibleAggregatesInitializationQuery = selector({
+  key: 'visibleAggregatesInitializationQuery',
   get: async ({get}) => {
     get(organizationConfigurationQuery);
     const {organizationId, locationId} = get(currentOrganizationAndLocationIdsQuery);
     const recordsClient = get(recordsClientQuery);
-    const familyAggregates = await recordsClient.listVisibleFamilies(organizationId, locationId);
-    return familyAggregates.filter(aggregate => aggregate instanceof FamilyRecordsAggregate).map(aggregate =>
+    const visibleAggregates = await recordsClient.listVisibleAggregates(organizationId, locationId);
+    return visibleAggregates;
+  }
+});
+
+export const visibleAggregatesData = atom<RecordsAggregate[]>({
+  key: 'visibleAggregatesData',
+  default: []
+});
+
+export const visibleFamiliesData = selector({
+  key: 'visibleFamiliesData__RENAME_TO_QUERY',
+  get: ({get}) => {
+    const visibleAggregates = get(visibleAggregatesData);
+    return visibleAggregates.filter(aggregate => aggregate instanceof FamilyRecordsAggregate).map(aggregate =>
       (aggregate as FamilyRecordsAggregate).family!);
   }
 });
 
-export const visibleFamiliesData = atom<CombinedFamilyInfo[]>({
-  key: 'visibleFamiliesData',
-  default: []
+export const visibleCommunitiesQuery = selector({
+  key: 'visibleCommunitiesQuery',
+  get: ({get}) => {
+    const visibleAggregates = get(visibleAggregatesData);
+    return visibleAggregates.filter(aggregate => aggregate instanceof CommunityRecordsAggregate).map(aggregate =>
+      (aggregate as CommunityRecordsAggregate).community!);
+  }
 });
 
 export function usePersonLookup() {
@@ -117,12 +134,12 @@ export function useAtomicRecordsCommandCallback<T extends unknown[], U extends A
       
       const updatedFamily = (updatedAggregate as FamilyRecordsAggregate).family!;
 
-      set(visibleFamiliesData, current =>
-        current.some(currentEntry => currentEntry.family?.id === familyId)
-        ? current.map(currentEntry => currentEntry.family?.id === familyId
-          ? updatedFamily
+      set(visibleAggregatesData, current => //TODO: Support generic aggregate upserts (ideally via a generic aggregate ID)
+        current.some(currentEntry => (currentEntry as FamilyRecordsAggregate).family?.family?.id === familyId)
+        ? current.map(currentEntry => (currentEntry as FamilyRecordsAggregate).family?.family?.id === familyId
+          ? updatedAggregate
           : currentEntry)
-        : current.concat(updatedFamily));
+        : current.concat(updatedAggregate));
       
       return updatedFamily;
     };
@@ -144,12 +161,12 @@ function useCompositeRecordsCommandCallback<T extends unknown[]>(
       
       const updatedFamily = (updatedAggregate as FamilyRecordsAggregate).family!;
 
-      set(visibleFamiliesData, current =>
-        current.some(currentEntry => currentEntry.family?.id === familyId)
-        ? current.map(currentEntry => currentEntry.family?.id === familyId
-          ? updatedFamily
+      set(visibleAggregatesData, current => //TODO: Support generic aggregate upserts (ideally via a generic aggregate ID)
+        current.some(currentEntry => (currentEntry as FamilyRecordsAggregate).family?.family?.id === familyId)
+        ? current.map(currentEntry => (currentEntry as FamilyRecordsAggregate).family?.family?.id === familyId
+          ? updatedAggregate
           : currentEntry)
-        : current.concat(updatedFamily));
+        : current.concat(updatedAggregate));
       
       return updatedFamily;
     };
