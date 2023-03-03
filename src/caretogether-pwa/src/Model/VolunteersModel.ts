@@ -1,5 +1,5 @@
 import { selector, useRecoilCallback } from "recoil";
-import { ActionRequirement, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, VolunteerCommand, RecordsClient, VolunteerFamilyCommand, RoleRemovalReason, RemoveVolunteerRole, ResetVolunteerRole, RemoveVolunteerFamilyRole, ResetVolunteerFamilyRole, MarkVolunteerFamilyRequirementIncomplete, CompletedRequirementInfo, MarkVolunteerRequirementIncomplete, ExemptVolunteerRequirement, UnexemptVolunteerRequirement, ExemptVolunteerFamilyRequirement, UnexemptVolunteerFamilyRequirement, ExemptedRequirementInfo, FamilyApprovalRecordsCommand, IndividualApprovalRecordsCommand, FamilyRecordsAggregate } from "../GeneratedClient";
+import { ActionRequirement, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, VolunteerCommand, RecordsClient, VolunteerFamilyCommand, RoleRemovalReason, RemoveVolunteerRole, ResetVolunteerRole, RemoveVolunteerFamilyRole, ResetVolunteerFamilyRole, MarkVolunteerFamilyRequirementIncomplete, CompletedRequirementInfo, MarkVolunteerRequirementIncomplete, ExemptVolunteerRequirement, UnexemptVolunteerRequirement, ExemptVolunteerFamilyRequirement, UnexemptVolunteerFamilyRequirement, ExemptedRequirementInfo, FamilyApprovalRecordsCommand, IndividualApprovalRecordsCommand } from "../GeneratedClient";
 import { authenticatingFetch } from "../Authentication/AuthenticatedHttp";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { visibleFamiliesQuery, visibleAggregatesData } from "./DirectoryModel";
@@ -25,9 +25,9 @@ function useVolunteerFamilyCommandCallbackWithLocation<T extends unknown[]>(
       c.command = command;
       const updatedAggregate = await client.submitAtomicRecordsCommand(organizationId, locationId, c);
       
-      set(visibleAggregatesData, current => //TODO: Support generic aggregate upserts (ideally via a generic aggregate ID)
-        current.some(currentEntry => (currentEntry as FamilyRecordsAggregate).family?.family?.id === volunteerFamilyId)
-        ? current.map(currentEntry => (currentEntry as FamilyRecordsAggregate).family?.family?.id === volunteerFamilyId
+      set(visibleAggregatesData, current =>
+        current.some(currentEntry => currentEntry.id === volunteerFamilyId)
+        ? current.map(currentEntry => currentEntry.id === volunteerFamilyId
           ? updatedAggregate
           : currentEntry)
         : current.concat(updatedAggregate));
@@ -56,9 +56,9 @@ function useVolunteerCommandCallbackWithLocation<T extends unknown[]>(
       c.command = command;
       const updatedAggregate = await client.submitAtomicRecordsCommand(organizationId, locationId, c);
       
-      set(visibleAggregatesData, current => //TODO: Support generic aggregate upserts (ideally via a generic aggregate ID)
-        current.some(currentEntry => (currentEntry as FamilyRecordsAggregate).family?.family?.id === volunteerFamilyId)
-        ? current.map(currentEntry => (currentEntry as FamilyRecordsAggregate).family?.family?.id === volunteerFamilyId
+      set(visibleAggregatesData, current =>
+        current.some(currentEntry => currentEntry.id === volunteerFamilyId)
+        ? current.map(currentEntry => currentEntry.id === volunteerFamilyId
           ? updatedAggregate
           : currentEntry)
         : current.concat(updatedAggregate));

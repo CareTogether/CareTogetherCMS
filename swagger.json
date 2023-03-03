@@ -1675,6 +1675,10 @@
           "discriminator"
         ],
         "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
           "discriminator": {
             "type": "string"
           }

@@ -56,11 +56,11 @@ namespace CareTogether.Managers.Records
         : AtomicRecordsCommand();
 
     [JsonHierarchyBase]
-    public abstract partial record RecordsAggregate();
+    public abstract partial record RecordsAggregate(Guid Id);
     public sealed record FamilyRecordsAggregate(CombinedFamilyInfo Family)
-        : RecordsAggregate();
+        : RecordsAggregate(Family.Family.Id);
     public sealed record CommunityRecordsAggregate(Community Community)
-        : RecordsAggregate();
+        : RecordsAggregate(Community.Id);
 
 
     public interface IRecordsManager

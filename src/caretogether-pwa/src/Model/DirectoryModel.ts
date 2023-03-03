@@ -134,9 +134,9 @@ export function useAtomicRecordsCommandCallback<T extends unknown[], U extends A
       
       const updatedFamily = (updatedAggregate as FamilyRecordsAggregate).family!;
 
-      set(visibleAggregatesData, current => //TODO: Support generic aggregate upserts (ideally via a generic aggregate ID)
-        current.some(currentEntry => (currentEntry as FamilyRecordsAggregate).family?.family?.id === familyId)
-        ? current.map(currentEntry => (currentEntry as FamilyRecordsAggregate).family?.family?.id === familyId
+      set(visibleAggregatesData, current =>
+        current.some(currentEntry => currentEntry.id === familyId)
+        ? current.map(currentEntry => currentEntry.id === familyId
           ? updatedAggregate
           : currentEntry)
         : current.concat(updatedAggregate));
@@ -161,9 +161,9 @@ function useCompositeRecordsCommandCallback<T extends unknown[]>(
       
       const updatedFamily = (updatedAggregate as FamilyRecordsAggregate).family!;
 
-      set(visibleAggregatesData, current => //TODO: Support generic aggregate upserts (ideally via a generic aggregate ID)
-        current.some(currentEntry => (currentEntry as FamilyRecordsAggregate).family?.family?.id === familyId)
-        ? current.map(currentEntry => (currentEntry as FamilyRecordsAggregate).family?.family?.id === familyId
+      set(visibleAggregatesData, current =>
+        current.some(currentEntry => currentEntry.id === familyId)
+        ? current.map(currentEntry => currentEntry.id === familyId
           ? updatedAggregate
           : currentEntry)
         : current.concat(updatedAggregate));

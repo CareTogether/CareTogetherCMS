@@ -2860,6 +2860,7 @@ export interface IDocumentUploadInfo {
 }
 
 export abstract class RecordsAggregate implements IRecordsAggregate {
+    id?: string;
 
     protected _discriminator: string;
 
@@ -2874,6 +2875,9 @@ export abstract class RecordsAggregate implements IRecordsAggregate {
     }
 
     init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+        }
     }
 
     static fromJS(data: any): RecordsAggregate {
@@ -2894,11 +2898,13 @@ export abstract class RecordsAggregate implements IRecordsAggregate {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["discriminator"] = this._discriminator;
+        data["id"] = this.id;
         return data;
     }
 }
 
 export interface IRecordsAggregate {
+    id?: string;
 }
 
 export class CommunityRecordsAggregate extends RecordsAggregate implements ICommunityRecordsAggregate {
