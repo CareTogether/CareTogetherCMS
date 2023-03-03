@@ -1,11 +1,11 @@
 import { selector } from "recoil";
 import { ReferralCommand, ArrangementsCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement, StartArrangements, EndArrangements, AssignVolunteerFamily, AssignIndividualVolunteer, ReferralCloseReason, CloseReferral, CreateReferral, TrackChildLocationChange, ChildLocationPlan, UpdateCustomReferralField, CustomField, ExemptReferralRequirement, UnexemptReferralRequirement, ExemptArrangementRequirement, UnexemptArrangementRequirement, MissingArrangementRequirement, ExemptedRequirementInfo, MarkReferralRequirementIncomplete, CompletedRequirementInfo, MarkArrangementRequirementIncomplete, CancelArrangementsSetup, UpdateReferralComments, UnassignVolunteerFamily, UnassignIndividualVolunteer, CompleteVolunteerFamilyAssignmentRequirement, CompleteIndividualVolunteerAssignmentRequirement, FamilyVolunteerAssignment, IndividualVolunteerAssignment, ExemptIndividualVolunteerAssignmentRequirement, ExemptVolunteerFamilyAssignmentRequirement, MarkIndividualVolunteerAssignmentRequirementIncomplete, MarkVolunteerFamilyAssignmentRequirementIncomplete, UnexemptIndividualVolunteerAssignmentRequirement, UnexemptVolunteerFamilyAssignmentRequirement, UpdateArrangementComments, ReopenArrangements, EditArrangementStartTime, DeleteChildLocationChange, PlanArrangementStart, PlanArrangementEnd, PlanChildLocationChange, DeletePlannedChildLocationChange, DeleteArrangements, ReferralRecordsCommand, ArrangementRecordsCommand } from "../GeneratedClient";
-import { useAtomicRecordsCommandCallback, visibleFamiliesData } from "./DirectoryModel";
+import { useAtomicRecordsCommandCallback, visibleFamiliesQuery } from "./DirectoryModel";
 
 export const partneringFamiliesData = selector({
   key: 'partneringFamiliesData',
   get: ({get}) => {
-    const visibleFamilies = get(visibleFamiliesData);
+    const visibleFamilies = get(visibleFamiliesQuery);
     return visibleFamilies.filter(f => f.partneringFamilyInfo);
   }});
 

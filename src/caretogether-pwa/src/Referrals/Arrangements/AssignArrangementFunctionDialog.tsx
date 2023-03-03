@@ -6,7 +6,7 @@ import { useParams } from 'react-router-dom';
 import { useBackdrop } from '../../Hooks/useBackdrop';
 import { DialogHandle } from '../../Hooks/useDialogHandle';
 import { useReferralsModel } from '../../Model/ReferralsModel';
-import { visibleFamiliesData, usePersonAndFamilyLookup } from '../../Model/DirectoryModel';
+import { visibleFamiliesQuery, usePersonAndFamilyLookup } from '../../Model/DirectoryModel';
 
 interface AssignArrangementFunctionDialogProps {
   handle: DialogHandle
@@ -27,7 +27,7 @@ export function AssignArrangementFunctionDialog({
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
   
-  const visibleFamilies = useRecoilValue(visibleFamiliesData);
+  const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
 
   const familyAndPersonLookup = usePersonAndFamilyLookup();
 

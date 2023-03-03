@@ -28,8 +28,8 @@ export const visibleAggregatesData = atom<RecordsAggregate[]>({
   default: []
 });
 
-export const visibleFamiliesData = selector({
-  key: 'visibleFamiliesData__RENAME_TO_QUERY',
+export const visibleFamiliesQuery = selector({
+  key: 'visibleFamiliesQuery',
   get: ({get}) => {
     const visibleAggregates = get(visibleAggregatesData);
     return visibleAggregates.filter(aggregate => aggregate instanceof FamilyRecordsAggregate).map(aggregate =>
@@ -47,7 +47,7 @@ export const visibleCommunitiesQuery = selector({
 });
 
 export function usePersonLookup() {
-  const visibleFamilies = useRecoilValue(visibleFamiliesData);
+  const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
 
   return (familyId?: string, personId?: string) => {
     const family = visibleFamilies.find(family => family.family!.id === familyId);
@@ -58,7 +58,7 @@ export function usePersonLookup() {
 }
 
 export function usePersonAndFamilyLookup() {
-  const visibleFamilies = useRecoilValue(visibleFamiliesData);
+  const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
 
   return (personId?: string) => {
     const family = visibleFamilies.find(family =>
@@ -71,7 +71,7 @@ export function usePersonAndFamilyLookup() {
 }
 
 export function useUserLookup() {
-  const visibleFamilies = useRecoilValue(visibleFamiliesData);
+  const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
   const organizationConfig = useRecoilValue(organizationConfigurationData);
 
   return (userId?: string) => {
@@ -85,7 +85,7 @@ export function useUserLookup() {
 }
 
 export function useFamilyLookup() {
-  const visibleFamilies = useRecoilValue(visibleFamiliesData);
+  const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
 
   return (familyId?: string) => {
     const family = visibleFamilies.find(family => family.family!.id === familyId);

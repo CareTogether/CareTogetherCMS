@@ -2,12 +2,12 @@ import { selector, useRecoilCallback } from "recoil";
 import { ActionRequirement, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, VolunteerCommand, RecordsClient, VolunteerFamilyCommand, RoleRemovalReason, RemoveVolunteerRole, ResetVolunteerRole, RemoveVolunteerFamilyRole, ResetVolunteerFamilyRole, MarkVolunteerFamilyRequirementIncomplete, CompletedRequirementInfo, MarkVolunteerRequirementIncomplete, ExemptVolunteerRequirement, UnexemptVolunteerRequirement, ExemptVolunteerFamilyRequirement, UnexemptVolunteerFamilyRequirement, ExemptedRequirementInfo, FamilyApprovalRecordsCommand, IndividualApprovalRecordsCommand, FamilyRecordsAggregate } from "../GeneratedClient";
 import { authenticatingFetch } from "../Authentication/AuthenticatedHttp";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
-import { visibleFamiliesData, visibleAggregatesData } from "./DirectoryModel";
+import { visibleFamiliesQuery, visibleAggregatesData } from "./DirectoryModel";
 
 export const volunteerFamiliesData = selector({
   key: 'volunteerFamiliesData',
   get: ({get}) => {
-    const visibleFamilies = get(visibleFamiliesData);
+    const visibleFamilies = get(visibleFamiliesQuery);
     return visibleFamilies.filter(f => f.volunteerFamilyInfo);
   }});
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@mui/material';
 import { ExactAge, Gender, EmailAddressType, PhoneNumberType, CombinedFamilyInfo } from '../GeneratedClient';
-import { visibleFamiliesData, useDirectoryModel } from '../Model/DirectoryModel';
+import { visibleFamiliesQuery, useDirectoryModel } from '../Model/DirectoryModel';
 import WarningIcon from '@mui/icons-material/Warning';
 import { DatePicker } from '@mui/x-date-pickers';
 import { useRecoilValue } from 'recoil';
@@ -20,7 +20,7 @@ function optional(arg: string) {
 
 export function AddAdultDialog({onClose}: AddAdultDialogProps) {
   const { familyId } = useParams<{ familyId: string }>();
-  const visibleFamilies = useRecoilValue(visibleFamiliesData);
+  const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
   const family = visibleFamilies.find(x => x.family?.id === familyId) as CombinedFamilyInfo;
 
   const [fields, setFields] = useState({
