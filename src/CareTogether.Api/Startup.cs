@@ -17,6 +17,7 @@ using CareTogether.Utilities.FileStore;
 using CareTogether.Utilities.ObjectStore;
 using CareTogether.Utilities.Telephony;
 using idunno.Authentication.Basic;
+using LazyCache;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -60,6 +61,8 @@ namespace CareTogether.Api
                 .AddFeatureFilter<TargetingFilter>();
 
             services.AddHealthChecks();
+
+            services.AddLazyCache(); // Registers IAppCache for thread-safe caching of expensive calculations
 
             // Configure the shared blob storage clients to authenticate according to the environment -
             // one for mutable storage and one for immutable storage.

@@ -5,6 +5,7 @@ using CareTogether.Managers.Records;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.Referrals;
+using LazyCache;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
@@ -103,12 +104,14 @@ namespace CareTogether.Api.OData
     {
         private readonly IPoliciesResource policiesResource;
         private readonly IRecordsManager recordsManager;
+        private readonly IAppCache cache;
 
         public LiveODataModelController(IPoliciesResource policiesResource,
-            IRecordsManager recordsManager)
+            IRecordsManager recordsManager, IAppCache cache)
         {
             this.policiesResource = policiesResource;
             this.recordsManager = recordsManager;
+            this.cache = cache;
         }
 
 
@@ -200,7 +203,24 @@ namespace CareTogether.Api.OData
         private async Task<LiveModel> RenderLiveModelAsync()
         {
             var organizationId = GetUserSingleOrganizationId();
+            
+            var result = await cache.GetOrAddAsync(
+                $"LiveODataModelController-RenderLiveModelAsync-{organizationId}",
+                async cacheEntry =>
+                {
+                    var result = await RenderLiveModelInternalAsync(organizationId);
 
+                    cacheEntry.SlidingExpiration = TimeSpan.FromMinutes(1);
+                    cacheEntry.AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(5);
+
+                    return result;
+                });
+
+            return result!; // If this is actually null, then we are already throwing an exception anyways.
+        }
+
+        private async Task<LiveModel> RenderLiveModelInternalAsync(Guid organizationId)
+        {
             var organizationConfiguration = await policiesResource.GetConfigurationAsync(organizationId);
 
             var locationPolicies = await organizationConfiguration.Locations
