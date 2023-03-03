@@ -66,8 +66,8 @@ namespace CareTogether.Api
             // Registers IAppCache for thread-safe caching of expensive calculations
             services.AddSingleton<IAppCache>(provider =>
             {
-                //HACK: This works around an issue with NSwag's command-line generation process
-                //      (see https://github.com/RicoSuter/NSwag/issues/2309).
+                //HACK: This works around a compatibility issue with NSwag's command-line generation process
+                //      (see https://github.com/alastairtree/LazyCache/issues/186).
                 //      The default LazyCache service registration (services.AddLazyCache()) assumes
                 //      that no IMemoryCache already exists in the dependency injection container, but
                 //      NSwag injects an IMemoryCache instance of its own when generating the OpenAPI model.

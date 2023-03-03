@@ -286,20 +286,37 @@ namespace CareTogether.Api.OData
             var primaryContactPerson = family.Family.Adults
                 .Single(adult => adult.Item1.Id == family.Family.PrimaryFamilyContactPersonId).Item1;
 
+            T? GetFromPrimaryContactIfAvailable<T>(Func<Resources.Directory.Person, T?> selector)
+                where T : class
+            {
+                var bestResult = primaryContactPerson != null ? selector(primaryContactPerson) : null;
+                bestResult ??= family.Family.Adults
+                    .Select(adult => selector(adult.Item1))
+                    .Where(result => result != null)
+                    .FirstOrDefault();
+                return bestResult;
+            }
+
             var familyName = $"{primaryContactPerson.FirstName} {primaryContactPerson.LastName} Family";
 
-            var primaryEmail = primaryContactPerson.EmailAddresses
-                .SingleOrDefault(x => x.Id == primaryContactPerson.PreferredEmailAddressId)?.Address;
-            var primaryAddressInfo = primaryContactPerson.Addresses
-                .SingleOrDefault(x => x.Id == primaryContactPerson.CurrentAddressId);
-            var primaryAddress = primaryAddressInfo == null ? null :
-                new Address(primaryAddressInfo.Line1, primaryAddressInfo.Line2,
-                    primaryAddressInfo.City, primaryAddressInfo.State, primaryAddressInfo.PostalCode);
-            var primaryPhoneNumber = primaryContactPerson.PhoneNumbers
-                .SingleOrDefault(x => x.Id == primaryContactPerson.PreferredPhoneNumberId)?.Number;
+            var bestEmail = GetFromPrimaryContactIfAvailable(person => person.EmailAddresses
+                .SingleOrDefault(x => x.Id == primaryContactPerson.PreferredEmailAddressId)?.Address);
+
+            var bestAddress = GetFromPrimaryContactIfAvailable(person =>
+            {
+                var primaryAddressInfo = person.Addresses
+                    .SingleOrDefault(x => x.Id == person.CurrentAddressId);
+                var primaryAddress = primaryAddressInfo == null ? null :
+                    new Address(primaryAddressInfo.Line1, primaryAddressInfo.Line2,
+                        primaryAddressInfo.City, primaryAddressInfo.State, primaryAddressInfo.PostalCode);
+                return primaryAddress;
+            });
+
+            var bestPhoneNumber = GetFromPrimaryContactIfAvailable(person => person.PhoneNumbers
+                .SingleOrDefault(x => x.Id == primaryContactPerson.PreferredPhoneNumberId)?.Number);
 
             return (family, new Family(family.Family.Id, location, location.Id, familyName,
-                primaryEmail, primaryPhoneNumber, primaryAddress));
+                bestEmail, bestPhoneNumber, bestAddress));
         }
 
         private static IEnumerable<Person> RenderPeople(CombinedFamilyInfo familyInfo, Family family)
