@@ -5,6 +5,7 @@ import { Referrals } from "./Referrals/Referrals";
 import { Volunteers } from "./Volunteers/Volunteers";
 import { Settings } from "./Settings/Settings";
 import { FamilyScreen } from "./Families/FamilyScreen";
+import { Communities } from "./Communities/Communities";
 
 export function AppRoutes() {
   return (
@@ -13,6 +14,7 @@ export function AppRoutes() {
       <Route path="families/:familyId" element={<FamilyScreen />} />
       <Route path="referrals/*" element={<Referrals />} />
       <Route path="volunteers/*" element={<Volunteers />} />
+      <Route path="communities/*" element={<Communities />} />
       <Route path="settings/*" element={<Settings />} />
       {/* TODO: Remove this once a dashboard view exists. */}
       <Route path="*" element={<Navigate to="../volunteers" replace />} />
