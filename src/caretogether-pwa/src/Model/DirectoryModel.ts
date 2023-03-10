@@ -354,8 +354,8 @@ export function useDirectoryModel() {
       command.personId = crypto.randomUUID();
       command.firstName = firstName;
       command.lastName = lastName;
-      command.gender = gender || undefined;
-      command.age = age || undefined;
+      command.gender = gender == null ? undefined : gender;
+      command.age = age == null ? undefined : age;
       command.ethnicity = ethnicity || undefined;
       command.concerns = concerns;
       command.notes = notes;
@@ -376,13 +376,13 @@ export function useDirectoryModel() {
         command.phoneNumber = new PhoneNumber();
         command.phoneNumber.id = crypto.randomUUID();
         command.phoneNumber.number = phoneNumber;
-        command.phoneNumber.type = phoneType || undefined;
+        command.phoneNumber.type = phoneType == null ? undefined : phoneType;
       }
       if (emailAddress != null) {
         command.emailAddress = new EmailAddress();
         command.emailAddress.id = crypto.randomUUID();
         command.emailAddress.address = emailAddress;
-        command.emailAddress.type = emailType || undefined;
+        command.emailAddress.type = emailType == null ? undefined : emailType;
       }
       return command;
     });
@@ -395,8 +395,8 @@ export function useDirectoryModel() {
       command.personId = crypto.randomUUID();
       command.firstName = firstName;
       command.lastName = lastName;
-      command.gender = gender || undefined;
-      command.age = age || undefined;
+      command.gender = gender == null ? undefined : gender;
+      command.age = age == null ? undefined : age;
       command.ethnicity = ethnicity || undefined;
       command.custodialRelationships = custodialRelationships.map(cr => {
         cr.childId = command.personId;
@@ -417,8 +417,8 @@ export function useDirectoryModel() {
       command.personId = crypto.randomUUID();
       command.firstName = firstName;
       command.lastName = lastName;
-      command.gender = gender || undefined;
-      command.age = age || undefined;
+      command.gender = gender == null ? undefined : gender;
+      command.age = age == null ? undefined : age;
       command.ethnicity = ethnicity || undefined;
       command.concerns = concerns;
       command.notes = notes;
@@ -439,13 +439,13 @@ export function useDirectoryModel() {
         command.phoneNumber = new PhoneNumber();
         command.phoneNumber.id = crypto.randomUUID();
         command.phoneNumber.number = phoneNumber;
-        command.phoneNumber.type = phoneType || undefined;
+        command.phoneNumber.type = phoneType == null ? undefined : phoneType;
       }
       if (emailAddress != null) {
         command.emailAddress = new EmailAddress();
         command.emailAddress.id = crypto.randomUUID();
         command.emailAddress.address = emailAddress;
-        command.emailAddress.type = emailType || undefined;
+        command.emailAddress.type = emailType == null ? undefined : emailType;
       }
       return command;
     });
@@ -462,8 +462,8 @@ export function useDirectoryModel() {
       command.referralOpenedAtUtc = referralOpenedAtUtc;
       command.firstName = firstName;
       command.lastName = lastName;
-      command.gender = gender || undefined;
-      command.age = age || undefined;
+      command.gender = gender == null ? undefined : gender;
+      command.age = age == null ? undefined : age;
       command.ethnicity = ethnicity || undefined;
       command.concerns = concerns;
       command.notes = notes;
@@ -484,13 +484,13 @@ export function useDirectoryModel() {
         command.phoneNumber = new PhoneNumber();
         command.phoneNumber.id = crypto.randomUUID();
         command.phoneNumber.number = phoneNumber;
-        command.phoneNumber.type = phoneType || undefined;
+        command.phoneNumber.type = phoneType == null ? undefined : phoneType;
       }
       if (emailAddress != null) {
         command.emailAddress = new EmailAddress();
         command.emailAddress.id = crypto.randomUUID();
         command.emailAddress.address = emailAddress;
-        command.emailAddress.type = emailType || undefined;
+        command.emailAddress.type = emailType == null ? undefined : emailType;
       }
       return command;
     });
