@@ -18,12 +18,6 @@ function useReferralCommandCallbackWithLocation<T extends unknown[]>(
   });
 }
 
-// function useReferralCommandCallback<T extends unknown[]>(
-//   callback: (partneringFamilyId: string, ...args: T) => Promise<ReferralCommand>) {
-//   return useReferralCommandCallbackWithLocation<T>(
-//     (_organizationId, _locationId, partneringFamilyId, ...args) => callback(partneringFamilyId, ...args));
-// }
-
 function useArrangementsCommandCallbackWithLocation<T extends unknown[]>(
   callback: (familyId: string, ...args: T) => Promise<ArrangementsCommand>) {
   return useAtomicRecordsCommandCallback(async (familyId, ...args: T) => {
@@ -32,12 +26,6 @@ function useArrangementsCommandCallbackWithLocation<T extends unknown[]>(
     return command;
   });
 }
-
-// function useArrangementCommandCallback<T extends unknown[]>(
-//   callback: (partneringFamilyId: string, personId: string, ...args: T) => Promise<ArrangementCommand>) {
-//   return useArrangementCommandCallbackWithLocation<T>(
-//     (_organizationId, _locationId, partneringFamilyId, personId, ...args) => callback(partneringFamilyId, personId, ...args));
-// }
 
 export function useReferralsModel() {
   const completeReferralRequirement = useReferralCommandCallbackWithLocation(

@@ -93,6 +93,52 @@ export function useFamilyLookup() {
   }
 }
 
+export function useAtomicRecordsCommandCallback<T extends unknown[], U extends AtomicRecordsCommand>(
+  callback: (aggregateId: string, ...args: T) => Promise<U>) {
+  return useRecoilCallback(({snapshot, set}) => {
+    const asyncCallback = async (aggregateId: string, ...args: T) => {
+      const organizationId = await snapshot.getPromise(currentOrganizationState);
+      const locationId = await snapshot.getPromise(currentLocationState);
+
+      const command = await callback(aggregateId, ...args);
+
+      const client = new RecordsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+      const updatedAggregate = await client.submitAtomicRecordsCommand(organizationId, locationId, command);
+      
+      set(visibleAggregatesData, current =>
+        current.some(currentEntry => currentEntry.id === aggregateId)
+        ? current.map(currentEntry => currentEntry.id === aggregateId
+          ? updatedAggregate
+          : currentEntry)
+        : current.concat(updatedAggregate));
+    };
+    return asyncCallback;
+  })
+}
+
+function useCompositeRecordsCommandCallback<T extends unknown[]>(
+  callback: (aggregateId: string, ...args: T) => Promise<CompositeRecordsCommand>) {
+  return useRecoilCallback(({snapshot, set}) => {
+    const asyncCallback = async (aggregateId: string, ...args: T) => {
+      const organizationId = await snapshot.getPromise(currentOrganizationState);
+      const locationId = await snapshot.getPromise(currentLocationState);
+
+      const command = await callback(aggregateId, ...args);
+
+      const client = new RecordsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+      const updatedAggregate = await client.submitCompositeRecordsCommand(organizationId, locationId, command);
+      
+      set(visibleAggregatesData, current =>
+        current.some(currentEntry => currentEntry.id === aggregateId)
+        ? current.map(currentEntry => currentEntry.id === aggregateId
+          ? updatedAggregate
+          : currentEntry)
+        : current.concat(updatedAggregate));
+    };
+    return asyncCallback;
+  })
+}
+
 function useFamilyCommandCallback<T extends unknown[]>(
   callback: (familyId: string, ...args: T) => Promise<FamilyCommand>) {
   return useAtomicRecordsCommandCallback(async (familyId, ...args: T) => {
@@ -118,60 +164,6 @@ function useNoteCommandCallback<T extends unknown[]>(
     command.command = await callback(familyId, ...args);
     return command;
   });
-}
-
-export function useAtomicRecordsCommandCallback<T extends unknown[], U extends AtomicRecordsCommand>(
-  callback: (familyId: string, ...args: T) => Promise<U>) {
-  return useRecoilCallback(({snapshot, set}) => {
-    const asyncCallback = async (familyId: string, ...args: T) => {
-      const organizationId = await snapshot.getPromise(currentOrganizationState);
-      const locationId = await snapshot.getPromise(currentLocationState);
-
-      const command = await callback(familyId, ...args);
-
-      const client = new RecordsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedAggregate = await client.submitAtomicRecordsCommand(organizationId, locationId, command);
-      
-      const updatedFamily = (updatedAggregate as FamilyRecordsAggregate).family!;
-
-      set(visibleAggregatesData, current =>
-        current.some(currentEntry => currentEntry.id === familyId)
-        ? current.map(currentEntry => currentEntry.id === familyId
-          ? updatedAggregate
-          : currentEntry)
-        : current.concat(updatedAggregate));
-      
-      return updatedFamily;
-    };
-    return asyncCallback;
-  })
-}
-
-function useCompositeRecordsCommandCallback<T extends unknown[]>(
-  callback: (familyId: string, ...args: T) => Promise<CompositeRecordsCommand>) {
-  return useRecoilCallback(({snapshot, set}) => {
-    const asyncCallback = async (familyId: string, ...args: T) => {
-      const organizationId = await snapshot.getPromise(currentOrganizationState);
-      const locationId = await snapshot.getPromise(currentLocationState);
-
-      const command = await callback(familyId, ...args);
-
-      const client = new RecordsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedAggregate = await client.submitCompositeRecordsCommand(organizationId, locationId, command);
-      
-      const updatedFamily = (updatedAggregate as FamilyRecordsAggregate).family!;
-
-      set(visibleAggregatesData, current =>
-        current.some(currentEntry => currentEntry.id === familyId)
-        ? current.map(currentEntry => currentEntry.id === familyId
-          ? updatedAggregate
-          : currentEntry)
-        : current.concat(updatedAggregate));
-      
-      return updatedFamily;
-    };
-    return asyncCallback;
-  })
 }
 
 export function useDirectoryModel() {
@@ -421,7 +413,7 @@ export function useDirectoryModel() {
       phoneNumber: string | null, phoneType: PhoneNumberType | null, emailAddress: string | null, emailType: EmailAddressType | null,
       notes?: string, concerns?: string) => {
       const command = new CreateVolunteerFamilyWithNewAdultCommand();
-      command.familyId = crypto.randomUUID();
+      command.familyId = familyId;
       command.personId = crypto.randomUUID();
       command.firstName = firstName;
       command.lastName = lastName;
@@ -464,7 +456,7 @@ export function useDirectoryModel() {
       phoneNumber: string | null, phoneType: PhoneNumberType | null, emailAddress: string | null, emailType: EmailAddressType | null,
       notes?: string, concerns?: string) => {
       const command = new CreatePartneringFamilyWithNewAdultCommand();
-      command.familyId = crypto.randomUUID();
+      command.familyId = familyId;
       command.personId = crypto.randomUUID();
       command.referralId = crypto.randomUUID();
       command.referralOpenedAtUtc = referralOpenedAtUtc;

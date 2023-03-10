@@ -64,7 +64,8 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
         let age = dateOfBirth == null ? null : new ExactAge();
         if (dateOfBirth != null)
           age!.dateOfBirth = dateOfBirth;
-        const newFamily = await directoryModel.createPartneringFamilyWithNewAdult("NEW",
+        const familyId = crypto.randomUUID();
+        await directoryModel.createPartneringFamilyWithNewAdult(familyId,
           referralOpenedAtLocal,
           firstName, lastName, gender, age, optional(ethnicity),
           isInHousehold, relationshipToFamily,
@@ -72,8 +73,7 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
           optional(phoneNumber), phoneType, optional(emailAddress), emailType,
           (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
         //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
-        //TODO: Retrieve the created partnering family and return it through this onClose callback!
-        onClose(newFamily.family!.id!);
+        onClose(familyId);
       }
     });
   }
