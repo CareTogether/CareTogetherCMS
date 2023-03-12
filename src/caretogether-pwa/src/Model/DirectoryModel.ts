@@ -3,6 +3,7 @@ import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, Add
 import { accessTokenFetchQuery, authenticatingFetch } from "../Authentication/AuthenticatedHttp";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { currentOrganizationAndLocationIdsQuery, organizationConfigurationData, organizationConfigurationQuery } from "./ConfigurationModel";
+import { useLoadable } from "../Hooks/useLoadable";
 
 export const recordsClientQuery = selector({
   key: 'directoryClientQuery',
@@ -22,6 +23,10 @@ export const visibleAggregatesInitializationQuery = selector({
     return visibleAggregates;
   }
 });
+
+export function useDataInitialized() {
+  return useLoadable(visibleAggregatesInitializationQuery) != null;
+}
 
 export const visibleAggregatesData = atom<RecordsAggregate[]>({
   key: 'visibleAggregatesData',

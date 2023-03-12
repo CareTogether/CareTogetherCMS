@@ -1,19 +1,7 @@
 import { Container, Toolbar } from '@mui/material';
 import { Navigate, Route, Routes, useParams } from 'react-router-dom';
 import useScreenTitle from '../Shell/ShellScreenTitle';
-
-function CommunitiesList() {
-  useScreenTitle("Communities PLACEHOLDER");
-
-  return (/*!communities
-  ? <ProgressBackdrop>
-      <p>Loading communities...</p>
-    </ProgressBackdrop>
-  :*/
-    <Container maxWidth={false} sx={{paddingLeft: '12px'}}>
-      <h1>Communities List</h1>
-    </Container>);
-}
+import { CommunitiesList } from './CommunitiesList';
 
 function CommunityScreen() {
   const communityIdMaybe = useParams<{ communityId: string }>();
