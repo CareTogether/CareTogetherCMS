@@ -21,7 +21,7 @@ function AddCommunity({ onClose }: DrawerProps) {
   const withBackdrop = useBackdrop();
   const navigate = useNavigate();
 
-  const createCommunity = useCommunityCommand((communityId, name: string, description: string) => {
+  const createCommunity = useCommunityCommand((communityId) => {
     const command = new CreateCommunity();
     command.communityId = communityId;
     command.name = name;
@@ -32,7 +32,7 @@ function AddCommunity({ onClose }: DrawerProps) {
   async function save() {
     await withBackdrop(async () => {
       const communityId = crypto.randomUUID();
-      await createCommunity(communityId, name, description);
+      await createCommunity(communityId);
       onClose();
       navigate(`/communities/community/${communityId}`);
     });
