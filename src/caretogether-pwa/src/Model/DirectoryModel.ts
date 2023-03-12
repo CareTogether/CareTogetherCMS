@@ -98,6 +98,15 @@ export function useFamilyLookup() {
   }
 }
 
+export function useCommunityLookup() {
+  const visibleCommunities = useRecoilValue(visibleCommunitiesQuery);
+
+  return (communityId?: string) => {
+    const community = visibleCommunities.find(community => community.id === communityId);
+    return community;
+  }
+}
+
 export function useAtomicRecordsCommandCallback<T extends unknown[], U extends AtomicRecordsCommand>(
   callback: (aggregateId: string, ...args: T) => Promise<U>) {
   return useRecoilCallback(({snapshot, set}) => {
