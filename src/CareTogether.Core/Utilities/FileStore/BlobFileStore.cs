@@ -22,17 +22,23 @@ namespace CareTogether.Utilities.FileStore
 
 
         public Task<Uri> GetValetCreateUrlAsync(Guid organizationId, Guid locationId, Guid documentId)
+            => GetValetCreateUrlAsync(organizationId, locationId, $"{documentId:D}");
+
+        public Task<Uri> GetValetCreateUrlAsync(Guid organizationId, Guid locationId, string documentSubpath)
         {
             var tenantContainer = blobServiceClient.GetBlobContainerClient(organizationId.ToString());
-            var objectBlob = tenantContainer.GetBlockBlobClient($"{locationId}/{fileCategory}/{documentId:D}");
+            var objectBlob = tenantContainer.GetBlockBlobClient($"{locationId}/{fileCategory}/{documentSubpath}");
             var sasUri = objectBlob.GenerateSasUri(BlobSasPermissions.Create, DateTimeOffset.UtcNow.AddMinutes(15));
             return Task.FromResult(sasUri);
         }
 
         public Task<Uri> GetValetReadUrlAsync(Guid organizationId, Guid locationId, Guid documentId)
+            => GetValetReadUrlAsync(organizationId, locationId, $"{documentId:D}");
+
+        public Task<Uri> GetValetReadUrlAsync(Guid organizationId, Guid locationId, string documentSubpath)
         {
             var tenantContainer = blobServiceClient.GetBlobContainerClient(organizationId.ToString());
-            var objectBlob = tenantContainer.GetBlockBlobClient($"{locationId}/{fileCategory}/{documentId:D}");
+            var objectBlob = tenantContainer.GetBlockBlobClient($"{locationId}/{fileCategory}/{documentSubpath}");
             var sasUri = objectBlob.GenerateSasUri(BlobSasPermissions.Read, DateTimeOffset.UtcNow.AddMinutes(15));
             return Task.FromResult(sasUri);
         }

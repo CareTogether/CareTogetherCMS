@@ -1,5 +1,5 @@
 import { atom, selector, useRecoilCallback, useRecoilValue } from "recoil";
-import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, CompositeRecordsCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, RecordsClient, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, UpdatePersonGender, UpdatePersonAge, UpdatePersonEthnicity, UpdateAdultRelationshipToFamily, CustodialRelationshipType, UpdateCustodialRelationshipType, RemoveCustodialRelationship, ChangePrimaryFamilyContact, CombinedFamilyInfo, FamilyRecordsCommand, PersonRecordsCommand, NoteRecordsCommand, AtomicRecordsCommand, CustomField, UpdateCustomFamilyField } from "../GeneratedClient";
+import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, CompositeRecordsCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, RecordsClient, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, UpdatePersonGender, UpdatePersonAge, UpdatePersonEthnicity, UpdateAdultRelationshipToFamily, CustodialRelationshipType, UpdateCustodialRelationshipType, RemoveCustodialRelationship, ChangePrimaryFamilyContact, FamilyRecordsCommand, PersonRecordsCommand, NoteRecordsCommand, AtomicRecordsCommand, CustomField, UpdateCustomFamilyField, FamilyRecordsAggregate, RecordsAggregate, CommunityRecordsAggregate } from "../GeneratedClient";
 import { accessTokenFetchQuery, authenticatingFetch } from "../Authentication/AuthenticatedHttp";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { currentOrganizationAndLocationIdsQuery, organizationConfigurationData, organizationConfigurationQuery } from "./ConfigurationModel";
@@ -12,23 +12,42 @@ export const recordsClientQuery = selector({
   }
 });
 
-export const visibleFamiliesInitializationQuery = selector({
-  key: 'visibleFamiliesInitializationQuery',
+export const visibleAggregatesInitializationQuery = selector({
+  key: 'visibleAggregatesInitializationQuery',
   get: async ({get}) => {
     get(organizationConfigurationQuery);
     const {organizationId, locationId} = get(currentOrganizationAndLocationIdsQuery);
     const recordsClient = get(recordsClientQuery);
-    return await recordsClient.listVisibleFamilies(organizationId, locationId);
+    const visibleAggregates = await recordsClient.listVisibleAggregates(organizationId, locationId);
+    return visibleAggregates;
   }
 });
 
-export const visibleFamiliesData = atom<CombinedFamilyInfo[]>({
-  key: 'visibleFamiliesData',
+export const visibleAggregatesData = atom<RecordsAggregate[]>({
+  key: 'visibleAggregatesData',
   default: []
 });
 
+export const visibleFamiliesQuery = selector({
+  key: 'visibleFamiliesQuery',
+  get: ({get}) => {
+    const visibleAggregates = get(visibleAggregatesData);
+    return visibleAggregates.filter(aggregate => aggregate instanceof FamilyRecordsAggregate).map(aggregate =>
+      (aggregate as FamilyRecordsAggregate).family!);
+  }
+});
+
+export const visibleCommunitiesQuery = selector({
+  key: 'visibleCommunitiesQuery',
+  get: ({get}) => {
+    const visibleAggregates = get(visibleAggregatesData);
+    return visibleAggregates.filter(aggregate => aggregate instanceof CommunityRecordsAggregate).map(aggregate =>
+      (aggregate as CommunityRecordsAggregate).community!);
+  }
+});
+
 export function usePersonLookup() {
-  const visibleFamilies = useRecoilValue(visibleFamiliesData);
+  const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
 
   return (familyId?: string, personId?: string) => {
     const family = visibleFamilies.find(family => family.family!.id === familyId);
@@ -39,7 +58,7 @@ export function usePersonLookup() {
 }
 
 export function usePersonAndFamilyLookup() {
-  const visibleFamilies = useRecoilValue(visibleFamiliesData);
+  const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
 
   return (personId?: string) => {
     const family = visibleFamilies.find(family =>
@@ -52,7 +71,7 @@ export function usePersonAndFamilyLookup() {
 }
 
 export function useUserLookup() {
-  const visibleFamilies = useRecoilValue(visibleFamiliesData);
+  const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
   const organizationConfig = useRecoilValue(organizationConfigurationData);
 
   return (userId?: string) => {
@@ -66,12 +85,58 @@ export function useUserLookup() {
 }
 
 export function useFamilyLookup() {
-  const visibleFamilies = useRecoilValue(visibleFamiliesData);
+  const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
 
   return (familyId?: string) => {
     const family = visibleFamilies.find(family => family.family!.id === familyId);
     return family;
   }
+}
+
+export function useAtomicRecordsCommandCallback<T extends unknown[], U extends AtomicRecordsCommand>(
+  callback: (aggregateId: string, ...args: T) => Promise<U>) {
+  return useRecoilCallback(({snapshot, set}) => {
+    const asyncCallback = async (aggregateId: string, ...args: T) => {
+      const organizationId = await snapshot.getPromise(currentOrganizationState);
+      const locationId = await snapshot.getPromise(currentLocationState);
+
+      const command = await callback(aggregateId, ...args);
+
+      const client = new RecordsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+      const updatedAggregate = await client.submitAtomicRecordsCommand(organizationId, locationId, command);
+      
+      set(visibleAggregatesData, current =>
+        current.some(currentEntry => currentEntry.id === updatedAggregate.id)
+        ? current.map(currentEntry => currentEntry.id === updatedAggregate.id
+          ? updatedAggregate
+          : currentEntry)
+        : current.concat(updatedAggregate));
+    };
+    return asyncCallback;
+  })
+}
+
+function useCompositeRecordsCommandCallback<T extends unknown[]>(
+  callback: (aggregateId: string, ...args: T) => Promise<CompositeRecordsCommand>) {
+  return useRecoilCallback(({snapshot, set}) => {
+    const asyncCallback = async (aggregateId: string, ...args: T) => {
+      const organizationId = await snapshot.getPromise(currentOrganizationState);
+      const locationId = await snapshot.getPromise(currentLocationState);
+
+      const command = await callback(aggregateId, ...args);
+
+      const client = new RecordsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
+      const updatedAggregate = await client.submitCompositeRecordsCommand(organizationId, locationId, command);
+      
+      set(visibleAggregatesData, current =>
+        current.some(currentEntry => currentEntry.id === updatedAggregate.id)
+        ? current.map(currentEntry => currentEntry.id === updatedAggregate.id
+          ? updatedAggregate
+          : currentEntry)
+        : current.concat(updatedAggregate));
+    };
+    return asyncCallback;
+  })
 }
 
 function useFamilyCommandCallback<T extends unknown[]>(
@@ -88,6 +153,7 @@ function usePersonCommandCallback<T extends unknown[]>(
   return useAtomicRecordsCommandCallback(async (familyId, ...args: T) => {
     var command = new PersonRecordsCommand();
     command.command = await callback(familyId, ...args);
+    command.familyId = familyId;
     return command;
   });
 }
@@ -99,56 +165,6 @@ function useNoteCommandCallback<T extends unknown[]>(
     command.command = await callback(familyId, ...args);
     return command;
   });
-}
-
-export function useAtomicRecordsCommandCallback<T extends unknown[], U extends AtomicRecordsCommand>(
-  callback: (familyId: string, ...args: T) => Promise<U>) {
-  return useRecoilCallback(({snapshot, set}) => {
-    const asyncCallback = async (familyId: string, ...args: T) => {
-      const organizationId = await snapshot.getPromise(currentOrganizationState);
-      const locationId = await snapshot.getPromise(currentLocationState);
-
-      const command = await callback(familyId, ...args);
-
-      const client = new RecordsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedFamily = await client.submitAtomicRecordsCommand(organizationId, locationId, command);
-
-      set(visibleFamiliesData, current =>
-        current.some(currentEntry => currentEntry.family?.id === familyId)
-        ? current.map(currentEntry => currentEntry.family?.id === familyId
-          ? updatedFamily
-          : currentEntry)
-        : current.concat(updatedFamily));
-      
-      return updatedFamily;
-    };
-    return asyncCallback;
-  })
-}
-
-function useCompositeRecordsCommandCallback<T extends unknown[]>(
-  callback: (familyId: string, ...args: T) => Promise<CompositeRecordsCommand>) {
-  return useRecoilCallback(({snapshot, set}) => {
-    const asyncCallback = async (familyId: string, ...args: T) => {
-      const organizationId = await snapshot.getPromise(currentOrganizationState);
-      const locationId = await snapshot.getPromise(currentLocationState);
-
-      const command = await callback(familyId, ...args);
-
-      const client = new RecordsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedFamily = await client.submitCompositeRecordsCommand(organizationId, locationId, command);
-
-      set(visibleFamiliesData, current =>
-        current.some(currentEntry => currentEntry.family?.id === familyId)
-        ? current.map(currentEntry => currentEntry.family?.id === familyId
-          ? updatedFamily
-          : currentEntry)
-        : current.concat(updatedFamily));
-      
-      return updatedFamily;
-    };
-    return asyncCallback;
-  })
 }
 
 export function useDirectoryModel() {
@@ -339,8 +355,8 @@ export function useDirectoryModel() {
       command.personId = crypto.randomUUID();
       command.firstName = firstName;
       command.lastName = lastName;
-      command.gender = gender || undefined;
-      command.age = age || undefined;
+      command.gender = gender == null ? undefined : gender;
+      command.age = age == null ? undefined : age;
       command.ethnicity = ethnicity || undefined;
       command.concerns = concerns;
       command.notes = notes;
@@ -361,13 +377,13 @@ export function useDirectoryModel() {
         command.phoneNumber = new PhoneNumber();
         command.phoneNumber.id = crypto.randomUUID();
         command.phoneNumber.number = phoneNumber;
-        command.phoneNumber.type = phoneType || undefined;
+        command.phoneNumber.type = phoneType == null ? undefined : phoneType;
       }
       if (emailAddress != null) {
         command.emailAddress = new EmailAddress();
         command.emailAddress.id = crypto.randomUUID();
         command.emailAddress.address = emailAddress;
-        command.emailAddress.type = emailType || undefined;
+        command.emailAddress.type = emailType == null ? undefined : emailType;
       }
       return command;
     });
@@ -380,8 +396,8 @@ export function useDirectoryModel() {
       command.personId = crypto.randomUUID();
       command.firstName = firstName;
       command.lastName = lastName;
-      command.gender = gender || undefined;
-      command.age = age || undefined;
+      command.gender = gender == null ? undefined : gender;
+      command.age = age == null ? undefined : age;
       command.ethnicity = ethnicity || undefined;
       command.custodialRelationships = custodialRelationships.map(cr => {
         cr.childId = command.personId;
@@ -398,12 +414,12 @@ export function useDirectoryModel() {
       phoneNumber: string | null, phoneType: PhoneNumberType | null, emailAddress: string | null, emailType: EmailAddressType | null,
       notes?: string, concerns?: string) => {
       const command = new CreateVolunteerFamilyWithNewAdultCommand();
-      command.familyId = crypto.randomUUID();
+      command.familyId = familyId;
       command.personId = crypto.randomUUID();
       command.firstName = firstName;
       command.lastName = lastName;
-      command.gender = gender || undefined;
-      command.age = age || undefined;
+      command.gender = gender == null ? undefined : gender;
+      command.age = age == null ? undefined : age;
       command.ethnicity = ethnicity || undefined;
       command.concerns = concerns;
       command.notes = notes;
@@ -424,13 +440,13 @@ export function useDirectoryModel() {
         command.phoneNumber = new PhoneNumber();
         command.phoneNumber.id = crypto.randomUUID();
         command.phoneNumber.number = phoneNumber;
-        command.phoneNumber.type = phoneType || undefined;
+        command.phoneNumber.type = phoneType == null ? undefined : phoneType;
       }
       if (emailAddress != null) {
         command.emailAddress = new EmailAddress();
         command.emailAddress.id = crypto.randomUUID();
         command.emailAddress.address = emailAddress;
-        command.emailAddress.type = emailType || undefined;
+        command.emailAddress.type = emailType == null ? undefined : emailType;
       }
       return command;
     });
@@ -441,14 +457,14 @@ export function useDirectoryModel() {
       phoneNumber: string | null, phoneType: PhoneNumberType | null, emailAddress: string | null, emailType: EmailAddressType | null,
       notes?: string, concerns?: string) => {
       const command = new CreatePartneringFamilyWithNewAdultCommand();
-      command.familyId = crypto.randomUUID();
+      command.familyId = familyId;
       command.personId = crypto.randomUUID();
       command.referralId = crypto.randomUUID();
       command.referralOpenedAtUtc = referralOpenedAtUtc;
       command.firstName = firstName;
       command.lastName = lastName;
-      command.gender = gender || undefined;
-      command.age = age || undefined;
+      command.gender = gender == null ? undefined : gender;
+      command.age = age == null ? undefined : age;
       command.ethnicity = ethnicity || undefined;
       command.concerns = concerns;
       command.notes = notes;
@@ -469,13 +485,13 @@ export function useDirectoryModel() {
         command.phoneNumber = new PhoneNumber();
         command.phoneNumber.id = crypto.randomUUID();
         command.phoneNumber.number = phoneNumber;
-        command.phoneNumber.type = phoneType || undefined;
+        command.phoneNumber.type = phoneType == null ? undefined : phoneType;
       }
       if (emailAddress != null) {
         command.emailAddress = new EmailAddress();
         command.emailAddress.id = crypto.randomUUID();
         command.emailAddress.address = emailAddress;
-        command.emailAddress.type = emailType || undefined;
+        command.emailAddress.type = emailType == null ? undefined : emailType;
       }
       return command;
     });

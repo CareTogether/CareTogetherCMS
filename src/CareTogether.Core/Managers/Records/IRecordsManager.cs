@@ -1,4 +1,5 @@
 using CareTogether.Resources.Approvals;
+using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Referrals;
@@ -51,27 +52,40 @@ namespace CareTogether.Managers.Records
         : AtomicRecordsCommand();
     public sealed record NoteRecordsCommand(NoteCommand Command)
         : AtomicRecordsCommand();
+    public sealed record CommunityRecordsCommand(CommunityCommand Command)
+        : AtomicRecordsCommand();
+
+    [JsonHierarchyBase]
+    public abstract partial record RecordsAggregate(Guid Id);
+    public sealed record FamilyRecordsAggregate(CombinedFamilyInfo Family)
+        : RecordsAggregate(Family.Family.Id);
+    public sealed record CommunityRecordsAggregate(Community Community)
+        : RecordsAggregate(Community.Id);
+
 
     public interface IRecordsManager
     {
-        Task<ImmutableList<CombinedFamilyInfo>> ListVisibleFamiliesAsync(
+        Task<ImmutableList<RecordsAggregate>> ListVisibleAggregatesAsync(
             ClaimsPrincipal user, Guid organizationId, Guid locationId);
 
-        Task<CombinedFamilyInfo> ExecuteCompositeRecordsCommand(Guid organizationId, Guid locationId,
+        //TODO: Support returning *multiple* aggregates to upsert
+        Task<RecordsAggregate> ExecuteCompositeRecordsCommand(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, CompositeRecordsCommand command);
 
-        //TODO: When adding the CommunityRecordsCommand, the return type of this method will need to be updated to
-        //      an abstract "ScopedCommandResult" that can be either "FamilyScopedCommandResult" of "CombinedFamilyInfo"
-        //      or "CommunityScopedCommandResult" of "CommunityInfo" (and potentially other scope types as well, e.g. settings).
-        Task<CombinedFamilyInfo> ExecuteAtomicRecordsCommandAsync(Guid organizationId, Guid locationId,
+        //TODO: Support returning *multiple* aggregates to upsert
+        Task<RecordsAggregate> ExecuteAtomicRecordsCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, AtomicRecordsCommand command);
 
-        //TODO: When adding community documents, the 'familyId' argument of this method can be changed to an abstract 'documentContext'
-        //      that can be either "FamilyDocumentContext" of "FamilyId" or "CommunityDocumentContext" of "CommunityId", etc.
         Task<Uri> GetFamilyDocumentReadValetUrl(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, Guid familyId, Guid documentId);
 
         Task<Uri> GenerateFamilyDocumentUploadValetUrl(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, Guid familyId, Guid documentId);
+
+        Task<Uri> GetCommunityDocumentReadValetUrl(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, Guid communityId, Guid documentId);
+
+        Task<Uri> GenerateCommunityDocumentUploadValetUrl(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, Guid communityId, Guid documentId);
     }
 }

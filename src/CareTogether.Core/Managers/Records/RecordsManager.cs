@@ -1,5 +1,6 @@
 ﻿using CareTogether.Engines.Authorization;
 using CareTogether.Resources.Approvals;
+using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Referrals;
@@ -20,23 +21,25 @@ namespace CareTogether.Managers.Records
         private readonly IApprovalsResource approvalsResource;
         private readonly IReferralsResource referralsResource;
         private readonly INotesResource notesResource;
+        private readonly ICommunitiesResource communitiesResource;
         private readonly CombinedFamilyInfoFormatter combinedFamilyInfoFormatter;
 
 
         public RecordsManager(IAuthorizationEngine authorizationEngine, IDirectoryResource directoryResource,
             IApprovalsResource approvalsResource, IReferralsResource referralsResource, INotesResource notesResource,
-            CombinedFamilyInfoFormatter combinedFamilyInfoFormatter)
+            ICommunitiesResource communitiesResource, CombinedFamilyInfoFormatter combinedFamilyInfoFormatter)
         {
             this.authorizationEngine = authorizationEngine;
             this.directoryResource = directoryResource;
             this.approvalsResource = approvalsResource;
             this.referralsResource = referralsResource;
             this.notesResource = notesResource;
+            this.communitiesResource = communitiesResource;
             this.combinedFamilyInfoFormatter = combinedFamilyInfoFormatter;
         }
 
 
-        public async Task<ImmutableList<CombinedFamilyInfo>> ListVisibleFamiliesAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId)
+        public async Task<ImmutableList<RecordsAggregate>> ListVisibleAggregatesAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId)
         {
             var families = await directoryResource.ListFamiliesAsync(organizationId, locationId);
 
@@ -49,16 +52,46 @@ namespace CareTogether.Managers.Records
                 .WhenAll())
                 .Where(x => x.hasPermissions)
                 .Select(x => x.family)
-                .Cast<Family>()
                 .ToImmutableList();
 
-            var result = await visibleFamilies
-                .Select(family => combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, family.Id, user))
+            var renderedFamilies = await visibleFamilies
+                .Select(async family =>
+                {
+                    var renderedFamily = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
+                        organizationId, locationId, family.Id, user);
+                    return new FamilyRecordsAggregate(renderedFamily);
+                })
                 .WhenAll();
-            return result.ToImmutableList();
+
+            var communities = await communitiesResource.ListLocationCommunitiesAsync(organizationId, locationId);
+
+            var visibleCommunities = (await communities.Select(async community =>
+                {
+                    var permissions = await authorizationEngine.AuthorizeUserAccessAsync(organizationId, locationId, user,
+                        new CommunityAuthorizationContext(community.Id));
+                    return (community, hasPermissions: !permissions.IsEmpty);
+                })
+                .WhenAll())
+                .Where(x => x.hasPermissions)
+                .Select(x => x.community)
+                .ToImmutableList();
+
+            var renderedCommunities = await visibleCommunities
+                .Select(async community =>
+                {
+                    //TODO: Rendering actions (e.g., permissions - which can be on a base aggregate type along with ID!)
+                    var renderedCommunity = await Task.FromResult(community);
+                    return new CommunityRecordsAggregate(renderedCommunity);
+                })
+                .WhenAll();
+
+            return renderedFamilies
+                .Cast<RecordsAggregate>()
+                .Concat(renderedCommunities)
+                .ToImmutableList();
         }
 
-        public async Task<CombinedFamilyInfo> ExecuteCompositeRecordsCommand(Guid organizationId, Guid locationId,
+        public async Task<RecordsAggregate> ExecuteCompositeRecordsCommand(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, CompositeRecordsCommand command)
         {
             var atomicCommands = GenerateAtomicCommandsForCompositeCommand(command).ToImmutableList();
@@ -73,10 +106,10 @@ namespace CareTogether.Managers.Records
             var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
                 organizationId, locationId, command.FamilyId, user);
 
-            return familyResult;
+            return new FamilyRecordsAggregate(familyResult);
         }
 
-        public async Task<CombinedFamilyInfo> ExecuteAtomicRecordsCommandAsync(Guid organizationId, Guid locationId,
+        public async Task<RecordsAggregate> ExecuteAtomicRecordsCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, AtomicRecordsCommand command)
         {
             if (!await AuthorizeCommandAsync(organizationId, locationId, user, command))
@@ -84,12 +117,7 @@ namespace CareTogether.Managers.Records
 
             await ExecuteCommandAsync(organizationId, locationId, user, command);
 
-            var familyId = GetFamilyIdFromCommand(command);
-
-            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
-                organizationId, locationId, familyId, user);
-
-            return familyResult;
+            return await RenderCommandResultAsync(organizationId, locationId, user, command);
         }
 
         public async Task<Uri> GetFamilyDocumentReadValetUrl(Guid organizationId, Guid locationId,
@@ -118,6 +146,36 @@ namespace CareTogether.Managers.Records
 
             var valetUrl = await directoryResource.GetFamilyDocumentUploadValetUrl(organizationId, locationId,
                 familyId, documentId);
+
+            return valetUrl;
+        }
+
+        public async Task<Uri> GetCommunityDocumentReadValetUrl(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, Guid communityId, Guid documentId)
+        {
+            var contextPermissions = await authorizationEngine.AuthorizeUserAccessAsync(organizationId, locationId, user,
+                new CommunityAuthorizationContext(communityId));
+
+            if (!contextPermissions.Contains(Permission.ReadCommunityDocuments))
+                throw new Exception("The user is not authorized to perform this command.");
+
+            var valetUrl = await communitiesResource.GetCommunityDocumentReadValetUrl(organizationId, locationId,
+                communityId, documentId);
+
+            return valetUrl;
+        }
+
+        public async Task<Uri> GenerateCommunityDocumentUploadValetUrl(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, Guid communityId, Guid documentId)
+        {
+            var contextPermissions = await authorizationEngine.AuthorizeUserAccessAsync(organizationId, locationId, user,
+                new CommunityAuthorizationContext(communityId));
+
+            if (!contextPermissions.Contains(Permission.UploadCommunityDocuments))
+                throw new Exception("The user is not authorized to perform this command.");
+
+            var valetUrl = await communitiesResource.GetCommunityDocumentUploadValetUrl(organizationId, locationId,
+                communityId, documentId);
 
             return valetUrl;
         }
@@ -225,6 +283,8 @@ namespace CareTogether.Managers.Records
                     organizationId, locationId, user, c.Command),
                 NoteRecordsCommand c => authorizationEngine.AuthorizeNoteCommandAsync(
                     organizationId, locationId, user, c.Command),
+                CommunityRecordsCommand c => authorizationEngine.AuthorizeCommunityCommandAsync(
+                    organizationId, locationId, user, c.Command),
                 _ => throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented.")
             };
@@ -247,9 +307,38 @@ namespace CareTogether.Managers.Records
                     organizationId, locationId, c.Command, user.UserId()),
                 NoteRecordsCommand c => notesResource.ExecuteNoteCommandAsync(
                     organizationId, locationId, c.Command, user.UserId()),
+                CommunityRecordsCommand c => communitiesResource.ExecuteCommunityCommandAsync(
+                    organizationId, locationId, c.Command, user.UserId()),
                 _ => throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented.")
             };
+
+        private async Task<RecordsAggregate> RenderCommandResultAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, AtomicRecordsCommand command)
+        {
+            if (command is CommunityRecordsCommand c)
+            {
+                var communityId = c.Command.CommunityId;
+
+                var communities = await communitiesResource.ListLocationCommunitiesAsync(
+                    organizationId, locationId);
+                var communityResult = communities.Single(community => community.Id == communityId);
+
+                var community = await authorizationEngine.DiscloseCommunityAsync(user,
+                    organizationId, locationId, communityResult);
+
+                return new CommunityRecordsAggregate(community);
+            }
+            else
+            {
+                var familyId = GetFamilyIdFromCommand(command);
+
+                var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
+                    organizationId, locationId, familyId, user);
+
+                return new FamilyRecordsAggregate(familyResult);
+            }
+        }
 
         private Guid GetFamilyIdFromCommand(AtomicRecordsCommand command) =>
             command switch

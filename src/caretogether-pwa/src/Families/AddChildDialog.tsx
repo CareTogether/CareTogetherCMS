@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControl, FormControlLabel, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@mui/material';
 import { CombinedFamilyInfo, ExactAge, Gender, CustodialRelationshipType, CustodialRelationship } from '../GeneratedClient';
-import { visibleFamiliesData, useDirectoryModel } from '../Model/DirectoryModel';
+import { visibleFamiliesQuery, useDirectoryModel } from '../Model/DirectoryModel';
 import WarningIcon from '@mui/icons-material/Warning';
 import { DatePicker } from '@mui/x-date-pickers';
 import { useRecoilValue } from 'recoil';
@@ -16,7 +16,7 @@ interface AddChildDialogProps {
 
 export function AddChildDialog({onClose}: AddChildDialogProps) {
   const { familyId } = useParams<{ familyId: string }>();
-  const visibleFamilies = useRecoilValue(visibleFamiliesData);
+  const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
   const family = visibleFamilies.find(x => x.family?.id === familyId) as CombinedFamilyInfo;
 
   const [fields, setFields] = useState({

@@ -62,15 +62,15 @@ export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDial
         let age = dateOfBirth == null ? null : new ExactAge();
         if (dateOfBirth != null)
           age!.dateOfBirth = dateOfBirth;
-        const newFamily = await directoryModel.createVolunteerFamilyWithNewAdult("NEW",
+        const familyId = crypto.randomUUID();
+        await directoryModel.createVolunteerFamilyWithNewAdult(familyId,
           firstName, lastName, gender, age, optional(ethnicity),
           isInHousehold, relationshipToFamily,
           optional(addressLine1), optional(addressLine2), optional(city), optional(state), optional(postalCode), optional(country),
           optional(phoneNumber), phoneType, optional(emailAddress), emailType,
           (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
         //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
-        //TODO: Retrieve the created volunteer family and return it through this onClose callback!
-        onClose(newFamily.family!.id!);
+        onClose(familyId);
       }
     });
   }

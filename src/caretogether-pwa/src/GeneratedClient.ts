@@ -356,7 +356,7 @@ export class RecordsClient {
         this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
     }
 
-    listVisibleFamilies(organizationId: string, locationId: string): Promise<CombinedFamilyInfo[]> {
+    listVisibleAggregates(organizationId: string, locationId: string): Promise<RecordsAggregate[]> {
         let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Records";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
@@ -374,11 +374,11 @@ export class RecordsClient {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processListVisibleFamilies(_response);
+            return this.processListVisibleAggregates(_response);
         });
     }
 
-    protected processListVisibleFamilies(response: Response): Promise<CombinedFamilyInfo[]> {
+    protected processListVisibleAggregates(response: Response): Promise<RecordsAggregate[]> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -388,7 +388,7 @@ export class RecordsClient {
             if (Array.isArray(resultData200)) {
                 result200 = [] as any;
                 for (let item of resultData200)
-                    result200!.push(CombinedFamilyInfo.fromJS(item));
+                    result200!.push(RecordsAggregate.fromJS(item));
             }
             else {
                 result200 = <any>null;
@@ -400,10 +400,10 @@ export class RecordsClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<CombinedFamilyInfo[]>(null as any);
+        return Promise.resolve<RecordsAggregate[]>(null as any);
     }
 
-    submitAtomicRecordsCommand(organizationId: string, locationId: string, command: AtomicRecordsCommand): Promise<CombinedFamilyInfo> {
+    submitAtomicRecordsCommand(organizationId: string, locationId: string, command: AtomicRecordsCommand): Promise<RecordsAggregate> {
         let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Records/atomicRecordsCommand";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
@@ -429,14 +429,14 @@ export class RecordsClient {
         });
     }
 
-    protected processSubmitAtomicRecordsCommand(response: Response): Promise<CombinedFamilyInfo> {
+    protected processSubmitAtomicRecordsCommand(response: Response): Promise<RecordsAggregate> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = CombinedFamilyInfo.fromJS(resultData200);
+            result200 = RecordsAggregate.fromJS(resultData200);
             return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -444,10 +444,10 @@ export class RecordsClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<CombinedFamilyInfo>(null as any);
+        return Promise.resolve<RecordsAggregate>(null as any);
     }
 
-    submitCompositeRecordsCommand(organizationId: string, locationId: string, command: CompositeRecordsCommand): Promise<CombinedFamilyInfo> {
+    submitCompositeRecordsCommand(organizationId: string, locationId: string, command: CompositeRecordsCommand): Promise<RecordsAggregate> {
         let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Records/compositeRecordsCommand";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
@@ -473,14 +473,14 @@ export class RecordsClient {
         });
     }
 
-    protected processSubmitCompositeRecordsCommand(response: Response): Promise<CombinedFamilyInfo> {
+    protected processSubmitCompositeRecordsCommand(response: Response): Promise<RecordsAggregate> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = CombinedFamilyInfo.fromJS(resultData200);
+            result200 = RecordsAggregate.fromJS(resultData200);
             return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -488,7 +488,7 @@ export class RecordsClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<CombinedFamilyInfo>(null as any);
+        return Promise.resolve<RecordsAggregate>(null as any);
     }
 }
 
@@ -759,6 +759,7 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
     organizationName?: string;
     locations?: LocationConfiguration[];
     roles?: RoleDefinition[];
+    communityRoles?: string[];
     users?: { [key: string]: UserAccessConfiguration; };
 
     constructor(data?: IOrganizationConfiguration) {
@@ -782,6 +783,11 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
                 this.roles = [] as any;
                 for (let item of _data["roles"])
                     this.roles!.push(RoleDefinition.fromJS(item));
+            }
+            if (Array.isArray(_data["communityRoles"])) {
+                this.communityRoles = [] as any;
+                for (let item of _data["communityRoles"])
+                    this.communityRoles!.push(item);
             }
             if (_data["users"]) {
                 this.users = {} as any;
@@ -813,6 +819,11 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
             for (let item of this.roles)
                 data["roles"].push(item.toJSON());
         }
+        if (Array.isArray(this.communityRoles)) {
+            data["communityRoles"] = [];
+            for (let item of this.communityRoles)
+                data["communityRoles"].push(item);
+        }
         if (this.users) {
             data["users"] = {};
             for (let key in this.users) {
@@ -828,6 +839,7 @@ export interface IOrganizationConfiguration {
     organizationName?: string;
     locations?: LocationConfiguration[];
     roles?: RoleDefinition[];
+    communityRoles?: string[];
     users?: { [key: string]: UserAccessConfiguration; };
 }
 
@@ -1082,6 +1094,16 @@ export abstract class PermissionContext implements IPermissionContext {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "CommunityCoMemberFamiliesPermissionContext") {
+            let result = new CommunityCoMemberFamiliesPermissionContext();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "CommunityMemberPermissionContext") {
+            let result = new CommunityMemberPermissionContext();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "GlobalPermissionContext") {
             let result = new GlobalPermissionContext();
             result.init(data);
@@ -1270,6 +1292,90 @@ export interface IAssignedFunctionsInReferralPartneringFamilyPermissionContext e
     whenOwnFunctionIsIn?: string[] | undefined;
 }
 
+export class CommunityCoMemberFamiliesPermissionContext extends PermissionContext implements ICommunityCoMemberFamiliesPermissionContext {
+    whenOwnCommunityRoleIsIn?: string[] | undefined;
+
+    constructor(data?: ICommunityCoMemberFamiliesPermissionContext) {
+        super(data);
+        this._discriminator = "CommunityCoMemberFamiliesPermissionContext";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            if (Array.isArray(_data["whenOwnCommunityRoleIsIn"])) {
+                this.whenOwnCommunityRoleIsIn = [] as any;
+                for (let item of _data["whenOwnCommunityRoleIsIn"])
+                    this.whenOwnCommunityRoleIsIn!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): CommunityCoMemberFamiliesPermissionContext {
+        data = typeof data === 'object' ? data : {};
+        let result = new CommunityCoMemberFamiliesPermissionContext();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.whenOwnCommunityRoleIsIn)) {
+            data["whenOwnCommunityRoleIsIn"] = [];
+            for (let item of this.whenOwnCommunityRoleIsIn)
+                data["whenOwnCommunityRoleIsIn"].push(item);
+        }
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ICommunityCoMemberFamiliesPermissionContext extends IPermissionContext {
+    whenOwnCommunityRoleIsIn?: string[] | undefined;
+}
+
+export class CommunityMemberPermissionContext extends PermissionContext implements ICommunityMemberPermissionContext {
+    whenOwnCommunityRoleIsIn?: string[] | undefined;
+
+    constructor(data?: ICommunityMemberPermissionContext) {
+        super(data);
+        this._discriminator = "CommunityMemberPermissionContext";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            if (Array.isArray(_data["whenOwnCommunityRoleIsIn"])) {
+                this.whenOwnCommunityRoleIsIn = [] as any;
+                for (let item of _data["whenOwnCommunityRoleIsIn"])
+                    this.whenOwnCommunityRoleIsIn!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): CommunityMemberPermissionContext {
+        data = typeof data === 'object' ? data : {};
+        let result = new CommunityMemberPermissionContext();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.whenOwnCommunityRoleIsIn)) {
+            data["whenOwnCommunityRoleIsIn"] = [];
+            for (let item of this.whenOwnCommunityRoleIsIn)
+                data["whenOwnCommunityRoleIsIn"].push(item);
+        }
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ICommunityMemberPermissionContext extends IPermissionContext {
+    whenOwnCommunityRoleIsIn?: string[] | undefined;
+}
+
 export class GlobalPermissionContext extends PermissionContext implements IGlobalPermissionContext {
 
     constructor(data?: IGlobalPermissionContext) {
@@ -1381,6 +1487,7 @@ export enum Permission {
     AccessPartneringFamiliesScreen = 101,
     AccessSettingsScreen = 102,
     EditRoles = 103,
+    AccessCommunitiesScreen = 104,
     ViewFamilyCustomFields = 150,
     ViewFamilyHistory = 151,
     ViewPersonConcerns = 152,
@@ -1423,6 +1530,15 @@ export enum Permission {
     ViewChildLocationHistory = 380,
     TrackChildLocationChange = 381,
     SendBulkSms = 400,
+    CreateCommunity = 500,
+    EditCommunity = 501,
+    DeleteCommunity = 502,
+    EditCommunityMemberFamilies = 503,
+    EditCommunityRoleAssignments = 504,
+    ViewCommunityDocumentMetadata = 505,
+    ReadCommunityDocuments = 506,
+    UploadCommunityDocuments = 507,
+    DeleteCommunityDocuments = 508,
 }
 
 export class UserAccessConfiguration implements IUserAccessConfiguration {
@@ -2743,6 +2859,290 @@ export interface IDocumentUploadInfo {
     valetUrl?: string;
 }
 
+export abstract class RecordsAggregate implements IRecordsAggregate {
+    id?: string;
+
+    protected _discriminator: string;
+
+    constructor(data?: IRecordsAggregate) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        this._discriminator = "RecordsAggregate";
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+        }
+    }
+
+    static fromJS(data: any): RecordsAggregate {
+        data = typeof data === 'object' ? data : {};
+        if (data["discriminator"] === "CommunityRecordsAggregate") {
+            let result = new CommunityRecordsAggregate();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "FamilyRecordsAggregate") {
+            let result = new FamilyRecordsAggregate();
+            result.init(data);
+            return result;
+        }
+        throw new Error("The abstract class 'RecordsAggregate' cannot be instantiated.");
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["discriminator"] = this._discriminator;
+        data["id"] = this.id;
+        return data;
+    }
+}
+
+export interface IRecordsAggregate {
+    id?: string;
+}
+
+export class CommunityRecordsAggregate extends RecordsAggregate implements ICommunityRecordsAggregate {
+    community?: Community;
+
+    constructor(data?: ICommunityRecordsAggregate) {
+        super(data);
+        this._discriminator = "CommunityRecordsAggregate";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.community = _data["community"] ? Community.fromJS(_data["community"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): CommunityRecordsAggregate {
+        data = typeof data === 'object' ? data : {};
+        let result = new CommunityRecordsAggregate();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["community"] = this.community ? this.community.toJSON() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ICommunityRecordsAggregate extends IRecordsAggregate {
+    community?: Community;
+}
+
+export class Community implements ICommunity {
+    id?: string;
+    name?: string;
+    description?: string;
+    memberFamilies?: string[];
+    communityRoleAssignments?: CommunityRoleAssignment[];
+    uploadedDocuments?: UploadedDocumentInfo[];
+
+    constructor(data?: ICommunity) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.description = _data["description"];
+            if (Array.isArray(_data["memberFamilies"])) {
+                this.memberFamilies = [] as any;
+                for (let item of _data["memberFamilies"])
+                    this.memberFamilies!.push(item);
+            }
+            if (Array.isArray(_data["communityRoleAssignments"])) {
+                this.communityRoleAssignments = [] as any;
+                for (let item of _data["communityRoleAssignments"])
+                    this.communityRoleAssignments!.push(CommunityRoleAssignment.fromJS(item));
+            }
+            if (Array.isArray(_data["uploadedDocuments"])) {
+                this.uploadedDocuments = [] as any;
+                for (let item of _data["uploadedDocuments"])
+                    this.uploadedDocuments!.push(UploadedDocumentInfo.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): Community {
+        data = typeof data === 'object' ? data : {};
+        let result = new Community();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["description"] = this.description;
+        if (Array.isArray(this.memberFamilies)) {
+            data["memberFamilies"] = [];
+            for (let item of this.memberFamilies)
+                data["memberFamilies"].push(item);
+        }
+        if (Array.isArray(this.communityRoleAssignments)) {
+            data["communityRoleAssignments"] = [];
+            for (let item of this.communityRoleAssignments)
+                data["communityRoleAssignments"].push(item.toJSON());
+        }
+        if (Array.isArray(this.uploadedDocuments)) {
+            data["uploadedDocuments"] = [];
+            for (let item of this.uploadedDocuments)
+                data["uploadedDocuments"].push(item.toJSON());
+        }
+        return data;
+    }
+}
+
+export interface ICommunity {
+    id?: string;
+    name?: string;
+    description?: string;
+    memberFamilies?: string[];
+    communityRoleAssignments?: CommunityRoleAssignment[];
+    uploadedDocuments?: UploadedDocumentInfo[];
+}
+
+export class CommunityRoleAssignment implements ICommunityRoleAssignment {
+    personId?: string;
+    communityRole?: string;
+
+    constructor(data?: ICommunityRoleAssignment) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.personId = _data["personId"];
+            this.communityRole = _data["communityRole"];
+        }
+    }
+
+    static fromJS(data: any): CommunityRoleAssignment {
+        data = typeof data === 'object' ? data : {};
+        let result = new CommunityRoleAssignment();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["personId"] = this.personId;
+        data["communityRole"] = this.communityRole;
+        return data;
+    }
+}
+
+export interface ICommunityRoleAssignment {
+    personId?: string;
+    communityRole?: string;
+}
+
+export class UploadedDocumentInfo implements IUploadedDocumentInfo {
+    userId?: string;
+    timestampUtc?: Date;
+    uploadedDocumentId?: string;
+    uploadedFileName?: string;
+
+    constructor(data?: IUploadedDocumentInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
+            this.uploadedFileName = _data["uploadedFileName"];
+        }
+    }
+
+    static fromJS(data: any): UploadedDocumentInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new UploadedDocumentInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
+        data["uploadedFileName"] = this.uploadedFileName;
+        return data;
+    }
+}
+
+export interface IUploadedDocumentInfo {
+    userId?: string;
+    timestampUtc?: Date;
+    uploadedDocumentId?: string;
+    uploadedFileName?: string;
+}
+
+export class FamilyRecordsAggregate extends RecordsAggregate implements IFamilyRecordsAggregate {
+    family?: CombinedFamilyInfo;
+
+    constructor(data?: IFamilyRecordsAggregate) {
+        super(data);
+        this._discriminator = "FamilyRecordsAggregate";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.family = _data["family"] ? CombinedFamilyInfo.fromJS(_data["family"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): FamilyRecordsAggregate {
+        data = typeof data === 'object' ? data : {};
+        let result = new FamilyRecordsAggregate();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["family"] = this.family ? this.family.toJSON() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IFamilyRecordsAggregate extends IRecordsAggregate {
+    family?: CombinedFamilyInfo;
+}
+
 export class CombinedFamilyInfo implements ICombinedFamilyInfo {
     family?: Family;
     partneringFamilyInfo?: PartneringFamilyInfo | undefined;
@@ -3483,54 +3883,6 @@ export enum CustodialRelationshipType {
     ParentWithCustody = 0,
     ParentWithCourtAppointedCustody = 1,
     LegalGuardian = 2,
-}
-
-export class UploadedDocumentInfo implements IUploadedDocumentInfo {
-    userId?: string;
-    timestampUtc?: Date;
-    uploadedDocumentId?: string;
-    uploadedFileName?: string;
-
-    constructor(data?: IUploadedDocumentInfo) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.userId = _data["userId"];
-            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
-            this.uploadedDocumentId = _data["uploadedDocumentId"];
-            this.uploadedFileName = _data["uploadedFileName"];
-        }
-    }
-
-    static fromJS(data: any): UploadedDocumentInfo {
-        data = typeof data === 'object' ? data : {};
-        let result = new UploadedDocumentInfo();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["userId"] = this.userId;
-        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
-        data["uploadedDocumentId"] = this.uploadedDocumentId;
-        data["uploadedFileName"] = this.uploadedFileName;
-        return data;
-    }
-}
-
-export interface IUploadedDocumentInfo {
-    userId?: string;
-    timestampUtc?: Date;
-    uploadedDocumentId?: string;
-    uploadedFileName?: string;
 }
 
 export class CompletedCustomFieldInfo implements ICompletedCustomFieldInfo {
@@ -4991,6 +5343,11 @@ export abstract class AtomicRecordsCommand implements IAtomicRecordsCommand {
         data = typeof data === 'object' ? data : {};
         if (data["discriminator"] === "ArrangementRecordsCommand") {
             let result = new ArrangementRecordsCommand();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "CommunityRecordsCommand") {
+            let result = new CommunityRecordsCommand();
             result.init(data);
             return result;
         }
@@ -6611,6 +6968,445 @@ export class UpdateArrangementComments extends ArrangementsCommand implements IU
 
 export interface IUpdateArrangementComments extends IArrangementsCommand {
     comments?: string | undefined;
+}
+
+export class CommunityRecordsCommand extends AtomicRecordsCommand implements ICommunityRecordsCommand {
+    command?: CommunityCommand;
+
+    constructor(data?: ICommunityRecordsCommand) {
+        super(data);
+        this._discriminator = "CommunityRecordsCommand";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.command = _data["command"] ? CommunityCommand.fromJS(_data["command"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): CommunityRecordsCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new CommunityRecordsCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["command"] = this.command ? this.command.toJSON() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ICommunityRecordsCommand extends IAtomicRecordsCommand {
+    command?: CommunityCommand;
+}
+
+export abstract class CommunityCommand implements ICommunityCommand {
+    communityId?: string;
+
+    protected _discriminator: string;
+
+    constructor(data?: ICommunityCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        this._discriminator = "CommunityCommand";
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.communityId = _data["communityId"];
+        }
+    }
+
+    static fromJS(data: any): CommunityCommand {
+        data = typeof data === 'object' ? data : {};
+        if (data["discriminator"] === "AddCommunityMemberFamily") {
+            let result = new AddCommunityMemberFamily();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "AddCommunityRoleAssignment") {
+            let result = new AddCommunityRoleAssignment();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "CreateCommunity") {
+            let result = new CreateCommunity();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "DeleteUploadedCommunityDocument") {
+            let result = new DeleteUploadedCommunityDocument();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "EditCommunityDescription") {
+            let result = new EditCommunityDescription();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "RemoveCommunityMemberFamily") {
+            let result = new RemoveCommunityMemberFamily();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "RemoveCommunityRoleAssignment") {
+            let result = new RemoveCommunityRoleAssignment();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "RenameCommunity") {
+            let result = new RenameCommunity();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UploadCommunityDocument") {
+            let result = new UploadCommunityDocument();
+            result.init(data);
+            return result;
+        }
+        throw new Error("The abstract class 'CommunityCommand' cannot be instantiated.");
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["discriminator"] = this._discriminator;
+        data["communityId"] = this.communityId;
+        return data;
+    }
+}
+
+export interface ICommunityCommand {
+    communityId?: string;
+}
+
+export class AddCommunityMemberFamily extends CommunityCommand implements IAddCommunityMemberFamily {
+    familyId?: string;
+
+    constructor(data?: IAddCommunityMemberFamily) {
+        super(data);
+        this._discriminator = "AddCommunityMemberFamily";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.familyId = _data["familyId"];
+        }
+    }
+
+    static fromJS(data: any): AddCommunityMemberFamily {
+        data = typeof data === 'object' ? data : {};
+        let result = new AddCommunityMemberFamily();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["familyId"] = this.familyId;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IAddCommunityMemberFamily extends ICommunityCommand {
+    familyId?: string;
+}
+
+export class AddCommunityRoleAssignment extends CommunityCommand implements IAddCommunityRoleAssignment {
+    personId?: string;
+    communityRole?: string;
+
+    constructor(data?: IAddCommunityRoleAssignment) {
+        super(data);
+        this._discriminator = "AddCommunityRoleAssignment";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.personId = _data["personId"];
+            this.communityRole = _data["communityRole"];
+        }
+    }
+
+    static fromJS(data: any): AddCommunityRoleAssignment {
+        data = typeof data === 'object' ? data : {};
+        let result = new AddCommunityRoleAssignment();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["personId"] = this.personId;
+        data["communityRole"] = this.communityRole;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IAddCommunityRoleAssignment extends ICommunityCommand {
+    personId?: string;
+    communityRole?: string;
+}
+
+export class CreateCommunity extends CommunityCommand implements ICreateCommunity {
+    name?: string;
+    description?: string;
+
+    constructor(data?: ICreateCommunity) {
+        super(data);
+        this._discriminator = "CreateCommunity";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.name = _data["name"];
+            this.description = _data["description"];
+        }
+    }
+
+    static fromJS(data: any): CreateCommunity {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateCommunity();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["name"] = this.name;
+        data["description"] = this.description;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ICreateCommunity extends ICommunityCommand {
+    name?: string;
+    description?: string;
+}
+
+export class DeleteUploadedCommunityDocument extends CommunityCommand implements IDeleteUploadedCommunityDocument {
+    uploadedDocumentId?: string;
+
+    constructor(data?: IDeleteUploadedCommunityDocument) {
+        super(data);
+        this._discriminator = "DeleteUploadedCommunityDocument";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
+        }
+    }
+
+    static fromJS(data: any): DeleteUploadedCommunityDocument {
+        data = typeof data === 'object' ? data : {};
+        let result = new DeleteUploadedCommunityDocument();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IDeleteUploadedCommunityDocument extends ICommunityCommand {
+    uploadedDocumentId?: string;
+}
+
+export class EditCommunityDescription extends CommunityCommand implements IEditCommunityDescription {
+    description?: string;
+
+    constructor(data?: IEditCommunityDescription) {
+        super(data);
+        this._discriminator = "EditCommunityDescription";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.description = _data["description"];
+        }
+    }
+
+    static fromJS(data: any): EditCommunityDescription {
+        data = typeof data === 'object' ? data : {};
+        let result = new EditCommunityDescription();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["description"] = this.description;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IEditCommunityDescription extends ICommunityCommand {
+    description?: string;
+}
+
+export class RemoveCommunityMemberFamily extends CommunityCommand implements IRemoveCommunityMemberFamily {
+    familyId?: string;
+
+    constructor(data?: IRemoveCommunityMemberFamily) {
+        super(data);
+        this._discriminator = "RemoveCommunityMemberFamily";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.familyId = _data["familyId"];
+        }
+    }
+
+    static fromJS(data: any): RemoveCommunityMemberFamily {
+        data = typeof data === 'object' ? data : {};
+        let result = new RemoveCommunityMemberFamily();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["familyId"] = this.familyId;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IRemoveCommunityMemberFamily extends ICommunityCommand {
+    familyId?: string;
+}
+
+export class RemoveCommunityRoleAssignment extends CommunityCommand implements IRemoveCommunityRoleAssignment {
+    personId?: string;
+    communityRole?: string;
+
+    constructor(data?: IRemoveCommunityRoleAssignment) {
+        super(data);
+        this._discriminator = "RemoveCommunityRoleAssignment";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.personId = _data["personId"];
+            this.communityRole = _data["communityRole"];
+        }
+    }
+
+    static fromJS(data: any): RemoveCommunityRoleAssignment {
+        data = typeof data === 'object' ? data : {};
+        let result = new RemoveCommunityRoleAssignment();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["personId"] = this.personId;
+        data["communityRole"] = this.communityRole;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IRemoveCommunityRoleAssignment extends ICommunityCommand {
+    personId?: string;
+    communityRole?: string;
+}
+
+export class RenameCommunity extends CommunityCommand implements IRenameCommunity {
+    name?: string;
+
+    constructor(data?: IRenameCommunity) {
+        super(data);
+        this._discriminator = "RenameCommunity";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.name = _data["name"];
+        }
+    }
+
+    static fromJS(data: any): RenameCommunity {
+        data = typeof data === 'object' ? data : {};
+        let result = new RenameCommunity();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["name"] = this.name;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IRenameCommunity extends ICommunityCommand {
+    name?: string;
+}
+
+export class UploadCommunityDocument extends CommunityCommand implements IUploadCommunityDocument {
+    uploadedDocumentId?: string;
+    uploadedFileName?: string;
+
+    constructor(data?: IUploadCommunityDocument) {
+        super(data);
+        this._discriminator = "UploadCommunityDocument";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
+            this.uploadedFileName = _data["uploadedFileName"];
+        }
+    }
+
+    static fromJS(data: any): UploadCommunityDocument {
+        data = typeof data === 'object' ? data : {};
+        let result = new UploadCommunityDocument();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
+        data["uploadedFileName"] = this.uploadedFileName;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUploadCommunityDocument extends ICommunityCommand {
+    uploadedDocumentId?: string;
+    uploadedFileName?: string;
 }
 
 export class FamilyApprovalRecordsCommand extends AtomicRecordsCommand implements IFamilyApprovalRecordsCommand {

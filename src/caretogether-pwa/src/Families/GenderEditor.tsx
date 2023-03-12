@@ -9,7 +9,7 @@ export function GenderEditor({ familyId, person }: PersonEditorProps) {
 
   const editor = useInlineEditor(async gender =>
     await directoryModel.updatePersonGender(familyId!, person.id!, gender),
-    person.gender!);
+    person.gender);
 
   return (
     <Grid container spacing={2}>
@@ -34,7 +34,7 @@ export function GenderEditor({ familyId, person }: PersonEditorProps) {
           </>
         : <Grid item xs={12}>
             Gender: {
-              person.gender !== null
+              (person.gender !== null && typeof(person.gender) !== 'undefined')
                 ? (person.gender === Gender.Male ? "Male"
                     : person.gender === Gender.Female ? "Female"
                     : "(see notes)")

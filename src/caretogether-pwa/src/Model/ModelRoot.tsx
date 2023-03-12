@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useRecoilStateLoadable, useSetRecoilState } from "recoil";
 import { useLoadable } from "../Hooks/useLoadable";
 import { useScopedTrace } from "../Hooks/useScopedTrace";
-import { visibleFamiliesData, visibleFamiliesInitializationQuery } from "./DirectoryModel";
+import { visibleAggregatesData, visibleAggregatesInitializationQuery } from "./DirectoryModel";
 import { userIdState, selectedLocationIdState, availableLocationsQuery } from "./SessionModel";
 
 interface ModelLoaderProps {
@@ -21,9 +21,9 @@ export function ModelRoot({children}: ModelLoaderProps) {
   trace(`availableLocations.length: ${availableLocations?.length}`);
   const [selectedLocationId, setSelectedLocationId] = useRecoilStateLoadable(selectedLocationIdState);
   trace(`selectedLocationId: ${selectedLocationId.state} -- ${selectedLocationId.contents}`);
-  const visibleFamilies = useLoadable(visibleFamiliesInitializationQuery);
-  trace(`visibleFamilies.length: ${visibleFamilies?.length}`);
-  const setVisibleFamiliesData = useSetRecoilState(visibleFamiliesData);
+  const visibleAggregates = useLoadable(visibleAggregatesInitializationQuery);
+  trace(`visibleAggregates.length: ${visibleAggregates?.length}`);
+  const setVisibleAggregatesData = useSetRecoilState(visibleAggregatesData);
   
   // Initialize the root of the model's dataflow graph with the active account's user ID.
   // If the active account is changed, the model will automatically repopulate.
@@ -52,12 +52,12 @@ export function ModelRoot({children}: ModelLoaderProps) {
     }
   }, [availableLocations, selectedLocationId, setSelectedLocationId, trace]);
 
-  // Initialize the families atom that will be used to track family state mutations.
+  // Initialize the aggregates atom that will be used to track aggregate state mutations.
   //TODO: Trigger a refresh when changing locations.
   useEffect(() => {
-    trace(`setVisibleFamiliesData: ${visibleFamilies?.length}`)
-    setVisibleFamiliesData(visibleFamilies || []);
-  }, [visibleFamilies, setVisibleFamiliesData, trace]);
+    trace(`setVisibleAggregatesData: ${visibleAggregates?.length}`)
+    setVisibleAggregatesData(visibleAggregates || []);
+  }, [visibleAggregates, setVisibleAggregatesData, trace]);
 
   trace("render");
   return (

@@ -13,7 +13,7 @@ namespace CareTogether.Managers
     public sealed record CombinedFamilyInfo(Family Family,
         PartneringFamilyInfo? PartneringFamilyInfo, VolunteerFamilyInfo? VolunteerFamilyInfo,
         ImmutableList<Note> Notes, ImmutableList<UploadedDocumentInfo> UploadedDocuments,
-        ImmutableList<string> MissingCustomFields,
+        ImmutableList<string> MissingCustomFields, //TODO: Include community memberships & community role assignments?
         ImmutableList<Permission> UserPermissions);
 
     public sealed record PartneringFamilyInfo(

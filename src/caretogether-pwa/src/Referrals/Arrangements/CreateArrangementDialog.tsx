@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@mui/material';
 import { CombinedFamilyInfo, ArrangementPolicy, ChildInvolvement } from '../../GeneratedClient';
-import { visibleFamiliesData } from '../../Model/DirectoryModel';
+import { visibleFamiliesQuery } from '../../Model/DirectoryModel';
 import { DatePicker } from '@mui/x-date-pickers';
 import { useRecoilValue } from 'recoil';
 import { useParams } from 'react-router-dom';
@@ -16,7 +16,7 @@ interface CreateArrangementDialogProps {
 
 export function CreateArrangementDialog({referralId, arrangementPolicy, onClose}: CreateArrangementDialogProps) {
   const { familyId } = useParams<{ familyId: string }>();
-  const visibleFamilies = useRecoilValue(visibleFamiliesData);
+  const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
   const family = visibleFamilies.find(x => x.family?.id === familyId) as CombinedFamilyInfo;
 
   // An arrangement is always either for one adult or one child in the partnering family.

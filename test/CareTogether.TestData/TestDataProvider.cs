@@ -1,5 +1,6 @@
-﻿using CareTogether.Resources.Accounts;
+using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Approvals;
+using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Goals;
 using CareTogether.Resources.Notes;
@@ -66,6 +67,7 @@ namespace CareTogether.TestData
             IEventLog<ReferralEvent> referralsEventLog,
             IEventLog<ApprovalEvent> approvalsEventLog,
             IEventLog<NotesEvent> notesEventLog,
+            IEventLog<CommunityCommandExecutedEvent> communitiesEventLog,
             IObjectStore<string?> draftNotesStore,
             IObjectStore<OrganizationConfiguration> configurationStore,
             IObjectStore<EffectiveLocationPolicy> policiesStore,
@@ -78,6 +80,7 @@ namespace CareTogether.TestData
             await PopulateReferralEvents(referralsEventLog);
             await PopulateApprovalEvents(approvalsEventLog);
             await PopulateNoteEvents(notesEventLog);
+            await PopulateCommunityEvents(communitiesEventLog);
             await PopulateDraftNotes(draftNotesStore);
             await PopulateConfigurations(configurationStore, testSourceSmsPhoneNumber, organizationSecretsStore);
             await PopulatePolicies(policiesStore);
@@ -350,6 +353,25 @@ namespace CareTogether.TestData
                 new NoteCommandExecuted(adminId, new DateTime(2021, 7, 10, 9, 32, 0), new ApproveNote(guid4, guid9, "I'm a little star-struck... Emily is *amazing*!!")));
         }
 
+        public static async Task PopulateCommunityEvents(IEventLog<CommunityCommandExecutedEvent> communitiesEventLog)
+        {
+            await communitiesEventLog.AppendEventsAsync(guid1, guid2,
+                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 0, 0), new CreateCommunity(guid1, "Officer Poker Group", "This informal group meets whenever the script calls for it.")),
+                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 5, 0), new RenameCommunity(guid1, "Officers' Poker Group")),
+                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 7, 30), new EditCommunityDescription(guid1, "This informal group meets whenever the script calls for it... and Tuesday evenings.")),
+                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 10, 0), new AddCommunityMemberFamily(guid1, guid3)),
+                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 12, 0), new AddCommunityMemberFamily(guid1, guid4)),
+                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 13, 0), new AddCommunityMemberFamily(guid1, guid5)),
+                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 14, 0), new AddCommunityRoleAssignment(guid1, guid4, "Community Organizer")),
+                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 14, 0), new AddCommunityRoleAssignment(guid1, guid8, "Community Organizer")),
+                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 15, 0), new RemoveCommunityRoleAssignment(guid1, guid4, "Community Organizer")),
+                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 15, 30), new AddCommunityRoleAssignment(guid1, guid4, "Community Co-Organizer")),
+                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 16, 0), new UploadCommunityDocument(guid1, guid1, "Five-card stud rules.pdf")),
+                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 16, 30), new DeleteUploadedCommunityDocument(guid1, guid1)),
+                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 18, 12), new UploadCommunityDocument(guid1, guid2, "Revised five-card stud rules.pdf")),
+                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 2, 0, 0, 0), new CreateCommunity(guid2, "Fight Club", "Don't talk about it.")));
+        }
+
         public static async Task PopulateDraftNotes(IObjectStore<string?> draftNotesStore)
         {
             await draftNotesStore.UpsertAsync(guid1, guid2, guid3.ToString(),
@@ -380,7 +402,7 @@ namespace CareTogether.TestData
                     ImmutableList<RoleDefinition>.Empty
                         .Add(new RoleDefinition("Volunteer", ImmutableList<ContextualPermissionSet>.Empty
                             .Add(new ContextualPermissionSet(new GlobalPermissionContext(),
-                                ImmutableList.Create<Permission>(
+                                ImmutableList.Create(
                                     Permission.AccessPartneringFamiliesScreen,
                                     Permission.AccessVolunteersScreen
                                 )))
@@ -415,7 +437,33 @@ namespace CareTogether.TestData
                                     WhenOwnFunctionIsIn: null, WhenAssigneeFunctionIsIn: null),
                                 ImmutableList.Create(
                                     Permission.ViewPersonContactInfo
-                                ))))),
+                                )))
+                            .Add(new ContextualPermissionSet(
+                                new CommunityMemberPermissionContext(
+                                    WhenOwnCommunityRoleIsIn: null),
+                                ImmutableList.Create(
+                                    Permission.ViewCommunityDocumentMetadata)))
+                            .Add(new ContextualPermissionSet(
+                                new CommunityMemberPermissionContext(
+                                    WhenOwnCommunityRoleIsIn: ImmutableList.Create("Community Organizer", "Community Co-Organizer")),
+                                ImmutableList.Create(
+                                    Permission.ReadCommunityDocuments)))
+                            .Add(new ContextualPermissionSet(
+                                new CommunityCoMemberFamiliesPermissionContext(
+                                    WhenOwnCommunityRoleIsIn: null),
+                                ImmutableList.Create(
+                                    Permission.ViewPersonContactInfo,
+                                    Permission.ViewApprovalStatus)))
+                            .Add(new ContextualPermissionSet(
+                                new CommunityCoMemberFamiliesPermissionContext(
+                                    WhenOwnCommunityRoleIsIn: ImmutableList.Create("Community Organizer")),
+                                ImmutableList.Create(
+                                    Permission.ViewApprovalProgress,
+                                    Permission.ViewReferralProgress,
+                                    Permission.ViewArrangementProgress))))),
+                    ImmutableList<string>.Empty
+                        .Add("Community Organizer")
+                        .Add("Community Co-Organizer"),
                     ImmutableDictionary<Guid, UserAccessConfiguration>.Empty
                         .Add(adminId, new UserAccessConfiguration(guid0, ImmutableList<UserLocationRoles>.Empty
                             .Add(new UserLocationRoles(guid2, ImmutableList.Create("OrganizationAdministrator")))
