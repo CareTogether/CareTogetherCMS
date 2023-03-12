@@ -1,11 +1,58 @@
-import { Fab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import { Button, Drawer, Fab, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { Community } from '../GeneratedClient';
+import { Community, Permission } from '../GeneratedClient';
 import { useLoadable } from '../Hooks/useLoadable';
 import { useDataInitialized, visibleCommunitiesQuery } from '../Model/DirectoryModel';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import useScreenTitle from '../Shell/ShellScreenTitle';
 import AddIcon from '@mui/icons-material/Add';
+import { useState } from 'react';
+import { useGlobalPermissions } from '../Model/SessionModel';
+
+interface DrawerProps {
+  onClose: () => void
+}
+
+function AddCommunity({ onClose }: DrawerProps) {
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+
+  function save() {
+    console.log(`${name}: ${description}`);
+    onClose();
+  }
+
+  return (
+    <Grid container spacing={2} maxWidth={500}>
+      <Grid item xs={12}>
+        <h3>Add New Community</h3>
+      </Grid>
+      <Grid item xs={12}>
+        <TextField type='text' fullWidth
+          label="Name"
+          placeholder="Enter a name for the community"
+          value={name} onChange={e => setName(e.target.value)} />
+      </Grid>
+      <Grid item xs={12}>
+        <TextField type='text' fullWidth multiline minRows={4}
+          label="Description"
+          placeholder="Provide a description for the community"
+          value={description} onChange={e => setDescription(e.target.value)} />
+      </Grid>
+      <Grid item xs={12} sx={{ textAlign: 'right' }}>
+        <Button color='secondary' variant='contained'
+          sx={{ marginRight: 2 }}
+          onClick={onClose}>
+          Cancel
+        </Button>
+        <Button color='primary' variant='contained'
+          onClick={save}>
+          Save
+        </Button>
+      </Grid>
+    </Grid>
+  )
+}
 
 export function CommunitiesList() {
   useScreenTitle("Communities");
@@ -20,6 +67,9 @@ export function CommunitiesList() {
   function openCommunity(community: Community) {
     navigate(`/communities/community/${community.id}`);
   }
+
+  const [addDrawerOpen, setAddDrawerOpen] = useState(false);
+  const permissions = useGlobalPermissions();
 
   return (!dataInitialized
     ? <ProgressBackdrop>
@@ -66,9 +116,20 @@ export function CommunitiesList() {
             </TableBody>
           </Table>
         </TableContainer>
-        <Fab color="primary" aria-label="add"
-          sx={{position: 'fixed', right: '30px', bottom: '70px'}}>
-          <AddIcon />
-        </Fab>
+        {permissions(Permission.CreateCommunity) &&
+          <>
+            <Fab color="primary" aria-label="add"
+            sx={{position: 'fixed', right: '30px', bottom: '70px'}}
+            onClick={() => setAddDrawerOpen(true)}>
+            <AddIcon />
+          </Fab>
+          <Drawer
+            anchor='right'
+            open={addDrawerOpen}
+            onClose={() => setAddDrawerOpen(false)}
+            sx={{ '.MuiDrawer-paper': { padding: 2, paddingTop: { xs: 7, sm: 8, md: 6 }}}}>
+            <AddCommunity onClose={() => setAddDrawerOpen(false)} />
+          </Drawer>
+          </>}
       </>);
 }
