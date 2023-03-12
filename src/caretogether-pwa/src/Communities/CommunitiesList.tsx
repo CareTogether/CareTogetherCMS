@@ -1,13 +1,14 @@
 import { Button, Drawer, Fab, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { Community, Permission } from '../GeneratedClient';
+import { Community, CreateCommunity, Permission } from '../GeneratedClient';
 import { useLoadable } from '../Hooks/useLoadable';
-import { useDataInitialized, visibleCommunitiesQuery } from '../Model/DirectoryModel';
+import { useCommunityCommand, useDataInitialized, visibleCommunitiesQuery } from '../Model/DirectoryModel';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import useScreenTitle from '../Shell/ShellScreenTitle';
 import AddIcon from '@mui/icons-material/Add';
 import { useState } from 'react';
 import { useGlobalPermissions } from '../Model/SessionModel';
+import { useBackdrop } from '../Hooks/useBackdrop';
 
 interface DrawerProps {
   onClose: () => void
@@ -17,9 +18,24 @@ function AddCommunity({ onClose }: DrawerProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
 
-  function save() {
-    console.log(`${name}: ${description}`);
-    onClose();
+  const withBackdrop = useBackdrop();
+  const navigate = useNavigate();
+
+  const createCommunity = useCommunityCommand((communityId, name: string, description: string) => {
+    const command = new CreateCommunity();
+    command.communityId = communityId;
+    command.name = name;
+    command.description = description;
+    return command;
+  });
+
+  async function save() {
+    await withBackdrop(async () => {
+      const communityId = crypto.randomUUID();
+      await createCommunity(communityId, name, description);
+      onClose();
+      navigate(`/communities/community/${communityId}`);
+    });
   }
 
   return (
@@ -28,7 +44,7 @@ function AddCommunity({ onClose }: DrawerProps) {
         <h3>Add New Community</h3>
       </Grid>
       <Grid item xs={12}>
-        <TextField type='text' fullWidth
+        <TextField type='text' fullWidth required
           label="Name"
           placeholder="Enter a name for the community"
           value={name} onChange={e => setName(e.target.value)} />
@@ -46,6 +62,7 @@ function AddCommunity({ onClose }: DrawerProps) {
           Cancel
         </Button>
         <Button color='primary' variant='contained'
+          disabled={name.length === 0}
           onClick={save}>
           Save
         </Button>
