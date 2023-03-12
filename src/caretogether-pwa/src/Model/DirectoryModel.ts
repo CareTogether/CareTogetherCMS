@@ -106,8 +106,8 @@ export function useAtomicRecordsCommandCallback<T extends unknown[], U extends A
       const updatedAggregate = await client.submitAtomicRecordsCommand(organizationId, locationId, command);
       
       set(visibleAggregatesData, current =>
-        current.some(currentEntry => currentEntry.id === aggregateId)
-        ? current.map(currentEntry => currentEntry.id === aggregateId
+        current.some(currentEntry => currentEntry.id === updatedAggregate.id)
+        ? current.map(currentEntry => currentEntry.id === updatedAggregate.id
           ? updatedAggregate
           : currentEntry)
         : current.concat(updatedAggregate));
@@ -129,8 +129,8 @@ function useCompositeRecordsCommandCallback<T extends unknown[]>(
       const updatedAggregate = await client.submitCompositeRecordsCommand(organizationId, locationId, command);
       
       set(visibleAggregatesData, current =>
-        current.some(currentEntry => currentEntry.id === aggregateId)
-        ? current.map(currentEntry => currentEntry.id === aggregateId
+        current.some(currentEntry => currentEntry.id === updatedAggregate.id)
+        ? current.map(currentEntry => currentEntry.id === updatedAggregate.id
           ? updatedAggregate
           : currentEntry)
         : current.concat(updatedAggregate));
@@ -153,6 +153,7 @@ function usePersonCommandCallback<T extends unknown[]>(
   return useAtomicRecordsCommandCallback(async (familyId, ...args: T) => {
     var command = new PersonRecordsCommand();
     command.command = await callback(familyId, ...args);
+    command.familyId = familyId;
     return command;
   });
 }
