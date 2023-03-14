@@ -1,4 +1,4 @@
-import { Button, Container, Drawer, Grid, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { Button, Container, Drawer, Grid, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import { useRecoilValue } from 'recoil';
 import { familyNameString } from '../Families/FamilyName';
@@ -11,6 +11,7 @@ import useScreenTitle from '../Shell/ShellScreenTitle';
 import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { AddEditCommunity } from './AddEditCommunity';
@@ -87,23 +88,34 @@ export function CommunityScreen() {
                 <Typography variant='h5'>Documents</Typography>
                 <List sx={{ '& .MuiListItemIcon-root': { minWidth: 36  }}}>
                   {documents.map(doc =>
-                    permissions(Permission.ReadCommunityDocuments)
-                    ? <ListItemButton key={doc.document.uploadedDocumentId} disableGutters>
-                        <ListItemIcon>
-                          <InsertDriveFileOutlinedIcon />
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={doc.document.uploadedFileName}
-                          secondary={`${format(doc.document.timestampUtc!, "PPp")} — ${personNameString(doc.uploader)}`} />
-                      </ListItemButton>
-                    : <ListItem key={doc.document.uploadedDocumentId} disablePadding>
-                        <ListItemIcon>
-                          <InsertDriveFileOutlinedIcon />
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={doc.document.uploadedFileName}
-                          secondary={`${format(doc.document.timestampUtc!, "PPp")} — ${personNameString(doc.uploader)}`} />
-                      </ListItem>)}
+                    <ListItem key={doc.document.uploadedDocumentId} disablePadding
+                      secondaryAction={
+                        permissions(Permission.DeleteCommunityDocuments)
+                        ? <IconButton edge="end" aria-label="delete">
+                            <DeleteIcon />
+                          </IconButton>
+                        : null
+                      }>
+                      {permissions(Permission.ReadCommunityDocuments)
+                        ? <ListItemButton disableGutters sx={{ paddingTop: 0, paddingBottom: 0 }}>
+                            <ListItemIcon>
+                              <InsertDriveFileOutlinedIcon />
+                            </ListItemIcon>
+                            <ListItemText
+                              primary={doc.document.uploadedFileName}
+                              secondary={`${format(doc.document.timestampUtc!, "PPp")} — ${personNameString(doc.uploader)}`}>
+                            </ListItemText>
+                          </ListItemButton>
+                        : <>
+                            <ListItemIcon>
+                              <InsertDriveFileOutlinedIcon />
+                            </ListItemIcon>
+                            <ListItemText
+                              primary={doc.document.uploadedFileName}
+                              secondary={`${format(doc.document.timestampUtc!, "PPp")} — ${personNameString(doc.uploader)}`}>
+                            </ListItemText>
+                          </>}
+                    </ListItem>)}
                 </List>
               </>}
           </Grid>
