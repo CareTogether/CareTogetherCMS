@@ -1,10 +1,8 @@
 import { Button, Container, Drawer, Grid, List, ListItem, ListItemText, Toolbar, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { useParams } from 'react-router-dom';
-import { useRecoilValue } from 'recoil';
-import { familyNameString } from '../Families/FamilyName';
 import { personNameString } from '../Families/PersonName';
-import { CombinedFamilyInfo, Permission } from '../GeneratedClient';
-import { useCommunityLookup, useDataInitialized, usePersonAndFamilyLookup, visibleFamiliesQuery } from '../Model/DirectoryModel';
+import { Permission } from '../GeneratedClient';
+import { useCommunityLookup, useDataInitialized, usePersonAndFamilyLookup } from '../Model/DirectoryModel';
 import { useCommunityPermissions } from '../Model/SessionModel';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import useScreenTitle from '../Shell/ShellScreenTitle';
@@ -17,6 +15,7 @@ import { CommunityDocuments } from './CommunityDocuments';
 import { DeleteForever, GroupAdd, PersonAddAlt1 } from '@mui/icons-material';
 import { AddMemberFamiliesForm } from './AddMemberFamiliesForm';
 import { AddRoleAssignmentForm } from './AddRoleAssignmentForm';
+import { CommunityMemberFamilies } from './CommunityMemberFamilies';
 
 export function CommunityScreen() {
   const communityIdMaybe = useParams<{ communityId: string; }>();
@@ -33,11 +32,6 @@ export function CommunityScreen() {
     personAndFamily: personLookup(assignee.personId),
     communityRole: assignee.communityRole
   }));
-
-  const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
-
-  const memberFamilies = (community?.memberFamilies || []).map(familyId =>
-    visibleFamilies.find(family => family.family?.id === familyId)).filter(family => family) as CombinedFamilyInfo[];
 
   useScreenTitle(community?.name || "...");
 
@@ -109,7 +103,7 @@ export function CommunityScreen() {
                 <CommunityDocuments communityInfo={communityInfo} />
               </>}
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid item xs={12} sm={5}>
             <Typography variant='h5'>
               Member Families
               {permissions(Permission.EditCommunityMemberFamilies) && <Button
@@ -121,14 +115,9 @@ export function CommunityScreen() {
                 Add
               </Button>}
             </Typography>
-            <List>
-              {memberFamilies.map(family =>
-                <ListItem key={family.family!.id} disablePadding>
-                  <ListItemText
-                    primary={familyNameString(family)} />
-                </ListItem>)}
-            </List>
+            <CommunityMemberFamilies communityInfo={communityInfo} />
           </Grid>
+          <Grid item xs={0} sm={1}></Grid>
           <Grid item xs={12} sm={6}>
             <Typography variant='h5'>
               Role Assignments
