@@ -252,7 +252,7 @@ export class FilesClient {
         this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
     }
 
-    getReadValetUrl(organizationId: string, locationId: string, familyId: string, documentId: string): Promise<string> {
+    getFamilyDocumentReadValetUrl(organizationId: string, locationId: string, familyId: string, documentId: string): Promise<string> {
         let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Files/family/{familyId}/{documentId}";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
@@ -276,11 +276,11 @@ export class FilesClient {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetReadValetUrl(_response);
+            return this.processGetFamilyDocumentReadValetUrl(_response);
         });
     }
 
-    protected processGetReadValetUrl(response: Response): Promise<string> {
+    protected processGetFamilyDocumentReadValetUrl(response: Response): Promise<string> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -299,7 +299,7 @@ export class FilesClient {
         return Promise.resolve<string>(null as any);
     }
 
-    generateUploadValetUrl(organizationId: string, locationId: string, familyId: string, documentId: string): Promise<DocumentUploadInfo> {
+    generateFamilyDocumentUploadValetUrl(organizationId: string, locationId: string, familyId: string, documentId: string): Promise<DocumentUploadInfo> {
         let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Files/upload/family/{familyId}/{documentId}";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
@@ -323,11 +323,104 @@ export class FilesClient {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGenerateUploadValetUrl(_response);
+            return this.processGenerateFamilyDocumentUploadValetUrl(_response);
         });
     }
 
-    protected processGenerateUploadValetUrl(response: Response): Promise<DocumentUploadInfo> {
+    protected processGenerateFamilyDocumentUploadValetUrl(response: Response): Promise<DocumentUploadInfo> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = DocumentUploadInfo.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<DocumentUploadInfo>(null as any);
+    }
+
+    getCommunityDocumentReadValetUrl(organizationId: string, locationId: string, communityId: string, documentId: string): Promise<string> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Files/community/{communityId}/{documentId}";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (locationId === undefined || locationId === null)
+            throw new Error("The parameter 'locationId' must be defined.");
+        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
+        if (communityId === undefined || communityId === null)
+            throw new Error("The parameter 'communityId' must be defined.");
+        url_ = url_.replace("{communityId}", encodeURIComponent("" + communityId));
+        if (documentId === undefined || documentId === null)
+            throw new Error("The parameter 'documentId' must be defined.");
+        url_ = url_.replace("{documentId}", encodeURIComponent("" + documentId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetCommunityDocumentReadValetUrl(_response);
+        });
+    }
+
+    protected processGetCommunityDocumentReadValetUrl(response: Response): Promise<string> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : <any>null;
+    
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<string>(null as any);
+    }
+
+    generateCommunityDocumentUploadValetUrl(organizationId: string, locationId: string, communityId: string, documentId: string): Promise<DocumentUploadInfo> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Files/upload/community/{communityId}/{documentId}";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (locationId === undefined || locationId === null)
+            throw new Error("The parameter 'locationId' must be defined.");
+        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
+        if (communityId === undefined || communityId === null)
+            throw new Error("The parameter 'communityId' must be defined.");
+        url_ = url_.replace("{communityId}", encodeURIComponent("" + communityId));
+        if (documentId === undefined || documentId === null)
+            throw new Error("The parameter 'documentId' must be defined.");
+        url_ = url_.replace("{documentId}", encodeURIComponent("" + documentId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGenerateCommunityDocumentUploadValetUrl(_response);
+        });
+    }
+
+    protected processGenerateCommunityDocumentUploadValetUrl(response: Response): Promise<DocumentUploadInfo> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
