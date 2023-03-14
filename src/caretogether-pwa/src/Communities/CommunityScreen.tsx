@@ -1,21 +1,19 @@
-import { Button, Container, Drawer, Grid, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { Button, Container, Drawer, Grid, List, ListItem, ListItemText, Toolbar, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import { useRecoilValue } from 'recoil';
 import { familyNameString } from '../Families/FamilyName';
 import { personNameString } from '../Families/PersonName';
-import { CombinedFamilyInfo, DeleteUploadedCommunityDocument, Permission, UploadedDocumentInfo } from '../GeneratedClient';
-import { useCommunityCommand, useCommunityLookup, useDataInitialized, usePersonAndFamilyLookup, useUserLookup, visibleFamiliesQuery } from '../Model/DirectoryModel';
+import { CombinedFamilyInfo, Permission } from '../GeneratedClient';
+import { useCommunityLookup, useDataInitialized, usePersonAndFamilyLookup, visibleFamiliesQuery } from '../Model/DirectoryModel';
 import { useCommunityPermissions } from '../Model/SessionModel';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import useScreenTitle from '../Shell/ShellScreenTitle';
-import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
 import { useState } from 'react';
-import { format } from 'date-fns';
 import { AddEditCommunity } from './AddEditCommunity';
-import { useBackdrop } from '../Hooks/useBackdrop';
+import { CommunityDocumentUpload } from './CommunityDocumentUploadForm';
+import { CommunityDocuments } from './CommunityDocuments';
 
 export function CommunityScreen() {
   const communityIdMaybe = useParams<{ communityId: string; }>();
@@ -27,28 +25,6 @@ export function CommunityScreen() {
   const communityInfo = communityLookup(communityId)!;
   const community = communityInfo?.community;
 
-  const userLookup = useUserLookup();
-  const documents = (community?.uploadedDocuments || []).map(document => ({
-    uploader: userLookup(document.userId),
-    document: document
-  }));
-
-  const deleteCommunityDocument = useCommunityCommand((communityId, documentId: string) => {
-    const command = new DeleteUploadedCommunityDocument();
-    command.communityId = communityId;
-    command.uploadedDocumentId = documentId;
-    return command;
-  });
-
-  const withBackdrop = useBackdrop();
-  async function deleteDocument(document: UploadedDocumentInfo) {
-    if (window.confirm("Are you sure you want to delete this document?\n\n" + document.uploadedFileName)) {
-      await withBackdrop(async () => {
-        await deleteCommunityDocument(communityId, document.uploadedDocumentId!);
-      });
-    }
-  }
-  
   const personLookup = usePersonAndFamilyLookup();
   const assignees = (community?.communityRoleAssignments || []).map(assignee => ({
     personAndFamily: personLookup(assignee.personId),
@@ -70,6 +46,7 @@ export function CommunityScreen() {
   const permissions = useCommunityPermissions(communityInfo);
 
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
+  const [uploadDrawerOpen, setUploadDrawerOpen] = useState(false);
   
   return ((!dataInitialized || !community)
     ? <ProgressBackdrop>
@@ -78,7 +55,7 @@ export function CommunityScreen() {
     : <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>
         <Toolbar disableGutters variant={isDesktop ? 'dense' : 'regular'}>
           {permissions(Permission.UploadCommunityDocuments) && <Button
-            // onClick={() => setUploadDocumentDialogOpen(true)}
+            onClick={() => setUploadDrawerOpen(true)}
             variant='contained'
             size={isDesktop ? 'small' : 'medium'}
             sx={{marginRight: 1}}
@@ -97,44 +74,13 @@ export function CommunityScreen() {
         <Grid container spacing={2} sx={{ marginTop: 0 }}>
           <Grid item xs={12} sm={6}>
             <Typography variant='h5'>Description</Typography>
-            <p style={{ marginTop: 0, whiteSpace: 'pre-wrap' }}>{community.description}</p>
+            <p style={{ marginTop: 12, whiteSpace: 'pre-wrap' }}>{community.description}</p>
           </Grid>
           <Grid item xs={12} sm={6}>
             {permissions(Permission.ViewCommunityDocumentMetadata) &&
               <>
                 <Typography variant='h5'>Documents</Typography>
-                <List sx={{ '& .MuiListItemIcon-root': { minWidth: 36  }}}>
-                  {documents.map(doc =>
-                    <ListItem key={doc.document.uploadedDocumentId} disablePadding
-                      secondaryAction={
-                        permissions(Permission.DeleteCommunityDocuments)
-                        ? <IconButton edge="end" aria-label="delete"
-                            onClick={() => deleteDocument(doc.document)}>
-                            <DeleteIcon />
-                          </IconButton>
-                        : null
-                      }>
-                      {permissions(Permission.ReadCommunityDocuments)
-                        ? <ListItemButton disableGutters sx={{ paddingTop: 0, paddingBottom: 0 }}>
-                            <ListItemIcon>
-                              <InsertDriveFileOutlinedIcon />
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={doc.document.uploadedFileName}
-                              secondary={`${format(doc.document.timestampUtc!, "PPp")} — ${personNameString(doc.uploader)}`}>
-                            </ListItemText>
-                          </ListItemButton>
-                        : <>
-                            <ListItemIcon>
-                              <InsertDriveFileOutlinedIcon />
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={doc.document.uploadedFileName}
-                              secondary={`${format(doc.document.timestampUtc!, "PPp")} — ${personNameString(doc.uploader)}`}>
-                            </ListItemText>
-                          </>}
-                    </ListItem>)}
-                </List>
+                <CommunityDocuments communityInfo={communityInfo} />
               </>}
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -166,6 +112,14 @@ export function CommunityScreen() {
             onClose={() => setEditDrawerOpen(false)}
             sx={{ '.MuiDrawer-paper': { padding: 2, paddingTop: { xs: 7, sm: 8, md: 6 }}}}>
             <AddEditCommunity community={community} onClose={() => setEditDrawerOpen(false)} />
+          </Drawer>}
+        {permissions(Permission.UploadCommunityDocuments) &&
+          <Drawer
+            anchor='right'
+            open={uploadDrawerOpen}
+            onClose={() => setUploadDrawerOpen(false)}
+            sx={{ '.MuiDrawer-paper': { padding: 2, paddingTop: { xs: 7, sm: 8, md: 6 }}}}>
+            <CommunityDocumentUpload community={community} onClose={() => setUploadDrawerOpen(false)} />
           </Drawer>}
       </Container>);
 }
