@@ -1,10 +1,12 @@
-import { Container, Grid, List, ListItem, ListItemText, Toolbar, Typography } from '@mui/material';
+import { Container, Grid, List, ListItem, ListItemText, TextField, Toolbar, Typography } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import { useRecoilValue } from 'recoil';
 import { familyNameString } from '../Families/FamilyName';
 import { personNameString } from '../Families/PersonName';
-import { CombinedFamilyInfo, Community } from '../GeneratedClient';
-import { useCommunityLookup, useDataInitialized, usePersonAndFamilyLookup, visibleFamiliesQuery } from '../Model/DirectoryModel';
+import { CombinedFamilyInfo, CommunityInfo, EditCommunityDescription, Permission } from '../GeneratedClient';
+import { useInlineEditor } from '../Hooks/useInlineEditor';
+import { useCommunityCommand, useCommunityLookup, useDataInitialized, usePersonAndFamilyLookup, visibleFamiliesQuery } from '../Model/DirectoryModel';
+import { useCommunityPermissions } from '../Model/SessionModel';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import useScreenTitle from '../Shell/ShellScreenTitle';
 
@@ -27,7 +29,8 @@ export function CommunityScreen() {
   const dataInitialized = useDataInitialized();
 
   const communityLookup = useCommunityLookup();
-  const community = communityLookup(communityId)!;
+  const communityInfo = communityLookup(communityId)!;
+  const community = communityInfo?.community;
 
   const personLookup = usePersonAndFamilyLookup();
   const assignees = (community?.communityRoleAssignments || []).map(assignee => ({

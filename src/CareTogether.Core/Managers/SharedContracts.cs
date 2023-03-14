@@ -2,6 +2,7 @@
 using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Resources;
 using CareTogether.Resources.Approvals;
+using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Referrals;
@@ -63,4 +64,7 @@ namespace CareTogether.Managers
         ImmutableList<string> MissingRequirements,
         ImmutableList<string> AvailableApplications,
         ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> IndividualRoleApprovals);
+
+    public sealed record CommunityInfo(Community Community,
+        ImmutableList<Permission> UserPermissions);
 }

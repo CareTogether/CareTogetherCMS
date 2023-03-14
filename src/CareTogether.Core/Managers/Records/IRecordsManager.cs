@@ -59,8 +59,8 @@ namespace CareTogether.Managers.Records
     public abstract partial record RecordsAggregate(Guid Id);
     public sealed record FamilyRecordsAggregate(CombinedFamilyInfo Family)
         : RecordsAggregate(Family.Family.Id);
-    public sealed record CommunityRecordsAggregate(Community Community)
-        : RecordsAggregate(Community.Id);
+    public sealed record CommunityRecordsAggregate(CommunityInfo Community)
+        : RecordsAggregate(Community.Community.Id);
 
 
     public interface IRecordsManager

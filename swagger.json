@@ -1694,11 +1694,26 @@
             "additionalProperties": false,
             "properties": {
               "community": {
-                "$ref": "#/components/schemas/Community"
+                "$ref": "#/components/schemas/CommunityInfo"
               }
             }
           }
         ]
+      },
+      "CommunityInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "community": {
+            "$ref": "#/components/schemas/Community"
+          },
+          "userPermissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Permission"
+            }
+          }
+        }
       },
       "Community": {
         "type": "object",

@@ -102,7 +102,7 @@ export function useCommunityLookup() {
   const visibleCommunities = useRecoilValue(visibleCommunitiesQuery);
 
   return (communityId?: string) => {
-    const community = visibleCommunities.find(community => community.id === communityId);
+    const community = visibleCommunities.find(community => community.community?.id === communityId);
     return community;
   }
 }

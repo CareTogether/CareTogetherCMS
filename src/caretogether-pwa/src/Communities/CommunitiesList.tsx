@@ -78,7 +78,8 @@ export function CommunitiesList() {
 
   // The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
   const communitiesLoadable = useLoadable(visibleCommunitiesQuery);
-  const communities = (communitiesLoadable || []).map(x => x).sort((a, b) => a.name! < b.name! ? -1 : a.name! > b.name! ? 1 : 0);
+  const communities = (communitiesLoadable || []).map(x => x.community!).sort((a, b) =>
+    a.name! < b.name! ? -1 : a.name! > b.name! ? 1 : 0);
 
   const navigate = useNavigate();
   function openCommunity(community: Community) {

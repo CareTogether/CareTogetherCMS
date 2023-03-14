@@ -56,7 +56,7 @@ namespace CareTogether.Engines.Authorization
         Task<CombinedFamilyInfo> DiscloseFamilyAsync(ClaimsPrincipal user,
             Guid organizationId, Guid locationId, CombinedFamilyInfo family);
 
-        Task<Community> DiscloseCommunityAsync(ClaimsPrincipal user,
-            Guid organizationId, Guid locationId, Community community);
+        Task<CommunityInfo> DiscloseCommunityAsync(ClaimsPrincipal user,
+            Guid organizationId, Guid locationId, CommunityInfo community);
     }
 }

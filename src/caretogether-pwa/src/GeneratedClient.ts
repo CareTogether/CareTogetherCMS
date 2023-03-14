@@ -2908,7 +2908,7 @@ export interface IRecordsAggregate {
 }
 
 export class CommunityRecordsAggregate extends RecordsAggregate implements ICommunityRecordsAggregate {
-    community?: Community;
+    community?: CommunityInfo;
 
     constructor(data?: ICommunityRecordsAggregate) {
         super(data);
@@ -2918,7 +2918,7 @@ export class CommunityRecordsAggregate extends RecordsAggregate implements IComm
     init(_data?: any) {
         super.init(_data);
         if (_data) {
-            this.community = _data["community"] ? Community.fromJS(_data["community"]) : <any>undefined;
+            this.community = _data["community"] ? CommunityInfo.fromJS(_data["community"]) : <any>undefined;
         }
     }
 
@@ -2938,7 +2938,55 @@ export class CommunityRecordsAggregate extends RecordsAggregate implements IComm
 }
 
 export interface ICommunityRecordsAggregate extends IRecordsAggregate {
+    community?: CommunityInfo;
+}
+
+export class CommunityInfo implements ICommunityInfo {
     community?: Community;
+    userPermissions?: Permission[];
+
+    constructor(data?: ICommunityInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.community = _data["community"] ? Community.fromJS(_data["community"]) : <any>undefined;
+            if (Array.isArray(_data["userPermissions"])) {
+                this.userPermissions = [] as any;
+                for (let item of _data["userPermissions"])
+                    this.userPermissions!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): CommunityInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new CommunityInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["community"] = this.community ? this.community.toJSON() : <any>undefined;
+        if (Array.isArray(this.userPermissions)) {
+            data["userPermissions"] = [];
+            for (let item of this.userPermissions)
+                data["userPermissions"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface ICommunityInfo {
+    community?: Community;
+    userPermissions?: Permission[];
 }
 
 export class Community implements ICommunity {

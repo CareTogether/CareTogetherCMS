@@ -80,7 +80,8 @@ namespace CareTogether.Managers.Records
                 .Select(async community =>
                 {
                     //TODO: Rendering actions (e.g., permissions - which can be on a base aggregate type along with ID!)
-                    var renderedCommunity = await Task.FromResult(community);
+                    var renderedCommunity = await authorizationEngine.DiscloseCommunityAsync(
+                        user, organizationId, locationId, new CommunityInfo(community, ImmutableList<Permission>.Empty));
                     return new CommunityRecordsAggregate(renderedCommunity);
                 })
                 .WhenAll();
@@ -322,12 +323,14 @@ namespace CareTogether.Managers.Records
 
                 var communities = await communitiesResource.ListLocationCommunitiesAsync(
                     organizationId, locationId);
-                var communityResult = communities.Single(community => community.Id == communityId);
+                var community = communities.Single(community => community.Id == communityId);
 
-                var community = await authorizationEngine.DiscloseCommunityAsync(user,
-                    organizationId, locationId, communityResult);
+                var communityInfo = new CommunityInfo(community, ImmutableList<Permission>.Empty);
 
-                return new CommunityRecordsAggregate(community);
+                var communityResult = await authorizationEngine.DiscloseCommunityAsync(user,
+                    organizationId, locationId, communityInfo);
+
+                return new CommunityRecordsAggregate(communityResult);
             }
             else
             {
