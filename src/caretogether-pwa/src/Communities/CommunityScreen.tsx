@@ -15,6 +15,7 @@ import { AddEditCommunity } from './AddEditCommunity';
 import { CommunityDocumentUpload } from './CommunityDocumentUploadForm';
 import { CommunityDocuments } from './CommunityDocuments';
 import { DeleteForever, GroupAdd, PersonAddAlt1 } from '@mui/icons-material';
+import { AddMemberFamiliesForm } from './AddMemberFamiliesForm';
 
 export function CommunityScreen() {
   const communityIdMaybe = useParams<{ communityId: string; }>();
@@ -171,7 +172,7 @@ export function CommunityScreen() {
             open={addMemberFamilyDrawerOpen}
             onClose={() => setAddMemberFamilyDrawerOpen(false)}
             sx={{ '.MuiDrawer-paper': { padding: 2, paddingTop: { xs: 7, sm: 8, md: 6 }}}}>
-            <AddEditCommunity /*TODO*/ community={community} onClose={() => setAddMemberFamilyDrawerOpen(false)} />
+            <AddMemberFamiliesForm community={community} onClose={() => setAddMemberFamilyDrawerOpen(false)} />
           </Drawer>}
         {permissions(Permission.EditCommunityRoleAssignments) &&
           <Drawer
