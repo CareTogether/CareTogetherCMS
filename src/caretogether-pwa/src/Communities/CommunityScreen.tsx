@@ -1,8 +1,7 @@
-import { Button, Container, Drawer, Grid, List, ListItem, ListItemText, Toolbar, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { Button, Container, Drawer, Grid, Toolbar, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { useParams } from 'react-router-dom';
-import { personNameString } from '../Families/PersonName';
 import { Permission } from '../GeneratedClient';
-import { useCommunityLookup, useDataInitialized, usePersonAndFamilyLookup } from '../Model/DirectoryModel';
+import { useCommunityLookup, useDataInitialized } from '../Model/DirectoryModel';
 import { useCommunityPermissions } from '../Model/SessionModel';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import useScreenTitle from '../Shell/ShellScreenTitle';
@@ -16,6 +15,7 @@ import { DeleteForever, GroupAdd, PersonAddAlt1 } from '@mui/icons-material';
 import { AddMemberFamiliesForm } from './AddMemberFamiliesForm';
 import { AddRoleAssignmentForm } from './AddRoleAssignmentForm';
 import { CommunityMemberFamilies } from './CommunityMemberFamilies';
+import { CommunityRoleAssignments } from './CommunityRoleAssignments';
 
 export function CommunityScreen() {
   const communityIdMaybe = useParams<{ communityId: string; }>();
@@ -26,12 +26,6 @@ export function CommunityScreen() {
   const communityLookup = useCommunityLookup();
   const communityInfo = communityLookup(communityId)!;
   const community = communityInfo?.community;
-
-  const personLookup = usePersonAndFamilyLookup();
-  const assignees = (community?.communityRoleAssignments || []).map(assignee => ({
-    personAndFamily: personLookup(assignee.personId),
-    communityRole: assignee.communityRole
-  }));
 
   useScreenTitle(community?.name || "...");
 
@@ -130,14 +124,7 @@ export function CommunityScreen() {
                 Add
               </Button>}
             </Typography>
-            <List>
-              {assignees.map(assignee =>
-                <ListItem key={`${assignee.personAndFamily!.person!.id}-${assignee.communityRole}`} disablePadding>
-                  <ListItemText
-                    primary={personNameString(assignee.personAndFamily.person)}
-                    secondary={assignee.communityRole} />
-                </ListItem>)}
-            </List>
+            <CommunityRoleAssignments communityInfo={communityInfo} />
           </Grid>
         </Grid>
         {permissions(Permission.EditCommunity) &&

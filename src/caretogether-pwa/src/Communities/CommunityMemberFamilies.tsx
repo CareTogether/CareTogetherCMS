@@ -3,7 +3,7 @@ import { CombinedFamilyInfo, CommunityInfo, Permission, RemoveCommunityMemberFam
 import { useCommunityCommand, visibleFamiliesQuery } from '../Model/DirectoryModel';
 import { useCommunityPermissions } from '../Model/SessionModel';
 import PeopleIcon from '@mui/icons-material/People';
-import DeleteIcon from '@mui/icons-material/Delete';
+import GroupRemoveIcon from '@mui/icons-material/GroupRemove';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useRecoilValue } from 'recoil';
 import { familyNameString } from '../Families/FamilyName';
@@ -48,7 +48,7 @@ export function CommunityMemberFamilies({ communityInfo }: CommunityMemberFamili
           ? <IconButton edge="end" aria-label="delete"
               color='primary'
               onClick={() => remove(family)}>
-              <DeleteIcon />
+              <GroupRemoveIcon />
             </IconButton>
           : null}>
         <ListItemButton disableGutters sx={{ paddingTop: 0, paddingBottom: 0 }}
