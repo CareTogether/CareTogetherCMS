@@ -3,8 +3,8 @@ import { useParams } from 'react-router-dom';
 import { useRecoilValue } from 'recoil';
 import { familyNameString } from '../Families/FamilyName';
 import { personNameString } from '../Families/PersonName';
-import { CombinedFamilyInfo, Permission } from '../GeneratedClient';
-import { useCommunityLookup, useDataInitialized, usePersonAndFamilyLookup, useUserLookup, visibleFamiliesQuery } from '../Model/DirectoryModel';
+import { CombinedFamilyInfo, DeleteUploadedCommunityDocument, Permission, UploadedDocumentInfo } from '../GeneratedClient';
+import { useCommunityCommand, useCommunityLookup, useDataInitialized, usePersonAndFamilyLookup, useUserLookup, visibleFamiliesQuery } from '../Model/DirectoryModel';
 import { useCommunityPermissions } from '../Model/SessionModel';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import useScreenTitle from '../Shell/ShellScreenTitle';
@@ -15,6 +15,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { AddEditCommunity } from './AddEditCommunity';
+import { useBackdrop } from '../Hooks/useBackdrop';
 
 export function CommunityScreen() {
   const communityIdMaybe = useParams<{ communityId: string; }>();
@@ -31,6 +32,22 @@ export function CommunityScreen() {
     uploader: userLookup(document.userId),
     document: document
   }));
+
+  const deleteCommunityDocument = useCommunityCommand((communityId, documentId: string) => {
+    const command = new DeleteUploadedCommunityDocument();
+    command.communityId = communityId;
+    command.uploadedDocumentId = documentId;
+    return command;
+  });
+
+  const withBackdrop = useBackdrop();
+  async function deleteDocument(document: UploadedDocumentInfo) {
+    if (window.confirm("Are you sure you want to delete this document?\n\n" + document.uploadedFileName)) {
+      await withBackdrop(async () => {
+        await deleteCommunityDocument(communityId, document.uploadedDocumentId!);
+      });
+    }
+  }
   
   const personLookup = usePersonAndFamilyLookup();
   const assignees = (community?.communityRoleAssignments || []).map(assignee => ({
@@ -91,7 +108,8 @@ export function CommunityScreen() {
                     <ListItem key={doc.document.uploadedDocumentId} disablePadding
                       secondaryAction={
                         permissions(Permission.DeleteCommunityDocuments)
-                        ? <IconButton edge="end" aria-label="delete">
+                        ? <IconButton edge="end" aria-label="delete"
+                            onClick={() => deleteDocument(doc.document)}>
                             <DeleteIcon />
                           </IconButton>
                         : null
