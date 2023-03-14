@@ -60,8 +60,8 @@ export function AddRoleAssignmentForm({ community, onClose }: AddRoleAssignmentF
   const organizationConfiguration = useRecoilValue(organizationConfigurationQuery);
   const communityRoles = organizationConfiguration.communityRoles || [];
 
-  const duplicate = !saving && community.communityRoleAssignments?.find(cra =>
-    cra.personId === person?.id && cra.communityRole === role) || null;
+  const duplicate = !saving && (community.communityRoleAssignments?.find(cra =>
+    cra.personId === person?.id && cra.communityRole === role) || null);
 
   return (
     <Grid container spacing={2} maxWidth={500}>
