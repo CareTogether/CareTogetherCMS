@@ -30,10 +30,10 @@ export function CommunityDocumentUpload({ community, onClose }: CommunityDocumen
 
   async function upload() {
     await withBackdrop(async () => {
-      await Promise.all(Array.from(documentFiles!).map(async documentFile => {
+      for (const documentFile of Array.from(documentFiles!)) {
         const documentId = await uploadCommunityFileToTenant(organizationId, locationId, community.id!, documentFile);
         await uploadCommunityDocument(community.id!, documentId, documentFile.name);
-      }));
+      }
       //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
       onClose();
     });

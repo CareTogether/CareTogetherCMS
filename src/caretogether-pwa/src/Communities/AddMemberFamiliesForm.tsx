@@ -31,8 +31,9 @@ export function AddMemberFamiliesForm({ community, onClose }: AddMemberFamiliesF
 
   async function save() {
     await withBackdrop(async () => {
-      await Promise.all(families.map(async family =>
-        await addMemberFamily(community.id!, family.id!)));
+      for (const family of families) {
+        await addMemberFamily(community.id!, family.id!);
+      }
       onClose();
     });
   }
