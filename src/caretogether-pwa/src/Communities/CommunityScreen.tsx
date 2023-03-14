@@ -16,6 +16,7 @@ import { CommunityDocumentUpload } from './CommunityDocumentUploadForm';
 import { CommunityDocuments } from './CommunityDocuments';
 import { DeleteForever, GroupAdd, PersonAddAlt1 } from '@mui/icons-material';
 import { AddMemberFamiliesForm } from './AddMemberFamiliesForm';
+import { AddRoleAssignmentForm } from './AddRoleAssignmentForm';
 
 export function CommunityScreen() {
   const communityIdMaybe = useParams<{ communityId: string; }>();
@@ -69,7 +70,7 @@ export function CommunityScreen() {
           </Button>}
           {permissions(Permission.DeleteCommunity) && <Button
             onClick={() => setDeleteCommunityDrawerOpen(true)}
-            variant='contained'
+            variant='contained' disabled
             size={isDesktop ? 'small' : 'medium'}
             sx={{margin: 1}}
             startIcon={<DeleteForever />}>
@@ -180,7 +181,7 @@ export function CommunityScreen() {
             open={addRoleAssignmentDrawerOpen}
             onClose={() => setAddRoleAssignmentDrawerOpen(false)}
             sx={{ '.MuiDrawer-paper': { padding: 2, paddingTop: { xs: 7, sm: 8, md: 6 }}}}>
-            <CommunityDocumentUpload /*TODO*/ community={community} onClose={() => setAddRoleAssignmentDrawerOpen(false)} />
+            <AddRoleAssignmentForm community={community} onClose={() => setAddRoleAssignmentDrawerOpen(false)} />
           </Drawer>}
         {permissions(Permission.DeleteCommunity) &&
           <Drawer
