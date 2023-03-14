@@ -11,7 +11,7 @@ import { useState } from 'react';
 import { AddEditCommunity } from './AddEditCommunity';
 import { CommunityDocumentUpload } from './CommunityDocumentUploadForm';
 import { CommunityDocuments } from './CommunityDocuments';
-import { DeleteForever, GroupAdd, PersonAddAlt1 } from '@mui/icons-material';
+import { GroupAdd, PersonAddAlt1 } from '@mui/icons-material';
 import { AddMemberFamiliesForm } from './AddMemberFamiliesForm';
 import { AddRoleAssignmentForm } from './AddRoleAssignmentForm';
 import { CommunityMemberFamilies } from './CommunityMemberFamilies';
@@ -40,7 +40,7 @@ export function CommunityScreen() {
   const [uploadDrawerOpen, setUploadDrawerOpen] = useState(false);
   const [addMemberFamilyDrawerOpen, setAddMemberFamilyDrawerOpen] = useState(false);
   const [addRoleAssignmentDrawerOpen, setAddRoleAssignmentDrawerOpen] = useState(false);
-  const [deleteCommunityDrawerOpen, setDeleteCommunityDrawerOpen] = useState(false);
+  // const [deleteCommunityDrawerOpen, setDeleteCommunityDrawerOpen] = useState(false);
   
   return ((!dataInitialized || !community)
     ? <ProgressBackdrop>
@@ -56,14 +56,14 @@ export function CommunityScreen() {
             startIcon={<EditIcon />}>
             Rename
           </Button>}
-          {permissions(Permission.DeleteCommunity) && <Button
+          {/* {permissions(Permission.DeleteCommunity) && <Button
             onClick={() => setDeleteCommunityDrawerOpen(true)}
             variant='contained' disabled
             size={isDesktop ? 'small' : 'medium'}
             sx={{margin: 1}}
             startIcon={<DeleteForever />}>
             Delete
-          </Button>}
+          </Button>} */}
         </Toolbar>
         <Grid container spacing={2} sx={{ marginTop: 0 }}>
           <Grid item xs={12} sm={6}>
@@ -159,13 +159,13 @@ export function CommunityScreen() {
             sx={{ '.MuiDrawer-paper': { padding: 2, paddingTop: { xs: 7, sm: 8, md: 6 }}}}>
             <AddRoleAssignmentForm community={community} onClose={() => setAddRoleAssignmentDrawerOpen(false)} />
           </Drawer>}
-        {permissions(Permission.DeleteCommunity) &&
+        {/* {permissions(Permission.DeleteCommunity) &&
           <Drawer
             anchor='right'
             open={deleteCommunityDrawerOpen}
             onClose={() => setDeleteCommunityDrawerOpen(false)}
             sx={{ '.MuiDrawer-paper': { padding: 2, paddingTop: { xs: 7, sm: 8, md: 6 }}}}>
-            <CommunityDocumentUpload /*TODO*/ community={community} onClose={() => setDeleteCommunityDrawerOpen(false)} />
-          </Drawer>}
+            <DeleteCommunityForm community={community} onClose={() => setDeleteCommunityDrawerOpen(false)} />
+          </Drawer>} */}
       </Container>);
 }

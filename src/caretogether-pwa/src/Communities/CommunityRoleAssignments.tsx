@@ -1,10 +1,9 @@
-import { IconButton, List, ListItem, ListItemText, useTheme } from '@mui/material';
+import { IconButton, List, ListItem, ListItemText } from '@mui/material';
 import { CommunityInfo, Permission, RemoveCommunityRoleAssignment } from '../GeneratedClient';
 import { useCommunityCommand, usePersonAndFamilyLookup } from '../Model/DirectoryModel';
 import { useCommunityPermissions } from '../Model/SessionModel';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useBackdrop } from '../Hooks/useBackdrop';
-import { useNavigate } from 'react-router-dom';
 import { personNameString } from '../Families/PersonName';
 
 interface CommunityRoleAssignmentsProps {
@@ -44,9 +43,6 @@ export function CommunityRoleAssignments({ communityInfo }: CommunityRoleAssignm
       });
     }
   }
-
-  const theme = useTheme();
-  const navigate = useNavigate();
 
   return <List sx={{ '& .MuiListItemIcon-root': { minWidth: 36 } }}>
     {assignments.map(assignment => 
