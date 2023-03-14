@@ -14,6 +14,7 @@ import { useState } from 'react';
 import { AddEditCommunity } from './AddEditCommunity';
 import { CommunityDocumentUpload } from './CommunityDocumentUploadForm';
 import { CommunityDocuments } from './CommunityDocuments';
+import { DeleteForever, GroupAdd, PersonAddAlt1 } from '@mui/icons-material';
 
 export function CommunityScreen() {
   const communityIdMaybe = useParams<{ communityId: string; }>();
@@ -47,6 +48,9 @@ export function CommunityScreen() {
 
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
   const [uploadDrawerOpen, setUploadDrawerOpen] = useState(false);
+  const [addMemberFamilyDrawerOpen, setAddMemberFamilyDrawerOpen] = useState(false);
+  const [addRoleAssignmentDrawerOpen, setAddRoleAssignmentDrawerOpen] = useState(false);
+  const [deleteCommunityDrawerOpen, setDeleteCommunityDrawerOpen] = useState(false);
   
   return ((!dataInitialized || !community)
     ? <ProgressBackdrop>
@@ -70,6 +74,30 @@ export function CommunityScreen() {
             startIcon={<EditIcon />}>
             Edit
           </Button>}
+          {permissions(Permission.EditCommunityMemberFamilies) && <Button
+            onClick={() => setAddMemberFamilyDrawerOpen(true)}
+            variant='contained'
+            size={isDesktop ? 'small' : 'medium'}
+            sx={{margin: 1}}
+            startIcon={<GroupAdd />}>
+            Add Member Family
+          </Button>}
+          {permissions(Permission.EditCommunityRoleAssignments) && <Button
+            onClick={() => setAddRoleAssignmentDrawerOpen(true)}
+            variant='contained'
+            size={isDesktop ? 'small' : 'medium'}
+            sx={{margin: 1}}
+            startIcon={<PersonAddAlt1 />}>
+            Add Role Assignment
+          </Button>}
+          {permissions(Permission.DeleteCommunity) && <Button
+            onClick={() => setDeleteCommunityDrawerOpen(true)}
+            variant='contained'
+            size={isDesktop ? 'small' : 'medium'}
+            sx={{margin: 1}}
+            startIcon={<DeleteForever />}>
+            Delete
+          </Button>}
         </Toolbar>
         <Grid container spacing={2} sx={{ marginTop: 0 }}>
           <Grid item xs={12} sm={6}>
@@ -84,6 +112,16 @@ export function CommunityScreen() {
               </>}
           </Grid>
           <Grid item xs={12} sm={6}>
+            <Typography variant='h5'>Member Families</Typography>
+            <List>
+              {memberFamilies.map(family =>
+                <ListItem key={family.family!.id} disablePadding>
+                  <ListItemText
+                    primary={familyNameString(family)} />
+                </ListItem>)}
+            </List>
+          </Grid>
+          <Grid item xs={12} sm={6}>
             <Typography variant='h5'>Role Assignments</Typography>
             <List>
               {assignees.map(assignee =>
@@ -91,16 +129,6 @@ export function CommunityScreen() {
                   <ListItemText
                     primary={personNameString(assignee.personAndFamily.person)}
                     secondary={assignee.communityRole} />
-                </ListItem>)}
-            </List>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography variant='h5'>Member Families</Typography>
-            <List>
-              {memberFamilies.map(family =>
-                <ListItem key={family.family!.id} disablePadding>
-                  <ListItemText
-                    primary={familyNameString(family)} />
                 </ListItem>)}
             </List>
           </Grid>
@@ -120,6 +148,30 @@ export function CommunityScreen() {
             onClose={() => setUploadDrawerOpen(false)}
             sx={{ '.MuiDrawer-paper': { padding: 2, paddingTop: { xs: 7, sm: 8, md: 6 }}}}>
             <CommunityDocumentUpload community={community} onClose={() => setUploadDrawerOpen(false)} />
+          </Drawer>}
+        {permissions(Permission.EditCommunityMemberFamilies) &&
+          <Drawer
+            anchor='right'
+            open={addMemberFamilyDrawerOpen}
+            onClose={() => setAddMemberFamilyDrawerOpen(false)}
+            sx={{ '.MuiDrawer-paper': { padding: 2, paddingTop: { xs: 7, sm: 8, md: 6 }}}}>
+            <AddEditCommunity /*TODO*/ community={community} onClose={() => setAddMemberFamilyDrawerOpen(false)} />
+          </Drawer>}
+        {permissions(Permission.EditCommunityRoleAssignments) &&
+          <Drawer
+            anchor='right'
+            open={addRoleAssignmentDrawerOpen}
+            onClose={() => setAddRoleAssignmentDrawerOpen(false)}
+            sx={{ '.MuiDrawer-paper': { padding: 2, paddingTop: { xs: 7, sm: 8, md: 6 }}}}>
+            <CommunityDocumentUpload /*TODO*/ community={community} onClose={() => setAddRoleAssignmentDrawerOpen(false)} />
+          </Drawer>}
+        {permissions(Permission.DeleteCommunity) &&
+          <Drawer
+            anchor='right'
+            open={deleteCommunityDrawerOpen}
+            onClose={() => setDeleteCommunityDrawerOpen(false)}
+            sx={{ '.MuiDrawer-paper': { padding: 2, paddingTop: { xs: 7, sm: 8, md: 6 }}}}>
+            <CommunityDocumentUpload /*TODO*/ community={community} onClose={() => setDeleteCommunityDrawerOpen(false)} />
           </Drawer>}
       </Container>);
 }
