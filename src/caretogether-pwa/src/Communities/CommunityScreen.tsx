@@ -58,37 +58,13 @@ export function CommunityScreen() {
       </ProgressBackdrop>
     : <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>
         <Toolbar disableGutters variant={isDesktop ? 'dense' : 'regular'}>
-          {permissions(Permission.UploadCommunityDocuments) && <Button
-            onClick={() => setUploadDrawerOpen(true)}
-            variant='contained'
-            size={isDesktop ? 'small' : 'medium'}
-            sx={{marginRight: 1}}
-            startIcon={<CloudUploadIcon />}>
-            Upload
-          </Button>}
           {permissions(Permission.EditCommunity) && <Button
             onClick={() => setEditDrawerOpen(true)}
             variant='contained'
             size={isDesktop ? 'small' : 'medium'}
             sx={{margin: 1}}
             startIcon={<EditIcon />}>
-            Edit
-          </Button>}
-          {permissions(Permission.EditCommunityMemberFamilies) && <Button
-            onClick={() => setAddMemberFamilyDrawerOpen(true)}
-            variant='contained'
-            size={isDesktop ? 'small' : 'medium'}
-            sx={{margin: 1}}
-            startIcon={<GroupAdd />}>
-            Add Member Family
-          </Button>}
-          {permissions(Permission.EditCommunityRoleAssignments) && <Button
-            onClick={() => setAddRoleAssignmentDrawerOpen(true)}
-            variant='contained'
-            size={isDesktop ? 'small' : 'medium'}
-            sx={{margin: 1}}
-            startIcon={<PersonAddAlt1 />}>
-            Add Role Assignment
+            Rename
           </Button>}
           {permissions(Permission.DeleteCommunity) && <Button
             onClick={() => setDeleteCommunityDrawerOpen(true)}
@@ -101,18 +77,48 @@ export function CommunityScreen() {
         </Toolbar>
         <Grid container spacing={2} sx={{ marginTop: 0 }}>
           <Grid item xs={12} sm={6}>
-            <Typography variant='h5'>Description</Typography>
+            <Typography variant='h5'>
+              Description
+              {permissions(Permission.EditCommunity) && <Button
+                onClick={() => setEditDrawerOpen(true)}
+                variant='text'
+                size={isDesktop ? 'small' : 'medium'}
+                sx={{marginLeft: 2}}
+                startIcon={<EditIcon />}>
+                Edit
+              </Button>}
+            </Typography>
             <p style={{ marginTop: 12, whiteSpace: 'pre-wrap' }}>{community.description}</p>
           </Grid>
           <Grid item xs={12} sm={6}>
             {permissions(Permission.ViewCommunityDocumentMetadata) &&
               <>
-                <Typography variant='h5'>Documents</Typography>
+                <Typography variant='h5'>
+                  Documents
+                  {permissions(Permission.UploadCommunityDocuments) && <Button
+                    onClick={() => setUploadDrawerOpen(true)}
+                    variant='text'
+                    size={isDesktop ? 'small' : 'medium'}
+                    sx={{marginLeft: 2}}
+                    startIcon={<CloudUploadIcon />}>
+                    Upload
+                  </Button>}
+                </Typography>
                 <CommunityDocuments communityInfo={communityInfo} />
               </>}
           </Grid>
           <Grid item xs={12} sm={6}>
-            <Typography variant='h5'>Member Families</Typography>
+            <Typography variant='h5'>
+              Member Families
+              {permissions(Permission.EditCommunityMemberFamilies) && <Button
+                onClick={() => setAddMemberFamilyDrawerOpen(true)}
+                variant='text'
+                size={isDesktop ? 'small' : 'medium'}
+                sx={{marginLeft: 2}}
+                startIcon={<GroupAdd />}>
+                Add
+              </Button>}
+            </Typography>
             <List>
               {memberFamilies.map(family =>
                 <ListItem key={family.family!.id} disablePadding>
@@ -122,7 +128,17 @@ export function CommunityScreen() {
             </List>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <Typography variant='h5'>Role Assignments</Typography>
+            <Typography variant='h5'>
+              Role Assignments
+              {permissions(Permission.EditCommunityRoleAssignments) && <Button
+                onClick={() => setAddRoleAssignmentDrawerOpen(true)}
+                variant='text'
+                size={isDesktop ? 'small' : 'medium'}
+                sx={{marginLeft: 2}}
+                startIcon={<PersonAddAlt1 />}>
+                Add
+              </Button>}
+            </Typography>
             <List>
               {assignees.map(assignee =>
                 <ListItem key={`${assignee.personAndFamily!.person!.id}-${assignee.communityRole}`} disablePadding>
