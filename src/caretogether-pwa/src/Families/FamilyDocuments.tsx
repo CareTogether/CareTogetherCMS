@@ -3,7 +3,7 @@ import { Menu, MenuItem } from '@mui/material';
 import { format } from 'date-fns';
 import { useRecoilValue } from 'recoil';
 import { CombinedFamilyInfo, Permission, UploadedDocumentInfo } from '../GeneratedClient';
-import { downloadFile } from '../Model/FilesModel';
+import { downloadFamilyFile } from '../Model/FilesModel';
 import { currentOrganizationState, currentLocationState, useFamilyPermissions } from '../Model/SessionModel';
 import { DeleteDocumentDialog } from './DeleteDocumentDialog';
 
@@ -36,7 +36,7 @@ export function FamilyDocuments({ family }: FamilyDocumentsProps) {
                 e.preventDefault();
                 setMoreMenuAnchor({ anchor: e.currentTarget, document: uploaded });
               }}
-              onClick={() => downloadFile(organizationId, locationId, family.family!.id!, uploaded.uploadedDocumentId!)}>
+              onClick={() => downloadFamilyFile(organizationId, locationId, family.family!.id!, uploaded.uploadedDocumentId!)}>
               📃 {uploaded.uploadedFileName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               {uploaded.timestampUtc && <span style={{float:'right',marginRight:20}}>{format(uploaded.timestampUtc, "M/d/yy")}</span>}
             </li>

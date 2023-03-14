@@ -424,16 +424,20 @@ namespace CareTogether.Engines.Authorization
             };
         }
 
-        public async Task<Community> DiscloseCommunityAsync(ClaimsPrincipal user,
-            Guid organizationId, Guid locationId, Community community)
+        public async Task<CommunityInfo> DiscloseCommunityAsync(ClaimsPrincipal user,
+            Guid organizationId, Guid locationId, CommunityInfo community)
         {
             var contextPermissions = await AuthorizeUserAccessAsync(organizationId, locationId, user,
-                new CommunityAuthorizationContext(community.Id));
+                new CommunityAuthorizationContext(community.Community.Id));
 
             return community with
             {
-                UploadedDocuments = contextPermissions.Contains(Permission.ViewCommunityDocumentMetadata)
-                    ? community.UploadedDocuments : ImmutableList<UploadedDocumentInfo>.Empty,
+                Community = community.Community with
+                {
+                    UploadedDocuments = contextPermissions.Contains(Permission.ViewCommunityDocumentMetadata)
+                        ? community.Community.UploadedDocuments : ImmutableList<UploadedDocumentInfo>.Empty,
+                },
+                UserPermissions = contextPermissions
             };
         }
 

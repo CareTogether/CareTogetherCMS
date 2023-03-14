@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { BottomNavigation, BottomNavigationAction, Drawer, Paper, useTheme } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
+import Diversity3Icon from '@mui/icons-material/Diversity3';
 // import DashboardIcon from '@mui/icons-material/Dashboard';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useFeatureFlags } from '../Model/ConfigurationModel';
@@ -46,6 +47,7 @@ export function ShellBottomNavigation() {
         {/* <BottomNavigationAction component={Link} to='/dashboard' label="Dashboard" icon={<DashboardIcon />} /> */}
         {featureFlags?.viewReferrals && <BottomNavigationAction component={Link} to='/referrals' label="Referrals" icon={<PermPhoneMsgIcon />} />}
         <BottomNavigationAction component={Link} to='/volunteers' label="Volunteers" icon={<PeopleIcon />} />
+        <BottomNavigationAction component={Link} to='/communities' label="Communities" icon={<Diversity3Icon />} />
       </BottomNavigation>
       <Drawer
         sx={{

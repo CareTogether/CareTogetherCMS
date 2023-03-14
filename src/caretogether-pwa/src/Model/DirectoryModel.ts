@@ -1,8 +1,9 @@
 import { atom, selector, useRecoilCallback, useRecoilValue } from "recoil";
-import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, CompositeRecordsCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, RecordsClient, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, UpdatePersonGender, UpdatePersonAge, UpdatePersonEthnicity, UpdateAdultRelationshipToFamily, CustodialRelationshipType, UpdateCustodialRelationshipType, RemoveCustodialRelationship, ChangePrimaryFamilyContact, FamilyRecordsCommand, PersonRecordsCommand, NoteRecordsCommand, AtomicRecordsCommand, CustomField, UpdateCustomFamilyField, FamilyRecordsAggregate, RecordsAggregate, CommunityRecordsAggregate } from "../GeneratedClient";
+import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, CompositeRecordsCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, RecordsClient, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, UpdatePersonGender, UpdatePersonAge, UpdatePersonEthnicity, UpdateAdultRelationshipToFamily, CustodialRelationshipType, UpdateCustodialRelationshipType, RemoveCustodialRelationship, ChangePrimaryFamilyContact, FamilyRecordsCommand, PersonRecordsCommand, NoteRecordsCommand, AtomicRecordsCommand, CustomField, UpdateCustomFamilyField, FamilyRecordsAggregate, RecordsAggregate, CommunityRecordsAggregate, CommunityCommand, CommunityRecordsCommand } from "../GeneratedClient";
 import { accessTokenFetchQuery, authenticatingFetch } from "../Authentication/AuthenticatedHttp";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { currentOrganizationAndLocationIdsQuery, organizationConfigurationData, organizationConfigurationQuery } from "./ConfigurationModel";
+import { useLoadable } from "../Hooks/useLoadable";
 
 export const recordsClientQuery = selector({
   key: 'directoryClientQuery',
@@ -22,6 +23,10 @@ export const visibleAggregatesInitializationQuery = selector({
     return visibleAggregates;
   }
 });
+
+export function useDataInitialized() {
+  return useLoadable(visibleAggregatesInitializationQuery) != null;
+}
 
 export const visibleAggregatesData = atom<RecordsAggregate[]>({
   key: 'visibleAggregatesData',
@@ -93,6 +98,15 @@ export function useFamilyLookup() {
   }
 }
 
+export function useCommunityLookup() {
+  const visibleCommunities = useRecoilValue(visibleCommunitiesQuery);
+
+  return (communityId?: string) => {
+    const community = visibleCommunities.find(community => community.community?.id === communityId);
+    return community;
+  }
+}
+
 export function useAtomicRecordsCommandCallback<T extends unknown[], U extends AtomicRecordsCommand>(
   callback: (aggregateId: string, ...args: T) => Promise<U>) {
   return useRecoilCallback(({snapshot, set}) => {
@@ -104,10 +118,10 @@ export function useAtomicRecordsCommandCallback<T extends unknown[], U extends A
 
       const client = new RecordsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
       const updatedAggregate = await client.submitAtomicRecordsCommand(organizationId, locationId, command);
-      
-      set(visibleAggregatesData, current =>
-        current.some(currentEntry => currentEntry.id === updatedAggregate.id)
-        ? current.map(currentEntry => currentEntry.id === updatedAggregate.id
+
+      set(visibleAggregatesData, current => 
+        current.some(currentEntry => currentEntry.id === updatedAggregate.id && currentEntry.constructor === updatedAggregate.constructor)
+        ? current.map(currentEntry => currentEntry.id === updatedAggregate.id && currentEntry.constructor === updatedAggregate.constructor
           ? updatedAggregate
           : currentEntry)
         : current.concat(updatedAggregate));
@@ -163,6 +177,15 @@ function useNoteCommandCallback<T extends unknown[]>(
   return useAtomicRecordsCommandCallback(async (familyId, ...args: T) => {
     var command = new NoteRecordsCommand();
     command.command = await callback(familyId, ...args);
+    return command;
+  });
+}
+
+export function useCommunityCommand<TCommand extends CommunityCommand, TArgs extends unknown[]>(
+  callback: (communityId: string, ...args: TArgs) => TCommand) {
+  return useAtomicRecordsCommandCallback(async (communityId, ...args: TArgs) => {
+    var command = new CommunityRecordsCommand();
+    command.command = callback(communityId, ...args);
     return command;
   });
 }

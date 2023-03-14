@@ -1,6 +1,6 @@
 import { atom, selector } from "recoil";
 import { accessTokenFetchQuery } from "../Authentication/AuthenticatedHttp";
-import { CombinedFamilyInfo, Permission, UserLocationAccess, UsersClient } from "../GeneratedClient";
+import { CombinedFamilyInfo, CommunityInfo, Permission, UserLocationAccess, UsersClient } from "../GeneratedClient";
 import { useLoadable } from "../Hooks/useLoadable";
 import { localStorageEffect } from "../Utilities/localStorageEffect";
 import { useFamilyLookup } from "./DirectoryModel";
@@ -114,4 +114,8 @@ export function useFamilyIdPermissions(familyId: string) {
 
 export function useFamilyPermissions(family?: CombinedFamilyInfo) {
   return usePermissions(family?.userPermissions);
+}
+
+export function useCommunityPermissions(community?: CommunityInfo) {
+  return usePermissions(community?.userPermissions);
 }

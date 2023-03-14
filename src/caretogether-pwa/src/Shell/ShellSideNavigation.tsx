@@ -2,6 +2,7 @@ import { Divider, Drawer, List, Skeleton, Stack, useTheme } from '@mui/material'
 import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
 import PeopleIcon from '@mui/icons-material/People';
 import SettingsIcon from '@mui/icons-material/Settings';
+import Diversity3Icon from '@mui/icons-material/Diversity3';
 import { ListItemLink } from './ListItemLink';
 import { useFeatureFlags } from '../Model/ConfigurationModel';
 import { Copyright } from './Copyright';
@@ -40,6 +41,8 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               <ListItemLink to="/referrals" primary="Referrals" icon={<PermPhoneMsgIcon sx={{color: '#fff8'}} />} />}
             {permissions(Permission.AccessVolunteersScreen) &&
               <ListItemLink to="/volunteers" primary="Volunteers" icon={<PeopleIcon sx={{color: '#fff8'}} />} />}
+            {permissions(Permission.AccessCommunitiesScreen) &&
+              <ListItemLink to="/communities" primary="Communities" icon={<Diversity3Icon sx={{color: '#fff8'}} />} />}
             {permissions(Permission.AccessSettingsScreen) &&
               <>
                 <Divider  />

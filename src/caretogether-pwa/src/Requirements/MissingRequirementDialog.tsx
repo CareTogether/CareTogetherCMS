@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRecoilValue } from "recoil";
 import { ActionRequirement, Arrangement, DocumentLinkRequirement, MissingArrangementRequirement, NoteEntryRequirement } from "../GeneratedClient";
 import { useDirectoryModel, useFamilyLookup, usePersonLookup } from "../Model/DirectoryModel";
-import { uploadFileToTenant } from "../Model/FilesModel";
+import { uploadFamilyFileToTenant } from "../Model/FilesModel";
 import { useReferralsModel } from "../Model/ReferralsModel";
 import { currentLocationState, currentOrganizationState } from "../Model/SessionModel";
 import { useVolunteersModel } from "../Model/VolunteersModel";
@@ -105,7 +105,7 @@ export function MissingRequirementDialog({
   async function markComplete() {
     let document = documentId;
     if (documentId === UPLOAD_NEW) {
-      document = await uploadFileToTenant(organizationId, locationId, contextFamilyId, documentFile!);
+      document = await uploadFamilyFileToTenant(organizationId, locationId, contextFamilyId, documentFile!);
       await directory.uploadFamilyDocument(contextFamilyId, document, documentFile!.name);
     }
     let noteId: string | undefined = undefined;
