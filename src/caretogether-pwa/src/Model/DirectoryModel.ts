@@ -118,10 +118,10 @@ export function useAtomicRecordsCommandCallback<T extends unknown[], U extends A
 
       const client = new RecordsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
       const updatedAggregate = await client.submitAtomicRecordsCommand(organizationId, locationId, command);
-      
-      set(visibleAggregatesData, current =>
-        current.some(currentEntry => currentEntry.id === updatedAggregate.id)
-        ? current.map(currentEntry => currentEntry.id === updatedAggregate.id
+
+      set(visibleAggregatesData, current => 
+        current.some(currentEntry => currentEntry.id === updatedAggregate.id && currentEntry.constructor === updatedAggregate.constructor)
+        ? current.map(currentEntry => currentEntry.id === updatedAggregate.id && currentEntry.constructor === updatedAggregate.constructor
           ? updatedAggregate
           : currentEntry)
         : current.concat(updatedAggregate));
