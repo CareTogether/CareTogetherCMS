@@ -93,25 +93,24 @@ namespace CareTogether.TestData
         public static async Task PopulateDirectoryEvents(IEventLog<DirectoryEvent> directoryEventLog)
         {
             await directoryEventLog.AppendEventsAsync(guid1, guid2,
-                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid0, adminId, "Administrator", "McTester", Gender.Male, new ExactAge(new DateTime(2021, 7, 1)), "Ethnic",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid0, "Administrator", "McTester", Gender.Male, new ExactAge(new DateTime(2021, 7, 1)), "Ethnic",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, "Test", "ABC")),
                 new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreateFamily(guid0, guid0,
                     ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty.Add((guid0, new FamilyAdultRelationshipInfo("Single", true))),
                     ImmutableList<Guid>.Empty, ImmutableList<CustodialRelationship>.Empty)),
-                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid1, null, "John", "Doe", Gender.Male, new ExactAge(new DateTime(1980, 7, 1)), "Ethnic",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid1, "John", "Doe", Gender.Male, new ExactAge(new DateTime(1980, 7, 1)), "Ethnic",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, "DEF")),
-                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid2, guid3, "Jane", "Smith", Gender.Female, new AgeInYears(42, new DateTime(2021, 1, 1)), "Ethnic",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid2, "Jane", "Smith", Gender.Female, new AgeInYears(42, new DateTime(2021, 1, 1)), "Ethnic",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
                 new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new UpdatePersonName(guid2, "Jane", "Doe")),
                 new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new UpdatePersonAge(guid1, new ExactAge(new DateTime(1975, 1, 1)))),
                 new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new UpdatePersonAge(guid2, new ExactAge(new DateTime(1979, 7, 1)))),
-                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new UpdatePersonUserLink(guid1, guid4)),
                 new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreateFamily(guid1, guid1,
                     ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty.Add((guid1, new FamilyAdultRelationshipInfo("Dad", true))),
                     ImmutableList<Guid>.Empty, ImmutableList<CustodialRelationship>.Empty)),
                 new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new AddAdultToFamily(guid1, guid2, new FamilyAdultRelationshipInfo("Mom", true))),
                 new FamilyCommandExecuted(adminId, new DateTime(2020, 3, 5, 4, 15, 15), new UploadFamilyDocument(guid1, guid1, "Jane Doe referral info.pdf")),
-                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid3, null, "Eric", "Doe", Gender.Male, new AgeInYears(12, new DateTime(2021, 1, 1)), "Ethnic",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid3, "Eric", "Doe", Gender.Male, new AgeInYears(12, new DateTime(2021, 1, 1)), "Ethnic",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
                 new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new AddChildToFamily(guid1, guid3, ImmutableList<CustodialRelationship>.Empty
                     .Add(new CustodialRelationship(guid3, guid1, CustodialRelationshipType.ParentWithCustody))
@@ -120,18 +119,18 @@ namespace CareTogether.TestData
                 new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new RemoveCustodialRelationship(guid1, guid3, guid1)),
                 new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new UpdateCustodialRelationshipType(guid1, guid3, guid2, CustodialRelationshipType.ParentWithCourtAppointedCustody)),
                 new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new AddCustodialRelationship(guid1, new CustodialRelationship(guid3, guid1, CustodialRelationshipType.ParentWithCourtAppointedCustody))),
-                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid4, volunteerId, "Emily", "Coachworthy", Gender.Female, new ExactAge(new DateTime(1980, 3, 19)), "Caucasian",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid4, "Emily", "Coachworthy", Gender.Female, new ExactAge(new DateTime(1980, 3, 19)), "Caucasian",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
                 new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreateFamily(guid4, guid4,
                     ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty.Add((guid4, new FamilyAdultRelationshipInfo("Single", true))),
                     ImmutableList<Guid>.Empty, ImmutableList<CustodialRelationship>.Empty)),
-                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid5, null, "Han", "Solo", Gender.Male, new AgeInYears(30, new DateTime(2021, 7, 1)), "Corellian",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid5, "Han", "Solo", Gender.Male, new AgeInYears(30, new DateTime(2021, 7, 1)), "Corellian",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, "Smuggler", null)),
-                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid6, null, "Leia", "Skywalker", Gender.Male, new AgeInYears(28, new DateTime(2021, 7, 1)), "Tatooinian",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid6, "Leia", "Skywalker", Gender.Male, new AgeInYears(28, new DateTime(2021, 7, 1)), "Tatooinian",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, "Freedom fighter", "Uncertain claim to royalty")),
-                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid7, null, "Ben", "Solo", Gender.Male, new AgeInYears(12, new DateTime(2021, 7, 1)), "Chandrilan",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid7, "Ben", "Solo", Gender.Male, new AgeInYears(12, new DateTime(2021, 7, 1)), "Chandrilan",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
-                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guidA, null, "Luke", "Skywalker", Gender.Male, new AgeInYears(28, new DateTime(2021, 7, 1)), "Tatooinian",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guidA, "Luke", "Skywalker", Gender.Male, new AgeInYears(28, new DateTime(2021, 7, 1)), "Tatooinian",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
                 new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreateFamily(guid2, guid6,
                     ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty
@@ -141,9 +140,9 @@ namespace CareTogether.TestData
                     ImmutableList<Guid>.Empty.Add(guid7), ImmutableList<CustodialRelationship>.Empty
                         .Add(new CustodialRelationship(guid7, guid5, CustodialRelationshipType.ParentWithCustody))
                         .Add(new CustodialRelationship(guid7, guid6, CustodialRelationshipType.ParentWithCustody)))),
-                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid8, null, "William", "Riker", Gender.Male, new ExactAge(new DateTime(1972, 1, 1)), "Alaskan",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid8, "William", "Riker", Gender.Male, new ExactAge(new DateTime(1972, 1, 1)), "Alaskan",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
-                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid9, null, "Deanna", "Riker", Gender.Female, new ExactAge(new DateTime(1970, 1, 1)), "Betazoid",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid9, "Deanna", "Riker", Gender.Female, new ExactAge(new DateTime(1970, 1, 1)), "Betazoid",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
                 new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreateFamily(guid3, guid8,
                     ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty
@@ -209,9 +208,9 @@ namespace CareTogether.TestData
                 //new PersonCommandExecuted(adminId, new DateTime(2021, 8, 1), new UpdatePersonContactMethodPreferenceNotes(guid4,
                 //    "Cannot receive voicemails"))
                 new FamilyCommandExecuted(adminId, new DateTime(2022, 3, 2, 18, 0, 0), new UploadFamilyDocument(guid1, guid2, "Jane Doe second referral info.pdf")),
-                new PersonCommandExecuted(adminId, new DateTime(2022, 6, 21), new CreatePerson(guidB, null, "Emmett", "Brown", Gender.Male, new AgeInYears(60, new DateTime(2022, 6, 21)), "Caucasian",
+                new PersonCommandExecuted(adminId, new DateTime(2022, 6, 21), new CreatePerson(guidB, "Emmett", "Brown", Gender.Male, new AgeInYears(60, new DateTime(2022, 6, 21)), "Caucasian",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
-                new PersonCommandExecuted(adminId, new DateTime(2022, 6, 21), new CreatePerson(guidC, null, "Marty", "McFly", Gender.Male, new AgeInYears(14, new DateTime(2022, 6, 21)), "Caucasian",
+                new PersonCommandExecuted(adminId, new DateTime(2022, 6, 21), new CreatePerson(guidC, "Marty", "McFly", Gender.Male, new AgeInYears(14, new DateTime(2022, 6, 21)), "Caucasian",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
                 new FamilyCommandExecuted(adminId, new DateTime(2022, 6, 21), new CreateFamily(guid5, guidB,
                     ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty
@@ -405,7 +404,8 @@ namespace CareTogether.TestData
                             .Add(new ContextualPermissionSet(new GlobalPermissionContext(),
                                 ImmutableList.Create(
                                     Permission.AccessPartneringFamiliesScreen,
-                                    Permission.AccessVolunteersScreen
+                                    Permission.AccessVolunteersScreen,
+                                    Permission.AccessCommunitiesScreen
                                 )))
                             .Add(new ContextualPermissionSet(new OwnFamilyPermissionContext(),
                                 ImmutableList.Create(

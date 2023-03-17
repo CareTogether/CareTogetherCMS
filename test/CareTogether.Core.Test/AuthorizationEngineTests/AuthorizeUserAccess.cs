@@ -43,6 +43,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
         [TestInitialize]
         public async Task TestInitializeAsync()
         {
+            var accountsEventLog = new MemoryEventLog<AccountEvent>();
             var directoryEventLog = new MemoryEventLog<DirectoryEvent>();
             var goalsEventLog = new MemoryEventLog<GoalCommandExecutedEvent>();
             var referralsEventLog = new MemoryEventLog<ReferralEvent>();
@@ -74,9 +75,11 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             var referralsResource = new ReferralsResource(referralsEventLog);
             var approvalsResource = new ApprovalsResource(approvalsEventLog);
             var communitiesResource = new CommunitiesResource(communitiesEventLog, Mock.Of<IFileStore>());
+            var accountsResource = new AccountsResource(userTenantAccessStore, accountsEventLog,
+                new Azure.Storage.Blobs.BlobServiceClient(null), configurationStore);
 
             dut = new AuthorizationEngine(policiesResource, directoryResource,
-                referralsResource, approvalsResource, communitiesResource);
+                referralsResource, approvalsResource, communitiesResource, accountsResource);
         }
 
         [DataTestMethod]
