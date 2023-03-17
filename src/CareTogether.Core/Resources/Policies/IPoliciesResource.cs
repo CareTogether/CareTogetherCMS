@@ -10,6 +10,8 @@ namespace CareTogether.Resources.Policies
         ImmutableList<RoleDefinition> Roles,
         ImmutableList<string> CommunityRoles,
         //TODO: Users is only being kept for compatibility until migrations are completed.
+        //      Once this is removed, some logic will need to change to reference AccountsResource info
+        //      (via disclosing user access on CombinedFamilyInfo).
         ImmutableDictionary<Guid, UserAccessConfiguration> Users);
 
     public sealed record LocationConfiguration(Guid Id, string Name,
