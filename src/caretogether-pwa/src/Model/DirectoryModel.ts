@@ -84,7 +84,7 @@ export function useUserLookup() {
     const staticPersonId = staticUserAssignment?.personId;
 
     const person = visibleFamilies.flatMap(family => family.family?.adults).find(adult =>
-      adult?.item1?.id === staticPersonId || adult?.item1?.userId === userId)?.item1;
+      adult?.item1?.id === staticPersonId)?.item1;
     return person;
   }
 }

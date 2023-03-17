@@ -2051,11 +2051,6 @@
             "type": "string",
             "format": "guid"
           },
-          "userId": {
-            "type": "string",
-            "format": "guid",
-            "nullable": true
-          },
           "active": {
             "type": "boolean"
           },
@@ -5100,8 +5095,7 @@
             "UpdatePersonGender": "#/components/schemas/UpdatePersonGender",
             "UpdatePersonName": "#/components/schemas/UpdatePersonName",
             "UpdatePersonNotes": "#/components/schemas/UpdatePersonNotes",
-            "UpdatePersonPhoneNumber": "#/components/schemas/UpdatePersonPhoneNumber",
-            "UpdatePersonUserLink": "#/components/schemas/UpdatePersonUserLink"
+            "UpdatePersonPhoneNumber": "#/components/schemas/UpdatePersonPhoneNumber"
           }
         },
         "x-abstract": true,
@@ -5185,11 +5179,6 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
-              "userId": {
-                "type": "string",
-                "format": "guid",
-                "nullable": true
-              },
               "firstName": {
                 "type": "string"
               },
@@ -5425,24 +5414,6 @@
               },
               "isPreferredPhoneNumber": {
                 "type": "boolean"
-              }
-            }
-          }
-        ]
-      },
-      "UpdatePersonUserLink": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/PersonCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "userId": {
-                "type": "string",
-                "format": "guid",
-                "nullable": true
               }
             }
           }

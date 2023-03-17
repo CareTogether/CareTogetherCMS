@@ -1,6 +1,7 @@
 using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Managers;
 using CareTogether.Resources;
+using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
@@ -23,17 +24,20 @@ namespace CareTogether.Engines.Authorization
         private readonly IReferralsResource referralsResource;
         private readonly IApprovalsResource approvalsResource;
         private readonly ICommunitiesResource communitiesResource;
+        private readonly IAccountsResource accountsResource;
 
 
         public AuthorizationEngine(IPoliciesResource policiesResource,
             IDirectoryResource directoryResource, IReferralsResource referralsResource,
-            IApprovalsResource approvalsResource, ICommunitiesResource communitiesResource)
+            IApprovalsResource approvalsResource, ICommunitiesResource communitiesResource,
+            IAccountsResource accountsResource)
         {
             this.policiesResource = policiesResource;
             this.directoryResource = directoryResource;
             this.referralsResource = referralsResource;
             this.approvalsResource = approvalsResource;
             this.communitiesResource = communitiesResource;
+            this.accountsResource = accountsResource;
         }
 
 
@@ -234,7 +238,6 @@ namespace CareTogether.Engines.Authorization
                 UpdatePersonGender => Permission.EditFamilyInfo,
                 UpdatePersonAge => Permission.EditFamilyInfo,
                 UpdatePersonEthnicity => Permission.EditFamilyInfo,
-                UpdatePersonUserLink => Permission.EditPersonUserLink,
                 UpdatePersonConcerns => Permission.EditPersonConcerns,
                 UpdatePersonNotes => Permission.EditPersonNotes,
                 AddPersonAddress => Permission.EditPersonContactInfo,
@@ -659,8 +662,13 @@ namespace CareTogether.Engines.Authorization
         internal async Task<bool> DiscloseNoteAsync(Note note, Guid organizationId, Guid locationId,
             Guid? userPersonId, ImmutableList<Permission> contextPermissions)
         {
-            var author = await directoryResource.FindUserAsync(organizationId, locationId, note.AuthorId);
-            return userPersonId != null && author?.Id == userPersonId.Value ||
+            var author = await accountsResource.GetUserAccountAsync(note.AuthorId);
+            var authorPersonId = author.Organization.Locations.Single(loc => loc.LocationId == locationId).PersonId;
+
+            // Disclose the note if:
+            //  1. the current user is the same person as the author, or
+            //  2. the author has permission to view all notes.
+            return (userPersonId != null && authorPersonId == userPersonId.Value) ||
                 contextPermissions.Contains(Permission.ViewAllNotes);
         }
     }

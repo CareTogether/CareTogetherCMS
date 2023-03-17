@@ -19,7 +19,7 @@ namespace CareTogether.Resources.Directory
         ImmutableList<Guid> DeletedDocuments,
         ImmutableList<CompletedCustomFieldInfo> CompletedCustomFields,
         ImmutableList<Activity> History);
-    public sealed record Person(Guid Id, Guid? UserId, bool Active,
+    public sealed record Person(Guid Id, bool Active,
         string FirstName, string LastName, Gender? Gender, Age? Age, string? Ethnicity,
         ImmutableList<Address> Addresses, Guid? CurrentAddressId,
         ImmutableList<PhoneNumber> PhoneNumbers, Guid? PreferredPhoneNumberId,
@@ -83,7 +83,7 @@ namespace CareTogether.Resources.Directory
 
     [JsonHierarchyBase]
     public abstract partial record PersonCommand(Guid PersonId);
-    public sealed record CreatePerson(Guid PersonId, Guid? UserId, string FirstName, string LastName,
+    public sealed record CreatePerson(Guid PersonId, string FirstName, string LastName,
         Gender? Gender, Age? Age, string? Ethnicity,
         ImmutableList<Address> Addresses, Guid? CurrentAddressId,
         ImmutableList<PhoneNumber> PhoneNumbers, Guid? PreferredPhoneNumberId,
@@ -99,8 +99,6 @@ namespace CareTogether.Resources.Directory
     public sealed record UpdatePersonAge(Guid PersonId, Age Age)
         : PersonCommand(PersonId);
     public sealed record UpdatePersonEthnicity(Guid PersonId, string Ethnicity)
-        : PersonCommand(PersonId);
-    public sealed record UpdatePersonUserLink(Guid PersonId, Guid? UserId)
         : PersonCommand(PersonId);
     public sealed record UpdatePersonConcerns(Guid PersonId, string? Concerns)
         : PersonCommand(PersonId);
@@ -125,8 +123,6 @@ namespace CareTogether.Resources.Directory
     /// </summary>
     public interface IDirectoryResource
     {
-        Task<Person?> FindUserAsync(Guid organizationId, Guid locationId, Guid userId);
-
         Task<ImmutableList<Person>> ListPeopleAsync(Guid organizationId, Guid locationId);
 
         Task<Family?> FindFamilyAsync(Guid organizationId, Guid locationId, Guid familyId);

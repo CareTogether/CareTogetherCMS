@@ -193,7 +193,7 @@ namespace CareTogether.Managers.Records
                         var emailAddresses = c.EmailAddress == null ? ImmutableList<EmailAddress>.Empty : ImmutableList<EmailAddress>.Empty.Add(c.EmailAddress);
 
                         yield return new PersonRecordsCommand(c.FamilyId,
-                            new CreatePerson(c.PersonId, null, c.FirstName, c.LastName,
+                            new CreatePerson(c.PersonId, c.FirstName, c.LastName,
                                 c.Gender, c.Age, c.Ethnicity,
                                 addresses, c.Address?.Id,
                                 phoneNumbers, c.PhoneNumber?.Id,
@@ -206,7 +206,7 @@ namespace CareTogether.Managers.Records
                 case AddChildToFamilyCommand c:
                     {
                         yield return new PersonRecordsCommand(c.FamilyId,
-                            new CreatePerson(c.PersonId, null, c.FirstName, c.LastName,
+                            new CreatePerson(c.PersonId, c.FirstName, c.LastName,
                                 c.Gender, c.Age, c.Ethnicity,
                                 ImmutableList<Address>.Empty, null,
                                 ImmutableList<PhoneNumber>.Empty, null,
@@ -223,7 +223,7 @@ namespace CareTogether.Managers.Records
                         var emailAddresses = c.EmailAddress == null ? ImmutableList<EmailAddress>.Empty : ImmutableList<EmailAddress>.Empty.Add(c.EmailAddress);
 
                         yield return new PersonRecordsCommand(c.FamilyId,
-                            new CreatePerson(c.PersonId, null, c.FirstName, c.LastName,
+                            new CreatePerson(c.PersonId, c.FirstName, c.LastName,
                                 c.Gender, c.Age, c.Ethnicity,
                                 addresses, c.Address?.Id,
                                 phoneNumbers, c.PhoneNumber?.Id,
@@ -245,7 +245,7 @@ namespace CareTogether.Managers.Records
                         var emailAddresses = c.EmailAddress == null ? ImmutableList<EmailAddress>.Empty : ImmutableList<EmailAddress>.Empty.Add(c.EmailAddress);
 
                         yield return new PersonRecordsCommand(c.FamilyId,
-                            new CreatePerson(c.PersonId, null, c.FirstName, c.LastName,
+                            new CreatePerson(c.PersonId, c.FirstName, c.LastName,
                                 c.Gender, c.Age, c.Ethnicity,
                                 addresses, c.Address?.Id,
                                 phoneNumbers, c.PhoneNumber?.Id,

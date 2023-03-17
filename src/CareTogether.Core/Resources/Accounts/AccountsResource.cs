@@ -15,14 +15,14 @@ namespace CareTogether.Resources.Accounts
         private const int GLOBAL_SCOPE_ID = 0; // Currently, there is only one globally-scoped accounts model.
         private readonly IEventLog<AccountEvent> accountsEventLog;
         private readonly BlobServiceClient blobServiceClient;
-        private readonly JsonBlobObjectStore<OrganizationConfiguration> organizationConfigurationStore;
+        private readonly IObjectStore<OrganizationConfiguration> organizationConfigurationStore;
         private readonly ConcurrentLockingStore<int, AccountsModel> globalScopeAccountsModel;
         private readonly IObjectStore<UserTenantAccessSummary> configurationStore;
 
 
         public AccountsResource(IObjectStore<UserTenantAccessSummary> configurationStore,
             IEventLog<AccountEvent> accountsEventLog,
-            BlobServiceClient blobServiceClient, JsonBlobObjectStore<OrganizationConfiguration> organizationConfigurationStore)
+            BlobServiceClient blobServiceClient, IObjectStore<OrganizationConfiguration> organizationConfigurationStore)
         {
             this.configurationStore = configurationStore;
             this.accountsEventLog = accountsEventLog;

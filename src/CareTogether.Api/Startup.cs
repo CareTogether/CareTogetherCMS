@@ -153,7 +153,7 @@ namespace CareTogether.Api
 
             // Engine services
             var authorizationEngine = new AuthorizationEngine(policiesResource, directoryResource,
-                referralsResource, approvalsResource, communitiesResource);
+                referralsResource, approvalsResource, communitiesResource, accountsResource);
             services.AddSingleton<IAuthorizationEngine>(authorizationEngine); //TODO: Temporary workaround for UsersController
             var policyEvaluationEngine = new PolicyEvaluationEngine(policiesResource);
 

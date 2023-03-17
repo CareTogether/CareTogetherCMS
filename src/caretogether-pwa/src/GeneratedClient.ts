@@ -3542,7 +3542,6 @@ export interface IValueTupleOfPersonAndFamilyAdultRelationshipInfo {
 
 export class Person implements IPerson {
     id?: string;
-    userId?: string | undefined;
     active?: boolean;
     firstName?: string;
     lastName?: string;
@@ -3570,7 +3569,6 @@ export class Person implements IPerson {
     init(_data?: any) {
         if (_data) {
             this.id = _data["id"];
-            this.userId = _data["userId"];
             this.active = _data["active"];
             this.firstName = _data["firstName"];
             this.lastName = _data["lastName"];
@@ -3610,7 +3608,6 @@ export class Person implements IPerson {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
-        data["userId"] = this.userId;
         data["active"] = this.active;
         data["firstName"] = this.firstName;
         data["lastName"] = this.lastName;
@@ -3643,7 +3640,6 @@ export class Person implements IPerson {
 
 export interface IPerson {
     id?: string;
-    userId?: string | undefined;
     active?: boolean;
     firstName?: string;
     lastName?: string;
@@ -9296,11 +9292,6 @@ export abstract class PersonCommand implements IPersonCommand {
             result.init(data);
             return result;
         }
-        if (data["discriminator"] === "UpdatePersonUserLink") {
-            let result = new UpdatePersonUserLink();
-            result.init(data);
-            return result;
-        }
         throw new Error("The abstract class 'PersonCommand' cannot be instantiated.");
     }
 
@@ -9431,7 +9422,6 @@ export interface IAddPersonPhoneNumber extends IPersonCommand {
 }
 
 export class CreatePerson extends PersonCommand implements ICreatePerson {
-    userId?: string | undefined;
     firstName?: string;
     lastName?: string;
     gender?: Gender | undefined;
@@ -9454,7 +9444,6 @@ export class CreatePerson extends PersonCommand implements ICreatePerson {
     init(_data?: any) {
         super.init(_data);
         if (_data) {
-            this.userId = _data["userId"];
             this.firstName = _data["firstName"];
             this.lastName = _data["lastName"];
             this.gender = _data["gender"];
@@ -9492,7 +9481,6 @@ export class CreatePerson extends PersonCommand implements ICreatePerson {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["userId"] = this.userId;
         data["firstName"] = this.firstName;
         data["lastName"] = this.lastName;
         data["gender"] = this.gender;
@@ -9524,7 +9512,6 @@ export class CreatePerson extends PersonCommand implements ICreatePerson {
 }
 
 export interface ICreatePerson extends IPersonCommand {
-    userId?: string | undefined;
     firstName?: string;
     lastName?: string;
     gender?: Gender | undefined;
@@ -9888,40 +9875,6 @@ export class UpdatePersonPhoneNumber extends PersonCommand implements IUpdatePer
 export interface IUpdatePersonPhoneNumber extends IPersonCommand {
     phoneNumber?: PhoneNumber;
     isPreferredPhoneNumber?: boolean;
-}
-
-export class UpdatePersonUserLink extends PersonCommand implements IUpdatePersonUserLink {
-    userId?: string | undefined;
-
-    constructor(data?: IUpdatePersonUserLink) {
-        super(data);
-        this._discriminator = "UpdatePersonUserLink";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.userId = _data["userId"];
-        }
-    }
-
-    static fromJS(data: any): UpdatePersonUserLink {
-        data = typeof data === 'object' ? data : {};
-        let result = new UpdatePersonUserLink();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["userId"] = this.userId;
-        super.toJSON(data);
-        return data;
-    }
-}
-
-export interface IUpdatePersonUserLink extends IPersonCommand {
-    userId?: string | undefined;
 }
 
 export class ReferralRecordsCommand extends AtomicRecordsCommand implements IReferralRecordsCommand {
