@@ -20,6 +20,7 @@ namespace CareTogether.TestData
     {
         /* Families
          * ======================
+         * NOTE: guidF is reserved for CareTogether system actions and should not be used as a person ID!
          * McTester - guid0
          *   Administrator McTester - guid0 - UserID adminId
          * Doe - guid1

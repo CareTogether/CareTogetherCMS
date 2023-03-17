@@ -9,6 +9,7 @@ namespace CareTogether.Resources.Policies
         ImmutableList<LocationConfiguration> Locations,
         ImmutableList<RoleDefinition> Roles,
         ImmutableList<string> CommunityRoles,
+        //TODO: Users is only being kept for compatibility until migrations are completed.
         ImmutableDictionary<Guid, UserAccessConfiguration> Users);
 
     public sealed record LocationConfiguration(Guid Id, string Name,

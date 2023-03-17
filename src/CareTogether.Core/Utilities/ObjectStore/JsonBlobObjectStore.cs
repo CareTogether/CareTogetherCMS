@@ -5,7 +5,9 @@ using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -75,6 +77,17 @@ namespace CareTogether.Utilities.ObjectStore
                 new BlobUploadOptions { HttpHeaders = new BlobHttpHeaders { ContentType = "application/json" } });
 
             memoryCache.Set(CacheKey(organizationId, locationId, objectId), value, cacheExpiration);
+        }
+
+        public async IAsyncEnumerable<string> ListAsync(Guid organizationId, Guid locationId)
+        {
+            var tenantContainer = await CreateContainerIfNotExists(organizationId);
+
+            await foreach (var blob in tenantContainer.GetBlobsAsync(prefix: $"{locationId}/{objectType}/"))
+            {
+                var objectId = blob.Name.Substring(blob.Name.LastIndexOf('/') + 1).Replace(".json", "");
+                yield return objectId;
+            }
         }
 
 

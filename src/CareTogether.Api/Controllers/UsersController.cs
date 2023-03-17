@@ -41,13 +41,15 @@ namespace CareTogether.Api.Controllers
         {
             //TODO: This should not happen here. This should perhaps be an AuthorizationEngine method,
             //      and derive only from the underlying data sources instead of the values on the ClaimsPrincipal.
-            var tenantAccess = await accountsResource.GetUserTenantAccessSummaryAsync(User.UserId());
-            var organizationId = tenantAccess.OrganizationId;
-            var locationIds = tenantAccess.LocationIds;
+            var account = await accountsResource.GetUserAccountAsync(User.UserId());
+            var organizationId = account.Organization.OrganizationId;
+            var locations = account.Organization.Locations;
 
-            var userLocationsAccess = (await locationIds
-                .Select(async locationId =>
+            var userLocationsAccess = (await locations
+                .Select(async location =>
                 {
+                    var locationId = location.LocationId;
+
                     var roles = User.LocationIdentity(organizationId, locationId)
                         !.FindAll(ClaimsIdentity.DefaultRoleClaimType)
                         .Select(c => c.Value).ToImmutableList();
@@ -65,7 +67,7 @@ namespace CareTogether.Api.Controllers
                         allPartneringFamiliesContextPermissions);
                 }).WhenAll()).ToImmutableList();
 
-            var userOrganizationAccess = new UserOrganizationAccess(tenantAccess.OrganizationId, userLocationsAccess);
+            var userOrganizationAccess = new UserOrganizationAccess(organizationId, userLocationsAccess);
 
             return Ok(userOrganizationAccess);
         }

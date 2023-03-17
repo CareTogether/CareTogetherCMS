@@ -94,6 +94,7 @@ namespace CareTogether.Api
 
             // Data store services
             var defaultMemoryCacheOptions = Options.Create(new MemoryCacheOptions());
+            var accountsEventLog = new AppendBlobEventLog<AccountEvent>(immutableBlobServiceClient, "AccountsEventLog");
             var directoryEventLog = new AppendBlobEventLog<DirectoryEvent>(immutableBlobServiceClient, "DirectoryEventLog");
             var goalsEventLog = new AppendBlobEventLog<GoalCommandExecutedEvent>(immutableBlobServiceClient, "GoalsEventLog");
             var referralsEventLog = new AppendBlobEventLog<ReferralEvent>(immutableBlobServiceClient, "ReferralsEventLog");
@@ -141,7 +142,7 @@ namespace CareTogether.Api
             var directoryResource = new DirectoryResource(directoryEventLog, uploadsStore);
             var goalsResource = new GoalsResource(goalsEventLog);
             var policiesResource = new PoliciesResource(configurationStore, policiesStore, organizationSecretsStore);
-            var accountsResource = new AccountsResource(userTenantAccessStore);
+            var accountsResource = new AccountsResource(userTenantAccessStore, accountsEventLog, immutableBlobServiceClient, configurationStore);
             var referralsResource = new ReferralsResource(referralsEventLog);
             var notesResource = new NotesResource(notesEventLog, draftNotesStore);
             var communitiesResource = new CommunitiesResource(communitiesEventLog, uploadsStore);
