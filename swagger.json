@@ -791,12 +791,6 @@
             "items": {
               "type": "string"
             }
-          },
-          "users": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/UserAccessConfiguration"
-            }
           }
         }
       },
@@ -1190,38 +1184,6 @@
           507,
           508
         ]
-      },
-      "UserAccessConfiguration": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "personId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "locationRoles": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UserLocationRoles"
-            }
-          }
-        }
-      },
-      "UserLocationRoles": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "locationId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "roleNames": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
       },
       "EffectiveLocationPolicy": {
         "type": "object",

@@ -12,6 +12,7 @@ namespace CareTogether.Resources.Policies
         //TODO: Users is only being kept for compatibility until migrations are completed.
         //      Once this is removed, some logic will need to change to reference AccountsResource info
         //      (via disclosing user access on CombinedFamilyInfo).
+        [property: NJsonSchema.Annotations.JsonSchemaIgnore]
         ImmutableDictionary<Guid, UserAccessConfiguration> Users);
 
     public sealed record LocationConfiguration(Guid Id, string Name,
