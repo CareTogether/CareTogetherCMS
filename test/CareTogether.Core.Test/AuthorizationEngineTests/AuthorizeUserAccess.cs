@@ -1,4 +1,5 @@
-﻿using CareTogether.Engines.Authorization;
+﻿using Azure.Storage.Blobs;
+using CareTogether.Engines.Authorization;
 using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Communities;
@@ -76,7 +77,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             var approvalsResource = new ApprovalsResource(approvalsEventLog);
             var communitiesResource = new CommunitiesResource(communitiesEventLog, Mock.Of<IFileStore>());
             var accountsResource = new AccountsResource(userTenantAccessStore, accountsEventLog,
-                new Azure.Storage.Blobs.BlobServiceClient(null), configurationStore);
+                new Azure.Storage.Blobs.BlobServiceClient("UseDevelopmentStorage=true"), configurationStore);
 
             dut = new AuthorizationEngine(policiesResource, directoryResource,
                 referralsResource, approvalsResource, communitiesResource, accountsResource);
@@ -135,22 +136,22 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
         }
 
         [DataTestMethod]
-        [DataRow('0', 5, 2, 2, 2, 2, 2, 2, 2)]
-        [DataRow('1', 2, 5, 2, 2, 2, 2, 2, 2)]
-        [DataRow('2', 2, 5, 2, 2, 2, 2, 2, 2)]
-        [DataRow('3', 2, 5, 2, 2, 2, 2, 2, 2)]
-        [DataRow('4', 2, 10, 3, 4, 6, 4, 4, 2)]
-        [DataRow('5', 2, 10, 5, 3, 3, 2, 2, 2)]
-        [DataRow('6', 2, 10, 5, 3, 3, 2, 2, 2)]
-        [DataRow('7', 2, 10, 5, 3, 3, 2, 2, 2)]
-        [DataRow('8', 2, 2, 3, 8, 7, 7, 4, 2)]
-        [DataRow('9', 2, 2, 3, 6, 4, 4, 3, 2)]
-        [DataRow('a', 2, 10, 5, 3, 3, 2, 2, 2)]
-        [DataRow('b', 2, 2, 2, 4, 4, 6, 3, 2)]
-        [DataRow('c', 2, 2, 2, 4, 4, 6, 3, 2)]
-        [DataRow('d', 2, 2, 2, 2, 2, 2, 2, 2)]
-        [DataRow('e', 2, 2, 2, 2, 2, 2, 2, 2)]
-        [DataRow('f', 2, 2, 2, 2, 2, 2, 2, 2)]
+        [DataRow('0', 6, 3, 3, 3, 3, 3, 3, 3)]
+        [DataRow('1', 3, 6, 3, 3, 3, 3, 3, 3)]
+        [DataRow('2', 3, 6, 3, 3, 3, 3, 3, 3)]
+        [DataRow('3', 3, 6, 3, 3, 3, 3, 3, 3)]
+        [DataRow('4', 3, 11, 4, 5, 7, 5, 5, 3)]
+        [DataRow('5', 3, 11, 6, 4, 4, 3, 3, 3)]
+        [DataRow('6', 3, 11, 6, 4, 4, 3, 3, 3)]
+        [DataRow('7', 3, 11, 6, 4, 4, 3, 3, 3)]
+        [DataRow('8', 3, 3, 4, 9, 8, 8, 5, 3)]
+        [DataRow('9', 3, 3, 4, 7, 5, 5, 4, 3)]
+        [DataRow('a', 3, 11, 6, 4, 4, 3, 3, 3)]
+        [DataRow('b', 3, 3, 3, 5, 5, 7, 4, 3)]
+        [DataRow('c', 3, 3, 3, 5, 5, 7, 4, 3)]
+        [DataRow('d', 3, 3, 3, 3, 3, 3, 3, 3)]
+        [DataRow('e', 3, 3, 3, 3, 3, 3, 3, 3)]
+        [DataRow('f', 3, 3, 3, 3, 3, 3, 3, 3)]
         public async Task TestAccessWithVolunteerRole(char personId,
             int expected0, int expected1, int expected2, int expected3, int expected4, int expected5,
             int expectedCommunity1, int expectedCommunity2)
