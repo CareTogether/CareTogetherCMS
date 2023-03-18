@@ -3174,6 +3174,7 @@ export interface IFamilyRecordsAggregate extends IRecordsAggregate {
 
 export class CombinedFamilyInfo implements ICombinedFamilyInfo {
     family?: Family;
+    users?: UserInfo[];
     partneringFamilyInfo?: PartneringFamilyInfo | undefined;
     volunteerFamilyInfo?: VolunteerFamilyInfo | undefined;
     notes?: Note[];
@@ -3193,6 +3194,11 @@ export class CombinedFamilyInfo implements ICombinedFamilyInfo {
     init(_data?: any) {
         if (_data) {
             this.family = _data["family"] ? Family.fromJS(_data["family"]) : <any>undefined;
+            if (Array.isArray(_data["users"])) {
+                this.users = [] as any;
+                for (let item of _data["users"])
+                    this.users!.push(UserInfo.fromJS(item));
+            }
             this.partneringFamilyInfo = _data["partneringFamilyInfo"] ? PartneringFamilyInfo.fromJS(_data["partneringFamilyInfo"]) : <any>undefined;
             this.volunteerFamilyInfo = _data["volunteerFamilyInfo"] ? VolunteerFamilyInfo.fromJS(_data["volunteerFamilyInfo"]) : <any>undefined;
             if (Array.isArray(_data["notes"])) {
@@ -3228,6 +3234,11 @@ export class CombinedFamilyInfo implements ICombinedFamilyInfo {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["family"] = this.family ? this.family.toJSON() : <any>undefined;
+        if (Array.isArray(this.users)) {
+            data["users"] = [];
+            for (let item of this.users)
+                data["users"].push(item.toJSON());
+        }
         data["partneringFamilyInfo"] = this.partneringFamilyInfo ? this.partneringFamilyInfo.toJSON() : <any>undefined;
         data["volunteerFamilyInfo"] = this.volunteerFamilyInfo ? this.volunteerFamilyInfo.toJSON() : <any>undefined;
         if (Array.isArray(this.notes)) {
@@ -3256,6 +3267,7 @@ export class CombinedFamilyInfo implements ICombinedFamilyInfo {
 
 export interface ICombinedFamilyInfo {
     family?: Family;
+    users?: UserInfo[];
     partneringFamilyInfo?: PartneringFamilyInfo | undefined;
     volunteerFamilyInfo?: VolunteerFamilyInfo | undefined;
     notes?: Note[];
@@ -4208,6 +4220,58 @@ export class ReferralRequirementCompleted extends Activity implements IReferralR
 export interface IReferralRequirementCompleted extends IActivity {
     requirementName?: string;
     completedAtUtc?: Date;
+}
+
+export class UserInfo implements IUserInfo {
+    userId?: string;
+    personId?: string;
+    locationRoles?: string[];
+
+    constructor(data?: IUserInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            this.personId = _data["personId"];
+            if (Array.isArray(_data["locationRoles"])) {
+                this.locationRoles = [] as any;
+                for (let item of _data["locationRoles"])
+                    this.locationRoles!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): UserInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["personId"] = this.personId;
+        if (Array.isArray(this.locationRoles)) {
+            data["locationRoles"] = [];
+            for (let item of this.locationRoles)
+                data["locationRoles"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IUserInfo {
+    userId?: string;
+    personId?: string;
+    locationRoles?: string[];
 }
 
 export class PartneringFamilyInfo implements IPartneringFamilyInfo {

@@ -29,6 +29,8 @@ namespace CareTogether.Resources.Accounts
     {
         Task<Account> GetUserAccountAsync(Guid userId);
 
+        Task<Account?> GetPersonUserAccountAsync(Guid organizationId, Guid locationId, Guid personId);
+
         Task<Account> ExecuteAccountCommandAsync(AccountCommand command, Guid userId);
     }
 }

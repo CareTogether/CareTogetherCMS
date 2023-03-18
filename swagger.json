@@ -1894,6 +1894,12 @@
           "family": {
             "$ref": "#/components/schemas/Family"
           },
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserInfo"
+            }
+          },
           "partneringFamilyInfo": {
             "nullable": true,
             "oneOf": [
@@ -2463,6 +2469,26 @@
             }
           }
         ]
+      },
+      "UserInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "personId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "locationRoles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
       },
       "PartneringFamilyInfo": {
         "type": "object",

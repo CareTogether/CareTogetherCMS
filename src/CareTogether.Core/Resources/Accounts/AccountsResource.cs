@@ -45,6 +45,19 @@ namespace CareTogether.Resources.Accounts
             }
         }
 
+        public async Task<Account?> GetPersonUserAccountAsync(Guid organizationId, Guid locationId, Guid personId)
+        {
+            using (var lockedModel = await globalScopeAccountsModel.ReadLockItemAsync(GLOBAL_SCOPE_ID))
+            {
+                var result = lockedModel.Value.FindAccounts(account =>
+                    account.Organization.OrganizationId == organizationId &&
+                    account.Organization.Locations.Any(loc =>
+                        loc.LocationId == locationId && loc.PersonId == personId));
+                
+                return result.SingleOrDefault();
+            }
+        }
+
         public async Task<Account> ExecuteAccountCommandAsync(AccountCommand command, Guid userId)
         {
             using (var lockedModel = await globalScopeAccountsModel.WriteLockItemAsync(GLOBAL_SCOPE_ID))
