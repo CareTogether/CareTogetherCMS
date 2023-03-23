@@ -7,20 +7,16 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Resources.Accounts
 {
-    [JsonHierarchyBase]
-    public abstract partial record PersonAccessEvent(Guid UserId, DateTime TimestampUtc,
-        Guid PersonId) : DomainEvent(UserId, TimestampUtc);
-    public sealed record PersonAccessCommandExecuted(Guid UserId, DateTime TimestampUtc,
-        PersonAccessCommand Command) : PersonAccessEvent(UserId, TimestampUtc, Command.PersonId);
-    public sealed record UserInviteNonceCreated(Guid UserId, DateTime TimestampUtc,
-        Guid PersonId, byte[] Nonce) : PersonAccessEvent(UserId, TimestampUtc, PersonId);
-    public sealed record UserInviteNonceRedeemed(Guid UserId, DateTime TimestampUtc,
-        Guid PersonId, byte[] Nonce) : PersonAccessEvent(UserId, TimestampUtc, PersonId);
+    public sealed record PersonAccessEvent(Guid UserId, DateTime TimestampUtc,
+        PersonAccessCommand Command) : DomainEvent(UserId, TimestampUtc);
 
-    public sealed record PersonAccessEntry(Guid PersonId, ImmutableList<string> Roles);
+    public sealed record PersonAccessEntry(Guid PersonId, ImmutableList<string> Roles,
+        byte[]? UserInviteNonce, DateTime? UserInviteNonceExpiration);
 
     public sealed class PersonAccessModel
     {
+        private static TimeSpan UserInviteNonceValidity = TimeSpan.FromDays(7);
+
         private ImmutableDictionary<Guid, PersonAccessEntry> entries =
             ImmutableDictionary<Guid, PersonAccessEntry>.Empty;
 
@@ -43,14 +39,31 @@ namespace CareTogether.Resources.Accounts
         public (PersonAccessEvent Event, long SequenceNumber, PersonAccessEntry Access, Action OnCommit)
             ExecuteAccessCommand(PersonAccessCommand command, Guid userId, DateTime timestampUtc)
         {
-            if (command is not ChangePersonRoles change)
-                throw new NotImplementedException(
-                    $"The command type '{command.GetType().FullName}' has not been implemented.");
+            if (!entries.TryGetValue(command.PersonId, out var entry))
+                entry = new PersonAccessEntry(command.PersonId, ImmutableList<string>.Empty, null, null);
 
-            var entry = new PersonAccessEntry(change.PersonId, change.Roles);
+            entry = command switch
+            {
+                ChangePersonRoles c => entry with
+                {
+                    Roles = c.Roles
+                },
+                GenerateUserInviteNonce c => entry with
+                {
+                    UserInviteNonce = c.Nonce,
+                    UserInviteNonceExpiration = timestampUtc.Add(UserInviteNonceValidity)
+                },
+                RedeemUserInviteNonce c => entry with
+                {
+                    UserInviteNonce = null,
+                    UserInviteNonceExpiration = null
+                },
+                _ => throw new NotImplementedException(
+                    $"The command type '{command.GetType().FullName}' has not been implemented.")
+            };
 
             return (
-                Event: new PersonAccessCommandExecuted(userId, timestampUtc, command),
+                Event: new PersonAccessEvent(userId, timestampUtc, command),
                 SequenceNumber: LastKnownSequenceNumber + 1,
                 Access: entry,
                 OnCommit: () => { LastKnownSequenceNumber++; entries = entries.SetItem(entry.PersonId, entry); }
@@ -67,21 +80,11 @@ namespace CareTogether.Resources.Accounts
 
         private void ReplayEvent(PersonAccessEvent domainEvent, long sequenceNumber)
         {
-            if (domainEvent is PersonAccessCommandExecuted personAccessCommandExecuted)
+            if (domainEvent is PersonAccessEvent personAccessEvent)
             {
-                var (_, _, _, onCommit) = ExecuteAccessCommand(personAccessCommandExecuted.Command,
-                    personAccessCommandExecuted.UserId, personAccessCommandExecuted.TimestampUtc);
+                var (_, _, _, onCommit) = ExecuteAccessCommand(personAccessEvent.Command,
+                    personAccessEvent.UserId, personAccessEvent.TimestampUtc);
                 onCommit();
-            }
-            else if (domainEvent is UserInviteNonceCreated userInviteNonceCreated)
-            {
-                //TODO: Implement!
-                throw new NotImplementedException();
-            }
-            else if (domainEvent is UserInviteNonceRedeemed userInviteNonceRedeemed)
-            {
-                //TODO: Implement!
-                throw new NotImplementedException();
             }
             else
                 throw new NotImplementedException(

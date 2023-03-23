@@ -1,4 +1,5 @@
 ﻿using Azure.Storage.Blobs;
+using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
 using CareTogether.Utilities.EventLog;
 using CareTogether.Utilities.ObjectStore;
@@ -106,17 +107,40 @@ namespace CareTogether.Resources.Accounts
             }
         }
 
-        public async Task<byte[]> CreateUserInviteNonceAsync(Guid organizationId, Guid locationId, Guid personId, Guid userId)
+        public async Task<byte[]> GenerateUserInviteNonceAsync(Guid organizationId, Guid locationId, Guid personId, Guid userId)
         {
             //WARNING: The read/write logic in this service needs to be designed carefully to avoid deadlocks.
+            var nonce = new byte[128];//TODO: Generate a cryptographically secure nonce value (128 bit should be fine)
 
-            //TODO: Implement!
-            throw new NotImplementedException();
+            using (var lockedModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
+            {
+                var result = lockedModel.Value.ExecuteAccessCommand(
+                    new GenerateUserInviteNonce(personId, nonce), userId, DateTime.UtcNow);
+
+                await personAccessEventLog.AppendEventAsync(organizationId, locationId, result.Event, result.SequenceNumber);
+                result.OnCommit();
+                return nonce;
+            }
         }
 
-        public async Task<Account> RedeemUserInviteNonceAsync(Guid organizationId, Guid locationId, Guid userId, byte[] nonce)
+        public async Task<Account?> TryRedeemUserInviteNonceAsync(Guid organizationId, Guid locationId, Guid userId, byte[] nonce)
         {
             //WARNING: The read/write logic in this service needs to be designed carefully to avoid deadlocks.
+
+            using (var lockedModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
+            {
+                var matchingEntry = lockedModel.Value.FindAccess(entry => entry.UserInviteNonce === nonce); //TODO: Byte-wise comparison!!
+
+                var result = lockedModel.Value.ExecuteAccessCommand(
+                    new GenerateUserInviteNonce(personId, nonce), userId, DateTime.UtcNow);
+
+                await personAccessEventLog.AppendEventAsync(organizationId, locationId, result.Event, result.SequenceNumber);
+                result.OnCommit();
+
+
+                //TODO: Also now need to execute a command against the global AccountsModel to link the person to the account!
+                return result;
+            }
 
             //TODO: Implement!
             throw new NotImplementedException();

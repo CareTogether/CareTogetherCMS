@@ -1,4 +1,5 @@
 ﻿using JsonPolymorph;
+using NJsonSchema.Annotations;
 using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
@@ -17,7 +18,9 @@ namespace CareTogether.Resources.Accounts
     public sealed record UserLocationAccess(Guid LocationId, Guid PersonId, ImmutableList<string> Roles);
 
     [JsonHierarchyBase]
+    [JsonSchemaIgnore]
     public abstract partial record AccountCommand(Guid UserId);
+    [JsonSchemaIgnore]
     public sealed record LinkPersonToAcccount(Guid UserId,
         Guid OrganizationId, Guid LocationId, Guid PersonId)
         : AccountCommand(UserId);
@@ -28,6 +31,12 @@ namespace CareTogether.Resources.Accounts
     [JsonHierarchyBase]
     public abstract partial record PersonAccessCommand(Guid PersonId);
     public sealed record ChangePersonRoles(Guid PersonId, ImmutableList<string> Roles)
+        : PersonAccessCommand(PersonId);
+    [JsonSchemaIgnore]
+    public sealed record GenerateUserInviteNonce(Guid PersonId, byte[] Nonce)
+        : PersonAccessCommand(PersonId);
+    [JsonSchemaIgnore]
+    public sealed record RedeemUserInviteNonce(Guid PersonId, byte[] Nonce)
         : PersonAccessCommand(PersonId);
 
     /// <summary>
@@ -46,8 +55,8 @@ namespace CareTogether.Resources.Accounts
         Task<PersonAccessEntry> ExecutePersonAccessCommandAsync(Guid organizationId, Guid locationId,
             PersonAccessCommand command, Guid userId);
 
-        Task<byte[]> CreateUserInviteNonceAsync(Guid organizationId, Guid locationId, Guid personId, Guid userId);
+        Task<byte[]> GenerateUserInviteNonceAsync(Guid organizationId, Guid locationId, Guid personId, Guid userId);
 
-        Task<Account> RedeemUserInviteNonceAsync(Guid organizationId, Guid locationId, Guid userId, byte[] nonce);
+        Task<Account?> TryRedeemUserInviteNonceAsync(Guid organizationId, Guid locationId, Guid userId, byte[] nonce);
     }
 }
