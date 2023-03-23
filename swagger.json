@@ -1185,6 +1185,38 @@
           508
         ]
       },
+      "UserAccessConfiguration": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "locationRoles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserLocationRoles"
+            }
+          }
+        }
+      },
+      "UserLocationRoles": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "locationId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "personId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "roleNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "EffectiveLocationPolicy": {
         "type": "object",
         "additionalProperties": false,
