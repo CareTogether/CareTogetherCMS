@@ -9,10 +9,13 @@ namespace CareTogether.Resources.Accounts
     public sealed record AccountEvent(Guid UserId, DateTime TimestampUtc,
         AccountCommand Command) : DomainEvent(UserId, TimestampUtc);
 
+    public sealed record AccountEntry(Guid UserId,
+        ImmutableHashSet<(Guid OrganizationId, Guid LocationId, Guid PersonId)> PersonLinks);
+
     public sealed class AccountsModel
     {
-        private ImmutableDictionary<Guid, Account> accounts =
-            ImmutableDictionary<Guid, Account>.Empty;
+        private ImmutableDictionary<Guid, AccountEntry> accounts =
+            ImmutableDictionary<Guid, AccountEntry>.Empty;
 
 
         public long LastKnownSequenceNumber { get; private set; } = -1;
@@ -30,36 +33,22 @@ namespace CareTogether.Resources.Accounts
         }
 
 
-        public (AccountEvent Event, long SequenceNumber, Account Account, Action OnCommit)
+        public (AccountEvent Event, long SequenceNumber, AccountEntry Account, Action OnCommit)
             ExecuteAccountCommand(AccountCommand command, Guid userId, DateTime timestampUtc)
         {
-            Account? account;
-            if (command is MigrateUserAccount migrate)
-                account = migrate.Account;
-            else
-            {
-                if (!accounts.TryGetValue(command.UserId, out account))
-                    throw new KeyNotFoundException("A user account with the specified ID does not exist.");
+            if (command is not LinkPersonToAcccount link)
+                throw new NotImplementedException(
+                    $"The command type '{command.GetType().FullName}' has not been implemented.");
 
-                account = command switch
-                {
-                    ChangeUserLocationRoles c => account with
-                    {
-                        Organizations = account.Organizations.Select(uoa =>
-                            uoa.OrganizationId == c.OrganizationId
-                            ? uoa with
-                            {
-                                Locations = uoa.Locations.Select(ula =>
-                                    ula.LocationId == c.LocationId
-                                    ? ula with { Roles = c.Roles }
-                                    : ula).ToImmutableList()
-                            }
-                            : uoa).ToImmutableList()
-                    },
-                    _ => throw new NotImplementedException(
-                        $"The command type '{command.GetType().FullName}' has not been implemented.")
-                };
-            }
+            AccountEntry? account;
+            if (!accounts.TryGetValue(command.UserId, out account))
+                account = new AccountEntry(command.UserId, ImmutableHashSet<(Guid, Guid, Guid)>.Empty);
+
+            account = account with
+            {
+                PersonLinks = account.PersonLinks.Add(
+                    (link.OrganizationId, link.LocationId, link.PersonId))
+            };
 
             return (
                 Event: new AccountEvent(userId, timestampUtc, command),
@@ -69,12 +58,12 @@ namespace CareTogether.Resources.Accounts
             );
         }
 
-        public ImmutableList<Account> FindAccounts(Func<Account, bool> predicate) =>
+        public ImmutableList<AccountEntry> FindAccounts(Func<AccountEntry, bool> predicate) =>
             accounts.Values
                 .Where(predicate)
                 .ToImmutableList();
 
-        public Account GetAccount(Guid userId) => accounts[userId];
+        public AccountEntry GetAccount(Guid userId) => accounts[userId];
 
 
         private void ReplayEvent(AccountEvent domainEvent, long sequenceNumber)

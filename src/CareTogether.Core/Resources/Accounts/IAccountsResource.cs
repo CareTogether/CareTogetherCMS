@@ -1,5 +1,4 @@
-using JsonPolymorph;
-using NJsonSchema.Annotations;
+﻿using JsonPolymorph;
 using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
@@ -19,19 +18,22 @@ namespace CareTogether.Resources.Accounts
 
     [JsonHierarchyBase]
     public abstract partial record AccountCommand(Guid UserId);
-    /// <summary>
-    /// The <see cref="MigrateUserAccount"/> command is only intended for system migration of users.
-    /// In general, the creation of "users" (user IDs) is reserved for the identity store.
-    /// </summary>
-    [JsonSchemaIgnore]
-    public sealed record MigrateUserAccount(Account Account)
-        : AccountCommand(Account.UserId);
-    public sealed record ChangeUserLocationRoles(Guid UserId, Guid OrganizationId, Guid LocationId,
-        ImmutableList<string> Roles)
+    public sealed record LinkPersonToAcccount(Guid UserId,
+        Guid OrganizationId, Guid LocationId, Guid PersonId)
         : AccountCommand(UserId);
 
     /// <summary>
+    /// Person access records exist at a per-location level *within* organizational boundaries.
+    /// </summary>
+    [JsonHierarchyBase]
+    public abstract partial record PersonAccessCommand(Guid PersonId);
+    public sealed record ChangePersonRoles(Guid PersonId, ImmutableList<string> Roles)
+        : PersonAccessCommand(PersonId);
+
+    /// <summary>
     /// The <see cref="IAccountsResource"/> is responsible for user account management in CareTogether.
+    /// This consists of managing *two* interconnected models: a global accounts model and a
+    /// per-organization-per-location person access model.
     /// </summary>
     public interface IAccountsResource
     {
@@ -40,5 +42,12 @@ namespace CareTogether.Resources.Accounts
         Task<Account?> GetPersonUserAccountAsync(Guid organizationId, Guid locationId, Guid personId);
 
         Task<Account> ExecuteAccountCommandAsync(AccountCommand command, Guid userId);
+
+        Task<Account> ExecutePersonAccessCommandAsync(Guid organizationId, Guid locationId,
+            PersonAccessCommand command, Guid userId);
+
+        Task<byte[]> CreateUserInviteNonceAsync(Guid organizationId, Guid locationId, Guid personId, Guid userId);
+
+        Task<Account> RedeemUserInviteNonceAsync(Guid organizationId, Guid locationId, Guid userId, byte[] nonce);
     }
 }
