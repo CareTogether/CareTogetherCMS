@@ -1,0 +1,27 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "msedge",
+            "request": "launch",
+            "name": "CareTogether PWA",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}/src/caretogether-pwa"
+            //TODO: Launch 'npm start' automatically?
+            //TODO: Wait for server to signify it is ready?
+        },
+        {
+            "type": "coreclr",
+            "request": "launch",
+            "name": "CareTogether Server",
+            "program": "${workspaceFolder}/bin/Debug/net6.0/CareTogether.Api.dll",
+            "cwd": "${workspaceFolder}/src/CareTogether.Api"
+            //TODO: Run 'dotnet build' automatically?
+            //TODO: Run 'azurite' automatically?
+            //TODO: Signify to PWA client when ready?
+        }
+    ]
+}
