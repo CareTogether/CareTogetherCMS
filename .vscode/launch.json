@@ -4,16 +4,24 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug Web App",
+            "name": "Debug CareTogether Web App",
+            "presentation": {
+                "group": "CareTogether",
+                "order": 3,
+                "hidden": true,
+            },
             "type": "msedge",
             "request": "launch",
             "url": "http://localhost:3000",
             "webRoot": "${workspaceFolder}/src/caretogether-pwa"
-            //TODO: Launch 'npm start' automatically?
-            //TODO: Wait for server to signify it is ready?
         },
         {
-            "name": "Debug Server",
+            "name": "Debug CareTogether Server",
+            "presentation": {
+                "group": "CareTogether",
+                "order": 2,
+                "hidden": true
+            },
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
@@ -22,16 +30,24 @@
             "args": [],
             "cwd": "${workspaceFolder}/src/CareTogether.Api",
             "stopAtEntry": false,
-            // // Enable launching a web browser when ASP.NET Core starts. For more information: https://aka.ms/VSCode-CS-LaunchJson-WebBrowser
-            // "serverReadyAction": {
-            //     "action": "openExternally",
-            //     "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
-            // },
-            // "env": {
-            //     "ASPNETCORE_ENVIRONMENT": "Development"
-            // },
-            //TODO: Run 'azurite' automatically?
-            //TODO: Signify to PWA client when ready? (serverReadyAction & name Debug Web App?)
+            "logging": {
+                "moduleLoad": false
+            }
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Debug CareTogether",
+            "presentation": {
+                "hidden": false,
+                "group": "CareTogether",
+                "order": 1
+            },
+            "configurations": [
+                "Debug CareTogether Server",
+                "Debug CareTogether Web App"
+            ],
+            "stopAll": true
         }
     ]
 }
