@@ -42,8 +42,9 @@ namespace CareTogether.Api.Controllers
             //TODO: This should not happen here. This should perhaps be an AuthorizationEngine method,
             //      and derive only from the underlying data sources instead of the values on the ClaimsPrincipal.
             var account = await accountsResource.GetUserAccountAsync(User.UserId());
-            var organizationId = account.Organization.OrganizationId;
-            var locations = account.Organization.Locations;
+            //TODO: Support multiple organizations per user
+            var organizationId = account.Organizations.First().OrganizationId;
+            var locations = account.Organizations.First().Locations;
 
             var userLocationsAccess = (await locations
                 .Select(async location =>

@@ -1,4 +1,4 @@
-using JsonPolymorph;
+﻿using JsonPolymorph;
 using NJsonSchema.Annotations;
 using System;
 using System.Collections.Immutable;
@@ -6,12 +6,14 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Resources.Accounts
 {
-    //TODO: Support multiple organizations per user.
     //TODO: This is only being kept for schema compatibility until the migration is completed.
     public sealed record UserTenantAccessSummary(Guid OrganizationId,
         ImmutableList<Guid> LocationIds);
 
-    public sealed record Account(Guid Id, UserOrganizationAccess Organization);
+    /// <summary>
+    /// The <see cref="Account"/> exists at a global level, *across* organizational boundaries.
+    /// </summary>
+    public sealed record Account(Guid UserId, ImmutableList<UserOrganizationAccess> Organizations);
     public sealed record UserOrganizationAccess(Guid OrganizationId, ImmutableList<UserLocationAccess> Locations);
     public sealed record UserLocationAccess(Guid LocationId, Guid PersonId, ImmutableList<string> Roles);
 

@@ -663,7 +663,9 @@ namespace CareTogether.Engines.Authorization
             Guid? userPersonId, ImmutableList<Permission> contextPermissions)
         {
             var author = await accountsResource.GetUserAccountAsync(note.AuthorId);
-            var authorPersonId = author.Organization.Locations.Single(loc => loc.LocationId == locationId).PersonId;
+            var authorPersonId = author.Organizations
+                .Single(org => org.OrganizationId == organizationId).Locations
+                .Single(loc => loc.LocationId == locationId).PersonId;
 
             // Disclose the note if:
             //  1. the current user is the same person as the author, or

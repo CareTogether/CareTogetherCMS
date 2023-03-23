@@ -28,14 +28,15 @@ namespace CareTogether.Api
             // Look up the tenant access for the user.
             var account = await accountsResource.GetUserAccountAsync(userId.Value);
 
-            var organizationId = account.Organization.OrganizationId;
+            //TODO: Support multiple organizations per user
+            var organizationId = account.Organizations.First().OrganizationId;
             principal.AddClaimOnlyOnce(tenantUserIdentity, Claims.OrganizationId, organizationId.ToString());
             principal.AddIdentity(tenantUserIdentity);
 
             // To represent the ability for users to have different sets of roles by location,
             // each location gets its own claims identity, named using a fixed convention for
             // easy lookup later.
-            var locationUserIdentities = account.Organization.Locations
+            var locationUserIdentities = account.Organizations.First().Locations
                 .Select(location =>
                 {
                     var locationUserIdentity = new ClaimsIdentity($"{organizationId}:{location.LocationId}");

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -35,7 +35,7 @@ namespace CareTogether.Resources.Accounts
         {
             Account? account;
             if (command is InitializeUserAccount initialize)
-                account = new Account(initialize.UserId, initialize.InitialAccess);
+                account = new Account(initialize.UserId, ImmutableList.Create(initialize.InitialAccess));
             else
             {
                 if (!accounts.TryGetValue(command.UserId, out account))
@@ -45,15 +45,16 @@ namespace CareTogether.Resources.Accounts
                 {
                     ChangeUserLocationRoles c => account with
                     {
-                        Organization = account.Organization with
-                        {
-                            Locations = account.Organization.Locations
-                                .Select(ula =>
+                        Organizations = account.Organizations.Select(uoa =>
+                            uoa.OrganizationId == c.OrganizationId
+                            ? uoa with
+                            {
+                                Locations = uoa.Locations.Select(ula =>
                                     ula.LocationId == c.LocationId
                                     ? ula with { Roles = c.Roles }
-                                    : ula)
-                                .ToImmutableList()
-                        }
+                                    : ula).ToImmutableList()
+                            }
+                            : uoa).ToImmutableList()
                     },
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented.")

@@ -50,9 +50,9 @@ namespace CareTogether.Resources.Accounts
             using (var lockedModel = await globalScopeAccountsModel.ReadLockItemAsync(GLOBAL_SCOPE_ID))
             {
                 var result = lockedModel.Value.FindAccounts(account =>
-                    account.Organization.OrganizationId == organizationId &&
-                    account.Organization.Locations.Any(loc =>
-                        loc.LocationId == locationId && loc.PersonId == personId));
+                    account.Organizations.Any(uoa => uoa.OrganizationId == organizationId &&
+                        uoa.Locations.Any(loc =>
+                            loc.LocationId == locationId && loc.PersonId == personId)));
                 
                 return result.SingleOrDefault();
             }
