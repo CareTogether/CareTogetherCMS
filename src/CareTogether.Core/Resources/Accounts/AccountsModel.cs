@@ -34,8 +34,8 @@ namespace CareTogether.Resources.Accounts
             ExecuteAccountCommand(AccountCommand command, Guid userId, DateTime timestampUtc)
         {
             Account? account;
-            if (command is InitializeUserAccount initialize)
-                account = new Account(initialize.UserId, ImmutableList.Create(initialize.InitialAccess));
+            if (command is MigrateUserAccount migrate)
+                account = migrate.Account;
             else
             {
                 if (!accounts.TryGetValue(command.UserId, out account))

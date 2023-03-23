@@ -90,7 +90,7 @@ namespace CareTogether.Resources.Accounts
             });
 
             var migratedAccountIds = await accountsEventLog.GetAllEventsAsync(Guid.Empty, Guid.Empty)
-                .Where(e => e.DomainEvent.Command is InitializeUserAccount)
+                .Where(e => e.DomainEvent.Command is MigrateUserAccount)
                 .ToDictionaryAsync(e => e.DomainEvent.Command.UserId);
 
             var oldAccountIds = configurationStore.ListAsync(Guid.Empty, Guid.Empty)
@@ -106,23 +106,24 @@ namespace CareTogether.Resources.Accounts
                 if (!hasOldAccess)
                     return;
 
-                var initializeAccountEvent = new AccountEvent(migrationUserId, migrationTimestamp,
-                    new InitializeUserAccount(oldAccountId, new UserOrganizationAccess(
-                        OrganizationId: oldAccess.orgId,
-                        Locations: oldAccount.LocationIds
-                            .SelectMany(locationId =>
-                            {
-                                var oldLocationAccess = oldAccess.access.LocationRoles
-                                    .Where(lr => lr.LocationId == locationId)
-                                    .FirstOrDefault();
-                                return (oldLocationAccess != null)
-                                    ? new UserLocationAccess[]
-                                        { new(locationId, oldAccess.access.PersonId, oldLocationAccess.RoleNames) }
-                                    : Array.Empty<UserLocationAccess>();
-                            })
-                            .ToImmutableList())));
+                var migrateAccountEvent = new AccountEvent(migrationUserId, migrationTimestamp,
+                    new MigrateUserAccount(new Account(oldAccountId,
+                        ImmutableList.Create(new UserOrganizationAccess(
+                            OrganizationId: oldAccess.orgId,
+                            Locations: oldAccount.LocationIds
+                                .SelectMany(locationId =>
+                                {
+                                    var oldLocationAccess = oldAccess.access.LocationRoles
+                                        .Where(lr => lr.LocationId == locationId)
+                                        .FirstOrDefault();
+                                    return (oldLocationAccess != null)
+                                        ? new UserLocationAccess[]
+                                            { new(locationId, oldAccess.access.PersonId, oldLocationAccess.RoleNames) }
+                                        : Array.Empty<UserLocationAccess>();
+                                })
+                                .ToImmutableList())))));
 
-                synthesizedEvents.Enqueue(initializeAccountEvent);
+                synthesizedEvents.Enqueue(migrateAccountEvent);
             });
 
             for (var i = 0; synthesizedEvents.TryDequeue(out var domainEvent); i++)
