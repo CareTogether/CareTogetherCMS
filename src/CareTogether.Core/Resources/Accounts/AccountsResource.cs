@@ -180,19 +180,17 @@ namespace CareTogether.Resources.Accounts
 
                 foreach (var oldLocationAccess in oldAccess.access.LocationRoles)
                 {
-                    //TODO: First, support (and add) per-location person IDs to do this correctly!
                     var linkPersonToAccountEvent = new AccountEvent(migrationUserId, migrationTimestamp,
                         new LinkPersonToAcccount(oldAccountId, oldAccess.orgId, oldLocationAccess.LocationId,
-                            oldAccess.access.PersonId));
+                            oldLocationAccess.PersonId));
 
                     synthesizedAccountEvents.Enqueue(linkPersonToAccountEvent);
 
                     //HACK: This is simplistic, but since the migration will be a one-time event
                     //      we don't need to address the partial failure mode where account events
                     //      are migrated but person access events are not.
-                    //TODO: First, support (and add) per-location person IDs to do this correctly!
                     synthesizedPersonAccessEvents.Enqueue(
-                        (oldAccess.access.PersonId, oldAccess.orgId, new PersonAccessCommandExecuted(
+                        (oldLocationAccess.PersonId, oldAccess.orgId, new PersonAccessCommandExecuted(
                             migrationUserId, migrationTimestamp, new ChangePersonRoles(
                                 oldLocationAccess.LocationId, oldLocationAccess.RoleNames))));
                 }
