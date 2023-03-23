@@ -1,27 +1,37 @@
 {
     // Use IntelliSense to learn about possible attributes.
     // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Debug Web App",
             "type": "msedge",
             "request": "launch",
-            "name": "CareTogether PWA",
             "url": "http://localhost:3000",
             "webRoot": "${workspaceFolder}/src/caretogether-pwa"
             //TODO: Launch 'npm start' automatically?
             //TODO: Wait for server to signify it is ready?
         },
         {
+            "name": "Debug Server",
             "type": "coreclr",
             "request": "launch",
-            "name": "CareTogether Server",
-            "program": "${workspaceFolder}/bin/Debug/net6.0/CareTogether.Api.dll",
-            "cwd": "${workspaceFolder}/src/CareTogether.Api"
-            //TODO: Run 'dotnet build' automatically?
+            "preLaunchTask": "build",
+            // If you have changed target frameworks, make sure to update the program path.
+            "program": "${workspaceFolder}/src/CareTogether.Api/bin/Debug/net6.0/CareTogether.Api.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/CareTogether.Api",
+            "stopAtEntry": false,
+            // // Enable launching a web browser when ASP.NET Core starts. For more information: https://aka.ms/VSCode-CS-LaunchJson-WebBrowser
+            // "serverReadyAction": {
+            //     "action": "openExternally",
+            //     "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+            // },
+            // "env": {
+            //     "ASPNETCORE_ENVIRONMENT": "Development"
+            // },
             //TODO: Run 'azurite' automatically?
-            //TODO: Signify to PWA client when ready?
+            //TODO: Signify to PWA client when ready? (serverReadyAction & name Debug Web App?)
         }
     ]
 }
