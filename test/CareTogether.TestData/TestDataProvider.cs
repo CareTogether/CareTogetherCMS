@@ -465,11 +465,11 @@ namespace CareTogether.TestData
                         .Add("Community Organizer")
                         .Add("Community Co-Organizer"),
                     ImmutableDictionary<Guid, UserAccessConfiguration>.Empty
-                        .Add(adminId, new UserAccessConfiguration(guid0, ImmutableList<UserLocationRoles>.Empty
-                            .Add(new UserLocationRoles(guid2, ImmutableList.Create("OrganizationAdministrator")))
-                            .Add(new UserLocationRoles(guid3, ImmutableList.Create("OrganizationAdministrator")))))
-                        .Add(volunteerId, new UserAccessConfiguration(guid4, ImmutableList<UserLocationRoles>.Empty
-                            .Add(new UserLocationRoles(guid2, ImmutableList.Create("Volunteer")))))));
+                        .Add(adminId, new UserAccessConfiguration(ImmutableList<UserLocationRoles>.Empty
+                            .Add(new UserLocationRoles(guid2, guid0, ImmutableList.Create("OrganizationAdministrator")))
+                            .Add(new UserLocationRoles(guid3, guid0, ImmutableList.Create("OrganizationAdministrator")))))
+                        .Add(volunteerId, new UserAccessConfiguration(ImmutableList<UserLocationRoles>.Empty
+                            .Add(new UserLocationRoles(guid2, guid4, ImmutableList.Create("Volunteer")))))));
 
             await organizationSecretsStore.UpsertAsync(guid1, Guid.Empty, "secrets",
                 new OrganizationSecrets("0123456789abcdef0123456789abcdef"));

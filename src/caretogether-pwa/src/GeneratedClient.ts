@@ -1635,7 +1635,6 @@ export enum Permission {
 }
 
 export class UserAccessConfiguration implements IUserAccessConfiguration {
-    personId?: string;
     locationRoles?: UserLocationRoles[];
 
     constructor(data?: IUserAccessConfiguration) {
@@ -1649,7 +1648,6 @@ export class UserAccessConfiguration implements IUserAccessConfiguration {
 
     init(_data?: any) {
         if (_data) {
-            this.personId = _data["personId"];
             if (Array.isArray(_data["locationRoles"])) {
                 this.locationRoles = [] as any;
                 for (let item of _data["locationRoles"])
@@ -1667,7 +1665,6 @@ export class UserAccessConfiguration implements IUserAccessConfiguration {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["personId"] = this.personId;
         if (Array.isArray(this.locationRoles)) {
             data["locationRoles"] = [];
             for (let item of this.locationRoles)
@@ -1678,12 +1675,12 @@ export class UserAccessConfiguration implements IUserAccessConfiguration {
 }
 
 export interface IUserAccessConfiguration {
-    personId?: string;
     locationRoles?: UserLocationRoles[];
 }
 
 export class UserLocationRoles implements IUserLocationRoles {
     locationId?: string;
+    personId?: string;
     roleNames?: string[];
 
     constructor(data?: IUserLocationRoles) {
@@ -1698,6 +1695,7 @@ export class UserLocationRoles implements IUserLocationRoles {
     init(_data?: any) {
         if (_data) {
             this.locationId = _data["locationId"];
+            this.personId = _data["personId"];
             if (Array.isArray(_data["roleNames"])) {
                 this.roleNames = [] as any;
                 for (let item of _data["roleNames"])
@@ -1716,6 +1714,7 @@ export class UserLocationRoles implements IUserLocationRoles {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["locationId"] = this.locationId;
+        data["personId"] = this.personId;
         if (Array.isArray(this.roleNames)) {
             data["roleNames"] = [];
             for (let item of this.roleNames)
@@ -1727,6 +1726,7 @@ export class UserLocationRoles implements IUserLocationRoles {
 
 export interface IUserLocationRoles {
     locationId?: string;
+    personId?: string;
     roleNames?: string[];
 }
 
