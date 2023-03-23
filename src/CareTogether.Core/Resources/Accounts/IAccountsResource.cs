@@ -41,9 +41,9 @@ namespace CareTogether.Resources.Accounts
 
         Task<Account?> GetPersonUserAccountAsync(Guid organizationId, Guid locationId, Guid personId);
 
-        Task<Account> ExecuteAccountCommandAsync(AccountCommand command, Guid userId);
+        Task<AccountEntry> ExecuteAccountCommandAsync(AccountCommand command, Guid userId);
 
-        Task<Account> ExecutePersonAccessCommandAsync(Guid organizationId, Guid locationId,
+        Task<PersonAccessEntry> ExecutePersonAccessCommandAsync(Guid organizationId, Guid locationId,
             PersonAccessCommand command, Guid userId);
 
         Task<byte[]> CreateUserInviteNonceAsync(Guid organizationId, Guid locationId, Guid personId, Guid userId);

@@ -44,7 +44,7 @@ namespace CareTogether.Resources.Accounts
 
         public async Task<Account> GetUserAccountAsync(Guid userId)
         {
-            //WARNING: The read/write logic in this service needs to be designed very carefully to avoid deadlocks.
+            //WARNING: The read/write logic in this service needs to be designed carefully to avoid deadlocks.
 
             // First, look up the global account entry to determine which person access records to retrieve.
             AccountEntry accountEntry;
@@ -60,7 +60,7 @@ namespace CareTogether.Resources.Accounts
 
         public async Task<Account?> GetPersonUserAccountAsync(Guid organizationId, Guid locationId, Guid personId)
         {
-            //WARNING: The read/write logic in this service needs to be designed very carefully to avoid deadlocks.
+            //WARNING: The read/write logic in this service needs to be designed carefully to avoid deadlocks.
 
             AccountEntry? accountEntry;
             using (var lockedModel = await globalScopeAccountsModel.ReadLockItemAsync(GLOBAL_SCOPE_ID))
@@ -77,36 +77,38 @@ namespace CareTogether.Resources.Accounts
             return account;
         }
 
-        public async Task<Account> ExecuteAccountCommandAsync(AccountCommand command, Guid userId)
+        public async Task<AccountEntry> ExecuteAccountCommandAsync(AccountCommand command, Guid userId)
         {
-            //WARNING: The read/write logic in this service needs to be designed very carefully to avoid deadlocks.
+            //WARNING: The read/write logic in this service needs to be designed carefully to avoid deadlocks.
             
-            AccountEntry accountEntry;
             using (var lockedModel = await globalScopeAccountsModel.WriteLockItemAsync(GLOBAL_SCOPE_ID))
             {
                 var result = lockedModel.Value.ExecuteAccountCommand(command, userId, DateTime.UtcNow);
 
                 await accountsEventLog.AppendEventAsync(Guid.Empty, Guid.Empty, result.Event, result.SequenceNumber);
                 result.OnCommit();
-                accountEntry = result.Account;
+                return result.Account;
             }
-
-            var account = await RenderAccountAsync(accountEntry);
-            return account;
         }
 
-        public async Task<Account> ExecutePersonAccessCommandAsync(Guid organizationId, Guid locationId,
+        public async Task<PersonAccessEntry> ExecutePersonAccessCommandAsync(Guid organizationId, Guid locationId,
             PersonAccessCommand command, Guid userId)
         {
-            //WARNING: The read/write logic in this service needs to be designed very carefully to avoid deadlocks.
+            //WARNING: The read/write logic in this service needs to be designed carefully to avoid deadlocks.
 
-            //TODO: Implement!
-            throw new NotImplementedException();
+            using (var lockedModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
+            {
+                var result = lockedModel.Value.ExecuteAccessCommand(command, userId, DateTime.UtcNow);
+
+                await personAccessEventLog.AppendEventAsync(organizationId, locationId, result.Event, result.SequenceNumber);
+                result.OnCommit();
+                return result.Access;
+            }
         }
 
         public async Task<byte[]> CreateUserInviteNonceAsync(Guid organizationId, Guid locationId, Guid personId, Guid userId)
         {
-            //WARNING: The read/write logic in this service needs to be designed very carefully to avoid deadlocks.
+            //WARNING: The read/write logic in this service needs to be designed carefully to avoid deadlocks.
 
             //TODO: Implement!
             throw new NotImplementedException();
@@ -114,7 +116,7 @@ namespace CareTogether.Resources.Accounts
 
         public async Task<Account> RedeemUserInviteNonceAsync(Guid organizationId, Guid locationId, Guid userId, byte[] nonce)
         {
-            //WARNING: The read/write logic in this service needs to be designed very carefully to avoid deadlocks.
+            //WARNING: The read/write logic in this service needs to be designed carefully to avoid deadlocks.
 
             //TODO: Implement!
             throw new NotImplementedException();
