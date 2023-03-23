@@ -40,10 +40,10 @@ namespace CareTogether.Resources.Policies
     public sealed record CommunityCoMemberFamiliesPermissionContext(
         ImmutableList<string>? WhenOwnCommunityRoleIsIn) : PermissionContext();
 
-    public sealed record UserAccessConfiguration(Guid PersonId,
+    public sealed record UserAccessConfiguration(
         ImmutableList<UserLocationRoles> LocationRoles);
 
-    public sealed record UserLocationRoles(Guid LocationId, ImmutableList<string> RoleNames);
+    public sealed record UserLocationRoles(Guid LocationId, Guid PersonId, ImmutableList<string> RoleNames);
 
 
     public sealed record OrganizationSecrets(string ApiKey);

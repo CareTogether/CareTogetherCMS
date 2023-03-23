@@ -51,7 +51,7 @@ namespace CareTogether.Api
                     var locationClaims = new Claim[]
                     {
                         new(Claims.LocationId, locationRoles.LocationId.ToString()),
-                        new(Claims.PersonId, userAccessConfiguration.PersonId.ToString())
+                        new(Claims.PersonId, locationRoles.PersonId.ToString())
                     };
                     locationUserIdentity.AddClaims(locationClaims);
 

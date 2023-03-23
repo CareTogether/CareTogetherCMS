@@ -1195,10 +1195,6 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "personId": {
-            "type": "string",
-            "format": "guid"
-          },
           "locationRoles": {
             "type": "array",
             "items": {
@@ -1212,6 +1208,10 @@
         "additionalProperties": false,
         "properties": {
           "locationId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "personId": {
             "type": "string",
             "format": "guid"
           },
