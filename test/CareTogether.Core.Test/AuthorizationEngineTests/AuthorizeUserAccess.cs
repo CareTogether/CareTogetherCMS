@@ -1,5 +1,4 @@
-﻿using Azure.Storage.Blobs;
-using CareTogether.Engines.Authorization;
+﻿using CareTogether.Engines.Authorization;
 using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Communities;
@@ -45,6 +44,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
         public async Task TestInitializeAsync()
         {
             var accountsEventLog = new MemoryEventLog<AccountEvent>();
+            var personAccessEventLog = new MemoryEventLog<PersonAccessEvent>();
             var directoryEventLog = new MemoryEventLog<DirectoryEvent>();
             var goalsEventLog = new MemoryEventLog<GoalCommandExecutedEvent>();
             var referralsEventLog = new MemoryEventLog<ReferralEvent>();
@@ -76,7 +76,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             var referralsResource = new ReferralsResource(referralsEventLog);
             var approvalsResource = new ApprovalsResource(approvalsEventLog);
             var communitiesResource = new CommunitiesResource(communitiesEventLog, Mock.Of<IFileStore>());
-            var accountsResource = new AccountsResource(userTenantAccessStore, accountsEventLog,
+            var accountsResource = new AccountsResource(userTenantAccessStore, accountsEventLog, personAccessEventLog,
                 new Azure.Storage.Blobs.BlobServiceClient("UseDevelopmentStorage=true"), configurationStore);
 
             dut = new AuthorizationEngine(policiesResource, directoryResource,
