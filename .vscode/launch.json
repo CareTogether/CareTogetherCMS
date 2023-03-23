@@ -1,0 +1,53 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug CareTogether Web App",
+            "presentation": {
+                "group": "CareTogether",
+                "order": 3,
+                "hidden": true,
+            },
+            "type": "msedge",
+            "request": "launch",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}/src/caretogether-pwa"
+        },
+        {
+            "name": "Debug CareTogether Server",
+            "presentation": {
+                "group": "CareTogether",
+                "order": 2,
+                "hidden": true
+            },
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            // If you have changed target frameworks, make sure to update the program path.
+            "program": "${workspaceFolder}/src/CareTogether.Api/bin/Debug/net6.0/CareTogether.Api.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/CareTogether.Api",
+            "stopAtEntry": false,
+            "logging": {
+                "moduleLoad": false
+            }
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Debug CareTogether",
+            "presentation": {
+                "hidden": false,
+                "group": "CareTogether",
+                "order": 1
+            },
+            "configurations": [
+                "Debug CareTogether Server",
+                "Debug CareTogether Web App"
+            ],
+            "stopAll": true
+        }
+    ]
+}

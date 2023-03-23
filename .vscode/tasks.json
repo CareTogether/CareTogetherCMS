@@ -1,0 +1,73 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "npm install",
+            "type": "shell",
+            "command": "npm install",
+            "options": {
+                "cwd": "${workspaceFolder}/src/caretogether-pwa"
+            },
+            "presentation": {
+                "reveal": "silent",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "npm start",
+            "type": "npm",
+            "script": "start",
+            "isBackground": true,
+            "options": {
+                "cwd": "${workspaceFolder}/src/caretogether-pwa",
+                "env": {
+                    "BROWSER": "none"
+                }
+            },
+            "dependsOn": [
+                "npm install"
+            ],
+            "runOptions": {
+                "runOn": "folderOpen"
+            },
+            "problemMatcher": {
+                "owner": "npm",
+                "background": {
+                    "activeOnStart": true,
+                        "beginsPattern": ".*",
+                        "endsPattern": "Finished.+"
+                },
+                "pattern": {
+                    "regexp": "",
+                }
+            }
+        },
+        {
+            "label": "Azurite",
+            "detail": "Installs and starts the Azurite storage emulator and leaves it running",
+            "type": "shell",
+            "command": "mkdir -p .azurite;cd ./.azurite;npm install -g azurite;azurite",
+            "isBackground": true,
+            "presentation": {
+                "reveal": "silent",
+                "panel": "dedicated"
+            },
+            "runOptions": {
+                "runOn": "folderOpen"
+            }
+        },
+        {
+            "label": "build",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/CareTogether.Api/CareTogether.Api.csproj",
+                "/property:GenerateFullPaths=true",
+                "/property:SolutionDir=${workspaceFolder}/",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        }
+    ]
+}
