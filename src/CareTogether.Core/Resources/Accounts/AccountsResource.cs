@@ -90,7 +90,7 @@ namespace CareTogether.Resources.Accounts
             });
 
             var migratedAccountIds = await accountsEventLog.GetAllEventsAsync(Guid.Empty, Guid.Empty)
-                .Where(e => e.DomainEvent.Command is CreateUserAccount)
+                .Where(e => e.DomainEvent.Command is InitializeUserAccount)
                 .ToDictionaryAsync(e => e.DomainEvent.Command.UserId);
 
             var oldAccountIds = configurationStore.ListAsync(Guid.Empty, Guid.Empty)
@@ -106,8 +106,8 @@ namespace CareTogether.Resources.Accounts
                 if (!hasOldAccess)
                     return;
 
-                var createAccountEvent = new AccountEvent(migrationUserId, migrationTimestamp,
-                    new CreateUserAccount(oldAccountId, new UserOrganizationAccess(
+                var initializeAccountEvent = new AccountEvent(migrationUserId, migrationTimestamp,
+                    new InitializeUserAccount(oldAccountId, new UserOrganizationAccess(
                         OrganizationId: oldAccess.orgId,
                         Locations: oldAccount.LocationIds
                             .SelectMany(locationId =>
@@ -122,7 +122,7 @@ namespace CareTogether.Resources.Accounts
                             })
                             .ToImmutableList())));
 
-                synthesizedEvents.Enqueue(createAccountEvent);
+                synthesizedEvents.Enqueue(initializeAccountEvent);
             });
 
             for (var i = 0; synthesizedEvents.TryDequeue(out var domainEvent); i++)

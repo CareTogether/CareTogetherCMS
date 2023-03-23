@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -34,8 +34,8 @@ namespace CareTogether.Resources.Accounts
             ExecuteAccountCommand(AccountCommand command, Guid userId, DateTime timestampUtc)
         {
             Account? account;
-            if (command is CreateUserAccount create)
-                account = new Account(create.UserId, create.InitialAccess);
+            if (command is InitializeUserAccount initialize)
+                account = new Account(initialize.UserId, initialize.InitialAccess);
             else
             {
                 if (!accounts.TryGetValue(command.UserId, out account))
@@ -64,7 +64,7 @@ namespace CareTogether.Resources.Accounts
                 Event: new AccountEvent(userId, timestampUtc, command),
                 SequenceNumber: LastKnownSequenceNumber + 1,
                 Account: account,
-                OnCommit: () => { LastKnownSequenceNumber++; accounts = accounts.SetItem(account.Id, account); }
+                OnCommit: () => { LastKnownSequenceNumber++; accounts = accounts.SetItem(account.UserId, account); }
             );
         }
 

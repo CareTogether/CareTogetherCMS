@@ -1,4 +1,5 @@
-﻿using JsonPolymorph;
+using JsonPolymorph;
+using NJsonSchema.Annotations;
 using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
@@ -16,7 +17,12 @@ namespace CareTogether.Resources.Accounts
 
     [JsonHierarchyBase]
     public abstract partial record AccountCommand(Guid UserId);
-    public sealed record CreateUserAccount(Guid UserId, UserOrganizationAccess InitialAccess)
+    /// <summary>
+    /// The <see cref="InitializeUserAccount"/> command is only intended for system purposes, including
+    /// user migrations and new organization/location onboarding experiences.
+    /// </summary>
+    [JsonSchemaIgnore]
+    public sealed record InitializeUserAccount(Guid UserId, UserOrganizationAccess InitialAccess)
         : AccountCommand(UserId);
     public sealed record ChangeUserLocationRoles(Guid UserId, Guid OrganizationId, Guid LocationId,
         ImmutableList<string> Roles)

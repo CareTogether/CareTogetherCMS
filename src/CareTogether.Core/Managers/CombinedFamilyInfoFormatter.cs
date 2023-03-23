@@ -86,7 +86,7 @@ namespace CareTogether.Managers
                 var account = await accountsResource.GetPersonUserAccountAsync(organizationId, locationId, adult.Item1.Id);
                 return (account == null)
                     ? null
-                    : new UserInfo(account.Id, adult.Item1.Id, account.Organization.Locations
+                    : new UserInfo(account.UserId, adult.Item1.Id, account.Organization.Locations
                             .Single(l => l.LocationId == locationId).Roles);
             }))).Where(user => user != null).Cast<UserInfo>().ToImmutableList();
 
