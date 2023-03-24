@@ -644,7 +644,7 @@
         }
       }
     },
-    "/api/Users/me/tenantAccess": {
+    "/api/Users/users/me/tenantAccess": {
       "get": {
         "tags": [
           "Users"
@@ -5977,6 +5977,10 @@
         "additionalProperties": false,
         "properties": {
           "locationId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "personId": {
             "type": "string",
             "format": "guid"
           },

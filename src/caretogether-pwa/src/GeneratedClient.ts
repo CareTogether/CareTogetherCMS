@@ -596,7 +596,7 @@ export class UsersClient {
     }
 
     getUserOrganizationAccess(): Promise<UserOrganizationAccess> {
-        let url_ = this.baseUrl + "/api/Users/me/tenantAccess";
+        let url_ = this.baseUrl + "/api/Users/users/me/tenantAccess";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -10685,6 +10685,7 @@ export interface IUserOrganizationAccess {
 
 export class UserLocationAccess implements IUserLocationAccess {
     locationId?: string;
+    personId?: string;
     roles?: string[];
     globalContextPermissions?: Permission[];
     allVolunteerFamiliesContextPermissions?: Permission[];
@@ -10702,6 +10703,7 @@ export class UserLocationAccess implements IUserLocationAccess {
     init(_data?: any) {
         if (_data) {
             this.locationId = _data["locationId"];
+            this.personId = _data["personId"];
             if (Array.isArray(_data["roles"])) {
                 this.roles = [] as any;
                 for (let item of _data["roles"])
@@ -10735,6 +10737,7 @@ export class UserLocationAccess implements IUserLocationAccess {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["locationId"] = this.locationId;
+        data["personId"] = this.personId;
         if (Array.isArray(this.roles)) {
             data["roles"] = [];
             for (let item of this.roles)
@@ -10761,6 +10764,7 @@ export class UserLocationAccess implements IUserLocationAccess {
 
 export interface IUserLocationAccess {
     locationId?: string;
+    personId?: string;
     roles?: string[];
     globalContextPermissions?: Permission[];
     allVolunteerFamiliesContextPermissions?: Permission[];

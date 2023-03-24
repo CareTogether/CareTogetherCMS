@@ -20,13 +20,13 @@ namespace CareTogether.Api.Controllers
         }
 
 
-        [HttpGet("/api/[controller]/me/tenantAccess")]
+        [HttpGet("/api/[controller]/users/me/tenantAccess")]
         public async Task<ActionResult<UserOrganizationAccess>> GetUserOrganizationAccess()
         {
             var userAccess = await membershipManager.GetUserAccessAsync(User);
 
             //TODO: Support multiple organizations per user!
-            return Ok(userAccess.Organizations.Single());
+            return Ok(userAccess.Organizations.First());
         }
     }
 }
