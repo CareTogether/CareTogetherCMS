@@ -1,5 +1,4 @@
 ﻿using Azure.Storage.Blobs;
-using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
 using CareTogether.Utilities.EventLog;
 using CareTogether.Utilities.ObjectStore;
@@ -7,6 +6,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 
 namespace CareTogether.Resources.Accounts
@@ -21,6 +21,7 @@ namespace CareTogether.Resources.Accounts
         private readonly ConcurrentLockingStore<int, AccountsModel> globalScopeAccountsModel;
         private readonly IObjectStore<UserTenantAccessSummary> configurationStore;
         private readonly ConcurrentLockingStore<(Guid organizationId, Guid locationId), PersonAccessModel> tenantModels;
+        private readonly RandomNumberGenerator randomNumberGenerator;
 
 
         public AccountsResource(IObjectStore<UserTenantAccessSummary> configurationStore,
@@ -40,6 +41,7 @@ namespace CareTogether.Resources.Accounts
             });
             tenantModels = new ConcurrentLockingStore<(Guid organizationId, Guid locationId), PersonAccessModel>(key =>
                 PersonAccessModel.InitializeAsync(personAccessEventLog.GetAllEventsAsync(key.organizationId, key.locationId)));
+            randomNumberGenerator = RandomNumberGenerator.Create();
         }
 
 
@@ -107,10 +109,16 @@ namespace CareTogether.Resources.Accounts
             }
         }
 
-        public async Task<byte[]> GenerateUserInviteNonceAsync(Guid organizationId, Guid locationId, Guid personId, Guid userId)
+        public async Task<byte[]> GenerateUserInviteNonceAsync(Guid organizationId, Guid locationId, Guid personId,
+            Guid userId)
         {
             //WARNING: The read/write logic in this service needs to be designed carefully to avoid deadlocks.
-            var nonce = new byte[128];//TODO: Generate a cryptographically secure nonce value (128 bit should be fine)
+
+            // A cryptographically random sequence of 128 bits is sufficiently secure.
+            // We can avoid padding during base64 encoding by using 144 bits instead.
+            var nonce = new byte[144 / 8];
+            randomNumberGenerator.GetBytes(nonce);
+            Convert.ToHexString(nonce);
 
             using (var lockedModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
             {
@@ -119,31 +127,54 @@ namespace CareTogether.Resources.Accounts
 
                 await personAccessEventLog.AppendEventAsync(organizationId, locationId, result.Event, result.SequenceNumber);
                 result.OnCommit();
+
                 return nonce;
             }
         }
 
-        public async Task<Account?> TryRedeemUserInviteNonceAsync(Guid organizationId, Guid locationId, Guid userId, byte[] nonce)
+        public async Task<Account?> TryRedeemUserInviteNonceAsync(Guid organizationId, Guid locationId, Guid userId,
+            byte[] nonce)
         {
             //WARNING: The read/write logic in this service needs to be designed carefully to avoid deadlocks.
 
-            using (var lockedModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
+            // First, try to find the person ID that matches the nonce, and mark the invite as redeemed.
+            Guid personId;
+            using (var lockedTenantModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
             {
-                var matchingEntry = lockedModel.Value.FindAccess(entry => entry.UserInviteNonce === nonce); //TODO: Byte-wise comparison!!
-
-                var result = lockedModel.Value.ExecuteAccessCommand(
-                    new GenerateUserInviteNonce(personId, nonce), userId, DateTime.UtcNow);
-
+                var matchingEntry = lockedTenantModel.Value
+                    .FindAccess(entry => entry.UserInviteNonce != null &&
+                        Enumerable.SequenceEqual(entry.UserInviteNonce, nonce))
+                    .SingleOrDefault();
+                
+                if (matchingEntry == null)
+                    return null;
+                
+                personId = matchingEntry.PersonId;
+                
+                var result = lockedTenantModel.Value.ExecuteAccessCommand(
+                    new RedeemUserInviteNonce(personId, nonce), userId, DateTime.UtcNow);
+                
                 await personAccessEventLog.AppendEventAsync(organizationId, locationId, result.Event, result.SequenceNumber);
                 result.OnCommit();
-
-
-                //TODO: Also now need to execute a command against the global AccountsModel to link the person to the account!
-                return result;
             }
 
-            //TODO: Implement!
-            throw new NotImplementedException();
+            // Next, link the person ID to the user ID.
+            AccountEntry accountEntry;
+            using (var lockedGlobalModel = await globalScopeAccountsModel.WriteLockItemAsync(GLOBAL_SCOPE_ID))
+            {
+                var result = lockedGlobalModel.Value.ExecuteAccountCommand(
+                    new LinkPersonToAcccount(userId, organizationId, locationId, personId),
+                    userId, DateTime.UtcNow);
+
+                accountEntry = result.Account;
+                
+                await accountsEventLog.AppendEventAsync(Guid.Empty, Guid.Empty, result.Event, result.SequenceNumber);
+                result.OnCommit();
+            }
+
+            // Finally, return a complete view of the user's current account & person links.
+            var account = await RenderAccountAsync(accountEntry);
+            return account;
         }
 
 
@@ -209,16 +240,16 @@ namespace CareTogether.Resources.Accounts
                     var linkPersonToAccountEvent = new AccountEvent(migrationUserId, migrationTimestamp,
                         new LinkPersonToAcccount(oldAccountId, oldAccess.orgId, oldLocationAccess.LocationId,
                             oldLocationAccess.PersonId));
-
                     synthesizedAccountEvents.Enqueue(linkPersonToAccountEvent);
 
                     //HACK: This is simplistic, but since the migration will be a one-time event
                     //      we don't need to address the partial failure mode where account events
                     //      are migrated but person access events are not.
-                    synthesizedPersonAccessEvents.Enqueue(
-                        (oldLocationAccess.PersonId, oldAccess.orgId, new PersonAccessCommandExecuted(
+                    var changePersonRolesEvent = new PersonAccessEvent(
                             migrationUserId, migrationTimestamp, new ChangePersonRoles(
-                                oldLocationAccess.LocationId, oldLocationAccess.RoleNames))));
+                                oldLocationAccess.LocationId, oldLocationAccess.RoleNames));
+                    synthesizedPersonAccessEvents.Enqueue(
+                        (oldLocationAccess.PersonId, oldAccess.orgId, changePersonRolesEvent));
                 }
             });
 
