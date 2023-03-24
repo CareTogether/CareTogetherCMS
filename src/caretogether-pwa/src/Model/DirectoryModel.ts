@@ -3,8 +3,6 @@ import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, Add
 import { accessTokenFetchQuery, authenticatingFetch } from "../Authentication/AuthenticatedHttp";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { currentOrganizationAndLocationIdsQuery, organizationConfigurationQuery } from "./ConfigurationModel";
-import { currentOrganizationState, currentLocationState, selectedLocationIdState } from "./SessionModel";
-import { currentOrganizationAndLocationIdsQuery, organizationConfigurationData, organizationConfigurationQuery } from "./ConfigurationModel";
 import { useLoadable } from "../Hooks/useLoadable";
 
 export const recordsClientQuery = selector({
@@ -79,8 +77,6 @@ export function usePersonAndFamilyLookup() {
 
 export function useUserLookup() {
   const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
-  const organizationConfig = useRecoilValue(organizationConfigurationData);
-  const selectedLocationId = useRecoilValue(selectedLocationIdState);
 
   return (userId?: string) => {
     const userFamily = visibleFamilies.filter(family => family.users?.find(user => user.userId === userId));
@@ -92,13 +88,6 @@ export function useUserLookup() {
     } else {
       return undefined;
     }
-    const staticUserAssignment = organizationConfig.users![userId!];
-    const staticPersonId = staticUserAssignment?.locationRoles?.find(loc =>
-      loc.locationId === selectedLocationId)?.personId;
-
-    const person = visibleFamilies.flatMap(family => family.family?.adults).find(adult =>
-      adult?.item1?.id === staticPersonId || adult?.item1?.userId === userId)?.item1;
-    return person;
   }
 }
 
