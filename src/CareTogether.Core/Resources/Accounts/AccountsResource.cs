@@ -118,7 +118,6 @@ namespace CareTogether.Resources.Accounts
             // We can avoid padding during base64 encoding by using 144 bits instead.
             var nonce = new byte[144 / 8];
             randomNumberGenerator.GetBytes(nonce);
-            Convert.ToHexString(nonce);
 
             using (var lockedModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
             {
