@@ -68,6 +68,22 @@
                 "/consoleloggerparameters:NoSummary"
             ],
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "restore",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "restore",
+                "${workspaceFolder}/src/CareTogether.Api/CareTogether.Api.csproj",
+                "/property:GenerateFullPaths=true",
+                "/property:SolutionDir=${workspaceFolder}/",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile",
+            "runOptions": {
+                "runOn": "folderOpen"
+            }
         }
     ]
 }
