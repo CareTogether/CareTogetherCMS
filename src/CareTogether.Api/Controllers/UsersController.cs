@@ -12,13 +12,6 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Api.Controllers
 {
-    public sealed class MembershipOptions
-    {
-        public const string Membership = "Membership";
-
-        public string PersonInviteLinkFormat { get; set; } = String.Empty;
-    }
-
     [ApiController]
     [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class UsersController : ControllerBase

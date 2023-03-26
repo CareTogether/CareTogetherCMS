@@ -22,18 +22,21 @@ namespace CareTogether.Resources.Accounts
         private readonly IObjectStore<UserTenantAccessSummary> configurationStore;
         private readonly ConcurrentLockingStore<(Guid organizationId, Guid locationId), PersonAccessModel> tenantModels;
         private readonly RandomNumberGenerator randomNumberGenerator;
+        private readonly string[] tombstonedOrganizations;
         private readonly Task migration;
 
 
         public AccountsResource(IObjectStore<UserTenantAccessSummary> configurationStore,
             IEventLog<AccountEvent> accountsEventLog, IEventLog<PersonAccessEvent> personAccessEventLog,
-            BlobServiceClient blobServiceClient, IObjectStore<OrganizationConfiguration> organizationConfigurationStore)
+            BlobServiceClient blobServiceClient, IObjectStore<OrganizationConfiguration> organizationConfigurationStore,
+            string[] tombstonedOrganizations)
         {
             this.configurationStore = configurationStore;
             this.accountsEventLog = accountsEventLog;
             this.personAccessEventLog = personAccessEventLog;
             this.blobServiceClient = blobServiceClient;
             this.organizationConfigurationStore = organizationConfigurationStore;
+            this.tombstonedOrganizations = tombstonedOrganizations;
 
             // This object is a singleton, so the migration will run exactly once at each application launch.
             migration = Task.Run(MigrateConfigurationStoreToEventLogsAsync);
@@ -217,6 +220,7 @@ namespace CareTogether.Resources.Accounts
             var synthesizedPersonAccessEvents = new ConcurrentQueue<(Guid organizationId, Guid locationId, PersonAccessEvent)>();
 
             var organizationIds = await blobServiceClient.GetBlobContainersAsync()
+                .Where(container => !tombstonedOrganizations.Contains(container.Name))
                 .Select(container => Guid.TryParse(container.Name, out var orgId) ? orgId : Guid.Empty)
                 .Where(orgId => orgId != Guid.Empty)
                 .ToListAsync();
