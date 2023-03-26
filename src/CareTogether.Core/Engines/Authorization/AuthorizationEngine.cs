@@ -396,6 +396,48 @@ namespace CareTogether.Engines.Authorization
             });
         }
 
+        public async Task<bool> AuthorizePersonAccessCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, PersonAccessCommand command)
+        {
+            var permissions = await AuthorizeUserAccessAsync(organizationId, locationId, user,
+                new GlobalAuthorizationContext());
+            
+            if (command is not ChangePersonRoles c)
+                throw new NotImplementedException(
+                    $"The command type '{command.GetType().FullName}' has not been implemented.");
+    
+            // Determine if any of the roles being added or removed are defined as protected roles.
+            var configuration = await policiesResource.GetConfigurationAsync(organizationId);
+            var protectedRoles = configuration.Roles
+                .Where(role => role.IsProtected == true)
+                .Select(role => role.RoleName)
+                .ToImmutableHashSet();
+            // HACK: If the person doesn't yet have an activated user account, we can assume that removing
+            //       protected roles is okay, which means we don't have to change the IAccountsResource interface.
+            var targetPersonAccount = await accountsResource.TryGetPersonUserAccountAsync(
+                organizationId, locationId, command.PersonId);
+            var targetPersonCurrentRoles = targetPersonAccount == null
+                ? ImmutableHashSet<string>.Empty
+                : targetPersonAccount.Organizations.Single(org => org.OrganizationId == organizationId)
+                    .Locations.Single(loc => loc.LocationId == locationId)
+                    .Roles.ToImmutableHashSet();
+            var rolesBeingAddedOrRemoved = targetPersonCurrentRoles.SymmetricExcept(c.Roles);
+            var anyRolesBeingAddedOrRemovedAreProtected = protectedRoles.Intersect(rolesBeingAddedOrRemoved).Count > 0;
+
+            return permissions.Contains(
+                anyRolesBeingAddedOrRemovedAreProtected
+                    ? Permission.EditPersonUserProtectedRoles
+                    : Permission.EditPersonUserStandardRoles);
+        }
+
+        public async Task<bool> AuthorizeGenerateUserInviteNonceAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user)
+        {
+            var permissions = await AuthorizeUserAccessAsync(organizationId, locationId, user,
+                new GlobalAuthorizationContext());
+            return permissions.Contains(Permission.InvitePersonUser);
+        }
+
         public async Task<CombinedFamilyInfo> DiscloseFamilyAsync(ClaimsPrincipal user,
             Guid organizationId, Guid locationId, CombinedFamilyInfo family)
         {
@@ -662,15 +704,15 @@ namespace CareTogether.Engines.Authorization
         internal async Task<bool> DiscloseNoteAsync(Note note, Guid organizationId, Guid locationId,
             Guid? userPersonId, ImmutableList<Permission> contextPermissions)
         {
-            var author = await accountsResource.GetUserAccountAsync(note.AuthorId);
-            var authorPersonId = author.Organizations
+            var authorAccount = await accountsResource.TryGetUserAccountAsync(note.AuthorId);
+            var authorPersonId = authorAccount?.Organizations
                 .Single(org => org.OrganizationId == organizationId).Locations
                 .Single(loc => loc.LocationId == locationId).PersonId;
 
             // Disclose the note if:
             //  1. the current user is the same person as the author, or
             //  2. the author has permission to view all notes.
-            return (userPersonId != null && authorPersonId == userPersonId.Value) ||
+            return (userPersonId != null && authorPersonId == userPersonId) ||
                 contextPermissions.Contains(Permission.ViewAllNotes);
         }
     }

@@ -1,5 +1,6 @@
 ﻿using CareTogether.Engines.Authorization;
 using CareTogether.Resources.Accounts;
+using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Security.Claims;
@@ -23,7 +24,9 @@ namespace CareTogether.Managers.Membership
 
         public async Task<UserAccess> GetUserAccessAsync(ClaimsPrincipal user)
         {
-            var account = await accountsResource.GetUserAccountAsync(user.UserId());
+            var account = await accountsResource.TryGetUserAccountAsync(user.UserId());
+            if (account == null)
+                return new UserAccess(user.UserId(), ImmutableList<UserOrganizationAccess>.Empty);
 
             var organizationsAccess = await Task.WhenAll(account.Organizations.Select(async organization =>
             {
@@ -51,6 +54,43 @@ namespace CareTogether.Managers.Membership
             }));
 
             return new UserAccess(user.UserId(), organizationsAccess.ToImmutableList());
+        }
+        
+        public async Task<PersonAccessEntry> ChangePersonRolesAsync(ClaimsPrincipal user,
+            Guid organizationId, Guid locationId, Guid personId, ImmutableList<string> roles)
+        {
+            var command = new ChangePersonRoles(personId, roles);
+
+            if (!await authorizationEngine.AuthorizePersonAccessCommandAsync(
+                organizationId, locationId, user, command))
+                throw new Exception("The user is not authorized to perform this command.");
+            
+            var result = await accountsResource.ExecutePersonAccessCommandAsync(
+                organizationId, locationId, command, user.UserId());
+            
+            return result;
+        }
+
+        public async Task<byte[]> GenerateUserInviteNonceAsync(ClaimsPrincipal user,
+            Guid organizationId, Guid locationId, Guid personId)
+        {
+            if (!await authorizationEngine.AuthorizeGenerateUserInviteNonceAsync(
+                organizationId, locationId, user))
+                throw new Exception("The user is not authorized to perform this action.");
+
+            var result = await accountsResource.GenerateUserInviteNonceAsync(
+                organizationId, locationId, personId, user.UserId());
+            
+            return result;
+        }
+
+        public async Task<Account?> TryRedeemUserInviteNonceAsync(ClaimsPrincipal user,
+            Guid organizationId, Guid locationId, byte[] nonce)
+        {
+            var result = await accountsResource.TryRedeemUserInviteNonceAsync(
+                organizationId, locationId, user.UserId(), nonce);
+            
+            return result;
         }
     }
 }

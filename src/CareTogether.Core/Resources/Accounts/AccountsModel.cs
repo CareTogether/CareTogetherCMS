@@ -63,7 +63,7 @@ namespace CareTogether.Resources.Accounts
                 .Where(predicate)
                 .ToImmutableList();
 
-        public AccountEntry GetAccount(Guid userId) => accounts[userId];
+        public AccountEntry? TryGetAccount(Guid userId) => accounts.GetValueOrDefault(userId);
 
 
         private void ReplayEvent(AccountEvent domainEvent, long sequenceNumber)

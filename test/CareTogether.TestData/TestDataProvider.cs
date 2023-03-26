@@ -400,7 +400,7 @@ namespace CareTogether.TestData
                             ImmutableList<string>.Empty.AddRange(new[] { "Single", "Spouse", "Partner", "Dad", "Mom", "Relative", "Domestic Worker" }),
                             sourcePhoneNumbers)),
                     ImmutableList<RoleDefinition>.Empty
-                        .Add(new RoleDefinition("Volunteer", ImmutableList<ContextualPermissionSet>.Empty
+                        .Add(new RoleDefinition("Volunteer", IsProtected: false, ImmutableList<ContextualPermissionSet>.Empty
                             .Add(new ContextualPermissionSet(new GlobalPermissionContext(),
                                 ImmutableList.Create(
                                     Permission.AccessPartneringFamiliesScreen,

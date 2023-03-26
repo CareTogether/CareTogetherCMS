@@ -45,23 +45,27 @@ namespace CareTogether.Resources.Accounts
         }
 
 
-        public async Task<Account> GetUserAccountAsync(Guid userId)
+        public async Task<Account?> TryGetUserAccountAsync(Guid userId)
         {
             //WARNING: The read/write logic in this service needs to be designed carefully to avoid deadlocks.
 
             // First, look up the global account entry to determine which person access records to retrieve.
-            AccountEntry accountEntry;
+            // If the user has not been linked to any person IDs, there will not be any records for them so return null.
+            AccountEntry? accountEntry;
             using (var lockedModel = await globalScopeAccountsModel.ReadLockItemAsync(GLOBAL_SCOPE_ID))
             {
-                accountEntry = lockedModel.Value.GetAccount(userId);
+                accountEntry = lockedModel.Value.TryGetAccount(userId);
             }
+
+            if (accountEntry == null)
+                return null;
 
             // Then, retrieve and merge all the person access records that are linked to this user account.
             var account = await RenderAccountAsync(accountEntry);
             return account;
         }
 
-        public async Task<Account?> GetPersonUserAccountAsync(Guid organizationId, Guid locationId, Guid personId)
+        public async Task<Account?> TryGetPersonUserAccountAsync(Guid organizationId, Guid locationId, Guid personId)
         {
             //WARNING: The read/write logic in this service needs to be designed carefully to avoid deadlocks.
 

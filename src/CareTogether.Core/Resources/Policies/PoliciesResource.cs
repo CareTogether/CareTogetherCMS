@@ -72,7 +72,7 @@ namespace CareTogether.Resources.Policies
                 // miss out on a newly defined permission that may not have been explicitly granted to
                 // them in their organization's role configuration.
                 Roles = config.Roles.Insert(0,
-                    new RoleDefinition(ORGANIZATION_ADMINISTRATOR, ImmutableList.Create(
+                    new RoleDefinition(ORGANIZATION_ADMINISTRATOR, IsProtected: true, ImmutableList.Create(
                         new ContextualPermissionSet(new GlobalPermissionContext(),
                             Enum.GetValues<Permission>().ToImmutableList()))))
             };

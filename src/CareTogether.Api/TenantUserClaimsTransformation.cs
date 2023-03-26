@@ -25,8 +25,11 @@ namespace CareTogether.Api
             var tenantUserIdentity = new ClaimsIdentity();
             tenantUserIdentity.Label = "Tenant User";
 
-            // Look up the tenant access for the user.
-            var account = await accountsResource.GetUserAccountAsync(userId.Value);
+            // Look up the tenant access for the user. Skip claims transformations if the principal does not have
+            // an account yet (i.e., hasn't activated any user-to-person links).
+            var account = await accountsResource.TryGetUserAccountAsync(userId.Value);
+            if (account == null)
+                return principal;
 
             //TODO: Support multiple organizations per user
             var organizationId = account.Organizations.First().OrganizationId;

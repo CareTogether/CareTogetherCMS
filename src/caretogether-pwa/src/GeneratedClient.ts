@@ -1038,6 +1038,7 @@ export interface ISourcePhoneNumberConfiguration {
 
 export class RoleDefinition implements IRoleDefinition {
     roleName?: string;
+    isProtected?: boolean | undefined;
     permissionSets?: ContextualPermissionSet[];
 
     constructor(data?: IRoleDefinition) {
@@ -1052,6 +1053,7 @@ export class RoleDefinition implements IRoleDefinition {
     init(_data?: any) {
         if (_data) {
             this.roleName = _data["roleName"];
+            this.isProtected = _data["isProtected"];
             if (Array.isArray(_data["permissionSets"])) {
                 this.permissionSets = [] as any;
                 for (let item of _data["permissionSets"])
@@ -1070,6 +1072,7 @@ export class RoleDefinition implements IRoleDefinition {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["roleName"] = this.roleName;
+        data["isProtected"] = this.isProtected;
         if (Array.isArray(this.permissionSets)) {
             data["permissionSets"] = [];
             for (let item of this.permissionSets)
@@ -1081,6 +1084,7 @@ export class RoleDefinition implements IRoleDefinition {
 
 export interface IRoleDefinition {
     roleName?: string;
+    isProtected?: boolean | undefined;
     permissionSets?: ContextualPermissionSet[];
 }
 
@@ -1560,6 +1564,9 @@ export enum Permission {
     ReadFamilyDocuments = 2,
     UploadFamilyDocuments = 3,
     DeleteFamilyDocuments = 4,
+    InvitePersonUser = 50,
+    EditPersonUserProtectedRoles = 51,
+    EditPersonUserStandardRoles = 52,
     AccessVolunteersScreen = 100,
     AccessPartneringFamiliesScreen = 101,
     AccessSettingsScreen = 102,
@@ -1574,7 +1581,6 @@ export enum Permission {
     EditPersonConcerns = 156,
     EditPersonNotes = 157,
     EditPersonContactInfo = 158,
-    EditPersonUserLink = 159,
     AddEditDraftNotes = 180,
     DiscardDraftNotes = 181,
     ApproveNotes = 182,

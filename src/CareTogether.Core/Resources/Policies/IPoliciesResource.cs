@@ -21,7 +21,7 @@ namespace CareTogether.Resources.Policies
 
     public sealed record SourcePhoneNumberConfiguration(string SourcePhoneNumber, string Description);
 
-    public sealed record RoleDefinition(string RoleName,
+    public sealed record RoleDefinition(string RoleName, bool? IsProtected,
         ImmutableList<ContextualPermissionSet> PermissionSets);
 
     public sealed record ContextualPermissionSet(PermissionContext Context, ImmutableList<Permission> Permissions);

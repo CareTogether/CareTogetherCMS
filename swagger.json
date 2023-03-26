@@ -844,6 +844,10 @@
           "roleName": {
             "type": "string"
           },
+          "isProtected": {
+            "type": "boolean",
+            "nullable": true
+          },
           "permissionSets": {
             "type": "array",
             "items": {
@@ -1065,6 +1069,9 @@
           "ReadFamilyDocuments",
           "UploadFamilyDocuments",
           "DeleteFamilyDocuments",
+          "InvitePersonUser",
+          "EditPersonUserProtectedRoles",
+          "EditPersonUserStandardRoles",
           "AccessVolunteersScreen",
           "AccessPartneringFamiliesScreen",
           "AccessSettingsScreen",
@@ -1079,7 +1086,6 @@
           "EditPersonConcerns",
           "EditPersonNotes",
           "EditPersonContactInfo",
-          "EditPersonUserLink",
           "AddEditDraftNotes",
           "DiscardDraftNotes",
           "ApproveNotes",
@@ -1127,6 +1133,9 @@
           2,
           3,
           4,
+          50,
+          51,
+          52,
           100,
           101,
           102,
@@ -1141,7 +1150,6 @@
           156,
           157,
           158,
-          159,
           180,
           181,
           182,

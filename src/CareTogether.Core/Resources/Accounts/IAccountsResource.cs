@@ -46,9 +46,9 @@ namespace CareTogether.Resources.Accounts
     /// </summary>
     public interface IAccountsResource
     {
-        Task<Account> GetUserAccountAsync(Guid userId);
+        Task<Account?> TryGetUserAccountAsync(Guid userId);
 
-        Task<Account?> GetPersonUserAccountAsync(Guid organizationId, Guid locationId, Guid personId);
+        Task<Account?> TryGetPersonUserAccountAsync(Guid organizationId, Guid locationId, Guid personId);
 
         Task<AccountEntry> ExecuteAccountCommandAsync(AccountCommand command, Guid userId);
 
