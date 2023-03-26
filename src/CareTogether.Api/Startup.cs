@@ -5,6 +5,7 @@ using CareTogether.Engines.Authorization;
 using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Managers;
 using CareTogether.Managers.Communications;
+using CareTogether.Managers.Membership;
 using CareTogether.Managers.Records;
 using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Approvals;
@@ -98,7 +99,6 @@ namespace CareTogether.Api
 
             // Data store services
             var defaultMemoryCacheOptions = Options.Create(new MemoryCacheOptions());
-            var accountsEventLog = new AppendBlobEventLog<AccountEvent>(immutableBlobServiceClient, "AccountsEventLog");
             var personAccessEventLog = new AppendBlobEventLog<PersonAccessEvent>(immutableBlobServiceClient, "PersonAccessEventLog");
             var directoryEventLog = new AppendBlobEventLog<DirectoryEvent>(immutableBlobServiceClient, "DirectoryEventLog");
             var goalsEventLog = new AppendBlobEventLog<GoalCommandExecutedEvent>(immutableBlobServiceClient, "GoalsEventLog");
@@ -136,6 +136,9 @@ namespace CareTogether.Api
                     organizationSecretsStore,
                     Configuration["TestData:SourceSmsPhoneNumber"]).Wait();
             }
+            
+            //NOTE: This currently lives after test data population in order to test the migration scenario.
+            var accountsEventLog = new AppendBlobEventLog<AccountEvent>(immutableBlobServiceClient, "AccountsEventLog");
 
             // Other utility services
             var telephony = new PlivoTelephony(
@@ -172,6 +175,8 @@ namespace CareTogether.Api
                 policiesResource, telephony));
             services.AddSingleton<IRecordsManager>(new RecordsManager(authorizationEngine, directoryResource,
                 approvalsResource, referralsResource, notesResource, communitiesResource, combinedFamilyInfoFormatter));
+            services.AddSingleton<IMembershipManager>(new MembershipManager(accountsResource, authorizationEngine,
+                directoryResource, combinedFamilyInfoFormatter));
 
             services.AddAuthentication("Basic")
                 .AddBasic("Basic", options =>
