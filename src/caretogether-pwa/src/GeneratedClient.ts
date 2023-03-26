@@ -678,6 +678,97 @@ export class UsersClient {
         }
         return Promise.resolve<CombinedFamilyInfo>(null as any);
     }
+
+    generatePersonInviteLink(organizationId: string | undefined, locationId: string | undefined, personId: string | undefined): Promise<string> {
+        let url_ = this.baseUrl + "/api/Users/personInviteLink?";
+        if (organizationId === null)
+            throw new Error("The parameter 'organizationId' cannot be null.");
+        else if (organizationId !== undefined)
+            url_ += "organizationId=" + encodeURIComponent("" + organizationId) + "&";
+        if (locationId === null)
+            throw new Error("The parameter 'locationId' cannot be null.");
+        else if (locationId !== undefined)
+            url_ += "locationId=" + encodeURIComponent("" + locationId) + "&";
+        if (personId === null)
+            throw new Error("The parameter 'personId' cannot be null.");
+        else if (personId !== undefined)
+            url_ += "personId=" + encodeURIComponent("" + personId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGeneratePersonInviteLink(_response);
+        });
+    }
+
+    protected processGeneratePersonInviteLink(response: Response): Promise<string> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : <any>null;
+    
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<string>(null as any);
+    }
+
+    redeemPersonInviteLink(organizationId: string | undefined, locationId: string | undefined, inviteNonce: string | null | undefined): Promise<Account> {
+        let url_ = this.baseUrl + "/api/Users/redeemPersonInviteLink?";
+        if (organizationId === null)
+            throw new Error("The parameter 'organizationId' cannot be null.");
+        else if (organizationId !== undefined)
+            url_ += "organizationId=" + encodeURIComponent("" + organizationId) + "&";
+        if (locationId === null)
+            throw new Error("The parameter 'locationId' cannot be null.");
+        else if (locationId !== undefined)
+            url_ += "locationId=" + encodeURIComponent("" + locationId) + "&";
+        if (inviteNonce !== undefined && inviteNonce !== null)
+            url_ += "inviteNonce=" + encodeURIComponent("" + inviteNonce) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processRedeemPersonInviteLink(_response);
+        });
+    }
+
+    protected processRedeemPersonInviteLink(response: Response): Promise<Account> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = Account.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<Account>(null as any);
+    }
 }
 
 export class MetadataClient {
@@ -10825,6 +10916,154 @@ export interface IUserLocationAccess {
     globalContextPermissions?: Permission[];
     allVolunteerFamiliesContextPermissions?: Permission[];
     allPartneringFamiliesContextPermissions?: Permission[];
+}
+
+export class Account implements IAccount {
+    userId?: string;
+    organizations?: AccountOrganizationAccess[];
+
+    constructor(data?: IAccount) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            if (Array.isArray(_data["organizations"])) {
+                this.organizations = [] as any;
+                for (let item of _data["organizations"])
+                    this.organizations!.push(AccountOrganizationAccess.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): Account {
+        data = typeof data === 'object' ? data : {};
+        let result = new Account();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        if (Array.isArray(this.organizations)) {
+            data["organizations"] = [];
+            for (let item of this.organizations)
+                data["organizations"].push(item.toJSON());
+        }
+        return data;
+    }
+}
+
+export interface IAccount {
+    userId?: string;
+    organizations?: AccountOrganizationAccess[];
+}
+
+export class AccountOrganizationAccess implements IAccountOrganizationAccess {
+    organizationId?: string;
+    locations?: AccountLocationAccess[];
+
+    constructor(data?: IAccountOrganizationAccess) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.organizationId = _data["organizationId"];
+            if (Array.isArray(_data["locations"])) {
+                this.locations = [] as any;
+                for (let item of _data["locations"])
+                    this.locations!.push(AccountLocationAccess.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): AccountOrganizationAccess {
+        data = typeof data === 'object' ? data : {};
+        let result = new AccountOrganizationAccess();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["organizationId"] = this.organizationId;
+        if (Array.isArray(this.locations)) {
+            data["locations"] = [];
+            for (let item of this.locations)
+                data["locations"].push(item.toJSON());
+        }
+        return data;
+    }
+}
+
+export interface IAccountOrganizationAccess {
+    organizationId?: string;
+    locations?: AccountLocationAccess[];
+}
+
+export class AccountLocationAccess implements IAccountLocationAccess {
+    locationId?: string;
+    personId?: string;
+    roles?: string[];
+
+    constructor(data?: IAccountLocationAccess) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.locationId = _data["locationId"];
+            this.personId = _data["personId"];
+            if (Array.isArray(_data["roles"])) {
+                this.roles = [] as any;
+                for (let item of _data["roles"])
+                    this.roles!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): AccountLocationAccess {
+        data = typeof data === 'object' ? data : {};
+        let result = new AccountLocationAccess();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["locationId"] = this.locationId;
+        data["personId"] = this.personId;
+        if (Array.isArray(this.roles)) {
+            data["roles"] = [];
+            for (let item of this.roles)
+                data["roles"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IAccountLocationAccess {
+    locationId?: string;
+    personId?: string;
+    roles?: string[];
 }
 
 export abstract class IEdmModel implements IIEdmModel {

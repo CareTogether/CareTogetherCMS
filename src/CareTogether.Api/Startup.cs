@@ -1,4 +1,5 @@
 using Azure.Storage.Blobs;
+using CareTogether.Api.Controllers;
 using CareTogether.Api.OData;
 using CareTogether.Engines.Authorization;
 using CareTogether.Engines.PolicyEvaluation;
@@ -77,6 +78,9 @@ namespace CareTogether.Api
                 var memoryCacheProvider = new MemoryCacheProvider(memoryCache);
                 return new CachingService(memoryCacheProvider);
             });
+
+            // Load shared application-specific configuration sections for use via dependency injection
+            services.Configure<MembershipOptions>(Configuration.GetSection(MembershipOptions.Membership));
 
             // Configure the shared blob storage clients to authenticate according to the environment -
             // one for mutable storage and one for immutable storage.

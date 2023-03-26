@@ -728,6 +728,105 @@
         }
       }
     },
+    "/api/Users/personInviteLink": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "Users_GeneratePersonInviteLink",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          },
+          {
+            "name": "personId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 3
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Users/redeemPersonInviteLink": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "Users_RedeemPersonInviteLink",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          },
+          {
+            "name": "inviteNonce",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 3
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/odata/live/$metadata": {
       "get": {
         "tags": [
@@ -6078,6 +6177,58 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Permission"
+            }
+          }
+        }
+      },
+      "Account": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "organizations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccountOrganizationAccess"
+            }
+          }
+        }
+      },
+      "AccountOrganizationAccess": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "organizationId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "locations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccountLocationAccess"
+            }
+          }
+        }
+      },
+      "AccountLocationAccess": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "locationId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "personId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
             }
           }
         }

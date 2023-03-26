@@ -13,9 +13,9 @@ namespace CareTogether.Resources.Accounts
     /// <summary>
     /// The <see cref="Account"/> exists at a global level, *across* organizational boundaries.
     /// </summary>
-    public sealed record Account(Guid UserId, ImmutableList<UserOrganizationAccess> Organizations);
-    public sealed record UserOrganizationAccess(Guid OrganizationId, ImmutableList<UserLocationAccess> Locations);
-    public sealed record UserLocationAccess(Guid LocationId, Guid PersonId, ImmutableList<string> Roles);
+    public sealed record Account(Guid UserId, ImmutableList<AccountOrganizationAccess> Organizations);
+    public sealed record AccountOrganizationAccess(Guid OrganizationId, ImmutableList<AccountLocationAccess> Locations);
+    public sealed record AccountLocationAccess(Guid LocationId, Guid PersonId, ImmutableList<string> Roles);
 
     [JsonHierarchyBase]
     [JsonSchemaIgnore]

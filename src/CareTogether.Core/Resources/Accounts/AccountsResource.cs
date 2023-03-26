@@ -196,8 +196,8 @@ namespace CareTogether.Resources.Accounts
 
             return new Account(accountEntry.UserId, accountEntry.PersonLinks
                 .GroupBy(link => link.OrganizationId)
-                .Select(orgLinks => new UserOrganizationAccess(orgLinks.Key, orgLinks.Select(link =>
-                    new UserLocationAccess(link.LocationId, link.PersonId,
+                .Select(orgLinks => new AccountOrganizationAccess(orgLinks.Key, orgLinks.Select(link =>
+                    new AccountLocationAccess(link.LocationId, link.PersonId,
                         personAccessResults[(link.OrganizationId, link.LocationId)].Roles)).ToImmutableList()))
                 .ToImmutableList());
         }
