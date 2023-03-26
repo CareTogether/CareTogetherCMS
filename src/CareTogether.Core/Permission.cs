@@ -15,6 +15,10 @@ namespace CareTogether
         UploadFamilyDocuments = 3, // Will become a prerequisite for upload-linked actions
         DeleteFamilyDocuments = 4,
 
+        InvitePersonUser = 50,
+        EditPersonUserProtectedRoles = 51,
+        EditPersonUserStandardRoles = 52,
+
         AccessVolunteersScreen = 100,
         AccessPartneringFamiliesScreen = 101,
         AccessSettingsScreen = 102,
@@ -30,7 +34,7 @@ namespace CareTogether
         EditPersonConcerns = 156,
         EditPersonNotes = 157,
         EditPersonContactInfo = 158,
-        EditPersonUserLink = 159,
+        //EditPersonUserLink = 159,
 
         AddEditDraftNotes = 180,
         DiscardDraftNotes = 181,

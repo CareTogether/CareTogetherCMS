@@ -1,6 +1,7 @@
 using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Managers;
 using CareTogether.Resources;
+using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
@@ -23,17 +24,20 @@ namespace CareTogether.Engines.Authorization
         private readonly IReferralsResource referralsResource;
         private readonly IApprovalsResource approvalsResource;
         private readonly ICommunitiesResource communitiesResource;
+        private readonly IAccountsResource accountsResource;
 
 
         public AuthorizationEngine(IPoliciesResource policiesResource,
             IDirectoryResource directoryResource, IReferralsResource referralsResource,
-            IApprovalsResource approvalsResource, ICommunitiesResource communitiesResource)
+            IApprovalsResource approvalsResource, ICommunitiesResource communitiesResource,
+            IAccountsResource accountsResource)
         {
             this.policiesResource = policiesResource;
             this.directoryResource = directoryResource;
             this.referralsResource = referralsResource;
             this.approvalsResource = approvalsResource;
             this.communitiesResource = communitiesResource;
+            this.accountsResource = accountsResource;
         }
 
 
@@ -234,7 +238,6 @@ namespace CareTogether.Engines.Authorization
                 UpdatePersonGender => Permission.EditFamilyInfo,
                 UpdatePersonAge => Permission.EditFamilyInfo,
                 UpdatePersonEthnicity => Permission.EditFamilyInfo,
-                UpdatePersonUserLink => Permission.EditPersonUserLink,
                 UpdatePersonConcerns => Permission.EditPersonConcerns,
                 UpdatePersonNotes => Permission.EditPersonNotes,
                 AddPersonAddress => Permission.EditPersonContactInfo,
@@ -391,6 +394,48 @@ namespace CareTogether.Engines.Authorization
                 _ => throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented.")
             });
+        }
+
+        public async Task<bool> AuthorizePersonAccessCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, PersonAccessCommand command)
+        {
+            var permissions = await AuthorizeUserAccessAsync(organizationId, locationId, user,
+                new GlobalAuthorizationContext());
+            
+            if (command is not ChangePersonRoles c)
+                throw new NotImplementedException(
+                    $"The command type '{command.GetType().FullName}' has not been implemented.");
+    
+            // Determine if any of the roles being added or removed are defined as protected roles.
+            var configuration = await policiesResource.GetConfigurationAsync(organizationId);
+            var protectedRoles = configuration.Roles
+                .Where(role => role.IsProtected == true)
+                .Select(role => role.RoleName)
+                .ToImmutableHashSet();
+            // HACK: If the person doesn't yet have an activated user account, we can assume that removing
+            //       protected roles is okay, which means we don't have to change the IAccountsResource interface.
+            var targetPersonAccount = await accountsResource.TryGetPersonUserAccountAsync(
+                organizationId, locationId, command.PersonId);
+            var targetPersonCurrentRoles = targetPersonAccount == null
+                ? ImmutableHashSet<string>.Empty
+                : targetPersonAccount.Organizations.Single(org => org.OrganizationId == organizationId)
+                    .Locations.Single(loc => loc.LocationId == locationId)
+                    .Roles.ToImmutableHashSet();
+            var rolesBeingAddedOrRemoved = targetPersonCurrentRoles.SymmetricExcept(c.Roles);
+            var anyRolesBeingAddedOrRemovedAreProtected = protectedRoles.Intersect(rolesBeingAddedOrRemoved).Count > 0;
+
+            return permissions.Contains(
+                anyRolesBeingAddedOrRemovedAreProtected
+                    ? Permission.EditPersonUserProtectedRoles
+                    : Permission.EditPersonUserStandardRoles);
+        }
+
+        public async Task<bool> AuthorizeGenerateUserInviteNonceAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user)
+        {
+            var permissions = await AuthorizeUserAccessAsync(organizationId, locationId, user,
+                new GlobalAuthorizationContext());
+            return permissions.Contains(Permission.InvitePersonUser);
         }
 
         public async Task<CombinedFamilyInfo> DiscloseFamilyAsync(ClaimsPrincipal user,
@@ -659,8 +704,15 @@ namespace CareTogether.Engines.Authorization
         internal async Task<bool> DiscloseNoteAsync(Note note, Guid organizationId, Guid locationId,
             Guid? userPersonId, ImmutableList<Permission> contextPermissions)
         {
-            var author = await directoryResource.FindUserAsync(organizationId, locationId, note.AuthorId);
-            return userPersonId != null && author?.Id == userPersonId.Value ||
+            var authorAccount = await accountsResource.TryGetUserAccountAsync(note.AuthorId);
+            var authorPersonId = authorAccount?.Organizations
+                .Single(org => org.OrganizationId == organizationId).Locations
+                .Single(loc => loc.LocationId == locationId).PersonId;
+
+            // Disclose the note if:
+            //  1. the current user is the same person as the author, or
+            //  2. the author has permission to view all notes.
+            return (userPersonId != null && authorPersonId == userPersonId) ||
                 contextPermissions.Contains(Permission.ViewAllNotes);
         }
     }

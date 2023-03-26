@@ -1,4 +1,5 @@
 ﻿using CareTogether.Managers;
+using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
@@ -52,6 +53,12 @@ namespace CareTogether.Engines.Authorization
 
         Task<bool> AuthorizeCommunityCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, CommunityCommand command);
+
+        Task<bool> AuthorizePersonAccessCommandAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user, PersonAccessCommand command);
+
+        Task<bool> AuthorizeGenerateUserInviteNonceAsync(Guid organizationId, Guid locationId,
+            ClaimsPrincipal user);
 
         Task<CombinedFamilyInfo> DiscloseFamilyAsync(ClaimsPrincipal user,
             Guid organizationId, Guid locationId, CombinedFamilyInfo family);

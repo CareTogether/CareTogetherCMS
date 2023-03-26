@@ -664,6 +664,169 @@
         }
       }
     },
+    "/api/Users/personRoles": {
+      "put": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "Users_ChangePersonRoles",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          },
+          {
+            "name": "personId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 3
+          }
+        ],
+        "requestBody": {
+          "x-name": "roles",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "required": true,
+          "x-position": 4
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CombinedFamilyInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Users/personInviteLink": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "Users_GeneratePersonInviteLink",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          },
+          {
+            "name": "personId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 3
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Users/redeemPersonInviteLink": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "Users_RedeemPersonInviteLink",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          },
+          {
+            "name": "inviteNonce",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 3
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/odata/live/$metadata": {
       "get": {
         "tags": [
@@ -791,12 +954,6 @@
             "items": {
               "type": "string"
             }
-          },
-          "users": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/UserAccessConfiguration"
-            }
           }
         }
       },
@@ -849,6 +1006,10 @@
         "properties": {
           "roleName": {
             "type": "string"
+          },
+          "isProtected": {
+            "type": "boolean",
+            "nullable": true
           },
           "permissionSets": {
             "type": "array",
@@ -1071,6 +1232,9 @@
           "ReadFamilyDocuments",
           "UploadFamilyDocuments",
           "DeleteFamilyDocuments",
+          "InvitePersonUser",
+          "EditPersonUserProtectedRoles",
+          "EditPersonUserStandardRoles",
           "AccessVolunteersScreen",
           "AccessPartneringFamiliesScreen",
           "AccessSettingsScreen",
@@ -1085,7 +1249,6 @@
           "EditPersonConcerns",
           "EditPersonNotes",
           "EditPersonContactInfo",
-          "EditPersonUserLink",
           "AddEditDraftNotes",
           "DiscardDraftNotes",
           "ApproveNotes",
@@ -1133,6 +1296,9 @@
           2,
           3,
           4,
+          50,
+          51,
+          52,
           100,
           101,
           102,
@@ -1147,7 +1313,6 @@
           156,
           157,
           158,
-          159,
           180,
           181,
           182,
@@ -1190,38 +1355,6 @@
           507,
           508
         ]
-      },
-      "UserAccessConfiguration": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "locationRoles": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UserLocationRoles"
-            }
-          }
-        }
-      },
-      "UserLocationRoles": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "locationId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "personId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "roleNames": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
       },
       "EffectiveLocationPolicy": {
         "type": "object",
@@ -1932,6 +2065,12 @@
           "family": {
             "$ref": "#/components/schemas/Family"
           },
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserInfo"
+            }
+          },
           "partneringFamilyInfo": {
             "nullable": true,
             "oneOf": [
@@ -2050,11 +2189,6 @@
           "id": {
             "type": "string",
             "format": "guid"
-          },
-          "userId": {
-            "type": "string",
-            "format": "guid",
-            "nullable": true
           },
           "active": {
             "type": "boolean"
@@ -2506,6 +2640,26 @@
             }
           }
         ]
+      },
+      "UserInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "personId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "locationRoles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
       },
       "PartneringFamilyInfo": {
         "type": "object",
@@ -5100,8 +5254,7 @@
             "UpdatePersonGender": "#/components/schemas/UpdatePersonGender",
             "UpdatePersonName": "#/components/schemas/UpdatePersonName",
             "UpdatePersonNotes": "#/components/schemas/UpdatePersonNotes",
-            "UpdatePersonPhoneNumber": "#/components/schemas/UpdatePersonPhoneNumber",
-            "UpdatePersonUserLink": "#/components/schemas/UpdatePersonUserLink"
+            "UpdatePersonPhoneNumber": "#/components/schemas/UpdatePersonPhoneNumber"
           }
         },
         "x-abstract": true,
@@ -5185,11 +5338,6 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
-              "userId": {
-                "type": "string",
-                "format": "guid",
-                "nullable": true
-              },
               "firstName": {
                 "type": "string"
               },
@@ -5425,24 +5573,6 @@
               },
               "isPreferredPhoneNumber": {
                 "type": "boolean"
-              }
-            }
-          }
-        ]
-      },
-      "UpdatePersonUserLink": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/PersonCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "userId": {
-                "type": "string",
-                "format": "guid",
-                "nullable": true
               }
             }
           }
@@ -6021,6 +6151,10 @@
             "type": "string",
             "format": "guid"
           },
+          "personId": {
+            "type": "string",
+            "format": "guid"
+          },
           "roles": {
             "type": "array",
             "items": {
@@ -6043,6 +6177,58 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Permission"
+            }
+          }
+        }
+      },
+      "Account": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "organizations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccountOrganizationAccess"
+            }
+          }
+        }
+      },
+      "AccountOrganizationAccess": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "organizationId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "locations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccountLocationAccess"
+            }
+          }
+        }
+      },
+      "AccountLocationAccess": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "locationId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "personId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
             }
           }
         }

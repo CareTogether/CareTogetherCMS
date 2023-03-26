@@ -628,6 +628,147 @@ export class UsersClient {
         }
         return Promise.resolve<UserOrganizationAccess>(null as any);
     }
+
+    changePersonRoles(organizationId: string | undefined, locationId: string | undefined, personId: string | undefined, roles: string[]): Promise<CombinedFamilyInfo> {
+        let url_ = this.baseUrl + "/api/Users/personRoles?";
+        if (organizationId === null)
+            throw new Error("The parameter 'organizationId' cannot be null.");
+        else if (organizationId !== undefined)
+            url_ += "organizationId=" + encodeURIComponent("" + organizationId) + "&";
+        if (locationId === null)
+            throw new Error("The parameter 'locationId' cannot be null.");
+        else if (locationId !== undefined)
+            url_ += "locationId=" + encodeURIComponent("" + locationId) + "&";
+        if (personId === null)
+            throw new Error("The parameter 'personId' cannot be null.");
+        else if (personId !== undefined)
+            url_ += "personId=" + encodeURIComponent("" + personId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(roles);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processChangePersonRoles(_response);
+        });
+    }
+
+    protected processChangePersonRoles(response: Response): Promise<CombinedFamilyInfo> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = CombinedFamilyInfo.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<CombinedFamilyInfo>(null as any);
+    }
+
+    generatePersonInviteLink(organizationId: string | undefined, locationId: string | undefined, personId: string | undefined): Promise<string> {
+        let url_ = this.baseUrl + "/api/Users/personInviteLink?";
+        if (organizationId === null)
+            throw new Error("The parameter 'organizationId' cannot be null.");
+        else if (organizationId !== undefined)
+            url_ += "organizationId=" + encodeURIComponent("" + organizationId) + "&";
+        if (locationId === null)
+            throw new Error("The parameter 'locationId' cannot be null.");
+        else if (locationId !== undefined)
+            url_ += "locationId=" + encodeURIComponent("" + locationId) + "&";
+        if (personId === null)
+            throw new Error("The parameter 'personId' cannot be null.");
+        else if (personId !== undefined)
+            url_ += "personId=" + encodeURIComponent("" + personId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGeneratePersonInviteLink(_response);
+        });
+    }
+
+    protected processGeneratePersonInviteLink(response: Response): Promise<string> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : <any>null;
+    
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<string>(null as any);
+    }
+
+    redeemPersonInviteLink(organizationId: string | undefined, locationId: string | undefined, inviteNonce: string | null | undefined): Promise<Account> {
+        let url_ = this.baseUrl + "/api/Users/redeemPersonInviteLink?";
+        if (organizationId === null)
+            throw new Error("The parameter 'organizationId' cannot be null.");
+        else if (organizationId !== undefined)
+            url_ += "organizationId=" + encodeURIComponent("" + organizationId) + "&";
+        if (locationId === null)
+            throw new Error("The parameter 'locationId' cannot be null.");
+        else if (locationId !== undefined)
+            url_ += "locationId=" + encodeURIComponent("" + locationId) + "&";
+        if (inviteNonce !== undefined && inviteNonce !== null)
+            url_ += "inviteNonce=" + encodeURIComponent("" + inviteNonce) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processRedeemPersonInviteLink(_response);
+        });
+    }
+
+    protected processRedeemPersonInviteLink(response: Response): Promise<Account> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = Account.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<Account>(null as any);
+    }
 }
 
 export class MetadataClient {
@@ -853,7 +994,6 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
     locations?: LocationConfiguration[];
     roles?: RoleDefinition[];
     communityRoles?: string[];
-    users?: { [key: string]: UserAccessConfiguration; };
 
     constructor(data?: IOrganizationConfiguration) {
         if (data) {
@@ -881,13 +1021,6 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
                 this.communityRoles = [] as any;
                 for (let item of _data["communityRoles"])
                     this.communityRoles!.push(item);
-            }
-            if (_data["users"]) {
-                this.users = {} as any;
-                for (let key in _data["users"]) {
-                    if (_data["users"].hasOwnProperty(key))
-                        (<any>this.users)![key] = _data["users"][key] ? UserAccessConfiguration.fromJS(_data["users"][key]) : new UserAccessConfiguration();
-                }
             }
         }
     }
@@ -917,13 +1050,6 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
             for (let item of this.communityRoles)
                 data["communityRoles"].push(item);
         }
-        if (this.users) {
-            data["users"] = {};
-            for (let key in this.users) {
-                if (this.users.hasOwnProperty(key))
-                    (<any>data["users"])[key] = this.users[key] ? this.users[key].toJSON() : <any>undefined;
-            }
-        }
         return data;
     }
 }
@@ -933,7 +1059,6 @@ export interface IOrganizationConfiguration {
     locations?: LocationConfiguration[];
     roles?: RoleDefinition[];
     communityRoles?: string[];
-    users?: { [key: string]: UserAccessConfiguration; };
 }
 
 export class LocationConfiguration implements ILocationConfiguration {
@@ -1054,6 +1179,7 @@ export interface ISourcePhoneNumberConfiguration {
 
 export class RoleDefinition implements IRoleDefinition {
     roleName?: string;
+    isProtected?: boolean | undefined;
     permissionSets?: ContextualPermissionSet[];
 
     constructor(data?: IRoleDefinition) {
@@ -1068,6 +1194,7 @@ export class RoleDefinition implements IRoleDefinition {
     init(_data?: any) {
         if (_data) {
             this.roleName = _data["roleName"];
+            this.isProtected = _data["isProtected"];
             if (Array.isArray(_data["permissionSets"])) {
                 this.permissionSets = [] as any;
                 for (let item of _data["permissionSets"])
@@ -1086,6 +1213,7 @@ export class RoleDefinition implements IRoleDefinition {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["roleName"] = this.roleName;
+        data["isProtected"] = this.isProtected;
         if (Array.isArray(this.permissionSets)) {
             data["permissionSets"] = [];
             for (let item of this.permissionSets)
@@ -1097,6 +1225,7 @@ export class RoleDefinition implements IRoleDefinition {
 
 export interface IRoleDefinition {
     roleName?: string;
+    isProtected?: boolean | undefined;
     permissionSets?: ContextualPermissionSet[];
 }
 
@@ -1576,6 +1705,9 @@ export enum Permission {
     ReadFamilyDocuments = 2,
     UploadFamilyDocuments = 3,
     DeleteFamilyDocuments = 4,
+    InvitePersonUser = 50,
+    EditPersonUserProtectedRoles = 51,
+    EditPersonUserStandardRoles = 52,
     AccessVolunteersScreen = 100,
     AccessPartneringFamiliesScreen = 101,
     AccessSettingsScreen = 102,
@@ -1590,7 +1722,6 @@ export enum Permission {
     EditPersonConcerns = 156,
     EditPersonNotes = 157,
     EditPersonContactInfo = 158,
-    EditPersonUserLink = 159,
     AddEditDraftNotes = 180,
     DiscardDraftNotes = 181,
     ApproveNotes = 182,
@@ -1632,102 +1763,6 @@ export enum Permission {
     ReadCommunityDocuments = 506,
     UploadCommunityDocuments = 507,
     DeleteCommunityDocuments = 508,
-}
-
-export class UserAccessConfiguration implements IUserAccessConfiguration {
-    locationRoles?: UserLocationRoles[];
-
-    constructor(data?: IUserAccessConfiguration) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            if (Array.isArray(_data["locationRoles"])) {
-                this.locationRoles = [] as any;
-                for (let item of _data["locationRoles"])
-                    this.locationRoles!.push(UserLocationRoles.fromJS(item));
-            }
-        }
-    }
-
-    static fromJS(data: any): UserAccessConfiguration {
-        data = typeof data === 'object' ? data : {};
-        let result = new UserAccessConfiguration();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        if (Array.isArray(this.locationRoles)) {
-            data["locationRoles"] = [];
-            for (let item of this.locationRoles)
-                data["locationRoles"].push(item.toJSON());
-        }
-        return data;
-    }
-}
-
-export interface IUserAccessConfiguration {
-    locationRoles?: UserLocationRoles[];
-}
-
-export class UserLocationRoles implements IUserLocationRoles {
-    locationId?: string;
-    personId?: string;
-    roleNames?: string[];
-
-    constructor(data?: IUserLocationRoles) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.locationId = _data["locationId"];
-            this.personId = _data["personId"];
-            if (Array.isArray(_data["roleNames"])) {
-                this.roleNames = [] as any;
-                for (let item of _data["roleNames"])
-                    this.roleNames!.push(item);
-            }
-        }
-    }
-
-    static fromJS(data: any): UserLocationRoles {
-        data = typeof data === 'object' ? data : {};
-        let result = new UserLocationRoles();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["locationId"] = this.locationId;
-        data["personId"] = this.personId;
-        if (Array.isArray(this.roleNames)) {
-            data["roleNames"] = [];
-            for (let item of this.roleNames)
-                data["roleNames"].push(item);
-        }
-        return data;
-    }
-}
-
-export interface IUserLocationRoles {
-    locationId?: string;
-    personId?: string;
-    roleNames?: string[];
 }
 
 export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
@@ -3286,6 +3321,7 @@ export interface IFamilyRecordsAggregate extends IRecordsAggregate {
 
 export class CombinedFamilyInfo implements ICombinedFamilyInfo {
     family?: Family;
+    users?: UserInfo[];
     partneringFamilyInfo?: PartneringFamilyInfo | undefined;
     volunteerFamilyInfo?: VolunteerFamilyInfo | undefined;
     notes?: Note[];
@@ -3305,6 +3341,11 @@ export class CombinedFamilyInfo implements ICombinedFamilyInfo {
     init(_data?: any) {
         if (_data) {
             this.family = _data["family"] ? Family.fromJS(_data["family"]) : <any>undefined;
+            if (Array.isArray(_data["users"])) {
+                this.users = [] as any;
+                for (let item of _data["users"])
+                    this.users!.push(UserInfo.fromJS(item));
+            }
             this.partneringFamilyInfo = _data["partneringFamilyInfo"] ? PartneringFamilyInfo.fromJS(_data["partneringFamilyInfo"]) : <any>undefined;
             this.volunteerFamilyInfo = _data["volunteerFamilyInfo"] ? VolunteerFamilyInfo.fromJS(_data["volunteerFamilyInfo"]) : <any>undefined;
             if (Array.isArray(_data["notes"])) {
@@ -3340,6 +3381,11 @@ export class CombinedFamilyInfo implements ICombinedFamilyInfo {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["family"] = this.family ? this.family.toJSON() : <any>undefined;
+        if (Array.isArray(this.users)) {
+            data["users"] = [];
+            for (let item of this.users)
+                data["users"].push(item.toJSON());
+        }
         data["partneringFamilyInfo"] = this.partneringFamilyInfo ? this.partneringFamilyInfo.toJSON() : <any>undefined;
         data["volunteerFamilyInfo"] = this.volunteerFamilyInfo ? this.volunteerFamilyInfo.toJSON() : <any>undefined;
         if (Array.isArray(this.notes)) {
@@ -3368,6 +3414,7 @@ export class CombinedFamilyInfo implements ICombinedFamilyInfo {
 
 export interface ICombinedFamilyInfo {
     family?: Family;
+    users?: UserInfo[];
     partneringFamilyInfo?: PartneringFamilyInfo | undefined;
     volunteerFamilyInfo?: VolunteerFamilyInfo | undefined;
     notes?: Note[];
@@ -3542,7 +3589,6 @@ export interface IValueTupleOfPersonAndFamilyAdultRelationshipInfo {
 
 export class Person implements IPerson {
     id?: string;
-    userId?: string | undefined;
     active?: boolean;
     firstName?: string;
     lastName?: string;
@@ -3570,7 +3616,6 @@ export class Person implements IPerson {
     init(_data?: any) {
         if (_data) {
             this.id = _data["id"];
-            this.userId = _data["userId"];
             this.active = _data["active"];
             this.firstName = _data["firstName"];
             this.lastName = _data["lastName"];
@@ -3610,7 +3655,6 @@ export class Person implements IPerson {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
-        data["userId"] = this.userId;
         data["active"] = this.active;
         data["firstName"] = this.firstName;
         data["lastName"] = this.lastName;
@@ -3643,7 +3687,6 @@ export class Person implements IPerson {
 
 export interface IPerson {
     id?: string;
-    userId?: string | undefined;
     active?: boolean;
     firstName?: string;
     lastName?: string;
@@ -4324,6 +4367,58 @@ export class ReferralRequirementCompleted extends Activity implements IReferralR
 export interface IReferralRequirementCompleted extends IActivity {
     requirementName?: string;
     completedAtUtc?: Date;
+}
+
+export class UserInfo implements IUserInfo {
+    userId?: string;
+    personId?: string;
+    locationRoles?: string[];
+
+    constructor(data?: IUserInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            this.personId = _data["personId"];
+            if (Array.isArray(_data["locationRoles"])) {
+                this.locationRoles = [] as any;
+                for (let item of _data["locationRoles"])
+                    this.locationRoles!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): UserInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["personId"] = this.personId;
+        if (Array.isArray(this.locationRoles)) {
+            data["locationRoles"] = [];
+            for (let item of this.locationRoles)
+                data["locationRoles"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IUserInfo {
+    userId?: string;
+    personId?: string;
+    locationRoles?: string[];
 }
 
 export class PartneringFamilyInfo implements IPartneringFamilyInfo {
@@ -9296,11 +9391,6 @@ export abstract class PersonCommand implements IPersonCommand {
             result.init(data);
             return result;
         }
-        if (data["discriminator"] === "UpdatePersonUserLink") {
-            let result = new UpdatePersonUserLink();
-            result.init(data);
-            return result;
-        }
         throw new Error("The abstract class 'PersonCommand' cannot be instantiated.");
     }
 
@@ -9431,7 +9521,6 @@ export interface IAddPersonPhoneNumber extends IPersonCommand {
 }
 
 export class CreatePerson extends PersonCommand implements ICreatePerson {
-    userId?: string | undefined;
     firstName?: string;
     lastName?: string;
     gender?: Gender | undefined;
@@ -9454,7 +9543,6 @@ export class CreatePerson extends PersonCommand implements ICreatePerson {
     init(_data?: any) {
         super.init(_data);
         if (_data) {
-            this.userId = _data["userId"];
             this.firstName = _data["firstName"];
             this.lastName = _data["lastName"];
             this.gender = _data["gender"];
@@ -9492,7 +9580,6 @@ export class CreatePerson extends PersonCommand implements ICreatePerson {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["userId"] = this.userId;
         data["firstName"] = this.firstName;
         data["lastName"] = this.lastName;
         data["gender"] = this.gender;
@@ -9524,7 +9611,6 @@ export class CreatePerson extends PersonCommand implements ICreatePerson {
 }
 
 export interface ICreatePerson extends IPersonCommand {
-    userId?: string | undefined;
     firstName?: string;
     lastName?: string;
     gender?: Gender | undefined;
@@ -9888,40 +9974,6 @@ export class UpdatePersonPhoneNumber extends PersonCommand implements IUpdatePer
 export interface IUpdatePersonPhoneNumber extends IPersonCommand {
     phoneNumber?: PhoneNumber;
     isPreferredPhoneNumber?: boolean;
-}
-
-export class UpdatePersonUserLink extends PersonCommand implements IUpdatePersonUserLink {
-    userId?: string | undefined;
-
-    constructor(data?: IUpdatePersonUserLink) {
-        super(data);
-        this._discriminator = "UpdatePersonUserLink";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.userId = _data["userId"];
-        }
-    }
-
-    static fromJS(data: any): UpdatePersonUserLink {
-        data = typeof data === 'object' ? data : {};
-        let result = new UpdatePersonUserLink();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["userId"] = this.userId;
-        super.toJSON(data);
-        return data;
-    }
-}
-
-export interface IUpdatePersonUserLink extends IPersonCommand {
-    userId?: string | undefined;
 }
 
 export class ReferralRecordsCommand extends AtomicRecordsCommand implements IReferralRecordsCommand {
@@ -10780,6 +10832,7 @@ export interface IUserOrganizationAccess {
 
 export class UserLocationAccess implements IUserLocationAccess {
     locationId?: string;
+    personId?: string;
     roles?: string[];
     globalContextPermissions?: Permission[];
     allVolunteerFamiliesContextPermissions?: Permission[];
@@ -10797,6 +10850,7 @@ export class UserLocationAccess implements IUserLocationAccess {
     init(_data?: any) {
         if (_data) {
             this.locationId = _data["locationId"];
+            this.personId = _data["personId"];
             if (Array.isArray(_data["roles"])) {
                 this.roles = [] as any;
                 for (let item of _data["roles"])
@@ -10830,6 +10884,7 @@ export class UserLocationAccess implements IUserLocationAccess {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["locationId"] = this.locationId;
+        data["personId"] = this.personId;
         if (Array.isArray(this.roles)) {
             data["roles"] = [];
             for (let item of this.roles)
@@ -10856,10 +10911,159 @@ export class UserLocationAccess implements IUserLocationAccess {
 
 export interface IUserLocationAccess {
     locationId?: string;
+    personId?: string;
     roles?: string[];
     globalContextPermissions?: Permission[];
     allVolunteerFamiliesContextPermissions?: Permission[];
     allPartneringFamiliesContextPermissions?: Permission[];
+}
+
+export class Account implements IAccount {
+    userId?: string;
+    organizations?: AccountOrganizationAccess[];
+
+    constructor(data?: IAccount) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            if (Array.isArray(_data["organizations"])) {
+                this.organizations = [] as any;
+                for (let item of _data["organizations"])
+                    this.organizations!.push(AccountOrganizationAccess.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): Account {
+        data = typeof data === 'object' ? data : {};
+        let result = new Account();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        if (Array.isArray(this.organizations)) {
+            data["organizations"] = [];
+            for (let item of this.organizations)
+                data["organizations"].push(item.toJSON());
+        }
+        return data;
+    }
+}
+
+export interface IAccount {
+    userId?: string;
+    organizations?: AccountOrganizationAccess[];
+}
+
+export class AccountOrganizationAccess implements IAccountOrganizationAccess {
+    organizationId?: string;
+    locations?: AccountLocationAccess[];
+
+    constructor(data?: IAccountOrganizationAccess) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.organizationId = _data["organizationId"];
+            if (Array.isArray(_data["locations"])) {
+                this.locations = [] as any;
+                for (let item of _data["locations"])
+                    this.locations!.push(AccountLocationAccess.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): AccountOrganizationAccess {
+        data = typeof data === 'object' ? data : {};
+        let result = new AccountOrganizationAccess();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["organizationId"] = this.organizationId;
+        if (Array.isArray(this.locations)) {
+            data["locations"] = [];
+            for (let item of this.locations)
+                data["locations"].push(item.toJSON());
+        }
+        return data;
+    }
+}
+
+export interface IAccountOrganizationAccess {
+    organizationId?: string;
+    locations?: AccountLocationAccess[];
+}
+
+export class AccountLocationAccess implements IAccountLocationAccess {
+    locationId?: string;
+    personId?: string;
+    roles?: string[];
+
+    constructor(data?: IAccountLocationAccess) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.locationId = _data["locationId"];
+            this.personId = _data["personId"];
+            if (Array.isArray(_data["roles"])) {
+                this.roles = [] as any;
+                for (let item of _data["roles"])
+                    this.roles!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): AccountLocationAccess {
+        data = typeof data === 'object' ? data : {};
+        let result = new AccountLocationAccess();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["locationId"] = this.locationId;
+        data["personId"] = this.personId;
+        if (Array.isArray(this.roles)) {
+            data["roles"] = [];
+            for (let item of this.roles)
+                data["roles"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IAccountLocationAccess {
+    locationId?: string;
+    personId?: string;
+    roles?: string[];
 }
 
 export abstract class IEdmModel implements IIEdmModel {

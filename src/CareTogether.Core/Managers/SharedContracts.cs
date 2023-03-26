@@ -12,10 +12,13 @@ using System.Collections.Immutable;
 namespace CareTogether.Managers
 {
     public sealed record CombinedFamilyInfo(Family Family,
+        ImmutableList<UserInfo> Users,
         PartneringFamilyInfo? PartneringFamilyInfo, VolunteerFamilyInfo? VolunteerFamilyInfo,
         ImmutableList<Note> Notes, ImmutableList<UploadedDocumentInfo> UploadedDocuments,
         ImmutableList<string> MissingCustomFields, //TODO: Include community memberships & community role assignments?
         ImmutableList<Permission> UserPermissions);
+
+    public sealed record UserInfo(Guid UserId, Guid PersonId, ImmutableList<string> LocationRoles);
 
     public sealed record PartneringFamilyInfo(
         Referral? OpenReferral,

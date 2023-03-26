@@ -1,8 +1,8 @@
 import { atom, selector, useRecoilCallback, useRecoilValue } from "recoil";
 import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, CompositeRecordsCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, RecordsClient, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, UpdatePersonGender, UpdatePersonAge, UpdatePersonEthnicity, UpdateAdultRelationshipToFamily, CustodialRelationshipType, UpdateCustodialRelationshipType, RemoveCustodialRelationship, ChangePrimaryFamilyContact, FamilyRecordsCommand, PersonRecordsCommand, NoteRecordsCommand, AtomicRecordsCommand, CustomField, UpdateCustomFamilyField, FamilyRecordsAggregate, RecordsAggregate, CommunityRecordsAggregate, CommunityCommand, CommunityRecordsCommand } from "../GeneratedClient";
 import { accessTokenFetchQuery, authenticatingFetch } from "../Authentication/AuthenticatedHttp";
-import { currentOrganizationState, currentLocationState, selectedLocationIdState } from "./SessionModel";
-import { currentOrganizationAndLocationIdsQuery, organizationConfigurationData, organizationConfigurationQuery } from "./ConfigurationModel";
+import { currentOrganizationState, currentLocationState } from "./SessionModel";
+import { currentOrganizationAndLocationIdsQuery, organizationConfigurationQuery } from "./ConfigurationModel";
 import { useLoadable } from "../Hooks/useLoadable";
 
 export const recordsClientQuery = selector({
@@ -77,17 +77,17 @@ export function usePersonAndFamilyLookup() {
 
 export function useUserLookup() {
   const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
-  const organizationConfig = useRecoilValue(organizationConfigurationData);
-  const selectedLocationId = useRecoilValue(selectedLocationIdState);
 
   return (userId?: string) => {
-    const staticUserAssignment = organizationConfig.users![userId!];
-    const staticPersonId = staticUserAssignment?.locationRoles?.find(loc =>
-      loc.locationId === selectedLocationId)?.personId;
-
-    const person = visibleFamilies.flatMap(family => family.family?.adults).find(adult =>
-      adult?.item1?.id === staticPersonId || adult?.item1?.userId === userId)?.item1;
-    return person;
+    const userFamily = visibleFamilies.filter(family => family.users?.find(user => user.userId === userId));
+    if (userFamily.length > 0) {
+      const userPersonInfo = userFamily[0].users?.find(user => user.userId === userId);
+      if (userPersonInfo) {
+        return userFamily[0].family?.adults?.find(adult => adult.item1?.id === userPersonInfo.personId)?.item1;
+      }
+    } else {
+      return undefined;
+    }
   }
 }
 

@@ -10,7 +10,7 @@ namespace CareTogether.Api.Controllers
     [ApiController]
     [Route("/api/{organizationId:guid}/{locationId:guid}/[controller]")]
     [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    public class FilesController : ControllerBase
+    public class FilesController : ControllerBase //TODO: Merge this into RecordsController
     {
         private readonly IRecordsManager recordsManager;
 

@@ -1,9 +1,11 @@
 using Azure.Storage.Blobs;
+using CareTogether.Api.Controllers;
 using CareTogether.Api.OData;
 using CareTogether.Engines.Authorization;
 using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Managers;
 using CareTogether.Managers.Communications;
+using CareTogether.Managers.Membership;
 using CareTogether.Managers.Records;
 using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Approvals;
@@ -78,6 +80,9 @@ namespace CareTogether.Api
                 return new CachingService(memoryCacheProvider);
             });
 
+            // Load shared application-specific configuration sections for use via dependency injection
+            services.Configure<MembershipOptions>(Configuration.GetSection(MembershipOptions.Membership));
+
             // Configure the shared blob storage clients to authenticate according to the environment -
             // one for mutable storage and one for immutable storage.
             // Note that this only has an effect when running in Azure; the local (Azurite) emulated storage is always mutable.
@@ -94,6 +99,7 @@ namespace CareTogether.Api
 
             // Data store services
             var defaultMemoryCacheOptions = Options.Create(new MemoryCacheOptions());
+            var personAccessEventLog = new AppendBlobEventLog<PersonAccessEvent>(immutableBlobServiceClient, "PersonAccessEventLog");
             var directoryEventLog = new AppendBlobEventLog<DirectoryEvent>(immutableBlobServiceClient, "DirectoryEventLog");
             var goalsEventLog = new AppendBlobEventLog<GoalCommandExecutedEvent>(immutableBlobServiceClient, "GoalsEventLog");
             var referralsEventLog = new AppendBlobEventLog<ReferralEvent>(immutableBlobServiceClient, "ReferralsEventLog");
@@ -130,6 +136,9 @@ namespace CareTogether.Api
                     organizationSecretsStore,
                     Configuration["TestData:SourceSmsPhoneNumber"]).Wait();
             }
+            
+            //NOTE: This currently lives after test data population in order to test the migration scenario.
+            var accountsEventLog = new AppendBlobEventLog<AccountEvent>(immutableBlobServiceClient, "AccountsEventLog");
 
             // Other utility services
             var telephony = new PlivoTelephony(
@@ -141,7 +150,8 @@ namespace CareTogether.Api
             var directoryResource = new DirectoryResource(directoryEventLog, uploadsStore);
             var goalsResource = new GoalsResource(goalsEventLog);
             var policiesResource = new PoliciesResource(configurationStore, policiesStore, organizationSecretsStore);
-            var accountsResource = new AccountsResource(userTenantAccessStore);
+            var accountsResource = new AccountsResource(userTenantAccessStore, accountsEventLog, personAccessEventLog,
+                immutableBlobServiceClient, configurationStore);
             var referralsResource = new ReferralsResource(referralsEventLog);
             var notesResource = new NotesResource(notesEventLog, draftNotesStore);
             var communitiesResource = new CommunitiesResource(communitiesEventLog, uploadsStore);
@@ -152,19 +162,21 @@ namespace CareTogether.Api
 
             // Engine services
             var authorizationEngine = new AuthorizationEngine(policiesResource, directoryResource,
-                referralsResource, approvalsResource, communitiesResource);
+                referralsResource, approvalsResource, communitiesResource, accountsResource);
             services.AddSingleton<IAuthorizationEngine>(authorizationEngine); //TODO: Temporary workaround for UsersController
             var policyEvaluationEngine = new PolicyEvaluationEngine(policiesResource);
 
             // Shared family info formatting logic used by all manager services
             var combinedFamilyInfoFormatter = new CombinedFamilyInfoFormatter(policyEvaluationEngine, authorizationEngine,
-                approvalsResource, referralsResource, directoryResource, notesResource, policiesResource);
+                approvalsResource, referralsResource, directoryResource, notesResource, policiesResource, accountsResource);
 
             // Manager services
             services.AddSingleton<ICommunicationsManager>(new CommunicationsManager(authorizationEngine, directoryResource,
                 policiesResource, telephony));
             services.AddSingleton<IRecordsManager>(new RecordsManager(authorizationEngine, directoryResource,
                 approvalsResource, referralsResource, notesResource, communitiesResource, combinedFamilyInfoFormatter));
+            services.AddSingleton<IMembershipManager>(new MembershipManager(accountsResource, authorizationEngine,
+                directoryResource, combinedFamilyInfoFormatter));
 
             services.AddAuthentication("Basic")
                 .AddBasic("Basic", options =>

@@ -33,19 +33,18 @@ namespace CareTogether.Core.Test
         {
             events = new MemoryEventLog<DirectoryEvent>();
             foreach (var (domainEvent, index) in EventSequence(
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid1, null, "John", "Doe", Gender.Male, new ExactAge(new DateTime(1980, 7, 1)), "Ethnic",
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid1, "John", "Doe", Gender.Male, new ExactAge(new DateTime(1980, 7, 1)), "Ethnic",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, "Test", "ABC")),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid2, guid3, "Jane", "Smith", Gender.Female, new AgeInYears(42, new DateTime(2021, 1, 1)), "Ethnic",
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid2, "Jane", "Smith", Gender.Female, new AgeInYears(42, new DateTime(2021, 1, 1)), "Ethnic",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, "DEF")),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonName(guid2, "Jane", "Doe")),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonAge(guid1, new ExactAge(new DateTime(1975, 1, 1)))),
                 new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonAge(guid2, new ExactAge(new DateTime(1979, 7, 1)))),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new UpdatePersonUserLink(guid1, guid4)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreateFamily(guid5, guid1,
                     ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty.Add((guid1, new FamilyAdultRelationshipInfo("Dad", true))),
                     ImmutableList<Guid>.Empty, ImmutableList<CustodialRelationship>.Empty)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddAdultToFamily(guid5, guid2, new FamilyAdultRelationshipInfo("Mom", true))),
-                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid6, null, "Eric", "Doe", Gender.Male, new AgeInYears(12, new DateTime(2021, 1, 1)), "Ethnic",
+                new PersonCommandExecuted(guid0, new DateTime(2021, 7, 1), new CreatePerson(guid6, "Eric", "Doe", Gender.Male, new AgeInYears(12, new DateTime(2021, 1, 1)), "Ethnic",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
                 new FamilyCommandExecuted(guid0, new DateTime(2021, 7, 1), new AddChildToFamily(guid5, guid6, ImmutableList<CustodialRelationship>.Empty
                     .Add(new CustodialRelationship(guid6, guid1, CustodialRelationshipType.ParentWithCustody))
@@ -76,20 +75,6 @@ namespace CareTogether.Core.Test
         }
 
         [TestMethod]
-        public async Task TestFindUser()
-        {
-            var dut = new DirectoryResource(events, Mock.Of<IFileStore>());
-
-            var user2 = await dut.FindUserAsync(guid1, guid2, guid3);
-            var user1 = await dut.FindUserAsync(guid1, guid2, guid4);
-            var nonexistentUser = await dut.FindUserAsync(guid1, guid2, guid7);
-
-            Assert.AreEqual(guid2, user2!.Id);
-            Assert.AreEqual(guid1, user1!.Id);
-            Assert.IsNull(nonexistentUser);
-        }
-
-        [TestMethod]
         public async Task TestListFamilies()
         {
             var dut = new DirectoryResource(events, Mock.Of<IFileStore>());
@@ -110,7 +95,7 @@ namespace CareTogether.Core.Test
             await Assert.ThrowsExceptionAsync<KeyNotFoundException>(() => dut.ExecutePersonCommandAsync(guid1, guid2, new UpdatePersonAge(guid5, new ExactAge(new DateTime(2021, 7, 2))), guid0));
             await Assert.ThrowsExceptionAsync<KeyNotFoundException>(() => dut.ExecutePersonCommandAsync(guid2, guid1, new UpdatePersonAge(guid6, new ExactAge(new DateTime(2021, 7, 3))), guid0));
 
-            Assert.AreEqual(new Person(guid6, null, true, "Eric", "Doe", Gender.Male, new ExactAge(new DateTime(2021, 7, 1)), "Ethnic",
+            Assert.AreEqual(new Person(guid6, true, "Eric", "Doe", Gender.Male, new ExactAge(new DateTime(2021, 7, 1)), "Ethnic",
                 ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null), result1);
         }
 

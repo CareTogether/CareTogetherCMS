@@ -1,73 +1,86 @@
-﻿using CareTogether.Engines.Authorization;
+﻿using CareTogether.Managers;
+using CareTogether.Managers.Membership;
 using CareTogether.Resources.Accounts;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Nito.AsyncEx;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace CareTogether.Api.Controllers
 {
-    public sealed record UserOrganizationAccess(Guid OrganizationId,
-        ImmutableList<UserLocationAccess> Locations);
-    public sealed record UserLocationAccess(Guid LocationId,
-        ImmutableList<string> Roles,
-        ImmutableList<Permission> GlobalContextPermissions,
-        ImmutableList<Permission> AllVolunteerFamiliesContextPermissions,
-        ImmutableList<Permission> AllPartneringFamiliesContextPermissions);
+    public sealed class MembershipOptions
+    {
+        public const string Membership = "Membership";
+
+        public string PersonInviteLinkFormat { get; set; } = String.Empty;
+    }
 
     [ApiController]
     [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class UsersController : ControllerBase
     {
-        private readonly IAccountsResource accountsResource;
-        private readonly IAuthorizationEngine authorizationEngine;
+        private readonly IMembershipManager membershipManager;
+        private readonly IOptions<MembershipOptions> membershipOptions;
 
 
-        public UsersController(IAccountsResource accountsResource,
-            IAuthorizationEngine authorizationEngine)
+        public UsersController(IMembershipManager membershipManager,
+            IOptions<MembershipOptions> membershipOptions)
         {
-            this.accountsResource = accountsResource;
-            this.authorizationEngine = authorizationEngine;
+            this.membershipManager = membershipManager;
+            this.membershipOptions = membershipOptions;
         }
 
 
         [HttpGet("/api/[controller]/me/tenantAccess")]
         public async Task<ActionResult<UserOrganizationAccess>> GetUserOrganizationAccess()
         {
-            //TODO: This should not happen here. This should perhaps be an AuthorizationEngine method,
-            //      and derive only from the underlying data sources instead of the values on the ClaimsPrincipal.
-            var tenantAccess = await accountsResource.GetUserTenantAccessSummaryAsync(User.UserId());
-            var organizationId = tenantAccess.OrganizationId;
-            var locationIds = tenantAccess.LocationIds;
+            var userAccess = await membershipManager.GetUserAccessAsync(User);
 
-            var userLocationsAccess = (await locationIds
-                .Select(async locationId =>
-                {
-                    var roles = User.LocationIdentity(organizationId, locationId)
-                        !.FindAll(ClaimsIdentity.DefaultRoleClaimType)
-                        .Select(c => c.Value).ToImmutableList();
+            //TODO: Support multiple organizations per user!
+            return Ok(userAccess.Organizations.First());
+        }
 
-                    var globalContextPermissions = await authorizationEngine.AuthorizeUserAccessAsync(
-                        organizationId, locationId, User, new GlobalAuthorizationContext());
-                    var allVolunteerFamiliesContextPermissions = await authorizationEngine.AuthorizeUserAccessAsync(
-                        organizationId, locationId, User, new AllVolunteerFamiliesAuthorizationContext());
-                    var allPartneringFamiliesContextPermissions = await authorizationEngine.AuthorizeUserAccessAsync(
-                        organizationId, locationId, User, new AllPartneringFamiliesAuthorizationContext());
+        [HttpPut("/api/[controller]/personRoles")]
+        public async Task<ActionResult<CombinedFamilyInfo>> ChangePersonRolesAsync(
+            [FromQuery] Guid organizationId, [FromQuery] Guid locationId, [FromQuery] Guid personId,
+            [FromBody] ImmutableList<string> roles)
+        {
+            var result = await membershipManager.ChangePersonRolesAsync(User,
+                organizationId, locationId, personId, roles);
+            
+            return Ok(result);
+        }
 
-                    return new UserLocationAccess(locationId, roles,
-                        globalContextPermissions,
-                        allVolunteerFamiliesContextPermissions,
-                        allPartneringFamiliesContextPermissions);
-                }).WhenAll()).ToImmutableList();
+        [HttpPost("/api/[controller]/personInviteLink")]
+        public async Task<ActionResult<Uri>> GeneratePersonInviteLink(
+            [FromQuery] Guid organizationId, [FromQuery] Guid locationId, [FromQuery] Guid personId)
+        {
+            var inviteNonce = await membershipManager.GenerateUserInviteNonceAsync(User,
+                organizationId, locationId, personId);
+            
+            var inviteNonceHexString = Convert.ToHexString(inviteNonce);
+            
+            var inviteLink = new Uri(
+                string.Format(membershipOptions.Value.PersonInviteLinkFormat,
+                    organizationId, locationId, inviteNonceHexString));
 
-            var userOrganizationAccess = new UserOrganizationAccess(tenantAccess.OrganizationId, userLocationsAccess);
+            return Ok(inviteLink);
+        }
 
-            return Ok(userOrganizationAccess);
+        [HttpPost("/api/[controller]/redeemPersonInviteLink")]
+        public async Task<ActionResult<Account>> RedeemPersonInviteLink(
+            [FromQuery] Guid organizationId, [FromQuery] Guid locationId, [FromQuery] string inviteNonce)
+        {
+            var nonceBytes = Convert.FromHexString(inviteNonce);
+
+            var redemptionResult = await membershipManager.TryRedeemUserInviteNonceAsync(User,
+                organizationId, locationId, nonceBytes);
+
+            return Ok(redemptionResult);
         }
     }
 }

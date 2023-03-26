@@ -9,6 +9,10 @@ namespace CareTogether.Resources.Policies
         ImmutableList<LocationConfiguration> Locations,
         ImmutableList<RoleDefinition> Roles,
         ImmutableList<string> CommunityRoles,
+        //TODO: Users is only being kept for compatibility until migrations are completed.
+        //      Once this is removed, some logic will need to change to reference AccountsResource info
+        //      (via disclosing user access on CombinedFamilyInfo).
+        [property: NJsonSchema.Annotations.JsonSchemaIgnore]
         ImmutableDictionary<Guid, UserAccessConfiguration> Users);
 
     public sealed record LocationConfiguration(Guid Id, string Name,
@@ -17,7 +21,7 @@ namespace CareTogether.Resources.Policies
 
     public sealed record SourcePhoneNumberConfiguration(string SourcePhoneNumber, string Description);
 
-    public sealed record RoleDefinition(string RoleName,
+    public sealed record RoleDefinition(string RoleName, bool? IsProtected,
         ImmutableList<ContextualPermissionSet> PermissionSets);
 
     public sealed record ContextualPermissionSet(PermissionContext Context, ImmutableList<Permission> Permissions);

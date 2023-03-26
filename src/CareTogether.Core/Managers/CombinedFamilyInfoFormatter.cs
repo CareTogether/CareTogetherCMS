@@ -1,6 +1,7 @@
 ﻿using CareTogether.Engines.Authorization;
 using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Resources;
+using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
@@ -24,11 +25,12 @@ namespace CareTogether.Managers
         private readonly IDirectoryResource directoryResource;
         private readonly INotesResource notesResource;
         private readonly IPoliciesResource policiesResource;
+        private readonly IAccountsResource accountsResource;
 
 
         public CombinedFamilyInfoFormatter(IPolicyEvaluationEngine policyEvaluationEngine, IAuthorizationEngine authorizationEngine,
             IApprovalsResource approvalsResource, IReferralsResource referralsResource, IDirectoryResource directoryResource,
-            INotesResource notesResource, IPoliciesResource policiesResource)
+            INotesResource notesResource, IPoliciesResource policiesResource, IAccountsResource accountsResource)
         {
             this.policyEvaluationEngine = policyEvaluationEngine;
             this.authorizationEngine = authorizationEngine;
@@ -37,6 +39,7 @@ namespace CareTogether.Managers
             this.directoryResource = directoryResource;
             this.notesResource = notesResource;
             this.policiesResource = policiesResource;
+            this.accountsResource = accountsResource;
         }
 
 
@@ -78,7 +81,17 @@ namespace CareTogether.Managers
                 .Where(udi => !family.DeletedDocuments.Contains(udi.UploadedDocumentId))
                 .ToImmutableList();
 
-            var renderedFamily = new CombinedFamilyInfo(family, partneringFamilyInfo, volunteerFamilyInfo, renderedNotes,
+            var users = (await Task.WhenAll(family.Adults.Select(async adult =>
+            {
+                var account = await accountsResource.TryGetPersonUserAccountAsync(organizationId, locationId, adult.Item1.Id);
+                return (account == null)
+                    ? null
+                    : new UserInfo(account.UserId, adult.Item1.Id, account.Organizations
+                        .Single(org => org.OrganizationId == organizationId).Locations
+                            .Single(l => l.LocationId == locationId).Roles);
+            }))).Where(user => user != null).Cast<UserInfo>().ToImmutableList();
+
+            var renderedFamily = new CombinedFamilyInfo(family, users, partneringFamilyInfo, volunteerFamilyInfo, renderedNotes,
                 allUploadedDocuments, missingCustomFamilyFields, ImmutableList<Permission>.Empty);
 
             var disclosedFamily = await authorizationEngine.DiscloseFamilyAsync(user, organizationId, locationId, renderedFamily);

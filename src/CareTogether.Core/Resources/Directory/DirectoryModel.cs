@@ -33,7 +33,7 @@ namespace CareTogether.Resources.Directory
                     UploadedDocuments, DeletedDocuments, CompletedCustomFields.Values.ToImmutableList(), History);
         }
 
-        internal record PersonEntry(Guid Id, Guid? UserId, bool Active, string FirstName, string LastName,
+        internal record PersonEntry(Guid Id, bool Active, string FirstName, string LastName,
             Gender? Gender, Age? Age, string? Ethnicity,
             ImmutableList<Address> Addresses, Guid? CurrentAddressId,
             ImmutableList<PhoneNumber> PhoneNumbers, Guid? PreferredPhoneNumberId,
@@ -41,7 +41,7 @@ namespace CareTogether.Resources.Directory
             string? Concerns, string? Notes)
         {
             internal Person ToPerson() =>
-                new(Id, UserId, Active, FirstName, LastName, Gender, Age, Ethnicity,
+                new(Id, Active, FirstName, LastName, Gender, Age, Ethnicity,
                     Addresses, CurrentAddressId,
                     PhoneNumbers, PreferredPhoneNumberId,
                     EmailAddresses, PreferredEmailAddressId,
@@ -168,7 +168,7 @@ namespace CareTogether.Resources.Directory
         {
             var personEntryToUpsert = command switch
             {
-                CreatePerson c => new PersonEntry(c.PersonId, c.UserId, Active: true, c.FirstName, c.LastName,
+                CreatePerson c => new PersonEntry(c.PersonId, Active: true, c.FirstName, c.LastName,
                     c.Gender, c.Age, c.Ethnicity,
                     c.Addresses, c.CurrentAddressId,
                     c.PhoneNumbers, c.PreferredPhoneNumberId,
@@ -182,7 +182,6 @@ namespace CareTogether.Resources.Directory
                         UpdatePersonGender c => personEntry with { Gender = c.Gender },
                         UpdatePersonAge c => personEntry with { Age = c.Age },
                         UpdatePersonEthnicity c => personEntry with { Ethnicity = c.Ethnicity },
-                        UpdatePersonUserLink c => personEntry with { UserId = c.UserId },
                         UpdatePersonConcerns c => personEntry with { Concerns = c.Concerns },
                         UpdatePersonNotes c => personEntry with { Notes = c.Notes },
                         AddPersonAddress c => personEntry with
