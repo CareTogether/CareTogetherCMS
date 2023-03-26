@@ -2,6 +2,7 @@ using System;
 using System.Collections.Immutable;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using CareTogether.Managers.Records;
 using CareTogether.Resources.Accounts;
 
 namespace CareTogether.Managers.Membership
@@ -20,7 +21,7 @@ namespace CareTogether.Managers.Membership
     {
         Task<UserAccess> GetUserAccessAsync(ClaimsPrincipal user);
         
-        Task<PersonAccessEntry> ChangePersonRolesAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId,
+        Task<FamilyRecordsAggregate> ChangePersonRolesAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId,
             Guid personId, ImmutableList<string> roles);
 
         Task<byte[]> GenerateUserInviteNonceAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId,
