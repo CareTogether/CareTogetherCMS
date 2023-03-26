@@ -22,6 +22,7 @@ namespace CareTogether.Resources.Accounts
         private readonly IObjectStore<UserTenantAccessSummary> configurationStore;
         private readonly ConcurrentLockingStore<(Guid organizationId, Guid locationId), PersonAccessModel> tenantModels;
         private readonly RandomNumberGenerator randomNumberGenerator;
+        private readonly Task migration;
 
 
         public AccountsResource(IObjectStore<UserTenantAccessSummary> configurationStore,
@@ -34,13 +35,19 @@ namespace CareTogether.Resources.Accounts
             this.blobServiceClient = blobServiceClient;
             this.organizationConfigurationStore = organizationConfigurationStore;
 
+            // This object is a singleton, so the migration will run exactly once at each application launch.
+            migration = Task.Run(MigrateConfigurationStoreToEventLogsAsync);
+
             globalScopeAccountsModel = new ConcurrentLockingStore<int, AccountsModel>(async key =>
             {
-                await MigrateConfigurationStoreToEventLogsAsync();
+                await migration;
                 return await AccountsModel.InitializeAsync(accountsEventLog.GetAllEventsAsync(Guid.Empty, Guid.Empty));
             });
-            tenantModels = new ConcurrentLockingStore<(Guid organizationId, Guid locationId), PersonAccessModel>(key =>
-                PersonAccessModel.InitializeAsync(personAccessEventLog.GetAllEventsAsync(key.organizationId, key.locationId)));
+            tenantModels = new ConcurrentLockingStore<(Guid organizationId, Guid locationId), PersonAccessModel>(async key =>
+            {
+                await migration;
+                return await PersonAccessModel.InitializeAsync(personAccessEventLog.GetAllEventsAsync(key.organizationId, key.locationId));
+            });
             randomNumberGenerator = RandomNumberGenerator.Create();
         }
 
@@ -209,25 +216,49 @@ namespace CareTogether.Resources.Accounts
             var synthesizedAccountEvents = new ConcurrentQueue<AccountEvent>();
             var synthesizedPersonAccessEvents = new ConcurrentQueue<(Guid organizationId, Guid locationId, PersonAccessEvent)>();
 
-            var organizationIds = blobServiceClient.GetBlobContainersAsync()
+            var organizationIds = await blobServiceClient.GetBlobContainersAsync()
                 .Select(container => Guid.TryParse(container.Name, out var orgId) ? orgId : Guid.Empty)
-                .Where(orgId => orgId != Guid.Empty);
+                .Where(orgId => orgId != Guid.Empty)
+                .ToListAsync();
 
             var organizationUserAccess = new ConcurrentDictionary<Guid, (Guid orgId, UserAccessConfiguration access)>();
+            var personRolesDefined = new ConcurrentBag<(Guid orgId, Guid locId, Guid personId)>();
             await Parallel.ForEachAsync(organizationIds, async (organizationId, _) =>
             {
                 var orgConfig = await organizationConfigurationStore.GetAsync(organizationId, Guid.Empty, "config");
                 foreach (var userAccess in orgConfig.Users)
                     organizationUserAccess.TryAdd(userAccess.Key, (organizationId, userAccess.Value));
+                
+                foreach (var location in orgConfig.Locations)
+                {
+                    var migratedPersonRoles = await personAccessEventLog.GetAllEventsAsync(organizationId, location.Id)
+                        .Where(e => e.DomainEvent.Command is ChangePersonRoles)
+                        .ToListAsync();
+                    foreach (var roleChange in migratedPersonRoles)
+                        personRolesDefined.Add(
+                            (orgId: organizationId, locId: location.Id, personId: roleChange.DomainEvent.Command.PersonId));
+                }
             });
 
             var migratedPersonAccountLinks = await accountsEventLog.GetAllEventsAsync(Guid.Empty, Guid.Empty)
                 .Where(e => e.DomainEvent.Command is LinkPersonToAcccount)
-                .ToDictionaryAsync(e => e.DomainEvent.Command.UserId);
+                .ToListAsync();
+            var migratedPersonAccountLinksGrouped = migratedPersonAccountLinks
+                .GroupBy(e => e.DomainEvent.Command.UserId)
+                .ToDictionary(g => g.Key);
 
-            var userIdsWithoutMigratedPersonAccountLinks = configurationStore.ListAsync(Guid.Empty, Guid.Empty)
+            //HACK: This is simplistic, making the assumption that all person account links will be written atomically,
+            //      but it's okay for a one-time migration.
+            var userIdsWithoutMigratedPersonAccountLinks = await configurationStore.ListAsync(Guid.Empty, Guid.Empty)
                 .Select(oldAccountId => Guid.Parse(oldAccountId))
-                .Where(oldAccountId => !migratedPersonAccountLinks.ContainsKey(oldAccountId));
+                .Where(oldAccountId => !migratedPersonAccountLinksGrouped.ContainsKey(oldAccountId))
+                .ToListAsync();
+            
+            var unmigratedPersonRoles = organizationUserAccess.Values
+                .SelectMany(oua => oua.access.LocationRoles
+                    .Where(lr => !personRolesDefined.Contains((oua.orgId, lr.LocationId, lr.PersonId)))
+                    .Select(lr => (orgId: oua.orgId, locId: lr.LocationId, personId: lr.PersonId, roles: lr.RoleNames)))
+                .ToImmutableList();
 
             await Parallel.ForEachAsync(userIdsWithoutMigratedPersonAccountLinks, async (oldAccountId, _) =>
             {
@@ -244,17 +275,17 @@ namespace CareTogether.Resources.Accounts
                         new LinkPersonToAcccount(oldAccountId, oldAccess.orgId, oldLocationAccess.LocationId,
                             oldLocationAccess.PersonId));
                     synthesizedAccountEvents.Enqueue(linkPersonToAccountEvent);
-
-                    //HACK: This is simplistic, but since the migration will be a one-time event
-                    //      we don't need to address the partial failure mode where account events
-                    //      are migrated but person access events are not.
-                    var changePersonRolesEvent = new PersonAccessEvent(
-                            migrationUserId, migrationTimestamp, new ChangePersonRoles(
-                                oldLocationAccess.LocationId, oldLocationAccess.RoleNames));
-                    synthesizedPersonAccessEvents.Enqueue(
-                        (oldLocationAccess.PersonId, oldAccess.orgId, changePersonRolesEvent));
                 }
             });
+
+            foreach (var unmigrated in unmigratedPersonRoles)
+            {
+                var changePersonRolesEvent = new PersonAccessEvent(
+                    migrationUserId, migrationTimestamp, new ChangePersonRoles(
+                        unmigrated.personId, unmigrated.roles));
+                synthesizedPersonAccessEvents.Enqueue(
+                    (organizationId: unmigrated.orgId, locationId: unmigrated.locId, changePersonRolesEvent));
+            }
 
             for (var i = 0; synthesizedAccountEvents.TryDequeue(out var domainEvent); i++)
                 await accountsEventLog.AppendEventAsync(Guid.Empty, Guid.Empty, domainEvent, i);
