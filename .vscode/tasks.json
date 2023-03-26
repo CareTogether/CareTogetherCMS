@@ -34,8 +34,8 @@
                 "owner": "npm",
                 "background": {
                     "activeOnStart": true,
-                        "beginsPattern": ".*",
-                        "endsPattern": "Finished.+"
+                    "beginsPattern": ".*",
+                    "endsPattern": "Finished.+"
                 },
                 "pattern": {
                     "regexp": "",
