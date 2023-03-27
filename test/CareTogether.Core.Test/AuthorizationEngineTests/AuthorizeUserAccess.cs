@@ -77,7 +77,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             var approvalsResource = new ApprovalsResource(approvalsEventLog);
             var communitiesResource = new CommunitiesResource(communitiesEventLog, Mock.Of<IFileStore>());
             var accountsResource = new AccountsResource(userTenantAccessStore, accountsEventLog, personAccessEventLog,
-                new Azure.Storage.Blobs.BlobServiceClient("UseDevelopmentStorage=true"), configurationStore);
+                new Azure.Storage.Blobs.BlobServiceClient("UseDevelopmentStorage=true"), configurationStore, Array.Empty<string>());
 
             dut = new AuthorizationEngine(policiesResource, directoryResource,
                 referralsResource, approvalsResource, communitiesResource, accountsResource);

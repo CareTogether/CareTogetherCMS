@@ -151,7 +151,8 @@ namespace CareTogether.Api
             var goalsResource = new GoalsResource(goalsEventLog);
             var policiesResource = new PoliciesResource(configurationStore, policiesStore, organizationSecretsStore);
             var accountsResource = new AccountsResource(userTenantAccessStore, accountsEventLog, personAccessEventLog,
-                immutableBlobServiceClient, configurationStore);
+                immutableBlobServiceClient, configurationStore,
+                Configuration.GetSection(MembershipOptions.Membership).Get<MembershipOptions>().TombstonedOrganizations);
             var referralsResource = new ReferralsResource(referralsEventLog);
             var notesResource = new NotesResource(notesEventLog, draftNotesStore);
             var communitiesResource = new CommunitiesResource(communitiesEventLog, uploadsStore);
