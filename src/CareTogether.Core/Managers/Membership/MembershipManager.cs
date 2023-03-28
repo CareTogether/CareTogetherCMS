@@ -2,6 +2,7 @@
 using CareTogether.Managers.Records;
 using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Directory;
+using CareTogether.Resources.Policies;
 using System;
 using System.Collections.Immutable;
 using System.Linq;
@@ -15,16 +16,18 @@ namespace CareTogether.Managers.Membership
         private readonly IAccountsResource accountsResource;
         private readonly IAuthorizationEngine authorizationEngine;
         private readonly IDirectoryResource directoryResource;
+        private readonly IPoliciesResource policiesResource;
         private readonly CombinedFamilyInfoFormatter combinedFamilyInfoFormatter;
 
 
         public MembershipManager(IAccountsResource accountsResource,
             IAuthorizationEngine authorizationEngine, IDirectoryResource directoryResource,
-            CombinedFamilyInfoFormatter combinedFamilyInfoFormatter)
+            IPoliciesResource policiesResource, CombinedFamilyInfoFormatter combinedFamilyInfoFormatter)
         {
             this.accountsResource = accountsResource;
             this.authorizationEngine = authorizationEngine;
             this.directoryResource = directoryResource;
+            this.policiesResource = policiesResource;
             this.combinedFamilyInfoFormatter = combinedFamilyInfoFormatter;
         }
 
@@ -99,6 +102,29 @@ namespace CareTogether.Managers.Membership
                 organizationId, locationId, personId, user.UserId());
             
             return result;
+        }
+
+        public async Task<UserInviteReviewInfo?> TryReviewUserInviteNonceAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId,
+            byte[] nonce)
+        {
+            var locationAccess = await accountsResource.TryLookupUserInviteNoncePersonIdAsync(
+                organizationId, locationId, nonce);
+            
+            if (locationAccess == null)
+                return null;
+            
+            var family = await directoryResource.FindPersonFamilyAsync(organizationId, locationId, locationAccess.PersonId);
+            if (family == null)
+                return null;
+
+            var person = family.Adults.Single(adult => adult.Item1.Id == locationAccess.PersonId).Item1;
+
+            var configuration = await policiesResource.GetConfigurationAsync(organizationId);
+
+            return new UserInviteReviewInfo(organizationId, configuration.OrganizationName,
+                locationId, configuration.Locations.Single(loc => loc.Id == locationId).Name,
+                locationAccess.PersonId, person.FirstName, person.LastName,
+                locationAccess.Roles);
         }
 
         public async Task<Account?> TryRedeemUserInviteNonceAsync(ClaimsPrincipal user,

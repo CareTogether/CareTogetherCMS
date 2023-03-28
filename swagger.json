@@ -778,12 +778,12 @@
         }
       }
     },
-    "/api/Users/redeemPersonInviteLink": {
-      "post": {
+    "/api/Users/personInvite": {
+      "get": {
         "tags": [
           "Users"
         ],
-        "operationId": "Users_RedeemPersonInviteLink",
+        "operationId": "Users_InitiatePersonInviteRedemptionSession",
         "parameters": [
           {
             "name": "organizationId",
@@ -811,6 +811,69 @@
               "nullable": true
             },
             "x-position": 3
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Users/reviewInvite": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "Users_ExaminePersonInviteRedemptionSession",
+        "parameters": [
+          {
+            "name": "redemptionSessionId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserInviteReviewInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Users/confirmInvite": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "Users_CompletePersonInviteRedemptionSession",
+        "parameters": [
+          {
+            "name": "redemptionSessionId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
           }
         ],
         "responses": {
@@ -6177,6 +6240,42 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Permission"
+            }
+          }
+        }
+      },
+      "UserInviteReviewInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "organizationId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "organizationName": {
+            "type": "string"
+          },
+          "locationId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "locationName": {
+            "type": "string"
+          },
+          "personId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
             }
           }
         }

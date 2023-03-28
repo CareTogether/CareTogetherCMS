@@ -177,7 +177,7 @@ namespace CareTogether.Api
             services.AddSingleton<IRecordsManager>(new RecordsManager(authorizationEngine, directoryResource,
                 approvalsResource, referralsResource, notesResource, communitiesResource, combinedFamilyInfoFormatter));
             services.AddSingleton<IMembershipManager>(new MembershipManager(accountsResource, authorizationEngine,
-                directoryResource, combinedFamilyInfoFormatter));
+                directoryResource, policiesResource, combinedFamilyInfoFormatter));
 
             services.AddAuthentication("Basic")
                 .AddBasic("Basic", options =>
