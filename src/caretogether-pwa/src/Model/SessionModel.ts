@@ -85,6 +85,25 @@ export const currentLocationState = selector({//TODO: Deprecated
   }
 });
 
+export const redemptionSessionIdState = atom<string | null>({
+  key: 'redemptionSessionIdState',
+  default: null
+});
+
+export const inviteReviewInfoQuery = selector({
+  key: 'inviteReviewInfoQuery',
+  get: async ({get}) => {
+    const usersClient = get(usersClientQuery);
+    const redemptionSessionId = get(redemptionSessionIdState);
+    
+    if (redemptionSessionId) {
+      const inviteReviewInfo = await usersClient.examinePersonInviteRedemptionSession(redemptionSessionId);
+      return inviteReviewInfo;
+    } else {
+      return null;
+    }
+}});
+
 function usePermissions(applicablePermissions?: Permission[]) {
   //TODO: If we want to expose a "not-yet-loaded" state, update this to return 'null' from
   //      the callback when 'applicablePermissions' is null (as opposed to undefined).
