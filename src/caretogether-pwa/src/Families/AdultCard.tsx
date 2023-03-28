@@ -25,7 +25,7 @@ import { IconRow } from "../IconRow";
 import { VolunteerRoleApprovalStatusChip } from "../Volunteers/VolunteerRoleApprovalStatusChip";
 import { RemoveIndividualRoleDialog } from "../Volunteers/RemoveIndividualRoleDialog";
 import { ResetIndividualRoleDialog } from "../Volunteers/ResetIndividualRoleDialog";
-import { useFamilyPermissions } from "../Model/SessionModel";
+import { currentLocationQuery, currentOrganizationIdQuery, useFamilyPermissions, usersClientQuery } from "../Model/SessionModel";
 import { MissingRequirementRow } from "../Requirements/MissingRequirementRow";
 import { ExemptedRequirementRow } from "../Requirements/ExemptedRequirementRow";
 import { CompletedRequirementRow } from "../Requirements/CompletedRequirementRow";
@@ -34,6 +34,9 @@ import { useDialogHandle } from "../Hooks/useDialogHandle";
 import { EditAdultDialog } from "./EditAdultDialog";
 import { useCollapsed } from "../Hooks/useCollapsed";
 import { useFamilyLookup } from "../Model/DirectoryModel";
+import { useBackdrop } from "../Hooks/useBackdrop";
+import { useRecoilValue } from "recoil";
+import { personNameString } from "./PersonName";
 
 type AdultCardProps = {
   familyId: string,
@@ -70,6 +73,18 @@ export function AdultCard({familyId, personId}: AdultCardProps) {
   function selectResetRole(adult: Person, role: string, removalReason: RoleRemovalReason, removalAdditionalComments: string) {
     setAdultMoreMenuAnchor(null);
     setResetRoleParameter({volunteerFamilyId: familyId, person: adult, role: role, removalReason: removalReason, removalAdditionalComments: removalAdditionalComments});
+  }
+
+  const withBackdrop = useBackdrop();
+  const usersClient = useRecoilValue(usersClientQuery);
+  const organizationId = useRecoilValue(currentOrganizationIdQuery);
+  const location = useRecoilValue(currentLocationQuery);
+  async function selectInvitePersonUser(adult: Person) {
+    await withBackdrop(async () => {
+      const inviteLink = await usersClient.generatePersonInviteLink(organizationId, location.locationId, adult.id);
+      await navigator.clipboard.writeText(inviteLink);
+      alert(`The invite link for ${personNameString(adult)} has been copied to your clipboard.`);
+    });
   }
 
   const participatingFamilyRoles =
@@ -205,6 +220,10 @@ export function AdultCard({familyId, personId}: AdultCardProps) {
             <ListItemText primary={`Reset ${removedRole.roleName} participation`} />
           </MenuItem>
         ))}
+        {permissions(Permission.InvitePersonUser) && !adultUser &&
+          <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectInvitePersonUser(adultMoreMenuAnchor.adult)}>
+            <ListItemText primary="Invite user" />
+          </MenuItem>}
       </Menu>
       {(removeRoleParameter && <RemoveIndividualRoleDialog volunteerFamilyId={familyId} person={removeRoleParameter.person} role={removeRoleParameter.role}
         onClose={() => setRemoveRoleParameter(null)} />) || null}
