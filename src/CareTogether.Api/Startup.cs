@@ -66,6 +66,8 @@ namespace CareTogether.Api
 
             services.AddHealthChecks();
 
+            services.AddMemoryCache();
+
             // Registers IAppCache for thread-safe caching of expensive calculations
             services.AddSingleton<IAppCache>(provider =>
             {
