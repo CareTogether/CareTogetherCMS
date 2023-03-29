@@ -4,6 +4,7 @@ using CareTogether.Resources.Accounts;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Immutable;
@@ -16,25 +17,31 @@ namespace CareTogether.Api.Controllers
     [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class UsersController : ControllerBase
     {
+        private sealed record PersonInviteRedemptionSession(string RedemptionSessionId,
+            Guid OrganizationId, Guid LocationId, string InviteNonce);
+
+        
         private readonly IMembershipManager membershipManager;
         private readonly IOptions<MembershipOptions> membershipOptions;
+        private readonly IMemoryCache redemptionSessionsCache;
 
 
         public UsersController(IMembershipManager membershipManager,
-            IOptions<MembershipOptions> membershipOptions)
+            IOptions<MembershipOptions> membershipOptions,
+            IMemoryCache redemptionSessionsCache)
         {
             this.membershipManager = membershipManager;
             this.membershipOptions = membershipOptions;
+            this.redemptionSessionsCache = redemptionSessionsCache;
         }
 
 
         [HttpGet("/api/[controller]/me/tenantAccess")]
-        public async Task<ActionResult<UserOrganizationAccess>> GetUserOrganizationAccess()
+        public async Task<ActionResult<UserAccess>> GetUserOrganizationAccess()
         {
             var userAccess = await membershipManager.GetUserAccessAsync(User);
 
-            //TODO: Support multiple organizations per user!
-            return Ok(userAccess.Organizations.First());
+            return Ok(userAccess);
         }
 
         [HttpPut("/api/[controller]/personRoles")]
@@ -64,16 +71,74 @@ namespace CareTogether.Api.Controllers
             return Ok(inviteLink);
         }
 
-        [HttpPost("/api/[controller]/redeemPersonInviteLink")]
-        public async Task<ActionResult<Account>> RedeemPersonInviteLink(
+        [AllowAnonymous]
+        [HttpGet("/api/[controller]/personInvite")]
+        public RedirectResult InitiatePersonInviteRedemptionSession(
             [FromQuery] Guid organizationId, [FromQuery] Guid locationId, [FromQuery] string inviteNonce)
         {
-            var nonceBytes = Convert.FromHexString(inviteNonce);
+            // The client can be assumed to be making this request using page-level navigation, i.e. clicking
+            // a link (e.g., in an email or text message) and not having the client UI loaded yet.
+            // This method converts the invite link into a redemption session (stored in the server cache with
+            // a short expiration) and redirects the client to a UI-based route with a copy of the session ID.
+            // The expectation is that the UI will then handle initiating user authentication (if the user is
+            // not already authenticated) to ensure the user has a valid user ID, followed by making a request to
+            // the CompletePersonInviteRedemptionSession method.
+            // Optionally, the UI may first make a request to the ExaminePersonInviteRedemptionSession method to
+            // look up the info of the person linked to the invite nonce, giving the client a chance to review
+            // the link for correctness before confirming it.
 
-            var redemptionResult = await membershipManager.TryRedeemUserInviteNonceAsync(User,
-                organizationId, locationId, nonceBytes);
+            //NOTE: Considering the maximum lifespan of these redemption sessions, the uniqueness guaranteed by
+            //      a GUID should be sufficient protection against an attacker guessing it.
+            var redemptionSessionId = Guid.NewGuid().ToString("N");
 
-            return Ok(redemptionResult);
+            var redemptionSession = new PersonInviteRedemptionSession(
+                redemptionSessionId, organizationId, locationId, inviteNonce);
+            
+            redemptionSessionsCache.Set(redemptionSessionId, redemptionSession, TimeSpan.FromMinutes(20));
+
+            var redirectUrl = string.Format(membershipOptions.Value.PersonInviteRedirectFormat,
+                redemptionSessionId);
+            
+            return Redirect(redirectUrl);
+        }
+
+        [HttpGet("/api/[controller]/reviewInvite")]
+        public async Task<ActionResult<UserInviteReviewInfo>> ExaminePersonInviteRedemptionSession(
+            [FromQuery] string redemptionSessionId)
+        {
+            // The client can be assumed to be making this request from JavaScript, meaning the results can
+            // be interpreted by client-side code rather than needing to trigger page-level navigation via redirects.
+
+            var redemptionSession = redemptionSessionsCache.Get<PersonInviteRedemptionSession>(redemptionSessionId);
+            if (redemptionSession == null)
+                return new BadRequestObjectResult("The specified person invite redemption session does not exist.");
+
+            var nonceBytes = Convert.FromHexString(redemptionSession.InviteNonce);
+
+            var inviteInfo = await membershipManager.TryReviewUserInviteNonceAsync(User,
+                redemptionSession.OrganizationId, redemptionSession.LocationId, nonceBytes);
+            
+            return Ok(inviteInfo);
+        }
+        
+
+        [HttpPost("/api/[controller]/confirmInvite")]
+        public async Task<ActionResult<Account>> CompletePersonInviteRedemptionSession(
+            [FromQuery] string redemptionSessionId)
+        {
+            // The client can be assumed to be making this request from JavaScript, meaning the results can
+            // be interpreted by client-side code rather than needing to trigger page-level navigation via redirects.
+
+            var redemptionSession = redemptionSessionsCache.Get<PersonInviteRedemptionSession>(redemptionSessionId);
+            if (redemptionSession == null)
+                return new BadRequestObjectResult("The specified person invite redemption session does not exist.");
+
+            var nonceBytes = Convert.FromHexString(redemptionSession.InviteNonce);
+
+            var accountAfterInviteRedemption = await membershipManager.TryRedeemUserInviteNonceAsync(User,
+                redemptionSession.OrganizationId, redemptionSession.LocationId, nonceBytes);
+            
+            return Ok(accountAfterInviteRedemption);
         }
     }
 }

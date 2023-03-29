@@ -595,7 +595,7 @@ export class UsersClient {
         this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
     }
 
-    getUserOrganizationAccess(): Promise<UserOrganizationAccess> {
+    getUserOrganizationAccess(): Promise<UserAccess> {
         let url_ = this.baseUrl + "/api/Users/me/tenantAccess";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -611,14 +611,14 @@ export class UsersClient {
         });
     }
 
-    protected processGetUserOrganizationAccess(response: Response): Promise<UserOrganizationAccess> {
+    protected processGetUserOrganizationAccess(response: Response): Promise<UserAccess> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = UserOrganizationAccess.fromJS(resultData200);
+            result200 = UserAccess.fromJS(resultData200);
             return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -626,7 +626,7 @@ export class UsersClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<UserOrganizationAccess>(null as any);
+        return Promise.resolve<UserAccess>(null as any);
     }
 
     changePersonRoles(organizationId: string | undefined, locationId: string | undefined, personId: string | undefined, roles: string[]): Promise<CombinedFamilyInfo> {
@@ -726,8 +726,8 @@ export class UsersClient {
         return Promise.resolve<string>(null as any);
     }
 
-    redeemPersonInviteLink(organizationId: string | undefined, locationId: string | undefined, inviteNonce: string | null | undefined): Promise<Account> {
-        let url_ = this.baseUrl + "/api/Users/redeemPersonInviteLink?";
+    initiatePersonInviteRedemptionSession(organizationId: string | undefined, locationId: string | undefined, inviteNonce: string | null | undefined): Promise<FileResponse> {
+        let url_ = this.baseUrl + "/api/Users/personInvite?";
         if (organizationId === null)
             throw new Error("The parameter 'organizationId' cannot be null.");
         else if (organizationId !== undefined)
@@ -741,6 +741,82 @@ export class UsersClient {
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/octet-stream"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processInitiatePersonInviteRedemptionSession(_response);
+        });
+    }
+
+    protected processInitiatePersonInviteRedemptionSession(response: Response): Promise<FileResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200 || status === 206) {
+            const contentDisposition = response.headers ? response.headers.get("content-disposition") : undefined;
+            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
+            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
+            if (fileName) {
+                fileName = decodeURIComponent(fileName);
+            } else {
+                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
+                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
+            }
+            return response.blob().then(blob => { return { fileName: fileName, data: blob, status: status, headers: _headers }; });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<FileResponse>(null as any);
+    }
+
+    examinePersonInviteRedemptionSession(redemptionSessionId: string | null | undefined): Promise<UserInviteReviewInfo> {
+        let url_ = this.baseUrl + "/api/Users/reviewInvite?";
+        if (redemptionSessionId !== undefined && redemptionSessionId !== null)
+            url_ += "redemptionSessionId=" + encodeURIComponent("" + redemptionSessionId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processExaminePersonInviteRedemptionSession(_response);
+        });
+    }
+
+    protected processExaminePersonInviteRedemptionSession(response: Response): Promise<UserInviteReviewInfo> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = UserInviteReviewInfo.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<UserInviteReviewInfo>(null as any);
+    }
+
+    completePersonInviteRedemptionSession(redemptionSessionId: string | null | undefined): Promise<Account> {
+        let url_ = this.baseUrl + "/api/Users/confirmInvite?";
+        if (redemptionSessionId !== undefined && redemptionSessionId !== null)
+            url_ += "redemptionSessionId=" + encodeURIComponent("" + redemptionSessionId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
             method: "POST",
             headers: {
                 "Accept": "application/json"
@@ -748,11 +824,11 @@ export class UsersClient {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processRedeemPersonInviteLink(_response);
+            return this.processCompletePersonInviteRedemptionSession(_response);
         });
     }
 
-    protected processRedeemPersonInviteLink(response: Response): Promise<Account> {
+    protected processCompletePersonInviteRedemptionSession(response: Response): Promise<Account> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -2908,8 +2984,7 @@ export enum VolunteerFamilyRequirementScope {
 }
 
 export class CurrentFeatureFlags implements ICurrentFeatureFlags {
-    viewReferrals?: boolean;
-    exemptAll?: boolean;
+    inviteUser?: boolean;
 
     constructor(data?: ICurrentFeatureFlags) {
         if (data) {
@@ -2922,8 +2997,7 @@ export class CurrentFeatureFlags implements ICurrentFeatureFlags {
 
     init(_data?: any) {
         if (_data) {
-            this.viewReferrals = _data["viewReferrals"];
-            this.exemptAll = _data["exemptAll"];
+            this.inviteUser = _data["inviteUser"];
         }
     }
 
@@ -2936,15 +3010,13 @@ export class CurrentFeatureFlags implements ICurrentFeatureFlags {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["viewReferrals"] = this.viewReferrals;
-        data["exemptAll"] = this.exemptAll;
+        data["inviteUser"] = this.inviteUser;
         return data;
     }
 }
 
 export interface ICurrentFeatureFlags {
-    viewReferrals?: boolean;
-    exemptAll?: boolean;
+    inviteUser?: boolean;
 }
 
 export class DocumentUploadInfo implements IDocumentUploadInfo {
@@ -10782,6 +10854,54 @@ export interface ICreateVolunteerFamilyWithNewAdultCommand extends ICompositeRec
     emailAddress?: EmailAddress | undefined;
 }
 
+export class UserAccess implements IUserAccess {
+    userId?: string;
+    organizations?: UserOrganizationAccess[];
+
+    constructor(data?: IUserAccess) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            if (Array.isArray(_data["organizations"])) {
+                this.organizations = [] as any;
+                for (let item of _data["organizations"])
+                    this.organizations!.push(UserOrganizationAccess.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): UserAccess {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserAccess();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        if (Array.isArray(this.organizations)) {
+            data["organizations"] = [];
+            for (let item of this.organizations)
+                data["organizations"].push(item.toJSON());
+        }
+        return data;
+    }
+}
+
+export interface IUserAccess {
+    userId?: string;
+    organizations?: UserOrganizationAccess[];
+}
+
 export class UserOrganizationAccess implements IUserOrganizationAccess {
     organizationId?: string;
     locations?: UserLocationAccess[];
@@ -10916,6 +11036,78 @@ export interface IUserLocationAccess {
     globalContextPermissions?: Permission[];
     allVolunteerFamiliesContextPermissions?: Permission[];
     allPartneringFamiliesContextPermissions?: Permission[];
+}
+
+export class UserInviteReviewInfo implements IUserInviteReviewInfo {
+    organizationId?: string;
+    organizationName?: string;
+    locationId?: string;
+    locationName?: string;
+    personId?: string;
+    firstName?: string;
+    lastName?: string;
+    roles?: string[];
+
+    constructor(data?: IUserInviteReviewInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.organizationId = _data["organizationId"];
+            this.organizationName = _data["organizationName"];
+            this.locationId = _data["locationId"];
+            this.locationName = _data["locationName"];
+            this.personId = _data["personId"];
+            this.firstName = _data["firstName"];
+            this.lastName = _data["lastName"];
+            if (Array.isArray(_data["roles"])) {
+                this.roles = [] as any;
+                for (let item of _data["roles"])
+                    this.roles!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): UserInviteReviewInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserInviteReviewInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["organizationId"] = this.organizationId;
+        data["organizationName"] = this.organizationName;
+        data["locationId"] = this.locationId;
+        data["locationName"] = this.locationName;
+        data["personId"] = this.personId;
+        data["firstName"] = this.firstName;
+        data["lastName"] = this.lastName;
+        if (Array.isArray(this.roles)) {
+            data["roles"] = [];
+            for (let item of this.roles)
+                data["roles"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IUserInviteReviewInfo {
+    organizationId?: string;
+    organizationName?: string;
+    locationId?: string;
+    locationName?: string;
+    personId?: string;
+    firstName?: string;
+    lastName?: string;
+    roles?: string[];
 }
 
 export class Account implements IAccount {
@@ -11832,6 +12024,13 @@ export class ODataFunctionImportInfo extends ODataServiceDocumentElement impleme
 }
 
 export interface IODataFunctionImportInfo extends IODataServiceDocumentElement {
+}
+
+export interface FileResponse {
+    data: Blob;
+    status: number;
+    fileName?: string;
+    headers?: { [name: string]: any };
 }
 
 export class ApiException extends Error {

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <TrustFrameworkPolicy 
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
   xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
@@ -10,7 +10,7 @@
   
   <BasePolicy>
     <TenantId>caretogetherb2cdev.onmicrosoft.com</TenantId>
-    <PolicyId>B2C_1A_TrustFrameworkBase</PolicyId>
+    <PolicyId>B2C_1A_TrustFrameworkLocalization</PolicyId>
   </BasePolicy>
  <BuildingBlocks>
 
@@ -23,7 +23,6 @@
       <TechnicalProfiles>
         <TechnicalProfile Id="Facebook-OAUTH">
           <Metadata>
-            <!--TODO: Replace this...-->
             <Item Key="client_id">facebook_clientid</Item>
             <Item Key="scope">email public_profile</Item>
             <Item Key="ClaimsEndpoint">https://graph.facebook.com/me?fields=id,first_name,last_name,name,email</Item>
@@ -31,6 +30,7 @@
         </TechnicalProfile>
       </TechnicalProfiles>
     </ClaimsProvider>
+
 
     <ClaimsProvider>
       <DisplayName>Local Account SignIn</DisplayName>
@@ -102,7 +102,7 @@
 
         <OrchestrationStep Order="1" Type="CombinedSignInAndSignUp" ContentDefinitionReferenceId="api.signuporsignin">
           <ClaimsProviderSelections>
-            <ClaimsProviderSelection TargetClaimsExchangeId="FacebookExchange" />
+            <!-- TODO: Add social identity providers here when ready -->
             <ClaimsProviderSelection ValidationClaimsExchangeId="LocalAccountSigninEmailExchange" />
             <ClaimsProviderSelection TargetClaimsExchangeId="StaffMultitenantAzureAdExchange" />
           </ClaimsProviderSelections>
@@ -120,7 +120,7 @@
             </Precondition>
           </Preconditions>
           <ClaimsExchanges>
-            <ClaimsExchange Id="FacebookExchange" TechnicalProfileReferenceId="Facebook-OAUTH" />
+            <!-- TODO: Add social login claim exchanges here when ready -->
             <ClaimsExchange Id="SignUpWithLogonEmailExchange" TechnicalProfileReferenceId="LocalAccountSignUpWithLogonEmail" />
             <ClaimsExchange Id="StaffMultitenantAzureAdExchange" TechnicalProfileReferenceId="AADCommon-OpenIdConnect" />
           </ClaimsExchanges>
@@ -184,7 +184,7 @@
           </ClaimsExchanges>
         </OrchestrationStep>
 
-        <!-- Phone verification: If MFA is not required, the next three steps (#5-#7) should be removed.
+        <!-- Phone verification: If MFA is not required, the next two steps (#7-#8) should be removed.
              This step checks whether there's a phone number on record,  for the user. If found, then the user is challenged to verify it. -->
         <!--<OrchestrationStep Order="7" Type="ClaimsExchange">
           <Preconditions>
@@ -212,6 +212,7 @@
             <ClaimsExchange Id="AADUserWriteWithObjectId" TechnicalProfileReferenceId="AAD-UserWritePhoneNumberUsingObjectId" />
           </ClaimsExchanges>
         </OrchestrationStep>-->
+
         <OrchestrationStep Order="7" Type="SendClaims" CpimIssuerTechnicalProfileReferenceId="JwtIssuer" />
 
       </OrchestrationSteps>

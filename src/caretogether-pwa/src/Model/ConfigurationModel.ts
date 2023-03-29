@@ -22,6 +22,8 @@ export const organizationConfigurationQuery = selector({
   key: 'organizationConfigurationQuery',
   get: async ({get}) => {
     const organizationId = get(currentOrganizationIdQuery);
+    if (organizationId == null)
+      return null;
     const configurationClient = get(configurationClientQuery);
     const edited = get(organizationConfigurationEdited);
     if (edited) {
@@ -43,7 +45,7 @@ export const organizationNameQuery = selector({
   key: 'organizationNameQuery',
   get: ({get}) => {
     const organizationConfiguration = get(organizationConfigurationQuery);
-    return organizationConfiguration.organizationName!;
+    return organizationConfiguration?.organizationName!;
   }
 })
 
@@ -52,7 +54,7 @@ export const locationConfigurationQuery = selector({
   get: ({get}) => {
     const organizationConfiguration = get(organizationConfigurationQuery);
     const selectedLocation = get(selectedLocationIdState);
-    return organizationConfiguration.locations!.find(x => x.id === selectedLocation)!;
+    return organizationConfiguration?.locations!.find(x => x.id === selectedLocation);
   }
 });
 
@@ -60,7 +62,7 @@ export const locationNameQuery = selector({
   key: 'locationNameQuery',
   get: ({get}) => {
     const locationConfiguration = get(locationConfigurationQuery);
-    return locationConfiguration.name!;
+    return locationConfiguration?.name;
   }
 })
 
@@ -68,7 +70,7 @@ export const ethnicitiesData = selector({//TODO: Rename to 'query'
   key: 'COMPATIBILITY__ethnicitiesData',
   get: ({get}) => {
     const locationConfiguration = get(locationConfigurationQuery);
-    return locationConfiguration.ethnicities!;
+    return locationConfiguration!.ethnicities!;
   }
 })
 
@@ -76,7 +78,7 @@ export const adultFamilyRelationshipsData = selector({//TODO: Rename to 'query'
   key: 'COMPATIBILITY__adultFamilyRelationshipsData',
   get: ({get}) => {
     const locationConfiguration = get(locationConfigurationQuery);
-    return locationConfiguration.adultFamilyRelationships!;
+    return locationConfiguration!.adultFamilyRelationships!;
   }
 })
 
@@ -171,12 +173,16 @@ export interface LocationContext {
   organizationId: string
   locationId: string
 }
-export const currentOrganizationAndLocationIdsQuery = selector<LocationContext>({
+export const currentOrganizationAndLocationIdsQuery = selector<LocationContext | null>({
   key: 'currentOrganizationAndLocationIdsQuery',
   get: ({get}) => {
     get(organizationConfigurationQuery); //TODO: Figure out why Recoil needs this.
     const organizationId = get(currentOrganizationIdQuery);
+    if (!organizationId)
+      return null;
     const locationId = get(selectedLocationIdState);
+    if (locationId == null)
+      return null;
     return { organizationId, locationId };
   }
 })
@@ -184,7 +190,10 @@ export const currentOrganizationAndLocationIdsQuery = selector<LocationContext>(
 export const featureFlagQuery = selector({
   key: 'featureFlagQuery',
   get: async ({get}) => {
-    const {organizationId, locationId} = get(currentOrganizationAndLocationIdsQuery);
+    const currentOrgAndLoc = get(currentOrganizationAndLocationIdsQuery);;
+    if (currentOrgAndLoc == null)
+      return null;
+    const {organizationId, locationId} = currentOrgAndLoc;
     const configurationClient = get(configurationClientQuery);
     const dataResponse = await configurationClient.getLocationFlags(organizationId, locationId);
     return dataResponse;

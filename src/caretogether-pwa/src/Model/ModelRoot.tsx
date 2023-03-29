@@ -49,15 +49,18 @@ export function ModelRoot({children}: ModelLoaderProps) {
     if (locationIdToSelect) {
       trace(`Setting selected location ID: ${locationIdToSelect}`);
       setSelectedLocationId(locationIdToSelect);
+    } else {
+      trace(`Initializing selected location ID to 'null'`);
+      setSelectedLocationId(null);
     }
   }, [availableLocations, selectedLocationId, setSelectedLocationId, trace]);
 
   // Initialize the aggregates atom that will be used to track aggregate state mutations.
-  //TODO: Trigger a refresh when changing locations.
+  // When changing locations, 'visibleAggregates' will be refreshed.
   useEffect(() => {
     trace(`setVisibleAggregatesData: ${visibleAggregates?.length}`)
     setVisibleAggregatesData(visibleAggregates || []);
-  }, [visibleAggregates, setVisibleAggregatesData, trace]);
+  }, [visibleAggregates, setVisibleAggregatesData, selectedLocationId, trace]);
 
   trace("render");
   return (

@@ -58,7 +58,7 @@ export function AddRoleAssignmentForm({ community, onClose }: AddRoleAssignmentF
     } as CandidatePerson));
 
   const organizationConfiguration = useRecoilValue(organizationConfigurationQuery);
-  const communityRoles = organizationConfiguration.communityRoles || [];
+  const communityRoles = organizationConfiguration?.communityRoles || [];
 
   const duplicate = !saving && (community.communityRoleAssignments?.find(cra =>
     cra.personId === person?.id && cra.communityRole === role) || null);

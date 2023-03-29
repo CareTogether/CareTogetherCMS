@@ -57,6 +57,9 @@ namespace CareTogether.Resources.Accounts
 
         Task<byte[]> GenerateUserInviteNonceAsync(Guid organizationId, Guid locationId, Guid personId, Guid userId);
 
+        Task<AccountLocationAccess?> TryLookupUserInviteNoncePersonIdAsync(Guid organizationId, Guid locationId,
+            byte[] nonce);
+
         Task<Account?> TryRedeemUserInviteNonceAsync(Guid organizationId, Guid locationId, Guid userId, byte[] nonce);
     }
 }

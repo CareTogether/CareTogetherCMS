@@ -16,6 +16,12 @@ namespace CareTogether.Managers.Membership
         ImmutableList<Permission> GlobalContextPermissions,
         ImmutableList<Permission> AllVolunteerFamiliesContextPermissions,
         ImmutableList<Permission> AllPartneringFamiliesContextPermissions);
+    
+    public sealed record UserInviteReviewInfo(
+        Guid OrganizationId, string OrganizationName,
+        Guid LocationId, string LocationName,
+        Guid PersonId, string FirstName, string LastName,
+        ImmutableList<string> Roles);
 
     public interface IMembershipManager
     {
@@ -26,6 +32,9 @@ namespace CareTogether.Managers.Membership
 
         Task<byte[]> GenerateUserInviteNonceAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId,
             Guid personId);
+        
+        Task<UserInviteReviewInfo?> TryReviewUserInviteNonceAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId,
+            byte[] nonce);
 
         Task<Account?> TryRedeemUserInviteNonceAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId,
             byte[] nonce);

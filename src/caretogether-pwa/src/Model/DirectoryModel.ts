@@ -17,7 +17,10 @@ export const visibleAggregatesInitializationQuery = selector({
   key: 'visibleAggregatesInitializationQuery',
   get: async ({get}) => {
     get(organizationConfigurationQuery);
-    const {organizationId, locationId} = get(currentOrganizationAndLocationIdsQuery);
+    const currentOrgAndLoc = get(currentOrganizationAndLocationIdsQuery);
+    if (currentOrgAndLoc == null)
+      return null;
+    const {organizationId, locationId} = currentOrgAndLoc;
     const recordsClient = get(recordsClientQuery);
     const visibleAggregates = await recordsClient.listVisibleAggregates(organizationId, locationId);
     return visibleAggregates;

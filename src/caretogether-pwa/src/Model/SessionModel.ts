@@ -30,7 +30,7 @@ export const currentOrganizationIdQuery = selector({
   key: 'currentOrganizationQuery',
   get: ({get}) => {
     const userOrganizationAccess = get(userOrganizationAccessQuery);
-    return userOrganizationAccess.organizationId!;
+    return userOrganizationAccess.organizations?.at(0)?.organizationId;
   }
 });
 
@@ -46,7 +46,7 @@ export const availableLocationsQuery = selector({
   key: 'availableLocationsQuery',
   get: ({get}) => {
     const userOrganizationAccess = get(userOrganizationAccessQuery);
-    return userOrganizationAccess?.locations ?? null; //TODO: Fix unnecessary nulls
+    return userOrganizationAccess.organizations?.at(0)?.locations ?? null; //TODO: Fix unnecessary nulls
   }
 });
 
@@ -58,7 +58,7 @@ export const availableLocationsState = selector({//TODO: Deprecated
   }
 });
 
-export const selectedLocationIdState = atom<string>({
+export const selectedLocationIdState = atom<string | null>({
   key: 'selectedLocationIdState',
   effects: [
     localStorageEffect('locationId'),
@@ -73,7 +73,7 @@ export const currentLocationQuery = selector({
   get: ({get}) => {
     const userOrganizationAccess = get(userOrganizationAccessQuery);
     const selectedLocationId = get(selectedLocationIdState);
-    return userOrganizationAccess.locations!.find(location => location.locationId === selectedLocationId)!;
+    return userOrganizationAccess.organizations?.at(0)?.locations!.find(location => location.locationId === selectedLocationId)!;
   }
 });
 
@@ -84,6 +84,25 @@ export const currentLocationState = selector({//TODO: Deprecated
     return value.locationId!;
   }
 });
+
+export const redemptionSessionIdState = atom<string | null>({
+  key: 'redemptionSessionIdState',
+  default: null
+});
+
+export const inviteReviewInfoQuery = selector({
+  key: 'inviteReviewInfoQuery',
+  get: async ({get}) => {
+    const usersClient = get(usersClientQuery);
+    const redemptionSessionId = get(redemptionSessionIdState);
+    
+    if (redemptionSessionId) {
+      const inviteReviewInfo = await usersClient.examinePersonInviteRedemptionSession(redemptionSessionId);
+      return inviteReviewInfo;
+    } else {
+      return null;
+    }
+}});
 
 function usePermissions(applicablePermissions?: Permission[]) {
   //TODO: If we want to expose a "not-yet-loaded" state, update this to return 'null' from

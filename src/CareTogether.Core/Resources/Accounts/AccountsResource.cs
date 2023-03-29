@@ -144,6 +144,24 @@ namespace CareTogether.Resources.Accounts
                 return nonce;
             }
         }
+        
+        public async Task<AccountLocationAccess?> TryLookupUserInviteNoncePersonIdAsync(
+            Guid organizationId, Guid locationId, byte[] nonce)
+        {
+            //WARNING: The read/write logic in this service needs to be designed carefully to avoid deadlocks.
+
+            using (var lockedTenantModel = await tenantModels.ReadLockItemAsync((organizationId, locationId)))
+            {
+                var matchingEntry = lockedTenantModel.Value
+                    .FindAccess(entry => entry.UserInviteNonce != null &&
+                        Enumerable.SequenceEqual(entry.UserInviteNonce, nonce))
+                    .SingleOrDefault();
+                
+                return matchingEntry == null
+                    ? null
+                    : new AccountLocationAccess(locationId, matchingEntry.PersonId, matchingEntry.Roles);
+            }
+        }
 
         public async Task<Account?> TryRedeemUserInviteNonceAsync(Guid organizationId, Guid locationId, Guid userId,
             byte[] nonce)

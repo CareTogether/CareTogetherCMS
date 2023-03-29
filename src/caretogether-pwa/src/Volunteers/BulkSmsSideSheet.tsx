@@ -5,7 +5,7 @@ import { authenticatingFetch } from "../Authentication/AuthenticatedHttp";
 import { CombinedFamilyInfo, CommunicationsClient, SendSmsToFamilyPrimaryContactsRequest, SmsResult, ValueTupleOfGuidAndSmsMessageResult } from "../GeneratedClient";
 import { organizationConfigurationData } from "../Model/ConfigurationModel";
 import { useFamilyLookup } from "../Model/DirectoryModel";
-import { currentOrganizationState, currentLocationState } from "../Model/SessionModel";
+import { currentOrganizationIdQuery, currentLocationState } from "../Model/SessionModel";
 import { useBackdrop } from "../Hooks/useBackdrop";
 import { FamilyName } from "../Families/FamilyName";
 
@@ -18,7 +18,7 @@ type BulkSmsSideSheetProps = {
 const phonePattern = /^\(?([0-9]{3})\)?[\u{00ad}\-.\s]?([0-9]{3})[\u{00ad}\-.\s]?([0-9]{4})/u;
 
 export function BulkSmsSideSheet({ selectedFamilies, onClose }: BulkSmsSideSheetProps) {
-  const organizationId = useRecoilValue(currentOrganizationState);
+  const organizationId = useRecoilValue(currentOrganizationIdQuery);
   const locationId = useRecoilValue(currentLocationState);
   const organizationConfiguration = useRecoilValue(organizationConfigurationData);
   
@@ -33,7 +33,7 @@ export function BulkSmsSideSheet({ selectedFamilies, onClose }: BulkSmsSideSheet
     };
   });
 
-  const smsSourcePhoneNumbers = organizationConfiguration.locations?.find(loc =>
+  const smsSourcePhoneNumbers = organizationConfiguration?.locations?.find(loc =>
     loc.id === locationId)?.smsSourcePhoneNumbers;
   
   const [selectedSourceNumber, setSelectedSourceNumber] = useState("");
@@ -47,7 +47,7 @@ export function BulkSmsSideSheet({ selectedFamilies, onClose }: BulkSmsSideSheet
       const familyIds = familiesSelectedForSms.map(family => family.family!.family!.id!);
   
       const client = new CommunicationsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const sendSmsResults = await client.sendSmsToFamilyPrimaryContacts(organizationId, locationId,
+      const sendSmsResults = await client.sendSmsToFamilyPrimaryContacts(organizationId!, locationId,
         new SendSmsToFamilyPrimaryContactsRequest({
           familyIds: familyIds,
           sourceNumber: selectedSourceNumber,
