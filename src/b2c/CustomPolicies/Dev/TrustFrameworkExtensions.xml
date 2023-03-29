@@ -53,7 +53,7 @@
       <DisplayName>Common AAD</DisplayName>
       <TechnicalProfiles>
         <TechnicalProfile Id="AADCommon-OpenIdConnect">
-          <DisplayName>Staff (Work Account)</DisplayName>
+          <DisplayName>Microsoft 365 Work Account (Staff)</DisplayName>
           <Description>Login with your Contoso account</Description>
           <Protocol Name="OpenIdConnect"/>
           <Metadata>
