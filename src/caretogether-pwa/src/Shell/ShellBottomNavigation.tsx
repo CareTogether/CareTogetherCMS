@@ -5,7 +5,6 @@ import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
 import Diversity3Icon from '@mui/icons-material/Diversity3';
 // import DashboardIcon from '@mui/icons-material/Dashboard';
 import MenuIcon from '@mui/icons-material/Menu';
-import { useFeatureFlags } from '../Model/ConfigurationModel';
 import { Link, useLocation } from 'react-router-dom';
 import { ShellContextSwitcher } from './ShellContextSwitcher';
 
@@ -13,8 +12,6 @@ export function ShellBottomNavigation() {
   const theme = useTheme();
   
   const location = useLocation();
-  
-  const featureFlags = useFeatureFlags();
 
   const links = [/*'/dashboard',*/ '/referrals', '/volunteers'];
   const selectedLink = links.findIndex(link => location.pathname.startsWith(link));
@@ -45,7 +42,7 @@ export function ShellBottomNavigation() {
       >
         <BottomNavigationAction icon={<MenuIcon />} onClick={() => setDrawerOpen(true)} />
         {/* <BottomNavigationAction component={Link} to='/dashboard' label="Dashboard" icon={<DashboardIcon />} /> */}
-        {featureFlags?.viewReferrals && <BottomNavigationAction component={Link} to='/referrals' label="Referrals" icon={<PermPhoneMsgIcon />} />}
+        {<BottomNavigationAction component={Link} to='/referrals' label="Referrals" icon={<PermPhoneMsgIcon />} />}
         <BottomNavigationAction component={Link} to='/volunteers' label="Volunteers" icon={<PeopleIcon />} />
         <BottomNavigationAction component={Link} to='/communities' label="Communities" icon={<Diversity3Icon />} />
       </BottomNavigation>

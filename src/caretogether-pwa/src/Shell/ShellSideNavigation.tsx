@@ -37,7 +37,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
             </Stack>
           </>
         : <>
-            {permissions(Permission.AccessPartneringFamiliesScreen) && flags?.viewReferrals &&
+            {permissions(Permission.AccessPartneringFamiliesScreen) &&
               <ListItemLink to="/referrals" primary="Referrals" icon={<PermPhoneMsgIcon sx={{color: '#fff8'}} />} />}
             {permissions(Permission.AccessVolunteersScreen) &&
               <ListItemLink to="/volunteers" primary="Volunteers" icon={<PeopleIcon sx={{color: '#fff8'}} />} />}

@@ -2984,8 +2984,7 @@ export enum VolunteerFamilyRequirementScope {
 }
 
 export class CurrentFeatureFlags implements ICurrentFeatureFlags {
-    viewReferrals?: boolean;
-    exemptAll?: boolean;
+    inviteUser?: boolean;
 
     constructor(data?: ICurrentFeatureFlags) {
         if (data) {
@@ -2998,8 +2997,7 @@ export class CurrentFeatureFlags implements ICurrentFeatureFlags {
 
     init(_data?: any) {
         if (_data) {
-            this.viewReferrals = _data["viewReferrals"];
-            this.exemptAll = _data["exemptAll"];
+            this.inviteUser = _data["inviteUser"];
         }
     }
 
@@ -3012,15 +3010,13 @@ export class CurrentFeatureFlags implements ICurrentFeatureFlags {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["viewReferrals"] = this.viewReferrals;
-        data["exemptAll"] = this.exemptAll;
+        data["inviteUser"] = this.inviteUser;
         return data;
     }
 }
 
 export interface ICurrentFeatureFlags {
-    viewReferrals?: boolean;
-    exemptAll?: boolean;
+    inviteUser?: boolean;
 }
 
 export class DocumentUploadInfo implements IDocumentUploadInfo {

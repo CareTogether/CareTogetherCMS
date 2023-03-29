@@ -37,6 +37,7 @@ import { useFamilyLookup } from "../Model/DirectoryModel";
 import { useBackdrop } from "../Hooks/useBackdrop";
 import { useRecoilValue } from "recoil";
 import { personNameString } from "./PersonName";
+import { useFeatureFlags } from "../Model/ConfigurationModel";
 
 type AdultCardProps = {
   familyId: string,
@@ -54,6 +55,8 @@ export function AdultCard({familyId, personId}: AdultCardProps) {
   const permissions = useFamilyPermissions(family);
 
   const editDialogHandle = useDialogHandle();
+
+  const featureFlags = useFeatureFlags();
 
   const requirementContext: IndividualVolunteerContext = {
     kind: "Individual Volunteer",
@@ -220,7 +223,7 @@ export function AdultCard({familyId, personId}: AdultCardProps) {
             <ListItemText primary={`Reset ${removedRole.roleName} participation`} />
           </MenuItem>
         ))}
-        {permissions(Permission.InvitePersonUser) && !adultUser &&
+        {featureFlags?.inviteUser && permissions(Permission.InvitePersonUser) && !adultUser &&
           <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectInvitePersonUser(adultMoreMenuAnchor.adult)}>
             <ListItemText primary="Invite user" />
           </MenuItem>}

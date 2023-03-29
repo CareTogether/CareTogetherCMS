@@ -1959,10 +1959,7 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "viewReferrals": {
-            "type": "boolean"
-          },
-          "exemptAll": {
+          "inviteUser": {
             "type": "boolean"
           }
         }

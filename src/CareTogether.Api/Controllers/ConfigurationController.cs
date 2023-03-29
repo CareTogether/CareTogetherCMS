@@ -1,5 +1,4 @@
 ﻿using CareTogether.Engines.Authorization;
-using CareTogether.Resources;
 using CareTogether.Resources.Policies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -10,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Api.Controllers
 {
-    public sealed record CurrentFeatureFlags(bool ViewReferrals, bool ExemptAll);
+    public sealed record CurrentFeatureFlags(bool InviteUser);
 
     [ApiController]
     [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -59,8 +58,7 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<CurrentFeatureFlags>> GetLocationFlags(Guid organizationId)
         {
             var result = new CurrentFeatureFlags(
-                ViewReferrals: await featureManager.IsEnabledAsync(nameof(FeatureFlags.ViewReferrals)),
-                ExemptAll: await featureManager.IsEnabledAsync(nameof(FeatureFlags.ExemptAll))
+                InviteUser: await featureManager.IsEnabledAsync(nameof(FeatureFlags.InviteUser))
                 );
             return Ok(result);
         }
