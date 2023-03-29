@@ -18,7 +18,7 @@
 
   <ClaimsProviders>
 
-    <ClaimsProvider>
+    <!-- <ClaimsProvider>
       <DisplayName>Facebook</DisplayName>
       <TechnicalProfiles>
         <TechnicalProfile Id="Facebook-OAUTH">
@@ -29,7 +29,7 @@
           </Metadata>
         </TechnicalProfile>
       </TechnicalProfiles>
-    </ClaimsProvider>
+    </ClaimsProvider> -->
 
 
     <ClaimsProvider>
