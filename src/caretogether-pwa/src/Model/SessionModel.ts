@@ -30,7 +30,7 @@ export const currentOrganizationIdQuery = selector({
   key: 'currentOrganizationQuery',
   get: ({get}) => {
     const userOrganizationAccess = get(userOrganizationAccessQuery);
-    return userOrganizationAccess.organizationId!;
+    return userOrganizationAccess.organizations?.at(0)?.organizationId;
   }
 });
 
@@ -46,7 +46,7 @@ export const availableLocationsQuery = selector({
   key: 'availableLocationsQuery',
   get: ({get}) => {
     const userOrganizationAccess = get(userOrganizationAccessQuery);
-    return userOrganizationAccess?.locations ?? null; //TODO: Fix unnecessary nulls
+    return userOrganizationAccess.organizations?.at(0)?.locations ?? null; //TODO: Fix unnecessary nulls
   }
 });
 
@@ -58,7 +58,7 @@ export const availableLocationsState = selector({//TODO: Deprecated
   }
 });
 
-export const selectedLocationIdState = atom<string>({
+export const selectedLocationIdState = atom<string | null>({
   key: 'selectedLocationIdState',
   effects: [
     localStorageEffect('locationId'),
@@ -73,7 +73,7 @@ export const currentLocationQuery = selector({
   get: ({get}) => {
     const userOrganizationAccess = get(userOrganizationAccessQuery);
     const selectedLocationId = get(selectedLocationIdState);
-    return userOrganizationAccess.locations!.find(location => location.locationId === selectedLocationId)!;
+    return userOrganizationAccess.organizations?.at(0)?.locations!.find(location => location.locationId === selectedLocationId)!;
   }
 });
 

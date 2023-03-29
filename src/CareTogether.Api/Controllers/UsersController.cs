@@ -37,12 +37,11 @@ namespace CareTogether.Api.Controllers
 
 
         [HttpGet("/api/[controller]/me/tenantAccess")]
-        public async Task<ActionResult<UserOrganizationAccess>> GetUserOrganizationAccess()
+        public async Task<ActionResult<UserAccess>> GetUserOrganizationAccess()
         {
             var userAccess = await membershipManager.GetUserAccessAsync(User);
 
-            //TODO: Support multiple organizations per user!
-            return Ok(userAccess.Organizations.First());
+            return Ok(userAccess);
         }
 
         [HttpPut("/api/[controller]/personRoles")]

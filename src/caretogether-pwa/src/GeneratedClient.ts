@@ -595,7 +595,7 @@ export class UsersClient {
         this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
     }
 
-    getUserOrganizationAccess(): Promise<UserOrganizationAccess> {
+    getUserOrganizationAccess(): Promise<UserAccess> {
         let url_ = this.baseUrl + "/api/Users/me/tenantAccess";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -611,14 +611,14 @@ export class UsersClient {
         });
     }
 
-    protected processGetUserOrganizationAccess(response: Response): Promise<UserOrganizationAccess> {
+    protected processGetUserOrganizationAccess(response: Response): Promise<UserAccess> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = UserOrganizationAccess.fromJS(resultData200);
+            result200 = UserAccess.fromJS(resultData200);
             return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -626,7 +626,7 @@ export class UsersClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<UserOrganizationAccess>(null as any);
+        return Promise.resolve<UserAccess>(null as any);
     }
 
     changePersonRoles(organizationId: string | undefined, locationId: string | undefined, personId: string | undefined, roles: string[]): Promise<CombinedFamilyInfo> {
@@ -10856,6 +10856,54 @@ export interface ICreateVolunteerFamilyWithNewAdultCommand extends ICompositeRec
     address?: Address | undefined;
     phoneNumber?: PhoneNumber | undefined;
     emailAddress?: EmailAddress | undefined;
+}
+
+export class UserAccess implements IUserAccess {
+    userId?: string;
+    organizations?: UserOrganizationAccess[];
+
+    constructor(data?: IUserAccess) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            if (Array.isArray(_data["organizations"])) {
+                this.organizations = [] as any;
+                for (let item of _data["organizations"])
+                    this.organizations!.push(UserOrganizationAccess.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): UserAccess {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserAccess();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        if (Array.isArray(this.organizations)) {
+            data["organizations"] = [];
+            for (let item of this.organizations)
+                data["organizations"].push(item.toJSON());
+        }
+        return data;
+    }
+}
+
+export interface IUserAccess {
+    userId?: string;
+    organizations?: UserOrganizationAccess[];
 }
 
 export class UserOrganizationAccess implements IUserOrganizationAccess {

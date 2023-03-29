@@ -43,7 +43,7 @@ function RoleSettings() {
   function save() {
     withBackdrop(async () => {
       const newConfig = await configurationClient!.putRoleDefinition(
-        organizationId, workingRole!.roleName!, workingRole!);
+        organizationId!, workingRole!.roleName!, workingRole!);
       storeEdits(newConfig);
       setDirty(false);
     });

@@ -656,7 +656,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserOrganizationAccess"
+                  "$ref": "#/components/schemas/UserAccess"
                 }
               }
             }
@@ -6189,6 +6189,22 @@
             }
           }
         ]
+      },
+      "UserAccess": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "organizations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserOrganizationAccess"
+            }
+          }
+        }
       },
       "UserOrganizationAccess": {
         "type": "object",

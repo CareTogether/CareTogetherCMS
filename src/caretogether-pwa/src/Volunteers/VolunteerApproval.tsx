@@ -230,7 +230,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 
   const locationId = useRecoilValue(currentLocationState);
   const organizationConfiguration = useRecoilValue(organizationConfigurationData);
-  const smsSourcePhoneNumbers = organizationConfiguration.locations?.find(loc =>
+  const smsSourcePhoneNumbers = organizationConfiguration?.locations?.find(loc =>
     loc.id === locationId)?.smsSourcePhoneNumbers;
   const [smsMode, setSmsMode] = useState(false);
   
