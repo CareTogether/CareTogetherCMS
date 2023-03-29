@@ -1,10 +1,10 @@
 import { Button } from '@mui/material';
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { useRecoilRefresher_UNSTABLE, useRecoilValue, useSetRecoilState } from 'recoil';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useLoadable } from '../Hooks/useLoadable';
-import { inviteReviewInfoQuery, redemptionSessionIdState, usersClientQuery } from '../Model/SessionModel';
+import { inviteReviewInfoQuery, redemptionSessionIdState, userOrganizationAccessQuery, usersClientQuery } from '../Model/SessionModel';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import useScreenTitle from '../Shell/ShellScreenTitle';
 
@@ -27,12 +27,15 @@ function RedeemPersonInvite() {
   const withBackdrop = useBackdrop();
   const usersClient = useRecoilValue(usersClientQuery);
   const navigate = useNavigate();
+
+  const refreshUserOrganizationAccess = useRecoilRefresher_UNSTABLE(userOrganizationAccessQuery);
   async function redeem() {
     await withBackdrop(async () => {
       const result = await usersClient.completePersonInviteRedemptionSession(
         redemptionSessionId);
       console.log("Invite redemption result:");
       console.log(result);
+      refreshUserOrganizationAccess();
       navigate('/');
     });
   }
