@@ -1,6 +1,6 @@
 import { Button } from '@mui/material';
 import { useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useLoadable } from '../Hooks/useLoadable';
@@ -26,12 +26,14 @@ function RedeemPersonInvite() {
   
   const withBackdrop = useBackdrop();
   const usersClient = useRecoilValue(usersClientQuery);
+  const navigate = useNavigate();
   async function redeem() {
     await withBackdrop(async () => {
       const result = await usersClient.completePersonInviteRedemptionSession(
         redemptionSessionId);
+      console.log("Invite redemption result:");
       console.log(result);
-      alert(`Invite link accepted!!`);
+      navigate('/');
     });
   }
 
@@ -71,7 +73,7 @@ function RedeemPersonInvite() {
         <p>
           <small>
             Redemption session ID:
-            <pre style={{display: 'inline'}}> {redemptionSessionId}</pre>
+            <span style={{fontFamily: 'monospace'}}> {redemptionSessionId}</span>
           </small>
         </p>
         <Button onClick={redeem} variant='contained'>
