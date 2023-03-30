@@ -11,7 +11,6 @@ namespace CareTogether.Resources.Policies
         private const string CONFIG = "config";
         private const string POLICY = "policy";
         private const string SECRETS = "secrets";
-        private const string ORGANIZATION_ADMINISTRATOR = "OrganizationAdministrator";
 
 
         private readonly IObjectStore<OrganizationConfiguration> configurationStore;
@@ -39,7 +38,7 @@ namespace CareTogether.Resources.Policies
         public async Task<OrganizationConfiguration> UpsertRoleDefinitionAsync(Guid organizationId,
             string roleName, RoleDefinition role)
         {
-            if (roleName == ORGANIZATION_ADMINISTRATOR)
+            if (roleName == SystemConstants.ORGANIZATION_ADMINISTRATOR)
                 throw new InvalidOperationException("The organization administrator role cannot be edited.");
 
             var config = await configurationStore.GetAsync(organizationId, Guid.Empty, CONFIG);
@@ -72,7 +71,7 @@ namespace CareTogether.Resources.Policies
                 // miss out on a newly defined permission that may not have been explicitly granted to
                 // them in their organization's role configuration.
                 Roles = config.Roles.Insert(0,
-                    new RoleDefinition(ORGANIZATION_ADMINISTRATOR, IsProtected: true, ImmutableList.Create(
+                    new RoleDefinition(SystemConstants.ORGANIZATION_ADMINISTRATOR, IsProtected: true, ImmutableList.Create(
                         new ContextualPermissionSet(new GlobalPermissionContext(),
                             Enum.GetValues<Permission>().ToImmutableList()))))
             };

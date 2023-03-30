@@ -629,7 +629,7 @@ export class UsersClient {
         return Promise.resolve<UserAccess>(null as any);
     }
 
-    changePersonRoles(organizationId: string | undefined, locationId: string | undefined, personId: string | undefined, roles: string[]): Promise<CombinedFamilyInfo> {
+    changePersonRoles(organizationId: string | undefined, locationId: string | undefined, personId: string | undefined, roles: string[]): Promise<FamilyRecordsAggregate> {
         let url_ = this.baseUrl + "/api/Users/personRoles?";
         if (organizationId === null)
             throw new Error("The parameter 'organizationId' cannot be null.");
@@ -661,14 +661,14 @@ export class UsersClient {
         });
     }
 
-    protected processChangePersonRoles(response: Response): Promise<CombinedFamilyInfo> {
+    protected processChangePersonRoles(response: Response): Promise<FamilyRecordsAggregate> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = CombinedFamilyInfo.fromJS(resultData200);
+            result200 = FamilyRecordsAggregate.fromJS(resultData200);
             return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -676,7 +676,7 @@ export class UsersClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<CombinedFamilyInfo>(null as any);
+        return Promise.resolve<FamilyRecordsAggregate>(null as any);
     }
 
     generatePersonInviteLink(organizationId: string | undefined, locationId: string | undefined, personId: string | undefined): Promise<string> {
@@ -4442,7 +4442,7 @@ export interface IReferralRequirementCompleted extends IActivity {
 }
 
 export class UserInfo implements IUserInfo {
-    userId?: string;
+    userId?: string | undefined;
     personId?: string;
     locationRoles?: string[];
 
@@ -4488,7 +4488,7 @@ export class UserInfo implements IUserInfo {
 }
 
 export interface IUserInfo {
-    userId?: string;
+    userId?: string | undefined;
     personId?: string;
     locationRoles?: string[];
 }

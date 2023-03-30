@@ -84,8 +84,12 @@ namespace CareTogether.Managers
             var users = (await Task.WhenAll(family.Adults.Select(async adult =>
             {
                 var account = await accountsResource.TryGetPersonUserAccountAsync(organizationId, locationId, adult.Item1.Id);
+                var personAccess = await accountsResource.TryGetPersonRolesAsync(organizationId, locationId, adult.Item1.Id);
+
                 return (account == null)
-                    ? null
+                    ? personAccess == null
+                        ? null
+                        : new UserInfo(null, adult.Item1.Id, personAccess ?? ImmutableList<string>.Empty)
                     : new UserInfo(account.UserId, adult.Item1.Id, account.Organizations
                         .Single(org => org.OrganizationId == organizationId).Locations
                             .Single(l => l.LocationId == locationId).Roles);

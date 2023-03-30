@@ -50,6 +50,8 @@ namespace CareTogether.Resources.Accounts
 
         Task<Account?> TryGetPersonUserAccountAsync(Guid organizationId, Guid locationId, Guid personId);
 
+        Task<ImmutableList<string>?> TryGetPersonRolesAsync(Guid organizationId, Guid locationId, Guid personId);
+
         Task<AccountEntry> ExecuteAccountCommandAsync(AccountCommand command, Guid userId);
 
         Task<PersonAccessEntry> ExecutePersonAccessCommandAsync(Guid organizationId, Guid locationId,

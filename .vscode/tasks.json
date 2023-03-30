@@ -62,9 +62,8 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/src/CareTogether.Api/CareTogether.Api.csproj",
+                "${workspaceFolder}/CareTogetherCMS.sln",
                 "/property:GenerateFullPaths=true",
-                "/property:SolutionDir=${workspaceFolder}/",
                 "/consoleloggerparameters:NoSummary"
             ],
             "problemMatcher": "$msCompile"
@@ -75,9 +74,8 @@
             "type": "process",
             "args": [
                 "restore",
-                "${workspaceFolder}/src/CareTogether.Api/CareTogether.Api.csproj",
+                "${workspaceFolder}/CareTogetherCMS.sln",
                 "/property:GenerateFullPaths=true",
-                "/property:SolutionDir=${workspaceFolder}/",
                 "/consoleloggerparameters:NoSummary"
             ],
             "problemMatcher": "$msCompile",

@@ -720,7 +720,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CombinedFamilyInfo"
+                  "$ref": "#/components/schemas/FamilyRecordsAggregate"
                 }
               }
             }
@@ -2707,7 +2707,8 @@
         "properties": {
           "userId": {
             "type": "string",
-            "format": "guid"
+            "format": "guid",
+            "nullable": true
           },
           "personId": {
             "type": "string",

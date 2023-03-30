@@ -12,8 +12,7 @@ import {
   AccordionSummary,
   AccordionDetails,
   Badge,
-  Grid
-} from "@mui/material";
+  Grid} from "@mui/material";
 import { useState } from "react";
 import { Gender, Person, RoleRemovalReason, Permission } from "../GeneratedClient";
 import { AgeText } from "../AgeText";
@@ -25,7 +24,7 @@ import { IconRow } from "../IconRow";
 import { VolunteerRoleApprovalStatusChip } from "../Volunteers/VolunteerRoleApprovalStatusChip";
 import { RemoveIndividualRoleDialog } from "../Volunteers/RemoveIndividualRoleDialog";
 import { ResetIndividualRoleDialog } from "../Volunteers/ResetIndividualRoleDialog";
-import { currentLocationQuery, currentOrganizationIdQuery, useFamilyPermissions, usersClientQuery } from "../Model/SessionModel";
+import { useFamilyPermissions } from "../Model/SessionModel";
 import { MissingRequirementRow } from "../Requirements/MissingRequirementRow";
 import { ExemptedRequirementRow } from "../Requirements/ExemptedRequirementRow";
 import { CompletedRequirementRow } from "../Requirements/CompletedRequirementRow";
@@ -34,10 +33,9 @@ import { useDialogHandle } from "../Hooks/useDialogHandle";
 import { EditAdultDialog } from "./EditAdultDialog";
 import { useCollapsed } from "../Hooks/useCollapsed";
 import { useFamilyLookup } from "../Model/DirectoryModel";
-import { useBackdrop } from "../Hooks/useBackdrop";
-import { useRecoilValue } from "recoil";
-import { personNameString } from "./PersonName";
 import { useFeatureFlags } from "../Model/ConfigurationModel";
+import { useDrawer } from "../Shell/ShellDrawer";
+import { ManageUserDrawer } from "./ManageUserDrawer";
 
 type AdultCardProps = {
   familyId: string,
@@ -78,17 +76,7 @@ export function AdultCard({familyId, personId}: AdultCardProps) {
     setResetRoleParameter({volunteerFamilyId: familyId, person: adult, role: role, removalReason: removalReason, removalAdditionalComments: removalAdditionalComments});
   }
 
-  const withBackdrop = useBackdrop();
-  const usersClient = useRecoilValue(usersClientQuery);
-  const organizationId = useRecoilValue(currentOrganizationIdQuery);
-  const location = useRecoilValue(currentLocationQuery);
-  async function selectInvitePersonUser(adult: Person) {
-    await withBackdrop(async () => {
-      const inviteLink = await usersClient.generatePersonInviteLink(organizationId, location.locationId, adult.id);
-      await navigator.clipboard.writeText(inviteLink);
-      alert(`The invite link for ${personNameString(adult)} has been copied to your clipboard.`);
-    });
-  }
+  const manageUserDrawer = useDrawer();
 
   const participatingFamilyRoles =
     Object.entries(family.volunteerFamilyInfo?.familyRoleApprovals || {}).filter(
@@ -112,10 +100,13 @@ export function AdultCard({familyId, personId}: AdultCardProps) {
               size="medium">
               <EditIcon color="primary" />
             </IconButton>}
-            {permissions(Permission.EditVolunteerRoleParticipation) &&
+            {((permissions(Permission.EditVolunteerRoleParticipation) &&
               (participatingFamilyRoles.length > 0 ||
                 participatingIndividualRoles.length > 0 ||
-                removedRoles.length > 0) && <IconButton
+                removedRoles.length > 0)) ||
+              permissions(Permission.InvitePersonUser) ||
+              permissions(Permission.EditPersonUserStandardRoles) ||
+              permissions(Permission.EditPersonUserProtectedRoles)) && <IconButton
               onClick={(event) => setAdultMoreMenuAnchor({anchor: event.currentTarget, adult: adult.item1 as Person})}
               size="large">
               <MoreVertIcon />
@@ -142,7 +133,7 @@ export function AdultCard({familyId, personId}: AdultCardProps) {
             <Chip key={removedRole.roleName} size="small" label={`${removedRole.roleName} - ${RoleRemovalReason[removedRole.reason!]} - ${removedRole.additionalComments}`} />)}
           {(adult.item2.relationshipToFamily && <Chip size="small" label={adult.item2.relationshipToFamily} />) || null}
           {adult.item2.isInHousehold && <Chip size="small" label="In Household" />}
-          {adultUser && <Chip size="small" label={`User: ${adultUser.locationRoles?.join(", ")}`} color="info" />}
+          {adultUser && <Chip size="small" label={`${adultUser.userId ? "User: " : "User NOT Activated: "}${adultUser.locationRoles?.join(", ")}`} color="info" />}
         </Typography>
         <Typography variant="body2" component="div">
           {adult.item1.concerns && <IconRow icon='⚠'><strong>{adult.item1.concerns}</strong></IconRow>}
@@ -223,9 +214,14 @@ export function AdultCard({familyId, personId}: AdultCardProps) {
             <ListItemText primary={`Reset ${removedRole.roleName} participation`} />
           </MenuItem>
         ))}
-        {featureFlags?.inviteUser && permissions(Permission.InvitePersonUser) && !adultUser &&
-          <MenuItem onClick={() => adultMoreMenuAnchor?.adult && selectInvitePersonUser(adultMoreMenuAnchor.adult)}>
-            <ListItemText primary="Invite user" />
+        {((featureFlags?.inviteUser && permissions(Permission.InvitePersonUser)) ||
+          permissions(Permission.EditPersonUserStandardRoles) ||
+          permissions(Permission.EditPersonUserProtectedRoles)) &&
+          <MenuItem onClick={() => {
+            adultMoreMenuAnchor?.adult && manageUserDrawer.openDrawer();
+            setAdultMoreMenuAnchor(null); //TODO: Is this why we had needed the null check on the previous line?
+          }}>
+            <ListItemText primary="Manage user..." />
           </MenuItem>}
       </Menu>
       {(removeRoleParameter && <RemoveIndividualRoleDialog volunteerFamilyId={familyId} person={removeRoleParameter.person} role={removeRoleParameter.role}
@@ -235,5 +231,9 @@ export function AdultCard({familyId, personId}: AdultCardProps) {
         onClose={() => setResetRoleParameter(null)} />) || null}
       {editDialogHandle.open && <EditAdultDialog handle={editDialogHandle} key={editDialogHandle.key}
         adult={adult} />}
+      {manageUserDrawer.drawerFor(
+        <ManageUserDrawer adult={adult.item1} user={adultUser}
+          onClose={manageUserDrawer.closeDrawer} />
+      )}
     </Card>}</>;
 }
