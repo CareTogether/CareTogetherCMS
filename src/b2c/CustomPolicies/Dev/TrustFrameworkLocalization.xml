@@ -82,7 +82,7 @@
         <LocalizedStrings>
           <LocalizedString ElementType="ClaimType" ElementId="signInName" StringId="DisplayName">Email Address</LocalizedString>
           <LocalizedString ElementType="UxElement" StringId="heading">Sign in</LocalizedString>
-          <LocalizedString ElementType="UxElement" StringId="social_intro">Sign in with your social account</LocalizedString>
+          <LocalizedString ElementType="UxElement" StringId="social_intro">Sign in with a social or work account</LocalizedString>
           <LocalizedString ElementType="UxElement" StringId="local_intro_generic">Sign in with your {0}</LocalizedString>
           <LocalizedString ElementType="ClaimType" ElementId="password" StringId="DisplayName">Password</LocalizedString>
           <LocalizedString ElementType="UxElement" StringId="requiredField_password">Please enter your password</LocalizedString>
