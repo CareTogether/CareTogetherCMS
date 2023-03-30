@@ -100,10 +100,13 @@ export function AdultCard({familyId, personId}: AdultCardProps) {
               size="medium">
               <EditIcon color="primary" />
             </IconButton>}
-            {permissions(Permission.EditVolunteerRoleParticipation) &&
+            {((permissions(Permission.EditVolunteerRoleParticipation) &&
               (participatingFamilyRoles.length > 0 ||
                 participatingIndividualRoles.length > 0 ||
-                removedRoles.length > 0) && <IconButton
+                removedRoles.length > 0)) ||
+              permissions(Permission.InvitePersonUser) ||
+              permissions(Permission.EditPersonUserStandardRoles) ||
+              permissions(Permission.EditPersonUserProtectedRoles)) && <IconButton
               onClick={(event) => setAdultMoreMenuAnchor({anchor: event.currentTarget, adult: adult.item1 as Person})}
               size="large">
               <MoreVertIcon />

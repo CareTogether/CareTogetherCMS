@@ -168,7 +168,7 @@ export function ManageUserDrawer({ onClose, familyId, adult, user }: ManageUserD
           Close
         </Button>
         <Button color='primary' variant='contained'
-          disabled={unsavedChanges}
+          disabled={!unsavedChanges}
           onClick={save}>
           Save
         </Button>
