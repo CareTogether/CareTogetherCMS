@@ -720,7 +720,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CombinedFamilyInfo"
+                  "$ref": "#/components/schemas/FamilyRecordsAggregate"
                 }
               }
             }

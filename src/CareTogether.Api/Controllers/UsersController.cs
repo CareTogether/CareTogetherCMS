@@ -1,5 +1,6 @@
 ﻿using CareTogether.Managers;
 using CareTogether.Managers.Membership;
+using CareTogether.Managers.Records;
 using CareTogether.Resources.Accounts;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -45,7 +46,7 @@ namespace CareTogether.Api.Controllers
         }
 
         [HttpPut("/api/[controller]/personRoles")]
-        public async Task<ActionResult<CombinedFamilyInfo>> ChangePersonRolesAsync(
+        public async Task<ActionResult<FamilyRecordsAggregate>> ChangePersonRolesAsync(
             [FromQuery] Guid organizationId, [FromQuery] Guid locationId, [FromQuery] Guid personId,
             [FromBody] ImmutableList<string> roles)
         {
