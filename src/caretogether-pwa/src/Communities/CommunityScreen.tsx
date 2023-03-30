@@ -16,6 +16,7 @@ import { AddMemberFamiliesForm } from './AddMemberFamiliesForm';
 import { AddRoleAssignmentForm } from './AddRoleAssignmentForm';
 import { CommunityMemberFamilies } from './CommunityMemberFamilies';
 import { CommunityRoleAssignments } from './CommunityRoleAssignments';
+import { useDrawer } from '../Shell/ShellDrawer';
 
 export function CommunityScreen() {
   const communityIdMaybe = useParams<{ communityId: string; }>();
@@ -36,7 +37,7 @@ export function CommunityScreen() {
   // const policy = useRecoilValue(policyData);
   const permissions = useCommunityPermissions(communityInfo);
 
-  const [editDrawerOpen, setEditDrawerOpen] = useState(false);
+  const editDrawer = useDrawer();
   const [uploadDrawerOpen, setUploadDrawerOpen] = useState(false);
   const [addMemberFamilyDrawerOpen, setAddMemberFamilyDrawerOpen] = useState(false);
   const [addRoleAssignmentDrawerOpen, setAddRoleAssignmentDrawerOpen] = useState(false);
@@ -49,7 +50,7 @@ export function CommunityScreen() {
     : <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>
         <Toolbar disableGutters variant={isDesktop ? 'dense' : 'regular'}>
           {permissions(Permission.EditCommunity) && <Button
-            onClick={() => setEditDrawerOpen(true)}
+            onClick={editDrawer.openDrawer}
             variant='contained'
             size={isDesktop ? 'small' : 'medium'}
             sx={{margin: 1}}
@@ -70,7 +71,7 @@ export function CommunityScreen() {
             <Typography variant='h5'>
               Description
               {permissions(Permission.EditCommunity) && <Button
-                onClick={() => setEditDrawerOpen(true)}
+                onClick={editDrawer.openDrawer}
                 variant='text'
                 size={isDesktop ? 'small' : 'medium'}
                 sx={{marginLeft: 2}}
@@ -127,14 +128,9 @@ export function CommunityScreen() {
             <CommunityRoleAssignments communityInfo={communityInfo} />
           </Grid>
         </Grid>
-        {permissions(Permission.EditCommunity) &&
-          <Drawer
-            anchor='right'
-            open={editDrawerOpen}
-            onClose={() => setEditDrawerOpen(false)}
-            sx={{ '.MuiDrawer-paper': { padding: 2, paddingTop: { xs: 7, sm: 8, md: 6 }}}}>
-            <AddEditCommunity community={community} onClose={() => setEditDrawerOpen(false)} />
-          </Drawer>}
+        {permissions(Permission.EditCommunity) && editDrawer.drawerFor(
+          <AddEditCommunity community={community} onClose={editDrawer.closeDrawer} />
+        )}
         {permissions(Permission.UploadCommunityDocuments) &&
           <Drawer
             anchor='right'
