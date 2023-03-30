@@ -41,7 +41,7 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<OrganizationConfiguration>> PutRoleDefinition(Guid organizationId,
             string roleName, [FromBody] RoleDefinition role)
         {
-            if (!User.IsInRole("OrganizationAdministrator"))
+            if (!User.IsInRole(SystemConstants.ORGANIZATION_ADMINISTRATOR))
                 return Forbid();
             var result = await policiesResource.UpsertRoleDefinitionAsync(organizationId, roleName, role);
             return Ok(result);

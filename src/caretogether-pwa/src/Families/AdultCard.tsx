@@ -133,7 +133,7 @@ export function AdultCard({familyId, personId}: AdultCardProps) {
             <Chip key={removedRole.roleName} size="small" label={`${removedRole.roleName} - ${RoleRemovalReason[removedRole.reason!]} - ${removedRole.additionalComments}`} />)}
           {(adult.item2.relationshipToFamily && <Chip size="small" label={adult.item2.relationshipToFamily} />) || null}
           {adult.item2.isInHousehold && <Chip size="small" label="In Household" />}
-          {adultUser && <Chip size="small" label={`${adultUser.userId ? "User: " : ""}${adultUser.locationRoles?.join(", ")}`} color={adultUser.userId ? "info" : "default"} />}
+          {adultUser && <Chip size="small" label={`${adultUser.userId ? "User: " : "User NOT Activated: "}${adultUser.locationRoles?.join(", ")}`} color="info" />}
         </Typography>
         <Typography variant="body2" component="div">
           {adult.item1.concerns && <IconRow icon='⚠'><strong>{adult.item1.concerns}</strong></IconRow>}

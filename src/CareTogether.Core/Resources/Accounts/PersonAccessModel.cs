@@ -1,4 +1,5 @@
-﻿using JsonPolymorph;
+﻿using CareTogether.Resources.Policies;
+using JsonPolymorph;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -44,10 +45,17 @@ namespace CareTogether.Resources.Accounts
 
             entry = command switch
             {
-                ChangePersonRoles c => entry with
-                {
-                    Roles = c.Roles
-                },
+                ChangePersonRoles c =>
+                    // Ensure that each location has at least one OrganizationAdministrator at all times.
+                    (c.Roles.Contains(SystemConstants.ORGANIZATION_ADMINISTRATOR) ||
+                        entries.Any(entry => entry.Key != command.PersonId && entry.Value.Roles
+                            .Any(role => role == SystemConstants.ORGANIZATION_ADMINISTRATOR)))
+                    ? entry with
+                    {
+                        Roles = c.Roles
+                    }
+                    : throw new InvalidOperationException(
+                        "Each location must have at least one OrganizationAdministrator at all times."),
                 GenerateUserInviteNonce c => entry with
                 {
                     UserInviteNonce = c.Nonce,
