@@ -8,6 +8,7 @@ import { useBackdrop } from '../Hooks/useBackdrop';
 import { useRecoilValue } from 'recoil';
 import { familyNameString } from '../Families/FamilyName';
 import { useNavigate } from 'react-router-dom';
+import { familyLastName } from '../Families/FamilyUtils';
 
 interface CommunityMemberFamiliesProps {
   communityInfo: CommunityInfo;
@@ -19,7 +20,12 @@ export function CommunityMemberFamilies({ communityInfo }: CommunityMemberFamili
   const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
 
   const memberFamilies = (community?.memberFamilies || []).map(familyId =>
-    visibleFamilies.find(family => family.family?.id === familyId)).filter(family => family) as CombinedFamilyInfo[];
+    visibleFamilies.find(family => family.family?.id === familyId)).filter(family =>
+    family).sort((a, b) => {
+      const aName = familyLastName(a!);
+      const bName = familyLastName(b!);
+      return aName?.localeCompare(bName, undefined, { sensitivity: 'base' });
+    }) as CombinedFamilyInfo[];
   
   const removeMemberFamily = useCommunityCommand((communityId, familyId: string) => {
     const command = new RemoveCommunityMemberFamily();
