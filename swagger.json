@@ -2707,7 +2707,8 @@
         "properties": {
           "userId": {
             "type": "string",
-            "format": "guid"
+            "format": "guid",
+            "nullable": true
           },
           "personId": {
             "type": "string",

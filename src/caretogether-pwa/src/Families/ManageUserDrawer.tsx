@@ -25,12 +25,11 @@ import { visibleAggregatesData } from "../Model/DirectoryModel";
 
 interface ManageUserDrawerProps {
   onClose: () => void;
-  familyId: string;
   adult: Person;
   user?: UserInfo;
 }
 
-export function ManageUserDrawer({ onClose, familyId, adult, user }: ManageUserDrawerProps) {
+export function ManageUserDrawer({ onClose, adult, user }: ManageUserDrawerProps) {
   const usersClient = useRecoilValue(usersClientQuery);
 
   const organizationId = useRecoilValue(currentOrganizationIdQuery);
@@ -108,7 +107,7 @@ export function ManageUserDrawer({ onClose, familyId, adult, user }: ManageUserD
         <h3>Manage User: {personNameString(adult)}</h3>
       </Grid>
       <Grid item xs={12}>
-        { user
+        { user?.userId
           ? <p style={{color: theme.palette.info.main}}>
               <Icon color='info' sx={{verticalAlign: 'sub', marginRight: 1}}>
                 <AccountCircle />

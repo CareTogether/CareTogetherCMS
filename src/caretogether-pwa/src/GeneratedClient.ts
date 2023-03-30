@@ -4442,7 +4442,7 @@ export interface IReferralRequirementCompleted extends IActivity {
 }
 
 export class UserInfo implements IUserInfo {
-    userId?: string;
+    userId?: string | undefined;
     personId?: string;
     locationRoles?: string[];
 
@@ -4488,7 +4488,7 @@ export class UserInfo implements IUserInfo {
 }
 
 export interface IUserInfo {
-    userId?: string;
+    userId?: string | undefined;
     personId?: string;
     locationRoles?: string[];
 }

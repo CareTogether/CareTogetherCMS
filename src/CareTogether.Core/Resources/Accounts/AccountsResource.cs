@@ -94,6 +94,18 @@ namespace CareTogether.Resources.Accounts
             return account;
         }
 
+        public async Task<ImmutableList<string>?> TryGetPersonRolesAsync(
+            Guid organizationId, Guid locationId, Guid personId)
+        {
+            //WARNING: The read/write logic in this service needs to be designed carefully to avoid deadlocks.
+
+            using (var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId)))
+            {
+                var result = lockedModel.Value.TryGetAccess(personId);
+                return result?.Roles;
+            }
+        }
+
         public async Task<AccountEntry> ExecuteAccountCommandAsync(AccountCommand command, Guid userId)
         {
             //WARNING: The read/write logic in this service needs to be designed carefully to avoid deadlocks.
@@ -216,7 +228,8 @@ namespace CareTogether.Resources.Accounts
                 {
                     using (var lockedModel = await tenantModels.ReadLockItemAsync((link.OrganizationId, link.LocationId)))
                     {
-                        return (link.OrganizationId, link.LocationId, lockedModel.Value.GetAccess(link.PersonId));
+                        var access = lockedModel.Value.TryGetAccess(link.PersonId);
+                        return (link.OrganizationId, link.LocationId, access!);
                     }
                 }))).ToDictionary(
                     result => (result.OrganizationId, result.LocationId),

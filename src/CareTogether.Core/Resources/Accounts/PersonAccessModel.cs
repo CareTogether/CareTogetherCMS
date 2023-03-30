@@ -75,7 +75,10 @@ namespace CareTogether.Resources.Accounts
                 .Where(predicate)
                 .ToImmutableList();
 
-        public PersonAccessEntry GetAccess(Guid personId) => entries[personId];
+        public PersonAccessEntry? TryGetAccess(Guid personId) =>
+            entries.TryGetValue(personId, out var entry)
+            ? entry
+            : null;
 
 
         private void ReplayEvent(PersonAccessEvent domainEvent, long sequenceNumber)

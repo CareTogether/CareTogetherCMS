@@ -18,7 +18,7 @@ namespace CareTogether.Managers
         ImmutableList<string> MissingCustomFields, //TODO: Include community memberships & community role assignments?
         ImmutableList<Permission> UserPermissions);
 
-    public sealed record UserInfo(Guid UserId, Guid PersonId, ImmutableList<string> LocationRoles);
+    public sealed record UserInfo(Guid? UserId, Guid PersonId, ImmutableList<string> LocationRoles);
 
     public sealed record PartneringFamilyInfo(
         Referral? OpenReferral,
