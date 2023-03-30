@@ -93,12 +93,20 @@ export function ManageUserDrawer({ onClose, adult, user }: ManageUserDrawerProps
     setSelectedRoles(user?.locationRoles ?? []);
   }
 
+  function close() {
+    if (!unsavedChanges ||
+      window.confirm("You have unsaved changes that will be lost. Are you sure?")) {
+      onClose();
+    }
+  }
+
   async function save() {
     await withBackdrop(async () => {
       if (rolesChanged) {
         await savePersonRoles();
       }
     });
+    onClose();
   }
 
   return (
@@ -163,7 +171,7 @@ export function ManageUserDrawer({ onClose, adult, user }: ManageUserDrawerProps
         </Button>
         <Button color='secondary' variant='contained'
           sx={{ marginRight: 2 }}
-          onClick={onClose}>
+          onClick={close}>
           Close
         </Button>
         <Button color='primary' variant='contained'
