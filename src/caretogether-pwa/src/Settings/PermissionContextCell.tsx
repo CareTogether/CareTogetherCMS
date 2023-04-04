@@ -1,7 +1,7 @@
 import { Checkbox, FormControlLabel, FormGroup, Skeleton, Stack, Switch, Typography } from "@mui/material";
-import { AllPartneringFamiliesPermissionContext, AllVolunteerFamiliesPermissionContext, AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext, AssignedFunctionsInReferralPartneringFamilyPermissionContext, GlobalPermissionContext, OwnFamilyPermissionContext, OwnReferralAssigneeFamiliesPermissionContext, PermissionContext } from "../GeneratedClient"
+import { AllPartneringFamiliesPermissionContext, AllVolunteerFamiliesPermissionContext, AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext, AssignedFunctionsInReferralPartneringFamilyPermissionContext, CommunityCoMemberFamiliesPermissionContext, CommunityMemberPermissionContext, GlobalPermissionContext, OwnFamilyPermissionContext, OwnReferralAssigneeFamiliesPermissionContext, PermissionContext } from "../GeneratedClient"
 import { useLoadable } from "../Hooks/useLoadable";
-import { allFunctionsInPolicyQuery } from "../Model/ConfigurationModel";
+import { allFunctionsInPolicyQuery, organizationConfigurationQuery } from "../Model/ConfigurationModel";
 
 interface ContextSelectorProps<T extends PermissionContext> {
   context: T
@@ -132,6 +132,51 @@ function AssigneeFunctionSelector({ context, factory, onUpdate }: ContextSelecto
   );
 }
 
+function OwnCommunityRoleSelector({ context, factory, onUpdate }: ContextSelectorProps<
+  CommunityMemberPermissionContext |
+  CommunityCoMemberFamiliesPermissionContext>) {
+  const communityRoles = useLoadable(organizationConfigurationQuery)?.communityRoles || null;
+  const hasValue = typeof context.whenOwnCommunityRoleIsIn !== 'undefined' && context.whenOwnCommunityRoleIsIn !== null;
+
+  return (
+    <FormGroup>
+      {communityRoles === null
+        ? <Skeleton />
+        : <>
+            <FormControlLabel control={
+              <Switch size='small'
+                checked={hasValue}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                  const newContext = factory();
+                  newContext.whenOwnCommunityRoleIsIn = event.target.checked
+                    ? communityRoles : undefined;
+                  onUpdate(newContext);
+                }} />}
+              label={hasValue
+                ? "Only when own community role is:" : "Regardless of any assigned community role"} />
+            {hasValue &&
+              <FormGroup>
+                {communityRoles.map(f => (
+                  <FormControlLabel key={f} control={
+                    <Checkbox size='small' checked={context.whenOwnCommunityRoleIsIn?.includes(f)}
+                      onChange={(_, checked) => {
+                        const newContext = factory();
+                        if (checked) {
+                          newContext.whenOwnCommunityRoleIsIn?.push(f);
+                        } else {
+                          newContext.whenOwnCommunityRoleIsIn =
+                            newContext.whenOwnCommunityRoleIsIn?.filter(x => x !== f);
+                        }
+                        onUpdate(newContext);
+                      }} />}
+                    label={f}
+                    sx={{marginLeft: 3}} />))}
+              </FormGroup>}
+          </>}
+    </FormGroup>
+  );
+}
+
 interface PermissionContextCellProps {
   context: PermissionContext
   editable: boolean
@@ -153,6 +198,10 @@ export function PermissionContextCell({ context, editable, onUpdate }: Permissio
     ? "Assigned Functions in Referral - Co-Assigned Families"
     : context instanceof OwnReferralAssigneeFamiliesPermissionContext
     ? "Own Referral - Assigned Families"
+    : context instanceof CommunityMemberPermissionContext
+    ? "Community Member - Community"
+    : context instanceof CommunityCoMemberFamiliesPermissionContext
+    ? "Community Member - Co-Member Families"
     : JSON.stringify(context);
   
   function assignedFunctionsInReferralPartneringFamilyPermissionContextFactory(
@@ -177,6 +226,20 @@ export function PermissionContextCell({ context, editable, onUpdate }: Permissio
     const result = new OwnReferralAssigneeFamiliesPermissionContext()
     result.whenReferralIsOpen = context.whenReferralIsOpen;
     result.whenAssigneeFunctionIsIn = context.whenAssigneeFunctionIsIn?.slice();
+    return result;
+  }
+  
+  function communityMemberPermissionContextFactory(
+    context: CommunityMemberPermissionContext) {
+    const result = new CommunityMemberPermissionContext()
+    result.whenOwnCommunityRoleIsIn = context.whenOwnCommunityRoleIsIn?.slice();
+    return result;
+  }
+  
+  function communityCoMemberFamiliesPermissionContextFactory(
+    context: CommunityCoMemberFamiliesPermissionContext) {
+    const result = new CommunityCoMemberFamiliesPermissionContext()
+    result.whenOwnCommunityRoleIsIn = context.whenOwnCommunityRoleIsIn?.slice();
     return result;
   }
   
@@ -206,6 +269,16 @@ export function PermissionContextCell({ context, editable, onUpdate }: Permissio
               factory={() => ownReferralAssigneeFamiliesPermissionContextFactory(context)} />
             <AssigneeFunctionSelector context={context} onUpdate={onUpdate}
               factory={() => ownReferralAssigneeFamiliesPermissionContextFactory(context)} />
+          </>}
+        {context instanceof CommunityMemberPermissionContext &&
+          <>
+            <OwnCommunityRoleSelector context={context} onUpdate={onUpdate}
+              factory={() => communityMemberPermissionContextFactory(context)} />
+          </>}
+        {context instanceof CommunityCoMemberFamiliesPermissionContext &&
+          <>
+            <OwnCommunityRoleSelector context={context} onUpdate={onUpdate}
+              factory={() => communityCoMemberFamiliesPermissionContextFactory(context)} />
           </>}
       </Stack>
     </Stack>

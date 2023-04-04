@@ -1,6 +1,6 @@
 import { Grid, Table, TableContainer, TableBody, TableHead, TableRow, Stack, Select, InputLabel, FormControl, MenuItem, FormHelperText, TableCell, IconButton, Button, Menu } from '@mui/material';
 import { useState } from 'react';
-import { AllPartneringFamiliesPermissionContext, AllVolunteerFamiliesPermissionContext, AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext, AssignedFunctionsInReferralPartneringFamilyPermissionContext, ContextualPermissionSet, GlobalPermissionContext, IContextualPermissionSet, OwnFamilyPermissionContext, OwnReferralAssigneeFamiliesPermissionContext, Permission, PermissionContext, RoleDefinition } from '../GeneratedClient';
+import { AllPartneringFamiliesPermissionContext, AllVolunteerFamiliesPermissionContext, AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext, AssignedFunctionsInReferralPartneringFamilyPermissionContext, CommunityCoMemberFamiliesPermissionContext, CommunityMemberPermissionContext, ContextualPermissionSet, GlobalPermissionContext, IContextualPermissionSet, OwnFamilyPermissionContext, OwnReferralAssigneeFamiliesPermissionContext, Permission, PermissionContext, RoleDefinition } from '../GeneratedClient';
 import { useLoadable } from '../Hooks/useLoadable';
 import { configurationClientQuery, organizationConfigurationEdited, organizationConfigurationQuery } from '../Model/ConfigurationModel';
 import { currentOrganizationIdQuery, useGlobalPermissions } from '../Model/SessionModel';
@@ -154,6 +154,8 @@ function RoleSettings() {
           <MenuItem dense onClick={() => addPermissionSet(() => new AssignedFunctionsInReferralPartneringFamilyPermissionContext())}>Assigned Functions in Referral - Partnering Family</MenuItem>
           <MenuItem dense onClick={() => addPermissionSet(() => new AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext())}>Assigned Functions in Referral - Co-Assigned Families</MenuItem>
           <MenuItem dense onClick={() => addPermissionSet(() => new OwnReferralAssigneeFamiliesPermissionContext())}>Own Referral - Assigned Families</MenuItem>
+          <MenuItem dense onClick={() => addPermissionSet(() => new CommunityMemberPermissionContext())}>Community Member - Community</MenuItem>
+          <MenuItem dense onClick={() => addPermissionSet(() => new CommunityCoMemberFamiliesPermissionContext())}>Community Member - Co-Member Families</MenuItem>
         </Menu>
       </Grid>
     </Grid>
