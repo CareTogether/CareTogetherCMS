@@ -41,13 +41,22 @@ namespace CareTogether.Managers.Records
 
         public async Task<ImmutableList<RecordsAggregate>> ListVisibleAggregatesAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId)
         {
+            // The following permissions should not be construed as granting access to an actual aggregate.
+            //TODO: More of this logic should be handled by the AuthorizationEngine.
+            var irrelevantPermissions = ImmutableHashSet.Create(
+                Permission.AccessCommunitiesScreen,
+                Permission.AccessPartneringFamiliesScreen,
+                Permission.AccessSettingsScreen,
+                Permission.AccessVolunteersScreen
+            );
+
             var families = await directoryResource.ListFamiliesAsync(organizationId, locationId);
 
             var visibleFamilies = (await families.Select(async family =>
                 {
                     var permissions = await authorizationEngine.AuthorizeUserAccessAsync(organizationId, locationId, user,
                         new FamilyAuthorizationContext(family.Id));
-                    return (family, hasPermissions: !permissions.IsEmpty);
+                    return (family, hasPermissions: permissions.Except(irrelevantPermissions).Any());
                 })
                 .WhenAll())
                 .Where(x => x.hasPermissions)
@@ -69,7 +78,7 @@ namespace CareTogether.Managers.Records
                 {
                     var permissions = await authorizationEngine.AuthorizeUserAccessAsync(organizationId, locationId, user,
                         new CommunityAuthorizationContext(community.Id));
-                    return (community, hasPermissions: !permissions.IsEmpty);
+                    return (community, hasPermissions: permissions.Except(irrelevantPermissions).Any());
                 })
                 .WhenAll())
                 .Where(x => x.hasPermissions)
