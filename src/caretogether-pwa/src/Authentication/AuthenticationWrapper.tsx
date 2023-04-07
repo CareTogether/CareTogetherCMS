@@ -4,6 +4,8 @@ import { useMsalAuthentication, useIsAuthenticated, useAccount, useMsal } from '
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useScopedTrace } from '../Hooks/useScopedTrace';
 import { useSearchParams } from 'react-router-dom';
+import { useSetRecoilState } from 'recoil';
+import { userIdState } from '../Model/Data';
 
 function SignInScreen() {
   return (
@@ -41,7 +43,7 @@ export default function AuthenticationWrapper({ children }: AuthenticationWrappe
   const isAuthenticated = useIsAuthenticated();
   const defaultAccount = useAccount();
   const { instance } = useMsal();
-  //const setAccessToken = useSetRecoilState(accessTokenState);
+  const setUserId = useSetRecoilState(userIdState);
   trace(`isAuthenticated: ${isAuthenticated} -- defaultAccount: ${defaultAccount?.localAccountId}`);
 
   // Before rendering any child components, ensure that the user is authenticated and
@@ -51,37 +53,33 @@ export default function AuthenticationWrapper({ children }: AuthenticationWrappe
     const accountToActivate = accounts.length > 0 ? accounts[0] : null;
     trace(`setActiveAccount: ${accountToActivate?.localAccountId}`);
     instance.setActiveAccount(accountToActivate);
+    if (accountToActivate) {
+      trace(`Setting user ID: ${accountToActivate.localAccountId}`);
+      setUserId(accountToActivate.localAccountId);
+    }
   }, [ instance, isAuthenticated, trace ]);
 
   // Track the most recently acquired access token as shared state for API clients to reference.
   useEffect(() => {
     const callbackId = instance.addEventCallback((event: any) => {
       trace(`event: ${event?.eventType}`);
-      // if (event.eventType === EventType.LOGIN_SUCCESS) {
-      //   instance.setActiveAccount(event.payload.account);
-      // }
-      // if (event.eventType === EventType.ACQUIRE_TOKEN_SUCCESS ||
-      //   event.eventType === EventType.LOGIN_SUCCESS ||
-      //   event.eventType === EventType.SSO_SILENT_SUCCESS) {
-      //   const accessToken = event.payload.accessToken as string;
-      //   setAccessToken(accessToken);
-      // }
     });
-    trace(`addEventCallback: ${callbackId}`);
+    trace(`addEventCallback completed: ${callbackId}`);
 
     return () => {
+      trace(`unmounting: ${callbackId}`);
       if (callbackId) {
         instance.removeEventCallback(callbackId);
       }
     }
-  }, [ instance, /*setAccessToken,*/ trace ]);
+  }, [ instance, trace ]);
 
   trace("render");
   return (
     <>
       {isAuthenticated && defaultAccount
         ? children
-        //TODO: Handle account selection when multiple accounts are signed in
+        //TODO: Handle account selection when multiple accounts are signed in (this is an edge case)
         : <SignInScreen />}
     </>
   );

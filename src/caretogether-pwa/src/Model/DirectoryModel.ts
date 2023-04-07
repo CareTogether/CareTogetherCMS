@@ -1,49 +1,8 @@
 import { atom, selector, useRecoilCallback, useRecoilValue } from "recoil";
 import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, CompositeRecordsCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, UpdatePersonGender, UpdatePersonAge, UpdatePersonEthnicity, UpdateAdultRelationshipToFamily, CustodialRelationshipType, UpdateCustodialRelationshipType, RemoveCustodialRelationship, ChangePrimaryFamilyContact, FamilyRecordsCommand, PersonRecordsCommand, NoteRecordsCommand, AtomicRecordsCommand, CustomField, UpdateCustomFamilyField, FamilyRecordsAggregate, RecordsAggregate, CommunityRecordsAggregate, CommunityCommand, CommunityRecordsCommand } from "../GeneratedClient";
-import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { currentOrganizationAndLocationIdsQuery, organizationConfigurationQuery } from "./ConfigurationModel";
 import { useLoadable } from "../Hooks/useLoadable";
 import { api } from "../Api/Api";
-
-export const visibleAggregatesInitializationQuery = selector({
-  key: 'visibleAggregatesInitializationQuery',
-  get: async ({get}) => {
-    get(organizationConfigurationQuery);
-    const currentOrgAndLoc = get(currentOrganizationAndLocationIdsQuery);
-    if (currentOrgAndLoc == null)
-      return null;
-    const {organizationId, locationId} = currentOrgAndLoc;
-    const visibleAggregates = await api.records.listVisibleAggregates(organizationId, locationId);
-    return visibleAggregates;
-  }
-});
-
-export function useDataInitialized() {
-  return useLoadable(visibleAggregatesInitializationQuery) != null;
-}
-
-export const visibleAggregatesData = atom<RecordsAggregate[]>({
-  key: 'visibleAggregatesData',
-  default: []
-});
-
-export const visibleFamiliesQuery = selector({
-  key: 'visibleFamiliesQuery',
-  get: ({get}) => {
-    const visibleAggregates = get(visibleAggregatesData);
-    return visibleAggregates.filter(aggregate => aggregate instanceof FamilyRecordsAggregate).map(aggregate =>
-      (aggregate as FamilyRecordsAggregate).family!);
-  }
-});
-
-export const visibleCommunitiesQuery = selector({
-  key: 'visibleCommunitiesQuery',
-  get: ({get}) => {
-    const visibleAggregates = get(visibleAggregatesData);
-    return visibleAggregates.filter(aggregate => aggregate instanceof CommunityRecordsAggregate).map(aggregate =>
-      (aggregate as CommunityRecordsAggregate).community!);
-  }
-});
 
 export function usePersonLookup() {
   const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
