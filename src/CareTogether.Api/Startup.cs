@@ -307,12 +307,14 @@ namespace CareTogether.Api
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapHealthChecks("/health").AllowAnonymous();
-
                 endpoints.MapControllers();
 
+                // This root endpoint is used by the Azure App Service Always On mechanism described here:
+                // https://learn.microsoft.com/en-us/azure/app-service/configure-common?tabs=portal#configure-general-settings
+                endpoints.MapHealthChecks("/").AllowAnonymous();
+
                 // Accommodating the Azure App Service liveness check mechanism described here:
-                // https://docs.microsoft.com/en-us/azure/app-service/configure-language-dotnetcore?pivots=platform-linux#robots933456-in-logs
+                // https://learn.microsoft.com/en-us/azure/app-service/configure-language-dotnetcore?pivots=platform-linux#robots933456-in-logs
                 endpoints.MapHealthChecks("/robots933456.txt").AllowAnonymous();
             });
         }
