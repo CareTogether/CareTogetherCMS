@@ -10,11 +10,10 @@ import AddIcon from '@mui/icons-material/Add';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { ContextualPermissionSetRow } from './ContextualPermissionSetRow';
-import { configurationClientQuery } from '../Api/Api';
+import { api } from '../Api/Api';
 
 function RoleSettings() {
   const configuration = useLoadable(organizationConfigurationQuery);
-  const configurationClient = useLoadable(configurationClientQuery);
   const organizationId = useRecoilValue(currentOrganizationIdQuery);
   const storeEdits = useSetRecoilState(organizationConfigurationEdited);
   const roles = configuration?.roles;
@@ -43,7 +42,7 @@ function RoleSettings() {
   const withBackdrop = useBackdrop();
   function save() {
     withBackdrop(async () => {
-      const newConfig = await configurationClient!.putRoleDefinition(
+      const newConfig = await api.configuration.putRoleDefinition(
         organizationId!, workingRole!.roleName!, workingRole!);
       storeEdits(newConfig);
       setDirty(false);

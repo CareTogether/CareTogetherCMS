@@ -1,11 +1,11 @@
 import { AnonymousCredential, BlockBlobClient } from "@azure/storage-blob";
-import { filesClient } from "../Api/Api";
+import { api } from "../Api/Api";
 
 export async function uploadFamilyFileToTenant(organizationId: string, locationId: string, familyId: string, formFile: File) {
   const fileBuffer = await formFile.arrayBuffer();
   const documentId = crypto.randomUUID();
   
-  const uploadInfo = await filesClient.generateFamilyDocumentUploadValetUrl(organizationId, locationId, familyId, documentId);
+  const uploadInfo = await api.files.generateFamilyDocumentUploadValetUrl(organizationId, locationId, familyId, documentId);
 
   const blobClient = new BlockBlobClient(uploadInfo.valetUrl as string, new AnonymousCredential());
   await blobClient.uploadData(fileBuffer, {
@@ -19,7 +19,7 @@ export async function uploadFamilyFileToTenant(organizationId: string, locationI
 }
 
 export async function downloadFamilyFile(organizationId: string, locationId: string, familyId: string, documentId: string) {  
-  const downloadUrl = await filesClient.getFamilyDocumentReadValetUrl(organizationId, locationId, familyId, documentId);
+  const downloadUrl = await api.files.getFamilyDocumentReadValetUrl(organizationId, locationId, familyId, documentId);
 
   window.location.href = downloadUrl;
 }
@@ -28,7 +28,7 @@ export async function uploadCommunityFileToTenant(organizationId: string, locati
   const fileBuffer = await formFile.arrayBuffer();
   const documentId = crypto.randomUUID();
   
-  const uploadInfo = await filesClient.generateCommunityDocumentUploadValetUrl(organizationId, locationId, communityId, documentId);
+  const uploadInfo = await api.files.generateCommunityDocumentUploadValetUrl(organizationId, locationId, communityId, documentId);
 
   const blobClient = new BlockBlobClient(uploadInfo.valetUrl as string, new AnonymousCredential());
   await blobClient.uploadData(fileBuffer, {
@@ -42,7 +42,7 @@ export async function uploadCommunityFileToTenant(organizationId: string, locati
 }
 
 export async function downloadCommunityFile(organizationId: string, locationId: string, communityId: string, documentId: string) {  
-  const downloadUrl = await filesClient.getCommunityDocumentReadValetUrl(organizationId, locationId, communityId, documentId);
+  const downloadUrl = await api.files.getCommunityDocumentReadValetUrl(organizationId, locationId, communityId, documentId);
 
   window.location.href = downloadUrl;
 }

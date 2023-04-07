@@ -22,7 +22,7 @@ import { AccountCircle, NoAccounts, PersonAdd } from "@mui/icons-material";
 import { organizationConfigurationQuery } from "../Model/ConfigurationModel";
 import { useState } from "react";
 import { visibleAggregatesData } from "../Model/DirectoryModel";
-import { usersClientQuery } from "../Api/Api";
+import { api } from "../Api/Api";
 
 interface ManageUserDrawerProps {
   onClose: () => void;
@@ -31,8 +31,6 @@ interface ManageUserDrawerProps {
 }
 
 export function ManageUserDrawer({ onClose, adult, user }: ManageUserDrawerProps) {
-  const usersClient = useRecoilValue(usersClientQuery);
-
   const organizationId = useRecoilValue(currentOrganizationIdQuery);
   const location = useRecoilValue(currentLocationQuery);
   const configuration = useRecoilValue(organizationConfigurationQuery);
@@ -41,7 +39,7 @@ export function ManageUserDrawer({ onClose, adult, user }: ManageUserDrawerProps
 
   async function invitePersonUser() {
     await withBackdrop(async () => {
-      const inviteLink = await usersClient.generatePersonInviteLink(
+      const inviteLink = await api.users.generatePersonInviteLink(
         organizationId, location.locationId, adult.id);
       await navigator.clipboard.writeText(inviteLink);
       alert(`The invite link for ${personNameString(adult)} has been copied to your clipboard.`);
@@ -77,7 +75,7 @@ export function ManageUserDrawer({ onClose, adult, user }: ManageUserDrawerProps
 
   const savePersonRoles = useRecoilCallback(({snapshot, set}) => {
     const asyncCallback = async () => {
-      const updatedAggregate = await usersClient.changePersonRoles(
+      const updatedAggregate = await api.users.changePersonRoles(
         organizationId, location.locationId, adult.id, selectedRoles);
 
       set(visibleAggregatesData, current => 

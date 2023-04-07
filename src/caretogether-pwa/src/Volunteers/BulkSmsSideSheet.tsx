@@ -7,7 +7,7 @@ import { useFamilyLookup } from "../Model/DirectoryModel";
 import { currentOrganizationIdQuery, currentLocationState } from "../Model/SessionModel";
 import { useBackdrop } from "../Hooks/useBackdrop";
 import { FamilyName } from "../Families/FamilyName";
-import { communicationsClient } from "../Api/Api";
+import { api } from "../Api/Api";
 
 type BulkSmsSideSheetProps = {
   selectedFamilies: CombinedFamilyInfo[]
@@ -46,7 +46,7 @@ export function BulkSmsSideSheet({ selectedFamilies, onClose }: BulkSmsSideSheet
     await withBackdrop(async () => {
       const familyIds = familiesSelectedForSms.map(family => family.family!.family!.id!);
   
-      const sendSmsResults = await communicationsClient.sendSmsToFamilyPrimaryContacts(organizationId!, locationId,
+      const sendSmsResults = await api.communications.sendSmsToFamilyPrimaryContacts(organizationId!, locationId,
         new SendSmsToFamilyPrimaryContactsRequest({
           familyIds: familyIds,
           sourceNumber: selectedSourceNumber,

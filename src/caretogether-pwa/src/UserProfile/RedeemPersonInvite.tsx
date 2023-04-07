@@ -1,13 +1,13 @@
 import { Button } from '@mui/material';
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useRecoilRefresher_UNSTABLE, useRecoilValue, useSetRecoilState } from 'recoil';
+import { useRecoilRefresher_UNSTABLE, useSetRecoilState } from 'recoil';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useLoadable } from '../Hooks/useLoadable';
 import { inviteReviewInfoQuery, redemptionSessionIdState, userOrganizationAccessQuery } from '../Model/SessionModel';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import useScreenTitle from '../Shell/ShellScreenTitle';
-import { usersClientQuery } from '../Api/Api';
+import { api } from '../Api/Api';
 
 function RedeemPersonInvite() {
   // Start by configuring the current redemption session, if there is one.
@@ -26,13 +26,12 @@ function RedeemPersonInvite() {
   const inviteReviewInfo = useLoadable(inviteReviewInfoQuery);
   
   const withBackdrop = useBackdrop();
-  const usersClient = useRecoilValue(usersClientQuery);
   const navigate = useNavigate();
 
   const refreshUserOrganizationAccess = useRecoilRefresher_UNSTABLE(userOrganizationAccessQuery);
   async function redeem() {
     await withBackdrop(async () => {
-      const result = await usersClient.completePersonInviteRedemptionSession(
+      const result = await api.users.completePersonInviteRedemptionSession(
         redemptionSessionId);
       console.log("Invite redemption result:");
       console.log(result);

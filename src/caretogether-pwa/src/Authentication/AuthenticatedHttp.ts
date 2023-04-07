@@ -1,15 +1,14 @@
 import { IPublicClientApplication } from "@azure/msal-browser";
-import { atom, selector } from "recoil";
 import { globalMsalInstance } from "./Auth";
 
-export const accessTokenState = atom<string>({
-  key: 'accessTokenState',
-  effects: [
-  //   ({onSet}) => {
-  //     onSet(newToken => console.log("ACCESS_TOKEN: " + newToken?.substring(0,10)))
-  //   }
-  ]
-});
+// export const accessTokenState = atom<string>({
+//   key: 'accessTokenState',
+//   effects: [
+//   //   ({onSet}) => {
+//   //     onSet(newToken => console.log("ACCESS_TOKEN: " + newToken?.substring(0,10)))
+//   //   }
+//   ]
+// });
 
 const acquireAccessToken = async (msalInstance: IPublicClientApplication) => {
   const activeAccount = msalInstance.getActiveAccount();
@@ -46,22 +45,3 @@ class AuthenticatedHttp {
 }
 
 export const authenticatingFetch = new AuthenticatedHttp();
-
-class AccessTokenHttp {
-  constructor(private accessToken: string) { }
-  async fetch(url: RequestInfo, init?: RequestInit): Promise<Response> {
-    init && (init.headers = {
-      ...init.headers,
-      Authorization: `Bearer ${this.accessToken}`
-    });
-    return window.fetch(url, init);
-  }
-}
-
-export const accessTokenFetchQuery = selector({
-  key: 'accessTokenFetch',
-  get: ({get}) => {
-    const accessToken = get(accessTokenState);
-    return new AccessTokenHttp(accessToken);
-  }
-})

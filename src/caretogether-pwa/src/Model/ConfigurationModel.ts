@@ -2,7 +2,7 @@ import { atom, selector } from "recoil";
 import { OrganizationConfiguration, RequirementStage, VolunteerFamilyRequirementScope } from "../GeneratedClient";
 import { currentLocationState, currentOrganizationIdQuery, currentOrganizationState, selectedLocationIdState } from "./SessionModel";
 import { useLoadable } from "../Hooks/useLoadable";
-import { configurationClientQuery } from "../Api/Api";
+import { api } from "../Api/Api";
 
 //TODO: Distinguish by organization ID
 export const organizationConfigurationEdited = atom<OrganizationConfiguration | null>({
@@ -16,12 +16,11 @@ export const organizationConfigurationQuery = selector({
     const organizationId = get(currentOrganizationIdQuery);
     if (organizationId == null)
       return null;
-    const configurationClient = get(configurationClientQuery);
     const edited = get(organizationConfigurationEdited);
     if (edited) {
       return edited;
     } else {
-      const dataResponse = await configurationClient.getOrganizationConfiguration(organizationId);
+      const dataResponse = await api.configuration.getOrganizationConfiguration(organizationId);
       return dataResponse;
     }
   }});
@@ -79,8 +78,7 @@ export const policyData = selector({
   get: async ({get}) => {
     const organizationId = get(currentOrganizationState);
     const locationId = get(currentLocationState);
-    const configurationClient = get(configurationClientQuery);
-    const dataResponse = await configurationClient.getEffectiveLocationPolicy(organizationId, locationId);
+    const dataResponse = await api.configuration.getEffectiveLocationPolicy(organizationId, locationId);
     return dataResponse;
   }});
 
@@ -186,8 +184,7 @@ export const featureFlagQuery = selector({
     if (currentOrgAndLoc == null)
       return null;
     const {organizationId, locationId} = currentOrgAndLoc;
-    const configurationClient = get(configurationClientQuery);
-    const dataResponse = await configurationClient.getLocationFlags(organizationId, locationId);
+    const dataResponse = await api.configuration.getLocationFlags(organizationId, locationId);
     return dataResponse;
   }});
 

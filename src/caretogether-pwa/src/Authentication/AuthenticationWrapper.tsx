@@ -1,9 +1,7 @@
 import React, { useEffect } from 'react';
-import { EventType, InteractionType } from "@azure/msal-browser";
+import { InteractionType } from "@azure/msal-browser";
 import { useMsalAuthentication, useIsAuthenticated, useAccount, useMsal } from '@azure/msal-react';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
-import { useSetRecoilState } from 'recoil';
-import { accessTokenState } from './AuthenticatedHttp';
 import { useScopedTrace } from '../Hooks/useScopedTrace';
 import { useSearchParams } from 'react-router-dom';
 
@@ -43,7 +41,7 @@ export default function AuthenticationWrapper({ children }: AuthenticationWrappe
   const isAuthenticated = useIsAuthenticated();
   const defaultAccount = useAccount();
   const { instance } = useMsal();
-  const setAccessToken = useSetRecoilState(accessTokenState);
+  //const setAccessToken = useSetRecoilState(accessTokenState);
   trace(`isAuthenticated: ${isAuthenticated} -- defaultAccount: ${defaultAccount?.localAccountId}`);
 
   // Before rendering any child components, ensure that the user is authenticated and
@@ -59,15 +57,15 @@ export default function AuthenticationWrapper({ children }: AuthenticationWrappe
   useEffect(() => {
     const callbackId = instance.addEventCallback((event: any) => {
       trace(`event: ${event?.eventType}`);
-      if (event.eventType === EventType.LOGIN_SUCCESS) {
-        instance.setActiveAccount(event.payload.account);
-      }
-      if (event.eventType === EventType.ACQUIRE_TOKEN_SUCCESS ||
-        event.eventType === EventType.LOGIN_SUCCESS ||
-        event.eventType === EventType.SSO_SILENT_SUCCESS) {
-        const accessToken = event.payload.accessToken as string;
-        setAccessToken(accessToken);
-      }
+      // if (event.eventType === EventType.LOGIN_SUCCESS) {
+      //   instance.setActiveAccount(event.payload.account);
+      // }
+      // if (event.eventType === EventType.ACQUIRE_TOKEN_SUCCESS ||
+      //   event.eventType === EventType.LOGIN_SUCCESS ||
+      //   event.eventType === EventType.SSO_SILENT_SUCCESS) {
+      //   const accessToken = event.payload.accessToken as string;
+      //   setAccessToken(accessToken);
+      // }
     });
     trace(`addEventCallback: ${callbackId}`);
 
@@ -76,7 +74,7 @@ export default function AuthenticationWrapper({ children }: AuthenticationWrappe
         instance.removeEventCallback(callbackId);
       }
     }
-  }, [ instance, setAccessToken, trace ]);
+  }, [ instance, /*setAccessToken,*/ trace ]);
 
   trace("render");
   return (

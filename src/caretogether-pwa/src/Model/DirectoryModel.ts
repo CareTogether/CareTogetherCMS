@@ -3,7 +3,7 @@ import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, Add
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { currentOrganizationAndLocationIdsQuery, organizationConfigurationQuery } from "./ConfigurationModel";
 import { useLoadable } from "../Hooks/useLoadable";
-import { recordsClientQuery } from "../Api/Api";
+import { api } from "../Api/Api";
 
 export const visibleAggregatesInitializationQuery = selector({
   key: 'visibleAggregatesInitializationQuery',
@@ -13,8 +13,7 @@ export const visibleAggregatesInitializationQuery = selector({
     if (currentOrgAndLoc == null)
       return null;
     const {organizationId, locationId} = currentOrgAndLoc;
-    const recordsClient = get(recordsClientQuery);
-    const visibleAggregates = await recordsClient.listVisibleAggregates(organizationId, locationId);
+    const visibleAggregates = await api.records.listVisibleAggregates(organizationId, locationId);
     return visibleAggregates;
   }
 });
@@ -110,11 +109,10 @@ export function useAtomicRecordsCommandCallback<T extends unknown[], U extends A
     const asyncCallback = async (aggregateId: string, ...args: T) => {
       const organizationId = await snapshot.getPromise(currentOrganizationState);
       const locationId = await snapshot.getPromise(currentLocationState);
-      const recordsClient = await snapshot.getPromise(recordsClientQuery);
 
       const command = await callback(aggregateId, ...args);
 
-      const updatedAggregate = await recordsClient.submitAtomicRecordsCommand(organizationId, locationId, command);
+      const updatedAggregate = await api.records.submitAtomicRecordsCommand(organizationId, locationId, command);
 
       set(visibleAggregatesData, current => 
         current.some(currentEntry => currentEntry.id === updatedAggregate.id && currentEntry.constructor === updatedAggregate.constructor)
@@ -133,11 +131,10 @@ function useCompositeRecordsCommandCallback<T extends unknown[]>(
     const asyncCallback = async (aggregateId: string, ...args: T) => {
       const organizationId = await snapshot.getPromise(currentOrganizationState);
       const locationId = await snapshot.getPromise(currentLocationState);
-      const recordsClient = await snapshot.getPromise(recordsClientQuery);
 
       const command = await callback(aggregateId, ...args);
 
-      const updatedAggregate = await recordsClient.submitCompositeRecordsCommand(organizationId, locationId, command);
+      const updatedAggregate = await api.records.submitCompositeRecordsCommand(organizationId, locationId, command);
       
       set(visibleAggregatesData, current =>
         current.some(currentEntry => currentEntry.id === updatedAggregate.id)

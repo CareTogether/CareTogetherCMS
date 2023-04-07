@@ -3,7 +3,7 @@ import { CombinedFamilyInfo, CommunityInfo, Permission, UserLocationAccess } fro
 import { useLoadable } from "../Hooks/useLoadable";
 import { localStorageEffect } from "../Utilities/localStorageEffect";
 import { useFamilyLookup } from "./DirectoryModel";
-import { usersClientQuery } from "../Api/Api";
+import { api } from "../Api/Api";
 
 export const userIdState = atom<string | null>({
   key: 'userIdState'
@@ -12,8 +12,7 @@ export const userIdState = atom<string | null>({
 export const userOrganizationAccessQuery = selector({
   key: 'userOrganizationAccessQuery',
   get: async ({get}) => {
-    const usersClient = get(usersClientQuery);
-    const userResponse = await usersClient.getUserOrganizationAccess();
+    const userResponse = await api.users.getUserOrganizationAccess();
     return userResponse;
   }
 });
@@ -85,11 +84,10 @@ export const redemptionSessionIdState = atom<string | null>({
 export const inviteReviewInfoQuery = selector({
   key: 'inviteReviewInfoQuery',
   get: async ({get}) => {
-    const usersClient = get(usersClientQuery);
     const redemptionSessionId = get(redemptionSessionIdState);
     
     if (redemptionSessionId) {
-      const inviteReviewInfo = await usersClient.examinePersonInviteRedemptionSession(redemptionSessionId);
+      const inviteReviewInfo = await api.users.examinePersonInviteRedemptionSession(redemptionSessionId);
       return inviteReviewInfo;
     } else {
       return null;
