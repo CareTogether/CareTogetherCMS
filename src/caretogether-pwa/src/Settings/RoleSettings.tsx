@@ -2,7 +2,7 @@ import { Grid, Table, TableContainer, TableBody, TableHead, TableRow, Stack, Sel
 import { useState } from 'react';
 import { AllPartneringFamiliesPermissionContext, AllVolunteerFamiliesPermissionContext, AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext, AssignedFunctionsInReferralPartneringFamilyPermissionContext, CommunityCoMemberFamiliesPermissionContext, CommunityMemberPermissionContext, ContextualPermissionSet, GlobalPermissionContext, IContextualPermissionSet, OwnFamilyPermissionContext, OwnReferralAssigneeFamiliesPermissionContext, Permission, PermissionContext, RoleDefinition } from '../GeneratedClient';
 import { useLoadable } from '../Hooks/useLoadable';
-import { configurationClientQuery, organizationConfigurationEdited, organizationConfigurationQuery } from '../Model/ConfigurationModel';
+import { organizationConfigurationEdited, organizationConfigurationQuery } from '../Model/ConfigurationModel';
 import { currentOrganizationIdQuery, useGlobalPermissions } from '../Model/SessionModel';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import useScreenTitle from '../Shell/ShellScreenTitle';
@@ -10,6 +10,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { ContextualPermissionSetRow } from './ContextualPermissionSetRow';
+import { configurationClientQuery } from '../Api/Api';
 
 function RoleSettings() {
   const configuration = useLoadable(organizationConfigurationQuery);

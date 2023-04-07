@@ -1,12 +1,10 @@
 import { AnonymousCredential, BlockBlobClient } from "@azure/storage-blob";
-import { authenticatingFetch } from "../Authentication/AuthenticatedHttp";
-import { FilesClient } from "../GeneratedClient";
+import { filesClient } from "../Api/Api";
 
 export async function uploadFamilyFileToTenant(organizationId: string, locationId: string, familyId: string, formFile: File) {
   const fileBuffer = await formFile.arrayBuffer();
   const documentId = crypto.randomUUID();
   
-  const filesClient = new FilesClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
   const uploadInfo = await filesClient.generateFamilyDocumentUploadValetUrl(organizationId, locationId, familyId, documentId);
 
   const blobClient = new BlockBlobClient(uploadInfo.valetUrl as string, new AnonymousCredential());
@@ -21,7 +19,6 @@ export async function uploadFamilyFileToTenant(organizationId: string, locationI
 }
 
 export async function downloadFamilyFile(organizationId: string, locationId: string, familyId: string, documentId: string) {  
-  const filesClient = new FilesClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
   const downloadUrl = await filesClient.getFamilyDocumentReadValetUrl(organizationId, locationId, familyId, documentId);
 
   window.location.href = downloadUrl;
@@ -31,7 +28,6 @@ export async function uploadCommunityFileToTenant(organizationId: string, locati
   const fileBuffer = await formFile.arrayBuffer();
   const documentId = crypto.randomUUID();
   
-  const filesClient = new FilesClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
   const uploadInfo = await filesClient.generateCommunityDocumentUploadValetUrl(organizationId, locationId, communityId, documentId);
 
   const blobClient = new BlockBlobClient(uploadInfo.valetUrl as string, new AnonymousCredential());
@@ -46,7 +42,6 @@ export async function uploadCommunityFileToTenant(organizationId: string, locati
 }
 
 export async function downloadCommunityFile(organizationId: string, locationId: string, communityId: string, documentId: string) {  
-  const filesClient = new FilesClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
   const downloadUrl = await filesClient.getCommunityDocumentReadValetUrl(organizationId, locationId, communityId, documentId);
 
   window.location.href = downloadUrl;

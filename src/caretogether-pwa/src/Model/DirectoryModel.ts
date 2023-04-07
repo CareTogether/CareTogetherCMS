@@ -1,17 +1,9 @@
 import { atom, selector, useRecoilCallback, useRecoilValue } from "recoil";
-import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, CompositeRecordsCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, RecordsClient, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, UpdatePersonGender, UpdatePersonAge, UpdatePersonEthnicity, UpdateAdultRelationshipToFamily, CustodialRelationshipType, UpdateCustodialRelationshipType, RemoveCustodialRelationship, ChangePrimaryFamilyContact, FamilyRecordsCommand, PersonRecordsCommand, NoteRecordsCommand, AtomicRecordsCommand, CustomField, UpdateCustomFamilyField, FamilyRecordsAggregate, RecordsAggregate, CommunityRecordsAggregate, CommunityCommand, CommunityRecordsCommand } from "../GeneratedClient";
-import { accessTokenFetchQuery, authenticatingFetch } from "../Authentication/AuthenticatedHttp";
+import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, CompositeRecordsCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, UpdatePersonGender, UpdatePersonAge, UpdatePersonEthnicity, UpdateAdultRelationshipToFamily, CustodialRelationshipType, UpdateCustodialRelationshipType, RemoveCustodialRelationship, ChangePrimaryFamilyContact, FamilyRecordsCommand, PersonRecordsCommand, NoteRecordsCommand, AtomicRecordsCommand, CustomField, UpdateCustomFamilyField, FamilyRecordsAggregate, RecordsAggregate, CommunityRecordsAggregate, CommunityCommand, CommunityRecordsCommand } from "../GeneratedClient";
 import { currentOrganizationState, currentLocationState } from "./SessionModel";
 import { currentOrganizationAndLocationIdsQuery, organizationConfigurationQuery } from "./ConfigurationModel";
 import { useLoadable } from "../Hooks/useLoadable";
-
-export const recordsClientQuery = selector({
-  key: 'directoryClientQuery',
-  get: ({get}) => {
-    const accessTokenFetch = get(accessTokenFetchQuery);
-    return new RecordsClient(process.env.REACT_APP_API_HOST, accessTokenFetch);
-  }
-});
+import { recordsClientQuery } from "../Api/Api";
 
 export const visibleAggregatesInitializationQuery = selector({
   key: 'visibleAggregatesInitializationQuery',
@@ -118,11 +110,11 @@ export function useAtomicRecordsCommandCallback<T extends unknown[], U extends A
     const asyncCallback = async (aggregateId: string, ...args: T) => {
       const organizationId = await snapshot.getPromise(currentOrganizationState);
       const locationId = await snapshot.getPromise(currentLocationState);
+      const recordsClient = await snapshot.getPromise(recordsClientQuery);
 
       const command = await callback(aggregateId, ...args);
 
-      const client = new RecordsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedAggregate = await client.submitAtomicRecordsCommand(organizationId, locationId, command);
+      const updatedAggregate = await recordsClient.submitAtomicRecordsCommand(organizationId, locationId, command);
 
       set(visibleAggregatesData, current => 
         current.some(currentEntry => currentEntry.id === updatedAggregate.id && currentEntry.constructor === updatedAggregate.constructor)
@@ -141,11 +133,11 @@ function useCompositeRecordsCommandCallback<T extends unknown[]>(
     const asyncCallback = async (aggregateId: string, ...args: T) => {
       const organizationId = await snapshot.getPromise(currentOrganizationState);
       const locationId = await snapshot.getPromise(currentLocationState);
+      const recordsClient = await snapshot.getPromise(recordsClientQuery);
 
       const command = await callback(aggregateId, ...args);
 
-      const client = new RecordsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedAggregate = await client.submitCompositeRecordsCommand(organizationId, locationId, command);
+      const updatedAggregate = await recordsClient.submitCompositeRecordsCommand(organizationId, locationId, command);
       
       set(visibleAggregatesData, current =>
         current.some(currentEntry => currentEntry.id === updatedAggregate.id)

@@ -4,9 +4,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useRecoilRefresher_UNSTABLE, useRecoilValue, useSetRecoilState } from 'recoil';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useLoadable } from '../Hooks/useLoadable';
-import { inviteReviewInfoQuery, redemptionSessionIdState, userOrganizationAccessQuery, usersClientQuery } from '../Model/SessionModel';
+import { inviteReviewInfoQuery, redemptionSessionIdState, userOrganizationAccessQuery } from '../Model/SessionModel';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import useScreenTitle from '../Shell/ShellScreenTitle';
+import { usersClientQuery } from '../Api/Api';
 
 function RedeemPersonInvite() {
   // Start by configuring the current redemption session, if there is one.

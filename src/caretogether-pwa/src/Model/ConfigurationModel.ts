@@ -1,16 +1,8 @@
 import { atom, selector } from "recoil";
-import { ConfigurationClient, OrganizationConfiguration, RequirementStage, VolunteerFamilyRequirementScope } from "../GeneratedClient";
-import { accessTokenFetchQuery } from "../Authentication/AuthenticatedHttp";
+import { OrganizationConfiguration, RequirementStage, VolunteerFamilyRequirementScope } from "../GeneratedClient";
 import { currentLocationState, currentOrganizationIdQuery, currentOrganizationState, selectedLocationIdState } from "./SessionModel";
 import { useLoadable } from "../Hooks/useLoadable";
-
-export const configurationClientQuery = selector({
-  key: 'configurationClient',
-  get: ({get}) => {
-    const accessTokenFetch = get(accessTokenFetchQuery);
-    return new ConfigurationClient(process.env.REACT_APP_API_HOST, accessTokenFetch);
-  }
-});
+import { configurationClientQuery } from "../Api/Api";
 
 //TODO: Distinguish by organization ID
 export const organizationConfigurationEdited = atom<OrganizationConfiguration | null>({

@@ -14,7 +14,7 @@ import {
   useMediaQuery
 } from "@mui/material";
 import { Permission, Person, UserInfo } from "../GeneratedClient";
-import { currentLocationQuery, currentOrganizationIdQuery, useGlobalPermissions, usersClientQuery } from "../Model/SessionModel";
+import { currentLocationQuery, currentOrganizationIdQuery, useGlobalPermissions } from "../Model/SessionModel";
 import { useBackdrop } from "../Hooks/useBackdrop";
 import { useRecoilCallback, useRecoilValue } from "recoil";
 import { personNameString } from "./PersonName";
@@ -22,6 +22,7 @@ import { AccountCircle, NoAccounts, PersonAdd } from "@mui/icons-material";
 import { organizationConfigurationQuery } from "../Model/ConfigurationModel";
 import { useState } from "react";
 import { visibleAggregatesData } from "../Model/DirectoryModel";
+import { usersClientQuery } from "../Api/Api";
 
 interface ManageUserDrawerProps {
   onClose: () => void;

@@ -1,17 +1,9 @@
 import { atom, selector } from "recoil";
-import { accessTokenFetchQuery } from "../Authentication/AuthenticatedHttp";
-import { CombinedFamilyInfo, CommunityInfo, Permission, UserLocationAccess, UsersClient } from "../GeneratedClient";
+import { CombinedFamilyInfo, CommunityInfo, Permission, UserLocationAccess } from "../GeneratedClient";
 import { useLoadable } from "../Hooks/useLoadable";
 import { localStorageEffect } from "../Utilities/localStorageEffect";
 import { useFamilyLookup } from "./DirectoryModel";
-
-export const usersClientQuery = selector({
-  key: 'usersClient',
-  get: ({get}) => {
-    const accessTokenFetch = get(accessTokenFetchQuery);
-    return new UsersClient(process.env.REACT_APP_API_HOST, accessTokenFetch);
-  }
-});
+import { usersClientQuery } from "../Api/Api";
 
 export const userIdState = atom<string | null>({
   key: 'userIdState'
