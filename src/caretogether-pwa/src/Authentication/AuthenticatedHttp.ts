@@ -1,15 +1,6 @@
 import { IPublicClientApplication } from "@azure/msal-browser";
 import { globalMsalInstance } from "./Auth";
 
-// export const accessTokenState = atom<string>({
-//   key: 'accessTokenState',
-//   effects: [
-//   //   ({onSet}) => {
-//   //     onSet(newToken => console.log("ACCESS_TOKEN: " + newToken?.substring(0,10)))
-//   //   }
-//   ]
-// });
-
 const acquireAccessToken = async (msalInstance: IPublicClientApplication) => {
   const activeAccount = msalInstance.getActiveAccount();
   const accounts = msalInstance.getAllAccounts();
