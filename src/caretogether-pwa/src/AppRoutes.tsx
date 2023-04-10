@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Dashboard } from "./Dashboard";
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { Referrals } from "./Referrals/Referrals";
@@ -19,19 +19,22 @@ function RouteMigrator() {
   const firstOrganization = userOrganizationAccess.organizations?.at(0);
   const firstLocation = firstOrganization?.locations?.at(0);
 
-  if (firstLocation) {
-    //TODO: Only do this if the old path is a valid/migrate-able path to begin with.
-    const target = `${firstOrganization?.organizationId}/${firstLocation.locationId}/${location.pathname}` +
-      `${location.search}${location.hash}`;
-    console.log(`Attempting to migrate route to: ${target}`);
-    navigate(target);
-  } else {
-    console.log("Could not migrate route. User organization access state was:")
-    console.log(userOrganizationAccess);
-  }
+  useEffect(() => {
+    if (firstLocation) {
+      //TODO: Only do this if the old path is a valid/migrate-able path to begin with.
+      const target = `${firstOrganization?.organizationId}/${firstLocation.locationId}${location.pathname}` +
+        `${location.search}${location.hash}`;
+      console.log(`Attempting to migrate route to: ${target}`);
+      navigate(target);
+    } else {
+      console.log("Could not migrate route. User organization access state was:")
+      console.log(userOrganizationAccess);
+    }
+  }, [navigate, firstOrganization, firstLocation]);
 
   return (
-    <RouteError />
+    // <RouteError />
+    <p>{JSON.stringify(location)}</p>
   );
 }
 
@@ -42,15 +45,15 @@ function RouteError(): React.ReactElement {
 export function AppRoutes() {
   return (
     <Routes>
-      <Route path="/:organizationId/:locationId">
-        <Route element={<ShellRootLayout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="families/:familyId" element={<FamilyScreen />} />
-          <Route path="referrals/*" element={<Referrals />} />
-          <Route path="volunteers/*" element={<Volunteers />} />
-          <Route path="communities/*" element={<Communities />} />
-          <Route path="settings/*" element={<Settings />} />
-        </Route>
+      <Route path="/:organizationId/:locationId" element={<ShellRootLayout />}>
+        {/* <Route element={< />}> */}
+        <Route /*index*/ path="./" element={<Dashboard />} />
+        <Route path="families/:familyId" element={<FamilyScreen />} />
+        <Route path="referrals/*" element={<Referrals />} />
+        <Route path="volunteers/*" element={<Volunteers />} />
+        <Route path="communities/*" element={<Communities />} />
+        <Route path="settings/*" element={<Settings />} />
+        {/* </Route> */}
       </Route>
       <Route path="/me" /*TODO: This needs a shell!*/ element={<UserProfile />} />
       <Route path="*" element={<RouteMigrator />} />
