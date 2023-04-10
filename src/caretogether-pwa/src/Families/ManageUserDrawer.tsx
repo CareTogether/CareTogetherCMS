@@ -14,15 +14,15 @@ import {
   useMediaQuery
 } from "@mui/material";
 import { Permission, Person, UserInfo } from "../GeneratedClient";
-import { currentLocationQuery, currentOrganizationIdQuery, useGlobalPermissions } from "../Model/SessionModel";
+import { useGlobalPermissions } from "../Model/SessionModel";
 import { useBackdrop } from "../Hooks/useBackdrop";
 import { useRecoilCallback, useRecoilValue } from "recoil";
 import { personNameString } from "./PersonName";
 import { AccountCircle, NoAccounts, PersonAdd } from "@mui/icons-material";
 import { organizationConfigurationQuery } from "../Model/ConfigurationModel";
 import { useState } from "react";
-import { visibleAggregatesData } from "../Model/DirectoryModel";
 import { api } from "../Api/Api";
+import { currentLocationQuery, selectedOrganizationIdState, visibleAggregatesState } from "../Model/Data";
 
 interface ManageUserDrawerProps {
   onClose: () => void;
@@ -31,7 +31,7 @@ interface ManageUserDrawerProps {
 }
 
 export function ManageUserDrawer({ onClose, adult, user }: ManageUserDrawerProps) {
-  const organizationId = useRecoilValue(currentOrganizationIdQuery);
+  const organizationId = useRecoilValue(selectedOrganizationIdState);
   const location = useRecoilValue(currentLocationQuery);
   const configuration = useRecoilValue(organizationConfigurationQuery);
 
@@ -78,7 +78,7 @@ export function ManageUserDrawer({ onClose, adult, user }: ManageUserDrawerProps
       const updatedAggregate = await api.users.changePersonRoles(
         organizationId, location.locationId, adult.id, selectedRoles);
 
-      set(visibleAggregatesData, current => 
+      set(visibleAggregatesState, current => 
         current.some(currentEntry => currentEntry.id === updatedAggregate.id && currentEntry.constructor === updatedAggregate.constructor)
         ? current.map(currentEntry => currentEntry.id === updatedAggregate.id && currentEntry.constructor === updatedAggregate.constructor
           ? updatedAggregate

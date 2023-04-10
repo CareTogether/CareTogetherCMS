@@ -1,28 +1,9 @@
 import { atom, selector } from "recoil";
-import { CombinedFamilyInfo, CommunityInfo, Permission, UserLocationAccess } from "../GeneratedClient";
+import { CombinedFamilyInfo, CommunityInfo, Permission } from "../GeneratedClient";
 import { useLoadable } from "../Hooks/useLoadable";
-import { localStorageEffect } from "../Utilities/localStorageEffect";
 import { useFamilyLookup } from "./DirectoryModel";
 import { api } from "../Api/Api";
-
-
-export const selectedLocationIdState = atom<string | null>({
-  key: 'selectedLocationIdState',
-  effects: [
-    localStorageEffect('locationId'),
-    // ({onSet}) => {
-    //   onSet(newId => console.log("SEL_LOC_ID: " + newId))
-    // }
-  ]
-})
-
-export const currentLocationState = selector({//TODO: Deprecated
-  key: 'COMPATIBILITY__currentLocationState',
-  get: ({get}) => {
-    const value = get(currentLocationQuery);
-    return value.locationId!;
-  }
-});
+import { currentLocationQuery } from "./Data";
 
 export const redemptionSessionIdState = atom<string | null>({
   key: 'redemptionSessionIdState',

@@ -1,9 +1,9 @@
 import { MenuItem, Select, Skeleton, Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { useRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import { useLoadable } from '../Hooks/useLoadable';
 import { locationNameQuery, organizationConfigurationQuery, organizationNameQuery } from '../Model/ConfigurationModel';
-import { selectedLocationIdState, availableLocationsQuery } from '../Model/SessionModel';
+import { currentOrganizationQuery, selectedLocationIdState } from '../Model/Data';
 
 export function ShellContextSwitcher() {
   const organizationName = useLoadable(organizationNameQuery);
@@ -11,7 +11,8 @@ export function ShellContextSwitcher() {
 
   const organizationConfiguration = useLoadable(organizationConfigurationQuery);
   const [selectedLocationId, setSelectedLocationId] = useRecoilState(selectedLocationIdState);
-  const availableLocations = useLoadable(availableLocationsQuery);
+  const currentOrganization = useRecoilValue(currentOrganizationQuery);
+  const availableLocations = currentOrganization.locations;
 
   const locations = organizationConfiguration?.locations!.map(location => ({
     id: location.id!,

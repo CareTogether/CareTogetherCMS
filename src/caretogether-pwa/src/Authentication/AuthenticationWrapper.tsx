@@ -57,7 +57,7 @@ export default function AuthenticationWrapper({ children }: AuthenticationWrappe
       trace(`Setting user ID: ${accountToActivate.localAccountId}`);
       setUserId(accountToActivate.localAccountId);
     }
-  }, [ instance, isAuthenticated, trace ]);
+  }, [ instance, isAuthenticated, trace, setUserId ]);
 
   // Track the most recently acquired access token as shared state for API clients to reference.
   useEffect(() => {

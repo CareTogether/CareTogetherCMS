@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControl, FormControlLabel, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@mui/material';
 import { CombinedFamilyInfo, ExactAge, Gender, CustodialRelationshipType, CustodialRelationship } from '../GeneratedClient';
-import { visibleFamiliesQuery, useDirectoryModel } from '../Model/DirectoryModel';
+import { useDirectoryModel } from '../Model/DirectoryModel';
 import WarningIcon from '@mui/icons-material/Warning';
 import { DatePicker } from '@mui/x-date-pickers';
 import { useRecoilValue } from 'recoil';
@@ -9,6 +9,7 @@ import { ethnicitiesData } from '../Model/ConfigurationModel';
 import { useParams } from 'react-router-dom';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { subYears } from 'date-fns';
+import { visibleFamiliesQuery } from '../Model/Data';
 
 interface AddChildDialogProps {
   onClose: () => void

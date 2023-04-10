@@ -1,6 +1,6 @@
 import { IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, useTheme } from '@mui/material';
 import { CombinedFamilyInfo, CommunityInfo, Permission, RemoveCommunityMemberFamily } from '../GeneratedClient';
-import { useCommunityCommand, visibleFamiliesQuery } from '../Model/DirectoryModel';
+import { useCommunityCommand } from '../Model/DirectoryModel';
 import { useCommunityPermissions } from '../Model/SessionModel';
 import PeopleIcon from '@mui/icons-material/People';
 import GroupRemoveIcon from '@mui/icons-material/GroupRemove';
@@ -9,6 +9,7 @@ import { useRecoilValue } from 'recoil';
 import { familyNameString } from '../Families/FamilyName';
 import { useNavigate } from 'react-router-dom';
 import { familyLastName } from '../Families/FamilyUtils';
+import { visibleFamiliesQuery } from '../Model/Data';
 
 interface CommunityMemberFamiliesProps {
   communityInfo: CommunityInfo;

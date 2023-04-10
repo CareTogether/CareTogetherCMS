@@ -1,8 +1,8 @@
 import { atom, selector } from "recoil";
 import { OrganizationConfiguration, RequirementStage, VolunteerFamilyRequirementScope } from "../GeneratedClient";
-import { currentLocationState, currentOrganizationIdQuery, currentOrganizationState, selectedLocationIdState } from "./SessionModel";
 import { useLoadable } from "../Hooks/useLoadable";
 import { api } from "../Api/Api";
+import { selectedLocationIdState, selectedOrganizationIdState } from "./Data";
 
 //TODO: Distinguish by organization ID
 export const organizationConfigurationEdited = atom<OrganizationConfiguration | null>({
@@ -13,7 +13,7 @@ export const organizationConfigurationEdited = atom<OrganizationConfiguration | 
 export const organizationConfigurationQuery = selector({
   key: 'organizationConfigurationQuery',
   get: async ({get}) => {
-    const organizationId = get(currentOrganizationIdQuery);
+    const organizationId = get(selectedOrganizationIdState);
     if (organizationId == null)
       return null;
     const edited = get(organizationConfigurationEdited);
@@ -76,8 +76,8 @@ export const adultFamilyRelationshipsData = selector({//TODO: Rename to 'query'
 export const policyData = selector({
   key: 'policyData',
   get: async ({get}) => {
-    const organizationId = get(currentOrganizationState);
-    const locationId = get(currentLocationState);
+    const organizationId = get(selectedOrganizationIdState);
+    const locationId = get(selectedLocationIdState);
     const dataResponse = await api.configuration.getEffectiveLocationPolicy(organizationId, locationId);
     return dataResponse;
   }});
@@ -167,7 +167,7 @@ export const currentOrganizationAndLocationIdsQuery = selector<LocationContext |
   key: 'currentOrganizationAndLocationIdsQuery',
   get: ({get}) => {
     get(organizationConfigurationQuery); //TODO: Figure out why Recoil needs this.
-    const organizationId = get(currentOrganizationIdQuery);
+    const organizationId = get(selectedOrganizationIdState);
     if (!organizationId)
       return null;
     const locationId = get(selectedLocationIdState);

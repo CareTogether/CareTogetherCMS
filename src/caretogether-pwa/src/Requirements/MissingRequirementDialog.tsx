@@ -6,7 +6,6 @@ import { ActionRequirement, Arrangement, DocumentLinkRequirement, MissingArrange
 import { useDirectoryModel, useFamilyLookup, usePersonLookup } from "../Model/DirectoryModel";
 import { uploadFamilyFileToTenant } from "../Model/FilesModel";
 import { useReferralsModel } from "../Model/ReferralsModel";
-import { currentLocationState, currentOrganizationState } from "../Model/SessionModel";
 import { useVolunteersModel } from "../Model/VolunteersModel";
 import { UpdateDialog } from "../UpdateDialog";
 import { RequirementContext } from "./RequirementContext";
@@ -15,6 +14,7 @@ import { personNameString } from "../Families/PersonName";
 import { DialogHandle } from "../Hooks/useDialogHandle";
 import { familyNameString } from "../Families/FamilyName";
 import { add, format, formatDuration, isValid } from "date-fns";
+import { selectedLocationIdState, selectedOrganizationIdState } from '../Model/Data';
 
 type MissingRequirementDialogProps = {
   handle: DialogHandle
@@ -39,8 +39,8 @@ export function MissingRequirementDialog({
   const [completedAtLocal, setCompletedAtLocal] = useState(null as Date | null);
   const [notes, setNotes] = useState("");
   const UPLOAD_NEW = "__uploadnew__";
-  const organizationId = useRecoilValue(currentOrganizationState);
-  const locationId = useRecoilValue(currentLocationState);
+  const organizationId = useRecoilValue(selectedOrganizationIdState);
+  const locationId = useRecoilValue(selectedLocationIdState);
   const [additionalComments, setAdditionalComments] = useState("");
   const [exemptionExpiresAtLocal, setExemptionExpiresAtLocal] = useState(null as Date | null);
   const [exemptAll, setExemptAll] = useState(false);

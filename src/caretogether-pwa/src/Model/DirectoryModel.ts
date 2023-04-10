@@ -1,8 +1,7 @@
-import { atom, selector, useRecoilCallback, useRecoilValue } from "recoil";
-import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, CompositeRecordsCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, UpdatePersonGender, UpdatePersonAge, UpdatePersonEthnicity, UpdateAdultRelationshipToFamily, CustodialRelationshipType, UpdateCustodialRelationshipType, RemoveCustodialRelationship, ChangePrimaryFamilyContact, FamilyRecordsCommand, PersonRecordsCommand, NoteRecordsCommand, AtomicRecordsCommand, CustomField, UpdateCustomFamilyField, FamilyRecordsAggregate, RecordsAggregate, CommunityRecordsAggregate, CommunityCommand, CommunityRecordsCommand } from "../GeneratedClient";
-import { currentOrganizationAndLocationIdsQuery, organizationConfigurationQuery } from "./ConfigurationModel";
-import { useLoadable } from "../Hooks/useLoadable";
+import { useRecoilCallback, useRecoilValue } from "recoil";
+import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, CompositeRecordsCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, UpdatePersonGender, UpdatePersonAge, UpdatePersonEthnicity, UpdateAdultRelationshipToFamily, CustodialRelationshipType, UpdateCustodialRelationshipType, RemoveCustodialRelationship, ChangePrimaryFamilyContact, FamilyRecordsCommand, PersonRecordsCommand, NoteRecordsCommand, AtomicRecordsCommand, CustomField, UpdateCustomFamilyField, CommunityCommand, CommunityRecordsCommand } from "../GeneratedClient";
 import { api } from "../Api/Api";
+import { selectedLocationIdState, selectedOrganizationIdState, visibleAggregatesState, visibleCommunitiesQuery, visibleFamiliesQuery } from "./Data";
 
 export function usePersonLookup() {
   const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
@@ -66,14 +65,14 @@ export function useAtomicRecordsCommandCallback<T extends unknown[], U extends A
   callback: (aggregateId: string, ...args: T) => Promise<U>) {
   return useRecoilCallback(({snapshot, set}) => {
     const asyncCallback = async (aggregateId: string, ...args: T) => {
-      const organizationId = await snapshot.getPromise(currentOrganizationState);
-      const locationId = await snapshot.getPromise(currentLocationState);
+      const organizationId = await snapshot.getPromise(selectedOrganizationIdState);
+      const locationId = await snapshot.getPromise(selectedLocationIdState);
 
       const command = await callback(aggregateId, ...args);
 
       const updatedAggregate = await api.records.submitAtomicRecordsCommand(organizationId, locationId, command);
 
-      set(visibleAggregatesData, current => 
+      set(visibleAggregatesState, current => 
         current.some(currentEntry => currentEntry.id === updatedAggregate.id && currentEntry.constructor === updatedAggregate.constructor)
         ? current.map(currentEntry => currentEntry.id === updatedAggregate.id && currentEntry.constructor === updatedAggregate.constructor
           ? updatedAggregate
@@ -88,14 +87,14 @@ function useCompositeRecordsCommandCallback<T extends unknown[]>(
   callback: (aggregateId: string, ...args: T) => Promise<CompositeRecordsCommand>) {
   return useRecoilCallback(({snapshot, set}) => {
     const asyncCallback = async (aggregateId: string, ...args: T) => {
-      const organizationId = await snapshot.getPromise(currentOrganizationState);
-      const locationId = await snapshot.getPromise(currentLocationState);
+      const organizationId = await snapshot.getPromise(selectedOrganizationIdState);
+      const locationId = await snapshot.getPromise(selectedLocationIdState);
 
       const command = await callback(aggregateId, ...args);
 
       const updatedAggregate = await api.records.submitCompositeRecordsCommand(organizationId, locationId, command);
       
-      set(visibleAggregatesData, current =>
+      set(visibleAggregatesState, current =>
         current.some(currentEntry => currentEntry.id === updatedAggregate.id)
         ? current.map(currentEntry => currentEntry.id === updatedAggregate.id
           ? updatedAggregate
