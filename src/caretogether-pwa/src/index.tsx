@@ -13,7 +13,6 @@ import { BrowserRouter as Router } from "react-router-dom";
 import { MsalProvider } from '@azure/msal-react';
 import { globalMsalInstance } from './Authentication/Auth';
 import AuthenticationWrapper from './Authentication/AuthenticationWrapper';
-import ShellRootLayout from './Shell/ShellRootLayout';
 import { AppRoutes } from './AppRoutes';
 import RequestBackdrop from './RequestBackdrop';
 import reportWebVitals from './reportWebVitals';
@@ -37,9 +36,7 @@ root.render(
                       <ProgressBackdrop opaque>
                         <p>Initializing...</p>
                       </ProgressBackdrop>}>
-                      <ShellRootLayout>
-                        <AppRoutes />
-                      </ShellRootLayout>
+                      <AppRoutes />
                     </React.Suspense>
                   </AuthenticationWrapper>
                 </MsalProvider>

@@ -3,11 +3,9 @@ import { ShellBottomNavigation } from './ShellBottomNavigation';
 import { ShellAppBar } from './ShellAppBar';
 import { ShellSideNavigation } from './ShellSideNavigation';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
+import { Outlet } from 'react-router-dom';
 
-interface ShellRootLayoutProps {
-  children?: React.ReactNode
-}
-function ShellRootLayout({ children }: ShellRootLayoutProps) {
+function ShellRootLayout() {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
 
@@ -27,7 +25,7 @@ function ShellRootLayout({ children }: ShellRootLayoutProps) {
             paddingBottom: isDesktop ? 0 : 7,
             backgroundColor: '#fff'
           }}>
-          {children}
+          <Outlet />
         </Container>
       </Box>
       {!isDesktop && <ShellBottomNavigation />}
