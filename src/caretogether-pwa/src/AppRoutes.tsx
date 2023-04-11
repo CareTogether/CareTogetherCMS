@@ -32,7 +32,7 @@ function RouteMigrator() {
       console.log("Could not migrate route. User organization access state was:")
       console.log(userOrganizationAccess);
     }
-  }, [navigate, firstOrganization, firstLocation]);
+  }, [navigate, firstOrganization, firstLocation, location, userOrganizationAccess]);
 
   return (
     <ProgressBackdrop opaque>
@@ -47,9 +47,9 @@ function RouteError(): React.ReactElement {
   throw new Error(`The URL path '${window.location.href}' is invalid.`);
 }
 
-function RouteDisplay(): React.ReactElement {
-  throw new Error(`The URL path '${window.location.href}' is invalid.`);
-}
+// function RouteDisplay(): React.ReactElement {
+//   throw new Error(`The URL path '${window.location.href}' is invalid.`);
+// }
 
 function LocationContextWrapper() {
   const trace = useScopedTrace("LocationContext");
@@ -69,7 +69,7 @@ function LocationContextWrapper() {
         `organizationId: '${organizationId}'` +
         `locationId: '${locationId}'`);
     }
-  }, [organizationId, locationId]);
+  }, [organizationId, locationId, trace, updateLocationContext]);
   
   return (
     <ShellRootLayout>

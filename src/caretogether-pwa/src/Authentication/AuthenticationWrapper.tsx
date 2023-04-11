@@ -56,7 +56,7 @@ export default function AuthenticationWrapper({ children }: AuthenticationWrappe
       trace(`Setting user ID: ${defaultAccount.localAccountId}`);
       setUserId(defaultAccount.localAccountId);
     }
-  }, [isAuthenticated, defaultAccount, setUserId]);
+  }, [isAuthenticated, defaultAccount, setUserId, trace]);
 
   trace("render");
   return (

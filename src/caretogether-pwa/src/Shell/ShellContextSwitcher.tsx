@@ -39,7 +39,7 @@ export function ShellContextSwitcher() {
             {organizationName}
           </Typography>
         : <Skeleton variant='text' width={130} animation='wave' sx={{ marginTop: -0.5, marginLeft: 1}} />}
-      {(locationName && availableLocations && locations && selectedLocationContext.state == 'hasValue')
+      {(locationName && availableLocations && locations && selectedLocationContext.state === 'hasValue')
         ? availableLocations.length >= 1
           ? <Select size={isDesktop ? 'small' : 'medium'}
               variant='outlined'
