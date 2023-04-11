@@ -1,11 +1,11 @@
 import React, { useEffect } from 'react';
 import { InteractionType } from "@azure/msal-browser";
-import { useMsalAuthentication, useIsAuthenticated, useAccount, useMsal } from '@azure/msal-react';
+import { useMsalAuthentication, useIsAuthenticated, useAccount } from '@azure/msal-react';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useScopedTrace } from '../Hooks/useScopedTrace';
 import { useSearchParams } from 'react-router-dom';
-import { useSetRecoilState } from 'recoil';
-import { userIdState } from '../Model/Data';
+import { useRecoilCallback } from 'recoil';
+import { userIdState } from "../Model/Data";
 
 function SignInScreen() {
   return (
@@ -31,7 +31,7 @@ export default function AuthenticationWrapper({ children }: AuthenticationWrappe
   const stateQueryParam = searchParams.get("state");
   trace(`state: ${stateQueryParam}`);
   
-  // Force the user to sign in if not already authenticated, then render the app.
+  // Force the user to sign in if not already authenticated.
   // See https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-react/docs/hooks.md
   //TODO: Handle token/session expiration to intercept the automatic redirect and prompt the user first?
   //TODO: Smoother handling of deeplink routing (integrating with React Router)?
@@ -40,39 +40,23 @@ export default function AuthenticationWrapper({ children }: AuthenticationWrappe
     scopes: [process.env.REACT_APP_AUTH_SCOPES],
     state: stateQueryParam ?? undefined
   });
+
   const isAuthenticated = useIsAuthenticated();
   const defaultAccount = useAccount();
-  const { instance } = useMsal();
-  const setUserId = useSetRecoilState(userIdState);
   trace(`isAuthenticated: ${isAuthenticated} -- defaultAccount: ${defaultAccount?.localAccountId}`);
-
-  // Before rendering any child components, ensure that the user is authenticated and
-  // that the default account is set correctly in MSAL.
+  
+  // One the user is authenticated, store the user's account for future reference.
+  // This becomes the root of the Recoil dataflow graph.
+  const setUserId = useRecoilCallback(({ set, snapshot }) => (userId: string) => {
+    set(userIdState, userId);
+  });
   useEffect(() => {
-    const accounts = instance.getAllAccounts();
-    const accountToActivate = accounts.length > 0 ? accounts[0] : null;
-    trace(`setActiveAccount: ${accountToActivate?.localAccountId}`);
-    instance.setActiveAccount(accountToActivate);
-    if (accountToActivate) {
-      trace(`Setting user ID: ${accountToActivate.localAccountId}`);
-      setUserId(accountToActivate.localAccountId);
+    trace("Effect triggered");
+    if (isAuthenticated && defaultAccount) {
+      trace(`Setting user ID: ${defaultAccount.localAccountId}`);
+      setUserId(defaultAccount.localAccountId);
     }
-  }, [ instance, isAuthenticated, trace, setUserId ]);
-
-  // Track the most recently acquired access token as shared state for API clients to reference.
-  useEffect(() => {
-    const callbackId = instance.addEventCallback((event: any) => {
-      trace(`event: ${event?.eventType}`);
-    });
-    trace(`addEventCallback completed: ${callbackId}`);
-
-    return () => {
-      trace(`unmounting: ${callbackId}`);
-      if (callbackId) {
-        instance.removeEventCallback(callbackId);
-      }
-    }
-  }, [ instance, trace ]);
+  }, [isAuthenticated, defaultAccount, setUserId]);
 
   trace("render");
   return (

@@ -3,14 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { useLoadable } from '../Hooks/useLoadable';
 import { locationNameQuery, organizationConfigurationQuery, organizationNameQuery } from '../Model/ConfigurationModel';
-import { currentOrganizationQuery, selectedLocationIdState } from '../Model/Data';
+import { currentOrganizationQuery, selectedLocationContextState } from '../Model/Data';
 
 export function ShellContextSwitcher() {
   const organizationName = useLoadable(organizationNameQuery);
   const locationName = useLoadable(locationNameQuery);
 
   const organizationConfiguration = useLoadable(organizationConfigurationQuery);
-  const [selectedLocationId, setSelectedLocationId] = useRecoilState(selectedLocationIdState);
+  const [selectedLocationContext, setSelectedLocationContext] = useRecoilState(selectedLocationContextState);
   const currentOrganization = useRecoilValue(currentOrganizationQuery);
   const availableLocations = currentOrganization.locations;
 
@@ -23,7 +23,7 @@ export function ShellContextSwitcher() {
   const navigate = useNavigate();
   
   function switchLocation(locationId: string) {
-    setSelectedLocationId(locationId);
+    setSelectedLocationContext({ organizationId: currentOrganization.organizationId!, locationId });
     navigate("/");
   }
   
@@ -65,7 +65,7 @@ export function ShellContextSwitcher() {
                 backgroundColor: theme.palette.primary.light,
                 color: theme.palette.primary.contrastText
               }}}}
-              value={selectedLocationId}
+              value={selectedLocationContext.locationId}
               onChange={e => switchLocation(e.target.value as string)}>
                 {locations.map(location =>
                   <MenuItem key={location.id} value={location.id}

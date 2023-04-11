@@ -13,23 +13,23 @@ export const organizationConfigurationEdited = atom<OrganizationConfiguration | 
 export const organizationConfigurationQuery = selector({
   key: 'organizationConfigurationQuery',
   get: async ({get}) => {
+    console.log("organizationConfigurationQuery GET");
     const organizationId = get(selectedOrganizationIdState);
+    console.log("organizationId:");
+    console.log(organizationId);
     if (organizationId == null)
       return null;
     const edited = get(organizationConfigurationEdited);
+    console.log("edited:");
+    console.log(edited);
     if (edited) {
       return edited;
     } else {
       const dataResponse = await api.configuration.getOrganizationConfiguration(organizationId);
+      console.log("dataResponse:");
+      console.log(dataResponse);
       return dataResponse;
     }
-  }});
-
-export const organizationConfigurationData = selector({//TODO: Deprecated
-  key: 'COMPATIBILITY__organizationConfigurationData',
-  get: async ({get}) => {
-    const organizationConfiguration = get(organizationConfigurationQuery);
-    return organizationConfiguration;
   }});
 
 export const organizationNameQuery = selector({

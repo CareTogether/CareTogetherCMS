@@ -5,7 +5,7 @@ export function useScopedTrace(component: string) {
   const appInsights = useAppInsightsContext();
 
   return useCallback((message: string) => {
-    console.log(`[${component}] ${message}`);
+    console.debug(`[${component}] ${message}`);
     appInsights.trackTrace({
       message: message,
       properties: {

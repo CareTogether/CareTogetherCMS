@@ -4,8 +4,10 @@ import { ShellAppBar } from './ShellAppBar';
 import { ShellSideNavigation } from './ShellSideNavigation';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
 import { Outlet } from 'react-router-dom';
+import React from 'react';
+import { ProgressBackdrop } from './ProgressBackdrop';
 
-function ShellRootLayout() {
+function ShellRootLayout({ children }: React.PropsWithChildren) {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
 
@@ -15,9 +17,9 @@ function ShellRootLayout() {
 
   return (
     <Box sx={{ flexGrow: 1 }}>
-      <ShellAppBar menuDrawerOpen={menuDrawerOpen} setMenuDrawerOpen={setMenuDrawerOpen}
-        drawerWidth={drawerWidth + 'px'} />
-      {isDesktop && <ShellSideNavigation open={menuDrawerOpen} width={drawerWidth} />}
+      {/* <ShellAppBar menuDrawerOpen={menuDrawerOpen} setMenuDrawerOpen={setMenuDrawerOpen}
+        drawerWidth={drawerWidth + 'px'} /> */}
+      {/* {isDesktop && <ShellSideNavigation open={menuDrawerOpen} width={drawerWidth} />} */}
       <Box sx={{ flexGrow: 1, marginLeft: isDesktop ? drawerWidth + 'px' : null }}>
         <Container maxWidth={false} sx={{
             marginTop: { xs: 7, sm: 8, md: 6 },
@@ -25,10 +27,15 @@ function ShellRootLayout() {
             paddingBottom: isDesktop ? 0 : 7,
             backgroundColor: '#fff'
           }}>
-          <Outlet />
+          <React.Suspense fallback={
+            <ProgressBackdrop opaque>
+              <p>Loading...</p>
+            </ProgressBackdrop>}>
+            {children}
+          </React.Suspense>
         </Container>
       </Box>
-      {!isDesktop && <ShellBottomNavigation />}
+      {/* {!isDesktop && <ShellBottomNavigation />} */}
     </Box>
   );
 }

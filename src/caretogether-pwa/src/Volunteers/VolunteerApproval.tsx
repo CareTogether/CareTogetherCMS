@@ -3,7 +3,7 @@ import { Gender, ExactAge, AgeInYears, RoleVersionApproval, CombinedFamilyInfo, 
 import { differenceInYears } from 'date-fns';
 import { atom, selector, useRecoilState, useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../Model/VolunteersModel';
-import { organizationConfigurationData, policyData } from '../Model/ConfigurationModel';
+import { organizationConfigurationQuery, policyData } from '../Model/ConfigurationModel';
 import { RoleApprovalStatus } from '../GeneratedClient';
 import React, { useEffect, useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
@@ -230,7 +230,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   };
 
   const locationId = useRecoilValue(selectedLocationIdState);
-  const organizationConfiguration = useRecoilValue(organizationConfigurationData);
+  const organizationConfiguration = useRecoilValue(organizationConfigurationQuery);
   const smsSourcePhoneNumbers = organizationConfiguration?.locations?.find(loc =>
     loc.id === locationId)?.smsSourcePhoneNumbers;
   const [smsMode, setSmsMode] = useState(false);
