@@ -29,7 +29,7 @@ export function ShellAppBar({ menuDrawerOpen, setMenuDrawerOpen, drawerWidth }: 
         style={{ paddingLeft: isDesktop ? 0 : undefined }}>
         {isDesktop && (menuDrawerOpen
           ? <Box sx={{ width: drawerWidth, flexShrink: 0, position: 'relative' }}>
-            <ShellContextSwitcher />
+            {/* <ShellContextSwitcher /> */}
             <IconButton
               size={isDesktop ? 'medium' : 'large'}
               color='inherit'

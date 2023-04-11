@@ -7,7 +7,7 @@ function Dashboard() {
   const organizationName = useRecoilValueLoadable(organizationNameQuery);
   const locationName = useRecoilValueLoadable(locationNameQuery);
 
-  //useScreenTitle("Dashboard");
+  useScreenTitle("Dashboard");
 
   return (
     <Grid container spacing={3}>

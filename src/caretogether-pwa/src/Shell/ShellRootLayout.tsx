@@ -17,8 +17,8 @@ function ShellRootLayout({ children }: React.PropsWithChildren) {
 
   return (
     <Box sx={{ flexGrow: 1 }}>
-      {/* <ShellAppBar menuDrawerOpen={menuDrawerOpen} setMenuDrawerOpen={setMenuDrawerOpen}
-        drawerWidth={drawerWidth + 'px'} /> */}
+      <ShellAppBar menuDrawerOpen={menuDrawerOpen} setMenuDrawerOpen={setMenuDrawerOpen}
+        drawerWidth={drawerWidth + 'px'} />
       {/* {isDesktop && <ShellSideNavigation open={menuDrawerOpen} width={drawerWidth} />} */}
       <Box sx={{ flexGrow: 1, marginLeft: isDesktop ? drawerWidth + 'px' : null }}>
         <Container maxWidth={false} sx={{
