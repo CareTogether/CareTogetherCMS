@@ -1,6 +1,6 @@
 import { MenuItem, Select, Skeleton, Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { useRecoilState, useRecoilValue } from 'recoil';
+import { useRecoilStateLoadable } from 'recoil';
 import { useLoadable } from '../Hooks/useLoadable';
 import { locationNameQuery, organizationConfigurationQuery, organizationNameQuery } from '../Model/ConfigurationModel';
 import { currentOrganizationQuery, selectedLocationContextState } from '../Model/Data';
@@ -10,9 +10,15 @@ export function ShellContextSwitcher() {
   const locationName = useLoadable(locationNameQuery);
 
   const organizationConfiguration = useLoadable(organizationConfigurationQuery);
-  const [selectedLocationContext, setSelectedLocationContext] = useRecoilState(selectedLocationContextState);
-  const currentOrganization = useRecoilValue(currentOrganizationQuery);
-  const availableLocations = currentOrganization.locations;
+  const [selectedLocationContext, setSelectedLocationContext] = useRecoilStateLoadable(selectedLocationContextState);
+  const currentOrganization = useLoadable(currentOrganizationQuery);
+  
+  const navigate = useNavigate();
+  
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
+
+  const availableLocations = currentOrganization?.locations;
 
   const locations = organizationConfiguration?.locations!.map(location => ({
     id: location.id!,
@@ -20,15 +26,10 @@ export function ShellContextSwitcher() {
     isAvailable: availableLocations?.some(available => available.locationId === location.id) || false
   }));
   
-  const navigate = useNavigate();
-  
   function switchLocation(locationId: string) {
-    setSelectedLocationContext({ organizationId: currentOrganization.organizationId!, locationId });
+    setSelectedLocationContext({ organizationId: currentOrganization!.organizationId!, locationId });
     navigate("/");
   }
-  
-  const theme = useTheme();
-  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
   
   return (
     <Stack sx={{ position: 'absolute' }}>
@@ -38,7 +39,7 @@ export function ShellContextSwitcher() {
             {organizationName}
           </Typography>
         : <Skeleton variant='text' width={130} animation='wave' sx={{ marginTop: -0.5, marginLeft: 1}} />}
-      {(locationName && availableLocations && locations)
+      {(locationName && availableLocations && locations && selectedLocationContext.state == 'hasValue')
         ? availableLocations.length >= 1
           ? <Select size={isDesktop ? 'small' : 'medium'}
               variant='outlined'
@@ -65,7 +66,7 @@ export function ShellContextSwitcher() {
                 backgroundColor: theme.palette.primary.light,
                 color: theme.palette.primary.contrastText
               }}}}
-              value={selectedLocationContext.locationId}
+              value={selectedLocationContext.getValue().locationId}
               onChange={e => switchLocation(e.target.value as string)}>
                 {locations.map(location =>
                   <MenuItem key={location.id} value={location.id}

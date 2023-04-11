@@ -16,9 +16,8 @@ export const userIdState = atom<string>({
 export const userOrganizationAccessQuery = selector({
   key: 'userOrganizationAccessQuery',
   get: async ({get}) => {
-    console.log("userOrganizationAccessQuery GET");
     const userId = get(userIdState);
-    console.log(`Reevaluating userOrganizationAccessQuery for user ID: ${userId}`);
+    console.debug(`Reevaluating userOrganizationAccessQuery for user ID: ${userId}`);
     const userResponse = await api.users.getUserOrganizationAccess();
     return userResponse;
   }
@@ -57,10 +56,9 @@ export const selectedLocationIdState = selector({
 export const currentOrganizationQuery = selector({
   key: 'currentOrganizationQuery',
   get: ({get}) => {
-    console.log("currentOrganizationQuery GET");
     const userOrganizationAccess = get(userOrganizationAccessQuery);
     const selectedLocationContext = get(selectedLocationContextState);
-    console.log(`Reevaluating currentOrganizationQuery for organization ID: ${selectedLocationContext.organizationId}`);
+    console.debug(`Reevaluating currentOrganizationQuery for organization ID: ${selectedLocationContext.organizationId}`);
 
     const selectedOrganization = userOrganizationAccess.organizations?.find(org =>
       org.organizationId && org.organizationId === selectedLocationContext.organizationId);
@@ -78,10 +76,9 @@ export const currentOrganizationQuery = selector({
 export const currentLocationQuery = selector({
   key: 'currentLocationQuery',
   get: ({get}) => {
-    console.log("currentLocationQuery GET");
     const currentOrganization = get(currentOrganizationQuery);
     const selectedLocationContext = get(selectedLocationContextState);
-    console.log(`Reevaluating currentLocationQuery for organization ID ${currentOrganization.organizationId}` +
+    console.debug(`Reevaluating currentLocationQuery for organization ID ${selectedLocationContext.organizationId}` +
       ` and location ID: ${selectedLocationContext.locationId}`);
 
     const selectedLocation = currentOrganization?.locations?.find(loc =>

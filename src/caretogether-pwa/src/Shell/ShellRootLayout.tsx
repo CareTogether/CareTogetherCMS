@@ -3,7 +3,6 @@ import { ShellBottomNavigation } from './ShellBottomNavigation';
 import { ShellAppBar } from './ShellAppBar';
 import { ShellSideNavigation } from './ShellSideNavigation';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
-import { Outlet } from 'react-router-dom';
 import React from 'react';
 import { ProgressBackdrop } from './ProgressBackdrop';
 
@@ -19,7 +18,7 @@ function ShellRootLayout({ children }: React.PropsWithChildren) {
     <Box sx={{ flexGrow: 1 }}>
       <ShellAppBar menuDrawerOpen={menuDrawerOpen} setMenuDrawerOpen={setMenuDrawerOpen}
         drawerWidth={drawerWidth + 'px'} />
-      {/* {isDesktop && <ShellSideNavigation open={menuDrawerOpen} width={drawerWidth} />} */}
+      {isDesktop && <ShellSideNavigation open={menuDrawerOpen} width={drawerWidth} />}
       <Box sx={{ flexGrow: 1, marginLeft: isDesktop ? drawerWidth + 'px' : null }}>
         <Container maxWidth={false} sx={{
             marginTop: { xs: 7, sm: 8, md: 6 },
@@ -35,7 +34,7 @@ function ShellRootLayout({ children }: React.PropsWithChildren) {
           </React.Suspense>
         </Container>
       </Box>
-      {/* {!isDesktop && <ShellBottomNavigation />} */}
+      {!isDesktop && <ShellBottomNavigation />}
     </Box>
   );
 }
