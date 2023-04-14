@@ -2,7 +2,7 @@ import { atom, atomFamily, selector, selectorFamily } from "recoil";
 import { useLoadable } from "../Hooks/useLoadable";
 import { api } from "../Api/Api";
 import { CommunityRecordsAggregate, FamilyRecordsAggregate, RecordsAggregate } from "../GeneratedClient";
-import { loggingEffect } from "./loggingEffect";
+import { loggingEffect } from "../Utilities/loggingEffect";
 
 // This will be set by AuthenticationWrapper once the user has authenticated and the default account is set.
 export const userIdState = atom<string>({
