@@ -89,8 +89,7 @@ function LocationContextWrapper() {
 export function AppRoutes() {
   return (
     <Routes>
-      <Route path="/:organizationId/:locationId/*" element={<LocationContextWrapper />}>
-      </Route>
+      <Route path="/:organizationId/:locationId/*" element={<LocationContextWrapper />} />
       <Route path="/me" /*TODO: This needs a shell!*/ element={<UserProfile />} />
       <Route path="*" element={<RouteMigrator />} />
     </Routes>
