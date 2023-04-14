@@ -3,18 +3,28 @@ import { BottomNavigation, BottomNavigationAction, Drawer, Paper, useTheme } fro
 import PeopleIcon from '@mui/icons-material/People';
 import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
 import Diversity3Icon from '@mui/icons-material/Diversity3';
-// import DashboardIcon from '@mui/icons-material/Dashboard';
+import DashboardIcon from '@mui/icons-material/Dashboard';
 import MenuIcon from '@mui/icons-material/Menu';
 import { Link, useLocation } from 'react-router-dom';
 import { ShellContextSwitcher } from './ShellContextSwitcher';
+import { useRecoilValue } from 'recoil';
+import { selectedLocationContextState } from '../Model/Data';
 
 export function ShellBottomNavigation() {
   const theme = useTheme();
   
   const location = useLocation();
 
-  const links = [/*'/dashboard',*/ '/referrals', '/volunteers'];
-  const selectedLink = links.findIndex(link => location.pathname.startsWith(link));
+  const context = useRecoilValue(selectedLocationContextState);
+  const locationPrefix = `/${context.organizationId}/${context.locationId}`;
+
+  const links = [
+    new RegExp(`${locationPrefix}/*.*`),
+    new RegExp(`${locationPrefix}/referrals/*.*`),
+    new RegExp(`${locationPrefix}/volunteers/*.*`),
+    new RegExp(`${locationPrefix}/communities/*.*`)
+  ];
+  const selectedLink = links.findIndex(link => location.pathname.match(link) != null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
@@ -41,10 +51,10 @@ export function ShellBottomNavigation() {
         }}
       >
         <BottomNavigationAction icon={<MenuIcon />} onClick={() => setDrawerOpen(true)} />
-        {/* <BottomNavigationAction component={Link} to='/dashboard' label="Dashboard" icon={<DashboardIcon />} /> */}
-        {<BottomNavigationAction component={Link} to='/referrals' label="Referrals" icon={<PermPhoneMsgIcon />} />}
-        <BottomNavigationAction component={Link} to='/volunteers' label="Volunteers" icon={<PeopleIcon />} />
-        <BottomNavigationAction component={Link} to='/communities' label="Communities" icon={<Diversity3Icon />} />
+        {<BottomNavigationAction component={Link} to={`${locationPrefix}`} label="Dashboard" icon={<DashboardIcon />} />}
+        {<BottomNavigationAction component={Link} to={`${locationPrefix}/referrals`} label="Referrals" icon={<PermPhoneMsgIcon />} />}
+        <BottomNavigationAction component={Link} to={`${locationPrefix}/volunteers`} label="Volunteers" icon={<PeopleIcon />} />
+        <BottomNavigationAction component={Link} to={`${locationPrefix}/communities`} label="Communities" icon={<Diversity3Icon />} />
       </BottomNavigation>
       <Drawer
         sx={{
