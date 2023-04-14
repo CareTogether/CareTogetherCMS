@@ -10,6 +10,7 @@ import { useGlobalPermissions } from '../Model/SessionModel';
 import { Permission } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { selectedLocationContextState } from '../Model/Data';
+import { useLoadable } from '../Hooks/useLoadable';
 
 interface SideNavigationMenuProps {
   open: boolean;
@@ -17,8 +18,9 @@ interface SideNavigationMenuProps {
 function SideNavigationMenu({ open }: SideNavigationMenuProps) {
   const flags = useFeatureFlags();
   const permissions = useGlobalPermissions();
-  const context = useRecoilValue(selectedLocationContextState);
-  const locationPrefix = `/${context.organizationId}/${context.locationId}`;
+  
+  const context = useLoadable(selectedLocationContextState);
+  const locationPrefix = `/${context?.organizationId}/${context?.locationId}`;
 
   return (
     //  <List aria-label="main navigation">

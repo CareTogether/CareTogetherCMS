@@ -9,14 +9,15 @@ import { Link, useLocation } from 'react-router-dom';
 import { ShellContextSwitcher } from './ShellContextSwitcher';
 import { useRecoilValue } from 'recoil';
 import { selectedLocationContextState } from '../Model/Data';
+import { useLoadable } from '../Hooks/useLoadable';
 
 export function ShellBottomNavigation() {
   const theme = useTheme();
   
   const location = useLocation();
 
-  const context = useRecoilValue(selectedLocationContextState);
-  const locationPrefix = `/${context.organizationId}/${context.locationId}`;
+  const context = useLoadable(selectedLocationContextState);
+  const locationPrefix = `/${context?.organizationId}/${context?.locationId}`;
 
   const links = [
     new RegExp(`${locationPrefix}/*.*`),
