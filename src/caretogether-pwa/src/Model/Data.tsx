@@ -17,7 +17,6 @@ export const userOrganizationAccessQuery = selector({
   key: 'userOrganizationAccessQuery',
   get: async ({get}) => {
     const userId = get(userIdState);
-    console.debug(`Reevaluating userOrganizationAccessQuery for user ID: ${userId}`);
     const userResponse = await api.users.getUserOrganizationAccess();
     return userResponse;
   }
@@ -58,7 +57,6 @@ export const currentOrganizationQuery = selector({
   get: ({get}) => {
     const userOrganizationAccess = get(userOrganizationAccessQuery);
     const selectedLocationContext = get(selectedLocationContextState);
-    console.debug(`Reevaluating currentOrganizationQuery for organization ID: ${selectedLocationContext.organizationId}`);
 
     const selectedOrganization = userOrganizationAccess.organizations?.find(org =>
       org.organizationId && org.organizationId === selectedLocationContext.organizationId);
@@ -78,8 +76,6 @@ export const currentLocationQuery = selector({
   get: ({get}) => {
     const currentOrganization = get(currentOrganizationQuery);
     const selectedLocationContext = get(selectedLocationContextState);
-    console.debug(`Reevaluating currentLocationQuery for organization ID ${selectedLocationContext.organizationId}` +
-      ` and location ID: ${selectedLocationContext.locationId}`);
 
     const selectedLocation = currentOrganization?.locations?.find(loc =>
       loc.locationId && loc.locationId === selectedLocationContext.locationId);
@@ -111,8 +107,16 @@ const visibleAggregatesForScopeData = atomFamily<RecordsAggregate[], LocationCon
 // For convenience, only the currently visible records are exported to the client from this module.
 export const visibleAggregatesState = selector({
   key: 'visibleAggregatesState',
-  get: ({get}) => visibleAggregatesForScopeData(get(selectedLocationContextState)),
-  set: ({get, set}, newValue) => set(visibleAggregatesForScopeData(get(selectedLocationContextState)), newValue)
+  get: async ({get}) => {
+    const context = await get(selectedLocationContextState);
+    const visibleAggregates = visibleAggregatesForScopeData(context);
+    const results = await get(visibleAggregates);
+    return results;
+  },
+  set: ({get, set}, newValue) => {
+    const context = get(selectedLocationContextState);
+    set(visibleAggregatesForScopeData(context), newValue);
+  }
 })
 
 // This hook can be used for convenience to determine if the current scope's records have been loaded.
@@ -122,8 +126,8 @@ export function useDataLoaded() {
 
 export const visibleFamiliesQuery = selector({
   key: 'visibleFamiliesQuery',
-  get: ({get}) => {
-    const visibleAggregates = get(visibleAggregatesState);
+  get: async ({get}) => {
+    const visibleAggregates = await get(visibleAggregatesState);
     return visibleAggregates.filter(aggregate => aggregate instanceof FamilyRecordsAggregate).map(aggregate =>
       (aggregate as FamilyRecordsAggregate).family!);
   }
@@ -131,8 +135,8 @@ export const visibleFamiliesQuery = selector({
 
 export const visibleCommunitiesQuery = selector({
   key: 'visibleCommunitiesQuery',
-  get: ({get}) => {
-    const visibleAggregates = get(visibleAggregatesState);
+  get: async ({get}) => {
+    const visibleAggregates = await get(visibleAggregatesState);
     return visibleAggregates.filter(aggregate => aggregate instanceof CommunityRecordsAggregate).map(aggregate =>
       (aggregate as CommunityRecordsAggregate).community!);
   }
