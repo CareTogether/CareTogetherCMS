@@ -17,7 +17,7 @@ export function ShellBottomNavigation() {
   const location = useLocation();
 
   const context = useLoadable(selectedLocationContextState);
-  const locationPrefix = `/${context?.organizationId}/${context?.locationId}`;
+  const locationPrefix = `/org/${context?.organizationId}/${context?.locationId}`;
 
   const links = [
     new RegExp(`${locationPrefix}/*.*`),

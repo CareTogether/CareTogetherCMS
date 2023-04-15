@@ -20,7 +20,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
   const permissions = useGlobalPermissions();
   
   const context = useLoadable(selectedLocationContextState);
-  const locationPrefix = `/${context?.organizationId}/${context?.locationId}`;
+  const locationPrefix = `/org/${context?.organizationId}/${context?.locationId}`;
 
   return (
     //  <List aria-label="main navigation">

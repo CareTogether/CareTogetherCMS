@@ -8,11 +8,13 @@ import AddIcon from '@mui/icons-material/Add';
 import { useState } from 'react';
 import { useGlobalPermissions } from '../Model/SessionModel';
 import { AddEditCommunity } from './AddEditCommunity';
-import { useDataLoaded, visibleCommunitiesQuery } from '../Model/Data';
+import { selectedLocationContextState, useDataLoaded, visibleCommunitiesQuery } from '../Model/Data';
+import { useRecoilValue } from 'recoil';
 
 export function CommunitiesList() {
   useScreenTitle("Communities");
 
+  const { organizationId, locationId } = useRecoilValue(selectedLocationContextState);
   const dataLoaded = useDataLoaded();
 
   // The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
@@ -22,7 +24,7 @@ export function CommunitiesList() {
 
   const navigate = useNavigate();
   function openCommunity(community: Community) {
-    navigate(`/communities/community/${community.id}`);
+    navigate(`/org/${organizationId}/${locationId}/communities/community/${community.id}`);
   }
 
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);

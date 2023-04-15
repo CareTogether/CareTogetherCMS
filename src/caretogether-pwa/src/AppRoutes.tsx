@@ -41,7 +41,7 @@ function RouteMigrator() {
   
     if (firstLocation) {
       //TODO: Only do this if the old path is a valid/migrate-able path to begin with.
-      const target = `${firstOrganization?.organizationId}/${firstLocation.locationId}${location.pathname}` +
+      const target = `/org/${firstOrganization?.organizationId}/${firstLocation.locationId}${location.pathname}` +
         `${location.search}${location.hash}`;
       trace(`Attempting to migrate route to: ${target}`);
       navigate(target);
@@ -104,9 +104,15 @@ function LocationContextWrapper() {
 export function AppRoutes() {
   return (
     <Routes>
-      <Route path="/:organizationId/:locationId/*" element={<LocationContextWrapper />} />
-      <Route path="/me" /*TODO: This needs a shell!*/ element={<UserProfile />} />
-      <Route path="*" element={<RouteMigrator />} />
+      <Route path="/org/:organizationId/:locationId/*" element={<LocationContextWrapper />} />
+      <Route path="/me/*" /*TODO: This needs a shell!*/ element={<UserProfile />} />
+      <Route path="/families/:familyId" element={<RouteMigrator />} />
+      <Route path="/referrals/*" element={<RouteMigrator />} />
+      <Route path="/volunteers/*" element={<RouteMigrator />} />
+      <Route path="/communities/*" element={<RouteMigrator />} />
+      <Route path="/settings/*" element={<RouteMigrator />} />
+      <Route path="/" element={<RouteMigrator />} />
+      <Route path="*" element={<RouteError />} />
     </Routes>
   );
 }
