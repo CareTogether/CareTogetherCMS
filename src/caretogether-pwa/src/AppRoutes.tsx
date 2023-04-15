@@ -7,32 +7,48 @@ import { Settings } from "./Settings/Settings";
 import { FamilyScreen } from "./Families/FamilyScreen";
 import { Communities } from "./Communities/Communities";
 import { UserProfile } from "./UserProfile/UserProfile";
-import { useRecoilCallback, useRecoilValue } from "recoil";
-import { LocationContext, selectedLocationContextState, userOrganizationAccessQuery } from "./Model/Data";
+import { useSetRecoilState } from "recoil";
+import { selectedLocationContextState, userOrganizationAccessQuery } from "./Model/Data";
 import ShellRootLayout from "./Shell/ShellRootLayout";
 import { ProgressBackdrop } from "./Shell/ProgressBackdrop";
 import { useScopedTrace } from "./Hooks/useScopedTrace";
+import { useLoadable } from "./Hooks/useLoadable";
 
 function RouteMigrator() {
+  const trace = useScopedTrace("RouteMigrator");
   const location = useLocation();
   const navigate = useNavigate();
 
-  const userOrganizationAccess = useRecoilValue(userOrganizationAccessQuery);
-  const firstOrganization = userOrganizationAccess.organizations?.at(0);
-  const firstLocation = firstOrganization?.locations?.at(0);
+  const userOrganizationAccess = useLoadable(userOrganizationAccessQuery);
+  trace(`userOrganizationAccess contents: ${JSON.stringify(
+    userOrganizationAccess?.organizations?.map(org => ({
+      organizationId: org.organizationId,
+      locations: org.locations?.map(loc => ({
+        locationId: loc.locationId,
+        personId: loc.personId,
+        roles: loc.roles
+      }))
+    })))}`);
 
   useEffect(() => {
+    if (userOrganizationAccess == null) {
+      return;
+    }
+    
+    const firstOrganization = userOrganizationAccess?.organizations?.at(0);
+    const firstLocation = firstOrganization?.locations?.at(0);
+    trace(`firstLocation ID: ${JSON.stringify(firstLocation?.locationId)}`);
+  
     if (firstLocation) {
       //TODO: Only do this if the old path is a valid/migrate-able path to begin with.
       const target = `${firstOrganization?.organizationId}/${firstLocation.locationId}${location.pathname}` +
         `${location.search}${location.hash}`;
-      console.log(`Attempting to migrate route to: ${target}`);
+      trace(`Attempting to migrate route to: ${target}`);
       navigate(target);
     } else {
-      console.log("Could not migrate route. User organization access state was:")
-      console.log(userOrganizationAccess);
+      trace("Could not migrate route.");
     }
-  }, [navigate, firstOrganization, firstLocation, location, userOrganizationAccess]);
+  }, [navigate, location, userOrganizationAccess]);
 
   return (
     <ProgressBackdrop opaque>
@@ -54,15 +70,14 @@ function RouteError(): React.ReactElement {
 function LocationContextWrapper() {
   const trace = useScopedTrace("LocationContext");
   const { organizationId, locationId } = useParams<{ organizationId: string, locationId: string }>();
-  const updateLocationContext = useRecoilCallback(({set, reset, snapshot}) => (context: LocationContext) => {
-    set(selectedLocationContextState, context);
-  });
+  
+  const updateLocationContext = useSetRecoilState(selectedLocationContextState);
 
   // We only need to change this on first load or when the location context actually changes.
   useEffect(() => {
-    trace("Effect");
+    trace(`organizationId: '${organizationId}' -- locationId: '${locationId}'`);
+
     if (organizationId && locationId) {
-      trace("Updating location context");
       updateLocationContext({ organizationId, locationId });
     } else {
       trace(`Location context was NOT updated. ` +

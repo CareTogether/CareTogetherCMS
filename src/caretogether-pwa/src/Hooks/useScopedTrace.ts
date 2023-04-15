@@ -1,9 +1,9 @@
 import { useAppInsightsContext } from "@microsoft/applicationinsights-react-js";
 import { useCallback } from "react";
 
-const ignoreComponentsForConsole = [
-  "AuthenticationWrapper",
-  "LocationContext"
+const ignoreComponentsForConsole: string[] = [
+  //"AuthenticationWrapper",
+  //"LocationContext",
 ];
 
 export function useScopedTrace(component: string) {

@@ -1,27 +1,14 @@
 import React, { useEffect } from 'react';
 import { InteractionType } from "@azure/msal-browser";
-import { useMsalAuthentication, useIsAuthenticated, useAccount } from '@azure/msal-react';
+import { useMsalAuthentication, useAccount, AuthenticatedTemplate, UnauthenticatedTemplate, useMsal } from '@azure/msal-react';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useScopedTrace } from '../Hooks/useScopedTrace';
 import { useSearchParams } from 'react-router-dom';
-import { useRecoilCallback } from 'recoil';
+import { useSetRecoilState } from 'recoil';
 import { userIdState } from "../Model/Data";
 
-function SignInScreen() {
-  return (
-    <ProgressBackdrop opaque>
-      <p>Signing in...</p>
-      <p>If you are not redirected within a few seconds,<br /> try refreshing this page.</p>
-    </ProgressBackdrop>
-  );
-}
-
-interface AuthenticationWrapperProps {
-  children?: React.ReactNode
-}
-export default function AuthenticationWrapper({ children }: AuthenticationWrapperProps) {
-  const trace = useScopedTrace("AuthenticationWrapper");
-  trace("start");
+function SignIn() {
+  const trace = useScopedTrace("SignIn");
 
   // Ensure that the 'state' parameter is always round-tripped through MSAL.
   // This is useful, e.g., for person invite redemption which may require interrupting a
@@ -30,7 +17,7 @@ export default function AuthenticationWrapper({ children }: AuthenticationWrappe
   const [searchParams, ] = useSearchParams();
   const stateQueryParam = searchParams.get("state");
   trace(`state: ${stateQueryParam}`);
-  
+
   // Force the user to sign in if not already authenticated.
   // See https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-react/docs/hooks.md
   //TODO: Handle token/session expiration to intercept the automatic redirect and prompt the user first?
@@ -41,30 +28,61 @@ export default function AuthenticationWrapper({ children }: AuthenticationWrappe
     state: stateQueryParam ?? undefined
   });
 
-  const isAuthenticated = useIsAuthenticated();
+  return (
+    <ProgressBackdrop opaque>
+      <p>Signing in...</p>
+      <p>If you are not redirected within a few seconds,<br /> try refreshing this page.</p>
+    </ProgressBackdrop>
+  );
+}
+
+function AuthenticatedUserWrapper({ children }: React.PropsWithChildren) {
+  const trace = useScopedTrace("SelectedUserWrapper");
+
   const defaultAccount = useAccount();
-  trace(`isAuthenticated: ${isAuthenticated} -- defaultAccount: ${defaultAccount?.localAccountId}`);
+  const msal = useMsal();
   
+  const allAccounts = msal.accounts;
+
+  trace(`defaultAccount: ${defaultAccount?.localAccountId}`);
+  trace(`MSAL accounts: ${JSON.stringify(allAccounts.map(account => account.localAccountId))}`);
+
   // One the user is authenticated, store the user's account for future reference.
   // This becomes the root of the Recoil dataflow graph.
-  const setUserId = useRecoilCallback(({ set, snapshot }) => (userId: string) => {
-    set(userIdState, userId);
-  });
+  const setUserId = useSetRecoilState(userIdState);
   useEffect(() => {
-    trace("Effect triggered");
-    if (isAuthenticated && defaultAccount) {
-      trace(`Setting user ID: ${defaultAccount.localAccountId}`);
+    if (defaultAccount) {
+      trace(`Setting the model to use the active account's user ID: ${defaultAccount.localAccountId}`);
       setUserId(defaultAccount.localAccountId);
+    } else if (allAccounts.length === 1) {
+      trace("Marking the signed-in account as active");
+      msal.instance.setActiveAccount(allAccounts[0]);
+    } else if (allAccounts.length === 0) {
+      throw new Error("Your user was unexpectedly not authenticated; please report this as a bug.");
+    } else {
+      throw new Error("You are signed in with more than one user account. Try clearing your browser cache and cookies, and report this as a bug if the issue persists.");
     }
-  }, [isAuthenticated, defaultAccount, setUserId, trace]);
+  }, [allAccounts, defaultAccount, setUserId, trace]);
 
-  trace("render");
   return (
     <>
-      {isAuthenticated && defaultAccount
-        ? children
-        //TODO: Handle account selection when multiple accounts are signed in (this is an edge case)
-        : <SignInScreen />}
+      {children}
+    </>
+  );
+}
+
+export default function AuthenticationWrapper({ children }: React.PropsWithChildren) {
+  return (
+    <>
+      <AuthenticatedTemplate>
+        {/*TODO: Handle account selection when multiple accounts are signed in (this is an edge case)*/}
+        <AuthenticatedUserWrapper>
+          {children}
+        </AuthenticatedUserWrapper>
+      </AuthenticatedTemplate>
+      <UnauthenticatedTemplate>
+        <SignIn />
+      </UnauthenticatedTemplate>
     </>
   );
 }
