@@ -7,7 +7,6 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import MenuIcon from '@mui/icons-material/Menu';
 import { Link, useLocation } from 'react-router-dom';
 import { ShellContextSwitcher } from './ShellContextSwitcher';
-import { useRecoilValue } from 'recoil';
 import { selectedLocationContextState } from '../Model/Data';
 import { useLoadable } from '../Hooks/useLoadable';
 

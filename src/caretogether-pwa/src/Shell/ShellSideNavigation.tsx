@@ -8,7 +8,6 @@ import { useFeatureFlags } from '../Model/ConfigurationModel';
 import { Copyright } from './Copyright';
 import { useGlobalPermissions } from '../Model/SessionModel';
 import { Permission } from '../GeneratedClient';
-import { useRecoilValue } from 'recoil';
 import { selectedLocationContextState } from '../Model/Data';
 import { useLoadable } from '../Hooks/useLoadable';
 
@@ -52,7 +51,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
             {permissions(Permission.AccessSettingsScreen) &&
               <>
                 <Divider  />
-                <ListItemLink to="/settings" primary="Settings" icon={<SettingsIcon sx={{color: '#fff8'}} />} />
+                <ListItemLink to={`${locationPrefix}/settings`} primary="Settings" icon={<SettingsIcon sx={{color: '#fff8'}} />} />
               </>}
           </>}
     </List>
