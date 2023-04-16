@@ -16,6 +16,6 @@ export function useAppNavigate() {
   }
 
   return {
-    community: (communityId: string) => inContext(`/communities/community/${communityId}`)
+    community: (communityId: string) => inContext(`communities/community/${communityId}`)
   };
 }
