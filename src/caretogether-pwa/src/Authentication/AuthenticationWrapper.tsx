@@ -8,26 +8,6 @@ import { useSetRecoilState } from 'recoil';
 import { userIdState } from "../Model/Data";
 
 function SignIn() {
-  const trace = useScopedTrace("SignIn");
-
-  // Ensure that the 'state' parameter is always round-tripped through MSAL.
-  // This is useful, e.g., for person invite redemption which may require interrupting a
-  // non-authenticated user with an authentication redirect before they can complete the
-  // invite redemption process.
-  const [searchParams, ] = useSearchParams();
-  const stateQueryParam = searchParams.get("state");
-  trace(`state: ${stateQueryParam}`);
-
-  // Force the user to sign in if not already authenticated.
-  // See https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-react/docs/hooks.md
-  //TODO: Handle token/session expiration to intercept the automatic redirect and prompt the user first?
-  //TODO: Smoother handling of deeplink routing (integrating with React Router)?
-  //TODO: Incorporate new AAD B2C refresh token support?
-  useMsalAuthentication(InteractionType.Redirect, {
-    scopes: [process.env.REACT_APP_AUTH_SCOPES],
-    state: stateQueryParam ?? undefined
-  });
-
   return (
     <ProgressBackdrop opaque>
       <p>Signing in...</p>
@@ -72,7 +52,27 @@ function AuthenticatedUserWrapper({ children }: React.PropsWithChildren) {
 }
 
 export default function AuthenticationWrapper({ children }: React.PropsWithChildren) {
-  //TODO: Handle the scenario where we don't have a current access (or refresh) token as if the user was unauthenticated.
+  //TODO: Long-term, consider removing the msal-react package altogether as it just doesn't play nicely with Recoil state updates.
+  const trace = useScopedTrace("AuthenticationWrapper");
+
+  // Ensure that the 'state' parameter is always round-tripped through MSAL.
+  // This is useful, e.g., for person invite redemption which may require interrupting a
+  // non-authenticated user with an authentication redirect before they can complete the
+  // invite redemption process.
+  const [searchParams, ] = useSearchParams();
+  const stateQueryParam = searchParams.get("state");
+  trace(`state: ${stateQueryParam}`);
+
+  // Force the user to sign in if not already authenticated.
+  // See https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-react/docs/hooks.md
+  //TODO: Handle token/session expiration to intercept the automatic redirect and prompt the user first?
+  //TODO: Smoother handling of deeplink routing (integrating with React Router)?
+  //TODO: Incorporate new AAD B2C refresh token support?
+  useMsalAuthentication(InteractionType.Redirect, {
+    scopes: [process.env.REACT_APP_AUTH_SCOPES],
+    state: stateQueryParam ?? undefined
+  });
+  
   return (
     <>
       <AuthenticatedTemplate>
