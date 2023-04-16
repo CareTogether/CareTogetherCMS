@@ -1,11 +1,9 @@
 import { Button, Grid, TextField } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
 import { Community, CreateCommunity, EditCommunityDescription, RenameCommunity } from '../GeneratedClient';
 import { useCommunityCommand } from '../Model/DirectoryModel';
 import { useState } from 'react';
 import { useBackdrop } from '../Hooks/useBackdrop';
-import { useRecoilValue } from 'recoil';
-import { selectedLocationContextState } from '../Model/Data';
+import { useAppNavigate } from '../Hooks/useAppNavigate';
 
 interface DrawerProps {
   onClose: () => void;
@@ -16,8 +14,6 @@ interface AddEditCommunityDrawerProps extends DrawerProps {
 export function AddEditCommunity({ community, onClose }: AddEditCommunityDrawerProps) {
   const [name, setName] = useState(community?.name || "");
   const [description, setDescription] = useState(community?.description || "");
-
-  const { organizationId, locationId } = useRecoilValue(selectedLocationContextState);
 
   const createCommunity = useCommunityCommand((communityId) => {
     const command = new CreateCommunity();
@@ -42,7 +38,7 @@ export function AddEditCommunity({ community, onClose }: AddEditCommunityDrawerP
   });
 
   const withBackdrop = useBackdrop();
-  const navigate = useNavigate();
+  const appNavigate = useAppNavigate();
 
   async function save() {
     await withBackdrop(async () => {
@@ -58,7 +54,7 @@ export function AddEditCommunity({ community, onClose }: AddEditCommunityDrawerP
         const communityId = crypto.randomUUID();
         await createCommunity(communityId);
         onClose();
-        navigate(`/org/${organizationId}/${locationId}/communities/community/${communityId}`);
+        appNavigate.community(communityId);
       }
     });
   }
