@@ -19,6 +19,12 @@ const acquireAccessToken = async (msalInstance: IPublicClientApplication) => {
 
   // This will throw an exception on failure.
   const authResult = await msalInstance.acquireTokenSilent(request);
+  //TODO: Handle failure:
+  // if (e instanceof InteractionRequiredAuthError) {
+  //   globalMsalInstance.acquireTokenRedirect({
+  //     ... (or somehow engage with the user to avoid losing unsaved work?)
+  //   })
+  // }
 
   return authResult.accessToken
 };

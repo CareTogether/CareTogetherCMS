@@ -72,6 +72,7 @@ function AuthenticatedUserWrapper({ children }: React.PropsWithChildren) {
 }
 
 export default function AuthenticationWrapper({ children }: React.PropsWithChildren) {
+  //TODO: Handle the scenario where we don't have a current access (or refresh) token as if the user was unauthenticated.
   return (
     <>
       <AuthenticatedTemplate>
