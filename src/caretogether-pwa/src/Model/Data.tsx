@@ -16,7 +16,10 @@ export const userIdState = atom<string>({
 export const userOrganizationAccessQuery = selector({
   key: 'userOrganizationAccessQuery',
   get: async ({get}) => {
-    const userId = get(userIdState);
+    //HACK: Requiring the user ID state to be set is a workaround for fall-through issues with the AuthenticationWrapper
+    //      and AuthenticatedUserWrapper. Removing this currently would cause runtime errors regarding the MsalProvider
+    //      being updated while a child component is being rendered (e.g., the ShellContextSwitcher).
+    get(userIdState);
     const userResponse = await api.users.getUserOrganizationAccess();
     return userResponse;
   }
@@ -107,10 +110,10 @@ const visibleAggregatesForScopeData = atomFamily<RecordsAggregate[], LocationCon
 // For convenience, only the currently visible records are exported to the client from this module.
 export const visibleAggregatesState = selector({
   key: 'visibleAggregatesState',
-  get: async ({get}) => {
-    const context = await get(selectedLocationContextState);
+  get: ({get}) => {
+    const context = get(selectedLocationContextState);
     const visibleAggregates = visibleAggregatesForScopeData(context);
-    const results = await get(visibleAggregates);
+    const results = get(visibleAggregates);
     return results;
   },
   set: ({get, set}, newValue) => {
@@ -126,8 +129,8 @@ export function useDataLoaded() {
 
 export const visibleFamiliesQuery = selector({
   key: 'visibleFamiliesQuery',
-  get: async ({get}) => {
-    const visibleAggregates = await get(visibleAggregatesState);
+  get: ({get}) => {
+    const visibleAggregates = get(visibleAggregatesState);
     return visibleAggregates.filter(aggregate => aggregate instanceof FamilyRecordsAggregate).map(aggregate =>
       (aggregate as FamilyRecordsAggregate).family!);
   }
@@ -135,8 +138,8 @@ export const visibleFamiliesQuery = selector({
 
 export const visibleCommunitiesQuery = selector({
   key: 'visibleCommunitiesQuery',
-  get: async ({get}) => {
-    const visibleAggregates = await get(visibleAggregatesState);
+  get: ({get}) => {
+    const visibleAggregates = get(visibleAggregatesState);
     return visibleAggregates.filter(aggregate => aggregate instanceof CommunityRecordsAggregate).map(aggregate =>
       (aggregate as CommunityRecordsAggregate).community!);
   }
