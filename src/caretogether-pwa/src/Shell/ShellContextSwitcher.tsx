@@ -2,14 +2,12 @@ import { MenuItem, Select, Skeleton, Stack, Typography, useMediaQuery, useTheme 
 import { useNavigate } from 'react-router-dom';
 import { useRecoilStateLoadable } from 'recoil';
 import { useLoadable } from '../Hooks/useLoadable';
-import { locationNameQuery, organizationConfigurationQuery, organizationNameQuery } from '../Model/ConfigurationModel';
+import { locationConfigurationQuery, organizationConfigurationQuery } from '../Model/ConfigurationModel';
 import { currentOrganizationQuery, selectedLocationContextState } from '../Model/Data';
 
 export function ShellContextSwitcher() {
-  const organizationName = useLoadable(organizationNameQuery);
-  const locationName = useLoadable(locationNameQuery);
-
   const organizationConfiguration = useLoadable(organizationConfigurationQuery);
+  const locationConfiguration = useLoadable(locationConfigurationQuery);
   const [selectedLocationContext, setSelectedLocationContext] = useRecoilStateLoadable(selectedLocationContextState);
   const currentOrganization = useLoadable(currentOrganizationQuery);
   
@@ -33,13 +31,13 @@ export function ShellContextSwitcher() {
   
   return (
     <Stack sx={{ position: 'absolute' }}>
-      {organizationName
+      {organizationConfiguration
         ? <Typography variant='subtitle1' component="h1"
             sx={{ position: 'relative', top: -4, left: 8}}>
-            {organizationName}
+            {organizationConfiguration.organizationName}
           </Typography>
         : <Skeleton variant='text' width={130} animation='wave' sx={{ marginTop: -0.5, marginLeft: 1}} />}
-      {(locationName && availableLocations && locations && selectedLocationContext.state === 'hasValue')
+      {(locationConfiguration && availableLocations && locations && selectedLocationContext.state === 'hasValue')
         ? availableLocations.length >= 1
           ? <Select size={isDesktop ? 'small' : 'medium'}
               variant='outlined'
@@ -76,7 +74,7 @@ export function ShellContextSwitcher() {
               </Select>
             : <Typography variant='subtitle2' component="h2"
                 sx={{ position: 'relative', top: -8, left: 8}}>
-                {locationName}
+                {locationConfiguration.name}
               </Typography>
         : <Skeleton variant="text" width={130} animation="wave" sx={{ marginLeft: 1 }} />}
     </Stack>

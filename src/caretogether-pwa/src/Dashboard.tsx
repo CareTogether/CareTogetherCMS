@@ -1,11 +1,11 @@
 import { Grid, Skeleton, Typography } from '@mui/material';
 import { useRecoilValueLoadable } from 'recoil';
-import { locationNameQuery, organizationNameQuery } from './Model/ConfigurationModel';
+import { locationConfigurationQuery, organizationConfigurationQuery } from './Model/ConfigurationModel';
 import useScreenTitle from './Shell/ShellScreenTitle';
 
 function Dashboard() {
-  const organizationName = useRecoilValueLoadable(organizationNameQuery);
-  const locationName = useRecoilValueLoadable(locationNameQuery);
+  const organizationConfiguration = useRecoilValueLoadable(organizationConfigurationQuery);
+  const locationConfiguration = useRecoilValueLoadable(locationConfigurationQuery);
 
   useScreenTitle("Dashboard");
 
@@ -17,8 +17,8 @@ function Dashboard() {
         <br />
         <Typography variant='body1'>Select an option from the menu to begin.</Typography>
         <br />
-        {locationName.state === 'hasValue' && organizationName.state === 'hasValue'
-          ? <p style={{lineHeight: 1}}>Current location: <strong>{locationName.contents}</strong> ({organizationName.contents})</p>
+        {locationConfiguration.state === 'hasValue' && organizationConfiguration.state === 'hasValue'
+          ? <p style={{lineHeight: 1}}>Current location: <strong>{locationConfiguration.contents?.name}</strong> ({organizationConfiguration.contents?.organizationName})</p>
           : <Skeleton variant='text' animation='wave' width={300} sx={{marginLeft: 'auto', marginRight: 'auto'}} />}
       </Grid>
     </Grid>

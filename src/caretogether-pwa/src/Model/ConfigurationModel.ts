@@ -25,14 +25,6 @@ export const organizationConfigurationQuery = selector({
     }
   }});
 
-export const organizationNameQuery = selector({
-  key: 'organizationNameQuery',
-  get: ({get}) => {
-    const organizationConfiguration = get(organizationConfigurationQuery);
-    return organizationConfiguration?.organizationName!;
-  }
-})
-
 export const locationConfigurationQuery = selector({
   key: 'locationConfigurationQuery',
   get: ({get}) => {
@@ -41,14 +33,6 @@ export const locationConfigurationQuery = selector({
     return organizationConfiguration?.locations!.find(x => x.id === locationId);
   }
 });
-
-export const locationNameQuery = selector({
-  key: 'locationNameQuery',
-  get: ({get}) => {
-    const locationConfiguration = get(locationConfigurationQuery);
-    return locationConfiguration?.name;
-  }
-})
 
 export const ethnicitiesData = selector({//TODO: Rename to 'query'
   key: 'COMPATIBILITY__ethnicitiesData',
@@ -151,30 +135,10 @@ export const allFunctionsInPolicyQuery = selector({
     return uniqueFunctions;
   }});
 
-export interface LocationContext {
-  organizationId: string
-  locationId: string
-}
-export const currentOrganizationAndLocationIdsQuery = selector<LocationContext | null>({
-  key: 'currentOrganizationAndLocationIdsQuery',
-  get: ({get}) => {
-    get(organizationConfigurationQuery); //TODO: Figure out why Recoil needs this.
-    const { organizationId, locationId } = get(selectedLocationContextState);
-    if (!organizationId) //TODO: Remove unreachable case
-      return null;
-    if (locationId == null) //TODO: Remove unreachable case
-      return null;
-    return { organizationId, locationId };
-  }
-})
-
-export const featureFlagQuery = selector({
+const featureFlagQuery = selector({
   key: 'featureFlagQuery',
   get: async ({get}) => {
-    const currentOrgAndLoc = get(currentOrganizationAndLocationIdsQuery);;
-    if (currentOrgAndLoc == null)
-      return null;
-    const {organizationId, locationId} = currentOrgAndLoc;
+    const { organizationId, locationId } = get(selectedLocationContextState);
     const dataResponse = await api.configuration.getLocationFlags(organizationId, locationId);
     return dataResponse;
   }});
