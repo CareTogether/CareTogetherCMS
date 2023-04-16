@@ -14,7 +14,7 @@ import { personNameString } from "../Families/PersonName";
 import { DialogHandle } from "../Hooks/useDialogHandle";
 import { familyNameString } from "../Families/FamilyName";
 import { add, format, formatDuration, isValid } from "date-fns";
-import { selectedLocationIdState, selectedOrganizationIdState } from '../Model/Data';
+import { selectedLocationContextState } from '../Model/Data';
 
 type MissingRequirementDialogProps = {
   handle: DialogHandle
@@ -39,8 +39,7 @@ export function MissingRequirementDialog({
   const [completedAtLocal, setCompletedAtLocal] = useState(null as Date | null);
   const [notes, setNotes] = useState("");
   const UPLOAD_NEW = "__uploadnew__";
-  const organizationId = useRecoilValue(selectedOrganizationIdState);
-  const locationId = useRecoilValue(selectedLocationIdState);
+  const { organizationId, locationId } = useRecoilValue(selectedLocationContextState);
   const [additionalComments, setAdditionalComments] = useState("");
   const [exemptionExpiresAtLocal, setExemptionExpiresAtLocal] = useState(null as Date | null);
   const [exemptAll, setExemptAll] = useState(false);

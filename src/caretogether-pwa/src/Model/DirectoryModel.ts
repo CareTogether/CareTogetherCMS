@@ -1,7 +1,7 @@
 import { useRecoilCallback, useRecoilValue } from "recoil";
 import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, CompositeRecordsCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, UpdatePersonGender, UpdatePersonAge, UpdatePersonEthnicity, UpdateAdultRelationshipToFamily, CustodialRelationshipType, UpdateCustodialRelationshipType, RemoveCustodialRelationship, ChangePrimaryFamilyContact, FamilyRecordsCommand, PersonRecordsCommand, NoteRecordsCommand, AtomicRecordsCommand, CustomField, UpdateCustomFamilyField, CommunityCommand, CommunityRecordsCommand } from "../GeneratedClient";
 import { api } from "../Api/Api";
-import { selectedLocationIdState, selectedOrganizationIdState, visibleAggregatesState, visibleCommunitiesQuery, visibleFamiliesQuery } from "./Data";
+import { selectedLocationContextState, visibleAggregatesState, visibleCommunitiesQuery, visibleFamiliesQuery } from "./Data";
 
 export function usePersonLookup() {
   const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
@@ -65,8 +65,7 @@ export function useAtomicRecordsCommandCallback<T extends unknown[], U extends A
   callback: (aggregateId: string, ...args: T) => Promise<U>) {
   return useRecoilCallback(({snapshot, set}) => {
     const asyncCallback = async (aggregateId: string, ...args: T) => {
-      const organizationId = await snapshot.getPromise(selectedOrganizationIdState);
-      const locationId = await snapshot.getPromise(selectedLocationIdState);
+      const { organizationId, locationId } = await snapshot.getPromise(selectedLocationContextState);
 
       const command = await callback(aggregateId, ...args);
 
@@ -87,8 +86,7 @@ function useCompositeRecordsCommandCallback<T extends unknown[]>(
   callback: (aggregateId: string, ...args: T) => Promise<CompositeRecordsCommand>) {
   return useRecoilCallback(({snapshot, set}) => {
     const asyncCallback = async (aggregateId: string, ...args: T) => {
-      const organizationId = await snapshot.getPromise(selectedOrganizationIdState);
-      const locationId = await snapshot.getPromise(selectedLocationIdState);
+      const { organizationId, locationId } = await snapshot.getPromise(selectedLocationContextState);
 
       const command = await callback(aggregateId, ...args);
 

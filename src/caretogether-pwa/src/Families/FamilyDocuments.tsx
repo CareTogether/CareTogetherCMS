@@ -6,15 +6,14 @@ import { CombinedFamilyInfo, Permission, UploadedDocumentInfo } from '../Generat
 import { downloadFamilyFile } from '../Model/FilesModel';
 import { useFamilyPermissions } from '../Model/SessionModel';
 import { DeleteDocumentDialog } from './DeleteDocumentDialog';
-import { selectedLocationIdState, selectedOrganizationIdState } from '../Model/Data';
+import { selectedLocationContextState } from '../Model/Data';
 
 type FamilyDocumentsProps = {
   family: CombinedFamilyInfo
 }
 
 export function FamilyDocuments({ family }: FamilyDocumentsProps) {
-  const organizationId = useRecoilValue(selectedOrganizationIdState);
-  const locationId = useRecoilValue(selectedLocationIdState);
+  const { organizationId, locationId } = useRecoilValue(selectedLocationContextState);
 
   const [moreMenuAnchor, setMoreMenuAnchor] = useState<{anchor: Element, document: UploadedDocumentInfo} | null>(null);
   const [deleteParameter, setDeleteParameter] = useState<{familyId: string, document: UploadedDocumentInfo} | null>(null);

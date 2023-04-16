@@ -23,7 +23,7 @@ import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { useLoadable } from '../Hooks/useLoadable';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
-import { selectedLocationIdState } from '../Model/Data';
+import { selectedLocationContextState } from '../Model/Data';
 
 type RoleFilter = {
   roleName: string
@@ -229,7 +229,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     }
   };
 
-  const locationId = useRecoilValue(selectedLocationIdState);
+  const { locationId } = useRecoilValue(selectedLocationContextState);
   const organizationConfiguration = useRecoilValue(organizationConfigurationQuery);
   const smsSourcePhoneNumbers = organizationConfiguration?.locations?.find(loc =>
     loc.id === locationId)?.smsSourcePhoneNumbers;

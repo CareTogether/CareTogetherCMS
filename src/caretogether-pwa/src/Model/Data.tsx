@@ -38,22 +38,6 @@ export const selectedLocationContextState = atom<LocationContext>({
   ]
 });
 
-export const selectedOrganizationIdState = selector({
-  key: 'selectedOrganizationIdState__DEPRECATED',
-  get: ({get}) => {
-    const { organizationId } = get(selectedLocationContextState);
-    return organizationId;
-  }
-});
-
-export const selectedLocationIdState = selector({
-  key: 'selectedLocationIdState__DEPRECATED',
-  get: ({get}) => {
-    const { locationId } = get(selectedLocationContextState);
-    return locationId;
-  }
-});
-
 // This will be available to query after the selectedLocationContextState is set by AppRoutes.
 export const currentOrganizationQuery = selector({
   key: 'currentOrganizationQuery',

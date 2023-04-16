@@ -7,7 +7,7 @@ import { useFamilyLookup } from "../Model/DirectoryModel";
 import { useBackdrop } from "../Hooks/useBackdrop";
 import { FamilyName } from "../Families/FamilyName";
 import { api } from "../Api/Api";
-import { selectedLocationIdState, selectedOrganizationIdState } from "../Model/Data";
+import { selectedLocationContextState } from "../Model/Data";
 
 type BulkSmsSideSheetProps = {
   selectedFamilies: CombinedFamilyInfo[]
@@ -18,8 +18,7 @@ type BulkSmsSideSheetProps = {
 const phonePattern = /^\(?([0-9]{3})\)?[\u{00ad}\-.\s]?([0-9]{3})[\u{00ad}\-.\s]?([0-9]{4})/u;
 
 export function BulkSmsSideSheet({ selectedFamilies, onClose }: BulkSmsSideSheetProps) {
-  const organizationId = useRecoilValue(selectedOrganizationIdState);
-  const locationId = useRecoilValue(selectedLocationIdState);
+  const { organizationId, locationId } = useRecoilValue(selectedLocationContextState);
   const organizationConfiguration = useRecoilValue(organizationConfigurationQuery);
   
   const familiesSelectedForSms = selectedFamilies.map(family => {

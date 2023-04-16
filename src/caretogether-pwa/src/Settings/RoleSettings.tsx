@@ -11,11 +11,11 @@ import { useBackdrop } from '../Hooks/useBackdrop';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { ContextualPermissionSetRow } from './ContextualPermissionSetRow';
 import { api } from '../Api/Api';
-import { selectedOrganizationIdState } from '../Model/Data';
+import { selectedLocationContextState } from '../Model/Data';
 
 function RoleSettings() {
   const configuration = useLoadable(organizationConfigurationQuery);
-  const organizationId = useRecoilValue(selectedOrganizationIdState);
+  const { organizationId } = useRecoilValue(selectedLocationContextState);
   const storeEdits = useSetRecoilState(organizationConfigurationEdited);
   const roles = configuration?.roles;
   

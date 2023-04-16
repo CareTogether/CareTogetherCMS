@@ -22,7 +22,7 @@ import { AccountCircle, NoAccounts, PersonAdd } from "@mui/icons-material";
 import { organizationConfigurationQuery } from "../Model/ConfigurationModel";
 import { useState } from "react";
 import { api } from "../Api/Api";
-import { currentLocationQuery, selectedOrganizationIdState, visibleAggregatesState } from "../Model/Data";
+import { selectedLocationContextState, visibleAggregatesState } from "../Model/Data";
 
 interface ManageUserDrawerProps {
   onClose: () => void;
@@ -31,8 +31,7 @@ interface ManageUserDrawerProps {
 }
 
 export function ManageUserDrawer({ onClose, adult, user }: ManageUserDrawerProps) {
-  const organizationId = useRecoilValue(selectedOrganizationIdState);
-  const location = useRecoilValue(currentLocationQuery);
+  const { organizationId, locationId } = useRecoilValue(selectedLocationContextState);
   const configuration = useRecoilValue(organizationConfigurationQuery);
 
   const withBackdrop = useBackdrop();
@@ -40,7 +39,7 @@ export function ManageUserDrawer({ onClose, adult, user }: ManageUserDrawerProps
   async function invitePersonUser() {
     await withBackdrop(async () => {
       const inviteLink = await api.users.generatePersonInviteLink(
-        organizationId, location.locationId, adult.id);
+        organizationId, locationId, adult.id);
       await navigator.clipboard.writeText(inviteLink);
       alert(`The invite link for ${personNameString(adult)} has been copied to your clipboard.`);
     });
@@ -76,7 +75,7 @@ export function ManageUserDrawer({ onClose, adult, user }: ManageUserDrawerProps
   const savePersonRoles = useRecoilCallback(({snapshot, set}) => {
     const asyncCallback = async () => {
       const updatedAggregate = await api.users.changePersonRoles(
-        organizationId, location.locationId, adult.id, selectedRoles);
+        organizationId, locationId, adult.id, selectedRoles);
 
       set(visibleAggregatesState, current => 
         current.some(currentEntry => currentEntry.id === updatedAggregate.id && currentEntry.constructor === updatedAggregate.constructor)

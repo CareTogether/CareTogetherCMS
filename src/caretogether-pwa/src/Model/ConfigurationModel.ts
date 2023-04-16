@@ -2,7 +2,7 @@ import { atom, selector } from "recoil";
 import { OrganizationConfiguration, RequirementStage, VolunteerFamilyRequirementScope } from "../GeneratedClient";
 import { useLoadable } from "../Hooks/useLoadable";
 import { api } from "../Api/Api";
-import { selectedLocationIdState, selectedOrganizationIdState } from "./Data";
+import { selectedLocationContextState } from "./Data";
 
 //TODO: Distinguish by organization ID
 export const organizationConfigurationEdited = atom<OrganizationConfiguration | null>({
@@ -13,7 +13,7 @@ export const organizationConfigurationEdited = atom<OrganizationConfiguration | 
 export const organizationConfigurationQuery = selector({
   key: 'organizationConfigurationQuery',
   get: async ({get}) => {
-    const organizationId = get(selectedOrganizationIdState);
+    const { organizationId } = get(selectedLocationContextState);
     if (organizationId == null)
       return null;
     const edited = get(organizationConfigurationEdited);
@@ -37,8 +37,8 @@ export const locationConfigurationQuery = selector({
   key: 'locationConfigurationQuery',
   get: ({get}) => {
     const organizationConfiguration = get(organizationConfigurationQuery);
-    const selectedLocation = get(selectedLocationIdState);
-    return organizationConfiguration?.locations!.find(x => x.id === selectedLocation);
+    const { locationId } = get(selectedLocationContextState);
+    return organizationConfiguration?.locations!.find(x => x.id === locationId);
   }
 });
 
@@ -69,8 +69,7 @@ export const adultFamilyRelationshipsData = selector({//TODO: Rename to 'query'
 export const policyData = selector({
   key: 'policyData',
   get: async ({get}) => {
-    const organizationId = get(selectedOrganizationIdState);
-    const locationId = get(selectedLocationIdState);
+    const { organizationId, locationId } = get(selectedLocationContextState);
     const dataResponse = await api.configuration.getEffectiveLocationPolicy(organizationId, locationId);
     return dataResponse;
   }});
@@ -160,11 +159,10 @@ export const currentOrganizationAndLocationIdsQuery = selector<LocationContext |
   key: 'currentOrganizationAndLocationIdsQuery',
   get: ({get}) => {
     get(organizationConfigurationQuery); //TODO: Figure out why Recoil needs this.
-    const organizationId = get(selectedOrganizationIdState);
-    if (!organizationId)
+    const { organizationId, locationId } = get(selectedLocationContextState);
+    if (!organizationId) //TODO: Remove unreachable case
       return null;
-    const locationId = get(selectedLocationIdState);
-    if (locationId == null)
+    if (locationId == null) //TODO: Remove unreachable case
       return null;
     return { organizationId, locationId };
   }

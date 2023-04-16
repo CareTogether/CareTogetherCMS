@@ -9,7 +9,7 @@ import { format } from 'date-fns';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { downloadCommunityFile } from '../Model/FilesModel';
 import { useRecoilValue } from 'recoil';
-import { selectedLocationIdState, selectedOrganizationIdState } from '../Model/Data';
+import { selectedLocationContextState } from '../Model/Data';
 
 interface CommunityDocumentsProps {
   communityInfo: CommunityInfo;
@@ -18,8 +18,7 @@ export function CommunityDocuments({ communityInfo }: CommunityDocumentsProps) {
   const permissions = useCommunityPermissions(communityInfo);
   const community = communityInfo.community!;
   
-  const organizationId = useRecoilValue(selectedOrganizationIdState);
-  const locationId = useRecoilValue(selectedLocationIdState);
+  const { organizationId, locationId } = useRecoilValue(selectedLocationContextState);
 
   const userLookup = useUserLookup();
   const documents = (community.uploadedDocuments || []).map(document => ({
