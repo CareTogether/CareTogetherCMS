@@ -62,7 +62,7 @@ function AuthenticatedUserWrapper({ children }: React.PropsWithChildren) {
     } else {
       throw new Error("You are signed in with more than one user account. Try clearing your browser cache and cookies, and report this as a bug if the issue persists.");
     }
-  }, [allAccounts, defaultAccount, setUserId, trace]);
+  }, [allAccounts, defaultAccount, setUserId, trace, msal.instance]);
 
   return (
     <>
