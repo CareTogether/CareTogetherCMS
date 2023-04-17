@@ -48,7 +48,7 @@ function RouteMigrator() {
     } else {
       trace("Could not migrate route.");
     }
-  }, [navigate, location, userOrganizationAccess]);
+  }, [trace, navigate, location, userOrganizationAccess]);
 
   return (
     <ProgressBackdrop opaque>
