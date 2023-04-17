@@ -7,7 +7,7 @@ import { Settings } from "./Settings/Settings";
 import { FamilyScreen } from "./Families/FamilyScreen";
 import { Communities } from "./Communities/Communities";
 import { UserProfile } from "./UserProfile/UserProfile";
-import { useSetRecoilState } from "recoil";
+import { useRecoilStateLoadable } from "recoil";
 import { selectedLocationContextState, userOrganizationAccessQuery } from "./Model/Data";
 import ShellRootLayout from "./Shell/ShellRootLayout";
 import { ProgressBackdrop } from "./Shell/ProgressBackdrop";
@@ -71,33 +71,43 @@ function LocationContextWrapper() {
   const trace = useScopedTrace("LocationContext");
   const { organizationId, locationId } = useParams<{ organizationId: string, locationId: string }>();
   
-  const updateLocationContext = useSetRecoilState(selectedLocationContextState);
+  const [selectedLocationContext, setSelectedLocationContext] = useRecoilStateLoadable(selectedLocationContextState);
 
   // We only need to change this on first load or when the location context actually changes.
   useEffect(() => {
     trace(`organizationId: '${organizationId}' -- locationId: '${locationId}'`);
 
     if (organizationId && locationId) {
-      updateLocationContext({ organizationId, locationId });
+      setSelectedLocationContext({ organizationId, locationId });
     } else {
       trace(`Location context was NOT updated. ` +
         `organizationId: '${organizationId}'` +
         `locationId: '${locationId}'`);
     }
-  }, [organizationId, locationId, trace, updateLocationContext]);
+  }, [organizationId, locationId, trace, setSelectedLocationContext]);
   
   return (
-    <ShellRootLayout>
-      <Routes>
-        <Route index element={<Dashboard />} />
-        <Route path="families/:familyId" element={<FamilyScreen />} />
-        <Route path="referrals/*" element={<Referrals />} />
-        <Route path="volunteers/*" element={<Volunteers />} />
-        <Route path="communities/*" element={<Communities />} />
-        <Route path="settings/*" element={<Settings />} />
-        <Route path="*" element={<RouteError />} />
-      </Routes>
-    </ShellRootLayout>
+    // We need to wait for this to have a value before rendering the child tree; otherwise,
+    // the tree will suspend as soon as a data dependency on selectedLocationContextState is encountered, and
+    // the effect above (that actually sets the selectedLocationContextState) will not fire.
+    (selectedLocationContext.state === "hasValue" &&
+    // As an added benefit, we can also use this component to show the spinner when switching locations.
+      selectedLocationContext.contents.organizationId === organizationId &&
+      selectedLocationContext.contents.locationId === locationId)
+    ? <ShellRootLayout>
+        <Routes>
+          <Route index element={<Dashboard />} />
+          <Route path="families/:familyId" element={<FamilyScreen />} />
+          <Route path="referrals/*" element={<Referrals />} />
+          <Route path="volunteers/*" element={<Volunteers />} />
+          <Route path="communities/*" element={<Communities />} />
+          <Route path="settings/*" element={<Settings />} />
+          <Route path="*" element={<RouteError />} />
+        </Routes>
+      </ShellRootLayout>
+    : <ProgressBackdrop opaque>
+        <p>Setting location...</p>
+      </ProgressBackdrop>
   );
 }
 

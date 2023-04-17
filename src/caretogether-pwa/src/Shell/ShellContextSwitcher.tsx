@@ -1,17 +1,16 @@
 import { MenuItem, Select, Skeleton, Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
-import { useRecoilStateLoadable } from 'recoil';
+import { useNavigate } from 'react-router-dom';
 import { useLoadable } from '../Hooks/useLoadable';
 import { locationConfigurationQuery, organizationConfigurationQuery } from '../Model/ConfigurationModel';
 import { currentOrganizationQuery, selectedLocationContextState } from '../Model/Data';
-import { useAppNavigate } from '../Hooks/useAppNavigate';
 
 export function ShellContextSwitcher() {
   const organizationConfiguration = useLoadable(organizationConfigurationQuery);
   const locationConfiguration = useLoadable(locationConfigurationQuery);
-  const [selectedLocationContext, setSelectedLocationContext] = useRecoilStateLoadable(selectedLocationContextState);
+  const selectedLocationContext = useLoadable(selectedLocationContextState);
   const currentOrganization = useLoadable(currentOrganizationQuery);
   
-  const appNavigate = useAppNavigate();
+  const navigate = useNavigate();
   
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
@@ -25,8 +24,7 @@ export function ShellContextSwitcher() {
   }));
   
   function switchLocation(locationId: string) {
-    setSelectedLocationContext({ organizationId: currentOrganization!.organizationId!, locationId });
-    appNavigate.dashboard();
+    navigate(`/org/${currentOrganization!.organizationId!}/${locationId}/`);
   }
   
   return (
@@ -37,7 +35,7 @@ export function ShellContextSwitcher() {
             {organizationConfiguration.organizationName}
           </Typography>
         : <Skeleton variant='text' width={130} animation='wave' sx={{ marginTop: -0.5, marginLeft: 1}} />}
-      {(locationConfiguration && availableLocations && locations && selectedLocationContext.state === 'hasValue')
+      {(locationConfiguration && availableLocations && locations && selectedLocationContext)
         ? availableLocations.length >= 1
           ? <Select size={isDesktop ? 'small' : 'medium'}
               variant='outlined'
@@ -64,7 +62,7 @@ export function ShellContextSwitcher() {
                 backgroundColor: theme.palette.primary.light,
                 color: theme.palette.primary.contrastText
               }}}}
-              value={selectedLocationContext.getValue().locationId}
+              value={selectedLocationContext.locationId}
               onChange={e => switchLocation(e.target.value as string)}>
                 {locations.map(location =>
                   <MenuItem key={location.id} value={location.id}
