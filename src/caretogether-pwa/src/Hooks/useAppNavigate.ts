@@ -16,6 +16,7 @@ export function useAppNavigate() {
   }
 
   return {
+    dashboard: () => inContext(""),
     community: (communityId: string) => inContext(`communities/community/${communityId}`)
   };
 }

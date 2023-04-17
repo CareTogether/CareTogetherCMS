@@ -1,9 +1,9 @@
 import { MenuItem, Select, Skeleton, Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
 import { useRecoilStateLoadable } from 'recoil';
 import { useLoadable } from '../Hooks/useLoadable';
 import { locationConfigurationQuery, organizationConfigurationQuery } from '../Model/ConfigurationModel';
 import { currentOrganizationQuery, selectedLocationContextState } from '../Model/Data';
+import { useAppNavigate } from '../Hooks/useAppNavigate';
 
 export function ShellContextSwitcher() {
   const organizationConfiguration = useLoadable(organizationConfigurationQuery);
@@ -11,7 +11,7 @@ export function ShellContextSwitcher() {
   const [selectedLocationContext, setSelectedLocationContext] = useRecoilStateLoadable(selectedLocationContextState);
   const currentOrganization = useLoadable(currentOrganizationQuery);
   
-  const navigate = useNavigate();
+  const appNavigate = useAppNavigate();
   
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
@@ -26,7 +26,7 @@ export function ShellContextSwitcher() {
   
   function switchLocation(locationId: string) {
     setSelectedLocationContext({ organizationId: currentOrganization!.organizationId!, locationId });
-    navigate("/");
+    appNavigate.dashboard();
   }
   
   return (
