@@ -3,9 +3,9 @@ import { Button, Dialog, DialogActions, DialogContent, DialogContentText, Dialog
 import { CombinedFamilyInfo } from '../GeneratedClient';
 import { uploadFamilyFileToTenant } from '../Model/FilesModel';
 import { useRecoilValue } from 'recoil';
-import { currentOrganizationState, currentLocationState } from '../Model/SessionModel';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useDirectoryModel } from '../Model/DirectoryModel';
+import { selectedLocationContextState } from '../Model/Data';
 
 interface UploadFamilyDocumentsDialogProps {
   family: CombinedFamilyInfo,
@@ -14,8 +14,7 @@ interface UploadFamilyDocumentsDialogProps {
 
 export function UploadFamilyDocumentsDialog({family, onClose}: UploadFamilyDocumentsDialogProps) {
   const [documentFiles, setDocumentFiles] = useState<FileList>();
-  const organizationId = useRecoilValue(currentOrganizationState);
-  const locationId = useRecoilValue(currentLocationState);
+  const { organizationId, locationId } = useRecoilValue(selectedLocationContextState);
   const directoryModel = useDirectoryModel();
 
   const withBackdrop = useBackdrop();

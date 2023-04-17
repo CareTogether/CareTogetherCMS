@@ -1,7 +1,7 @@
 import { Button, Container, Grid, Toolbar, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import { Permission } from '../GeneratedClient';
-import { useCommunityLookup, useDataInitialized } from '../Model/DirectoryModel';
+import { useCommunityLookup } from '../Model/DirectoryModel';
 import { useCommunityPermissions } from '../Model/SessionModel';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import useScreenTitle from '../Shell/ShellScreenTitle';
@@ -16,12 +16,13 @@ import { AddRoleAssignmentForm } from './AddRoleAssignmentForm';
 import { CommunityMemberFamilies } from './CommunityMemberFamilies';
 import { CommunityRoleAssignments } from './CommunityRoleAssignments';
 import { useDrawer } from '../Shell/ShellDrawer';
+import { useDataLoaded } from '../Model/Data';
 
 export function CommunityScreen() {
   const communityIdMaybe = useParams<{ communityId: string; }>();
   const communityId = communityIdMaybe.communityId as string;
 
-  const dataInitialized = useDataInitialized();
+  const dataLoaded = useDataLoaded();
 
   const communityLookup = useCommunityLookup();
   const communityInfo = communityLookup(communityId)!;
@@ -42,7 +43,7 @@ export function CommunityScreen() {
   const addRoleAssignmentDrawer = useDrawer();
   // const deleteCommunityDrawer = useDrawer();
   
-  return ((!dataInitialized || !community)
+  return ((!dataLoaded || !community)
     ? <ProgressBackdrop>
         <p>Loading community...</p>
       </ProgressBackdrop>

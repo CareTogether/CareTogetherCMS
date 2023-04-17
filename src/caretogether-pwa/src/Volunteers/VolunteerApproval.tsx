@@ -3,7 +3,7 @@ import { Gender, ExactAge, AgeInYears, RoleVersionApproval, CombinedFamilyInfo, 
 import { differenceInYears } from 'date-fns';
 import { atom, selector, useRecoilState, useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../Model/VolunteersModel';
-import { organizationConfigurationData, policyData } from '../Model/ConfigurationModel';
+import { organizationConfigurationQuery, policyData } from '../Model/ConfigurationModel';
 import { RoleApprovalStatus } from '../GeneratedClient';
 import React, { useEffect, useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
@@ -15,7 +15,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { SearchBar } from '../SearchBar';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
 import { useScrollMemory } from '../Hooks/useScrollMemory';
-import { currentLocationState, useAllVolunteerFamiliesPermissions } from '../Model/SessionModel';
+import { useAllVolunteerFamiliesPermissions } from '../Model/SessionModel';
 import { BulkSmsSideSheet } from './BulkSmsSideSheet';
 import { useWindowSize } from '../Hooks/useWindowSize';
 import useScreenTitle from '../Shell/ShellScreenTitle';
@@ -23,6 +23,7 @@ import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { useLoadable } from '../Hooks/useLoadable';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
+import { selectedLocationContextState } from '../Model/Data';
 
 type RoleFilter = {
   roleName: string
@@ -228,8 +229,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     }
   };
 
-  const locationId = useRecoilValue(currentLocationState);
-  const organizationConfiguration = useRecoilValue(organizationConfigurationData);
+  const { locationId } = useRecoilValue(selectedLocationContextState);
+  const organizationConfiguration = useRecoilValue(organizationConfigurationQuery);
   const smsSourcePhoneNumbers = organizationConfiguration?.locations?.find(loc =>
     loc.id === locationId)?.smsSourcePhoneNumbers;
   const [smsMode, setSmsMode] = useState(false);

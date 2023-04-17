@@ -14,14 +14,15 @@ import {
   useMediaQuery
 } from "@mui/material";
 import { Permission, Person, UserInfo } from "../GeneratedClient";
-import { currentLocationQuery, currentOrganizationIdQuery, useGlobalPermissions, usersClientQuery } from "../Model/SessionModel";
+import { useGlobalPermissions } from "../Model/SessionModel";
 import { useBackdrop } from "../Hooks/useBackdrop";
 import { useRecoilCallback, useRecoilValue } from "recoil";
 import { personNameString } from "./PersonName";
 import { AccountCircle, NoAccounts, PersonAdd } from "@mui/icons-material";
 import { organizationConfigurationQuery } from "../Model/ConfigurationModel";
 import { useState } from "react";
-import { visibleAggregatesData } from "../Model/DirectoryModel";
+import { api } from "../Api/Api";
+import { selectedLocationContextState, visibleAggregatesState } from "../Model/Data";
 
 interface ManageUserDrawerProps {
   onClose: () => void;
@@ -30,18 +31,15 @@ interface ManageUserDrawerProps {
 }
 
 export function ManageUserDrawer({ onClose, adult, user }: ManageUserDrawerProps) {
-  const usersClient = useRecoilValue(usersClientQuery);
-
-  const organizationId = useRecoilValue(currentOrganizationIdQuery);
-  const location = useRecoilValue(currentLocationQuery);
+  const { organizationId, locationId } = useRecoilValue(selectedLocationContextState);
   const configuration = useRecoilValue(organizationConfigurationQuery);
 
   const withBackdrop = useBackdrop();
 
   async function invitePersonUser() {
     await withBackdrop(async () => {
-      const inviteLink = await usersClient.generatePersonInviteLink(
-        organizationId, location.locationId, adult.id);
+      const inviteLink = await api.users.generatePersonInviteLink(
+        organizationId, locationId, adult.id);
       await navigator.clipboard.writeText(inviteLink);
       alert(`The invite link for ${personNameString(adult)} has been copied to your clipboard.`);
     });
@@ -76,10 +74,10 @@ export function ManageUserDrawer({ onClose, adult, user }: ManageUserDrawerProps
 
   const savePersonRoles = useRecoilCallback(({snapshot, set}) => {
     const asyncCallback = async () => {
-      const updatedAggregate = await usersClient.changePersonRoles(
-        organizationId, location.locationId, adult.id, selectedRoles);
+      const updatedAggregate = await api.users.changePersonRoles(
+        organizationId, locationId, adult.id, selectedRoles);
 
-      set(visibleAggregatesData, current => 
+      set(visibleAggregatesState, current => 
         current.some(currentEntry => currentEntry.id === updatedAggregate.id && currentEntry.constructor === updatedAggregate.constructor)
         ? current.map(currentEntry => currentEntry.id === updatedAggregate.id && currentEntry.constructor === updatedAggregate.constructor
           ? updatedAggregate

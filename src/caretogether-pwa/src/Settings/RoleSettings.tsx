@@ -2,19 +2,20 @@ import { Grid, Table, TableContainer, TableBody, TableHead, TableRow, Stack, Sel
 import { useState } from 'react';
 import { AllPartneringFamiliesPermissionContext, AllVolunteerFamiliesPermissionContext, AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext, AssignedFunctionsInReferralPartneringFamilyPermissionContext, CommunityCoMemberFamiliesPermissionContext, CommunityMemberPermissionContext, ContextualPermissionSet, GlobalPermissionContext, IContextualPermissionSet, OwnFamilyPermissionContext, OwnReferralAssigneeFamiliesPermissionContext, Permission, PermissionContext, RoleDefinition } from '../GeneratedClient';
 import { useLoadable } from '../Hooks/useLoadable';
-import { configurationClientQuery, organizationConfigurationEdited, organizationConfigurationQuery } from '../Model/ConfigurationModel';
-import { currentOrganizationIdQuery, useGlobalPermissions } from '../Model/SessionModel';
+import { organizationConfigurationEdited, organizationConfigurationQuery } from '../Model/ConfigurationModel';
+import { useGlobalPermissions } from '../Model/SessionModel';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import useScreenTitle from '../Shell/ShellScreenTitle';
 import AddIcon from '@mui/icons-material/Add';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { ContextualPermissionSetRow } from './ContextualPermissionSetRow';
+import { api } from '../Api/Api';
+import { selectedLocationContextState } from '../Model/Data';
 
 function RoleSettings() {
   const configuration = useLoadable(organizationConfigurationQuery);
-  const configurationClient = useLoadable(configurationClientQuery);
-  const organizationId = useRecoilValue(currentOrganizationIdQuery);
+  const { organizationId } = useRecoilValue(selectedLocationContextState);
   const storeEdits = useSetRecoilState(organizationConfigurationEdited);
   const roles = configuration?.roles;
   
@@ -42,7 +43,7 @@ function RoleSettings() {
   const withBackdrop = useBackdrop();
   function save() {
     withBackdrop(async () => {
-      const newConfig = await configurationClient!.putRoleDefinition(
+      const newConfig = await api.configuration.putRoleDefinition(
         organizationId!, workingRole!.roleName!, workingRole!);
       storeEdits(newConfig);
       setDirty(false);

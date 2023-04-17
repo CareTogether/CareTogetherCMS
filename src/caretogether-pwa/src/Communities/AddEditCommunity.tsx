@@ -1,9 +1,9 @@
 import { Button, Grid, TextField } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
 import { Community, CreateCommunity, EditCommunityDescription, RenameCommunity } from '../GeneratedClient';
 import { useCommunityCommand } from '../Model/DirectoryModel';
 import { useState } from 'react';
 import { useBackdrop } from '../Hooks/useBackdrop';
+import { useAppNavigate } from '../Hooks/useAppNavigate';
 
 interface DrawerProps {
   onClose: () => void;
@@ -38,7 +38,7 @@ export function AddEditCommunity({ community, onClose }: AddEditCommunityDrawerP
   });
 
   const withBackdrop = useBackdrop();
-  const navigate = useNavigate();
+  const appNavigate = useAppNavigate();
 
   async function save() {
     await withBackdrop(async () => {
@@ -54,7 +54,7 @@ export function AddEditCommunity({ community, onClose }: AddEditCommunityDrawerP
         const communityId = crypto.randomUUID();
         await createCommunity(communityId);
         onClose();
-        navigate(`/communities/community/${communityId}`);
+        appNavigate.community(communityId);
       }
     });
   }

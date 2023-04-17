@@ -1,6 +1,7 @@
 import { selector } from "recoil";
 import { ActionRequirement, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, VolunteerCommand, VolunteerFamilyCommand, RoleRemovalReason, RemoveVolunteerRole, ResetVolunteerRole, RemoveVolunteerFamilyRole, ResetVolunteerFamilyRole, MarkVolunteerFamilyRequirementIncomplete, CompletedRequirementInfo, MarkVolunteerRequirementIncomplete, ExemptVolunteerRequirement, UnexemptVolunteerRequirement, ExemptVolunteerFamilyRequirement, UnexemptVolunteerFamilyRequirement, ExemptedRequirementInfo, FamilyApprovalRecordsCommand, IndividualApprovalRecordsCommand } from "../GeneratedClient";
-import { visibleFamiliesQuery, useAtomicRecordsCommandCallback } from "./DirectoryModel";
+import { useAtomicRecordsCommandCallback } from "./DirectoryModel";
+import { visibleFamiliesQuery } from "./Data";
 
 export const volunteerFamiliesData = selector({
   key: 'volunteerFamiliesData',

@@ -6,7 +6,8 @@ import { useParams } from 'react-router-dom';
 import { useBackdrop } from '../../Hooks/useBackdrop';
 import { DialogHandle } from '../../Hooks/useDialogHandle';
 import { useReferralsModel } from '../../Model/ReferralsModel';
-import { visibleFamiliesQuery, usePersonAndFamilyLookup } from '../../Model/DirectoryModel';
+import { usePersonAndFamilyLookup } from '../../Model/DirectoryModel';
+import { visibleFamiliesQuery } from '../../Model/Data';
 
 interface AssignArrangementFunctionDialogProps {
   handle: DialogHandle

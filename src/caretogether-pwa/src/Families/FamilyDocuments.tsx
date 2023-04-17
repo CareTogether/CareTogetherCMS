@@ -4,16 +4,16 @@ import { format } from 'date-fns';
 import { useRecoilValue } from 'recoil';
 import { CombinedFamilyInfo, Permission, UploadedDocumentInfo } from '../GeneratedClient';
 import { downloadFamilyFile } from '../Model/FilesModel';
-import { currentOrganizationState, currentLocationState, useFamilyPermissions } from '../Model/SessionModel';
+import { useFamilyPermissions } from '../Model/SessionModel';
 import { DeleteDocumentDialog } from './DeleteDocumentDialog';
+import { selectedLocationContextState } from '../Model/Data';
 
 type FamilyDocumentsProps = {
   family: CombinedFamilyInfo
 }
 
 export function FamilyDocuments({ family }: FamilyDocumentsProps) {
-  const organizationId = useRecoilValue(currentOrganizationState);
-  const locationId = useRecoilValue(currentLocationState);
+  const { organizationId, locationId } = useRecoilValue(selectedLocationContextState);
 
   const [moreMenuAnchor, setMoreMenuAnchor] = useState<{anchor: Element, document: UploadedDocumentInfo} | null>(null);
   const [deleteParameter, setDeleteParameter] = useState<{familyId: string, document: UploadedDocumentInfo} | null>(null);
