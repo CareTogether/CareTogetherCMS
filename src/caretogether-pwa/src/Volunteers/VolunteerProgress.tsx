@@ -2,7 +2,7 @@ import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow,
 import { volunteerFamiliesData } from '../Model/VolunteersModel';
 import { allApprovalAndOnboardingRequirementsData } from '../Model/ConfigurationModel';
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import AddIcon from '@mui/icons-material/Add';
 import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';
 import { SearchBar } from '../SearchBar';
@@ -16,12 +16,13 @@ import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { useLoadable } from '../Hooks/useLoadable';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
+import { useAppNavigate } from '../Hooks/useAppNavigate';
 
 function VolunteerProgress(props: { onOpen: () => void }) {
   const { onOpen } = props;
   useEffect(onOpen);
 
-  const navigate = useNavigate();
+  const appNavigate = useAppNavigate();
 
   // The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
   const volunteerFamiliesLoadable = useLoadable(volunteerFamiliesData);
@@ -34,7 +35,7 @@ function VolunteerProgress(props: { onOpen: () => void }) {
   useScrollMemory();
 
   function openFamily(familyId: string) {
-    navigate(`/families/${familyId}`);
+    appNavigate.family(familyId);
   }
   const [createVolunteerFamilyDialogOpen, setCreateVolunteerFamilyDialogOpen] = useState(false);
   

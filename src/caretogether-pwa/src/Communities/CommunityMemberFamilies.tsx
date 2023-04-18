@@ -7,9 +7,9 @@ import GroupRemoveIcon from '@mui/icons-material/GroupRemove';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useRecoilValue } from 'recoil';
 import { familyNameString } from '../Families/FamilyName';
-import { useNavigate } from 'react-router-dom';
 import { familyLastName } from '../Families/FamilyUtils';
 import { visibleFamiliesQuery } from '../Model/Data';
+import { useAppNavigate } from '../Hooks/useAppNavigate';
 
 interface CommunityMemberFamiliesProps {
   communityInfo: CommunityInfo;
@@ -46,7 +46,7 @@ export function CommunityMemberFamilies({ communityInfo }: CommunityMemberFamili
   }
 
   const theme = useTheme();
-  const navigate = useNavigate();
+  const appNavigate = useAppNavigate();
 
   return <List sx={{ '& .MuiListItemIcon-root': { minWidth: 36 } }}>
     {memberFamilies.map(family => 
@@ -59,7 +59,7 @@ export function CommunityMemberFamilies({ communityInfo }: CommunityMemberFamili
             </IconButton>
           : null}>
         <ListItemButton disableGutters sx={{ paddingTop: 0, paddingBottom: 0 }}
-          onClick={() => navigate(`/families/${family.family!.id!}`)}>
+          onClick={() => appNavigate.family(family.family!.id!)}>
           <ListItemIcon>
             <PeopleIcon color='primary' />
           </ListItemIcon>

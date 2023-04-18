@@ -1,5 +1,4 @@
 import { Drawer, Fab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
 import { Community, Permission } from '../GeneratedClient';
 import { useLoadable } from '../Hooks/useLoadable';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
@@ -8,13 +7,12 @@ import AddIcon from '@mui/icons-material/Add';
 import { useState } from 'react';
 import { useGlobalPermissions } from '../Model/SessionModel';
 import { AddEditCommunity } from './AddEditCommunity';
-import { selectedLocationContextState, useDataLoaded, visibleCommunitiesQuery } from '../Model/Data';
-import { useRecoilValue } from 'recoil';
+import { useDataLoaded, visibleCommunitiesQuery } from '../Model/Data';
+import { useAppNavigate } from '../Hooks/useAppNavigate';
 
 export function CommunitiesList() {
   useScreenTitle("Communities");
 
-  const { organizationId, locationId } = useRecoilValue(selectedLocationContextState);
   const dataLoaded = useDataLoaded();
 
   // The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
@@ -22,9 +20,9 @@ export function CommunitiesList() {
   const communities = (communitiesLoadable || []).map(x => x.community!).sort((a, b) =>
     a.name! < b.name! ? -1 : a.name! > b.name! ? 1 : 0);
 
-  const navigate = useNavigate();
+  const appNavigate = useAppNavigate();
   function openCommunity(community: Community) {
-    navigate(`/org/${organizationId}/${locationId}/communities/community/${community.id}`);
+    appNavigate.community(community.id!);
   }
 
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);
