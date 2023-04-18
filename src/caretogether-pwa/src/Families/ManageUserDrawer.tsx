@@ -104,7 +104,6 @@ export function ManageUserDrawer({ onClose, adult, user }: ManageUserDrawerProps
         await savePersonRoles();
       }
     });
-    onClose();
   }
 
   return (

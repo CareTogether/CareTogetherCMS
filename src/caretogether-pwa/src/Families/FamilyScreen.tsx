@@ -51,10 +51,13 @@ export function FamilyScreen() {
 
   const policy = useRecoilValue(policyData);
 
+  const permissions = useFamilyPermissions(family);
+
   const canCloseReferral = family?.partneringFamilyInfo?.openReferral &&
     !family.partneringFamilyInfo.openReferral.closeReason &&
     !family.partneringFamilyInfo.openReferral.arrangements?.some(arrangement =>
-      !arrangement.endedAtUtc && !arrangement.cancelledAtUtc);
+      !arrangement.endedAtUtc && !arrangement.cancelledAtUtc) &&
+    permissions(Permission.CloseReferral);
 
   const [closeReferralDialogOpen, setCloseReferralDialogOpen] = useState(false);
   const [openNewReferralDialogOpen, setOpenNewReferralDialogOpen] = useState(false);
@@ -100,8 +103,6 @@ export function FamilyScreen() {
   const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));
   const isWideScreen = useMediaQuery(theme.breakpoints.up('xl'));
 
-  const permissions = useFamilyPermissions(family);
-
   useScreenTitle(family
     ? `${family.family?.adults!.filter(adult => adult.item1!.id === family.family!.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family`
     : "...");
@@ -136,14 +137,14 @@ export function FamilyScreen() {
           startIcon={<AddCircleIcon />}>
           Child
         </Button>}
-        <Button
+        {permissions(Permission.AddEditDraftNotes) && <Button
           onClick={() => setAddNoteDialogOpen(true)}
           variant="contained"
           size="small"
           sx={{margin: 1}}
           startIcon={<AddCircleIcon />}>
           Note
-        </Button>
+        </Button>}
         {permissions(Permission.EditVolunteerRoleParticipation) &&
           (participatingFamilyRoles.length > 0 ||
             (family.volunteerFamilyInfo?.removedRoles &&
