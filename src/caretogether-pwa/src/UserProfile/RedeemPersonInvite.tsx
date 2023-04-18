@@ -37,7 +37,7 @@ function RedeemPersonInvite() {
       console.log("Invite redemption result:");
       console.log(result);
       refreshUserOrganizationAccess();
-      navigate('/');
+      navigate(`/org/${inviteReviewInfo?.organizationId}/${inviteReviewInfo?.locationId}/`);
     });
   }
 
@@ -66,14 +66,14 @@ function RedeemPersonInvite() {
         </p>
         <p>
           Your assigned permissions:
-          {inviteReviewInfo.roles && inviteReviewInfo.roles.length > 0
-            ? <ul>
-                {inviteReviewInfo.roles?.map(role =>
-                  <li>{role}</li>
-                )}
-              </ul>
-            : <span><i> (none at this time)</i></span>}
         </p>
+        {inviteReviewInfo.roles && inviteReviewInfo.roles.length > 0
+          ? <ul>
+              {inviteReviewInfo.roles?.map(role =>
+                <li key={role}>{role}</li>
+              )}
+            </ul>
+          : <p><i> (none at this time)</i></p>}
         <p>
           <small>
             Redemption session ID:
