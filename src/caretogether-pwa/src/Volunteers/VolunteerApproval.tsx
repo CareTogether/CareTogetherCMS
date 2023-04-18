@@ -11,7 +11,7 @@ import SmsIcon from '@mui/icons-material/Sms';
 import EmailIcon from '@mui/icons-material/Email';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { SearchBar } from '../SearchBar';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
 import { useScrollMemory } from '../Hooks/useScrollMemory';
@@ -24,6 +24,7 @@ import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { useLoadable } from '../Hooks/useLoadable';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { selectedLocationContextState } from '../Model/Data';
+import { useAppNavigate } from '../Hooks/useAppNavigate';
 
 type RoleFilter = {
   roleName: string
@@ -152,7 +153,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   const { onOpen } = props;
   useEffect(onOpen);
 
-  const navigate = useNavigate();
+  const appNavigate = useAppNavigate();
   
   const [uncheckedFamilies, setUncheckedFamilies] = useState<string[]>([]);
 
@@ -211,7 +212,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   useScrollMemory();
   
   function openFamily(familyId: string) {
-    navigate(`/families/${familyId}`);
+    appNavigate.family(familyId);
   }
   const [createVolunteerFamilyDialogOpen, setCreateVolunteerFamilyDialogOpen] = useState(false);
   
@@ -294,8 +295,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
               onClose={() => setNoticeOpen(false)}
               message={`Found and copied ${getSelectedFamiliesContactEmails().length} email addresses for ${selectedFamilies.length} selected families to clipboard`} />
             <ButtonGroup variant="text" color="inherit" aria-label="text inherit button group" style={{flexGrow: 1}}>
-              <Button color={location.pathname === "/volunteers/approval" ? 'secondary' : 'inherit'} component={Link} to={"/volunteers/approval"}>Approvals</Button>
-              <Button color={location.pathname === "/volunteers/progress" ? 'secondary' : 'inherit'} component={Link} to={"/volunteers/progress"}>Progress</Button>
+              <Button color={location.pathname.endsWith("/volunteers/approval") ? 'secondary' : 'inherit'} component={Link} to={"../approval"}>Approvals</Button>
+              <Button color={location.pathname.endsWith("/volunteers/progress") ? 'secondary' : 'inherit'} component={Link} to={"../progress"}>Progress</Button>
             </ButtonGroup>
           </Stack>
         </Grid>

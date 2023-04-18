@@ -8,7 +8,6 @@ import { format } from 'date-fns';
 import React, { useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import { ReferralCloseReason, PartneringFamilyInfo, Arrangement, ArrangementPhase, Permission } from '../GeneratedClient';
-import { useNavigate } from 'react-router-dom';
 import { FamilyName } from '../Families/FamilyName';
 import { ArrangementCard } from './Arrangements/ArrangementCard';
 import { CreatePartneringFamilyDialog } from './CreatePartneringFamilyDialog';
@@ -23,6 +22,7 @@ import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { useLoadable } from '../Hooks/useLoadable';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
+import { useAppNavigate } from '../Hooks/useAppNavigate';
 
 const arrangementPhaseText = new Map<number, string>([
   [ArrangementPhase.SettingUp, 'Setting Up'],
@@ -40,7 +40,7 @@ function allArrangements(partneringFamilyInfo: PartneringFamilyInfo) {
 }
 
 function PartneringFamilies() {
-  const navigate = useNavigate();
+  const appNavigate = useAppNavigate();
 
   // The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
   const partneringFamiliesLoadable = useLoadable(partneringFamiliesData);
@@ -56,7 +56,7 @@ function PartneringFamilies() {
   useScrollMemory();
 
   function openFamily(familyId: string) {
-    navigate(`/families/${familyId}`);
+    appNavigate.family(familyId);
   }
 
   function arrangementStatusSummary(partneringFamily: PartneringFamilyInfo, phase: ArrangementPhase, type: string) {

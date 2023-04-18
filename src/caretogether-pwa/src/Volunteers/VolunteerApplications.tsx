@@ -5,7 +5,6 @@
 // import { policyData } from '../Model/ConfigurationModel';
 // import { VolunteerFamilyRequirementScope } from '../GeneratedClient';
 // import React, { useState } from 'react';
-// import { useNavigate } from 'react-router-dom';
 
 export {}
 
@@ -35,7 +34,7 @@ export {}
 
 // function VolunteerApplications() {
 //   const classes = useStyles();
-//   const navigate = useNavigate();
+//   const appNavigate = useAppNavigate();
 //   const volunteerFamilies = useRecoilValue(volunteerFamiliesData);
 //   const policy = useRecoilValue(policyData);
 
@@ -119,7 +118,7 @@ export {}
 //       : previous, [] as ActivityRequirement[]);
 
 //   function openVolunteerFamily(volunteerFamilyId: string) {
-//     navigate(`/volunteers/family/${volunteerFamilyId}`);
+//     appNavigate.family(volunteerFamilyId);
 //   }
   
 //   const [drawerOpen, setDrawerOpen] = useState(false);

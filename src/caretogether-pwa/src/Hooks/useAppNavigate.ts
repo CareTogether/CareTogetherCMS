@@ -17,6 +17,7 @@ export function useAppNavigate() {
 
   return {
     dashboard: () => inContext(""),
+    family: (familyId: string) => inContext(`families/${familyId}`),
     community: (communityId: string) => inContext(`communities/community/${communityId}`)
   };
 }
