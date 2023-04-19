@@ -107,6 +107,9 @@ namespace CareTogether.Managers.Membership
         public async Task<UserInviteReviewInfo?> TryReviewUserInviteNonceAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId,
             byte[] nonce)
         {
+            if (user.PersonId(organizationId, locationId) != null)
+                throw new Exception("The user is already linked to a person in this organization and location.");
+
             var locationAccess = await accountsResource.TryLookupUserInviteNoncePersonIdAsync(
                 organizationId, locationId, nonce);
             
