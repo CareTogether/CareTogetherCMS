@@ -134,13 +134,15 @@ namespace CareTogether.Engines.Authorization
                     userFamily != null && userFamily.Id == targetFamily?.Id,
                 AllVolunteerFamiliesPermissionContext c => context switch
                 {
-                    FamilyAuthorizationContext or AllVolunteerFamiliesAuthorizationContext =>
+                    AllVolunteerFamiliesAuthorizationContext => true,
+                    FamilyAuthorizationContext =>
                         targetFamily != null && targetFamilyIsVolunteerFamily,
                     _ => false
                 },
                 AllPartneringFamiliesPermissionContext c => context switch
                 {
-                    FamilyAuthorizationContext or AllPartneringFamiliesAuthorizationContext =>
+                    AllPartneringFamiliesAuthorizationContext => true,
+                    FamilyAuthorizationContext =>
                         targetFamily != null && !targetFamilyReferrals.IsEmpty,
                     _ => false
                 },
