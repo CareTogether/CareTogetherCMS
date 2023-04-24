@@ -1,13 +1,14 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useMatch } from 'react-router-dom';
 import { PartneringFamilies } from './PartneringFamilies';
-import { PartneringFamilyScreen } from './PartneringFamilyScreen';
 
 function Referrals() {
+  const familyId = useMatch('/referrals/family/:familyId');
+  
   return (
     <>
       <Routes>
         <Route path="" element={<PartneringFamilies />} />
-        <Route path="family/:familyId" element={<PartneringFamilyScreen />} />
+        <Route path="family/:familyId" element={<Navigate to={`/families/${familyId?.params.familyId}`} />} />
         <Route path="*" element={<Navigate to=".." replace />} />
       </Routes>
     </>

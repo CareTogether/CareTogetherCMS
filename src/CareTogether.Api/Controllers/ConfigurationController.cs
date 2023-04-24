@@ -1,6 +1,7 @@
 ﻿using CareTogether.Engines.Authorization;
-using CareTogether.Resources;
 using CareTogether.Resources.Policies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.FeatureManagement;
 using System;
@@ -8,9 +9,10 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Api.Controllers
 {
-    public sealed record CurrentFeatureFlags(bool ViewReferrals, bool ExemptAll);
+    public sealed record CurrentFeatureFlags(bool InviteUser);
 
     [ApiController]
+    [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class ConfigurationController : ControllerBase
     {
         private readonly IPoliciesResource policiesResource;
@@ -39,7 +41,7 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<OrganizationConfiguration>> PutRoleDefinition(Guid organizationId,
             string roleName, [FromBody] RoleDefinition role)
         {
-            if (!User.IsInRole("OrganizationAdministrator"))
+            if (!User.IsInRole(SystemConstants.ORGANIZATION_ADMINISTRATOR))
                 return Forbid();
             var result = await policiesResource.UpsertRoleDefinitionAsync(organizationId, roleName, role);
             return Ok(result);
@@ -56,8 +58,7 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<CurrentFeatureFlags>> GetLocationFlags(Guid organizationId)
         {
             var result = new CurrentFeatureFlags(
-                ViewReferrals: await featureManager.IsEnabledAsync(nameof(FeatureFlags.ViewReferrals)),
-                ExemptAll: await featureManager.IsEnabledAsync(nameof(FeatureFlags.ExemptAll))
+                InviteUser: await featureManager.IsEnabledAsync(nameof(FeatureFlags.InviteUser))
                 );
             return Ok(result);
         }

@@ -3,11 +3,10 @@ import { ShellBottomNavigation } from './ShellBottomNavigation';
 import { ShellAppBar } from './ShellAppBar';
 import { ShellSideNavigation } from './ShellSideNavigation';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
+import React from 'react';
+import { ProgressBackdrop } from './ProgressBackdrop';
 
-interface ShellRootLayoutProps {
-  children?: React.ReactNode
-}
-function ShellRootLayout({ children }: ShellRootLayoutProps) {
+function ShellRootLayout({ children }: React.PropsWithChildren) {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
 
@@ -27,7 +26,12 @@ function ShellRootLayout({ children }: ShellRootLayoutProps) {
             paddingBottom: isDesktop ? 0 : 7,
             backgroundColor: '#fff'
           }}>
-          {children}
+          <React.Suspense fallback={
+            <ProgressBackdrop opaque>
+              <p>Loading...</p>
+            </ProgressBackdrop>}>
+            {children}
+          </React.Suspense>
         </Container>
       </Box>
       {!isDesktop && <ShellBottomNavigation />}

@@ -23,13 +23,14 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingCloseoutRequirements(
                 CloseoutRequirements("A", "B", "C"),
-                new ArrangementEntry(Guid.Empty, "", DateTime.MinValue,
+                new ArrangementEntry(Guid.Empty, "", true, DateTime.MinValue,
                     StartedAtUtc: null, EndedAtUtc: null,
-                    null, Guid.Empty,
+                    null, null, null, Guid.Empty,
                     Helpers.Completed(),
                     Helpers.Exempted(),
                     ImmutableList<IndividualVolunteerAssignment>.Empty,
                     ImmutableList<FamilyVolunteerAssignment>.Empty,
+                    Helpers.LocationHistoryEntries(),
                     Helpers.LocationHistoryEntries(),
                     Comments: null),
                 utcNow: new DateTime(2022, 2, 1));
@@ -45,13 +46,14 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingCloseoutRequirements(
                 CloseoutRequirements("A", "B", "C"),
-                new ArrangementEntry(Guid.Empty, "", DateTime.MinValue,
+                new ArrangementEntry(Guid.Empty, "", true, DateTime.MinValue,
                     StartedAtUtc: null, EndedAtUtc: null,
-                    null, Guid.Empty,
+                    null, null, null, Guid.Empty,
                     Helpers.Completed(("A", 1), ("A", 2), ("B", 3)),
                     Helpers.Exempted(),
                     ImmutableList<IndividualVolunteerAssignment>.Empty,
                     ImmutableList<FamilyVolunteerAssignment>.Empty,
+                    Helpers.LocationHistoryEntries(),
                     Helpers.LocationHistoryEntries(),
                     Comments: null),
                 utcNow: new DateTime(2022, 2, 1));
@@ -65,13 +67,14 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingCloseoutRequirements(
                 CloseoutRequirements("A", "B", "C"),
-                new ArrangementEntry(Guid.Empty, "", DateTime.MinValue,
+                new ArrangementEntry(Guid.Empty, "", true, DateTime.MinValue,
                     StartedAtUtc: null, EndedAtUtc: null,
-                    null, Guid.Empty,
+                    null, null, null, Guid.Empty,
                     Helpers.Completed(("A", 1), ("A", 2), ("B", 3), ("C", 12)),
                     Helpers.Exempted(),
                     ImmutableList<IndividualVolunteerAssignment>.Empty,
                     ImmutableList<FamilyVolunteerAssignment>.Empty,
+                    Helpers.LocationHistoryEntries(),
                     Helpers.LocationHistoryEntries(),
                     Comments: null),
                 utcNow: new DateTime(2022, 2, 1));

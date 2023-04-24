@@ -29,27 +29,28 @@ namespace CareTogether.Core.Test
 
         static readonly Family volunteerFamily = new Family(guid4, guid1,
             ImmutableList<(Person, FamilyAdultRelationshipInfo)>.Empty
-                .Add((new Person(guid1, null, true, "John", "Voluntold", Gender.Male, new ExactAge(new DateTime(2000, 1, 1)), "Ethnic",
+                .Add((new Person(guid1, true, "John", "Voluntold", Gender.Male, new ExactAge(new DateTime(2000, 1, 1)), "Ethnic",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, "Works from home"),
                     new FamilyAdultRelationshipInfo("Dad", true)))
-                .Add((new Person(guid2, null, true, "Jane", "Voluntold", Gender.Female, new ExactAge(new DateTime(2000, 1, 1)), "Ethnic",
+                .Add((new Person(guid2, true, "Jane", "Voluntold", Gender.Female, new ExactAge(new DateTime(2000, 1, 1)), "Ethnic",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, "Travels for work"),
                     new FamilyAdultRelationshipInfo("Mom", true)))
-                .Add((new Person(guid3, null, true, "Janet", "Staywithus", Gender.Female, new ExactAge(new DateTime(2002, 1, 1)), "Ethnic",
+                .Add((new Person(guid3, true, "Janet", "Staywithus", Gender.Female, new ExactAge(new DateTime(2002, 1, 1)), "Ethnic",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null,
                     "Likely sleep-deprived as she's getting her master's in social work", "Living with sister & brother-in-law during college"),
                     new FamilyAdultRelationshipInfo("Relative", true))),
             ImmutableList<Person>.Empty
-                .Add(new Person(guid4, null, true, "Joe", "Voluntold", Gender.Male, new AgeInYears(4, new DateTime(2021, 7, 1)), "Ethnic",
+                .Add(new Person(guid4, true, "Joe", "Voluntold", Gender.Male, new AgeInYears(4, new DateTime(2021, 7, 1)), "Ethnic",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null))
-                .Add(new Person(guid5, null, true, "Jill", "Notours", Gender.Female, new AgeInYears(2, new DateTime(2021, 7, 1)), "Ethnic",
+                .Add(new Person(guid5, true, "Jill", "Notours", Gender.Female, new AgeInYears(2, new DateTime(2021, 7, 1)), "Ethnic",
                     ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
             ImmutableList<CustodialRelationship>.Empty
                 .Add(new CustodialRelationship(guid4, guid1, CustodialRelationshipType.ParentWithCustody))
                 .Add(new CustodialRelationship(guid4, guid2, CustodialRelationshipType.ParentWithCustody))
                 .Add(new CustodialRelationship(guid5, guid1, CustodialRelationshipType.LegalGuardian))
                 .Add(new CustodialRelationship(guid5, guid2, CustodialRelationshipType.LegalGuardian)),
-            ImmutableList<UploadedDocumentInfo>.Empty, ImmutableList<Guid>.Empty, ImmutableList<Activity>.Empty);
+            ImmutableList<UploadedDocumentInfo>.Empty, ImmutableList<Guid>.Empty,
+            ImmutableList<CompletedCustomFieldInfo>.Empty, ImmutableList<Activity>.Empty);
 
         private static MemoryObjectStore<EffectiveLocationPolicy> policiesStore =
             new MemoryObjectStore<EffectiveLocationPolicy>();

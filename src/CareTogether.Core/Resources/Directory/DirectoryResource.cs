@@ -1,4 +1,5 @@
 ﻿using CareTogether.Utilities.EventLog;
+using CareTogether.Utilities.FileStore;
 using System;
 using System.Collections.Immutable;
 using System.Linq;
@@ -9,12 +10,14 @@ namespace CareTogether.Resources.Directory
     public sealed class DirectoryResource : IDirectoryResource
     {
         private readonly IEventLog<DirectoryEvent> eventLog;
+        private readonly IFileStore fileStore;
         private readonly ConcurrentLockingStore<(Guid organizationId, Guid locationId), DirectoryModel> tenantModels;
 
 
-        public DirectoryResource(IEventLog<DirectoryEvent> eventLog)
+        public DirectoryResource(IEventLog<DirectoryEvent> eventLog, IFileStore fileStore)
         {
             this.eventLog = eventLog;
+            this.fileStore = fileStore;
             tenantModels = new ConcurrentLockingStore<(Guid organizationId, Guid locationId), DirectoryModel>(key =>
                 DirectoryModel.InitializeAsync(eventLog.GetAllEventsAsync(key.organizationId, key.locationId)));
         }
@@ -54,17 +57,6 @@ namespace CareTogether.Resources.Directory
             }
         }
 
-        public async Task<Person?> FindUserAsync(Guid organizationId, Guid locationId, Guid userId)
-        {
-            using (var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId)))
-            {
-                var result = lockedModel.Value.FindPeople(p => p.UserId == userId);
-                return result.SingleOrDefault();
-                //TODO: Handle the exception case where multiple people have the same user ID assigned, or
-                //      protect against that scenario in the domain model.
-            }
-        }
-
         public async Task<ImmutableList<Family>> ListFamiliesAsync(Guid organizationId, Guid locationId)
         {
             using (var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId)))
@@ -91,6 +83,37 @@ namespace CareTogether.Resources.Directory
                     f.Children.Exists(c => c.Id == personId));
                 return result.SingleOrDefault(); //TODO: Should this be tightened down to always have a value?
             }
+        }
+
+        public async Task<Uri> GetFamilyDocumentReadValetUrl(Guid organizationId, Guid locationId,
+            Guid familyId, Guid documentId)
+        {
+            var family = await FindFamilyAsync(organizationId, locationId, familyId);
+            if (family == null
+                || !family.UploadedDocuments.Any(doc => doc.UploadedDocumentId == documentId)
+                || family.DeletedDocuments.Any(doc => doc == documentId))
+                throw new Exception("The specified family document does not exist.");
+
+            //TODO: Concatenate 'family-' and the family ID with the 'documentId' itself to prevent hostile overwrites
+            //      (requires a data migration; could use an existence check in the interim)
+            var valetUrl = await fileStore.GetValetReadUrlAsync(organizationId, locationId, documentId);
+            
+            return valetUrl;
+        }
+
+        public async Task<Uri> GetFamilyDocumentUploadValetUrl(Guid organizationId, Guid locationId,
+            Guid familyId, Guid documentId)
+        {
+            var family = await FindFamilyAsync(organizationId, locationId, familyId);
+            if (family == null
+                || family.UploadedDocuments.Any(doc => doc.UploadedDocumentId == documentId))
+                throw new Exception("The specified family document already exists.");
+
+            //TODO: Concatenate 'family-' and the family ID with the 'documentId' itself to prevent hostile overwrites
+            //      (requires a data migration; could use an existence check in the interim)
+            var valetUrl = await fileStore.GetValetCreateUrlAsync(organizationId, locationId, documentId);
+            
+            return valetUrl;
         }
     }
 }

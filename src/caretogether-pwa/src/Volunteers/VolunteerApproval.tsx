@@ -3,7 +3,7 @@ import { Gender, ExactAge, AgeInYears, RoleVersionApproval, CombinedFamilyInfo, 
 import { differenceInYears } from 'date-fns';
 import { atom, selector, useRecoilState, useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../Model/VolunteersModel';
-import { organizationConfigurationData, policyData } from '../Model/ConfigurationModel';
+import { organizationConfigurationQuery, policyData } from '../Model/ConfigurationModel';
 import { RoleApprovalStatus } from '../GeneratedClient';
 import React, { useEffect, useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
@@ -11,11 +11,11 @@ import SmsIcon from '@mui/icons-material/Sms';
 import EmailIcon from '@mui/icons-material/Email';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { SearchBar } from '../SearchBar';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
 import { useScrollMemory } from '../Hooks/useScrollMemory';
-import { currentLocationState, useAllVolunteerFamiliesPermissions } from '../Model/SessionModel';
+import { useAllVolunteerFamiliesPermissions } from '../Model/SessionModel';
 import { BulkSmsSideSheet } from './BulkSmsSideSheet';
 import { useWindowSize } from '../Hooks/useWindowSize';
 import useScreenTitle from '../Shell/ShellScreenTitle';
@@ -23,6 +23,8 @@ import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { useLoadable } from '../Hooks/useLoadable';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
+import { selectedLocationContextState } from '../Model/Data';
+import { useAppNavigate } from '../Hooks/useAppNavigate';
 
 type RoleFilter = {
   roleName: string
@@ -151,7 +153,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   const { onOpen } = props;
   useEffect(onOpen);
 
-  const navigate = useNavigate();
+  const appNavigate = useAppNavigate();
   
   const [uncheckedFamilies, setUncheckedFamilies] = useState<string[]>([]);
 
@@ -209,8 +211,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 
   useScrollMemory();
   
-  function openVolunteerFamily(volunteerFamilyId: string) {
-    navigate(`../family/${volunteerFamilyId}`);
+  function openFamily(familyId: string) {
+    appNavigate.family(familyId);
   }
   const [createVolunteerFamilyDialogOpen, setCreateVolunteerFamilyDialogOpen] = useState(false);
   
@@ -228,9 +230,9 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     }
   };
 
-  const locationId = useRecoilValue(currentLocationState);
-  const organizationConfiguration = useRecoilValue(organizationConfigurationData);
-  const smsSourcePhoneNumbers = organizationConfiguration.locations?.find(loc =>
+  const { locationId } = useRecoilValue(selectedLocationContextState);
+  const organizationConfiguration = useRecoilValue(organizationConfigurationQuery);
+  const smsSourcePhoneNumbers = organizationConfiguration?.locations?.find(loc =>
     loc.id === locationId)?.smsSourcePhoneNumbers;
   const [smsMode, setSmsMode] = useState(false);
   
@@ -293,8 +295,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
               onClose={() => setNoticeOpen(false)}
               message={`Found and copied ${getSelectedFamiliesContactEmails().length} email addresses for ${selectedFamilies.length} selected families to clipboard`} />
             <ButtonGroup variant="text" color="inherit" aria-label="text inherit button group" style={{flexGrow: 1}}>
-              <Button color={location.pathname === "/volunteers/approval" ? 'secondary' : 'inherit'} component={Link} to={"/volunteers/approval"}>Approvals</Button>
-              <Button color={location.pathname === "/volunteers/progress" ? 'secondary' : 'inherit'} component={Link} to={"/volunteers/progress"}>Progress</Button>
+              <Button color={location.pathname.endsWith("/volunteers/approval") ? 'secondary' : 'inherit'} component={Link} to={"../approval"}>Approvals</Button>
+              <Button color={location.pathname.endsWith("/volunteers/progress") ? 'secondary' : 'inherit'} component={Link} to={"../progress"}>Progress</Button>
             </ButtonGroup>
           </Stack>
         </Grid>
@@ -329,7 +331,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                 {filteredVolunteerFamilies.map((volunteerFamily) => (
                   <React.Fragment key={volunteerFamily.family?.id}>
                     <TableRow sx={{backgroundColor: '#eef', height: '39px'}}
-                      onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}>
+                      onClick={() => openFamily(volunteerFamily.family!.id!)}>
                       {smsMode && <TableCell key="-" sx={{ padding: 0, width: '36px' }}>
                         <Checkbox size='small' checked={!uncheckedFamilies.some(x => x === volunteerFamily.family!.id!)}
                           onChange={e => e.target.checked
@@ -368,7 +370,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                     </TableRow>
                     {expandedView && volunteerFamily.family?.adults?.map(adult => adult.item1 && adult.item1.active && (
                       <TableRow key={volunteerFamily.family?.id + ":" + adult.item1.id}
-                        onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}>
+                        onClick={() => openFamily(volunteerFamily.family!.id!)}>
                         {smsMode && <TableCell />}
                         <TableCell sx={{paddingLeft:3}}>{adult.item1.firstName}</TableCell>
                         <TableCell>{adult.item1.lastName}</TableCell>
@@ -390,7 +392,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                     ))}
                     {expandedView && volunteerFamily.family?.children?.map(child => child.active && (
                       <TableRow key={volunteerFamily.family?.id + ":" + child.id}
-                        onClick={() => openVolunteerFamily(volunteerFamily.family!.id!)}
+                        onClick={() => openFamily(volunteerFamily.family!.id!)}
                         sx={{color: 'ddd', fontStyle: 'italic'}}>
                         {smsMode && <TableCell />}
                         <TableCell sx={{paddingLeft:3}}>{child.firstName}</TableCell>
@@ -420,7 +422,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
           </Fab>}
           {createVolunteerFamilyDialogOpen && <CreateVolunteerFamilyDialog onClose={(volunteerFamilyId) => {
             setCreateVolunteerFamilyDialogOpen(false);
-            volunteerFamilyId && openVolunteerFamily(volunteerFamilyId);
+            volunteerFamilyId && openFamily(volunteerFamilyId);
           }} />}
         </Grid>
       </Grid>

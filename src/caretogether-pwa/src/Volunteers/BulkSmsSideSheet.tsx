@@ -1,13 +1,13 @@
 import { Drawer, TextField, Button, Divider, useMediaQuery, useTheme, FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 import { useState } from "react";
 import { useRecoilValue } from "recoil";
-import { authenticatingFetch } from "../Authentication/AuthenticatedHttp";
-import { CombinedFamilyInfo, DirectoryClient, SendSmsToFamilyPrimaryContactsRequest, SmsResult, ValueTupleOfGuidAndSmsMessageResult } from "../GeneratedClient";
-import { organizationConfigurationData } from "../Model/ConfigurationModel";
+import { CombinedFamilyInfo, SendSmsToFamilyPrimaryContactsRequest, SmsResult, ValueTupleOfGuidAndSmsMessageResult } from "../GeneratedClient";
+import { organizationConfigurationQuery } from "../Model/ConfigurationModel";
 import { useFamilyLookup } from "../Model/DirectoryModel";
-import { currentOrganizationState, currentLocationState } from "../Model/SessionModel";
 import { useBackdrop } from "../Hooks/useBackdrop";
 import { FamilyName } from "../Families/FamilyName";
+import { api } from "../Api/Api";
+import { selectedLocationContextState } from "../Model/Data";
 
 type BulkSmsSideSheetProps = {
   selectedFamilies: CombinedFamilyInfo[]
@@ -18,9 +18,8 @@ type BulkSmsSideSheetProps = {
 const phonePattern = /^\(?([0-9]{3})\)?[\u{00ad}\-.\s]?([0-9]{3})[\u{00ad}\-.\s]?([0-9]{4})/u;
 
 export function BulkSmsSideSheet({ selectedFamilies, onClose }: BulkSmsSideSheetProps) {
-  const organizationId = useRecoilValue(currentOrganizationState);
-  const locationId = useRecoilValue(currentLocationState);
-  const organizationConfiguration = useRecoilValue(organizationConfigurationData);
+  const { organizationId, locationId } = useRecoilValue(selectedLocationContextState);
+  const organizationConfiguration = useRecoilValue(organizationConfigurationQuery);
   
   const familiesSelectedForSms = selectedFamilies.map(family => {
     const primaryAdult = family.family!.adults!.find(adult => adult.item1!.id === family.family!.primaryFamilyContactPersonId);
@@ -33,7 +32,7 @@ export function BulkSmsSideSheet({ selectedFamilies, onClose }: BulkSmsSideSheet
     };
   });
 
-  const smsSourcePhoneNumbers = organizationConfiguration.locations?.find(loc =>
+  const smsSourcePhoneNumbers = organizationConfiguration?.locations?.find(loc =>
     loc.id === locationId)?.smsSourcePhoneNumbers;
   
   const [selectedSourceNumber, setSelectedSourceNumber] = useState("");
@@ -46,8 +45,7 @@ export function BulkSmsSideSheet({ selectedFamilies, onClose }: BulkSmsSideSheet
     await withBackdrop(async () => {
       const familyIds = familiesSelectedForSms.map(family => family.family!.family!.id!);
   
-      const client = new DirectoryClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const sendSmsResults = await client.sendSmsToFamilyPrimaryContacts(organizationId, locationId,
+      const sendSmsResults = await api.communications.sendSmsToFamilyPrimaryContacts(organizationId!, locationId,
         new SendSmsToFamilyPrimaryContactsRequest({
           familyIds: familyIds,
           sourceNumber: selectedSourceNumber,

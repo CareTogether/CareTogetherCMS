@@ -1,79 +1,41 @@
-import { selector, useRecoilCallback } from "recoil";
-import { ActionRequirement, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, VolunteerCommand, VolunteersClient, VolunteerFamilyCommand, RoleRemovalReason, RemoveVolunteerRole, ResetVolunteerRole, RemoveVolunteerFamilyRole, ResetVolunteerFamilyRole, MarkVolunteerFamilyRequirementIncomplete, CompletedRequirementInfo, MarkVolunteerRequirementIncomplete, ExemptVolunteerRequirement, UnexemptVolunteerRequirement, ExemptVolunteerFamilyRequirement, UnexemptVolunteerFamilyRequirement, ExemptedRequirementInfo } from "../GeneratedClient";
-import { authenticatingFetch } from "../Authentication/AuthenticatedHttp";
-import { currentOrganizationState, currentLocationState } from "./SessionModel";
-import { visibleFamiliesData } from "./DirectoryModel";
+import { selector } from "recoil";
+import { ActionRequirement, CompleteVolunteerFamilyRequirement, CompleteVolunteerRequirement, VolunteerCommand, VolunteerFamilyCommand, RoleRemovalReason, RemoveVolunteerRole, ResetVolunteerRole, RemoveVolunteerFamilyRole, ResetVolunteerFamilyRole, MarkVolunteerFamilyRequirementIncomplete, CompletedRequirementInfo, MarkVolunteerRequirementIncomplete, ExemptVolunteerRequirement, UnexemptVolunteerRequirement, ExemptVolunteerFamilyRequirement, UnexemptVolunteerFamilyRequirement, ExemptedRequirementInfo, FamilyApprovalRecordsCommand, IndividualApprovalRecordsCommand } from "../GeneratedClient";
+import { useAtomicRecordsCommandCallback } from "./DirectoryModel";
+import { visibleFamiliesQuery } from "./Data";
 
 export const volunteerFamiliesData = selector({
   key: 'volunteerFamiliesData',
   get: ({get}) => {
-    const visibleFamilies = get(visibleFamiliesData);
+    const visibleFamilies = get(visibleFamiliesQuery);
     return visibleFamilies.filter(f => f.volunteerFamilyInfo);
   }});
 
 function useVolunteerFamilyCommandCallbackWithLocation<T extends unknown[]>(
-  callback: (organizationId: string, locationId: string, volunteerFamilyId: string, ...args: T) => Promise<VolunteerFamilyCommand>) {
-  return useRecoilCallback(({snapshot, set}) => {
-    const asyncCallback = async (volunteerFamilyId: string, ...args: T) => {
-      const organizationId = await snapshot.getPromise(currentOrganizationState);
-      const locationId = await snapshot.getPromise(currentLocationState);
-
-      const command = await callback(organizationId, locationId, volunteerFamilyId, ...args);
-
-      const client = new VolunteersClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedFamily = await client.submitVolunteerFamilyCommand(organizationId, locationId, command);
-
-      set(visibleFamiliesData, current => {
-        return current.map(currentEntry => currentEntry.family?.id === volunteerFamilyId
-          ? updatedFamily
-          : currentEntry);
-      });
-    };
-    return asyncCallback;
-  })
+  callback: (familyId: string, ...args: T) => Promise<VolunteerFamilyCommand>) {
+  return useAtomicRecordsCommandCallback(async (familyId, ...args: T) => {
+    var command = new FamilyApprovalRecordsCommand();
+    command.command = await callback(familyId, ...args);
+    return command;
+  });
 }
-
-// function useVolunteerFamilyCommandCallback<T extends unknown[]>(
-//   callback: (volunteerFamilyId: string, ...args: T) => Promise<VolunteerFamilyCommand>) {
-//   return useVolunteerFamilyCommandCallbackWithLocation<T>(
-//     (_organizationId, _locationId, volunteerFamilyId, ...args) => callback(volunteerFamilyId, ...args));
-// }
 
 function useVolunteerCommandCallbackWithLocation<T extends unknown[]>(
-  callback: (organizationId: string, locationId: string, volunteerFamilyId: string, personId: string, ...args: T) => Promise<VolunteerCommand>) {
-  return useRecoilCallback(({snapshot, set}) => {
-    const asyncCallback = async (volunteerFamilyId: string, personId: string, ...args: T) => {
-      const organizationId = await snapshot.getPromise(currentOrganizationState);
-      const locationId = await snapshot.getPromise(currentLocationState);
-
-      const command = await callback(organizationId, locationId, volunteerFamilyId, personId, ...args);
-
-      const client = new VolunteersClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedFamily = await client.submitVolunteerCommand(organizationId, locationId, command);
-
-      set(visibleFamiliesData, current => {
-        return current.map(currentEntry => currentEntry.family?.id === volunteerFamilyId
-          ? updatedFamily
-          : currentEntry);
-      });
-    };
-    return asyncCallback;
-  })
+  callback: (familyId: string, ...args: T) => Promise<VolunteerCommand>) {
+  return useAtomicRecordsCommandCallback(async (familyId, ...args: T) => {
+    var command = new IndividualApprovalRecordsCommand();
+    command.command = await callback(familyId, ...args);
+    return command;
+  });
 }
-
-// function useVolunteerCommandCallback<T extends unknown[]>(
-//   callback: (volunteerFamilyId: string, personId: string, ...args: T) => Promise<VolunteerCommand>) {
-//   return useVolunteerCommandCallbackWithLocation<T>(
-//     (_organizationId, _locationId, volunteerFamilyId, personId, ...args) => callback(volunteerFamilyId, personId, ...args));
-// }
 
 export function useVolunteersModel() {
   const completeFamilyRequirement = useVolunteerFamilyCommandCallbackWithLocation(
-    async (organizationId, locationId, volunteerFamilyId, requirementName: string, requirement: ActionRequirement,
+    async (volunteerFamilyId, requirementName: string, requirement: ActionRequirement,
       completedAtLocal: Date, documentId: string | null, noteId: string | null) => {
       const command = new CompleteVolunteerFamilyRequirement({
         familyId: volunteerFamilyId
       });
+      command.completedRequirementId = crypto.randomUUID();
       command.requirementName = requirementName;
       command.completedAtUtc = completedAtLocal;
       if (documentId != null)
@@ -83,7 +45,7 @@ export function useVolunteersModel() {
       return command;
     });
   const markFamilyRequirementIncomplete = useVolunteerFamilyCommandCallbackWithLocation(
-    async (organizationId, locationId, volunteerFamilyId, completedRequirement: CompletedRequirementInfo) => {
+    async (volunteerFamilyId, completedRequirement: CompletedRequirementInfo) => {
       const command = new MarkVolunteerFamilyRequirementIncomplete({
         familyId: volunteerFamilyId
       });
@@ -92,7 +54,7 @@ export function useVolunteersModel() {
       return command;
     });
   const exemptVolunteerFamilyRequirement = useVolunteerFamilyCommandCallbackWithLocation(
-    async (organizationId, locationId, volunteerFamilyId, requirementName: string,
+    async (volunteerFamilyId, requirementName: string,
       additionalComments: string, exemptionExpiresAtLocal: Date | null) => {
       const command = new ExemptVolunteerFamilyRequirement({
         familyId: volunteerFamilyId
@@ -103,7 +65,7 @@ export function useVolunteersModel() {
       return command;
     });
   const unexemptVolunteerFamilyRequirement = useVolunteerFamilyCommandCallbackWithLocation(
-    async (organizationId, locationId, volunteerFamilyId, exemptedRequirement: ExemptedRequirementInfo) => {
+    async (volunteerFamilyId, exemptedRequirement: ExemptedRequirementInfo) => {
       const command = new UnexemptVolunteerFamilyRequirement({
         familyId: volunteerFamilyId
       });
@@ -111,7 +73,7 @@ export function useVolunteersModel() {
       return command;
     });
   const removeFamilyRole = useVolunteerFamilyCommandCallbackWithLocation(
-    async (organizationId, locationId, volunteerFamilyId,
+    async (volunteerFamilyId,
       role: string, reason: RoleRemovalReason, additionalComments: string) =>
     {
       const command = new RemoveVolunteerFamilyRole({
@@ -123,7 +85,7 @@ export function useVolunteersModel() {
       return command;
     });
   const resetFamilyRole = useVolunteerFamilyCommandCallbackWithLocation(
-    async (organizationId, locationId, volunteerFamilyId,
+    async (volunteerFamilyId,
       role: string) =>
     {
       const command = new ResetVolunteerFamilyRole({
@@ -133,12 +95,13 @@ export function useVolunteersModel() {
       return command;
     });
   const completeIndividualRequirement = useVolunteerCommandCallbackWithLocation(
-    async (organizationId, locationId, volunteerFamilyId, personId, requirementName: string, requirement: ActionRequirement,
+    async (volunteerFamilyId, personId: string, requirementName: string, requirement: ActionRequirement,
       completedAtLocal: Date, documentId: string | null, noteId: string | null) => {
       const command = new CompleteVolunteerRequirement({
         familyId: volunteerFamilyId,
         personId: personId
       });
+      command.completedRequirementId = crypto.randomUUID();
       command.requirementName = requirementName;
       command.completedAtUtc = completedAtLocal;
       if (documentId != null)
@@ -148,7 +111,7 @@ export function useVolunteersModel() {
       return command;
     });
   const markIndividualRequirementIncomplete = useVolunteerCommandCallbackWithLocation(
-    async (organizationId, locationId, volunteerFamilyId, personId, completedRequirement: CompletedRequirementInfo) => {
+    async (volunteerFamilyId, personId: string, completedRequirement: CompletedRequirementInfo) => {
       const command = new MarkVolunteerRequirementIncomplete({
         familyId: volunteerFamilyId,
         personId: personId
@@ -158,7 +121,7 @@ export function useVolunteersModel() {
       return command;
     });
   const exemptVolunteerRequirement = useVolunteerCommandCallbackWithLocation(
-    async (organizationId, locationId, volunteerFamilyId, personId, requirementName: string,
+    async (volunteerFamilyId, personId: string, requirementName: string,
       additionalComments: string, exemptionExpiresAtLocal: Date | null) => {
       const command = new ExemptVolunteerRequirement({
         familyId: volunteerFamilyId,
@@ -170,7 +133,7 @@ export function useVolunteersModel() {
       return command;
     });
   const unexemptVolunteerRequirement = useVolunteerCommandCallbackWithLocation(
-    async (organizationId, locationId, volunteerFamilyId, personId, exemptedRequirement: ExemptedRequirementInfo) => {
+    async (volunteerFamilyId, personId: string, exemptedRequirement: ExemptedRequirementInfo) => {
       const command = new UnexemptVolunteerRequirement({
         familyId: volunteerFamilyId,
         personId: personId
@@ -179,7 +142,7 @@ export function useVolunteersModel() {
       return command;
     });
   const removeIndividualRole = useVolunteerCommandCallbackWithLocation(
-    async (organizationId, locationId, volunteerFamilyId, personId,
+    async (volunteerFamilyId, personId: string,
       role: string, reason: RoleRemovalReason, additionalComments: string) =>
     {
       const command = new RemoveVolunteerRole({
@@ -192,7 +155,7 @@ export function useVolunteersModel() {
       return command;
     });
   const resetIndividualRole = useVolunteerCommandCallbackWithLocation(
-    async (organizationId, locationId, volunteerFamilyId, personId,
+    async (volunteerFamilyId, personId: string,
       role: string) =>
     {
       const command = new ResetVolunteerRole({

@@ -1,80 +1,42 @@
-import { selector, useRecoilCallback } from "recoil";
-import { authenticatingFetch } from "../Authentication/AuthenticatedHttp";
-import { ReferralCommand, ReferralsClient, ArrangementsCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement, StartArrangements, EndArrangements, AssignVolunteerFamily, AssignIndividualVolunteer, ReferralCloseReason, CloseReferral, CreateReferral, TrackChildLocationChange, ChildLocationPlan, UpdateCustomReferralField, CustomField, ExemptReferralRequirement, UnexemptReferralRequirement, ExemptArrangementRequirement, UnexemptArrangementRequirement, MissingArrangementRequirement, ExemptedRequirementInfo, MarkReferralRequirementIncomplete, CompletedRequirementInfo, MarkArrangementRequirementIncomplete, CancelArrangementsSetup, UpdateReferralComments, UnassignVolunteerFamily, UnassignIndividualVolunteer, CompleteVolunteerFamilyAssignmentRequirement, CompleteIndividualVolunteerAssignmentRequirement, FamilyVolunteerAssignment, IndividualVolunteerAssignment, ExemptIndividualVolunteerAssignmentRequirement, ExemptVolunteerFamilyAssignmentRequirement, MarkIndividualVolunteerAssignmentRequirementIncomplete, MarkVolunteerFamilyAssignmentRequirementIncomplete, UnexemptIndividualVolunteerAssignmentRequirement, UnexemptVolunteerFamilyAssignmentRequirement, UpdateArrangementComments, ReopenArrangements, EditArrangementStartTime, DeleteChildLocationChange } from "../GeneratedClient";
-import { visibleFamiliesData } from "./DirectoryModel";
-import { currentOrganizationState, currentLocationState } from "./SessionModel";
+import { selector } from "recoil";
+import { ReferralCommand, ArrangementsCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement, StartArrangements, EndArrangements, AssignVolunteerFamily, AssignIndividualVolunteer, ReferralCloseReason, CloseReferral, CreateReferral, TrackChildLocationChange, ChildLocationPlan, UpdateCustomReferralField, CustomField, ExemptReferralRequirement, UnexemptReferralRequirement, ExemptArrangementRequirement, UnexemptArrangementRequirement, MissingArrangementRequirement, ExemptedRequirementInfo, MarkReferralRequirementIncomplete, CompletedRequirementInfo, MarkArrangementRequirementIncomplete, CancelArrangementsSetup, UpdateReferralComments, UnassignVolunteerFamily, UnassignIndividualVolunteer, CompleteVolunteerFamilyAssignmentRequirement, CompleteIndividualVolunteerAssignmentRequirement, FamilyVolunteerAssignment, IndividualVolunteerAssignment, ExemptIndividualVolunteerAssignmentRequirement, ExemptVolunteerFamilyAssignmentRequirement, MarkIndividualVolunteerAssignmentRequirementIncomplete, MarkVolunteerFamilyAssignmentRequirementIncomplete, UnexemptIndividualVolunteerAssignmentRequirement, UnexemptVolunteerFamilyAssignmentRequirement, UpdateArrangementComments, ReopenArrangements, EditArrangementStartTime, DeleteChildLocationChange, PlanArrangementStart, PlanArrangementEnd, PlanChildLocationChange, DeletePlannedChildLocationChange, DeleteArrangements, ReferralRecordsCommand, ArrangementRecordsCommand } from "../GeneratedClient";
+import { useAtomicRecordsCommandCallback } from "./DirectoryModel";
+import { visibleFamiliesQuery } from "./Data";
 
 export const partneringFamiliesData = selector({
   key: 'partneringFamiliesData',
   get: ({get}) => {
-    const visibleFamilies = get(visibleFamiliesData);
+    const visibleFamilies = get(visibleFamiliesQuery);
     return visibleFamilies.filter(f => f.partneringFamilyInfo);
   }});
 
 function useReferralCommandCallbackWithLocation<T extends unknown[]>(
-  callback: (organizationId: string, locationId: string, partneringFamilyId: string, ...args: T) => Promise<ReferralCommand>) {
-  return useRecoilCallback(({snapshot, set}) => {
-    const asyncCallback = async (partneringFamilyId: string, ...args: T) => {
-      const organizationId = await snapshot.getPromise(currentOrganizationState);
-      const locationId = await snapshot.getPromise(currentLocationState);
-
-      const command = await callback(organizationId, locationId, partneringFamilyId, ...args);
-
-      const client = new ReferralsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedFamily = await client.submitReferralCommand(organizationId, locationId, command);
-
-      set(visibleFamiliesData, current => {
-        return current.map(currentEntry => currentEntry.family?.id === partneringFamilyId
-          ? updatedFamily
-          : currentEntry);
-      });
-    };
-    return asyncCallback;
-  })
+  callback: (familyId: string, ...args: T) => Promise<ReferralCommand>) {
+  return useAtomicRecordsCommandCallback(async (familyId, ...args: T) => {
+    var command = new ReferralRecordsCommand();
+    command.command = await callback(familyId, ...args);
+    return command;
+  });
 }
-
-// function useReferralCommandCallback<T extends unknown[]>(
-//   callback: (partneringFamilyId: string, ...args: T) => Promise<ReferralCommand>) {
-//   return useReferralCommandCallbackWithLocation<T>(
-//     (_organizationId, _locationId, partneringFamilyId, ...args) => callback(partneringFamilyId, ...args));
-// }
 
 function useArrangementsCommandCallbackWithLocation<T extends unknown[]>(
-  callback: (organizationId: string, locationId: string, partneringFamilyId: string, referralId: string, ...args: T) => Promise<ArrangementsCommand>) {
-  return useRecoilCallback(({snapshot, set}) => {
-    const asyncCallback = async (partneringFamilyId: string, referralId: string, ...args: T) => {
-      const organizationId = await snapshot.getPromise(currentOrganizationState);
-      const locationId = await snapshot.getPromise(currentLocationState);
-
-      const command = await callback(organizationId, locationId, partneringFamilyId, referralId, ...args);
-
-      const client = new ReferralsClient(process.env.REACT_APP_API_HOST, authenticatingFetch);
-      const updatedFamily = await client.submitArrangementsCommand(organizationId, locationId, command);
-
-      set(visibleFamiliesData, current => {
-        return current.map(currentEntry => currentEntry.family?.id === partneringFamilyId
-          ? updatedFamily
-          : currentEntry);
-      });
-    };
-    return asyncCallback;
-  })
+  callback: (familyId: string, ...args: T) => Promise<ArrangementsCommand>) {
+  return useAtomicRecordsCommandCallback(async (familyId, ...args: T) => {
+    var command = new ArrangementRecordsCommand();
+    command.command = await callback(familyId, ...args);
+    return command;
+  });
 }
-
-// function useArrangementCommandCallback<T extends unknown[]>(
-//   callback: (partneringFamilyId: string, personId: string, ...args: T) => Promise<ArrangementCommand>) {
-//   return useArrangementCommandCallbackWithLocation<T>(
-//     (_organizationId, _locationId, partneringFamilyId, personId, ...args) => callback(partneringFamilyId, personId, ...args));
-// }
 
 export function useReferralsModel() {
   const completeReferralRequirement = useReferralCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, requirementName: string, requirement: ActionRequirement,
+    async (partneringFamilyId: string, referralId: string, requirementName: string, requirement: ActionRequirement,
       completedAtLocal: Date, documentId: string | null, noteId: string | null) => {
       const command = new CompleteReferralRequirement({
         familyId: partneringFamilyId,
         referralId: referralId,
       });
+      command.completedRequirementId = crypto.randomUUID();
       command.requirementName = requirementName;
       command.completedAtUtc = completedAtLocal;
       if (documentId != null)
@@ -84,7 +46,7 @@ export function useReferralsModel() {
       return command;
     });
   const markReferralRequirementIncomplete = useReferralCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, completedRequirement: CompletedRequirementInfo) => {
+    async (partneringFamilyId: string, referralId: string, completedRequirement: CompletedRequirementInfo) => {
       const command = new MarkReferralRequirementIncomplete({
         familyId: partneringFamilyId,
         referralId: referralId
@@ -94,7 +56,7 @@ export function useReferralsModel() {
       return command;
     });
   const exemptReferralRequirement = useReferralCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, requirementName: string,
+    async (partneringFamilyId: string, referralId: string, requirementName: string,
       additionalComments: string, exemptionExpiresAtLocal: Date | null) => {
       const command = new ExemptReferralRequirement({
         familyId: partneringFamilyId,
@@ -106,7 +68,7 @@ export function useReferralsModel() {
       return command;
     });
   const unexemptReferralRequirement = useReferralCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, exemptedRequirement: ExemptedRequirementInfo) => {
+    async (partneringFamilyId: string, referralId: string, exemptedRequirement: ExemptedRequirementInfo) => {
       const command = new UnexemptReferralRequirement({
         familyId: partneringFamilyId,
         referralId: referralId,
@@ -115,19 +77,20 @@ export function useReferralsModel() {
       return command;
     });
   const updateCustomReferralField = useReferralCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, customField: CustomField,
+    async (partneringFamilyId: string, referralId: string, customField: CustomField,
       value: boolean | string | null) => {
       const command = new UpdateCustomReferralField({
         familyId: partneringFamilyId,
         referralId: referralId,
       });
+      command.completedCustomFieldId = crypto.randomUUID();
       command.customFieldName = customField.name;
       command.customFieldType = customField.type;
       command.value = value;
       return command;
     });
   const updateReferralComments = useReferralCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, comments: string | undefined) => {
+    async (partneringFamilyId: string, referralId: string, comments: string | undefined) => {
       const command = new UpdateReferralComments({
         familyId: partneringFamilyId,
         referralId: referralId,
@@ -136,7 +99,7 @@ export function useReferralsModel() {
       return command;
     });
   const completeArrangementRequirement = useArrangementsCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementIds: string[],
+    async (partneringFamilyId: string, referralId: string, arrangementIds: string[],
       requirementName: string, requirement: ActionRequirement,
       completedAtLocal: Date, documentId: string | null, noteId: string | null) => {
       const command = new CompleteArrangementRequirement({
@@ -144,6 +107,7 @@ export function useReferralsModel() {
         referralId: referralId,
         arrangementIds: arrangementIds
       });
+      command.completedRequirementId = crypto.randomUUID();
       command.requirementName = requirementName;
       command.completedAtUtc = completedAtLocal;
       if (documentId != null)
@@ -153,7 +117,7 @@ export function useReferralsModel() {
       return command;
     });
   const markArrangementRequirementIncomplete = useArrangementsCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
+    async (partneringFamilyId: string, referralId: string, arrangementId: string,
       completedRequirement: CompletedRequirementInfo) => {
       const command = new MarkArrangementRequirementIncomplete({
         familyId: partneringFamilyId,
@@ -165,7 +129,7 @@ export function useReferralsModel() {
       return command;
     });
   const exemptArrangementRequirement = useArrangementsCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementIds: string[],
+    async (partneringFamilyId: string, referralId: string, arrangementIds: string[],
       requirement: MissingArrangementRequirement, exemptAll: Boolean,
       additionalComments: string, exemptionExpiresAtLocal: Date | null) => {
       const command = new ExemptArrangementRequirement({
@@ -182,7 +146,7 @@ export function useReferralsModel() {
       return command;
     });
   const unexemptArrangementRequirement = useArrangementsCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
+    async (partneringFamilyId: string, referralId: string, arrangementId: string,
       exemptedRequirement: ExemptedRequirementInfo) => {
       const command = new UnexemptArrangementRequirement({
         familyId: partneringFamilyId,
@@ -195,7 +159,7 @@ export function useReferralsModel() {
     });
     
   const completeVolunteerFamilyAssignmentRequirement = useArrangementsCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementIds: string[],
+    async (partneringFamilyId: string, referralId: string, arrangementIds: string[],
       assignment: FamilyVolunteerAssignment,
       requirementName: string, requirement: ActionRequirement,
       completedAtLocal: Date, documentId: string | null, noteId: string | null) => {
@@ -216,7 +180,7 @@ export function useReferralsModel() {
       return command;
     });
   const markVolunteerFamilyAssignmentRequirementIncomplete = useArrangementsCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
+    async (partneringFamilyId: string, referralId: string, arrangementId: string,
       assignment: FamilyVolunteerAssignment,
       completedRequirement: CompletedRequirementInfo) => {
       const command = new MarkVolunteerFamilyAssignmentRequirementIncomplete({
@@ -232,7 +196,7 @@ export function useReferralsModel() {
       return command;
     });
   const exemptVolunteerFamilyAssignmentRequirement = useArrangementsCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementIds: string[],
+    async (partneringFamilyId: string, referralId: string, arrangementIds: string[],
       assignment: FamilyVolunteerAssignment,
       requirement: MissingArrangementRequirement, exemptAll: Boolean,
       additionalComments: string, exemptionExpiresAtLocal: Date | null) => {
@@ -253,7 +217,7 @@ export function useReferralsModel() {
       return command;
     });
   const unexemptVolunteerFamilyAssignmentRequirement = useArrangementsCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
+    async (partneringFamilyId: string, referralId: string, arrangementId: string,
       assignment: FamilyVolunteerAssignment,
       exemptedRequirement: ExemptedRequirementInfo) => {
       const command = new UnexemptVolunteerFamilyAssignmentRequirement({
@@ -270,7 +234,7 @@ export function useReferralsModel() {
     });
 
   const completeIndividualVolunteerAssignmentRequirement = useArrangementsCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementIds: string[],
+    async (partneringFamilyId: string, referralId: string, arrangementIds: string[],
       assignment: IndividualVolunteerAssignment,
       requirementName: string, requirement: ActionRequirement,
       completedAtLocal: Date, documentId: string | null, noteId: string | null) => {
@@ -292,7 +256,7 @@ export function useReferralsModel() {
       return command;
     });
   const markIndividualVolunteerAssignmentRequirementIncomplete = useArrangementsCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
+    async (partneringFamilyId: string, referralId: string, arrangementId: string,
       assignment: IndividualVolunteerAssignment,
       completedRequirement: CompletedRequirementInfo) => {
       const command = new MarkIndividualVolunteerAssignmentRequirementIncomplete({
@@ -309,7 +273,7 @@ export function useReferralsModel() {
       return command;
     });
   const exemptIndividualVolunteerAssignmentRequirement = useArrangementsCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementIds: string[],
+    async (partneringFamilyId: string, referralId: string, arrangementIds: string[],
       assignment: IndividualVolunteerAssignment,
       requirement: MissingArrangementRequirement, exemptAll: Boolean,
       additionalComments: string, exemptionExpiresAtLocal: Date | null) => {
@@ -331,7 +295,7 @@ export function useReferralsModel() {
       return command;
     });
   const unexemptIndividualVolunteerAssignmentRequirement = useArrangementsCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
+    async (partneringFamilyId: string, referralId: string, arrangementId: string,
       assignment: IndividualVolunteerAssignment,
       exemptedRequirement: ExemptedRequirementInfo) => {
       const command = new UnexemptIndividualVolunteerAssignmentRequirement({
@@ -349,20 +313,32 @@ export function useReferralsModel() {
     });
     
   const createArrangement = useArrangementsCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementType: string,
+    async (partneringFamilyId: string, referralId: string, arrangementType: string,
       requestedAtLocal: Date, partneringFamilyPersonId: string) => {
       const command = new CreateArrangement({
         familyId: partneringFamilyId,
         referralId: referralId,
         arrangementIds: []
       });
+      command.arrangementIds = [crypto.randomUUID()];
       command.arrangementType = arrangementType;
       command.requestedAtUtc = requestedAtLocal;
       command.partneringFamilyPersonId = partneringFamilyPersonId;
       return command;
     });
+  const planArrangementStart = useArrangementsCommandCallbackWithLocation(
+    async (partneringFamilyId: string, referralId: string, arrangementId: string,
+      plannedStartLocal: Date | null) => {
+      const command = new PlanArrangementStart({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementIds: [arrangementId]
+      });
+      command.plannedStartUtc = plannedStartLocal || undefined;
+      return command;
+    });
   const startArrangement = useArrangementsCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
+    async (partneringFamilyId: string, referralId: string, arrangementId: string,
       startedAtLocal: Date) => {
       const command = new StartArrangements({
         familyId: partneringFamilyId,
@@ -373,7 +349,7 @@ export function useReferralsModel() {
       return command;
     });
   const editArrangementStartTime = useArrangementsCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
+    async (partneringFamilyId: string, referralId: string, arrangementId: string,
       startedAtLocal: Date) => {
       const command = new EditArrangementStartTime({
         familyId: partneringFamilyId,
@@ -383,8 +359,19 @@ export function useReferralsModel() {
       command.startedAtUtc = startedAtLocal;
       return command;
     });
+  const planArrangementEnd = useArrangementsCommandCallbackWithLocation(
+    async (partneringFamilyId: string, referralId: string, arrangementId: string,
+      plannedEndLocal: Date | null) => {
+      const command = new PlanArrangementEnd({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementIds: [arrangementId]
+      });
+      command.plannedEndUtc = plannedEndLocal || undefined;
+      return command;
+    });
   const endArrangement = useArrangementsCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
+    async (partneringFamilyId: string, referralId: string, arrangementId: string,
       endedAtLocal: Date) => {
       const command = new EndArrangements({
         familyId: partneringFamilyId,
@@ -395,7 +382,7 @@ export function useReferralsModel() {
       return command;
     });
   const reopenArrangement = useArrangementsCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
+    async (partneringFamilyId: string, referralId: string, arrangementId: string,
       noteId: string | null) => {
       const command = new ReopenArrangements({
         familyId: partneringFamilyId,
@@ -407,7 +394,7 @@ export function useReferralsModel() {
       return command;
     });
   const cancelArrangement = useArrangementsCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
+    async (partneringFamilyId: string, referralId: string, arrangementId: string,
       cancelledAtLocal: Date) => {
       const command = new CancelArrangementsSetup({
         familyId: partneringFamilyId,
@@ -417,8 +404,17 @@ export function useReferralsModel() {
       command.cancelledAtUtc = cancelledAtLocal;
       return command;
     });
+  const deleteArrangement = useArrangementsCommandCallbackWithLocation(
+    async (partneringFamilyId: string, referralId: string, arrangementId: string) => {
+      const command = new DeleteArrangements({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementIds: [arrangementId]
+      });
+      return command;
+    });
   const assignVolunteerFamily = useArrangementsCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
+    async (partneringFamilyId: string, referralId: string, arrangementId: string,
       volunteerFamilyId: string, arrangementFunction: string, arrangementFunctionVariant?: string) => {
       const command = new AssignVolunteerFamily({
         familyId: partneringFamilyId,
@@ -431,7 +427,7 @@ export function useReferralsModel() {
       return command;
     });
   const assignIndividualVolunteer = useArrangementsCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
+    async (partneringFamilyId: string, referralId: string, arrangementId: string,
       volunteerFamilyId: string, personId: string, arrangementFunction: string, arrangementFunctionVariant?: string) => {
       const command = new AssignIndividualVolunteer({
         familyId: partneringFamilyId,
@@ -445,7 +441,7 @@ export function useReferralsModel() {
       return command;
     });
   const unassignVolunteerFamily = useArrangementsCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
+    async (partneringFamilyId: string, referralId: string, arrangementId: string,
       volunteerFamilyId: string, arrangementFunction: string, arrangementFunctionVariant?: string) => {
       const command = new UnassignVolunteerFamily({
         familyId: partneringFamilyId,
@@ -458,7 +454,7 @@ export function useReferralsModel() {
       return command;
     });
   const unassignIndividualVolunteer = useArrangementsCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
+    async (partneringFamilyId: string, referralId: string, arrangementId: string,
       volunteerFamilyId: string, personId: string, arrangementFunction: string, arrangementFunctionVariant?: string) => {
       const command = new UnassignIndividualVolunteer({
         familyId: partneringFamilyId,
@@ -472,7 +468,7 @@ export function useReferralsModel() {
       return command;
     });
   const trackChildLocation = useArrangementsCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
+    async (partneringFamilyId: string, referralId: string, arrangementId: string,
       childLocationFamilyId: string, childLocationAdultId: string, changedAtLocal: Date,
       childLocationPlan: ChildLocationPlan, noteId: string | null) => {
       const command = new TrackChildLocationChange({
@@ -489,7 +485,7 @@ export function useReferralsModel() {
       return command;
     });
   const deleteChildLocationEntry = useArrangementsCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
+    async (partneringFamilyId: string, referralId: string, arrangementId: string,
       childLocationFamilyId: string, childLocationAdultId: string, changedAtLocal: Date,
       noteId: string | null) => {
       const command = new DeleteChildLocationChange({
@@ -504,8 +500,36 @@ export function useReferralsModel() {
         command.noteId = noteId;
       return command;
     });
+  const planChildLocation = useArrangementsCommandCallbackWithLocation(
+    async (partneringFamilyId: string, referralId: string, arrangementId: string,
+      childLocationFamilyId: string, childLocationAdultId: string, changedAtLocal: Date,
+      childLocationPlan: ChildLocationPlan) => {
+      const command = new PlanChildLocationChange({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementIds: [arrangementId]
+      });
+      command.childLocationFamilyId = childLocationFamilyId;
+      command.childLocationReceivingAdultId = childLocationAdultId;
+      command.plannedChangeUtc = changedAtLocal;
+      command.plan = childLocationPlan;
+      return command;
+    });
+  const deleteChildLocationPlan = useArrangementsCommandCallbackWithLocation(
+    async (partneringFamilyId: string, referralId: string, arrangementId: string,
+      childLocationFamilyId: string, childLocationAdultId: string, changedAtLocal: Date) => {
+      const command = new DeletePlannedChildLocationChange({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementIds: [arrangementId]
+      });
+      command.childLocationFamilyId = childLocationFamilyId;
+      command.childLocationReceivingAdultId = childLocationAdultId;
+      command.plannedChangeUtc = changedAtLocal;
+      return command;
+    });
   const updateArrangementComments = useArrangementsCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string, arrangementId: string,
+    async (partneringFamilyId: string, referralId: string, arrangementId: string,
       comments: string | undefined) => {
       const command = new UpdateArrangementComments({
         familyId: partneringFamilyId,
@@ -516,7 +540,7 @@ export function useReferralsModel() {
       return command;
     });
   const closeReferral = useReferralCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId, referralId: string,
+    async (partneringFamilyId: string, referralId: string,
       reason: ReferralCloseReason, closedAtLocal: Date) => {
       const command = new CloseReferral({
         familyId: partneringFamilyId,
@@ -527,11 +551,12 @@ export function useReferralsModel() {
       return command;
     });
   const openReferral = useReferralCommandCallbackWithLocation(
-    async (organizationId, locationId, partneringFamilyId,
+    async (partneringFamilyId: string,
       openedAtLocal: Date) => {
         const command = new CreateReferral({
           familyId: partneringFamilyId
         });
+        command.referralId = crypto.randomUUID();
         command.openedAtUtc = openedAtLocal;
         return command;
       });
@@ -556,17 +581,22 @@ export function useReferralsModel() {
     exemptIndividualVolunteerAssignmentRequirement,
     unexemptIndividualVolunteerAssignmentRequirement,
     createArrangement,
+    planArrangementStart,
     startArrangement,
     editArrangementStartTime,
+    planArrangementEnd,
     endArrangement,
     reopenArrangement,
     cancelArrangement,
+    deleteArrangement,
     assignVolunteerFamily,
     assignIndividualVolunteer,
     unassignVolunteerFamily,
     unassignIndividualVolunteer,
     trackChildLocation,
     deleteChildLocationEntry,
+    planChildLocation,
+    deleteChildLocationPlan,
     updateArrangementComments,
     closeReferral,
     openReferral

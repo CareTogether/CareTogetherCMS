@@ -1,5 +1,6 @@
 ﻿using CareTogether.Utilities.ObjectStore;
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 
@@ -9,19 +10,22 @@ namespace CareTogether.Resources.Policies
     {
         private const string CONFIG = "config";
         private const string POLICY = "policy";
-        private const string ORGANIZATION_ADMINISTRATOR = "OrganizationAdministrator";
+        private const string SECRETS = "secrets";
 
 
         private readonly IObjectStore<OrganizationConfiguration> configurationStore;
         private readonly IObjectStore<EffectiveLocationPolicy> locationPoliciesStore;
+        private readonly IObjectStore<OrganizationSecrets> organizationSecretsStore;
 
 
         public PoliciesResource(
             IObjectStore<OrganizationConfiguration> configurationStore,
-            IObjectStore<EffectiveLocationPolicy> locationPoliciesStore)
+            IObjectStore<EffectiveLocationPolicy> locationPoliciesStore,
+            IObjectStore<OrganizationSecrets> organizationSecretsStore)
         {
             this.configurationStore = configurationStore;
             this.locationPoliciesStore = locationPoliciesStore;
+            this.organizationSecretsStore = organizationSecretsStore;
         }
 
 
@@ -34,7 +38,7 @@ namespace CareTogether.Resources.Policies
         public async Task<OrganizationConfiguration> UpsertRoleDefinitionAsync(Guid organizationId,
             string roleName, RoleDefinition role)
         {
-            if (roleName == ORGANIZATION_ADMINISTRATOR)
+            if (roleName == SystemConstants.ORGANIZATION_ADMINISTRATOR)
                 throw new InvalidOperationException("The organization administrator role cannot be edited.");
 
             var config = await configurationStore.GetAsync(organizationId, Guid.Empty, CONFIG);
@@ -52,6 +56,12 @@ namespace CareTogether.Resources.Policies
             return result;
         }
 
+        public async Task<OrganizationSecrets> GetOrganizationSecretsAsync(Guid organizationId)
+        {
+            var result = await organizationSecretsStore.GetAsync(organizationId, Guid.Empty, SECRETS);
+            return result;
+        }
+
 
         private OrganizationConfiguration Render(OrganizationConfiguration config) =>
             config with
@@ -61,7 +71,7 @@ namespace CareTogether.Resources.Policies
                 // miss out on a newly defined permission that may not have been explicitly granted to
                 // them in their organization's role configuration.
                 Roles = config.Roles.Insert(0,
-                    new RoleDefinition(ORGANIZATION_ADMINISTRATOR, ImmutableList.Create(
+                    new RoleDefinition(SystemConstants.ORGANIZATION_ADMINISTRATOR, IsProtected: true, ImmutableList.Create(
                         new ContextualPermissionSet(new GlobalPermissionContext(),
                             Enum.GetValues<Permission>().ToImmutableList()))))
             };

@@ -1,7 +1,10 @@
+using CareTogether.Resources.Policies;
+using CareTogether.Resources.Referrals;
 using JsonPolymorph;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace CareTogether.Resources.Directory
@@ -14,9 +17,10 @@ namespace CareTogether.Resources.Directory
         // COMPATIBILITY: This is included so we don't have to duplicate a delete command for the old approvals document model,
         // and can instead just merge the deletions in the CombinedFamilyInfoFormatter.
         ImmutableList<Guid> DeletedDocuments,
+        ImmutableList<CompletedCustomFieldInfo> CompletedCustomFields,
         ImmutableList<Activity> History);
-    public sealed record Person(Guid Id, Guid? UserId, bool Active,
-        string FirstName, string LastName, Gender Gender, Age Age, string Ethnicity,
+    public sealed record Person(Guid Id, bool Active,
+        string FirstName, string LastName, Gender? Gender, Age? Age, string? Ethnicity,
         ImmutableList<Address> Addresses, Guid? CurrentAddressId,
         ImmutableList<PhoneNumber> PhoneNumbers, Guid? PreferredPhoneNumberId,
         ImmutableList<EmailAddress> EmailAddresses, Guid? PreferredEmailAddressId,
@@ -73,11 +77,14 @@ namespace CareTogether.Resources.Directory
     public sealed record ChangePrimaryFamilyContact(Guid FamilyId,
         Guid AdultId)
         : FamilyCommand(FamilyId);
+    public sealed record UpdateCustomFamilyField(Guid FamilyId,
+        Guid CompletedCustomFieldId, string CustomFieldName, CustomFieldType CustomFieldType, object? Value)
+        : FamilyCommand(FamilyId);
 
     [JsonHierarchyBase]
     public abstract partial record PersonCommand(Guid PersonId);
-    public sealed record CreatePerson(Guid PersonId, Guid? UserId, string FirstName, string LastName,
-        Gender Gender, Age Age, string Ethnicity,
+    public sealed record CreatePerson(Guid PersonId, string FirstName, string LastName,
+        Gender? Gender, Age? Age, string? Ethnicity,
         ImmutableList<Address> Addresses, Guid? CurrentAddressId,
         ImmutableList<PhoneNumber> PhoneNumbers, Guid? PreferredPhoneNumberId,
         ImmutableList<EmailAddress> EmailAddresses, Guid? PreferredEmailAddressId,
@@ -92,8 +99,6 @@ namespace CareTogether.Resources.Directory
     public sealed record UpdatePersonAge(Guid PersonId, Age Age)
         : PersonCommand(PersonId);
     public sealed record UpdatePersonEthnicity(Guid PersonId, string Ethnicity)
-        : PersonCommand(PersonId);
-    public sealed record UpdatePersonUserLink(Guid PersonId, Guid? UserId)
         : PersonCommand(PersonId);
     public sealed record UpdatePersonConcerns(Guid PersonId, string? Concerns)
         : PersonCommand(PersonId);
@@ -118,8 +123,6 @@ namespace CareTogether.Resources.Directory
     /// </summary>
     public interface IDirectoryResource
     {
-        Task<Person?> FindUserAsync(Guid organizationId, Guid locationId, Guid userId);
-
         Task<ImmutableList<Person>> ListPeopleAsync(Guid organizationId, Guid locationId);
 
         Task<Family?> FindFamilyAsync(Guid organizationId, Guid locationId, Guid familyId);
@@ -131,5 +134,10 @@ namespace CareTogether.Resources.Directory
         Task<Family> ExecuteFamilyCommandAsync(Guid organizationId, Guid locationId, FamilyCommand command, Guid userId);
 
         Task<Person> ExecutePersonCommandAsync(Guid organizationId, Guid locationId, PersonCommand command, Guid userId);
+
+        Task<Uri> GetFamilyDocumentReadValetUrl(Guid organizationId, Guid locationId, Guid familyId, Guid documentId);
+
+        //TODO: Rename to 'UploadFamilyDocumentViaValetUrl' and merge in FamilyCommand functionality to ensure consistency
+        Task<Uri> GetFamilyDocumentUploadValetUrl(Guid organizationId, Guid locationId, Guid familyId, Guid documentId);
     }
 }

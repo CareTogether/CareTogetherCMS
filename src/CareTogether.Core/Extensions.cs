@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace CareTogether
 {
@@ -41,7 +44,13 @@ namespace CareTogether
             }
         }
 
-        public static Guid PersonId(this ClaimsPrincipal principal,
+        public static Guid? UserIdOrDefault(this ClaimsPrincipal principal)
+        {
+            var userId = principal.FindFirst(Claims.UserId)?.Value;
+            return userId == null ? null : Guid.Parse(userId);
+        }
+
+        public static Guid? PersonId(this ClaimsPrincipal principal,
             Guid organizationId, Guid locationId)
         {
             var locationIdentity = principal.LocationIdentity(organizationId, locationId);
@@ -52,8 +61,7 @@ namespace CareTogether
                     return Guid.Parse(personIdClaim.Value);
             }
 
-            throw new InvalidOperationException(
-                $"The principal does not have a valid person ID claim for organization '{organizationId}' and location '{locationId}'.");
+            return null;
         }
 
         public static void AddClaimOnlyOnce(this ClaimsPrincipal principal,
@@ -77,5 +85,36 @@ namespace CareTogether
             Guid organizationId, Guid locationId) =>
             principal.Identities
                 .SingleOrDefault(identity => identity.AuthenticationType == $"{organizationId}:{locationId}");
+
+
+        public static async IAsyncEnumerable<U> SelectManyAsync<T, U>(this IEnumerable<T> values,
+            Func<T, Task<IEnumerable<U>>> selector)
+        {
+            foreach (var value in values)
+            {
+                var results = await selector(value);
+                foreach (var result in results)
+                    yield return result;
+            }
+        }
+
+        public static async IAsyncEnumerable<(T, U)> ZipSelectManyAsync<T, U>(this IEnumerable<T> values,
+            Func<T, Task<ImmutableList<U>>> selector)
+        {
+            foreach (var value in values)
+            {
+                var results = await selector(value);
+                foreach (var result in results)
+                    yield return (value, result);
+            }
+        }
+
+        public static async IAsyncEnumerable<U> SelectManyAsync<T, U>(this IEnumerable<T> values,
+            Func<T, IAsyncEnumerable<U>> selector)
+        {
+            foreach (var value in values)
+                await foreach (var result in selector(value))
+                    yield return result;
+        }
     }
 }

@@ -1,35 +1,46 @@
 using Azure.Storage.Blobs;
+using CareTogether.Api.Controllers;
+using CareTogether.Api.OData;
 using CareTogether.Engines.Authorization;
 using CareTogether.Engines.PolicyEvaluation;
-using CareTogether.Utilities.EventLog;
-using CareTogether.Utilities.FileStore;
-using CareTogether.Utilities.ObjectStore;
 using CareTogether.Managers;
-using CareTogether.Managers.Approval;
-using CareTogether.Managers.Directory;
-using CareTogether.Managers.Referrals;
-using CareTogether.Resources;
+using CareTogether.Managers.Communications;
+using CareTogether.Managers.Membership;
+using CareTogether.Managers.Records;
 using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Approvals;
+using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Goals;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.Referrals;
+using CareTogether.Utilities.EventLog;
+using CareTogether.Utilities.FileStore;
+using CareTogether.Utilities.ObjectStore;
+using CareTogether.Utilities.Telephony;
+using idunno.Authentication.Basic;
+using LazyCache;
+using LazyCache.Providers;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.OData;
+using Microsoft.AspNetCore.OData.NewtonsoftJson;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using Microsoft.FeatureManagement;
 using Microsoft.FeatureManagement.FeatureFilters;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Logging;
-using CareTogether.Utilities.Telephony;
+using System;
+using System.Security.Claims;
 
 namespace CareTogether.Api
 {
@@ -55,32 +66,58 @@ namespace CareTogether.Api
 
             services.AddHealthChecks();
 
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddMicrosoftIdentityWebApi(Configuration.GetSection("AzureAdB2C"));
+            services.AddMemoryCache();
 
-            services.AddTransient<IClaimsTransformation, TenantUserClaimsTransformation>();
+            // Registers IAppCache for thread-safe caching of expensive calculations
+            services.AddSingleton<IAppCache>(provider =>
+            {
+                //HACK: This works around a compatibility issue with NSwag's command-line generation process
+                //      (see https://github.com/alastairtree/LazyCache/issues/186).
+                //      The default LazyCache service registration (services.AddLazyCache()) assumes
+                //      that no IMemoryCache already exists in the dependency injection container, but
+                //      NSwag injects an IMemoryCache instance of its own when generating the OpenAPI model.
+                //      If not for this conflict, we could just call services.AddLazyCache() and be done.
+                var memoryCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
+                var memoryCacheProvider = new MemoryCacheProvider(memoryCache);
+                return new CachingService(memoryCacheProvider);
+            });
+
+            // Load shared application-specific configuration sections for use via dependency injection
+            services.Configure<MembershipOptions>(Configuration.GetSection(MembershipOptions.Membership));
 
             // Configure the shared blob storage clients to authenticate according to the environment -
             // one for mutable storage and one for immutable storage.
             // Note that this only has an effect when running in Azure; the local (Azurite) emulated storage is always mutable.
             // Also note that we lock the blob storage service (API) version because Azurite occasionally lags behind in
             // support for the newest versions. This service version should be reviewed at least once a year to keep it current.
-            var blobClientOptions = new BlobClientOptions(BlobClientOptions.ServiceVersion.V2021_06_08);
+            var blobClientOptions = new BlobClientOptions(BlobClientOptions.ServiceVersion.V2021_10_04);
             var immutableBlobServiceClient = new BlobServiceClient(
                 Configuration["Persistence:ImmutableBlobStorageConnectionString"], blobClientOptions);
             var mutableBlobServiceClient = new BlobServiceClient(
                 Configuration["Persistence:MutableBlobStorageConnectionString"], blobClientOptions);
 
+            // Utility providers
+            var uploadsStore = new BlobFileStore(immutableBlobServiceClient, "Uploads");
+
             // Data store services
+            var defaultMemoryCacheOptions = Options.Create(new MemoryCacheOptions());
+            var personAccessEventLog = new AppendBlobEventLog<PersonAccessEvent>(immutableBlobServiceClient, "PersonAccessEventLog");
             var directoryEventLog = new AppendBlobEventLog<DirectoryEvent>(immutableBlobServiceClient, "DirectoryEventLog");
             var goalsEventLog = new AppendBlobEventLog<GoalCommandExecutedEvent>(immutableBlobServiceClient, "GoalsEventLog");
             var referralsEventLog = new AppendBlobEventLog<ReferralEvent>(immutableBlobServiceClient, "ReferralsEventLog");
             var approvalsEventLog = new AppendBlobEventLog<ApprovalEvent>(immutableBlobServiceClient, "ApprovalsEventLog");
             var notesEventLog = new AppendBlobEventLog<NotesEvent>(immutableBlobServiceClient, "NotesEventLog");
-            var draftNotesStore = new JsonBlobObjectStore<string?>(mutableBlobServiceClient, "DraftNotes");
-            var configurationStore = new JsonBlobObjectStore<OrganizationConfiguration>(immutableBlobServiceClient, "Configuration");
-            var policiesStore = new JsonBlobObjectStore<EffectiveLocationPolicy>(immutableBlobServiceClient, "LocationPolicies");
-            var userTenantAccessStore = new JsonBlobObjectStore<UserTenantAccessSummary>(immutableBlobServiceClient, "UserTenantAccess");
+            var communitiesEventLog = new AppendBlobEventLog<CommunityCommandExecutedEvent>(immutableBlobServiceClient, "CommunitiesEventLog");
+            var draftNotesStore = new JsonBlobObjectStore<string?>(mutableBlobServiceClient, "DraftNotes",
+                new MemoryCache(defaultMemoryCacheOptions), TimeSpan.FromMinutes(30));
+            var configurationStore = new JsonBlobObjectStore<OrganizationConfiguration>(immutableBlobServiceClient, "Configuration",
+                new MemoryCache(defaultMemoryCacheOptions), TimeSpan.FromMinutes(1));
+            var policiesStore = new JsonBlobObjectStore<EffectiveLocationPolicy>(immutableBlobServiceClient, "LocationPolicies",
+                new MemoryCache(defaultMemoryCacheOptions), TimeSpan.FromMinutes(1));
+            var userTenantAccessStore = new JsonBlobObjectStore<UserTenantAccessSummary>(immutableBlobServiceClient, "UserTenantAccess",
+                new MemoryCache(defaultMemoryCacheOptions), TimeSpan.FromMinutes(1));
+            var organizationSecretsStore = new JsonBlobObjectStore<OrganizationSecrets>(immutableBlobServiceClient, "Configuration",
+                new MemoryCache(defaultMemoryCacheOptions), TimeSpan.FromMinutes(1));
 
             if (Configuration["OpenApiGen"] != "true")
             {
@@ -93,12 +130,17 @@ namespace CareTogether.Api
                     referralsEventLog,
                     approvalsEventLog,
                     notesEventLog,
+                    communitiesEventLog,
                     draftNotesStore,
                     configurationStore,
                     policiesStore,
                     userTenantAccessStore,
+                    organizationSecretsStore,
                     Configuration["TestData:SourceSmsPhoneNumber"]).Wait();
             }
+            
+            //NOTE: This currently lives after test data population in order to test the migration scenario.
+            var accountsEventLog = new AppendBlobEventLog<AccountEvent>(immutableBlobServiceClient, "AccountsEventLog");
 
             // Other utility services
             var telephony = new PlivoTelephony(
@@ -107,12 +149,15 @@ namespace CareTogether.Api
 
             // Resource services
             var approvalsResource = new ApprovalsResource(approvalsEventLog);
-            var directoryResource = new DirectoryResource(directoryEventLog);
+            var directoryResource = new DirectoryResource(directoryEventLog, uploadsStore);
             var goalsResource = new GoalsResource(goalsEventLog);
-            var policiesResource = new PoliciesResource(configurationStore, policiesStore);
-            var accountsResource = new AccountsResource(userTenantAccessStore);
+            var policiesResource = new PoliciesResource(configurationStore, policiesStore, organizationSecretsStore);
+            var accountsResource = new AccountsResource(userTenantAccessStore, accountsEventLog, personAccessEventLog,
+                immutableBlobServiceClient, configurationStore,
+                Configuration.GetSection(MembershipOptions.Membership).Get<MembershipOptions>().TombstonedOrganizations);
             var referralsResource = new ReferralsResource(referralsEventLog);
             var notesResource = new NotesResource(notesEventLog, draftNotesStore);
+            var communitiesResource = new CommunitiesResource(communitiesEventLog, uploadsStore);
 
             //TODO: If we want to be strict about conventions, this should have a manager intermediary for authz.
             services.AddSingleton<IPoliciesResource>(policiesResource);
@@ -120,31 +165,79 @@ namespace CareTogether.Api
 
             // Engine services
             var authorizationEngine = new AuthorizationEngine(policiesResource, directoryResource,
-                referralsResource, approvalsResource);
+                referralsResource, approvalsResource, communitiesResource, accountsResource);
             services.AddSingleton<IAuthorizationEngine>(authorizationEngine); //TODO: Temporary workaround for UsersController
             var policyEvaluationEngine = new PolicyEvaluationEngine(policiesResource);
 
             // Shared family info formatting logic used by all manager services
             var combinedFamilyInfoFormatter = new CombinedFamilyInfoFormatter(policyEvaluationEngine, authorizationEngine,
-                approvalsResource, referralsResource, directoryResource, notesResource, policiesResource);
+                approvalsResource, referralsResource, directoryResource, notesResource, policiesResource, accountsResource);
 
             // Manager services
-            services.AddSingleton<IDirectoryManager>(new DirectoryManager(authorizationEngine, directoryResource,
-                approvalsResource, referralsResource, notesResource, policiesResource, telephony,
-                combinedFamilyInfoFormatter));
-            services.AddSingleton<IReferralsManager>(new ReferralsManager(authorizationEngine, referralsResource,
-                combinedFamilyInfoFormatter));
-            services.AddSingleton<IApprovalManager>(new ApprovalManager(authorizationEngine, approvalsResource,
-                combinedFamilyInfoFormatter));
+            services.AddSingleton<ICommunicationsManager>(new CommunicationsManager(authorizationEngine, directoryResource,
+                policiesResource, telephony));
+            services.AddSingleton<IRecordsManager>(new RecordsManager(authorizationEngine, directoryResource,
+                approvalsResource, referralsResource, notesResource, communitiesResource, combinedFamilyInfoFormatter));
+            services.AddSingleton<IMembershipManager>(new MembershipManager(accountsResource, authorizationEngine,
+                directoryResource, policiesResource, combinedFamilyInfoFormatter));
 
-            // Utility providers
-            services.AddSingleton<IFileStore>(new BlobFileStore(immutableBlobServiceClient, "Uploads"));
+            services.AddAuthentication("Basic")
+                .AddBasic("Basic", options =>
+                {
+                    options.AllowInsecureProtocol = HostEnvironment.IsDevelopment();
+                    options.Realm = "CareTogether OData Feed";
+                    options.Events = new BasicAuthenticationEvents
+                    {
+                        OnValidateCredentials = async context =>
+                        {
+                            if (!Guid.TryParse(context.Username, out var assertedOrganizationId))
+                            {
+                                context.Fail("The username must be an organization ID in GUID format.");
+                                return;
+                            }
 
-            // Use legacy Newtonsoft JSON to support JsonPolymorph & NSwag for polymorphic serialization
-            services.AddControllers().AddNewtonsoftJson();
+                            try
+                            {
+                                // Note that it may be possible to leak valid organization IDs here via a timing attack.
+                                var organizationSecrets = await policiesResource.GetOrganizationSecretsAsync(assertedOrganizationId);
+                                if (organizationSecrets.ApiKey?.Length >= 32 && context.Password == organizationSecrets.ApiKey)
+                                {
+                                    context.Principal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+                                    {
+                                        new Claim(Claims.OrganizationId, context.Username)
+                                    }, "API Key"));
+                                    context.Success();
+                                    return;
+                                }
+                            }
+                            catch { }
+
+                            context.Fail("The API key is invalid.");
+                            return;
+                        }
+                    };
+                })
+                .AddMicrosoftIdentityWebApi(Configuration.GetSection("AzureAdB2C"));
+
+            services.AddTransient<IClaimsTransformation, TenantUserClaimsTransformation>();
+
+            // Use legacy Newtonsoft JSON to support JsonPolymorph & NSwag for polymorphic serialization.
+            // Since we are using OData, .AddODataNewtonsoftJson() replaces .AddNewtonsoftJson().
+            services
+                .AddControllers()
+                .AddOData(options =>
+                {
+                    options.EnableQueryFeatures();
+                    options.AddRouteComponents("api/odata/live", ODataModelProvider.GetLiveEdmModel());
+                })
+                .AddODataNewtonsoftJson();
 
             services.AddAuthorization(options =>
             {
+                options.AddPolicy(Policies.ForbidAnonymous, new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .Build());
+
                 // Require all users to be authenticated and have access to the specified tenant -
                 // the organization ID and location ID (if specified).
                 options.FallbackPolicy = new AuthorizationPolicyBuilder()
@@ -186,6 +279,8 @@ namespace CareTogether.Api
                 IdentityModelEventSource.ShowPII = true;
                 app.UseDeveloperExceptionPage();
 
+                app.UseODataRouteDebug();
+
                 app.UseOpenApi();
                 // ReDoc supports discriminators/polymorphism so we use that instead of Swagger UI.
                 app.UseReDoc(config => { config.Path = "/redoc"; });
@@ -212,12 +307,14 @@ namespace CareTogether.Api
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapHealthChecks("/health").AllowAnonymous();
-
                 endpoints.MapControllers();
 
+                // This root endpoint is used by the Azure App Service Always On mechanism described here:
+                // https://learn.microsoft.com/en-us/azure/app-service/configure-common?tabs=portal#configure-general-settings
+                endpoints.MapHealthChecks("/").AllowAnonymous();
+
                 // Accommodating the Azure App Service liveness check mechanism described here:
-                // https://docs.microsoft.com/en-us/azure/app-service/configure-language-dotnetcore?pivots=platform-linux#robots933456-in-logs
+                // https://learn.microsoft.com/en-us/azure/app-service/configure-language-dotnetcore?pivots=platform-linux#robots933456-in-logs
                 endpoints.MapHealthChecks("/robots933456.txt").AllowAnonymous();
             });
         }

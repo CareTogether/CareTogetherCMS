@@ -21,26 +21,27 @@ namespace CareTogether.Resources.Directory
             ImmutableDictionary<Guid, FamilyAdultRelationshipInfo> AdultRelationships,
             ImmutableList<Guid> Children,
             ImmutableDictionary<(Guid ChildId, Guid AdultId), CustodialRelationshipType> CustodialRelationships,
-            ImmutableList<UploadedDocumentInfo> UploadedDocuments,
-            ImmutableList<Guid> DeletedDocuments, ImmutableList<Activity> History)
+            ImmutableList<UploadedDocumentInfo> UploadedDocuments, ImmutableList<Guid> DeletedDocuments,
+            ImmutableDictionary<string, CompletedCustomFieldInfo> CompletedCustomFields,
+            ImmutableList<Activity> History)
         {
             internal Family ToFamily(ImmutableDictionary<Guid, PersonEntry> people) =>
                 new(Id, PrimaryFamilyContactPersonId,
                     AdultRelationships.Select(ar => (people[ar.Key].ToPerson(), ar.Value)).ToImmutableList(),
                     Children.Select(c => people[c].ToPerson()).ToImmutableList(),
                     CustodialRelationships.Select(cr => new CustodialRelationship(cr.Key.ChildId, cr.Key.AdultId, cr.Value)).ToImmutableList(),
-                    UploadedDocuments, DeletedDocuments, History);
+                    UploadedDocuments, DeletedDocuments, CompletedCustomFields.Values.ToImmutableList(), History);
         }
 
-        internal record PersonEntry(Guid Id, Guid? UserId, bool Active, string FirstName, string LastName,
-            Gender Gender, Age Age, string Ethnicity,
+        internal record PersonEntry(Guid Id, bool Active, string FirstName, string LastName,
+            Gender? Gender, Age? Age, string? Ethnicity,
             ImmutableList<Address> Addresses, Guid? CurrentAddressId,
             ImmutableList<PhoneNumber> PhoneNumbers, Guid? PreferredPhoneNumberId,
             ImmutableList<EmailAddress> EmailAddresses, Guid? PreferredEmailAddressId,
             string? Concerns, string? Notes)
         {
             internal Person ToPerson() =>
-                new(Id, UserId, Active, FirstName, LastName, Gender, Age, Ethnicity,
+                new(Id, Active, FirstName, LastName, Gender, Age, Ethnicity,
                     Addresses, CurrentAddressId,
                     PhoneNumbers, PreferredPhoneNumberId,
                     EmailAddresses, PreferredEmailAddressId,
@@ -82,6 +83,7 @@ namespace CareTogether.Resources.Directory
                             new KeyValuePair<(Guid ChildId, Guid AdultId), CustodialRelationshipType>((cr.ChildId, cr.PersonId), cr.Type))
                         ?? new List<KeyValuePair<(Guid ChildId, Guid AdultId), CustodialRelationshipType>>()),
                         ImmutableList<UploadedDocumentInfo>.Empty, DeletedDocuments: ImmutableList<Guid>.Empty,
+                        CompletedCustomFields: ImmutableDictionary<string, CompletedCustomFieldInfo>.Empty,
                         ImmutableList<Activity>.Empty),
                 _ => families.TryGetValue(command.FamilyId, out var familyEntry)
                     ? command switch
@@ -137,6 +139,13 @@ namespace CareTogether.Resources.Directory
                         {
                             PrimaryFamilyContactPersonId = c.AdultId
                         },
+                        UpdateCustomFamilyField c => familyEntry with
+                        {
+                            CompletedCustomFields = familyEntry.CompletedCustomFields.SetItem(
+                                c.CustomFieldName,
+                                new CompletedCustomFieldInfo(userId, timestampUtc, c.CompletedCustomFieldId,
+                                    c.CustomFieldName, c.CustomFieldType, c.Value))
+                        },
                         _ => throw new NotImplementedException(
                             $"The command type '{command.GetType().FullName}' has not been implemented.")
                     }
@@ -159,7 +168,7 @@ namespace CareTogether.Resources.Directory
         {
             var personEntryToUpsert = command switch
             {
-                CreatePerson c => new PersonEntry(c.PersonId, c.UserId, Active: true, c.FirstName, c.LastName,
+                CreatePerson c => new PersonEntry(c.PersonId, Active: true, c.FirstName, c.LastName,
                     c.Gender, c.Age, c.Ethnicity,
                     c.Addresses, c.CurrentAddressId,
                     c.PhoneNumbers, c.PreferredPhoneNumberId,
@@ -173,7 +182,6 @@ namespace CareTogether.Resources.Directory
                         UpdatePersonGender c => personEntry with { Gender = c.Gender },
                         UpdatePersonAge c => personEntry with { Age = c.Age },
                         UpdatePersonEthnicity c => personEntry with { Ethnicity = c.Ethnicity },
-                        UpdatePersonUserLink c => personEntry with { UserId = c.UserId },
                         UpdatePersonConcerns c => personEntry with { Concerns = c.Concerns },
                         UpdatePersonNotes c => personEntry with { Notes = c.Notes },
                         AddPersonAddress c => personEntry with

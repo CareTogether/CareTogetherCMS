@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { CombinedFamilyInfo } from '../GeneratedClient';
-import { uploadFileToTenant } from '../Model/FilesModel';
+import { uploadFamilyFileToTenant } from '../Model/FilesModel';
 import { useRecoilValue } from 'recoil';
-import { currentOrganizationState, currentLocationState } from '../Model/SessionModel';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useDirectoryModel } from '../Model/DirectoryModel';
+import { selectedLocationContextState } from '../Model/Data';
 
 interface UploadFamilyDocumentsDialogProps {
   family: CombinedFamilyInfo,
@@ -14,8 +14,7 @@ interface UploadFamilyDocumentsDialogProps {
 
 export function UploadFamilyDocumentsDialog({family, onClose}: UploadFamilyDocumentsDialogProps) {
   const [documentFiles, setDocumentFiles] = useState<FileList>();
-  const organizationId = useRecoilValue(currentOrganizationState);
-  const locationId = useRecoilValue(currentLocationState);
+  const { organizationId, locationId } = useRecoilValue(selectedLocationContextState);
   const directoryModel = useDirectoryModel();
 
   const withBackdrop = useBackdrop();
@@ -26,7 +25,7 @@ export function UploadFamilyDocumentsDialog({family, onClose}: UploadFamilyDocum
         alert("No files were selected. Try again.");
       } else {
         await Promise.all(Array.from(documentFiles).map(async documentFile => {
-          const documentId = await uploadFileToTenant(organizationId, locationId, documentFile);
+          const documentId = await uploadFamilyFileToTenant(organizationId, locationId, family.family!.id!, documentFile);
           await directoryModel.uploadFamilyDocument(family.family!.id!, documentId, documentFile.name);
         }));
         //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)

@@ -1,5 +1,5 @@
-﻿using CareTogether.Engines.Authorization;
-using CareTogether.Utilities.FileStore;
+﻿using CareTogether.Managers.Records;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -7,52 +7,53 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Api.Controllers
 {
-    [Authorize]
     [ApiController]
     [Route("/api/{organizationId:guid}/{locationId:guid}/[controller]")]
-    public class FilesController : ControllerBase
+    [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public class FilesController : ControllerBase //TODO: Merge this into RecordsController
     {
-        private readonly IFileStore fileStore;
-        private readonly IAuthorizationEngine authorizationEngine;
+        private readonly IRecordsManager recordsManager;
 
 
         public sealed record DocumentUploadInfo(Guid DocumentId, Uri ValetUrl);
 
 
-        public FilesController(IFileStore fileStore, IAuthorizationEngine authorizationEngine)
+        public FilesController(IRecordsManager recordsManager)
         {
-            this.fileStore = fileStore;
-            this.authorizationEngine = authorizationEngine;
+            this.recordsManager = recordsManager;
         }
 
 
-        [HttpGet("{documentId:guid}")]
-        public async Task<ActionResult<Uri>> GetReadValetUrl(Guid organizationId, Guid locationId, Guid documentId)
+        [HttpGet("family/{familyId:guid}/{documentId:guid}")]
+        public async Task<ActionResult<Uri>> GetFamilyDocumentReadValetUrl(Guid organizationId, Guid locationId, Guid familyId, Guid documentId)
         {
-            var contextPermissions = await authorizationEngine.AuthorizeUserAccessAsync(
-                organizationId, locationId, User, new GlobalAuthorizationContext()); //TODO: Authorize this in the context of the associated family.
-            if (contextPermissions.Contains(Permission.ReadFamilyDocuments))
-            {
-                var valetUrl = await fileStore.GetValetReadUrlAsync(organizationId, locationId, documentId);
-                return Ok(valetUrl);
-            }
-            else
-                return BadRequest();
+            var valetUrl = await recordsManager.GetFamilyDocumentReadValetUrl(organizationId, locationId, User,
+                familyId, documentId);
+            return Ok(valetUrl); //TODO: Don't return server errors (5xx) if there were client errors (should be 4xx)!
         }
 
-        [HttpPost("upload")]
-        public async Task<ActionResult<DocumentUploadInfo>> GenerateUploadValetUrl(Guid organizationId, Guid locationId)
+        [HttpPost("upload/family/{familyId:guid}/{documentId:guid}")]
+        public async Task<ActionResult<DocumentUploadInfo>> GenerateFamilyDocumentUploadValetUrl(Guid organizationId, Guid locationId, Guid familyId, Guid documentId)
         {
-            var contextPermissions = await authorizationEngine.AuthorizeUserAccessAsync(
-                organizationId, locationId, User, new GlobalAuthorizationContext()); //TODO: Authorize this in the context of the associated family.
-            if (contextPermissions.Contains(Permission.UploadFamilyDocuments))
-            {
-                var documentId = Guid.NewGuid();
-                var valetUrl = await fileStore.GetValetCreateUrlAsync(organizationId, locationId, documentId);
-                return Ok(new DocumentUploadInfo(documentId, valetUrl));
-            }
-            else
-                return BadRequest();
+            var valetUrl = await recordsManager.GenerateFamilyDocumentUploadValetUrl(organizationId, locationId, User,
+                familyId, documentId);
+            return Ok(new DocumentUploadInfo(documentId, valetUrl));
+        }
+
+        [HttpGet("community/{communityId:guid}/{documentId:guid}")]
+        public async Task<ActionResult<Uri>> GetCommunityDocumentReadValetUrl(Guid organizationId, Guid locationId, Guid communityId, Guid documentId)
+        {
+            var valetUrl = await recordsManager.GetCommunityDocumentReadValetUrl(organizationId, locationId, User,
+                communityId, documentId);
+            return Ok(valetUrl);
+        }
+
+        [HttpPost("upload/community/{communityId:guid}/{documentId:guid}")]
+        public async Task<ActionResult<DocumentUploadInfo>> GenerateCommunityDocumentUploadValetUrl(Guid organizationId, Guid locationId, Guid communityId, Guid documentId)
+        {
+            var valetUrl = await recordsManager.GenerateCommunityDocumentUploadValetUrl(organizationId, locationId, User,
+                communityId, documentId);
+            return Ok(new DocumentUploadInfo(documentId, valetUrl));
         }
     }
 }

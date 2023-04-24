@@ -1,89 +1,27 @@
 import { atom, selector } from "recoil";
-import { accessTokenFetchQuery } from "../Authentication/AuthenticatedHttp";
-import { CombinedFamilyInfo, Permission, UserLocationAccess, UsersClient } from "../GeneratedClient";
+import { CombinedFamilyInfo, CommunityInfo, Permission } from "../GeneratedClient";
 import { useLoadable } from "../Hooks/useLoadable";
-import { localStorageEffect } from "../Utilities/localStorageEffect";
 import { useFamilyLookup } from "./DirectoryModel";
+import { api } from "../Api/Api";
+import { currentLocationQuery } from "./Data";
 
-export const usersClientQuery = selector({
-  key: 'usersClient',
-  get: ({get}) => {
-    const accessTokenFetch = get(accessTokenFetchQuery);
-    return new UsersClient(process.env.REACT_APP_API_HOST, accessTokenFetch);
-  }
+export const redemptionSessionIdState = atom<string | null>({
+  key: 'redemptionSessionIdState',
+  default: null
 });
 
-export const userIdState = atom<string | null>({
-  key: 'userIdState'
-});
-
-export const userOrganizationAccessQuery = selector({
-  key: 'userOrganizationAccessQuery',
+export const inviteReviewInfoQuery = selector({
+  key: 'inviteReviewInfoQuery',
   get: async ({get}) => {
-    const usersClient = get(usersClientQuery);
-    const userResponse = await usersClient.getUserOrganizationAccess();
-    return userResponse;
-  }
-});
-
-export const currentOrganizationIdQuery = selector({
-  key: 'currentOrganizationQuery',
-  get: ({get}) => {
-    const userOrganizationAccess = get(userOrganizationAccessQuery);
-    return userOrganizationAccess.organizationId!;
-  }
-});
-
-export const currentOrganizationState = selector({//TODO: Deprecated
-  key: 'COMPATIBILITY__currentOrganizationState',
-  get: ({get}) => {
-    const value = get(currentOrganizationIdQuery);
-    return value ?? '';
-  }
-});
-
-export const availableLocationsQuery = selector({
-  key: 'availableLocationsQuery',
-  get: ({get}) => {
-    const userOrganizationAccess = get(userOrganizationAccessQuery);
-    return userOrganizationAccess?.locations ?? null; //TODO: Fix unnecessary nulls
-  }
-});
-
-export const availableLocationsState = selector({//TODO: Deprecated
-  key: 'COMPATIBILITY__availableLocationsState',
-  get: ({get}) => {
-    const value = get(availableLocationsQuery);
-    return value ?? [] as UserLocationAccess[];
-  }
-});
-
-export const selectedLocationIdState = atom<string>({
-  key: 'selectedLocationIdState',
-  effects: [
-    localStorageEffect('locationId'),
-    // ({onSet}) => {
-    //   onSet(newId => console.log("SEL_LOC_ID: " + newId))
-    // }
-  ]
-})
-
-export const currentLocationQuery = selector({
-  key: 'currentLocationQuery',
-  get: ({get}) => {
-    const userOrganizationAccess = get(userOrganizationAccessQuery);
-    const selectedLocationId = get(selectedLocationIdState);
-    return userOrganizationAccess.locations!.find(location => location.locationId === selectedLocationId)!;
-  }
-});
-
-export const currentLocationState = selector({//TODO: Deprecated
-  key: 'COMPATIBILITY__currentLocationState',
-  get: ({get}) => {
-    const value = get(currentLocationQuery);
-    return value.locationId!;
-  }
-});
+    const redemptionSessionId = get(redemptionSessionIdState);
+    
+    if (redemptionSessionId) {
+      const inviteReviewInfo = await api.users.examinePersonInviteRedemptionSession(redemptionSessionId);
+      return inviteReviewInfo;
+    } else {
+      return null;
+    }
+}});
 
 function usePermissions(applicablePermissions?: Permission[]) {
   //TODO: If we want to expose a "not-yet-loaded" state, update this to return 'null' from
@@ -114,4 +52,8 @@ export function useFamilyIdPermissions(familyId: string) {
 
 export function useFamilyPermissions(family?: CombinedFamilyInfo) {
   return usePermissions(family?.userPermissions);
+}
+
+export function useCommunityPermissions(community?: CommunityInfo) {
+  return usePermissions(community?.userPermissions);
 }

@@ -1,16 +1,8 @@
 import { atom, selector } from "recoil";
-import { ConfigurationClient, OrganizationConfiguration, RequirementStage, VolunteerFamilyRequirementScope } from "../GeneratedClient";
-import { accessTokenFetchQuery } from "../Authentication/AuthenticatedHttp";
-import { currentLocationState, currentOrganizationIdQuery, currentOrganizationState, selectedLocationIdState } from "./SessionModel";
+import { OrganizationConfiguration, RequirementStage, VolunteerFamilyRequirementScope } from "../GeneratedClient";
 import { useLoadable } from "../Hooks/useLoadable";
-
-export const configurationClientQuery = selector({
-  key: 'configurationClient',
-  get: ({get}) => {
-    const accessTokenFetch = get(accessTokenFetchQuery);
-    return new ConfigurationClient(process.env.REACT_APP_API_HOST, accessTokenFetch);
-  }
-});
+import { api } from "../Api/Api";
+import { selectedLocationContextState } from "./Data";
 
 //TODO: Distinguish by organization ID
 export const organizationConfigurationEdited = atom<OrganizationConfiguration | null>({
@@ -21,54 +13,32 @@ export const organizationConfigurationEdited = atom<OrganizationConfiguration | 
 export const organizationConfigurationQuery = selector({
   key: 'organizationConfigurationQuery',
   get: async ({get}) => {
-    const organizationId = get(currentOrganizationIdQuery);
-    const configurationClient = get(configurationClientQuery);
+    const { organizationId } = get(selectedLocationContextState);
+    if (organizationId == null)
+      return null;
     const edited = get(organizationConfigurationEdited);
     if (edited) {
       return edited;
     } else {
-      const dataResponse = await configurationClient.getOrganizationConfiguration(organizationId);
+      const dataResponse = await api.configuration.getOrganizationConfiguration(organizationId);
       return dataResponse;
     }
   }});
-
-export const organizationConfigurationData = selector({//TODO: Deprecated
-  key: 'COMPATIBILITY__organizationConfigurationData',
-  get: async ({get}) => {
-    const organizationConfiguration = get(organizationConfigurationQuery);
-    return organizationConfiguration;
-  }});
-
-export const organizationNameQuery = selector({
-  key: 'organizationNameQuery',
-  get: ({get}) => {
-    const organizationConfiguration = get(organizationConfigurationQuery);
-    return organizationConfiguration.organizationName!;
-  }
-})
 
 export const locationConfigurationQuery = selector({
   key: 'locationConfigurationQuery',
   get: ({get}) => {
     const organizationConfiguration = get(organizationConfigurationQuery);
-    const selectedLocation = get(selectedLocationIdState);
-    return organizationConfiguration.locations!.find(x => x.id === selectedLocation)!;
+    const { locationId } = get(selectedLocationContextState);
+    return organizationConfiguration?.locations!.find(x => x.id === locationId);
   }
 });
-
-export const locationNameQuery = selector({
-  key: 'locationNameQuery',
-  get: ({get}) => {
-    const locationConfiguration = get(locationConfigurationQuery);
-    return locationConfiguration.name!;
-  }
-})
 
 export const ethnicitiesData = selector({//TODO: Rename to 'query'
   key: 'COMPATIBILITY__ethnicitiesData',
   get: ({get}) => {
     const locationConfiguration = get(locationConfigurationQuery);
-    return locationConfiguration.ethnicities!;
+    return locationConfiguration!.ethnicities!;
   }
 })
 
@@ -76,17 +46,15 @@ export const adultFamilyRelationshipsData = selector({//TODO: Rename to 'query'
   key: 'COMPATIBILITY__adultFamilyRelationshipsData',
   get: ({get}) => {
     const locationConfiguration = get(locationConfigurationQuery);
-    return locationConfiguration.adultFamilyRelationships!;
+    return locationConfiguration!.adultFamilyRelationships!;
   }
 })
 
 export const policyData = selector({
   key: 'policyData',
   get: async ({get}) => {
-    const organizationId = get(currentOrganizationState);
-    const locationId = get(currentLocationState);
-    const configurationClient = get(configurationClientQuery);
-    const dataResponse = await configurationClient.getEffectiveLocationPolicy(organizationId, locationId);
+    const { organizationId, locationId } = get(selectedLocationContextState);
+    const dataResponse = await api.configuration.getEffectiveLocationPolicy(organizationId, locationId);
     return dataResponse;
   }});
 
@@ -163,31 +131,15 @@ export const allFunctionsInPolicyQuery = selector({
     const policy = get(policyData);
     const allFunctions = policy.referralPolicy?.arrangementPolicies?.flatMap(arrangement =>
       arrangement.arrangementFunctions?.map(arrangementFunction => arrangementFunction.functionName!) || []) || [];
-    const uniqueFunctions = allFunctions.sort((a, b) => a < b ? -1 : a > b ? 1 : 0).filter(v =>
-      allFunctions.filter(x => x === v).length === 1);
+    const uniqueFunctions = Array.from(new Set(allFunctions));
     return uniqueFunctions;
   }});
 
-export interface LocationContext {
-  organizationId: string
-  locationId: string
-}
-export const currentOrganizationAndLocationIdsQuery = selector<LocationContext>({
-  key: 'currentOrganizationAndLocationIdsQuery',
-  get: ({get}) => {
-    get(organizationConfigurationQuery); //TODO: Figure out why Recoil needs this.
-    const organizationId = get(currentOrganizationIdQuery);
-    const locationId = get(selectedLocationIdState);
-    return { organizationId, locationId };
-  }
-})
-
-export const featureFlagQuery = selector({
+const featureFlagQuery = selector({
   key: 'featureFlagQuery',
   get: async ({get}) => {
-    const {organizationId, locationId} = get(currentOrganizationAndLocationIdsQuery);
-    const configurationClient = get(configurationClientQuery);
-    const dataResponse = await configurationClient.getLocationFlags(organizationId, locationId);
+    const { organizationId, locationId } = get(selectedLocationContextState);
+    const dataResponse = await api.configuration.getLocationFlags(organizationId, locationId);
     return dataResponse;
   }});
 

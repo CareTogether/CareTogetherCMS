@@ -16,19 +16,26 @@ namespace CareTogether.TestData
             foreach (var blobPage in tenantContainer.GetBlobs().AsPages())
                 foreach (var blob in blobPage.Values)
                     tenantContainer.DeleteBlobIfExists(blob.Name, DeleteSnapshotsOption.IncludeSnapshots);
-            
-            //TODO: Figure out why this fails.
-            //blobServiceClient.SetProperties(new BlobServiceProperties
-            //{
-            //    Cors = new System.Collections.Generic.List<BlobCorsRule> { new BlobCorsRule
-            //    {
-            //        AllowedHeaders = "https://app.caretogether.io:443",
-            //        AllowedMethods = "GET,PUT",
-            //        AllowedOrigins = "*",
-            //        ExposedHeaders = "*",
-            //        MaxAgeInSeconds = 5
-            //    } }
-            //});
+
+            //TODO: Fix the following logic so it works properly in Azure as well (API issue)
+            if (blobServiceClient.AccountName == "devstoreaccount1")
+            {
+                blobServiceClient.SetProperties(new BlobServiceProperties
+                {
+                    Cors = new System.Collections.Generic.List<BlobCorsRule> { new BlobCorsRule
+                {
+                    AllowedHeaders = "*",
+                    AllowedMethods = "GET,PUT",
+                    AllowedOrigins = "http://localhost:3000",
+                    ExposedHeaders = "*",
+                    MaxAgeInSeconds = 10
+                } },
+                    Logging = new BlobAnalyticsLogging
+                    {
+                        Version = "1.0"
+                    }
+                });
+            }
         }
 
         private static Guid Id(char x) => Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));

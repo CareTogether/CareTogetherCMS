@@ -3,9 +3,9 @@ import { flushSync } from 'react-dom';
 import { Autocomplete, Container, FilterOptionsState, IconButton, InputAdornment, Paper, TextField, useMediaQuery, useTheme } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { useLoadable } from '../Hooks/useLoadable';
-import { visibleFamiliesData } from '../Model/DirectoryModel';
 import { familyNameString } from '../Families/FamilyName';
 import { CombinedFamilyInfo } from '../GeneratedClient';
+import { visibleFamiliesQuery } from '../Model/Data';
 
 interface ShellSearchBarProps {
   openMobileSearch: boolean;
@@ -15,7 +15,7 @@ export function ShellSearchBar({ openMobileSearch, setOpenMobileSearch }: ShellS
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
 
-  const families = useLoadable(visibleFamiliesData) || [];
+  const families = useLoadable(visibleFamiliesQuery) || [];
 
   const searchBoxRef = useRef<any | null>(null);
 

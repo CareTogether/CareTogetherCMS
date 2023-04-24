@@ -1,5 +1,4 @@
-﻿using CareTogether.Resources.Accounts;
-using CareTogether.Resources.Policies;
+using CareTogether.Resources.Accounts;
 using Microsoft.AspNetCore.Authentication;
 using System.Linq;
 using System.Security.Claims;
@@ -10,51 +9,53 @@ namespace CareTogether.Api
     public class TenantUserClaimsTransformation : IClaimsTransformation
     {
         private readonly IAccountsResource accountsResource;
-        private readonly IPoliciesResource policiesResource;
 
-        public TenantUserClaimsTransformation(IAccountsResource accountsResource, IPoliciesResource policiesResource)
+        public TenantUserClaimsTransformation(IAccountsResource accountsResource)
         {
             this.accountsResource = accountsResource;
-            this.policiesResource = policiesResource;
         }
 
         public async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
         {
+            // Skip claims transformations if the principal is not a tenant user (e.g., if it is an API key client).
+            var userId = principal.UserIdOrDefault();
+            if (userId == null)
+                return principal;
+
             var tenantUserIdentity = new ClaimsIdentity();
             tenantUserIdentity.Label = "Tenant User";
-            var userId = principal.UserId();
 
-            // Look up the tenant access for the user.
-            var userTenantAccess = await accountsResource.GetUserTenantAccessSummaryAsync(userId);
+            // Look up the tenant access for the user. Skip claims transformations if the principal does not have
+            // an account yet (i.e., hasn't activated any user-to-person links).
+            var account = await accountsResource.TryGetUserAccountAsync(userId.Value);
+            if (account == null)
+                return principal;
 
-            var organizationId = userTenantAccess.OrganizationId;
+            //TODO: Support multiple organizations per user
+            var organizationId = account.Organizations.First().OrganizationId;
             principal.AddClaimOnlyOnce(tenantUserIdentity, Claims.OrganizationId, organizationId.ToString());
             principal.AddIdentity(tenantUserIdentity);
 
-            // Then look up the organization-managed role access and person ID for that user.
-            var configuration = await policiesResource.GetConfigurationAsync(organizationId);
-            
             // To represent the ability for users to have different sets of roles by location,
             // each location gets its own claims identity, named using a fixed convention for
             // easy lookup later.
-            var userAccessConfiguration = configuration.Users[userId];
-            var locationUserIdentities = userAccessConfiguration.LocationRoles
-                .Select(locationRoles =>
+            var locationUserIdentities = account.Organizations.First().Locations
+                .Select(location =>
                 {
-                    var locationUserIdentity = new ClaimsIdentity($"{organizationId}:{locationRoles.LocationId}");
+                    var locationUserIdentity = new ClaimsIdentity($"{organizationId}:{location.LocationId}");
                     locationUserIdentity.Label = "User Location Access";
 
                     var locationClaims = new Claim[]
                     {
-                        new(Claims.LocationId, locationRoles.LocationId.ToString()),
-                        new(Claims.PersonId, userAccessConfiguration.PersonId.ToString())
+                        new(Claims.LocationId, location.LocationId.ToString()),
+                        new(Claims.PersonId, location.PersonId.ToString())
                     };
                     locationUserIdentity.AddClaims(locationClaims);
 
                     //Note: We can't map the complicated role definitions into simple string-based permission claims,
                     //      so instead just map the role names to the location user identity.
                     //      The role definitions are known to the AuthorizationEngine service.
-                    var locationRoleClaims = locationRoles.RoleNames
+                    var locationRoleClaims = location.Roles
                         .Select(roleName => new Claim(tenantUserIdentity.RoleClaimType, roleName))
                         .ToArray();
                     locationUserIdentity.AddClaims(locationRoleClaims);

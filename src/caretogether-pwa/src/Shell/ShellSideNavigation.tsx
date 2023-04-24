@@ -2,11 +2,14 @@ import { Divider, Drawer, List, Skeleton, Stack, useTheme } from '@mui/material'
 import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
 import PeopleIcon from '@mui/icons-material/People';
 import SettingsIcon from '@mui/icons-material/Settings';
+import Diversity3Icon from '@mui/icons-material/Diversity3';
 import { ListItemLink } from './ListItemLink';
 import { useFeatureFlags } from '../Model/ConfigurationModel';
 import { Copyright } from './Copyright';
 import { useGlobalPermissions } from '../Model/SessionModel';
 import { Permission } from '../GeneratedClient';
+import { selectedLocationContextState } from '../Model/Data';
+import { useLoadable } from '../Hooks/useLoadable';
 
 interface SideNavigationMenuProps {
   open: boolean;
@@ -14,6 +17,9 @@ interface SideNavigationMenuProps {
 function SideNavigationMenu({ open }: SideNavigationMenuProps) {
   const flags = useFeatureFlags();
   const permissions = useGlobalPermissions();
+  
+  const context = useLoadable(selectedLocationContextState);
+  const locationPrefix = `/org/${context?.organizationId}/${context?.locationId}`;
 
   return (
     //  <List aria-label="main navigation">
@@ -36,14 +42,16 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
             </Stack>
           </>
         : <>
-            {permissions(Permission.AccessPartneringFamiliesScreen) && flags?.viewReferrals &&
-              <ListItemLink to="/referrals" primary="Referrals" icon={<PermPhoneMsgIcon sx={{color: '#fff8'}} />} />}
+            {permissions(Permission.AccessPartneringFamiliesScreen) &&
+              <ListItemLink to={`${locationPrefix}/referrals`} primary="Referrals" icon={<PermPhoneMsgIcon sx={{color: '#fff8'}} />} />}
             {permissions(Permission.AccessVolunteersScreen) &&
-              <ListItemLink to="/volunteers" primary="Volunteers" icon={<PeopleIcon sx={{color: '#fff8'}} />} />}
+              <ListItemLink to={`${locationPrefix}/volunteers`} primary="Volunteers" icon={<PeopleIcon sx={{color: '#fff8'}} />} />}
+            {permissions(Permission.AccessCommunitiesScreen) &&
+              <ListItemLink to={`${locationPrefix}/communities`} primary="Communities" icon={<Diversity3Icon sx={{color: '#fff8'}} />} />}
             {permissions(Permission.AccessSettingsScreen) &&
               <>
                 <Divider  />
-                <ListItemLink to="/settings" primary="Settings" icon={<SettingsIcon sx={{color: '#fff8'}} />} />
+                <ListItemLink to={`${locationPrefix}/settings`} primary="Settings" icon={<SettingsIcon sx={{color: '#fff8'}} />} />
               </>}
           </>}
     </List>

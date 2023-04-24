@@ -2,11 +2,10 @@ import { DatePicker, DateTimePicker } from '@mui/x-date-pickers';
 import { Checkbox, DialogContentText, Divider, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputLabel, Link, MenuItem, Select, Tab, Tabs, TextField } from "@mui/material";
 import { useState } from "react";
 import { useRecoilValue } from "recoil";
-import { ActionRequirement, Arrangement, DocumentLinkRequirement, MissingArrangementRequirement, Note, NoteEntryRequirement } from "../GeneratedClient";
+import { ActionRequirement, Arrangement, DocumentLinkRequirement, MissingArrangementRequirement, NoteEntryRequirement } from "../GeneratedClient";
 import { useDirectoryModel, useFamilyLookup, usePersonLookup } from "../Model/DirectoryModel";
-import { uploadFileToTenant } from "../Model/FilesModel";
+import { uploadFamilyFileToTenant } from "../Model/FilesModel";
 import { useReferralsModel } from "../Model/ReferralsModel";
-import { currentLocationState, currentOrganizationState } from "../Model/SessionModel";
 import { useVolunteersModel } from "../Model/VolunteersModel";
 import { UpdateDialog } from "../UpdateDialog";
 import { RequirementContext } from "./RequirementContext";
@@ -14,8 +13,8 @@ import { a11yProps, TabPanel } from "../TabPanel";
 import { personNameString } from "../Families/PersonName";
 import { DialogHandle } from "../Hooks/useDialogHandle";
 import { familyNameString } from "../Families/FamilyName";
-import { add, format, formatDuration } from "date-fns";
-import { useFeatureFlags } from '../Model/ConfigurationModel';
+import { add, format, formatDuration, isValid } from "date-fns";
+import { selectedLocationContextState } from '../Model/Data';
 
 type MissingRequirementDialogProps = {
   handle: DialogHandle
@@ -30,8 +29,6 @@ export function MissingRequirementDialog({
   const referrals = useReferralsModel();
   const volunteers = useVolunteersModel();
 
-  const featureFlags = useFeatureFlags();
-
   const validityDuration = policy.validity
     ? { days: parseInt(policy.validity.split('.')[0]) }
     : null;
@@ -42,8 +39,7 @@ export function MissingRequirementDialog({
   const [completedAtLocal, setCompletedAtLocal] = useState(null as Date | null);
   const [notes, setNotes] = useState("");
   const UPLOAD_NEW = "__uploadnew__";
-  const organizationId = useRecoilValue(currentOrganizationState);
-  const locationId = useRecoilValue(currentLocationState);
+  const { organizationId, locationId } = useRecoilValue(selectedLocationContextState);
   const [additionalComments, setAdditionalComments] = useState("");
   const [exemptionExpiresAtLocal, setExemptionExpiresAtLocal] = useState(null as Date | null);
   const [exemptAll, setExemptAll] = useState(false);
@@ -105,41 +101,43 @@ export function MissingRequirementDialog({
   async function markComplete() {
     let document = documentId;
     if (documentId === UPLOAD_NEW) {
-      document = await uploadFileToTenant(organizationId, locationId, documentFile!);
+      document = await uploadFamilyFileToTenant(organizationId, locationId, contextFamilyId, documentFile!);
       await directory.uploadFamilyDocument(contextFamilyId, document, documentFile!.name);
     }
-    let note: Note | undefined = undefined;
-    if (notes !== "")
-      note = (await directory.createDraftNote(contextFamilyId as string, notes)).note;
+    let noteId: string | undefined = undefined;
+    if (notes !== "") {
+      noteId = crypto.randomUUID();
+      await directory.createDraftNote(contextFamilyId as string, noteId, notes);
+    }
     switch (context.kind) {
       case 'Referral':
         await referrals.completeReferralRequirement(contextFamilyId, context.referralId,
-          requirementName, policy, completedAtLocal!, document === "" ? null : document, note?.id || null);
+          requirementName, policy, completedAtLocal!, document === "" ? null : document, noteId || null);
         break;
       case 'Arrangement':
         await referrals.completeArrangementRequirement(contextFamilyId, context.referralId,
           applyToArrangements.map(arrangement => arrangement.id!),
-          requirementName, policy, completedAtLocal!, document === "" ? null : document, note?.id || null);
+          requirementName, policy, completedAtLocal!, document === "" ? null : document, noteId || null);
         break;
       case 'Family Volunteer Assignment':
         await referrals.completeVolunteerFamilyAssignmentRequirement(contextFamilyId, context.referralId,
           applyToArrangements.map(arrangement => arrangement.id!),
           context.assignment,
-          requirementName, policy, completedAtLocal!, document === "" ? null : document, note?.id || null);
+          requirementName, policy, completedAtLocal!, document === "" ? null : document, noteId || null);
         break;
       case 'Individual Volunteer Assignment':
         await referrals.completeIndividualVolunteerAssignmentRequirement(contextFamilyId, context.referralId,
           applyToArrangements.map(arrangement => arrangement.id!),
           context.assignment,
-          requirementName, policy, completedAtLocal!, document === "" ? null : document, note?.id || null);
+          requirementName, policy, completedAtLocal!, document === "" ? null : document, noteId || null);
         break;
       case 'Volunteer Family':
         await volunteers.completeFamilyRequirement(contextFamilyId,
-          requirementName, policy, completedAtLocal!, document === "" ? null : document, note?.id || null);
+          requirementName, policy, completedAtLocal!, document === "" ? null : document, noteId || null);
         break;
       case 'Individual Volunteer':
         await volunteers.completeIndividualRequirement(contextFamilyId, context.personId,
-          requirementName, policy, completedAtLocal!, document === "" ? null : document, note?.id || null);
+          requirementName, policy, completedAtLocal!, document === "" ? null : document, noteId || null);
         break;
     }
   }
@@ -246,7 +244,7 @@ export function MissingRequirementDialog({
                 disableFuture inputFormat="MM/dd/yyyy"
                 onChange={(date: any) => date && setCompletedAtLocal(date)}
                 renderInput={(params: any) => <TextField fullWidth required {...params} />} />}
-            {validityDuration && (completedAtLocal
+            {validityDuration && ((completedAtLocal && isValid(completedAtLocal))
               ? <p>This will be valid until {format(add(completedAtLocal, validityDuration), "M/d/yyyy h:mm a")}</p>
               : <p>Valid for {formatDuration(validityDuration)}</p>)}
           </Grid>
@@ -316,8 +314,7 @@ export function MissingRequirementDialog({
                 </FormGroup>
               </FormControl>
             </Grid>}
-          {featureFlags?.exemptAll &&
-            requirement instanceof MissingArrangementRequirement &&
+          {requirement instanceof MissingArrangementRequirement &&
             (requirement.dueBy || requirement.pastDueSince) && // Only monitoring requirements will have one of these dates set.
             <Grid item xs={12}>
               <Divider sx={{marginBottom: 1}} />

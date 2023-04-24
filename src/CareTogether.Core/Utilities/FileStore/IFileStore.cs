@@ -7,6 +7,10 @@ namespace CareTogether.Utilities.FileStore
     {
         Task<Uri> GetValetReadUrlAsync(Guid organizationId, Guid locationId, Guid documentId);
 
+        Task<Uri> GetValetReadUrlAsync(Guid organizationId, Guid locationId, string documentSubpath);
+
         Task<Uri> GetValetCreateUrlAsync(Guid organizationId, Guid locationId, Guid documentId);
+
+        Task<Uri> GetValetCreateUrlAsync(Guid organizationId, Guid locationId, string documentSubpath);
     }
 }

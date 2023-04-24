@@ -28,13 +28,14 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                         .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null)))))
                     .Add(new MonitoringRequirement("B", new DurationStagesRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                         .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null)))))),
-                new ArrangementEntry(Guid.Empty, "", DateTime.MinValue,
+                new ArrangementEntry(Guid.Empty, "", true, DateTime.MinValue,
                     StartedAtUtc: null, EndedAtUtc: null,
-                    null, Guid.Empty,
+                    null, null, null, Guid.Empty,
                     Helpers.Completed(),
                     Helpers.Exempted(),
                     ImmutableList<IndividualVolunteerAssignment>.Empty,
                     ImmutableList<FamilyVolunteerAssignment>.Empty,
+                    Helpers.LocationHistoryEntries(),
                     Helpers.LocationHistoryEntries(),
                     Comments: null),
                 utcNow: new DateTime(2022, 1, 31));
@@ -53,13 +54,14 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                         .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null)))))
                     .Add(new MonitoringRequirement("B", new DurationStagesRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                         .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null)))))),
-                new ArrangementEntry(Guid.Empty, "", DateTime.MinValue,
+                new ArrangementEntry(Guid.Empty, "", true, DateTime.MinValue,
                     StartedAtUtc: new DateTime(2022, 1, 1), EndedAtUtc: null,
-                    null, Guid.Empty,
+                    null, null, null, Guid.Empty,
                     Helpers.Completed(),
                     Helpers.Exempted(),
                     ImmutableList<IndividualVolunteerAssignment>.Empty,
                     ImmutableList<FamilyVolunteerAssignment>.Empty,
+                    Helpers.LocationHistoryEntries(),
                     Helpers.LocationHistoryEntries(),
                     Comments: null),
                 utcNow: new DateTime(2022, 1, 31));
@@ -89,13 +91,14 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                         .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null)))))
                     .Add(new MonitoringRequirement("B", new DurationStagesRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                         .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null)))))),
-                new ArrangementEntry(Guid.Empty, "", DateTime.MinValue,
+                new ArrangementEntry(Guid.Empty, "", true, DateTime.MinValue,
                     StartedAtUtc: new DateTime(2022, 1, 1), EndedAtUtc: null,
-                    null, Guid.Empty,
+                    null, null, null, Guid.Empty,
                     Helpers.Completed(("A", 3), ("B", 7)),
                     Helpers.Exempted(),
                     ImmutableList<IndividualVolunteerAssignment>.Empty,
                     ImmutableList<FamilyVolunteerAssignment>.Empty,
+                    Helpers.LocationHistoryEntries(),
                     Helpers.LocationHistoryEntries(),
                     Comments: null),
                 utcNow: new DateTime(2022, 1, 31));
@@ -123,13 +126,14 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                         .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null)))))
                     .Add(new MonitoringRequirement("B", new DurationStagesRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                         .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null)))))),
-                new ArrangementEntry(Guid.Empty, "", DateTime.MinValue,
+                new ArrangementEntry(Guid.Empty, "", true, DateTime.MinValue,
                     StartedAtUtc: new DateTime(2022, 1, 1), EndedAtUtc: null,
-                    null, Guid.Empty,
+                    null, null, null, Guid.Empty,
                     Helpers.Completed(("A", 3), ("B", 7)),
                     Helpers.Exempted(),
                     ImmutableList<IndividualVolunteerAssignment>.Empty,
                     ImmutableList<FamilyVolunteerAssignment>.Empty,
+                    Helpers.LocationHistoryEntries(),
                     Helpers.LocationHistoryEntries(),
                     Comments: null),
                 utcNow: new DateTime(2022, 1, 8));

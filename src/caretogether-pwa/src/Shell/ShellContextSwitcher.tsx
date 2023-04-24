@@ -1,17 +1,21 @@
 import { MenuItem, Select, Skeleton, Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { useRecoilState } from 'recoil';
 import { useLoadable } from '../Hooks/useLoadable';
-import { locationNameQuery, organizationConfigurationQuery, organizationNameQuery } from '../Model/ConfigurationModel';
-import { selectedLocationIdState, availableLocationsQuery } from '../Model/SessionModel';
+import { locationConfigurationQuery, organizationConfigurationQuery } from '../Model/ConfigurationModel';
+import { currentOrganizationQuery, selectedLocationContextState } from '../Model/Data';
 
 export function ShellContextSwitcher() {
-  const organizationName = useLoadable(organizationNameQuery);
-  const locationName = useLoadable(locationNameQuery);
-
   const organizationConfiguration = useLoadable(organizationConfigurationQuery);
-  const [selectedLocationId, setSelectedLocationId] = useRecoilState(selectedLocationIdState);
-  const availableLocations = useLoadable(availableLocationsQuery);
+  const locationConfiguration = useLoadable(locationConfigurationQuery);
+  const selectedLocationContext = useLoadable(selectedLocationContextState);
+  const currentOrganization = useLoadable(currentOrganizationQuery);
+  
+  const navigate = useNavigate();
+  
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
+
+  const availableLocations = currentOrganization?.locations;
 
   const locations = organizationConfiguration?.locations!.map(location => ({
     id: location.id!,
@@ -19,25 +23,19 @@ export function ShellContextSwitcher() {
     isAvailable: availableLocations?.some(available => available.locationId === location.id) || false
   }));
   
-  const navigate = useNavigate();
-  
   function switchLocation(locationId: string) {
-    setSelectedLocationId(locationId);
-    navigate("/");
+    navigate(`/org/${currentOrganization!.organizationId!}/${locationId}/`);
   }
-  
-  const theme = useTheme();
-  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
   
   return (
     <Stack sx={{ position: 'absolute' }}>
-      {organizationName
+      {organizationConfiguration
         ? <Typography variant='subtitle1' component="h1"
             sx={{ position: 'relative', top: -4, left: 8}}>
-            {organizationName}
+            {organizationConfiguration.organizationName}
           </Typography>
         : <Skeleton variant='text' width={130} animation='wave' sx={{ marginTop: -0.5, marginLeft: 1}} />}
-      {(locationName && availableLocations && locations)
+      {(locationConfiguration && availableLocations && locations && selectedLocationContext)
         ? availableLocations.length >= 1
           ? <Select size={isDesktop ? 'small' : 'medium'}
               variant='outlined'
@@ -64,7 +62,7 @@ export function ShellContextSwitcher() {
                 backgroundColor: theme.palette.primary.light,
                 color: theme.palette.primary.contrastText
               }}}}
-              value={selectedLocationId}
+              value={selectedLocationContext.locationId}
               onChange={e => switchLocation(e.target.value as string)}>
                 {locations.map(location =>
                   <MenuItem key={location.id} value={location.id}
@@ -74,7 +72,7 @@ export function ShellContextSwitcher() {
               </Select>
             : <Typography variant='subtitle2' component="h2"
                 sx={{ position: 'relative', top: -8, left: 8}}>
-                {locationName}
+                {locationConfiguration.name}
               </Typography>
         : <Skeleton variant="text" width={130} animation="wave" sx={{ marginLeft: 1 }} />}
     </Stack>

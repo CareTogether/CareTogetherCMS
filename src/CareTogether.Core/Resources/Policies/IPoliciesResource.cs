@@ -8,6 +8,11 @@ namespace CareTogether.Resources.Policies
     public sealed record OrganizationConfiguration(string OrganizationName,
         ImmutableList<LocationConfiguration> Locations,
         ImmutableList<RoleDefinition> Roles,
+        ImmutableList<string> CommunityRoles,
+        //TODO: Users is only being kept for compatibility until migrations are completed.
+        //      Once this is removed, some logic will need to change to reference AccountsResource info
+        //      (via disclosing user access on CombinedFamilyInfo).
+        [property: NJsonSchema.Annotations.JsonSchemaIgnore]
         ImmutableDictionary<Guid, UserAccessConfiguration> Users);
 
     public sealed record LocationConfiguration(Guid Id, string Name,
@@ -16,7 +21,7 @@ namespace CareTogether.Resources.Policies
 
     public sealed record SourcePhoneNumberConfiguration(string SourcePhoneNumber, string Description);
 
-    public sealed record RoleDefinition(string RoleName,
+    public sealed record RoleDefinition(string RoleName, bool? IsProtected,
         ImmutableList<ContextualPermissionSet> PermissionSets);
 
     public sealed record ContextualPermissionSet(PermissionContext Context, ImmutableList<Permission> Permissions);
@@ -34,15 +39,23 @@ namespace CareTogether.Resources.Policies
     public sealed record AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext(
         bool? WhenReferralIsOpen, ImmutableList<string>? WhenOwnFunctionIsIn, ImmutableList<string>? WhenAssigneeFunctionIsIn)
         : PermissionContext();
+    public sealed record CommunityMemberPermissionContext(
+        ImmutableList<string>? WhenOwnCommunityRoleIsIn) : PermissionContext();
+    public sealed record CommunityCoMemberFamiliesPermissionContext(
+        ImmutableList<string>? WhenOwnCommunityRoleIsIn) : PermissionContext();
 
-
-    public sealed record UserAccessConfiguration(Guid PersonId,
+    public sealed record UserAccessConfiguration(
         ImmutableList<UserLocationRoles> LocationRoles);
 
-    public sealed record UserLocationRoles(Guid LocationId, ImmutableList<string> RoleNames);
+    public sealed record UserLocationRoles(Guid LocationId, Guid PersonId, ImmutableList<string> RoleNames);
+
+
+    public sealed record OrganizationSecrets(string ApiKey);
+
 
     public sealed record EffectiveLocationPolicy(
         ImmutableDictionary<string, ActionRequirement> ActionDefinitions,
+        ImmutableList<CustomField> CustomFamilyFields,
         ReferralPolicy ReferralPolicy,
         VolunteerPolicy VolunteerPolicy);
 
@@ -158,6 +171,8 @@ namespace CareTogether.Resources.Policies
 
         Task<OrganizationConfiguration> UpsertRoleDefinitionAsync(Guid organizationId,
             string roleName, RoleDefinition role);
+
+        Task<OrganizationSecrets> GetOrganizationSecretsAsync(Guid organizationId);
 
         Task<EffectiveLocationPolicy> GetCurrentPolicy(Guid organizationId, Guid locationId);
     }

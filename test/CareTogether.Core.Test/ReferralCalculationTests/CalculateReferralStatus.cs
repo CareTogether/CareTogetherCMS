@@ -91,15 +91,15 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 RequiredMonitoringActions: ImmutableList<MonitoringRequirement>.Empty,
                 RequiredCloseoutActionNames: Helpers.From())));
 
-        static Person adult1 = new Person(guid1, null, true, "Bob", "Smith", Gender.Male, new ExactAge(new DateTime(2000, 1, 1)), "",
+        static Person adult1 = new Person(guid1, true, "Bob", "Smith", Gender.Male, new ExactAge(new DateTime(2000, 1, 1)), "",
             ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null);
-        static Person adult2 = new Person(guid2, null, true, "Jane", "Smith", Gender.Female, new ExactAge(new DateTime(2000, 1, 1)), "",
+        static Person adult2 = new Person(guid2, true, "Jane", "Smith", Gender.Female, new ExactAge(new DateTime(2000, 1, 1)), "",
             ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null);
-        static Person inactiveAdult3 = new Person(guid3, null, false, "BobDUPLICATE", "Smith", Gender.Male, new ExactAge(new DateTime(2000, 1, 1)), "",
+        static Person inactiveAdult3 = new Person(guid3, false, "BobDUPLICATE", "Smith", Gender.Male, new ExactAge(new DateTime(2000, 1, 1)), "",
             ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null);
-        static Person brotherNotInHousehold4 = new Person(guid2, null, true, "Eric", "Smith", Gender.Male, new ExactAge(new DateTime(2000, 1, 1)), "",
+        static Person brotherNotInHousehold4 = new Person(guid2, true, "Eric", "Smith", Gender.Male, new ExactAge(new DateTime(2000, 1, 1)), "",
             ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null);
-        static Person child5 = new Person(guid5, null, true, "Wanda", "Smith", Gender.Female, new ExactAge(new DateTime(2022, 1, 1)), "",
+        static Person child5 = new Person(guid5, true, "Wanda", "Smith", Gender.Female, new ExactAge(new DateTime(2022, 1, 1)), "",
             ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null);
 
         static Family family = new Family(guid0, guid1,
@@ -113,7 +113,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             ImmutableList<CustodialRelationship>.Empty
                 .Add(new CustodialRelationship(guid5, guid1, CustodialRelationshipType.ParentWithCustody))
                 .Add(new CustodialRelationship(guid5, guid2, CustodialRelationshipType.ParentWithCustody)),
-            ImmutableList<UploadedDocumentInfo>.Empty, ImmutableList<Guid>.Empty, ImmutableList<Activity>.Empty);
+            ImmutableList<UploadedDocumentInfo>.Empty, ImmutableList<Guid>.Empty,
+            ImmutableList<CompletedCustomFieldInfo>.Empty, ImmutableList<Activity>.Empty);
 
 
         [TestMethod]

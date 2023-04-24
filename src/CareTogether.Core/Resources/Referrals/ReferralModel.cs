@@ -139,13 +139,13 @@ namespace CareTogether.Resources.Referrals
             var arrangementEntriesToUpsert = command.ArrangementIds.Select<Guid, (ArrangementEntry, Activity?)>(arrangementId =>
                 command switch
                 {
-                    CreateArrangement c => (new ArrangementEntry(arrangementId, c.ArrangementType,
+                    CreateArrangement c => (new ArrangementEntry(arrangementId, c.ArrangementType, Active: true,
                         RequestedAtUtc: c.RequestedAtUtc, StartedAtUtc: null, EndedAtUtc: null,
-                        CancelledAtUtc: null,
+                        CancelledAtUtc: null, PlannedStartUtc: null, PlannedEndUtc: null,
                         c.PartneringFamilyPersonId,
                         ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<ExemptedRequirementInfo>.Empty,
                         ImmutableList<IndividualVolunteerAssignment>.Empty, ImmutableList<FamilyVolunteerAssignment>.Empty,
-                        ImmutableSortedSet<ChildLocationHistoryEntry>.Empty,
+                        ImmutableSortedSet<ChildLocationHistoryEntry>.Empty, ImmutableSortedSet<ChildLocationHistoryEntry>.Empty,
                         Comments: null),
                         null),
                     _ => referralEntry.Arrangements.TryGetValue(arrangementId, out var arrangementEntry)
@@ -180,6 +180,10 @@ namespace CareTogether.Resources.Referrals
                                     fva.ArrangementFunction == c.ArrangementFunction &&
                                     fva.ArrangementFunctionVariant == c.ArrangementFunctionVariant &&
                                     fva.FamilyId == c.VolunteerFamilyId)
+                            }, null),
+                            PlanArrangementStart c => (arrangementEntry with
+                            {
+                                PlannedStartUtc = c.PlannedStartUtc
                             }, null),
                             StartArrangements c => (arrangementEntry with
                             {
@@ -319,6 +323,20 @@ namespace CareTogether.Resources.Referrals
                                             x.RequirementName == c.RequirementName && x.DueDate == c.DueDate)
                                     })
                             }, null),
+                            PlanChildLocationChange c => (arrangementEntry with
+                            {
+                                ChildLocationPlan = arrangementEntry.ChildLocationPlan.Add(
+                                    new ChildLocationHistoryEntry(userId, c.PlannedChangeUtc,
+                                        c.ChildLocationFamilyId, c.ChildLocationReceivingAdultId, c.Plan, NoteId: null))
+                            }, null),
+                            DeletePlannedChildLocationChange c => (arrangementEntry with
+                            {
+                                ChildLocationPlan = arrangementEntry.ChildLocationPlan.Remove(
+                                    arrangementEntry.ChildLocationPlan.Last(entry =>
+                                        entry.ChildLocationFamilyId == c.ChildLocationFamilyId &&
+                                        entry.ChildLocationReceivingAdultId == c.ChildLocationReceivingAdultId &&
+                                        entry.TimestampUtc == c.PlannedChangeUtc))
+                            }, null),
                             TrackChildLocationChange c => (arrangementEntry with
                             {
                                 ChildLocationHistory = arrangementEntry.ChildLocationHistory.Add(
@@ -333,6 +351,10 @@ namespace CareTogether.Resources.Referrals
                                         entry.ChildLocationFamilyId == c.ChildLocationFamilyId &&
                                         entry.ChildLocationReceivingAdultId == c.ChildLocationReceivingAdultId &&
                                         entry.TimestampUtc == c.ChangedAtUtc))
+                            }, null),
+                            PlanArrangementEnd c => (arrangementEntry with
+                            {
+                                PlannedEndUtc = c.PlannedEndUtc
                             }, null),
                             EndArrangements c => (arrangementEntry with
                             {
@@ -351,6 +373,10 @@ namespace CareTogether.Resources.Referrals
                             UpdateArrangementComments c => (arrangementEntry with
                             {
                                 Comments = c.Comments
+                            }, null),
+                            DeleteArrangements c => (arrangementEntry with
+                            {
+                                Active = false
                             }, null),
                             _ => throw new NotImplementedException(
                                 $"The command type '{command.GetType().FullName}' has not been implemented.")

@@ -15,11 +15,17 @@ namespace CareTogether
         UploadFamilyDocuments = 3, // Will become a prerequisite for upload-linked actions
         DeleteFamilyDocuments = 4,
 
+        InvitePersonUser = 50,
+        EditPersonUserProtectedRoles = 51,
+        EditPersonUserStandardRoles = 52,
+
         AccessVolunteersScreen = 100,
         AccessPartneringFamiliesScreen = 101,
         AccessSettingsScreen = 102,
         EditRoles = 103,
+        AccessCommunitiesScreen = 104,
 
+        ViewFamilyCustomFields = 150,
         ViewFamilyHistory = 151,
         ViewPersonConcerns = 152,
         ViewPersonNotes = 153,
@@ -28,8 +34,8 @@ namespace CareTogether
         EditPersonConcerns = 156,
         EditPersonNotes = 157,
         EditPersonContactInfo = 158,
-        EditPersonUserLink = 159,
-        
+        //EditPersonUserLink = 159,
+
         AddEditDraftNotes = 180,
         DiscardDraftNotes = 181,
         ApproveNotes = 182,
@@ -65,10 +71,25 @@ namespace CareTogether
         ViewAssignedArrangementProgress = 355, // See only items assigned to your own family
         EditArrangementRequirementCompletion = 356,
         EditArrangementRequirementExemption = 357,
+        DeleteArrangement = 358,
         
         ViewChildLocationHistory = 380,
         TrackChildLocationChange = 381,
 
+        // ---- Communications ---- //
+
         SendBulkSms = 400,
+
+        // ---- Communities ---- //
+
+        CreateCommunity = 500,
+        EditCommunity = 501,
+        DeleteCommunity = 502,
+        EditCommunityMemberFamilies = 503,
+        EditCommunityRoleAssignments = 504,
+        ViewCommunityDocumentMetadata = 505,
+        ReadCommunityDocuments = 506,
+        UploadCommunityDocuments = 507,
+        DeleteCommunityDocuments = 508,
     }
 }

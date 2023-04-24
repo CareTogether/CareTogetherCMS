@@ -1,6 +1,7 @@
 ﻿using CareTogether.Engines.Authorization;
 using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Resources;
+using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
@@ -24,11 +25,12 @@ namespace CareTogether.Managers
         private readonly IDirectoryResource directoryResource;
         private readonly INotesResource notesResource;
         private readonly IPoliciesResource policiesResource;
+        private readonly IAccountsResource accountsResource;
 
 
         public CombinedFamilyInfoFormatter(IPolicyEvaluationEngine policyEvaluationEngine, IAuthorizationEngine authorizationEngine,
             IApprovalsResource approvalsResource, IReferralsResource referralsResource, IDirectoryResource directoryResource,
-            INotesResource notesResource, IPoliciesResource policiesResource)
+            INotesResource notesResource, IPoliciesResource policiesResource, IAccountsResource accountsResource)
         {
             this.policyEvaluationEngine = policyEvaluationEngine;
             this.authorizationEngine = authorizationEngine;
@@ -37,6 +39,7 @@ namespace CareTogether.Managers
             this.directoryResource = directoryResource;
             this.notesResource = notesResource;
             this.policiesResource = policiesResource;
+            this.accountsResource = accountsResource;
         }
 
 
@@ -48,6 +51,11 @@ namespace CareTogether.Managers
             var family = await directoryResource.FindFamilyAsync(organizationId, locationId, familyId);
             if (family == null)
                 throw new InvalidOperationException("The specified family ID was not found.");
+
+            var missingCustomFamilyFields = locationPolicy.CustomFamilyFields
+                .Where(customField => !family.CompletedCustomFields.Any(completed => completed.CustomFieldName == customField.Name))
+                .Select(customField => customField.Name)
+                .ToImmutableList();
 
             var partneringFamilyInfo = await RenderPartneringFamilyInfoAsync(organizationId, locationId, family, user);
 
@@ -73,8 +81,22 @@ namespace CareTogether.Managers
                 .Where(udi => !family.DeletedDocuments.Contains(udi.UploadedDocumentId))
                 .ToImmutableList();
 
-            var renderedFamily = new CombinedFamilyInfo(family, partneringFamilyInfo, volunteerFamilyInfo, renderedNotes,
-                allUploadedDocuments, ImmutableList<Permission>.Empty);
+            var users = (await Task.WhenAll(family.Adults.Select(async adult =>
+            {
+                var account = await accountsResource.TryGetPersonUserAccountAsync(organizationId, locationId, adult.Item1.Id);
+                var personAccess = await accountsResource.TryGetPersonRolesAsync(organizationId, locationId, adult.Item1.Id);
+
+                return (account == null)
+                    ? personAccess == null
+                        ? null
+                        : new UserInfo(null, adult.Item1.Id, personAccess ?? ImmutableList<string>.Empty)
+                    : new UserInfo(account.UserId, adult.Item1.Id, account.Organizations
+                        .Single(org => org.OrganizationId == organizationId).Locations
+                            .Single(l => l.LocationId == locationId).Roles);
+            }))).Where(user => user != null).Cast<UserInfo>().ToImmutableList();
+
+            var renderedFamily = new CombinedFamilyInfo(family, users, partneringFamilyInfo, volunteerFamilyInfo, renderedNotes,
+                allUploadedDocuments, missingCustomFamilyFields, ImmutableList<Permission>.Empty);
 
             var disclosedFamily = await authorizationEngine.DiscloseFamilyAsync(user, organizationId, locationId, renderedFamily);
             return disclosedFamily;
@@ -111,6 +133,7 @@ namespace CareTogether.Managers
                     entry.CompletedRequirements, entry.ExemptedRequirements, referralStatus.MissingIntakeRequirements,
                     entry.CompletedCustomFields.Values.ToImmutableList(), referralStatus.MissingCustomFields,
                     entry.Arrangements
+                        .Where(a => a.Value.Active)
                         .Select(a => ToArrangement(a.Value, referralStatus.IndividualArrangements[a.Key]))
                         .ToImmutableList(),
                     entry.Comments);
@@ -119,10 +142,11 @@ namespace CareTogether.Managers
             static Arrangement ToArrangement(ArrangementEntry entry, ArrangementStatus status) =>
                 new(entry.Id, entry.ArrangementType, entry.PartneringFamilyPersonId, status.Phase,
                     entry.RequestedAtUtc, entry.StartedAtUtc, entry.EndedAtUtc, entry.CancelledAtUtc,
+                    entry.PlannedStartUtc, entry.PlannedEndUtc,
                     entry.CompletedRequirements, entry.ExemptedRequirements,
                     status.MissingRequirements,
                     entry.IndividualVolunteerAssignments, entry.FamilyVolunteerAssignments,
-                    entry.ChildLocationHistory,
+                    entry.ChildLocationHistory, entry.ChildLocationPlan,
                     entry.Comments);
         }
 

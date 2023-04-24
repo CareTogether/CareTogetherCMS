@@ -22,7 +22,7 @@ export function EthnicityEditor({ familyId, person }: PersonEditorProps) {
                 <InputLabel id="ethnicity-label">Ethnicity</InputLabel>
                 <Select
                   labelId="ethnicity-label" id="ethnicity"
-                  value={editor.value}
+                  value={editor.value || ''}
                   onChange={e => editor.setValue(e.target.value as string)}>
                     <MenuItem key="placeholder" value="" disabled>
                       Select an ethnicity
