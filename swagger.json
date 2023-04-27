@@ -3330,6 +3330,11 @@
           },
           "status": {
             "$ref": "#/components/schemas/NoteStatus"
+          },
+          "backdatedTimestampUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           }
         }
       },

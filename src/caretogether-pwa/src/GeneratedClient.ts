@@ -5579,6 +5579,7 @@ export class Note implements INote {
     timestampUtc?: Date;
     contents?: string | undefined;
     status?: NoteStatus;
+    backdatedTimestampUtc?: Date | undefined;
 
     constructor(data?: INote) {
         if (data) {
@@ -5596,6 +5597,7 @@ export class Note implements INote {
             this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
             this.contents = _data["contents"];
             this.status = _data["status"];
+            this.backdatedTimestampUtc = _data["backdatedTimestampUtc"] ? new Date(_data["backdatedTimestampUtc"].toString()) : <any>undefined;
         }
     }
 
@@ -5613,6 +5615,7 @@ export class Note implements INote {
         data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
         data["contents"] = this.contents;
         data["status"] = this.status;
+        data["backdatedTimestampUtc"] = this.backdatedTimestampUtc ? this.backdatedTimestampUtc.toISOString() : <any>undefined;
         return data;
     }
 }
@@ -5623,6 +5626,7 @@ export interface INote {
     timestampUtc?: Date;
     contents?: string | undefined;
     status?: NoteStatus;
+    backdatedTimestampUtc?: Date | undefined;
 }
 
 export enum NoteStatus {
