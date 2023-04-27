@@ -59,7 +59,8 @@ namespace CareTogether.Resources.Notes
             var noteEntryToUpsert = command switch
             {
                 CreateDraftNote c => new NoteEntry(c.NoteId, c.FamilyId, userId, timestampUtc, NoteStatus.Draft,
-                    c.DraftNoteContents, ApproverId: null, ApprovedTimestampUtc: null),
+                    c.DraftNoteContents, ApproverId: null, ApprovedTimestampUtc: null,
+                    BackdatedTimestampUtc: c.BackdatedTimestampUtc),
                 DiscardDraftNote c => null,
                 _ => notes.TryGetValue(command.NoteId, out var noteEntry)
                     ? command switch
@@ -68,14 +69,16 @@ namespace CareTogether.Resources.Notes
                         EditDraftNote c => noteEntry with
                         {
                             Contents = c.DraftNoteContents,
-                            LastEditTimestampUtc = timestampUtc
+                            LastEditTimestampUtc = timestampUtc,
+                            BackdatedTimestampUtc = c.BackdatedTimestampUtc
                         },
                         ApproveNote c => noteEntry with
                         {
                             Status = NoteStatus.Approved,
                             Contents = c.FinalizedNoteContents,
                             ApprovedTimestampUtc = timestampUtc,
-                            ApproverId = userId
+                            ApproverId = userId,
+                            BackdatedTimestampUtc = c.BackdatedTimestampUtc
                         },
                         _ => throw new NotImplementedException(
                             $"The command type '{command.GetType().FullName}' has not been implemented.")
