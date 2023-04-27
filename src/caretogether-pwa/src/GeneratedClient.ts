@@ -9204,6 +9204,7 @@ export interface INoteCommand {
 
 export class ApproveNote extends NoteCommand implements IApproveNote {
     finalizedNoteContents?: string;
+    backdatedTimestampUtc?: Date | undefined;
 
     constructor(data?: IApproveNote) {
         super(data);
@@ -9214,6 +9215,7 @@ export class ApproveNote extends NoteCommand implements IApproveNote {
         super.init(_data);
         if (_data) {
             this.finalizedNoteContents = _data["finalizedNoteContents"];
+            this.backdatedTimestampUtc = _data["backdatedTimestampUtc"] ? new Date(_data["backdatedTimestampUtc"].toString()) : <any>undefined;
         }
     }
 
@@ -9227,6 +9229,7 @@ export class ApproveNote extends NoteCommand implements IApproveNote {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["finalizedNoteContents"] = this.finalizedNoteContents;
+        data["backdatedTimestampUtc"] = this.backdatedTimestampUtc ? this.backdatedTimestampUtc.toISOString() : <any>undefined;
         super.toJSON(data);
         return data;
     }
@@ -9234,10 +9237,12 @@ export class ApproveNote extends NoteCommand implements IApproveNote {
 
 export interface IApproveNote extends INoteCommand {
     finalizedNoteContents?: string;
+    backdatedTimestampUtc?: Date | undefined;
 }
 
 export class CreateDraftNote extends NoteCommand implements ICreateDraftNote {
     draftNoteContents?: string | undefined;
+    backdatedTimestampUtc?: Date | undefined;
 
     constructor(data?: ICreateDraftNote) {
         super(data);
@@ -9248,6 +9253,7 @@ export class CreateDraftNote extends NoteCommand implements ICreateDraftNote {
         super.init(_data);
         if (_data) {
             this.draftNoteContents = _data["draftNoteContents"];
+            this.backdatedTimestampUtc = _data["backdatedTimestampUtc"] ? new Date(_data["backdatedTimestampUtc"].toString()) : <any>undefined;
         }
     }
 
@@ -9261,6 +9267,7 @@ export class CreateDraftNote extends NoteCommand implements ICreateDraftNote {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["draftNoteContents"] = this.draftNoteContents;
+        data["backdatedTimestampUtc"] = this.backdatedTimestampUtc ? this.backdatedTimestampUtc.toISOString() : <any>undefined;
         super.toJSON(data);
         return data;
     }
@@ -9268,6 +9275,7 @@ export class CreateDraftNote extends NoteCommand implements ICreateDraftNote {
 
 export interface ICreateDraftNote extends INoteCommand {
     draftNoteContents?: string | undefined;
+    backdatedTimestampUtc?: Date | undefined;
 }
 
 export class DiscardDraftNote extends NoteCommand implements IDiscardDraftNote {
@@ -9300,6 +9308,7 @@ export interface IDiscardDraftNote extends INoteCommand {
 
 export class EditDraftNote extends NoteCommand implements IEditDraftNote {
     draftNoteContents?: string | undefined;
+    backdatedTimestampUtc?: Date | undefined;
 
     constructor(data?: IEditDraftNote) {
         super(data);
@@ -9310,6 +9319,7 @@ export class EditDraftNote extends NoteCommand implements IEditDraftNote {
         super.init(_data);
         if (_data) {
             this.draftNoteContents = _data["draftNoteContents"];
+            this.backdatedTimestampUtc = _data["backdatedTimestampUtc"] ? new Date(_data["backdatedTimestampUtc"].toString()) : <any>undefined;
         }
     }
 
@@ -9323,6 +9333,7 @@ export class EditDraftNote extends NoteCommand implements IEditDraftNote {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["draftNoteContents"] = this.draftNoteContents;
+        data["backdatedTimestampUtc"] = this.backdatedTimestampUtc ? this.backdatedTimestampUtc.toISOString() : <any>undefined;
         super.toJSON(data);
         return data;
     }
@@ -9330,6 +9341,7 @@ export class EditDraftNote extends NoteCommand implements IEditDraftNote {
 
 export interface IEditDraftNote extends INoteCommand {
     draftNoteContents?: string | undefined;
+    backdatedTimestampUtc?: Date | undefined;
 }
 
 export class PersonRecordsCommand extends AtomicRecordsCommand implements IPersonRecordsCommand {
