@@ -23,7 +23,7 @@ export function ActivityTimeline({ family }: ActivityTimelineProps) {
     activities?.every(a => a.noteId !== note.id))?.map(note =>
     ({
       userId: note.authorId,
-      activityTimestampUtc: note.timestampUtc,
+      activityTimestampUtc: note.backdatedTimestampUtc ?? note.timestampUtc,
       auditTimestampUtc: note.timestampUtc,
       noteId: note.id
     } as Activity)) || [];

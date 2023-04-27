@@ -469,22 +469,24 @@ export function useDirectoryModel() {
       return command;
     });
   const createDraftNote = useNoteCommandCallback(
-    async (familyId, noteId: string, draftNoteContents: string) => {
+    async (familyId, noteId: string, draftNoteContents: string, backdatedTimestampLocal?: Date) => {
       const command = new CreateDraftNote({
         familyId: familyId,
         noteId: noteId
       });
       command.draftNoteContents = draftNoteContents;
       command.noteId = noteId;
+      command.backdatedTimestampUtc = backdatedTimestampLocal;
       return command;
     });
   const editDraftNote = useNoteCommandCallback(
-    async (familyId, noteId: string, draftNoteContents: string) => {
+    async (familyId, noteId: string, draftNoteContents: string, backdatedTimestampLocal?: Date) => {
       const command = new EditDraftNote({
         familyId: familyId,
         noteId: noteId
       });
       command.draftNoteContents = draftNoteContents;
+      command.backdatedTimestampUtc = backdatedTimestampLocal;
       return command;
     });
   const discardDraftNote = useNoteCommandCallback(
@@ -496,12 +498,13 @@ export function useDirectoryModel() {
       return command;
     });
   const approveNote = useNoteCommandCallback(
-    async (familyId, noteId: string, finalizedNoteContents: string) => {
+    async (familyId, noteId: string, finalizedNoteContents: string, backdatedTimestampLocal?: Date) => {
       const command = new ApproveNote({
         familyId: familyId,
         noteId: noteId
       });
       command.finalizedNoteContents = finalizedNoteContents;
+      command.backdatedTimestampUtc = backdatedTimestampLocal;
       return command;
     });
   
