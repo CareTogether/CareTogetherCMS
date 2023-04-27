@@ -48,7 +48,7 @@ namespace CareTogether.Managers
         string? Comments);
 
     public sealed record Note(Guid Id, Guid AuthorId, DateTime TimestampUtc,
-        string? Contents, NoteStatus Status);
+        string? Contents, NoteStatus Status, DateTime? BackdatedTimestampUtc);
 
     public sealed record VolunteerFamilyInfo(
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,

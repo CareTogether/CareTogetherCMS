@@ -66,7 +66,7 @@ namespace CareTogether.Managers
             var renderedNotes = notes
                 .Select(note => new Note(note.Id, note.AuthorId, TimestampUtc: note.Status == NoteStatus.Approved
                     ? note.ApprovedTimestampUtc!.Value
-                    : note.LastEditTimestampUtc, note.Contents, note.Status))
+                    : note.LastEditTimestampUtc, note.Contents, note.Status, note.BackdatedTimestampUtc))
                 .ToImmutableList();
 
             // COMPATIBILITY: This step is required to merge previously separated document upload info lists.

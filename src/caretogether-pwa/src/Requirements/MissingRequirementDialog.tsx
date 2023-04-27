@@ -107,7 +107,7 @@ export function MissingRequirementDialog({
     let noteId: string | undefined = undefined;
     if (notes !== "") {
       noteId = crypto.randomUUID();
-      await directory.createDraftNote(contextFamilyId as string, noteId, notes);
+      await directory.createDraftNote(contextFamilyId as string, noteId, notes, completedAtLocal || undefined);
     }
     switch (context.kind) {
       case 'Referral':

@@ -3330,6 +3330,11 @@
           },
           "status": {
             "$ref": "#/components/schemas/NoteStatus"
+          },
+          "backdatedTimestampUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           }
         }
       },
@@ -5227,6 +5232,11 @@
             "properties": {
               "finalizedNoteContents": {
                 "type": "string"
+              },
+              "backdatedTimestampUtc": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
               }
             }
           }
@@ -5243,6 +5253,11 @@
             "properties": {
               "draftNoteContents": {
                 "type": "string",
+                "nullable": true
+              },
+              "backdatedTimestampUtc": {
+                "type": "string",
+                "format": "date-time",
                 "nullable": true
               }
             }
@@ -5271,6 +5286,11 @@
             "properties": {
               "draftNoteContents": {
                 "type": "string",
+                "nullable": true
+              },
+              "backdatedTimestampUtc": {
+                "type": "string",
+                "format": "date-time",
                 "nullable": true
               }
             }

@@ -16,7 +16,7 @@ export function ApproveNoteDialog({familyId, note, onClose}: ApproveNoteDialogPr
   const userLookup = useUserLookup();
 
   async function approve() {
-    await directoryModel.approveNote(familyId, note.id!, note.contents!);
+    await directoryModel.approveNote(familyId, note.id!, note.contents!, note.backdatedTimestampUtc);
   }
 
   return (
@@ -26,6 +26,9 @@ export function ApproveNoteDialog({familyId, note, onClose}: ApproveNoteDialogPr
         <PersonName person={userLookup(note.authorId)} /> -&nbsp;
         {format(note.timestampUtc!, "MM/dd/yyyy hh:mm aa")}
       </Typography>
+      {note.backdatedTimestampUtc && <Typography variant="body2" component="p">
+        Backdated to: {format(note.backdatedTimestampUtc!, "MM/dd/yyyy hh:mm aa")}
+      </Typography>}
       <Divider />
       <Typography>
         {note.contents}

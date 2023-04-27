@@ -215,7 +215,7 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
         let noteId: string | undefined = undefined;
         if (notes !== "") {
           noteId = crypto.randomUUID();
-          await directoryModel.createDraftNote(partneringFamily.family?.id as string, noteId, notes);
+          await directoryModel.createDraftNote(partneringFamily.family?.id as string, noteId, notes, changeAtLocal);
         }
         await referralsModel.trackChildLocation(partneringFamily.family?.id as string, referralId, arrangement.id!,
           assigneeInfo!.familyId, assigneeInfo!.personId, changeAtLocal, plan, noteId || null);
