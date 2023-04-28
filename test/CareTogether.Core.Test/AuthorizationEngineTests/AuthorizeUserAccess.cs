@@ -54,10 +54,11 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             var draftNotesStore = new MemoryObjectStore<string?>();
             var configurationStore = new MemoryObjectStore<OrganizationConfiguration>();
             var policiesStore = new MemoryObjectStore<EffectiveLocationPolicy>();
-            var userTenantAccessStore = new MemoryObjectStore<UserTenantAccessSummary>();
             var organizationSecretsStore = new MemoryObjectStore<OrganizationSecrets>();
 
             await TestDataProvider.PopulateTestDataAsync(
+                accountsEventLog,
+                personAccessEventLog,
                 directoryEventLog,
                 goalsEventLog,
                 referralsEventLog,
@@ -67,7 +68,6 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 draftNotesStore,
                 configurationStore,
                 policiesStore,
-                userTenantAccessStore,
                 organizationSecretsStore,
                 testSourceSmsPhoneNumber: null);
 
@@ -76,8 +76,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             var referralsResource = new ReferralsResource(referralsEventLog);
             var approvalsResource = new ApprovalsResource(approvalsEventLog);
             var communitiesResource = new CommunitiesResource(communitiesEventLog, Mock.Of<IFileStore>());
-            var accountsResource = new AccountsResource(userTenantAccessStore, accountsEventLog, personAccessEventLog,
-                new Azure.Storage.Blobs.BlobServiceClient("UseDevelopmentStorage=true"), configurationStore, Array.Empty<string>());
+            var accountsResource = new AccountsResource(accountsEventLog, personAccessEventLog);
 
             dut = new AuthorizationEngine(policiesResource, directoryResource,
                 referralsResource, approvalsResource, communitiesResource, accountsResource);

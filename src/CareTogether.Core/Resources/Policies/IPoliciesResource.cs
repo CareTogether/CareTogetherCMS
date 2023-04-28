@@ -8,12 +8,7 @@ namespace CareTogether.Resources.Policies
     public sealed record OrganizationConfiguration(string OrganizationName,
         ImmutableList<LocationConfiguration> Locations,
         ImmutableList<RoleDefinition> Roles,
-        ImmutableList<string> CommunityRoles,
-        //TODO: Users is only being kept for compatibility until migrations are completed.
-        //      Once this is removed, some logic will need to change to reference AccountsResource info
-        //      (via disclosing user access on CombinedFamilyInfo).
-        [property: NJsonSchema.Annotations.JsonSchemaIgnore]
-        ImmutableDictionary<Guid, UserAccessConfiguration> Users);
+        ImmutableList<string> CommunityRoles);
 
     public sealed record LocationConfiguration(Guid Id, string Name,
         ImmutableList<string> Ethnicities, ImmutableList<string> AdultFamilyRelationships,
