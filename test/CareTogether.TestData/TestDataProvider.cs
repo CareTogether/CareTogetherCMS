@@ -63,6 +63,8 @@ namespace CareTogether.TestData
 
 
         public static async Task PopulateTestDataAsync(
+            IEventLog<AccountEvent> accountsEventLog,
+            IEventLog<PersonAccessEvent> personAccessEventLog,
             IEventLog<DirectoryEvent> directoryEventLog,
             IEventLog<GoalCommandExecutedEvent> goalsEventLog,
             IEventLog<ReferralEvent> referralsEventLog,
@@ -72,10 +74,11 @@ namespace CareTogether.TestData
             IObjectStore<string?> draftNotesStore,
             IObjectStore<OrganizationConfiguration> configurationStore,
             IObjectStore<EffectiveLocationPolicy> policiesStore,
-            IObjectStore<UserTenantAccessSummary> userTenantAccessStore,
             IObjectStore<OrganizationSecrets> organizationSecretsStore,
             string? testSourceSmsPhoneNumber)
         {
+            await PopulateAccountEvents(accountsEventLog);
+            await PopulatePersonAccessEvents(personAccessEventLog);
             await PopulateDirectoryEvents(directoryEventLog);
             await PopulateGoalEvents(goalsEventLog);
             await PopulateReferralEvents(referralsEventLog);
@@ -85,10 +88,43 @@ namespace CareTogether.TestData
             await PopulateDraftNotes(draftNotesStore);
             await PopulateConfigurations(configurationStore, testSourceSmsPhoneNumber, organizationSecretsStore);
             await PopulatePolicies(policiesStore);
-            await PopulateUserTenantAccess(userTenantAccessStore);
         }
 
         #endregion
+
+        public static async Task PopulateAccountEvents(IEventLog<AccountEvent> accountsEventLog)
+        {
+            //NOTE: Since this log is *global*, only do this if these events have not yet been appended.
+            var testEventsNeeded = new[]
+            {
+                new AccountEvent(SystemConstants.SystemUserId, new DateTime(2020, 1, 1),
+                    new LinkPersonToAcccount(UserId: adminId, OrganizationId: guid1, LocationId: guid2, PersonId: guid0)),
+                new AccountEvent(SystemConstants.SystemUserId, new DateTime(2020, 1, 1),
+                    new LinkPersonToAcccount(UserId: adminId, OrganizationId: guid1, LocationId: guid3, PersonId: guid0)),
+                new AccountEvent(SystemConstants.SystemUserId, new DateTime(2020, 1, 1),
+                    new LinkPersonToAcccount(UserId: volunteerId, OrganizationId: guid1, LocationId: guid2, PersonId: guid4))
+            };
+            var existingGlobalEvents = await accountsEventLog.GetAllEventsAsync(guid0, guid0).ToListAsync();
+            var testEventsToAppend = testEventsNeeded
+                .Where(testEvent => !existingGlobalEvents.Any(entry =>
+                    entry.DomainEvent with { TimestampUtc = new DateTime(2020, 1, 1)} == testEvent))
+                .ToArray();
+            await accountsEventLog.AppendEventsAsync(guid0, guid0, testEventsToAppend);
+        }
+
+        public static async Task PopulatePersonAccessEvents(IEventLog<PersonAccessEvent> personAccessEventLog)
+        {
+            await personAccessEventLog.AppendEventsAsync(guid1, guid2,
+                new PersonAccessEvent(SystemConstants.SystemUserId, new DateTime(2020, 1, 1),
+                    new ChangePersonRoles(PersonId: guid0, Roles: ImmutableList.Create(SystemConstants.ORGANIZATION_ADMINISTRATOR))),
+                new PersonAccessEvent(SystemConstants.SystemUserId, new DateTime(2020, 1, 1),
+                    new ChangePersonRoles(PersonId: guid4, Roles: ImmutableList.Create("Volunteer")))
+                );
+            await personAccessEventLog.AppendEventsAsync(guid1, guid3,
+                new PersonAccessEvent(SystemConstants.SystemUserId, new DateTime(2020, 1, 1),
+                    new ChangePersonRoles(PersonId: guid0, Roles: ImmutableList.Create(SystemConstants.ORGANIZATION_ADMINISTRATOR)))
+                );
+        }
 
         public static async Task PopulateDirectoryEvents(IEventLog<DirectoryEvent> directoryEventLog)
         {
@@ -464,13 +500,7 @@ namespace CareTogether.TestData
                                     Permission.ViewArrangementProgress))))),
                     ImmutableList<string>.Empty
                         .Add("Community Organizer")
-                        .Add("Community Co-Organizer"),
-                    ImmutableDictionary<Guid, UserAccessConfiguration>.Empty
-                        .Add(adminId, new UserAccessConfiguration(ImmutableList<UserLocationRoles>.Empty
-                            .Add(new UserLocationRoles(guid2, guid0, ImmutableList.Create("OrganizationAdministrator")))
-                            .Add(new UserLocationRoles(guid3, guid0, ImmutableList.Create("OrganizationAdministrator")))))
-                        .Add(volunteerId, new UserAccessConfiguration(ImmutableList<UserLocationRoles>.Empty
-                            .Add(new UserLocationRoles(guid2, guid4, ImmutableList.Create("Volunteer")))))));
+                        .Add("Community Co-Organizer")));
 
             await organizationSecretsStore.UpsertAsync(guid1, Guid.Empty, "secrets",
                 new OrganizationSecrets("0123456789abcdef0123456789abcdef"));
@@ -795,17 +825,7 @@ namespace CareTogether.TestData
             await policiesStore.UpsertAsync(guid1, guid2, "policy", policy);
             await policiesStore.UpsertAsync(guid1, guid3, "policy", policy);
         }
-
-        public static async Task PopulateUserTenantAccess(IObjectStore<UserTenantAccessSummary> userTenantAccessStore)
-        {
-            await userTenantAccessStore.UpsertAsync(Guid.Empty, Guid.Empty,
-                adminId.ToString(),
-                new UserTenantAccessSummary(guid1, ImmutableList<Guid>.Empty.Add(guid2).Add(guid3)));
-            await userTenantAccessStore.UpsertAsync(Guid.Empty, Guid.Empty,
-                volunteerId.ToString(),
-                new UserTenantAccessSummary(guid1, ImmutableList<Guid>.Empty.Add(guid2)));
-        }
-
+        
 
         private static async Task AppendEventsAsync<T>(this IEventLog<T> eventLog,
             Guid organizationId, Guid locationId, params T[] events)

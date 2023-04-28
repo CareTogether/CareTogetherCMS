@@ -1,5 +1,4 @@
 using Azure.Storage.Blobs;
-using CareTogether.Api.Controllers;
 using CareTogether.Api.OData;
 using CareTogether.Engines.Authorization;
 using CareTogether.Engines.PolicyEvaluation;
@@ -23,7 +22,6 @@ using idunno.Authentication.Basic;
 using LazyCache;
 using LazyCache.Providers;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -101,6 +99,7 @@ namespace CareTogether.Api
 
             // Data store services
             var defaultMemoryCacheOptions = Options.Create(new MemoryCacheOptions());
+            var accountsEventLog = new AppendBlobEventLog<AccountEvent>(immutableBlobServiceClient, "AccountsEventLog");
             var personAccessEventLog = new AppendBlobEventLog<PersonAccessEvent>(immutableBlobServiceClient, "PersonAccessEventLog");
             var directoryEventLog = new AppendBlobEventLog<DirectoryEvent>(immutableBlobServiceClient, "DirectoryEventLog");
             var goalsEventLog = new AppendBlobEventLog<GoalCommandExecutedEvent>(immutableBlobServiceClient, "GoalsEventLog");
@@ -108,13 +107,12 @@ namespace CareTogether.Api
             var approvalsEventLog = new AppendBlobEventLog<ApprovalEvent>(immutableBlobServiceClient, "ApprovalsEventLog");
             var notesEventLog = new AppendBlobEventLog<NotesEvent>(immutableBlobServiceClient, "NotesEventLog");
             var communitiesEventLog = new AppendBlobEventLog<CommunityCommandExecutedEvent>(immutableBlobServiceClient, "CommunitiesEventLog");
+
             var draftNotesStore = new JsonBlobObjectStore<string?>(mutableBlobServiceClient, "DraftNotes",
                 new MemoryCache(defaultMemoryCacheOptions), TimeSpan.FromMinutes(30));
             var configurationStore = new JsonBlobObjectStore<OrganizationConfiguration>(immutableBlobServiceClient, "Configuration",
                 new MemoryCache(defaultMemoryCacheOptions), TimeSpan.FromMinutes(1));
             var policiesStore = new JsonBlobObjectStore<EffectiveLocationPolicy>(immutableBlobServiceClient, "LocationPolicies",
-                new MemoryCache(defaultMemoryCacheOptions), TimeSpan.FromMinutes(1));
-            var userTenantAccessStore = new JsonBlobObjectStore<UserTenantAccessSummary>(immutableBlobServiceClient, "UserTenantAccess",
                 new MemoryCache(defaultMemoryCacheOptions), TimeSpan.FromMinutes(1));
             var organizationSecretsStore = new JsonBlobObjectStore<OrganizationSecrets>(immutableBlobServiceClient, "Configuration",
                 new MemoryCache(defaultMemoryCacheOptions), TimeSpan.FromMinutes(1));
@@ -125,6 +123,8 @@ namespace CareTogether.Api
                 TestData.TestStorageHelper.ResetTestTenantData(immutableBlobServiceClient);
                 TestData.TestStorageHelper.ResetTestTenantData(mutableBlobServiceClient);
                 TestData.TestDataProvider.PopulateTestDataAsync(
+                    accountsEventLog,
+                    personAccessEventLog,
                     directoryEventLog,
                     goalsEventLog,
                     referralsEventLog,
@@ -134,14 +134,10 @@ namespace CareTogether.Api
                     draftNotesStore,
                     configurationStore,
                     policiesStore,
-                    userTenantAccessStore,
                     organizationSecretsStore,
                     Configuration["TestData:SourceSmsPhoneNumber"]).Wait();
             }
             
-            //NOTE: This currently lives after test data population in order to test the migration scenario.
-            var accountsEventLog = new AppendBlobEventLog<AccountEvent>(immutableBlobServiceClient, "AccountsEventLog");
-
             // Other utility services
             var telephony = new PlivoTelephony(
                 authId: Configuration["Telephony:Plivo:AuthId"],
@@ -152,9 +148,7 @@ namespace CareTogether.Api
             var directoryResource = new DirectoryResource(directoryEventLog, uploadsStore);
             var goalsResource = new GoalsResource(goalsEventLog);
             var policiesResource = new PoliciesResource(configurationStore, policiesStore, organizationSecretsStore);
-            var accountsResource = new AccountsResource(userTenantAccessStore, accountsEventLog, personAccessEventLog,
-                immutableBlobServiceClient, configurationStore,
-                Configuration.GetSection(MembershipOptions.Membership).Get<MembershipOptions>().TombstonedOrganizations);
+            var accountsResource = new AccountsResource(accountsEventLog, personAccessEventLog);
             var referralsResource = new ReferralsResource(referralsEventLog);
             var notesResource = new NotesResource(notesEventLog, draftNotesStore);
             var communitiesResource = new CommunitiesResource(communitiesEventLog, uploadsStore);

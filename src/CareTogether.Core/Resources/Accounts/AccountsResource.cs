@@ -1,9 +1,5 @@
-﻿using Azure.Storage.Blobs;
-using CareTogether.Resources.Policies;
-using CareTogether.Utilities.EventLog;
-using CareTogether.Utilities.ObjectStore;
+﻿using CareTogether.Utilities.EventLog;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Security.Cryptography;
@@ -16,39 +12,23 @@ namespace CareTogether.Resources.Accounts
         private const int GLOBAL_SCOPE_ID = 0; // There is only one globally-scoped accounts model.
         private readonly IEventLog<AccountEvent> accountsEventLog;
         private readonly IEventLog<PersonAccessEvent> personAccessEventLog;
-        private readonly BlobServiceClient blobServiceClient;
-        private readonly IObjectStore<OrganizationConfiguration> organizationConfigurationStore;
         private readonly ConcurrentLockingStore<int, AccountsModel> globalScopeAccountsModel;
-        private readonly IObjectStore<UserTenantAccessSummary> configurationStore;
         private readonly ConcurrentLockingStore<(Guid organizationId, Guid locationId), PersonAccessModel> tenantModels;
         private readonly RandomNumberGenerator randomNumberGenerator;
-        private readonly string[] tombstonedOrganizations;
-        private readonly Task migration;
 
 
-        public AccountsResource(IObjectStore<UserTenantAccessSummary> configurationStore,
-            IEventLog<AccountEvent> accountsEventLog, IEventLog<PersonAccessEvent> personAccessEventLog,
-            BlobServiceClient blobServiceClient, IObjectStore<OrganizationConfiguration> organizationConfigurationStore,
-            string[] tombstonedOrganizations)
+        public AccountsResource(
+            IEventLog<AccountEvent> accountsEventLog, IEventLog<PersonAccessEvent> personAccessEventLog)
         {
-            this.configurationStore = configurationStore;
             this.accountsEventLog = accountsEventLog;
             this.personAccessEventLog = personAccessEventLog;
-            this.blobServiceClient = blobServiceClient;
-            this.organizationConfigurationStore = organizationConfigurationStore;
-            this.tombstonedOrganizations = tombstonedOrganizations;
-
-            // This object is a singleton, so the migration will run exactly once at each application launch.
-            migration = Task.Run(MigrateConfigurationStoreToEventLogsAsync);
 
             globalScopeAccountsModel = new ConcurrentLockingStore<int, AccountsModel>(async key =>
             {
-                await migration;
                 return await AccountsModel.InitializeAsync(accountsEventLog.GetAllEventsAsync(Guid.Empty, Guid.Empty));
             });
             tenantModels = new ConcurrentLockingStore<(Guid organizationId, Guid locationId), PersonAccessModel>(async key =>
             {
-                await migration;
                 return await PersonAccessModel.InitializeAsync(personAccessEventLog.GetAllEventsAsync(key.organizationId, key.locationId));
             });
             randomNumberGenerator = RandomNumberGenerator.Create();
@@ -241,93 +221,6 @@ namespace CareTogether.Resources.Accounts
                     new AccountLocationAccess(link.LocationId, link.PersonId,
                         personAccessResults[(link.OrganizationId, link.LocationId)].Roles)).ToImmutableList()))
                 .ToImmutableList());
-        }
-
-        private async Task MigrateConfigurationStoreToEventLogsAsync()
-        {
-            DateTime migrationTimestamp = DateTime.UtcNow;
-            Guid migrationUserId = SystemConstants.SystemUserId;
-            var synthesizedAccountEvents = new ConcurrentQueue<AccountEvent>();
-            var synthesizedPersonAccessEvents = new ConcurrentQueue<(Guid organizationId, Guid locationId, PersonAccessEvent)>();
-
-            var organizationIds = await blobServiceClient.GetBlobContainersAsync()
-                .Where(container => !tombstonedOrganizations.Contains(container.Name))
-                .Select(container => Guid.TryParse(container.Name, out var orgId) ? orgId : Guid.Empty)
-                .Where(orgId => orgId != Guid.Empty)
-                .ToListAsync();
-
-            var organizationUserAccess = new ConcurrentDictionary<Guid, (Guid orgId, UserAccessConfiguration access)>();
-            var personRolesDefined = new ConcurrentBag<(Guid orgId, Guid locId, Guid personId)>();
-            await Parallel.ForEachAsync(organizationIds, async (organizationId, _) =>
-            {
-                var orgConfig = await organizationConfigurationStore.GetAsync(organizationId, Guid.Empty, "config");
-                foreach (var userAccess in orgConfig.Users)
-                    organizationUserAccess.TryAdd(userAccess.Key, (organizationId, userAccess.Value));
-                
-                foreach (var location in orgConfig.Locations)
-                {
-                    var migratedPersonRoles = await personAccessEventLog.GetAllEventsAsync(organizationId, location.Id)
-                        .Where(e => e.DomainEvent.Command is ChangePersonRoles)
-                        .ToListAsync();
-                    foreach (var roleChange in migratedPersonRoles)
-                        personRolesDefined.Add(
-                            (orgId: organizationId, locId: location.Id, personId: roleChange.DomainEvent.Command.PersonId));
-                }
-            });
-
-            var migratedPersonAccountLinks = await accountsEventLog.GetAllEventsAsync(Guid.Empty, Guid.Empty)
-                .Where(e => e.DomainEvent.Command is LinkPersonToAcccount)
-                .ToListAsync();
-            var migratedPersonAccountLinksGrouped = migratedPersonAccountLinks
-                .GroupBy(e => e.DomainEvent.Command.UserId)
-                .ToDictionary(g => g.Key);
-
-            //HACK: This is simplistic, making the assumption that all person account links will be written atomically,
-            //      but it's okay for a one-time migration.
-            var userIdsWithoutMigratedPersonAccountLinks = await configurationStore.ListAsync(Guid.Empty, Guid.Empty)
-                .Select(oldAccountId => Guid.Parse(oldAccountId))
-                .Where(oldAccountId => !migratedPersonAccountLinksGrouped.ContainsKey(oldAccountId))
-                .ToListAsync();
-            
-            var unmigratedPersonRoles = organizationUserAccess.Values
-                .SelectMany(oua => oua.access.LocationRoles
-                    .Where(lr => !personRolesDefined.Contains((oua.orgId, lr.LocationId, lr.PersonId)))
-                    .Select(lr => (orgId: oua.orgId, locId: lr.LocationId, personId: lr.PersonId, roles: lr.RoleNames)))
-                .ToImmutableList();
-
-            await Parallel.ForEachAsync(userIdsWithoutMigratedPersonAccountLinks, async (oldAccountId, _) =>
-            {
-                var oldAccount = await configurationStore.GetAsync(Guid.Empty, Guid.Empty, oldAccountId.ToString());
-
-                var hasOldAccess = organizationUserAccess.TryGetValue(oldAccountId, out var oldAccess);
-
-                if (!hasOldAccess)
-                    return;
-
-                foreach (var oldLocationAccess in oldAccess.access.LocationRoles)
-                {
-                    var linkPersonToAccountEvent = new AccountEvent(migrationUserId, migrationTimestamp,
-                        new LinkPersonToAcccount(oldAccountId, oldAccess.orgId, oldLocationAccess.LocationId,
-                            oldLocationAccess.PersonId));
-                    synthesizedAccountEvents.Enqueue(linkPersonToAccountEvent);
-                }
-            });
-
-            foreach (var unmigrated in unmigratedPersonRoles)
-            {
-                var changePersonRolesEvent = new PersonAccessEvent(
-                    migrationUserId, migrationTimestamp, new ChangePersonRoles(
-                        unmigrated.personId, unmigrated.roles));
-                synthesizedPersonAccessEvents.Enqueue(
-                    (organizationId: unmigrated.orgId, locationId: unmigrated.locId, changePersonRolesEvent));
-            }
-
-            for (var i = 0; synthesizedAccountEvents.TryDequeue(out var domainEvent); i++)
-                await accountsEventLog.AppendEventAsync(Guid.Empty, Guid.Empty, domainEvent, i);
-
-            for (var i = 0; synthesizedPersonAccessEvents.TryDequeue(out var domainEvent); i++)
-                await personAccessEventLog.AppendEventAsync(
-                    domainEvent.organizationId, domainEvent.locationId, domainEvent.Item3, i);
         }
     }
 }
