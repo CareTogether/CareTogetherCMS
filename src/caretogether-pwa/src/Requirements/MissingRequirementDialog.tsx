@@ -235,7 +235,7 @@ export function MissingRequirementDialog({
               ? <DateTimePicker
                 label="When was this requirement completed?"
                 value={completedAtLocal}
-                disableFuture format="M/d/yyyy h:mma"
+                disableFuture format="M/d/yyyy h:mm a"
                 onChange={(date: any) => date && setCompletedAtLocal(date)}
                 slotProps={{ textField: { fullWidth: true, required: true }}} />
               : <DatePicker

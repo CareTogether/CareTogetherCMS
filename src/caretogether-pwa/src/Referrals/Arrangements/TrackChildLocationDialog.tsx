@@ -300,7 +300,7 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
                     <DateTimePicker
                       label="What time did this person receive the child?"
                       value={changeAtLocal}
-                      disableFuture format="M/d/yyyy h:mma"
+                      disableFuture format="M/d/yyyy h:mm a"
                       onChange={(date: any) => date && setChangeAtLocal(date)}
                       slotProps={{ textField: { fullWidth: true, required: true }}} />
                   </Grid>
@@ -353,7 +353,7 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
                     <DateTimePicker
                       label="What time will this person receive the child?"
                       value={changeAtLocal}
-                      format="M/d/yyyy h:mma"
+                      format="M/d/yyyy h:mm a"
                       onChange={(date: any) => date && setChangeAtLocal(date)}
                       slotProps={{ textField: { fullWidth: true, required: true}}} />
                   </Grid>

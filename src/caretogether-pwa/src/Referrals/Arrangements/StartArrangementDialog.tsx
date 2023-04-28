@@ -37,7 +37,7 @@ export function StartArrangementDialog({referralId, arrangement, onClose}: Start
           <DateTimePicker
             label="When was this arrangement started?"
             value={startedAtLocal}
-            disableFuture format="M/d/yyyy h:mma"
+            disableFuture format="M/d/yyyy h:mm a"
             onChange={(date: any) => date && setStartedAtLocal(date)}
             slotProps={{ textField: { fullWidth: true, required: true, sx: {marginTop: 1}}}} />
         </Grid>

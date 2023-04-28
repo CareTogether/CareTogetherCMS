@@ -44,7 +44,7 @@ export function AddEditNoteDialog({familyId, note, onClose}: AddEditNoteDialogPr
             <DateTimePicker
               label="Backdate (optional - leave blank to use the current date & time)"
               value={backdatedTimestampLocal || null}
-              disableFuture format="M/d/yyyy h:mma"
+              disableFuture format="M/d/yyyy h:mm a"
               onChange={(date: any) => setFields({...fields, backdatedTimestampLocal: date})}
               slotProps={{ textField: { fullWidth: true}}} />
           </Grid>

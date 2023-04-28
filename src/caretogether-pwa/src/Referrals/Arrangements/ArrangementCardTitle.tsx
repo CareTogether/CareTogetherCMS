@@ -85,7 +85,7 @@ export function ArrangementCardTitle({ summaryOnly, partneringFamilyId, referral
                             <DateTimePicker
                               label="When was this arrangement started?"
                               value={startedAtEditor.value}
-                              disableFuture format="M/d/yyyy h:mma"
+                              disableFuture format="M/d/yyyy h:mm a"
                               onChange={(date: any) => date && startedAtEditor.setValue(date)}
                               slotProps={{ textField: { fullWidth: true, required: true, sx: {marginTop: 1}}}} />
                             {startedAtEditor.cancelButton}

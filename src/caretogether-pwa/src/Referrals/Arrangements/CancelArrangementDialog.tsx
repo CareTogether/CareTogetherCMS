@@ -39,7 +39,7 @@ export function CancelArrangementDialog({referralId, arrangement, onClose}: Canc
           <DateTimePicker
             label="When was this arrangement cancelled?"
             value={cancelledAtLocal}
-            disableFuture format="M/d/yyyy h:mma"
+            disableFuture format="M/d/yyyy h:mm a"
             onChange={(date: any) => date && setFields({ ...fields, cancelledAtLocal: date })}
             slotProps={{ textField: { fullWidth: true, required: true, sx: {marginTop: 1}}}} />
         </Grid>
