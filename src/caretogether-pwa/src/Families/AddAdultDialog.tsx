@@ -143,7 +143,7 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
                 value={dateOfBirth} maxDate={subYears(new Date(), 18)} openTo="year"
                 format="MM/dd/yyyy"
                 onChange={(date: any) => date && setFields({...fields, dateOfBirth: date})}
-                renderInput={(params: any) => <TextField size="small" fullWidth {...params} />} />
+                slotProps={{ textField: { size: "small", fullWidth: true}}} />
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth size="small">

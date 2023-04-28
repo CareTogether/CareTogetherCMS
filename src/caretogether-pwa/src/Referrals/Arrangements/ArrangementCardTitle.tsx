@@ -1,4 +1,4 @@
-import { Button, TextField } from "@mui/material";
+import { Button } from "@mui/material";
 import { formatRelative } from "date-fns";
 import { useState } from "react";
 import { Arrangement, ArrangementPhase, Permission } from "../../GeneratedClient";
@@ -85,9 +85,9 @@ export function ArrangementCardTitle({ summaryOnly, partneringFamilyId, referral
                             <DateTimePicker
                               label="When was this arrangement started?"
                               value={startedAtEditor.value}
-                              disableFuture inputFormat="M/d/yyyy h:mma"
+                              disableFuture format="M/d/yyyy h:mma"
                               onChange={(date: any) => date && startedAtEditor.setValue(date)}
-                              renderInput={(params: any) => <TextField fullWidth required {...params} sx={{marginTop: 1}} />} />
+                              slotProps={{ textField: { fullWidth: true, required: true, sx: {marginTop: 1}}}} />
                             {startedAtEditor.cancelButton}
                             {startedAtEditor.saveButton}
                           </>

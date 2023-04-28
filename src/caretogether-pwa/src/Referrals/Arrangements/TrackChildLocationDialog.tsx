@@ -302,7 +302,7 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
                       value={changeAtLocal}
                       disableFuture format="M/d/yyyy h:mma"
                       onChange={(date: any) => date && setChangeAtLocal(date)}
-                      renderInput={(params: any) => <TextField fullWidth required {...params} />} />
+                      slotProps={{ textField: { fullWidth: true, required: true }}} />
                   </Grid>
                   <Grid item xs={12}>
                     <TextField
@@ -355,7 +355,7 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
                       value={changeAtLocal}
                       format="M/d/yyyy h:mma"
                       onChange={(date: any) => date && setChangeAtLocal(date)}
-                      renderInput={(params: any) => <TextField fullWidth required {...params} />} />
+                      slotProps={{ textField: { fullWidth: true, required: true}}} />
                   </Grid>
                 </Grid>
               </TabPanel>

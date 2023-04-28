@@ -90,7 +90,7 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
             value={referralOpenedAtLocal}
             disableFuture format="MM/dd/yyyy"
             onChange={(date: any) => date && setFields({...fields, referralOpenedAtLocal: date})}
-            renderInput={(params: any) => <TextField fullWidth required {...params} />} />
+            slotProps={{ textField: { fullWidth: true, required: true }}} />
         </Grid>
         <DialogContentText>
           Provide the basic information needed for the first adult in the family.
@@ -149,7 +149,7 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
                 value={dateOfBirth} maxDate={subYears(new Date(), 16)} openTo="year"
                 format="MM/dd/yyyy"
                 onChange={(date: any) => date && setFields({...fields, dateOfBirth: date})}
-                renderInput={(params: any) => <TextField size="small" fullWidth {...params} />} />
+                slotProps={{ textField: { size: "small", fullWidth: true}}} />
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth size="small">

@@ -46,7 +46,7 @@ export function AddEditNoteDialog({familyId, note, onClose}: AddEditNoteDialogPr
               value={backdatedTimestampLocal || null}
               disableFuture format="M/d/yyyy h:mma"
               onChange={(date: any) => setFields({...fields, backdatedTimestampLocal: date})}
-              renderInput={(params: any) => <TextField fullWidth {...params} />} />
+              slotProps={{ textField: { fullWidth: true}}} />
           </Grid>
         </Grid>
       </form>

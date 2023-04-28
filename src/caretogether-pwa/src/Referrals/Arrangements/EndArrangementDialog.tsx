@@ -1,4 +1,4 @@
-import { Grid, TextField } from '@mui/material';
+import { Grid } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers';
 import { useState } from 'react';
 import { useParams } from 'react-router';
@@ -39,7 +39,7 @@ export function EndArrangementDialog({referralId, arrangement, onClose}: EndArra
             value={endedAtLocal}
             disableFuture format="M/d/yyyy h:mma"
             onChange={(date: any) => date && setEndedAtLocal(date)}
-            renderInput={(params: any) => <TextField fullWidth required {...params} sx={{marginTop: 1}} />} />
+            slotProps={{ textField: {fullWidth: true, required: true, sx: {marginTop: 1}}}} />
         </Grid>
       </Grid>
     </UpdateDialog>
