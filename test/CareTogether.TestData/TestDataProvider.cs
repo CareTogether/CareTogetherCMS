@@ -106,7 +106,8 @@ namespace CareTogether.TestData
             };
             var existingGlobalEvents = await accountsEventLog.GetAllEventsAsync(guid0, guid0).ToListAsync();
             var testEventsToAppend = testEventsNeeded
-                .Where(testEvent => !existingGlobalEvents.Any(entry => entry.DomainEvent == testEvent))
+                .Where(testEvent => !existingGlobalEvents.Any(entry =>
+                    entry.DomainEvent with { TimestampUtc = new DateTime(2020, 1, 1)} == testEvent))
                 .ToArray();
             await accountsEventLog.AppendEventsAsync(guid0, guid0, testEventsToAppend);
         }
