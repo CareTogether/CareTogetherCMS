@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@mui/material';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup } from '@mui/material';
 import { CombinedFamilyInfo, ArrangementPolicy, ChildInvolvement } from '../../GeneratedClient';
 import { DatePicker } from '@mui/x-date-pickers';
 import { useRecoilValue } from 'recoil';
@@ -61,9 +61,9 @@ export function CreateArrangementDialog({referralId, arrangementPolicy, onClose}
               <DatePicker
                 label="Requested at"
                 value={requestedAtLocal} maxDate={new Date()}
-                inputFormat="MM/dd/yyyy"
+                format="MM/dd/yyyy"
                 onChange={(date: any) => date && setFields({...fields, requestedAtLocal: date})}
-                renderInput={(params: any) => <TextField size="small" required {...params} sx={{marginTop: 1}} />} />
+                slotProps={{ textField: { size: "small", required: true, sx: {marginTop: 1}}}} />
             </Grid>
             <Grid item xs={12}>
               <FormControl required component="fieldset">

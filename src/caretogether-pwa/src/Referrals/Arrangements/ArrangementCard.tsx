@@ -14,7 +14,6 @@ import {
   Table,
   TableBody,
   TableContainer,
-  TextField,
   Typography,
 } from '@mui/material';
 import { useState } from 'react';
@@ -147,7 +146,7 @@ function ArrangementPlannedDuration({ partneringFamily, referralId, arrangement,
                   label="Planned start"
                   value={plannedStartEditor.value}
                   onChange={(value: any) => plannedStartEditor.setValue(value)}
-                  renderInput={(params: any) => <TextField size='small' margin='dense' {...params} />} />
+                  slotProps={{ textField: { size: 'small', margin: 'dense' }}} />
                 {plannedStartEditor.cancelButton}
                 {plannedStartEditor.saveButton}
               </>
@@ -169,7 +168,7 @@ function ArrangementPlannedDuration({ partneringFamily, referralId, arrangement,
                   label="Planned end"
                   value={plannedEndEditor.value}
                   onChange={(value: any) => plannedEndEditor.setValue(value)}
-                  renderInput={(params: any) => <TextField size='small' margin='dense' {...params} />} />
+                  slotProps={{ textField: { size: 'small', margin: 'dense'}}} />
                 {plannedEndEditor.cancelButton}
                 {plannedEndEditor.saveButton}
               </>

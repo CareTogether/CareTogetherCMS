@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@mui/material';
+import { FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup } from '@mui/material';
 import { ReferralCloseReason } from '../GeneratedClient';
 import { UpdateDialog } from '../UpdateDialog';
 import { DatePicker } from '@mui/x-date-pickers';
@@ -47,9 +47,8 @@ export function CloseReferralDialog({partneringFamilyId, referralId, onClose}: C
             <DatePicker
               label="When was this referral closed?"
               value={closedAtLocal}
-              disableFuture inputFormat="MM/dd/yyyy"
-              onChange={(date: any) => date && setFields({ ...fields, closedAtLocal: date })}
-              renderInput={(params: any) => <TextField {...params} />} />
+              disableFuture format="MM/dd/yyyy"
+              onChange={(date: any) => date && setFields({ ...fields, closedAtLocal: date })} />
           </Grid>
         </Grid>
       </form>

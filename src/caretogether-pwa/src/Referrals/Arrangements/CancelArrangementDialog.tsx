@@ -1,4 +1,4 @@
-import { Grid, TextField } from '@mui/material';
+import { Grid } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers';
 import { useState } from 'react';
 import { useParams } from 'react-router';
@@ -39,9 +39,9 @@ export function CancelArrangementDialog({referralId, arrangement, onClose}: Canc
           <DateTimePicker
             label="When was this arrangement cancelled?"
             value={cancelledAtLocal}
-            disableFuture inputFormat="M/d/yyyy h:mma"
+            disableFuture format="M/d/yyyy h:mm a"
             onChange={(date: any) => date && setFields({ ...fields, cancelledAtLocal: date })}
-            renderInput={(params: any) => <TextField fullWidth required {...params} sx={{marginTop: 1}} />} />
+            slotProps={{ textField: { fullWidth: true, required: true, sx: {marginTop: 1}}}} />
         </Grid>
       </Grid>
     </UpdateDialog>
