@@ -214,7 +214,7 @@ function PartneringFamilies() {
             </TableBody>
           </Table>
         </TableContainer>
-        {permissions(Permission.EditFamilyInfo) && <Fab color="primary" aria-label="add"
+        {permissions(Permission.EditFamilyInfo) && permissions(Permission.CreateReferral) && <Fab color="primary" aria-label="add"
           sx={{position: 'fixed', right: '30px', bottom: '70px'}}
           onClick={() => setCreatePartneringFamilyDialogOpen(true)}>
           <AddIcon />

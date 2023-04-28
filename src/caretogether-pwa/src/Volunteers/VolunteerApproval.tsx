@@ -415,7 +415,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
               </TableBody>
             </Table>
           </TableContainer>
-          {permissions(Permission.EditFamilyInfo) && <Fab color="primary" aria-label="add"
+          {permissions(Permission.EditFamilyInfo) && permissions(Permission.ActivateVolunteerFamily) && <Fab color="primary" aria-label="add"
             sx={{position: 'fixed', right: '30px', bottom: '70px'}}
             onClick={() => setCreateVolunteerFamilyDialogOpen(true)}>
             <AddIcon />
