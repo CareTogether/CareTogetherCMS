@@ -88,7 +88,7 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
           <DatePicker
             label="When was this referral opened?"
             value={referralOpenedAtLocal}
-            disableFuture inputFormat="MM/dd/yyyy"
+            disableFuture format="MM/dd/yyyy"
             onChange={(date: any) => date && setFields({...fields, referralOpenedAtLocal: date})}
             renderInput={(params: any) => <TextField fullWidth required {...params} />} />
         </Grid>
@@ -147,7 +147,7 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
               <DatePicker
                 label="Date of birth"
                 value={dateOfBirth} maxDate={subYears(new Date(), 16)} openTo="year"
-                inputFormat="MM/dd/yyyy"
+                format="MM/dd/yyyy"
                 onChange={(date: any) => date && setFields({...fields, dateOfBirth: date})}
                 renderInput={(params: any) => <TextField size="small" fullWidth {...params} />} />
             </Grid>

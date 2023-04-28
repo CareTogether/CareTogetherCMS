@@ -30,7 +30,7 @@ export function OpenNewReferralDialog({partneringFamilyId, onClose}: OpenNewRefe
             <DatePicker
               label="When was this referral opened?"
               value={openedAtLocal}
-              disableFuture inputFormat="MM/dd/yyyy"
+              disableFuture format="MM/dd/yyyy"
               onChange={(date: any) => date && setFields({...fields, openedAtLocal: date})}
               renderInput={(params: any) => <TextField fullWidth required {...params} sx={{marginTop: 1}} />} />
           </Grid>

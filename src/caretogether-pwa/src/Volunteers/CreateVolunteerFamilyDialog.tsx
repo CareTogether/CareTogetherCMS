@@ -136,7 +136,7 @@ export function CreateVolunteerFamilyDialog({onClose}: CreateVolunteerFamilyDial
               <DatePicker
                 label="Date of birth"
                 value={dateOfBirth} maxDate={subYears(new Date(), 18)} openTo="year"
-                inputFormat="MM/dd/yyyy"
+                format="MM/dd/yyyy"
                 onChange={(date: any) => date && setFields({...fields, dateOfBirth: date})}
                 renderInput={(params: any) => <TextField size="small" fullWidth {...params} />} />
             </Grid>

@@ -36,7 +36,7 @@ export function AgeEditor({ familyId, person }: PersonEditorProps) {
               <DatePicker
                 label="Date of birth"
                 value={editor.value} openTo="year"
-                inputFormat="MM/dd/yyyy"
+                format="MM/dd/yyyy"
                 onChange={(date: any) => date && editor.setValue(date)}
                 renderInput={(params: any) => <TextField size="small" required {...params} />} />
             </Grid>

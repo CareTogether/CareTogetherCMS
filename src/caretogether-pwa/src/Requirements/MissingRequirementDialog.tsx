@@ -235,13 +235,13 @@ export function MissingRequirementDialog({
               ? <DateTimePicker
                 label="When was this requirement completed?"
                 value={completedAtLocal}
-                disableFuture inputFormat="M/d/yyyy h:mma"
+                disableFuture format="M/d/yyyy h:mma"
                 onChange={(date: any) => date && setCompletedAtLocal(date)}
                 renderInput={(params: any) => <TextField fullWidth required {...params} />} />
               : <DatePicker
                 label="When was this requirement completed?"
                 value={completedAtLocal}
-                disableFuture inputFormat="MM/dd/yyyy"
+                disableFuture format="MM/dd/yyyy"
                 onChange={(date: any) => date && setCompletedAtLocal(date)}
                 renderInput={(params: any) => <TextField fullWidth required {...params} />} />}
             {validityDuration && ((completedAtLocal && isValid(completedAtLocal))
@@ -339,7 +339,7 @@ export function MissingRequirementDialog({
             <DatePicker
               label="When does this exemption expire? (Default is never)"
               value={exemptionExpiresAtLocal}
-              inputFormat="MM/dd/yyyy"
+              format="MM/dd/yyyy"
               onChange={(date: any) => date && setExemptionExpiresAtLocal(date)}
               renderInput={(params: any) => <TextField fullWidth {...params} />} />
           </Grid>

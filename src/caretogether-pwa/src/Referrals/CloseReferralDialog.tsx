@@ -47,7 +47,7 @@ export function CloseReferralDialog({partneringFamilyId, referralId, onClose}: C
             <DatePicker
               label="When was this referral closed?"
               value={closedAtLocal}
-              disableFuture inputFormat="MM/dd/yyyy"
+              disableFuture format="MM/dd/yyyy"
               onChange={(date: any) => date && setFields({ ...fields, closedAtLocal: date })}
               renderInput={(params: any) => <TextField {...params} />} />
           </Grid>
