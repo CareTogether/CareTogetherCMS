@@ -36,6 +36,8 @@ import { RemoveFamilyRoleDialog } from '../Volunteers/RemoveFamilyRoleDialog';
 import { ResetFamilyRoleDialog } from '../Volunteers/ResetFamilyRoleDialog';
 import { VolunteerRoleApprovalStatusChip } from '../Volunteers/VolunteerRoleApprovalStatusChip';
 import { FamilyCustomField } from './FamilyCustomField';
+import { useFilterMenu } from '../Generic/useFilterMenu';
+import { FilterMenu } from '../Generic/FilterMenu';
 
 const sortArrangementsByStartDateDescThenCreateDateDesc = (a: Arrangement,b: Arrangement) => {
   return ((b.startedAtUtc ?? new Date()).getTime() - (a.startedAtUtc ?? new Date()).getTime()) || 
@@ -106,6 +108,34 @@ export function FamilyScreen() {
   useScreenTitle(family
     ? `${family.family?.adults!.filter(adult => adult.item1!.id === family.family!.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family`
     : "...");
+  
+  enum ArrangementFilterOptionLabel {
+    Active = "Active",
+    Cancelled = "Cancelled"
+  }
+  const { arrangementFilterOptions, handleFilterArrangements } =
+    useFilterMenu(Object.keys(ArrangementFilterOptionLabel), [ArrangementFilterOptionLabel.Active]);
+
+	const meetsArrangementFilterCriteria = (arrangement: Arrangement): boolean => {
+		return arrangementFilterOptions.filter(o => o.selected).map(o => o.text).some((option) => {
+			const opt = (option as ArrangementFilterOptionLabel);
+			if (opt === ArrangementFilterOptionLabel.Active && arrangement.cancelledAtUtc === undefined) {
+				return true;
+			} else if (opt === ArrangementFilterOptionLabel.Cancelled && arrangement.cancelledAtUtc !== undefined) {
+				return true;
+			}
+			return false;
+		})
+	};
+
+	const filteredArrangements = family.partneringFamilyInfo?.openReferral?.arrangements?.slice()
+	.filter(arrangement => meetsArrangementFilterCriteria(arrangement))
+	.sort((a,b) => sortArrangementsByStartDateDescThenCreateDateDesc(a,b))
+	.map(arrangement => (
+	<ArrangementCard key={arrangement.id}
+		partneringFamily={family} referralId={family.partneringFamilyInfo!.openReferral!.id!}
+		arrangement={arrangement} />
+	));
 
   return (!family
   ? <ProgressBackdrop>
@@ -335,16 +365,18 @@ export function FamilyScreen() {
           <Grid container spacing={0}>
             {family.partneringFamilyInfo?.openReferral &&
               <Grid item xs={12}>
-                <h3 style={{ marginBottom: 0 }}>Arrangements</h3>
-                <Masonry columns={isDesktop ? isWideScreen ? 3 : 2 : 1} spacing={2}>
-                  {family.partneringFamilyInfo?.openReferral?.arrangements?.slice()
-                  .sort((a,b) => sortArrangementsByStartDateDescThenCreateDateDesc(a,b))
-                  .map(arrangement => (
-                    <ArrangementCard key={arrangement.id}
-                      partneringFamily={family} referralId={family.partneringFamilyInfo!.openReferral!.id!}
-                      arrangement={arrangement} />
-                  )) || false}
-                  {permissions(Permission.CreateArrangement) && <Box sx={{textAlign: 'center'}}>
+                <div style={{ display: `flex`, justifyContent: `space-between`, maxWidth: `100%`, flexWrap: `wrap` }}>
+                  <div style={{ display: `flex`, justifyContent: `flex-start`, maxWidth: `100%`, flexWrap: `wrap` }}>
+                    <h3 style={{ margin: 0, display: `flex`, alignSelf: `center` }}>Arrangements</h3>
+                    <FilterMenu
+                      singularLabel={`Arrangement`}
+                      pluralLabel={`Arrangements`}
+                      filterOptions={arrangementFilterOptions}
+                      handleFilterChange={handleFilterArrangements}
+                    />
+                  </div>
+                  {permissions(Permission.CreateArrangement) && (
+                  <Box sx={{textAlign: 'center', display: `flex`, flexDirection: `row`, maxWidth: `100%`, flexWrap: `wrap` }}>
                     {family.partneringFamilyInfo?.openReferral && policy.referralPolicy?.arrangementPolicies?.map(arrangementPolicy => (
                       <Box key={arrangementPolicy.arrangementType}>
                         <Button
@@ -357,7 +389,10 @@ export function FamilyScreen() {
                         </Button>
                       </Box>
                     ))}
-                  </Box>}
+                  </Box>)}
+                </div>
+                <Masonry columns={isDesktop ? isWideScreen ? 3 : 2 : 1} spacing={2} style={{ height: filteredArrangements?.length === 0 ? 0 : undefined }}>
+                  {filteredArrangements || false}
                 </Masonry>
                 {createArrangementDialogParameter &&
                   <CreateArrangementDialog
