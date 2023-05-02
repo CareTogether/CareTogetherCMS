@@ -115,27 +115,27 @@ export function FamilyScreen() {
   }
   const { arrangementFilterOptions, handleFilterArrangements } =
     useFilterMenu(Object.keys(ArrangementFilterOptionLabel), [ArrangementFilterOptionLabel.Active]);
-  const meetsArrangementFilterCriteria = (arrangement: Arrangement): boolean => {
-    let result = false;
-    const selectedOptions = arrangementFilterOptions.filter(o => o.selected).map(o => o.text);
-    selectedOptions.forEach((option) => {
-      switch(option as ArrangementFilterOptionLabel) {
-        case ArrangementFilterOptionLabel.Active:
-          if (arrangement.cancelledAtUtc === undefined) {
-            result = true;
-          }
-          break;
-        case ArrangementFilterOptionLabel.Cancelled:
-          if (arrangement.cancelledAtUtc !== undefined) {
-            result = true;
-          }
-          break;
-        default:
-          break;
-      }
-    });
-    return result;
-  }
+
+	const meetsArrangementFilterCriteria = (arrangement: Arrangement): boolean => {
+		return arrangementFilterOptions.filter(o => o.selected).map(o => o.text).some((option) => {
+			const opt = (option as ArrangementFilterOptionLabel);
+			if (opt === ArrangementFilterOptionLabel.Active && arrangement.cancelledAtUtc === undefined) {
+				return true;
+			} else if (opt === ArrangementFilterOptionLabel.Cancelled && arrangement.cancelledAtUtc !== undefined) {
+				return true;
+			}
+			return false;
+		})
+	};
+
+	const filteredArrangements = family.partneringFamilyInfo?.openReferral?.arrangements?.slice()
+	.filter(arrangement => meetsArrangementFilterCriteria(arrangement))
+	.sort((a,b) => sortArrangementsByStartDateDescThenCreateDateDesc(a,b))
+	.map(arrangement => (
+	<ArrangementCard key={arrangement.id}
+		partneringFamily={family} referralId={family.partneringFamilyInfo!.openReferral!.id!}
+		arrangement={arrangement} />
+	));
 
   return (!family
   ? <ProgressBackdrop>
@@ -391,15 +391,8 @@ export function FamilyScreen() {
                     ))}
                   </Box>)}
                 </div>
-                <Masonry columns={isDesktop ? isWideScreen ? 3 : 2 : 1} spacing={2}>
-                  {family.partneringFamilyInfo?.openReferral?.arrangements?.slice()
-                  .filter(arrangement => meetsArrangementFilterCriteria(arrangement))
-                  .sort((a,b) => sortArrangementsByStartDateDescThenCreateDateDesc(a,b))
-                  .map(arrangement => (
-                    <ArrangementCard key={arrangement.id}
-                      partneringFamily={family} referralId={family.partneringFamilyInfo!.openReferral!.id!}
-                      arrangement={arrangement} />
-                  )) || false}
+                <Masonry columns={isDesktop ? isWideScreen ? 3 : 2 : 1} spacing={2} style={{ height: filteredArrangements?.length === 0 ? 0 : undefined }}>
+                  {filteredArrangements || false}
                 </Masonry>
                 {createArrangementDialogParameter &&
                   <CreateArrangementDialog
