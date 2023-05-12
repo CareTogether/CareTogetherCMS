@@ -69,7 +69,7 @@ export default function AuthenticationWrapper({ children }: React.PropsWithChild
   //TODO: Smoother handling of deeplink routing (integrating with React Router)?
   //TODO: Incorporate new AAD B2C refresh token support?
   useMsalAuthentication(InteractionType.Redirect, {
-    scopes: [process.env.REACT_APP_AUTH_SCOPES],
+    scopes: [import.meta.env.VITE_APP_AUTH_SCOPES],
     state: stateQueryParam ?? undefined
   });
   
