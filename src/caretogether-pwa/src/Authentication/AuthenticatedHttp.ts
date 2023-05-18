@@ -13,7 +13,7 @@ const acquireAccessToken = async (msalInstance: IPublicClientApplication) => {
     throw new Error("User is not signed in.");
   }
   const request = {
-    scopes: [process.env.REACT_APP_AUTH_SCOPES],
+    scopes: [import.meta.env.VITE_APP_AUTH_SCOPES],
     account: activeAccount || accounts[0]
   };
 

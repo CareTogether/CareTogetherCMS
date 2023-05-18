@@ -9,25 +9,21 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     
     steps:
     # Checkout the repo
     - name: Checkout source
-      uses: actions/checkout@master
+      uses: actions/checkout@v3
     # Build React frontend
     - name: Set up Node.js
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v3
       with:
-        node-version: '14.x'
-    - name: Cache NPM packages
-      uses: actions/cache@v2
-      with:
-        path: '**/node_modules'
-        key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+        node-version: '18.x'
+        cache: 'npm'
+        cache-dependency-path: src/caretogether-pwa
     - name: Install NPM packages
-      run: npm install
+      run: npm ci
       working-directory: src/caretogether-pwa
     - name: Build React app
       run: npm run build

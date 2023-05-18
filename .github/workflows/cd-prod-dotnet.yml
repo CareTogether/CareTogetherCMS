@@ -28,17 +28,17 @@ jobs:
     steps:
     # Checkout the repo
     - name: Checkout source
-      uses: actions/checkout@master
-    # Connect to Azure Container Registry 
-    - uses: azure/docker-login@v1 
+      uses: actions/checkout@v3
+    # Connect to Azure Container Registry
+    - uses: azure/docker-login@v1
       with:
         login-server: caretogether.azurecr.io 
-        username: ${{ secrets.REGISTRY_USERNAME }} 
-        password: ${{ secrets.REGISTRY_PASSWORD }} 
-    # Build and publish the .NET backend container via dockerfile 
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+    # Build and publish the .NET backend container via dockerfile
     - run: |
         docker build -f src/CareTogether.Api/Dockerfile -t caretogether.azurecr.io/caretogether-api:${{ github.sha }} .
-        docker push caretogether.azurecr.io/caretogether-api:${{ github.sha }}  
+        docker push caretogether.azurecr.io/caretogether-api:${{ github.sha }}
     # Deploy .NET backend container
     - name: Deploy .NET API to Azure
       uses: azure/webapps-deploy@v2

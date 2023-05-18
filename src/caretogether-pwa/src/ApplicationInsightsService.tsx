@@ -5,7 +5,7 @@ import { globalMsalInstance } from './Authentication/Auth';
 var aiReactPlugin = new ReactPlugin();
 var appInsights = new ApplicationInsights({
   config: {
-    connectionString: process.env.REACT_APP_APPINSIGHTS_CONNECTIONSTRING,
+    connectionString: import.meta.env.VITE_APP_APPINSIGHTS_CONNECTIONSTRING,
     enableAutoRouteTracking: true,
     enableCorsCorrelation: true,
     enableRequestHeaderTracking: true,

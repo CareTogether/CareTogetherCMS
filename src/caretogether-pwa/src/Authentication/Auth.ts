@@ -5,10 +5,10 @@ import { PublicClientApplication, IPublicClientApplication } from "@azure/msal-b
 // https://github.com/AzureAD/microsoft-authentication-library-for-js/tree/dev/lib/msal-react.
 const config = {
   auth: {
-    clientId: process.env.REACT_APP_AUTH_CLIENT_ID,
-    authority: process.env.REACT_APP_AUTH_AUTHORITY,
-    knownAuthorities: [ process.env.REACT_APP_AUTH_KNOWN_AUTHORITY ],
-    redirectUri: process.env.REACT_APP_AUTH_REDIRECT_URI
+    clientId: import.meta.env.VITE_APP_AUTH_CLIENT_ID,
+    authority: import.meta.env.VITE_APP_AUTH_AUTHORITY,
+    knownAuthorities: [ import.meta.env.VITE_APP_AUTH_KNOWN_AUTHORITY ],
+    redirectUri: import.meta.env.VITE_APP_AUTH_REDIRECT_URI
   },
   cache: {
     cacheLocation: "localStorage"
