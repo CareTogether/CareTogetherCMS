@@ -28,3 +28,6 @@ jobs:
     - name: Build React app
       run: npm run build
       working-directory: src/caretogether-pwa
+    - name: List build outputs
+      run: ls -R dist
+      working-directory: src/caretogether-pwa
