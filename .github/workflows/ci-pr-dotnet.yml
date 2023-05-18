@@ -29,7 +29,6 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '18.x'
-        cache: 'npm'
     - name: Install Azurite storage emulator
       run: npm install -g azurite
     - name: Start Azurite storage emulator
