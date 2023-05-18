@@ -19,7 +19,10 @@ We ask that you practice effective communication, preferably through comments on
 5. **Stay responsive to comments** on your PR.
 
 ## Prerequisites
-You can build and run CareTogether on any operating system supported by Node.js and .NET, including Windows, MacOS, and supported Linux distros. CareTogether requires currently supported versions of Node.js and the .NET 6 (LTS) SDK to be installed on your system.
+You can build and run CareTogether on any operating system supported by Node.js and .NET, including Windows, MacOS, and Linux. Install the following:
+- [Node.js 18 LTS](https://nodejs.org/en/download)
+- [.NET 6 LTS](https://dotnet.microsoft.com/en-us/download/dotnet/6.0)
+- [Visual Studio Code](https://code.visualstudio.com/Download) (recommended)
 
 ## Development
 1. Clone the repository into any local directory on your device.
