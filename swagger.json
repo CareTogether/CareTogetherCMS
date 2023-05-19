@@ -2412,6 +2412,10 @@
           "city": {
             "type": "string"
           },
+          "county": {
+            "type": "string",
+            "nullable": true
+          },
           "state": {
             "type": "string"
           },

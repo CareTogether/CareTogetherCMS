@@ -3900,6 +3900,7 @@ export class Address implements IAddress {
     line1?: string;
     line2?: string | undefined;
     city?: string;
+    county?: string | undefined;
     state?: string;
     postalCode?: string;
 
@@ -3918,6 +3919,7 @@ export class Address implements IAddress {
             this.line1 = _data["line1"];
             this.line2 = _data["line2"];
             this.city = _data["city"];
+            this.county = _data["county"];
             this.state = _data["state"];
             this.postalCode = _data["postalCode"];
         }
@@ -3936,6 +3938,7 @@ export class Address implements IAddress {
         data["line1"] = this.line1;
         data["line2"] = this.line2;
         data["city"] = this.city;
+        data["county"] = this.county;
         data["state"] = this.state;
         data["postalCode"] = this.postalCode;
         return data;
@@ -3947,6 +3950,7 @@ export interface IAddress {
     line1?: string;
     line2?: string | undefined;
     city?: string;
+    county?: string | undefined;
     state?: string;
     postalCode?: string;
 }
