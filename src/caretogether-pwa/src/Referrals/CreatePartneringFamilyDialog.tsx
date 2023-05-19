@@ -30,6 +30,7 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
     addressLine1: '',
     addressLine2: '',
     city: '',
+    county: '',
     state: '',
     postalCode: '',
     country: 'United States',
@@ -44,7 +45,7 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
     referralOpenedAtLocal,
     firstName, lastName, gender, dateOfBirth, ethnicity,
     isInHousehold, relationshipToFamily,
-    addressLine1, addressLine2, city, state, postalCode, country,
+    addressLine1, addressLine2, city, county, state, postalCode, country,
     phoneNumber, phoneType, emailAddress, emailType,
     notes, concerns } = fields;
   const directoryModel = useDirectoryModel();
@@ -69,7 +70,7 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
           referralOpenedAtLocal,
           firstName, lastName, gender, age, optional(ethnicity),
           isInHousehold, relationshipToFamily,
-          optional(addressLine1), optional(addressLine2), optional(city), optional(state), optional(postalCode), optional(country),
+          optional(addressLine1), optional(addressLine2), optional(city), optional(county), optional(state), optional(postalCode), optional(country),
           optional(phoneNumber), phoneType, optional(emailAddress), emailType,
           (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
         //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)

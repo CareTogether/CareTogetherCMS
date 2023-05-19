@@ -35,6 +35,7 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
     addressLine1: '',
     addressLine2: '',
     city: '',
+    county: '',
     state: '',
     postalCode: '',
     country: 'United States',
@@ -48,7 +49,7 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
   const {
     firstName, lastName, gender, dateOfBirth, ethnicity,
     isInHousehold, relationshipToFamily,
-    addressLine1, addressLine2, city, state, postalCode, country,
+    addressLine1, addressLine2, city, county, state, postalCode, country,
     phoneNumber, phoneType, emailAddress, emailType,
     notes, concerns } = fields;
   const directoryModel = useDirectoryModel();
@@ -71,7 +72,7 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
         await directoryModel.addAdult(family.family!.id!,
           firstName, lastName, gender, age, optional(ethnicity),
           isInHousehold, relationshipToFamily,
-          optional(addressLine1), optional(addressLine2), optional(city), optional(state), optional(postalCode), optional(country),
+          optional(addressLine1), optional(addressLine2), optional(city), optional(county), optional(state), optional(postalCode), optional(country),
           optional(phoneNumber), phoneType, optional(emailAddress), emailType,
           (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
           //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
@@ -203,6 +204,10 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
             <Grid item xs={12} sm={6}>
               <TextField id="address-city" label="City" fullWidth size="small"
                 value={city} onChange={e => setFields({...fields, city: e.target.value})} />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField id="address-county" label="County" fullWidth size="small"
+                value={county} onChange={e => setFields({...fields, county: e.target.value})} />
             </Grid>
             <Grid item xs={12} sm={2}>
               <TextField id="address-state" label="State" fullWidth size="small"

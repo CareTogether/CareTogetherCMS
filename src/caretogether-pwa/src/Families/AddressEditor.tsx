@@ -32,16 +32,17 @@ export function AddressEditor({ familyId, person, add, address }: AddressEditorP
     await (add
       ? directoryModel.addPersonAddress(familyId!, person.id!,
           value!.line1!, value!.line2 && value!.line2.length > 0 ? value.line2 : null,
-          value!.city!, value!.state!, value!.postalCode!, value!.isCurrent!)
+          value!.city!, value!.county && value!.county.length > 0 ? value.county : null, value!.state!, value!.postalCode!, value!.isCurrent!)
       : directoryModel.updatePersonAddress(familyId!, person.id!,
           value.id!, value.line1!, value.line2 && value.line2.length > 0 ? value.line2 : null,
-          value.city!, value.state!, value.postalCode!, value!.isCurrent!)),
+          value.city!, value!.county && value!.county.length > 0 ? value.county : null, value.state!, value.postalCode!, value!.isCurrent!)),
     addressWithCurrent,
     value => (value &&
       (value.line1!.length > 0 && value.city!.length > 0 && value.state!.length > 0 && value.postalCode!.length > 0) &&
       (value.line1 !== address?.line1 ||
         (address?.line2 && address?.line2.length > 0 ? value.line2 !== address?.line2 : value.line2 !== "") ||
         value.city !== address?.city || value.state !== address?.state || value.postalCode !== address?.postalCode ||
+        (address?.county && address?.county.length > 0 ? value.county !== address?.county : value.county !== "") ||
         value.isCurrent !== isCurrent)) as boolean);
 
   function handleAdd() {
@@ -76,6 +77,11 @@ export function AddressEditor({ familyId, person, add, address }: AddressEditorP
               <TextField id="address-city" label="City" fullWidth size="small"
                 value={editor.value?.city || ""}
                 onChange={e => editor.setValue({...editor.value, city: e.target.value})} />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField id="address-county" label="County" fullWidth size="small"
+                value={editor.value?.county || ""}
+                onChange={e => editor.setValue({...editor.value, county: e.target.value})} />
             </Grid>
             <Grid item xs={12} sm={2}>
               <TextField id="address-state" label="State" fullWidth size="small"
@@ -118,6 +124,7 @@ export function AddressEditor({ familyId, person, add, address }: AddressEditorP
                   {address!.line1}<br />
                   {address!.line2 && <>{address!.line2}<br /></>}
                   {address!.city},&nbsp;{address!.state}&nbsp;{address!.postalCode}
+                  {address!.county && <><br />{address!.county} County</>}
                 </p>
                 {permissions(Permission.EditPersonContactInfo) && editor.editButton}
               </>}
