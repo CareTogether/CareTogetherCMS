@@ -336,16 +336,7 @@ export function useDirectoryModel() {
         isInHousehold: isInHousehold,
         relationshipToFamily: relationshipToFamily
       });
-      if (addressLine1 != null) {
-        command.address = new Address();
-        command.address.id = crypto.randomUUID();
-        command.address.line1 = addressLine1;
-        command.address.line2 = addressLine2 || undefined;
-        command.address.city = city || undefined;
-        command.address.county = county || undefined;
-        command.address.state = state || undefined;
-        command.address.postalCode = postalCode || undefined;
-      }
+      command.address = address == null ? undefined : address;
       if (phoneNumber != null) {
         command.phoneNumber = new PhoneNumber();
         command.phoneNumber.id = crypto.randomUUID();
@@ -383,7 +374,7 @@ export function useDirectoryModel() {
   const createVolunteerFamilyWithNewAdult = useCompositeRecordsCommandCallback(
     async (familyId: string, firstName: string, lastName: string, gender: Gender | null, age: Age | null, ethnicity: string | null,
       isInHousehold: boolean, relationshipToFamily: string,
-      addressLine1: string | null, addressLine2: string | null, city: string | null, county: string | null, state: string | null, postalCode: string | null, country: string | null,
+      address: Address | null,
       phoneNumber: string | null, phoneType: PhoneNumberType | null, emailAddress: string | null, emailType: EmailAddressType | null,
       notes?: string, concerns?: string) => {
       const command = new CreateVolunteerFamilyWithNewAdultCommand();
@@ -400,16 +391,7 @@ export function useDirectoryModel() {
         isInHousehold: isInHousehold,
         relationshipToFamily: relationshipToFamily
       });
-      if (addressLine1 != null) {
-        command.address = new Address();
-        command.address.id = crypto.randomUUID();
-        command.address.line1 = addressLine1;
-        command.address.line2 = addressLine2 || undefined;
-        command.address.city = city || undefined;
-        command.address.county = county || undefined;
-        command.address.state = state || undefined;
-        command.address.postalCode = postalCode || undefined;
-      }
+      command.address = address == null ? undefined : address;
       if (phoneNumber != null) {
         command.phoneNumber = new PhoneNumber();
         command.phoneNumber.id = crypto.randomUUID();
@@ -427,7 +409,7 @@ export function useDirectoryModel() {
   const createPartneringFamilyWithNewAdult = useCompositeRecordsCommandCallback(
     async (familyId: string, referralOpenedAtUtc: Date, firstName: string, lastName: string, gender: Gender | null, age: Age | null, ethnicity: string | null,
       isInHousehold: boolean, relationshipToFamily: string,
-      addressLine1: string | null, addressLine2: string | null, city: string | null, county: string | null, state: string | null, postalCode: string | null, country: string | null,
+      address: Address,
       phoneNumber: string | null, phoneType: PhoneNumberType | null, emailAddress: string | null, emailType: EmailAddressType | null,
       notes?: string, concerns?: string) => {
       const command = new CreatePartneringFamilyWithNewAdultCommand();
@@ -446,16 +428,7 @@ export function useDirectoryModel() {
         isInHousehold: isInHousehold,
         relationshipToFamily: relationshipToFamily
       });
-      if (addressLine1 != null) {
-        command.address = new Address();
-        command.address.id = crypto.randomUUID();
-        command.address.line1 = addressLine1;
-        command.address.line2 = addressLine2 || undefined;
-        command.address.city = city || undefined;
-        command.address.county = county || undefined;
-        command.address.state = state || undefined;
-        command.address.postalCode = postalCode || undefined;
-      }
+      command.address = address == null ? undefined : address;
       if (phoneNumber != null) {
         command.phoneNumber = new PhoneNumber();
         command.phoneNumber.id = crypto.randomUUID();
