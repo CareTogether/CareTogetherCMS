@@ -7,6 +7,48 @@ import { Address, IAddress, Permission } from '../GeneratedClient';
 import { MyLocation, LocationSearching } from '@mui/icons-material';
 import { useFamilyIdPermissions } from '../Model/SessionModel';
 
+type AddressFormFieldsProps = {
+  address: IAddress
+  onEdit: (value: IAddress) => void
+}
+
+export function AddressFormFields({ address, onEdit }: AddressFormFieldsProps) {
+  return (
+    <>
+      <Grid item xs={12}>
+        <TextField id="address-line1" label="Address Line 1" fullWidth size="small"
+          value={address.line1 || ""}
+          onChange={e => onEdit({...address, line1: e.target.value})} />
+      </Grid>
+      <Grid item xs={12}>
+        <TextField id="address-line2" label="Address Line 2" fullWidth size="small"
+          value={address.line2 || ""}
+          onChange={e => onEdit({...address, line2: e.target.value})} />
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <TextField id="address-city" label="City" fullWidth size="small"
+          value={address.city || ""}
+          onChange={e => onEdit({...address, city: e.target.value})} />
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <TextField id="address-county" label="County" fullWidth size="small"
+          value={address.county || ""}
+          onChange={e => onEdit({...address, county: e.target.value})} />
+      </Grid>
+      <Grid item xs={12} sm={2}>
+        <TextField id="address-state" label="State" fullWidth size="small"
+          value={address.state || ""}
+          onChange={e => onEdit({...address, state: e.target.value})} />
+      </Grid>
+      <Grid item xs={12} sm={4}>
+        <TextField id="address-postalcode" label="ZIP/Postal Code" fullWidth size="small"
+          value={address.postalCode || ""}
+          onChange={e => onEdit({...address, postalCode: e.target.value})} />
+      </Grid>
+    </>
+  );
+}
+
 type AddressEditorProps = PersonEditorProps & {
   add?: boolean
   address?: Address
@@ -30,12 +72,8 @@ export function AddressEditor({ familyId, person, add, address }: AddressEditorP
   
   const editor = useInlineEditor(async value =>
     await (add
-      ? directoryModel.addPersonAddress(familyId!, person.id!,
-          value!.line1!, value!.line2 && value!.line2.length > 0 ? value.line2 : null,
-          value!.city!, value!.county && value!.county.length > 0 ? value.county : null, value!.state!, value!.postalCode!, value!.isCurrent!)
-      : directoryModel.updatePersonAddress(familyId!, person.id!,
-          value.id!, value.line1!, value.line2 && value.line2.length > 0 ? value.line2 : null,
-          value.city!, value!.county && value!.county.length > 0 ? value.county : null, value.state!, value.postalCode!, value!.isCurrent!)),
+      ? directoryModel.addPersonAddress(familyId!, person.id!, new Address(value), value!.isCurrent!)
+      : directoryModel.updatePersonAddress(familyId!, person.id!, new Address(value), value!.isCurrent!)),
     addressWithCurrent,
     value => (value &&
       (value.line1!.length > 0 && value.city!.length > 0 && value.state!.length > 0 && value.postalCode!.length > 0) &&
@@ -47,13 +85,16 @@ export function AddressEditor({ familyId, person, add, address }: AddressEditorP
 
   function handleAdd() {
     editor.setValue({
-      line1: "",
-      city: "",
-      state: "",
-      postalCode: "",
       isCurrent: isCurrent
     });
     editor.setEditing(true);
+  }
+
+  function onEditAddressFields(value: IAddress) {
+    editor.setValue({
+      ...value,
+      isCurrent: isCurrent
+    });
   }
 
   const permissions = useFamilyIdPermissions(familyId);
@@ -63,36 +104,7 @@ export function AddressEditor({ familyId, person, add, address }: AddressEditorP
       {editor.editing
         ? <>
             <Grid item xs={12}><Divider /><br /></Grid>
-            <Grid item xs={12}>
-              <TextField id="address-line1" label="Address Line 1" fullWidth size="small"
-                value={editor.value?.line1 || ""}
-                onChange={e => editor.setValue({...editor.value, line1: e.target.value})} />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField id="address-line2" label="Address Line 2" fullWidth size="small"
-                value={editor.value?.line2 || ""}
-                onChange={e => editor.setValue({...editor.value, line2: e.target.value})} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField id="address-city" label="City" fullWidth size="small"
-                value={editor.value?.city || ""}
-                onChange={e => editor.setValue({...editor.value, city: e.target.value})} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField id="address-county" label="County" fullWidth size="small"
-                value={editor.value?.county || ""}
-                onChange={e => editor.setValue({...editor.value, county: e.target.value})} />
-            </Grid>
-            <Grid item xs={12} sm={2}>
-              <TextField id="address-state" label="State" fullWidth size="small"
-                value={editor.value?.state || ""}
-                onChange={e => editor.setValue({...editor.value, state: e.target.value})} />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField id="address-postalcode" label="ZIP/Postal Code" fullWidth size="small"
-                value={editor.value?.postalCode || ""}
-                onChange={e => editor.setValue({...editor.value, postalCode: e.target.value})} />
-            </Grid>
+            {editor.value && <AddressFormFields address={editor.value} onEdit={onEditAddressFields} />}
             <Grid item xs={12} sm={6}>
               <FormControlLabel control={
                 <Checkbox checked={editor.value!.isCurrent}

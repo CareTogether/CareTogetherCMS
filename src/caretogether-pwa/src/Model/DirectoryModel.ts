@@ -299,28 +299,27 @@ export function useDirectoryModel() {
       return command;
     });
   const addPersonAddress = usePersonCommandCallback(
-    async (familyId, personId: string, line1: string, line2: string | null, city: string, county: string | null, state: string, postalCode: string, isCurrent: boolean) => {
+    async (_familyId, personId: string, address: Address, isCurrent: boolean) => {
       const command = new AddPersonAddress({
         personId: personId
       });
-      command.address = new Address({ id: crypto.randomUUID(), line1: line1, line2: line2 == null ? undefined : line2, city: city, county: county == null ? undefined : county, state: state, postalCode: postalCode })
+      command.address = address;
       command.isCurrentAddress = isCurrent;
       return command;
     });
   const updatePersonAddress = usePersonCommandCallback(
-    async (familyId, personId: string, addressId: string,
-      line1: string, line2: string | null, city: string, county: string | null, state: string, postalCode: string, isCurrent: boolean) => {
+    async (_familyId, personId: string, address: Address, isCurrent: boolean) => {
       const command = new UpdatePersonAddress({
         personId: personId
       });
-      command.address = new Address({ id: addressId, line1: line1, line2: line2 == null ? undefined : line2, city: city, county: county == null ? undefined : county, state: state, postalCode: postalCode })
+      command.address = address;
       command.isCurrentAddress = isCurrent;
       return command;
     });
   const addAdult = useCompositeRecordsCommandCallback(
     async (familyId, firstName: string, lastName: string, gender: Gender | null, age: Age | null, ethnicity: string | null,
         isInHousehold: boolean, relationshipToFamily: string,
-        addressLine1: string | null, addressLine2: string | null, city: string | null, county: string | null, state: string | null, postalCode: string | null, country: string | null,
+        address: Address | null,
         phoneNumber: string | null, phoneType: PhoneNumberType | null, emailAddress: string | null, emailType: EmailAddressType | null,
         notes?: string, concerns?: string) => {
       const command = new AddAdultToFamilyCommand();
