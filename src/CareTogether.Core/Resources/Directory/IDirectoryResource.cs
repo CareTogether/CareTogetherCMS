@@ -32,7 +32,7 @@ namespace CareTogether.Resources.Directory
     public enum CustodialRelationshipType { ParentWithCustody, ParentWithCourtAppointedCustody, LegalGuardian }
     public enum Gender { Male, Female, SeeNotes }
     public sealed record Address(Guid Id,
-        string Line1, string? Line2, string City, string? County, string State, string PostalCode);
+        string? Line1, string? Line2, string? City, string? County, string? State, string? PostalCode);
     public sealed record PhoneNumber(Guid Id, string Number, PhoneNumberType Type);
     public enum PhoneNumberType { Mobile, Home, Work, Fax }
     public sealed record EmailAddress(Guid Id, string Address, EmailAddressType Type);

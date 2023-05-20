@@ -3897,12 +3897,12 @@ export interface IExactAge extends IAge {
 
 export class Address implements IAddress {
     id?: string;
-    line1?: string;
+    line1?: string | undefined;
     line2?: string | undefined;
-    city?: string;
+    city?: string | undefined;
     county?: string | undefined;
-    state?: string;
-    postalCode?: string;
+    state?: string | undefined;
+    postalCode?: string | undefined;
 
     constructor(data?: IAddress) {
         if (data) {
@@ -3947,12 +3947,12 @@ export class Address implements IAddress {
 
 export interface IAddress {
     id?: string;
-    line1?: string;
+    line1?: string | undefined;
     line2?: string | undefined;
-    city?: string;
+    city?: string | undefined;
     county?: string | undefined;
-    state?: string;
-    postalCode?: string;
+    state?: string | undefined;
+    postalCode?: string | undefined;
 }
 
 export class PhoneNumber implements IPhoneNumber {

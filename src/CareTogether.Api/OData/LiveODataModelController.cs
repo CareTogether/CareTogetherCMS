@@ -35,7 +35,7 @@ namespace CareTogether.Api.OData
         string? Ethnicity, DateOnly? DateOfBirth);
 
     public sealed record Address(
-        string Line1, string? Line2, string City, string? County, string State, string PostalCode);
+        string? Line1, string? Line2, string? City, string? County, string? State, string? PostalCode);
 
     public sealed record FamilyRoleApproval(
         [property: ForeignKey("FamilyId")] Family Family, [property: Key] Guid FamilyId,

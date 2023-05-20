@@ -2403,24 +2403,28 @@
             "format": "guid"
           },
           "line1": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "line2": {
             "type": "string",
             "nullable": true
           },
           "city": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "county": {
             "type": "string",
             "nullable": true
           },
           "state": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "postalCode": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           }
         }
       },
