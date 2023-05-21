@@ -409,7 +409,7 @@ export function useDirectoryModel() {
   const createPartneringFamilyWithNewAdult = useCompositeRecordsCommandCallback(
     async (familyId: string, referralOpenedAtUtc: Date, firstName: string, lastName: string, gender: Gender | null, age: Age | null, ethnicity: string | null,
       isInHousehold: boolean, relationshipToFamily: string,
-      address: Address,
+      address: Address | null,
       phoneNumber: string | null, phoneType: PhoneNumberType | null, emailAddress: string | null, emailType: EmailAddressType | null,
       notes?: string, concerns?: string) => {
       const command = new CreatePartneringFamilyWithNewAdultCommand();

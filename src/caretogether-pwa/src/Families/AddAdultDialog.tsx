@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField } from '@mui/material';
-import { ExactAge, Gender, EmailAddressType, PhoneNumberType, CombinedFamilyInfo } from '../GeneratedClient';
+import { ExactAge, Gender, EmailAddressType, PhoneNumberType, CombinedFamilyInfo, IAddress, Address } from '../GeneratedClient';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import WarningIcon from '@mui/icons-material/Warning';
 import { DatePicker } from '@mui/x-date-pickers';
@@ -10,6 +10,7 @@ import { useParams } from 'react-router-dom';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { subYears } from 'date-fns';
 import { visibleFamiliesQuery } from '../Model/Data';
+import { AddressFormFields } from './AddressEditor';
 
 interface AddAdultDialogProps {
   onClose: () => void
@@ -32,13 +33,7 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
     ethnicity: '',
     isInHousehold: true,
     relationshipToFamily: '',
-    addressLine1: '',
-    addressLine2: '',
-    city: '',
-    county: '',
-    state: '',
-    postalCode: '',
-    country: 'United States',
+    address: null as IAddress | null,
     phoneNumber: '',
     phoneType: PhoneNumberType.Mobile,
     emailAddress: '',
@@ -49,7 +44,7 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
   const {
     firstName, lastName, gender, dateOfBirth, ethnicity,
     isInHousehold, relationshipToFamily,
-    addressLine1, addressLine2, city, county, state, postalCode, country,
+    address,
     phoneNumber, phoneType, emailAddress, emailType,
     notes, concerns } = fields;
   const directoryModel = useDirectoryModel();
@@ -72,7 +67,7 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
         await directoryModel.addAdult(family.family!.id!,
           firstName, lastName, gender, age, optional(ethnicity),
           isInHousehold, relationshipToFamily,
-          optional(addressLine1), optional(addressLine2), optional(city), optional(county), optional(state), optional(postalCode), optional(country),
+          address == null ? null : new Address({...address, id: crypto.randomUUID() }),
           optional(phoneNumber), phoneType, optional(emailAddress), emailType,
           (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
           //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
@@ -193,30 +188,7 @@ export function AddAdultDialog({onClose}: AddAdultDialogProps) {
             </Grid>
             <Grid item xs={12}>
             </Grid>
-            <Grid item xs={12}>
-              <TextField id="address-line1" label="Address Line 1" fullWidth size="small"
-                value={addressLine1} onChange={e => setFields({...fields, addressLine1: e.target.value})} />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField id="address-line2" label="Address Line 2" fullWidth size="small"
-                value={addressLine2} onChange={e => setFields({...fields, addressLine2: e.target.value})} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField id="address-city" label="City" fullWidth size="small"
-                value={city} onChange={e => setFields({...fields, city: e.target.value})} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField id="address-county" label="County" fullWidth size="small"
-                value={county} onChange={e => setFields({...fields, county: e.target.value})} />
-            </Grid>
-            <Grid item xs={12} sm={2}>
-              <TextField id="address-state" label="State" fullWidth size="small"
-                value={state} onChange={e => setFields({...fields, state: e.target.value})} />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField id="address-postalcode" label="ZIP/Postal Code" fullWidth size="small"
-                value={postalCode} onChange={e => setFields({...fields, postalCode: e.target.value})} />
-            </Grid>
+            <AddressFormFields address={address} onEdit={value => setFields({...fields, address: value})} />
             <Grid item xs={12}>
             </Grid>
             <Grid item xs={12}>
