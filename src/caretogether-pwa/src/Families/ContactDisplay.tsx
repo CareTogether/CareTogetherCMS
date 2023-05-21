@@ -1,5 +1,5 @@
-import { Person } from "./GeneratedClient";
-import { IconRow } from "./IconRow";
+import { Person } from "../GeneratedClient";
+import { IconRow } from "../IconRow";
 
 type ContactDisplayProps = {
   person: Person
@@ -19,6 +19,7 @@ export function ContactDisplay({ person }: ContactDisplayProps) {
           {currentAddress.line1}<br />
           {currentAddress.line2 && <>{currentAddress.line2}<br /></>}
           {currentAddress.city},&nbsp;{currentAddress.state}&nbsp;{currentAddress.postalCode}
+          {currentAddress.county && <><br />{currentAddress.county} County</>}
         </p>
       </IconRow>}
     </>

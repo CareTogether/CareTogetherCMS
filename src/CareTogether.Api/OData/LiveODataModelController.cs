@@ -35,7 +35,7 @@ namespace CareTogether.Api.OData
         string? Ethnicity, DateOnly? DateOfBirth);
 
     public sealed record Address(
-        string Line1, string? Line2, string City, string State, string PostalCode);
+        string? Line1, string? Line2, string? City, string? County, string? State, string? PostalCode);
 
     public sealed record FamilyRoleApproval(
         [property: ForeignKey("FamilyId")] Family Family, [property: Key] Guid FamilyId,
@@ -310,7 +310,8 @@ namespace CareTogether.Api.OData
                     .SingleOrDefault(x => x.Id == person.CurrentAddressId);
                 var primaryAddress = primaryAddressInfo == null ? null :
                     new Address(primaryAddressInfo.Line1, primaryAddressInfo.Line2,
-                        primaryAddressInfo.City, primaryAddressInfo.State, primaryAddressInfo.PostalCode);
+                        primaryAddressInfo.City, primaryAddressInfo.County, primaryAddressInfo.State,
+                        primaryAddressInfo.PostalCode);
                 return primaryAddress;
             });
 

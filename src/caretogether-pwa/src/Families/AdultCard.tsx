@@ -19,7 +19,7 @@ import { AgeText } from "../AgeText";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import EditIcon from '@mui/icons-material/Edit';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { ContactDisplay } from "../ContactDisplay";
+import { ContactDisplay } from "./ContactDisplay";
 import { IconRow } from "../IconRow";
 import { VolunteerRoleApprovalStatusChip } from "../Volunteers/VolunteerRoleApprovalStatusChip";
 import { RemoveIndividualRoleDialog } from "../Volunteers/RemoveIndividualRoleDialog";
