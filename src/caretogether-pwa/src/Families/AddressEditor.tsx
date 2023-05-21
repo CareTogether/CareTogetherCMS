@@ -13,17 +13,21 @@ type AddressFormFieldsProps = {
 }
 
 function isSet(value: string | undefined) {
-  return typeof value !== 'undefined' && value.length > 0;
+  return typeof value !== 'undefined' && value != null && value.length > 0;
+}
+
+function isInputValid(value: IAddress) {
+  return isSet(value.line1) ||
+  isSet(value.line2) ||
+  isSet(value.city) ||
+  isSet(value.county) ||
+  isSet(value.state) ||
+  isSet(value.postalCode);
 }
 
 export function AddressFormFields({ address, onEdit }: AddressFormFieldsProps) {
   function onEditField(value: IAddress) {
-    if (isSet(value.line1) ||
-      isSet(value.line2) ||
-      isSet(value.city) ||
-      isSet(value.county) ||
-      isSet(value.state) ||
-      isSet(value.postalCode)) {
+    if (isInputValid(value)) {
       onEdit(value); //TODO: Note that this does not determine whether to add an ID; that is handled by the caller.
     } else {
       onEdit(null);
@@ -68,11 +72,7 @@ export function AddressFormFields({ address, onEdit }: AddressFormFieldsProps) {
 
 type AddressEditorProps = PersonEditorProps & {
   add?: boolean
-  address?: Address
-}
-
-type IAddressWithCurrent = IAddress & {
-  isCurrent?: boolean
+  address?: IAddress
 }
 
 export function AddressEditor({ familyId, person, add, address }: AddressEditorProps) {
@@ -83,35 +83,37 @@ export function AddressEditor({ familyId, person, add, address }: AddressEditorP
   const isCurrent = person.currentAddressId === address?.id ||
     typeof person.addresses === 'undefined' ||
     person.addresses.length === 0;
-  const addressWithCurrent = {...address} as IAddressWithCurrent | undefined;
-  if (typeof addressWithCurrent !== 'undefined')
-    addressWithCurrent.isCurrent = isCurrent;
+  const addressWithCurrent = {address: address || null, isCurrent: isCurrent};
   
   const editor = useInlineEditor(async value =>
     await (add
-      ? directoryModel.addPersonAddress(familyId!, person.id!, new Address({...value, id: crypto.randomUUID()}), value!.isCurrent!)
-      : directoryModel.updatePersonAddress(familyId!, person.id!, new Address(value), value!.isCurrent!)),
+      ? directoryModel.addPersonAddress(familyId!, person.id!, new Address({...value.address!, id: crypto.randomUUID()}), value.isCurrent!)
+      : directoryModel.updatePersonAddress(familyId!, person.id!, new Address({...value.address!, id: address!.id}), value.isCurrent!)),
     addressWithCurrent,
     value => (value &&
-      (value.line1!.length > 0 && value.city!.length > 0 && value.state!.length > 0 && value.postalCode!.length > 0) &&
-      (value.line1 !== address?.line1 ||
-        (address?.line2 && address?.line2.length > 0 ? value.line2 !== address?.line2 : value.line2 !== "") ||
-        value.city !== address?.city || value.state !== address?.state || value.postalCode !== address?.postalCode ||
-        (address?.county && address?.county.length > 0 ? value.county !== address?.county : value.county !== "") ||
-        value.isCurrent !== isCurrent)) as boolean);
+      value.address != null &&
+      (value.address.line1 !== address?.line1 ||
+      value.address.line2 !== address?.line2 ||
+      value.address.city !== address?.city ||
+      value.address.county !== address?.county ||
+      value.address.state !== address?.state ||
+      value.address.postalCode !== address?.postalCode ||
+      value.isCurrent !== isCurrent ||
+      add)) || false);
 
   function handleAdd() {
-    editor.setValue({
+    editor.setValue(editorValue => ({
+      address: editorValue?.address || null,
       isCurrent: isCurrent
-    });
+    }));
     editor.setEditing(true);
   }
 
   function onEditAddressFields(value: IAddress | null) {
-    editor.setValue({
-      ...value,
-      isCurrent: isCurrent
-    });
+    editor.setValue(editorValue => ({
+      address: value,
+      isCurrent: editorValue?.isCurrent || false
+    }));
   }
 
   const permissions = useFamilyIdPermissions(familyId);
@@ -121,11 +123,11 @@ export function AddressEditor({ familyId, person, add, address }: AddressEditorP
       {editor.editing
         ? <>
             <Grid item xs={12}><Divider /><br /></Grid>
-            <AddressFormFields address={editor.value || null} onEdit={onEditAddressFields} />
+            <AddressFormFields address={editor.value!.address} onEdit={onEditAddressFields} />
             <Grid item xs={12} sm={6}>
               <FormControlLabel control={
                 <Checkbox checked={editor.value!.isCurrent}
-                  onChange={e => editor.setValue({...editor.value, isCurrent: e.target.checked})}
+                  onChange={e => editor.setValue({...editor.value!, isCurrent: e.target.checked})}
                   icon={<LocationSearching />}
                   checkedIcon={<MyLocation />} />}
                 label="Is Current Address" />
