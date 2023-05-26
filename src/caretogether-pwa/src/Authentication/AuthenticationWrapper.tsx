@@ -1,10 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { globalMsalInstance } from './Auth';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useScopedTrace } from '../Hooks/useScopedTrace';
 import { useSearchParams } from 'react-router-dom';
 import { useRecoilValueLoadable, useSetRecoilState } from 'recoil';
 import { userIdState } from "../Model/Data";
+import { useLoadable } from '../Hooks/useLoadable';
 
 function SignIn() {
   const trace = useScopedTrace("SignIn");
@@ -26,35 +27,47 @@ function SignIn() {
   //TODO: Incorporate new AAD B2C refresh token support?
   const setUserId = useSetRecoilState(userIdState);
   useEffect(() => {
-    trace(`starting loginRedirect with state: ${stateQueryParam}`);
-    globalMsalInstance.loginRedirect({
-      scopes: [import.meta.env.VITE_APP_AUTH_SCOPES],
-      state: stateQueryParam ?? undefined
-    }).then(() => {
-      trace(`loginRedirect completed`);
-
-      const allAccounts = globalMsalInstance.getAllAccounts();
-      trace(`allAccounts length: ${allAccounts.length}`);
-      
-      let activeAccount = globalMsalInstance.getActiveAccount();
-      trace(`activeAccount: ${activeAccount?.localAccountId}`);
-  
-      if (!activeAccount) {
-        if (allAccounts.length === 1) {
-          trace("Marking the sole signed-in account as active");
-          let activeAccount = allAccounts[0];
-          globalMsalInstance.setActiveAccount(activeAccount);
-        } else if (allAccounts.length === 0) {
-          throw new Error("Your user was unexpectedly not authenticated; please report this as a bug.");
-        } else {
-          //TODO: Handle account selection when multiple accounts are signed in (this is an edge case)
-          throw new Error("You are signed in with more than one user account. Try clearing your browser cache and cookies, and report this as a bug if the issue persists.");
-        }
+    trace(`Blindly calling handleRedirectPromise...`);
+    globalMsalInstance.handleRedirectPromise().then(result => {
+      if (result == null) {
+        trace(`handleRedirectPromise returned null`);
+      } else {
+        trace(`handleRedirectPromise returned a result`);
+        console.log(result);
       }
-      
-      trace(`Setting the model to use the active account's user ID: ${activeAccount!.localAccountId}`);
-      setUserId(activeAccount!.localAccountId);
+    }).catch(error => {
+      trace(`handleRedirectPromise returned an error`);
+      console.log(error);
     });
+    // trace(`starting loginRedirect with state: ${stateQueryParam}`);
+    // globalMsalInstance.loginRedirect({
+    //   scopes: [import.meta.env.VITE_APP_AUTH_SCOPES],
+    //   state: stateQueryParam ?? undefined
+    // }).then(() => {
+    //   trace(`loginRedirect completed`);
+
+    //   const allAccounts = globalMsalInstance.getAllAccounts();
+    //   trace(`allAccounts length: ${allAccounts.length}`);
+      
+    //   let activeAccount = globalMsalInstance.getActiveAccount();
+    //   trace(`activeAccount: ${activeAccount?.localAccountId}`);
+  
+    //   if (!activeAccount) {
+    //     if (allAccounts.length === 1) {
+    //       trace("Marking the sole signed-in account as active");
+    //       let activeAccount = allAccounts[0];
+    //       globalMsalInstance.setActiveAccount(activeAccount);
+    //     } else if (allAccounts.length === 0) {
+    //       throw new Error("Your user was unexpectedly not authenticated; please report this as a bug.");
+    //     } else {
+    //       //TODO: Handle account selection when multiple accounts are signed in (this is an edge case)
+    //       throw new Error("You are signed in with more than one user account. Try clearing your browser cache and cookies, and report this as a bug if the issue persists.");
+    //     }
+    //   }
+      
+    //   trace(`Setting the model to use the active account's user ID: ${activeAccount!.localAccountId}`);
+    //   setUserId(activeAccount!.localAccountId);
+    // });
   }, [setUserId]);
 
   return (
@@ -101,16 +114,31 @@ function AuthenticatedUserWrapper({ children }: React.PropsWithChildren) {
 
 export default function AuthenticationWrapper({ children }: React.PropsWithChildren) {
   const trace = useScopedTrace("AuthenticationWrapper");
+
+  const [msalInitialized, setMsalInitialized] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      trace("Initializing MSAL...");
+      await globalMsalInstance.initialize();
+      trace("MSAL initialization completed.");
+      setMsalInitialized(true);
+    })();
+  }, [setMsalInitialized]);
   
   //TODO: Add an event callback to be notified if the user's session expires?
   // Force the user to sign in if not already authenticated.
-  const userId = useRecoilValueLoadable(userIdState);
+  const userId = useLoadable(userIdState);
   trace(`userId: ${userId}`);
 
-  return (userId
-    ? <AuthenticatedUserWrapper>
+  return (!msalInitialized
+    ? <ProgressBackdrop opaque>
+        <p>Initializing security...</p>
+      </ProgressBackdrop>
+    : !userId
+    ? <SignIn />
+    : <AuthenticatedUserWrapper>
         {children}
       </AuthenticatedUserWrapper>
-    : <SignIn />
   );
 }
