@@ -30,6 +30,7 @@ function renderMsalError(error: unknown) {
 
 function displayableError(error: Error | unknown) {
   return error; //TODO: Include a user-friendly message that's compatible with the global error boundary.
+  //"Something went wrong during sign-in. Try clearing your browser cache and cookies, and report this as a bug if the issue persists."
 }
 
 function withDefaultScopes(scopes: string[]) {
@@ -64,9 +65,9 @@ async function loginAndSetActiveAccountAsync(): Promise<string> {
   const allAccounts = globalMsalInstance.getAllAccounts();
   trace(`Login`, `MSAL accounts: ${JSON.stringify(allAccounts.map(account => account.localAccountId))}`);
 
+  // Step 4: If zero accounts were found, attempt a silent SSO to try to use the user's single
+  //          active session with Azure AD (if the user has exactly one such session) to authenticate.
   if (allAccounts.length === 0) {
-    // Step 4a: If zero accounts were found, attempt a silent SSO to try to use the user's single
-    //          active session with Azure AD (if the user has exactly one such session) to authenticate.
     try {
       trace(`Login`, `Attempting silent SSO...`);
       result = await globalMsalInstance.ssoSilent({
@@ -79,18 +80,20 @@ async function loginAndSetActiveAccountAsync(): Promise<string> {
         throw displayableError(error);
       }
     }
-  } else {
-    // Step 4b: If one or more accounts was found, set the active account (if needed) and attempt
-    //          to acquire a token silently to verify the user's authentication.
-    if (allAccounts.length > 1) {
-      //NOTE: Based on the documentation, we can assume that if only one account is found then MSAL will
-      //      guarantee that it is *always* the active account.
-      const firstAccount = allAccounts[0];
-      trace(`Login`, `Setting active account to first known account: ${firstAccount.localAccountId}`);
-      globalMsalInstance.setActiveAccount(firstAccount);
-    }
-    const activeAccount = globalMsalInstance.getActiveAccount();
-    trace(`Login`, `Active account is: ${activeAccount?.localAccountId}`);
+  }
+  
+  // Step 5: If one or more accounts was found but no active account is set, set the active account.
+  let activeAccount = globalMsalInstance.getActiveAccount();
+  trace(`Login`, `Active account is: ${activeAccount?.localAccountId}`);
+  if (allAccounts.length > 1 && !activeAccount) {
+    const firstAccount = allAccounts[0];
+    trace(`Login`, `Setting active account to first known account: ${firstAccount.localAccountId}`);
+    globalMsalInstance.setActiveAccount(firstAccount);
+    activeAccount = firstAccount;
+  }
+
+  // Step 6: If an active account is now set, attempt to acquire a token silently using the active account.
+  if (activeAccount) {
     try {
       trace(`Login`, `Attempting silent token acquisition using the active account '${activeAccount?.localAccountId}'...`);
       result = await globalMsalInstance.acquireTokenSilent({
@@ -106,7 +109,8 @@ async function loginAndSetActiveAccountAsync(): Promise<string> {
   }
 
   // Step 5: One the user is authenticated, store the user's account ID for future reference.
-  //         This becomes the root of the Recoil dataflow graph.
+  //         This account ID becomes the root of the Recoil dataflow graph. That is, all other
+  //         API queries should be designed to only execute once this atom is initialized.
   if (result && result.account) {
     return result.account.localAccountId;
   } else if (result && !result.account) {
@@ -134,6 +138,7 @@ async function loginAndSetActiveAccountAsync(): Promise<string> {
   }
 }
 
+//TODO: Smoother handling of deeplink routing (integrating with React Router)?
 //TODO: Add an event callback to be notified if the user's session expires?
 //      NO -- idiomatic MSAL.js usage is to stick with these 'acquireToken*' flows and then alert the user if interaction is needed.
 

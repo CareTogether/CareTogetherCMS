@@ -2,8 +2,12 @@ import { IPublicClientApplication } from "@azure/msal-browser";
 import { globalMsalInstance } from "./Auth";
 
 const acquireAccessToken = async (msalInstance: IPublicClientApplication) => {
+  //TODO: REWRITE ALL THIS!!!
   const activeAccount = msalInstance.getActiveAccount();
   const accounts = msalInstance.getAllAccounts();
+  
+  //TODO: Handle token/session expiration to intercept the automatic redirect and prompt the user first?
+  //TODO: Incorporate new AAD B2C refresh token support?
 
   if (!activeAccount && accounts.length === 0) {
     /*
