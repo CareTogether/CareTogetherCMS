@@ -24,7 +24,8 @@ You can build and run CareTogether on any operating system supported by Node.js 
 - [.NET 6 LTS](https://dotnet.microsoft.com/en-us/download/dotnet/6.0)
 - [Visual Studio Code](https://code.visualstudio.com/Download) (recommended)
 
-You will also need to allow PowerShell scripts to run on your computer. You can follow [these instructions](https://superuser.com/a/106363) ([documentation link](https://learn.microsoft.com/en-us/previous-versions//bb613481(v=vs.85)?redirectedfrom=MSDN#how-to-allow-scripts-to-run)).
+You will also need to allow PowerShell scripts to run on your computer (see [documentation](https://learn.microsoft.com/en-us/previous-versions//bb613481(v=vs.85)?redirectedfrom=MSDN#how-to-allow-scripts-to-run)). To do this, open an administrative PowerShell session and run the following command:
+`Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
 
 ## Development
 1. Clone the repository into any local directory on your device.
