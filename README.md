@@ -24,6 +24,8 @@ You can build and run CareTogether on any operating system supported by Node.js 
 - [.NET 6 LTS](https://dotnet.microsoft.com/en-us/download/dotnet/6.0)
 - [Visual Studio Code](https://code.visualstudio.com/Download) (recommended)
 
+You will also need to allow PowerShell scripts to run on your computer. You can follow [these instructions](https://superuser.com/a/106363) ([documentation link](https://learn.microsoft.com/en-us/previous-versions//bb613481(v=vs.85)?redirectedfrom=MSDN#how-to-allow-scripts-to-run)).
+
 ## Development
 1. Clone the repository into any local directory on your device.
 2. Run the _CareTogether.Api_ project and the React client.
