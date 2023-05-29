@@ -10,8 +10,6 @@ import { AdapterDateFns as DateAdapter } from '@mui/x-date-pickers/AdapterDateFn
 import { GlobalErrorBoundary } from './GlobalErrorBoundary';
 import { RecoilRoot } from 'recoil';
 import { BrowserRouter as Router } from "react-router-dom";
-import { MsalProvider } from '@azure/msal-react';
-import { globalMsalInstance } from './Authentication/Auth';
 import AuthenticationWrapper from './Authentication/AuthenticationWrapper';
 import { AppRoutes } from './AppRoutes';
 import RequestBackdrop from './RequestBackdrop';
@@ -29,16 +27,14 @@ root.render(
           <GlobalErrorBoundary>
             <RecoilRoot>
               <Router>
-                <MsalProvider instance={globalMsalInstance}>
-                  <AuthenticationWrapper>
-                    <React.Suspense fallback={
-                      <ProgressBackdrop opaque>
-                        <p>Initializing...</p>
-                      </ProgressBackdrop>}>
-                      <AppRoutes />
-                    </React.Suspense>
-                  </AuthenticationWrapper>
-                </MsalProvider>
+                <AuthenticationWrapper>
+                  <React.Suspense fallback={
+                    <ProgressBackdrop opaque>
+                      <p>Initializing...</p>
+                    </ProgressBackdrop>}>
+                    <AppRoutes />
+                  </React.Suspense>
+                </AuthenticationWrapper>
               </Router>
               <RequestBackdrop />
             </RecoilRoot>
