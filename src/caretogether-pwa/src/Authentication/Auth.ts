@@ -86,7 +86,7 @@ async function loginAndSetActiveAccountAsync(): Promise<string> {
   // Step 5: If one or more accounts was found but no active account is set, set the active account.
   let activeAccount = globalMsalInstance.getActiveAccount();
   trace(`Login`, `Active account is: ${activeAccount?.localAccountId}`);
-  if (allAccounts.length > 1 && !activeAccount) {
+  if (allAccounts.length > 0 && !activeAccount) {
     const firstAccount = allAccounts[0];
     trace(`Login`, `Setting active account to first known account: ${firstAccount.localAccountId}`);
     globalMsalInstance.setActiveAccount(firstAccount);
@@ -139,9 +139,15 @@ async function loginAndSetActiveAccountAsync(): Promise<string> {
   }
 }
 
+let userIdStateInitialized = false;
 const initializeUserIdStateAsync: AtomEffect<any> = params => {
-  trace("InitializeUserIdStateAsync", params.node.key);
-  params.setSelf(loginAndSetActiveAccountAsync());
+  trace(`InitializeUserIdStateAsync`, params.node.key);
+  if (!userIdStateInitialized) {
+    userIdStateInitialized = true;
+    params.setSelf(loginAndSetActiveAccountAsync());
+  } else {
+    trace(`InitializeUserIdStateAsync`, `Initialization has already started; skipping this atom effect invocation.`);
+  }
 }
 
 // This will be set by AuthenticationWrapper once the user has authenticated and the default account is set.
