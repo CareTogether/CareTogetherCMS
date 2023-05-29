@@ -55,6 +55,7 @@ async function loginAndSetActiveAccountAsync(): Promise<string> {
 
   // Step 2: Since we are using redirect-based interaction, check on each page load whether the
   //         browser has just completed a redirect flow and handle the response from Azure AD if so.
+  //TODO: Do we need smoother handling of deeplink routing (integrating with React Router)?
   trace(`Login`, `Checking for a redirect response to process...`);
   result = await globalMsalInstance.handleRedirectPromise();
   trace(`Login`, `Redirect result account: ${result?.account?.localAccountId}`);
@@ -138,10 +139,6 @@ async function loginAndSetActiveAccountAsync(): Promise<string> {
   }
 }
 
-//TODO: Smoother handling of deeplink routing (integrating with React Router)?
-//TODO: Add an event callback to be notified if the user's session expires?
-//      NO -- idiomatic MSAL.js usage is to stick with these 'acquireToken*' flows and then alert the user if interaction is needed.
-
 const initializeUserIdStateAsync: AtomEffect<any> = params => {
   trace("InitializeUserIdStateAsync", params.node.key);
   params.setSelf(loginAndSetActiveAccountAsync());
@@ -155,3 +152,37 @@ export const userIdState = atom<string>({
     initializeUserIdStateAsync
   ]
 });
+
+export async function tryAcquireAccessToken(): Promise<string | null> {
+  // This function attempts to return a current access token for the authenticated account using MSAL.js and,
+  // if it can't due to required interaction, informs the caller by returning null.
+  // https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-browser/docs/acquire-token.md
+  trace(`tryAcquireAccessToken`, `Attempting to acquire an access token...`);
+
+  // Step 1: Ensure that the user has an active account in MSAL.js.
+  const activeAccount = globalMsalInstance.getActiveAccount();
+  if (!activeAccount) {
+    trace(`tryAcquireAccessToken`, `MSAL does not have an active account set.`);
+    return null;
+  }
+
+  // Step 2: Attempt to acquire an access token silently using the current active account.
+  //TODO: Incorporate new AAD B2C refresh token support?
+  try {
+    trace(`tryAcquireAccessToken`, `Attempting silent token acquisition using the active account '${activeAccount?.localAccountId}'...`);
+    const result = await globalMsalInstance.acquireTokenSilent({
+      scopes: scopes
+    });
+    trace(`tryAcquireAccessToken`, `Silent token acquisition was successful.`);
+    return result.accessToken;
+  } catch (error) {
+    trace(`tryAcquireAccessToken`, `Silent token acquisition failed with: ${renderMsalError(error)}`);
+    if (!(error instanceof InteractionRequiredAuthError)) {
+      trace(`tryAcquireAccessToken`, `This error type is unexpected and requires technical support.`);
+      throw displayableError(error);
+    } else {
+      trace(`tryAcquireAccessToken`, `User interaction with Azure AD is required.`);
+      return null;
+    }
+  }
+}
