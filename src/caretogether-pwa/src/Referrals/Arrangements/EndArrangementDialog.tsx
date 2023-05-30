@@ -37,6 +37,7 @@ export function EndArrangementDialog({referralId, arrangement, onClose}: EndArra
           <DateTimePicker
             label="When was this arrangement ended?"
             value={endedAtLocal}
+            minDate={arrangement.startedAtUtc}
             disableFuture format="M/d/yyyy h:mm a"
             onChange={(date: any) => date && setEndedAtLocal(date)}
             slotProps={{ textField: {fullWidth: true, required: true, sx: {marginTop: 1}}}} />
