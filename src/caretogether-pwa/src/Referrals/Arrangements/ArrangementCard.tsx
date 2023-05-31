@@ -348,7 +348,7 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
                   </Badge>
                 </Grid>
                 <Grid item xs={3}>
-                  <Badge color="error"
+                  <Badge color="info"
                     badgeContent={upcomingRequirementsCount}>
                     📅
                   </Badge>
