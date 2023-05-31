@@ -285,6 +285,9 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
       return { missing: requirement, context: arrangementRequirementContext };
     }
   });
+
+  const upcomingRequirementsCount = arrangement.missingRequirements?.filter(missingRequirement =>
+    missingRequirement.dueBy /*Determine if this is an "upcoming" requirement */).length;
   
   return (
     <Card variant="outlined">
@@ -326,22 +329,28 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
             <AccordionSummary expandIcon={<ExpandMoreIcon />}
               sx={{ marginTop:1, paddingTop:1, backgroundColor: "#0000000a" }}>
               <Grid container>
-                <Grid item xs={4}>
+                <Grid item xs={3}>
                   <Badge color="success"
                     badgeContent={completedRequirementsWithContext.length}>
                     ✅
                   </Badge>
                 </Grid>
-                <Grid item xs={4}>
+                <Grid item xs={3}>
                   <Badge color="warning"
                     badgeContent={exemptedRequirementsWithContext.length}>
                     🚫
                   </Badge>
                 </Grid>
-                <Grid item xs={4}>
+                <Grid item xs={3}>
                   <Badge color="error"
-                    badgeContent={missingAssignmentFunctions + assignmentsMissingVariants + missingRequirementsWithContext.length}>
+                    badgeContent={missingAssignmentFunctions + assignmentsMissingVariants + missingRequirementsWithContext.length - upcomingRequirementsCount}>
                     ❌
+                  </Badge>
+                </Grid>
+                <Grid item xs={3}>
+                  <Badge color="error"
+                    badgeContent={upcomingRequirementsCount}>
+                    📅
                   </Badge>
                 </Grid>
               </Grid>
