@@ -707,13 +707,15 @@ namespace CareTogether.Engines.Authorization
             Guid? userPersonId, ImmutableList<Permission> contextPermissions)
         {
             var authorAccount = await accountsResource.TryGetUserAccountAsync(note.AuthorId);
+            //NOTE: The 'SingleOrDefault' logic here is used to make it possible to copy an organization's
+            //      data over to a test/demo tenant that does not have the same user accounts defined.
             var authorPersonId = authorAccount?.Organizations
-                .Single(org => org.OrganizationId == organizationId).Locations
-                .Single(loc => loc.LocationId == locationId).PersonId;
+                .SingleOrDefault(org => org.OrganizationId == organizationId)?.Locations
+                .SingleOrDefault(loc => loc.LocationId == locationId)?.PersonId;
 
             // Disclose the note if:
             //  1. the current user is the same person as the author, or
-            //  2. the author has permission to view all notes.
+            //  2. the user has permission to view all notes.
             return (userPersonId != null && authorPersonId == userPersonId) ||
                 contextPermissions.Contains(Permission.ViewAllNotes);
         }
