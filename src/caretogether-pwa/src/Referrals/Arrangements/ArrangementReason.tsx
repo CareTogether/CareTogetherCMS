@@ -29,6 +29,7 @@ export function ArrangementReason({ partneringFamily, referralId, arrangement }:
     <>
       {arrangementReasons && arrangementReasons.length > 0
         ? <>
+          Reason:&nbsp;
           {editor.editing
             ? <FormControl required fullWidth size="small">
                 <InputLabel id="arrangement-reason">Reason for Request</InputLabel>
