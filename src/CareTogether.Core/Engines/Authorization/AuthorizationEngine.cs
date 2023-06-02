@@ -309,6 +309,7 @@ namespace CareTogether.Engines.Authorization
                 ReopenArrangements => Permission.EditArrangement,
                 CancelArrangementsSetup => Permission.EditArrangement,
                 UpdateArrangementComments => Permission.EditArrangement,
+                EditArrangementReason => Permission.EditArrangement,
                 DeleteArrangements => Permission.DeleteArrangement,
                 _ => throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented.")

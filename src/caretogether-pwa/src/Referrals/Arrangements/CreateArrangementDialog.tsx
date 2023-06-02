@@ -44,11 +44,11 @@ export function CreateArrangementDialog({referralId, arrangementPolicy, onClose}
         alert("A partnering family member was not selected. Try again.");
       } else if (requestedAtLocal == null) {
         alert("A date is required.");
-      } else if (arrangementReasons && arrangementReasons.length > 0 && reason == null) {
+      } else if (arrangementReasons && arrangementReasons.length > 0 && reason == null && reason.length > 0) {
         alert("A reason for the request is required.");
       } else {
         await referralsModel.createArrangement(family.family?.id as string, referralId,
-          arrangementPolicy.arrangementType!, requestedAtLocal, partneringFamilyPersonId, reason);
+          arrangementPolicy.arrangementType!, requestedAtLocal, partneringFamilyPersonId, reason && reason.length > 0 ? reason : null);
         //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
         onClose();
       }

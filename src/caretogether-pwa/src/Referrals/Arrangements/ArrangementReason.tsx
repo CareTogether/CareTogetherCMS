@@ -22,7 +22,7 @@ export function ArrangementReason({ partneringFamily, referralId, arrangement }:
 
   const editor = useInlineEditor(async value => {
     await referralsModel.editArrangementReason(
-      partneringFamily.family!.id!, referralId, arrangement.id!, value);
+      partneringFamily.family!.id!, referralId, arrangement.id!, value && value.length > 0 ? value : null);
   }, savedValue);
 
   return (
@@ -34,7 +34,7 @@ export function ArrangementReason({ partneringFamily, referralId, arrangement }:
                 <InputLabel id="arrangement-reason">Reason for Request</InputLabel>
                 <Select
                   labelId="arrangement-reason-label" id="arrangement-reason"
-                  value={editor.value}
+                  value={editor.value || ""}
                   onChange={e => editor.setValue(e.target.value)}>
                     <MenuItem key="placeholder" value="" disabled>
                       Select a reason
