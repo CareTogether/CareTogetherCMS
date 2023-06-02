@@ -41,6 +41,7 @@ import { useReferralsModel } from '../../Model/ReferralsModel';
 import { useFamilyIdPermissions } from '../../Model/SessionModel';
 import { format } from 'date-fns';
 import { DatePicker } from '@mui/x-date-pickers';
+import { ArrangementReason } from './ArrangementReason';
 
 interface ChildLocationIndicatorProps {
   partneringFamily: CombinedFamilyInfo
@@ -322,6 +323,7 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
           <ArrangementPlannedDuration partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement}
             summaryOnly={summaryOnly} />}
         {!summaryOnly && (<>
+          <ArrangementReason partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement} />
           <Divider />
           <ArrangementComments partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement} />
           <Accordion expanded={!collapsed} onChange={(event, isExpanded) => setCollapsed(!isExpanded)}

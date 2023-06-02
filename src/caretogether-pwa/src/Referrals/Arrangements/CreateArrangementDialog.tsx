@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup } from '@mui/material';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormLabel, Grid, InputLabel, MenuItem, Radio, RadioGroup, Select } from '@mui/material';
 import { CombinedFamilyInfo, ArrangementPolicy, ChildInvolvement } from '../../GeneratedClient';
 import { DatePicker } from '@mui/x-date-pickers';
 import { useRecoilValue } from 'recoil';
@@ -7,6 +7,7 @@ import { useParams } from 'react-router-dom';
 import { useBackdrop } from '../../Hooks/useBackdrop';
 import { useReferralsModel } from '../../Model/ReferralsModel';
 import { visibleFamiliesQuery } from '../../Model/Data';
+import { locationConfigurationQuery } from '../../Model/ConfigurationModel';
 
 interface CreateArrangementDialogProps {
   referralId: string,
@@ -19,6 +20,8 @@ export function CreateArrangementDialog({referralId, arrangementPolicy, onClose}
   const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
   const family = visibleFamilies.find(x => x.family?.id === familyId) as CombinedFamilyInfo;
 
+  const arrangementReasons = useRecoilValue(locationConfigurationQuery)?.arrangementReasons;
+
   // An arrangement is always either for one adult or one child in the partnering family.
   const applicableFamilyMembers = arrangementPolicy.childInvolvement === ChildInvolvement.NoChildInvolvement
     ? family.family!.adults!.filter(adult => adult.item1!.active).map(adult => adult.item1!)
@@ -26,9 +29,10 @@ export function CreateArrangementDialog({referralId, arrangementPolicy, onClose}
 
   const [fields, setFields] = useState({
     requestedAtLocal: null as Date | null,
-    partneringFamilyPersonId: null as string | null
+    partneringFamilyPersonId: null as string | null,
+    reason: null as string | null
   });
-  const { requestedAtLocal, partneringFamilyPersonId } = fields;
+  const { requestedAtLocal, partneringFamilyPersonId, reason } = fields;
   
   const referralsModel = useReferralsModel();
   
@@ -40,9 +44,11 @@ export function CreateArrangementDialog({referralId, arrangementPolicy, onClose}
         alert("A partnering family member was not selected. Try again.");
       } else if (requestedAtLocal == null) {
         alert("A date is required.");
+      } else if (arrangementReasons && arrangementReasons.length > 0 && reason == null) {
+        alert("A reason for the request is required.");
       } else {
         await referralsModel.createArrangement(family.family?.id as string, referralId,
-          arrangementPolicy.arrangementType!, requestedAtLocal, partneringFamilyPersonId);
+          arrangementPolicy.arrangementType!, requestedAtLocal, partneringFamilyPersonId, reason);
         //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
         onClose();
       }
@@ -76,6 +82,22 @@ export function CreateArrangementDialog({referralId, arrangementPolicy, onClose}
                 </RadioGroup>
               </FormControl>
             </Grid>
+            {arrangementReasons && arrangementReasons.length > 0 &&
+              <Grid item xs={12} sm={6}>
+                <FormControl required fullWidth size="small">
+                  <InputLabel id="arrangement-reason-label">Reason for Request</InputLabel>
+                  <Select
+                    labelId="arrangement-reason-label" id="arrangement-reason"
+                    value={reason}
+                    onChange={e => setFields({...fields, reason: e.target.value as string})}>
+                      <MenuItem key="placeholder" value="" disabled>
+                        Select a reason
+                      </MenuItem>
+                      {arrangementReasons.map(arrangementReason =>
+                        <MenuItem key={arrangementReason} value={arrangementReason}>{arrangementReason}</MenuItem>)}
+                  </Select>
+                </FormControl>
+              </Grid>}
           </Grid>
         </form>
       </DialogContent>
