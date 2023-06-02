@@ -146,7 +146,7 @@ namespace CareTogether.Resources.Referrals
                         ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<ExemptedRequirementInfo>.Empty,
                         ImmutableList<IndividualVolunteerAssignment>.Empty, ImmutableList<FamilyVolunteerAssignment>.Empty,
                         ImmutableSortedSet<ChildLocationHistoryEntry>.Empty, ImmutableSortedSet<ChildLocationHistoryEntry>.Empty,
-                        Comments: null),
+                        Comments: null, Reason: c.Reason),
                         null),
                     _ => referralEntry.Arrangements.TryGetValue(arrangementId, out var arrangementEntry)
                         ? command switch
@@ -373,6 +373,10 @@ namespace CareTogether.Resources.Referrals
                             UpdateArrangementComments c => (arrangementEntry with
                             {
                                 Comments = c.Comments
+                            }, null),
+                            EditArrangementReason c => (arrangementEntry with
+                            {
+                                Reason = c.Reason
                             }, null),
                             DeleteArrangements c => (arrangementEntry with
                             {

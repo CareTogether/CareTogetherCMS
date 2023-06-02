@@ -147,7 +147,7 @@ namespace CareTogether.Managers
                     status.MissingRequirements,
                     entry.IndividualVolunteerAssignments, entry.FamilyVolunteerAssignments,
                     entry.ChildLocationHistory, entry.ChildLocationPlan,
-                    entry.Comments);
+                    entry.Comments, entry.Reason);
         }
 
         private async Task<(VolunteerFamilyInfo?, ImmutableList<UploadedDocumentInfo>)> RenderVolunteerFamilyInfoAsync(

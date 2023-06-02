@@ -542,6 +542,9 @@ namespace CareTogether.Engines.Authorization
                             Comments = contextPermissions.Contains(Permission.ViewReferralComments)
                                 ? arrangement.Comments
                                 : null,
+                            Reason = contextPermissions.Contains(Permission.ViewReferralComments)
+                                ? arrangement.Reason
+                                : null,
                             CompletedRequirements = contextPermissions.Contains(Permission.ViewArrangementProgress)
                                 ? arrangement.CompletedRequirements
                                 : ImmutableList<CompletedRequirementInfo>.Empty,

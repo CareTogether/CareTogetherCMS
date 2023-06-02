@@ -59,7 +59,7 @@ namespace CareTogether.Api.OData
         [property: ForeignKey("ReferralId")] Referral Referral, Guid ReferralId,
         [property: ForeignKey("PersonId")] Person Person, Guid PersonId,
         DateOnly Requested, DateTime? StartedUtc, DateTime? EndedUtc,
-        ArrangementPhase Phase);
+        ArrangementPhase Phase, string? Reason);
 
     public sealed record ArrangementType([property: Key] string Type,
         ChildInvolvement ChildInvolvement);
@@ -409,7 +409,7 @@ namespace CareTogether.Api.OData
                         referral, referral.Id,
                         arrangementPerson, arrangement.PartneringFamilyPersonId,
                         DateOnly.FromDateTime(arrangement.RequestedAtUtc),
-                        arrangement.StartedAtUtc, arrangement.EndedAtUtc, arrangement.Phase);
+                        arrangement.StartedAtUtc, arrangement.EndedAtUtc, arrangement.Phase, arrangement.Reason);
                 });
             });
         }
