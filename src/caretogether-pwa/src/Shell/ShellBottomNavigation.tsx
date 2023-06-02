@@ -19,12 +19,13 @@ export function ShellBottomNavigation() {
   const locationPrefix = `/org/${context?.organizationId}/${context?.locationId}`;
 
   const links = [
-    new RegExp(`${locationPrefix}/*.*`),
-    new RegExp(`${locationPrefix}/referrals/*.*`),
-    new RegExp(`${locationPrefix}/volunteers/*.*`),
-    new RegExp(`${locationPrefix}/communities/*.*`)
+    new RegExp(`^$never`),
+    new RegExp(`^${locationPrefix}/*$`),
+    new RegExp(`^${locationPrefix}/referrals/*.*$`),
+    new RegExp(`^${locationPrefix}/volunteers/*.*$`),
+    new RegExp(`^${locationPrefix}/communities/*.*$`)
   ];
-  const selectedLink = links.findIndex(link => location.pathname.match(link) != null);
+  const selectedLink = Math.max(links.findIndex(link => location.pathname.match(link) != null), 0);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
