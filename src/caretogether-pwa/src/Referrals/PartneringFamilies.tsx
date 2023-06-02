@@ -131,7 +131,7 @@ function PartneringFamilies() {
     }
   };
 
-  const [viewActiveOnly, setViewActiveOnly] = useState(false);
+  const [viewActiveOnly, setViewActiveOnly] = useLocalStorage('partnering-families-viewActiveOnly', false);
   const filteredPartneringFamiliesWithActiveOrAllFilter = filteredPartneringFamilies.filter(family => viewActiveOnly
     ? family.partneringFamilyInfo?.openReferral?.arrangements?.some(arrangement =>
       arrangement.phase === ArrangementPhase.Started)
