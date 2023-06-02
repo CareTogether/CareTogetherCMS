@@ -288,7 +288,7 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
   });
 
   const upcomingRequirementsCount = arrangement.missingRequirements?.filter(missingRequirement =>
-    missingRequirement.dueBy /*Determine if this is an "upcoming" requirement */).length;
+    missingRequirement.dueBy /* Determine if this is an "upcoming" requirement */).length || 0;
   
   return (
     <Card variant="outlined">
