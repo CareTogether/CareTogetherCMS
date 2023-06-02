@@ -430,10 +430,12 @@ namespace CareTogether.TestData
                         .Add(new LocationConfiguration(guid2, "Atlantis",
                             ImmutableList<string>.Empty.AddRange(new[] { "Atlantean", "Aquatic", "Norse" }),
                             ImmutableList<string>.Empty.AddRange(new[] { "Single", "Spouse", "Partner", "Dad", "Mom", "Relative", "Droid" }),
+                            ImmutableList.Create("Crisis", "Assistance", "Respite"),
                             sourcePhoneNumbers))
                         .Add(new LocationConfiguration(guid3, "El Dorado",
                             ImmutableList<string>.Empty.AddRange(new[] { "Amazon", "Caucasian", "Other" }),
                             ImmutableList<string>.Empty.AddRange(new[] { "Single", "Spouse", "Partner", "Dad", "Mom", "Relative", "Domestic Worker" }),
+                            ImmutableList.Create("Crisis", "Assistance", "Respite"),
                             sourcePhoneNumbers)),
                     ImmutableList<RoleDefinition>.Empty
                         .Add(new RoleDefinition("Volunteer", IsProtected: false, ImmutableList<ContextualPermissionSet>.Empty

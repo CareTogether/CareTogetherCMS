@@ -1142,6 +1142,7 @@ export class LocationConfiguration implements ILocationConfiguration {
     name?: string;
     ethnicities?: string[];
     adultFamilyRelationships?: string[];
+    arrangementReasons?: string[];
     smsSourcePhoneNumbers?: SourcePhoneNumberConfiguration[];
 
     constructor(data?: ILocationConfiguration) {
@@ -1166,6 +1167,11 @@ export class LocationConfiguration implements ILocationConfiguration {
                 this.adultFamilyRelationships = [] as any;
                 for (let item of _data["adultFamilyRelationships"])
                     this.adultFamilyRelationships!.push(item);
+            }
+            if (Array.isArray(_data["arrangementReasons"])) {
+                this.arrangementReasons = [] as any;
+                for (let item of _data["arrangementReasons"])
+                    this.arrangementReasons!.push(item);
             }
             if (Array.isArray(_data["smsSourcePhoneNumbers"])) {
                 this.smsSourcePhoneNumbers = [] as any;
@@ -1196,6 +1202,11 @@ export class LocationConfiguration implements ILocationConfiguration {
             for (let item of this.adultFamilyRelationships)
                 data["adultFamilyRelationships"].push(item);
         }
+        if (Array.isArray(this.arrangementReasons)) {
+            data["arrangementReasons"] = [];
+            for (let item of this.arrangementReasons)
+                data["arrangementReasons"].push(item);
+        }
         if (Array.isArray(this.smsSourcePhoneNumbers)) {
             data["smsSourcePhoneNumbers"] = [];
             for (let item of this.smsSourcePhoneNumbers)
@@ -1210,6 +1221,7 @@ export interface ILocationConfiguration {
     name?: string;
     ethnicities?: string[];
     adultFamilyRelationships?: string[];
+    arrangementReasons?: string[];
     smsSourcePhoneNumbers?: SourcePhoneNumberConfiguration[];
 }
 

@@ -1043,6 +1043,12 @@
               "type": "string"
             }
           },
+          "arrangementReasons": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "smsSourcePhoneNumbers": {
             "type": "array",
             "items": {
