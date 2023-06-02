@@ -41,6 +41,7 @@ import { useReferralsModel } from '../../Model/ReferralsModel';
 import { useFamilyIdPermissions } from '../../Model/SessionModel';
 import { format } from 'date-fns';
 import { DatePicker } from '@mui/x-date-pickers';
+import { ArrangementReason } from './ArrangementReason';
 
 interface ChildLocationIndicatorProps {
   partneringFamily: CombinedFamilyInfo
@@ -287,7 +288,7 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
   });
 
   const upcomingRequirementsCount = arrangement.missingRequirements?.filter(missingRequirement =>
-    missingRequirement.dueBy /*Determine if this is an "upcoming" requirement */).length;
+    missingRequirement.dueBy /* Determine if this is an "upcoming" requirement */).length || 0;
   
   return (
     <Card variant="outlined">
@@ -322,6 +323,7 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
           <ArrangementPlannedDuration partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement}
             summaryOnly={summaryOnly} />}
         {!summaryOnly && (<>
+          <ArrangementReason partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement} />
           <Divider />
           <ArrangementComments partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement} />
           <Accordion expanded={!collapsed} onChange={(event, isExpanded) => setCollapsed(!isExpanded)}

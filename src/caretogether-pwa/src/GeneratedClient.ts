@@ -1142,6 +1142,7 @@ export class LocationConfiguration implements ILocationConfiguration {
     name?: string;
     ethnicities?: string[];
     adultFamilyRelationships?: string[];
+    arrangementReasons?: string[] | undefined;
     smsSourcePhoneNumbers?: SourcePhoneNumberConfiguration[];
 
     constructor(data?: ILocationConfiguration) {
@@ -1166,6 +1167,11 @@ export class LocationConfiguration implements ILocationConfiguration {
                 this.adultFamilyRelationships = [] as any;
                 for (let item of _data["adultFamilyRelationships"])
                     this.adultFamilyRelationships!.push(item);
+            }
+            if (Array.isArray(_data["arrangementReasons"])) {
+                this.arrangementReasons = [] as any;
+                for (let item of _data["arrangementReasons"])
+                    this.arrangementReasons!.push(item);
             }
             if (Array.isArray(_data["smsSourcePhoneNumbers"])) {
                 this.smsSourcePhoneNumbers = [] as any;
@@ -1196,6 +1202,11 @@ export class LocationConfiguration implements ILocationConfiguration {
             for (let item of this.adultFamilyRelationships)
                 data["adultFamilyRelationships"].push(item);
         }
+        if (Array.isArray(this.arrangementReasons)) {
+            data["arrangementReasons"] = [];
+            for (let item of this.arrangementReasons)
+                data["arrangementReasons"].push(item);
+        }
         if (Array.isArray(this.smsSourcePhoneNumbers)) {
             data["smsSourcePhoneNumbers"] = [];
             for (let item of this.smsSourcePhoneNumbers)
@@ -1210,6 +1221,7 @@ export interface ILocationConfiguration {
     name?: string;
     ethnicities?: string[];
     adultFamilyRelationships?: string[];
+    arrangementReasons?: string[] | undefined;
     smsSourcePhoneNumbers?: SourcePhoneNumberConfiguration[];
 }
 
@@ -4828,6 +4840,7 @@ export class Arrangement implements IArrangement {
     childLocationHistory?: ChildLocationHistoryEntry[];
     childLocationPlan?: ChildLocationHistoryEntry[];
     comments?: string | undefined;
+    reason?: string | undefined;
 
     constructor(data?: IArrangement) {
         if (data) {
@@ -4886,6 +4899,7 @@ export class Arrangement implements IArrangement {
                     this.childLocationPlan!.push(ChildLocationHistoryEntry.fromJS(item));
             }
             this.comments = _data["comments"];
+            this.reason = _data["reason"];
         }
     }
 
@@ -4944,6 +4958,7 @@ export class Arrangement implements IArrangement {
                 data["childLocationPlan"].push(item.toJSON());
         }
         data["comments"] = this.comments;
+        data["reason"] = this.reason;
         return data;
     }
 }
@@ -4967,6 +4982,7 @@ export interface IArrangement {
     childLocationHistory?: ChildLocationHistoryEntry[];
     childLocationPlan?: ChildLocationHistoryEntry[];
     comments?: string | undefined;
+    reason?: string | undefined;
 }
 
 export enum ArrangementPhase {
@@ -5825,6 +5841,11 @@ export abstract class ArrangementsCommand implements IArrangementsCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "EditArrangementReason") {
+            let result = new EditArrangementReason();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "EditArrangementStartTime") {
             let result = new EditArrangementStartTime();
             result.init(data);
@@ -6252,6 +6273,7 @@ export class CreateArrangement extends ArrangementsCommand implements ICreateArr
     arrangementType?: string;
     requestedAtUtc?: Date;
     partneringFamilyPersonId?: string;
+    reason?: string | undefined;
 
     constructor(data?: ICreateArrangement) {
         super(data);
@@ -6264,6 +6286,7 @@ export class CreateArrangement extends ArrangementsCommand implements ICreateArr
             this.arrangementType = _data["arrangementType"];
             this.requestedAtUtc = _data["requestedAtUtc"] ? new Date(_data["requestedAtUtc"].toString()) : <any>undefined;
             this.partneringFamilyPersonId = _data["partneringFamilyPersonId"];
+            this.reason = _data["reason"];
         }
     }
 
@@ -6279,6 +6302,7 @@ export class CreateArrangement extends ArrangementsCommand implements ICreateArr
         data["arrangementType"] = this.arrangementType;
         data["requestedAtUtc"] = this.requestedAtUtc ? this.requestedAtUtc.toISOString() : <any>undefined;
         data["partneringFamilyPersonId"] = this.partneringFamilyPersonId;
+        data["reason"] = this.reason;
         super.toJSON(data);
         return data;
     }
@@ -6288,6 +6312,7 @@ export interface ICreateArrangement extends IArrangementsCommand {
     arrangementType?: string;
     requestedAtUtc?: Date;
     partneringFamilyPersonId?: string;
+    reason?: string | undefined;
 }
 
 export class DeleteArrangements extends ArrangementsCommand implements IDeleteArrangements {
@@ -6404,6 +6429,40 @@ export interface IDeletePlannedChildLocationChange extends IArrangementsCommand 
     plannedChangeUtc?: Date;
     childLocationFamilyId?: string;
     childLocationReceivingAdultId?: string;
+}
+
+export class EditArrangementReason extends ArrangementsCommand implements IEditArrangementReason {
+    reason?: string | undefined;
+
+    constructor(data?: IEditArrangementReason) {
+        super(data);
+        this._discriminator = "EditArrangementReason";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.reason = _data["reason"];
+        }
+    }
+
+    static fromJS(data: any): EditArrangementReason {
+        data = typeof data === 'object' ? data : {};
+        let result = new EditArrangementReason();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["reason"] = this.reason;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IEditArrangementReason extends IArrangementsCommand {
+    reason?: string | undefined;
 }
 
 export class EditArrangementStartTime extends ArrangementsCommand implements IEditArrangementStartTime {

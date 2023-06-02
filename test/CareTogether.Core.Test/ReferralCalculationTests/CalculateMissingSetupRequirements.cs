@@ -31,7 +31,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     ImmutableList<FamilyVolunteerAssignment>.Empty,
                     Helpers.LocationHistoryEntries(),
                     Helpers.LocationHistoryEntries(),
-                    Comments: null),
+                    Comments: null, Reason: null),
                 utcNow: new DateTime(2022, 2, 1));
 
             AssertEx.SequenceIs(result,
@@ -54,7 +54,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     ImmutableList<FamilyVolunteerAssignment>.Empty,
                     Helpers.LocationHistoryEntries(),
                     Helpers.LocationHistoryEntries(),
-                    Comments: null),
+                    Comments: null, Reason: null),
                 utcNow: new DateTime(2022, 2, 1));
 
             AssertEx.SequenceIs(result,
@@ -75,7 +75,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     ImmutableList<FamilyVolunteerAssignment>.Empty,
                     Helpers.LocationHistoryEntries(),
                     Helpers.LocationHistoryEntries(),
-                    Comments: null),
+                    Comments: null, Reason: null),
                 utcNow: new DateTime(2022, 2, 1));
 
             AssertEx.SequenceIs(result);

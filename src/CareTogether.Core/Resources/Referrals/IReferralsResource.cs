@@ -25,7 +25,7 @@ namespace CareTogether.Resources.Referrals
         ImmutableList<FamilyVolunteerAssignment> FamilyVolunteerAssignments,
         ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationHistory,
         ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationPlan,
-        string? Comments);
+        string? Comments, string? Reason);
 
     public enum ReferralCloseReason { NotAppropriate, NoCapacity, NoLongerNeeded, Resourced, NeedMet };
 
@@ -81,7 +81,7 @@ namespace CareTogether.Resources.Referrals
     [JsonHierarchyBase]
     public abstract partial record ArrangementsCommand(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds);
     public sealed record CreateArrangement(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
-        string ArrangementType, DateTime RequestedAtUtc, Guid PartneringFamilyPersonId)
+        string ArrangementType, DateTime RequestedAtUtc, Guid PartneringFamilyPersonId, string? Reason)
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
     public sealed record AssignIndividualVolunteer(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         Guid VolunteerFamilyId, Guid PersonId, string ArrangementFunction, string? ArrangementFunctionVariant)
@@ -177,6 +177,9 @@ namespace CareTogether.Resources.Referrals
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
     public sealed record UpdateArrangementComments(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
         string? Comments)
+        : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+    public sealed record EditArrangementReason(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds,
+        string? Reason)
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
     public sealed record DeleteArrangements(Guid FamilyId, Guid ReferralId, ImmutableList<Guid> ArrangementIds)
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);

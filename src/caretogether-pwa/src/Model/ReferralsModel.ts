@@ -1,5 +1,5 @@
 import { selector } from "recoil";
-import { ReferralCommand, ArrangementsCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement, StartArrangements, EndArrangements, AssignVolunteerFamily, AssignIndividualVolunteer, ReferralCloseReason, CloseReferral, CreateReferral, TrackChildLocationChange, ChildLocationPlan, UpdateCustomReferralField, CustomField, ExemptReferralRequirement, UnexemptReferralRequirement, ExemptArrangementRequirement, UnexemptArrangementRequirement, MissingArrangementRequirement, ExemptedRequirementInfo, MarkReferralRequirementIncomplete, CompletedRequirementInfo, MarkArrangementRequirementIncomplete, CancelArrangementsSetup, UpdateReferralComments, UnassignVolunteerFamily, UnassignIndividualVolunteer, CompleteVolunteerFamilyAssignmentRequirement, CompleteIndividualVolunteerAssignmentRequirement, FamilyVolunteerAssignment, IndividualVolunteerAssignment, ExemptIndividualVolunteerAssignmentRequirement, ExemptVolunteerFamilyAssignmentRequirement, MarkIndividualVolunteerAssignmentRequirementIncomplete, MarkVolunteerFamilyAssignmentRequirementIncomplete, UnexemptIndividualVolunteerAssignmentRequirement, UnexemptVolunteerFamilyAssignmentRequirement, UpdateArrangementComments, ReopenArrangements, EditArrangementStartTime, DeleteChildLocationChange, PlanArrangementStart, PlanArrangementEnd, PlanChildLocationChange, DeletePlannedChildLocationChange, DeleteArrangements, ReferralRecordsCommand, ArrangementRecordsCommand } from "../GeneratedClient";
+import { ReferralCommand, ArrangementsCommand, ActionRequirement, CompleteReferralRequirement, CreateArrangement, CompleteArrangementRequirement, StartArrangements, EndArrangements, AssignVolunteerFamily, AssignIndividualVolunteer, ReferralCloseReason, CloseReferral, CreateReferral, TrackChildLocationChange, ChildLocationPlan, UpdateCustomReferralField, CustomField, ExemptReferralRequirement, UnexemptReferralRequirement, ExemptArrangementRequirement, UnexemptArrangementRequirement, MissingArrangementRequirement, ExemptedRequirementInfo, MarkReferralRequirementIncomplete, CompletedRequirementInfo, MarkArrangementRequirementIncomplete, CancelArrangementsSetup, UpdateReferralComments, UnassignVolunteerFamily, UnassignIndividualVolunteer, CompleteVolunteerFamilyAssignmentRequirement, CompleteIndividualVolunteerAssignmentRequirement, FamilyVolunteerAssignment, IndividualVolunteerAssignment, ExemptIndividualVolunteerAssignmentRequirement, ExemptVolunteerFamilyAssignmentRequirement, MarkIndividualVolunteerAssignmentRequirementIncomplete, MarkVolunteerFamilyAssignmentRequirementIncomplete, UnexemptIndividualVolunteerAssignmentRequirement, UnexemptVolunteerFamilyAssignmentRequirement, UpdateArrangementComments, ReopenArrangements, EditArrangementStartTime, DeleteChildLocationChange, PlanArrangementStart, PlanArrangementEnd, PlanChildLocationChange, DeletePlannedChildLocationChange, DeleteArrangements, ReferralRecordsCommand, ArrangementRecordsCommand, EditArrangementReason } from "../GeneratedClient";
 import { useAtomicRecordsCommandCallback } from "./DirectoryModel";
 import { visibleFamiliesQuery } from "./Data";
 
@@ -314,7 +314,7 @@ export function useReferralsModel() {
     
   const createArrangement = useArrangementsCommandCallbackWithLocation(
     async (partneringFamilyId: string, referralId: string, arrangementType: string,
-      requestedAtLocal: Date, partneringFamilyPersonId: string) => {
+      requestedAtLocal: Date, partneringFamilyPersonId: string, reason: string | null) => {
       const command = new CreateArrangement({
         familyId: partneringFamilyId,
         referralId: referralId,
@@ -324,6 +324,7 @@ export function useReferralsModel() {
       command.arrangementType = arrangementType;
       command.requestedAtUtc = requestedAtLocal;
       command.partneringFamilyPersonId = partneringFamilyPersonId;
+      command.reason = reason || undefined;
       return command;
     });
   const planArrangementStart = useArrangementsCommandCallbackWithLocation(
@@ -539,6 +540,17 @@ export function useReferralsModel() {
       command.comments = comments;
       return command;
     });
+  const editArrangementReason = useArrangementsCommandCallbackWithLocation(
+    async (partneringFamilyId: string, referralId: string, arrangementId: string,
+      reason: string | null) => {
+      const command = new EditArrangementReason({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementIds: [arrangementId]
+      });
+      command.reason = reason || undefined;
+      return command;
+    });
   const closeReferral = useReferralCommandCallbackWithLocation(
     async (partneringFamilyId: string, referralId: string,
       reason: ReferralCloseReason, closedAtLocal: Date) => {
@@ -598,6 +610,7 @@ export function useReferralsModel() {
     planChildLocation,
     deleteChildLocationPlan,
     updateArrangementComments,
+    editArrangementReason,
     closeReferral,
     openReferral
   };

@@ -45,7 +45,7 @@ namespace CareTogether.Managers
         ImmutableList<FamilyVolunteerAssignment> FamilyVolunteerAssignments,
         ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationHistory,
         ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationPlan,
-        string? Comments);
+        string? Comments, string? Reason);
 
     public sealed record Note(Guid Id, Guid AuthorId, DateTime TimestampUtc,
         string? Contents, NoteStatus Status, DateTime? BackdatedTimestampUtc);

@@ -309,6 +309,7 @@ namespace CareTogether.Engines.Authorization
                 ReopenArrangements => Permission.EditArrangement,
                 CancelArrangementsSetup => Permission.EditArrangement,
                 UpdateArrangementComments => Permission.EditArrangement,
+                EditArrangementReason => Permission.EditArrangement,
                 DeleteArrangements => Permission.DeleteArrangement,
                 _ => throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented.")
@@ -541,6 +542,9 @@ namespace CareTogether.Engines.Authorization
                                 : ImmutableSortedSet<ChildLocationHistoryEntry>.Empty,
                             Comments = contextPermissions.Contains(Permission.ViewReferralComments)
                                 ? arrangement.Comments
+                                : null,
+                            Reason = contextPermissions.Contains(Permission.ViewReferralComments)
+                                ? arrangement.Reason
                                 : null,
                             CompletedRequirements = contextPermissions.Contains(Permission.ViewArrangementProgress)
                                 ? arrangement.CompletedRequirements

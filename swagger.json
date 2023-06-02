@@ -1043,6 +1043,13 @@
               "type": "string"
             }
           },
+          "arrangementReasons": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
           "smsSourcePhoneNumbers": {
             "type": "array",
             "items": {
@@ -3003,6 +3010,10 @@
           "comments": {
             "type": "string",
             "nullable": true
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -3415,6 +3426,7 @@
             "DeleteArrangements": "#/components/schemas/DeleteArrangements",
             "DeleteChildLocationChange": "#/components/schemas/DeleteChildLocationChange",
             "DeletePlannedChildLocationChange": "#/components/schemas/DeletePlannedChildLocationChange",
+            "EditArrangementReason": "#/components/schemas/EditArrangementReason",
             "EditArrangementStartTime": "#/components/schemas/EditArrangementStartTime",
             "EndArrangements": "#/components/schemas/EndArrangements",
             "ExemptArrangementRequirement": "#/components/schemas/ExemptArrangementRequirement",
@@ -3679,6 +3691,10 @@
               "partneringFamilyPersonId": {
                 "type": "string",
                 "format": "guid"
+              },
+              "reason": {
+                "type": "string",
+                "nullable": true
               }
             }
           }
@@ -3745,6 +3761,23 @@
               "childLocationReceivingAdultId": {
                 "type": "string",
                 "format": "guid"
+              }
+            }
+          }
+        ]
+      },
+      "EditArrangementReason": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "reason": {
+                "type": "string",
+                "nullable": true
               }
             }
           }
