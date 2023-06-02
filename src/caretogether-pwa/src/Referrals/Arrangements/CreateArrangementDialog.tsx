@@ -44,7 +44,7 @@ export function CreateArrangementDialog({referralId, arrangementPolicy, onClose}
         alert("A partnering family member was not selected. Try again.");
       } else if (requestedAtLocal == null) {
         alert("A date is required.");
-      } else if (arrangementReasons && arrangementReasons.length > 0 && reason == null && reason.length > 0) {
+      } else if (arrangementReasons && arrangementReasons.length > 0 && (reason == null || reason.length == 0)) {
         alert("A reason for the request is required.");
       } else {
         await referralsModel.createArrangement(family.family?.id as string, referralId,
@@ -88,7 +88,7 @@ export function CreateArrangementDialog({referralId, arrangementPolicy, onClose}
                   <InputLabel id="arrangement-reason-label">Reason for Request</InputLabel>
                   <Select
                     labelId="arrangement-reason-label" id="arrangement-reason"
-                    value={reason}
+                    value={reason || ""}
                     onChange={e => setFields({...fields, reason: e.target.value as string})}>
                       <MenuItem key="placeholder" value="" disabled>
                         Select a reason

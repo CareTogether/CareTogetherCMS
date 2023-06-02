@@ -542,13 +542,13 @@ export function useReferralsModel() {
     });
   const editArrangementReason = useArrangementsCommandCallbackWithLocation(
     async (partneringFamilyId: string, referralId: string, arrangementId: string,
-      reason: string | undefined) => {
+      reason: string | null) => {
       const command = new EditArrangementReason({
         familyId: partneringFamilyId,
         referralId: referralId,
         arrangementIds: [arrangementId]
       });
-      command.reason = reason;
+      command.reason = reason || undefined;
       return command;
     });
   const closeReferral = useReferralCommandCallbackWithLocation(
