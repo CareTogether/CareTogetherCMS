@@ -1045,6 +1045,7 @@
           },
           "arrangementReasons": {
             "type": "array",
+            "nullable": true,
             "items": {
               "type": "string"
             }

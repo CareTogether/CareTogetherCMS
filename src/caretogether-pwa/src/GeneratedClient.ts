@@ -1142,7 +1142,7 @@ export class LocationConfiguration implements ILocationConfiguration {
     name?: string;
     ethnicities?: string[];
     adultFamilyRelationships?: string[];
-    arrangementReasons?: string[];
+    arrangementReasons?: string[] | undefined;
     smsSourcePhoneNumbers?: SourcePhoneNumberConfiguration[];
 
     constructor(data?: ILocationConfiguration) {
@@ -1221,7 +1221,7 @@ export interface ILocationConfiguration {
     name?: string;
     ethnicities?: string[];
     adultFamilyRelationships?: string[];
-    arrangementReasons?: string[];
+    arrangementReasons?: string[] | undefined;
     smsSourcePhoneNumbers?: SourcePhoneNumberConfiguration[];
 }
 
