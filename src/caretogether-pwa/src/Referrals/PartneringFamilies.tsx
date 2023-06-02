@@ -32,10 +32,16 @@ const arrangementPhaseText = new Map<number, string>([
 ]);
 
 
-function allArrangements(partneringFamilyInfo: PartneringFamilyInfo) {
+function matchingArrangements(partneringFamilyInfo: PartneringFamilyInfo, viewActiveOnly: boolean) {
   const results = [] as { referralId: string, arrangement: Arrangement }[];
-  partneringFamilyInfo.closedReferrals?.forEach(x => x.arrangements?.forEach(y => results.push({ referralId: x.id!, arrangement: y })));
-  partneringFamilyInfo.openReferral?.arrangements?.forEach(x => results.push({ referralId: partneringFamilyInfo.openReferral!.id!, arrangement: x }));
+  if (viewActiveOnly) {
+    partneringFamilyInfo.openReferral?.arrangements?.filter(arrangement =>
+      arrangement.phase === ArrangementPhase.Started).forEach(x =>
+      results.push({ referralId: partneringFamilyInfo.openReferral!.id!, arrangement: x }));
+  } else {
+    partneringFamilyInfo.closedReferrals?.forEach(x => x.arrangements?.forEach(y => results.push({ referralId: x.id!, arrangement: y })));
+    partneringFamilyInfo.openReferral?.arrangements?.forEach(x => results.push({ referralId: partneringFamilyInfo.openReferral!.id!, arrangement: x }));
+  }
   return results;
 }
 
@@ -125,6 +131,12 @@ function PartneringFamilies() {
     }
   };
 
+  const [viewActiveOnly, setViewActiveOnly] = useLocalStorage('partnering-families-viewActiveOnly', false);
+  const filteredPartneringFamiliesWithActiveOrAllFilter = filteredPartneringFamilies.filter(family => viewActiveOnly
+    ? family.partneringFamilyInfo?.openReferral?.arrangements?.some(arrangement =>
+      arrangement.phase === ArrangementPhase.Started)
+    : true);
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -146,6 +158,11 @@ function PartneringFamilies() {
             <ToggleButton value={false} aria-label="collapsed"><UnfoldLessIcon /></ToggleButton>
           </ToggleButtonGroup>
           <SearchBar value={filterText} onChange={setFilterText} />
+          <ToggleButtonGroup value={viewActiveOnly} exclusive onChange={(_, value) => setViewActiveOnly(value)}
+            size={isMobile ? 'medium' : 'small'} aria-label="row expansion">
+            <ToggleButton value={false} aria-label="expanded">All</ToggleButton>
+            <ToggleButton value={true} aria-label="collapsed">Active</ToggleButton>
+          </ToggleButtonGroup>
         </Stack>
       </Grid>
       <Grid item xs={12}>
@@ -160,7 +177,7 @@ function PartneringFamilies() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredPartneringFamilies.map((partneringFamily) => (
+              {filteredPartneringFamiliesWithActiveOrAllFilter.map((partneringFamily) => (
                 <React.Fragment key={partneringFamily.family?.id}>
                   <TableRow sx={{backgroundColor: '#eef'}} onClick={() => openFamily(partneringFamily.family!.id!)}>
                     <TableCell><FamilyName family={partneringFamily} /></TableCell>
@@ -200,7 +217,7 @@ function PartneringFamilies() {
                     </TableCell>
                     <TableCell>
                       <Grid container spacing={2}>
-                        {allArrangements(partneringFamily.partneringFamilyInfo!).map(arrangementEntry => (
+                        {matchingArrangements(partneringFamily.partneringFamilyInfo!, viewActiveOnly).map(arrangementEntry => (
                           <Grid item key={arrangementEntry.arrangement.id}>
                             <ArrangementCard summaryOnly
                               partneringFamily={partneringFamily} referralId={arrangementEntry.referralId} arrangement={arrangementEntry.arrangement} />
