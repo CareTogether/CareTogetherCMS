@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Dashboard } from "./Dashboard";
+import { Dashboard } from "./Dashboard/Dashboard";
 import { Routes, Route, useLocation, useNavigate, useParams } from "react-router-dom";
 import { Referrals } from "./Referrals/Referrals";
 import { Volunteers } from "./Volunteers/Volunteers";

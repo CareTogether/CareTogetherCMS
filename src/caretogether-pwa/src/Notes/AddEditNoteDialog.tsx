@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Grid, TextField } from '@mui/material';
 import { useDirectoryModel } from '../Model/DirectoryModel';
-import { UpdateDialog } from '../UpdateDialog';
+import { UpdateDialog } from '../Generic/UpdateDialog';
 import { Note } from '../GeneratedClient';
 import { DateTimePicker } from '@mui/x-date-pickers';
 

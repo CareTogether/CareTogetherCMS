@@ -6,7 +6,7 @@ import { useFamilyIdPermissions } from "../Model/SessionModel";
 import { useDialogHandle } from "../Hooks/useDialogHandle";
 import { FamilyName } from "../Families/FamilyName";
 import { PersonName } from "../Families/PersonName";
-import { IconRow } from "../IconRow";
+import { IconRow } from "../Generic/IconRow";
 import { ExemptedRequirementDialog } from "./ExemptedRequirementDialog";
 import { RequirementContext } from "./RequirementContext";
 import { useRecoilValue } from "recoil";

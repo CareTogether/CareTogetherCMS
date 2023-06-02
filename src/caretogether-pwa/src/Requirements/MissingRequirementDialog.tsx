@@ -7,9 +7,9 @@ import { useDirectoryModel, useFamilyLookup, usePersonLookup } from "../Model/Di
 import { uploadFamilyFileToTenant } from "../Model/FilesModel";
 import { useReferralsModel } from "../Model/ReferralsModel";
 import { useVolunteersModel } from "../Model/VolunteersModel";
-import { UpdateDialog } from "../UpdateDialog";
+import { UpdateDialog } from "../Generic/UpdateDialog";
 import { RequirementContext } from "./RequirementContext";
-import { a11yProps, TabPanel } from "../TabPanel";
+import { a11yProps, TabPanel } from "../Generic/TabPanel";
 import { personNameString } from "../Families/PersonName";
 import { DialogHandle } from "../Hooks/useDialogHandle";
 import { familyNameString } from "../Families/FamilyName";

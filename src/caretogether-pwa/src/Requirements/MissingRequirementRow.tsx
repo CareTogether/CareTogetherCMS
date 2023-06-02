@@ -3,7 +3,7 @@ import { Permission } from "../GeneratedClient";
 import { policyData } from "../Model/ConfigurationModel";
 import { useFamilyIdPermissions } from "../Model/SessionModel";
 import { useDialogHandle } from "../Hooks/useDialogHandle";
-import { IconRow } from "../IconRow";
+import { IconRow } from "../Generic/IconRow";
 import { MissingRequirementDialog } from "./MissingRequirementDialog";
 import { RequirementContext } from "./RequirementContext";
 

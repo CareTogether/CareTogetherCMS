@@ -15,12 +15,12 @@ import {
   Grid} from "@mui/material";
 import { useState } from "react";
 import { Gender, Person, RoleRemovalReason, Permission } from "../GeneratedClient";
-import { AgeText } from "../AgeText";
+import { AgeText } from "./AgeText";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import EditIcon from '@mui/icons-material/Edit';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { ContactDisplay } from "./ContactDisplay";
-import { IconRow } from "../IconRow";
+import { IconRow } from "../Generic/IconRow";
 import { VolunteerRoleApprovalStatusChip } from "../Volunteers/VolunteerRoleApprovalStatusChip";
 import { RemoveIndividualRoleDialog } from "../Volunteers/RemoveIndividualRoleDialog";
 import { ResetIndividualRoleDialog } from "../Volunteers/ResetIndividualRoleDialog";
@@ -34,7 +34,7 @@ import { EditAdultDialog } from "./EditAdultDialog";
 import { useCollapsed } from "../Hooks/useCollapsed";
 import { useFamilyLookup } from "../Model/DirectoryModel";
 import { useFeatureFlags } from "../Model/ConfigurationModel";
-import { useDrawer } from "../Shell/ShellDrawer";
+import { useDrawer } from "../Generic/ShellDrawer";
 import { ManageUserDrawer } from "./ManageUserDrawer";
 
 type AdultCardProps = {

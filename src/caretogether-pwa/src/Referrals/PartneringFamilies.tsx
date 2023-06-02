@@ -14,7 +14,7 @@ import { CreatePartneringFamilyDialog } from './CreatePartneringFamilyDialog';
 import { useScrollMemory } from '../Hooks/useScrollMemory';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
 import { policyData } from '../Model/ConfigurationModel';
-import { SearchBar } from '../SearchBar';
+import { SearchBar } from '../Shell/SearchBar';
 import { filterFamiliesByText, sortFamiliesByLastNameDesc } from '../Families/FamilyUtils';
 import { useAllPartneringFamiliesPermissions } from '../Model/SessionModel';
 import useScreenTitle from '../Shell/ShellScreenTitle';

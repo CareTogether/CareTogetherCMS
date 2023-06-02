@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import AddIcon from '@mui/icons-material/Add';
 import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';
-import { SearchBar } from '../SearchBar';
+import { SearchBar } from '../Shell/SearchBar';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
 import { useScrollMemory } from '../Hooks/useScrollMemory';
 import { filterFamiliesByText, familyLastName, sortFamiliesByLastNameDesc } from '../Families/FamilyUtils';

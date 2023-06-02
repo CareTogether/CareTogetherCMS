@@ -1,7 +1,7 @@
 import { Grid, Skeleton, Typography } from '@mui/material';
 import { useRecoilValueLoadable } from 'recoil';
-import { locationConfigurationQuery, organizationConfigurationQuery } from './Model/ConfigurationModel';
-import useScreenTitle from './Shell/ShellScreenTitle';
+import { locationConfigurationQuery, organizationConfigurationQuery } from '../Model/ConfigurationModel';
+import useScreenTitle from '../Shell/ShellScreenTitle';
 
 function Dashboard() {
   const organizationConfiguration = useRecoilValueLoadable(organizationConfigurationQuery);

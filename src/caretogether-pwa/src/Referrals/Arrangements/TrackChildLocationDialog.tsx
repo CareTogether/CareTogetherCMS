@@ -24,7 +24,7 @@ import { PersonName } from '../../Families/PersonName';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../../Model/ConfigurationModel';
 import { format } from 'date-fns';
-import { a11yProps, TabPanel } from '../../TabPanel';
+import { a11yProps, TabPanel } from '../../Generic/TabPanel';
 
 interface ChildLocationTimelineProps {
   partneringFamily: CombinedFamilyInfo,

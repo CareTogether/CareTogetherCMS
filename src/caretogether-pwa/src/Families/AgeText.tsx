@@ -1,5 +1,5 @@
 import { differenceInYears } from "date-fns";
-import { Age, AgeInYears, ExactAge } from "./GeneratedClient";
+import { Age, AgeInYears, ExactAge } from "../GeneratedClient";
 
 interface AgeTextProps {
   age?: Age

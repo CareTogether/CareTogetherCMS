@@ -12,7 +12,7 @@ import EmailIcon from '@mui/icons-material/Email';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';
 import { Link, useLocation } from 'react-router-dom';
-import { SearchBar } from '../SearchBar';
+import { SearchBar } from '../Shell/SearchBar';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
 import { useScrollMemory } from '../Hooks/useScrollMemory';
 import { useAllVolunteerFamiliesPermissions } from '../Model/SessionModel';

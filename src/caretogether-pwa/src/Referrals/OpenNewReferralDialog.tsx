@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Grid } from '@mui/material';
-import { UpdateDialog } from '../UpdateDialog';
+import { UpdateDialog } from '../Generic/UpdateDialog';
 import { DatePicker } from '@mui/x-date-pickers';
 import { useReferralsModel } from '../Model/ReferralsModel';
 

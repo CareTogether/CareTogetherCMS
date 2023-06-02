@@ -1,6 +1,6 @@
 import { UploadedDocumentInfo } from '../GeneratedClient';
 import { useDirectoryModel } from '../Model/DirectoryModel';
-import { UpdateDialog } from '../UpdateDialog';
+import { UpdateDialog } from '../Generic/UpdateDialog';
 
 interface DeleteDocumentDialogProps {
   familyId: string,
