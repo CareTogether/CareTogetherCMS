@@ -51,8 +51,8 @@ export function ShellBottomNavigation() {
         }}
       >
         <BottomNavigationAction icon={<MenuIcon />} onClick={() => setDrawerOpen(true)} />
-        {<BottomNavigationAction component={Link} to={`${locationPrefix}`} label="Dashboard" icon={<DashboardIcon />} />}
-        {<BottomNavigationAction component={Link} to={`${locationPrefix}/referrals`} label="Referrals" icon={<PermPhoneMsgIcon />} />}
+        <BottomNavigationAction component={Link} to={`${locationPrefix}`} label="Dashboard" icon={<DashboardIcon />} />
+        <BottomNavigationAction component={Link} to={`${locationPrefix}/referrals`} label="Referrals" icon={<PermPhoneMsgIcon />} />
         <BottomNavigationAction component={Link} to={`${locationPrefix}/volunteers`} label="Volunteers" icon={<PeopleIcon />} />
         <BottomNavigationAction component={Link} to={`${locationPrefix}/communities`} label="Communities" icon={<Diversity3Icon />} />
       </BottomNavigation>
