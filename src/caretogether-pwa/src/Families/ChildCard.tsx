@@ -6,7 +6,7 @@ import {
   Typography,
 } from "@mui/material";
 import { CustodialRelationshipType, Gender, Permission } from "../GeneratedClient";
-import { AgeText } from "../AgeText";
+import { AgeText } from "./AgeText";
 import EditIcon from '@mui/icons-material/Edit';
 import { useDialogHandle } from "../Hooks/useDialogHandle";
 import { EditChildDialog } from "./EditChildDialog";

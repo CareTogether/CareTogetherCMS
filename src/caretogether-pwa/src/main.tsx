@@ -12,7 +12,7 @@ import { RecoilRoot } from 'recoil';
 import { BrowserRouter as Router } from "react-router-dom";
 import AuthenticationWrapper from './Authentication/AuthenticationWrapper';
 import { AppRoutes } from './AppRoutes';
-import RequestBackdrop from './RequestBackdrop';
+import RequestBackdrop from './Shell/RequestBackdrop';
 import { ProgressBackdrop } from './Shell/ProgressBackdrop';
 
 const root = ReactDOM.createRoot(

@@ -5,7 +5,7 @@ import { useParams } from 'react-router';
 import { Arrangement, Person } from '../../GeneratedClient';
 import { usePersonLookup } from '../../Model/DirectoryModel';
 import { useReferralsModel } from '../../Model/ReferralsModel';
-import { UpdateDialog } from '../../UpdateDialog';
+import { UpdateDialog } from '../../Generic/UpdateDialog';
 
 interface StartArrangementDialogProps {
   referralId: string,

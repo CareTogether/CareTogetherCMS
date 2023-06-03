@@ -6,7 +6,7 @@ import { useFamilyIdPermissions } from "../../Model/SessionModel";
 import { useDialogHandle } from "../../Hooks/useDialogHandle";
 import { FamilyName } from "../../Families/FamilyName";
 import { PersonName } from "../../Families/PersonName";
-import { IconRow } from "../../IconRow";
+import { IconRow } from "../../Generic/IconRow";
 import { AssignArrangementFunctionDialog } from "./AssignArrangementFunctionDialog";
 import { UnassignArrangementFunctionDialog } from "./UnassignArrangementFunctionDialog";
 

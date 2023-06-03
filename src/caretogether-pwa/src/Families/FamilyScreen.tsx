@@ -113,7 +113,7 @@ export function FamilyScreen() {
     Active = "Active",
     Cancelled = "Cancelled"
   }
-  const { arrangementFilterOptions, handleFilterArrangements } =
+  const { filterOptions: arrangementFilterOptions, handleFilterChange: handleFilterArrangements } =
     useFilterMenu(Object.keys(ArrangementFilterOptionLabel), [ArrangementFilterOptionLabel.Active]);
 
 	const meetsArrangementFilterCriteria = (arrangement: Arrangement): boolean => {

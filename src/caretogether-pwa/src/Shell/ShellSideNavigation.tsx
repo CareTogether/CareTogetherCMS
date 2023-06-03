@@ -3,6 +3,7 @@ import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
 import PeopleIcon from '@mui/icons-material/People';
 import SettingsIcon from '@mui/icons-material/Settings';
 import Diversity3Icon from '@mui/icons-material/Diversity3';
+import DashboardIcon from '@mui/icons-material/Dashboard';
 import { ListItemLink } from './ListItemLink';
 import { useFeatureFlags } from '../Model/ConfigurationModel';
 import { Copyright } from './Copyright';
@@ -42,6 +43,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
             </Stack>
           </>
         : <>
+            <ListItemLink to={`${locationPrefix}`} primary="Dashboard" icon={<DashboardIcon sx={{color: '#fff8'}} />} />
             {permissions(Permission.AccessPartneringFamiliesScreen) &&
               <ListItemLink to={`${locationPrefix}/referrals`} primary="Referrals" icon={<PermPhoneMsgIcon sx={{color: '#fff8'}} />} />}
             {permissions(Permission.AccessVolunteersScreen) &&

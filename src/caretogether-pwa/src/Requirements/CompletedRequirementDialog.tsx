@@ -3,7 +3,7 @@ import { CompletedRequirementInfo } from "../GeneratedClient";
 import { useReferralsModel } from "../Model/ReferralsModel";
 import { useVolunteersModel } from "../Model/VolunteersModel";
 import { DialogHandle } from "../Hooks/useDialogHandle";
-import { UpdateDialog } from "../UpdateDialog";
+import { UpdateDialog } from "../Generic/UpdateDialog";
 import { RequirementContext } from "./RequirementContext";
 
 type CompletedRequirementDialogProps = {

@@ -1,7 +1,7 @@
 import { Person } from '../GeneratedClient';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { DialogHandle } from '../Hooks/useDialogHandle';
-import { UpdateDialog } from '../UpdateDialog';
+import { UpdateDialog } from '../Generic/UpdateDialog';
 
 interface DeletePersonDialogProps {
   familyId: string,

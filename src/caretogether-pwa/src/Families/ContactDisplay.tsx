@@ -1,5 +1,5 @@
 import { Person } from "../GeneratedClient";
-import { IconRow } from "../IconRow";
+import { IconRow } from "../Generic/IconRow";
 
 type ContactDisplayProps = {
   person: Person

@@ -1,5 +1,5 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
-import { useBackdrop } from './Hooks/useBackdrop';
+import { useBackdrop } from '../Hooks/useBackdrop';
 
 type UpdateDialogProps = {
   title: string

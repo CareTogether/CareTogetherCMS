@@ -15,7 +15,7 @@ import { AddMemberFamiliesForm } from './AddMemberFamiliesForm';
 import { AddRoleAssignmentForm } from './AddRoleAssignmentForm';
 import { CommunityMemberFamilies } from './CommunityMemberFamilies';
 import { CommunityRoleAssignments } from './CommunityRoleAssignments';
-import { useDrawer } from '../Shell/ShellDrawer';
+import { useDrawer } from '../Generic/ShellDrawer';
 import { useDataLoaded } from '../Model/Data';
 
 export function CommunityScreen() {

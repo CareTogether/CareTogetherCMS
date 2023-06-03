@@ -1,6 +1,6 @@
 import { useRecoilValue } from "recoil";
-import { showGlobalBackdropData } from "./Hooks/useBackdrop";
-import { ProgressBackdrop } from "./Shell/ProgressBackdrop";
+import { showGlobalBackdropData } from "../Hooks/useBackdrop";
+import { ProgressBackdrop } from "./ProgressBackdrop";
 
 export default function RequestBackdrop() {
   const showGlobalBackdrop = useRecoilValue(showGlobalBackdropData);

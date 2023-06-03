@@ -1,6 +1,6 @@
 import { Divider, Typography } from '@mui/material';
 import { useDirectoryModel, useUserLookup } from '../Model/DirectoryModel';
-import { UpdateDialog } from '../UpdateDialog';
+import { UpdateDialog } from '../Generic/UpdateDialog';
 import { Note } from '../GeneratedClient';
 import { PersonName } from '../Families/PersonName';
 import { format } from 'date-fns';
