@@ -1,19 +1,18 @@
 import { ChangeEvent, useState } from "react";
 import { IFilterOption } from "./IFilterOption";
 
-export function useFilterMenu(ArrangementFilterOptionLabels: string[], defaultOptionLabels: string[] ) {
-  const [arrangementFilterOptions, setArrangementFilterOptions] = useState<IFilterOption[]>(
-    ArrangementFilterOptionLabels.map(label => {
-    return {
-      key: label,
-      text: label,
-      selected: defaultOptionLabels.includes(label)
-    }
-    })
-  );
+export function useFilterMenu(options: string[], initialSelections: string[]) {
+  const [filterOptions, setSelectedOptions] = useState<IFilterOption[]>(
+    options.map(option => {
+      return {
+        key: option,
+        text: option,
+        selected: initialSelections.includes(option)
+      }
+    }));
 
-  const handleFilterArrangements = (event: ChangeEvent<HTMLInputElement>, checked: boolean) => {
-    setArrangementFilterOptions(arrangementFilterOptions.map(o => {
+  const handleFilterChange = (event: ChangeEvent<HTMLInputElement>, _checked: boolean) => {
+    setSelectedOptions(filterOptions.map(o => {
       if (o.text === event.target.name) {
         o.selected = !o.selected;
       }
@@ -22,7 +21,7 @@ export function useFilterMenu(ArrangementFilterOptionLabels: string[], defaultOp
   }
 
   return {
-    arrangementFilterOptions,
-    handleFilterArrangements
+    filterOptions,
+    handleFilterChange
   }
 }
