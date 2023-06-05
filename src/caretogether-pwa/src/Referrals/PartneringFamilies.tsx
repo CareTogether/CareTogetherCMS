@@ -31,6 +31,12 @@ const arrangementPhaseText = new Map<number, string>([
   [ArrangementPhase.Ended, 'Ended'],
 ]);
 
+function allArrangements(partneringFamilyInfo: PartneringFamilyInfo) {
+  const results = [] as { referralId: string, arrangement: Arrangement }[];
+  partneringFamilyInfo.closedReferrals?.forEach(x => x.arrangements?.forEach(y => results.push({ referralId: x.id!, arrangement: y })));
+  partneringFamilyInfo.openReferral?.arrangements?.forEach(x => results.push({ referralId: partneringFamilyInfo.openReferral!.id!, arrangement: x }));
+  return results;
+}
 
 function matchingArrangements(partneringFamilyInfo: PartneringFamilyInfo, viewActiveOnly: boolean) {
   const results = [] as { referralId: string, arrangement: Arrangement }[];
