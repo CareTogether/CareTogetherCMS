@@ -55,10 +55,11 @@ function ChildLocationTimeline({ partneringFamily, referralId, arrangement, reco
   const allEntries = (arrangement.childLocationHistory || []).concat(arrangement.childLocationPlan || []).sort((a, b) =>
     a.timestampUtc! < b.timestampUtc! ? 1 : a.timestampUtc! > b.timestampUtc! ? -1 : 0);
   
+  // If there are no entries, or only planned entries, the current location entry will be undefined.
   const currentLocationEntryIndex = allEntries.findIndex(entry => entry.noteId);
-  const currentLocationEntry = allEntries[currentLocationEntryIndex];
+  const currentLocationEntry = currentLocationEntryIndex !== -1 ? allEntries[currentLocationEntryIndex] : undefined;
   const nextPlannedChange = allEntries.slice(0, currentLocationEntryIndex).reverse().find(entry =>
-    !entry.noteId && entry.childLocationFamilyId !== currentLocationEntry.childLocationFamilyId);
+    !entry.noteId && entry.childLocationFamilyId !== currentLocationEntry?.childLocationFamilyId);
   
   const now = new Date();
   
