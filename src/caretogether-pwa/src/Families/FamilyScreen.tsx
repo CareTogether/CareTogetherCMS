@@ -111,7 +111,8 @@ export function FamilyScreen() {
   
   enum ArrangementFilterOptionLabel {
     Active = "Active",
-    Cancelled = "Cancelled"
+    Cancelled = "Cancelled",
+    Ended = "Ended"
   }
   const { filterOptions: arrangementFilterOptions, handleFilterChange: handleFilterArrangements } =
     useFilterMenu(Object.keys(ArrangementFilterOptionLabel), [ArrangementFilterOptionLabel.Active]);
@@ -123,7 +124,9 @@ export function FamilyScreen() {
 				return true;
 			} else if (opt === ArrangementFilterOptionLabel.Cancelled && arrangement.cancelledAtUtc !== undefined) {
 				return true;
-			}
+			} else if (opt === ArrangementFilterOptionLabel.Ended && arrangement.endedAtUtc !== undefined) {
+        return true;
+      }
 			return false;
 		})
 	};
