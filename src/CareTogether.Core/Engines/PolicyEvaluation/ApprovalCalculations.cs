@@ -28,9 +28,17 @@ namespace CareTogether.Engines.PolicyEvaluation
                 volunteerPolicy, family, utcNow,
                 completedFamilyRequirements, exemptedFamilyRequirements, removedFamilyRoles,
                 completedIndividualRequirements, exemptedIndividualRequirements, removedIndividualRoles);
+            
+            var effectiveFamilyRoleVersionApprovals = familyResult.FamilyRoleVersionApprovals
+                .Select(roleApprovals =>
+                    (role: roleApprovals.Key,
+                    effectiveApproval: CalculateEffectiveRoleVersionApproval(roleApprovals.Value)))
+                .Where(roleApproval => roleApproval.effectiveApproval != null)
+                .ToImmutableDictionary(roleApproval => roleApproval.role, roleApproval => roleApproval.effectiveApproval!);
 
             return new VolunteerFamilyApprovalStatus(
                 familyResult.FamilyRoleVersionApprovals,
+                effectiveFamilyRoleVersionApprovals,
                 familyResult.RemovedFamilyRoles,
                 familyResult.MissingFamilyRequirements,
                 familyResult.AvailableFamilyApplications,
@@ -50,14 +58,42 @@ namespace CareTogether.Engines.PolicyEvaluation
                         .Distinct()
                         .ToImmutableList();
 
+                    var effectiveIndividualRoleVersionApprovals = individualResult.IndividualRoleVersionApprovals
+                        .Select(roleApprovals =>
+                            (role: roleApprovals.Key,
+                            effectiveApproval: CalculateEffectiveRoleVersionApproval(roleApprovals.Value)))
+                        .Where(roleApproval => roleApproval.effectiveApproval != null)
+                        .ToImmutableDictionary(roleApproval => roleApproval.role, roleApproval => roleApproval.effectiveApproval!);
+
                     return new KeyValuePair<Guid, VolunteerApprovalStatus>(person.Id, new VolunteerApprovalStatus(
                         IndividualRoleApprovals: individualResult.IndividualRoleVersionApprovals,
+                        EffectiveIndividualRoleApprovals: effectiveIndividualRoleVersionApprovals,
                         RemovedIndividualRoles: individualResult.RemovedIndividualRoles,
                         MissingIndividualRequirements: mergedMissingIndividualRequirements,
                         AvailableIndividualApplications: individualResult.AvailableIndividualApplications));
                 }).ToImmutableDictionary());
         }
 
+        /// <summary>
+        /// Given potentially multiple calculated role version approvals (due to having multiple policies or
+        /// perhaps multiple ways that the approval was qualified for), select the one that gives the best
+        /// (most-approved) status for the overall role, since that will always be the one of interest.
+        /// </summary>
+        internal static RoleVersionApproval? CalculateEffectiveRoleVersionApproval(ImmutableList<RoleVersionApproval> value)
+        {
+            if (value.Count == 0)
+                return null;
+
+            // Sort the approval status values by the numeric value of the ApprovalStatus enum cases.
+            // This means that Onboarded trumps Approved, which trumps Expired, which trumps Prospective.
+            // Within each approval level, we want the expiration date that is furthest in the future.
+            var bestCurrentApproval = value
+                .OrderByDescending(rva => rva.ApprovalStatus)
+                .ThenByDescending(rva => rva.ExpiresAt ?? DateTime.MaxValue)
+                .First();
+            
+            return bestCurrentApproval;
+        }
 
         internal static ImmutableDictionary<Guid,
             (ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> IndividualRoleVersionApprovals,
