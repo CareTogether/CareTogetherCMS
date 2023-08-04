@@ -32,7 +32,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             var effectiveFamilyRoleVersionApprovals = familyResult.FamilyRoleVersionApprovals
                 .Select(roleApprovals =>
                     (role: roleApprovals.Key,
-                    effectiveApproval: CalculateEffectiveRoleVersionApproval(roleApprovals.Value)))
+                    effectiveApproval: CalculateEffectiveRoleVersionApproval(roleApprovals.Value, utcNow)))
                 .Where(roleApproval => roleApproval.effectiveApproval != null)
                 .ToImmutableDictionary(roleApproval => roleApproval.role, roleApproval => roleApproval.effectiveApproval!);
 
@@ -61,7 +61,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                     var effectiveIndividualRoleVersionApprovals = individualResult.IndividualRoleVersionApprovals
                         .Select(roleApprovals =>
                             (role: roleApprovals.Key,
-                            effectiveApproval: CalculateEffectiveRoleVersionApproval(roleApprovals.Value)))
+                            effectiveApproval: CalculateEffectiveRoleVersionApproval(roleApprovals.Value, utcNow)))
                         .Where(roleApproval => roleApproval.effectiveApproval != null)
                         .ToImmutableDictionary(roleApproval => roleApproval.role, roleApproval => roleApproval.effectiveApproval!);
 
@@ -79,15 +79,20 @@ namespace CareTogether.Engines.PolicyEvaluation
         /// perhaps multiple ways that the approval was qualified for), select the one that gives the best
         /// (most-approved) status for the overall role, since that will always be the one of interest.
         /// </summary>
-        internal static RoleVersionApproval? CalculateEffectiveRoleVersionApproval(ImmutableList<RoleVersionApproval> value)
+        internal static RoleVersionApproval? CalculateEffectiveRoleVersionApproval(
+            ImmutableList<RoleVersionApproval> roleVersionApprovals, DateTime utcNow)
         {
-            if (value.Count == 0)
+            if (roleVersionApprovals.Count == 0)
                 return null;
 
-            // Sort the approval status values by the numeric value of the ApprovalStatus enum cases.
+            // Based on the current timestamp, treat any expired approval status values as expired. Then,
+            // sort the approval status values by the numeric value of the ApprovalStatus enum cases.
             // This means that Onboarded trumps Approved, which trumps Expired, which trumps Prospective.
             // Within each approval level, we want the expiration date that is furthest in the future.
-            var bestCurrentApproval = value
+            var bestCurrentApproval = roleVersionApprovals
+                .Select(rva => rva.ExpiresAt != null && rva.ExpiresAt < utcNow
+                    ? rva with { ApprovalStatus = RoleApprovalStatus.Expired }
+                    : rva)
                 .OrderByDescending(rva => rva.ApprovalStatus)
                 .ThenByDescending(rva => rva.ExpiresAt ?? DateTime.MaxValue)
                 .First();

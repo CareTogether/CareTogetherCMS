@@ -40,12 +40,12 @@ namespace CareTogether.Api.OData
     public sealed record FamilyRoleApproval(
         [property: ForeignKey("FamilyId")] Family Family, [property: Key] Guid FamilyId,
         [property: ForeignKey("RoleName")] Role Role, [property: Key] string RoleName,
-        RoleApprovalStatus ApprovalStatus);
+        RoleApprovalStatus ApprovalStatus, DateOnly? ExpiresAt);
 
     public sealed record IndividualRoleApproval(
         [property: ForeignKey("PersonId")] Person Person, [property: Key] Guid PersonId,
         [property: ForeignKey("RoleName")] Role Role, [property: Key] string RoleName,
-        RoleApprovalStatus ApprovalStatus);
+        RoleApprovalStatus ApprovalStatus, DateOnly? ExpiresAt);
 
     public sealed record Role([property: Key] string Name);
 
@@ -339,44 +339,27 @@ namespace CareTogether.Api.OData
         private static IEnumerable<FamilyRoleApproval> RenderFamilyRoleApprovals(
             CombinedFamilyInfo familyInfo, Family family, Role[] roles)
         {
-            return familyInfo.VolunteerFamilyInfo?.FamilyRoleApprovals
-                .SelectMany(fra =>
-                {
-                    var bestCurrentApproval = fra.Value
-                        .Where(rva => rva.ExpiresAt == null || rva.ExpiresAt > DateTime.Now)
-                        .MaxBy(rva => rva.ApprovalStatus);
-                    return bestCurrentApproval == null
-                        ? Enumerable.Empty<FamilyRoleApproval>()
-                        : new[]
-                        {
-                            new FamilyRoleApproval(family, family.Id,
-                                roles.Single(role => role.Name == fra.Key), fra.Key,
-                                bestCurrentApproval.ApprovalStatus)
-                        };
-                })
+            return familyInfo.VolunteerFamilyInfo?.EffectiveFamilyRoleApprovals
+                .Select(fra =>
+                    new FamilyRoleApproval(family, family.Id,
+                        roles.Single(role => role.Name == fra.Key), fra.Key,
+                        fra.Value.ApprovalStatus,
+                        fra.Value.ExpiresAt == null ? null : DateOnly.FromDateTime(fra.Value.ExpiresAt.Value)))
                 ?? Enumerable.Empty<FamilyRoleApproval>();
+            //TODO: Include *when approval began* (requires returning *all* the approvals and adding a 'Since' date property!)
         }
 
         private static IEnumerable<IndividualRoleApproval> RenderIndividualRoleApprovals(
             CombinedFamilyInfo familyInfo, Family family, Person[] people, Role[] roles)
         {
             return familyInfo.VolunteerFamilyInfo?.IndividualVolunteers
-                .SelectMany(individual => individual.Value.IndividualRoleApprovals
-                    .SelectMany(ira =>
-                    {
-                        var bestCurrentApproval = ira.Value
-                            .Where(rva => rva.ExpiresAt == null || rva.ExpiresAt > DateTime.Now)
-                            .MaxBy(rva => rva.ApprovalStatus);
-                        return bestCurrentApproval == null
-                            ? Enumerable.Empty<IndividualRoleApproval>()
-                            : new[]
-                            {
-                                new IndividualRoleApproval(
-                                    people.Single(person => person.Id == individual.Key), individual.Key,
-                                    roles.Single(role => role.Name == ira.Key), ira.Key,
-                                    bestCurrentApproval.ApprovalStatus)
-                            };
-                    }))
+                .SelectMany(individual => individual.Value.EffectiveIndividualRoleApprovals
+                    .Select(ira =>
+                        new IndividualRoleApproval(
+                            people.Single(person => person.Id == individual.Key), individual.Key,
+                            roles.Single(role => role.Name == ira.Key), ira.Key,
+                            ira.Value.ApprovalStatus,
+                            ira.Value.ExpiresAt == null ? null : DateOnly.FromDateTime(ira.Value.ExpiresAt.Value))))
                 ?? Enumerable.Empty<IndividualRoleApproval>();
         }
 

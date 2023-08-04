@@ -57,6 +57,7 @@ namespace CareTogether.Managers
         ImmutableList<string> MissingRequirements,
         ImmutableList<string> AvailableApplications,
         ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> FamilyRoleApprovals,
+        ImmutableDictionary<string, RoleVersionApproval> EffectiveFamilyRoleApprovals,
         ImmutableDictionary<Guid, VolunteerInfo> IndividualVolunteers,
         ImmutableList<Activity> History);
 
@@ -66,7 +67,8 @@ namespace CareTogether.Managers
         ImmutableList<RemovedRole> RemovedRoles,
         ImmutableList<string> MissingRequirements,
         ImmutableList<string> AvailableApplications,
-        ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> IndividualRoleApprovals);
+        ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> IndividualRoleApprovals,
+        ImmutableDictionary<string, RoleVersionApproval> EffectiveIndividualRoleApprovals);
 
     public sealed record CommunityInfo(Community Community,
         ImmutableList<Permission> UserPermissions);
