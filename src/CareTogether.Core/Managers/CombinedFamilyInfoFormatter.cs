@@ -187,6 +187,7 @@ namespace CareTogether.Managers
                 volunteerFamilyApprovalStatus.MissingFamilyRequirements,
                 volunteerFamilyApprovalStatus.AvailableFamilyApplications,
                 volunteerFamilyApprovalStatus.FamilyRoleApprovals,
+                volunteerFamilyApprovalStatus.EffectiveFamilyRoleApprovals,
                 volunteerFamilyApprovalStatus.IndividualVolunteers.ToImmutableDictionary(
                     x => x.Key,
                     x =>
@@ -199,7 +200,8 @@ namespace CareTogether.Managers
                             individualEntry?.RemovedRoles ?? ImmutableList<RemovedRole>.Empty,
                             x.Value.MissingIndividualRequirements,
                             x.Value.AvailableIndividualApplications,
-                            x.Value.IndividualRoleApprovals);
+                            x.Value.IndividualRoleApprovals,
+                            x.Value.EffectiveIndividualRoleApprovals);
                     }),
                 entry.History);
 

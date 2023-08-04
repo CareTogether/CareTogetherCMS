@@ -85,12 +85,14 @@ namespace CareTogether.Engines.PolicyEvaluation
             if (roleVersionApprovals.Count == 0)
                 return null;
 
-            // Based on the current timestamp, treat any expired approval status values as expired. Then,
-            // sort the approval status values by the numeric value of the ApprovalStatus enum cases.
+            // Based on the current timestamp, treat any expired approvals (approved or onboarded status) as expired.
+            // (Note that the raw calculations which serve as inputs for this method don't ever return 'expired' themselves.)
+            // Then, sort the status values by the numeric value of the ApprovalStatus enum cases.
             // This means that Onboarded trumps Approved, which trumps Expired, which trumps Prospective.
-            // Within each approval level, we want the expiration date that is furthest in the future.
+            // Within each status level, return the expiration date that is furthest in the future.
             var bestCurrentApproval = roleVersionApprovals
-                .Select(rva => rva.ExpiresAt != null && rva.ExpiresAt < utcNow
+                //TODO: Is there a more straightforward way to treat a Prospective status that has expired?
+                .Select(rva => rva.ApprovalStatus > RoleApprovalStatus.Expired && rva.ExpiresAt != null && rva.ExpiresAt < utcNow
                     ? rva with { ApprovalStatus = RoleApprovalStatus.Expired }
                     : rva)
                 .OrderByDescending(rva => rva.ApprovalStatus)
