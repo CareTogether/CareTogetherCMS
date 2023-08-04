@@ -10,15 +10,14 @@ namespace CareTogether.Engines.PolicyEvaluation
         public sealed record RequirementCheckResult(bool IsMetOrExempted, DateTime? ExpiresAtUtc);
 
         internal static RequirementCheckResult RequirementMetOrExempted(string requirementName,
-            DateTime? policySupersededAtUtc, DateTime utcNow,
+            DateTime? policySupersededAtUtc,
             ImmutableList<CompletedRequirementInfo> completedRequirements,
             ImmutableList<ExemptedRequirementInfo> exemptedRequirements)
         {
             var bestCompletion = completedRequirements
                 .Where(completed =>
                     completed.RequirementName == requirementName &&
-                    (policySupersededAtUtc == null || completed.CompletedAtUtc < policySupersededAtUtc) &&
-                    (completed.ExpiresAtUtc == null || completed.ExpiresAtUtc > utcNow))
+                    (policySupersededAtUtc == null || completed.CompletedAtUtc < policySupersededAtUtc))
                 .MaxBy(completed => completed.ExpiresAtUtc ?? DateTime.MaxValue);
 
             if (bestCompletion != null)
@@ -26,8 +25,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             var bestExemption = exemptedRequirements
                 .Where(exempted =>
-                    exempted.RequirementName == requirementName &&
-                    (exempted.ExemptionExpiresAtUtc == null || exempted.ExemptionExpiresAtUtc > utcNow))
+                    exempted.RequirementName == requirementName)
                 .MaxBy(exempted => exempted.ExemptionExpiresAtUtc ?? DateTime.MaxValue);
 
             if (bestExemption != null)
