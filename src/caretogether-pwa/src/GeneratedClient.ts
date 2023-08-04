@@ -5256,6 +5256,7 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
     missingRequirements?: string[];
     availableApplications?: string[];
     familyRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
+    effectiveFamilyRoleApprovals?: { [key: string]: RoleVersionApproval; };
     individualVolunteers?: { [key: string]: VolunteerInfo; };
     history?: Activity[];
 
@@ -5300,6 +5301,13 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
                 for (let key in _data["familyRoleApprovals"]) {
                     if (_data["familyRoleApprovals"].hasOwnProperty(key))
                         (<any>this.familyRoleApprovals)![key] = _data["familyRoleApprovals"][key] ? _data["familyRoleApprovals"][key].map((i: any) => RoleVersionApproval.fromJS(i)) : [];
+                }
+            }
+            if (_data["effectiveFamilyRoleApprovals"]) {
+                this.effectiveFamilyRoleApprovals = {} as any;
+                for (let key in _data["effectiveFamilyRoleApprovals"]) {
+                    if (_data["effectiveFamilyRoleApprovals"].hasOwnProperty(key))
+                        (<any>this.effectiveFamilyRoleApprovals)![key] = _data["effectiveFamilyRoleApprovals"][key] ? RoleVersionApproval.fromJS(_data["effectiveFamilyRoleApprovals"][key]) : new RoleVersionApproval();
                 }
             }
             if (_data["individualVolunteers"]) {
@@ -5358,6 +5366,13 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
                     (<any>data["familyRoleApprovals"])[key] = (<any>this.familyRoleApprovals)[key];
             }
         }
+        if (this.effectiveFamilyRoleApprovals) {
+            data["effectiveFamilyRoleApprovals"] = {};
+            for (let key in this.effectiveFamilyRoleApprovals) {
+                if (this.effectiveFamilyRoleApprovals.hasOwnProperty(key))
+                    (<any>data["effectiveFamilyRoleApprovals"])[key] = this.effectiveFamilyRoleApprovals[key] ? this.effectiveFamilyRoleApprovals[key].toJSON() : <any>undefined;
+            }
+        }
         if (this.individualVolunteers) {
             data["individualVolunteers"] = {};
             for (let key in this.individualVolunteers) {
@@ -5381,6 +5396,7 @@ export interface IVolunteerFamilyInfo {
     missingRequirements?: string[];
     availableApplications?: string[];
     familyRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
+    effectiveFamilyRoleApprovals?: { [key: string]: RoleVersionApproval; };
     individualVolunteers?: { [key: string]: VolunteerInfo; };
     history?: Activity[];
 }
@@ -5493,6 +5509,7 @@ export class VolunteerInfo implements IVolunteerInfo {
     missingRequirements?: string[];
     availableApplications?: string[];
     individualRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
+    effectiveIndividualRoleApprovals?: { [key: string]: RoleVersionApproval; };
 
     constructor(data?: IVolunteerInfo) {
         if (data) {
@@ -5535,6 +5552,13 @@ export class VolunteerInfo implements IVolunteerInfo {
                 for (let key in _data["individualRoleApprovals"]) {
                     if (_data["individualRoleApprovals"].hasOwnProperty(key))
                         (<any>this.individualRoleApprovals)![key] = _data["individualRoleApprovals"][key] ? _data["individualRoleApprovals"][key].map((i: any) => RoleVersionApproval.fromJS(i)) : [];
+                }
+            }
+            if (_data["effectiveIndividualRoleApprovals"]) {
+                this.effectiveIndividualRoleApprovals = {} as any;
+                for (let key in _data["effectiveIndividualRoleApprovals"]) {
+                    if (_data["effectiveIndividualRoleApprovals"].hasOwnProperty(key))
+                        (<any>this.effectiveIndividualRoleApprovals)![key] = _data["effectiveIndividualRoleApprovals"][key] ? RoleVersionApproval.fromJS(_data["effectiveIndividualRoleApprovals"][key]) : new RoleVersionApproval();
                 }
             }
         }
@@ -5581,6 +5605,13 @@ export class VolunteerInfo implements IVolunteerInfo {
                     (<any>data["individualRoleApprovals"])[key] = (<any>this.individualRoleApprovals)[key];
             }
         }
+        if (this.effectiveIndividualRoleApprovals) {
+            data["effectiveIndividualRoleApprovals"] = {};
+            for (let key in this.effectiveIndividualRoleApprovals) {
+                if (this.effectiveIndividualRoleApprovals.hasOwnProperty(key))
+                    (<any>data["effectiveIndividualRoleApprovals"])[key] = this.effectiveIndividualRoleApprovals[key] ? this.effectiveIndividualRoleApprovals[key].toJSON() : <any>undefined;
+            }
+        }
         return data;
     }
 }
@@ -5592,6 +5623,7 @@ export interface IVolunteerInfo {
     missingRequirements?: string[];
     availableApplications?: string[];
     individualRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
+    effectiveIndividualRoleApprovals?: { [key: string]: RoleVersionApproval; };
 }
 
 export class Note implements INote {

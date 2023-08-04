@@ -127,8 +127,8 @@ export function AdultCard({familyId, personId}: AdultCardProps) {
             margin: 0.5,
           }
         }} component="div">
-          {Object.entries(family.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].individualRoleApprovals || {}).map(([role, roleVersionApprovals]) =>
-            <VolunteerRoleApprovalStatusChip key={role} roleName={role} roleVersionApprovals={roleVersionApprovals} />)}
+          {Object.entries(family.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].effectiveIndividualRoleApprovals || {}).map(([role, roleVersionApproval]) =>
+            <VolunteerRoleApprovalStatusChip key={role} roleName={role} roleVersionApproval={roleVersionApproval} />)}
           {(family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles || []).map(removedRole =>
             <Chip key={removedRole.roleName} size="small" label={`${removedRole.roleName} - ${RoleRemovalReason[removedRole.reason!]} - ${removedRole.additionalComments}`} />)}
           {(adult.item2.relationshipToFamily && <Chip size="small" label={adult.item2.relationshipToFamily} />) || null}

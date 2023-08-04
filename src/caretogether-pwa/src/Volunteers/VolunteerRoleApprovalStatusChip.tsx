@@ -4,31 +4,18 @@ import { RoleApprovalStatus, RoleVersionApproval } from "../GeneratedClient";
 
 type VolunteerRoleApprovalStatusChipProps = {
   roleName: string;
-  roleVersionApprovals: RoleVersionApproval[];
+  roleVersionApproval: RoleVersionApproval;
 };
 
-export function VolunteerRoleApprovalStatusChip({ roleName, roleVersionApprovals }: VolunteerRoleApprovalStatusChipProps) {
-  const determination =
-    roleVersionApprovals.some(x => x.approvalStatus === RoleApprovalStatus.Onboarded)
-    ? RoleApprovalStatus.Onboarded
-    : roleVersionApprovals.some(x => x.approvalStatus === RoleApprovalStatus.Approved)
-    ? RoleApprovalStatus.Approved
-    : roleVersionApprovals.some(x => x.approvalStatus === RoleApprovalStatus.Prospective)
-    ? RoleApprovalStatus.Prospective
-    : null;
+export function VolunteerRoleApprovalStatusChip({ roleName, roleVersionApproval }: VolunteerRoleApprovalStatusChipProps) {
+  const { approvalStatus, expiresAt } = roleVersionApproval;
 
-  const expiration = determination
-    ? roleVersionApprovals.reduce((earliestExpiration, rva) =>
-      rva.expiresAt && (!earliestExpiration || rva.expiresAt < earliestExpiration)
-      ? rva.expiresAt : earliestExpiration, null as Date | null)
-    : null;
-  
-  return determination
+  return approvalStatus != null
     ? <Chip size="small"
-        color={determination === RoleApprovalStatus.Onboarded
+        color={approvalStatus === RoleApprovalStatus.Onboarded
           ? "primary" : "secondary"}
-        label={expiration
-          ? `${RoleApprovalStatus[determination]} ${roleName} until ${format(expiration, "M/d/yy")}`
-          : `${RoleApprovalStatus[determination]} ${roleName}`} />
+        label={expiresAt
+          ? `${RoleApprovalStatus[approvalStatus]} ${roleName} until ${format(expiresAt, "M/d/yy")}`
+          : `${RoleApprovalStatus[approvalStatus]} ${roleName}`} />
     : <></>;
 }

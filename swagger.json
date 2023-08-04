@@ -3207,6 +3207,12 @@
               }
             }
           },
+          "effectiveFamilyRoleApprovals": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/RoleVersionApproval"
+            }
+          },
           "individualVolunteers": {
             "type": "object",
             "additionalProperties": {
@@ -3325,6 +3331,12 @@
               "items": {
                 "$ref": "#/components/schemas/RoleVersionApproval"
               }
+            }
+          },
+          "effectiveIndividualRoleApprovals": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/RoleVersionApproval"
             }
           }
         }
