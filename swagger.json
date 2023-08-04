@@ -3273,13 +3273,15 @@
         "description": "",
         "x-enumNames": [
           "Prospective",
+          "Expired",
           "Approved",
           "Onboarded"
         ],
         "enum": [
           0,
           1,
-          2
+          2,
+          3
         ]
       },
       "VolunteerInfo": {

@@ -5481,8 +5481,9 @@ export interface IRoleVersionApproval {
 
 export enum RoleApprovalStatus {
     Prospective = 0,
-    Approved = 1,
-    Onboarded = 2,
+    Expired = 1,
+    Approved = 2,
+    Onboarded = 3,
 }
 
 export class VolunteerInfo implements IVolunteerInfo {
