@@ -2,7 +2,7 @@ import { DatePicker, DateTimePicker } from '@mui/x-date-pickers';
 import { Checkbox, DialogContentText, Divider, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputLabel, Link, MenuItem, Select, Tab, Tabs, TextField } from "@mui/material";
 import { useState } from "react";
 import { useRecoilValue } from "recoil";
-import { ActionRequirement, Arrangement, DocumentLinkRequirement, MissingArrangementRequirement, NoteEntryRequirement } from "../GeneratedClient";
+import { ActionRequirement, Arrangement, ArrangementPhase, DocumentLinkRequirement, MissingArrangementRequirement, NoteEntryRequirement } from "../GeneratedClient";
 import { useDirectoryModel, useFamilyLookup, usePersonLookup } from "../Model/DirectoryModel";
 import { uploadFamilyFileToTenant } from "../Model/FilesModel";
 import { useReferralsModel } from "../Model/ReferralsModel";
@@ -13,7 +13,7 @@ import { a11yProps, TabPanel } from "../Generic/TabPanel";
 import { personNameString } from "../Families/PersonName";
 import { DialogHandle } from "../Hooks/useDialogHandle";
 import { familyNameString } from "../Families/FamilyName";
-import { add, format, formatDuration, isValid } from "date-fns";
+import { add, format, formatDuration, formatRelative, isValid } from "date-fns";
 import { selectedLocationContextState } from '../Model/Data';
 
 type MissingRequirementDialogProps = {
@@ -28,6 +28,8 @@ export function MissingRequirementDialog({
   const directory = useDirectoryModel();
   const referrals = useReferralsModel();
   const volunteers = useVolunteersModel();
+
+  const now = new Date();
 
   const validityDuration = policy.validity
     ? { days: parseInt(policy.validity.split('.')[0]) }
@@ -225,7 +227,12 @@ export function MissingRequirementDialog({
                         (context.kind === 'Family Volunteer Assignment'
                           ? ` (${familyNameString(familyLookup(context.assignment.familyId))})` : '') +
                         (context.kind === 'Individual Volunteer Assignment'
-                          ? ` (${personNameString(personLookup(context.assignment.personId))})` : '')} />
+                          ? ` (${personNameString(personLookup(context.assignment.personId))})` : '') + ` - ` +
+                        (arrangement.phase === ArrangementPhase.Cancelled ? `Cancelled ${formatRelative(arrangement.cancelledAtUtc!, now)}`
+                        : arrangement.phase === ArrangementPhase.SettingUp ? "Setting up"
+                        : arrangement.phase === ArrangementPhase.ReadyToStart ? "Ready to start"
+                        : arrangement.phase === ArrangementPhase.Started ? `Started ${formatRelative(arrangement.startedAtUtc!, now)}`
+                        : `Ended ${formatRelative(arrangement.endedAtUtc!, now)}`)} />
                   )}
                 </FormGroup>
               </FormControl>
@@ -309,7 +316,12 @@ export function MissingRequirementDialog({
                         checked={applyToArrangements.includes(arrangement)}
                         onChange={(_, checked) => toggleApplyToArrangement(arrangement, checked)}
                         name={arrangement.id!} />}
-                      label={`${arrangement.arrangementType} - ${personNameString(personLookup(arrangement.partneringFamilyPersonId))}`} />
+                      label={`${arrangement.arrangementType} - ${personNameString(personLookup(arrangement.partneringFamilyPersonId))} - ` +
+                              (arrangement.phase === ArrangementPhase.Cancelled ? `Cancelled ${formatRelative(arrangement.cancelledAtUtc!, now)}`
+                              : arrangement.phase === ArrangementPhase.SettingUp ? "Setting up"
+                              : arrangement.phase === ArrangementPhase.ReadyToStart ? "Ready to start"
+                              : arrangement.phase === ArrangementPhase.Started ? `Started ${formatRelative(arrangement.startedAtUtc!, now)}`
+                              : `Ended ${formatRelative(arrangement.endedAtUtc!, now)}`)} />
                   )}
                 </FormGroup>
               </FormControl>
