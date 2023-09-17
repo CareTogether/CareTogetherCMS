@@ -8,11 +8,14 @@ import { FamilyScreen } from "./Families/FamilyScreen";
 import { Communities } from "./Communities/Communities";
 import { UserProfile } from "./UserProfile/UserProfile";
 import { useRecoilStateLoadable } from "recoil";
-import { selectedLocationContextState, userOrganizationAccessQuery } from "./Model/Data";
+import { LocationContext, selectedLocationContextState, userOrganizationAccessQuery } from "./Model/Data";
 import ShellRootLayout from "./Shell/ShellRootLayout";
 import { ProgressBackdrop } from "./Shell/ProgressBackdrop";
 import { useScopedTrace } from "./Hooks/useScopedTrace";
 import { useLoadable } from "./Hooks/useLoadable";
+import { useLocalStorage } from "./Hooks/useLocalStorage";
+
+const LAST_VISITED_LOCATION = 'lastVisitedLocation';
 
 function RouteMigrator() {
   const trace = useScopedTrace("RouteMigrator");
@@ -29,26 +32,38 @@ function RouteMigrator() {
         roles: loc.roles
       }))
     })))}`);
+  
+  const [lastVisitedLocation, _] = useLocalStorage<LocationContext | null>(LAST_VISITED_LOCATION, null);
+  trace(`lastVisitedLocation contents: ${JSON.stringify(lastVisitedLocation)}`);
 
   useEffect(() => {
     if (userOrganizationAccess == null) {
       return;
     }
+
+    let migrationTargetContext: LocationContext | null = null;
     
-    const firstOrganization = userOrganizationAccess?.organizations?.at(0);
-    const firstLocation = firstOrganization?.locations?.at(0);
-    trace(`firstLocation ID: ${JSON.stringify(firstLocation?.locationId)}`);
-  
-    if (firstLocation) {
+    if (lastVisitedLocation) {
+      migrationTargetContext = lastVisitedLocation;
+    } else {
+      const firstOrganization = userOrganizationAccess?.organizations?.at(0);
+      const firstLocation = firstOrganization?.locations?.at(0);
+      trace(`firstLocation ID: ${JSON.stringify(firstLocation?.locationId)}`);
+      migrationTargetContext = (firstOrganization && firstLocation)
+        ? { organizationId: firstOrganization.organizationId!, locationId: firstLocation.locationId! }
+        : null;
+    }
+    
+    if (migrationTargetContext != null) {
       //TODO: Only do this if the old path is a valid/migrate-able path to begin with.
-      const target = `/org/${firstOrganization?.organizationId}/${firstLocation.locationId}${location.pathname}` +
+      const target = `/org/${migrationTargetContext.organizationId}/${migrationTargetContext.locationId}${location.pathname}` +
         `${location.search}${location.hash}`;
       trace(`Attempting to migrate route to: ${target}`);
       navigate(target);
     } else {
       trace("Could not migrate route.");
     }
-  }, [trace, navigate, location, userOrganizationAccess]);
+  }, [trace, navigate, location, userOrganizationAccess, lastVisitedLocation]);
 
   return (
     <ProgressBackdrop opaque>
@@ -72,6 +87,7 @@ function LocationContextWrapper() {
   const { organizationId, locationId } = useParams<{ organizationId: string, locationId: string }>();
   
   const [selectedLocationContext, setSelectedLocationContext] = useRecoilStateLoadable(selectedLocationContextState);
+  const [_, setLastVisitedLocation] = useLocalStorage<LocationContext | null>(LAST_VISITED_LOCATION, null);
 
   // We only need to change this on first load or when the location context actually changes.
   useEffect(() => {
@@ -79,6 +95,7 @@ function LocationContextWrapper() {
 
     if (organizationId && locationId) {
       setSelectedLocationContext({ organizationId, locationId });
+      setLastVisitedLocation({ organizationId, locationId });
     } else {
       trace(`Location context was NOT updated. ` +
         `organizationId: '${organizationId}'` +
