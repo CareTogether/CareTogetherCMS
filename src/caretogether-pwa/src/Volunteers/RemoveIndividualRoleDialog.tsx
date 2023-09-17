@@ -3,6 +3,8 @@ import { FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, Text
 import { Person, RoleRemovalReason } from '../GeneratedClient';
 import { useVolunteersModel } from '../Model/VolunteersModel';
 import { UpdateDialog } from '../Generic/UpdateDialog';
+import { useRecoilValue } from 'recoil';
+import { policyData } from '../Model/ConfigurationModel';
 
 interface RemoveIndividualRoleDialogProps {
   volunteerFamilyId: string,
@@ -18,6 +20,9 @@ export function RemoveIndividualRoleDialog({volunteerFamilyId, person, role, onC
     additionalComments: ""
   });
   const { reason, additionalComments } = fields;
+
+  const policy = useRecoilValue(policyData);
+  const isFamilyRole = policy.volunteerPolicy?.volunteerFamilyRoles?.[role] != null;
 
   async function save() {
     await volunteerFamiliesModel.removeIndividualRole(volunteerFamilyId, person.id as string,
@@ -35,7 +40,9 @@ export function RemoveIndividualRoleDialog({volunteerFamilyId, person, role, onC
               <RadioGroup aria-label="reason" name="reason" row
                 value={RoleRemovalReason[reason]} onChange={e => setFields({...fields, reason: RoleRemovalReason[e.target.value as keyof typeof RoleRemovalReason]})}>
                 <FormControlLabel value={RoleRemovalReason[RoleRemovalReason.Inactive]} control={<Radio size="small" />} label="Inactive" />
-                <FormControlLabel value={RoleRemovalReason[RoleRemovalReason.OptOut]} control={<Radio size="small" />} label="Opted Out" />
+                {isFamilyRole &&
+                  // The 'opted out' reason is only applicable to family roles. Opting out of an individual role is just being inactive.
+                  <FormControlLabel value={RoleRemovalReason[RoleRemovalReason.OptOut]} control={<Radio size="small" />} label="Opted Out" />}
                 <FormControlLabel value={RoleRemovalReason[RoleRemovalReason.Denied]} control={<Radio size="small" />} label="Denied" />
               </RadioGroup>
             </FormControl>
