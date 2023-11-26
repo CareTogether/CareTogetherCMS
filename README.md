@@ -42,13 +42,5 @@ _**NOTE:** The API project comes with a basic set of test data for local develop
       - Email Address: `test2@bynalogic.com`
       - Password: `P@ssw0rd`
 
-### Troubleshooting Your Local Setup
-1. If pressing 'F5' does not start the project for you in **Visual Studio Code**, then you likely have a key-mapping issue with your keyboard & will need to instead select "Start Debugging" from **Visual Studio Code**'s "Run" menu
-2. If the server side of the application does not start correctly and/or seems to be having issues that you're having trouble debugging, you can try running the "CareTogether.Api" project separately in a different IDE, such as Visual Studio
-3. If you're having problems getting the Azurite emulator to run (such as a "No connection could be made because the target machine actively refused it" error on the "tenantContainer.CreateIfNotExists()" method of "TestStorageHelper.cs"), you may need to install & run the Azurite emulator manually. To do so:
-- Run ```npm install -g azurite``` from the command line
-- Navigate to the local repository where you cloned the project
-- Run the ```azurite-blob --loose``` command to start Azurite from the command line (This will run Azurite with the default Blob service endpoint as we don't use the Queue or Table storage endpoints currently. You can also add a `--silent` parameter if you don't want to see individual requests logged to the terminal. The `--loose` parameter is currently required to support valet key access from the browser.)
-
 ## Licensing Notice
 CareTogether is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0) which, crucially, **only permits hosting this software (including derivatives) if** you also make the source code of the software and any of your modifications available to your users under this same license. This effectively ensures that CareTogether CMS remains forever open-source and doesn't simply become the base code for a proprietary derivative at some point. We value collaboration and openness, and we believe that the best way to accomplish this is to ensure the software remains open to everyone.
