@@ -45,14 +45,19 @@ export function BulkSmsSideSheet({ selectedFamilies, onClose }: BulkSmsSideSheet
     await withBackdrop(async () => {
       const familyIds = familiesSelectedForSms.map(family => family.family!.family!.id!);
   
-      const sendSmsResults = await api.communications.sendSmsToFamilyPrimaryContacts(organizationId!, locationId,
-        new SendSmsToFamilyPrimaryContactsRequest({
-          familyIds: familyIds,
-          sourceNumber: selectedSourceNumber,
-          message: smsMessage
-        }));
-      
-      setSmsResults(sendSmsResults);
+      try {
+        const sendSmsResults = await api.communications.sendSmsToFamilyPrimaryContacts(organizationId!, locationId,
+          new SendSmsToFamilyPrimaryContactsRequest({
+            familyIds: familyIds,
+            sourceNumber: selectedSourceNumber,
+            message: smsMessage
+          }));
+        
+        setSmsResults(sendSmsResults);
+      } catch (error) {
+        alert("An error occurred while sending those texts:\n" + JSON.stringify(error));
+        throw error;
+      }
     });
   }
 

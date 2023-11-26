@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControl, FormControlLabel, FormLabel, Grid, IconButton, InputLabel, MenuItem, Radio, RadioGroup, Select, Stack, Tab, Tabs, TextField } from '@mui/material';
-import { CombinedFamilyInfo, Arrangement, Person, ChildLocationPlan, ChildInvolvement, ChildLocationHistoryEntry } from '../../GeneratedClient';
+import { CombinedFamilyInfo, Arrangement, Person, ChildLocationPlan, ChildInvolvement, ChildLocationHistoryEntry, ArrangementPhase } from '../../GeneratedClient';
 import { DateTimePicker } from '@mui/x-date-pickers';
 
 import {
@@ -55,10 +55,11 @@ function ChildLocationTimeline({ partneringFamily, referralId, arrangement, reco
   const allEntries = (arrangement.childLocationHistory || []).concat(arrangement.childLocationPlan || []).sort((a, b) =>
     a.timestampUtc! < b.timestampUtc! ? 1 : a.timestampUtc! > b.timestampUtc! ? -1 : 0);
   
+  // If there are no entries, or only planned entries, the current location entry will be undefined.
   const currentLocationEntryIndex = allEntries.findIndex(entry => entry.noteId);
-  const currentLocationEntry = allEntries[currentLocationEntryIndex];
+  const currentLocationEntry = currentLocationEntryIndex !== -1 ? allEntries[currentLocationEntryIndex] : undefined;
   const nextPlannedChange = allEntries.slice(0, currentLocationEntryIndex).reverse().find(entry =>
-    !entry.noteId && entry.childLocationFamilyId !== currentLocationEntry.childLocationFamilyId);
+    !entry.noteId && entry.childLocationFamilyId !== currentLocationEntry?.childLocationFamilyId);
   
   const now = new Date();
   
@@ -126,7 +127,12 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
   
   const child = personLookup(partneringFamily.family!.id, arrangement.partneringFamilyPersonId);
 
-  const [tabValue, setTabValue] = useState(0);
+  const arrangementHasNotStartedYet =
+    arrangement.phase === ArrangementPhase.SettingUp ||
+    arrangement.phase === ArrangementPhase.ReadyToStart ||
+    arrangement.phase === ArrangementPhase.Cancelled;
+
+  const [tabValue, setTabValue] = useState(arrangementHasNotStartedYet ? 1 : 0);
   const [selectedAssigneeKey, setSelectedAssigneeKey] = useState('');
   const [changeAtLocal, setChangeAtLocal] = useState(null as Date | null);
   const [plan, setPlan] = useState<ChildLocationPlan | null>(null);
@@ -258,7 +264,8 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
                 onChange={(_, newValue) => setTabValue(newValue)}
                 indicatorColor="secondary"
                 variant="fullWidth">
-                <Tab label="Record a Location Change" {...a11yProps(0)} />
+                <Tab label="Record a Location Change" {...a11yProps(0)}
+                  disabled={arrangementHasNotStartedYet} />
                 <Tab label="Plan a Future Change" {...a11yProps(1)} />
               </Tabs>
               <TabPanel value={tabValue} index={0}>

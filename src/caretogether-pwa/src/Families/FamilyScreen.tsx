@@ -39,9 +39,9 @@ import { FamilyCustomField } from './FamilyCustomField';
 import { useFilterMenu } from '../Generic/useFilterMenu';
 import { FilterMenu } from '../Generic/FilterMenu';
 
-const sortArrangementsByStartDateDescThenCreateDateDesc = (a: Arrangement,b: Arrangement) => {
-  return ((b.startedAtUtc ?? new Date()).getTime() - (a.startedAtUtc ?? new Date()).getTime()) || 
-  ((b.requestedAtUtc ?? new Date()).getTime() - (a.requestedAtUtc ?? new Date()).getTime())
+const sortArrangementsByStartDateDescThenCreateDateDesc = (a: Arrangement, b: Arrangement) => {
+  return ((b.startedAtUtc ?? new Date()).getTime() - (a.startedAtUtc ?? new Date()).getTime()) ||
+    ((b.requestedAtUtc ?? new Date()).getTime() - (a.requestedAtUtc ?? new Date()).getTime())
 };
 
 export function FamilyScreen() {
@@ -67,24 +67,24 @@ export function FamilyScreen() {
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
   const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
   const [addNoteDialogOpen, setAddNoteDialogOpen] = useState(false);
-  
+
   const [familyMoreMenuAnchor, setFamilyMoreMenuAnchor] = useState<Element | null>(null);
 
   const participatingFamilyRoles =
     Object.entries(family?.volunteerFamilyInfo?.familyRoleApprovals || {}).filter(
       ([role,]) => !family?.volunteerFamilyInfo?.removedRoles?.find(x => x.roleName === role));
-  
-  const [removeRoleParameter, setRemoveRoleParameter] = useState<{volunteerFamilyId: string, role: string} | null>(null);
+
+  const [removeRoleParameter, setRemoveRoleParameter] = useState<{ volunteerFamilyId: string, role: string } | null>(null);
   function selectRemoveRole(role: string) {
     setFamilyMoreMenuAnchor(null);
-    setRemoveRoleParameter({volunteerFamilyId: familyId, role: role});
+    setRemoveRoleParameter({ volunteerFamilyId: familyId, role: role });
   }
-  const [resetRoleParameter, setResetRoleParameter] = useState<{volunteerFamilyId: string, role: string, removalReason: RoleRemovalReason, removalAdditionalComments: string} | null>(null);
+  const [resetRoleParameter, setResetRoleParameter] = useState<{ volunteerFamilyId: string, role: string, removalReason: RoleRemovalReason, removalAdditionalComments: string } | null>(null);
   function selectResetRole(role: string, removalReason: RoleRemovalReason, removalAdditionalComments: string) {
     setFamilyMoreMenuAnchor(null);
-    setResetRoleParameter({volunteerFamilyId: familyId, role: role, removalReason: removalReason, removalAdditionalComments: removalAdditionalComments});
+    setResetRoleParameter({ volunteerFamilyId: familyId, role: role, removalReason: removalReason, removalAdditionalComments: removalAdditionalComments });
   }
-  
+
   let referralRequirementContext: ReferralContext | undefined;
   if (family?.partneringFamilyInfo?.openReferral) {
     referralRequirementContext = {
@@ -93,14 +93,14 @@ export function FamilyScreen() {
       referralId: family.partneringFamilyInfo.openReferral.id!
     };
   }
-  
+
   const volunteerFamilyRequirementContext: VolunteerFamilyContext = {
     kind: "Volunteer Family",
     volunteerFamilyId: familyId
   };
 
   const [createArrangementDialogParameter, setCreateArrangementDialogParameter] = useState<ArrangementPolicy | null>(null);
-  
+
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));
   const isWideScreen = useMediaQuery(theme.breakpoints.up('xl'));
@@ -108,46 +108,49 @@ export function FamilyScreen() {
   useScreenTitle(family
     ? `${family.family?.adults!.filter(adult => adult.item1!.id === family.family!.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family`
     : "...");
-  
+
   enum ArrangementFilterOptionLabel {
     Active = "Active",
-    Cancelled = "Cancelled"
+    Cancelled = "Cancelled",
+    Ended = "Ended"
   }
   const { filterOptions: arrangementFilterOptions, handleFilterChange: handleFilterArrangements } =
     useFilterMenu(Object.keys(ArrangementFilterOptionLabel), [ArrangementFilterOptionLabel.Active]);
 
-	const meetsArrangementFilterCriteria = (arrangement: Arrangement): boolean => {
-		return arrangementFilterOptions.filter(o => o.selected).map(o => o.text).some((option) => {
-			const opt = (option as ArrangementFilterOptionLabel);
-			if (opt === ArrangementFilterOptionLabel.Active && arrangement.cancelledAtUtc === undefined) {
-				return true;
-			} else if (opt === ArrangementFilterOptionLabel.Cancelled && arrangement.cancelledAtUtc !== undefined) {
-				return true;
-			}
-			return false;
-		})
-	};
+  const meetsArrangementFilterCriteria = (arrangement: Arrangement): boolean => {
+    return arrangementFilterOptions.filter(o => o.selected).map(o => o.text).some((option) => {
+      const opt = (option as ArrangementFilterOptionLabel);
+      if (opt === ArrangementFilterOptionLabel.Active && arrangement.cancelledAtUtc === undefined) {
+        return true;
+      } else if (opt === ArrangementFilterOptionLabel.Cancelled && arrangement.cancelledAtUtc !== undefined) {
+        return true;
+      } else if (opt === ArrangementFilterOptionLabel.Ended && arrangement.endedAtUtc !== undefined) {
+        return true;
+      }
+      return false;
+    })
+  };
 
-	const filteredArrangements = family.partneringFamilyInfo?.openReferral?.arrangements?.slice()
-	.filter(arrangement => meetsArrangementFilterCriteria(arrangement))
-	.sort((a,b) => sortArrangementsByStartDateDescThenCreateDateDesc(a,b))
-	.map(arrangement => (
-	<ArrangementCard key={arrangement.id}
-		partneringFamily={family} referralId={family.partneringFamilyInfo!.openReferral!.id!}
-		arrangement={arrangement} />
-	));
+  const filteredArrangements = family.partneringFamilyInfo?.openReferral?.arrangements?.slice()
+    .filter(arrangement => meetsArrangementFilterCriteria(arrangement))
+    .sort((a, b) => sortArrangementsByStartDateDescThenCreateDateDesc(a, b))
+    .map(arrangement => (
+      <ArrangementCard key={arrangement.id}
+        partneringFamily={family} referralId={family.partneringFamilyInfo!.openReferral!.id!}
+        arrangement={arrangement} />
+    ));
 
   return (!family
-  ? <ProgressBackdrop>
+    ? <ProgressBackdrop>
       <p>Loading family...</p>
     </ProgressBackdrop>
-  : <Container maxWidth={false} sx={{paddingLeft: '12px'}}>
+    : <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>
       <Toolbar variant="dense" disableGutters={true}>
         {permissions(Permission.UploadFamilyDocuments) && <Button
           onClick={() => setUploadDocumentDialogOpen(true)}
           variant="contained"
           size="small"
-          sx={{margin: 1}}
+          sx={{ margin: 1 }}
           startIcon={<CloudUploadIcon />}>
           Upload
         </Button>}
@@ -155,7 +158,7 @@ export function FamilyScreen() {
           onClick={() => setAddAdultDialogOpen(true)}
           variant="contained"
           size="small"
-          sx={{margin: 1}}
+          sx={{ margin: 1 }}
           startIcon={<AddCircleIcon />}>
           Adult
         </Button>}
@@ -163,7 +166,7 @@ export function FamilyScreen() {
           onClick={() => setAddChildDialogOpen(true)}
           variant="contained"
           size="small"
-          sx={{margin: 1}}
+          sx={{ margin: 1 }}
           startIcon={<AddCircleIcon />}>
           Child
         </Button>}
@@ -171,7 +174,7 @@ export function FamilyScreen() {
           onClick={() => setAddNoteDialogOpen(true)}
           variant="contained"
           size="small"
-          sx={{margin: 1}}
+          sx={{ margin: 1 }}
           startIcon={<AddCircleIcon />}>
           Note
         </Button>}
@@ -191,18 +194,18 @@ export function FamilyScreen() {
           onClose={() => setFamilyMoreMenuAnchor(null)}>
           <MenuList dense={isDesktop}>
             {permissions(Permission.EditVolunteerRoleParticipation) &&
-              participatingFamilyRoles.flatMap(([role, ]) => (
-              <MenuItem key={role} onClick={() => selectRemoveRole(role)}>
-                <ListItemText primary={`Remove from ${role} role`} />
-              </MenuItem>
-            ))}
+              participatingFamilyRoles.flatMap(([role,]) => (
+                <MenuItem key={role} onClick={() => selectRemoveRole(role)}>
+                  <ListItemText primary={`Remove from ${role} role`} />
+                </MenuItem>
+              ))}
             {permissions(Permission.EditVolunteerRoleParticipation) &&
               (family.volunteerFamilyInfo?.removedRoles || []).map(removedRole => (
-              <MenuItem key={removedRole.roleName}
-                onClick={() => selectResetRole(removedRole.roleName!, removedRole.reason!, removedRole.additionalComments!)}>
-                <ListItemText primary={`Reset ${removedRole.roleName} participation`} />
-              </MenuItem>
-            ))}
+                <MenuItem key={removedRole.roleName}
+                  onClick={() => selectResetRole(removedRole.roleName!, removedRole.reason!, removedRole.additionalComments!)}>
+                  <ListItemText primary={`Reset ${removedRole.roleName} participation`} />
+                </MenuItem>
+              ))}
           </MenuList>
         </Menu>
         {uploadDocumentDialogOpen && <UploadFamilyDocumentsDialog family={family}
@@ -231,7 +234,7 @@ export function FamilyScreen() {
                   <br />
                   {family.partneringFamilyInfo?.openReferral
                     ? "Referral open since " + format(family.partneringFamilyInfo.openReferral.openedAtUtc!, "M/d/yy")
-                    : "Referral closed - " + ReferralCloseReason[family.partneringFamilyInfo?.closedReferrals?.[family.partneringFamilyInfo.closedReferrals.length-1]?.closeReason!]
+                    : "Referral closed - " + ReferralCloseReason[family.partneringFamilyInfo?.closedReferrals?.[family.partneringFamilyInfo.closedReferrals.length - 1]?.closeReason!]
                     //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closedUtc) -- needs a new calculated property
                   }
                   {(family.partneringFamilyInfo?.closedReferrals?.length && (
@@ -248,40 +251,40 @@ export function FamilyScreen() {
               {permissions(Permission.ViewFamilyCustomFields) &&
                 (family.family!.completedCustomFields ||
                   [] as Array<CompletedCustomFieldInfo | string>).concat(
-                  family.missingCustomFields || []).sort((a, b) =>
-                    (a instanceof CompletedCustomFieldInfo ? a.customFieldName! : a) <
-                    (b instanceof CompletedCustomFieldInfo ? b.customFieldName! : b) ? -1
-                    : (a instanceof CompletedCustomFieldInfo ? a.customFieldName! : a) >
-                    (b instanceof CompletedCustomFieldInfo ? b.customFieldName! : b) ? 1
-                    : 0).map(customField =>
-                  <FamilyCustomField key={typeof customField === 'string' ? customField : customField.customFieldName}
-                    familyId={familyId} customField={customField} />)}
+                    family.missingCustomFields || []).sort((a, b) =>
+                      (a instanceof CompletedCustomFieldInfo ? a.customFieldName! : a) <
+                        (b instanceof CompletedCustomFieldInfo ? b.customFieldName! : b) ? -1
+                        : (a instanceof CompletedCustomFieldInfo ? a.customFieldName! : a) >
+                          (b instanceof CompletedCustomFieldInfo ? b.customFieldName! : b) ? 1
+                          : 0).map(customField =>
+                            <FamilyCustomField key={typeof customField === 'string' ? customField : customField.customFieldName}
+                              familyId={familyId} customField={customField} />)}
               {permissions(Permission.ViewReferralCustomFields) &&
                 (family.partneringFamilyInfo?.openReferral?.completedCustomFields ||
                   [] as Array<CompletedCustomFieldInfo | string>).concat(
-                  family.partneringFamilyInfo?.openReferral?.missingCustomFields || []).sort((a, b) =>
-                    (a instanceof CompletedCustomFieldInfo ? a.customFieldName! : a) <
-                    (b instanceof CompletedCustomFieldInfo ? b.customFieldName! : b) ? -1
-                    : (a instanceof CompletedCustomFieldInfo ? a.customFieldName! : a) >
-                    (b instanceof CompletedCustomFieldInfo ? b.customFieldName! : b) ? 1
-                    : 0).map(customField =>
-                  <ReferralCustomField key={typeof customField === 'string' ? customField : customField.customFieldName}
-                    partneringFamilyId={familyId} referralId={family.partneringFamilyInfo!.openReferral!.id!}
-                    customField={customField} />)}
+                    family.partneringFamilyInfo?.openReferral?.missingCustomFields || []).sort((a, b) =>
+                      (a instanceof CompletedCustomFieldInfo ? a.customFieldName! : a) <
+                        (b instanceof CompletedCustomFieldInfo ? b.customFieldName! : b) ? -1
+                        : (a instanceof CompletedCustomFieldInfo ? a.customFieldName! : a) >
+                          (b instanceof CompletedCustomFieldInfo ? b.customFieldName! : b) ? 1
+                          : 0).map(customField =>
+                            <ReferralCustomField key={typeof customField === 'string' ? customField : customField.customFieldName}
+                              partneringFamilyId={familyId} referralId={family.partneringFamilyInfo!.openReferral!.id!}
+                              customField={customField} />)}
             </Grid>
             <Grid item xs={6} md={4}>
               {canCloseReferral && <Button
                 onClick={() => setCloseReferralDialogOpen(true)}
                 variant="contained"
                 size="small"
-                sx={{margin: 1}}>
+                sx={{ margin: 1 }}>
                 Close Referral
               </Button>}
               {!family.partneringFamilyInfo?.openReferral && permissions(Permission.CreateReferral) && <Button
                 onClick={() => setOpenNewReferralDialogOpen(true)}
                 variant="contained"
                 size="small"
-                sx={{margin: 1}}>
+                sx={{ margin: 1 }}>
                 Open New Referral
               </Button>}
               {closeReferralDialogOpen && family.partneringFamilyInfo?.openReferral && (
@@ -303,13 +306,13 @@ export function FamilyScreen() {
           <Grid container spacing={0}>
             {permissions(Permission.ViewReferralProgress) && family.partneringFamilyInfo?.openReferral &&
               <>
-                <Grid item xs={12} sm={6} md={4} style={{paddingRight: 20}}>
+                <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
                   <h3 style={{ marginBottom: 0 }}>Incomplete</h3>
                   {family.partneringFamilyInfo?.openReferral?.missingRequirements?.map((missing, i) =>
                     <MissingRequirementRow key={`${missing}:${i}`} requirement={missing} context={referralRequirementContext!} />
                   )}
                 </Grid>
-                <Grid item xs={12} sm={6} md={4} style={{paddingRight: 20}}>
+                <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
                   <h3 style={{ marginBottom: 0 }}>Completed</h3>
                   {family.partneringFamilyInfo?.openReferral?.completedRequirements?.map((completed, i) =>
                     <CompletedRequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} context={referralRequirementContext!} />
@@ -336,7 +339,7 @@ export function FamilyScreen() {
                       <Chip key={removedRole.roleName} size="small" label={`${removedRole.roleName} - ${RoleRemovalReason[removedRole.reason!]} - ${removedRole.additionalComments}`} />)}
                   </Box>
                 </Grid>
-                <Grid item xs={12} sm={6} md={4} style={{paddingRight: 20}}>
+                <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
                   <h3>Incomplete</h3>
                   {family.volunteerFamilyInfo?.missingRequirements?.map((missing, i) =>
                     <MissingRequirementRow key={`${missing}:${i}`} requirement={missing} context={volunteerFamilyRequirementContext} />
@@ -346,7 +349,7 @@ export function FamilyScreen() {
                     <MissingRequirementRow key={`${application}:${i}`} requirement={application} context={volunteerFamilyRequirementContext} isAvailableApplication={true} />
                   )}
                 </Grid>
-                <Grid item xs={12} sm={6} md={4} style={{paddingRight: 20}}>
+                <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
                   <h3>Completed</h3>
                   {family.volunteerFamilyInfo?.completedRequirements?.map((completed, i) =>
                     <CompletedRequirementRow key={`${completed.completedRequirementId}:${i}`} requirement={completed} context={volunteerFamilyRequirementContext} />
@@ -376,20 +379,20 @@ export function FamilyScreen() {
                     />
                   </div>
                   {permissions(Permission.CreateArrangement) && (
-                  <Box sx={{textAlign: 'center', display: `flex`, flexDirection: `row`, maxWidth: `100%`, flexWrap: `wrap` }}>
-                    {family.partneringFamilyInfo?.openReferral && policy.referralPolicy?.arrangementPolicies?.map(arrangementPolicy => (
-                      <Box key={arrangementPolicy.arrangementType}>
-                        <Button
-                          onClick={() => setCreateArrangementDialogParameter(arrangementPolicy)}
-                          variant="contained"
-                          size="small"
-                          sx={{margin: 1}}
-                          startIcon={<AddCircleIcon />}>
-                          {arrangementPolicy.arrangementType}
-                        </Button>
-                      </Box>
-                    ))}
-                  </Box>)}
+                    <Box sx={{ textAlign: 'center', display: `flex`, flexDirection: `row`, maxWidth: `100%`, flexWrap: `wrap` }}>
+                      {family.partneringFamilyInfo?.openReferral && policy.referralPolicy?.arrangementPolicies?.map(arrangementPolicy => (
+                        <Box key={arrangementPolicy.arrangementType}>
+                          <Button
+                            onClick={() => setCreateArrangementDialogParameter(arrangementPolicy)}
+                            variant="contained"
+                            size="small"
+                            sx={{ margin: 1 }}
+                            startIcon={<AddCircleIcon />}>
+                            {arrangementPolicy.arrangementType}
+                          </Button>
+                        </Box>
+                      ))}
+                    </Box>)}
                 </div>
                 <Masonry columns={isDesktop ? isWideScreen ? 3 : 2 : 1} spacing={2} style={{ height: filteredArrangements?.length === 0 ? 0 : undefined }}>
                   {filteredArrangements || false}

@@ -28,10 +28,12 @@ You will also need to allow PowerShell scripts to run on your computer (see [doc
 `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
 
 ## Development
+_**NOTE:** The API project comes with a basic set of test data for local development. This test data is automatically regenerated each time you start the API project._
+
 1. Clone the repository into any local directory on your device.
 2. Run the _CareTogether.Api_ project and the React client.
    * If using **Visual Studio Code** (recommended), all you need to do is open the repository folder in VS Code and hit 'F5' to start debugging _both_ the client and server. VS Code will also automatically install and run the Azurite emulator for Azure Storage in your project folder.
-   * **NOTE:** The API project comes with a basic set of test data for local development. This test data is automatically regenerated each time you start the API project.
+   * If using the command line, you will need `dotnet run` (in the _src/CareTogether.Api_ directory) to start the API, and `npm run dev` (in the _src/caretogether-pwa_ directory) to start the client. If using another IDE such as Visual Studio, use the equivalent debug or launch options.
 3. To sign into the application's local test environment, use the following credentials:
    - Administrator
       - Email Address: `test@bynalogic.com`
