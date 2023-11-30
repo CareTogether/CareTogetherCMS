@@ -1,14 +1,14 @@
+export function isBackdropClick(reason: string): boolean {	
+	console.warn(reason === `backdropClick` ? `Don't even try it!` : ``);
+	return reason === `backdropClick`;
+}
+
 export function handleBackdropClick(
-	onClose: ((event: any, reason: `backdropClick` | `escapeKeyDown`) => void) | undefined, 
-	event: any, 
+	onClose: ((event: object, reason: `backdropClick` | `escapeKeyDown`) => void) | undefined, 
+	event: object, 
 	reason: `backdropClick` | `escapeKeyDown`
 ) {
-	console.group(`handleBackdropClick`);
-	console.log(event);
-	console.log(reason);
-	console.groupEnd();
-
-	if (onClose && reason !== `backdropClick`) {
+	if (onClose && !isBackdropClick(reason)) {
 		onClose(event, reason);
 	}
 }

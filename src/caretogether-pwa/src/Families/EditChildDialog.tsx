@@ -13,6 +13,7 @@ import { DeletePersonDialog } from './DeletePersonDialog';
 import { EthnicityEditor } from './EthnicityEditor';
 import { ChildCustodyRelationshipEditor } from './ChildCustodyRelationshipEditor';
 import { useFamilyIdPermissions } from '../Model/SessionModel';
+import { isBackdropClick } from '../Utilities/handleBackdropClick';
 
 interface EditChildDialogProps {
   handle: DialogHandle
@@ -33,7 +34,7 @@ export function EditChildDialog({ handle, child, familyAdults, custodialRelation
   const permissions = useFamilyIdPermissions(familyId!);
   
   return (
-    <Dialog open={handle.open} onClose={handle.closeDialog}
+    <Dialog open={handle.open} onClose={(event: object | undefined, reason: string) => isBackdropClick(reason) ? handle.closeDialog : ({})}
       fullWidth scroll='body' aria-labelledby="edit-child-title">
       <DialogTitle id="edit-child-title">
         Edit Child

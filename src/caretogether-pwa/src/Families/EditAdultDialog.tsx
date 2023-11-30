@@ -16,6 +16,7 @@ import { AddressEditor } from './AddressEditor';
 import { PhoneNumberEditor } from './PhoneNumberEditor';
 import { EmailAddressEditor } from './EmailAddressEditor';
 import { useFamilyIdPermissions } from '../Model/SessionModel';
+import { isBackdropClick } from '../Utilities/handleBackdropClick';
 
 interface EditAdultDialogProps {
   handle: DialogHandle
@@ -34,7 +35,7 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
   const permissions = useFamilyIdPermissions(familyId!);
 
   return (
-    <Dialog open={handle.open} onClose={handle.closeDialog}
+    <Dialog open={handle.open} onClose={(event: object | undefined, reason: string) => isBackdropClick(reason) ? handle.closeDialog : ({})}
       fullWidth scroll='body' aria-labelledby="edit-adult-title">
       <DialogTitle id="edit-adult-title">
         Edit Adult

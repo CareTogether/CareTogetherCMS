@@ -6,6 +6,7 @@ import { useReferralsModel } from '../../Model/ReferralsModel';
 import { useFamilyLookup, usePersonLookup } from '../../Model/DirectoryModel';
 import { PersonName } from '../../Families/PersonName';
 import { FamilyName } from '../../Families/FamilyName';
+import { isBackdropClick } from '../../Utilities/handleBackdropClick';
 
 interface UnassignArrangementFunctionDialogProps {
   handle: DialogHandle
@@ -46,7 +47,7 @@ export function UnassignArrangementFunctionDialog({
   }
 
   return (
-    <Dialog open={handle.open} onClose={handle.closeDialog} key={handle.key}
+    <Dialog open={handle.open} onClose={(event: object | undefined, reason: string) => isBackdropClick(reason) ? handle.closeDialog : ({})} key={handle.key}
       scroll='body' aria-labelledby="assign-volunteer-title">
       <DialogTitle id="assign-volunteer-title">
         Unassign {arrangementFunction.functionName}
