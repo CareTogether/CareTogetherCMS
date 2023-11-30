@@ -1,5 +1,4 @@
 export function isBackdropClick(reason: string): boolean {	
-	console.warn(reason === `backdropClick` ? `Don't even try it!` : ``);
 	return reason === `backdropClick`;
 }
 
