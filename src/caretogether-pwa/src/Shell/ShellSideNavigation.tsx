@@ -4,6 +4,7 @@ import PeopleIcon from '@mui/icons-material/People';
 import SettingsIcon from '@mui/icons-material/Settings';
 import Diversity3Icon from '@mui/icons-material/Diversity3';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import SupportIcon from '@mui/icons-material/Support';
 import { ListItemLink } from './ListItemLink';
 import { useFeatureFlags } from '../Model/ConfigurationModel';
 import { Copyright } from './Copyright';
@@ -54,6 +55,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               <>
                 <Divider  />
                 <ListItemLink to={`${locationPrefix}/settings`} primary="Settings" icon={<SettingsIcon sx={{color: '#fff8'}} />} />
+                <ListItemLink to="http://support.caretogether.io" newTab primary="Support" icon={<SupportIcon sx={{color: '#fff8'}} />} />
               </>}
           </>}
     </List>
