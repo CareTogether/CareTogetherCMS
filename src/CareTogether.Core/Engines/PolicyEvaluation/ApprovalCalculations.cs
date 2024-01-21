@@ -28,7 +28,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 volunteerPolicy, family,
                 completedFamilyRequirements, exemptedFamilyRequirements, removedFamilyRoles,
                 completedIndividualRequirements, exemptedIndividualRequirements, removedIndividualRoles);
-            
+
             var effectiveFamilyRoleVersionApprovals = familyResult.FamilyRoleVersionApprovals
                 .Select(roleApprovals =>
                     (role: roleApprovals.Key,
@@ -98,7 +98,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .OrderByDescending(rva => rva.ApprovalStatus)
                 .ThenByDescending(rva => rva.ExpiresAt ?? DateTime.MaxValue)
                 .First();
-            
+
             return bestCurrentApproval;
         }
 
@@ -224,15 +224,18 @@ namespace CareTogether.Engines.PolicyEvaluation
         internal static
             (RoleApprovalStatus? Status, DateTime? ExpiresAtUtc, ImmutableList<string> MissingRequirements, ImmutableList<string> AvailableApplications)
             CalculateIndividualVolunteerRoleApprovalStatus(
-            VolunteerRolePolicyVersion policyVersion,
+            ImmutableDictionary<string, ActionRequirement> actionDefinitions, VolunteerRolePolicyVersion policyVersion,
             ImmutableList<CompletedRequirementInfo> completedRequirements, ImmutableList<ExemptedRequirementInfo> exemptedRequirements)
         {
             var supersededAtUtc = policyVersion.SupersededAtUtc;
 
             var requirementCompletionStatus = policyVersion.Requirements.Select(requirement =>
-                (requirement.ActionName, requirement.Stage, RequirementMetOrExempted:
-                    SharedCalculations.RequirementMetOrExempted(requirement.ActionName, supersededAtUtc, completedRequirements, exemptedRequirements)))
-                .ToImmutableList();
+            {
+                var actionDefinition = actionDefinitions[requirement.ActionName];
+                return (requirement.ActionName, requirement.Stage, RequirementMetOrExempted:
+                    SharedCalculations.FindRequirementApprovals(requirement.ActionName, actionDefinition.Validity,
+                        completedRequirements, exemptedRequirements));
+            }).ToImmutableList();
 
             var simpleRequirementCompletionStatus = requirementCompletionStatus
                 .Select(status => (status.ActionName, status.Stage, RequirementMetOrExempted: status.RequirementMetOrExempted.IsMetOrExempted))

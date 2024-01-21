@@ -9,6 +9,7 @@ namespace CareTogether.Engines.PolicyEvaluation
     {
         public sealed record RequirementCheckResult(bool IsMetOrExempted, DateTime? ExpiresAtUtc);
 
+        //NOTE: This is currently being used by Referral calculations.
         internal static RequirementCheckResult RequirementMetOrExempted(string requirementName,
             DateTime? policySupersededAtUtc, DateTime utcNow,
             ImmutableList<CompletedRequirementInfo> completedRequirements,
@@ -35,30 +36,41 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             return new RequirementCheckResult(false, null);
         }
-        
-        internal static RequirementCheckResult RequirementMetOrExempted(string requirementName,
-            DateTime? policySupersededAtUtc,
-            ImmutableList<CompletedRequirementInfo> completedRequirements,
-            ImmutableList<ExemptedRequirementInfo> exemptedRequirements)
+
+        //NOTE: This is currently being used by Approval calculations.
+        //      The two major differences are the removal of the utcNow parameter and the
+        //      change of the return type to a Timeline. That allows returning all times when
+        //      the requirement was met or exempted, not just the current one.
+        //      The reason for this is to subsequently be able to determine if a role
+        //      approval *was* met or exempted, even if it is now expired.
+        //      A return value of 'null' indicates no approval.
+        //      Further note: action validity was previously not being handled but now is.
+        internal static DateOnlyTimeline? FindRequirementApprovals(
+            string requirementName, TimeSpan? actionValidity,
+            ImmutableList<CompletedRequirementInfo> completedRequirementsInScope,
+            ImmutableList<ExemptedRequirementInfo> exemptedRequirementsInScope)
         {
-            var bestCompletion = completedRequirements
-                .Where(completed =>
-                    completed.RequirementName == requirementName &&
-                    (policySupersededAtUtc == null || completed.CompletedAtUtc < policySupersededAtUtc))
-                .MaxBy(completed => completed.ExpiresAtUtc ?? DateTime.MaxValue);
+            //NOTE: This does *not* account for policy supersedence, as that is a higher-level concept
+            //      that applies to *sets* of requirements.
 
-            if (bestCompletion != null)
-                return new RequirementCheckResult(true, bestCompletion.ExpiresAtUtc);
+            var matchingCompletions = completedRequirementsInScope
+                .Where(completed => completed.RequirementName == requirementName)
+                .Select<CompletedRequirementInfo, TimelineStage>(completed => actionValidity == null
+                    ? new NonTerminatingStage(DateOnly.FromDateTime(completed.CompletedAtUtc))
+                    : new TerminatingStage(DateOnly.FromDateTime(completed.CompletedAtUtc),
+                        DateOnly.FromDateTime(completed.CompletedAtUtc + actionValidity.Value)));
 
-            var bestExemption = exemptedRequirements
-                .Where(exempted =>
-                    exempted.RequirementName == requirementName)
-                .MaxBy(exempted => exempted.ExemptionExpiresAtUtc ?? DateTime.MaxValue);
+            var matchingExemptions = exemptedRequirementsInScope
+                .Where(exempted => exempted.RequirementName == requirementName)
+                .Select<ExemptedRequirementInfo, TimelineStage>(exempted => exempted.ExemptionExpiresAtUtc == null
+                    //NOTE: This limits exemptions to being valid as of the time they were created.
+                    //      If we want to allow backdating or postdating exemptions, we'll need to change this.
+                    ? new NonTerminatingStage(DateOnly.FromDateTime(exempted.TimestampUtc))
+                    : new TerminatingStage(DateOnly.FromDateTime(exempted.TimestampUtc),
+                        DateOnly.FromDateTime(exempted.ExemptionExpiresAtUtc.Value)));
 
-            if (bestExemption != null)
-                return new RequirementCheckResult(true, bestExemption.ExemptionExpiresAtUtc);
-
-            return new RequirementCheckResult(false, null);
+            //TODO: Upgrade to .NET 8 and start using frozen collections?
+            return DateOnlyTimeline.Union(matchingCompletions.Concat(matchingExemptions).ToImmutableList());
         }
     }
 }
