@@ -1,14 +1,21 @@
 import { useState } from 'react';
-import { BottomNavigation, BottomNavigationAction, Drawer, Paper, useTheme } from '@mui/material';
+import { BottomNavigation, BottomNavigationAction, Divider, Drawer, List, Paper, useTheme } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
 import Diversity3Icon from '@mui/icons-material/Diversity3';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import MenuIcon from '@mui/icons-material/Menu';
+import SettingsIcon from '@mui/icons-material/Settings';
+import SupportIcon from '@mui/icons-material/Support';
 import { Link, useLocation } from 'react-router-dom';
 import { ShellContextSwitcher } from './ShellContextSwitcher';
 import { selectedLocationContextState } from '../Model/Data';
 import { useLoadable } from '../Hooks/useLoadable';
+import { ListItemLink } from './ListItemLink';
+import { useFeatureFlags } from '../Model/ConfigurationModel';
+import { useGlobalPermissions } from '../Model/SessionModel';
+import { Permission } from '../GeneratedClient';
+import { Stack } from '@mui/system';
 
 export function ShellBottomNavigation() {
   const theme = useTheme();
@@ -27,6 +34,9 @@ export function ShellBottomNavigation() {
   ];
   const selectedLink = Math.max(links.findIndex(link => location.pathname.match(link) != null), 0);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  
+  const flags = useFeatureFlags();
+  const permissions = useGlobalPermissions();
 
   return (
     <Paper elevation={3} sx={{
@@ -67,10 +77,20 @@ export function ShellBottomNavigation() {
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
       >
-        <ShellContextSwitcher />
-        {/* <div style={{ overflowX: 'hidden', position: 'fixed', bottom: 0, marginLeft: 4}}>
-          <Copyright />
-        </div> */}
+        <Stack padding={1} spacing={1}>
+          <ShellContextSwitcher />
+          {flags && <List aria-label="secondary navigation" sx={{position: 'relative', top: 100, zIndex: theme.zIndex.drawer + 3}}>
+            {permissions(Permission.AccessSettingsScreen) &&
+              <>
+                <Divider  />
+                <ListItemLink darkColor to={`${locationPrefix}/settings`} primary="Settings" icon={<SettingsIcon />} />
+                <ListItemLink darkColor to="http://support.caretogether.io" newTab primary="Support" icon={<SupportIcon />} />
+              </>}
+          </List>}
+          {/* <div style={{ overflowX: 'hidden', position: 'fixed', bottom: 0, marginLeft: 4}}>
+            <Copyright />
+          </div> */}
+        </Stack>
       </Drawer>
     </Paper>
   );

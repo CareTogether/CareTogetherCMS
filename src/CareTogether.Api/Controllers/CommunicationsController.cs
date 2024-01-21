@@ -33,7 +33,7 @@ namespace CareTogether.Api.Controllers
         {
             var result = await communicationsManager.SendSmsToFamilyPrimaryContactsAsync(organizationId, locationId,
                 User, request.FamilyIds, request.SourceNumber, request.Message);
-            return Accepted(result);
+            return Ok(result);
         }
     }
 }
