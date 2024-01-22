@@ -126,6 +126,15 @@ public sealed class DateOnlyTimeline
         return intersection;
     }
 
+    public static DateOnlyTimeline? ComplementOf(DateOnlyTimeline? timeline)
+    {
+        // The complement of an empty timeline is a timeline that covers all dates.
+        if (timeline == null)
+            return new DateOnlyTimeline(ImmutableList.Create(new DateRange(DateOnly.MinValue)));
+
+        return timeline.Complement();
+    }
+
 
     public bool Contains(DateOnly value) =>
         Ranges.Exists(range => range.Contains(value));
@@ -158,4 +167,95 @@ public sealed class DateOnlyTimeline
 
         return UnionOf(intersections);
     }
+
+    public DateOnlyTimeline? Complement()
+    {
+        // The complement of a timeline is a timeline that covers all dates not covered by the original.
+        // This is the same as the union of all the ranges outside of the ranges in the original timeline.
+        var complementRanges = new List<DateRange>();
+
+        // To calculate the complement, start at the beginning of time and iterate through each range,
+        // adding the range of dates between the end of the prior range and the start of the current range.
+        // If there is no prior range, start at the beginning of time. If there is no current range,
+        // end at the end of time.
+        DateRange? priorRange = null;
+        foreach (var currentRange in Ranges)
+        {
+            if (currentRange.Start == DateOnly.MinValue)
+            {
+                // If the current range starts at the beginning of time, skip it - there is no complement before it.
+                priorRange = currentRange;
+                continue;
+            }
+            else if (currentRange.End == DateOnly.MaxValue)
+            {
+                // If the current range ends at the end of time, skip it - there is no complement after it.
+                priorRange = currentRange;
+                continue;
+            }
+            else if (priorRange == null)
+            {
+                // If this is the first range, add a range from the beginning of time to just before the start of this range.
+                complementRanges.Add(new DateRange(DateOnly.MinValue, currentRange.Start.AddDays(-1)));
+                priorRange = currentRange;
+                continue;
+            }
+            else if (priorRange.Value.End.AddDays(1) == currentRange.Start)
+            {
+                // If this range is adjacent to the prior range, skip it - there is no complement range between it and the prior range.
+                priorRange = currentRange;
+                continue;
+            }
+            else
+            {
+                // For all other ranges, add a range from just after the end of the prior range to just before the start of this range.
+                complementRanges.Add(new DateRange(priorRange.Value.End.AddDays(1), currentRange.Start.AddDays(-1)));
+                priorRange = currentRange;
+                continue;
+            }
+        }
+        // There should always have been at least one range in the current timeline.
+        if (priorRange == null)
+            throw new InvalidOperationException("The timeline must contain at least one range.");
+        // Finally, if the last range ends before the end of time, add a range from just after the end of the last range to the end of time.
+        if (priorRange.Value.End < DateOnly.MaxValue)
+            complementRanges.Add(new DateRange(priorRange.Value.End.AddDays(1), DateOnly.MaxValue));
+
+        return UnionOf(complementRanges.ToImmutableList());
+    }
+}
+
+public sealed class DateOnlyTimeline<T>
+    where T : notnull, IEquatable<T>
+{
+    public ImmutableList<DateRange<T>> Ranges { get; init; }
+
+
+    public DateOnlyTimeline(ImmutableList<DateRange<T>> ranges)
+    {
+        if (ranges.Count == 0)
+            throw new ArgumentException("At least one date range is required.");
+
+        // Store the stages in chronological order.
+        //TODO: This could be optimized if we know that the input is already ordered.
+        Ranges = ranges.OrderBy(range => range.Start).ToImmutableList();
+
+        // Validate that the ordered stages are non-overlapping.
+        for (var i = 1; i < Ranges.Count; i++)
+        {
+            var prior = Ranges[i - 1];
+            var current = Ranges[i];
+
+            if (prior.End >= current.Start)
+                throw new ArgumentException("The date ranges must not overlap. Overlap detected between " +
+                    $"{prior} and {current}.");
+        }
+    }
+
+
+    public bool Contains(DateOnly value) =>
+        Ranges.Exists(range => range.Contains(value));
+
+    public T? ValueAt(DateOnly value) =>
+        Ranges.SingleOrDefault(range => range.Contains(value)).Tag; //TODO: Ensure this returns null when intended to.
 }

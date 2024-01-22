@@ -398,4 +398,97 @@ public class DateOnlyTimelineTest
             DR(3, 3)
         ]));
     }
+
+    [TestMethod]
+    public void ComplementOfNullIsAllOfTime()
+    {
+        var dut = DateOnlyTimeline.ComplementOf(null);
+
+        Assert.IsNotNull(dut);
+        Assert.IsTrue(dut.Ranges.SequenceEqual([
+            new DateRange(DateOnly.MinValue, DateOnly.MaxValue)
+        ]));
+    }
+
+    [TestMethod]
+    public void ComplementOfAllOfTimeIsNull()
+    {
+        var input = new DateOnlyTimeline([
+            new DateRange(DateOnly.MinValue, DateOnly.MaxValue)
+        ]);
+        var dut = DateOnlyTimeline.ComplementOf(input);
+
+        Assert.IsNull(dut);
+    }
+
+    [TestMethod]
+    public void ComplementOfAllOfTimeIsNullViaInstanceMethod()
+    {
+        var input = new DateOnlyTimeline([
+            new DateRange(DateOnly.MinValue, DateOnly.MaxValue)
+        ]);
+        var dut = input.Complement();
+
+        Assert.IsNull(dut);
+    }
+
+    [TestMethod]
+    public void ComplementOfSingleRangeIsTwoRanges()
+    {
+        var input = new DateOnlyTimeline([
+            DR(1, 3)
+        ]);
+        var dut = input.Complement();
+
+        Assert.IsNotNull(dut);
+        Assert.IsTrue(dut.Ranges.SequenceEqual([
+            new DateRange(DateOnly.MinValue, D(1).AddDays(-1)),
+            new DateRange(D(3).AddDays(1), DateOnly.MaxValue)
+        ]));
+    }
+
+    [TestMethod]
+    public void ComplementOfTwoRangesIsThreeRanges()
+    {
+        var input = new DateOnlyTimeline([
+            DR(1, 3), DR(5, 5)
+        ]);
+        var dut = input.Complement();
+
+        Assert.IsNotNull(dut);
+        Assert.IsTrue(dut.Ranges.SequenceEqual([
+            new DateRange(DateOnly.MinValue, D(1).AddDays(-1)),
+            new DateRange(D(3).AddDays(1), D(5).AddDays(-1)),
+            new DateRange(D(5).AddDays(1), DateOnly.MaxValue)
+        ]));
+    }
+
+    [TestMethod]
+    public void ComplementOfTwoAdjacentRangesIsTwoRanges()
+    {
+        var input = new DateOnlyTimeline([
+            DR(1, 3), DR(3, 5)
+        ]);
+        var dut = input.Complement();
+
+        Assert.IsNotNull(dut);
+        Assert.IsTrue(dut.Ranges.SequenceEqual([
+            new DateRange(DateOnly.MinValue, D(1).AddDays(-1)),
+            new DateRange(D(5).AddDays(1), DateOnly.MaxValue)
+        ]));
+    }
+
+    [TestMethod]
+    public void ComplementOfRangeBeforeBeginningOfTimeDoesNotExist()
+    {
+        var input = new DateOnlyTimeline([
+            new DateRange(DateOnly.MinValue, D(3)), DR(DateOnly.MinValue, 1)
+        ]);
+        var dut = input.Complement();
+
+        Assert.IsNotNull(dut);
+        Assert.IsTrue(dut.Ranges.SequenceEqual([
+            new DateRange(D(3).AddDays(1), DateOnly.MaxValue)
+        ]));
+    }
 }

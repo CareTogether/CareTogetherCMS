@@ -67,3 +67,38 @@ public readonly struct DateRange : IEquatable<DateRange>
         return $"{Start:yyyyMMdd}-{End:yyyyMMdd}";
     }
 }
+
+public readonly struct DateRange<T>
+    where T : notnull, IEquatable<T>
+{
+    public readonly DateOnly Start;
+    public readonly DateOnly End;
+    public readonly T Tag;
+
+
+    public DateRange(DateOnly start, T tag) : this(start, DateOnly.MaxValue, tag)
+    { }
+
+    public DateRange(DateOnly start, DateOnly end, T tag)
+    {
+        if (start > end)
+            throw new ArgumentException(
+                "The start date must be on or before the end date.");
+
+        Start = start;
+        End = end;
+        Tag = tag;
+    }
+
+
+    public bool Contains(DateOnly value) =>
+        value >= Start && value <= End;
+
+    public T? ValueAt(DateOnly value) => Contains(value) ? Tag : default;
+
+
+    public override string ToString()
+    {
+        return $"{Tag}:{Start:yyyyMMdd}-{End:yyyyMMdd}";
+    }
+}

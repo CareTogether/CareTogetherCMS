@@ -302,7 +302,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 MissingIndividualRequirements: missingIndividualRequirements);
         }
 
-        internal static (RoleApprovalStatus? Status, DateTime? ExpiresAtUtc) CalculateRoleApprovalStatusesFromRequirementCompletions(
+        internal static DateOnlyTimeline<RoleApprovalStatus> CalculateRoleApprovalStatusesFromRequirementCompletions(
             ImmutableList<(string ActionName, RequirementStage Stage, DateOnlyTimeline? RequirementApprovals)> requirementCompletionStatus)
         {
             // Instead of a single status and an expiration, return a set of *each* RoleApprovalStatus and DateOnlyTimeline?
@@ -316,20 +316,26 @@ namespace CareTogether.Engines.PolicyEvaluation
             }
 
             var onboarded = FindRangesWhereAllAreSatisfied(requirementCompletionStatus);
-            if (onboarded != null)
-                return (Status: RoleApprovalStatus.Onboarded, onboarded.ExpiresAtUtc);
 
-            var approved = FindRangesWhereAllAreSatisfied(requirementCompletionStatus
+            var approvedOrOnboarded = FindRangesWhereAllAreSatisfied(requirementCompletionStatus
                 .Where(x => x.Stage == RequirementStage.Application || x.Stage == RequirementStage.Approval));
-            if (approved != null)
-                return (Status: RoleApprovalStatus.Approved, approved.ExpiresAtUtc);
 
-            var prospective = FindRangesWhereAllAreSatisfied(requirementCompletionStatus
+            // Approved-only is the difference of approvedOrOnboarded and onboarded.
+            //TODO: Calculate approved
+
+            // Expired is a special case. It starts *after* any ranges from 'approvedOrOnboarded' (so it's the
+            // forward-only complement of 'approvedOrOnboarded'), and ends at the end of time. If there are no
+            // ranges from 'approvedOrOnboarded', then it is null.
+            //TODO: Calculate expired
+
+            var prospectiveOrExpiredOrApprovedOrOnboarded = FindRangesWhereAllAreSatisfied(requirementCompletionStatus
                 .Where(x => x.Stage == RequirementStage.Application));
-            if (prospective != null)
-                return (Status: RoleApprovalStatus.Prospective, prospective.ExpiresAtUtc);
 
-            return (Status: null, ExpiresAtUtc: null);
+            // Prospective-only is the difference of prospectiveOrExpiredOrApprovedOrOnboarded and approvedOrOnboarded,
+            // subsequently also subtracting out 'expired'.
+            //TODO: Calculate prospective
+
+            //TODO: Merge the results (onboarded, approved, expired, prospective) into a tagged timeline.
         }
 
         internal static ImmutableList<string> CalculateAvailableIndividualApplicationsFromRequirementCompletion(RoleApprovalStatus? status,
