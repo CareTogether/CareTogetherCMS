@@ -187,16 +187,16 @@ public sealed class DateOnlyTimeline
                 priorRange = currentRange;
                 continue;
             }
-            else if (currentRange.End == DateOnly.MaxValue)
-            {
-                // If the current range ends at the end of time, skip it - there is no complement after it.
-                priorRange = currentRange;
-                continue;
-            }
             else if (priorRange == null)
             {
                 // If this is the first range, add a range from the beginning of time to just before the start of this range.
                 complementRanges.Add(new DateRange(DateOnly.MinValue, currentRange.Start.AddDays(-1)));
+                priorRange = currentRange;
+                continue;
+            }
+            else if (currentRange.End == DateOnly.MaxValue)
+            {
+                // If the current range ends at the end of time, skip it - there is no complement after it.
                 priorRange = currentRange;
                 continue;
             }

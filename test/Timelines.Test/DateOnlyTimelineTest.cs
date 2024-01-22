@@ -467,7 +467,7 @@ public class DateOnlyTimelineTest
     public void ComplementOfTwoAdjacentRangesIsTwoRanges()
     {
         var input = new DateOnlyTimeline([
-            DR(1, 3), DR(3, 5)
+            DR(1, 3), DR(4, 5)
         ]);
         var dut = input.Complement();
 
@@ -482,13 +482,42 @@ public class DateOnlyTimelineTest
     public void ComplementOfRangeBeforeBeginningOfTimeDoesNotExist()
     {
         var input = new DateOnlyTimeline([
-            new DateRange(DateOnly.MinValue, D(3)), DR(DateOnly.MinValue, 1)
+            new DateRange(DateOnly.MinValue, D(3))
         ]);
         var dut = input.Complement();
 
         Assert.IsNotNull(dut);
         Assert.IsTrue(dut.Ranges.SequenceEqual([
             new DateRange(D(3).AddDays(1), DateOnly.MaxValue)
+        ]));
+    }
+
+    [TestMethod]
+    public void ComplementOfRangeAfterEndOfTimeDoesNotExist()
+    {
+        var input = new DateOnlyTimeline([
+            new DateRange(D(1), DateOnly.MaxValue)
+        ]);
+        var dut = input.Complement();
+
+        Assert.IsNotNull(dut);
+        Assert.IsTrue(dut.Ranges.SequenceEqual([
+            new DateRange(DateOnly.MinValue, D(1).AddDays(-1))
+        ]));
+    }
+
+    [TestMethod]
+    public void ComplementOfSecondRangeAfterEndOfTimeDoesNotExist()
+    {
+        var input = new DateOnlyTimeline([
+            new DateRange(D(1), D(3)),
+            new DateRange(D(4), DateOnly.MaxValue)
+        ]);
+        var dut = input.Complement();
+
+        Assert.IsNotNull(dut);
+        Assert.IsTrue(dut.Ranges.SequenceEqual([
+            new DateRange(DateOnly.MinValue, D(1).AddDays(-1))
         ]));
     }
 }

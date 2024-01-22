@@ -206,4 +206,80 @@ public class DateRangeTest
         var dut = DR(1);
         Assert.AreEqual("20240101-99991231", dut.ToString());
     }
+
+    [TestMethod]
+    public void TaggedDateRangeConstructorWithSingleValueSetsEndToMaxValue()
+    {
+        var dut = new DateRange<char>(D(1), 'A');
+
+        Assert.AreEqual(D(1), dut.Start);
+        Assert.AreEqual(DateOnly.MaxValue, dut.End);
+        Assert.AreEqual('A', dut.Tag);
+    }
+
+    [TestMethod]
+    public void TaggedDateRangeConstructorAllowsEqualValues()
+    {
+        var dut = new DateRange<char>(D(1), D(2), 'A');
+
+        Assert.AreEqual(D(1), dut.Start);
+        Assert.AreEqual(D(2), dut.End);
+        Assert.AreEqual('A', dut.Tag);
+    }
+
+    [TestMethod]
+    public void TaggedDateRangeConstructorAllowsEndAfterStart()
+    {
+        var dut = new DateRange<char>(D(1), D(2), 'A');
+
+        Assert.AreEqual(D(1), dut.Start);
+        Assert.AreEqual(D(2), dut.End);
+        Assert.AreEqual('A', dut.Tag);
+    }
+
+    [TestMethod]
+    public void TaggedDateRangeConstructorForbidsStartAfterEnd()
+    {
+        Assert.ThrowsException<ArgumentException>(() =>
+            new DateRange<char>(D(2), D(1), 'A'));
+    }
+
+    [DataRow(1, 1, 1, true)]
+    [DataRow(1, 1, 2, false)]
+    [DataRow(1, 2, 1, true)]
+    [DataRow(1, 2, 2, true)]
+    [DataRow(1, 2, 3, false)]
+    [DataRow(2, 2, 1, false)]
+    [DataRow(2, 2, 2, true)]
+    [DataRow(2, 4, 3, true)]
+    [DataRow(2, 4, 4, true)]
+    [DataRow(2, 4, 5, false)]
+    [DataTestMethod]
+    public void TaggedDateRangeContainsHandlesValues(
+        int start, int end, int test, bool expected)
+    {
+        var dut = new DateRange<char>(D(start), D(end), 'A');
+        Assert.AreEqual(expected, dut.Contains(D(test)));
+    }
+
+    [TestMethod]
+    public void TaggedToStringReturnsExpectedValue()
+    {
+        var dut = new DateRange<char>(D(1), D(2), 'A');
+        Assert.AreEqual("A:20240101-20240102", dut.ToString());
+    }
+
+    [TestMethod]
+    public void TaggedToStringReturnsExpectedValueForSingleDay()
+    {
+        var dut = new DateRange<char>(D(1), D(1), 'A');
+        Assert.AreEqual("A:20240101-20240101", dut.ToString());
+    }
+
+    [TestMethod]
+    public void TaggedToStringReturnsExpectedValueForMaxValue()
+    {
+        var dut = new DateRange<char>(D(1), DateOnly.MaxValue, 'A');
+        Assert.AreEqual("A:20240101-99991231", dut.ToString());
+    }
 }

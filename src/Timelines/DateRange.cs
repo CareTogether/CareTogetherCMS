@@ -94,8 +94,6 @@ public readonly struct DateRange<T>
     public bool Contains(DateOnly value) =>
         value >= Start && value <= End;
 
-    public T? ValueAt(DateOnly value) => Contains(value) ? Tag : default;
-
 
     public override string ToString()
     {
