@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Diagnostics;
+﻿using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 
 namespace Timelines;
 
-public readonly struct DateRange// : IEnumerable<DateOnly>
+public readonly struct DateRange : IEquatable<DateRange>
 {
     public readonly DateOnly Start;
     public readonly DateOnly End;
@@ -45,10 +40,16 @@ public readonly struct DateRange// : IEnumerable<DateOnly>
             End < other.Value.End ? End : other.Value.End);
     }
 
+
+    public bool Equals(DateRange other)
+    {
+        return Start == other.Start && End == other.End;
+    }
+
     public override bool Equals([NotNullWhen(true)] object? obj)
     {
         if (obj is DateRange other)
-            return Start == other.Start && End == other.End;
+            return Equals(other);
 
         return base.Equals(obj);
     }
@@ -62,17 +63,6 @@ public readonly struct DateRange// : IEnumerable<DateOnly>
     {
         return $"{Start:yyyyMMdd}-{End:yyyyMMdd}";
     }
-
-    // public IEnumerator<DateOnly> GetEnumerator()
-    // {
-    //     for (var date = start; date <= end; date++)
-    //         yield return date;
-    // }
-
-    // IEnumerator IEnumerable.GetEnumerator()
-    // {
-    //     return GetEnumerator();
-    // }
 }
 
 /// <summary>
@@ -82,7 +72,7 @@ public readonly struct DateRange// : IEnumerable<DateOnly>
 /// NOTE: Unlike the <see cref="Timeline"/> class, this class only considers
 ///      dates, not times.
 /// </summary>
-public sealed class DateOnlyTimeline //: IEquatable<DateOnlyTimeline?>
+public sealed class DateOnlyTimeline
 {
     public ImmutableList<DateRange> Ranges { get; init; }
 
@@ -142,8 +132,8 @@ public sealed class DateOnlyTimeline //: IEquatable<DateOnlyTimeline?>
             .OrderBy(range => range.Start)
             .ToImmutableList();
 
-        // Merge any overlapping ranges, i.e., whenever the end of one range is on or
-        // after the start of the next range, combine them into a single range.
+        // Merge any overlapping ranges, i.e., whenever the end of one range is on,
+        // adjacent to, or after the start of the next range, combine them into a single range.
         var sequentialNonOverlappingRanges = orderedAbsoluteRanges
             .Aggregate(new List<DateRange>(), (prior, current) =>
             {
@@ -154,9 +144,11 @@ public sealed class DateOnlyTimeline //: IEquatable<DateOnlyTimeline?>
                 }
 
                 var mostRecentRange = prior[^1];
-                if (current.Start <= mostRecentRange.End)
+                if (current.Start <= mostRecentRange.End.AddDays(1))
                 {
-                    prior[^1] = new DateRange(mostRecentRange.Start, current.End);
+                    // The resulting range should use the end date of whichever range ends later.
+                    prior[^1] = new DateRange(mostRecentRange.Start,
+                        mostRecentRange.End > current.End ? mostRecentRange.End : current.End);
                     return prior;
                 }
 
@@ -229,92 +221,4 @@ public sealed class DateOnlyTimeline //: IEquatable<DateOnlyTimeline?>
 
         return UnionOf(intersections);
     }
-
-    // public AbsoluteTimeSpan MapUnbounded(TimeSpan startDelay, TimeSpan duration)
-    // {
-    //     var start = MapUnbounded(startDelay);
-    //     var end = MapUnbounded(startDelay + duration);
-
-    //     return new AbsoluteTimeSpan(start, end);
-    // }
-
-    // public DateTime? TryMapFrom(DateTime offset, TimeSpan duration)
-    // {
-    //     try
-    //     {
-    //         var subsetFromOffset = Subset(offset, DateTime.MaxValue);
-    //         var mappedDurationInSubset = subsetFromOffset.TryMap(duration);
-    //         return mappedDurationInSubset;
-    //     }
-    //     catch
-    //     {
-    //         return null;
-    //     }
-    // }
-
-    // public DateTime MapUnbounded(TimeSpan durationFromStart)
-    // {
-    //     var result = TryMap(durationFromStart);
-
-    //     if (result == null)
-    //         return DateTime.MaxValue;
-
-    //     return result.Value;
-    // }
-
-    // public DateTime? TryMap(TimeSpan durationFromStart)
-    // {
-    //     DateTime? mappedStageStartDate = null;
-    //     TimeSpan mappedDurationPriorToCurrentStage = TimeSpan.Zero;
-
-    //     foreach (var stage in stages)
-    //     {
-    //         if (stage.Duration + mappedDurationPriorToCurrentStage >= durationFromStart)
-    //         {
-    //             mappedStageStartDate = stage.Start;
-    //             break;
-    //         }
-    //         else
-    //             mappedDurationPriorToCurrentStage += stage.Duration;
-    //     }
-
-    //     if (mappedStageStartDate == null)
-    //         return null;
-
-    //     return mappedStageStartDate +
-    //         durationFromStart - mappedDurationPriorToCurrentStage;
-    // }
-
-    // public Timeline Subset(DateTime start, DateTime? end)
-    // {
-    //     var subsetEnd = end.HasValue ? end.Value : DateTime.MaxValue;
-
-    //     var subsetStages = stages
-    //         .Where(stage => stage.Start <= subsetEnd && stage.End >= start)
-    //         .Select(stage => new TerminatingTimelineStage(
-    //             Start: start > stage.Start ? start : stage.Start,
-    //             End: subsetEnd < stage.End ? subsetEnd : stage.End))
-    //         .ToImmutableList();
-
-    //     // To protect against invalid timelines when the subset is empty,
-    //     // return a single-instant timeline starting at the requested start date.
-    //     return subsetStages.Count == 0
-    //         ? new Timeline(start, start)
-    //         : new Timeline(subsetStages);
-    // }
-
-    // public override bool Equals(object? obj)
-    // {
-    //     return Equals(obj as DateOnlyTimeline);
-    // }
-
-    // public bool Equals(DateOnlyTimeline? other)
-    // {
-    //     return other != null && stages.SequenceEqual(other.stages);
-    // }
-
-    // public override int GetHashCode()
-    // {
-    //     return stages.GetHashCode();
-    // }
 }
