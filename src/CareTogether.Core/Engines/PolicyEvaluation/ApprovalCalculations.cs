@@ -305,30 +305,28 @@ namespace CareTogether.Engines.PolicyEvaluation
         internal static (RoleApprovalStatus? Status, DateTime? ExpiresAtUtc) CalculateRoleApprovalStatusesFromRequirementCompletions(
             ImmutableList<(string ActionName, RequirementStage Stage, DateOnlyTimeline? RequirementApprovals)> requirementCompletionStatus)
         {
-            //TODO: Instead of a single status and an expiration, return a set of *each* RoleApprovalStatus and DateOnlyTimeline?
-            //      so that the caller gets a full picture of the role's approval history.
-            static (bool IsSatisfied, DateOnlyTimeline) Evaluate(
+            // Instead of a single status and an expiration, return a set of *each* RoleApprovalStatus and DateOnlyTimeline?
+            // so that the caller gets a full picture of the role's approval history.
+
+            static DateOnlyTimeline? FindRangesWhereAllAreSatisfied(
                 IEnumerable<(string ActionName, RequirementStage Stage, DateOnlyTimeline? RequirementApprovals)> values)
             {
-                if (values.All(value => value.RequirementApprovals != null))
-                    return (true,
-                        values.MinBy(value => value.RequirementApprovals.ExpiresAtUtc ?? DateTime.MaxValue).RequirementMetOrExempted.ExpiresAtUtc);
-                else
-                    return (false, null);
+                return DateOnlyTimeline.IntersectionOf(
+                    values.Select(value => value.RequirementApprovals).ToImmutableList());
             }
 
-            var onboarded = Evaluate(requirementCompletionStatus);
-            if (onboarded.IsSatisfied)
+            var onboarded = FindRangesWhereAllAreSatisfied(requirementCompletionStatus);
+            if (onboarded != null)
                 return (Status: RoleApprovalStatus.Onboarded, onboarded.ExpiresAtUtc);
 
-            var approved = Evaluate(requirementCompletionStatus
+            var approved = FindRangesWhereAllAreSatisfied(requirementCompletionStatus
                 .Where(x => x.Stage == RequirementStage.Application || x.Stage == RequirementStage.Approval));
-            if (approved.IsSatisfied)
+            if (approved != null)
                 return (Status: RoleApprovalStatus.Approved, approved.ExpiresAtUtc);
 
-            var prospective = Evaluate(requirementCompletionStatus
+            var prospective = FindRangesWhereAllAreSatisfied(requirementCompletionStatus
                 .Where(x => x.Stage == RequirementStage.Application));
-            if (prospective.IsSatisfied)
+            if (prospective != null)
                 return (Status: RoleApprovalStatus.Prospective, prospective.ExpiresAtUtc);
 
             return (Status: null, ExpiresAtUtc: null);
