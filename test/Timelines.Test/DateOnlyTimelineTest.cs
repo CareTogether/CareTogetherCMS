@@ -17,7 +17,37 @@ public class DateOnlyTimelineTest
     }
 
 
-    // TODO: Test DateOnlyTimeline instance methods
+    [TestMethod]
+    public void ConstructorForbidsEmptyList()
+    {
+        Assert.ThrowsException<ArgumentException>(() =>
+            new DateOnlyTimeline(ImmutableList<DateRange>.Empty));
+    }
+
+    [TestMethod]
+    public void ConstructorForbidsOverlappingRanges()
+    {
+        Assert.ThrowsException<ArgumentException>(() =>
+            new DateOnlyTimeline([DR(1, 2), DR(2, 3)]));
+    }
+
+    [TestMethod]
+    public void ConstructorForbidsOverlappingRanges2()
+    {
+        Assert.ThrowsException<ArgumentException>(() =>
+            new DateOnlyTimeline([DR(1, 3), DR(2, 4)]));
+    }
+
+    [TestMethod]
+    public void ConstructorPopulatesRanges()
+    {
+        var dut = new DateOnlyTimeline([DR(1, 2), DR(3, 4)]);
+
+        Assert.IsNotNull(dut);
+        Assert.IsTrue(dut.Ranges.SequenceEqual([
+            DR(1, 2), DR(3, 4)
+        ]));
+    }
 
     [TestMethod]
     public void UnionOfEmptyListReturnsNull()
@@ -196,17 +226,49 @@ public class DateOnlyTimelineTest
         ]));
     }
 
+    [TestMethod]
+    public void UnionOfTimelinesReturnsNullIfAllNull()
+    {
+        var dut = DateOnlyTimeline.UnionOf(ImmutableList<DateOnlyTimeline?>.Empty
+            .AddRange([null, null]));
 
-
-
-    //////////////////////////////////
-    // TODO: Review subsequent tests
+        Assert.IsNull(dut);
+    }
 
     [TestMethod]
-    public void TestSingleZeroDurationTerminatingStage()
+    public void UnionOfTimelinesReturnsUnionOfAllNonNullRanges()
     {
-        var dut = DateOnlyTimeline.UnionOf(ImmutableList.Create(
-            DR(1, 1)));
+        var dut = DateOnlyTimeline.UnionOf(ImmutableList<DateOnlyTimeline?>.Empty
+            .AddRange([
+                null,
+                DateOnlyTimeline.UnionOf(ImmutableList.Create(DR(1, 1))),
+                null,
+                DateOnlyTimeline.UnionOf(ImmutableList.Create(DR(2, 2))),
+                DateOnlyTimeline.UnionOf(ImmutableList.Create(DR(4, 5))),
+                null
+            ]));
+
+        Assert.IsNotNull(dut);
+        AssertDatesAre(dut, 1, 2, 4, 5);
+        Assert.IsTrue(dut.Ranges.SequenceEqual([
+            DR(1, 2), DR(4, 5)
+        ]));
+    }
+
+    [TestMethod]
+    public void IntersectionOfEmptyListReturnsNull()
+    {
+        var dut = DateOnlyTimeline.IntersectionOf([]);
+
+        Assert.IsNull(dut);
+    }
+
+    [TestMethod]
+    public void IntersectionOfSingleOneDayTimeline()
+    {
+        var dut = DateOnlyTimeline.IntersectionOf(ImmutableList.Create([
+            new DateOnlyTimeline([DR(1, 1)])
+        ]));
 
         Assert.IsNotNull(dut);
         AssertDatesAre(dut, 1);
@@ -216,146 +278,124 @@ public class DateOnlyTimelineTest
     }
 
     [TestMethod]
-    public void TestSingleTerminatingStage()
+    public void IntersectionOfTwoOverlappingTimelines()
     {
-        var dut = DateOnlyTimeline.UnionOf(ImmutableList.Create(
-            DR(1, 10)));
+        var dut = DateOnlyTimeline.IntersectionOf(ImmutableList.Create([
+            new DateOnlyTimeline([DR(2, 2)]),
+            new DateOnlyTimeline([DR(1, 3)])
+        ]));
 
         Assert.IsNotNull(dut);
-        Assert.IsTrue(dut.Contains(D(1)));
-        Assert.IsTrue(dut.Contains(D(2)));
-        Assert.IsTrue(dut.Contains(D(9)));
-        Assert.IsTrue(dut.Contains(D(10)));
-        Assert.IsFalse(dut.Contains(D(11)));
-        Assert.IsFalse(dut.Contains(D(19)));
-        Assert.IsFalse(dut.Contains(D(20)));
-        Assert.IsFalse(dut.Contains(D(21)));
-        Assert.IsFalse(dut.Contains(D(25)));
-        Assert.IsFalse(dut.Contains(D(30)));
-        Assert.IsFalse(dut.Contains(D(31)));
+        AssertDatesAre(dut, 2);
+        Assert.IsTrue(dut.Ranges.SequenceEqual([
+            DR(2, 2)
+        ]));
     }
 
     [TestMethod]
-    public void TestTwoContinuousTerminatingStages()
+    public void IntersectionOfTwoOverlappingTimelinesAndNull()
     {
-        var dut = DateOnlyTimeline.UnionOf(ImmutableList.Create(
-            DR(1, 10), DR(10, 20)));
+        var dut = DateOnlyTimeline.IntersectionOf(ImmutableList.Create([
+            new DateOnlyTimeline([DR(2, 2)]),
+            new DateOnlyTimeline([DR(1, 3)]),
+            null
+        ]));
 
-        Assert.IsNotNull(dut);
-        Assert.IsTrue(dut.Contains(D(1)));
-        Assert.IsTrue(dut.Contains(D(2)));
-        Assert.IsTrue(dut.Contains(D(9)));
-        Assert.IsTrue(dut.Contains(D(10)));
-        Assert.IsTrue(dut.Contains(D(11)));
-        Assert.IsTrue(dut.Contains(D(19)));
-        Assert.IsTrue(dut.Contains(D(20)));
-        Assert.IsFalse(dut.Contains(D(21)));
-        Assert.IsFalse(dut.Contains(D(25)));
-        Assert.IsFalse(dut.Contains(D(30)));
-        Assert.IsFalse(dut.Contains(D(31)));
+        Assert.IsNull(dut);
     }
 
     [TestMethod]
-    public void TestTwoDiscontinuousTerminatingStages()
+    public void IntersectionOfThreeDisjointTimelines()
     {
-        var dut = DateOnlyTimeline.UnionOf(ImmutableList.Create(
-            DR(1, 10), DR(20, 30)));
+        var dut = DateOnlyTimeline.IntersectionOf(ImmutableList.Create([
+            new DateOnlyTimeline([DR(2, 2)]),
+            new DateOnlyTimeline([DR(1, 3)]),
+            new DateOnlyTimeline([DR(4, 4)])
+        ]));
 
-        Assert.IsNotNull(dut);
-        Assert.IsTrue(dut.Contains(D(1)));
-        Assert.IsTrue(dut.Contains(D(2)));
-        Assert.IsTrue(dut.Contains(D(9)));
-        Assert.IsTrue(dut.Contains(D(10)));
-        Assert.IsFalse(dut.Contains(D(11)));
-        Assert.IsFalse(dut.Contains(D(19)));
-        Assert.IsTrue(dut.Contains(D(20)));
-        Assert.IsTrue(dut.Contains(D(21)));
-        Assert.IsTrue(dut.Contains(D(25)));
-        Assert.IsTrue(dut.Contains(D(30)));
-        Assert.IsFalse(dut.Contains(D(31)));
+        Assert.IsNull(dut);
     }
 
     [TestMethod]
-    public void TestTwoOverlappingTerminatingStages()
+    public void IntersectionOfThreeOverlappingTimelines()
     {
-        var dut = DateOnlyTimeline.UnionOf(ImmutableList.Create(
-            DR(1, 15), DR(10, 20)));
+        var dut = DateOnlyTimeline.IntersectionOf(ImmutableList.Create([
+            new DateOnlyTimeline([DR(2, 2)]),
+            new DateOnlyTimeline([DR(1, 3)]),
+            new DateOnlyTimeline([DR(2, 4)])
+        ]));
 
         Assert.IsNotNull(dut);
-        Assert.IsTrue(dut.Contains(D(1)));
-        Assert.IsTrue(dut.Contains(D(2)));
-        Assert.IsTrue(dut.Contains(D(9)));
-        Assert.IsTrue(dut.Contains(D(10)));
-        Assert.IsTrue(dut.Contains(D(11)));
-        Assert.IsTrue(dut.Contains(D(15)));
-        Assert.IsTrue(dut.Contains(D(16)));
-        Assert.IsTrue(dut.Contains(D(19)));
-        Assert.IsTrue(dut.Contains(D(20)));
-        Assert.IsFalse(dut.Contains(D(21)));
-        Assert.IsFalse(dut.Contains(D(25)));
-        Assert.IsFalse(dut.Contains(D(30)));
-        Assert.IsFalse(dut.Contains(D(31)));
+        AssertDatesAre(dut, 2);
+        Assert.IsTrue(dut.Ranges.SequenceEqual([
+            DR(2, 2)
+        ]));
     }
 
     [TestMethod]
-    public void TestSingleNonTerminatingStage()
+    public void ContainsChecksAllRanges()
     {
-        var dut = DateOnlyTimeline.UnionOf(ImmutableList.Create(
-            DR(1)));
+        var dut = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
 
-        Assert.IsNotNull(dut);
         Assert.IsTrue(dut.Contains(D(1)));
-        Assert.IsTrue(dut.Contains(D(2)));
-        Assert.IsTrue(dut.Contains(D(9)));
-        Assert.IsTrue(dut.Contains(D(10)));
-        Assert.IsTrue(dut.Contains(D(11)));
-        Assert.IsTrue(dut.Contains(D(19)));
-        Assert.IsTrue(dut.Contains(D(20)));
-        Assert.IsTrue(dut.Contains(D(21)));
-        Assert.IsTrue(dut.Contains(D(25)));
-        Assert.IsTrue(dut.Contains(D(30)));
-        Assert.IsTrue(dut.Contains(D(31)));
+        Assert.IsFalse(dut.Contains(D(2)));
+        Assert.IsTrue(dut.Contains(D(3)));
+        Assert.IsTrue(dut.Contains(D(4)));
+        Assert.IsFalse(dut.Contains(D(5)));
     }
 
     [TestMethod]
-    public void TestSingleTerminatingAndContinuousNonTerminatingStage()
+    public void IntersectionWithNullReturnsNull()
     {
-        var dut = DateOnlyTimeline.UnionOf(ImmutableList.Create(
-            DR(1, 10), DR(10)));
+        var dut = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
 
-        Assert.IsNotNull(dut);
-        Assert.IsTrue(dut.Contains(D(1)));
-        Assert.IsTrue(dut.Contains(D(2)));
-        Assert.IsTrue(dut.Contains(D(9)));
-        Assert.IsTrue(dut.Contains(D(10)));
-        Assert.IsTrue(dut.Contains(D(11)));
-        Assert.IsTrue(dut.Contains(D(19)));
-        Assert.IsTrue(dut.Contains(D(20)));
-        Assert.IsTrue(dut.Contains(D(21)));
-        Assert.IsTrue(dut.Contains(D(25)));
-        Assert.IsTrue(dut.Contains(D(30)));
-        Assert.IsTrue(dut.Contains(D(31)));
+        Assert.IsNull(dut.IntersectionWith(null));
     }
 
     [TestMethod]
-    public void TestSingleTerminatingAndDiscontinuousNonTerminatingStage()
+    public void IntersectionWithDisjointTimelineReturnsNull()
     {
-        var dut = DateOnlyTimeline.UnionOf(ImmutableList.Create(
-            DR(1, 10), DR(20)));
+        var dut = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
+        var other = new DateOnlyTimeline([DR(5, 5), DR(7, 8)]);
 
-        Assert.IsNotNull(dut);
-        Assert.IsTrue(dut.Contains(D(1)));
-        Assert.IsTrue(dut.Contains(D(2)));
-        Assert.IsTrue(dut.Contains(D(9)));
-        Assert.IsTrue(dut.Contains(D(10)));
-        Assert.IsFalse(dut.Contains(D(11)));
-        Assert.IsFalse(dut.Contains(D(19)));
-        Assert.IsTrue(dut.Contains(D(20)));
-        Assert.IsTrue(dut.Contains(D(21)));
-        Assert.IsTrue(dut.Contains(D(25)));
-        Assert.IsTrue(dut.Contains(D(30)));
-        Assert.IsTrue(dut.Contains(D(31)));
+        Assert.IsNull(dut.IntersectionWith(other));
     }
 
-    //TODO: Exhaustive unit tests for other DateOnlyTimeline methods!!!
+    [TestMethod]
+    public void IntersectionWithOverlappingTimelineReturnsIntersection()
+    {
+        var dut = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
+        var other = new DateOnlyTimeline([DR(2, 3), DR(4, 5)]);
+
+        var intersection = dut.IntersectionWith(other);
+
+        Assert.IsNotNull(intersection);
+        AssertDatesAre(intersection, 3, 4);
+        Assert.IsTrue(intersection.Ranges.SequenceEqual([
+            DR(3, 4)
+        ]));
+    }
+
+    public void IntersectionWithDisjointDateRangeReturnsNull()
+    {
+        var dut = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
+        var other = DR(5, 5);
+
+        Assert.IsNull(dut.IntersectionWith(other));
+    }
+
+    [TestMethod]
+    public void IntersectionWithOverlappingDateRangeReturnsIntersection()
+    {
+        var dut = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
+        var other = DR(2, 3);
+
+        var intersection = dut.IntersectionWith(other);
+
+        Assert.IsNotNull(intersection);
+        AssertDatesAre(intersection, 3);
+        Assert.IsTrue(intersection.Ranges.SequenceEqual([
+            DR(3, 3)
+        ]));
+    }
 }
