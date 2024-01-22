@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Immutable;
 using System.Linq;
+using Timelines;
 
 namespace CareTogether.Engines.PolicyEvaluation
 {
