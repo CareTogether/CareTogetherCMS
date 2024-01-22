@@ -55,22 +55,26 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             var matchingCompletions = completedRequirementsInScope
                 .Where(completed => completed.RequirementName == requirementName)
-                .Select<CompletedRequirementInfo, TimelineStage>(completed => actionValidity == null
-                    ? new NonTerminatingStage(DateOnly.FromDateTime(completed.CompletedAtUtc))
-                    : new TerminatingStage(DateOnly.FromDateTime(completed.CompletedAtUtc),
-                        DateOnly.FromDateTime(completed.CompletedAtUtc + actionValidity.Value)));
+                .Select(completed => new DateRange(
+                    DateOnly.FromDateTime(completed.CompletedAtUtc),
+                    actionValidity == null
+                        ? DateOnly.MaxValue
+                        : DateOnly.FromDateTime(completed.CompletedAtUtc + actionValidity.Value)))
+                .ToImmutableList();
 
             var matchingExemptions = exemptedRequirementsInScope
                 .Where(exempted => exempted.RequirementName == requirementName)
-                .Select<ExemptedRequirementInfo, TimelineStage>(exempted => exempted.ExemptionExpiresAtUtc == null
+                .Select(exempted => new DateRange(
                     //NOTE: This limits exemptions to being valid as of the time they were created.
                     //      If we want to allow backdating or postdating exemptions, we'll need to change this.
-                    ? new NonTerminatingStage(DateOnly.FromDateTime(exempted.TimestampUtc))
-                    : new TerminatingStage(DateOnly.FromDateTime(exempted.TimestampUtc),
-                        DateOnly.FromDateTime(exempted.ExemptionExpiresAtUtc.Value)));
+                    DateOnly.FromDateTime(exempted.TimestampUtc),
+                    exempted.ExemptionExpiresAtUtc == null
+                        ? DateOnly.MaxValue
+                        : DateOnly.FromDateTime(exempted.ExemptionExpiresAtUtc.Value)))
+                .ToImmutableList();
 
             //TODO: Upgrade to .NET 8 and start using frozen collections?
-            return DateOnlyTimeline.Union(matchingCompletions.Concat(matchingExemptions).ToImmutableList());
+            return DateOnlyTimeline.UnionOf(matchingCompletions.Concat(matchingExemptions).ToImmutableList());
         }
     }
 }

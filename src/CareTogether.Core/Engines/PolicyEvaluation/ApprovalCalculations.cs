@@ -229,19 +229,23 @@ namespace CareTogether.Engines.PolicyEvaluation
         {
             var supersededAtUtc = policyVersion.SupersededAtUtc;
 
+            // For each requirement of the policy version for this role, find the dates for which it was met or exempted.
+            // If there are none, the resulting timeline will be 'null'.
             var requirementCompletionStatus = policyVersion.Requirements.Select(requirement =>
             {
                 var actionDefinition = actionDefinitions[requirement.ActionName];
-                return (requirement.ActionName, requirement.Stage, RequirementMetOrExempted:
+                return (requirement.ActionName, requirement.Stage, RequirementApprovals:
                     SharedCalculations.FindRequirementApprovals(requirement.ActionName, actionDefinition.Validity,
                         completedRequirements, exemptedRequirements));
             }).ToImmutableList();
 
             var simpleRequirementCompletionStatus = requirementCompletionStatus
-                .Select(status => (status.ActionName, status.Stage, RequirementMetOrExempted: status.RequirementMetOrExempted.IsMetOrExempted))
+                .Select(status => (status.ActionName, status.Stage, RequirementMetOrExempted: status.RequirementApprovals != null))
                 .ToImmutableList();
 
-            var status = CalculateRoleApprovalStatusFromRequirementCompletions(requirementCompletionStatus);
+            var status = CalculateRoleApprovalStatusesFromRequirementCompletions(requirementCompletionStatus);
+            //TODO: This is simplistic. Do we want to instead calculate 'missing as of date'? If so, that feels like a separate calculation.
+            //TODO: Do we want to return 'expiredRequirements' as well?
             var missingRequirements = CalculateMissingIndividualRequirementsFromRequirementCompletion(status.Status, simpleRequirementCompletionStatus);
             var availableApplications = CalculateAvailableIndividualApplicationsFromRequirementCompletion(status.Status, simpleRequirementCompletionStatus);
 
@@ -285,7 +289,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .Select(status => (status.ActionName, status.Stage, status.Scope, RequirementMetOrExempted: status.RequirementMetOrExempted.IsMetOrExempted, status.RequirementMissingForIndividuals))
                 .ToImmutableList();
 
-            var status = CalculateRoleApprovalStatusFromRequirementCompletions(
+            var status = CalculateRoleApprovalStatusesFromRequirementCompletions(
                 requirementsMet.Select(x => (x.ActionName, x.Stage, x.RequirementMetOrExempted)).ToImmutableList());
             var missingRequirements = CalculateMissingFamilyRequirementsFromRequirementCompletion(status.Status, simpleRequirementsMet);
             var availableApplications = CalculateAvailableFamilyApplicationsFromRequirementCompletion(status.Status, simpleRequirementsMet);
@@ -297,15 +301,17 @@ namespace CareTogether.Engines.PolicyEvaluation
                 MissingIndividualRequirements: missingIndividualRequirements);
         }
 
-        internal static (RoleApprovalStatus? Status, DateTime? ExpiresAtUtc) CalculateRoleApprovalStatusFromRequirementCompletions(
-            ImmutableList<(string ActionName, RequirementStage Stage, SharedCalculations.RequirementCheckResult RequirementMetOrExempted)> requirementCompletionStatus)
+        internal static (RoleApprovalStatus? Status, DateTime? ExpiresAtUtc) CalculateRoleApprovalStatusesFromRequirementCompletions(
+            ImmutableList<(string ActionName, RequirementStage Stage, DateOnlyTimeline? RequirementApprovals)> requirementCompletionStatus)
         {
-            static (bool IsSatisfied, DateTime? ExpiresAtUtc) Evaluate(
-                IEnumerable<(string ActionName, RequirementStage Stage, SharedCalculations.RequirementCheckResult RequirementMetOrExempted)> values)
+            //TODO: Instead of a single status and an expiration, return a set of *each* RoleApprovalStatus and DateOnlyTimeline?
+            //      so that the caller gets a full picture of the role's approval history.
+            static (bool IsSatisfied, DateOnlyTimeline) Evaluate(
+                IEnumerable<(string ActionName, RequirementStage Stage, DateOnlyTimeline? RequirementApprovals)> values)
             {
-                if (values.All(value => value.RequirementMetOrExempted.IsMetOrExempted))
+                if (values.All(value => value.RequirementApprovals != null))
                     return (true,
-                        values.MinBy(value => value.RequirementMetOrExempted.ExpiresAtUtc ?? DateTime.MaxValue).RequirementMetOrExempted.ExpiresAtUtc);
+                        values.MinBy(value => value.RequirementApprovals.ExpiresAtUtc ?? DateTime.MaxValue).RequirementMetOrExempted.ExpiresAtUtc);
                 else
                     return (false, null);
             }

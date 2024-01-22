@@ -9,7 +9,9 @@ namespace CareTogether.Core.Test
     [TestClass]
     public class DateOnlyTimelineTest
     {
-        private static DateOnly D(int day) => new DateOnly(2024, 1, day);
+        private static DateOnly D(int day) => new(2024, 1, day);
+        private static DateRange DR(int start, int end) => new(D(start), D(end));
+        private static DateRange DR(int start) => new(D(start), DateOnly.MaxValue);
         // private static TimeSpan T(int days) => TimeSpan.FromDays(days);
         // private static AbsoluteDateSpan M(int start, int end) =>
         //     new AbsoluteDateSpan(D(start), D(end));
@@ -27,8 +29,8 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public void TestSingleZeroDurationTerminatingStage()
         {
-            var dut = DateOnlyTimeline.Union(ImmutableList.Create<TimelineStage>(
-                new TerminatingStage(D(1), D(1))));
+            var dut = DateOnlyTimeline.UnionOf(ImmutableList.Create(
+                DR(1, 1)));
 
             Assert.IsNotNull(dut);
             Assert.IsTrue(dut.Contains(D(1)));
@@ -75,8 +77,8 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public void TestSingleTerminatingStage()
         {
-            var dut = DateOnlyTimeline.Union(ImmutableList.Create<TimelineStage>(
-                new TerminatingStage(D(1), D(10))));
+            var dut = DateOnlyTimeline.UnionOf(ImmutableList.Create(
+                DR(1, 10)));
 
             Assert.IsNotNull(dut);
             Assert.IsTrue(dut.Contains(D(1)));
@@ -123,9 +125,8 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public void TestTwoContinuousTerminatingStages()
         {
-            var dut = DateOnlyTimeline.Union(ImmutableList.Create<TimelineStage>(
-                new TerminatingStage(D(1), D(10)),
-                new TerminatingStage(D(10), D(20))));
+            var dut = DateOnlyTimeline.UnionOf(ImmutableList.Create(
+                DR(1, 10), DR(10, 20)));
 
             Assert.IsNotNull(dut);
             Assert.IsTrue(dut.Contains(D(1)));
@@ -171,9 +172,8 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public void TestTwoDiscontinuousTerminatingStages()
         {
-            var dut = DateOnlyTimeline.Union(ImmutableList.Create<TimelineStage>(
-                new TerminatingStage(D(1), D(10)),
-                new TerminatingStage(D(20), D(30))));
+            var dut = DateOnlyTimeline.UnionOf(ImmutableList.Create(
+                DR(1, 10), DR(20, 30)));
 
             Assert.IsNotNull(dut);
             Assert.IsTrue(dut.Contains(D(1)));
@@ -219,9 +219,8 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public void TestTwoOverlappingTerminatingStages()
         {
-            var dut = DateOnlyTimeline.Union(ImmutableList.Create<TimelineStage>(
-                new TerminatingStage(D(1), D(15)),
-                new TerminatingStage(D(10), D(20))));
+            var dut = DateOnlyTimeline.UnionOf(ImmutableList.Create(
+                DR(1, 15), DR(10, 20)));
 
             Assert.IsNotNull(dut);
             Assert.IsTrue(dut.Contains(D(1)));
@@ -242,8 +241,8 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public void TestSingleNonTerminatingStage()
         {
-            var dut = DateOnlyTimeline.Union(ImmutableList.Create<TimelineStage>(
-                new NonTerminatingStage(D(1))));
+            var dut = DateOnlyTimeline.UnionOf(ImmutableList.Create(
+                DR(1)));
 
             Assert.IsNotNull(dut);
             Assert.IsTrue(dut.Contains(D(1)));
@@ -289,9 +288,8 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public void TestSingleTerminatingAndContinuousNonTerminatingStage()
         {
-            var dut = DateOnlyTimeline.Union(ImmutableList.Create<TimelineStage>(
-                new TerminatingStage(D(1), D(10)),
-                new NonTerminatingStage(D(10))));
+            var dut = DateOnlyTimeline.UnionOf(ImmutableList.Create(
+                DR(1, 10), DR(10)));
 
             Assert.IsNotNull(dut);
             Assert.IsTrue(dut.Contains(D(1)));
@@ -337,9 +335,8 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public void TestSingleTerminatingAndDiscontinuousNonTerminatingStage()
         {
-            var dut = DateOnlyTimeline.Union(ImmutableList.Create<TimelineStage>(
-                new TerminatingStage(D(1), D(10)),
-                new NonTerminatingStage(D(20))));
+            var dut = DateOnlyTimeline.UnionOf(ImmutableList.Create(
+                DR(1, 10), DR(20)));
 
             Assert.IsNotNull(dut);
             Assert.IsTrue(dut.Contains(D(1)));
@@ -378,5 +375,7 @@ namespace CareTogether.Core.Test
             // Assert.AreEqual(D(10), dut.TryMapFrom(D(7), T(3)));
             // Assert.AreEqual(D(22), dut.TryMapFrom(D(7), T(5)));
         }
+
+        //TODO: Exhaustive unit tests for other DateOnlyTimeline methods!!!
     }
 }
