@@ -17,8 +17,6 @@ public class DateOnlyTimelineTest
     }
 
 
-    // TODO: Test DateRange instance methods
-
     // TODO: Test DateOnlyTimeline instance methods
 
     [TestMethod]
