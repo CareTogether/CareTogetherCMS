@@ -223,34 +223,28 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
         internal static
-            (RoleApprovalStatus? Status, DateTime? ExpiresAtUtc, ImmutableList<string> MissingRequirements, ImmutableList<string> AvailableApplications)
+            (DateOnlyTimeline<RoleApprovalStatus>? Status,
+                ImmutableList<(string ActionName, RequirementStage Stage, DateOnlyTimeline? MetOrExemptedWhen)> RequirementCompletions)
             CalculateIndividualVolunteerRoleApprovalStatus(
             ImmutableDictionary<string, ActionRequirement> actionDefinitions, VolunteerRolePolicyVersion policyVersion,
             ImmutableList<CompletedRequirementInfo> completedRequirements, ImmutableList<ExemptedRequirementInfo> exemptedRequirements)
         {
-            var supersededAtUtc = policyVersion.SupersededAtUtc;
+            var policyVersionSupersededAtUtc = policyVersion.SupersededAtUtc;
 
             // For each requirement of the policy version for this role, find the dates for which it was met or exempted.
             // If there are none, the resulting timeline will be 'null'.
             var requirementCompletionStatus = policyVersion.Requirements.Select(requirement =>
             {
                 var actionDefinition = actionDefinitions[requirement.ActionName];
-                return (requirement.ActionName, requirement.Stage, RequirementApprovals:
+                return (requirement.ActionName, requirement.Stage, MetOrExemptedWhen:
                     SharedCalculations.FindRequirementApprovals(requirement.ActionName, actionDefinition.Validity,
-                        completedRequirements, exemptedRequirements));
+                        policyVersionSupersededAtUtc, completedRequirements, exemptedRequirements));
             }).ToImmutableList();
 
-            var simpleRequirementCompletionStatus = requirementCompletionStatus
-                .Select(status => (status.ActionName, status.Stage, RequirementMetOrExempted: status.RequirementApprovals != null))
-                .ToImmutableList();
+            // Calculate the combined approval status timeline for this role based on this policy version.
+            var roleApprovalStatus = CalculateRoleApprovalStatusesFromRequirementCompletions(requirementCompletionStatus);
 
-            var status = CalculateRoleApprovalStatusesFromRequirementCompletions(requirementCompletionStatus);
-            //TODO: This is simplistic. Do we want to instead calculate 'missing as of date'? If so, that feels like a separate calculation.
-            //TODO: Do we want to return 'expiredRequirements' as well?
-            var missingRequirements = CalculateMissingIndividualRequirementsFromRequirementCompletion(status.Status, simpleRequirementCompletionStatus);
-            var availableApplications = CalculateAvailableIndividualApplicationsFromRequirementCompletion(status.Status, simpleRequirementCompletionStatus);
-
-            return (status.Status, status.ExpiresAtUtc, MissingRequirements: missingRequirements, AvailableApplications: availableApplications);
+            return (roleApprovalStatus, requirementCompletionStatus);
         }
 
         internal static
@@ -303,16 +297,16 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
         internal static DateOnlyTimeline<RoleApprovalStatus> CalculateRoleApprovalStatusesFromRequirementCompletions(
-            ImmutableList<(string ActionName, RequirementStage Stage, DateOnlyTimeline? RequirementApprovals)> requirementCompletionStatus)
+            ImmutableList<(string ActionName, RequirementStage Stage, DateOnlyTimeline? MetOrExemptedWhen)> requirementCompletionStatus)
         {
             // Instead of a single status and an expiration, return a set of *each* RoleApprovalStatus and DateOnlyTimeline?
             // so that the caller gets a full picture of the role's approval history.
 
             static DateOnlyTimeline? FindRangesWhereAllAreSatisfied(
-                IEnumerable<(string ActionName, RequirementStage Stage, DateOnlyTimeline? RequirementApprovals)> values)
+                IEnumerable<(string ActionName, RequirementStage Stage, DateOnlyTimeline? MetOrExemptedWhen)> values)
             {
                 return DateOnlyTimeline.IntersectionOf(
-                    values.Select(value => value.RequirementApprovals).ToImmutableList());
+                    values.Select(value => value.MetOrExemptedWhen).ToImmutableList());
             }
 
             var onboarded = FindRangesWhereAllAreSatisfied(requirementCompletionStatus);
@@ -350,101 +344,6 @@ namespace CareTogether.Engines.PolicyEvaluation
             var result = new DateOnlyTimeline<RoleApprovalStatus>(taggedRanges);
 
             return result;
-        }
-
-        internal static ImmutableList<string> CalculateAvailableIndividualApplicationsFromRequirementCompletion(RoleApprovalStatus? status,
-            ImmutableList<(string ActionName, RequirementStage Stage, bool RequirementMetOrExempted)> requirementCompletionStatus) =>
-            status switch
-            {
-                RoleApprovalStatus.Onboarded => ImmutableList<string>.Empty,
-                RoleApprovalStatus.Approved => ImmutableList<string>.Empty,
-                RoleApprovalStatus.Prospective => ImmutableList<string>.Empty,
-                null => requirementCompletionStatus
-                    .Where(x => !x.RequirementMetOrExempted && x.Stage == RequirementStage.Application)
-                    .Select(x => x.ActionName)
-                    .ToImmutableList(),
-                _ => throw new NotImplementedException(
-                    $"The volunteer role approval status '{status}' has not been implemented.")
-            };
-
-        internal static ImmutableList<string> CalculateMissingIndividualRequirementsFromRequirementCompletion(RoleApprovalStatus? status,
-            ImmutableList<(string ActionName, RequirementStage Stage, bool RequirementMetOrExempted)> requirementCompletionStatus) =>
-            status switch
-            {
-                RoleApprovalStatus.Onboarded => ImmutableList<string>.Empty,
-                RoleApprovalStatus.Approved => requirementCompletionStatus
-                        .Where(x => !x.RequirementMetOrExempted && x.Stage == RequirementStage.Onboarding)
-                        .Select(x => x.ActionName)
-                        .ToImmutableList(),
-                RoleApprovalStatus.Prospective => requirementCompletionStatus
-                        .Where(x => !x.RequirementMetOrExempted && x.Stage == RequirementStage.Approval)
-                        .Select(x => x.ActionName)
-                        .ToImmutableList(),
-                null => ImmutableList<string>.Empty,
-                _ => throw new NotImplementedException(
-                    $"The volunteer role approval status '{status}' has not been implemented.")
-            };
-
-        internal static ImmutableList<string> CalculateMissingFamilyRequirementsFromRequirementCompletion(RoleApprovalStatus? status,
-            ImmutableList<(string ActionName, RequirementStage Stage, VolunteerFamilyRequirementScope Scope, bool RequirementMetOrExempted, List<Guid> RequirementMissingForIndividuals)> requirementsMet)
-        {
-            return status switch
-            {
-                RoleApprovalStatus.Onboarded => ImmutableList<string>.Empty,
-                RoleApprovalStatus.Approved => requirementsMet
-                        .Where(x => !x.RequirementMetOrExempted && x.Stage == RequirementStage.Onboarding
-                            && x.Scope == VolunteerFamilyRequirementScope.OncePerFamily)
-                        .Select(x => x.ActionName)
-                        .ToImmutableList(),
-                RoleApprovalStatus.Prospective => requirementsMet
-                        .Where(x => !x.RequirementMetOrExempted && x.Stage == RequirementStage.Approval
-                            && x.Scope == VolunteerFamilyRequirementScope.OncePerFamily)
-                        .Select(x => x.ActionName)
-                        .ToImmutableList(),
-                null => ImmutableList<string>.Empty,
-                _ => throw new NotImplementedException(
-                    $"The volunteer role approval status '{status}' has not been implemented.")
-            };
-        }
-
-        internal static ImmutableList<string> CalculateAvailableFamilyApplicationsFromRequirementCompletion(RoleApprovalStatus? status,
-            ImmutableList<(string ActionName, RequirementStage Stage, VolunteerFamilyRequirementScope Scope, bool RequirementMetOrExempted, List<Guid> RequirementMissingForIndividuals)> requirementsMet)
-        {
-            return status switch
-            {
-                RoleApprovalStatus.Onboarded => ImmutableList<string>.Empty,
-                RoleApprovalStatus.Approved => ImmutableList<string>.Empty,
-                RoleApprovalStatus.Prospective => ImmutableList<string>.Empty,
-                null => requirementsMet
-                        .Where(x => !x.RequirementMetOrExempted && x.Stage == RequirementStage.Application
-                            && x.Scope == VolunteerFamilyRequirementScope.OncePerFamily)
-                        .Select(x => x.ActionName)
-                        .ToImmutableList(),
-                _ => throw new NotImplementedException(
-                    $"The volunteer role approval status '{status}' has not been implemented.")
-            };
-        }
-
-        internal static ImmutableDictionary<Guid, ImmutableList<string>> CalculateMissingFamilyIndividualRequirementsFromRequirementCompletion(RoleApprovalStatus? status,
-            ImmutableList<(string ActionName, RequirementStage Stage, VolunteerFamilyRequirementScope Scope, bool RequirementMetOrExempted, List<Guid> RequirementMissingForIndividuals)> requirementsMet)
-        {
-            return status switch
-            {
-                RoleApprovalStatus.Onboarded => ImmutableDictionary<Guid, ImmutableList<string>>.Empty,
-                RoleApprovalStatus.Approved => requirementsMet
-                        .Where(x => x.Stage == RequirementStage.Onboarding)
-                        .SelectMany(x => x.RequirementMissingForIndividuals.Select(y => (PersonId: y, x.ActionName)))
-                        .GroupBy(x => x.PersonId)
-                        .ToImmutableDictionary(x => x.Key, x => x.Select(y => y.ActionName).ToImmutableList()),
-                RoleApprovalStatus.Prospective => requirementsMet
-                        .Where(x => x.Stage == RequirementStage.Approval)
-                        .SelectMany(x => x.RequirementMissingForIndividuals.Select(y => (PersonId: y, x.ActionName)))
-                        .GroupBy(x => x.PersonId)
-                        .ToImmutableDictionary(x => x.Key, x => x.Select(y => y.ActionName).ToImmutableList()),
-                null => ImmutableDictionary<Guid, ImmutableList<string>>.Empty,
-                _ => throw new NotImplementedException(
-                    $"The volunteer role approval status '{status}' has not been implemented.")
-            };
         }
 
         internal static SharedCalculations.RequirementCheckResult FamilyRequirementMetOrExempted(string roleName,
