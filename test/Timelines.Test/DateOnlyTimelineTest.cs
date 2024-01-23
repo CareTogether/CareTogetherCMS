@@ -522,6 +522,189 @@ public class DateOnlyTimelineTest
     }
 
     [TestMethod]
+    public void ComplementOfSecondRangeAfterEndOfTimeDoesNotExist2()
+    {
+        var input = new DateOnlyTimeline([
+            new DateRange(D(1), D(2)),
+            new DateRange(D(4), DateOnly.MaxValue)
+        ]);
+        var dut = input.Complement();
+
+        Assert.IsNotNull(dut);
+        Assert.IsTrue(dut.Ranges.SequenceEqual([
+            new DateRange(DateOnly.MinValue, D(1).AddDays(-1)),
+            new DateRange(D(2).AddDays(1), D(4).AddDays(-1))
+        ]));
+    }
+
+    [TestMethod]
+    public void ForwardOnlyComplementOfAllOfTimeIsNull()
+    {
+        var input = new DateOnlyTimeline([
+            new DateRange(DateOnly.MinValue, DateOnly.MaxValue)
+        ]);
+        var dut = input.ForwardOnlyComplement();
+
+        Assert.IsNull(dut);
+    }
+
+    [TestMethod]
+    public void ForwardOnlyComplementOfSingleRangeIsOneRange()
+    {
+        var input = new DateOnlyTimeline([
+            DR(1, 3)
+        ]);
+        var dut = input.ForwardOnlyComplement();
+
+        Assert.IsNotNull(dut);
+        Assert.IsTrue(dut.Ranges.SequenceEqual([
+            new DateRange(D(3).AddDays(1), DateOnly.MaxValue)
+        ]));
+    }
+
+    [TestMethod]
+    public void ForwardOnlyComplementOfTwoRangesIsTwoRanges()
+    {
+        var input = new DateOnlyTimeline([
+            DR(1, 3), DR(5, 5)
+        ]);
+        var dut = input.ForwardOnlyComplement();
+
+        Assert.IsNotNull(dut);
+        Assert.IsTrue(dut.Ranges.SequenceEqual([
+            new DateRange(D(3).AddDays(1), D(5).AddDays(-1)),
+            new DateRange(D(5).AddDays(1), DateOnly.MaxValue)
+        ]));
+    }
+
+    [TestMethod]
+    public void ForwardOnlyComplementOfTwoAdjacentRangesIsOneRange()
+    {
+        var input = new DateOnlyTimeline([
+            DR(1, 3), DR(4, 5)
+        ]);
+        var dut = input.ForwardOnlyComplement();
+
+        Assert.IsNotNull(dut);
+        Assert.IsTrue(dut.Ranges.SequenceEqual([
+            new DateRange(D(5).AddDays(1), DateOnly.MaxValue)
+        ]));
+    }
+
+    [TestMethod]
+    public void ForwardOnlyComplementOfRangeBeforeBeginningOfTimeDoesNotExist()
+    {
+        var input = new DateOnlyTimeline([
+            new DateRange(DateOnly.MinValue, D(3)),
+            new DateRange(D(5), D(7))
+        ]);
+        var dut = input.ForwardOnlyComplement();
+
+        Assert.IsNotNull(dut);
+        Assert.IsTrue(dut.Ranges.SequenceEqual([
+            new DateRange(D(3).AddDays(1), D(5).AddDays(-1)),
+            new DateRange(D(7).AddDays(1), DateOnly.MaxValue)
+        ]));
+    }
+
+    [TestMethod]
+    public void ForwardOnlyComplementOfRangeAfterEndOfTimeDoesNotExist()
+    {
+        var input = new DateOnlyTimeline([
+            new DateRange(D(1), DateOnly.MaxValue)
+        ]);
+        var dut = input.ForwardOnlyComplement();
+
+        Assert.IsNull(dut);
+    }
+
+    [TestMethod]
+    public void ForwardOnlyComplementOfSecondRangeAfterEndOfTimeDoesNotExist()
+    {
+        var input = new DateOnlyTimeline([
+            new DateRange(D(1), D(2)),
+            new DateRange(D(4), DateOnly.MaxValue)
+        ]);
+        var dut = input.ForwardOnlyComplement();
+
+        Assert.IsNotNull(dut);
+        Assert.IsTrue(dut.Ranges.SequenceEqual([
+            new DateRange(D(2).AddDays(1), D(4).AddDays(-1))
+        ]));
+    }
+
+    [TestMethod]
+    public void DifferenceWithNullReturnsTheOriginal()
+    {
+        var input = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
+        var dut = input.Difference(null);
+
+        Assert.IsNotNull(dut);
+        Assert.IsTrue(dut.Ranges.SequenceEqual([
+            DR(1, 1), DR(3, 4)
+        ]));
+    }
+
+    [TestMethod]
+    public void DifferenceWithAllOfTimeReturnsNull()
+    {
+        var input = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
+        var dut = input.Difference(new DateOnlyTimeline([
+            new DateRange(DateOnly.MinValue, DateOnly.MaxValue)
+        ]));
+
+        Assert.IsNull(dut);
+    }
+
+    [TestMethod]
+    public void DifferenceWithDisjointRangesReturnsTheOriginal()
+    {
+        var input = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
+        var dut = input.Difference(new DateOnlyTimeline([DR(5, 7)]));
+
+        Assert.IsNotNull(dut);
+        Assert.IsTrue(dut.Ranges.SequenceEqual([
+            DR(1, 1), DR(3, 4)
+        ]));
+    }
+
+    [TestMethod]
+    public void DifferenceWithPartialOverlapExcludesTheSecondTimeline()
+    {
+        var input = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
+        var dut = input.Difference(new DateOnlyTimeline([DR(4, 7)]));
+
+        Assert.IsNotNull(dut);
+        Assert.IsTrue(dut.Ranges.SequenceEqual([
+            DR(1, 1), DR(3, 3)
+        ]));
+    }
+
+    [TestMethod]
+    public void DifferenceWithPartialOverlapExcludesTheSecondTimeline2()
+    {
+        var input = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
+        var dut = input.Difference(new DateOnlyTimeline([DR(2, 7)]));
+
+        Assert.IsNotNull(dut);
+        Assert.IsTrue(dut.Ranges.SequenceEqual([
+            DR(1, 1)
+        ]));
+    }
+
+    [TestMethod]
+    public void DifferenceWithPartialOverlapExcludesTheSecondTimeline3()
+    {
+        var input = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
+        var dut = input.Difference(new DateOnlyTimeline([DR(1, 3)]));
+
+        Assert.IsNotNull(dut);
+        Assert.IsTrue(dut.Ranges.SequenceEqual([
+            DR(4, 4)
+        ]));
+    }
+
+    [TestMethod]
     public void TaggedConstructorForbidsEmptyList()
     {
         Assert.ThrowsException<ArgumentException>(() =>

@@ -194,12 +194,6 @@ public sealed class DateOnlyTimeline
                 priorRange = currentRange;
                 continue;
             }
-            else if (currentRange.End == DateOnly.MaxValue)
-            {
-                // If the current range ends at the end of time, skip it - there is no complement after it.
-                priorRange = currentRange;
-                continue;
-            }
             else if (priorRange.Value.End.AddDays(1) == currentRange.Start)
             {
                 // If this range is adjacent to the prior range, skip it - there is no complement range between it and the prior range.
@@ -214,7 +208,7 @@ public sealed class DateOnlyTimeline
                 continue;
             }
         }
-        // There should always have been at least one range in the current timeline.
+        // INVARIANT: There should always have been at least one range in the current timeline.
         if (priorRange == null)
             throw new InvalidOperationException("The timeline must contain at least one range.");
         // Finally, if the last range ends before the end of time, add a range from just after the end of the last range to the end of time.
@@ -222,6 +216,41 @@ public sealed class DateOnlyTimeline
             complementRanges.Add(new DateRange(priorRange.Value.End.AddDays(1), DateOnly.MaxValue));
 
         return UnionOf(complementRanges.ToImmutableList());
+    }
+
+    public DateOnlyTimeline? ForwardOnlyComplement()
+    {
+        // The forward-only complement of a timeline is similar to a regular
+        // complement (i.e., it covers all dates not covered by the original),
+        // but it only includes dates after the first range in the original.
+        // This is the same as the union of all the ranges outside of the ranges
+        // in the original timeline, but only after the end of the first range.
+
+        var fullComplement = Complement();
+        if (fullComplement == null)
+            return null;
+
+        // If the first range in the original timeline starts at the beginning of time,
+        // then the forward-only complement is the same as the regular complement.
+        if (Ranges[0].Start == DateOnly.MinValue)
+            return fullComplement;
+
+        // Otherwise, the forward-only complement is the regular complement, but
+        // with the first range removed.
+        var rangesAfterFirst = fullComplement.Ranges
+            .Skip(1)
+            .ToImmutableList();
+        return UnionOf(rangesAfterFirst);
+    }
+
+    public DateOnlyTimeline? Difference(DateOnlyTimeline? other)
+    {
+        if (other == null)
+            return this;
+
+        // The difference between two timelines is the intersection of the
+        // first timeline with the complement of the second.
+        return IntersectionWith(ComplementOf(other));
     }
 }
 
