@@ -7,7 +7,7 @@ public class DateOnlyTimelineTest
 {
     private static DateOnly D(int day) => new(2024, 1, day);
     private static DateRange DR(int start, int end) => new(D(start), D(end));
-    private static DateRange DR(int start) => new(D(start), DateOnly.MaxValue);
+    private static DateRange<char> DR(int start, int end, char tag) => new(D(start), D(end), tag);
 
     private static void AssertDatesAre(DateOnlyTimeline dut, params int[] dates)
     {
@@ -519,5 +519,52 @@ public class DateOnlyTimelineTest
         Assert.IsTrue(dut.Ranges.SequenceEqual([
             new DateRange(DateOnly.MinValue, D(1).AddDays(-1))
         ]));
+    }
+
+    [TestMethod]
+    public void TaggedConstructorForbidsEmptyList()
+    {
+        Assert.ThrowsException<ArgumentException>(() =>
+            new DateOnlyTimeline<char>(ImmutableList<DateRange<char>>.Empty));
+    }
+
+    [TestMethod]
+    public void TaggedConstructorForbidsOverlappingRanges()
+    {
+        Assert.ThrowsException<ArgumentException>(() =>
+            new DateOnlyTimeline<char>([DR(1, 2, 'A'), DR(2, 3, 'A')]));
+    }
+
+    [TestMethod]
+    public void TaggedConstructorForbidsOverlappingRanges2()
+    {
+        Assert.ThrowsException<ArgumentException>(() =>
+            new DateOnlyTimeline<char>([DR(1, 3, 'A'), DR(2, 4, 'A')]));
+    }
+
+    [TestMethod]
+    public void TaggedConstructorPopulatesRanges()
+    {
+        var dut = new DateOnlyTimeline<char>([DR(1, 2, 'A'), DR(3, 4, 'B')]);
+
+        Assert.IsNotNull(dut);
+        Assert.IsTrue(dut.Ranges.SequenceEqual([
+            DR(1, 2, 'A'), DR(3, 4, 'B')
+        ]));
+    }
+
+    [DataRow(1, default(char))]
+    [DataRow(2, 'A')]
+    [DataRow(3, 'A')]
+    [DataRow(4, 'A')]
+    [DataRow(5, default(char))]
+    [DataRow(6, 'B')]
+    [DataRow(7, default(char))]
+    [DataTestMethod]
+    public void TaggedTimelineValuesAreCorrect(int day, char? expected)
+    {
+        var dut = new DateOnlyTimeline<char>([DR(2, 4, 'A'), DR(6, 6, 'B')]);
+
+        Assert.AreEqual(expected, dut.ValueAt(D(day)));
     }
 }

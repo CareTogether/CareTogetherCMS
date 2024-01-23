@@ -253,9 +253,8 @@ public sealed class DateOnlyTimeline<T>
     }
 
 
-    public bool Contains(DateOnly value) =>
-        Ranges.Exists(range => range.Contains(value));
-
     public T? ValueAt(DateOnly value) =>
-        Ranges.SingleOrDefault(range => range.Contains(value)).Tag; //TODO: Ensure this returns null when intended to.
+        // Because DateRange is a struct, the 'default' value is a range that has 'Tag' set to default(T).
+        // That will be null for reference types, and the default value for value types.
+        Ranges.SingleOrDefault(range => range.Contains(value)).Tag;
 }
