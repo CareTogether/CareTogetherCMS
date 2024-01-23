@@ -12,16 +12,12 @@ namespace CareTogether.Engines.PolicyEvaluation
         ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> FamilyRoleApprovals,
         ImmutableDictionary<string, RoleVersionApproval> EffectiveFamilyRoleApprovals,
         ImmutableList<RemovedRole> RemovedFamilyRoles,
-        ImmutableList<string> MissingFamilyRequirements,
-        ImmutableList<string> AvailableFamilyApplications,
         ImmutableDictionary<Guid, VolunteerApprovalStatus> IndividualVolunteers);
 
     public sealed record VolunteerApprovalStatus(
         ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> IndividualRoleApprovals,
         ImmutableDictionary<string, RoleVersionApproval> EffectiveIndividualRoleApprovals,
-        ImmutableList<RemovedRole> RemovedIndividualRoles,
-        ImmutableList<string> MissingIndividualRequirements,
-        ImmutableList<string> AvailableIndividualApplications);
+        ImmutableList<RemovedRole> RemovedIndividualRoles);
 
     public sealed record ReferralStatus(
         ImmutableList<string> MissingIntakeRequirements,
