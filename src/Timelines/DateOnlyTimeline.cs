@@ -20,7 +20,6 @@ public sealed class DateOnlyTimeline
             throw new ArgumentException("At least one date range is required.");
 
         // Store the stages in chronological order.
-        //TODO: This could be optimized if we know that the input is already ordered.
         Ranges = ranges.OrderBy(range => range.Start).ToImmutableList();
 
         // Validate that the ordered stages are non-overlapping.
@@ -266,7 +265,6 @@ public sealed class DateOnlyTimeline<T>
             throw new ArgumentException("At least one date range is required.");
 
         // Store the stages in chronological order.
-        //TODO: This could be optimized if we know that the input is already ordered.
         Ranges = ranges.OrderBy(range => range.Start).ToImmutableList();
 
         // Validate that the ordered stages are non-overlapping.
