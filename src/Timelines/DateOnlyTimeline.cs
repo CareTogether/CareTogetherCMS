@@ -255,7 +255,7 @@ public sealed class DateOnlyTimeline
 }
 
 public sealed class DateOnlyTimeline<T>
-    where T : notnull, IEquatable<T>
+    where T : notnull
 {
     public ImmutableList<DateRange<T>> Ranges { get; init; }
 

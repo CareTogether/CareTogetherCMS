@@ -69,7 +69,6 @@ public readonly struct DateRange : IEquatable<DateRange>
 }
 
 public readonly struct DateRange<T>
-    where T : notnull, IEquatable<T>
 {
     public readonly DateOnly Start;
     public readonly DateOnly End;

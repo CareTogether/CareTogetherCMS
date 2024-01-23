@@ -321,21 +321,35 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .Where(x => x.Stage == RequirementStage.Application || x.Stage == RequirementStage.Approval));
 
             // Approved-only is the difference of approvedOrOnboarded and onboarded.
-            //TODO: Calculate approved
+            var approvedOnly = approvedOrOnboarded?.Difference(onboarded);
 
             // Expired is a special case. It starts *after* any ranges from 'approvedOrOnboarded' (so it's the
             // forward-only complement of 'approvedOrOnboarded'), and ends at the end of time. If there are no
             // ranges from 'approvedOrOnboarded', then it is null.
-            //TODO: Calculate expired
+            var expired = approvedOrOnboarded?.ForwardOnlyComplement();
 
             var prospectiveOrExpiredOrApprovedOrOnboarded = FindRangesWhereAllAreSatisfied(requirementCompletionStatus
                 .Where(x => x.Stage == RequirementStage.Application));
 
             // Prospective-only is the difference of prospectiveOrExpiredOrApprovedOrOnboarded and approvedOrOnboarded,
             // subsequently also subtracting out 'expired'.
-            //TODO: Calculate prospective
+            var prospectiveOnly = prospectiveOrExpiredOrApprovedOrOnboarded
+                ?.Difference(approvedOrOnboarded)
+                ?.Difference(expired);
 
-            //TODO: Merge the results (onboarded, approved, expired, prospective) into a tagged timeline.
+            // Merge the results (onboarded, approved, expired, prospective) into a tagged timeline.
+            var taggedRanges = ImmutableList.Create(
+                (RoleApprovalStatus.Onboarded, onboarded),
+                (RoleApprovalStatus.Approved, approvedOnly),
+                (RoleApprovalStatus.Expired, expired),
+                (RoleApprovalStatus.Prospective, prospectiveOnly)
+            ).SelectMany(x => x.Item2?.Ranges
+                .Select(y => new DateRange<RoleApprovalStatus>(y.Start, y.End, x.Item1))
+                ?? ImmutableList<DateRange<RoleApprovalStatus>>.Empty)
+            .ToImmutableList();
+            var result = new DateOnlyTimeline<RoleApprovalStatus>(taggedRanges);
+
+            return result;
         }
 
         internal static ImmutableList<string> CalculateAvailableIndividualApplicationsFromRequirementCompletion(RoleApprovalStatus? status,
