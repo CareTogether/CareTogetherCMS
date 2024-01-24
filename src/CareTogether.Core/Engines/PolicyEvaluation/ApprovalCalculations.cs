@@ -12,7 +12,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 {
     internal static class ApprovalCalculations
     {
-        public static VolunteerFamilyApprovalStatus CalculateVolunteerFamilyApprovalStatus(
+        public static FamilyApprovalStatus CalculateVolunteerFamilyApprovalStatus(
             ImmutableDictionary<string, ActionRequirement> actionDefinitions,
             VolunteerPolicy volunteerPolicy, Family family, DateTime utcNow,
             ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
@@ -50,12 +50,6 @@ namespace CareTogether.Engines.PolicyEvaluation
                         ? result :
                         (IndividualRoleVersionApprovals: ImmutableDictionary<string, ImmutableList<RoleVersionApproval>>.Empty,
                         RemovedIndividualRoles: ImmutableList<RemovedRole>.Empty);
-
-                    var mergedMissingIndividualRequirements = individualResult.MissingIndividualRequirements
-                        .Concat(familyResult.MissingIndividualRequirementsForFamilyRoles.TryGetValue(person.Id, out var missing)
-                            ? missing : ImmutableList<string>.Empty)
-                        .Distinct()
-                        .ToImmutableList();
 
                     var effectiveIndividualRoleVersionApprovals = individualResult.IndividualRoleVersionApprovals
                         .Select(roleApprovals =>
@@ -100,7 +94,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
         internal static ImmutableDictionary<Guid,
-            (ImmutableDictionary<string, ImmutableList<IndividualRoleApprovalStatus>> IndividualRoleVersionApprovals,
+            (ImmutableDictionary<string, ImmutableList<IndividualRoleVersionApprovalStatus>> IndividualRoleVersionApprovals,
             ImmutableList<RemovedRole> RemovedIndividualRoles)>
             CalculateCombinedIndividualRoleStatusForFamilyMembers(
             ImmutableDictionary<string, ActionRequirement> actionDefinitions,
@@ -181,7 +175,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             return volunteerFamilyApprovalStatus;
         }
 
-        internal static IndividualRoleApprovalStatus CalculateIndividualVolunteerRoleApprovalStatus(
+        internal static IndividualRoleVersionApprovalStatus CalculateIndividualVolunteerRoleApprovalStatus(
             ImmutableDictionary<string, ActionRequirement> actionDefinitions, VolunteerRolePolicyVersion policyVersion,
             ImmutableList<CompletedRequirementInfo> completedRequirements, ImmutableList<ExemptedRequirementInfo> exemptedRequirements)
         {

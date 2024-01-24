@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Immutable;
+using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Policies;
 using Timelines;
 
@@ -8,7 +9,20 @@ namespace CareTogether.Engines
     public sealed record RoleVersionApproval(string Version,
         RoleApprovalStatus ApprovalStatus, DateTime? ExpiresAt);
 
-    public sealed record IndividualRoleApprovalStatus(string Version,
+    public sealed record FamilyApprovalStatus(
+        ImmutableDictionary<Guid, IndividualApprovalStatus> IndividualApprovals,
+        ImmutableDictionary<string, FamilyRoleApprovalStatus> FamilyRoleApprovals,
+        ImmutableList<RemovedRole> RemovedFamilyRoles);
+
+    public sealed record IndividualApprovalStatus(
+        ImmutableDictionary<string, IndividualRoleApprovalStatus> IndividualRoleApprovals,
+        ImmutableList<RemovedRole> RemovedIndividualRoles);
+
+    public sealed record IndividualRoleApprovalStatus(
+        DateOnlyTimeline<RoleApprovalStatus> EffectiveRoleApprovalStatus,
+        ImmutableList<IndividualRoleVersionApprovalStatus> RoleVersionApprovals);
+
+    public sealed record IndividualRoleVersionApprovalStatus(string Version,
         DateOnlyTimeline<RoleApprovalStatus>? Status,
         ImmutableList<RoleRequirementCompletionStatus> RoleRequirementCompletions);
 
