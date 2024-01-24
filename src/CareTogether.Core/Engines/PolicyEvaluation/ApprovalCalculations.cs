@@ -232,16 +232,15 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         internal static
             FamilyRoleApprovalStatus
-            CalculateFamilyVolunteerRoleApprovalStatus
-            (string roleName, ImmutableDictionary<string, ActionRequirement> actionDefinitions,
+            CalculateFamilyVolunteerRoleApprovalStatus(
+            string roleName, ImmutableDictionary<string, ActionRequirement> actionDefinitions,
             VolunteerFamilyRolePolicyVersion policyVersion, Family family,
             ImmutableList<CompletedRequirementInfo> completedFamilyRequirements, ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
             ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>> exemptedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles)
         {
-            var supersededAtUtc = policyVersion.SupersededAtUtc;
-
+            // Ignore any inactive (i.e., soft-deleted) adults.
             var activeAdults = family.Adults
                 .Where(a => a.Item1.Active)
                 .Select(a =>
@@ -256,7 +255,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             var requirementCompletions = policyVersion.Requirements
                 .Select(requirement =>
                     FamilyRequirementMetOrExempted(roleName, requirement.ActionName, requirement.Stage,
-                        actionDefinitions[requirement.ActionName].Validity, requirement.Scope, supersededAtUtc,
+                        actionDefinitions[requirement.ActionName].Validity, requirement.Scope, policyVersion.SupersededAtUtc,
                         completedFamilyRequirements, exemptedFamilyRequirements, removedIndividualRoles,
                         activeAdults))
                 .ToImmutableList();
