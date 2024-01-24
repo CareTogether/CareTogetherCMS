@@ -30,7 +30,7 @@ namespace CareTogether.Engines
         RequirementStage Stage, DateOnlyTimeline? WhenMet);
 
     public sealed record FamilyRoleApprovalStatus(
-        DateOnlyTimeline<RoleApprovalStatus> EffectiveRoleApprovalStatus,
+        DateOnlyTimeline<RoleApprovalStatus>? EffectiveRoleApprovalStatus,
         ImmutableList<FamilyRoleVersionApprovalStatus> RoleVersionApprovals);
 
     public sealed record FamilyRoleVersionApprovalStatus(string Version,

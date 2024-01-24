@@ -11,11 +11,11 @@ namespace CareTogether.Engines.PolicyEvaluation
     {
         internal static IndividualApprovalStatus
             CalculateIndividualApprovalStatus(
-            ImmutableDictionary<string, ActionRequirement> actionDefinitions,
-            ImmutableDictionary<string, VolunteerRolePolicy> volunteerRoles,
-            ImmutableList<CompletedRequirementInfo> completedRequirements,
-            ImmutableList<ExemptedRequirementInfo> exemptedRequirements,
-            ImmutableList<RemovedRole> removedRoles)
+                ImmutableDictionary<string, ActionRequirement> actionDefinitions,
+                ImmutableDictionary<string, VolunteerRolePolicy> volunteerRoles,
+                ImmutableList<CompletedRequirementInfo> completedRequirements,
+                ImmutableList<ExemptedRequirementInfo> exemptedRequirements,
+                ImmutableList<RemovedRole> removedRoles)
         {
             var allIndividualRoleApprovals = volunteerRoles
                 .Where(rolePolicy =>
@@ -23,7 +23,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .ToImmutableDictionary(
                     rolePolicy => rolePolicy.Key,
                     rolePolicy => CalculateIndividualRoleApprovalStatus(
-                        rolePolicy.Value, actionDefinitions,
+                        actionDefinitions, rolePolicy.Value,
                         completedRequirements, exemptedRequirements));
 
             return new IndividualApprovalStatus(allIndividualRoleApprovals);
@@ -31,8 +31,8 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         internal static IndividualRoleApprovalStatus
             CalculateIndividualRoleApprovalStatus(
-                VolunteerRolePolicy rolePolicy,
                 ImmutableDictionary<string, ActionRequirement> actionDefinitions,
+                VolunteerRolePolicy rolePolicy,
                 ImmutableList<CompletedRequirementInfo> completedRequirements,
                 ImmutableList<ExemptedRequirementInfo> exemptedRequirements)
         {
