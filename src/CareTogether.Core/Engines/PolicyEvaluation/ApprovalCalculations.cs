@@ -22,39 +22,39 @@ namespace CareTogether.Engines.PolicyEvaluation
             ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>> exemptedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles)
         {
-            var allAdultsIndividualApprovalStatus = family.Adults.Select(adultFamilyEntry =>
-            {
-                var (person, familyRelationship) = adultFamilyEntry;
+            var allAdultsIndividualApprovalStatus = family.Adults
+                .Select(adultFamilyEntry =>
+                {
+                    var (person, familyRelationship) = adultFamilyEntry;
 
-                var completedRequirements = completedIndividualRequirements.GetValueOrEmptyList(person.Id);
-                var exemptedRequirements = exemptedIndividualRequirements.GetValueOrEmptyList(person.Id);
-                var removedRoles = removedIndividualRoles.GetValueOrEmptyList(person.Id);
+                    var completedRequirements = completedIndividualRequirements
+                        .GetValueOrEmptyList(person.Id);
+                    var exemptedRequirements = exemptedIndividualRequirements
+                        .GetValueOrEmptyList(person.Id);
+                    var removedRoles = removedIndividualRoles
+                        .GetValueOrEmptyList(person.Id);
 
-                var individualApprovalStatus =
-                    IndividualApprovalCalculations.CalculateIndividualApprovalStatus(
-                        actionDefinitions, volunteerPolicy.VolunteerRoles,
-                        completedRequirements, exemptedRequirements, removedRoles);
+                    var individualApprovalStatus =
+                        IndividualApprovalCalculations.CalculateIndividualApprovalStatus(
+                            actionDefinitions, volunteerPolicy.VolunteerRoles,
+                            completedRequirements, exemptedRequirements, removedRoles);
 
-                return (person.Id, individualApprovalStatus);
-            }).ToImmutableDictionary(x => x.Id, x => x.Item2);
+                    return (person.Id, individualApprovalStatus);
+                })
+                .ToImmutableDictionary(x => x.Id, x => x.Item2);
 
-            var familyResult = CalculateCombinedFamilyRoleStatusForFamily(
-                actionDefinitions, volunteerPolicy, family,
-                completedFamilyRequirements, exemptedFamilyRequirements, removedFamilyRoles,
-                completedIndividualRequirements, exemptedIndividualRequirements, removedIndividualRoles);
-
-            var effectiveFamilyRoleVersionApprovals = familyResult.FamilyRoleVersionApprovals
-                .Select(roleApprovals =>
-                    (role: roleApprovals.Key,
-                    effectiveApproval: CalculateEffectiveRoleVersionApproval(roleApprovals.Value, utcNow)))
-                .Where(roleApproval => roleApproval.effectiveApproval != null)
-                .ToImmutableDictionary(roleApproval => roleApproval.role, roleApproval => roleApproval.effectiveApproval!);
+            var familyRoleApprovalStatuses =
+                FamilyApprovalCalculations.CalculateAllFamilyRoleApprovalStatuses(
+                    actionDefinitions, volunteerPolicy.VolunteerFamilyRoles,
+                    family,
+                    completedFamilyRequirements, exemptedFamilyRequirements,
+                    removedFamilyRoles,
+                    completedIndividualRequirements, exemptedIndividualRequirements,
+                    removedIndividualRoles);
 
             return new FamilyApprovalStatus(
                 allAdultsIndividualApprovalStatus,
-                familyResult.FamilyRoleVersionApprovals,
-                effectiveFamilyRoleVersionApprovals,
-                familyResult.RemovedFamilyRoles);
+                familyRoleApprovalStatuses);
         }
 
         /// <summary>
