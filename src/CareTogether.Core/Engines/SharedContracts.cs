@@ -8,12 +8,23 @@ namespace CareTogether.Engines
     public sealed record RoleVersionApproval(string Version,
         RoleApprovalStatus ApprovalStatus, DateTime? ExpiresAt);
 
-    public sealed record RoleVersionApproval2(string Version,
-        DateOnlyTimeline<RoleApprovalStatus>? ApprovalStatus,
-        ImmutableList<RoleRequirementStatus> RequirementStatuses);
+    public sealed record IndividualRoleApprovalStatus(string Version,
+        DateOnlyTimeline<RoleApprovalStatus>? Status,
+        ImmutableList<RoleRequirementCompletionStatus> RoleRequirementCompletions);
 
-    public sealed record RoleRequirementStatus(string ActionName,
+    public sealed record RoleRequirementCompletionStatus(string ActionName,
         RequirementStage Stage, DateOnlyTimeline? WhenMet);
+
+    public sealed record FamilyRoleApprovalStatus(string Version,
+        DateOnlyTimeline<RoleApprovalStatus>? Status,
+        ImmutableList<FamilyRoleRequirementCompletionStatus> RoleRequirementCompletions);
+
+    public sealed record FamilyRoleRequirementCompletionStatus(string ActionName,
+        RequirementStage Stage, VolunteerFamilyRequirementScope Scope, DateOnlyTimeline? WhenMet,
+        ImmutableList<FamilyRequirementStatusDetail> StatusDetails);
+
+    public sealed record FamilyRequirementStatusDetail(string RequirementActionName,
+        VolunteerFamilyRequirementScope Scope, Guid? PersonId, DateOnlyTimeline? WhenMet);
 
     public enum RoleApprovalStatus
     {
