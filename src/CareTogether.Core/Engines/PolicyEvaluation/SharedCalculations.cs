@@ -1,5 +1,7 @@
 ﻿using CareTogether.Resources;
+using CareTogether.Resources.Policies;
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Timelines;
@@ -46,6 +48,8 @@ namespace CareTogether.Engines.PolicyEvaluation
         //      approval *was* met or exempted, even if it is now expired.
         //      A return value of 'null' indicates no approval.
         //      Further note: action validity was previously not being handled but now is.
+        //TODO: Eventually this should be used for referral calculations as well!
+        //      Maybe rename it to 'FindWhenRequirementIsMet' or something like that?
         internal static DateOnlyTimeline? FindRequirementApprovals(
             string requirementName, TimeSpan? actionValidity, DateTime? policyVersionSupersededAtUtc,
             ImmutableList<CompletedRequirementInfo> completedRequirementsInScope,

@@ -11,15 +11,15 @@ namespace CareTogether.Engines
 
     public sealed record FamilyApprovalStatus(
         ImmutableDictionary<Guid, IndividualApprovalStatus> IndividualApprovals,
-        ImmutableDictionary<string, FamilyRoleApprovalStatus> FamilyRoleApprovals,
-        ImmutableList<RemovedRole> RemovedFamilyRoles);
+        ImmutableDictionary<string, FamilyRoleApprovalStatus> FamilyRoleApprovals);
+    //TODO: Do we need to include the removed family roles here?
 
     public sealed record IndividualApprovalStatus(
-        ImmutableDictionary<string, IndividualRoleApprovalStatus> ApprovalStatusByRole,
-        ImmutableList<RemovedRole> RemovedIndividualRoles);
+        ImmutableDictionary<string, IndividualRoleApprovalStatus> ApprovalStatusByRole);
+    //TODO: Do we need to include the removed individual roles here?
 
     public sealed record IndividualRoleApprovalStatus(
-        DateOnlyTimeline<RoleApprovalStatus> EffectiveRoleApprovalStatus,
+        DateOnlyTimeline<RoleApprovalStatus>? EffectiveRoleApprovalStatus,
         ImmutableList<IndividualRoleVersionApprovalStatus> RoleVersionApprovals);
 
     public sealed record IndividualRoleVersionApprovalStatus(string Version,
