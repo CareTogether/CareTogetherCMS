@@ -15,7 +15,7 @@ namespace CareTogether.Engines
         ImmutableList<RemovedRole> RemovedFamilyRoles);
 
     public sealed record IndividualApprovalStatus(
-        ImmutableDictionary<string, IndividualRoleApprovalStatus> IndividualRoleApprovals,
+        ImmutableDictionary<string, IndividualRoleApprovalStatus> ApprovalStatusByRole,
         ImmutableList<RemovedRole> RemovedIndividualRoles);
 
     public sealed record IndividualRoleApprovalStatus(
@@ -24,21 +24,25 @@ namespace CareTogether.Engines
 
     public sealed record IndividualRoleVersionApprovalStatus(string Version,
         DateOnlyTimeline<RoleApprovalStatus>? Status,
-        ImmutableList<RoleRequirementCompletionStatus> RoleRequirementCompletions);
+        ImmutableList<IndividualRoleRequirementCompletionStatus> Requirements);
 
-    public sealed record RoleRequirementCompletionStatus(string ActionName,
+    public sealed record IndividualRoleRequirementCompletionStatus(string ActionName,
         RequirementStage Stage, DateOnlyTimeline? WhenMet);
 
-    public sealed record FamilyRoleApprovalStatus(string Version,
+    public sealed record FamilyRoleApprovalStatus(
+        DateOnlyTimeline<RoleApprovalStatus> EffectiveRoleApprovalStatus,
+        ImmutableList<FamilyRoleVersionApprovalStatus> RoleVersionApprovals);
+
+    public sealed record FamilyRoleVersionApprovalStatus(string Version,
         DateOnlyTimeline<RoleApprovalStatus>? Status,
-        ImmutableList<FamilyRoleRequirementCompletionStatus> RoleRequirementCompletions);
+        ImmutableList<FamilyRoleRequirementCompletionStatus> Requirements);
 
     public sealed record FamilyRoleRequirementCompletionStatus(string ActionName,
         RequirementStage Stage, VolunteerFamilyRequirementScope Scope, DateOnlyTimeline? WhenMet,
         ImmutableList<FamilyRequirementStatusDetail> StatusDetails);
 
-    public sealed record FamilyRequirementStatusDetail(string RequirementActionName,
-        VolunteerFamilyRequirementScope Scope, Guid? PersonId, DateOnlyTimeline? WhenMet);
+    public sealed record FamilyRequirementStatusDetail(
+        Guid? PersonId, DateOnlyTimeline? WhenMet);
 
     public enum RoleApprovalStatus
     {
