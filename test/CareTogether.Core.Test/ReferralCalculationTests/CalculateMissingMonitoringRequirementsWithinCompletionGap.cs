@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Immutable;
+using Timelines;
 
 namespace CareTogether.Core.Test.ReferralCalculationTests
 {
