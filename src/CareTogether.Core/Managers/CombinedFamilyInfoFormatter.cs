@@ -57,10 +57,10 @@ namespace CareTogether.Managers
                 .Select(customField => customField.Name)
                 .ToImmutableList();
 
-            var partneringFamilyInfo = await RenderPartneringFamilyInfoAsync(organizationId, locationId, family, user);
+            var partneringFamilyInfo = await RenderPartneringFamilyInfoAsync(organizationId, locationId, family);
 
             var (volunteerFamilyInfo, uploadedApprovalDocuments) = await RenderVolunteerFamilyInfoAsync(
-                organizationId, locationId, locationPolicy, family, user);
+                organizationId, locationId, locationPolicy, family);
 
             var notes = await notesResource.ListFamilyNotesAsync(organizationId, locationId, familyId);
             var renderedNotes = notes
@@ -104,7 +104,7 @@ namespace CareTogether.Managers
 
 
         private async Task<PartneringFamilyInfo?> RenderPartneringFamilyInfoAsync(Guid organizationId, Guid locationId,
-            Family family, ClaimsPrincipal user)
+            Family family)
         {
             var referralEntries = (await referralsResource.ListReferralsAsync(organizationId, locationId))
                 .Where(r => r.FamilyId == family.Id)
@@ -152,7 +152,7 @@ namespace CareTogether.Managers
 
         private async Task<(VolunteerFamilyInfo?, ImmutableList<UploadedDocumentInfo>)> RenderVolunteerFamilyInfoAsync(
             Guid organizationId, Guid locationId, EffectiveLocationPolicy locationPolicy,
-            Family family, ClaimsPrincipal user)
+            Family family)
         {
             var entry = await approvalsResource.TryGetVolunteerFamilyAsync(organizationId, locationId, family.Id);
 
