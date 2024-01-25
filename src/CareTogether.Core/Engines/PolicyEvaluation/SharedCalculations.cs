@@ -186,7 +186,8 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             var matchingCompletions = completedRequirementsInScope
                 .Where(completed => completed.RequirementName == requirementName &&
-                    (policyVersionSupersededAtUtc == null || completed.CompletedAtUtc < policyVersionSupersededAtUtc))
+                    (policyVersionSupersededAtUtc == null ||
+                        completed.CompletedAtUtc.Date < policyVersionSupersededAtUtc.Value.Date))
                 .Select(completed => new DateRange(
                     DateOnly.FromDateTime(completed.CompletedAtUtc),
                     completed.ExpiresAtUtc == null

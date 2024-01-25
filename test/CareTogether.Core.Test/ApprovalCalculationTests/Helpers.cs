@@ -13,34 +13,37 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
 {
     internal class Helpers
     {
-        public static DateOnly D(int day) => new(2024, 1, day);
+        const int YEAR = 2024;
+
+        public static DateOnly D(int day) => new(YEAR, 1, day);
+        public static DateTime DT(int day) => new(YEAR, 1, day);
         public static DateRange DR(int start, int end) => new(D(start), D(end));
         public static DateRange<T> DR<T>(int start, int end, T tag) => new(D(start), D(end), tag);
 
         public static void AssertDatesAre(DateOnlyTimeline dut, params int[] dates)
         {
             // Set the max date to check to something past where we'll be testing.
-            for (var i = 1; i < 20; i++)
+            for (var i = 1; i <= 31; i++)
                 Assert.AreEqual(dates.Contains(i), dut.Contains(D(i)), $"Failed on {i}");
         }
 
         public static ImmutableList<CompletedRequirementInfo> Completed(params (string, int)[] completionsWithDates) =>
             completionsWithDates.Select(completion =>
                 new CompletedRequirementInfo(Guid.Empty, DateTime.MinValue,
-                    Guid.Empty, completion.Item1, new DateTime(2022, 1, completion.Item2), ExpiresAtUtc: null, null, null))
+                    Guid.Empty, completion.Item1, new DateTime(YEAR, 1, completion.Item2), ExpiresAtUtc: null, null, null))
             .ToImmutableList();
 
         public static ImmutableList<CompletedRequirementInfo> CompletedWithExpiry(params (string, int, int?)[] completionsWithDates) =>
             completionsWithDates.Select(completion =>
                 new CompletedRequirementInfo(Guid.Empty, DateTime.MinValue,
-                    Guid.Empty, completion.Item1, new DateTime(2022, 1, completion.Item2),
-                    ExpiresAtUtc: completion.Item3.HasValue ? new DateTime(2022, 1, completion.Item3.Value) : null, null, null))
+                    Guid.Empty, completion.Item1, new DateTime(YEAR, 1, completion.Item2),
+                    ExpiresAtUtc: completion.Item3.HasValue ? new DateTime(YEAR, 1, completion.Item3.Value) : null, null, null))
             .ToImmutableList();
 
         public static ImmutableList<ExemptedRequirementInfo> Exempted(params (string, int?)[] exemptionsWithExpirations) =>
             exemptionsWithExpirations.Select(exemption =>
                 new ExemptedRequirementInfo(Guid.Empty, DateTime.MinValue,
-                    exemption.Item1, DueDate: null, "", exemption.Item2.HasValue ? new DateTime(2022, 1, exemption.Item2.Value) : null))
+                    exemption.Item1, DueDate: null, "", exemption.Item2.HasValue ? new DateTime(YEAR, 1, exemption.Item2.Value) : null))
             .ToImmutableList();
 
         public static ImmutableList<RemovedRole> Removed(params string[] removedRoles) =>
@@ -53,7 +56,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
             CompletedIndividualRequirements(params (Guid, string, int)[] completedIndividualRequirements) =>
             ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>>.Empty.AddRange(
                 completedIndividualRequirements
-                    .GroupBy(completed => completed.Item1, completed => (completed.Item2, new DateTime(2022, 1, completed.Item3)))
+                    .GroupBy(completed => completed.Item1, completed => (completed.Item2, new DateTime(YEAR, 1, completed.Item3)))
                     .Select(completed => new KeyValuePair<Guid, ImmutableList<CompletedRequirementInfo>>(completed.Key,
                         completed.Select(c => new CompletedRequirementInfo(Guid.Empty, DateTime.MinValue, new Guid(),
                             c.Item1, c.Item2, ExpiresAtUtc: null, null, null))
@@ -65,8 +68,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
             ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>>.Empty.AddRange(
                 completedIndividualRequirements
                     .GroupBy(completed => completed.Item1,
-                        completed => (completed.Item2, new DateTime(2022, 1, completed.Item3),
-                            completed.Item4.HasValue ? new DateTime(2022, 1, completed.Item4.Value) as DateTime? : null))
+                        completed => (completed.Item2, new DateTime(YEAR, 1, completed.Item3),
+                            completed.Item4.HasValue ? new DateTime(YEAR, 1, completed.Item4.Value) as DateTime? : null))
                     .Select(completed => new KeyValuePair<Guid, ImmutableList<CompletedRequirementInfo>>(completed.Key,
                         completed.Select(c => new CompletedRequirementInfo(Guid.Empty, DateTime.MinValue, new Guid(),
                             c.Item1, c.Item2, ExpiresAtUtc: c.Item3, null, null))
@@ -80,7 +83,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     .GroupBy(exempted => exempted.Item1, exempted => exempted)
                     .Select(exempted => new KeyValuePair<Guid, ImmutableList<ExemptedRequirementInfo>>(exempted.Key,
                         exempted.Select(e => new ExemptedRequirementInfo(Guid.Empty, DateTime.MinValue,
-                            e.Item2, DueDate: null, "", e.Item3.HasValue ? new DateTime(2022, 1, e.Item3.Value) : null))
+                            e.Item2, DueDate: null, "", e.Item3.HasValue ? new DateTime(YEAR, 1, e.Item3.Value) : null))
                             .ToImmutableList())));
 
         public static
@@ -111,7 +114,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public static
             ImmutableList<(string ActionName, RequirementStage Stage, SharedCalculations.RequirementCheckResult RequirementMetOrExempted)>
             IndividualRequirementsMetWithExpiry(params (string, RequirementStage, bool, int?)[] requirementsMet) =>
-            requirementsMet.Select(x => (x.Item1, x.Item2, new SharedCalculations.RequirementCheckResult(x.Item3, x.Item4.HasValue ? new DateTime(2022, 1, x.Item4.Value) : null))).ToImmutableList();
+            requirementsMet.Select(x => (x.Item1, x.Item2, new SharedCalculations.RequirementCheckResult(x.Item3, x.Item4.HasValue ? new DateTime(YEAR, 1, x.Item4.Value) : null))).ToImmutableList();
 
         public static
             ImmutableList<(string ActionName, RequirementStage Stage, bool RequirementMetOrExempted)>
