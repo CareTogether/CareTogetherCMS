@@ -404,11 +404,11 @@ namespace CareTogether.Engines.Authorization
         {
             var permissions = await AuthorizeUserAccessAsync(organizationId, locationId, user,
                 new GlobalAuthorizationContext());
-            
+
             if (command is not ChangePersonRoles c)
                 throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented.");
-    
+
             // Determine if any of the roles being added or removed are defined as protected roles.
             var configuration = await policiesResource.GetConfigurationAsync(organizationId);
             var protectedRoles = configuration.Roles
@@ -608,7 +608,7 @@ namespace CareTogether.Engines.Authorization
             {
                 FamilyRoleApprovals = contextPermissions.Contains(Permission.ViewApprovalStatus)
                     ? volunteerFamilyInfo.FamilyRoleApprovals
-                    : ImmutableDictionary<string, ImmutableList<RoleVersionApproval>>.Empty,
+                    : ImmutableDictionary<string, FamilyRoleApprovalStatus>.Empty,
                 RemovedRoles = contextPermissions.Contains(Permission.ViewApprovalStatus)
                     ? volunteerFamilyInfo.RemovedRoles
                     : ImmutableList<RemovedRole>.Empty,
@@ -619,34 +619,22 @@ namespace CareTogether.Engines.Authorization
                         RemovedRoles = contextPermissions.Contains(Permission.ViewApprovalStatus)
                             ? kvp.Value.RemovedRoles
                             : ImmutableList<RemovedRole>.Empty,
-                        IndividualRoleApprovals = contextPermissions.Contains(Permission.ViewApprovalStatus)
-                            ? kvp.Value.IndividualRoleApprovals
-                            : ImmutableDictionary<string, ImmutableList<RoleVersionApproval>>.Empty,
-                        AvailableApplications = contextPermissions.Contains(Permission.ViewApprovalProgress)
-                            ? kvp.Value.AvailableApplications
-                            : ImmutableList<string>.Empty,
+                        ApprovalStatusByRole = contextPermissions.Contains(Permission.ViewApprovalStatus)
+                            ? kvp.Value.ApprovalStatusByRole
+                            : ImmutableDictionary<string, IndividualRoleApprovalStatus>.Empty,
                         CompletedRequirements = contextPermissions.Contains(Permission.ViewApprovalProgress)
                             ? kvp.Value.CompletedRequirements
                             : ImmutableList<CompletedRequirementInfo>.Empty,
                         ExemptedRequirements = contextPermissions.Contains(Permission.ViewApprovalProgress)
                             ? kvp.Value.ExemptedRequirements
-                            : ImmutableList<ExemptedRequirementInfo>.Empty,
-                        MissingRequirements = contextPermissions.Contains(Permission.ViewApprovalProgress)
-                            ? kvp.Value.MissingRequirements
-                            : ImmutableList<string>.Empty,
+                            : ImmutableList<ExemptedRequirementInfo>.Empty
                     }),
-                AvailableApplications = contextPermissions.Contains(Permission.ViewApprovalProgress)
-                    ? volunteerFamilyInfo.AvailableApplications
-                    : ImmutableList<string>.Empty,
                 CompletedRequirements = contextPermissions.Contains(Permission.ViewApprovalProgress)
                     ? volunteerFamilyInfo.CompletedRequirements
                     : ImmutableList<CompletedRequirementInfo>.Empty,
                 ExemptedRequirements = contextPermissions.Contains(Permission.ViewApprovalProgress)
                     ? volunteerFamilyInfo.ExemptedRequirements
                     : ImmutableList<ExemptedRequirementInfo>.Empty,
-                MissingRequirements = contextPermissions.Contains(Permission.ViewApprovalProgress)
-                    ? volunteerFamilyInfo.MissingRequirements
-                    : ImmutableList<string>.Empty,
                 History = contextPermissions.Contains(Permission.ViewApprovalHistory)
                     ? volunteerFamilyInfo.History
                     : ImmutableList<Activity>.Empty
