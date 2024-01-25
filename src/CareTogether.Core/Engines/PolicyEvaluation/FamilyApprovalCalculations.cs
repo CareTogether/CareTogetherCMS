@@ -13,7 +13,6 @@ namespace CareTogether.Engines.PolicyEvaluation
     {
         internal static ImmutableDictionary<string, FamilyRoleApprovalStatus>
             CalculateAllFamilyRoleApprovalStatuses(
-            ImmutableDictionary<string, ActionRequirement> actionDefinitions,
             ImmutableDictionary<string, VolunteerFamilyRolePolicy> volunteerFamilyRoles,
             Family family,
             ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
@@ -29,7 +28,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .ToImmutableDictionary(
                     rolePolicy => rolePolicy.Key,
                     rolePolicy => CalculateFamilyRoleApprovalStatus(
-                        actionDefinitions, rolePolicy.Key, rolePolicy.Value,
+                        rolePolicy.Key, rolePolicy.Value,
                         family,
                         completedFamilyRequirements, exemptedFamilyRequirements,
                         completedIndividualRequirements, exemptedIndividualRequirements,
@@ -40,7 +39,6 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         internal static FamilyRoleApprovalStatus
             CalculateFamilyRoleApprovalStatus(
-            ImmutableDictionary<string, ActionRequirement> actionDefinitions,
             string roleName, VolunteerFamilyRolePolicy rolePolicy, Family family,
             ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
             ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
@@ -51,7 +49,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             var roleVersionApprovals = rolePolicy.PolicyVersions
                 .Select(policyVersion =>
                     CalculateFamilyRoleVersionApprovalStatus(
-                        actionDefinitions, roleName, policyVersion, family,
+                        roleName, policyVersion, family,
                         completedFamilyRequirements, exemptedFamilyRequirements,
                         completedIndividualRequirements, exemptedIndividualRequirements,
                         removedIndividualRoles))
@@ -68,7 +66,6 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         internal static FamilyRoleVersionApprovalStatus
             CalculateFamilyRoleVersionApprovalStatus(
-            ImmutableDictionary<string, ActionRequirement> actionDefinitions,
             string roleName, VolunteerFamilyRolePolicyVersion policyVersion,
             Family family,
             ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
@@ -100,7 +97,6 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .Select(requirement =>
                     CalculateFamilyRoleRequirementCompletionStatus(roleName,
                         requirement.ActionName, requirement.Stage,
-                        actionDefinitions[requirement.ActionName].Validity,
                         requirement.Scope, policyVersion.SupersededAtUtc,
                         completedFamilyRequirements, exemptedFamilyRequirements,
                         removedIndividualRoles, activeAdults))
@@ -121,9 +117,8 @@ namespace CareTogether.Engines.PolicyEvaluation
         internal static FamilyRoleRequirementCompletionStatus
             CalculateFamilyRoleRequirementCompletionStatus(
             string roleName, string requirementActionName,
-            RequirementStage requirementStage, TimeSpan? actionValidity,
-            VolunteerFamilyRequirementScope requirementScope,
-            DateTime? supersededAtUtc,
+            RequirementStage requirementStage, VolunteerFamilyRequirementScope requirementScope,
+            DateTime? policyVersionSupersededAtUtc,
             ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
             ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
             ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles,
@@ -140,7 +135,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 VolunteerFamilyRequirementScope.AllAdultsInTheFamily => activeAdults
                     .Select(a => new FamilyRequirementStatusDetail(a.Id,
                         SharedCalculations.FindRequirementApprovals(
-                            requirementActionName, actionValidity, supersededAtUtc,
+                            requirementActionName, policyVersionSupersededAtUtc,
                             a.CompletedRequirements, a.ExemptedRequirements)))
                     .ToImmutableList(),
                 VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily => activeAdults
@@ -149,13 +144,13 @@ namespace CareTogether.Engines.PolicyEvaluation
                         removedRoles.All(x => x.RoleName != roleName))
                     .Select(a => new FamilyRequirementStatusDetail(a.Id,
                         SharedCalculations.FindRequirementApprovals(
-                            requirementActionName, actionValidity, supersededAtUtc,
+                            requirementActionName, policyVersionSupersededAtUtc,
                             a.CompletedRequirements, a.ExemptedRequirements)))
                     .ToImmutableList(),
                 VolunteerFamilyRequirementScope.OncePerFamily => ImmutableList.Create(
                     new FamilyRequirementStatusDetail(PersonId: null,
                         SharedCalculations.FindRequirementApprovals(
-                            requirementActionName, actionValidity, supersededAtUtc,
+                            requirementActionName, policyVersionSupersededAtUtc,
                             completedFamilyRequirements, exemptedFamilyRequirements))),
                 _ => throw new NotImplementedException(
                     $"The volunteer family requirement scope '{requirementScope}' has not been implemented.")

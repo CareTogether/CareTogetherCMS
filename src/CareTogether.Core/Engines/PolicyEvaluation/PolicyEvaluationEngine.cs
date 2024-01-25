@@ -5,7 +5,6 @@ using CareTogether.Resources.Policies;
 using CareTogether.Resources.Referrals;
 using System;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace CareTogether.Engines.PolicyEvaluation
@@ -32,7 +31,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             var policy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
 
             return ApprovalCalculations.CalculateCombinedFamilyApprovals(
-                policy.ActionDefinitions, policy.VolunteerPolicy, family,
+                policy.VolunteerPolicy, family,
                 completedFamilyRequirements, exemptedFamilyRequirements, removedFamilyRoles,
                 completedIndividualRequirements, exemptedIndividualRequirements, removedIndividualRoles);
         }

@@ -11,7 +11,6 @@ namespace CareTogether.Engines.PolicyEvaluation
     {
         internal static IndividualApprovalStatus
             CalculateIndividualApprovalStatus(
-                ImmutableDictionary<string, ActionRequirement> actionDefinitions,
                 ImmutableDictionary<string, VolunteerRolePolicy> volunteerRoles,
                 ImmutableList<CompletedRequirementInfo> completedRequirements,
                 ImmutableList<ExemptedRequirementInfo> exemptedRequirements,
@@ -23,7 +22,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .ToImmutableDictionary(
                     rolePolicy => rolePolicy.Key,
                     rolePolicy => CalculateIndividualRoleApprovalStatus(
-                        actionDefinitions, rolePolicy.Value,
+                        rolePolicy.Value,
                         completedRequirements, exemptedRequirements));
 
             return new IndividualApprovalStatus(allIndividualRoleApprovals);
@@ -31,15 +30,13 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         internal static IndividualRoleApprovalStatus
             CalculateIndividualRoleApprovalStatus(
-                ImmutableDictionary<string, ActionRequirement> actionDefinitions,
                 VolunteerRolePolicy rolePolicy,
                 ImmutableList<CompletedRequirementInfo> completedRequirements,
                 ImmutableList<ExemptedRequirementInfo> exemptedRequirements)
         {
             var roleVersionApprovals = rolePolicy.PolicyVersions
                 .Select(policyVersion =>
-                    CalculateIndividualRoleVersionApprovalStatus(
-                        actionDefinitions, policyVersion,
+                    CalculateIndividualRoleVersionApprovalStatus(policyVersion,
                         completedRequirements, exemptedRequirements))
                 .ToImmutableList();
 
@@ -54,7 +51,6 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         internal static IndividualRoleVersionApprovalStatus
             CalculateIndividualRoleVersionApprovalStatus(
-                ImmutableDictionary<string, ActionRequirement> actionDefinitions,
                 VolunteerRolePolicyVersion policyVersion,
                 ImmutableList<CompletedRequirementInfo> completedRequirements,
                 ImmutableList<ExemptedRequirementInfo> exemptedRequirements)
@@ -65,8 +61,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             var requirementCompletionStatus = policyVersion.Requirements
                 .Select(requirement =>
                     CalculateIndividualRoleRequirementCompletionStatus(
-                        actionDefinitions[requirement.ActionName], requirement,
-                        policyVersion.SupersededAtUtc,
+                        requirement, policyVersion.SupersededAtUtc,
                         completedRequirements, exemptedRequirements))
                 .ToImmutableList();
 
@@ -84,14 +79,13 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         internal static IndividualRoleRequirementCompletionStatus
             CalculateIndividualRoleRequirementCompletionStatus(
-                ActionRequirement actionDefinition,
                 VolunteerApprovalRequirement requirement,
                 DateTime? policyVersionSupersededAtUtc,
                 ImmutableList<CompletedRequirementInfo> completedRequirements,
                 ImmutableList<ExemptedRequirementInfo> exemptedRequirements)
         {
             var whenMet = SharedCalculations.FindRequirementApprovals(
-                requirement.ActionName, actionDefinition.Validity,
+                requirement.ActionName,
                 policyVersionSupersededAtUtc,
                 completedRequirements, exemptedRequirements);
 

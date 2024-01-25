@@ -13,7 +13,6 @@ namespace CareTogether.Engines.PolicyEvaluation
     internal static class ApprovalCalculations
     {
         public static FamilyApprovalStatus CalculateCombinedFamilyApprovals(
-            ImmutableDictionary<string, ActionRequirement> actionDefinitions,
             VolunteerPolicy volunteerPolicy, Family family,
             ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
             ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
@@ -36,7 +35,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 
                     var individualApprovalStatus =
                         IndividualApprovalCalculations.CalculateIndividualApprovalStatus(
-                            actionDefinitions, volunteerPolicy.VolunteerRoles,
+                            volunteerPolicy.VolunteerRoles,
                             completedRequirements, exemptedRequirements, removedRoles);
 
                     return (person.Id, individualApprovalStatus);
@@ -45,7 +44,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             var familyRoleApprovalStatuses =
                 FamilyApprovalCalculations.CalculateAllFamilyRoleApprovalStatuses(
-                    actionDefinitions, volunteerPolicy.VolunteerFamilyRoles,
+                    volunteerPolicy.VolunteerFamilyRoles,
                     family,
                     completedFamilyRequirements, exemptedFamilyRequirements,
                     removedFamilyRoles,

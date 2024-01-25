@@ -1,7 +1,5 @@
 ﻿using CareTogether.Resources;
-using CareTogether.Resources.Policies;
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Timelines;
@@ -51,7 +49,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         //TODO: Eventually this should be used for referral calculations as well!
         //      Maybe rename it to 'FindWhenRequirementIsMet' or something like that?
         internal static DateOnlyTimeline? FindRequirementApprovals(
-            string requirementName, TimeSpan? actionValidity, DateTime? policyVersionSupersededAtUtc,
+            string requirementName, DateTime? policyVersionSupersededAtUtc,
             ImmutableList<CompletedRequirementInfo> completedRequirementsInScope,
             ImmutableList<ExemptedRequirementInfo> exemptedRequirementsInScope)
         {
@@ -65,9 +63,9 @@ namespace CareTogether.Engines.PolicyEvaluation
                     (policyVersionSupersededAtUtc == null || completed.CompletedAtUtc < policyVersionSupersededAtUtc))
                 .Select(completed => new DateRange(
                     DateOnly.FromDateTime(completed.CompletedAtUtc),
-                    actionValidity == null
+                    completed.ExpiresAtUtc == null
                         ? DateOnly.MaxValue
-                        : DateOnly.FromDateTime(completed.CompletedAtUtc + actionValidity.Value)))
+                        : DateOnly.FromDateTime(completed.ExpiresAtUtc.Value)))
                 .ToImmutableList();
 
             var matchingExemptions = exemptedRequirementsInScope

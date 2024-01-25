@@ -178,30 +178,24 @@ namespace CareTogether.Managers
                 .ToImmutableDictionary(entry => entry.Key, entry => entry.Value
                     .Select(applyValidity).ToImmutableList());
 
-            var volunteerFamilyApprovalStatus = await policyEvaluationEngine.CalculateCombinedFamilyApprovalsAsync(
+            var combinedFamilyApprovals = await policyEvaluationEngine.CalculateCombinedFamilyApprovalsAsync(
                 organizationId, locationId, family, completedFamilyRequirementsWithExpiration, entry.ExemptedRequirements, entry.RemovedRoles,
                 completedIndividualRequirementsWithExpiration, exemptedIndividualRequirements, removedIndividualRoles);
 
             var volunteerFamilyInfo = new VolunteerFamilyInfo(
+                combinedFamilyApprovals.FamilyRoleApprovals,
                 completedFamilyRequirementsWithExpiration, entry.ExemptedRequirements, entry.RemovedRoles,
-                volunteerFamilyApprovalStatus.MissingFamilyRequirements,
-                volunteerFamilyApprovalStatus.AvailableFamilyApplications,
-                volunteerFamilyApprovalStatus.FamilyRoleApprovals,
-                volunteerFamilyApprovalStatus.EffectiveFamilyRoleApprovals,
-                volunteerFamilyApprovalStatus.IndividualVolunteers.ToImmutableDictionary(
+                combinedFamilyApprovals.IndividualApprovals.ToImmutableDictionary(
                     x => x.Key,
                     x =>
                     {
                         entry.IndividualEntries.TryGetValue(x.Key, out var individualEntry);
                         completedIndividualRequirementsWithExpiration.TryGetValue(x.Key, out var completedRequirements);
                         return new VolunteerInfo(
+                            x.Value.ApprovalStatusByRole,
                             completedRequirements ?? ImmutableList<CompletedRequirementInfo>.Empty,
                             individualEntry?.ExemptedRequirements ?? ImmutableList<ExemptedRequirementInfo>.Empty,
-                            individualEntry?.RemovedRoles ?? ImmutableList<RemovedRole>.Empty,
-                            x.Value.MissingIndividualRequirements,
-                            x.Value.AvailableIndividualApplications,
-                            x.Value.IndividualRoleApprovals,
-                            x.Value.EffectiveIndividualRoleApprovals);
+                            individualEntry?.RemovedRoles ?? ImmutableList<RemovedRole>.Empty);
                     }),
                 entry.History);
 
