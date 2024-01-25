@@ -5250,13 +5250,10 @@ export interface IChildLocationHistoryEntry {
 }
 
 export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
+    familyRoleApprovals?: { [key: string]: FamilyRoleApprovalStatus; };
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
     removedRoles?: RemovedRole[];
-    missingRequirements?: string[];
-    availableApplications?: string[];
-    familyRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
-    effectiveFamilyRoleApprovals?: { [key: string]: RoleVersionApproval; };
     individualVolunteers?: { [key: string]: VolunteerInfo; };
     history?: Activity[];
 
@@ -5271,6 +5268,13 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
 
     init(_data?: any) {
         if (_data) {
+            if (_data["familyRoleApprovals"]) {
+                this.familyRoleApprovals = {} as any;
+                for (let key in _data["familyRoleApprovals"]) {
+                    if (_data["familyRoleApprovals"].hasOwnProperty(key))
+                        (<any>this.familyRoleApprovals)![key] = _data["familyRoleApprovals"][key] ? FamilyRoleApprovalStatus.fromJS(_data["familyRoleApprovals"][key]) : new FamilyRoleApprovalStatus();
+                }
+            }
             if (Array.isArray(_data["completedRequirements"])) {
                 this.completedRequirements = [] as any;
                 for (let item of _data["completedRequirements"])
@@ -5285,30 +5289,6 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
                 this.removedRoles = [] as any;
                 for (let item of _data["removedRoles"])
                     this.removedRoles!.push(RemovedRole.fromJS(item));
-            }
-            if (Array.isArray(_data["missingRequirements"])) {
-                this.missingRequirements = [] as any;
-                for (let item of _data["missingRequirements"])
-                    this.missingRequirements!.push(item);
-            }
-            if (Array.isArray(_data["availableApplications"])) {
-                this.availableApplications = [] as any;
-                for (let item of _data["availableApplications"])
-                    this.availableApplications!.push(item);
-            }
-            if (_data["familyRoleApprovals"]) {
-                this.familyRoleApprovals = {} as any;
-                for (let key in _data["familyRoleApprovals"]) {
-                    if (_data["familyRoleApprovals"].hasOwnProperty(key))
-                        (<any>this.familyRoleApprovals)![key] = _data["familyRoleApprovals"][key] ? _data["familyRoleApprovals"][key].map((i: any) => RoleVersionApproval.fromJS(i)) : [];
-                }
-            }
-            if (_data["effectiveFamilyRoleApprovals"]) {
-                this.effectiveFamilyRoleApprovals = {} as any;
-                for (let key in _data["effectiveFamilyRoleApprovals"]) {
-                    if (_data["effectiveFamilyRoleApprovals"].hasOwnProperty(key))
-                        (<any>this.effectiveFamilyRoleApprovals)![key] = _data["effectiveFamilyRoleApprovals"][key] ? RoleVersionApproval.fromJS(_data["effectiveFamilyRoleApprovals"][key]) : new RoleVersionApproval();
-                }
             }
             if (_data["individualVolunteers"]) {
                 this.individualVolunteers = {} as any;
@@ -5334,6 +5314,13 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
+        if (this.familyRoleApprovals) {
+            data["familyRoleApprovals"] = {};
+            for (let key in this.familyRoleApprovals) {
+                if (this.familyRoleApprovals.hasOwnProperty(key))
+                    (<any>data["familyRoleApprovals"])[key] = this.familyRoleApprovals[key] ? this.familyRoleApprovals[key].toJSON() : <any>undefined;
+            }
+        }
         if (Array.isArray(this.completedRequirements)) {
             data["completedRequirements"] = [];
             for (let item of this.completedRequirements)
@@ -5348,30 +5335,6 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
             data["removedRoles"] = [];
             for (let item of this.removedRoles)
                 data["removedRoles"].push(item.toJSON());
-        }
-        if (Array.isArray(this.missingRequirements)) {
-            data["missingRequirements"] = [];
-            for (let item of this.missingRequirements)
-                data["missingRequirements"].push(item);
-        }
-        if (Array.isArray(this.availableApplications)) {
-            data["availableApplications"] = [];
-            for (let item of this.availableApplications)
-                data["availableApplications"].push(item);
-        }
-        if (this.familyRoleApprovals) {
-            data["familyRoleApprovals"] = {};
-            for (let key in this.familyRoleApprovals) {
-                if (this.familyRoleApprovals.hasOwnProperty(key))
-                    (<any>data["familyRoleApprovals"])[key] = (<any>this.familyRoleApprovals)[key];
-            }
-        }
-        if (this.effectiveFamilyRoleApprovals) {
-            data["effectiveFamilyRoleApprovals"] = {};
-            for (let key in this.effectiveFamilyRoleApprovals) {
-                if (this.effectiveFamilyRoleApprovals.hasOwnProperty(key))
-                    (<any>data["effectiveFamilyRoleApprovals"])[key] = this.effectiveFamilyRoleApprovals[key] ? this.effectiveFamilyRoleApprovals[key].toJSON() : <any>undefined;
-            }
         }
         if (this.individualVolunteers) {
             data["individualVolunteers"] = {};
@@ -5390,15 +5353,391 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
 }
 
 export interface IVolunteerFamilyInfo {
+    familyRoleApprovals?: { [key: string]: FamilyRoleApprovalStatus; };
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
     removedRoles?: RemovedRole[];
-    missingRequirements?: string[];
-    availableApplications?: string[];
-    familyRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
-    effectiveFamilyRoleApprovals?: { [key: string]: RoleVersionApproval; };
     individualVolunteers?: { [key: string]: VolunteerInfo; };
     history?: Activity[];
+}
+
+export class FamilyRoleApprovalStatus implements IFamilyRoleApprovalStatus {
+    effectiveRoleApprovalStatus?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
+    roleVersionApprovals?: FamilyRoleVersionApprovalStatus[];
+
+    constructor(data?: IFamilyRoleApprovalStatus) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.effectiveRoleApprovalStatus = _data["effectiveRoleApprovalStatus"] ? DateOnlyTimelineOfRoleApprovalStatus.fromJS(_data["effectiveRoleApprovalStatus"]) : <any>undefined;
+            if (Array.isArray(_data["roleVersionApprovals"])) {
+                this.roleVersionApprovals = [] as any;
+                for (let item of _data["roleVersionApprovals"])
+                    this.roleVersionApprovals!.push(FamilyRoleVersionApprovalStatus.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): FamilyRoleApprovalStatus {
+        data = typeof data === 'object' ? data : {};
+        let result = new FamilyRoleApprovalStatus();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["effectiveRoleApprovalStatus"] = this.effectiveRoleApprovalStatus ? this.effectiveRoleApprovalStatus.toJSON() : <any>undefined;
+        if (Array.isArray(this.roleVersionApprovals)) {
+            data["roleVersionApprovals"] = [];
+            for (let item of this.roleVersionApprovals)
+                data["roleVersionApprovals"].push(item.toJSON());
+        }
+        return data;
+    }
+}
+
+export interface IFamilyRoleApprovalStatus {
+    effectiveRoleApprovalStatus?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
+    roleVersionApprovals?: FamilyRoleVersionApprovalStatus[];
+}
+
+export class DateOnlyTimelineOfRoleApprovalStatus implements IDateOnlyTimelineOfRoleApprovalStatus {
+    ranges?: DateRangeOfRoleApprovalStatus[];
+
+    constructor(data?: IDateOnlyTimelineOfRoleApprovalStatus) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["ranges"])) {
+                this.ranges = [] as any;
+                for (let item of _data["ranges"])
+                    this.ranges!.push(DateRangeOfRoleApprovalStatus.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): DateOnlyTimelineOfRoleApprovalStatus {
+        data = typeof data === 'object' ? data : {};
+        let result = new DateOnlyTimelineOfRoleApprovalStatus();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.ranges)) {
+            data["ranges"] = [];
+            for (let item of this.ranges)
+                data["ranges"].push(item.toJSON());
+        }
+        return data;
+    }
+}
+
+export interface IDateOnlyTimelineOfRoleApprovalStatus {
+    ranges?: DateRangeOfRoleApprovalStatus[];
+}
+
+export class DateRangeOfRoleApprovalStatus implements IDateRangeOfRoleApprovalStatus {
+    start?: Date;
+    end?: Date;
+    tag?: RoleApprovalStatus;
+
+    constructor(data?: IDateRangeOfRoleApprovalStatus) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.start = _data["start"] ? new Date(_data["start"].toString()) : <any>undefined;
+            this.end = _data["end"] ? new Date(_data["end"].toString()) : <any>undefined;
+            this.tag = _data["tag"];
+        }
+    }
+
+    static fromJS(data: any): DateRangeOfRoleApprovalStatus {
+        data = typeof data === 'object' ? data : {};
+        let result = new DateRangeOfRoleApprovalStatus();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["start"] = this.start ? formatDate(this.start) : <any>undefined;
+        data["end"] = this.end ? formatDate(this.end) : <any>undefined;
+        data["tag"] = this.tag;
+        return data;
+    }
+}
+
+export interface IDateRangeOfRoleApprovalStatus {
+    start?: Date;
+    end?: Date;
+    tag?: RoleApprovalStatus;
+}
+
+export enum RoleApprovalStatus {
+    Prospective = 0,
+    Expired = 1,
+    Approved = 2,
+    Onboarded = 3,
+}
+
+export class FamilyRoleVersionApprovalStatus implements IFamilyRoleVersionApprovalStatus {
+    version?: string;
+    status?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
+    requirements?: FamilyRoleRequirementCompletionStatus[];
+
+    constructor(data?: IFamilyRoleVersionApprovalStatus) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.version = _data["version"];
+            this.status = _data["status"] ? DateOnlyTimelineOfRoleApprovalStatus.fromJS(_data["status"]) : <any>undefined;
+            if (Array.isArray(_data["requirements"])) {
+                this.requirements = [] as any;
+                for (let item of _data["requirements"])
+                    this.requirements!.push(FamilyRoleRequirementCompletionStatus.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): FamilyRoleVersionApprovalStatus {
+        data = typeof data === 'object' ? data : {};
+        let result = new FamilyRoleVersionApprovalStatus();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["version"] = this.version;
+        data["status"] = this.status ? this.status.toJSON() : <any>undefined;
+        if (Array.isArray(this.requirements)) {
+            data["requirements"] = [];
+            for (let item of this.requirements)
+                data["requirements"].push(item.toJSON());
+        }
+        return data;
+    }
+}
+
+export interface IFamilyRoleVersionApprovalStatus {
+    version?: string;
+    status?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
+    requirements?: FamilyRoleRequirementCompletionStatus[];
+}
+
+export class FamilyRoleRequirementCompletionStatus implements IFamilyRoleRequirementCompletionStatus {
+    actionName?: string;
+    stage?: RequirementStage;
+    scope?: VolunteerFamilyRequirementScope;
+    whenMet?: DateOnlyTimeline | undefined;
+    statusDetails?: FamilyRequirementStatusDetail[];
+
+    constructor(data?: IFamilyRoleRequirementCompletionStatus) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.actionName = _data["actionName"];
+            this.stage = _data["stage"];
+            this.scope = _data["scope"];
+            this.whenMet = _data["whenMet"] ? DateOnlyTimeline.fromJS(_data["whenMet"]) : <any>undefined;
+            if (Array.isArray(_data["statusDetails"])) {
+                this.statusDetails = [] as any;
+                for (let item of _data["statusDetails"])
+                    this.statusDetails!.push(FamilyRequirementStatusDetail.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): FamilyRoleRequirementCompletionStatus {
+        data = typeof data === 'object' ? data : {};
+        let result = new FamilyRoleRequirementCompletionStatus();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["actionName"] = this.actionName;
+        data["stage"] = this.stage;
+        data["scope"] = this.scope;
+        data["whenMet"] = this.whenMet ? this.whenMet.toJSON() : <any>undefined;
+        if (Array.isArray(this.statusDetails)) {
+            data["statusDetails"] = [];
+            for (let item of this.statusDetails)
+                data["statusDetails"].push(item.toJSON());
+        }
+        return data;
+    }
+}
+
+export interface IFamilyRoleRequirementCompletionStatus {
+    actionName?: string;
+    stage?: RequirementStage;
+    scope?: VolunteerFamilyRequirementScope;
+    whenMet?: DateOnlyTimeline | undefined;
+    statusDetails?: FamilyRequirementStatusDetail[];
+}
+
+export class DateOnlyTimeline implements IDateOnlyTimeline {
+    ranges?: DateRange[];
+
+    constructor(data?: IDateOnlyTimeline) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["ranges"])) {
+                this.ranges = [] as any;
+                for (let item of _data["ranges"])
+                    this.ranges!.push(DateRange.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): DateOnlyTimeline {
+        data = typeof data === 'object' ? data : {};
+        let result = new DateOnlyTimeline();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.ranges)) {
+            data["ranges"] = [];
+            for (let item of this.ranges)
+                data["ranges"].push(item.toJSON());
+        }
+        return data;
+    }
+}
+
+export interface IDateOnlyTimeline {
+    ranges?: DateRange[];
+}
+
+export class DateRange implements IDateRange {
+    start?: Date;
+    end?: Date;
+
+    constructor(data?: IDateRange) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.start = _data["start"] ? new Date(_data["start"].toString()) : <any>undefined;
+            this.end = _data["end"] ? new Date(_data["end"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): DateRange {
+        data = typeof data === 'object' ? data : {};
+        let result = new DateRange();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["start"] = this.start ? formatDate(this.start) : <any>undefined;
+        data["end"] = this.end ? formatDate(this.end) : <any>undefined;
+        return data;
+    }
+}
+
+export interface IDateRange {
+    start?: Date;
+    end?: Date;
+}
+
+export class FamilyRequirementStatusDetail implements IFamilyRequirementStatusDetail {
+    personId?: string | undefined;
+    whenMet?: DateOnlyTimeline | undefined;
+
+    constructor(data?: IFamilyRequirementStatusDetail) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.personId = _data["personId"];
+            this.whenMet = _data["whenMet"] ? DateOnlyTimeline.fromJS(_data["whenMet"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): FamilyRequirementStatusDetail {
+        data = typeof data === 'object' ? data : {};
+        let result = new FamilyRequirementStatusDetail();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["personId"] = this.personId;
+        data["whenMet"] = this.whenMet ? this.whenMet.toJSON() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IFamilyRequirementStatusDetail {
+    personId?: string | undefined;
+    whenMet?: DateOnlyTimeline | undefined;
 }
 
 export class RemovedRole implements IRemovedRole {
@@ -5451,65 +5790,11 @@ export enum RoleRemovalReason {
     Denied = 2,
 }
 
-export class RoleVersionApproval implements IRoleVersionApproval {
-    version?: string;
-    approvalStatus?: RoleApprovalStatus;
-    expiresAt?: Date | undefined;
-
-    constructor(data?: IRoleVersionApproval) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.version = _data["version"];
-            this.approvalStatus = _data["approvalStatus"];
-            this.expiresAt = _data["expiresAt"] ? new Date(_data["expiresAt"].toString()) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): RoleVersionApproval {
-        data = typeof data === 'object' ? data : {};
-        let result = new RoleVersionApproval();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["version"] = this.version;
-        data["approvalStatus"] = this.approvalStatus;
-        data["expiresAt"] = this.expiresAt ? this.expiresAt.toISOString() : <any>undefined;
-        return data;
-    }
-}
-
-export interface IRoleVersionApproval {
-    version?: string;
-    approvalStatus?: RoleApprovalStatus;
-    expiresAt?: Date | undefined;
-}
-
-export enum RoleApprovalStatus {
-    Prospective = 0,
-    Expired = 1,
-    Approved = 2,
-    Onboarded = 3,
-}
-
 export class VolunteerInfo implements IVolunteerInfo {
+    approvalStatusByRole?: { [key: string]: IndividualRoleApprovalStatus; };
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
     removedRoles?: RemovedRole[];
-    missingRequirements?: string[];
-    availableApplications?: string[];
-    individualRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
-    effectiveIndividualRoleApprovals?: { [key: string]: RoleVersionApproval; };
 
     constructor(data?: IVolunteerInfo) {
         if (data) {
@@ -5522,6 +5807,13 @@ export class VolunteerInfo implements IVolunteerInfo {
 
     init(_data?: any) {
         if (_data) {
+            if (_data["approvalStatusByRole"]) {
+                this.approvalStatusByRole = {} as any;
+                for (let key in _data["approvalStatusByRole"]) {
+                    if (_data["approvalStatusByRole"].hasOwnProperty(key))
+                        (<any>this.approvalStatusByRole)![key] = _data["approvalStatusByRole"][key] ? IndividualRoleApprovalStatus.fromJS(_data["approvalStatusByRole"][key]) : new IndividualRoleApprovalStatus();
+                }
+            }
             if (Array.isArray(_data["completedRequirements"])) {
                 this.completedRequirements = [] as any;
                 for (let item of _data["completedRequirements"])
@@ -5537,30 +5829,6 @@ export class VolunteerInfo implements IVolunteerInfo {
                 for (let item of _data["removedRoles"])
                     this.removedRoles!.push(RemovedRole.fromJS(item));
             }
-            if (Array.isArray(_data["missingRequirements"])) {
-                this.missingRequirements = [] as any;
-                for (let item of _data["missingRequirements"])
-                    this.missingRequirements!.push(item);
-            }
-            if (Array.isArray(_data["availableApplications"])) {
-                this.availableApplications = [] as any;
-                for (let item of _data["availableApplications"])
-                    this.availableApplications!.push(item);
-            }
-            if (_data["individualRoleApprovals"]) {
-                this.individualRoleApprovals = {} as any;
-                for (let key in _data["individualRoleApprovals"]) {
-                    if (_data["individualRoleApprovals"].hasOwnProperty(key))
-                        (<any>this.individualRoleApprovals)![key] = _data["individualRoleApprovals"][key] ? _data["individualRoleApprovals"][key].map((i: any) => RoleVersionApproval.fromJS(i)) : [];
-                }
-            }
-            if (_data["effectiveIndividualRoleApprovals"]) {
-                this.effectiveIndividualRoleApprovals = {} as any;
-                for (let key in _data["effectiveIndividualRoleApprovals"]) {
-                    if (_data["effectiveIndividualRoleApprovals"].hasOwnProperty(key))
-                        (<any>this.effectiveIndividualRoleApprovals)![key] = _data["effectiveIndividualRoleApprovals"][key] ? RoleVersionApproval.fromJS(_data["effectiveIndividualRoleApprovals"][key]) : new RoleVersionApproval();
-                }
-            }
         }
     }
 
@@ -5573,6 +5841,13 @@ export class VolunteerInfo implements IVolunteerInfo {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
+        if (this.approvalStatusByRole) {
+            data["approvalStatusByRole"] = {};
+            for (let key in this.approvalStatusByRole) {
+                if (this.approvalStatusByRole.hasOwnProperty(key))
+                    (<any>data["approvalStatusByRole"])[key] = this.approvalStatusByRole[key] ? this.approvalStatusByRole[key].toJSON() : <any>undefined;
+            }
+        }
         if (Array.isArray(this.completedRequirements)) {
             data["completedRequirements"] = [];
             for (let item of this.completedRequirements)
@@ -5588,42 +5863,159 @@ export class VolunteerInfo implements IVolunteerInfo {
             for (let item of this.removedRoles)
                 data["removedRoles"].push(item.toJSON());
         }
-        if (Array.isArray(this.missingRequirements)) {
-            data["missingRequirements"] = [];
-            for (let item of this.missingRequirements)
-                data["missingRequirements"].push(item);
-        }
-        if (Array.isArray(this.availableApplications)) {
-            data["availableApplications"] = [];
-            for (let item of this.availableApplications)
-                data["availableApplications"].push(item);
-        }
-        if (this.individualRoleApprovals) {
-            data["individualRoleApprovals"] = {};
-            for (let key in this.individualRoleApprovals) {
-                if (this.individualRoleApprovals.hasOwnProperty(key))
-                    (<any>data["individualRoleApprovals"])[key] = (<any>this.individualRoleApprovals)[key];
-            }
-        }
-        if (this.effectiveIndividualRoleApprovals) {
-            data["effectiveIndividualRoleApprovals"] = {};
-            for (let key in this.effectiveIndividualRoleApprovals) {
-                if (this.effectiveIndividualRoleApprovals.hasOwnProperty(key))
-                    (<any>data["effectiveIndividualRoleApprovals"])[key] = this.effectiveIndividualRoleApprovals[key] ? this.effectiveIndividualRoleApprovals[key].toJSON() : <any>undefined;
-            }
-        }
         return data;
     }
 }
 
 export interface IVolunteerInfo {
+    approvalStatusByRole?: { [key: string]: IndividualRoleApprovalStatus; };
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
     removedRoles?: RemovedRole[];
-    missingRequirements?: string[];
-    availableApplications?: string[];
-    individualRoleApprovals?: { [key: string]: RoleVersionApproval[]; };
-    effectiveIndividualRoleApprovals?: { [key: string]: RoleVersionApproval; };
+}
+
+export class IndividualRoleApprovalStatus implements IIndividualRoleApprovalStatus {
+    effectiveRoleApprovalStatus?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
+    roleVersionApprovals?: IndividualRoleVersionApprovalStatus[];
+
+    constructor(data?: IIndividualRoleApprovalStatus) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.effectiveRoleApprovalStatus = _data["effectiveRoleApprovalStatus"] ? DateOnlyTimelineOfRoleApprovalStatus.fromJS(_data["effectiveRoleApprovalStatus"]) : <any>undefined;
+            if (Array.isArray(_data["roleVersionApprovals"])) {
+                this.roleVersionApprovals = [] as any;
+                for (let item of _data["roleVersionApprovals"])
+                    this.roleVersionApprovals!.push(IndividualRoleVersionApprovalStatus.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): IndividualRoleApprovalStatus {
+        data = typeof data === 'object' ? data : {};
+        let result = new IndividualRoleApprovalStatus();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["effectiveRoleApprovalStatus"] = this.effectiveRoleApprovalStatus ? this.effectiveRoleApprovalStatus.toJSON() : <any>undefined;
+        if (Array.isArray(this.roleVersionApprovals)) {
+            data["roleVersionApprovals"] = [];
+            for (let item of this.roleVersionApprovals)
+                data["roleVersionApprovals"].push(item.toJSON());
+        }
+        return data;
+    }
+}
+
+export interface IIndividualRoleApprovalStatus {
+    effectiveRoleApprovalStatus?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
+    roleVersionApprovals?: IndividualRoleVersionApprovalStatus[];
+}
+
+export class IndividualRoleVersionApprovalStatus implements IIndividualRoleVersionApprovalStatus {
+    version?: string;
+    status?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
+    requirements?: IndividualRoleRequirementCompletionStatus[];
+
+    constructor(data?: IIndividualRoleVersionApprovalStatus) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.version = _data["version"];
+            this.status = _data["status"] ? DateOnlyTimelineOfRoleApprovalStatus.fromJS(_data["status"]) : <any>undefined;
+            if (Array.isArray(_data["requirements"])) {
+                this.requirements = [] as any;
+                for (let item of _data["requirements"])
+                    this.requirements!.push(IndividualRoleRequirementCompletionStatus.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): IndividualRoleVersionApprovalStatus {
+        data = typeof data === 'object' ? data : {};
+        let result = new IndividualRoleVersionApprovalStatus();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["version"] = this.version;
+        data["status"] = this.status ? this.status.toJSON() : <any>undefined;
+        if (Array.isArray(this.requirements)) {
+            data["requirements"] = [];
+            for (let item of this.requirements)
+                data["requirements"].push(item.toJSON());
+        }
+        return data;
+    }
+}
+
+export interface IIndividualRoleVersionApprovalStatus {
+    version?: string;
+    status?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
+    requirements?: IndividualRoleRequirementCompletionStatus[];
+}
+
+export class IndividualRoleRequirementCompletionStatus implements IIndividualRoleRequirementCompletionStatus {
+    actionName?: string;
+    stage?: RequirementStage;
+    whenMet?: DateOnlyTimeline | undefined;
+
+    constructor(data?: IIndividualRoleRequirementCompletionStatus) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.actionName = _data["actionName"];
+            this.stage = _data["stage"];
+            this.whenMet = _data["whenMet"] ? DateOnlyTimeline.fromJS(_data["whenMet"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): IndividualRoleRequirementCompletionStatus {
+        data = typeof data === 'object' ? data : {};
+        let result = new IndividualRoleRequirementCompletionStatus();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["actionName"] = this.actionName;
+        data["stage"] = this.stage;
+        data["whenMet"] = this.whenMet ? this.whenMet.toJSON() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IIndividualRoleRequirementCompletionStatus {
+    actionName?: string;
+    stage?: RequirementStage;
+    whenMet?: DateOnlyTimeline | undefined;
 }
 
 export class Note implements INote {
@@ -12136,6 +12528,12 @@ export class ODataFunctionImportInfo extends ODataServiceDocumentElement impleme
 }
 
 export interface IODataFunctionImportInfo extends IODataServiceDocumentElement {
+}
+
+function formatDate(d: Date) {
+    return d.getFullYear() + '-' + 
+        (d.getMonth() < 9 ? ('0' + (d.getMonth()+1)) : (d.getMonth()+1)) + '-' +
+        (d.getDate() < 10 ? ('0' + d.getDate()) : d.getDate());
 }
 
 export interface FileResponse {
