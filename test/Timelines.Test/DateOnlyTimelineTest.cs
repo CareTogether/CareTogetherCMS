@@ -7,7 +7,7 @@ public class DateOnlyTimelineTest
 {
     private static DateOnly D(int day) => new(2024, 1, day);
     private static DateRange DR(int start, int end) => new(D(start), D(end));
-    private static DateRange<char> DR(int start, int end, char tag) => new(D(start), D(end), tag);
+    private static DateRange<T> DR<T>(int start, int end, T tag) => new(D(start), D(end), tag);
 
     private static void AssertDatesAre(DateOnlyTimeline dut, params int[] dates)
     {

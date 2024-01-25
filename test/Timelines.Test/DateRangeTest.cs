@@ -9,13 +9,6 @@ public class DateRangeTest
     private static DateRange DR(int start, int end) => new(D(start), D(end));
     private static DateRange DR(int start) => new(D(start));
 
-    private static void AssertDatesAre(DateOnlyTimeline dut, params int[] dates)
-    {
-        // Set the max date to check to something past where we'll be testing.
-        for (var i = 1; i < 20; i++)
-            Assert.AreEqual(dates.Contains(i), dut.Contains(D(i)), $"Failed on {i}");
-    }
-
 
     [TestMethod]
     public void DateRangeConstructorWithSingleValueSetsEndToMaxValue()

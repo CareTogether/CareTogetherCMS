@@ -2,15 +2,28 @@
 using CareTogether.Resources;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Policies;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using Timelines;
 
 namespace CareTogether.Core.Test.ApprovalCalculationTests
 {
     internal class Helpers
     {
+        public static DateOnly D(int day) => new(2024, 1, day);
+        public static DateRange DR(int start, int end) => new(D(start), D(end));
+        public static DateRange<T> DR<T>(int start, int end, T tag) => new(D(start), D(end), tag);
+
+        public static void AssertDatesAre(DateOnlyTimeline dut, params int[] dates)
+        {
+            // Set the max date to check to something past where we'll be testing.
+            for (var i = 1; i < 20; i++)
+                Assert.AreEqual(dates.Contains(i), dut.Contains(D(i)), $"Failed on {i}");
+        }
+
         public static ImmutableList<CompletedRequirementInfo> Completed(params (string, int)[] completionsWithDates) =>
             completionsWithDates.Select(completion =>
                 new CompletedRequirementInfo(Guid.Empty, DateTime.MinValue,
