@@ -13,7 +13,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
 {
     internal class Helpers
     {
-        const int YEAR = 2024;
+        public const int YEAR = 2024;
 
         public static DateOnly D(int day) => new(YEAR, 1, day);
         public static DateTime DT(int day) => new(YEAR, 1, day);

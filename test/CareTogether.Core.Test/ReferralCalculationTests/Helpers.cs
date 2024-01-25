@@ -9,10 +9,19 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
 {
     internal class Helpers
     {
+        public const int YEAR = 2024;
+
         public static ImmutableList<CompletedRequirementInfo> Completed(params (string, int)[] completionsWithDates) =>
             completionsWithDates.Select(completion =>
                 new CompletedRequirementInfo(Guid.Empty, DateTime.MinValue,
                     Guid.Empty, completion.Item1, new DateTime(2022, 1, completion.Item2), ExpiresAtUtc: null, null, null))
+            .ToImmutableList();
+
+        public static ImmutableList<CompletedRequirementInfo> CompletedWithExpiry(params (string, int, int?)[] completionsWithDates) =>
+            completionsWithDates.Select(completion =>
+                new CompletedRequirementInfo(Guid.Empty, DateTime.MinValue,
+                    Guid.Empty, completion.Item1, new DateTime(YEAR, 1, completion.Item2),
+                    ExpiresAtUtc: completion.Item3.HasValue ? new DateTime(YEAR, 1, completion.Item3.Value) : null, null, null))
             .ToImmutableList();
 
         public static ImmutableList<ExemptedRequirementInfo> Exempted(params (string, int?)[] exemptionsWithExpirations) =>
