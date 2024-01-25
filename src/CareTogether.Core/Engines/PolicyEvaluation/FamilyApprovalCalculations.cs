@@ -32,7 +32,6 @@ namespace CareTogether.Engines.PolicyEvaluation
                         actionDefinitions, rolePolicy.Key, rolePolicy.Value,
                         family,
                         completedFamilyRequirements, exemptedFamilyRequirements,
-                        removedFamilyRoles,
                         completedIndividualRequirements, exemptedIndividualRequirements,
                         removedIndividualRoles));
 
@@ -45,7 +44,6 @@ namespace CareTogether.Engines.PolicyEvaluation
             string roleName, VolunteerFamilyRolePolicy rolePolicy, Family family,
             ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
             ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
-            ImmutableList<RemovedRole> removedFamilyRoles,
             ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>> exemptedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles)

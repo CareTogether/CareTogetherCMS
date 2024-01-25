@@ -12,7 +12,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 {
     internal static class ApprovalCalculations
     {
-        public static FamilyApprovalStatus CalculateFamilyApprovalStatus(
+        public static FamilyApprovalStatus CalculateCombinedFamilyApprovals(
             ImmutableDictionary<string, ActionRequirement> actionDefinitions,
             VolunteerPolicy volunteerPolicy, Family family,
             ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,

@@ -178,7 +178,7 @@ namespace CareTogether.Managers
                 .ToImmutableDictionary(entry => entry.Key, entry => entry.Value
                     .Select(applyValidity).ToImmutableList());
 
-            var volunteerFamilyApprovalStatus = await policyEvaluationEngine.CalculateVolunteerFamilyApprovalStatusAsync(
+            var volunteerFamilyApprovalStatus = await policyEvaluationEngine.CalculateCombinedFamilyApprovalsAsync(
                 organizationId, locationId, family, completedFamilyRequirementsWithExpiration, entry.ExemptedRequirements, entry.RemovedRoles,
                 completedIndividualRequirementsWithExpiration, exemptedIndividualRequirements, removedIndividualRoles);
 

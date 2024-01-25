@@ -1,23 +1,55 @@
 ﻿using CareTogether.Resources;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
+using CareTogether.Resources.Policies;
 using CareTogether.Resources.Referrals;
 using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using Timelines;
 
 namespace CareTogether.Engines.PolicyEvaluation
 {
-    public sealed record VolunteerFamilyApprovalStatus(
-        ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> FamilyRoleApprovals,
-        ImmutableDictionary<string, RoleVersionApproval> EffectiveFamilyRoleApprovals,
-        ImmutableList<RemovedRole> RemovedFamilyRoles,
-        ImmutableDictionary<Guid, VolunteerApprovalStatus> IndividualVolunteers);
+    public sealed record FamilyApprovalStatus(
+        ImmutableDictionary<Guid, IndividualApprovalStatus> IndividualApprovals,
+        ImmutableDictionary<string, FamilyRoleApprovalStatus> FamilyRoleApprovals);
 
-    public sealed record VolunteerApprovalStatus(
-        ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> IndividualRoleApprovals,
-        ImmutableDictionary<string, RoleVersionApproval> EffectiveIndividualRoleApprovals,
-        ImmutableList<RemovedRole> RemovedIndividualRoles);
+    public sealed record IndividualApprovalStatus(
+        ImmutableDictionary<string, IndividualRoleApprovalStatus> ApprovalStatusByRole);
+
+    public sealed record IndividualRoleApprovalStatus(
+        DateOnlyTimeline<RoleApprovalStatus>? EffectiveRoleApprovalStatus,
+        ImmutableList<IndividualRoleVersionApprovalStatus> RoleVersionApprovals);
+
+    public sealed record IndividualRoleVersionApprovalStatus(string Version,
+        DateOnlyTimeline<RoleApprovalStatus>? Status,
+        ImmutableList<IndividualRoleRequirementCompletionStatus> Requirements);
+
+    public sealed record IndividualRoleRequirementCompletionStatus(string ActionName,
+        RequirementStage Stage, DateOnlyTimeline? WhenMet);
+
+    public sealed record FamilyRoleApprovalStatus(
+        DateOnlyTimeline<RoleApprovalStatus>? EffectiveRoleApprovalStatus,
+        ImmutableList<FamilyRoleVersionApprovalStatus> RoleVersionApprovals);
+
+    public sealed record FamilyRoleVersionApprovalStatus(string Version,
+        DateOnlyTimeline<RoleApprovalStatus>? Status,
+        ImmutableList<FamilyRoleRequirementCompletionStatus> Requirements);
+
+    public sealed record FamilyRoleRequirementCompletionStatus(string ActionName,
+        RequirementStage Stage, VolunteerFamilyRequirementScope Scope, DateOnlyTimeline? WhenMet,
+        ImmutableList<FamilyRequirementStatusDetail> StatusDetails);
+
+    public sealed record FamilyRequirementStatusDetail(
+        Guid? PersonId, DateOnlyTimeline? WhenMet);
+
+    public enum RoleApprovalStatus
+    {
+        Prospective = 0,
+        Expired = 1,
+        Approved = 2,
+        Onboarded = 3
+    };
 
     public sealed record ReferralStatus(
         ImmutableList<string> MissingIntakeRequirements,
@@ -38,7 +70,7 @@ namespace CareTogether.Engines.PolicyEvaluation
     public interface IPolicyEvaluationEngine
     {
         //TODO: Merge this with the CombinedFamilyInfoFormatter logic
-        Task<VolunteerFamilyApprovalStatus> CalculateVolunteerFamilyApprovalStatusAsync(
+        Task<FamilyApprovalStatus> CalculateCombinedFamilyApprovalsAsync(
             Guid organizationId, Guid locationId, Family family,
             ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
             ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
