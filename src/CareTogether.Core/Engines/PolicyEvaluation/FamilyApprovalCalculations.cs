@@ -56,7 +56,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .ToImmutableList();
 
             var effectiveRoleApprovalStatus =
-                ApprovalCalculations.CalculateEffectiveRoleApprovalStatus(
+                SharedCalculations.CalculateEffectiveRoleApprovalStatus(
                     roleVersionApprovals
                         .Select(rva => rva.Status).ToImmutableList());
 
@@ -105,7 +105,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             // Calculate the combined approval status timeline for this
             // role under this policy version.
             var roleVersionApprovalStatus =
-                ApprovalCalculations.CalculateRoleVersionApprovalStatus(
+                SharedCalculations.CalculateRoleVersionApprovalStatus(
                     requirementCompletions
                         .Select(x => (x.Stage, x.WhenMet)).ToImmutableList());
 
