@@ -19,6 +19,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
+using Timelines;
 
 namespace CareTogether.Api.OData
 {
@@ -40,12 +41,12 @@ namespace CareTogether.Api.OData
     public sealed record FamilyRoleApproval(
         [property: ForeignKey("FamilyId")] Family Family, [property: Key] Guid FamilyId,
         [property: ForeignKey("RoleName")] Role Role, [property: Key] string RoleName,
-        RoleApprovalStatus ApprovalStatus, DateOnly? ExpiresAt);
+        ImmutableList<DateRange<RoleApprovalStatus>>? ApprovalStatusRanges);
 
     public sealed record IndividualRoleApproval(
         [property: ForeignKey("PersonId")] Person Person, [property: Key] Guid PersonId,
         [property: ForeignKey("RoleName")] Role Role, [property: Key] string RoleName,
-        RoleApprovalStatus ApprovalStatus, DateOnly? ExpiresAt);
+        ImmutableList<DateRange<RoleApprovalStatus>>? ApprovalStatusRanges);
 
     public sealed record IndividualRemovedRole(
         [property: ForeignKey("PersonId")] Person Person, [property: Key] Guid PersonId,
@@ -353,12 +354,11 @@ namespace CareTogether.Api.OData
         private static IEnumerable<FamilyRoleApproval> RenderFamilyRoleApprovals(
             CombinedFamilyInfo familyInfo, Family family, Role[] roles)
         {
-            return familyInfo.VolunteerFamilyInfo?.EffectiveFamilyRoleApprovals
+            return familyInfo.VolunteerFamilyInfo?.FamilyRoleApprovals
                 .Select(fra =>
                     new FamilyRoleApproval(family, family.Id,
                         roles.Single(role => role.Name == fra.Key), fra.Key,
-                        fra.Value.ApprovalStatus,
-                        fra.Value.ExpiresAt == null ? null : DateOnly.FromDateTime(fra.Value.ExpiresAt.Value)))
+                        fra.Value.EffectiveRoleApprovalStatus?.Ranges))
                 ?? Enumerable.Empty<FamilyRoleApproval>();
             //TODO: Include *when approval began* (requires returning *all* the approvals and adding a 'Since' date property!)
         }
@@ -367,13 +367,12 @@ namespace CareTogether.Api.OData
             CombinedFamilyInfo familyInfo, Family family, Person[] people, Role[] roles)
         {
             return familyInfo.VolunteerFamilyInfo?.IndividualVolunteers
-                .SelectMany(individual => individual.Value.EffectiveIndividualRoleApprovals
+                .SelectMany(individual => individual.Value.ApprovalStatusByRole
                     .Select(ira =>
                         new IndividualRoleApproval(
                             people.Single(person => person.Id == individual.Key), individual.Key,
                             roles.Single(role => role.Name == ira.Key), ira.Key,
-                            ira.Value.ApprovalStatus,
-                            ira.Value.ExpiresAt == null ? null : DateOnly.FromDateTime(ira.Value.ExpiresAt.Value))))
+                            ira.Value.EffectiveRoleApprovalStatus?.Ranges)))
                 ?? Enumerable.Empty<IndividualRoleApproval>();
         }
 
