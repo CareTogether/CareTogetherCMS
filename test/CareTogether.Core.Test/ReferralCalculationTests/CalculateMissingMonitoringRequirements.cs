@@ -4,6 +4,7 @@ using CareTogether.Resources.Referrals;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Immutable;
+using H = CareTogether.Core.Test.ReferralCalculationTests.Helpers;
 
 namespace CareTogether.Core.Test.ReferralCalculationTests
 {
@@ -38,7 +39,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     Helpers.LocationHistoryEntries(),
                     Helpers.LocationHistoryEntries(),
                     Comments: null, Reason: null),
-                utcNow: new DateTime(2022, 1, 31));
+                utcNow: new DateTime(H.YEAR, 1, 31));
 
             AssertEx.SequenceIs(result);
         }
@@ -55,7 +56,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     .Add(new MonitoringRequirement("B", new DurationStagesRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                         .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null)))))),
                 new ArrangementEntry(Guid.Empty, "", true, DateTime.MinValue,
-                    StartedAtUtc: new DateTime(2022, 1, 1), EndedAtUtc: null,
+                    StartedAtUtc: new DateTime(H.YEAR, 1, 1), EndedAtUtc: null,
                     null, null, null, Guid.Empty,
                     Helpers.Completed(),
                     Helpers.Exempted(),
@@ -64,20 +65,20 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     Helpers.LocationHistoryEntries(),
                     Helpers.LocationHistoryEntries(),
                     Comments: null, Reason: null),
-                utcNow: new DateTime(2022, 1, 31));
+                utcNow: new DateTime(H.YEAR, 1, 31));
 
             AssertEx.SequenceIs(result,
-                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateTime(2022, 1, 3)),
-                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateTime(2022, 1, 10)),
-                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateTime(2022, 1, 17)),
-                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateTime(2022, 1, 24)),
-                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateTime(2022, 1, 31)),
-                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: new DateTime(2022, 2, 14), PastDueSince: null),
-                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: null, PastDueSince: new DateTime(2022, 1, 8)),
-                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: null, PastDueSince: new DateTime(2022, 1, 15)),
-                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: null, PastDueSince: new DateTime(2022, 1, 22)),
-                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: null, PastDueSince: new DateTime(2022, 1, 29)),
-                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: new DateTime(2022, 2, 5), PastDueSince: null));
+                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 3)),
+                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 10)),
+                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 17)),
+                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 24)),
+                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 31)),
+                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: new DateTime(H.YEAR, 2, 14), PastDueSince: null),
+                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 8)),
+                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 15)),
+                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 22)),
+                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 29)),
+                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: new DateTime(H.YEAR, 2, 5), PastDueSince: null));
         }
 
         [TestMethod]
@@ -92,7 +93,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     .Add(new MonitoringRequirement("B", new DurationStagesRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                         .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null)))))),
                 new ArrangementEntry(Guid.Empty, "", true, DateTime.MinValue,
-                    StartedAtUtc: new DateTime(2022, 1, 1), EndedAtUtc: null,
+                    StartedAtUtc: new DateTime(H.YEAR, 1, 1), EndedAtUtc: null,
                     null, null, null, Guid.Empty,
                     Helpers.Completed(("A", 3), ("B", 7)),
                     Helpers.Exempted(),
@@ -101,18 +102,18 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     Helpers.LocationHistoryEntries(),
                     Helpers.LocationHistoryEntries(),
                     Comments: null, Reason: null),
-                utcNow: new DateTime(2022, 1, 31));
+                utcNow: new DateTime(H.YEAR, 1, 31));
 
             AssertEx.SequenceIs(result,
-                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateTime(2022, 1, 10)),
-                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateTime(2022, 1, 17)),
-                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateTime(2022, 1, 24)),
-                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateTime(2022, 1, 31)),
-                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: new DateTime(2022, 2, 14), PastDueSince: null),
-                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: null, PastDueSince: new DateTime(2022, 1, 14)),
-                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: null, PastDueSince: new DateTime(2022, 1, 21)),
-                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: null, PastDueSince: new DateTime(2022, 1, 28)),
-                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: new DateTime(2022, 2, 4), PastDueSince: null));
+                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 10)),
+                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 17)),
+                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 24)),
+                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 31)),
+                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: new DateTime(H.YEAR, 2, 14), PastDueSince: null),
+                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 14)),
+                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 21)),
+                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 28)),
+                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: new DateTime(H.YEAR, 2, 4), PastDueSince: null));
         }
 
         [TestMethod]
@@ -127,7 +128,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     .Add(new MonitoringRequirement("B", new DurationStagesRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
                         .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null)))))),
                 new ArrangementEntry(Guid.Empty, "", true, DateTime.MinValue,
-                    StartedAtUtc: new DateTime(2022, 1, 1), EndedAtUtc: null,
+                    StartedAtUtc: new DateTime(H.YEAR, 1, 1), EndedAtUtc: null,
                     null, null, null, Guid.Empty,
                     Helpers.Completed(("A", 3), ("B", 7)),
                     Helpers.Exempted(),
@@ -136,11 +137,11 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     Helpers.LocationHistoryEntries(),
                     Helpers.LocationHistoryEntries(),
                     Comments: null, Reason: null),
-                utcNow: new DateTime(2022, 1, 8));
+                utcNow: new DateTime(H.YEAR, 1, 8));
 
             AssertEx.SequenceIs(result,
-                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: new DateTime(2022, 1, 10), PastDueSince: null),
-                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: new DateTime(2022, 1, 14), PastDueSince: null));
+                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: new DateTime(H.YEAR, 1, 10), PastDueSince: null),
+                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: new DateTime(H.YEAR, 1, 14), PastDueSince: null));
         }
     }
 }
