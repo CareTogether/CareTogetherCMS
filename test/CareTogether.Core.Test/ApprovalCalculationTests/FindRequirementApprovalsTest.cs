@@ -8,7 +8,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests;
 public class FindRequirementApprovalsTest
 {
     [TestMethod]
-    public void Foo()
+    public void EmptyInputsReturnsNull()
     {
         var result = SharedCalculations.FindRequirementApprovals(
             "A", null,
@@ -16,8 +16,30 @@ public class FindRequirementApprovalsTest
             H.Exempted([])
         );
 
-        Assert.Inconclusive("Not implemented!");
         Assert.IsNull(result);
-        H.AssertDatesAre(result);
+    }
+
+    [TestMethod]
+    public void EmptyInputsWithSupersededDateReturnsNull()
+    {
+        var result = SharedCalculations.FindRequirementApprovals(
+            "A", H.DT(20),
+            H.Completed([]),
+            H.Exempted([])
+        );
+
+        Assert.IsNull(result);
+    }
+
+    [TestMethod]
+    public void NonMatchingInputsReturnsNull()
+    {
+        var result = SharedCalculations.FindRequirementApprovals(
+            "A", null,
+            H.Completed([("B", 2), ("C", 3)]),
+            H.Exempted([("D", 4)])
+        );
+
+        Assert.IsNull(result);
     }
 }
