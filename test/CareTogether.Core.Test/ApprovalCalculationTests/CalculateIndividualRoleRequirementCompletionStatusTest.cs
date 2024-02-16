@@ -9,10 +9,10 @@ using H = CareTogether.Core.Test.ApprovalCalculationTests.Helpers;
 namespace CareTogether.Core.Test.ApprovalCalculationTests
 {
     [TestClass]
-    public class IndividualApprovalCalculationsTest
+    public class CalculateIndividualRoleRequirementCompletionStatusTest
     {
         [TestMethod]
-        public void CalculateIndividualRoleRequirementCompletionStatusWhenNoneCompleted()
+        public void WhenNoneCompleted()
         {
             var result = IndividualApprovalCalculations.CalculateIndividualRoleRequirementCompletionStatus(
                 requirement: new VolunteerApprovalRequirement(RequirementStage.Approval, "A"),
@@ -29,7 +29,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         }
 
         [TestMethod]
-        public void CalculateIndividualRoleRequirementCompletionStatusWhenSomeCompleted()
+        public void WhenSomeCompleted()
         {
             var result = IndividualApprovalCalculations.CalculateIndividualRoleRequirementCompletionStatus(
                 requirement: new VolunteerApprovalRequirement(RequirementStage.Approval, "A"),
