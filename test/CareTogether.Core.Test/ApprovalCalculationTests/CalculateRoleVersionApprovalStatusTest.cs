@@ -51,7 +51,7 @@ public class CalculateRoleVersionApprovalStatusTest
     }
 
     [TestMethod]
-    public void TestApplicationsMetWithoutAnyOtherRequirementsReturnsOnboardedRanges()
+    public void TestApplicationsMetWithoutAnyOtherRequirementsReturnsOnboardedRangesWithExpired()
     {
         var result = SharedCalculations.CalculateRoleVersionApprovalStatus([
             (RequirementStage.Application, new DateOnlyTimeline([ H.DR(1, 5)])),
@@ -61,7 +61,8 @@ public class CalculateRoleVersionApprovalStatusTest
 
         Assert.IsNotNull(result);
         Assert.IsTrue(result.Ranges.SequenceEqual([
-            H.DR(1, 5, RoleApprovalStatus.Onboarded)
+            H.DR(1, 5, RoleApprovalStatus.Onboarded),
+            H.DR(6, null, RoleApprovalStatus.Expired)
         ]));
     }
 
