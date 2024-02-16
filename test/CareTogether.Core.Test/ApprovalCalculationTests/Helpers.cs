@@ -33,6 +33,12 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     Guid.Empty, completion.Item1, new DateTime(YEAR, 1, completion.Item2), ExpiresAtUtc: null, null, null))
             .ToImmutableList();
 
+        public static ImmutableList<CompletedRequirementInfo> CompletedUntil(params (string, int, int?)[] completionsWithDates) =>
+            completionsWithDates.Select(completion =>
+                new CompletedRequirementInfo(Guid.Empty, DateTime.MinValue,
+                    Guid.Empty, completion.Item1, new DateTime(YEAR, 1, completion.Item2), ExpiresAtUtc: completion.Item3.HasValue ? new DateTime(YEAR, 1, completion.Item3.Value) : null, null, null))
+            .ToImmutableList();
+
         public static ImmutableList<CompletedRequirementInfo> CompletedWithExpiry(params (string, int, int?)[] completionsWithDates) =>
             completionsWithDates.Select(completion =>
                 new CompletedRequirementInfo(Guid.Empty, DateTime.MinValue,
@@ -44,6 +50,12 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
             exemptionsWithExpirations.Select(exemption =>
                 new ExemptedRequirementInfo(Guid.Empty, DateTime.MinValue,
                     exemption.Item1, DueDate: null, "", exemption.Item2.HasValue ? new DateTime(YEAR, 1, exemption.Item2.Value) : null))
+            .ToImmutableList();
+
+        public static ImmutableList<ExemptedRequirementInfo> ExemptedOn(params (string, int, int?)[] datedExemptionsWithExpirations) =>
+            datedExemptionsWithExpirations.Select(exemption =>
+                new ExemptedRequirementInfo(Guid.Empty, new DateTime(YEAR, 1, exemption.Item2),
+                    exemption.Item1, DueDate: null, "", exemption.Item3.HasValue ? new DateTime(YEAR, 1, exemption.Item3.Value) : null))
             .ToImmutableList();
 
         public static ImmutableList<RemovedRole> Removed(params string[] removedRoles) =>

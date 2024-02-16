@@ -227,6 +227,19 @@ public class DateOnlyTimelineTest
     }
 
     [TestMethod]
+    public void UnionOfTwoUnendingRangesReturnsSingleOverlappingRange()
+    {
+        var dut = DateOnlyTimeline.UnionOf(ImmutableList.Create(
+            new DateRange(D(2), DateOnly.MaxValue),
+            new DateRange(D(4), DateOnly.MaxValue)));
+
+        Assert.IsNotNull(dut);
+        Assert.IsTrue(dut.Ranges.SequenceEqual([
+            new DateRange(D(2), DateOnly.MaxValue)
+        ]));
+    }
+
+    [TestMethod]
     public void UnionOfTimelinesReturnsNullIfAllNull()
     {
         var dut = DateOnlyTimeline.UnionOf(ImmutableList<DateOnlyTimeline?>.Empty

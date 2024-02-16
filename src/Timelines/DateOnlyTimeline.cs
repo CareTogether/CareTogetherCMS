@@ -80,7 +80,8 @@ public sealed class DateOnlyTimeline
                 }
 
                 var mostRecentRange = prior[^1];
-                if (current.Start <= mostRecentRange.End.AddDays(1))
+                if (mostRecentRange.End == DateOnly.MaxValue ||
+                    current.Start <= mostRecentRange.End.AddDays(1))
                 {
                     // The resulting range should use the end date of whichever range ends later.
                     prior[^1] = new DateRange(mostRecentRange.Start,
