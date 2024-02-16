@@ -718,53 +718,6 @@ public class DateOnlyTimelineTest
     }
 
     [TestMethod]
-    public void TaggedConstructorForbidsEmptyList()
-    {
-        Assert.ThrowsException<ArgumentException>(() =>
-            new DateOnlyTimeline<char>(ImmutableList<DateRange<char>>.Empty));
-    }
-
-    [TestMethod]
-    public void TaggedConstructorForbidsOverlappingRanges()
-    {
-        Assert.ThrowsException<ArgumentException>(() =>
-            new DateOnlyTimeline<char>([DR(1, 2, 'A'), DR(2, 3, 'A')]));
-    }
-
-    [TestMethod]
-    public void TaggedConstructorForbidsOverlappingRanges2()
-    {
-        Assert.ThrowsException<ArgumentException>(() =>
-            new DateOnlyTimeline<char>([DR(1, 3, 'A'), DR(2, 4, 'A')]));
-    }
-
-    [TestMethod]
-    public void TaggedConstructorPopulatesRanges()
-    {
-        var dut = new DateOnlyTimeline<char>([DR(1, 2, 'A'), DR(3, 4, 'B')]);
-
-        Assert.IsNotNull(dut);
-        Assert.IsTrue(dut.Ranges.SequenceEqual([
-            DR(1, 2, 'A'), DR(3, 4, 'B')
-        ]));
-    }
-
-    [DataRow(1, default(char))]
-    [DataRow(2, 'A')]
-    [DataRow(3, 'A')]
-    [DataRow(4, 'A')]
-    [DataRow(5, default(char))]
-    [DataRow(6, 'B')]
-    [DataRow(7, default(char))]
-    [DataTestMethod]
-    public void TaggedTimelineValuesAreCorrect(int day, char? expected)
-    {
-        var dut = new DateOnlyTimeline<char>([DR(2, 4, 'A'), DR(6, 6, 'B')]);
-
-        Assert.AreEqual(expected, dut.ValueAt(D(day)));
-    }
-
-    [TestMethod]
     public void EqualsWithNullIsFalse()
     {
         var dut = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
@@ -830,6 +783,141 @@ public class DateOnlyTimelineTest
     {
         var dut = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
         var other = new DateOnlyTimeline([DR(1, 1)]);
+
+        Assert.AreNotEqual(dut.GetHashCode(), other.GetHashCode());
+    }
+
+    [TestMethod]
+    public void TaggedConstructorForbidsEmptyList()
+    {
+        Assert.ThrowsException<ArgumentException>(() =>
+            new DateOnlyTimeline<char>(ImmutableList<DateRange<char>>.Empty));
+    }
+
+    [TestMethod]
+    public void TaggedConstructorForbidsOverlappingRanges()
+    {
+        Assert.ThrowsException<ArgumentException>(() =>
+            new DateOnlyTimeline<char>([DR(1, 2, 'A'), DR(2, 3, 'A')]));
+    }
+
+    [TestMethod]
+    public void TaggedConstructorForbidsOverlappingRanges2()
+    {
+        Assert.ThrowsException<ArgumentException>(() =>
+            new DateOnlyTimeline<char>([DR(1, 3, 'A'), DR(2, 4, 'A')]));
+    }
+
+    [TestMethod]
+    public void TaggedConstructorPopulatesRanges()
+    {
+        var dut = new DateOnlyTimeline<char>([DR(1, 2, 'A'), DR(3, 4, 'B')]);
+
+        Assert.IsNotNull(dut);
+        Assert.IsTrue(dut.Ranges.SequenceEqual([
+            DR(1, 2, 'A'), DR(3, 4, 'B')
+        ]));
+    }
+
+    [DataRow(1, default(char))]
+    [DataRow(2, 'A')]
+    [DataRow(3, 'A')]
+    [DataRow(4, 'A')]
+    [DataRow(5, default(char))]
+    [DataRow(6, 'B')]
+    [DataRow(7, default(char))]
+    [DataTestMethod]
+    public void TaggedTimelineValuesAreCorrect(int day, char? expected)
+    {
+        var dut = new DateOnlyTimeline<char>([DR(2, 4, 'A'), DR(6, 6, 'B')]);
+
+        Assert.AreEqual(expected, dut.ValueAt(D(day)));
+    }
+
+    [TestMethod]
+    public void TaggedEqualsWithNullIsFalse()
+    {
+        var dut = new DateOnlyTimeline<char>([DR(1, 1, 'A'), DR(3, 4, 'B')]);
+
+        Assert.IsFalse(dut.Equals(null));
+    }
+
+    [TestMethod]
+    public void TaggedEqualsWithArrayOfDateRangesIsFalse()
+    {
+        var dut = new DateOnlyTimeline<char>([DR(1, 1, 'A'), DR(3, 4, 'B')]);
+
+        Assert.IsFalse(dut.Equals(new DateRange<char>[] { DR(1, 1, 'A'), DR(3, 4, 'B') }));
+    }
+
+    [TestMethod]
+    public void TaggedEqualsWithSameRangesIsTrue()
+    {
+        var dut = new DateOnlyTimeline<char>([DR(1, 1, 'A'), DR(3, 4, 'B')]);
+        var other = new DateOnlyTimeline<char>([DR(1, 1, 'A'), DR(3, 4, 'B')]);
+
+        Assert.IsTrue(dut.Equals(other));
+    }
+
+    [TestMethod]
+    public void TaggedEqualsWithDifferentRangesIsFalse()
+    {
+        var dut = new DateOnlyTimeline<char>([DR(1, 1, 'A'), DR(3, 4, 'B')]);
+        var other = new DateOnlyTimeline<char>([DR(1, 1, 'A'), DR(3, 5, 'B')]);
+
+        Assert.IsFalse(dut.Equals(other));
+    }
+
+    [TestMethod]
+    public void TaggedEqualsWithDifferentRangesIsFalse2()
+    {
+        var dut = new DateOnlyTimeline<char>([DR(1, 1, 'A'), DR(3, 4, 'B')]);
+        var other = new DateOnlyTimeline<char>([DR(1, 1, 'A')]);
+
+        Assert.IsFalse(dut.Equals(other));
+    }
+
+    [TestMethod]
+    public void TaggedEqualsWithDifferentRangesIsFalse3()
+    {
+        var dut = new DateOnlyTimeline<char>([DR(1, 1, 'A'), DR(3, 4, 'B')]);
+        var other = new DateOnlyTimeline<char>([DR(1, 1, 'A'), DR(3, 4, 'C')]);
+
+        Assert.IsFalse(dut.Equals(other));
+    }
+
+    [TestMethod]
+    public void TaggedGetHashCodeIsConsistent()
+    {
+        var dut = new DateOnlyTimeline<char>([DR(1, 1, 'A'), DR(3, 4, 'B')]);
+        var other = new DateOnlyTimeline<char>([DR(1, 1, 'A'), DR(3, 4, 'B')]);
+
+        Assert.AreEqual(dut.GetHashCode(), other.GetHashCode());
+    }
+
+    [TestMethod]
+    public void TaggedGetHashCodeIsConsistent2()
+    {
+        var dut = new DateOnlyTimeline<char>([DR(1, 1, 'A'), DR(3, 4, 'B')]);
+        var other = new DateOnlyTimeline<char>([DR(1, 1, 'A'), DR(3, 5, 'B')]);
+
+        Assert.AreNotEqual(dut.GetHashCode(), other.GetHashCode());
+    }
+
+    [TestMethod]
+    public void TaggedGetHashCodeIsConsistent3()
+    {
+        var dut = new DateOnlyTimeline<char>([DR(1, 1, 'A'), DR(3, 4, 'B')]);
+        var other = new DateOnlyTimeline<char>([DR(1, 1, 'A')]);
+
+        Assert.AreNotEqual(dut.GetHashCode(), other.GetHashCode());
+    }
+
+    [TestMethod]
+    public void TaggedGetHashCodeIsConsistent4()
+    {
+        var dut = new DateOnlyTimeline<char>([DR(1, 1, 'A'), DR(3, 4, 'B')]);
+        var other = new DateOnlyTimeline<char>([DR(1, 1, 'A'), DR(3, 4, 'C')]);
 
         Assert.AreNotEqual(dut.GetHashCode(), other.GetHashCode());
     }

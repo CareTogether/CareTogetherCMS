@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Timelines;
 
@@ -9,7 +10,7 @@ namespace Timelines;
 /// NOTE: Unlike the <see cref="Timeline"/> class, this class only considers
 ///      dates, not times.
 /// </summary>
-public sealed class DateOnlyTimeline
+public sealed class DateOnlyTimeline : IEquatable<DateOnlyTimeline>
 {
     public ImmutableList<DateRange> Ranges { get; init; }
 
@@ -254,21 +255,29 @@ public sealed class DateOnlyTimeline
     }
 
 
-    public override bool Equals(object? obj)
+    public bool Equals(DateOnlyTimeline? other)
+    {
+        return other != null && Ranges.SequenceEqual(other.Ranges);
+    }
+
+    public override bool Equals([NotNullWhen(true)] object? obj)
     {
         if (obj is DateOnlyTimeline other)
-            return Ranges.SequenceEqual(other.Ranges);
+            return Equals(other);
 
         return base.Equals(obj);
     }
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(Ranges);
+        var hashCode = new HashCode();
+        foreach (var range in Ranges)
+            hashCode.Add(range.GetHashCode());
+        return hashCode.ToHashCode();
     }
 }
 
-public sealed class DateOnlyTimeline<T>
+public sealed class DateOnlyTimeline<T> : IEquatable<DateOnlyTimeline<T>>
     where T : notnull
 {
     public ImmutableList<DateRange<T>> Ranges { get; init; }
@@ -299,4 +308,26 @@ public sealed class DateOnlyTimeline<T>
         // Because DateRange is a struct, the 'default' value is a range that has 'Tag' set to default(T).
         // That will be null for reference types, and the default value for value types.
         Ranges.SingleOrDefault(range => range.Contains(value)).Tag;
+
+
+    public bool Equals(DateOnlyTimeline<T>? other)
+    {
+        return other != null && Ranges.SequenceEqual(other.Ranges);
+    }
+
+    public override bool Equals([NotNullWhen(true)] object? obj)
+    {
+        if (obj is DateOnlyTimeline<T> other)
+            return Equals(other);
+
+        return base.Equals(obj);
+    }
+
+    public override int GetHashCode()
+    {
+        var hashCode = new HashCode();
+        foreach (var range in Ranges)
+            hashCode.Add(range.GetHashCode());
+        return hashCode.ToHashCode();
+    }
 }
