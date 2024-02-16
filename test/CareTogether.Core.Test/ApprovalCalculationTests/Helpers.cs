@@ -17,8 +17,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
 
         public static DateOnly D(int day) => new(YEAR, 1, day);
         public static DateTime DT(int day) => new(YEAR, 1, day);
-        public static DateRange DR(int start, int end) => new(D(start), D(end));
-        public static DateRange<T> DR<T>(int start, int end, T tag) => new(D(start), D(end), tag);
+        public static DateRange DR(int start, int? end) => new(D(start), end.HasValue ? D(end.Value) : DateOnly.MaxValue);
+        public static DateRange<T> DR<T>(int start, int? end, T tag) => new(D(start), end.HasValue ? D(end.Value) : DateOnly.MaxValue, tag);
 
         public static void AssertDatesAre(DateOnlyTimeline dut, params int[] dates)
         {

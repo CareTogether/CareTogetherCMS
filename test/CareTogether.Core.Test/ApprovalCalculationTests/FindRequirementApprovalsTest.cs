@@ -1,7 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using CareTogether.Engines.PolicyEvaluation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -13,17 +10,6 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests;
 [TestClass]
 public class FindRequirementApprovalsTest
 {
-    private static DateOnly D(int day) => new(2024, 1, day);
-    private static DateRange DR(int start, int end) => new(D(start), D(end));
-    private static DateRange<T> DR<T>(int start, int end, T tag) => new(D(start), D(end), tag);
-
-    private static void AssertDatesAre(DateOnlyTimeline dut, IEnumerable<int> dates)
-    {
-        // Set the max date to check to something past where we'll be testing.
-        for (var i = 1; i < 20; i++)
-            Assert.AreEqual(dates.Contains(i), dut.Contains(D(i)), $"Failed on {i}");
-    }
-
     [TestMethod]
     public void EmptyInputsReturnsNull()
     {
@@ -71,7 +57,7 @@ public class FindRequirementApprovalsTest
 
         Assert.IsNotNull(result);
         Assert.IsTrue(result.Ranges.SequenceEqual([
-            new DateRange(D(2), DateOnly.MaxValue)
+            new DateRange(H.D(2), DateOnly.MaxValue)
         ]));
     }
 
@@ -86,7 +72,7 @@ public class FindRequirementApprovalsTest
 
         Assert.IsNotNull(result);
         Assert.IsTrue(result.Ranges.SequenceEqual([
-            new DateRange(D(2), DateOnly.MaxValue)
+            new DateRange(H.D(2), DateOnly.MaxValue)
         ]));
     }
 
@@ -101,7 +87,7 @@ public class FindRequirementApprovalsTest
 
         Assert.IsNotNull(result);
         Assert.IsTrue(result.Ranges.SequenceEqual([
-            new DateRange(D(2), D(4))
+            new DateRange(H.D(2), H.D(4))
         ]));
     }
 
@@ -116,8 +102,8 @@ public class FindRequirementApprovalsTest
 
         Assert.IsNotNull(result);
         Assert.IsTrue(result.Ranges.SequenceEqual([
-            new DateRange(D(2), D(4)),
-            new DateRange(D(6), D(9))
+            new DateRange(H.D(2), H.D(4)),
+            new DateRange(H.D(6), H.D(9))
         ]));
     }
 
@@ -132,7 +118,7 @@ public class FindRequirementApprovalsTest
 
         Assert.IsNotNull(result);
         Assert.IsTrue(result.Ranges.SequenceEqual([
-            new DateRange(D(2), D(9))
+            new DateRange(H.D(2), H.D(9))
         ]));
     }
 
@@ -147,7 +133,7 @@ public class FindRequirementApprovalsTest
 
         Assert.IsNotNull(result);
         Assert.IsTrue(result.Ranges.SequenceEqual([
-            new DateRange(D(3), DateOnly.MaxValue)
+            new DateRange(H.D(3), DateOnly.MaxValue)
         ]));
     }
 
@@ -162,7 +148,7 @@ public class FindRequirementApprovalsTest
 
         Assert.IsNotNull(result);
         Assert.IsTrue(result.Ranges.SequenceEqual([
-            new DateRange(D(3), DateOnly.MaxValue)
+            new DateRange(H.D(3), DateOnly.MaxValue)
         ]));
     }
 
@@ -177,7 +163,7 @@ public class FindRequirementApprovalsTest
 
         Assert.IsNotNull(result);
         Assert.IsTrue(result.Ranges.SequenceEqual([
-            new DateRange(D(2), DateOnly.MaxValue)
+            new DateRange(H.D(2), DateOnly.MaxValue)
         ]));
     }
 
@@ -192,7 +178,7 @@ public class FindRequirementApprovalsTest
 
         Assert.IsNotNull(result);
         Assert.IsTrue(result.Ranges.SequenceEqual([
-            new DateRange(D(3), D(6))
+            new DateRange(H.D(3), H.D(6))
         ]));
     }
 
@@ -207,7 +193,7 @@ public class FindRequirementApprovalsTest
 
         Assert.IsNotNull(result);
         Assert.IsTrue(result.Ranges.SequenceEqual([
-            new DateRange(D(3), D(9))
+            new DateRange(H.D(3), H.D(9))
         ]));
     }
 
@@ -222,7 +208,7 @@ public class FindRequirementApprovalsTest
 
         Assert.IsNotNull(result);
         Assert.IsTrue(result.Ranges.SequenceEqual([
-            new DateRange(D(2), DateOnly.MaxValue)
+            new DateRange(H.D(2), DateOnly.MaxValue)
         ]));
     }
 
@@ -251,7 +237,7 @@ public class FindRequirementApprovalsTest
 
         Assert.IsNotNull(result);
         Assert.IsTrue(result.Ranges.SequenceEqual([
-            new DateRange(D(13), D(17))
+            new DateRange(H.D(13), H.D(17))
         ]));
     }
 
@@ -266,7 +252,7 @@ public class FindRequirementApprovalsTest
 
         Assert.IsNotNull(result);
         Assert.IsTrue(result.Ranges.SequenceEqual([
-            new DateRange(D(5), D(17))
+            new DateRange(H.D(5), H.D(17))
         ]));
     }
 }
