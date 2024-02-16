@@ -12,50 +12,6 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
     [TestClass]
     public class CalculateFamilyVolunteerRoleApprovalStatus
     {
-        private static Guid Id(char x) => Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
-        static readonly Guid guid0 = Id('0');
-        static readonly Guid guid1 = Id('1');
-        static readonly Guid guid2 = Id('2');
-        static readonly Guid guid3 = Id('3');
-        static readonly Guid guid4 = Id('4');
-        static readonly Guid guid5 = Id('5');
-        static readonly Guid guid6 = Id('6');
-
-        static ImmutableList<VolunteerFamilyApprovalRequirement> requirements =
-            Helpers.FamilyApprovalRequirements(
-                (RequirementStage.Application, "A", VolunteerFamilyRequirementScope.OncePerFamily),
-                (RequirementStage.Approval, "B", VolunteerFamilyRequirementScope.OncePerFamily),
-                (RequirementStage.Approval, "C", VolunteerFamilyRequirementScope.AllAdultsInTheFamily),
-                (RequirementStage.Approval, "D", VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily),
-                (RequirementStage.Onboarding, "E", VolunteerFamilyRequirementScope.OncePerFamily),
-                (RequirementStage.Onboarding, "F", VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily));
-
-        static Person adult1 = new Person(guid1, true, "Bob", "Smith", Gender.Male, new ExactAge(new DateTime(2000, 1, 1)), "",
-            ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null);
-        static Person adult2 = new Person(guid2, true, "Jane", "Smith", Gender.Female, new ExactAge(new DateTime(2000, 1, 1)), "",
-            ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null);
-        static Person inactiveAdult3 = new Person(guid3, false, "BobDUPLICATE", "Smith", Gender.Male, new ExactAge(new DateTime(2000, 1, 1)), "",
-            ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null);
-        static Person brotherNotInHousehold4 = new Person(guid2, true, "Eric", "Smith", Gender.Male, new ExactAge(new DateTime(2000, 1, 1)), "",
-            ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null);
-        static Person child5 = new Person(guid5, true, "Wanda", "Smith", Gender.Female, new ExactAge(new DateTime(2022, 1, 1)), "",
-            ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null);
-
-        static Family family = new Family(guid0, guid1,
-            ImmutableList<(Person, FamilyAdultRelationshipInfo)>.Empty
-                .Add((adult1, new FamilyAdultRelationshipInfo("Dad", true)))
-                .Add((adult2, new FamilyAdultRelationshipInfo("Mom", true)))
-                /*.Add((inactiveAdult3, new FamilyAdultRelationshipInfo("Dad", true))) //TODO: Reenable
-                .Add((brotherNotInHousehold4, new FamilyAdultRelationshipInfo("Brother", false)))*/, //TODO: Reenable
-            ImmutableList<Person>.Empty
-                .Add(child5),
-            ImmutableList<CustodialRelationship>.Empty
-                .Add(new CustodialRelationship(guid5, guid1, CustodialRelationshipType.ParentWithCustody))
-                .Add(new CustodialRelationship(guid5, guid2, CustodialRelationshipType.ParentWithCustody)),
-            ImmutableList<UploadedDocumentInfo>.Empty, ImmutableList<Guid>.Empty,
-            ImmutableList<CompletedCustomFieldInfo>.Empty, ImmutableList<Activity>.Empty);
-
-
         // [TestMethod]
         // public void TestNotApplied()
         // {

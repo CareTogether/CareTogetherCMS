@@ -13,6 +13,24 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
 {
     internal class Helpers
     {
+        private static Guid Id(char x) => Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
+        public static readonly Guid guid0 = Id('0');
+        public static readonly Guid guid1 = Id('1');
+        public static readonly Guid guid2 = Id('2');
+        public static readonly Guid guid3 = Id('3');
+        public static readonly Guid guid4 = Id('4');
+        public static readonly Guid guid5 = Id('5');
+        public static readonly Guid guid6 = Id('6');
+        public static readonly Guid guid7 = Id('7');
+        public static readonly Guid guid8 = Id('8');
+        public static readonly Guid guid9 = Id('9');
+        public static readonly Guid guida = Id('a');
+        public static readonly Guid guidb = Id('b');
+        public static readonly Guid guidc = Id('c');
+        public static readonly Guid guidd = Id('d');
+        public static readonly Guid guide = Id('e');
+        public static readonly Guid guidf = Id('f');
+
         public const int YEAR = 2024;
 
         public static DateOnly D(int day) => new(YEAR, 1, day);

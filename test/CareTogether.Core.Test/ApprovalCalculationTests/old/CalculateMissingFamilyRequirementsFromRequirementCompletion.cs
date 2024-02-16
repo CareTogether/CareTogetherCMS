@@ -11,16 +11,6 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
     [TestClass]
     public class CalculateMissingFamilyRequirementsFromRequirementCompletion
     {
-        private static Guid Id(char x) => Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
-        static readonly Guid guid0 = Id('0');
-        static readonly Guid guid1 = Id('1');
-        static readonly Guid guid2 = Id('2');
-        static readonly Guid guid3 = Id('3');
-        static readonly Guid guid4 = Id('4');
-        static readonly Guid guid5 = Id('5');
-        static readonly Guid guid6 = Id('6');
-
-
         // [TestMethod]
         // public void TestNoStatusNoneMissing()
         // {

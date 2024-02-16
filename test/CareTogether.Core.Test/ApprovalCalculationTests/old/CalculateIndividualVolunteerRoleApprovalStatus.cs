@@ -11,16 +11,6 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
     [TestClass]
     public class CalculateIndividualVolunteerRoleApprovalStatus
     {
-        static ImmutableList<VolunteerApprovalRequirement> requirements =
-            Helpers.IndividualApprovalRequirements(
-                (RequirementStage.Application, "A"),
-                (RequirementStage.Approval, "B"),
-                (RequirementStage.Approval, "C"),
-                (RequirementStage.Approval, "D"),
-                (RequirementStage.Onboarding, "E"),
-                (RequirementStage.Onboarding, "F"));
-
-
         // [TestMethod]
         // public void TestNotApplied()
         // {
