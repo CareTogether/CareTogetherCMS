@@ -252,6 +252,20 @@ public sealed class DateOnlyTimeline
         // first timeline with the complement of the second.
         return IntersectionWith(ComplementOf(other));
     }
+
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is DateOnlyTimeline other)
+            return Ranges.SequenceEqual(other.Ranges);
+
+        return base.Equals(obj);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Ranges);
+    }
 }
 
 public sealed class DateOnlyTimeline<T>

@@ -763,4 +763,74 @@ public class DateOnlyTimelineTest
 
         Assert.AreEqual(expected, dut.ValueAt(D(day)));
     }
+
+    [TestMethod]
+    public void EqualsWithNullIsFalse()
+    {
+        var dut = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
+
+        Assert.IsFalse(dut.Equals(null));
+    }
+
+    [TestMethod]
+    public void EqualsWithArrayOfDateRangesIsFalse()
+    {
+        var dut = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
+
+        Assert.IsFalse(dut.Equals(new DateRange[] { DR(1, 1), DR(3, 4) }));
+    }
+
+    [TestMethod]
+    public void EqualsWithSameRangesIsTrue()
+    {
+        var dut = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
+        var other = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
+
+        Assert.IsTrue(dut.Equals(other));
+    }
+
+    [TestMethod]
+    public void EqualsWithDifferentRangesIsFalse()
+    {
+        var dut = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
+        var other = new DateOnlyTimeline([DR(1, 1), DR(3, 5)]);
+
+        Assert.IsFalse(dut.Equals(other));
+    }
+
+    [TestMethod]
+    public void EqualsWithDifferentRangesIsFalse2()
+    {
+        var dut = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
+        var other = new DateOnlyTimeline([DR(1, 1)]);
+
+        Assert.IsFalse(dut.Equals(other));
+    }
+
+    [TestMethod]
+    public void GetHashCodeIsConsistent()
+    {
+        var dut = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
+        var other = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
+
+        Assert.AreEqual(dut.GetHashCode(), other.GetHashCode());
+    }
+
+    [TestMethod]
+    public void GetHashCodeIsConsistent2()
+    {
+        var dut = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
+        var other = new DateOnlyTimeline([DR(1, 1), DR(3, 5)]);
+
+        Assert.AreNotEqual(dut.GetHashCode(), other.GetHashCode());
+    }
+
+    [TestMethod]
+    public void GetHashCodeIsConsistent3()
+    {
+        var dut = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
+        var other = new DateOnlyTimeline([DR(1, 1)]);
+
+        Assert.AreNotEqual(dut.GetHashCode(), other.GetHashCode());
+    }
 }
