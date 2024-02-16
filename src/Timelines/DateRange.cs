@@ -68,7 +68,7 @@ public readonly struct DateRange : IEquatable<DateRange>
     }
 }
 
-public readonly struct DateRange<T>
+public readonly struct DateRange<T> : IEquatable<DateRange<T>>
 {
     public readonly DateOnly Start;
     public readonly DateOnly End;
@@ -93,6 +93,26 @@ public readonly struct DateRange<T>
     public bool Contains(DateOnly value) =>
         value >= Start && value <= End;
 
+
+    public bool Equals(DateRange<T> other)
+    {
+        return Start == other.Start && End == other.End && (
+            (Tag == null && other.Tag == null) ||
+            (Tag != null && Tag.Equals(other.Tag)));
+    }
+
+    public override bool Equals([NotNullWhen(true)] object? obj)
+    {
+        if (obj is DateRange other)
+            return Equals(other);
+
+        return base.Equals(obj);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Start, End, Tag);
+    }
 
     public override string ToString()
     {

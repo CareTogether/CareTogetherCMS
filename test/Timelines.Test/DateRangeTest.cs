@@ -1,6 +1,4 @@
-﻿using System.Collections.Immutable;
-
-namespace Timelines.Test;
+﻿namespace Timelines.Test;
 
 [TestClass]
 public class DateRangeTest
@@ -8,6 +6,7 @@ public class DateRangeTest
     private static DateOnly D(int day) => new(2024, 1, day);
     private static DateRange DR(int start, int end) => new(D(start), D(end));
     private static DateRange DR(int start) => new(D(start));
+    private static DateRange<T> DR<T>(int start, int end, T tag) => new(D(start), D(end), tag);
 
 
     [TestMethod]
@@ -253,6 +252,90 @@ public class DateRangeTest
     {
         var dut = new DateRange<char>(D(start), D(end), 'A');
         Assert.AreEqual(expected, dut.Contains(D(test)));
+    }
+
+    [TestMethod]
+    public void TaggedEqualsReturnsTrueForSameValues()
+    {
+        var dut = DR(1, 2, 'A');
+        Assert.IsTrue(dut.Equals(DR(1, 2, 'A')));
+    }
+
+    [TestMethod]
+    public void TaggedEqualsReturnsFalseForDifferentStart()
+    {
+        var dut = DR(1, 2, 'A');
+        Assert.IsFalse(dut.Equals(DR(2, 2, 'A')));
+    }
+
+    [TestMethod]
+    public void TaggedEqualsReturnsFalseForDifferentEnd()
+    {
+        var dut = DR(1, 2, 'A');
+        Assert.IsFalse(dut.Equals(DR(1, 3, 'A')));
+    }
+
+    [TestMethod]
+    public void TaggedEqualsReturnsFalseForDifferentStartAndEnd()
+    {
+        var dut = DR(1, 2, 'A');
+        Assert.IsFalse(dut.Equals(DR(2, 3, 'A')));
+    }
+
+    [TestMethod]
+    public void TaggedEqualsReturnsFalseForDifferentTag()
+    {
+        var dut = DR(1, 2, 'A');
+        Assert.IsFalse(dut.Equals(DR(1, 2, 'B')));
+    }
+
+    [TestMethod]
+    public void TaggedEqualsReturnsFalseForNull()
+    {
+        var dut = DR(1, 2, 'A');
+        Assert.IsFalse(dut.Equals(null));
+    }
+
+    [TestMethod]
+    public void TaggedEqualsReturnsFalseForDifferentType()
+    {
+        var dut = DR(1, 2, 'A');
+        Assert.IsFalse(dut.Equals(1));
+    }
+
+    [TestMethod]
+    public void TaggedGetHashCodeReturnsSameValueForSameValues()
+    {
+        var dut = DR(1, 2, 'A');
+        Assert.AreEqual(dut.GetHashCode(), DR(1, 2, 'A').GetHashCode());
+    }
+
+    [TestMethod]
+    public void TaggedGetHashCodeReturnsDifferentValueForDifferentStart()
+    {
+        var dut = DR(1, 2, 'A');
+        Assert.AreNotEqual(dut.GetHashCode(), DR(2, 2, 'A').GetHashCode());
+    }
+
+    [TestMethod]
+    public void TaggedGetHashCodeReturnsDifferentValueForDifferentEnd()
+    {
+        var dut = DR(1, 2, 'A');
+        Assert.AreNotEqual(dut.GetHashCode(), DR(1, 3, 'A').GetHashCode());
+    }
+
+    [TestMethod]
+    public void TaggedGetHashCodeReturnsDifferentValueForDifferentStartAndEnd()
+    {
+        var dut = DR(1, 2, 'A');
+        Assert.AreNotEqual(dut.GetHashCode(), DR(2, 3, 'A').GetHashCode());
+    }
+
+    [TestMethod]
+    public void TaggedGetHashCodeReturnsDifferentValueForDifferentTag()
+    {
+        var dut = DR(1, 2, 'A');
+        Assert.AreNotEqual(dut.GetHashCode(), DR(1, 2, 'B').GetHashCode());
     }
 
     [TestMethod]
