@@ -1,11 +1,6 @@
-﻿using CareTogether.Engines;
-using CareTogether.Engines.PolicyEvaluation;
-using CareTogether.Resources;
-using CareTogether.Resources.Directory;
-using CareTogether.Resources.Policies;
+﻿using CareTogether.Engines.PolicyEvaluation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections.Immutable;
 using System.Linq;
 using Timelines;
 using H = CareTogether.Core.Test.ApprovalCalculationTests.Helpers;
