@@ -58,5 +58,17 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 ])),
                 result);
         }
+
+        [TestMethod]
+        public void WhenSomeExempted()
+        {
+            Assert.Inconclusive("Not implemented");
+        }
+
+        [TestMethod]
+        public void WhenSomeCompletedAndSomeExempted()
+        {
+            Assert.Inconclusive("Not implemented");
+        }
     }
 }

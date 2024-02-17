@@ -21,11 +21,12 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
             //     exemptedRequirements: []
             // );
 
-            // Assert.AreEqual(new IndividualRoleRequirementCompletionStatus(
+            // Assert.AreEqual(new IndividualRoleVersionApprovalStatus(
             //     ActionName: "A",
             //     Stage: RequirementStage.Approval,
             //     WhenMet: null),
             //     result);
+            Assert.Inconclusive("Not implemented");
         }
 
         [TestMethod]
@@ -49,7 +50,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
             //     ]
             // );
 
-            // Assert.AreEqual(new IndividualRoleRequirementCompletionStatus(
+            // Assert.AreEqual(new IndividualRoleVersionApprovalStatus(
             //     ActionName: "A",
             //     Stage: RequirementStage.Approval,
             //     WhenMet: new DateOnlyTimeline([
@@ -57,6 +58,19 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
             //         H.DR(14, null)
             //     ])),
             //     result);
+            Assert.Inconclusive("Not implemented");
+        }
+
+        [TestMethod]
+        public void WhenSomeExempted()
+        {
+            Assert.Inconclusive("Not implemented");
+        }
+
+        [TestMethod]
+        public void WhenSomeCompletedAndSomeExempted()
+        {
+            Assert.Inconclusive("Not implemented");
         }
     }
 }
