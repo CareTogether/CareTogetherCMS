@@ -14,10 +14,10 @@ namespace CareTogether.Engines.PolicyEvaluation
             VolunteerPolicy volunteerPolicy, Family family,
             ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
             ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
-            ImmutableList<RemovedRole> removedFamilyRoles,
+            ImmutableList<RoleRemoval> familyRoleRemovals,
             ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>> exemptedIndividualRequirements,
-            ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles)
+            ImmutableDictionary<Guid, ImmutableList<RoleRemoval>> individualRoleRemovals)
         {
             var allAdultsIndividualApprovalStatus = family.Adults
                 .Select(adultFamilyEntry =>
@@ -28,13 +28,13 @@ namespace CareTogether.Engines.PolicyEvaluation
                         .GetValueOrEmptyList(person.Id);
                     var exemptedRequirements = exemptedIndividualRequirements
                         .GetValueOrEmptyList(person.Id);
-                    var removedRoles = removedIndividualRoles
+                    var roleRemovals = individualRoleRemovals
                         .GetValueOrEmptyList(person.Id);
 
                     var individualApprovalStatus =
                         IndividualApprovalCalculations.CalculateIndividualApprovalStatus(
                             volunteerPolicy.VolunteerRoles,
-                            completedRequirements, exemptedRequirements, removedRoles);
+                            completedRequirements, exemptedRequirements, roleRemovals);
 
                     return (person.Id, individualApprovalStatus);
                 })
@@ -45,9 +45,9 @@ namespace CareTogether.Engines.PolicyEvaluation
                     volunteerPolicy.VolunteerFamilyRoles,
                     family,
                     completedFamilyRequirements, exemptedFamilyRequirements,
-                    removedFamilyRoles,
+                    familyRoleRemovals,
                     completedIndividualRequirements, exemptedIndividualRequirements,
-                    removedIndividualRoles);
+                    individualRoleRemovals);
 
             return new FamilyApprovalStatus(
                 allAdultsIndividualApprovalStatus,

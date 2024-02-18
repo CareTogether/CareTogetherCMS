@@ -84,10 +84,10 @@ namespace CareTogether.Engines.PolicyEvaluation
             Guid organizationId, Guid locationId, Family family,
             ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
             ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
-            ImmutableList<RemovedRole> removedFamilyRoles,
+            ImmutableList<RoleRemoval> familyRoleRemovals,
             ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>> exemptedIndividualRequirements,
-            ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles);
+            ImmutableDictionary<Guid, ImmutableList<RoleRemoval>> individualRoleRemovals);
 
         Task<ReferralStatus> CalculateReferralStatusAsync(
             Guid organizationId, Guid locationId, Family family,

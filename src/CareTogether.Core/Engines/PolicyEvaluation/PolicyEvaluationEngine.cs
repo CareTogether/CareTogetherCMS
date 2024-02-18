@@ -23,17 +23,17 @@ namespace CareTogether.Engines.PolicyEvaluation
         public async Task<FamilyApprovalStatus> CalculateCombinedFamilyApprovalsAsync(Guid organizationId, Guid locationId,
             Family family, ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
             ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
-            ImmutableList<RemovedRole> removedFamilyRoles,
+            ImmutableList<RoleRemoval> familyRoleRemovals,
             ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>> exemptedIndividualRequirements,
-            ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles)
+            ImmutableDictionary<Guid, ImmutableList<RoleRemoval>> individualRoleRemovals)
         {
             var policy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
 
             return ApprovalCalculations.CalculateCombinedFamilyApprovals(
                 policy.VolunteerPolicy, family,
-                completedFamilyRequirements, exemptedFamilyRequirements, removedFamilyRoles,
-                completedIndividualRequirements, exemptedIndividualRequirements, removedIndividualRoles);
+                completedFamilyRequirements, exemptedFamilyRequirements, familyRoleRemovals,
+                completedIndividualRequirements, exemptedIndividualRequirements, individualRoleRemovals);
         }
 
 

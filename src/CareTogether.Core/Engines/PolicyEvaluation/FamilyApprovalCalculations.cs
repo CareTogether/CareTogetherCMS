@@ -17,22 +17,23 @@ namespace CareTogether.Engines.PolicyEvaluation
             Family family,
             ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
             ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
-            ImmutableList<RemovedRole> removedFamilyRoles,
+            ImmutableList<RoleRemoval> familyRoleRemovals,
             ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>> exemptedIndividualRequirements,
-            ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles)
+            ImmutableDictionary<Guid, ImmutableList<RoleRemoval>> individualRoleRemovals)
         {
             var allFamilyRoleApprovals = volunteerFamilyRoles
                 .Where(rolePolicy =>
-                    !removedFamilyRoles.Any(x => x.RoleName == rolePolicy.Key))
+                    !familyRoleRemovals.Any(x => x.RoleName == rolePolicy.Key))
                 .ToImmutableDictionary(
                     rolePolicy => rolePolicy.Key,
                     rolePolicy => CalculateFamilyRoleApprovalStatus(
                         rolePolicy.Key, rolePolicy.Value,
                         family,
                         completedFamilyRequirements, exemptedFamilyRequirements,
+                        familyRoleRemovals,
                         completedIndividualRequirements, exemptedIndividualRequirements,
-                        removedIndividualRoles));
+                        individualRoleRemovals));
 
             return allFamilyRoleApprovals;
         }
@@ -42,17 +43,19 @@ namespace CareTogether.Engines.PolicyEvaluation
             string roleName, VolunteerFamilyRolePolicy rolePolicy, Family family,
             ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
             ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
+            ImmutableList<RoleRemoval> familyRoleRemovals,
             ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>> exemptedIndividualRequirements,
-            ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles)
+            ImmutableDictionary<Guid, ImmutableList<RoleRemoval>> individualRoleRemovals)
         {
             var roleVersionApprovals = rolePolicy.PolicyVersions
                 .Select(policyVersion =>
                     CalculateFamilyRoleVersionApprovalStatus(
                         roleName, policyVersion, family,
                         completedFamilyRequirements, exemptedFamilyRequirements,
+                        familyRoleRemovals,
                         completedIndividualRequirements, exemptedIndividualRequirements,
-                        removedIndividualRoles))
+                        individualRoleRemovals))
                 .ToImmutableList();
 
             var effectiveRoleApprovalStatus =
@@ -70,9 +73,10 @@ namespace CareTogether.Engines.PolicyEvaluation
             Family family,
             ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
             ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
+            ImmutableList<RoleRemoval> familyRoleRemovals,
             ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>> exemptedIndividualRequirements,
-            ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles)
+            ImmutableDictionary<Guid, ImmutableList<RoleRemoval>> individualRoleRemovals)
         {
             // Ignore any inactive (i.e., soft-deleted) adults.
             var activeAdults = family.Adults
@@ -99,7 +103,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                         requirement.ActionName, requirement.Stage,
                         requirement.Scope, policyVersion.SupersededAtUtc,
                         completedFamilyRequirements, exemptedFamilyRequirements,
-                        removedIndividualRoles, activeAdults))
+                        individualRoleRemovals, activeAdults))
                 .ToImmutableList();
 
             // Calculate the combined approval status timeline for this
@@ -107,7 +111,9 @@ namespace CareTogether.Engines.PolicyEvaluation
             var roleVersionApprovalStatus =
                 SharedCalculations.CalculateRoleVersionApprovalStatus(
                     requirementCompletions
-                        .Select(x => (x.Stage, x.WhenMet)).ToImmutableList());
+                        .Select(x => (x.Stage, x.WhenMet)).ToImmutableList(),
+                    familyRoleRemovals
+                        .Where(x => x.RoleName == roleName).ToImmutableList());
 
             return new FamilyRoleVersionApprovalStatus(
                 policyVersion.Version, roleVersionApprovalStatus,
@@ -121,7 +127,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             DateTime? policyVersionSupersededAtUtc,
             ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
             ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
-            ImmutableDictionary<Guid, ImmutableList<RemovedRole>> removedIndividualRoles,
+            ImmutableDictionary<Guid, ImmutableList<RoleRemoval>> individualRoleRemovals,
             ImmutableList<(Guid Id, ImmutableList<CompletedRequirementInfo> CompletedRequirements,
                 ImmutableList<ExemptedRequirementInfo> ExemptedRequirements)> activeAdults)
         {
@@ -140,8 +146,14 @@ namespace CareTogether.Engines.PolicyEvaluation
                     .ToImmutableList(),
                 VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily => activeAdults
                     .Where(a =>
-                        !removedIndividualRoles.TryGetValue(a.Id, out var removedRoles) ||
-                        removedRoles.All(x => x.RoleName != roleName))
+                        // This works for now because 1) the previous behavior was to remove or reinstate regardless
+                        // of time and 2) the UI currently doesn't provide a way to back- or post-date removals.
+                        // That means that the evaluation of the new removals model using these rules will mimic the
+                        // previous behavior.
+                        //TODO: Instead of this hackery, we should build an actual 'participating' timeline
+                        //      for each adult and intersect those with the same people's requirement completions.
+                        !individualRoleRemovals.TryGetValue(a.Id, out var removedRoles) ||
+                        removedRoles.All(x => x.RoleName != roleName || x.EffectiveUntil != null))
                     .Select(a => new FamilyRequirementStatusDetail(a.Id,
                         SharedCalculations.FindRequirementApprovals(
                             requirementActionName, policyVersionSupersededAtUtc,
