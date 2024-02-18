@@ -5506,6 +5506,8 @@ export enum RoleApprovalStatus {
     Expired = 1,
     Approved = 2,
     Onboarded = 3,
+    Inactive = 4,
+    Denied = 5,
 }
 
 export class FamilyRoleVersionApprovalStatus implements IFamilyRoleVersionApprovalStatus {

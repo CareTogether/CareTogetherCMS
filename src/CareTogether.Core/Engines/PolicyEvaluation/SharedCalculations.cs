@@ -1,4 +1,5 @@
 ﻿using CareTogether.Resources;
+using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Policies;
 using System;
 using System.Collections.Generic;
@@ -50,6 +51,8 @@ namespace CareTogether.Engines.PolicyEvaluation
         /// "positive" approval value possible at any given time. For example,
         /// if there is a Prospective approval in one role version and an Approved
         /// approval in another version of the same role, the result is Approved.
+        /// 
+        /// However, if there are any role removals, they will take precedence.
         /// </summary>
         internal static DateOnlyTimeline<RoleApprovalStatus>?
             CalculateEffectiveRoleApprovalStatus(
@@ -71,6 +74,10 @@ namespace CareTogether.Engines.PolicyEvaluation
                 return DateOnlyTimeline.UnionOf(matchingRanges);
             }
 
+            var allDenied = AllRangesWith(RoleApprovalStatus.Denied);
+            var allInactive = AllRangesWith(RoleApprovalStatus.Inactive);
+            var allRemovals = DateOnlyTimeline.UnionOf(ImmutableList.Create(allDenied, allInactive));
+
             var allOnboarded = AllRangesWith(RoleApprovalStatus.Onboarded);
             var allApproved = AllRangesWith(RoleApprovalStatus.Approved);
             var allExpired = AllRangesWith(RoleApprovalStatus.Expired);
@@ -79,19 +86,28 @@ namespace CareTogether.Engines.PolicyEvaluation
             // Now evaluate the impact of role approval status precedence.
             //TODO: Handle this logic generically via IComparable<T> as a
             //      method directly on DateOnlyTimeline<T>?
-            var onboarded = allOnboarded;
+            var denied = allDenied; // Denied takes precedence over everything else
+            var inactive = allInactive
+                ?.Difference(allDenied);
+            var onboarded = allOnboarded
+                ?.Difference(allRemovals);
             var approved = allApproved
-                ?.Difference(onboarded);
+                ?.Difference(onboarded)
+                ?.Difference(allRemovals);
             var expired = allExpired
                 ?.Difference(approved)
-                ?.Difference(onboarded);
+                ?.Difference(onboarded)
+                ?.Difference(allRemovals);
             var prospective = allProspective
                 ?.Difference(expired)
                 ?.Difference(approved)
-                ?.Difference(onboarded);
+                ?.Difference(onboarded)
+                ?.Difference(allRemovals);
 
             // Merge the results (onboarded, approved, expired, prospective) into a tagged timeline.
             var taggedRanges = ImmutableList.Create(
+                (RoleApprovalStatus.Denied, denied),
+                (RoleApprovalStatus.Inactive, inactive),
                 (RoleApprovalStatus.Onboarded, onboarded),
                 (RoleApprovalStatus.Approved, approved),
                 (RoleApprovalStatus.Expired, expired),
@@ -111,7 +127,8 @@ namespace CareTogether.Engines.PolicyEvaluation
         internal static DateOnlyTimeline<RoleApprovalStatus>?
             CalculateRoleVersionApprovalStatus(
             ImmutableList<(RequirementStage Stage, DateOnlyTimeline? WhenMet)>
-                requirementCompletionStatus)
+                requirementCompletionStatus,
+            ImmutableList<RoleRemoval> removalsOfThisRole)
         {
             // Instead of a single status and an expiration, return a tagged timeline with
             // *every* date range for each effective RoleApprovalStatus, so that the
@@ -146,12 +163,33 @@ namespace CareTogether.Engines.PolicyEvaluation
                 ?.Difference(approvedOrOnboarded)
                 ?.Difference(expired);
 
+            // Calculate the timelines for removals. Note that there could be multiple overlapping removals,
+            // so we need to calculate the union of all of them, by removal reason. The reasons of interest are
+            // Inactive and Denied; OptOut is not relevant for role approval status since it only applies to
+            // individual family members.
+            var inactive = DateOnlyTimeline.UnionOf(removalsOfThisRole
+                .Where(removal => removal.Reason == RoleRemovalReason.Inactive)
+                .Select(removal => new DateRange(
+                    removal.EffectiveSince,
+                    removal.EffectiveUntil ?? DateOnly.MaxValue))
+                .ToImmutableList());
+            var denied = DateOnlyTimeline.UnionOf(removalsOfThisRole
+                .Where(removal => removal.Reason == RoleRemovalReason.Denied)
+                .Select(removal => new DateRange(
+                    removal.EffectiveSince,
+                    removal.EffectiveUntil ?? DateOnly.MaxValue))
+                .ToImmutableList());
+
+            var allRemovals = DateOnlyTimeline.UnionOf(ImmutableList.Create(inactive, denied));
+
             // Merge the results (onboarded, approved, expired, prospective) into a tagged timeline.
             var taggedRanges = ImmutableList.Create(
-                (RoleApprovalStatus.Onboarded, onboarded),
-                (RoleApprovalStatus.Approved, approvedOnly),
-                (RoleApprovalStatus.Expired, expired),
-                (RoleApprovalStatus.Prospective, prospectiveOnly)
+                (RoleApprovalStatus.Denied, denied),
+                (RoleApprovalStatus.Inactive, inactive?.Difference(denied)), // Denied takes precedence over Inactive
+                (RoleApprovalStatus.Onboarded, onboarded?.Difference(allRemovals)),
+                (RoleApprovalStatus.Approved, approvedOnly?.Difference(allRemovals)),
+                (RoleApprovalStatus.Expired, expired?.Difference(allRemovals)),
+                (RoleApprovalStatus.Prospective, prospectiveOnly?.Difference(allRemovals))
             ).SelectMany(x => x.Item2?.Ranges
                 .Select(y => new DateRange<RoleApprovalStatus>(y.Start, y.End, x.Item1))
                 ?? ImmutableList<DateRange<RoleApprovalStatus>>.Empty)

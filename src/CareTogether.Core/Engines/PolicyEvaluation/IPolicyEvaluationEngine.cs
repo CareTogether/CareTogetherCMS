@@ -1,4 +1,4 @@
-using CareTogether.Resources;
+﻿using CareTogether.Resources;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
@@ -56,7 +56,9 @@ namespace CareTogether.Engines.PolicyEvaluation
         Prospective = 0,
         Expired = 1,
         Approved = 2,
-        Onboarded = 3
+        Onboarded = 3,
+        Inactive = 4,
+        Denied = 5
     };
 
     public sealed record ReferralStatus(
