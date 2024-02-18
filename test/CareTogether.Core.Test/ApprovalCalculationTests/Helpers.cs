@@ -76,9 +76,9 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     exemption.Item1, DueDate: null, "", exemption.Item3.HasValue ? new DateTime(YEAR, 1, exemption.Item3.Value) : null))
             .ToImmutableList();
 
-        public static ImmutableList<RemovedRole> Removed(params string[] removedRoles) =>
+        public static ImmutableList<RoleRemoval> Removed(params string[] removedRoles) =>
             removedRoles.Select(removed =>
-                new RemovedRole(removed, RoleRemovalReason.OptOut, null))
+                new RoleRemoval(removed, RoleRemovalReason.OptOut, DateOnly.MinValue, null, null))
             .ToImmutableList();
 
         public static
@@ -117,13 +117,13 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                             .ToImmutableList())));
 
         public static
-            ImmutableDictionary<Guid, ImmutableList<RemovedRole>>
+            ImmutableDictionary<Guid, ImmutableList<RoleRemoval>>
             RemovedIndividualRoles(params (Guid, string)[] removedIndividualRoles) =>
-            ImmutableDictionary<Guid, ImmutableList<RemovedRole>>.Empty.AddRange(
+            ImmutableDictionary<Guid, ImmutableList<RoleRemoval>>.Empty.AddRange(
                 removedIndividualRoles
                     .GroupBy(removed => removed.Item1, removed => removed.Item2)
-                    .Select(removed => new KeyValuePair<Guid, ImmutableList<RemovedRole>>(removed.Key,
-                        removed.Select(r => new RemovedRole(r, RoleRemovalReason.OptOut, AdditionalComments: null))
+                    .Select(removed => new KeyValuePair<Guid, ImmutableList<RoleRemoval>>(removed.Key,
+                        removed.Select(r => new RoleRemoval(r, RoleRemovalReason.OptOut, DateOnly.MinValue, null, AdditionalComments: null))
                         .ToImmutableList())));
 
         public static

@@ -167,7 +167,7 @@ namespace CareTogether.Managers
                 x => x.Value.ExemptedRequirements);
             var removedIndividualRoles = entry.IndividualEntries.ToImmutableDictionary(
                 x => x.Key,
-                x => x.Value.RemovedRoles);
+                x => x.Value.RoleRemovals);
 
             // Apply default action expiration policies to completed requirements before running approval calculations.
             var applyValidity = (CompletedRequirementInfo completed) =>
@@ -179,12 +179,12 @@ namespace CareTogether.Managers
                     .Select(applyValidity).ToImmutableList());
 
             var combinedFamilyApprovals = await policyEvaluationEngine.CalculateCombinedFamilyApprovalsAsync(
-                organizationId, locationId, family, completedFamilyRequirementsWithExpiration, entry.ExemptedRequirements, entry.RemovedRoles,
+                organizationId, locationId, family, completedFamilyRequirementsWithExpiration, entry.ExemptedRequirements, entry.RoleRemovals,
                 completedIndividualRequirementsWithExpiration, exemptedIndividualRequirements, removedIndividualRoles);
 
             var volunteerFamilyInfo = new VolunteerFamilyInfo(
                 combinedFamilyApprovals.FamilyRoleApprovals,
-                completedFamilyRequirementsWithExpiration, entry.ExemptedRequirements, entry.RemovedRoles,
+                completedFamilyRequirementsWithExpiration, entry.ExemptedRequirements, entry.RoleRemovals,
                 combinedFamilyApprovals.IndividualApprovals.ToImmutableDictionary(
                     x => x.Key,
                     x =>
@@ -195,7 +195,7 @@ namespace CareTogether.Managers
                             x.Value.ApprovalStatusByRole,
                             completedRequirements ?? ImmutableList<CompletedRequirementInfo>.Empty,
                             individualEntry?.ExemptedRequirements ?? ImmutableList<ExemptedRequirementInfo>.Empty,
-                            individualEntry?.RemovedRoles ?? ImmutableList<RemovedRole>.Empty);
+                            individualEntry?.RoleRemovals ?? ImmutableList<RoleRemoval>.Empty);
                     }),
                 entry.History);
 

@@ -93,7 +93,6 @@ namespace CareTogether.Api.OData
         IEnumerable<Role> Roles,
         IEnumerable<FamilyRoleApproval> FamilyRoleApprovals,
         IEnumerable<IndividualRoleApproval> IndividualRoleApprovals,
-        IEnumerable<IndividualRemovedRole> IndividualRemovedRoles,
         IEnumerable<Referral> Referrals,
         IEnumerable<Arrangement> Arrangements,
         IEnumerable<ArrangementType> ArrangementTypes,
@@ -161,13 +160,6 @@ namespace CareTogether.Api.OData
         {
             var liveModel = await RenderLiveModelAsync();
             return liveModel.IndividualRoleApprovals;
-        }
-
-        [HttpGet("IndividualRemovedRoles")]
-        public async Task<IEnumerable<IndividualRemovedRole>> GetIndividualRemovedRolesAsync()
-        {
-            var liveModel = await RenderLiveModelAsync();
-            return liveModel.IndividualRemovedRoles;
         }
 
         [HttpGet("Referral")]
@@ -267,8 +259,6 @@ namespace CareTogether.Api.OData
                 .SelectMany(x => RenderFamilyRoleApprovals(x.Item1, x.Item2, roles)).ToArray();
             var individualRoleApprovals = familiesWithInfo
                 .SelectMany(x => RenderIndividualRoleApprovals(x.Item1, x.Item2, people, roles)).ToArray();
-            var individualRemovedRoles = familiesWithInfo
-                .SelectMany(x => RenderIndividualRemovedRoles(x.Item1, x.Item2, people, roles)).ToArray();
 
             var referrals = familiesWithInfo.SelectMany(x => RenderReferrals(x.Item1, x.Item2)).ToArray();
 
@@ -287,7 +277,7 @@ namespace CareTogether.Api.OData
             var individualFunctionAssignments = familiesWithInfo.SelectMany(x => RenderIndividualFunctionAssignments(x.Item1, x.Item2, families, people, arrangements)).ToArray();
 
             return new LiveModel(locations, families, people,
-                roles, familyRoleApprovals, individualRoleApprovals, individualRemovedRoles,
+                roles, familyRoleApprovals, individualRoleApprovals,
                 referrals, arrangements, arrangementTypes,
                 childLocationRecords, familyFunctionAssignments, individualFunctionAssignments);
         }
@@ -374,17 +364,6 @@ namespace CareTogether.Api.OData
                             roles.Single(role => role.Name == ira.Key), ira.Key,
                             ira.Value.EffectiveRoleApprovalStatus?.Ranges)))
                 ?? Enumerable.Empty<IndividualRoleApproval>();
-        }
-
-        private static IEnumerable<IndividualRemovedRole> RenderIndividualRemovedRoles(
-            CombinedFamilyInfo familyInfo, Family family, Person[] people, Role[] roles)
-        {
-            return familyInfo.VolunteerFamilyInfo?.IndividualVolunteers
-                .SelectMany(individual => individual.Value.RemovedRoles
-                    .Select(rr => new IndividualRemovedRole(
-                        people.Single(person => person.Id == individual.Key), individual.Key,
-                        roles.Single(role => role.Name == rr.RoleName), rr.RoleName)))
-                ?? Enumerable.Empty<IndividualRemovedRole>();
         }
 
         private static IEnumerable<Referral> RenderReferrals(

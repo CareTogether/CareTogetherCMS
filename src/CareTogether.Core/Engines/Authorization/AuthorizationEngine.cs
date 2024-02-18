@@ -609,16 +609,16 @@ namespace CareTogether.Engines.Authorization
                 FamilyRoleApprovals = contextPermissions.Contains(Permission.ViewApprovalStatus)
                     ? volunteerFamilyInfo.FamilyRoleApprovals
                     : ImmutableDictionary<string, FamilyRoleApprovalStatus>.Empty,
-                RemovedRoles = contextPermissions.Contains(Permission.ViewApprovalStatus)
-                    ? volunteerFamilyInfo.RemovedRoles
-                    : ImmutableList<RemovedRole>.Empty,
+                RoleRemovals = contextPermissions.Contains(Permission.ViewApprovalStatus)
+                    ? volunteerFamilyInfo.RoleRemovals
+                    : ImmutableList<RoleRemoval>.Empty,
                 IndividualVolunteers = volunteerFamilyInfo.IndividualVolunteers.ToImmutableDictionary(
                     keySelector: kvp => kvp.Key,
                     elementSelector: kvp => kvp.Value with
                     {
-                        RemovedRoles = contextPermissions.Contains(Permission.ViewApprovalStatus)
-                            ? kvp.Value.RemovedRoles
-                            : ImmutableList<RemovedRole>.Empty,
+                        RoleRemovals = contextPermissions.Contains(Permission.ViewApprovalStatus)
+                            ? kvp.Value.RoleRemovals
+                            : ImmutableList<RoleRemoval>.Empty,
                         ApprovalStatusByRole = contextPermissions.Contains(Permission.ViewApprovalStatus)
                             ? kvp.Value.ApprovalStatusByRole
                             : ImmutableDictionary<string, IndividualRoleApprovalStatus>.Empty,

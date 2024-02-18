@@ -3186,10 +3186,10 @@
               "$ref": "#/components/schemas/ExemptedRequirementInfo"
             }
           },
-          "removedRoles": {
+          "roleRemovals": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/RemovedRole"
+              "$ref": "#/components/schemas/RoleRemoval"
             }
           },
           "individualVolunteers": {
@@ -3380,7 +3380,7 @@
           }
         }
       },
-      "RemovedRole": {
+      "RoleRemoval": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -3389,6 +3389,15 @@
           },
           "reason": {
             "$ref": "#/components/schemas/RoleRemovalReason"
+          },
+          "effectiveSince": {
+            "type": "string",
+            "format": "date"
+          },
+          "effectiveUntil": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
           },
           "additionalComments": {
             "type": "string",
@@ -3432,10 +3441,10 @@
               "$ref": "#/components/schemas/ExemptedRequirementInfo"
             }
           },
-          "removedRoles": {
+          "roleRemovals": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/RemovedRole"
+              "$ref": "#/components/schemas/RoleRemoval"
             }
           }
         }

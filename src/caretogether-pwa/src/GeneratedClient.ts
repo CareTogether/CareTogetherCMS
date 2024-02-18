@@ -5253,7 +5253,7 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
     familyRoleApprovals?: { [key: string]: FamilyRoleApprovalStatus; };
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
-    removedRoles?: RemovedRole[];
+    roleRemovals?: RoleRemoval[];
     individualVolunteers?: { [key: string]: VolunteerInfo; };
     history?: Activity[];
 
@@ -5285,10 +5285,10 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
                 for (let item of _data["exemptedRequirements"])
                     this.exemptedRequirements!.push(ExemptedRequirementInfo.fromJS(item));
             }
-            if (Array.isArray(_data["removedRoles"])) {
-                this.removedRoles = [] as any;
-                for (let item of _data["removedRoles"])
-                    this.removedRoles!.push(RemovedRole.fromJS(item));
+            if (Array.isArray(_data["roleRemovals"])) {
+                this.roleRemovals = [] as any;
+                for (let item of _data["roleRemovals"])
+                    this.roleRemovals!.push(RoleRemoval.fromJS(item));
             }
             if (_data["individualVolunteers"]) {
                 this.individualVolunteers = {} as any;
@@ -5331,10 +5331,10 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
             for (let item of this.exemptedRequirements)
                 data["exemptedRequirements"].push(item.toJSON());
         }
-        if (Array.isArray(this.removedRoles)) {
-            data["removedRoles"] = [];
-            for (let item of this.removedRoles)
-                data["removedRoles"].push(item.toJSON());
+        if (Array.isArray(this.roleRemovals)) {
+            data["roleRemovals"] = [];
+            for (let item of this.roleRemovals)
+                data["roleRemovals"].push(item.toJSON());
         }
         if (this.individualVolunteers) {
             data["individualVolunteers"] = {};
@@ -5356,7 +5356,7 @@ export interface IVolunteerFamilyInfo {
     familyRoleApprovals?: { [key: string]: FamilyRoleApprovalStatus; };
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
-    removedRoles?: RemovedRole[];
+    roleRemovals?: RoleRemoval[];
     individualVolunteers?: { [key: string]: VolunteerInfo; };
     history?: Activity[];
 }
@@ -5746,12 +5746,14 @@ export interface IFamilyRequirementStatusDetail {
     whenMet?: DateOnlyTimeline | undefined;
 }
 
-export class RemovedRole implements IRemovedRole {
+export class RoleRemoval implements IRoleRemoval {
     roleName?: string;
     reason?: RoleRemovalReason;
+    effectiveSince?: Date;
+    effectiveUntil?: Date | undefined;
     additionalComments?: string | undefined;
 
-    constructor(data?: IRemovedRole) {
+    constructor(data?: IRoleRemoval) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -5764,13 +5766,15 @@ export class RemovedRole implements IRemovedRole {
         if (_data) {
             this.roleName = _data["roleName"];
             this.reason = _data["reason"];
+            this.effectiveSince = _data["effectiveSince"] ? new Date(_data["effectiveSince"].toString()) : <any>undefined;
+            this.effectiveUntil = _data["effectiveUntil"] ? new Date(_data["effectiveUntil"].toString()) : <any>undefined;
             this.additionalComments = _data["additionalComments"];
         }
     }
 
-    static fromJS(data: any): RemovedRole {
+    static fromJS(data: any): RoleRemoval {
         data = typeof data === 'object' ? data : {};
-        let result = new RemovedRole();
+        let result = new RoleRemoval();
         result.init(data);
         return result;
     }
@@ -5779,14 +5783,18 @@ export class RemovedRole implements IRemovedRole {
         data = typeof data === 'object' ? data : {};
         data["roleName"] = this.roleName;
         data["reason"] = this.reason;
+        data["effectiveSince"] = this.effectiveSince ? formatDate(this.effectiveSince) : <any>undefined;
+        data["effectiveUntil"] = this.effectiveUntil ? formatDate(this.effectiveUntil) : <any>undefined;
         data["additionalComments"] = this.additionalComments;
         return data;
     }
 }
 
-export interface IRemovedRole {
+export interface IRoleRemoval {
     roleName?: string;
     reason?: RoleRemovalReason;
+    effectiveSince?: Date;
+    effectiveUntil?: Date | undefined;
     additionalComments?: string | undefined;
 }
 
@@ -5800,7 +5808,7 @@ export class VolunteerInfo implements IVolunteerInfo {
     approvalStatusByRole?: { [key: string]: IndividualRoleApprovalStatus; };
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
-    removedRoles?: RemovedRole[];
+    roleRemovals?: RoleRemoval[];
 
     constructor(data?: IVolunteerInfo) {
         if (data) {
@@ -5830,10 +5838,10 @@ export class VolunteerInfo implements IVolunteerInfo {
                 for (let item of _data["exemptedRequirements"])
                     this.exemptedRequirements!.push(ExemptedRequirementInfo.fromJS(item));
             }
-            if (Array.isArray(_data["removedRoles"])) {
-                this.removedRoles = [] as any;
-                for (let item of _data["removedRoles"])
-                    this.removedRoles!.push(RemovedRole.fromJS(item));
+            if (Array.isArray(_data["roleRemovals"])) {
+                this.roleRemovals = [] as any;
+                for (let item of _data["roleRemovals"])
+                    this.roleRemovals!.push(RoleRemoval.fromJS(item));
             }
         }
     }
@@ -5864,10 +5872,10 @@ export class VolunteerInfo implements IVolunteerInfo {
             for (let item of this.exemptedRequirements)
                 data["exemptedRequirements"].push(item.toJSON());
         }
-        if (Array.isArray(this.removedRoles)) {
-            data["removedRoles"] = [];
-            for (let item of this.removedRoles)
-                data["removedRoles"].push(item.toJSON());
+        if (Array.isArray(this.roleRemovals)) {
+            data["roleRemovals"] = [];
+            for (let item of this.roleRemovals)
+                data["roleRemovals"].push(item.toJSON());
         }
         return data;
     }
@@ -5877,7 +5885,7 @@ export interface IVolunteerInfo {
     approvalStatusByRole?: { [key: string]: IndividualRoleApprovalStatus; };
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
-    removedRoles?: RemovedRole[];
+    roleRemovals?: RoleRemoval[];
 }
 
 export class IndividualRoleApprovalStatus implements IIndividualRoleApprovalStatus {
