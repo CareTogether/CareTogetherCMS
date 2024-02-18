@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using CareTogether.Engines.PolicyEvaluation;
+using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Policies;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Timelines;
@@ -15,6 +16,7 @@ public class CalculateRoleVersionApprovalStatusTest
     public void EmptyInputsReturnsNull()
     {
         var result = SharedCalculations.CalculateRoleVersionApprovalStatus([
+        ], [
         ]);
 
         Assert.IsNull(result);
@@ -29,6 +31,7 @@ public class CalculateRoleVersionApprovalStatusTest
             (RequirementStage.Approval, new DateOnlyTimeline([ H.DR(1, null)])),
             (RequirementStage.Onboarding, new DateOnlyTimeline([ H.DR(1, null)])),
             (RequirementStage.Onboarding, new DateOnlyTimeline([ H.DR(1, null)]))
+        ], [
         ]);
 
         Assert.IsNull(result);
@@ -42,6 +45,7 @@ public class CalculateRoleVersionApprovalStatusTest
             (RequirementStage.Approval, new DateOnlyTimeline([ H.DR(1, null)])),
             (RequirementStage.Onboarding, new DateOnlyTimeline([ H.DR(1, null)])),
             (RequirementStage.Onboarding, new DateOnlyTimeline([ H.DR(1, null)]))
+        ], [
         ]);
 
         Assert.IsNotNull(result);
@@ -57,6 +61,7 @@ public class CalculateRoleVersionApprovalStatusTest
             (RequirementStage.Application, new DateOnlyTimeline([ H.DR(1, 5)])),
             (RequirementStage.Application, new DateOnlyTimeline([ H.DR(1, 5)])),
             (RequirementStage.Application, new DateOnlyTimeline([ H.DR(1, 5)])),
+        ], [
         ]);
 
         Assert.IsNotNull(result);
@@ -73,6 +78,7 @@ public class CalculateRoleVersionApprovalStatusTest
             (RequirementStage.Application, new DateOnlyTimeline([ H.DR(1, null)])),
             (RequirementStage.Application, new DateOnlyTimeline([ H.DR(1, 5), H.DR(10, 15)])),
             (RequirementStage.Application, new DateOnlyTimeline([ H.DR(4, 12)])),
+        ], [
         ]);
 
         Assert.IsNotNull(result);
@@ -97,6 +103,7 @@ public class CalculateRoleVersionApprovalStatusTest
             (RequirementStage.Approval, new DateOnlyTimeline([ H.DR(10, 16), H.DR(18, 20)])),
             (RequirementStage.Onboarding, new DateOnlyTimeline([ H.DR(12, null)])),
             (RequirementStage.Onboarding, new DateOnlyTimeline([ H.DR(14, 24)])),
+        ], [
         ]);
 
         Assert.IsNotNull(result);
@@ -107,6 +114,38 @@ public class CalculateRoleVersionApprovalStatusTest
             H.DR(17, 17, RoleApprovalStatus.Expired),
             H.DR(18, 20, RoleApprovalStatus.Onboarded),
             H.DR(21, null, RoleApprovalStatus.Expired),
+        ]));
+    }
+
+    [TestMethod]
+    public void TestStatusSequenceWithRemovals()
+    {
+        var result = SharedCalculations.CalculateRoleVersionApprovalStatus([
+            (RequirementStage.Application, new DateOnlyTimeline([ H.DR(4, null)])),
+            (RequirementStage.Application, new DateOnlyTimeline([ H.DR(6, null)])),
+            (RequirementStage.Application, new DateOnlyTimeline([ H.DR(8, null)])),
+            (RequirementStage.Approval, new DateOnlyTimeline([ H.DR(7, null)])),
+            (RequirementStage.Approval, new DateOnlyTimeline([ H.DR(8, null)])),
+            (RequirementStage.Approval, new DateOnlyTimeline([ H.DR(10, 16), H.DR(18, 20)])),
+            (RequirementStage.Onboarding, new DateOnlyTimeline([ H.DR(12, null)])),
+            (RequirementStage.Onboarding, new DateOnlyTimeline([ H.DR(14, 24)])),
+        ], [
+            new RoleRemoval("Irrelevant", RoleRemovalReason.Inactive, H.D(5), H.D(7), null),
+            new RoleRemoval("Irrelevant", RoleRemovalReason.Denied, H.D(12), H.D(19), null),
+            new RoleRemoval("Irrelevant", RoleRemovalReason.Inactive, H.D(23), null, null),
+            new RoleRemoval("Irrelevant", RoleRemovalReason.Denied, H.D(25), null, null),
+        ]);
+
+        Assert.IsNotNull(result);
+        Assert.IsTrue(result.Ranges.SequenceEqual([
+            H.DR(5, 7, RoleApprovalStatus.Inactive),
+            H.DR(8, 9, RoleApprovalStatus.Prospective),
+            H.DR(10, 11, RoleApprovalStatus.Approved),
+            H.DR(12, 19, RoleApprovalStatus.Denied),
+            H.DR(20, 20, RoleApprovalStatus.Onboarded),
+            H.DR(21, 22, RoleApprovalStatus.Expired),
+            H.DR(23, 24, RoleApprovalStatus.Inactive),
+            H.DR(25, null, RoleApprovalStatus.Denied),
         ]));
     }
 }

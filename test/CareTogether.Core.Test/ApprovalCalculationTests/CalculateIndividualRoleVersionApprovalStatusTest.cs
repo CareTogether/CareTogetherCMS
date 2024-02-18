@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Resources;
+using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Policies;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Timelines;
@@ -27,6 +28,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 completedRequirements: [
                 ],
                 exemptedRequirements: [
+                ],
+                removalsOfThisRole: [
                 ]
             );
 
@@ -81,6 +84,10 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     new ExemptedRequirementInfo(H.guid1,
                         TimestampUtc: H.DT(11), RequirementName: "D", DueDate: null,
                         AdditionalComments: "", ExemptionExpiresAtUtc: H.DT(20)),
+                ],
+                removalsOfThisRole: [
+                    new RoleRemoval("Irrelevant", RoleRemovalReason.Denied, H.D(16), H.D(17), null),
+                    new RoleRemoval("Irrelevant", RoleRemovalReason.Inactive, H.D(23), null, null),
                 ]
             );
 
@@ -89,8 +96,11 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     H.DR(5, 10, RoleApprovalStatus.Prospective),
                     H.DR(11, 12, RoleApprovalStatus.Approved),
                     H.DR(13, 13, RoleApprovalStatus.Expired),
-                    H.DR(14, 20, RoleApprovalStatus.Approved),
-                    H.DR(21, null, RoleApprovalStatus.Expired)
+                    H.DR(14, 15, RoleApprovalStatus.Approved),
+                    H.DR(16, 17, RoleApprovalStatus.Denied),
+                    H.DR(18, 20, RoleApprovalStatus.Approved),
+                    H.DR(21, 22, RoleApprovalStatus.Expired),
+                    H.DR(23, null, RoleApprovalStatus.Inactive),
                 ]), result.Status);
             Assert.IsTrue(result.Requirements.SequenceEqual([
                 new("A", RequirementStage.Application,
