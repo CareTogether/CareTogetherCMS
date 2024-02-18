@@ -3223,6 +3223,14 @@
             "items": {
               "$ref": "#/components/schemas/FamilyRoleVersionApprovalStatus"
             }
+          },
+          "currentStatus": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RoleApprovalStatus"
+              }
+            ]
           }
         }
       },
@@ -3445,6 +3453,14 @@
             "items": {
               "$ref": "#/components/schemas/IndividualRoleVersionApprovalStatus"
             }
+          },
+          "currentStatus": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RoleApprovalStatus"
+              }
+            ]
           }
         }
       },

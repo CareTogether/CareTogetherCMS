@@ -309,6 +309,8 @@ public sealed class DateOnlyTimeline<T> : IEquatable<DateOnlyTimeline<T>>
         // That will be null for reference types, and the default value for value types.
         Ranges.SingleOrDefault(range => range.Contains(value)).Tag;
 
+    public T? ValueAt(DateTime value) => ValueAt(DateOnly.FromDateTime(value));
+
 
     public bool Equals(DateOnlyTimeline<T>? other)
     {

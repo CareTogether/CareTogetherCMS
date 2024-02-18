@@ -5364,6 +5364,7 @@ export interface IVolunteerFamilyInfo {
 export class FamilyRoleApprovalStatus implements IFamilyRoleApprovalStatus {
     effectiveRoleApprovalStatus?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     roleVersionApprovals?: FamilyRoleVersionApprovalStatus[];
+    currentStatus?: RoleApprovalStatus | undefined;
 
     constructor(data?: IFamilyRoleApprovalStatus) {
         if (data) {
@@ -5382,6 +5383,7 @@ export class FamilyRoleApprovalStatus implements IFamilyRoleApprovalStatus {
                 for (let item of _data["roleVersionApprovals"])
                     this.roleVersionApprovals!.push(FamilyRoleVersionApprovalStatus.fromJS(item));
             }
+            this.currentStatus = _data["currentStatus"];
         }
     }
 
@@ -5400,6 +5402,7 @@ export class FamilyRoleApprovalStatus implements IFamilyRoleApprovalStatus {
             for (let item of this.roleVersionApprovals)
                 data["roleVersionApprovals"].push(item.toJSON());
         }
+        data["currentStatus"] = this.currentStatus;
         return data;
     }
 }
@@ -5407,6 +5410,7 @@ export class FamilyRoleApprovalStatus implements IFamilyRoleApprovalStatus {
 export interface IFamilyRoleApprovalStatus {
     effectiveRoleApprovalStatus?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     roleVersionApprovals?: FamilyRoleVersionApprovalStatus[];
+    currentStatus?: RoleApprovalStatus | undefined;
 }
 
 export class DateOnlyTimelineOfRoleApprovalStatus implements IDateOnlyTimelineOfRoleApprovalStatus {
@@ -5877,6 +5881,7 @@ export interface IVolunteerInfo {
 export class IndividualRoleApprovalStatus implements IIndividualRoleApprovalStatus {
     effectiveRoleApprovalStatus?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     roleVersionApprovals?: IndividualRoleVersionApprovalStatus[];
+    currentStatus?: RoleApprovalStatus | undefined;
 
     constructor(data?: IIndividualRoleApprovalStatus) {
         if (data) {
@@ -5895,6 +5900,7 @@ export class IndividualRoleApprovalStatus implements IIndividualRoleApprovalStat
                 for (let item of _data["roleVersionApprovals"])
                     this.roleVersionApprovals!.push(IndividualRoleVersionApprovalStatus.fromJS(item));
             }
+            this.currentStatus = _data["currentStatus"];
         }
     }
 
@@ -5913,6 +5919,7 @@ export class IndividualRoleApprovalStatus implements IIndividualRoleApprovalStat
             for (let item of this.roleVersionApprovals)
                 data["roleVersionApprovals"].push(item.toJSON());
         }
+        data["currentStatus"] = this.currentStatus;
         return data;
     }
 }
@@ -5920,6 +5927,7 @@ export class IndividualRoleApprovalStatus implements IIndividualRoleApprovalStat
 export interface IIndividualRoleApprovalStatus {
     effectiveRoleApprovalStatus?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     roleVersionApprovals?: IndividualRoleVersionApprovalStatus[];
+    currentStatus?: RoleApprovalStatus | undefined;
 }
 
 export class IndividualRoleVersionApprovalStatus implements IIndividualRoleVersionApprovalStatus {

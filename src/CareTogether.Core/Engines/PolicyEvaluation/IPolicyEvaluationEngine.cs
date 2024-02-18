@@ -1,4 +1,4 @@
-﻿using CareTogether.Resources;
+using CareTogether.Resources;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
@@ -19,7 +19,11 @@ namespace CareTogether.Engines.PolicyEvaluation
 
     public sealed record IndividualRoleApprovalStatus(
         DateOnlyTimeline<RoleApprovalStatus>? EffectiveRoleApprovalStatus,
-        ImmutableList<IndividualRoleVersionApprovalStatus> RoleVersionApprovals);
+        ImmutableList<IndividualRoleVersionApprovalStatus> RoleVersionApprovals)
+    {
+        public RoleApprovalStatus? CurrentStatus =>
+            EffectiveRoleApprovalStatus?.ValueAt(DateTime.UtcNow);
+    }
 
     public sealed record IndividualRoleVersionApprovalStatus(string Version,
         DateOnlyTimeline<RoleApprovalStatus>? Status,
@@ -30,7 +34,11 @@ namespace CareTogether.Engines.PolicyEvaluation
 
     public sealed record FamilyRoleApprovalStatus(
         DateOnlyTimeline<RoleApprovalStatus>? EffectiveRoleApprovalStatus,
-        ImmutableList<FamilyRoleVersionApprovalStatus> RoleVersionApprovals);
+        ImmutableList<FamilyRoleVersionApprovalStatus> RoleVersionApprovals)
+    {
+        public RoleApprovalStatus? CurrentStatus =>
+            EffectiveRoleApprovalStatus?.ValueAt(DateTime.UtcNow);
+    }
 
     public sealed record FamilyRoleVersionApprovalStatus(string Version,
         DateOnlyTimeline<RoleApprovalStatus>? Status,
