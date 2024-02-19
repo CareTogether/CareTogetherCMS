@@ -184,7 +184,10 @@ namespace CareTogether.Managers
 
             var volunteerFamilyInfo = new VolunteerFamilyInfo(
                 combinedFamilyApprovals.FamilyRoleApprovals,
-                completedFamilyRequirementsWithExpiration, entry.ExemptedRequirements, entry.RoleRemovals,
+                completedFamilyRequirementsWithExpiration, entry.ExemptedRequirements,
+                combinedFamilyApprovals.CurrentAvailableFamilyApplications,
+                combinedFamilyApprovals.CurrentMissingFamilyRequirements,
+                entry.RoleRemovals,
                 combinedFamilyApprovals.IndividualApprovals.ToImmutableDictionary(
                     x => x.Key,
                     x =>
@@ -195,6 +198,7 @@ namespace CareTogether.Managers
                             x.Value.ApprovalStatusByRole,
                             completedRequirements ?? ImmutableList<CompletedRequirementInfo>.Empty,
                             individualEntry?.ExemptedRequirements ?? ImmutableList<ExemptedRequirementInfo>.Empty,
+                            x.Value.CurrentAvailableApplications, x.Value.CurrentMissingRequirements,
                             individualEntry?.RoleRemovals ?? ImmutableList<RoleRemoval>.Empty);
                     }),
                 entry.History);

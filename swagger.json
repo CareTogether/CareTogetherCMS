@@ -3186,6 +3186,18 @@
               "$ref": "#/components/schemas/ExemptedRequirementInfo"
             }
           },
+          "availableApplications": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "missingRequirements": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "roleRemovals": {
             "type": "array",
             "items": {
@@ -3231,6 +3243,18 @@
                 "$ref": "#/components/schemas/RoleApprovalStatus"
               }
             ]
+          },
+          "currentMissingFamilyRequirements": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "currentAvailableFamilyApplications": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -3299,6 +3323,26 @@
             ]
           },
           "requirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FamilyRoleRequirementCompletionStatus"
+            }
+          },
+          "currentStatus": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RoleApprovalStatus"
+              }
+            ]
+          },
+          "currentMissingRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FamilyRoleRequirementCompletionStatus"
+            }
+          },
+          "currentAvailableApplications": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/FamilyRoleRequirementCompletionStatus"
@@ -3441,6 +3485,18 @@
               "$ref": "#/components/schemas/ExemptedRequirementInfo"
             }
           },
+          "availableApplications": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "missingRequirements": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "roleRemovals": {
             "type": "array",
             "items": {
@@ -3474,6 +3530,18 @@
                 "$ref": "#/components/schemas/RoleApprovalStatus"
               }
             ]
+          },
+          "currentMissingRequirements": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "currentAvailableApplications": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -3493,6 +3561,26 @@
             ]
           },
           "requirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IndividualRoleRequirementCompletionStatus"
+            }
+          },
+          "currentStatus": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RoleApprovalStatus"
+              }
+            ]
+          },
+          "currentMissingRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IndividualRoleRequirementCompletionStatus"
+            }
+          },
+          "currentAvailableApplications": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/IndividualRoleRequirementCompletionStatus"

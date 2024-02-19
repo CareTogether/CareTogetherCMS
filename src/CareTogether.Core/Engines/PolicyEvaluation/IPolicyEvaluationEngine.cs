@@ -1,10 +1,11 @@
-﻿using CareTogether.Resources;
+using CareTogether.Resources;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.Referrals;
 using System;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 using Timelines;
 
@@ -12,10 +13,36 @@ namespace CareTogether.Engines.PolicyEvaluation
 {
     public sealed record FamilyApprovalStatus(
         ImmutableDictionary<Guid, IndividualApprovalStatus> IndividualApprovals,
-        ImmutableDictionary<string, FamilyRoleApprovalStatus> FamilyRoleApprovals);
+        ImmutableDictionary<string, FamilyRoleApprovalStatus> FamilyRoleApprovals)
+    {
+        public ImmutableList<string> CurrentMissingFamilyRequirements =>
+            FamilyRoleApprovals
+                .SelectMany(r => r.Value.CurrentMissingFamilyRequirements)
+                .Distinct()
+                .ToImmutableList();
+
+        public ImmutableList<string> CurrentAvailableFamilyApplications =>
+            FamilyRoleApprovals
+                .SelectMany(r => r.Value.CurrentAvailableFamilyApplications)
+                .Distinct()
+                .ToImmutableList();
+    }
 
     public sealed record IndividualApprovalStatus(
-        ImmutableDictionary<string, IndividualRoleApprovalStatus> ApprovalStatusByRole);
+        ImmutableDictionary<string, IndividualRoleApprovalStatus> ApprovalStatusByRole)
+    {
+        public ImmutableList<string> CurrentMissingRequirements =>
+            ApprovalStatusByRole
+                .SelectMany(r => r.Value.CurrentMissingRequirements)
+                .Distinct()
+                .ToImmutableList();
+
+        public ImmutableList<string> CurrentAvailableApplications =>
+            ApprovalStatusByRole
+                .SelectMany(r => r.Value.CurrentAvailableApplications)
+                .Distinct()
+                .ToImmutableList();
+    }
 
     public sealed record IndividualRoleApprovalStatus(
         DateOnlyTimeline<RoleApprovalStatus>? EffectiveRoleApprovalStatus,
@@ -23,11 +50,49 @@ namespace CareTogether.Engines.PolicyEvaluation
     {
         public RoleApprovalStatus? CurrentStatus =>
             EffectiveRoleApprovalStatus?.ValueAt(DateTime.UtcNow);
+
+        public ImmutableList<string> CurrentMissingRequirements =>
+            RoleVersionApprovals
+                // The following filter selects only the "effective" version(s),
+                // allowing the 'EffectiveRoleApprovalStatus' calculation to take
+                // care of all the tricky decisions like which status takes precedence.
+                // If multiple versions contribute to the current status, we can show
+                // the requirements from all of them, and this will dynamically update
+                // as the requirements for some versions are met.
+                .Where(r => r.CurrentStatus == CurrentStatus)
+                .SelectMany(r => r.CurrentMissingRequirements)
+                .Select(r => r.ActionName)
+                .ToImmutableList();
+
+        public ImmutableList<string> CurrentAvailableApplications =>
+            RoleVersionApprovals
+                .Where(r => r.CurrentStatus == null && CurrentStatus == null)
+                .SelectMany(r => r.CurrentAvailableApplications)
+                .Select(r => r.ActionName)
+                .ToImmutableList();
     }
 
     public sealed record IndividualRoleVersionApprovalStatus(string Version,
         DateOnlyTimeline<RoleApprovalStatus>? Status,
-        ImmutableList<IndividualRoleRequirementCompletionStatus> Requirements);
+        ImmutableList<IndividualRoleRequirementCompletionStatus> Requirements)
+    {
+        public RoleApprovalStatus? CurrentStatus =>
+            Status?.ValueAt(DateTime.UtcNow);
+
+        public ImmutableList<IndividualRoleRequirementCompletionStatus> CurrentMissingRequirements =>
+            Requirements
+                .Where(r =>
+                    (r.Stage == RequirementStage.Approval && CurrentStatus == RoleApprovalStatus.Prospective) ||
+                    (r.Stage == RequirementStage.Onboarding && CurrentStatus == RoleApprovalStatus.Approved))
+                .Where(r => r.WhenMet?.Contains(DateOnly.FromDateTime(DateTime.UtcNow)) != true)
+                .ToImmutableList();
+
+        public ImmutableList<IndividualRoleRequirementCompletionStatus> CurrentAvailableApplications =>
+            Requirements
+                .Where(r => r.Stage == RequirementStage.Application && CurrentStatus == null)
+                .Where(r => r.WhenMet?.Contains(DateOnly.FromDateTime(DateTime.UtcNow)) != true)
+                .ToImmutableList();
+    }
 
     public sealed record IndividualRoleRequirementCompletionStatus(string ActionName,
         RequirementStage Stage, DateOnlyTimeline? WhenMet);
@@ -38,11 +103,51 @@ namespace CareTogether.Engines.PolicyEvaluation
     {
         public RoleApprovalStatus? CurrentStatus =>
             EffectiveRoleApprovalStatus?.ValueAt(DateTime.UtcNow);
+
+        public ImmutableList<string> CurrentMissingFamilyRequirements =>
+            RoleVersionApprovals
+                // The following filter selects only the "effective" version(s),
+                // allowing the 'EffectiveRoleApprovalStatus' calculation to take
+                // care of all the tricky decisions like which status takes precedence.
+                // If multiple versions contribute to the current status, we can show
+                // the requirements from all of them, and this will dynamically update
+                // as the requirements for some versions are met.
+                .Where(r => r.CurrentStatus == CurrentStatus)
+                .SelectMany(r => r.CurrentMissingRequirements)
+                .Where(r => r.Scope == VolunteerFamilyRequirementScope.OncePerFamily)
+                .Select(r => r.ActionName)
+                .ToImmutableList();
+
+        public ImmutableList<string> CurrentAvailableFamilyApplications =>
+            RoleVersionApprovals
+                .Where(r => r.CurrentStatus == null && CurrentStatus == null)
+                .SelectMany(r => r.CurrentAvailableApplications)
+                .Where(r => r.Scope == VolunteerFamilyRequirementScope.OncePerFamily)
+                .Select(r => r.ActionName)
+                .ToImmutableList();
     }
 
     public sealed record FamilyRoleVersionApprovalStatus(string Version,
         DateOnlyTimeline<RoleApprovalStatus>? Status,
-        ImmutableList<FamilyRoleRequirementCompletionStatus> Requirements);
+        ImmutableList<FamilyRoleRequirementCompletionStatus> Requirements)
+    {
+        public RoleApprovalStatus? CurrentStatus =>
+            Status?.ValueAt(DateTime.UtcNow);
+
+        public ImmutableList<FamilyRoleRequirementCompletionStatus> CurrentMissingRequirements =>
+            Requirements
+                .Where(r =>
+                    (r.Stage == RequirementStage.Approval && CurrentStatus == RoleApprovalStatus.Prospective) ||
+                    (r.Stage == RequirementStage.Onboarding && CurrentStatus == RoleApprovalStatus.Approved))
+                .Where(r => r.WhenMet?.Contains(DateOnly.FromDateTime(DateTime.UtcNow)) != true)
+                .ToImmutableList();
+
+        public ImmutableList<FamilyRoleRequirementCompletionStatus> CurrentAvailableApplications =>
+            Requirements
+                .Where(r => r.Stage == RequirementStage.Application && CurrentStatus == null)
+                .Where(r => r.WhenMet?.Contains(DateOnly.FromDateTime(DateTime.UtcNow)) != true)
+                .ToImmutableList();
+    }
 
     public sealed record FamilyRoleRequirementCompletionStatus(string ActionName,
         RequirementStage Stage, VolunteerFamilyRequirementScope Scope, DateOnlyTimeline? WhenMet,
