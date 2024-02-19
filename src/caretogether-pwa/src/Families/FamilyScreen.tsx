@@ -333,8 +333,8 @@ export function FamilyScreen() {
                       margin: theme.spacing(0.5),
                     }
                   }}>
-                    {Object.entries(family.volunteerFamilyInfo?.effectiveFamilyRoleApprovals || {}).flatMap(([role, roleVersionApproval]) =>
-                      <VolunteerRoleApprovalStatusChip key={role} roleName={role} roleVersionApproval={roleVersionApproval} />)}
+                    {Object.entries(family.volunteerFamilyInfo?.familyRoleApprovals || {}).flatMap(([role, roleApprovalStatus]) =>
+                      <VolunteerRoleApprovalStatusChip key={role} roleName={role} status={roleApprovalStatus.effectiveRoleApprovalStatus} />)}
                     {(family.volunteerFamilyInfo?.removedRoles || []).map(removedRole =>
                       <Chip key={removedRole.roleName} size="small" label={`${removedRole.roleName} - ${RoleRemovalReason[removedRole.reason!]} - ${removedRole.additionalComments}`} />)}
                   </Box>
