@@ -5391,6 +5391,7 @@ export class FamilyRoleApprovalStatus implements IFamilyRoleApprovalStatus {
     currentStatus?: RoleApprovalStatus | undefined;
     currentMissingFamilyRequirements?: string[];
     currentAvailableFamilyApplications?: string[];
+    currentMissingIndividualRequirements?: ValueTupleOfGuidAndString[];
 
     constructor(data?: IFamilyRoleApprovalStatus) {
         if (data) {
@@ -5419,6 +5420,11 @@ export class FamilyRoleApprovalStatus implements IFamilyRoleApprovalStatus {
                 this.currentAvailableFamilyApplications = [] as any;
                 for (let item of _data["currentAvailableFamilyApplications"])
                     this.currentAvailableFamilyApplications!.push(item);
+            }
+            if (Array.isArray(_data["currentMissingIndividualRequirements"])) {
+                this.currentMissingIndividualRequirements = [] as any;
+                for (let item of _data["currentMissingIndividualRequirements"])
+                    this.currentMissingIndividualRequirements!.push(ValueTupleOfGuidAndString.fromJS(item));
             }
         }
     }
@@ -5449,6 +5455,11 @@ export class FamilyRoleApprovalStatus implements IFamilyRoleApprovalStatus {
             for (let item of this.currentAvailableFamilyApplications)
                 data["currentAvailableFamilyApplications"].push(item);
         }
+        if (Array.isArray(this.currentMissingIndividualRequirements)) {
+            data["currentMissingIndividualRequirements"] = [];
+            for (let item of this.currentMissingIndividualRequirements)
+                data["currentMissingIndividualRequirements"].push(item.toJSON());
+        }
         return data;
     }
 }
@@ -5459,6 +5470,7 @@ export interface IFamilyRoleApprovalStatus {
     currentStatus?: RoleApprovalStatus | undefined;
     currentMissingFamilyRequirements?: string[];
     currentAvailableFamilyApplications?: string[];
+    currentMissingIndividualRequirements?: ValueTupleOfGuidAndString[];
 }
 
 export class DateOnlyTimelineOfRoleApprovalStatus implements IDateOnlyTimelineOfRoleApprovalStatus {
@@ -5820,6 +5832,46 @@ export class FamilyRequirementStatusDetail implements IFamilyRequirementStatusDe
 export interface IFamilyRequirementStatusDetail {
     personId?: string | undefined;
     whenMet?: DateOnlyTimeline | undefined;
+}
+
+export class ValueTupleOfGuidAndString implements IValueTupleOfGuidAndString {
+    item1?: string;
+    item2?: string;
+
+    constructor(data?: IValueTupleOfGuidAndString) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.item1 = _data["item1"];
+            this.item2 = _data["item2"];
+        }
+    }
+
+    static fromJS(data: any): ValueTupleOfGuidAndString {
+        data = typeof data === 'object' ? data : {};
+        let result = new ValueTupleOfGuidAndString();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["item1"] = this.item1;
+        data["item2"] = this.item2;
+        return data;
+    }
+}
+
+export interface IValueTupleOfGuidAndString {
+    item1?: string;
+    item2?: string;
 }
 
 export class RoleRemoval implements IRoleRemoval {

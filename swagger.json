@@ -3255,6 +3255,12 @@
             "items": {
               "type": "string"
             }
+          },
+          "currentMissingIndividualRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValueTupleOfGuidAndString"
+            }
           }
         }
       },
@@ -3421,6 +3427,19 @@
                 "$ref": "#/components/schemas/DateOnlyTimeline"
               }
             ]
+          }
+        }
+      },
+      "ValueTupleOfGuidAndString": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "item1": {
+            "type": "string",
+            "format": "guid"
+          },
+          "item2": {
+            "type": "string"
           }
         }
       },

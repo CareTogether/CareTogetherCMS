@@ -26,6 +26,22 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .SelectMany(r => r.Value.CurrentAvailableFamilyApplications)
                 .Distinct()
                 .ToImmutableList();
+
+        public ImmutableList<(Guid PersonId, string ActionName)> CurrentMissingIndividualRequirements =>
+            FamilyRoleApprovals
+                .SelectMany(fra => fra.Value.CurrentMissingIndividualRequirements)
+                .Concat(IndividualApprovals
+                    .SelectMany(ia => ia.Value.CurrentMissingRequirements
+                        .Select(r => (PersonId: ia.Key, ActionName: r))))
+                .Distinct()
+                .ToImmutableList();
+
+        public ImmutableList<(Guid PersonId, string ActionName)> CurrentAvailableIndividualApplications =>
+            IndividualApprovals
+                .SelectMany(ia => ia.Value.CurrentAvailableApplications
+                    .Select(r => (PersonId: ia.Key, ActionName: r)))
+                .Distinct()
+                .ToImmutableList();
     }
 
     public sealed record IndividualApprovalStatus(
@@ -124,6 +140,17 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .SelectMany(r => r.CurrentAvailableApplications)
                 .Where(r => r.Scope == VolunteerFamilyRequirementScope.OncePerFamily)
                 .Select(r => r.ActionName)
+                .ToImmutableList();
+
+        public ImmutableList<(Guid PersonId, string ActionName)> CurrentMissingIndividualRequirements =>
+            RoleVersionApprovals
+                .Where(r => r.CurrentStatus == CurrentStatus)
+                .SelectMany(r => r.CurrentMissingRequirements)
+                .Where(r => r.Scope == VolunteerFamilyRequirementScope.AllAdultsInTheFamily ||
+                    r.Scope == VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily)
+                .SelectMany(r => r.StatusDetails
+                    .Where(sd => !(sd.WhenMet?.Contains(DateOnly.FromDateTime(DateTime.UtcNow)) ?? false))
+                    .Select(sd => (sd.PersonId!.Value, r.ActionName)))
                 .ToImmutableList();
     }
 
