@@ -198,7 +198,14 @@ namespace CareTogether.Managers
                             x.Value.ApprovalStatusByRole,
                             completedRequirements ?? ImmutableList<CompletedRequirementInfo>.Empty,
                             individualEntry?.ExemptedRequirements ?? ImmutableList<ExemptedRequirementInfo>.Empty,
-                            x.Value.CurrentAvailableApplications, x.Value.CurrentMissingRequirements,
+                            combinedFamilyApprovals.CurrentAvailableIndividualApplications
+                                .Where(y => y.PersonId == x.Key)
+                                .Select(y => y.ActionName)
+                                .ToImmutableList(),
+                            combinedFamilyApprovals.CurrentMissingIndividualRequirements
+                                .Where(y => y.PersonId == x.Key)
+                                .Select(y => y.ActionName)
+                                .ToImmutableList(),
                             individualEntry?.RoleRemovals ?? ImmutableList<RoleRemoval>.Empty);
                     }),
                 entry.History);
