@@ -11,12 +11,11 @@ namespace CareTogether.Resources.Approvals
         // COMPATIBILITY: This UploadedDocuments property is only used for backwards compatibility.
         // It should not be referenced directly.
         ImmutableList<UploadedDocumentInfo> UploadedDocuments,
-        ImmutableList<RoleRemoval> RoleRemovals,
+        ImmutableList<RemovedRole> RemovedRoles,
         ImmutableDictionary<Guid, VolunteerEntry> IndividualEntries,
         ImmutableList<Activity> History);
 
-    public record RoleRemoval(string RoleName, RoleRemovalReason Reason,
-        DateOnly EffectiveSince, DateOnly? EffectiveUntil, string? AdditionalComments);
+    public record RemovedRole(string RoleName, RoleRemovalReason Reason, string? AdditionalComments);
 
     public enum RoleRemovalReason { Inactive, OptOut, Denied };
 
@@ -24,7 +23,7 @@ namespace CareTogether.Resources.Approvals
         bool Active, string Note,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
-        ImmutableList<RoleRemoval> RoleRemovals);
+        ImmutableList<RemovedRole> RemovedRoles);
 
     [JsonHierarchyBase]
     public abstract partial record VolunteerFamilyCommand(Guid FamilyId);
@@ -56,7 +55,7 @@ namespace CareTogether.Resources.Approvals
     [JsonHierarchyBase]
     public abstract partial record VolunteerCommand(Guid FamilyId, Guid PersonId);
     public sealed record CompleteVolunteerRequirement(Guid FamilyId, Guid PersonId,
-        Guid CompletedRequirementId, string RequirementName, DateTime CompletedAtUtc,
+        Guid CompletedRequirementId, string RequirementName,  DateTime CompletedAtUtc,
         Guid? UploadedDocumentId, Guid? NoteId)
         : VolunteerCommand(FamilyId, PersonId);
     public sealed record MarkVolunteerRequirementIncomplete(Guid FamilyId, Guid PersonId,

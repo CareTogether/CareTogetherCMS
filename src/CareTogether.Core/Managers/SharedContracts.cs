@@ -51,22 +51,22 @@ namespace CareTogether.Managers
         string? Contents, NoteStatus Status, DateTime? BackdatedTimestampUtc);
 
     public sealed record VolunteerFamilyInfo(
-        ImmutableDictionary<string, FamilyRoleApprovalStatus> FamilyRoleApprovals,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
-        ImmutableList<string> AvailableApplications,
+        ImmutableList<RemovedRole> RemovedRoles,
         ImmutableList<string> MissingRequirements,
-        ImmutableList<RoleRemoval> RoleRemovals,
+        ImmutableList<string> AvailableApplications,
+        ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> FamilyRoleApprovals,
         ImmutableDictionary<Guid, VolunteerInfo> IndividualVolunteers,
         ImmutableList<Activity> History);
 
     public sealed record VolunteerInfo(
-        ImmutableDictionary<string, IndividualRoleApprovalStatus> ApprovalStatusByRole,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
-        ImmutableList<string> AvailableApplications,
+        ImmutableList<RemovedRole> RemovedRoles,
         ImmutableList<string> MissingRequirements,
-        ImmutableList<RoleRemoval> RoleRemovals);
+        ImmutableList<string> AvailableApplications,
+        ImmutableDictionary<string, ImmutableList<RoleVersionApproval>> IndividualRoleApprovals);
 
     public sealed record CommunityInfo(Community Community,
         ImmutableList<Permission> UserPermissions);

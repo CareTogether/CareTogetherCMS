@@ -41,7 +41,7 @@ namespace CareTogether.Resources.Approvals
             if (!volunteerFamilies.TryGetValue(command.FamilyId, out var volunteerFamilyEntry))
                 volunteerFamilyEntry = new VolunteerFamilyEntry(command.FamilyId,
                     ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<ExemptedRequirementInfo>.Empty, ImmutableList<UploadedDocumentInfo>.Empty,
-                    ImmutableList<RoleRemoval>.Empty, ImmutableDictionary<Guid, VolunteerEntry>.Empty, ImmutableList<Activity>.Empty);
+                    ImmutableList<RemovedRole>.Empty, ImmutableDictionary<Guid, VolunteerEntry>.Empty, ImmutableList<Activity>.Empty);
 
             var volunteerFamilyEntryToUpsert = command switch
             {
@@ -76,22 +76,17 @@ namespace CareTogether.Resources.Approvals
                 },
                 RemoveVolunteerFamilyRole c => volunteerFamilyEntry with
                 {
-                    RoleRemovals = volunteerFamilyEntry.RoleRemovals.Add(
-                        new RoleRemoval(c.RoleName, c.Reason,
-                            EffectiveSince: DateOnly.FromDateTime(timestampUtc),
-                            EffectiveUntil: null,
-                            c.AdditionalComments))
+                    RemovedRoles = volunteerFamilyEntry.RemovedRoles.Add(
+                        new RemovedRole(c.RoleName, c.Reason, c.AdditionalComments))
                 },
                 ResetVolunteerFamilyRole c => volunteerFamilyEntry with
                 {
-                    RoleRemovals = volunteerFamilyEntry.RoleRemovals.UpdateAll(
-                        x => x.RoleName == c.RoleName && x.EffectiveUntil == null,
-                        x => x with { EffectiveUntil = DateOnly.FromDateTime(timestampUtc) })
+                    RemovedRoles = volunteerFamilyEntry.RemovedRoles.RemoveAll(x => x.RoleName == c.RoleName)
                 },
                 _ => throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented.")
             };
-
+            
             return (
                 Event: new VolunteerFamilyCommandExecuted(userId, timestampUtc, command),
                 SequenceNumber: LastKnownSequenceNumber + 1,
@@ -100,8 +95,7 @@ namespace CareTogether.Resources.Approvals
                 {
                     LastKnownSequenceNumber++;
                     volunteerFamilies = volunteerFamilies.SetItem(volunteerFamilyEntryToUpsert.FamilyId, volunteerFamilyEntryToUpsert);
-                }
-            );
+                });
         }
 
         public (VolunteerCommandExecuted Event, long SequenceNumber, VolunteerFamilyEntry VolunteerFamilyEntry, Action OnCommit)
@@ -110,11 +104,11 @@ namespace CareTogether.Resources.Approvals
             if (!volunteerFamilies.TryGetValue(command.FamilyId, out var volunteerFamilyEntry))
                 volunteerFamilyEntry = new VolunteerFamilyEntry(command.FamilyId,
                     ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<ExemptedRequirementInfo>.Empty, ImmutableList<UploadedDocumentInfo>.Empty,
-                    ImmutableList<RoleRemoval>.Empty, ImmutableDictionary<Guid, VolunteerEntry>.Empty, ImmutableList<Activity>.Empty);
+                    ImmutableList<RemovedRole>.Empty, ImmutableDictionary<Guid, VolunteerEntry>.Empty, ImmutableList<Activity>.Empty);
 
             if (!volunteerFamilyEntry.IndividualEntries.TryGetValue(command.PersonId, out var volunteerEntry))
                 volunteerEntry = new VolunteerEntry(command.PersonId, true, "",
-                    ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<ExemptedRequirementInfo>.Empty, ImmutableList<RoleRemoval>.Empty);
+                    ImmutableList<CompletedRequirementInfo>.Empty, ImmutableList<ExemptedRequirementInfo>.Empty, ImmutableList<RemovedRole>.Empty);
 
             var volunteerEntryToUpsert = command switch
             {
@@ -142,17 +136,12 @@ namespace CareTogether.Resources.Approvals
                 },
                 RemoveVolunteerRole c => volunteerEntry with
                 {
-                    RoleRemovals = volunteerEntry.RoleRemovals.Add(
-                        new RoleRemoval(c.RoleName, c.Reason,
-                            EffectiveSince: DateOnly.FromDateTime(timestampUtc),
-                            EffectiveUntil: null,
-                            c.AdditionalComments))
+                    RemovedRoles = volunteerEntry.RemovedRoles.Add(
+                        new RemovedRole(c.RoleName, c.Reason, c.AdditionalComments))
                 },
                 ResetVolunteerRole c => volunteerEntry with
                 {
-                    RoleRemovals = volunteerEntry.RoleRemovals.UpdateAll(
-                        x => x.RoleName == c.RoleName && x.EffectiveUntil == null,
-                        x => x with { EffectiveUntil = DateOnly.FromDateTime(timestampUtc) })
+                    RemovedRoles = volunteerEntry.RemovedRoles.RemoveAll(x => x.RoleName == c.RoleName)
                 },
                 _ => throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented.")
@@ -170,8 +159,7 @@ namespace CareTogether.Resources.Approvals
                 {
                     LastKnownSequenceNumber++;
                     volunteerFamilies = volunteerFamilies.SetItem(volunteerFamilyEntryToUpsert.FamilyId, volunteerFamilyEntryToUpsert);
-                }
-            );
+                });
         }
 
         public ImmutableList<VolunteerFamilyEntry> FindVolunteerFamilyEntries(Func<VolunteerFamilyEntry, bool> predicate)

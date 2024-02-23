@@ -3168,12 +3168,6 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "familyRoleApprovals": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/FamilyRoleApprovalStatus"
-            }
-          },
           "completedRequirements": {
             "type": "array",
             "items": {
@@ -3186,10 +3180,10 @@
               "$ref": "#/components/schemas/ExemptedRequirementInfo"
             }
           },
-          "availableApplications": {
+          "removedRoles": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/RemovedRole"
             }
           },
           "missingRequirements": {
@@ -3198,10 +3192,19 @@
               "type": "string"
             }
           },
-          "roleRemovals": {
+          "availableApplications": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/RoleRemoval"
+              "type": "string"
+            }
+          },
+          "familyRoleApprovals": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/RoleVersionApproval"
+              }
             }
           },
           "individualVolunteers": {
@@ -3218,212 +3221,7 @@
           }
         }
       },
-      "FamilyRoleApprovalStatus": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "effectiveRoleApprovalStatus": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/DateOnlyTimelineOfRoleApprovalStatus"
-              }
-            ]
-          },
-          "roleVersionApprovals": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/FamilyRoleVersionApprovalStatus"
-            }
-          },
-          "currentStatus": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/RoleApprovalStatus"
-              }
-            ]
-          },
-          "currentMissingFamilyRequirements": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "currentAvailableFamilyApplications": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "currentMissingIndividualRequirements": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ValueTupleOfGuidAndString"
-            }
-          }
-        }
-      },
-      "DateOnlyTimelineOfRoleApprovalStatus": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "ranges": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DateRangeOfRoleApprovalStatus"
-            }
-          }
-        }
-      },
-      "DateRangeOfRoleApprovalStatus": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "start": {
-            "type": "string",
-            "format": "date"
-          },
-          "end": {
-            "type": "string",
-            "format": "date"
-          },
-          "tag": {
-            "$ref": "#/components/schemas/RoleApprovalStatus"
-          }
-        }
-      },
-      "RoleApprovalStatus": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "Prospective",
-          "Expired",
-          "Approved",
-          "Onboarded",
-          "Inactive",
-          "Denied"
-        ],
-        "enum": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5
-        ]
-      },
-      "FamilyRoleVersionApprovalStatus": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "version": {
-            "type": "string"
-          },
-          "status": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/DateOnlyTimelineOfRoleApprovalStatus"
-              }
-            ]
-          },
-          "requirements": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/FamilyRoleRequirementCompletionStatus"
-            }
-          }
-        }
-      },
-      "FamilyRoleRequirementCompletionStatus": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "actionName": {
-            "type": "string"
-          },
-          "stage": {
-            "$ref": "#/components/schemas/RequirementStage"
-          },
-          "scope": {
-            "$ref": "#/components/schemas/VolunteerFamilyRequirementScope"
-          },
-          "whenMet": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/DateOnlyTimeline"
-              }
-            ]
-          },
-          "statusDetails": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/FamilyRequirementStatusDetail"
-            }
-          }
-        }
-      },
-      "DateOnlyTimeline": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "ranges": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DateRange"
-            }
-          }
-        }
-      },
-      "DateRange": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "start": {
-            "type": "string",
-            "format": "date"
-          },
-          "end": {
-            "type": "string",
-            "format": "date"
-          }
-        }
-      },
-      "FamilyRequirementStatusDetail": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "personId": {
-            "type": "string",
-            "format": "guid",
-            "nullable": true
-          },
-          "whenMet": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/DateOnlyTimeline"
-              }
-            ]
-          }
-        }
-      },
-      "ValueTupleOfGuidAndString": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "item1": {
-            "type": "string",
-            "format": "guid"
-          },
-          "item2": {
-            "type": "string"
-          }
-        }
-      },
-      "RoleRemoval": {
+      "RemovedRole": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -3432,15 +3230,6 @@
           },
           "reason": {
             "$ref": "#/components/schemas/RoleRemovalReason"
-          },
-          "effectiveSince": {
-            "type": "string",
-            "format": "date"
-          },
-          "effectiveUntil": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
           },
           "additionalComments": {
             "type": "string",
@@ -3462,16 +3251,41 @@
           2
         ]
       },
+      "RoleVersionApproval": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "approvalStatus": {
+            "$ref": "#/components/schemas/RoleApprovalStatus"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "RoleApprovalStatus": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Prospective",
+          "Approved",
+          "Onboarded"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
       "VolunteerInfo": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "approvalStatusByRole": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/IndividualRoleApprovalStatus"
-            }
-          },
           "completedRequirements": {
             "type": "array",
             "items": {
@@ -3484,10 +3298,10 @@
               "$ref": "#/components/schemas/ExemptedRequirementInfo"
             }
           },
-          "availableApplications": {
+          "removedRoles": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/RemovedRole"
             }
           },
           "missingRequirements": {
@@ -3496,94 +3310,20 @@
               "type": "string"
             }
           },
-          "roleRemovals": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/RoleRemoval"
-            }
-          }
-        }
-      },
-      "IndividualRoleApprovalStatus": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "effectiveRoleApprovalStatus": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/DateOnlyTimelineOfRoleApprovalStatus"
-              }
-            ]
-          },
-          "roleVersionApprovals": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/IndividualRoleVersionApprovalStatus"
-            }
-          },
-          "currentStatus": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/RoleApprovalStatus"
-              }
-            ]
-          },
-          "currentMissingRequirements": {
+          "availableApplications": {
             "type": "array",
             "items": {
               "type": "string"
             }
           },
-          "currentAvailableApplications": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "IndividualRoleVersionApprovalStatus": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "version": {
-            "type": "string"
-          },
-          "status": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/DateOnlyTimelineOfRoleApprovalStatus"
+          "individualRoleApprovals": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/RoleVersionApproval"
               }
-            ]
-          },
-          "requirements": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/IndividualRoleRequirementCompletionStatus"
             }
-          }
-        }
-      },
-      "IndividualRoleRequirementCompletionStatus": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "actionName": {
-            "type": "string"
-          },
-          "stage": {
-            "$ref": "#/components/schemas/RequirementStage"
-          },
-          "whenMet": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/DateOnlyTimeline"
-              }
-            ]
           }
         }
       },

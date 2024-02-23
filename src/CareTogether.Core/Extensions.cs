@@ -23,18 +23,6 @@ namespace CareTogether
             return list.Replace(oldValue, newValue);
         }
 
-        public static ImmutableList<T> UpdateAll<T>(this ImmutableList<T> list, Func<T, bool> predicate,
-            Func<T, T> selector)
-        {
-            var result = list;
-            foreach (var match in list.Where(predicate))
-            {
-                var newValue = selector(match);
-                result = result.Replace(match, newValue);
-            }
-            return result;
-        }
-
         public static ImmutableList<U> GetValueOrEmptyList<T, U>(this ImmutableDictionary<T, ImmutableList<U>> dictionary, T key)
             where T : notnull
         {

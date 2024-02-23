@@ -5,11 +5,10 @@ import { visibleFamiliesQuery } from "./Data";
 
 export const volunteerFamiliesData = selector({
   key: 'volunteerFamiliesData',
-  get: ({ get }) => {
+  get: ({get}) => {
     const visibleFamilies = get(visibleFamiliesQuery);
     return visibleFamilies.filter(f => f.volunteerFamilyInfo);
-  }
-});
+  }});
 
 function useVolunteerFamilyCommandCallbackWithLocation<T extends unknown[]>(
   callback: (familyId: string, ...args: T) => Promise<VolunteerFamilyCommand>) {
@@ -75,7 +74,8 @@ export function useVolunteersModel() {
     });
   const removeFamilyRole = useVolunteerFamilyCommandCallbackWithLocation(
     async (volunteerFamilyId,
-      role: string, reason: RoleRemovalReason, additionalComments: string) => {
+      role: string, reason: RoleRemovalReason, additionalComments: string) =>
+    {
       const command = new RemoveVolunteerFamilyRole({
         familyId: volunteerFamilyId
       });
@@ -86,7 +86,8 @@ export function useVolunteersModel() {
     });
   const resetFamilyRole = useVolunteerFamilyCommandCallbackWithLocation(
     async (volunteerFamilyId,
-      role: string) => {
+      role: string) =>
+    {
       const command = new ResetVolunteerFamilyRole({
         familyId: volunteerFamilyId
       });
@@ -142,7 +143,8 @@ export function useVolunteersModel() {
     });
   const removeIndividualRole = useVolunteerCommandCallbackWithLocation(
     async (volunteerFamilyId, personId: string,
-      role: string, reason: RoleRemovalReason, additionalComments: string) => {
+      role: string, reason: RoleRemovalReason, additionalComments: string) =>
+    {
       const command = new RemoveVolunteerRole({
         familyId: volunteerFamilyId,
         personId: personId
@@ -154,7 +156,8 @@ export function useVolunteersModel() {
     });
   const resetIndividualRole = useVolunteerCommandCallbackWithLocation(
     async (volunteerFamilyId, personId: string,
-      role: string) => {
+      role: string) =>
+    {
       const command = new ResetVolunteerRole({
         familyId: volunteerFamilyId,
         personId: personId

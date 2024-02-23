@@ -1,4 +1,3 @@
 {
-    "task.allowAutomaticTasks": "on",
-    "dotnet.defaultSolution": "CareTogetherCMS.sln"
+    "task.allowAutomaticTasks": "on"
 }
