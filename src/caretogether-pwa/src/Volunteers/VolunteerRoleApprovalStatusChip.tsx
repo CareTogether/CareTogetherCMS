@@ -1,34 +1,28 @@
 import { Chip } from "@mui/material";
 import { format } from "date-fns";
-import { RoleApprovalStatus, RoleVersionApproval } from "../GeneratedClient";
+import { DateOnlyTimelineOfRoleApprovalStatus, RoleApprovalStatus } from "../GeneratedClient";
 
 type VolunteerRoleApprovalStatusChipProps = {
   roleName: string;
-  roleVersionApprovals: RoleVersionApproval[];
+  status?: DateOnlyTimelineOfRoleApprovalStatus;
 };
 
-export function VolunteerRoleApprovalStatusChip({ roleName, roleVersionApprovals }: VolunteerRoleApprovalStatusChipProps) {
-  const determination =
-    roleVersionApprovals.some(x => x.approvalStatus === RoleApprovalStatus.Onboarded)
-    ? RoleApprovalStatus.Onboarded
-    : roleVersionApprovals.some(x => x.approvalStatus === RoleApprovalStatus.Approved)
-    ? RoleApprovalStatus.Approved
-    : roleVersionApprovals.some(x => x.approvalStatus === RoleApprovalStatus.Prospective)
-    ? RoleApprovalStatus.Prospective
-    : null;
+// Date ranges may use either 'null' or the C# DateOnly.MaxValue to indicate an open-ended range.
+const FUTURE_CUTOFF = new Date(3000, 0, 1);
 
-  const expiration = determination
-    ? roleVersionApprovals.reduce((earliestExpiration, rva) =>
-      rva.expiresAt && (!earliestExpiration || rva.expiresAt < earliestExpiration)
-      ? rva.expiresAt : earliestExpiration, null as Date | null)
-    : null;
-  
-  return determination
+export function VolunteerRoleApprovalStatusChip({ roleName, status }: VolunteerRoleApprovalStatusChipProps) {
+  const now = new Date();
+  const currentStatusRange = status?.ranges?.find(r => r.start && r.start <= now && (!r.end || r.end >= now));
+  const currentStatusValue = currentStatusRange?.tag;
+  //TODO: Actually select the next range that has a value of 'expired'?
+  const expiresAt = currentStatusRange?.end;
+
+  return currentStatusValue != null
     ? <Chip size="small"
-        color={determination === RoleApprovalStatus.Onboarded
-          ? "primary" : "secondary"}
-        label={expiration
-          ? `${RoleApprovalStatus[determination]} ${roleName} until ${format(expiration, "M/d/yy")}`
-          : `${RoleApprovalStatus[determination]} ${roleName}`} />
+      color={currentStatusValue === RoleApprovalStatus.Onboarded
+        ? "primary" : "secondary"}
+      label={(expiresAt && expiresAt < FUTURE_CUTOFF)
+        ? `${RoleApprovalStatus[currentStatusValue]} ${roleName} until ${format(expiresAt, "M/d/yy")}`
+        : `${RoleApprovalStatus[currentStatusValue]} ${roleName}`} />
     : <></>;
 }
