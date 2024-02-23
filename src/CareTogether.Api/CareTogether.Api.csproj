@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <UserSecretsId>aspnet-CareTogether.Api-0706AF60-30BE-4CB4-868D-366CBB379CA7</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
