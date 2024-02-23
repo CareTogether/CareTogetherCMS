@@ -3333,26 +3333,6 @@
             "items": {
               "$ref": "#/components/schemas/FamilyRoleRequirementCompletionStatus"
             }
-          },
-          "currentStatus": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/RoleApprovalStatus"
-              }
-            ]
-          },
-          "currentMissingRequirements": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/FamilyRoleRequirementCompletionStatus"
-            }
-          },
-          "currentAvailableApplications": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/FamilyRoleRequirementCompletionStatus"
-            }
           }
         }
       },
@@ -3580,26 +3560,6 @@
             ]
           },
           "requirements": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/IndividualRoleRequirementCompletionStatus"
-            }
-          },
-          "currentStatus": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/RoleApprovalStatus"
-              }
-            ]
-          },
-          "currentMissingRequirements": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/IndividualRoleRequirementCompletionStatus"
-            }
-          },
-          "currentAvailableApplications": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/IndividualRoleRequirementCompletionStatus"

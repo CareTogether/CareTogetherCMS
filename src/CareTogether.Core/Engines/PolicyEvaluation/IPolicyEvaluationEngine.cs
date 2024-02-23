@@ -6,6 +6,7 @@ using CareTogether.Resources.Referrals;
 using System;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Timelines;
 
@@ -47,12 +48,16 @@ namespace CareTogether.Engines.PolicyEvaluation
     public sealed record IndividualApprovalStatus(
         ImmutableDictionary<string, IndividualRoleApprovalStatus> ApprovalStatusByRole)
     {
+        [JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
         public ImmutableList<string> CurrentMissingRequirements =>
             ApprovalStatusByRole
                 .SelectMany(r => r.Value.CurrentMissingRequirements)
                 .Distinct()
                 .ToImmutableList();
 
+        [JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
         public ImmutableList<string> CurrentAvailableApplications =>
             ApprovalStatusByRole
                 .SelectMany(r => r.Value.CurrentAvailableApplications)
@@ -92,9 +97,13 @@ namespace CareTogether.Engines.PolicyEvaluation
         DateOnlyTimeline<RoleApprovalStatus>? Status,
         ImmutableList<IndividualRoleRequirementCompletionStatus> Requirements)
     {
+        [JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
         public RoleApprovalStatus? CurrentStatus =>
             Status?.ValueAt(DateTime.UtcNow);
 
+        [JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
         public ImmutableList<IndividualRoleRequirementCompletionStatus> CurrentMissingRequirements =>
             Requirements
                 .Where(r =>
@@ -103,6 +112,8 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .Where(r => r.WhenMet?.Contains(DateOnly.FromDateTime(DateTime.UtcNow)) != true)
                 .ToImmutableList();
 
+        [JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
         public ImmutableList<IndividualRoleRequirementCompletionStatus> CurrentAvailableApplications =>
             Requirements
                 .Where(r => r.Stage == RequirementStage.Application && CurrentStatus == null)
@@ -158,9 +169,13 @@ namespace CareTogether.Engines.PolicyEvaluation
         DateOnlyTimeline<RoleApprovalStatus>? Status,
         ImmutableList<FamilyRoleRequirementCompletionStatus> Requirements)
     {
+        [JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
         public RoleApprovalStatus? CurrentStatus =>
             Status?.ValueAt(DateTime.UtcNow);
 
+        [JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
         public ImmutableList<FamilyRoleRequirementCompletionStatus> CurrentMissingRequirements =>
             Requirements
                 .Where(r =>
@@ -169,6 +184,8 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .Where(r => r.WhenMet?.Contains(DateOnly.FromDateTime(DateTime.UtcNow)) != true)
                 .ToImmutableList();
 
+        [JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
         public ImmutableList<FamilyRoleRequirementCompletionStatus> CurrentAvailableApplications =>
             Requirements
                 .Where(r => r.Stage == RequirementStage.Application && CurrentStatus == null)

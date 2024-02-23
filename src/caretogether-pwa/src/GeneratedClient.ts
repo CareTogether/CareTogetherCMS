@@ -5574,9 +5574,6 @@ export class FamilyRoleVersionApprovalStatus implements IFamilyRoleVersionApprov
     version?: string;
     status?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     requirements?: FamilyRoleRequirementCompletionStatus[];
-    currentStatus?: RoleApprovalStatus | undefined;
-    currentMissingRequirements?: FamilyRoleRequirementCompletionStatus[];
-    currentAvailableApplications?: FamilyRoleRequirementCompletionStatus[];
 
     constructor(data?: IFamilyRoleVersionApprovalStatus) {
         if (data) {
@@ -5595,17 +5592,6 @@ export class FamilyRoleVersionApprovalStatus implements IFamilyRoleVersionApprov
                 this.requirements = [] as any;
                 for (let item of _data["requirements"])
                     this.requirements!.push(FamilyRoleRequirementCompletionStatus.fromJS(item));
-            }
-            this.currentStatus = _data["currentStatus"];
-            if (Array.isArray(_data["currentMissingRequirements"])) {
-                this.currentMissingRequirements = [] as any;
-                for (let item of _data["currentMissingRequirements"])
-                    this.currentMissingRequirements!.push(FamilyRoleRequirementCompletionStatus.fromJS(item));
-            }
-            if (Array.isArray(_data["currentAvailableApplications"])) {
-                this.currentAvailableApplications = [] as any;
-                for (let item of _data["currentAvailableApplications"])
-                    this.currentAvailableApplications!.push(FamilyRoleRequirementCompletionStatus.fromJS(item));
             }
         }
     }
@@ -5626,17 +5612,6 @@ export class FamilyRoleVersionApprovalStatus implements IFamilyRoleVersionApprov
             for (let item of this.requirements)
                 data["requirements"].push(item.toJSON());
         }
-        data["currentStatus"] = this.currentStatus;
-        if (Array.isArray(this.currentMissingRequirements)) {
-            data["currentMissingRequirements"] = [];
-            for (let item of this.currentMissingRequirements)
-                data["currentMissingRequirements"].push(item.toJSON());
-        }
-        if (Array.isArray(this.currentAvailableApplications)) {
-            data["currentAvailableApplications"] = [];
-            for (let item of this.currentAvailableApplications)
-                data["currentAvailableApplications"].push(item.toJSON());
-        }
         return data;
     }
 }
@@ -5645,9 +5620,6 @@ export interface IFamilyRoleVersionApprovalStatus {
     version?: string;
     status?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     requirements?: FamilyRoleRequirementCompletionStatus[];
-    currentStatus?: RoleApprovalStatus | undefined;
-    currentMissingRequirements?: FamilyRoleRequirementCompletionStatus[];
-    currentAvailableApplications?: FamilyRoleRequirementCompletionStatus[];
 }
 
 export class FamilyRoleRequirementCompletionStatus implements IFamilyRoleRequirementCompletionStatus {
@@ -6120,9 +6092,6 @@ export class IndividualRoleVersionApprovalStatus implements IIndividualRoleVersi
     version?: string;
     status?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     requirements?: IndividualRoleRequirementCompletionStatus[];
-    currentStatus?: RoleApprovalStatus | undefined;
-    currentMissingRequirements?: IndividualRoleRequirementCompletionStatus[];
-    currentAvailableApplications?: IndividualRoleRequirementCompletionStatus[];
 
     constructor(data?: IIndividualRoleVersionApprovalStatus) {
         if (data) {
@@ -6141,17 +6110,6 @@ export class IndividualRoleVersionApprovalStatus implements IIndividualRoleVersi
                 this.requirements = [] as any;
                 for (let item of _data["requirements"])
                     this.requirements!.push(IndividualRoleRequirementCompletionStatus.fromJS(item));
-            }
-            this.currentStatus = _data["currentStatus"];
-            if (Array.isArray(_data["currentMissingRequirements"])) {
-                this.currentMissingRequirements = [] as any;
-                for (let item of _data["currentMissingRequirements"])
-                    this.currentMissingRequirements!.push(IndividualRoleRequirementCompletionStatus.fromJS(item));
-            }
-            if (Array.isArray(_data["currentAvailableApplications"])) {
-                this.currentAvailableApplications = [] as any;
-                for (let item of _data["currentAvailableApplications"])
-                    this.currentAvailableApplications!.push(IndividualRoleRequirementCompletionStatus.fromJS(item));
             }
         }
     }
@@ -6172,17 +6130,6 @@ export class IndividualRoleVersionApprovalStatus implements IIndividualRoleVersi
             for (let item of this.requirements)
                 data["requirements"].push(item.toJSON());
         }
-        data["currentStatus"] = this.currentStatus;
-        if (Array.isArray(this.currentMissingRequirements)) {
-            data["currentMissingRequirements"] = [];
-            for (let item of this.currentMissingRequirements)
-                data["currentMissingRequirements"].push(item.toJSON());
-        }
-        if (Array.isArray(this.currentAvailableApplications)) {
-            data["currentAvailableApplications"] = [];
-            for (let item of this.currentAvailableApplications)
-                data["currentAvailableApplications"].push(item.toJSON());
-        }
         return data;
     }
 }
@@ -6191,9 +6138,6 @@ export interface IIndividualRoleVersionApprovalStatus {
     version?: string;
     status?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     requirements?: IndividualRoleRequirementCompletionStatus[];
-    currentStatus?: RoleApprovalStatus | undefined;
-    currentMissingRequirements?: IndividualRoleRequirementCompletionStatus[];
-    currentAvailableApplications?: IndividualRoleRequirementCompletionStatus[];
 }
 
 export class IndividualRoleRequirementCompletionStatus implements IIndividualRoleRequirementCompletionStatus {
