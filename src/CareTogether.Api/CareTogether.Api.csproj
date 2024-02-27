@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -37,8 +37,8 @@
   </PropertyGroup>
 
   <Target Name="NSwag" AfterTargets="PostBuildEvent" Condition="'$(Configuration)' == 'Debug'">
-    <Exec Command="$(NSwagExe_Net60) aspnetcore2openapi /assembly:$(TargetPath) /output:$(SolutionDir)swagger.json" EnvironmentVariables="ASPNETCORE_ENVIRONMENT=Development;OpenApiGen=true" />
-    <Exec Command="$(NSwagExe_Net60) openapi2tsclient /input:$(SolutionDir)swagger.json /output:$(SolutionDir)src\caretogether-pwa\src\GeneratedClient.ts" />
+    <Exec WorkingDirectory="$(ProjectDir)" Command="$(NSwagExe_Net80) aspnetcore2openapi /NoBuild:true /Project:$(ProjectDir) /output:$(ProjectDir)..\..\swagger.json" EnvironmentVariables="ASPNETCORE_ENVIRONMENT=Development;OpenApiGen=true" />
+    <Exec WorkingDirectory="$(ProjectDir)" Command="$(NSwagExe_Net80) openapi2tsclient /Input:$(ProjectDir)..\..\swagger.json /output:$(ProjectDir)..\caretogether-pwa\src\GeneratedClient.ts" />
   </Target>
 
 </Project>
