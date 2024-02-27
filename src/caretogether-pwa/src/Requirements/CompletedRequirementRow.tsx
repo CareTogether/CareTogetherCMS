@@ -19,11 +19,11 @@ export function CompletedRequirementRow({ requirement, context }: CompletedRequi
   const userLookup = useUserLookup();
   const permissions = useFamilyIdPermissions(
     context.kind === 'Referral' ||
-    context.kind === 'Arrangement' ||
-    context.kind === 'Family Volunteer Assignment' ||
-    context.kind === 'Individual Volunteer Assignment'
-    ? context.partneringFamilyId
-    : context.volunteerFamilyId
+      context.kind === 'Arrangement' ||
+      context.kind === 'Family Volunteer Assignment' ||
+      context.kind === 'Individual Volunteer Assignment'
+      ? context.partneringFamilyId
+      : context.volunteerFamilyId
   );
 
   const dialogHandle = useDialogHandle();
@@ -33,18 +33,18 @@ export function CompletedRequirementRow({ requirement, context }: CompletedRequi
     : context.kind === 'Arrangement' ||
       context.kind === 'Family Volunteer Assignment' ||
       context.kind === 'Individual Volunteer Assignment'
-    ? permissions(Permission.EditArrangementRequirementCompletion)
-    : permissions(Permission.EditApprovalRequirementCompletion);
-  
+      ? permissions(Permission.EditArrangementRequirementCompletion)
+      : permissions(Permission.EditApprovalRequirementCompletion);
+
   const dateFormat =
     context.kind === "Arrangement" ||
-    context.kind === "Family Volunteer Assignment" ||
-    context.kind === "Individual Volunteer Assignment"
-    ? "M/d/yy h:mm a" : "M/d/yy";
+      context.kind === "Family Volunteer Assignment" ||
+      context.kind === "Individual Volunteer Assignment"
+      ? "M/d/yy h:mm a" : "M/d/yy";
 
   const familyLookup = useFamilyLookup();
   const personLookup = usePersonLookup();
-  
+
   return (
     <>
       <IconRow icon="✅" onClick={canMarkIncomplete ? dialogHandle.openDialog : undefined}>
@@ -63,14 +63,14 @@ export function CompletedRequirementRow({ requirement, context }: CompletedRequi
               <><br /><span style={{ paddingLeft: '30px' }}>
                 {requirement.expiresAtUtc > new Date()
                   ? `⏰ Expires ${format(requirement.expiresAtUtc, dateFormat)}`
-                  : <span style={{ fontWeight: 'bold'}}>❌ Expired {format(requirement.expiresAtUtc, dateFormat)}</span>}
+                  : <span style={{ fontWeight: 'bold' }}>⚠ Expired {format(requirement.expiresAtUtc, dateFormat)}</span>}
               </span></>}
             {context.kind === 'Family Volunteer Assignment' &&
-              <><br/><span style={{ paddingLeft: '30px' }}>
+              <><br /><span style={{ paddingLeft: '30px' }}>
                 <FamilyName family={familyLookup(context.assignment.familyId)} />
               </span></>}
             {context.kind === 'Individual Volunteer Assignment' &&
-              <><br/><span style={{ paddingLeft: '30px' }}>
+              <><br /><span style={{ paddingLeft: '30px' }}>
                 <PersonName person={personLookup(context.assignment.familyId, context.assignment.personId)} />
               </span></>}
           </>
