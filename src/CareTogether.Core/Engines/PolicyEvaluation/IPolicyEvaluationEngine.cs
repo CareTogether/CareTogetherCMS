@@ -107,8 +107,12 @@ namespace CareTogether.Engines.PolicyEvaluation
         public ImmutableList<IndividualRoleRequirementCompletionStatus> CurrentMissingRequirements =>
             Requirements
                 .Where(r =>
-                    (r.Stage == RequirementStage.Approval && CurrentStatus == RoleApprovalStatus.Prospective) ||
-                    (r.Stage == RequirementStage.Onboarding && CurrentStatus == RoleApprovalStatus.Approved))
+                    (r.Stage == RequirementStage.Approval && (
+                        CurrentStatus == RoleApprovalStatus.Prospective ||
+                        CurrentStatus == RoleApprovalStatus.Expired)) ||
+                    (r.Stage == RequirementStage.Onboarding && (
+                        CurrentStatus == RoleApprovalStatus.Approved ||
+                        CurrentStatus == RoleApprovalStatus.Expired)))
                 .Where(r => r.WhenMet?.Contains(DateOnly.FromDateTime(DateTime.UtcNow)) != true)
                 .ToImmutableList();
 
@@ -116,7 +120,9 @@ namespace CareTogether.Engines.PolicyEvaluation
         [Newtonsoft.Json.JsonIgnore]
         public ImmutableList<IndividualRoleRequirementCompletionStatus> CurrentAvailableApplications =>
             Requirements
-                .Where(r => r.Stage == RequirementStage.Application && CurrentStatus == null)
+                .Where(r => r.Stage == RequirementStage.Application && (
+                    CurrentStatus == null ||
+                    CurrentStatus == RoleApprovalStatus.Expired))
                 .Where(r => r.WhenMet?.Contains(DateOnly.FromDateTime(DateTime.UtcNow)) != true)
                 .ToImmutableList();
     }
@@ -179,8 +185,12 @@ namespace CareTogether.Engines.PolicyEvaluation
         public ImmutableList<FamilyRoleRequirementCompletionStatus> CurrentMissingRequirements =>
             Requirements
                 .Where(r =>
-                    (r.Stage == RequirementStage.Approval && CurrentStatus == RoleApprovalStatus.Prospective) ||
-                    (r.Stage == RequirementStage.Onboarding && CurrentStatus == RoleApprovalStatus.Approved))
+                    (r.Stage == RequirementStage.Approval && (
+                        CurrentStatus == RoleApprovalStatus.Prospective ||
+                        CurrentStatus == RoleApprovalStatus.Expired)) ||
+                    (r.Stage == RequirementStage.Onboarding && (
+                        CurrentStatus == RoleApprovalStatus.Approved ||
+                        CurrentStatus == RoleApprovalStatus.Expired)))
                 .Where(r => r.WhenMet?.Contains(DateOnly.FromDateTime(DateTime.UtcNow)) != true)
                 .ToImmutableList();
 
@@ -188,7 +198,9 @@ namespace CareTogether.Engines.PolicyEvaluation
         [Newtonsoft.Json.JsonIgnore]
         public ImmutableList<FamilyRoleRequirementCompletionStatus> CurrentAvailableApplications =>
             Requirements
-                .Where(r => r.Stage == RequirementStage.Application && CurrentStatus == null)
+                .Where(r => r.Stage == RequirementStage.Application && (
+                    CurrentStatus == null ||
+                    CurrentStatus == RoleApprovalStatus.Expired))
                 .Where(r => r.WhenMet?.Contains(DateOnly.FromDateTime(DateTime.UtcNow)) != true)
                 .ToImmutableList();
     }
