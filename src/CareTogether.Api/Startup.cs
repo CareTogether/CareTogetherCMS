@@ -178,7 +178,7 @@ namespace CareTogether.Api
             services.AddAuthentication("Basic")
                 .AddBasic("Basic", options =>
                 {
-                    options.AllowInsecureProtocol = HostEnvironment.IsDevelopment();
+                    options.AllowInsecureProtocol = true; // Azure Front Door handles SSL termination.
                     options.Realm = "CareTogether OData Feed";
                     options.Events = new BasicAuthenticationEvents
                     {
