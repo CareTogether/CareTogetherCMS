@@ -41,12 +41,13 @@ namespace CareTogether.Api.OData
     public sealed record FamilyRoleApproval(
         [property: ForeignKey("FamilyId")] Family Family, [property: Key] Guid FamilyId,
         [property: ForeignKey("RoleName")] Role Role, [property: Key] string RoleName,
-        ImmutableList<DateRange<RoleApprovalStatus>>? ApprovalStatusRanges);
+        [property: Key] DateOnly Start, [property: Key] DateOnly End, RoleApprovalStatus? Status);
 
     public sealed record IndividualRoleApproval(
         [property: ForeignKey("PersonId")] Person Person, [property: Key] Guid PersonId,
         [property: ForeignKey("RoleName")] Role Role, [property: Key] string RoleName,
-        ImmutableList<DateRange<RoleApprovalStatus>>? ApprovalStatusRanges);
+        [property: ForeignKey("FamilyId")] Family Family, Guid FamilyId,
+        [property: Key] DateOnly Start, [property: Key] DateOnly End, RoleApprovalStatus? Status);
 
     public sealed record IndividualRemovedRole(
         [property: ForeignKey("PersonId")] Person Person, [property: Key] Guid PersonId,
@@ -345,12 +346,10 @@ namespace CareTogether.Api.OData
             CombinedFamilyInfo familyInfo, Family family, Role[] roles)
         {
             return familyInfo.VolunteerFamilyInfo?.FamilyRoleApprovals
-                .Select(fra =>
-                    new FamilyRoleApproval(family, family.Id,
+                .SelectMany(fra => fra.Value.EffectiveRoleApprovalStatus?.Ranges
+                    .Select(range => new FamilyRoleApproval(family, family.Id,
                         roles.Single(role => role.Name == fra.Key), fra.Key,
-                        fra.Value.EffectiveRoleApprovalStatus?.Ranges))
-                ?? Enumerable.Empty<FamilyRoleApproval>();
-            //TODO: Include *when approval began* (requires returning *all* the approvals and adding a 'Since' date property!)
+                        range.Start, range.End, range.Tag)) ?? []) ?? [];
         }
 
         private static IEnumerable<IndividualRoleApproval> RenderIndividualRoleApprovals(
@@ -358,12 +357,12 @@ namespace CareTogether.Api.OData
         {
             return familyInfo.VolunteerFamilyInfo?.IndividualVolunteers
                 .SelectMany(individual => individual.Value.ApprovalStatusByRole
-                    .Select(ira =>
-                        new IndividualRoleApproval(
+                    .SelectMany(ira => ira.Value.EffectiveRoleApprovalStatus?.Ranges
+                        .Select(range => new IndividualRoleApproval(
                             people.Single(person => person.Id == individual.Key), individual.Key,
                             roles.Single(role => role.Name == ira.Key), ira.Key,
-                            ira.Value.EffectiveRoleApprovalStatus?.Ranges)))
-                ?? Enumerable.Empty<IndividualRoleApproval>();
+                            family, family.Id,
+                            range.Start, range.End, range.Tag)) ?? []) ?? []) ?? [];
         }
 
         private static IEnumerable<Referral> RenderReferrals(
