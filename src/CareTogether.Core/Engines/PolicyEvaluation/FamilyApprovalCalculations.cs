@@ -23,15 +23,13 @@ namespace CareTogether.Engines.PolicyEvaluation
             ImmutableDictionary<Guid, ImmutableList<RoleRemoval>> individualRoleRemovals)
         {
             var allFamilyRoleApprovals = volunteerFamilyRoles
-                .Where(rolePolicy =>
-                    !familyRoleRemovals.Any(x => x.RoleName == rolePolicy.Key))
                 .ToImmutableDictionary(
                     rolePolicy => rolePolicy.Key,
                     rolePolicy => CalculateFamilyRoleApprovalStatus(
                         rolePolicy.Key, rolePolicy.Value,
                         family,
                         completedFamilyRequirements, exemptedFamilyRequirements,
-                        familyRoleRemovals,
+                        familyRoleRemovals.Where(role => role.RoleName == rolePolicy.Key).ToImmutableList(),
                         completedIndividualRequirements, exemptedIndividualRequirements,
                         individualRoleRemovals));
 
@@ -43,7 +41,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             string roleName, VolunteerFamilyRolePolicy rolePolicy, Family family,
             ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
             ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
-            ImmutableList<RoleRemoval> familyRoleRemovals,
+            ImmutableList<RoleRemoval> removalsOfThisRole,
             ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>> exemptedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<RoleRemoval>> individualRoleRemovals)
@@ -53,7 +51,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                     CalculateFamilyRoleVersionApprovalStatus(
                         roleName, policyVersion, family,
                         completedFamilyRequirements, exemptedFamilyRequirements,
-                        familyRoleRemovals,
+                        removalsOfThisRole,
                         completedIndividualRequirements, exemptedIndividualRequirements,
                         individualRoleRemovals))
                 .ToImmutableList();
@@ -73,7 +71,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             Family family,
             ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
             ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
-            ImmutableList<RoleRemoval> familyRoleRemovals,
+            ImmutableList<RoleRemoval> removalsOfThisRole,
             ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>> exemptedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<RoleRemoval>> individualRoleRemovals)
@@ -112,8 +110,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 SharedCalculations.CalculateRoleVersionApprovalStatus(
                     requirementCompletions
                         .Select(x => (x.Stage, x.WhenMet)).ToImmutableList(),
-                    familyRoleRemovals
-                        .Where(x => x.RoleName == roleName).ToImmutableList());
+                    removalsOfThisRole);
 
             return new FamilyRoleVersionApprovalStatus(
                 policyVersion.Version, roleVersionApprovalStatus,
