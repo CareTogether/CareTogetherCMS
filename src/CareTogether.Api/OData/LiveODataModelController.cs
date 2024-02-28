@@ -49,11 +49,11 @@ namespace CareTogether.Api.OData
         [property: ForeignKey("FamilyId")] Family Family, Guid FamilyId,
         [property: Key] DateOnly Start, [property: Key] DateOnly End, RoleApprovalStatus? Status);
 
-    public sealed record IndividualRemovedRole(
+    public sealed record FamilyRoleRemovedIndividual(
         [property: ForeignKey("PersonId")] Person Person, [property: Key] Guid PersonId,
         [property: ForeignKey("RoleName")] Role Role, [property: Key] string RoleName,
         [property: ForeignKey("FamilyId")] Family Family, Guid FamilyId,
-        [property: Key] DateOnly EffectiveSince, [property: Key] DateOnly? EffectiveUntil);
+        [property: Key] DateOnly Start, [property: Key] DateOnly End);
 
     public sealed record Role([property: Key] string Name);
 
@@ -96,7 +96,7 @@ namespace CareTogether.Api.OData
         IEnumerable<Role> Roles,
         IEnumerable<FamilyRoleApproval> FamilyRoleApprovals,
         IEnumerable<IndividualRoleApproval> IndividualRoleApprovals,
-        IEnumerable<IndividualRemovedRole> IndividualRemovedRoles,
+        IEnumerable<FamilyRoleRemovedIndividual> FamilyRoleRemovedIndividuals,
         IEnumerable<Referral> Referrals,
         IEnumerable<Arrangement> Arrangements,
         IEnumerable<ArrangementType> ArrangementTypes,
@@ -166,11 +166,11 @@ namespace CareTogether.Api.OData
             return liveModel.IndividualRoleApprovals;
         }
 
-        [HttpGet("IndividualRemovedRoles")]
-        public async Task<IEnumerable<IndividualRemovedRole>> GetIndividualRemovedRolesAsync()
+        [HttpGet("FamilyRoleRemovedIndividuals")]
+        public async Task<IEnumerable<FamilyRoleRemovedIndividual>> GetFamilyRoleRemovedIndividualsAsync()
         {
             var liveModel = await RenderLiveModelAsync();
-            return liveModel.IndividualRemovedRoles;
+            return liveModel.FamilyRoleRemovedIndividuals;
         }
 
         [HttpGet("Referral")]
@@ -270,8 +270,8 @@ namespace CareTogether.Api.OData
                 .SelectMany(x => RenderFamilyRoleApprovals(x.Item1, x.Item2, roles)).ToArray();
             var individualRoleApprovals = familiesWithInfo
                 .SelectMany(x => RenderIndividualRoleApprovals(x.Item1, x.Item2, people, roles)).ToArray();
-            var individualRemovedRoles = familiesWithInfo
-                .SelectMany(x => RenderIndividualRemovedRoles(x.Item1, x.Item2, people, roles)).ToArray();
+            var familyRoleRemovedIndividuals = familiesWithInfo
+                .SelectMany(x => RenderFamilyRoleRemovedIndividuals(x.Item1, x.Item2, people, roles)).ToArray();
 
             var referrals = familiesWithInfo.SelectMany(x => RenderReferrals(x.Item1, x.Item2)).ToArray();
 
@@ -290,7 +290,7 @@ namespace CareTogether.Api.OData
             var individualFunctionAssignments = familiesWithInfo.SelectMany(x => RenderIndividualFunctionAssignments(x.Item1, x.Item2, families, people, arrangements)).ToArray();
 
             return new LiveModel(locations, families, people,
-                roles, familyRoleApprovals, individualRoleApprovals, individualRemovedRoles,
+                roles, familyRoleApprovals, individualRoleApprovals, familyRoleRemovedIndividuals,
                 referrals, arrangements, arrangementTypes,
                 childLocationRecords, familyFunctionAssignments, individualFunctionAssignments);
         }
@@ -377,16 +377,18 @@ namespace CareTogether.Api.OData
                             range.Start, range.End, range.Tag)) ?? []) ?? []) ?? [];
         }
 
-        private static IEnumerable<IndividualRemovedRole> RenderIndividualRemovedRoles(
+        private static IEnumerable<FamilyRoleRemovedIndividual> RenderFamilyRoleRemovedIndividuals(
             CombinedFamilyInfo familyInfo, Family family, Person[] people, Role[] roles)
         {
             return familyInfo.VolunteerFamilyInfo?.IndividualVolunteers
                 .SelectMany(individual => individual.Value.RoleRemovals
-                    .Select(removal => new IndividualRemovedRole(
+                    .Where(removal =>
+                        familyInfo.VolunteerFamilyInfo.FamilyRoleApprovals.Keys.Contains(removal.RoleName))
+                    .Select(removal => new FamilyRoleRemovedIndividual(
                         people.Single(person => person.Id == individual.Key), individual.Key,
                         roles.Single(role => role.Name == removal.RoleName), removal.RoleName,
                         family, family.Id,
-                        removal.EffectiveSince, removal.EffectiveUntil))) ?? [];
+                        removal.EffectiveSince, removal.EffectiveUntil ?? DateOnly.MaxValue))) ?? [];
         }
 
         private static IEnumerable<Referral> RenderReferrals(
