@@ -81,11 +81,11 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
 
   const participatingFamilyRoles =
     Object.entries(family.volunteerFamilyInfo?.familyRoleApprovals || {}).filter(
-      ([role,]) => !family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles?.find(x => x.roleName === role));
+      ([role,]) => !family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.roleRemovals?.find(x => x.roleName === role));
   const participatingIndividualRoles =
-    Object.entries(family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.individualRoleApprovals || {}).filter(
-      ([role,]) => !family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles?.find(x => x.roleName === role));
-  const removedRoles = family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles || [];
+    Object.entries(family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.approvalStatusByRole || {}).filter(
+      ([role,]) => !family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.roleRemovals?.find(x => x.roleName === role));
+  const removedRoles = family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.roleRemovals || [];
 
   return <>{adult?.item1 && adult.item1.id && adult.item2 &&
     <Card variant="outlined" sx={{ minWidth: '275px' }}>
@@ -130,7 +130,7 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
         }} component="div">
           {Object.entries(family.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].approvalStatusByRole || {}).map(([role, roleApprovalStatus]) =>
             <VolunteerRoleApprovalStatusChip key={role} roleName={role} status={roleApprovalStatus.effectiveRoleApprovalStatus} />)}
-          {(family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles || []).map(removedRole =>
+          {(family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.roleRemovals || []).map(removedRole =>
             <Chip key={removedRole.roleName} size="small" label={`${removedRole.roleName} - ${RoleRemovalReason[removedRole.reason!]} - ${removedRole.additionalComments}`} />)}
           {(adult.item2.relationshipToFamily && <Chip size="small" label={adult.item2.relationshipToFamily} />) || null}
           {adult.item2.isInHousehold && <Chip size="small" label="In Household" />}
