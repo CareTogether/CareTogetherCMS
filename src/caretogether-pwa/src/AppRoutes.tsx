@@ -32,8 +32,8 @@ function RouteMigrator() {
         roles: loc.roles
       }))
     })))}`);
-  
-  const [lastVisitedLocation, _] = useLocalStorage<LocationContext | null>(LAST_VISITED_LOCATION, null);
+
+  const [lastVisitedLocation,] = useLocalStorage<LocationContext | null>(LAST_VISITED_LOCATION, null);
   trace(`lastVisitedLocation contents: ${JSON.stringify(lastVisitedLocation)}`);
 
   useEffect(() => {
@@ -42,7 +42,7 @@ function RouteMigrator() {
     }
 
     let migrationTargetContext: LocationContext | null = null;
-    
+
     if (lastVisitedLocation) {
       migrationTargetContext = lastVisitedLocation;
     } else {
@@ -53,7 +53,7 @@ function RouteMigrator() {
         ? { organizationId: firstOrganization.organizationId!, locationId: firstLocation.locationId! }
         : null;
     }
-    
+
     if (migrationTargetContext != null) {
       //TODO: Only do this if the old path is a valid/migrate-able path to begin with.
       const target = `/org/${migrationTargetContext.organizationId}/${migrationTargetContext.locationId}${location.pathname}` +
@@ -85,9 +85,9 @@ function RouteError(): React.ReactElement {
 function LocationContextWrapper() {
   const trace = useScopedTrace("LocationContext");
   const { organizationId, locationId } = useParams<{ organizationId: string, locationId: string }>();
-  
+
   const [selectedLocationContext, setSelectedLocationContext] = useRecoilStateLoadable(selectedLocationContextState);
-  const [_, setLastVisitedLocation] = useLocalStorage<LocationContext | null>(LAST_VISITED_LOCATION, null);
+  const [, setLastVisitedLocation] = useLocalStorage<LocationContext | null>(LAST_VISITED_LOCATION, null);
 
   // We only need to change this on first load or when the location context actually changes.
   useEffect(() => {
@@ -101,17 +101,18 @@ function LocationContextWrapper() {
         `organizationId: '${organizationId}'` +
         `locationId: '${locationId}'`);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [organizationId, locationId, trace, setSelectedLocationContext]);
-  
+
   return (
     // We need to wait for this to have a value before rendering the child tree; otherwise,
     // the tree will suspend as soon as a data dependency on selectedLocationContextState is encountered, and
     // the effect above (that actually sets the selectedLocationContextState) will not fire.
     (selectedLocationContext.state === "hasValue" &&
-    // As an added benefit, we can also use this component to show the spinner when switching locations.
+      // As an added benefit, we can also use this component to show the spinner when switching locations.
       selectedLocationContext.contents.organizationId === organizationId &&
       selectedLocationContext.contents.locationId === locationId)
-    ? <ShellRootLayout>
+      ? <ShellRootLayout>
         <Routes>
           <Route index element={<Dashboard />} />
           <Route path="families/:familyId" element={<FamilyScreen />} />
@@ -122,7 +123,7 @@ function LocationContextWrapper() {
           <Route path="*" element={<RouteError />} />
         </Routes>
       </ShellRootLayout>
-    : <ProgressBackdrop opaque>
+      : <ProgressBackdrop opaque>
         <p>Setting location...</p>
       </ProgressBackdrop>
   );

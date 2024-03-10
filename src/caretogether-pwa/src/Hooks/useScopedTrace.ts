@@ -19,5 +19,5 @@ export function useScopedTrace(component: string) {
         "Component Name": component
       }
     });
-  }, [ appInsights, component ]);
+  }, [appInsights, component]);
 }

@@ -11,7 +11,7 @@ interface ApproveNoteDialogProps {
   onClose: () => void
 }
 
-export function ApproveNoteDialog({familyId, note, onClose}: ApproveNoteDialogProps) {
+export function ApproveNoteDialog({ familyId, note, onClose }: ApproveNoteDialogProps) {
   const directoryModel = useDirectoryModel();
   const userLookup = useUserLookup();
 

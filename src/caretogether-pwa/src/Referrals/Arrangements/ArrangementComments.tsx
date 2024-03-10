@@ -25,15 +25,15 @@ export function ArrangementComments({ partneringFamily, referralId, arrangement 
     <>
       {editor.editing
         ? <TextField
-            id="arrangement-comments"
-            helperText="Arrangement comments are visible to everyone."
-            placeholder="Space for any general notes about the arrangement, upcoming plans, etc."
-            multiline fullWidth variant="outlined" minRows={2} size="medium"
-            value={editor.value}
-            onChange={e => editor.setValue(e.target.value)} />
+          id="arrangement-comments"
+          helperText="Arrangement comments are visible to everyone."
+          placeholder="Space for any general notes about the arrangement, upcoming plans, etc."
+          multiline fullWidth variant="outlined" minRows={2} size="medium"
+          value={editor.value}
+          onChange={e => editor.setValue(e.target.value)} />
         : (savedValue && savedValue.length > 0)
-        ? savedValue
-        : "(no comments)"}
+          ? savedValue
+          : "(no comments)"}
       {permissions(Permission.EditArrangement) &&
         <>
           {editor.editButton}

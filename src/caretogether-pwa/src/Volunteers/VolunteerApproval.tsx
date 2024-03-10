@@ -211,7 +211,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
         roleFilter.selected.indexOf(
           family.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.roleName]?.currentStatus || null) > -1) &&
       volunteerRoleFilters.every(roleFilter =>
-        ((family.volunteerFamilyInfo?.individualVolunteers && Object.entries(family.volunteerFamilyInfo?.individualVolunteers)) || []).some(([_, volunteer]) =>
+        ((family.volunteerFamilyInfo?.individualVolunteers && Object.entries(family.volunteerFamilyInfo?.individualVolunteers)) || []).some(([, volunteer]) =>
           roleFilter.selected.indexOf(null) > -1 ||
           roleFilter.selected.indexOf(volunteer.approvalStatusByRole?.[roleFilter.roleName]?.currentStatus || null) > -1))
     ));
@@ -232,7 +232,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 
   const [expandedView, setExpandedView] = useLocalStorage('volunteer-approval-expanded', true);
   const handleExpandCollapse = (
-    event: React.MouseEvent<HTMLElement>,
+    _event: React.MouseEvent<HTMLElement>,
     newExpandedView: boolean | null,
   ) => {
     if (newExpandedView !== null) {

@@ -17,15 +17,15 @@ export function MissingRequirementRow({ requirement, context, isAvailableApplica
   const policy = useRecoilValue(policyData);
   const permissions = useFamilyIdPermissions(
     context.kind === 'Referral' ||
-    context.kind === 'Arrangement' ||
-    context.kind === 'Family Volunteer Assignment' ||
-    context.kind === 'Individual Volunteer Assignment'
-    ? context.partneringFamilyId
-    : context.volunteerFamilyId
+      context.kind === 'Arrangement' ||
+      context.kind === 'Family Volunteer Assignment' ||
+      context.kind === 'Individual Volunteer Assignment'
+      ? context.partneringFamilyId
+      : context.volunteerFamilyId
   );
-  
+
   const dialogHandle = useDialogHandle();
-  
+
   const requirementPolicy = policy.actionDefinitions![requirement];
 
   if (context.kind === 'Arrangement' ||
@@ -39,7 +39,7 @@ export function MissingRequirementRow({ requirement, context, isAvailableApplica
   const canExempt = context.kind === 'Referral'
     ? permissions(Permission.EditReferralRequirementExemption)
     : permissions(Permission.EditApprovalRequirementExemption);
-  
+
   return (
     <>
       <IconRow icon={isAvailableApplication ? "💤" : "❌"}

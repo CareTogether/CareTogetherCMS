@@ -6,7 +6,7 @@ import {
   Button,
   Typography,
 } from '@mui/material';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Note, NoteStatus, Permission } from '../GeneratedClient';
 import { useUserLookup } from '../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
@@ -33,8 +33,8 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
   const permissions = useFamilyIdPermissions(familyId);
 
   return typeof note === 'undefined' ? null : (
-    <Card sx={{margin: 0}} variant="outlined">
-      <CardHeader sx={{padding: 1}}
+    <Card sx={{ margin: 0 }} variant="outlined">
+      <CardHeader sx={{ padding: 1 }}
         subheader={<>
           <PersonName person={userLookup(note.authorId)} />
           {note.status === NoteStatus.Draft ? " - DRAFT" : ""}
@@ -51,13 +51,13 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
         </Typography>
       </CardContent>
       {note.status === NoteStatus.Draft &&
-        <CardActions sx={{paddingTop: 0}}>
+        <CardActions sx={{ paddingTop: 0 }}>
           {permissions(Permission.DiscardDraftNotes) && <Button
             onClick={() => setShowDiscardNoteDialog(true)}
             variant="contained"
             size="small"
             color='secondary'
-            sx={{marginTop: 1, marginLeft: 'auto !important'}}
+            sx={{ marginTop: 1, marginLeft: 'auto !important' }}
             startIcon={<DeleteForeverIcon />}>
             Delete
           </Button>}
@@ -65,7 +65,7 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
             onClick={() => setShowEditNoteDialog(true)}
             variant="contained"
             size="small"
-            sx={{marginTop: 1, marginLeft: 'auto !important'}}
+            sx={{ marginTop: 1, marginLeft: 'auto !important' }}
             startIcon={<EditIcon />}>
             Edit
           </Button>}
@@ -73,7 +73,7 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
             onClick={() => setShowApproveNoteDialog(true)}
             variant="contained"
             size="small"
-            sx={{marginTop: 1, marginLeft: 'auto !important'}}
+            sx={{ marginTop: 1, marginLeft: 'auto !important' }}
             startIcon={<CheckIcon />}>
             Approve
           </Button>}

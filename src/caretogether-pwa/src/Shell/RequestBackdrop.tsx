@@ -8,4 +8,4 @@ export default function RequestBackdrop() {
   return (
     <ProgressBackdrop open={showGlobalBackdrop} />
   );
-};
+}

@@ -63,7 +63,7 @@ export function useCommunityLookup() {
 
 export function useAtomicRecordsCommandCallback<T extends unknown[], U extends AtomicRecordsCommand>(
   callback: (aggregateId: string, ...args: T) => Promise<U>) {
-  return useRecoilCallback(({snapshot, set}) => {
+  return useRecoilCallback(({ snapshot, set }) => {
     const asyncCallback = async (aggregateId: string, ...args: T) => {
       const { organizationId, locationId } = await snapshot.getPromise(selectedLocationContextState);
 
@@ -71,12 +71,12 @@ export function useAtomicRecordsCommandCallback<T extends unknown[], U extends A
 
       const updatedAggregate = await api.records.submitAtomicRecordsCommand(organizationId, locationId, command);
 
-      set(visibleAggregatesState, current => 
+      set(visibleAggregatesState, current =>
         current.some(currentEntry => currentEntry.id === updatedAggregate.id && currentEntry.constructor === updatedAggregate.constructor)
-        ? current.map(currentEntry => currentEntry.id === updatedAggregate.id && currentEntry.constructor === updatedAggregate.constructor
-          ? updatedAggregate
-          : currentEntry)
-        : current.concat(updatedAggregate));
+          ? current.map(currentEntry => currentEntry.id === updatedAggregate.id && currentEntry.constructor === updatedAggregate.constructor
+            ? updatedAggregate
+            : currentEntry)
+          : current.concat(updatedAggregate));
     };
     return asyncCallback;
   })
@@ -84,20 +84,20 @@ export function useAtomicRecordsCommandCallback<T extends unknown[], U extends A
 
 function useCompositeRecordsCommandCallback<T extends unknown[]>(
   callback: (aggregateId: string, ...args: T) => Promise<CompositeRecordsCommand>) {
-  return useRecoilCallback(({snapshot, set}) => {
+  return useRecoilCallback(({ snapshot, set }) => {
     const asyncCallback = async (aggregateId: string, ...args: T) => {
       const { organizationId, locationId } = await snapshot.getPromise(selectedLocationContextState);
 
       const command = await callback(aggregateId, ...args);
 
       const updatedAggregate = await api.records.submitCompositeRecordsCommand(organizationId, locationId, command);
-      
+
       set(visibleAggregatesState, current =>
         current.some(currentEntry => currentEntry.id === updatedAggregate.id)
-        ? current.map(currentEntry => currentEntry.id === updatedAggregate.id
-          ? updatedAggregate
-          : currentEntry)
-        : current.concat(updatedAggregate));
+          ? current.map(currentEntry => currentEntry.id === updatedAggregate.id
+            ? updatedAggregate
+            : currentEntry)
+          : current.concat(updatedAggregate));
     };
     return asyncCallback;
   })
@@ -106,7 +106,7 @@ function useCompositeRecordsCommandCallback<T extends unknown[]>(
 function useFamilyCommandCallback<T extends unknown[]>(
   callback: (familyId: string, ...args: T) => Promise<FamilyCommand>) {
   return useAtomicRecordsCommandCallback(async (familyId, ...args: T) => {
-    var command = new FamilyRecordsCommand();
+    const command = new FamilyRecordsCommand();
     command.command = await callback(familyId, ...args);
     return command;
   });
@@ -115,7 +115,7 @@ function useFamilyCommandCallback<T extends unknown[]>(
 function usePersonCommandCallback<T extends unknown[]>(
   callback: (familyId: string, ...args: T) => Promise<PersonCommand>) {
   return useAtomicRecordsCommandCallback(async (familyId, ...args: T) => {
-    var command = new PersonRecordsCommand();
+    const command = new PersonRecordsCommand();
     command.command = await callback(familyId, ...args);
     command.familyId = familyId;
     return command;
@@ -125,7 +125,7 @@ function usePersonCommandCallback<T extends unknown[]>(
 function useNoteCommandCallback<T extends unknown[]>(
   callback: (familyId: string, ...args: T) => Promise<NoteCommand>) {
   return useAtomicRecordsCommandCallback(async (familyId, ...args: T) => {
-    var command = new NoteRecordsCommand();
+    const command = new NoteRecordsCommand();
     command.command = await callback(familyId, ...args);
     return command;
   });
@@ -134,7 +134,7 @@ function useNoteCommandCallback<T extends unknown[]>(
 export function useCommunityCommand<TCommand extends CommunityCommand, TArgs extends unknown[]>(
   callback: (communityId: string, ...args: TArgs) => TCommand) {
   return useAtomicRecordsCommandCallback(async (communityId, ...args: TArgs) => {
-    var command = new CommunityRecordsCommand();
+    const command = new CommunityRecordsCommand();
     command.command = callback(communityId, ...args);
     return command;
   });
@@ -318,10 +318,10 @@ export function useDirectoryModel() {
     });
   const addAdult = useCompositeRecordsCommandCallback(
     async (familyId, firstName: string, lastName: string, gender: Gender | null, age: Age | null, ethnicity: string | null,
-        isInHousehold: boolean, relationshipToFamily: string,
-        address: Address | null,
-        phoneNumber: string | null, phoneType: PhoneNumberType | null, emailAddress: string | null, emailType: EmailAddressType | null,
-        notes?: string, concerns?: string) => {
+      isInHousehold: boolean, relationshipToFamily: string,
+      address: Address | null,
+      phoneNumber: string | null, phoneType: PhoneNumberType | null, emailAddress: string | null, emailType: EmailAddressType | null,
+      notes?: string, concerns?: string) => {
       const command = new AddAdultToFamilyCommand();
       command.familyId = familyId;
       command.personId = crypto.randomUUID();
@@ -353,8 +353,8 @@ export function useDirectoryModel() {
     });
   const addChild = useCompositeRecordsCommandCallback(
     async (familyId, firstName: string, lastName: string, gender: Gender | null, age: Age | null, ethnicity: string | null,
-        custodialRelationships: CustodialRelationship[],
-        notes?: string, concerns?: string) => {
+      custodialRelationships: CustodialRelationship[],
+      notes?: string, concerns?: string) => {
       const command = new AddChildToFamilyCommand();
       command.familyId = familyId;
       command.personId = crypto.randomUUID();
@@ -482,7 +482,7 @@ export function useDirectoryModel() {
       command.backdatedTimestampUtc = backdatedTimestampLocal;
       return command;
     });
-  
+
   return {
     uploadFamilyDocument,
     deleteUploadedFamilyDocument,

@@ -28,7 +28,7 @@ export function FilterMenu({ singularLabel, pluralLabel, filterOptions, handleFi
         aria-describedby={filterMenuId}
         onClick={handleFilterClick}
         size="small"
-        color="primary" 
+        color="primary"
       >
         <FilterAlt />
       </IconButton>
@@ -38,23 +38,23 @@ export function FilterMenu({ singularLabel, pluralLabel, filterOptions, handleFi
         anchorEl={filterElement}
         onClose={handleFilterClose}
         anchorOrigin={{
-        vertical: 'bottom',
-        horizontal: 'left',
+          vertical: 'bottom',
+          horizontal: 'left',
         }}
       >
         <FormControl sx={{ m: 3 }} component="fieldset" variant="standard">
-        <FormLabel component="legend">{`Filter ${pluralLabel}`}</FormLabel>
-        <FormGroup>
-          {filterOptions.map(o =>
-            <FormControlLabel
-              key={o.key}
-              control={
-                <Checkbox checked={o.selected} onChange={handleFilterChange} name={o.text} />
-              }
-              label={o.text}
-            />
-          )}
-        </FormGroup>
+          <FormLabel component="legend">{`Filter ${pluralLabel}`}</FormLabel>
+          <FormGroup>
+            {filterOptions.map(o =>
+              <FormControlLabel
+                key={o.key}
+                control={
+                  <Checkbox checked={o.selected} onChange={handleFilterChange} name={o.text} />
+                }
+                label={o.text}
+              />
+            )}
+          </FormGroup>
         </FormControl>
       </Popover>
     </React.Fragment>

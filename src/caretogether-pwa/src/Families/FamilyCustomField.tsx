@@ -11,12 +11,12 @@ type FamilyCustomFieldProps = {
 
 export function FamilyCustomField({ familyId, customField }: FamilyCustomFieldProps) {
   const policy = useRecoilValue(policyData);
-  
+
   const savedCustomField = customField instanceof CompletedCustomFieldInfo ? customField : null;
   const customFieldPolicy = policy.customFamilyFields!.find(cf =>
     savedCustomField
-    ? cf.name === savedCustomField.customFieldName
-    : cf.name === customField) as CustomField;
+      ? cf.name === savedCustomField.customFieldName
+      : cf.name === customField) as CustomField;
 
   const directoryModel = useDirectoryModel();
 

@@ -11,7 +11,7 @@ interface ResetIndividualRoleDialogProps {
   onClose: () => void
 }
 
-export function ResetIndividualRoleDialog({volunteerFamilyId, person, role, removalReason, removalAdditionalComments, onClose}: ResetIndividualRoleDialogProps) {
+export function ResetIndividualRoleDialog({ volunteerFamilyId, person, role, removalReason, removalAdditionalComments, onClose }: ResetIndividualRoleDialogProps) {
   const volunteerFamiliesModel = useVolunteersModel();
 
   async function save() {

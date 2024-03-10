@@ -37,8 +37,8 @@ function ReferralOpenSelector({ context, factory, onUpdate }: ContextSelectorPro
                 ? true : false;
               onUpdate(newContext);
             }} />}
-        label={context.whenReferralIsOpen ? "Open referral" : "Closed referral"}
-        sx={{marginLeft: 3}} />}
+          label={context.whenReferralIsOpen ? "Open referral" : "Closed referral"}
+          sx={{ marginLeft: 3 }} />}
     </FormGroup>
   );
 }
@@ -54,36 +54,36 @@ function OwnFunctionSelector({ context, factory, onUpdate }: ContextSelectorProp
       {allFunctionsInPolicy === null
         ? <Skeleton />
         : <>
-            <FormControlLabel control={
-              <Switch size='small'
-                checked={hasValue}
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                  const newContext = factory();
-                  newContext.whenOwnFunctionIsIn = event.target.checked
-                    ? allFunctionsInPolicy : undefined;
-                  onUpdate(newContext);
-                }} />}
-              label={hasValue
-                ? "Only when own function is:" : "When assigned any function"} />
-            {hasValue &&
-              <FormGroup>
-                {allFunctionsInPolicy.map(f => (
-                  <FormControlLabel key={f} control={
-                    <Checkbox size='small' checked={context.whenOwnFunctionIsIn?.includes(f)}
-                      onChange={(_, checked) => {
-                        const newContext = factory();
-                        if (checked) {
-                          newContext.whenOwnFunctionIsIn?.push(f);
-                        } else {
-                          newContext.whenOwnFunctionIsIn =
-                            newContext.whenOwnFunctionIsIn?.filter(x => x !== f);
-                        }
-                        onUpdate(newContext);
-                      }} />}
-                    label={f}
-                    sx={{marginLeft: 3}} />))}
-              </FormGroup>}
-          </>}
+          <FormControlLabel control={
+            <Switch size='small'
+              checked={hasValue}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                const newContext = factory();
+                newContext.whenOwnFunctionIsIn = event.target.checked
+                  ? allFunctionsInPolicy : undefined;
+                onUpdate(newContext);
+              }} />}
+            label={hasValue
+              ? "Only when own function is:" : "When assigned any function"} />
+          {hasValue &&
+            <FormGroup>
+              {allFunctionsInPolicy.map(f => (
+                <FormControlLabel key={f} control={
+                  <Checkbox size='small' checked={context.whenOwnFunctionIsIn?.includes(f)}
+                    onChange={(_, checked) => {
+                      const newContext = factory();
+                      if (checked) {
+                        newContext.whenOwnFunctionIsIn?.push(f);
+                      } else {
+                        newContext.whenOwnFunctionIsIn =
+                          newContext.whenOwnFunctionIsIn?.filter(x => x !== f);
+                      }
+                      onUpdate(newContext);
+                    }} />}
+                  label={f}
+                  sx={{ marginLeft: 3 }} />))}
+            </FormGroup>}
+        </>}
     </FormGroup>
   );
 }
@@ -99,35 +99,35 @@ function AssigneeFunctionSelector({ context, factory, onUpdate }: ContextSelecto
       {allFunctionsInPolicy === null
         ? <Skeleton />
         : <>
-            <FormControlLabel control={
-              <Switch size='small' checked={hasValue}
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                  const newContext = factory();
-                  newContext.whenAssigneeFunctionIsIn = event.target.checked
-                    ? allFunctionsInPolicy : undefined;
-                  onUpdate(newContext);
-                }} />}
-              label={hasValue
-                ? "Only when assignee's function is:" : "Any assignee function"} />
-            {hasValue &&
-              <FormGroup>
-                {allFunctionsInPolicy.map(f => (
-                  <FormControlLabel key={f} control={
-                    <Checkbox size='small' checked={context.whenAssigneeFunctionIsIn?.includes(f)}
-                      onChange={(_, checked) => {
-                        const newContext = factory();
-                        if (checked) {
-                          newContext.whenAssigneeFunctionIsIn?.push(f);
-                        } else {
-                          newContext.whenAssigneeFunctionIsIn =
-                            newContext.whenAssigneeFunctionIsIn?.filter(x => x !== f);
-                        }
-                        onUpdate(newContext);
-                      }} />}
-                    label={f}
-                    sx={{marginLeft: 3}} />))}
-              </FormGroup>}
-          </>}
+          <FormControlLabel control={
+            <Switch size='small' checked={hasValue}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                const newContext = factory();
+                newContext.whenAssigneeFunctionIsIn = event.target.checked
+                  ? allFunctionsInPolicy : undefined;
+                onUpdate(newContext);
+              }} />}
+            label={hasValue
+              ? "Only when assignee's function is:" : "Any assignee function"} />
+          {hasValue &&
+            <FormGroup>
+              {allFunctionsInPolicy.map(f => (
+                <FormControlLabel key={f} control={
+                  <Checkbox size='small' checked={context.whenAssigneeFunctionIsIn?.includes(f)}
+                    onChange={(_, checked) => {
+                      const newContext = factory();
+                      if (checked) {
+                        newContext.whenAssigneeFunctionIsIn?.push(f);
+                      } else {
+                        newContext.whenAssigneeFunctionIsIn =
+                          newContext.whenAssigneeFunctionIsIn?.filter(x => x !== f);
+                      }
+                      onUpdate(newContext);
+                    }} />}
+                  label={f}
+                  sx={{ marginLeft: 3 }} />))}
+            </FormGroup>}
+        </>}
     </FormGroup>
   );
 }
@@ -143,36 +143,36 @@ function OwnCommunityRoleSelector({ context, factory, onUpdate }: ContextSelecto
       {communityRoles === null
         ? <Skeleton />
         : <>
-            <FormControlLabel control={
-              <Switch size='small'
-                checked={hasValue}
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                  const newContext = factory();
-                  newContext.whenOwnCommunityRoleIsIn = event.target.checked
-                    ? communityRoles : undefined;
-                  onUpdate(newContext);
-                }} />}
-              label={hasValue
-                ? "Only when own community role is:" : "Regardless of any assigned community role"} />
-            {hasValue &&
-              <FormGroup>
-                {communityRoles.map(f => (
-                  <FormControlLabel key={f} control={
-                    <Checkbox size='small' checked={context.whenOwnCommunityRoleIsIn?.includes(f)}
-                      onChange={(_, checked) => {
-                        const newContext = factory();
-                        if (checked) {
-                          newContext.whenOwnCommunityRoleIsIn?.push(f);
-                        } else {
-                          newContext.whenOwnCommunityRoleIsIn =
-                            newContext.whenOwnCommunityRoleIsIn?.filter(x => x !== f);
-                        }
-                        onUpdate(newContext);
-                      }} />}
-                    label={f}
-                    sx={{marginLeft: 3}} />))}
-              </FormGroup>}
-          </>}
+          <FormControlLabel control={
+            <Switch size='small'
+              checked={hasValue}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                const newContext = factory();
+                newContext.whenOwnCommunityRoleIsIn = event.target.checked
+                  ? communityRoles : undefined;
+                onUpdate(newContext);
+              }} />}
+            label={hasValue
+              ? "Only when own community role is:" : "Regardless of any assigned community role"} />
+          {hasValue &&
+            <FormGroup>
+              {communityRoles.map(f => (
+                <FormControlLabel key={f} control={
+                  <Checkbox size='small' checked={context.whenOwnCommunityRoleIsIn?.includes(f)}
+                    onChange={(_, checked) => {
+                      const newContext = factory();
+                      if (checked) {
+                        newContext.whenOwnCommunityRoleIsIn?.push(f);
+                      } else {
+                        newContext.whenOwnCommunityRoleIsIn =
+                          newContext.whenOwnCommunityRoleIsIn?.filter(x => x !== f);
+                      }
+                      onUpdate(newContext);
+                    }} />}
+                  label={f}
+                  sx={{ marginLeft: 3 }} />))}
+            </FormGroup>}
+        </>}
     </FormGroup>
   );
 }
@@ -182,28 +182,28 @@ interface PermissionContextCellProps {
   editable: boolean
   onUpdate: (newValue: PermissionContext) => void
 }
-export function PermissionContextCell({ context, editable, onUpdate }: PermissionContextCellProps) {
+export function PermissionContextCell({ context, onUpdate }: PermissionContextCellProps) {
   const contextLabel =
     context instanceof GlobalPermissionContext
-    ? "Global"
-    : context instanceof OwnFamilyPermissionContext
-    ? "Own Family"
-    : context instanceof AllVolunteerFamiliesPermissionContext
-    ? "All Volunteer Families"
-    : context instanceof AllPartneringFamiliesPermissionContext
-    ? "All Partnering Families"
-    : context instanceof AssignedFunctionsInReferralPartneringFamilyPermissionContext
-    ? "Assigned Functions in Referral - Partnering Family"
-    : context instanceof AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext
-    ? "Assigned Functions in Referral - Co-Assigned Families"
-    : context instanceof OwnReferralAssigneeFamiliesPermissionContext
-    ? "Own Referral - Assigned Families"
-    : context instanceof CommunityMemberPermissionContext
-    ? "Community Member - Community"
-    : context instanceof CommunityCoMemberFamiliesPermissionContext
-    ? "Community Member - Co-Member Families"
-    : JSON.stringify(context);
-  
+      ? "Global"
+      : context instanceof OwnFamilyPermissionContext
+        ? "Own Family"
+        : context instanceof AllVolunteerFamiliesPermissionContext
+          ? "All Volunteer Families"
+          : context instanceof AllPartneringFamiliesPermissionContext
+            ? "All Partnering Families"
+            : context instanceof AssignedFunctionsInReferralPartneringFamilyPermissionContext
+              ? "Assigned Functions in Referral - Partnering Family"
+              : context instanceof AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext
+                ? "Assigned Functions in Referral - Co-Assigned Families"
+                : context instanceof OwnReferralAssigneeFamiliesPermissionContext
+                  ? "Own Referral - Assigned Families"
+                  : context instanceof CommunityMemberPermissionContext
+                    ? "Community Member - Community"
+                    : context instanceof CommunityCoMemberFamiliesPermissionContext
+                      ? "Community Member - Co-Member Families"
+                      : JSON.stringify(context);
+
   function assignedFunctionsInReferralPartneringFamilyPermissionContextFactory(
     context: AssignedFunctionsInReferralPartneringFamilyPermissionContext) {
     const result = new AssignedFunctionsInReferralPartneringFamilyPermissionContext()
@@ -211,7 +211,7 @@ export function PermissionContextCell({ context, editable, onUpdate }: Permissio
     result.whenOwnFunctionIsIn = context.whenOwnFunctionIsIn?.slice();
     return result;
   }
-  
+
   function assignedFunctionsInReferralCoAssigneeFamiliesPermissionContextFactory(
     context: AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext) {
     const result = new AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext()
@@ -220,7 +220,7 @@ export function PermissionContextCell({ context, editable, onUpdate }: Permissio
     result.whenAssigneeFunctionIsIn = context.whenAssigneeFunctionIsIn?.slice();
     return result;
   }
-  
+
   function ownReferralAssigneeFamiliesPermissionContextFactory(
     context: OwnReferralAssigneeFamiliesPermissionContext) {
     const result = new OwnReferralAssigneeFamiliesPermissionContext()
@@ -228,21 +228,21 @@ export function PermissionContextCell({ context, editable, onUpdate }: Permissio
     result.whenAssigneeFunctionIsIn = context.whenAssigneeFunctionIsIn?.slice();
     return result;
   }
-  
+
   function communityMemberPermissionContextFactory(
     context: CommunityMemberPermissionContext) {
     const result = new CommunityMemberPermissionContext()
     result.whenOwnCommunityRoleIsIn = context.whenOwnCommunityRoleIsIn?.slice();
     return result;
   }
-  
+
   function communityCoMemberFamiliesPermissionContextFactory(
     context: CommunityCoMemberFamiliesPermissionContext) {
     const result = new CommunityCoMemberFamiliesPermissionContext()
     result.whenOwnCommunityRoleIsIn = context.whenOwnCommunityRoleIsIn?.slice();
     return result;
   }
-  
+
   return (
     <Stack>
       <Typography variant='h6'>{contextLabel}</Typography>

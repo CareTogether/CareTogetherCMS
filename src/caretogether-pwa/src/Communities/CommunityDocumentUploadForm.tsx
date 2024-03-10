@@ -16,7 +16,7 @@ interface CommunityDocumentUploadProps extends DrawerProps {
 export function CommunityDocumentUpload({ community, onClose }: CommunityDocumentUploadProps) {
   const [documentFiles, setDocumentFiles] = useState<FileList | null>(null);
   const { organizationId, locationId } = useRecoilValue(selectedLocationContextState);
-  
+
   const withBackdrop = useBackdrop();
 
   const uploadCommunityDocument = useCommunityCommand((communityId, documentId: string, fileName: string) => {

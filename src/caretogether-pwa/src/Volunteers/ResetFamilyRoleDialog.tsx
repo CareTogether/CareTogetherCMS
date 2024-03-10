@@ -10,7 +10,7 @@ interface ResetFamilyRoleDialogProps {
   onClose: () => void
 }
 
-export function ResetFamilyRoleDialog({volunteerFamilyId, role, removalReason, removalAdditionalComments, onClose}: ResetFamilyRoleDialogProps) {
+export function ResetFamilyRoleDialog({ volunteerFamilyId, role, removalReason, removalAdditionalComments, onClose }: ResetFamilyRoleDialogProps) {
   const volunteerFamiliesModel = useVolunteersModel();
 
   async function save() {

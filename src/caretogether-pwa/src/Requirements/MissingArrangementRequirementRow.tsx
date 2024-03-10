@@ -20,22 +20,22 @@ export function MissingArrangementRequirementRow({ requirement, context }: Missi
   const policy = useRecoilValue(policyData);
   const permissions = useFamilyIdPermissions(
     context.kind === 'Referral' ||
-    context.kind === 'Arrangement' ||
-    context.kind === 'Family Volunteer Assignment' ||
-    context.kind === 'Individual Volunteer Assignment'
-    ? context.partneringFamilyId
-    : context.volunteerFamilyId
+      context.kind === 'Arrangement' ||
+      context.kind === 'Family Volunteer Assignment' ||
+      context.kind === 'Individual Volunteer Assignment'
+      ? context.partneringFamilyId
+      : context.volunteerFamilyId
   );
-  
+
   const dialogHandle = useDialogHandle();
-  
+
   const requirementPolicy = policy.actionDefinitions![requirement.actionName!];
-  
+
   if (context.kind === 'Referral' ||
     context.kind === 'Individual Volunteer' ||
     context.kind === 'Volunteer Family')
     throw new Error(`Invalid missing requirement context '${context.kind}'`);
-  
+
   const canComplete = permissions(Permission.EditArrangementRequirementCompletion);
   const canExempt = permissions(Permission.EditArrangementRequirementExemption);
 
@@ -49,11 +49,11 @@ export function MissingArrangementRequirementRow({ requirement, context }: Missi
           {requirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           <span style={{ float: 'right' }}>{format(requirement.dueBy, "M/d/yy h:mm a")}</span>
           {requirement.volunteerFamilyId && !requirement.personId &&
-            <><br/><span style={{ paddingLeft: '30px' }}>
+            <><br /><span style={{ paddingLeft: '30px' }}>
               <FamilyName family={familyLookup(requirement.volunteerFamilyId)} />
             </span></>}
           {requirement.volunteerFamilyId && requirement.personId &&
-            <><br/><span style={{ paddingLeft: '30px' }}>
+            <><br /><span style={{ paddingLeft: '30px' }}>
               <PersonName person={personLookup(requirement.volunteerFamilyId, requirement.personId)} />
             </span></>}
         </IconRow>
@@ -61,11 +61,11 @@ export function MissingArrangementRequirementRow({ requirement, context }: Missi
           {requirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           {requirement.pastDueSince && <span style={{ float: 'right' }}>{format(requirement.pastDueSince, "M/d/yy h:mm a")}</span>}
           {requirement.volunteerFamilyId && !requirement.personId &&
-            <><br/><span style={{ paddingLeft: '30px' }}>
+            <><br /><span style={{ paddingLeft: '30px' }}>
               <FamilyName family={familyLookup(requirement.volunteerFamilyId)} />
             </span></>}
           {requirement.volunteerFamilyId && requirement.personId &&
-            <><br/><span style={{ paddingLeft: '30px' }}>
+            <><br /><span style={{ paddingLeft: '30px' }}>
               <PersonName person={personLookup(requirement.volunteerFamilyId, requirement.personId)} />
             </span></>}
         </IconRow>}

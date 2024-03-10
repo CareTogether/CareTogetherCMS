@@ -47,18 +47,18 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
         <AdultFamilyRelationshipEditor relationship={adult.item2!} {...personEditorProps} />
         {permissions(Permission.ViewPersonContactInfo) &&
           <>
-            <h4 style={{ marginBottom:0 }}>Phone Number(s):</h4>
+            <h4 style={{ marginBottom: 0 }}>Phone Number(s):</h4>
             {person.phoneNumbers?.map(phoneNumber =>
-              <PhoneNumberEditor key={phoneNumber.id!} phoneNumber={phoneNumber} {...personEditorProps } />)}
+              <PhoneNumberEditor key={phoneNumber.id!} phoneNumber={phoneNumber} {...personEditorProps} />)}
             {permissions(Permission.EditPersonContactInfo) && <PhoneNumberEditor add {...personEditorProps} />}
-            <h4 style={{ marginBottom:0 }}>Email Address(es):</h4>
+            <h4 style={{ marginBottom: 0 }}>Email Address(es):</h4>
             {person.emailAddresses?.map(emailAddress =>
-              <EmailAddressEditor key={emailAddress.id!} emailAddress={emailAddress} {...personEditorProps } />)}
+              <EmailAddressEditor key={emailAddress.id!} emailAddress={emailAddress} {...personEditorProps} />)}
             {permissions(Permission.EditPersonContactInfo) && <EmailAddressEditor add {...personEditorProps} />}
-            <h4 style={{ marginBottom:0 }}>Address(es):</h4>
+            <h4 style={{ marginBottom: 0 }}>Address(es):</h4>
             {person.addresses?.map(address =>
-              <AddressEditor key={address.id!} address={address} {...personEditorProps } />)}
-            {permissions(Permission.EditPersonContactInfo) && <AddressEditor add {...personEditorProps } />}
+              <AddressEditor key={address.id!} address={address} {...personEditorProps} />)}
+            {permissions(Permission.EditPersonContactInfo) && <AddressEditor add {...personEditorProps} />}
           </>}
         {permissions(Permission.ViewPersonNotes) && <NotesEditor {...personEditorProps} />}
         {permissions(Permission.ViewPersonConcerns) && <ConcernsEditor {...personEditorProps} />}

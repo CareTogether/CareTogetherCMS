@@ -44,7 +44,7 @@ export function useInlineEditor<T, U>(onSave: (value: T) => Promise<U>, savedVal
         variant="text"
         size="small"
         startIcon={<EditIcon />}
-        sx={{margin: 1}}>
+        sx={{ margin: 1 }}>
         Edit
       </Button>,
     cancelButton: editing &&
@@ -54,19 +54,19 @@ export function useInlineEditor<T, U>(onSave: (value: T) => Promise<U>, savedVal
         size="small"
         startIcon={<UndoIcon />}
         color="secondary"
-        sx={{margin: 1}}>
+        sx={{ margin: 1 }}>
         Cancel
       </Button>,
     saveButton: editing &&
       <Button
         disabled={value === savedValue ||
-          typeof(value) === 'undefined' ||
-          (typeof(validate) !== 'undefined' && !validate(value))}
+          typeof (value) === 'undefined' ||
+          (typeof (validate) !== 'undefined' && !validate(value))}
         onClick={saveChanges}
         variant="contained"
         size="small"
         startIcon={<SaveIcon />}
-        sx={{margin: 1}}>
+        sx={{ margin: 1 }}>
         Save
       </Button>
   }

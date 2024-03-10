@@ -10,7 +10,7 @@ function AuthenticatedUserWrapper({ children }: React.PropsWithChildren) {
   // This will suspend until a user ID has been set by the `userIdState` initialization logic.
   const userId = useLoadable(userIdState);
   trace(`userId: ${userId}`);
-  
+
   return (
     <>
       {userId

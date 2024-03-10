@@ -18,7 +18,7 @@ interface UnassignArrangementFunctionDialogProps {
 }
 
 export function UnassignArrangementFunctionDialog({
-  handle, partneringFamilyId, referralId, arrangement, arrangementPolicy, arrangementFunction, assignment
+  handle, partneringFamilyId, referralId, arrangement, arrangementFunction, assignment
 }: UnassignArrangementFunctionDialogProps) {
   const familyLookup = useFamilyLookup();
   const personLookup = usePersonLookup();
@@ -26,9 +26,9 @@ export function UnassignArrangementFunctionDialog({
   const assignee = assignment instanceof IndividualVolunteerAssignment
     ? personLookup(assignment.familyId, assignment.personId)
     : familyLookup(assignment.familyId);
-  
+
   const referralsModel = useReferralsModel();
-  
+
   const withBackdrop = useBackdrop();
 
   async function save() {

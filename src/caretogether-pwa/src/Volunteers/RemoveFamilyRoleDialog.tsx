@@ -10,7 +10,7 @@ interface RemoveFamilyRoleDialogProps {
   onClose: () => void
 }
 
-export function RemoveFamilyRoleDialog({volunteerFamilyId, role, onClose}: RemoveFamilyRoleDialogProps) {
+export function RemoveFamilyRoleDialog({ volunteerFamilyId, role, onClose }: RemoveFamilyRoleDialogProps) {
   const volunteerFamiliesModel = useVolunteersModel();
   const [fields, setFields] = useState({
     reason: RoleRemovalReason.Inactive,
@@ -32,7 +32,7 @@ export function RemoveFamilyRoleDialog({volunteerFamilyId, role, onClose}: Remov
             <FormControl component="fieldset">
               <FormLabel component="legend">Reason for Removal:</FormLabel>
               <RadioGroup aria-label="reason" name="reason" row
-                value={RoleRemovalReason[reason]} onChange={e => setFields({...fields, reason: RoleRemovalReason[e.target.value as keyof typeof RoleRemovalReason]})}>
+                value={RoleRemovalReason[reason]} onChange={e => setFields({ ...fields, reason: RoleRemovalReason[e.target.value as keyof typeof RoleRemovalReason] })}>
                 <FormControlLabel value={RoleRemovalReason[RoleRemovalReason.Inactive]} control={<Radio size="small" />} label="Inactive" />
                 <FormControlLabel value={RoleRemovalReason[RoleRemovalReason.OptOut]} control={<Radio size="small" />} label="Opted Out" />
                 <FormControlLabel value={RoleRemovalReason[RoleRemovalReason.Denied]} control={<Radio size="small" />} label="Denied" />
@@ -44,7 +44,7 @@ export function RemoveFamilyRoleDialog({volunteerFamilyId, role, onClose}: Remov
               id="additional-comments"
               label="Additional Comments" placeholder="Explain why the family is not going to serve in this role"
               multiline fullWidth variant="outlined" minRows={2} maxRows={5} size="small"
-              value={additionalComments} onChange={e => setFields({...fields, additionalComments: e.target.value})}
+              value={additionalComments} onChange={e => setFields({ ...fields, additionalComments: e.target.value })}
             />
           </Grid>
         </Grid>

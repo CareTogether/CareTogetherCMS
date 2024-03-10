@@ -25,36 +25,36 @@ export function ChildCustodyRelationshipEditor({ familyId, person, adult, relati
     <Grid container spacing={2}>
       {editor.editing
         ? <>
-            <Grid item xs={12}>
-              <PersonName person={adult} />
-              <FormControl required fullWidth size="small">
-                <Select
-                  id={"custodial-relationship-"+adult.id}
-                  value={editor.value}
-                  onChange={e => editor.setValue(e.target.value as CustodialRelationshipType | -1)}>
-                    <MenuItem key="none" value={-1}>None</MenuItem>
-                    <MenuItem key='ParentWithCustody' value={CustodialRelationshipType.ParentWithCustody}>Parent with custody</MenuItem>
-                    <MenuItem key='ParentWithCourtAppointedCustody' value={CustodialRelationshipType.ParentWithCourtAppointedCustody}>Parent with court-appointed custody</MenuItem>
-                    <MenuItem key='LegalGuardian' value={CustodialRelationshipType.LegalGuardian}>Legal guardian</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12}>
-              {editor.cancelButton}
-              {editor.saveButton}
-            </Grid>
-          </>
+          <Grid item xs={12}>
+            <PersonName person={adult} />
+            <FormControl required fullWidth size="small">
+              <Select
+                id={"custodial-relationship-" + adult.id}
+                value={editor.value}
+                onChange={e => editor.setValue(e.target.value as CustodialRelationshipType | -1)}>
+                <MenuItem key="none" value={-1}>None</MenuItem>
+                <MenuItem key='ParentWithCustody' value={CustodialRelationshipType.ParentWithCustody}>Parent with custody</MenuItem>
+                <MenuItem key='ParentWithCourtAppointedCustody' value={CustodialRelationshipType.ParentWithCourtAppointedCustody}>Parent with court-appointed custody</MenuItem>
+                <MenuItem key='LegalGuardian' value={CustodialRelationshipType.LegalGuardian}>Legal guardian</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12}>
+            {editor.cancelButton}
+            {editor.saveButton}
+          </Grid>
+        </>
         : <Grid item xs={12}>
-            <PersonName person={adult} />:
-            <span> </span>
-            {editor.value === CustodialRelationshipType.LegalGuardian
-              ? "legal guardian"
-              : editor.value === CustodialRelationshipType.ParentWithCustody
+          <PersonName person={adult} />:
+          <span> </span>
+          {editor.value === CustodialRelationshipType.LegalGuardian
+            ? "legal guardian"
+            : editor.value === CustodialRelationshipType.ParentWithCustody
               ? "parent with custody"
               : editor.value === CustodialRelationshipType.ParentWithCourtAppointedCustody
-              ? "parent with court-appointed sole custody"
-              : "none"}
-            {editor.editButton}
+                ? "parent with court-appointed sole custody"
+                : "none"}
+          {editor.editButton}
         </Grid>}
     </Grid>
   );

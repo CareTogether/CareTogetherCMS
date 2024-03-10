@@ -9,7 +9,7 @@ const config = {
   auth: {
     clientId: import.meta.env.VITE_APP_AUTH_CLIENT_ID,
     authority: import.meta.env.VITE_APP_AUTH_AUTHORITY,
-    knownAuthorities: [ import.meta.env.VITE_APP_AUTH_KNOWN_AUTHORITY ],
+    knownAuthorities: [import.meta.env.VITE_APP_AUTH_KNOWN_AUTHORITY],
     redirectUri: import.meta.env.VITE_APP_AUTH_REDIRECT_URI
   },
   cache: {
@@ -82,7 +82,7 @@ async function loginAndSetActiveAccountAsync(): Promise<string> {
       }
     }
   }
-  
+
   // Step 5: If one or more accounts was found but no active account is set, set the active account.
   let activeAccount = globalMsalInstance.getActiveAccount();
   trace(`Login`, `Active account is: ${activeAccount?.localAccountId}`);
@@ -140,7 +140,7 @@ async function loginAndSetActiveAccountAsync(): Promise<string> {
 }
 
 let userIdStateInitialized = false;
-const initializeUserIdStateAsync: AtomEffect<any> = params => {
+const initializeUserIdStateAsync: AtomEffect<string> = params => {
   trace(`InitializeUserIdStateAsync`, params.node.key);
   if (!userIdStateInitialized) {
     userIdStateInitialized = true;

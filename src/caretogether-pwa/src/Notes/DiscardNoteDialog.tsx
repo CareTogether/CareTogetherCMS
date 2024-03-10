@@ -11,7 +11,7 @@ interface DiscardNoteDialogProps {
   onClose: () => void
 }
 
-export function DiscardNoteDialog({familyId, note, onClose}: DiscardNoteDialogProps) {
+export function DiscardNoteDialog({ familyId, note, onClose }: DiscardNoteDialogProps) {
   const directoryModel = useDirectoryModel();
   const userLookup = useUserLookup();
 

@@ -13,7 +13,7 @@ interface RemoveIndividualRoleDialogProps {
   onClose: () => void
 }
 
-export function RemoveIndividualRoleDialog({volunteerFamilyId, person, role, onClose}: RemoveIndividualRoleDialogProps) {
+export function RemoveIndividualRoleDialog({ volunteerFamilyId, person, role, onClose }: RemoveIndividualRoleDialogProps) {
   const volunteerFamiliesModel = useVolunteersModel();
   const [fields, setFields] = useState({
     reason: RoleRemovalReason.Inactive,
@@ -38,7 +38,7 @@ export function RemoveIndividualRoleDialog({volunteerFamilyId, person, role, onC
             <FormControl component="fieldset">
               <FormLabel component="legend">Reason for Removal:</FormLabel>
               <RadioGroup aria-label="reason" name="reason" row
-                value={RoleRemovalReason[reason]} onChange={e => setFields({...fields, reason: RoleRemovalReason[e.target.value as keyof typeof RoleRemovalReason]})}>
+                value={RoleRemovalReason[reason]} onChange={e => setFields({ ...fields, reason: RoleRemovalReason[e.target.value as keyof typeof RoleRemovalReason] })}>
                 <FormControlLabel value={RoleRemovalReason[RoleRemovalReason.Inactive]} control={<Radio size="small" />} label="Inactive" />
                 {isFamilyRole &&
                   // The 'opted out' reason is only applicable to family roles. Opting out of an individual role is just being inactive.
@@ -52,7 +52,7 @@ export function RemoveIndividualRoleDialog({volunteerFamilyId, person, role, onC
               id="additional-comments"
               label="Additional Comments" placeholder="Explain why the volunteer is not going to serve in this role"
               multiline fullWidth variant="outlined" minRows={2} maxRows={5} size="small"
-              value={additionalComments} onChange={e => setFields({...fields, additionalComments: e.target.value})}
+              value={additionalComments} onChange={e => setFields({ ...fields, additionalComments: e.target.value })}
             />
           </Grid>
         </Grid>

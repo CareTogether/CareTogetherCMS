@@ -11,7 +11,7 @@ interface AddEditNoteDialogProps {
   onClose: () => void
 }
 
-export function AddEditNoteDialog({familyId, note, onClose}: AddEditNoteDialogProps) {
+export function AddEditNoteDialog({ familyId, note, onClose }: AddEditNoteDialogProps) {
   const [fields, setFields] = useState({
     contents: note?.contents || '',
     backdatedTimestampLocal: note?.backdatedTimestampUtc
@@ -37,7 +37,7 @@ export function AddEditNoteDialog({familyId, note, onClose}: AddEditNoteDialogPr
               id="notes"
               label="Notes" placeholder="Space for any general notes"
               required multiline fullWidth variant="outlined" minRows={6} size="medium"
-              value={contents} onChange={e => setFields({...fields, contents: e.target.value})}
+              value={contents} onChange={e => setFields({ ...fields, contents: e.target.value })}
             />
           </Grid>
           <Grid item xs={12}>
@@ -45,8 +45,8 @@ export function AddEditNoteDialog({familyId, note, onClose}: AddEditNoteDialogPr
               label="Backdate (optional - leave blank to use the current date & time)"
               value={backdatedTimestampLocal || null}
               disableFuture format="M/d/yyyy h:mm a"
-              onChange={(date: any) => setFields({...fields, backdatedTimestampLocal: date})}
-              slotProps={{ textField: { fullWidth: true}}} />
+              onChange={(date: Date | null) => setFields({ ...fields, backdatedTimestampLocal: date ?? undefined })}
+              slotProps={{ textField: { fullWidth: true } }} />
           </Grid>
         </Grid>
       </form>

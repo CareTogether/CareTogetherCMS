@@ -13,13 +13,13 @@ interface EndArrangementDialogProps {
   onClose: () => void
 }
 
-export function EndArrangementDialog({referralId, arrangement, onClose}: EndArrangementDialogProps) {
+export function EndArrangementDialog({ referralId, arrangement, onClose }: EndArrangementDialogProps) {
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
-  
+
   const referralsModel = useReferralsModel();
   const personLookup = usePersonLookup();
-  
+
   const person = personLookup(familyId, arrangement.partneringFamilyPersonId) as Person;
 
   const [endedAtLocal, setEndedAtLocal] = useState(null as Date | null);
@@ -39,8 +39,8 @@ export function EndArrangementDialog({referralId, arrangement, onClose}: EndArra
             value={endedAtLocal}
             minDate={arrangement.startedAtUtc}
             disableFuture format="M/d/yyyy h:mm a"
-            onChange={(date: any) => date && setEndedAtLocal(date)}
-            slotProps={{ textField: {fullWidth: true, required: true, sx: {marginTop: 1}}}} />
+            onChange={(date: Date | null) => date && setEndedAtLocal(date)}
+            slotProps={{ textField: { fullWidth: true, required: true, sx: { marginTop: 1 } } }} />
         </Grid>
       </Grid>
     </UpdateDialog>
