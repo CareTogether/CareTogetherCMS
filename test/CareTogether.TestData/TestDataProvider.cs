@@ -20,21 +20,22 @@ namespace CareTogether.TestData
     {
         /* The following fields are used to keep the test data relatively current.
          * In general:
-         *   "MONTH" is intended to be blank (to prevent 'after UtcNow' issues),
-         *   "LAST_MONTH" is for referrals,
-         *   "OLDER_MONTH" is for approvals.
+         * - the current month is intended to be blank after midnight of the 1st (to prevent 'after UtcNow' issues),
+         * - month-1 is for partnering families, referrals, and goals;
+         * - month-2 is for volunteer approvals and communities;
+         * - month-3 is for organization setup.
          */
         static int YEAR = DateTime.UtcNow.Year;
         static int MONTH = DateTime.UtcNow.Month;
-        static int LAST_MONTH = MONTH - 1 == 0 ? 12 : MONTH - 1;
-        static int LAST_MONTH_YEAR = LAST_MONTH == 12 ? YEAR - 1 : YEAR;
-        static int OLDER_MONTH = LAST_MONTH - 1 == 0 ? 12 : LAST_MONTH - 1;
-        static int OLDER_MONTH_YEAR = OLDER_MONTH == 12 ? LAST_MONTH_YEAR - 1 : LAST_MONTH_YEAR;
+        static DateTime DateOf(int monthOffset, int day) => new DateTime(YEAR, MONTH, day).AddMonths(monthOffset);
+        static DateTime DateOf(int monthOffset, int day, int hour, int minute, int second) => new DateTime(YEAR, MONTH, day, hour, minute, second).AddMonths(monthOffset);
         static DateTime StartOfCurrentMonth() => new DateTime(YEAR, MONTH, 1);
-        static DateTime LastMonth(int day) => new DateTime(LAST_MONTH_YEAR, LAST_MONTH, day);
-        static DateTime LastMonth(int day, int hour, int minute, int second) => new DateTime(LAST_MONTH_YEAR, LAST_MONTH, day, hour, minute, second);
-        static DateTime OlderMonth(int day) => new DateTime(OLDER_MONTH_YEAR, OLDER_MONTH, day);
-        static DateTime OlderMonth(int day, int hour, int minute, int second) => new DateTime(OLDER_MONTH_YEAR, OLDER_MONTH, day, hour, minute, second);
+        static DateTime ReferralsMonth(int day) => DateOf(-1, day);
+        static DateTime ReferralsMonth(int day, int hour, int minute, int second) => DateOf(-1, day, hour, minute, second);
+        static DateTime ApprovalsMonth(int day) => DateOf(-2, day);
+        static DateTime ApprovalsMonth(int day, int hour, int minute, int second) => DateOf(-2, day, hour, minute, second);
+        static DateTime SetupMonth(int day) => DateOf(-3, day);
+        static DateTime SetupMonth(int day, int hour, int minute, int second) => DateOf(-3, day, hour, minute, second);
 
 
         /* Families
@@ -136,13 +137,13 @@ namespace CareTogether.TestData
         public static async Task PopulatePersonAccessEvents(IEventLog<PersonAccessEvent> personAccessEventLog)
         {
             await personAccessEventLog.AppendEventsAsync(guid1, guid2,
-                new PersonAccessEvent(SystemConstants.SystemUserId, OlderMonth(1),
+                new PersonAccessEvent(SystemConstants.SystemUserId, SetupMonth(1),
                     new ChangePersonRoles(PersonId: guid0, Roles: [SystemConstants.ORGANIZATION_ADMINISTRATOR])),
-                new PersonAccessEvent(SystemConstants.SystemUserId, OlderMonth(1),
+                new PersonAccessEvent(SystemConstants.SystemUserId, SetupMonth(1),
                     new ChangePersonRoles(PersonId: guid4, Roles: ["Volunteer"]))
                 );
             await personAccessEventLog.AppendEventsAsync(guid1, guid3,
-                new PersonAccessEvent(SystemConstants.SystemUserId, OlderMonth(1),
+                new PersonAccessEvent(SystemConstants.SystemUserId, SetupMonth(1),
                     new ChangePersonRoles(PersonId: guid0, Roles: [SystemConstants.ORGANIZATION_ADMINISTRATOR]))
                 );
         }
