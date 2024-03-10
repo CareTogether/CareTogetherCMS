@@ -101,7 +101,8 @@ function LocationContextWrapper() {
         `organizationId: '${organizationId}'` +
         `locationId: '${locationId}'`);
     }
-  }, [organizationId, locationId, trace, setSelectedLocationContext, setLastVisitedLocation]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [organizationId, locationId, trace, setSelectedLocationContext]);
 
   return (
     // We need to wait for this to have a value before rendering the child tree; otherwise,
