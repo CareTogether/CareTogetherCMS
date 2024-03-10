@@ -2,16 +2,16 @@ name: CI - Pull Requests - .NET API
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths-ignore:
-      - 'src/caretogether-pwa/**'
-      - 'src/b2c/**'
-      - 'README.md'
-      - 'LICENSE'
-      - '.gitignore'
-      - '.github/workflows/cd-prod-react.yml'
-      - '.github/workflows/cd-prod-dotnet.yml'
-      - '.github/workflows/ci-pr-react.yml'
+      - "src/caretogether-pwa/**"
+      - "src/b2c/**"
+      - "README.md"
+      - "LICENSE"
+      - ".gitignore"
+      - ".github/workflows/cd-prod-react.yml"
+      - ".github/workflows/cd-prod-dotnet.yml"
+      - ".github/workflows/ci-pr-react.yml"
 
 jobs:
   build:
@@ -19,24 +19,24 @@ jobs:
 
     steps:
       # Checkout the repo
-    - name: Check out source
-      uses: actions/checkout@v3
-    - name: Set up .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: 6.0.x
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18.x'
-    - name: Install Azurite storage emulator
-      run: npm install -g azurite
-    - name: Start Azurite storage emulator
-      shell: bash
-      run: azurite &
-    - name: Restore .NET dependencies
-      run: dotnet restore
-    - name: Build .NET solution
-      run: dotnet build --no-restore
-    - name: Test .NET solution
-      run: dotnet test --no-build --verbosity normal
+      - name: Check out source
+        uses: actions/checkout@v3
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.0.x
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18.x"
+      - name: Install Azurite storage emulator
+        run: npm install -g azurite
+      - name: Start Azurite storage emulator
+        shell: bash
+        run: azurite &
+      - name: Restore .NET dependencies
+        run: dotnet restore
+      - name: Build .NET solution
+        run: dotnet build --no-restore
+      - name: Test .NET solution
+        run: dotnet test --no-build --verbosity normal

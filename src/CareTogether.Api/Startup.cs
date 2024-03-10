@@ -137,11 +137,11 @@ namespace CareTogether.Api
                     organizationSecretsStore,
                     Configuration["TestData:SourceSmsPhoneNumber"]).Wait();
             }
-            
+
             // Other utility services
             var telephony = new PlivoTelephony(
-                authId: Configuration["Telephony:Plivo:AuthId"],
-                authToken: Configuration["Telephony:Plivo:AuthToken"]);
+                authId: Configuration["Telephony:Plivo:AuthId"]!,
+                authToken: Configuration["Telephony:Plivo:AuthToken"]!);
 
             // Resource services
             var approvalsResource = new ApprovalsResource(approvalsEventLog);
@@ -178,7 +178,7 @@ namespace CareTogether.Api
             services.AddAuthentication("Basic")
                 .AddBasic("Basic", options =>
                 {
-                    options.AllowInsecureProtocol = HostEnvironment.IsDevelopment();
+                    options.AllowInsecureProtocol = true; // Azure Front Door handles SSL termination.
                     options.Realm = "CareTogether OData Feed";
                     options.Events = new BasicAuthenticationEvents
                     {

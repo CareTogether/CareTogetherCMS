@@ -28,7 +28,7 @@ export function AssignArrangementFunctionDialog({
 }: AssignArrangementFunctionDialogProps) {
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
-  
+
   const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
 
   const familyAndPersonLookup = usePersonAndFamilyLookup();
@@ -42,26 +42,26 @@ export function AssignArrangementFunctionDialog({
   const candidateVolunteerIndividualAssignees = arrangementFunction.eligibleIndividualVolunteerRoles
     ? visibleFamilies.flatMap(f => f.volunteerFamilyInfo?.individualVolunteers
       ? Object.entries(f.volunteerFamilyInfo?.individualVolunteers).filter(([volunteerId, _]) =>
-        f.family!.adults!.find(a => a.item1!.id === volunteerId)!.item1!.active).flatMap(([volunteerId, volunteerInfo]) => volunteerInfo.individualRoleApprovals
-        ? Object.entries(volunteerInfo.individualRoleApprovals).flatMap(([roleName, roleVersionApproval]) =>
-          arrangementFunction.eligibleIndividualVolunteerRoles!.find(x => x === roleName) &&
-          roleVersionApproval.find(rva => rva.approvalStatus === RoleApprovalStatus.Approved || rva.approvalStatus === RoleApprovalStatus.Onboarded) &&
-          !arrangement.individualVolunteerAssignments?.find(iva =>
-            iva.arrangementFunction === arrangementFunction.functionName && iva.familyId === f.family!.id && iva.personId === volunteerId)
-          ? [{ family: f.family!, person: f.family!.adults!.find(a => a.item1!.id === volunteerId)!.item1 || null }]
+        f.family!.adults!.find(a => a.item1!.id === volunteerId)!.item1!.active).flatMap(([volunteerId, volunteerInfo]) => volunteerInfo.approvalStatusByRole
+          ? Object.entries(volunteerInfo.approvalStatusByRole).flatMap(([roleName, roleApprovalStatus]) =>
+            arrangementFunction.eligibleIndividualVolunteerRoles!.find(x => x === roleName) &&
+              (roleApprovalStatus.currentStatus === RoleApprovalStatus.Approved || roleApprovalStatus.currentStatus === RoleApprovalStatus.Onboarded) &&
+              !arrangement.individualVolunteerAssignments?.find(iva =>
+                iva.arrangementFunction === arrangementFunction.functionName && iva.familyId === f.family!.id && iva.personId === volunteerId)
+              ? [{ family: f.family!, person: f.family!.adults!.find(a => a.item1!.id === volunteerId)!.item1 || null }]
+              : [])
           : [])
-        : [])
       : [])
     : [];
   const candidateVolunteerFamilyAssignees = arrangementFunction.eligibleVolunteerFamilyRoles
     ? visibleFamilies.flatMap(f => f.volunteerFamilyInfo?.familyRoleApprovals
-      ? Object.entries(f.volunteerFamilyInfo.familyRoleApprovals).flatMap(([roleName, roleVersionApproval]) =>
+      ? Object.entries(f.volunteerFamilyInfo.familyRoleApprovals).flatMap(([roleName, roleApprovalStatus]) =>
         arrangementFunction.eligibleVolunteerFamilyRoles!.find(x => x === roleName) &&
-        roleVersionApproval.find(rva => rva.approvalStatus === RoleApprovalStatus.Approved || rva.approvalStatus === RoleApprovalStatus.Onboarded) &&
-        !arrangement.familyVolunteerAssignments?.find(fva =>
-          fva.arrangementFunction === arrangementFunction.functionName && fva.familyId === f.family!.id)
-        ? [{ family: f.family!, person: null as Person | null }]
-        : [])
+          (roleApprovalStatus.currentStatus === RoleApprovalStatus.Approved || roleApprovalStatus.currentStatus === RoleApprovalStatus.Onboarded) &&
+          !arrangement.familyVolunteerAssignments?.find(fva =>
+            fva.arrangementFunction === arrangementFunction.functionName && fva.familyId === f.family!.id)
+          ? [{ family: f.family!, person: null as Person | null }]
+          : [])
       : [])
     : [];
   const allCandidateAssignees = candidateNamedPeopleAssignees.concat(candidateVolunteerFamilyAssignees).concat(candidateVolunteerIndividualAssignees);
@@ -71,7 +71,7 @@ export function AssignArrangementFunctionDialog({
         a.family.primaryFamilyContactPersonId === adult.item1!.id)!.item1!;
       const bPrimaryContact = b.family!.adults!.find(adult =>
         b.family.primaryFamilyContactPersonId === adult.item1!.id)!.item1!;
-      
+
       const aFirst = a.person ? a.person.firstName! : null;
       const aLast = a.person ? a.person.lastName! : aPrimaryContact.lastName!;
       const bFirst = b.person ? b.person.firstName! : null;
@@ -98,15 +98,15 @@ export function AssignArrangementFunctionDialog({
       };
     }
   });
-  
+
   const [fields, setFields] = useState({
     assigneeKey: '',
     variant: null as string | null
   });
   const { assigneeKey } = fields;
-  
+
   const referralsModel = useReferralsModel();
-  
+
   const withBackdrop = useBackdrop();
 
   function getFamilyName(person: ValueTupleOfPersonAndFamilyAdultRelationshipInfo | undefined) {
@@ -134,7 +134,7 @@ export function AssignArrangementFunctionDialog({
       <DialogTitle id="assign-volunteer-title" sx={{paddingBottom:"20px"}}>
         Assign {arrangementFunction.functionName}
       </DialogTitle>
-      <DialogContent sx={{ '& .MuiDialogContent-root': { overflowY: 'visible' }}}>
+      <DialogContent sx={{ '& .MuiDialogContent-root': { overflowY: 'visible' } }}>
         <form noValidate autoComplete="off">
           <Grid container spacing={2}>
             {arrangementFunction.variants && arrangementFunction.variants.length > 0 &&
@@ -144,7 +144,7 @@ export function AssignArrangementFunctionDialog({
                   <RadioGroup
                     aria-labelledby="variant"
                     value={fields.variant}
-                    onChange={(event) => setFields({...fields, variant: (event.target as HTMLInputElement).value})}
+                    onChange={(event) => setFields({ ...fields, variant: (event.target as HTMLInputElement).value })}
                   >
                     {arrangementFunction.variants.map(variant =>
                       <FormControlLabel key={variant.variantName} value={variant.variantName}
@@ -153,12 +153,12 @@ export function AssignArrangementFunctionDialog({
                 </FormControl>
               </Grid>}
             <Grid item xs={12}>
-              <FormControl required fullWidth size="small" sx={{marginTop: 1}}> 
+              <FormControl required fullWidth size="small" sx={{ marginTop: 1 }}>
                 <Autocomplete
                   id="assignee"
                   clearOnEscape
                   onChange={(event: any, newValue: AssigneeOptionType | null) => {
-                    setFields({...fields, assigneeKey: newValue?.id as string})
+                    setFields({ ...fields, assigneeKey: newValue?.id as string })
                   }}
                   options={candidateAssignees.map(candidate => {
                     return {
@@ -177,7 +177,7 @@ export function AssignArrangementFunctionDialog({
           </Grid>
         </form>
       </DialogContent>
-      <DialogActions sx={{paddingRight:"20px", paddingBottom:"20px"}}>
+      <DialogActions sx={{ paddingRight: "20px", paddingBottom: "20px" }}>
         <Button onClick={handle.closeDialog} color="secondary">
           Cancel
         </Button>

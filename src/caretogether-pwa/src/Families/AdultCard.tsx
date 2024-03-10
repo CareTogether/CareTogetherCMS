@@ -12,7 +12,8 @@ import {
   AccordionSummary,
   AccordionDetails,
   Badge,
-  Grid} from "@mui/material";
+  Grid
+} from "@mui/material";
 import { useState } from "react";
 import { Gender, Person, RoleRemovalReason, Permission } from "../GeneratedClient";
 import { AgeText } from "./AgeText";
@@ -42,7 +43,7 @@ type AdultCardProps = {
   personId: string
 }
 
-export function AdultCard({familyId, personId}: AdultCardProps) {
+export function AdultCard({ familyId, personId }: AdultCardProps) {
   const familyLookup = useFamilyLookup();
   const family = familyLookup(familyId)!;
 
@@ -63,32 +64,32 @@ export function AdultCard({familyId, personId}: AdultCardProps) {
   };
 
   const [collapsed, setCollapsed] = useCollapsed(`person-${familyId}-${personId}`, false);
-  
-  const [adultMoreMenuAnchor, setAdultMoreMenuAnchor] = useState<{anchor: Element, adult: Person} | null>(null);
-  const [removeRoleParameter, setRemoveRoleParameter] = useState<{volunteerFamilyId: string, person: Person, role: string} | null>(null);
+
+  const [adultMoreMenuAnchor, setAdultMoreMenuAnchor] = useState<{ anchor: Element, adult: Person } | null>(null);
+  const [removeRoleParameter, setRemoveRoleParameter] = useState<{ volunteerFamilyId: string, person: Person, role: string } | null>(null);
   function selectRemoveRole(adult: Person, role: string) {
     setAdultMoreMenuAnchor(null);
-    setRemoveRoleParameter({volunteerFamilyId: familyId, person: adult, role: role});
+    setRemoveRoleParameter({ volunteerFamilyId: familyId, person: adult, role: role });
   }
-  const [resetRoleParameter, setResetRoleParameter] = useState<{volunteerFamilyId: string, person: Person, role: string, removalReason: RoleRemovalReason, removalAdditionalComments: string} | null>(null);
+  const [resetRoleParameter, setResetRoleParameter] = useState<{ volunteerFamilyId: string, person: Person, role: string, removalReason: RoleRemovalReason, removalAdditionalComments: string } | null>(null);
   function selectResetRole(adult: Person, role: string, removalReason: RoleRemovalReason, removalAdditionalComments: string) {
     setAdultMoreMenuAnchor(null);
-    setResetRoleParameter({volunteerFamilyId: familyId, person: adult, role: role, removalReason: removalReason, removalAdditionalComments: removalAdditionalComments});
+    setResetRoleParameter({ volunteerFamilyId: familyId, person: adult, role: role, removalReason: removalReason, removalAdditionalComments: removalAdditionalComments });
   }
 
   const manageUserDrawer = useDrawer();
 
   const participatingFamilyRoles =
     Object.entries(family.volunteerFamilyInfo?.familyRoleApprovals || {}).filter(
-      ([role,]) => !family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles?.find(x => x.roleName === role));
+      ([role,]) => !family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.roleRemovals?.find(x => x.roleName === role));
   const participatingIndividualRoles =
-    Object.entries(family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.individualRoleApprovals || {}).filter(
-      ([role,]) => !family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles?.find(x => x.roleName === role));
-  const removedRoles = family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles || [];
+    Object.entries(family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.approvalStatusByRole || {}).filter(
+      ([role,]) => !family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.roleRemovals?.find(x => x.roleName === role));
+  const removedRoles = family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.roleRemovals || [];
 
   return <>{adult?.item1 && adult.item1.id && adult.item2 &&
-    <Card variant="outlined" sx={{minWidth: '275px'}}>
-      <CardHeader sx={{paddingBottom: 0}}
+    <Card variant="outlined" sx={{ minWidth: '275px' }}>
+      <CardHeader sx={{ paddingBottom: 0 }}
         title={adult.item1.firstName + " " + adult.item1.lastName}
         subheader={<>
           Adult, <AgeText age={adult.item1.age} /> {adult.item1.gender ? ", " + Gender[adult.item1.gender] : ""} {adult.item1.ethnicity ? ", " + adult.item1.ethnicity : ""}
@@ -107,10 +108,10 @@ export function AdultCard({familyId, personId}: AdultCardProps) {
               permissions(Permission.InvitePersonUser) ||
               permissions(Permission.EditPersonUserStandardRoles) ||
               permissions(Permission.EditPersonUserProtectedRoles)) && <IconButton
-              onClick={(event) => setAdultMoreMenuAnchor({anchor: event.currentTarget, adult: adult.item1 as Person})}
-              size="large">
-              <MoreVertIcon />
-            </IconButton>}
+                onClick={(event) => setAdultMoreMenuAnchor({ anchor: event.currentTarget, adult: adult.item1 as Person })}
+                size="large">
+                <MoreVertIcon />
+              </IconButton>}
           </>} />
       <CardContent sx={{
         paddingTop: 1,
@@ -127,9 +128,9 @@ export function AdultCard({familyId, personId}: AdultCardProps) {
             margin: 0.5,
           }
         }} component="div">
-          {Object.entries(family.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].individualRoleApprovals || {}).map(([role, roleVersionApprovals]) =>
-            <VolunteerRoleApprovalStatusChip key={role} roleName={role} roleVersionApprovals={roleVersionApprovals} />)}
-          {(family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.removedRoles || []).map(removedRole =>
+          {Object.entries(family.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].approvalStatusByRole || {}).map(([role, roleApprovalStatus]) =>
+            <VolunteerRoleApprovalStatusChip key={role} roleName={role} status={roleApprovalStatus.effectiveRoleApprovalStatus} />)}
+          {(family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.roleRemovals || []).map(removedRole =>
             <Chip key={removedRole.roleName} size="small" label={`${removedRole.roleName} - ${RoleRemovalReason[removedRole.reason!]} - ${removedRole.additionalComments}`} />)}
           {(adult.item2.relationshipToFamily && <Chip size="small" label={adult.item2.relationshipToFamily} />) || null}
           {adult.item2.isInHousehold && <Chip size="small" label="In Household" />}
@@ -143,8 +144,8 @@ export function AdultCard({familyId, personId}: AdultCardProps) {
           <ContactDisplay person={adult.item1} />
         </Typography>
         <Accordion expanded={!collapsed} onChange={(event, isExpanded) => setCollapsed(!isExpanded)}
-          variant="outlined" square disableGutters sx={{marginLeft:-2, marginRight:-2, border: 'none'}}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ marginTop:1, paddingTop:1, backgroundColor: "#0000000a" }}>
+          variant="outlined" square disableGutters sx={{ marginLeft: -2, marginRight: -2, border: 'none' }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ marginTop: 1, paddingTop: 1, backgroundColor: "#0000000a" }}>
             <Grid container>
               <Grid item xs={3}>
                 <Badge color="success"
@@ -196,24 +197,24 @@ export function AdultCard({familyId, personId}: AdultCardProps) {
         open={Boolean(adultMoreMenuAnchor)}
         onClose={() => setAdultMoreMenuAnchor(null)}>
         {permissions(Permission.EditVolunteerRoleParticipation) &&
-          participatingFamilyRoles.flatMap(([role, ]) => (
-          <MenuItem key={role} onClick={() => adultMoreMenuAnchor?.adult && selectRemoveRole(adultMoreMenuAnchor.adult, role)}>
-            <ListItemText primary={`Remove from ${role} role`} />
-          </MenuItem>
-        ))}
+          participatingFamilyRoles.flatMap(([role,]) => (
+            <MenuItem key={role} onClick={() => adultMoreMenuAnchor?.adult && selectRemoveRole(adultMoreMenuAnchor.adult, role)}>
+              <ListItemText primary={`Remove from ${role} role`} />
+            </MenuItem>
+          ))}
         {permissions(Permission.EditVolunteerRoleParticipation) &&
-          participatingIndividualRoles.flatMap(([role, ]) => (
-          <MenuItem key={role} onClick={() => adultMoreMenuAnchor?.adult && selectRemoveRole(adultMoreMenuAnchor.adult, role)}>
-            <ListItemText primary={`Remove from ${role} role`} />
-          </MenuItem>
-        ))}
+          participatingIndividualRoles.flatMap(([role,]) => (
+            <MenuItem key={role} onClick={() => adultMoreMenuAnchor?.adult && selectRemoveRole(adultMoreMenuAnchor.adult, role)}>
+              <ListItemText primary={`Remove from ${role} role`} />
+            </MenuItem>
+          ))}
         {permissions(Permission.EditVolunteerRoleParticipation) &&
           removedRoles.map(removedRole => (
-          <MenuItem key={removedRole.roleName}
-            onClick={() => adultMoreMenuAnchor?.adult && selectResetRole(adultMoreMenuAnchor.adult, removedRole.roleName!, removedRole.reason!, removedRole.additionalComments!)}>
-            <ListItemText primary={`Reset ${removedRole.roleName} participation`} />
-          </MenuItem>
-        ))}
+            <MenuItem key={removedRole.roleName}
+              onClick={() => adultMoreMenuAnchor?.adult && selectResetRole(adultMoreMenuAnchor.adult, removedRole.roleName!, removedRole.reason!, removedRole.additionalComments!)}>
+              <ListItemText primary={`Reset ${removedRole.roleName} participation`} />
+            </MenuItem>
+          ))}
         {((featureFlags?.inviteUser && permissions(Permission.InvitePersonUser)) ||
           permissions(Permission.EditPersonUserStandardRoles) ||
           permissions(Permission.EditPersonUserProtectedRoles)) &&

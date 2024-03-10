@@ -73,7 +73,7 @@ export function FamilyScreen() {
 
   const participatingFamilyRoles =
     Object.entries(family?.volunteerFamilyInfo?.familyRoleApprovals || {}).filter(
-      ([role,]) => !family?.volunteerFamilyInfo?.removedRoles?.find(x => x.roleName === role));
+      ([role,]) => !family?.volunteerFamilyInfo?.roleRemovals?.find(x => x.roleName === role));
 
   const [removeRoleParameter, setRemoveRoleParameter] = useState<{ volunteerFamilyId: string, role: string } | null>(null);
   function selectRemoveRole(role: string) {
@@ -181,8 +181,8 @@ export function FamilyScreen() {
         </Button>}
         {permissions(Permission.EditVolunteerRoleParticipation) &&
           (participatingFamilyRoles.length > 0 ||
-            (family.volunteerFamilyInfo?.removedRoles &&
-              family.volunteerFamilyInfo.removedRoles.length > 0)) &&
+            (family.volunteerFamilyInfo?.roleRemovals &&
+              family.volunteerFamilyInfo.roleRemovals.length > 0)) &&
           <IconButton
             onClick={(event) => setFamilyMoreMenuAnchor(event.currentTarget)}
             size="large">
@@ -201,7 +201,7 @@ export function FamilyScreen() {
                 </MenuItem>
               ))}
             {permissions(Permission.EditVolunteerRoleParticipation) &&
-              (family.volunteerFamilyInfo?.removedRoles || []).map(removedRole => (
+              (family.volunteerFamilyInfo?.roleRemovals || []).map(removedRole => (
                 <MenuItem key={removedRole.roleName}
                   onClick={() => selectResetRole(removedRole.roleName!, removedRole.reason!, removedRole.additionalComments!)}>
                   <ListItemText primary={`Reset ${removedRole.roleName} participation`} />
@@ -339,9 +339,9 @@ export function FamilyScreen() {
                       margin: theme.spacing(0.5),
                     }
                   }}>
-                    {Object.entries(family.volunteerFamilyInfo?.familyRoleApprovals || {}).flatMap(([role, roleVersionApprovals]) =>
-                      <VolunteerRoleApprovalStatusChip key={role} roleName={role} roleVersionApprovals={roleVersionApprovals} />)}
-                    {(family.volunteerFamilyInfo?.removedRoles || []).map(removedRole =>
+                    {Object.entries(family.volunteerFamilyInfo?.familyRoleApprovals || {}).flatMap(([role, roleApprovalStatus]) =>
+                      <VolunteerRoleApprovalStatusChip key={role} roleName={role} status={roleApprovalStatus.effectiveRoleApprovalStatus} />)}
+                    {(family.volunteerFamilyInfo?.roleRemovals || []).map(removedRole =>
                       <Chip key={removedRole.roleName} size="small" label={`${removedRole.roleName} - ${RoleRemovalReason[removedRole.reason!]} - ${removedRole.additionalComments}`} />)}
                   </Box>
                 </Grid>

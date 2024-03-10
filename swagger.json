@@ -1,5 +1,5 @@
 {
-  "x-generator": "NSwag v13.18.2.0 (NJsonSchema v10.8.0.0 (Newtonsoft.Json v13.0.0.0))",
+  "x-generator": "NSwag v14.0.3.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))",
   "openapi": "3.0.0",
   "info": {
     "title": "CareTogether CMS API",
@@ -126,8 +126,7 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "nullable": true
+              "type": "string"
             },
             "x-position": 2
           }
@@ -807,8 +806,7 @@
             "name": "inviteNonce",
             "in": "query",
             "schema": {
-              "type": "string",
-              "nullable": true
+              "type": "string"
             },
             "x-position": 3
           }
@@ -839,8 +837,7 @@
             "name": "redemptionSessionId",
             "in": "query",
             "schema": {
-              "type": "string",
-              "nullable": true
+              "type": "string"
             },
             "x-position": 1
           }
@@ -870,8 +867,7 @@
             "name": "redemptionSessionId",
             "in": "query",
             "schema": {
-              "type": "string",
-              "nullable": true
+              "type": "string"
             },
             "x-position": 1
           }
@@ -895,10 +891,11 @@
         "tags": [
           "Metadata"
         ],
+        "summary": "Generates the OData $metadata document.",
         "operationId": "Metadata_GetMetadata",
         "responses": {
           "200": {
-            "description": "",
+            "description": "The IEdmModel representing $metadata.",
             "content": {
               "application/json": {
                 "schema": {
@@ -915,10 +912,11 @@
         "tags": [
           "Metadata"
         ],
+        "summary": "Generates the OData service document.",
         "operationId": "Metadata_GetServiceDocument",
         "responses": {
           "200": {
-            "description": "",
+            "description": "The service document for the service.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2242,10 +2240,20 @@
         "additionalProperties": false,
         "properties": {
           "item1": {
-            "$ref": "#/components/schemas/Person"
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Person"
+              }
+            ]
           },
           "item2": {
-            "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
+              }
+            ]
           }
         }
       },
@@ -3168,6 +3176,12 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "familyRoleApprovals": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/FamilyRoleApprovalStatus"
+            }
+          },
           "completedRequirements": {
             "type": "array",
             "items": {
@@ -3180,10 +3194,10 @@
               "$ref": "#/components/schemas/ExemptedRequirementInfo"
             }
           },
-          "removedRoles": {
+          "availableApplications": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/RemovedRole"
+              "type": "string"
             }
           },
           "missingRequirements": {
@@ -3192,19 +3206,10 @@
               "type": "string"
             }
           },
-          "availableApplications": {
+          "roleRemovals": {
             "type": "array",
             "items": {
-              "type": "string"
-            }
-          },
-          "familyRoleApprovals": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/RoleVersionApproval"
-              }
+              "$ref": "#/components/schemas/RoleRemoval"
             }
           },
           "individualVolunteers": {
@@ -3221,7 +3226,213 @@
           }
         }
       },
-      "RemovedRole": {
+      "FamilyRoleApprovalStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "effectiveRoleApprovalStatus": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/DateOnlyTimelineOfRoleApprovalStatus"
+              }
+            ]
+          },
+          "roleVersionApprovals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FamilyRoleVersionApprovalStatus"
+            }
+          },
+          "currentStatus": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RoleApprovalStatus"
+              }
+            ]
+          },
+          "currentMissingFamilyRequirements": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "currentAvailableFamilyApplications": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "currentMissingIndividualRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValueTupleOfGuidAndString"
+            }
+          }
+        }
+      },
+      "DateOnlyTimelineOfRoleApprovalStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "ranges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DateRangeOfRoleApprovalStatus"
+            }
+          }
+        }
+      },
+      "DateRangeOfRoleApprovalStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date"
+          },
+          "end": {
+            "type": "string",
+            "format": "date"
+          },
+          "tag": {
+            "$ref": "#/components/schemas/RoleApprovalStatus"
+          }
+        }
+      },
+      "RoleApprovalStatus": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Prospective",
+          "Expired",
+          "Approved",
+          "Onboarded",
+          "Inactive",
+          "Denied"
+        ],
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "FamilyRoleVersionApprovalStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "status": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/DateOnlyTimelineOfRoleApprovalStatus"
+              }
+            ]
+          },
+          "requirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FamilyRoleRequirementCompletionStatus"
+            }
+          }
+        }
+      },
+      "FamilyRoleRequirementCompletionStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "actionName": {
+            "type": "string"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/RequirementStage"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/VolunteerFamilyRequirementScope"
+          },
+          "whenMet": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/DateOnlyTimeline"
+              }
+            ]
+          },
+          "statusDetails": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FamilyRequirementStatusDetail"
+            }
+          }
+        }
+      },
+      "DateOnlyTimeline": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "ranges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DateRange"
+            }
+          }
+        }
+      },
+      "DateRange": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date"
+          },
+          "end": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "FamilyRequirementStatusDetail": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "personId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          },
+          "whenMet": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/DateOnlyTimeline"
+              }
+            ]
+          }
+        }
+      },
+      "ValueTupleOfGuidAndString": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "item1": {
+            "type": "string",
+            "format": "guid"
+          },
+          "item2": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "RoleRemoval": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -3230,6 +3441,15 @@
           },
           "reason": {
             "$ref": "#/components/schemas/RoleRemovalReason"
+          },
+          "effectiveSince": {
+            "type": "string",
+            "format": "date"
+          },
+          "effectiveUntil": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
           },
           "additionalComments": {
             "type": "string",
@@ -3251,41 +3471,16 @@
           2
         ]
       },
-      "RoleVersionApproval": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "version": {
-            "type": "string"
-          },
-          "approvalStatus": {
-            "$ref": "#/components/schemas/RoleApprovalStatus"
-          },
-          "expiresAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          }
-        }
-      },
-      "RoleApprovalStatus": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "Prospective",
-          "Approved",
-          "Onboarded"
-        ],
-        "enum": [
-          0,
-          1,
-          2
-        ]
-      },
       "VolunteerInfo": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "approvalStatusByRole": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/IndividualRoleApprovalStatus"
+            }
+          },
           "completedRequirements": {
             "type": "array",
             "items": {
@@ -3298,10 +3493,10 @@
               "$ref": "#/components/schemas/ExemptedRequirementInfo"
             }
           },
-          "removedRoles": {
+          "availableApplications": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/RemovedRole"
+              "type": "string"
             }
           },
           "missingRequirements": {
@@ -3310,20 +3505,94 @@
               "type": "string"
             }
           },
-          "availableApplications": {
+          "roleRemovals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleRemoval"
+            }
+          }
+        }
+      },
+      "IndividualRoleApprovalStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "effectiveRoleApprovalStatus": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/DateOnlyTimelineOfRoleApprovalStatus"
+              }
+            ]
+          },
+          "roleVersionApprovals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IndividualRoleVersionApprovalStatus"
+            }
+          },
+          "currentStatus": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RoleApprovalStatus"
+              }
+            ]
+          },
+          "currentMissingRequirements": {
             "type": "array",
             "items": {
               "type": "string"
             }
           },
-          "individualRoleApprovals": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/RoleVersionApproval"
-              }
+          "currentAvailableApplications": {
+            "type": "array",
+            "items": {
+              "type": "string"
             }
+          }
+        }
+      },
+      "IndividualRoleVersionApprovalStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "status": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/DateOnlyTimelineOfRoleApprovalStatus"
+              }
+            ]
+          },
+          "requirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IndividualRoleRequirementCompletionStatus"
+            }
+          }
+        }
+      },
+      "IndividualRoleRequirementCompletionStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "actionName": {
+            "type": "string"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/RequirementStage"
+          },
+          "whenMet": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/DateOnlyTimeline"
+              }
+            ]
           }
         }
       },
@@ -4903,7 +5172,12 @@
             "format": "guid"
           },
           "item2": {
-            "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
+              }
+            ]
           }
         }
       },
@@ -6409,11 +6683,13 @@
       },
       "IEdmModel": {
         "type": "object",
+        "description": "Semantic representation of an EDM model.",
         "x-abstract": true,
         "additionalProperties": false,
         "properties": {
           "schemaElements": {
             "type": "array",
+            "description": "Gets the collection of schema elements that are contained in this model.",
             "nullable": true,
             "items": {
               "$ref": "#/components/schemas/IEdmSchemaElement"
@@ -6421,6 +6697,7 @@
           },
           "vocabularyAnnotations": {
             "type": "array",
+            "description": "Gets the collection of vocabulary annotations that are contained in this model.",
             "nullable": true,
             "items": {
               "$ref": "#/components/schemas/IEdmVocabularyAnnotation"
@@ -6428,6 +6705,7 @@
           },
           "referencedModels": {
             "type": "array",
+            "description": "Gets the collection of models referred to by this model (mainly by the this.References).",
             "nullable": true,
             "items": {
               "$ref": "#/components/schemas/IEdmModel"
@@ -6435,12 +6713,14 @@
           },
           "declaredNamespaces": {
             "type": "array",
+            "description": "Gets the collection of namespaces that schema elements use contained in this model.",
             "nullable": true,
             "items": {
               "type": "string"
             }
           },
           "directValueAnnotationsManager": {
+            "description": "Gets the model's annotations manager.",
             "nullable": true,
             "oneOf": [
               {
@@ -6449,6 +6729,7 @@
             ]
           },
           "entityContainer": {
+            "description": "Gets the only one entity container of the model.",
             "nullable": true,
             "oneOf": [
               {
@@ -6460,21 +6741,28 @@
       },
       "IEdmSchemaElement": {
         "type": "object",
+        "description": "Common base interface for all named children of EDM schema.",
         "x-abstract": true,
         "additionalProperties": false,
         "properties": {
           "schemaElementKind": {
-            "$ref": "#/components/schemas/EdmSchemaElementKind"
+            "description": "Gets the kind of this schema element.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/EdmSchemaElementKind"
+              }
+            ]
           },
           "namespace": {
             "type": "string",
+            "description": "Gets the namespace this schema element belongs to.",
             "nullable": true
           }
         }
       },
       "EdmSchemaElementKind": {
         "type": "integer",
-        "description": "",
+        "description": "Defines EDM schema element types.",
         "x-enumNames": [
           "None",
           "TypeDefinition",
@@ -6494,14 +6782,17 @@
       },
       "IEdmVocabularyAnnotation": {
         "type": "object",
+        "description": "Represents an EDM vocabulary annotation.",
         "x-abstract": true,
         "additionalProperties": false,
         "properties": {
           "qualifier": {
             "type": "string",
+            "description": "Gets the qualifier used to discriminate between multiple bindings of the same property or type.",
             "nullable": true
           },
           "term": {
+            "description": "Gets the term bound by the annotation.",
             "nullable": true,
             "oneOf": [
               {
@@ -6510,6 +6801,7 @@
             ]
           },
           "target": {
+            "description": "Gets the element the annotation applies to.",
             "nullable": true,
             "oneOf": [
               {
@@ -6518,6 +6810,7 @@
             ]
           },
           "value": {
+            "description": "Gets the expression producing the value of the annotation.",
             "nullable": true,
             "oneOf": [
               {
@@ -6529,10 +6822,12 @@
       },
       "IEdmTerm": {
         "type": "object",
+        "description": "Represents an EDM term.",
         "x-abstract": true,
         "additionalProperties": false,
         "properties": {
           "type": {
+            "description": "Gets the type of this term.",
             "nullable": true,
             "oneOf": [
               {
@@ -6542,23 +6837,28 @@
           },
           "appliesTo": {
             "type": "string",
+            "description": "Gets the AppliesTo of this term.",
             "nullable": true
           },
           "defaultValue": {
             "type": "string",
+            "description": "Gets the DefaultValue of this term.",
             "nullable": true
           }
         }
       },
       "IEdmTypeReference": {
         "type": "object",
+        "description": "Represents a references to a type.",
         "x-abstract": true,
         "additionalProperties": false,
         "properties": {
           "isNullable": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Gets a value indicating whether this type is nullable."
           },
           "definition": {
+            "description": "Gets the definition to which this type refers.",
             "nullable": true,
             "oneOf": [
               {
@@ -6570,17 +6870,23 @@
       },
       "IEdmType": {
         "type": "object",
+        "description": "Represents the definition of an EDM type.",
         "x-abstract": true,
         "additionalProperties": false,
         "properties": {
           "typeKind": {
-            "$ref": "#/components/schemas/EdmTypeKind"
+            "description": "Gets the kind of this type.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/EdmTypeKind"
+              }
+            ]
           }
         }
       },
       "EdmTypeKind": {
         "type": "integer",
-        "description": "",
+        "description": "Defines EDM metatypes.",
         "x-enumNames": [
           "None",
           "Primitive",
@@ -6608,22 +6914,29 @@
       },
       "IEdmVocabularyAnnotatable": {
         "type": "object",
+        "description": "Represents an element that can be targeted by Vocabulary Annotations",
         "x-abstract": true,
         "additionalProperties": false
       },
       "IEdmExpression": {
         "type": "object",
+        "description": "Represents an EDM expression.",
         "x-abstract": true,
         "additionalProperties": false,
         "properties": {
           "expressionKind": {
-            "$ref": "#/components/schemas/EdmExpressionKind"
+            "description": "Gets the kind of this expression.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/EdmExpressionKind"
+              }
+            ]
           }
         }
       },
       "EdmExpressionKind": {
         "type": "integer",
-        "description": "",
+        "description": "Defines EDM expression kinds.",
         "x-enumNames": [
           "None",
           "BinaryConstant",
@@ -6683,16 +6996,19 @@
       },
       "IEdmDirectValueAnnotationsManager": {
         "type": "object",
+        "description": "Manages getting and setting direct annotations on EDM elements.",
         "x-abstract": true,
         "additionalProperties": false
       },
       "IEdmEntityContainer": {
         "type": "object",
+        "description": "Represents an EDM entity container.",
         "x-abstract": true,
         "additionalProperties": false,
         "properties": {
           "elements": {
             "type": "array",
+            "description": "Gets a collection of the elements of this entity container.",
             "nullable": true,
             "items": {
               "$ref": "#/components/schemas/IEdmEntityContainerElement"
@@ -6702,13 +7018,20 @@
       },
       "IEdmEntityContainerElement": {
         "type": "object",
+        "description": "Represents the common elements of all EDM entity container elements.",
         "x-abstract": true,
         "additionalProperties": false,
         "properties": {
           "containerElementKind": {
-            "$ref": "#/components/schemas/EdmContainerElementKind"
+            "description": "Gets the kind of element of this container element.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/EdmContainerElementKind"
+              }
+            ]
           },
           "container": {
+            "description": "Gets the container that contains this element.",
             "nullable": true,
             "oneOf": [
               {
@@ -6720,7 +7043,7 @@
       },
       "EdmContainerElementKind": {
         "type": "integer",
-        "description": "",
+        "description": "Defines EDM container element types.",
         "x-enumNames": [
           "None",
           "EntitySet",
@@ -6743,10 +7066,12 @@
           },
           {
             "type": "object",
+            "description": "Class representing the a service document.",
             "additionalProperties": false,
             "properties": {
               "entitySets": {
                 "type": "array",
+                "description": "Gets or sets the set of entity sets in the service document.",
                 "nullable": true,
                 "items": {
                   "$ref": "#/components/schemas/ODataEntitySetInfo"
@@ -6754,6 +7079,7 @@
               },
               "singletons": {
                 "type": "array",
+                "description": "Gets or sets the set of singletons in the service document.",
                 "nullable": true,
                 "items": {
                   "$ref": "#/components/schemas/ODataSingletonInfo"
@@ -6761,6 +7087,7 @@
               },
               "functionImports": {
                 "type": "array",
+                "description": "Gets or sets the set of function imports in the service document.",
                 "nullable": true,
                 "items": {
                   "$ref": "#/components/schemas/ODataFunctionImportInfo"
@@ -6777,6 +7104,7 @@
           },
           {
             "type": "object",
+            "description": "Class representing a entity set in a service document.",
             "additionalProperties": false
           }
         ]
@@ -6788,20 +7116,24 @@
           },
           {
             "type": "object",
+            "description": "Abstract class representing an element (EntitySet, Singleton) in a service document.",
             "x-abstract": true,
             "additionalProperties": false,
             "properties": {
               "url": {
                 "type": "string",
+                "description": "Gets or sets the URI representing the Unified Resource Locator (URL) to the element.",
                 "format": "uri",
                 "nullable": true
               },
               "name": {
                 "type": "string",
+                "description": "Gets or sets the name of the element; this is the entity set or singleton name in JSON and the HREF in Atom.",
                 "nullable": true
               },
               "title": {
                 "type": "string",
+                "description": "Gets or sets the title of the element; this is the title in JSON.",
                 "nullable": true
               }
             }
@@ -6810,10 +7142,12 @@
       },
       "ODataAnnotatable": {
         "type": "object",
+        "description": "Base class for all annotatable types in OData library.",
         "x-abstract": true,
         "additionalProperties": false,
         "properties": {
           "typeAnnotation": {
+            "description": "The annotation for storing @odata.type.",
             "nullable": true,
             "oneOf": [
               {
@@ -6825,10 +7159,12 @@
       },
       "ODataTypeAnnotation": {
         "type": "object",
+        "description": "Annotation which stores the EDM type information of a value.",
         "additionalProperties": false,
         "properties": {
           "typeName": {
             "type": "string",
+            "description": "Gets the type name to serialize, for the annotated item. ",
             "nullable": true
           }
         }
@@ -6840,6 +7176,7 @@
           },
           {
             "type": "object",
+            "description": "Class representing a singleton in a service document.",
             "additionalProperties": false
           }
         ]
@@ -6851,6 +7188,7 @@
           },
           {
             "type": "object",
+            "description": "Class representing a function Import in a service document.",
             "additionalProperties": false
           }
         ]
