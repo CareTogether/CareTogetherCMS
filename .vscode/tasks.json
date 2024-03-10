@@ -38,7 +38,7 @@
                     "endsPattern": "Finished.+"
                 },
                 "pattern": {
-                    "regexp": ""
+                    "regexp": "",
                 }
             }
         },
