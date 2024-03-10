@@ -2,6 +2,7 @@
   "name": "caretogether-pwa",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "dependencies": {
     "@azure/msal-browser": "^3.10.0",
     "@azure/storage-blob": "^12.17.0",
