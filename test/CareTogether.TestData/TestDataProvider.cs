@@ -18,6 +18,25 @@ namespace CareTogether.TestData
 {
     public static class TestDataProvider
     {
+        /* The following fields are used to keep the test data relatively current.
+         * In general:
+         *   "MONTH" is intended to be blank (to prevent 'after UtcNow' issues),
+         *   "LAST_MONTH" is for referrals,
+         *   "OLDER_MONTH" is for approvals.
+         */
+        static int YEAR = DateTime.UtcNow.Year;
+        static int MONTH = DateTime.UtcNow.Month;
+        static int LAST_MONTH = MONTH - 1 == 0 ? 12 : MONTH - 1;
+        static int LAST_MONTH_YEAR = LAST_MONTH == 12 ? YEAR - 1 : YEAR;
+        static int OLDER_MONTH = LAST_MONTH - 1 == 0 ? 12 : LAST_MONTH - 1;
+        static int OLDER_MONTH_YEAR = OLDER_MONTH == 12 ? LAST_MONTH_YEAR - 1 : LAST_MONTH_YEAR;
+        static DateTime StartOfCurrentMonth() => new DateTime(YEAR, MONTH, 1);
+        static DateTime LastMonth(int day) => new DateTime(LAST_MONTH_YEAR, LAST_MONTH, day);
+        static DateTime LastMonth(int day, int hour, int minute, int second) => new DateTime(LAST_MONTH_YEAR, LAST_MONTH, day, hour, minute, second);
+        static DateTime OlderMonth(int day) => new DateTime(OLDER_MONTH_YEAR, OLDER_MONTH, day);
+        static DateTime OlderMonth(int day, int hour, int minute, int second) => new DateTime(OLDER_MONTH_YEAR, OLDER_MONTH, day, hour, minute, second);
+
+
         /* Families
          * ======================
          * NOTE: guidF is reserved for CareTogether system actions and should not be used as a person ID!
@@ -117,13 +136,13 @@ namespace CareTogether.TestData
         public static async Task PopulatePersonAccessEvents(IEventLog<PersonAccessEvent> personAccessEventLog)
         {
             await personAccessEventLog.AppendEventsAsync(guid1, guid2,
-                new PersonAccessEvent(SystemConstants.SystemUserId, new DateTime(2020, 1, 1),
+                new PersonAccessEvent(SystemConstants.SystemUserId, OlderMonth(1),
                     new ChangePersonRoles(PersonId: guid0, Roles: ImmutableList.Create(SystemConstants.ORGANIZATION_ADMINISTRATOR))),
-                new PersonAccessEvent(SystemConstants.SystemUserId, new DateTime(2020, 1, 1),
+                new PersonAccessEvent(SystemConstants.SystemUserId, OlderMonth(1),
                     new ChangePersonRoles(PersonId: guid4, Roles: ImmutableList.Create("Volunteer")))
                 );
             await personAccessEventLog.AppendEventsAsync(guid1, guid3,
-                new PersonAccessEvent(SystemConstants.SystemUserId, new DateTime(2020, 1, 1),
+                new PersonAccessEvent(SystemConstants.SystemUserId, OlderMonth(1),
                     new ChangePersonRoles(PersonId: guid0, Roles: ImmutableList.Create(SystemConstants.ORGANIZATION_ADMINISTRATOR)))
                 );
         }
