@@ -12,12 +12,12 @@ type ReferralCustomFieldProps = {
 
 export function ReferralCustomField({ partneringFamilyId, referralId, customField }: ReferralCustomFieldProps) {
   const policy = useRecoilValue(policyData);
-  
+
   const savedCustomField = customField instanceof CompletedCustomFieldInfo ? customField : null;
   const customFieldPolicy = policy.referralPolicy!.customFields!.find(cf =>
     savedCustomField
-    ? cf.name === savedCustomField.customFieldName
-    : cf.name === customField) as CustomField;
+      ? cf.name === savedCustomField.customFieldName
+      : cf.name === customField) as CustomField;
 
   const referralsModel = useReferralsModel();
 

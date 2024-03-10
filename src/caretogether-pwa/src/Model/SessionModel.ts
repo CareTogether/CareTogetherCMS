@@ -12,16 +12,17 @@ export const redemptionSessionIdState = atom<string | null>({
 
 export const inviteReviewInfoQuery = selector({
   key: 'inviteReviewInfoQuery',
-  get: async ({get}) => {
+  get: async ({ get }) => {
     const redemptionSessionId = get(redemptionSessionIdState);
-    
+
     if (redemptionSessionId) {
       const inviteReviewInfo = await api.users.examinePersonInviteRedemptionSession(redemptionSessionId);
       return inviteReviewInfo;
     } else {
       return null;
     }
-}});
+  }
+});
 
 function usePermissions(applicablePermissions?: Permission[]) {
   //TODO: If we want to expose a "not-yet-loaded" state, update this to return 'null' from

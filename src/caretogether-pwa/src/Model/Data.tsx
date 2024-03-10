@@ -8,7 +8,7 @@ import { userIdState } from "../Authentication/Auth";
 // This will be available to query (asynchronously) after the userIdState is set (i.e., post-authentication).
 export const userOrganizationAccessQuery = selector({
   key: 'userOrganizationAccessQuery',
-  get: async ({get}) => {
+  get: async ({ get }) => {
     //HACK: Requiring the user ID state to be set is a workaround for fall-through issues with the AuthenticationWrapper
     //      and AuthenticatedUserWrapper. Removing this currently would cause runtime errors regarding the MsalProvider
     //      being updated while a child component is being rendered (e.g., the ShellContextSwitcher).
@@ -34,7 +34,7 @@ export const selectedLocationContextState = atom<LocationContext>({
 // This will be available to query after the selectedLocationContextState is set by AppRoutes.
 export const currentOrganizationQuery = selector({
   key: 'currentOrganizationQuery',
-  get: ({get}) => {
+  get: ({ get }) => {
     const userOrganizationAccess = get(userOrganizationAccessQuery);
     const selectedLocationContext = get(selectedLocationContextState);
 
@@ -53,7 +53,7 @@ export const currentOrganizationQuery = selector({
 // This will be available to query after the selectedLocationIdState is set by AppRoutes.
 export const currentLocationQuery = selector({
   key: 'currentLocationQuery',
-  get: ({get}) => {
+  get: ({ get }) => {
     const currentOrganization = get(currentOrganizationQuery);
     const selectedLocationContext = get(selectedLocationContextState);
 
@@ -87,13 +87,13 @@ const visibleAggregatesForScopeData = atomFamily<RecordsAggregate[], LocationCon
 // For convenience, only the currently visible records are exported to the client from this module.
 export const visibleAggregatesState = selector({
   key: 'visibleAggregatesState',
-  get: ({get}) => {
+  get: ({ get }) => {
     const context = get(selectedLocationContextState);
     const visibleAggregates = visibleAggregatesForScopeData(context);
     const results = get(visibleAggregates);
     return results;
   },
-  set: ({get, set}, newValue) => {
+  set: ({ get, set }, newValue) => {
     const context = get(selectedLocationContextState);
     set(visibleAggregatesForScopeData(context), newValue);
   }
@@ -106,7 +106,7 @@ export function useDataLoaded() {
 
 export const visibleFamiliesQuery = selector({
   key: 'visibleFamiliesQuery',
-  get: ({get}) => {
+  get: ({ get }) => {
     const visibleAggregates = get(visibleAggregatesState);
     return visibleAggregates.filter(aggregate => aggregate instanceof FamilyRecordsAggregate).map(aggregate =>
       (aggregate as FamilyRecordsAggregate).family!);
@@ -115,7 +115,7 @@ export const visibleFamiliesQuery = selector({
 
 export const visibleCommunitiesQuery = selector({
   key: 'visibleCommunitiesQuery',
-  get: ({get}) => {
+  get: ({ get }) => {
     const visibleAggregates = get(visibleAggregatesState);
     return visibleAggregates.filter(aggregate => aggregate instanceof CommunityRecordsAggregate).map(aggregate =>
       (aggregate as CommunityRecordsAggregate).community!);

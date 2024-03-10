@@ -7,7 +7,7 @@ interface Collapsed {
 }
 
 class CollapsedDb extends Dexie {
-  items!: Table<Collapsed>; 
+  items!: Table<Collapsed>;
 
   constructor() {
     super('collapsedItems');
@@ -38,6 +38,6 @@ export function useCollapsed(key: string, initialValue: boolean) {
   }, [key]);
 
   const value = typeof savedValue === 'undefined' ? initialValue : savedValue;
-  
+
   return [value, upsertSavedValue] as const;
 }

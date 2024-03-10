@@ -8,7 +8,7 @@ interface DeleteDocumentDialogProps {
   onClose: () => void
 }
 
-export function DeleteDocumentDialog({familyId, document, onClose}: DeleteDocumentDialogProps) {
+export function DeleteDocumentDialog({ familyId, document, onClose }: DeleteDocumentDialogProps) {
   const directoryModel = useDirectoryModel();
 
   async function save() {

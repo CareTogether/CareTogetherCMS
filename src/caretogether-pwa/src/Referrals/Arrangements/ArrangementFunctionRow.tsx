@@ -25,16 +25,16 @@ export function ArrangementFunctionRow({
   const permissions = useFamilyIdPermissions(partneringFamilyId);
   const familyLookup = useFamilyLookup();
   const personLookup = usePersonLookup();
-  
+
   const addAssignmentDialogHandle = useDialogHandle();
   const removeAssignmentDialogHandle = useDialogHandle();
 
   const canComplete = permissions(Permission.EditAssignments);
-  
+
   const assignments = (arrangement.familyVolunteerAssignments || [] as Array<FamilyVolunteerAssignment | IndividualVolunteerAssignment>).concat(
     arrangement.individualVolunteerAssignments || []).filter(assignment =>
-    assignment.arrangementFunction === functionPolicy.functionName) as Array<FamilyVolunteerAssignment | IndividualVolunteerAssignment>;
-  
+      assignment.arrangementFunction === functionPolicy.functionName) as Array<FamilyVolunteerAssignment | IndividualVolunteerAssignment>;
+
   const isMissing =
     !arrangement.familyVolunteerAssignments?.some(x => x.arrangementFunction === functionPolicy.functionName) &&
     !arrangement.individualVolunteerAssignments?.some(x => x.arrangementFunction === functionPolicy.functionName);
@@ -42,13 +42,13 @@ export function ArrangementFunctionRow({
   function isMissingVariant(assignment: FamilyVolunteerAssignment | IndividualVolunteerAssignment) {
     return functionPolicy.variants && functionPolicy.variants.length > 0 && !assignment.arrangementFunctionVariant;
   }
-  
+
   const [unassignmentParameter, setUnassignmentParameter] = useState<FamilyVolunteerAssignment | IndividualVolunteerAssignment | null>(null);
   function openUnassignDialog(assignment: FamilyVolunteerAssignment | IndividualVolunteerAssignment) {
     setUnassignmentParameter(assignment);
     removeAssignmentDialogHandle.openDialog();
   }
-  
+
   return (
     <>
       <TableRow key={functionPolicy.functionName}>
@@ -72,12 +72,12 @@ export function ArrangementFunctionRow({
                 {assignment.arrangementFunctionVariant &&
                   <>
                     <br />
-                    <span style={{paddingLeft: '30px', fontStyle: 'italic'}}>{assignment.arrangementFunctionVariant}</span>
+                    <span style={{ paddingLeft: '30px', fontStyle: 'italic' }}>{assignment.arrangementFunctionVariant}</span>
                   </>}
                 {isMissingVariant(assignment) &&
                   <>
                     <br />
-                    <span style={{paddingLeft: '30px', fontWeight: 'bold', display: 'inline-block'}}>❌ This assignment is missing a variant! Requirements for this assignment will not be calculated. To fix, remove this assignment and add it back with the correct variant.</span>
+                    <span style={{ paddingLeft: '30px', fontWeight: 'bold', display: 'inline-block' }}>❌ This assignment is missing a variant! Requirements for this assignment will not be calculated. To fix, remove this assignment and add it back with the correct variant.</span>
                   </>}
               </>
             </IconRow>)}

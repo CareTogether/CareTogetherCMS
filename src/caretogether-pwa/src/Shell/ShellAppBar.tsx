@@ -51,12 +51,12 @@ export function ShellAppBar({ menuDrawerOpen, setMenuDrawerOpen, drawerWidth }: 
           </IconButton>)}
         {screenTitle
           ? <Typography variant='h6' component="h3" noWrap sx={{
-                display: { xs: openMobileSearch ? 'none' : 'block', md: 'block' },
-                marginLeft: isDesktop ? (menuDrawerOpen ? 3 : 1) : 0
-              }}>
-              {screenTitle}
-            </Typography>
-          : <Skeleton variant="text" sx={{fontSize: theme.typography.h6, marginLeft: 1}} width={200} />}
+            display: { xs: openMobileSearch ? 'none' : 'block', md: 'block' },
+            marginLeft: isDesktop ? (menuDrawerOpen ? 3 : 1) : 0
+          }}>
+            {screenTitle}
+          </Typography>
+          : <Skeleton variant="text" sx={{ fontSize: theme.typography.h6, marginLeft: 1 }} width={200} />}
         {/* <ShellSearchBar
           openMobileSearch={openMobileSearch}
           setOpenMobileSearch={setOpenMobileSearch} /> */}

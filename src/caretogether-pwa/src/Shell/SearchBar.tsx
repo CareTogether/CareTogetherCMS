@@ -38,7 +38,7 @@ export function SearchBar(props: SearchBarProps) {
       </Box>
       <InputBase
         sx={{
-          root: {color: 'inherit'},
+          root: { color: 'inherit' },
           input: {
             padding: theme.spacing(1, 1, 1, 0),
             // vertical padding + font size from searchIcon
@@ -47,9 +47,9 @@ export function SearchBar(props: SearchBarProps) {
             width: '100%',
             [theme.breakpoints.up('sm')]: {
               width: '0ch',
-                '&:focus': {
-                 width: '20ch',
-               },
+              '&:focus': {
+                width: '20ch',
+              },
             },
           }
         }}

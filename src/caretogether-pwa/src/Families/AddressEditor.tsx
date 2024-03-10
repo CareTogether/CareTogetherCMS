@@ -18,11 +18,11 @@ function isSet(value: string | undefined) {
 
 function isInputValid(value: IAddress) {
   return isSet(value.line1) ||
-  isSet(value.line2) ||
-  isSet(value.city) ||
-  isSet(value.county) ||
-  isSet(value.state) ||
-  isSet(value.postalCode);
+    isSet(value.line2) ||
+    isSet(value.city) ||
+    isSet(value.county) ||
+    isSet(value.state) ||
+    isSet(value.postalCode);
 }
 
 export function AddressFormFields({ address, onEdit }: AddressFormFieldsProps) {
@@ -39,32 +39,32 @@ export function AddressFormFields({ address, onEdit }: AddressFormFieldsProps) {
       <Grid item xs={12}>
         <TextField id="address-line1" label="Address Line 1" fullWidth size="small"
           value={address?.line1 || ""}
-          onChange={e => onEditField({...address, line1: e.target.value})} />
+          onChange={e => onEditField({ ...address, line1: e.target.value })} />
       </Grid>
       <Grid item xs={12}>
         <TextField id="address-line2" label="Address Line 2" fullWidth size="small"
           value={address?.line2 || ""}
-          onChange={e => onEditField({...address, line2: e.target.value})} />
+          onChange={e => onEditField({ ...address, line2: e.target.value })} />
       </Grid>
       <Grid item xs={12} sm={6}>
         <TextField id="address-city" label="City" fullWidth size="small"
           value={address?.city || ""}
-          onChange={e => onEditField({...address, city: e.target.value})} />
+          onChange={e => onEditField({ ...address, city: e.target.value })} />
       </Grid>
       <Grid item xs={12} sm={6}>
         <TextField id="address-county" label="County" fullWidth size="small"
           value={address?.county || ""}
-          onChange={e => onEditField({...address, county: e.target.value})} />
+          onChange={e => onEditField({ ...address, county: e.target.value })} />
       </Grid>
       <Grid item xs={12} sm={2}>
         <TextField id="address-state" label="State" fullWidth size="small"
           value={address?.state || ""}
-          onChange={e => onEditField({...address, state: e.target.value})} />
+          onChange={e => onEditField({ ...address, state: e.target.value })} />
       </Grid>
       <Grid item xs={12} sm={4}>
         <TextField id="address-postalcode" label="ZIP/Postal Code" fullWidth size="small"
           value={address?.postalCode || ""}
-          onChange={e => onEditField({...address, postalCode: e.target.value})} />
+          onChange={e => onEditField({ ...address, postalCode: e.target.value })} />
       </Grid>
     </>
   );
@@ -83,23 +83,23 @@ export function AddressEditor({ familyId, person, add, address }: AddressEditorP
   const isCurrent = person.currentAddressId === address?.id ||
     typeof person.addresses === 'undefined' ||
     person.addresses.length === 0;
-  const addressWithCurrent = {address: address || null, isCurrent: isCurrent};
-  
+  const addressWithCurrent = { address: address || null, isCurrent: isCurrent };
+
   const editor = useInlineEditor(async value =>
     await (add
-      ? directoryModel.addPersonAddress(familyId!, person.id!, new Address({...value.address!, id: crypto.randomUUID()}), value.isCurrent!)
-      : directoryModel.updatePersonAddress(familyId!, person.id!, new Address({...value.address!, id: address!.id}), value.isCurrent!)),
+      ? directoryModel.addPersonAddress(familyId!, person.id!, new Address({ ...value.address!, id: crypto.randomUUID() }), value.isCurrent!)
+      : directoryModel.updatePersonAddress(familyId!, person.id!, new Address({ ...value.address!, id: address!.id }), value.isCurrent!)),
     addressWithCurrent,
     value => (value &&
       value.address != null &&
       (value.address.line1 !== address?.line1 ||
-      value.address.line2 !== address?.line2 ||
-      value.address.city !== address?.city ||
-      value.address.county !== address?.county ||
-      value.address.state !== address?.state ||
-      value.address.postalCode !== address?.postalCode ||
-      value.isCurrent !== isCurrent ||
-      add)) || false);
+        value.address.line2 !== address?.line2 ||
+        value.address.city !== address?.city ||
+        value.address.county !== address?.county ||
+        value.address.state !== address?.state ||
+        value.address.postalCode !== address?.postalCode ||
+        value.isCurrent !== isCurrent ||
+        add)) || false);
 
   function handleAdd() {
     editor.setValue(editorValue => ({
@@ -117,48 +117,48 @@ export function AddressEditor({ familyId, person, add, address }: AddressEditorP
   }
 
   const permissions = useFamilyIdPermissions(familyId);
-  
+
   return (
     <Grid container rowSpacing={2} columnSpacing={2}>
       {editor.editing
         ? <>
-            <Grid item xs={12}><Divider /><br /></Grid>
-            <AddressFormFields address={editor.value!.address} onEdit={onEditAddressFields} />
-            <Grid item xs={12} sm={6}>
-              <FormControlLabel control={
-                <Checkbox checked={editor.value!.isCurrent}
-                  onChange={e => editor.setValue({...editor.value!, isCurrent: e.target.checked})}
-                  icon={<LocationSearching />}
-                  checkedIcon={<MyLocation />} />}
-                label="Is Current Address" />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              {editor.cancelButton}
-              {editor.saveButton}
-            </Grid>
-            <Grid item xs={12}><Divider /><br /></Grid>
-          </>
+          <Grid item xs={12}><Divider /><br /></Grid>
+          <AddressFormFields address={editor.value!.address} onEdit={onEditAddressFields} />
+          <Grid item xs={12} sm={6}>
+            <FormControlLabel control={
+              <Checkbox checked={editor.value!.isCurrent}
+                onChange={e => editor.setValue({ ...editor.value!, isCurrent: e.target.checked })}
+                icon={<LocationSearching />}
+                checkedIcon={<MyLocation />} />}
+              label="Is Current Address" />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            {editor.cancelButton}
+            {editor.saveButton}
+          </Grid>
+          <Grid item xs={12}><Divider /><br /></Grid>
+        </>
         : <Grid item xs={12}>
-          { add
+          {add
             ? <Button
-                onClick={handleAdd}
-                variant="text"
-                size="small"
-                startIcon={<AddIcon />}>
-                Add
-              </Button>
+              onClick={handleAdd}
+              variant="text"
+              size="small"
+              startIcon={<AddIcon />}>
+              Add
+            </Button>
             : <>
-                {isCurrent
-                  ? <MyLocation fontSize='small' color='disabled' sx={{verticalAlign: 'middle', marginRight: 1}} />
-                  : <LocationSearching fontSize='small' color='disabled' sx={{verticalAlign: 'middle', marginRight: 1}} />}
-                <p style={{display: 'inline-block', margin: 0}}>
-                  {address!.line1}<br />
-                  {address!.line2 && <>{address!.line2}<br /></>}
-                  {address!.city},&nbsp;{address!.state}&nbsp;{address!.postalCode}
-                  {address!.county && <><br />{address!.county} County</>}
-                </p>
-                {permissions(Permission.EditPersonContactInfo) && editor.editButton}
-              </>}
+              {isCurrent
+                ? <MyLocation fontSize='small' color='disabled' sx={{ verticalAlign: 'middle', marginRight: 1 }} />
+                : <LocationSearching fontSize='small' color='disabled' sx={{ verticalAlign: 'middle', marginRight: 1 }} />}
+              <p style={{ display: 'inline-block', margin: 0 }}>
+                {address!.line1}<br />
+                {address!.line2 && <>{address!.line2}<br /></>}
+                {address!.city},&nbsp;{address!.state}&nbsp;{address!.postalCode}
+                {address!.county && <><br />{address!.county} County</>}
+              </p>
+              {permissions(Permission.EditPersonContactInfo) && editor.editButton}
+            </>}
         </Grid>}
     </Grid>
   );

@@ -25,45 +25,47 @@ export function AdultFamilyRelationshipEditor({ familyId, person, relationship }
     <Grid container spacing={2}>
       {editor.editing
         ? <>
-            <Grid item xs={12} sm={6}>
-              <FormControl required fullWidth size="small">
-                <InputLabel id="family-relationship-label">Relationship to Family</InputLabel>
-                <Select
-                  labelId="family-relationship-label" id="family-relationship"
-                  value={editor.value?.relationshipToFamily}
+          <Grid item xs={12} sm={6}>
+            <FormControl required fullWidth size="small">
+              <InputLabel id="family-relationship-label">Relationship to Family</InputLabel>
+              <Select
+                labelId="family-relationship-label" id="family-relationship"
+                value={editor.value?.relationshipToFamily}
+                onChange={e => editor.setValue({
+                  isInHousehold: editor.value!.isInHousehold,
+                  relationshipToFamily: e.target.value as string
+                })}>
+                <MenuItem key="placeholder" value="" disabled>
+                  Select a relationship type
+                </MenuItem>
+                {relationshipTypes.map(relationshipType =>
+                  <MenuItem key={relationshipType} value={relationshipType}>{relationshipType}</MenuItem>)}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <FormGroup row>
+              <FormControlLabel
+                control={<Checkbox
+                  checked={editor.value?.isInHousehold}
                   onChange={e => editor.setValue({
-                    isInHousehold: editor.value!.isInHousehold,
-                    relationshipToFamily: e.target.value as string })}>
-                    <MenuItem key="placeholder" value="" disabled>
-                      Select a relationship type
-                    </MenuItem>
-                    {relationshipTypes.map(relationshipType =>
-                      <MenuItem key={relationshipType} value={relationshipType}>{relationshipType}</MenuItem>)}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormGroup row>
-                <FormControlLabel
-                  control={<Checkbox
-                    checked={editor.value?.isInHousehold}
-                    onChange={e => editor.setValue({
-                      isInHousehold: e.target.checked,
-                      relationshipToFamily: editor.value!.relationshipToFamily })}
-                    name="isInHousehold" color="primary" size="small" />}
-                  label="In Household"
-                />
-              </FormGroup>
-            </Grid>
-            <Grid item xs={12}>
-              {editor.cancelButton}
-              {editor.saveButton}
-            </Grid>
-          </>
+                    isInHousehold: e.target.checked,
+                    relationshipToFamily: editor.value!.relationshipToFamily
+                  })}
+                  name="isInHousehold" color="primary" size="small" />}
+                label="In Household"
+              />
+            </FormGroup>
+          </Grid>
+          <Grid item xs={12}>
+            {editor.cancelButton}
+            {editor.saveButton}
+          </Grid>
+        </>
         : <Grid item xs={12}>
-            Relationship type: {relationship.relationshipToFamily}, {relationship.isInHousehold
+          Relationship type: {relationship.relationshipToFamily}, {relationship.isInHousehold
             ? "household member" : "not in household"}
-            {editor.editButton}
+          {editor.editButton}
         </Grid>}
     </Grid>
   );

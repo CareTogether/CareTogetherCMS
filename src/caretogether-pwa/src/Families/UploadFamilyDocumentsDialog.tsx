@@ -12,7 +12,7 @@ interface UploadFamilyDocumentsDialogProps {
   onClose: () => void
 }
 
-export function UploadFamilyDocumentsDialog({family, onClose}: UploadFamilyDocumentsDialogProps) {
+export function UploadFamilyDocumentsDialog({ family, onClose }: UploadFamilyDocumentsDialogProps) {
   const [documentFiles, setDocumentFiles] = useState<FileList>();
   const { organizationId, locationId } = useRecoilValue(selectedLocationContextState);
   const directoryModel = useDirectoryModel();
@@ -44,9 +44,11 @@ export function UploadFamilyDocumentsDialog({family, onClose}: UploadFamilyDocum
           multiple={true}
           id="family-document-file"
           type="file"
-          onChange={async (e) => {if (e.target.files && e.target.files.length > 0) {
-            setDocumentFiles(e.target.files);
-          }}}
+          onChange={async (e) => {
+            if (e.target.files && e.target.files.length > 0) {
+              setDocumentFiles(e.target.files);
+            }
+          }}
         />
       </DialogContent>
       <DialogActions>

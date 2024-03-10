@@ -15,21 +15,21 @@ type FamilyDocumentsProps = {
 export function FamilyDocuments({ family }: FamilyDocumentsProps) {
   const { organizationId, locationId } = useRecoilValue(selectedLocationContextState);
 
-  const [moreMenuAnchor, setMoreMenuAnchor] = useState<{anchor: Element, document: UploadedDocumentInfo} | null>(null);
-  const [deleteParameter, setDeleteParameter] = useState<{familyId: string, document: UploadedDocumentInfo} | null>(null);
+  const [moreMenuAnchor, setMoreMenuAnchor] = useState<{ anchor: Element, document: UploadedDocumentInfo } | null>(null);
+  const [deleteParameter, setDeleteParameter] = useState<{ familyId: string, document: UploadedDocumentInfo } | null>(null);
   function selectDelete(document: UploadedDocumentInfo) {
     setMoreMenuAnchor(null);
-    setDeleteParameter({familyId: family.family!.id!, document: document});
+    setDeleteParameter({ familyId: family.family!.id!, document: document });
   }
 
   const permissions = useFamilyPermissions(family);
-  
+
   return (
     <>
-      <ul style={{listStyle: 'none', paddingLeft: 22, textIndent: -22}}>
+      <ul style={{ listStyle: 'none', paddingLeft: 22, textIndent: -22 }}>
         {family.uploadedDocuments?.map((uploaded, i) =>
           permissions(Permission.ReadFamilyDocuments)
-          ? <li key={i} style={{ clear: 'both', cursor: 'pointer' }}
+            ? <li key={i} style={{ clear: 'both', cursor: 'pointer' }}
               onContextMenu={(e) => {
                 if (!permissions(Permission.DeleteFamilyDocuments))
                   return;
@@ -38,11 +38,11 @@ export function FamilyDocuments({ family }: FamilyDocumentsProps) {
               }}
               onClick={() => downloadFamilyFile(organizationId, locationId, family.family!.id!, uploaded.uploadedDocumentId!)}>
               📃 {uploaded.uploadedFileName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-              {uploaded.timestampUtc && <span style={{float:'right',marginRight:20}}>{format(uploaded.timestampUtc, "M/d/yy")}</span>}
+              {uploaded.timestampUtc && <span style={{ float: 'right', marginRight: 20 }}>{format(uploaded.timestampUtc, "M/d/yy")}</span>}
             </li>
-          : <li key={i} style={{ clear: 'both' }}>
+            : <li key={i} style={{ clear: 'both' }}>
               📃 {uploaded.uploadedFileName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-              {uploaded.timestampUtc && <span style={{float:'right',marginRight:20}}>{format(uploaded.timestampUtc, "M/d/yy")}</span>}
+              {uploaded.timestampUtc && <span style={{ float: 'right', marginRight: 20 }}>{format(uploaded.timestampUtc, "M/d/yy")}</span>}
             </li>
         )}
       </ul>

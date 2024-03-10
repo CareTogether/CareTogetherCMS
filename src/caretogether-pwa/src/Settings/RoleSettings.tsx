@@ -18,7 +18,7 @@ function RoleSettings() {
   const { organizationId } = useRecoilValue(selectedLocationContextState);
   const storeEdits = useSetRecoilState(organizationConfigurationEdited);
   const roles = configuration?.roles;
-  
+
   const permissions = useGlobalPermissions();
 
   const [selectedRoleName, setSelectedRoleName] = useState("");
@@ -49,7 +49,7 @@ function RoleSettings() {
       setDirty(false);
     });
   }
-  
+
   function deletePermissionSetAtIndex(i: number) {
     const newPermissionSets = workingRole!.permissionSets!.filter((_, j) => j !== i);
     const newWorkingRole = {
@@ -87,16 +87,16 @@ function RoleSettings() {
   useScreenTitle("Roles");
 
   return (!roles
-  ? <ProgressBackdrop>
+    ? <ProgressBackdrop>
       <p>Loading roles...</p>
     </ProgressBackdrop>
-  : <Grid container>
+    : <Grid container>
       <Grid item xs={12}>
-        <Stack direction='row' sx={{marginTop: 1}}>
+        <Stack direction='row' sx={{ marginTop: 1 }}>
           <FormControl>
             <InputLabel id='role-select-label'>Role</InputLabel>
             <Select size='small'
-              sx={{minWidth: 200}}
+              sx={{ minWidth: 200 }}
               labelId='role-select-label'
               label="Role"
               value={selectedRoleName}
@@ -113,7 +113,7 @@ function RoleSettings() {
       </Grid>
       <Grid item xs={12}>
         <TableContainer>
-          <Table sx={{minWidth: '700px'}} size="small">
+          <Table sx={{ minWidth: '700px' }} size="small">
             <TableHead>
               <TableRow>
                 <TableCell></TableCell>

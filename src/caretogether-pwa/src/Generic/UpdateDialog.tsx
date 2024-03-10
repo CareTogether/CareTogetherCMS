@@ -23,10 +23,10 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
   const withBackdrop = useBackdrop();
 
   // Whether the dialog is open or not can be controlled by the caller; otherwise it will always be open.
-  const isOpen = typeof(open) === 'undefined' ? true : open;
-  
-  const saveButtonLabel = typeof(saveLabel) === 'undefined' ? "Save" : saveLabel;
-  
+  const isOpen = typeof (open) === 'undefined' ? true : open;
+
+  const saveButtonLabel = typeof (saveLabel) === 'undefined' ? "Save" : saveLabel;
+
   async function saveHandler() {
     await withBackdrop(async () => {
       await onSave();

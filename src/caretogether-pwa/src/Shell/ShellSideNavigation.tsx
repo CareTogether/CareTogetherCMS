@@ -19,7 +19,7 @@ interface SideNavigationMenuProps {
 function SideNavigationMenu({ open }: SideNavigationMenuProps) {
   const flags = useFeatureFlags();
   const permissions = useGlobalPermissions();
-  
+
   const context = useLoadable(selectedLocationContextState);
   const locationPrefix = `/org/${context?.organizationId}/${context?.locationId}`;
 
@@ -30,34 +30,34 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
     <List aria-label="secondary navigation">
       {flags === null
         ? <>
-            <Stack padding={1} spacing={1}>
-              <Stack direction='row'>
-                <Skeleton variant="circular" width={30} height={30} />
-                {open &&
-                  <Skeleton variant="rounded" width={100} height={24} sx={{marginLeft: 2, marginTop: 0.5}} />}
-              </Stack>
-              <Stack direction='row'>
-                <Skeleton variant="circular" width={30} height={30} />
-                {open &&
-                  <Skeleton variant="rounded" width={100} height={24} sx={{marginLeft: 2, marginTop: 0.5}} />}
-              </Stack>
+          <Stack padding={1} spacing={1}>
+            <Stack direction='row'>
+              <Skeleton variant="circular" width={30} height={30} />
+              {open &&
+                <Skeleton variant="rounded" width={100} height={24} sx={{ marginLeft: 2, marginTop: 0.5 }} />}
             </Stack>
-          </>
+            <Stack direction='row'>
+              <Skeleton variant="circular" width={30} height={30} />
+              {open &&
+                <Skeleton variant="rounded" width={100} height={24} sx={{ marginLeft: 2, marginTop: 0.5 }} />}
+            </Stack>
+          </Stack>
+        </>
         : <>
-            <ListItemLink to={`${locationPrefix}`} primary="Dashboard" icon={<DashboardIcon sx={{color: '#fff8'}} />} />
-            {permissions(Permission.AccessPartneringFamiliesScreen) &&
-              <ListItemLink to={`${locationPrefix}/referrals`} primary="Referrals" icon={<PermPhoneMsgIcon sx={{color: '#fff8'}} />} />}
-            {permissions(Permission.AccessVolunteersScreen) &&
-              <ListItemLink to={`${locationPrefix}/volunteers`} primary="Volunteers" icon={<PeopleIcon sx={{color: '#fff8'}} />} />}
-            {permissions(Permission.AccessCommunitiesScreen) &&
-              <ListItemLink to={`${locationPrefix}/communities`} primary="Communities" icon={<Diversity3Icon sx={{color: '#fff8'}} />} />}
-            {permissions(Permission.AccessSettingsScreen) &&
-              <>
-                <Divider  />
-                <ListItemLink to={`${locationPrefix}/settings`} primary="Settings" icon={<SettingsIcon sx={{color: '#fff8'}} />} />
-                <ListItemLink to="http://support.caretogether.io" newTab primary="Support" icon={<SupportIcon sx={{color: '#fff8'}} />} />
-              </>}
-          </>}
+          <ListItemLink to={`${locationPrefix}`} primary="Dashboard" icon={<DashboardIcon sx={{ color: '#fff8' }} />} />
+          {permissions(Permission.AccessPartneringFamiliesScreen) &&
+            <ListItemLink to={`${locationPrefix}/referrals`} primary="Referrals" icon={<PermPhoneMsgIcon sx={{ color: '#fff8' }} />} />}
+          {permissions(Permission.AccessVolunteersScreen) &&
+            <ListItemLink to={`${locationPrefix}/volunteers`} primary="Volunteers" icon={<PeopleIcon sx={{ color: '#fff8' }} />} />}
+          {permissions(Permission.AccessCommunitiesScreen) &&
+            <ListItemLink to={`${locationPrefix}/communities`} primary="Communities" icon={<Diversity3Icon sx={{ color: '#fff8' }} />} />}
+          {permissions(Permission.AccessSettingsScreen) &&
+            <>
+              <Divider />
+              <ListItemLink to={`${locationPrefix}/settings`} primary="Settings" icon={<SettingsIcon sx={{ color: '#fff8' }} />} />
+              <ListItemLink to="http://support.caretogether.io" newTab primary="Support" icon={<SupportIcon sx={{ color: '#fff8' }} />} />
+            </>}
+        </>}
     </List>
   );
 }
@@ -68,7 +68,7 @@ interface ShellSideNavigationProps {
 }
 export function ShellSideNavigation({ open, width }: ShellSideNavigationProps) {
   const theme = useTheme();
-  
+
   // const drawerPaperOpenStyle = {
   //   position: 'relative',
   //   whiteSpace: 'nowrap',
@@ -78,7 +78,7 @@ export function ShellSideNavigation({ open, width }: ShellSideNavigationProps) {
   //     duration: theme.transitions.duration.enteringScreen
   //   })
   // };
-  
+
   // const drawerPaperCloseStyle = {
   //   position: 'relative',
   //   whiteSpace: 'nowrap',
@@ -109,7 +109,7 @@ export function ShellSideNavigation({ open, width }: ShellSideNavigationProps) {
       <Stack sx={{ width: width, paddingTop: { xs: 7, sm: 8, md: 6 } }}>
         <SideNavigationMenu open={open} />
         {open &&
-          <div style={{ overflowX: 'hidden', width: width - 4, position: 'fixed', bottom: 0, marginLeft: 4}}>
+          <div style={{ overflowX: 'hidden', width: width - 4, position: 'fixed', bottom: 0, marginLeft: 4 }}>
             <Copyright />
           </div>}
       </Stack>
