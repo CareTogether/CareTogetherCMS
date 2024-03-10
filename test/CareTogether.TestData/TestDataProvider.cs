@@ -776,7 +776,7 @@ namespace CareTogether.TestData
                     {
                         ["Family Friend"] = new VolunteerRolePolicy("Family Friend", PolicyVersions:
                         [
-                            new VolunteerRolePolicyVersion("v1", new DateTime(2021, 10, 1),
+                            new VolunteerRolePolicyVersion("v1", StartOfCurrentMonth(),
                             [
                                 new VolunteerApprovalRequirement(RequirementStage.Application, "Family Friend Application"),
                                 new VolunteerApprovalRequirement(RequirementStage.Approval, "Background Check")
@@ -789,7 +789,7 @@ namespace CareTogether.TestData
                         ]),
                         ["Family Coach"] = new VolunteerRolePolicy("Family Coach", PolicyVersions:
                         [
-                            new VolunteerRolePolicyVersion("v1", new DateTime(2021, 10, 1),
+                            new VolunteerRolePolicyVersion("v1", StartOfCurrentMonth(),
                             [
                                 new VolunteerApprovalRequirement(RequirementStage.Application, "Family Coach Application"),
                                 new VolunteerApprovalRequirement(RequirementStage.Approval, "Background Check"),
@@ -807,7 +807,7 @@ namespace CareTogether.TestData
                     {
                         ["Host Family"] = new VolunteerFamilyRolePolicy("Host Family", PolicyVersions:
                         [
-                            new VolunteerFamilyRolePolicyVersion("v1", new DateTime(2021, 10, 1),
+                            new VolunteerFamilyRolePolicyVersion("v1", StartOfCurrentMonth(),
                             [
                                 new VolunteerFamilyApprovalRequirement(RequirementStage.Application, "Host Family Application", VolunteerFamilyRequirementScope.OncePerFamily),
                                 new VolunteerFamilyApprovalRequirement(RequirementStage.Approval, "Background Check", VolunteerFamilyRequirementScope.AllAdultsInTheFamily),
