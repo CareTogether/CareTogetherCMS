@@ -50,14 +50,14 @@ interface ChildLocationIndicatorProps {
   arrangementPolicy: ArrangementPolicy
   summaryOnly?: boolean
 }
-function ChildLocationIndicator({ partneringFamily, referralId, arrangement, arrangementPolicy, summaryOnly }: ChildLocationIndicatorProps) {
+function ChildLocationIndicator({ partneringFamily, referralId, arrangement, summaryOnly }: ChildLocationIndicatorProps) {
   const familyLookup = useFamilyLookup();
   const [showTrackChildLocationDialog, setShowTrackChildLocationDialog] = useState(false);
 
   const currentLocation = arrangement.childLocationHistory && arrangement.childLocationHistory.length > 0
     ? arrangement.childLocationHistory[arrangement.childLocationHistory.length - 1]
     : null;
-  
+
   // The planned location that is of interest is always the next one after the stay with the current family.
   // This means that, whether the current location change happened before, on, or after the corresponding planned change,
   // the next planned location to display will always be whatever other family the child is set to go to next.
@@ -66,12 +66,12 @@ function ChildLocationIndicator({ partneringFamily, referralId, arrangement, arr
   // most recently missed planned change.
   const nextPlannedLocation = arrangement.childLocationPlan && arrangement.childLocationPlan.length > 0
     ? arrangement.childLocationPlan.find(entry =>
-        currentLocation == null ||
-        (entry.timestampUtc! > currentLocation.timestampUtc! &&
-          entry.childLocationFamilyId !== currentLocation.childLocationFamilyId)) ||
-      arrangement.childLocationPlan.slice().reverse().find(entry =>
-        entry.childLocationFamilyId !== currentLocation?.childLocationFamilyId) ||
-      null
+      currentLocation == null ||
+      (entry.timestampUtc! > currentLocation.timestampUtc! &&
+        entry.childLocationFamilyId !== currentLocation.childLocationFamilyId)) ||
+    arrangement.childLocationPlan.slice().reverse().find(entry =>
+      entry.childLocationFamilyId !== currentLocation?.childLocationFamilyId) ||
+    null
     : null;
 
   const nextPlanIsPastDue = nextPlannedLocation && nextPlannedLocation.timestampUtc! < new Date();
@@ -80,37 +80,39 @@ function ChildLocationIndicator({ partneringFamily, referralId, arrangement, arr
     <>
       {summaryOnly
         ? <>
-            <PersonPinCircleIcon color='disabled' style={{float: 'right', marginLeft: 2, marginTop: 2}} />
-            <span style={{float: 'right', paddingTop: 4}}>{
-              currentLocation
+          <PersonPinCircleIcon color='disabled' style={{ float: 'right', marginLeft: 2, marginTop: 2 }} />
+          <span style={{ float: 'right', paddingTop: 4 }}>{
+            currentLocation
               ? <FamilyName family={familyLookup(currentLocation.childLocationFamilyId)} />
               : <strong>Location unspecified</strong>
-            }</span>
-          </>
+          }</span>
+        </>
         : <>
-            <Button size="large" variant="text"
-              style={{float: 'right', marginTop: -10, marginRight: -10, textTransform: "initial"}}
-              endIcon={<PersonPinCircleIcon />}
-              onClick={(event) => setShowTrackChildLocationDialog(true)}>
-              {currentLocation
-                ? <FamilyName family={familyLookup(currentLocation.childLocationFamilyId)} />
-                : <strong>Location unspecified</strong>}
-            </Button>
-            {showTrackChildLocationDialog && <TrackChildLocationDialog
-              partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement}
-              onClose={() => setShowTrackChildLocationDialog(false)} />}
-          </>}
-      <Typography variant={summaryOnly ? 'body2' : 'body1'} style={{float:'right', clear:'right'}}>
+          <Button size="large" variant="text"
+            style={{ float: 'right', marginTop: -10, marginRight: -10, textTransform: "initial" }}
+            endIcon={<PersonPinCircleIcon />}
+            onClick={() => setShowTrackChildLocationDialog(true)}>
+            {currentLocation
+              ? <FamilyName family={familyLookup(currentLocation.childLocationFamilyId)} />
+              : <strong>Location unspecified</strong>}
+          </Button>
+          {showTrackChildLocationDialog && <TrackChildLocationDialog
+            partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement}
+            onClose={() => setShowTrackChildLocationDialog(false)} />}
+        </>}
+      <Typography variant={summaryOnly ? 'body2' : 'body1'} style={{ float: 'right', clear: 'right' }}>
         {nextPlannedLocation == null
           ? <span>No upcoming plans</span>
           : <span style={nextPlanIsPastDue ? { fontWeight: 'bold', color: 'red' } : {}}>
-              {nextPlanIsPastDue && "PAST DUE - "}
-              <FamilyName family={familyLookup(nextPlannedLocation.childLocationFamilyId)} />
-              &nbsp;on {format(nextPlannedLocation.timestampUtc!, 'M/d/yyyy')}
-            </span>}
-        <EventIcon sx={{ position: 'relative', top: 7,
+            {nextPlanIsPastDue && "PAST DUE - "}
+            <FamilyName family={familyLookup(nextPlannedLocation.childLocationFamilyId)} />
+            &nbsp;on {format(nextPlannedLocation.timestampUtc!, 'M/d/yyyy')}
+          </span>}
+        <EventIcon sx={{
+          position: 'relative', top: 7,
           marginTop: summaryOnly ? -0.5 : -1, marginRight: summaryOnly ? 0 : -0.5, marginLeft: summaryOnly ? 0.25 : 1,
-          color: nextPlanIsPastDue ? 'red' : summaryOnly ? '#00000042' : null }} />
+          color: nextPlanIsPastDue ? 'red' : summaryOnly ? '#00000042' : null
+        }} />
       </Typography>
     </>
   );
@@ -131,7 +133,7 @@ function ArrangementPlannedDuration({ partneringFamily, referralId, arrangement,
   const plannedStartEditor = useInlineEditor(async value => {
     await referralsModel.planArrangementStart(partneringFamilyId, referralId, arrangement.id!, value);
   }, arrangement.plannedStartUtc || null);
-  
+
   const plannedEndEditor = useInlineEditor(async value => {
     await referralsModel.planArrangementEnd(partneringFamilyId, referralId, arrangement.id!, value);
   }, arrangement.plannedEndUtc || null);
@@ -143,21 +145,21 @@ function ArrangementPlannedDuration({ partneringFamily, referralId, arrangement,
         {(!summaryOnly && permissions(Permission.EditArrangement))
           ? plannedStartEditor.editing
             ? <>
-                <DatePicker
-                  label="Planned start"
-                  value={plannedStartEditor.value}
-                  onChange={(value: any) => plannedStartEditor.setValue(value)}
-                  slotProps={{ textField: { size: 'small', margin: 'dense' }}} />
-                {plannedStartEditor.cancelButton}
-                {plannedStartEditor.saveButton}
-              </>
-            : <>
-                {plannedStartEditor.value ? format(plannedStartEditor.value, "M/d/yyyy") : "-"}
-                {plannedStartEditor.editButton}
-              </>
-          : <>
-              {plannedStartEditor.value ? format(plannedStartEditor.value, "M/d/yyyy") : "-"}
+              <DatePicker
+                label="Planned start"
+                value={plannedStartEditor.value}
+                onChange={(value: Date | null) => plannedStartEditor.setValue(value)}
+                slotProps={{ textField: { size: 'small', margin: 'dense' } }} />
+              {plannedStartEditor.cancelButton}
+              {plannedStartEditor.saveButton}
             </>
+            : <>
+              {plannedStartEditor.value ? format(plannedStartEditor.value, "M/d/yyyy") : "-"}
+              {plannedStartEditor.editButton}
+            </>
+          : <>
+            {plannedStartEditor.value ? format(plannedStartEditor.value, "M/d/yyyy") : "-"}
+          </>
         }
       </Box>
       <Box>
@@ -165,21 +167,21 @@ function ArrangementPlannedDuration({ partneringFamily, referralId, arrangement,
         {(!summaryOnly && permissions(Permission.EditArrangement))
           ? plannedEndEditor.editing
             ? <>
-                <DatePicker
-                  label="Planned end"
-                  value={plannedEndEditor.value}
-                  onChange={(value: any) => plannedEndEditor.setValue(value)}
-                  slotProps={{ textField: { size: 'small', margin: 'dense'}}} />
-                {plannedEndEditor.cancelButton}
-                {plannedEndEditor.saveButton}
-              </>
+              <DatePicker
+                label="Planned end"
+                value={plannedEndEditor.value}
+                onChange={(value: Date | null) => plannedEndEditor.setValue(value)}
+                slotProps={{ textField: { size: 'small', margin: 'dense' } }} />
+              {plannedEndEditor.cancelButton}
+              {plannedEndEditor.saveButton}
+            </>
             : <>
-                {plannedEndEditor.value ? format(plannedEndEditor.value, "M/d/yyyy") : "-"}
-                {plannedEndEditor.editButton}
-              </>
-          : <>
               {plannedEndEditor.value ? format(plannedEndEditor.value, "M/d/yyyy") : "-"}
-            </>}
+              {plannedEndEditor.editButton}
+            </>
+          : <>
+            {plannedEndEditor.value ? format(plannedEndEditor.value, "M/d/yyyy") : "-"}
+          </>}
       </Box>
     </Stack>
   );
@@ -206,9 +208,9 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
     referralId: referralId,
     arrangementId: arrangement.id!
   };
-  
+
   const arrangementPolicy = policy.referralPolicy?.arrangementPolicies?.find(a => a.arrangementType === arrangement.arrangementType);
-  
+
   const missingAssignmentFunctions = arrangementPolicy?.arrangementFunctions?.filter(functionPolicy =>
     (functionPolicy.requirement === FunctionRequirement.ExactlyOne || functionPolicy.requirement === FunctionRequirement.OneOrMore) &&
     !arrangement.familyVolunteerAssignments?.some(x => x.arrangementFunction === functionPolicy.functionName) &&
@@ -216,72 +218,88 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
 
   const assignmentsMissingVariants = arrangementPolicy?.arrangementFunctions?.filter(functionPolicy =>
     functionPolicy.variants && functionPolicy.variants.length > 0).map(functionPolicy =>
-    (arrangement.familyVolunteerAssignments?.filter(fva =>
-      fva.arrangementFunction === functionPolicy.functionName && !fva.arrangementFunctionVariant)?.length || 0) +
-    (arrangement.individualVolunteerAssignments?.filter(iva =>
-      iva.arrangementFunction === functionPolicy.functionName && !iva.arrangementFunctionVariant)?.length || 0)).reduce(
-    (prev, curr) => prev + curr, 0) || 0;
-  
+      (arrangement.familyVolunteerAssignments?.filter(fva =>
+        fva.arrangementFunction === functionPolicy.functionName && !fva.arrangementFunctionVariant)?.length || 0) +
+      (arrangement.individualVolunteerAssignments?.filter(iva =>
+        iva.arrangementFunction === functionPolicy.functionName && !iva.arrangementFunctionVariant)?.length || 0)).reduce(
+          (prev, curr) => prev + curr, 0) || 0;
+
   const completedRequirementsWithContext =
     (arrangement.completedRequirements || []).map(cr =>
       ({ completed: cr, context: arrangementRequirementContext as RequirementContext })).concat(
-    (arrangement.familyVolunteerAssignments || []).flatMap(fva => (fva.completedRequirements || []).map(cr =>
-      ({ completed: cr, context: {
-        kind: "Family Volunteer Assignment",
-        partneringFamilyId: partneringFamily.family!.id!,
-        referralId: referralId,
-        arrangementId: arrangement.id!,
-        assignment: fva } as RequirementContext})))).concat(
-    (arrangement.individualVolunteerAssignments || []).flatMap(iva => (iva.completedRequirements || []).map(cr =>
-      ({ completed: cr, context: {
-        kind: "Individual Volunteer Assignment",
-        partneringFamilyId: partneringFamily.family!.id!,
-        referralId: referralId,
-        arrangementId: arrangement.id!,
-        assignment: iva }}))));
-  
+        (arrangement.familyVolunteerAssignments || []).flatMap(fva => (fva.completedRequirements || []).map(cr =>
+        ({
+          completed: cr, context: {
+            kind: "Family Volunteer Assignment",
+            partneringFamilyId: partneringFamily.family!.id!,
+            referralId: referralId,
+            arrangementId: arrangement.id!,
+            assignment: fva
+          } as RequirementContext
+        })))).concat(
+          (arrangement.individualVolunteerAssignments || []).flatMap(iva => (iva.completedRequirements || []).map(cr =>
+          ({
+            completed: cr, context: {
+              kind: "Individual Volunteer Assignment",
+              partneringFamilyId: partneringFamily.family!.id!,
+              referralId: referralId,
+              arrangementId: arrangement.id!,
+              assignment: iva
+            }
+          }))));
+
   const exemptedRequirementsWithContext =
     (arrangement.exemptedRequirements || []).map(er =>
       ({ exempted: er, context: arrangementRequirementContext as RequirementContext })).concat(
-    (arrangement.familyVolunteerAssignments || []).flatMap(fva => (fva.exemptedRequirements || []).map(er =>
-      ({ exempted: er, context: {
-        kind: "Family Volunteer Assignment",
-        partneringFamilyId: partneringFamily.family!.id!,
-        referralId: referralId,
-        arrangementId: arrangement.id!,
-        assignment: fva } as RequirementContext})))).concat(
-    (arrangement.individualVolunteerAssignments || []).flatMap(iva => (iva.exemptedRequirements || []).map(er =>
-      ({ exempted: er, context: {
-        kind: "Individual Volunteer Assignment",
-        partneringFamilyId: partneringFamily.family!.id!,
-        referralId: referralId,
-        arrangementId: arrangement.id!,
-        assignment: iva }}))));
+        (arrangement.familyVolunteerAssignments || []).flatMap(fva => (fva.exemptedRequirements || []).map(er =>
+        ({
+          exempted: er, context: {
+            kind: "Family Volunteer Assignment",
+            partneringFamilyId: partneringFamily.family!.id!,
+            referralId: referralId,
+            arrangementId: arrangement.id!,
+            assignment: fva
+          } as RequirementContext
+        })))).concat(
+          (arrangement.individualVolunteerAssignments || []).flatMap(iva => (iva.exemptedRequirements || []).map(er =>
+          ({
+            exempted: er, context: {
+              kind: "Individual Volunteer Assignment",
+              partneringFamilyId: partneringFamily.family!.id!,
+              referralId: referralId,
+              arrangementId: arrangement.id!,
+              assignment: iva
+            }
+          }))));
 
   const missingRequirementsWithContext = (arrangement.missingRequirements || []).map(requirement => {
     if (requirement.personId) {
-      return { missing: requirement, context: {
-        kind: "Individual Volunteer Assignment",
-        partneringFamilyId: partneringFamily.family!.id!,
-        referralId: referralId,
-        arrangementId: arrangement.id!,
-        assignment: arrangement.individualVolunteerAssignments!.find(iva =>
-          iva.arrangementFunction === requirement.arrangementFunction &&
-          iva.arrangementFunctionVariant === requirement.arrangementFunctionVariant &&
-          iva.familyId === requirement.volunteerFamilyId &&
-          iva.personId === requirement.personId)!
-      } as RequirementContext };
+      return {
+        missing: requirement, context: {
+          kind: "Individual Volunteer Assignment",
+          partneringFamilyId: partneringFamily.family!.id!,
+          referralId: referralId,
+          arrangementId: arrangement.id!,
+          assignment: arrangement.individualVolunteerAssignments!.find(iva =>
+            iva.arrangementFunction === requirement.arrangementFunction &&
+            iva.arrangementFunctionVariant === requirement.arrangementFunctionVariant &&
+            iva.familyId === requirement.volunteerFamilyId &&
+            iva.personId === requirement.personId)!
+        } as RequirementContext
+      };
     } else if (requirement.volunteerFamilyId) {
-      return { missing: requirement, context: {
-        kind: "Family Volunteer Assignment",
-        partneringFamilyId: partneringFamily.family!.id!,
-        referralId: referralId,
-        arrangementId: arrangement.id!,
-        assignment: arrangement.familyVolunteerAssignments!.find(iva =>
-          iva.arrangementFunction === requirement.arrangementFunction &&
-          iva.arrangementFunctionVariant === requirement.arrangementFunctionVariant &&
-          iva.familyId === requirement.volunteerFamilyId)!
-      } as RequirementContext };
+      return {
+        missing: requirement, context: {
+          kind: "Family Volunteer Assignment",
+          partneringFamilyId: partneringFamily.family!.id!,
+          referralId: referralId,
+          arrangementId: arrangement.id!,
+          assignment: arrangement.familyVolunteerAssignments!.find(iva =>
+            iva.arrangementFunction === requirement.arrangementFunction &&
+            iva.arrangementFunctionVariant === requirement.arrangementFunctionVariant &&
+            iva.familyId === requirement.volunteerFamilyId)!
+        } as RequirementContext
+      };
     } else {
       return { missing: requirement, context: arrangementRequirementContext };
     }
@@ -289,7 +307,7 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
 
   const upcomingRequirementsCount = arrangement.missingRequirements?.filter(missingRequirement =>
     missingRequirement.dueBy /* Determine if this is an "upcoming" requirement */).length || 0;
-  
+
   return (
     <Card variant="outlined">
       <ArrangementPhaseSummary phase={arrangement.phase!}
@@ -302,7 +320,7 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
         }
       }}
         title={<ArrangementCardTitle summaryOnly={summaryOnly}
-        partneringFamilyId={partneringFamily.family!.id!} referralId={referralId} arrangement={arrangement} />} />
+          partneringFamilyId={partneringFamily.family!.id!} referralId={referralId} arrangement={arrangement} />} />
       <CardContent sx={{
         paddingTop: 1,
         paddingBottom: 1,
@@ -310,9 +328,9 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
           paddingBottom: 0
         }
       }}>
-        <Typography variant="body2" component="div" sx={{mb:1}}>
+        <Typography variant="body2" component="div" sx={{ mb: 1 }}>
           <strong><PersonName person={personLookup(partneringFamily.family!.id, arrangement.partneringFamilyPersonId)} /></strong>
-          {(arrangementPolicy?.childInvolvement === ChildInvolvement.ChildHousing || arrangementPolicy?.childInvolvement === ChildInvolvement.DaytimeChildCareOnly) && 
+          {(arrangementPolicy?.childInvolvement === ChildInvolvement.ChildHousing || arrangementPolicy?.childInvolvement === ChildInvolvement.DaytimeChildCareOnly) &&
             <ChildLocationIndicator partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement}
               arrangementPolicy={arrangementPolicy} summaryOnly={summaryOnly} />}
         </Typography>
@@ -325,10 +343,10 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
           <ArrangementReason partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement} />
           <Divider />
           <ArrangementComments partneringFamily={partneringFamily} referralId={referralId} arrangement={arrangement} />
-          <Accordion expanded={!collapsed} onChange={(event, isExpanded) => setCollapsed(!isExpanded)}
-            variant="outlined" square disableGutters sx={{marginLeft:-2, marginRight:-2, border: 'none' }}>
+          <Accordion expanded={!collapsed} onChange={(_event, isExpanded) => setCollapsed(!isExpanded)}
+            variant="outlined" square disableGutters sx={{ marginLeft: -2, marginRight: -2, border: 'none' }}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}
-              sx={{ marginTop:1, paddingTop:1, backgroundColor: "#0000000a" }}>
+              sx={{ marginTop: 1, paddingTop: 1, backgroundColor: "#0000000a" }}>
               <Grid container>
                 <Grid item xs={3}>
                   <Badge color="success"
@@ -384,7 +402,7 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
               )}
             </AccordionDetails>
           </Accordion>
-          </>
+        </>
         )}
       </CardContent>
     </Card>

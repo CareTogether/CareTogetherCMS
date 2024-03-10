@@ -14,7 +14,7 @@ export const volunteerFamiliesData = selector({
 function useVolunteerFamilyCommandCallbackWithLocation<T extends unknown[]>(
   callback: (familyId: string, ...args: T) => Promise<VolunteerFamilyCommand>) {
   return useAtomicRecordsCommandCallback(async (familyId, ...args: T) => {
-    var command = new FamilyApprovalRecordsCommand();
+    const command = new FamilyApprovalRecordsCommand();
     command.command = await callback(familyId, ...args);
     return command;
   });
@@ -23,7 +23,7 @@ function useVolunteerFamilyCommandCallbackWithLocation<T extends unknown[]>(
 function useVolunteerCommandCallbackWithLocation<T extends unknown[]>(
   callback: (familyId: string, ...args: T) => Promise<VolunteerCommand>) {
   return useAtomicRecordsCommandCallback(async (familyId, ...args: T) => {
-    var command = new IndividualApprovalRecordsCommand();
+    const command = new IndividualApprovalRecordsCommand();
     command.command = await callback(familyId, ...args);
     return command;
   });
@@ -31,7 +31,7 @@ function useVolunteerCommandCallbackWithLocation<T extends unknown[]>(
 
 export function useVolunteersModel() {
   const completeFamilyRequirement = useVolunteerFamilyCommandCallbackWithLocation(
-    async (volunteerFamilyId, requirementName: string, requirement: ActionRequirement,
+    async (volunteerFamilyId, requirementName: string, _requirement: ActionRequirement,
       completedAtLocal: Date, documentId: string | null, noteId: string | null) => {
       const command = new CompleteVolunteerFamilyRequirement({
         familyId: volunteerFamilyId
@@ -94,7 +94,7 @@ export function useVolunteersModel() {
       return command;
     });
   const completeIndividualRequirement = useVolunteerCommandCallbackWithLocation(
-    async (volunteerFamilyId, personId: string, requirementName: string, requirement: ActionRequirement,
+    async (volunteerFamilyId, personId: string, requirementName: string, _requirement: ActionRequirement,
       completedAtLocal: Date, documentId: string | null, noteId: string | null) => {
       const command = new CompleteVolunteerRequirement({
         familyId: volunteerFamilyId,
@@ -162,7 +162,7 @@ export function useVolunteersModel() {
       command.roleName = role;
       return command;
     });
-  
+
   return {
     completeFamilyRequirement,
     markFamilyRequirementIncomplete,

@@ -43,7 +43,7 @@ function matchingArrangements(partneringFamilyInfo: PartneringFamilyInfo, viewAc
   if (viewActiveOnly) {
     partneringFamilyInfo.openReferral?.arrangements?.filter(arrangement =>
       arrangement.phase === ArrangementPhase.Started).forEach(x =>
-      results.push({ referralId: partneringFamilyInfo.openReferral!.id!, arrangement: x }));
+        results.push({ referralId: partneringFamilyInfo.openReferral!.id!, arrangement: x }));
   } else {
     partneringFamilyInfo.closedReferrals?.forEach(x => x.arrangements?.forEach(y => results.push({ referralId: x.id!, arrangement: y })));
     partneringFamilyInfo.openReferral?.arrangements?.forEach(x => results.push({ referralId: partneringFamilyInfo.openReferral!.id!, arrangement: x }));
@@ -64,7 +64,7 @@ function PartneringFamilies() {
 
   const [filterText, setFilterText] = useState("");
   const filteredPartneringFamilies = filterFamiliesByText(partneringFamilies, filterText);
-    
+
   useScrollMemory();
 
   function openFamily(familyId: string) {
@@ -74,7 +74,7 @@ function PartneringFamilies() {
   function arrangementStatusSummary(partneringFamily: PartneringFamilyInfo, phase: ArrangementPhase, type: string) {
     const phaseText = arrangementPhaseText.get(phase);
 
-    const statusCount = allArrangements(partneringFamily).filter((a) => (a.arrangement.phase === phase 
+    const statusCount = allArrangements(partneringFamily).filter((a) => (a.arrangement.phase === phase
       && a.arrangement.arrangementType === type)).length;
 
     let statusCountDiv;
@@ -85,41 +85,47 @@ function PartneringFamilies() {
     const arrangementStarted = '#01ACFB';
     const arrangementEnded = 'green';
 
-    if(statusCount > 0) {
-      statusCountDiv = <b style={{display: 'inline-block', verticalAlign: 'middle', color:
-        statusCount===0 ? arrangementZero 
-        : phase===ArrangementPhase.SettingUp ? arrangementSettingUp 
-        : phase===ArrangementPhase.ReadyToStart ? arrangementReady 
-        : phase===ArrangementPhase.Started ? arrangementStarted 
-        : arrangementEnded}}>{statusCount}</b>
+    if (statusCount > 0) {
+      statusCountDiv = <b style={{
+        display: 'inline-block', verticalAlign: 'middle', color:
+          statusCount === 0 ? arrangementZero
+            : phase === ArrangementPhase.SettingUp ? arrangementSettingUp
+              : phase === ArrangementPhase.ReadyToStart ? arrangementReady
+                : phase === ArrangementPhase.Started ? arrangementStarted
+                  : arrangementEnded
+      }}>{statusCount}</b>
     }
-    
+
     return (
-      <div style={{width: 36}}>
+      <div style={{ width: 36 }}>
         <Tooltip title={phaseText!}>
-          {phase===ArrangementPhase.SettingUp ? 
+          {phase === ArrangementPhase.SettingUp ?
             <PendingOutlinedIcon sx={{
               display: 'inline-block', verticalAlign: 'middle', marginRight: '3px', color:
-              statusCount===0 ? 
-              arrangementZero : arrangementSettingUp}}
+                statusCount === 0 ?
+                  arrangementZero : arrangementSettingUp
+            }}
             />
-          : phase===ArrangementPhase.ReadyToStart ? 
-            <AccessTimeIcon sx={{
-              display: 'inline-block', verticalAlign: 'middle', marginRight: '3px', color:
-              statusCount===0 ? 
-              arrangementZero : arrangementReady}}
-            />
-          : phase===ArrangementPhase.Started ? 
-            <PlayCircleFilledIcon sx={{
-              display: 'inline-block', verticalAlign: 'middle', marginRight: '3px', color:
-              statusCount===0 ? 
-              arrangementZero : arrangementStarted}}
-            />
-          : <CheckCircleOutlinedIcon sx={{
-              display: 'inline-block', verticalAlign: 'middle', marginRight: '3px', color:
-              statusCount===0 ? 
-              arrangementZero : arrangementEnded}} 
-            />}
+            : phase === ArrangementPhase.ReadyToStart ?
+              <AccessTimeIcon sx={{
+                display: 'inline-block', verticalAlign: 'middle', marginRight: '3px', color:
+                  statusCount === 0 ?
+                    arrangementZero : arrangementReady
+              }}
+              />
+              : phase === ArrangementPhase.Started ?
+                <PlayCircleFilledIcon sx={{
+                  display: 'inline-block', verticalAlign: 'middle', marginRight: '3px', color:
+                    statusCount === 0 ?
+                      arrangementZero : arrangementStarted
+                }}
+                />
+                : <CheckCircleOutlinedIcon sx={{
+                  display: 'inline-block', verticalAlign: 'middle', marginRight: '3px', color:
+                    statusCount === 0 ?
+                      arrangementZero : arrangementEnded
+                }}
+                />}
         </Tooltip>
         {statusCountDiv}
       </div>)
@@ -127,9 +133,9 @@ function PartneringFamilies() {
 
   const [createPartneringFamilyDialogOpen, setCreatePartneringFamilyDialogOpen] = useState(false);
   const [expandedView, setExpandedView] = useLocalStorage('partnering-families-expanded', true);
-  
+
   const handleExpandCollapse = (
-    event: React.MouseEvent<HTMLElement>,
+    _event: React.MouseEvent<HTMLElement>,
     newExpandedView: boolean | null,
   ) => {
     if (newExpandedView !== null) {
@@ -152,12 +158,12 @@ function PartneringFamilies() {
 
   return (!partneringFamiliesLoadable || !arrangementTypes
     ? <ProgressBackdrop>
-        <p>Loading families...</p>
-      </ProgressBackdrop>
-    : 
+      <p>Loading families...</p>
+    </ProgressBackdrop>
+    :
     <Grid container>
       <Grid item xs={12}>
-        <Stack direction='row-reverse' sx={{marginTop: 1}}>
+        <Stack direction='row-reverse' sx={{ marginTop: 1 }}>
           <ToggleButtonGroup value={expandedView} exclusive onChange={handleExpandCollapse}
             size={isMobile ? 'medium' : 'small'} aria-label="row expansion">
             <ToggleButton value={true} aria-label="expanded"><UnfoldMoreIcon /></ToggleButton>
@@ -173,72 +179,72 @@ function PartneringFamilies() {
       </Grid>
       <Grid item xs={12}>
         <TableContainer>
-          <Table sx={{minWidth: '700px'}} size="small">
+          <Table sx={{ minWidth: '700px' }} size="small">
             <TableHead>
               <TableRow>
                 <TableCell>Partnering Family</TableCell>
                 <TableCell>Referral Status</TableCell>
-                { !expandedView ? arrangementTypes?.map((arrangementType) => 
+                {!expandedView ? arrangementTypes?.map((arrangementType) =>
                   (<TableCell key={arrangementType}>{arrangementType}</TableCell>)) : <></>}
               </TableRow>
             </TableHead>
             <TableBody>
               {filteredPartneringFamiliesWithActiveOrAllFilter.map((partneringFamily) => (
                 <React.Fragment key={partneringFamily.family?.id}>
-                  <TableRow sx={{backgroundColor: '#eef'}} onClick={() => openFamily(partneringFamily.family!.id!)}>
+                  <TableRow sx={{ backgroundColor: '#eef' }} onClick={() => openFamily(partneringFamily.family!.id!)}>
                     <TableCell><FamilyName family={partneringFamily} /></TableCell>
                     <TableCell>{
                       partneringFamily.partneringFamilyInfo?.openReferral
-                      ? "Open since " + format(partneringFamily.partneringFamilyInfo.openReferral.openedAtUtc!, "MM/dd/yyyy")
-                      : "Closed - " + ReferralCloseReason[partneringFamily.partneringFamilyInfo?.closedReferrals?.[partneringFamily.partneringFamilyInfo.closedReferrals.length-1]?.closeReason!]
+                        ? "Open since " + format(partneringFamily.partneringFamilyInfo.openReferral.openedAtUtc!, "MM/dd/yyyy")
+                        : "Closed - " + ReferralCloseReason[partneringFamily.partneringFamilyInfo!.closedReferrals![partneringFamily.partneringFamilyInfo!.closedReferrals!.length - 1]!.closeReason!]
                       //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closedUtc) -- needs a new calculated property
-                      }</TableCell>
-                      {!expandedView ? arrangementTypes?.map((arrangementType) => (
-                        <TableCell key={arrangementType}>
-                          <div style={{
-                            display: 'flex',
-                            rowGap: '5px',
-                            columnGap: '8px',
-                            flexWrap: 'wrap',
-                            justifyContent: 'flex-start',
-                            alignItems: 'center',
-                          }}>
-                            {arrangementStatusSummary(partneringFamily.partneringFamilyInfo!,ArrangementPhase.SettingUp, arrangementType!)}
+                    }</TableCell>
+                    {!expandedView ? arrangementTypes?.map((arrangementType) => (
+                      <TableCell key={arrangementType}>
+                        <div style={{
+                          display: 'flex',
+                          rowGap: '5px',
+                          columnGap: '8px',
+                          flexWrap: 'wrap',
+                          justifyContent: 'flex-start',
+                          alignItems: 'center',
+                        }}>
+                          {arrangementStatusSummary(partneringFamily.partneringFamilyInfo!, ArrangementPhase.SettingUp, arrangementType!)}
                           <div>
-                            {arrangementStatusSummary(partneringFamily.partneringFamilyInfo!,ArrangementPhase.ReadyToStart, arrangementType!)}
-                          </div>
-                          <div>
-                            {arrangementStatusSummary(partneringFamily.partneringFamilyInfo!,ArrangementPhase.Started, arrangementType!)}
+                            {arrangementStatusSummary(partneringFamily.partneringFamilyInfo!, ArrangementPhase.ReadyToStart, arrangementType!)}
                           </div>
                           <div>
-                            {arrangementStatusSummary(partneringFamily.partneringFamilyInfo!,ArrangementPhase.Ended, arrangementType!)}
+                            {arrangementStatusSummary(partneringFamily.partneringFamilyInfo!, ArrangementPhase.Started, arrangementType!)}
                           </div>
+                          <div>
+                            {arrangementStatusSummary(partneringFamily.partneringFamilyInfo!, ArrangementPhase.Ended, arrangementType!)}
                           </div>
-                        </TableCell>)) : <></> }
+                        </div>
+                      </TableCell>)) : <></>}
                   </TableRow>
-                  { expandedView
+                  {expandedView
                     ? (<TableRow onClick={() => openFamily(partneringFamily.family!.id!)}>
-                    <TableCell sx={{maxWidth: '400px', paddingLeft: 3}}>
-                      {partneringFamily.partneringFamilyInfo?.openReferral?.comments}
-                    </TableCell>
-                    <TableCell>
-                      <Grid container spacing={2}>
-                        {matchingArrangements(partneringFamily.partneringFamilyInfo!, viewActiveOnly).map(arrangementEntry => (
-                          <Grid item key={arrangementEntry.arrangement.id}>
-                            <ArrangementCard summaryOnly
-                              partneringFamily={partneringFamily} referralId={arrangementEntry.referralId} arrangement={arrangementEntry.arrangement} />
-                          </Grid>
-                        ))}
-                      </Grid>
-                    </TableCell>
-                  </TableRow> ) : <></> }
+                      <TableCell sx={{ maxWidth: '400px', paddingLeft: 3 }}>
+                        {partneringFamily.partneringFamilyInfo?.openReferral?.comments}
+                      </TableCell>
+                      <TableCell>
+                        <Grid container spacing={2}>
+                          {matchingArrangements(partneringFamily.partneringFamilyInfo!, viewActiveOnly).map(arrangementEntry => (
+                            <Grid item key={arrangementEntry.arrangement.id}>
+                              <ArrangementCard summaryOnly
+                                partneringFamily={partneringFamily} referralId={arrangementEntry.referralId} arrangement={arrangementEntry.arrangement} />
+                            </Grid>
+                          ))}
+                        </Grid>
+                      </TableCell>
+                    </TableRow>) : <></>}
                 </React.Fragment>
               ))}
             </TableBody>
           </Table>
         </TableContainer>
         {permissions(Permission.EditFamilyInfo) && permissions(Permission.CreateReferral) && <Fab color="primary" aria-label="add"
-          sx={{position: 'fixed', right: '30px', bottom: '70px'}}
+          sx={{ position: 'fixed', right: '30px', bottom: '70px' }}
           onClick={() => setCreatePartneringFamilyDialogOpen(true)}>
           <AddIcon />
         </Fab>}

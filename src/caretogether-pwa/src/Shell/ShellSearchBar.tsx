@@ -17,6 +17,7 @@ export function ShellSearchBar({ openMobileSearch, setOpenMobileSearch }: ShellS
 
   const families = useLoadable(visibleFamiliesQuery) || [];
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const searchBoxRef = useRef<any | null>(null);
 
   function openAndFocusSearch() {
@@ -34,7 +35,7 @@ export function ShellSearchBar({ openMobileSearch, setOpenMobileSearch }: ShellS
     });
   }
 
-  function selectFamily(event: React.SyntheticEvent, family: CombinedFamilyInfo | null) {
+  function selectFamily(_event: React.SyntheticEvent, family: CombinedFamilyInfo | null) {
     console.log(family);
     //TODO: Navigate to the selected family
   }

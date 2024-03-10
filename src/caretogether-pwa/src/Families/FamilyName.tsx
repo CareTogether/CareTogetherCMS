@@ -1,4 +1,3 @@
-import React from 'react';
 import { CombinedFamilyInfo } from '../GeneratedClient';
 import { personNameString } from './PersonName';
 
@@ -6,10 +5,11 @@ type FamilyNameProps = {
   family?: CombinedFamilyInfo
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function familyNameString(family?: CombinedFamilyInfo) {
   const primaryContactPerson = family?.family?.adults?.find(adult =>
     family.family!.primaryFamilyContactPersonId === adult.item1?.id)?.item1;
-  
+
   return primaryContactPerson && `${personNameString(primaryContactPerson)} Family`;
 }
 

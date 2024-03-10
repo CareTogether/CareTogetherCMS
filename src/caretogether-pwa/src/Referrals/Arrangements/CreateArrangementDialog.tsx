@@ -15,7 +15,7 @@ interface CreateArrangementDialogProps {
   onClose: () => void
 }
 
-export function CreateArrangementDialog({referralId, arrangementPolicy, onClose}: CreateArrangementDialogProps) {
+export function CreateArrangementDialog({ referralId, arrangementPolicy, onClose }: CreateArrangementDialogProps) {
   const { familyId } = useParams<{ familyId: string }>();
   const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
   const family = visibleFamilies.find(x => x.family?.id === familyId) as CombinedFamilyInfo;
@@ -34,9 +34,9 @@ export function CreateArrangementDialog({referralId, arrangementPolicy, onClose}
     reason: null as string | null
   });
   const { requestedAtLocal, partneringFamilyPersonId, reason } = fields;
-  
+
   const referralsModel = useReferralsModel();
-  
+
   const withBackdrop = useBackdrop();
 
   async function save() {
@@ -69,14 +69,14 @@ export function CreateArrangementDialog({referralId, arrangementPolicy, onClose}
                 label="Requested at"
                 value={requestedAtLocal} maxDate={new Date()}
                 format="MM/dd/yyyy"
-                onChange={(date: any) => date && setFields({...fields, requestedAtLocal: date})}
-                slotProps={{ textField: { size: "small", required: true, sx: {marginTop: 1}}}} />
+                onChange={(date: Date | null) => date && setFields({ ...fields, requestedAtLocal: date })}
+                slotProps={{ textField: { size: "small", required: true, sx: { marginTop: 1 } } }} />
             </Grid>
             <Grid item xs={12}>
               <FormControl required component="fieldset">
                 <FormLabel component="legend">Family Member:</FormLabel>
                 <RadioGroup aria-label="familyMember" name="familyMember"
-                  value={partneringFamilyPersonId} onChange={e => setFields({...fields, partneringFamilyPersonId: e.target.value})}>
+                  value={partneringFamilyPersonId} onChange={e => setFields({ ...fields, partneringFamilyPersonId: e.target.value })}>
                   {applicableFamilyMembers.map(person => (
                     <FormControlLabel key={person.id} value={person.id} control={<Radio size="small" />} label={person.firstName!} />
                   ))}
@@ -90,12 +90,12 @@ export function CreateArrangementDialog({referralId, arrangementPolicy, onClose}
                   <Select
                     labelId="arrangement-reason-label" id="arrangement-reason"
                     value={reason || ""}
-                    onChange={e => setFields({...fields, reason: e.target.value as string})}>
-                      <MenuItem key="placeholder" value="" disabled>
-                        Select a reason
-                      </MenuItem>
-                      {arrangementReasons.map(arrangementReason =>
-                        <MenuItem key={arrangementReason} value={arrangementReason}>{arrangementReason}</MenuItem>)}
+                    onChange={e => setFields({ ...fields, reason: e.target.value as string })}>
+                    <MenuItem key="placeholder" value="" disabled>
+                      Select a reason
+                    </MenuItem>
+                    {arrangementReasons.map(arrangementReason =>
+                      <MenuItem key={arrangementReason} value={arrangementReason}>{arrangementReason}</MenuItem>)}
                   </Select>
                 </FormControl>
               </Grid>}

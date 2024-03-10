@@ -6,12 +6,12 @@ export const showGlobalBackdropData = atom({
 });
 
 export function useBackdrop() {
-  const showBackdrop = useRecoilCallback(({snapshot, set}) => {
+  const showBackdrop = useRecoilCallback(({ set }) => {
     return async () => {
       set(showGlobalBackdropData, true);
     };
   });
-  const hideBackdrop = useRecoilCallback(({snapshot, set}) => {
+  const hideBackdrop = useRecoilCallback(({ set }) => {
     return async () => {
       set(showGlobalBackdropData, false);
     };

@@ -20,10 +20,11 @@ interface AssignArrangementFunctionDialogProps {
 interface AssigneeOptionType {
   label: string;
   id: string;
+  candidateType: string;
 }
 
 export function AssignArrangementFunctionDialog({
-  handle, referralId, arrangement, arrangementPolicy, arrangementFunction
+  handle, referralId, arrangement, arrangementFunction
 }: AssignArrangementFunctionDialogProps) {
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
@@ -40,7 +41,7 @@ export function AssignArrangementFunctionDialog({
     : [];
   const candidateVolunteerIndividualAssignees = arrangementFunction.eligibleIndividualVolunteerRoles
     ? visibleFamilies.flatMap(f => f.volunteerFamilyInfo?.individualVolunteers
-      ? Object.entries(f.volunteerFamilyInfo?.individualVolunteers).filter(([volunteerId, _]) =>
+      ? Object.entries(f.volunteerFamilyInfo?.individualVolunteers).filter(([volunteerId,]) =>
         f.family!.adults!.find(a => a.item1!.id === volunteerId)!.item1!.active).flatMap(([volunteerId, volunteerInfo]) => volunteerInfo.approvalStatusByRole
           ? Object.entries(volunteerInfo.approvalStatusByRole).flatMap(([roleName, roleApprovalStatus]) =>
             arrangementFunction.eligibleIndividualVolunteerRoles!.find(x => x === roleName) &&
@@ -156,7 +157,7 @@ export function AssignArrangementFunctionDialog({
                 <Autocomplete
                   id="assignee"
                   clearOnEscape
-                  onChange={(event: any, newValue: AssigneeOptionType | null) => {
+                  onChange={(_event, newValue: AssigneeOptionType | null) => {
                     setFields({ ...fields, assigneeKey: newValue?.id as string })
                   }}
                   options={candidateAssignees.map(candidate => {

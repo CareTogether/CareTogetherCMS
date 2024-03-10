@@ -48,7 +48,7 @@ export function AddMemberFamiliesForm({ community, onClose }: AddMemberFamiliesF
         a.family!.primaryFamilyContactPersonId === adult.item1!.id)!.item1!;
       const bPrimaryContact = b.family!.adults!.find(adult =>
         b.family!.primaryFamilyContactPersonId === adult.item1!.id)!.item1!;
-      
+
       const aFirst = aPrimaryContact.firstName!;
       const aLast = aPrimaryContact.lastName!;
       const bFirst = bPrimaryContact.firstName!;
@@ -57,7 +57,7 @@ export function AddMemberFamiliesForm({ community, onClose }: AddMemberFamiliesF
       // Sort by last name, then by first name (of the family's primary contact)
       return aLast < bLast ? -1 : aLast > bLast ? 1 :
         aFirst < bFirst ? -1 : aFirst > bFirst ? 1 :
-        0;
+          0;
     }).map(family => ({
       id: family.family!.id!,
       label: familyNameString(family)
@@ -69,10 +69,10 @@ export function AddMemberFamiliesForm({ community, onClose }: AddMemberFamiliesF
         <h3>Add Member Families</h3>
       </Grid>
       <Grid item xs={12}>
-        <FormControl required fullWidth size="small" sx={{marginTop: 1}}> 
+        <FormControl required fullWidth size="small" sx={{ marginTop: 1 }}>
           <Autocomplete
             multiple clearOnEscape disableCloseOnSelect
-            onChange={(event: any, newValue: CandidateFamily[]) => {
+            onChange={(_event, newValue: CandidateFamily[]) => {
               setFamilies(newValue);
             }}
             options={candidateFamilies}

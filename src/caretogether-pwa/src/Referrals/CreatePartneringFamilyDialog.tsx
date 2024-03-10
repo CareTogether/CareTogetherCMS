@@ -18,7 +18,7 @@ function optional(arg: string) {
   return arg.length > 0 ? arg : null;
 }
 
-export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDialogProps) {
+export function CreatePartneringFamilyDialog({ onClose }: CreatePartneringFamilyDialogProps) {
   const [fields, setFields] = useState({
     referralOpenedAtLocal: new Date(),
     firstName: '',
@@ -47,7 +47,7 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
 
   const relationshipTypes = useRecoilValue(adultFamilyRelationshipsData);
   const ethnicities = useRecoilValue(ethnicitiesData);
-  
+
   const withBackdrop = useBackdrop();
 
   async function save() {
@@ -57,7 +57,7 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
       } else if (relationshipToFamily === '') { //TODO: Actual validation!
         alert("Family relationship was not selected. Try again.");
       } else {
-        let age = dateOfBirth == null ? null : new ExactAge();
+        const age = dateOfBirth == null ? null : new ExactAge();
         if (dateOfBirth != null)
           age!.dateOfBirth = dateOfBirth;
         const familyId = crypto.randomUUID();
@@ -65,7 +65,7 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
           referralOpenedAtLocal,
           firstName, lastName, gender, age, optional(ethnicity),
           isInHousehold, relationshipToFamily,
-          address == null ? null : new Address({...address, id: crypto.randomUUID() }),
+          address == null ? null : new Address({ ...address, id: crypto.randomUUID() }),
           optional(phoneNumber), phoneType, optional(emailAddress), emailType,
           (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
         //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
@@ -80,13 +80,13 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
         Create Partnering Family - First Adult
       </DialogTitle>
       <DialogContent>
-        <Grid item xs={12} sx={{paddingTop: 1}}>
+        <Grid item xs={12} sx={{ paddingTop: 1 }}>
           <DatePicker
             label="When was this referral opened?"
             value={referralOpenedAtLocal}
             disableFuture format="MM/dd/yyyy"
-            onChange={(date: any) => date && setFields({...fields, referralOpenedAtLocal: date})}
-            slotProps={{ textField: { fullWidth: true, required: true }}} />
+            onChange={(date: Date | null) => date && setFields({ ...fields, referralOpenedAtLocal: date })}
+            slotProps={{ textField: { fullWidth: true, required: true } }} />
         </Grid>
         <DialogContentText>
           Provide the basic information needed for the first adult in the family.
@@ -95,11 +95,11 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
               <TextField required id="first-name" label="First Name" fullWidth size="small"
-                value={firstName} onChange={e => setFields({...fields, firstName: e.target.value})} />
+                value={firstName} onChange={e => setFields({ ...fields, firstName: e.target.value })} />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField required id="last-name" label="Last Name" fullWidth size="small"
-                value={lastName} onChange={e => setFields({...fields, lastName: e.target.value})} />
+                value={lastName} onChange={e => setFields({ ...fields, lastName: e.target.value })} />
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl required fullWidth size="small">
@@ -107,19 +107,19 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
                 <Select
                   labelId="family-relationship-label" id="family-relationship"
                   value={relationshipToFamily}
-                  onChange={e => setFields({...fields, relationshipToFamily: e.target.value as string})}>
-                    <MenuItem key="placeholder" value="" disabled>
-                      Select a relationship type
-                    </MenuItem>
-                    {relationshipTypes.map(relationshipType =>
-                      <MenuItem key={relationshipType} value={relationshipType}>{relationshipType}</MenuItem>)}
+                  onChange={e => setFields({ ...fields, relationshipToFamily: e.target.value as string })}>
+                  <MenuItem key="placeholder" value="" disabled>
+                    Select a relationship type
+                  </MenuItem>
+                  {relationshipTypes.map(relationshipType =>
+                    <MenuItem key={relationshipType} value={relationshipType}>{relationshipType}</MenuItem>)}
                 </Select>
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormGroup row>
                 <FormControlLabel
-                  control={<Checkbox checked={isInHousehold} onChange={e => setFields({...fields, isInHousehold: e.target.checked})}
+                  control={<Checkbox checked={isInHousehold} onChange={e => setFields({ ...fields, isInHousehold: e.target.checked })}
                     name="isInHousehold" color="primary" size="small" />}
                   label="In Household"
                 />
@@ -132,7 +132,7 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
               <FormControl component="fieldset">
                 <FormLabel component="legend">Gender:</FormLabel>
                 <RadioGroup aria-label="genderType" name="genderType" row
-                  value={gender == null ? null : Gender[gender]} onChange={e => setFields({...fields, gender: Gender[e.target.value as keyof typeof Gender]})}>
+                  value={gender == null ? null : Gender[gender]} onChange={e => setFields({ ...fields, gender: Gender[e.target.value as keyof typeof Gender] })}>
                   <FormControlLabel value={Gender[Gender.Male]} control={<Radio size="small" />} label="Male" />
                   <FormControlLabel value={Gender[Gender.Female]} control={<Radio size="small" />} label="Female" />
                   <FormControlLabel value={Gender[Gender.SeeNotes]} control={<Radio size="small" />} label="See Notes" />
@@ -144,8 +144,8 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
                 label="Date of birth"
                 value={dateOfBirth} maxDate={subYears(new Date(), 16)} openTo="year"
                 format="MM/dd/yyyy"
-                onChange={(date: any) => date && setFields({...fields, dateOfBirth: date})}
-                slotProps={{ textField: { size: "small", fullWidth: true}}} />
+                onChange={(date: Date | null) => date && setFields({ ...fields, dateOfBirth: date })}
+                slotProps={{ textField: { size: "small", fullWidth: true } }} />
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth size="small">
@@ -153,12 +153,12 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
                 <Select
                   labelId="ethnicity-label" id="ethnicity"
                   value={ethnicity}
-                  onChange={e => setFields({...fields, ethnicity: e.target.value as string})}>
-                    <MenuItem key="placeholder" value="" disabled>
-                      Select an ethnicity
-                    </MenuItem>
-                    {ethnicities.map(ethnicity =>
-                      <MenuItem key={ethnicity} value={ethnicity}>{ethnicity}</MenuItem>)}
+                  onChange={e => setFields({ ...fields, ethnicity: e.target.value as string })}>
+                  <MenuItem key="placeholder" value="" disabled>
+                    Select an ethnicity
+                  </MenuItem>
+                  {ethnicities.map(ethnicity =>
+                    <MenuItem key={ethnicity} value={ethnicity}>{ethnicity}</MenuItem>)}
                 </Select>
               </FormControl>
             </Grid>
@@ -166,12 +166,12 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField id="phone-number" label="Phone Number" fullWidth size="small" type="tel"
-                value={phoneNumber} onChange={e => setFields({...fields, phoneNumber: e.target.value})} />
+                value={phoneNumber} onChange={e => setFields({ ...fields, phoneNumber: e.target.value })} />
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl component="fieldset">
                 <RadioGroup aria-label="phoneType" name="phoneType" row
-                  value={PhoneNumberType[phoneType]} onChange={e => setFields({...fields, phoneType: PhoneNumberType[e.target.value as keyof typeof PhoneNumberType]})}>
+                  value={PhoneNumberType[phoneType]} onChange={e => setFields({ ...fields, phoneType: PhoneNumberType[e.target.value as keyof typeof PhoneNumberType] })}>
                   <FormControlLabel value={PhoneNumberType[PhoneNumberType.Mobile]} control={<Radio size="small" />} label="Mobile" />
                   <FormControlLabel value={PhoneNumberType[PhoneNumberType.Home]} control={<Radio size="small" />} label="Home" />
                   <FormControlLabel value={PhoneNumberType[PhoneNumberType.Work]} control={<Radio size="small" />} label="Work" />
@@ -181,12 +181,12 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField id="email-address" label="Email Address" fullWidth size="small" type="email"
-                value={emailAddress} onChange={e => setFields({...fields, emailAddress: e.target.value})} />
+                value={emailAddress} onChange={e => setFields({ ...fields, emailAddress: e.target.value })} />
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl component="fieldset">
                 <RadioGroup aria-label="emailType" name="emailType" row
-                  value={EmailAddressType[emailType]} onChange={e => setFields({...fields, emailType: EmailAddressType[e.target.value as keyof typeof EmailAddressType]})}>
+                  value={EmailAddressType[emailType]} onChange={e => setFields({ ...fields, emailType: EmailAddressType[e.target.value as keyof typeof EmailAddressType] })}>
                   <FormControlLabel value={EmailAddressType[EmailAddressType.Personal]} control={<Radio size="small" />} label="Personal" />
                   <FormControlLabel value={EmailAddressType[EmailAddressType.Work]} control={<Radio size="small" />} label="Work" />
                 </RadioGroup>
@@ -194,7 +194,7 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
             </Grid>
             <Grid item xs={12}>
             </Grid>
-            <AddressFormFields address={address} onEdit={value => setFields({...fields, address: value})} />
+            <AddressFormFields address={address} onEdit={value => setFields({ ...fields, address: value })} />
             <Grid item xs={12}>
             </Grid>
             <Grid item xs={12}>
@@ -209,7 +209,7 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
                     </InputAdornment>
                   ),
                 }}
-                value={concerns == null ? "" : concerns} onChange={e => setFields({...fields, concerns: e.target.value})}
+                value={concerns == null ? "" : concerns} onChange={e => setFields({ ...fields, concerns: e.target.value })}
               />
             </Grid>
             <Grid item xs={12}>
@@ -217,13 +217,13 @@ export function CreatePartneringFamilyDialog({onClose}: CreatePartneringFamilyDi
                 id="notes"
                 label="Notes" placeholder="Space for any general notes"
                 multiline fullWidth variant="outlined" minRows={2} maxRows={5} size="small"
-                value={notes == null ? "" : notes} onChange={e => setFields({...fields, notes: e.target.value})}
+                value={notes == null ? "" : notes} onChange={e => setFields({ ...fields, notes: e.target.value })}
               />
             </Grid>
           </Grid>
         </form>
       </DialogContent>
-      <DialogActions sx={{marginBottom: 4}}>
+      <DialogActions sx={{ marginBottom: 4 }}>
         <Button onClick={() => onClose()} color="secondary">
           Cancel
         </Button>

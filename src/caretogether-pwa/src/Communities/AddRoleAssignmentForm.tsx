@@ -44,19 +44,19 @@ export function AddRoleAssignmentForm({ community, onClose }: AddRoleAssignmentF
 
   const allFamilies = useRecoilValue(visibleFamiliesQuery);
   const allAdults = allFamilies.flatMap(family => family.family!.adults!.map(adult => adult.item1!)).sort((a, b) => {
-      const aFirst = a.firstName!;
-      const aLast = a.lastName!;
-      const bFirst = b.firstName!;
-      const bLast = b.lastName!;
+    const aFirst = a.firstName!;
+    const aLast = a.lastName!;
+    const bFirst = b.firstName!;
+    const bLast = b.lastName!;
 
-      // Sort by last name, then by first name
-      return aLast < bLast ? -1 : aLast > bLast ? 1 :
-        aFirst < bFirst ? -1 : aFirst > bFirst ? 1 :
+    // Sort by last name, then by first name
+    return aLast < bLast ? -1 : aLast > bLast ? 1 :
+      aFirst < bFirst ? -1 : aFirst > bFirst ? 1 :
         0;
-    }).map(person => ({
-      id: person.id!,
-      label: personNameString(person)
-    } as CandidatePerson));
+  }).map(person => ({
+    id: person.id!,
+    label: personNameString(person)
+  } as CandidatePerson));
 
   const organizationConfiguration = useRecoilValue(organizationConfigurationQuery);
   const communityRoles = organizationConfiguration?.communityRoles || [];
@@ -70,10 +70,10 @@ export function AddRoleAssignmentForm({ community, onClose }: AddRoleAssignmentF
         <h3>Add Community Role Assignments</h3>
       </Grid>
       <Grid item xs={12}>
-        <FormControl required fullWidth size="small" sx={{marginTop: 1}}> 
+        <FormControl required fullWidth size="small" sx={{ marginTop: 1 }}>
           <Autocomplete
             clearOnEscape
-            onChange={(event: any, newValue: CandidatePerson | null) => {
+            onChange={(_event, newValue: CandidatePerson | null) => {
               setPerson(newValue);
             }}
             options={allAdults}
@@ -88,7 +88,7 @@ export function AddRoleAssignmentForm({ community, onClose }: AddRoleAssignmentF
           <RadioGroup
             aria-labelledby="role"
             value={role || ""}
-            onChange={(event, newValue) => setRole(newValue)}
+            onChange={(_event, newValue) => setRole(newValue)}
           >
             {communityRoles.map(role =>
               <FormControlLabel key={role} value={role}

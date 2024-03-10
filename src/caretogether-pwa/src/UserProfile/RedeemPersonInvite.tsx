@@ -12,7 +12,7 @@ import { userOrganizationAccessQuery } from '../Model/Data';
 
 function RedeemPersonInvite() {
   // Start by configuring the current redemption session, if there is one.
-  const [searchParams, ] = useSearchParams();
+  const [searchParams,] = useSearchParams();
   const redemptionSessionId = searchParams.get("state");
   const setRedemptionSessionId = useSetRecoilState(redemptionSessionIdState);
   useEffect(() => {
@@ -25,7 +25,7 @@ function RedeemPersonInvite() {
   // If it can be retrieved, then render the invite review to allow the user the
   // option to confirm accepting the invite.
   const inviteReviewInfo = useLoadable(inviteReviewInfoQuery);
-  
+
   const withBackdrop = useBackdrop();
   const navigate = useNavigate();
 
@@ -33,7 +33,7 @@ function RedeemPersonInvite() {
   async function redeem() {
     await withBackdrop(async () => {
       const result = await api.users.completePersonInviteRedemptionSession(
-        redemptionSessionId);
+        redemptionSessionId ?? undefined);
       console.log("Invite redemption result:");
       console.log(result);
       refreshUserOrganizationAccess();
@@ -45,14 +45,14 @@ function RedeemPersonInvite() {
 
   return (!redemptionSessionId
     ? <p>
-        It appears that you did not use a valid CareTogether invite link to get here.
-        If you have a link, try clicking it again.
-      </p>
+      It appears that you did not use a valid CareTogether invite link to get here.
+      If you have a link, try clicking it again.
+    </p>
     : !inviteReviewInfo
-    ? <ProgressBackdrop>
+      ? <ProgressBackdrop>
         <p>Loading invitation...</p>
       </ProgressBackdrop>
-    : <>
+      : <>
         <h1>You're Invited!</h1>
         <p>
           The link you clicked is an invitation to link your CareTogether account to
@@ -69,15 +69,15 @@ function RedeemPersonInvite() {
         </p>
         {inviteReviewInfo.roles && inviteReviewInfo.roles.length > 0
           ? <ul>
-              {inviteReviewInfo.roles?.map(role =>
-                <li key={role}>{role}</li>
-              )}
-            </ul>
+            {inviteReviewInfo.roles?.map(role =>
+              <li key={role}>{role}</li>
+            )}
+          </ul>
           : <p><i> (none at this time)</i></p>}
         <p>
           <small>
             Redemption session ID:
-            <span style={{fontFamily: 'monospace'}}> {redemptionSessionId}</span>
+            <span style={{ fontFamily: 'monospace' }}> {redemptionSessionId}</span>
           </small>
         </p>
         <Button onClick={redeem} variant='contained'>

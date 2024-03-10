@@ -24,35 +24,35 @@ export function AgeEditor({ familyId, person }: PersonEditorProps) {
     <Grid container spacing={2}>
       {editor.editing
         ? <>
-            <Grid item xs={12}>
-              Saved age: <AgeText age={person.age} />
-              {person.age
-                ? person.age instanceof ExactAge
-                  ? ` (date of birth: ${format(dateOfBirth!, " (M/d/yyyy)")}`
-                  : ` (${ageInYears} as of ${format(ageAsOf!, "M/d/yy")})`
-                : ``}
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <DatePicker
-                label="Date of birth"
-                value={editor.value} openTo="year"
-                format="MM/dd/yyyy"
-                onChange={(date: any) => date && editor.setValue(date)}
-                slotProps={{ textField: { size: "small", required: true}}} />
-            </Grid>
-            <Grid item xs={6}>
-              {editor.cancelButton}
-              {editor.saveButton}
-            </Grid>
-          </>
-        : <Grid item xs={12}>
-            Age: <AgeText age={person.age} />
+          <Grid item xs={12}>
+            Saved age: <AgeText age={person.age} />
             {person.age
               ? person.age instanceof ExactAge
                 ? ` (date of birth: ${format(dateOfBirth!, " (M/d/yyyy)")}`
                 : ` (${ageInYears} as of ${format(ageAsOf!, "M/d/yy")})`
               : ``}
-            {editor.editButton}
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <DatePicker
+              label="Date of birth"
+              value={editor.value} openTo="year"
+              format="MM/dd/yyyy"
+              onChange={(date: Date | null) => date && editor.setValue(date)}
+              slotProps={{ textField: { size: "small", required: true } }} />
+          </Grid>
+          <Grid item xs={6}>
+            {editor.cancelButton}
+            {editor.saveButton}
+          </Grid>
+        </>
+        : <Grid item xs={12}>
+          Age: <AgeText age={person.age} />
+          {person.age
+            ? person.age instanceof ExactAge
+              ? ` (date of birth: ${format(dateOfBirth!, " (M/d/yyyy)")}`
+              : ` (${ageInYears} as of ${format(ageAsOf!, "M/d/yy")})`
+            : ``}
+          {editor.editButton}
         </Grid>}
     </Grid>
   );
