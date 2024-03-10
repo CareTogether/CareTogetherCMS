@@ -417,20 +417,20 @@ namespace CareTogether.TestData
         public static async Task PopulateCommunityEvents(IEventLog<CommunityCommandExecutedEvent> communitiesEventLog)
         {
             await communitiesEventLog.AppendEventsAsync(guid1, guid2,
-                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 0, 0), new CreateCommunity(guid1, "Officer Poker Group", "This informal group meets whenever the script calls for it.")),
-                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 5, 0), new RenameCommunity(guid1, "Officers' Poker Group")),
-                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 7, 30), new EditCommunityDescription(guid1, "This informal group meets whenever the script calls for it... and Tuesday evenings.")),
-                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 10, 0), new AddCommunityMemberFamily(guid1, guid3)),
-                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 12, 0), new AddCommunityMemberFamily(guid1, guid4)),
-                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 13, 0), new AddCommunityMemberFamily(guid1, guid5)),
-                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 14, 0), new AddCommunityRoleAssignment(guid1, guid4, "Community Organizer")),
-                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 14, 0), new AddCommunityRoleAssignment(guid1, guid8, "Community Organizer")),
-                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 15, 0), new RemoveCommunityRoleAssignment(guid1, guid4, "Community Organizer")),
-                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 15, 30), new AddCommunityRoleAssignment(guid1, guid4, "Community Co-Organizer")),
-                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 16, 0), new UploadCommunityDocument(guid1, guid1, "Five-card stud rules.pdf")),
-                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 16, 30), new DeleteUploadedCommunityDocument(guid1, guid1)),
-                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 1, 10, 18, 12), new UploadCommunityDocument(guid1, guid2, "Revised five-card stud rules.pdf")),
-                new CommunityCommandExecutedEvent(adminId, new DateTime(2023, 2, 2, 0, 0, 0), new CreateCommunity(guid2, "Fight Club", "Don't talk about it.")));
+                new CommunityCommandExecutedEvent(adminId, ApprovalsMonth(1, 10, 0, 0), new CreateCommunity(guid1, "Officer Poker Group", "This informal group meets whenever the script calls for it.")),
+                new CommunityCommandExecutedEvent(adminId, ApprovalsMonth(1, 10, 5, 0), new RenameCommunity(guid1, "Officers' Poker Group")),
+                new CommunityCommandExecutedEvent(adminId, ApprovalsMonth(1, 10, 7, 30), new EditCommunityDescription(guid1, "This informal group meets whenever the script calls for it... and Tuesday evenings.")),
+                new CommunityCommandExecutedEvent(adminId, ApprovalsMonth(1, 10, 10, 0), new AddCommunityMemberFamily(guid1, guid3)),
+                new CommunityCommandExecutedEvent(adminId, ApprovalsMonth(1, 10, 12, 0), new AddCommunityMemberFamily(guid1, guid4)),
+                new CommunityCommandExecutedEvent(adminId, ApprovalsMonth(1, 10, 13, 0), new AddCommunityMemberFamily(guid1, guid5)),
+                new CommunityCommandExecutedEvent(adminId, ApprovalsMonth(1, 10, 14, 0), new AddCommunityRoleAssignment(guid1, guid4, "Community Organizer")),
+                new CommunityCommandExecutedEvent(adminId, ApprovalsMonth(1, 10, 14, 0), new AddCommunityRoleAssignment(guid1, guid8, "Community Organizer")),
+                new CommunityCommandExecutedEvent(adminId, ApprovalsMonth(1, 10, 15, 0), new RemoveCommunityRoleAssignment(guid1, guid4, "Community Organizer")),
+                new CommunityCommandExecutedEvent(adminId, ApprovalsMonth(1, 10, 15, 30), new AddCommunityRoleAssignment(guid1, guid4, "Community Co-Organizer")),
+                new CommunityCommandExecutedEvent(adminId, ApprovalsMonth(1, 10, 16, 0), new UploadCommunityDocument(guid1, guid1, "Five-card stud rules.pdf")),
+                new CommunityCommandExecutedEvent(adminId, ApprovalsMonth(1, 10, 16, 30), new DeleteUploadedCommunityDocument(guid1, guid1)),
+                new CommunityCommandExecutedEvent(adminId, ApprovalsMonth(1, 10, 18, 12), new UploadCommunityDocument(guid1, guid2, "Revised five-card stud rules.pdf")),
+                new CommunityCommandExecutedEvent(adminId, ApprovalsMonth(2, 0, 0, 0), new CreateCommunity(guid2, "Fight Club", "Don't talk about it.")));
         }
 
         public static async Task PopulateDraftNotes(IObjectStore<string?> draftNotesStore)
