@@ -82,16 +82,6 @@
             "runOptions": {
                 "runOn": "folderOpen"
             }
-        },
-        {
-            "type": "npm",
-            "script": "lint",
-            "path": "src/caretogether-pwa",
-            "problemMatcher": [
-                "$eslint-stylish"
-            ],
-            "label": "npm: lint - src/caretogether-pwa",
-            "detail": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
         }
     ]
 }
