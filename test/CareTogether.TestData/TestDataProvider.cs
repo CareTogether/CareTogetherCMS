@@ -95,19 +95,21 @@ namespace CareTogether.TestData
         public static async Task PopulateAccountEvents(IEventLog<AccountEvent> accountsEventLog)
         {
             //NOTE: Since this log is *global*, only do this if these events have not yet been appended.
+            //NOTE: The date *MUST* be kept fixed to YEAR-01-01 to ensure that the events are not appended multiple times.
+            var FIXED_DATE = new DateTime(2020, 1, 1);
             var testEventsNeeded = new[]
             {
-                new AccountEvent(SystemConstants.SystemUserId, new DateTime(2020, 1, 1),
+                new AccountEvent(SystemConstants.SystemUserId, FIXED_DATE,
                     new LinkPersonToAcccount(UserId: adminId, OrganizationId: guid1, LocationId: guid2, PersonId: guid0)),
-                new AccountEvent(SystemConstants.SystemUserId, new DateTime(2020, 1, 1),
+                new AccountEvent(SystemConstants.SystemUserId, FIXED_DATE,
                     new LinkPersonToAcccount(UserId: adminId, OrganizationId: guid1, LocationId: guid3, PersonId: guid0)),
-                new AccountEvent(SystemConstants.SystemUserId, new DateTime(2020, 1, 1),
+                new AccountEvent(SystemConstants.SystemUserId, FIXED_DATE,
                     new LinkPersonToAcccount(UserId: volunteerId, OrganizationId: guid1, LocationId: guid2, PersonId: guid4))
             };
             var existingGlobalEvents = await accountsEventLog.GetAllEventsAsync(guid0, guid0).ToListAsync();
             var testEventsToAppend = testEventsNeeded
                 .Where(testEvent => !existingGlobalEvents.Any(entry =>
-                    entry.DomainEvent with { TimestampUtc = new DateTime(2020, 1, 1)} == testEvent))
+                    entry.DomainEvent with { TimestampUtc = FIXED_DATE } == testEvent))
                 .ToArray();
             await accountsEventLog.AppendEventsAsync(guid0, guid0, testEventsToAppend);
         }
