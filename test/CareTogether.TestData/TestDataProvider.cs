@@ -36,6 +36,7 @@ namespace CareTogether.TestData
         static DateTime ApprovalsMonth(int day, int hour, int minute, int second) => DateOf(-2, day, hour, minute, second);
         static DateTime SetupMonth(int day) => DateOf(-3, day);
         static DateTime SetupMonth(int day, int hour, int minute, int second) => DateOf(-3, day, hour, minute, second);
+        static Age YearsOld(int years) => new ExactAge(DateTime.UtcNow.AddYears(years));
 
 
         /* Families
@@ -151,24 +152,24 @@ namespace CareTogether.TestData
         public static async Task PopulateDirectoryEvents(IEventLog<DirectoryEvent> directoryEventLog)
         {
             await directoryEventLog.AppendEventsAsync(guid1, guid2,
-                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid0, "Administrator", "McTester", Gender.Male, new ExactAge(new DateTime(2021, 7, 1)), "Ethnic",
+                new PersonCommandExecuted(adminId, SetupMonth(1), new CreatePerson(guid0, "Administrator", "McTester", Gender.Male, YearsOld(30), "Ethnic",
                     [], null, [], null, [], null, "Test", "ABC")),
-                new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreateFamily(guid0, guid0,
+                new FamilyCommandExecuted(adminId, SetupMonth(1), new CreateFamily(guid0, guid0,
                     [(guid0, new FamilyAdultRelationshipInfo("Single", true))],
                     [], [])),
-                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid1, "John", "Doe", Gender.Male, new ExactAge(new DateTime(1980, 7, 1)), "Ethnic",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid1, "John", "Doe", Gender.Male, YearsOld(40), "Ethnic",
                     [], null, [], null, [], null, null, "DEF")),
-                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid2, "Jane", "Smith", Gender.Female, new AgeInYears(42, new DateTime(2021, 1, 1)), "Ethnic",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid2, "Jane", "Smith", Gender.Female, YearsOld(42), "Ethnic",
                     [], null, [], null, [], null, null, null)),
                 new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new UpdatePersonName(guid2, "Jane", "Doe")),
-                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new UpdatePersonAge(guid1, new ExactAge(new DateTime(1975, 1, 1)))),
-                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new UpdatePersonAge(guid2, new ExactAge(new DateTime(1979, 7, 1)))),
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new UpdatePersonAge(guid1, YearsOld(45))),
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new UpdatePersonAge(guid2, YearsOld(41))),
                 new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreateFamily(guid1, guid1,
                     [(guid1, new FamilyAdultRelationshipInfo("Dad", true))],
                     [], [])),
                 new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new AddAdultToFamily(guid1, guid2, new FamilyAdultRelationshipInfo("Mom", true))),
                 new FamilyCommandExecuted(adminId, new DateTime(2020, 3, 5, 4, 15, 15), new UploadFamilyDocument(guid1, guid1, "Jane Doe referral info.pdf")),
-                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid3, "Eric", "Doe", Gender.Male, new AgeInYears(12, new DateTime(2021, 1, 1)), "Ethnic",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid3, "Eric", "Doe", Gender.Male, YearsOld(12), "Ethnic",
                     [], null, [], null, [], null, null, null)),
                 new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new AddChildToFamily(guid1, guid3,
                 [
@@ -179,18 +180,18 @@ namespace CareTogether.TestData
                 new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new RemoveCustodialRelationship(guid1, guid3, guid1)),
                 new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new UpdateCustodialRelationshipType(guid1, guid3, guid2, CustodialRelationshipType.ParentWithCourtAppointedCustody)),
                 new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new AddCustodialRelationship(guid1, new CustodialRelationship(guid3, guid1, CustodialRelationshipType.ParentWithCourtAppointedCustody))),
-                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid4, "Emily", "Coachworthy", Gender.Female, new ExactAge(new DateTime(1980, 3, 19)), "Caucasian",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid4, "Emily", "Coachworthy", Gender.Female, YearsOld(40), "Caucasian",
                     [], null, [], null, [], null, null, null)),
                 new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreateFamily(guid4, guid4,
                     [(guid4, new FamilyAdultRelationshipInfo("Single", true))],
                     [], [])),
-                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid5, "Han", "Solo", Gender.Male, new AgeInYears(30, new DateTime(2021, 7, 1)), "Corellian",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid5, "Han", "Solo", Gender.Male, YearsOld(30), "Corellian",
                     [], null, [], null, [], null, "Smuggler", null)),
-                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid6, "Leia", "Skywalker", Gender.Male, new AgeInYears(28, new DateTime(2021, 7, 1)), "Tatooinian",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid6, "Leia", "Skywalker", Gender.Male, YearsOld(28), "Tatooinian",
                     [], null, [], null, [], null, "Freedom fighter", "Uncertain claim to royalty")),
-                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid7, "Ben", "Solo", Gender.Male, new AgeInYears(12, new DateTime(2021, 7, 1)), "Chandrilan",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid7, "Ben", "Solo", Gender.Male, YearsOld(12), "Chandrilan",
                     [], null, [], null, [], null, null, null)),
-                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guidA, "Luke", "Skywalker", Gender.Male, new AgeInYears(28, new DateTime(2021, 7, 1)), "Tatooinian",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guidA, "Luke", "Skywalker", Gender.Male, YearsOld(28), "Tatooinian",
                     [], null, [], null, [], null, null, null)),
                 new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreateFamily(guid2, guid6,
                     [
@@ -203,9 +204,9 @@ namespace CareTogether.TestData
                         new CustodialRelationship(guid7, guid5, CustodialRelationshipType.ParentWithCustody),
                         new CustodialRelationship(guid7, guid6, CustodialRelationshipType.ParentWithCustody),
                     ])),
-                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid8, "William", "Riker", Gender.Male, new ExactAge(new DateTime(1972, 1, 1)), "Alaskan",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid8, "William", "Riker", Gender.Male, YearsOld(48), "Alaskan",
                     [], null, [], null, [], null, null, null)),
-                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid9, "Deanna", "Riker", Gender.Female, new ExactAge(new DateTime(1970, 1, 1)), "Betazoid",
+                new PersonCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreatePerson(guid9, "Deanna", "Riker", Gender.Female, YearsOld(50), "Betazoid",
                     [], null, [], null, [], null, null, null)),
                 new FamilyCommandExecuted(adminId, new DateTime(2021, 7, 1), new CreateFamily(guid3, guid8,
                     [(guid8, new FamilyAdultRelationshipInfo("Dad", true)), (guid9, new FamilyAdultRelationshipInfo("Mom", true))],
@@ -269,9 +270,9 @@ namespace CareTogether.TestData
                 //new PersonCommandExecuted(adminId, new DateTime(2021, 8, 1), new UpdatePersonContactMethodPreferenceNotes(guid4,
                 //    "Cannot receive voicemails"))
                 new FamilyCommandExecuted(adminId, new DateTime(2022, 3, 2, 18, 0, 0), new UploadFamilyDocument(guid1, guid2, "Jane Doe second referral info.pdf")),
-                new PersonCommandExecuted(adminId, new DateTime(2022, 6, 21), new CreatePerson(guidB, "Emmett", "Brown", Gender.Male, new AgeInYears(60, new DateTime(2022, 6, 21)), "Caucasian",
+                new PersonCommandExecuted(adminId, new DateTime(2022, 6, 21), new CreatePerson(guidB, "Emmett", "Brown", Gender.Male, YearsOld(60), "Caucasian",
                     [], null, [], null, [], null, null, null)),
-                new PersonCommandExecuted(adminId, new DateTime(2022, 6, 21), new CreatePerson(guidC, "Marty", "McFly", Gender.Male, new AgeInYears(14, new DateTime(2022, 6, 21)), "Caucasian",
+                new PersonCommandExecuted(adminId, new DateTime(2022, 6, 21), new CreatePerson(guidC, "Marty", "McFly", Gender.Male, YearsOld(14), "Caucasian",
                     [], null, [], null, [], null, null, null)),
                 new FamilyCommandExecuted(adminId, new DateTime(2022, 6, 21), new CreateFamily(guid5, guidB,
                     [(guidB, new FamilyAdultRelationshipInfo("Single", true))],
