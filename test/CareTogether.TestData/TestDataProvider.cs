@@ -329,12 +329,12 @@ namespace CareTogether.TestData
         public static async Task PopulateGoalEvents(IEventLog<GoalCommandExecutedEvent> goalsEventLog)
         {
             await goalsEventLog.AppendEventsAsync(guid1, guid2,
-                new GoalCommandExecutedEvent(adminId, new DateTime(2021, 7, 11), new CreateGoal(guid2, guid1, "Get an apartment", new DateTime(2021, 8, 11))),
-                new GoalCommandExecutedEvent(adminId, new DateTime(2021, 7, 11), new CreateGoal(guid2, guid2, "Find a job", new DateTime(2021, 8, 11))),
-                new GoalCommandExecutedEvent(adminId, new DateTime(2021, 7, 11), new CreateGoal(guid2, guid2, "Get daytime childcare", new DateTime(2021, 8, 1))),
-                new GoalCommandExecutedEvent(adminId, new DateTime(2021, 7, 12), new ChangeGoalDescription(guid2, guid1, "Find stable housing")),
-                new GoalCommandExecutedEvent(adminId, new DateTime(2021, 8, 1), new ChangeGoalTargetDate(guid2, guid1, new DateTime(2021, 8, 31))),
-                new GoalCommandExecutedEvent(adminId, new DateTime(2021, 8, 30), new MarkGoalCompleted(guid2, guid1, new DateTime(2021, 8, 27))));
+                new GoalCommandExecutedEvent(adminId, ReferralsMonth(11), new CreateGoal(guid2, guid1, "Get an apartment", StartOfCurrentMonth())),
+                new GoalCommandExecutedEvent(adminId, ReferralsMonth(11), new CreateGoal(guid2, guid2, "Find a job", StartOfCurrentMonth())),
+                new GoalCommandExecutedEvent(adminId, ReferralsMonth(11), new CreateGoal(guid2, guid2, "Get daytime childcare", StartOfCurrentMonth())),
+                new GoalCommandExecutedEvent(adminId, ReferralsMonth(12), new ChangeGoalDescription(guid2, guid1, "Find stable housing")),
+                new GoalCommandExecutedEvent(adminId, ReferralsMonth(21), new ChangeGoalTargetDate(guid2, guid1, ReferralsMonth(28))),
+                new GoalCommandExecutedEvent(adminId, ReferralsMonth(28), new MarkGoalCompleted(guid2, guid1, ReferralsMonth(27))));
         }
 
         public static async Task PopulateApprovalEvents(IEventLog<ApprovalEvent> approvalsEventLog)
