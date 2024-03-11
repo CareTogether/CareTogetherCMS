@@ -240,7 +240,7 @@ export function FamilyScreen() {
                   <br />
                   {family.partneringFamilyInfo?.openReferral
                     ? "Referral open since " + format(family.partneringFamilyInfo.openReferral.openedAtUtc!, "M/d/yy")
-                    : "Referral closed - " + ReferralCloseReason[family.partneringFamilyInfo?.closedReferrals?.[family.partneringFamilyInfo.closedReferrals.length - 1]?.closeReason!]
+                    : "Referral closed - " + ReferralCloseReason[family.partneringFamilyInfo!.closedReferrals![family.partneringFamilyInfo.closedReferrals!.length - 1]!.closeReason!]
                     //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closedUtc) -- needs a new calculated property
                   }
                   {(family.partneringFamilyInfo?.closedReferrals?.length && (
@@ -295,12 +295,12 @@ export function FamilyScreen() {
               </Button>}
               {closeReferralDialogOpen && family.partneringFamilyInfo?.openReferral && (
                 <CloseReferralDialog
-                  partneringFamilyId={family.family?.id!}
+                  partneringFamilyId={family.family!.id!}
                   referralId={family.partneringFamilyInfo!.openReferral!.id!}
                   onClose={() => setCloseReferralDialogOpen(false)} />)}
               {openNewReferralDialogOpen && (
                 <OpenNewReferralDialog
-                  partneringFamilyId={family.family?.id!}
+                  partneringFamilyId={family.family!.id!}
                   onClose={() => setOpenNewReferralDialogOpen(false)} />)}
             </Grid>
           </Grid>

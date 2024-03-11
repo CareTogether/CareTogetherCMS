@@ -49,15 +49,15 @@ export function MissingRequirementDialog({
   const familyLookup = useFamilyLookup();
   const contextFamilyId =
     context.kind === 'Referral' || context.kind === 'Arrangement' ||
-    context.kind === 'Family Volunteer Assignment' || context.kind === 'Individual Volunteer Assignment'
-    ? context.partneringFamilyId
-    : context.volunteerFamilyId;
+      context.kind === 'Family Volunteer Assignment' || context.kind === 'Individual Volunteer Assignment'
+      ? context.partneringFamilyId
+      : context.volunteerFamilyId;
   const contextFamily = familyLookup(contextFamilyId);
 
   const personLookup = usePersonLookup().bind(null, contextFamilyId);
 
   const availableArrangements = requirement instanceof MissingArrangementRequirement
-  ? contextFamily!.partneringFamilyInfo!.openReferral!.arrangements!.filter(arrangement =>
+    ? contextFamily!.partneringFamilyInfo!.openReferral!.arrangements!.filter(arrangement =>
       arrangement.missingRequirements?.some(x => {
         if (context.kind === 'Family Volunteer Assignment')
           return x.actionName === requirement.actionName &&
@@ -73,11 +73,11 @@ export function MissingRequirementDialog({
         else
           return x.actionName === requirement.actionName;
       }))
-  : [];
+    : [];
   const [applyToArrangements, setApplyToArrangements] = useState(
     context.kind === 'Arrangement'
-    ? availableArrangements.filter(arrangement => arrangement.id === context.arrangementId)
-    :[]);
+      ? availableArrangements.filter(arrangement => arrangement.id === context.arrangementId)
+      : []);
   function toggleApplyToArrangement(arrangement: Arrangement, include: boolean) {
     if (include) {
       setApplyToArrangements(applyToArrangements.concat(arrangement));
@@ -229,10 +229,10 @@ export function MissingRequirementDialog({
                         (context.kind === 'Individual Volunteer Assignment'
                           ? ` (${personNameString(personLookup(context.assignment.personId))})` : '') + ` - ` +
                         (arrangement.phase === ArrangementPhase.Cancelled ? `Cancelled ${formatRelative(arrangement.cancelledAtUtc!, now)}`
-                        : arrangement.phase === ArrangementPhase.SettingUp ? "Setting up"
-                        : arrangement.phase === ArrangementPhase.ReadyToStart ? "Ready to start"
-                        : arrangement.phase === ArrangementPhase.Started ? `Started ${formatRelative(arrangement.startedAtUtc!, now)}`
-                        : `Ended ${formatRelative(arrangement.endedAtUtc!, now)}`)} />
+                          : arrangement.phase === ArrangementPhase.SettingUp ? "Setting up"
+                            : arrangement.phase === ArrangementPhase.ReadyToStart ? "Ready to start"
+                              : arrangement.phase === ArrangementPhase.Started ? `Started ${formatRelative(arrangement.startedAtUtc!, now)}`
+                                : `Ended ${formatRelative(arrangement.endedAtUtc!, now)}`)} />
                   )}
                 </FormGroup>
               </FormControl>
@@ -243,14 +243,14 @@ export function MissingRequirementDialog({
                 label="When was this requirement completed?"
                 value={completedAtLocal}
                 disableFuture format="M/d/yyyy h:mm a"
-                onChange={(date: any) => date && setCompletedAtLocal(date)}
-                slotProps={{ textField: { fullWidth: true, required: true }}} />
+                onChange={(date: Date | null) => date && setCompletedAtLocal(date)}
+                slotProps={{ textField: { fullWidth: true, required: true } }} />
               : <DatePicker
                 label="When was this requirement completed?"
                 value={completedAtLocal}
                 disableFuture format="MM/dd/yyyy"
-                onChange={(date: any) => date && setCompletedAtLocal(date)}
-                slotProps={{ textField: { fullWidth: true, required: true }}} />}
+                onChange={(date: Date | null) => date && setCompletedAtLocal(date)}
+                slotProps={{ textField: { fullWidth: true, required: true } }} />}
             {validityDuration && ((completedAtLocal && isValid(completedAtLocal))
               ? <p>This will be valid until {format(add(completedAtLocal, validityDuration), "M/d/yyyy h:mm a")}</p>
               : <p>Valid for {formatDuration(validityDuration)}</p>)}
@@ -317,11 +317,11 @@ export function MissingRequirementDialog({
                         onChange={(_, checked) => toggleApplyToArrangement(arrangement, checked)}
                         name={arrangement.id!} />}
                       label={`${arrangement.arrangementType} - ${personNameString(personLookup(arrangement.partneringFamilyPersonId))} - ` +
-                              (arrangement.phase === ArrangementPhase.Cancelled ? `Cancelled ${formatRelative(arrangement.cancelledAtUtc!, now)}`
-                              : arrangement.phase === ArrangementPhase.SettingUp ? "Setting up"
-                              : arrangement.phase === ArrangementPhase.ReadyToStart ? "Ready to start"
+                        (arrangement.phase === ArrangementPhase.Cancelled ? `Cancelled ${formatRelative(arrangement.cancelledAtUtc!, now)}`
+                          : arrangement.phase === ArrangementPhase.SettingUp ? "Setting up"
+                            : arrangement.phase === ArrangementPhase.ReadyToStart ? "Ready to start"
                               : arrangement.phase === ArrangementPhase.Started ? `Started ${formatRelative(arrangement.startedAtUtc!, now)}`
-                              : `Ended ${formatRelative(arrangement.endedAtUtc!, now)}`)} />
+                                : `Ended ${formatRelative(arrangement.endedAtUtc!, now)}`)} />
                   )}
                 </FormGroup>
               </FormControl>
@@ -329,7 +329,7 @@ export function MissingRequirementDialog({
           {requirement instanceof MissingArrangementRequirement &&
             (requirement.dueBy || requirement.pastDueSince) && // Only monitoring requirements will have one of these dates set.
             <Grid item xs={12}>
-              <Divider sx={{marginBottom: 1}} />
+              <Divider sx={{ marginBottom: 1 }} />
               <FormControl component="fieldset" variant="standard">
                 <FormControlLabel
                   control={<Checkbox size="medium"
@@ -352,8 +352,8 @@ export function MissingRequirementDialog({
               label="When does this exemption expire? (Default is never)"
               value={exemptionExpiresAtLocal}
               format="MM/dd/yyyy"
-              onChange={(date: any) => date && setExemptionExpiresAtLocal(date)}
-              slotProps={{ textField: { fullWidth: true}}} />
+              onChange={(date: Date | null) => date && setExemptionExpiresAtLocal(date)}
+              slotProps={{ textField: { fullWidth: true } }} />
           </Grid>
         </Grid>
       </TabPanel>

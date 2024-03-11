@@ -32,28 +32,28 @@ export function ArrangementReason({ partneringFamily, referralId, arrangement }:
           Reason:&nbsp;
           {editor.editing
             ? <FormControl required fullWidth size="small">
-                <InputLabel id="arrangement-reason">Reason for Request</InputLabel>
-                <Select
-                  labelId="arrangement-reason-label" id="arrangement-reason"
-                  value={editor.value || ""}
-                  onChange={e => editor.setValue(e.target.value)}>
-                    <MenuItem key="placeholder" value="" disabled>
-                      Select a reason
-                    </MenuItem>
-                    {arrangementReasons.map(arrangementReason =>
-                      <MenuItem key={arrangementReason} value={arrangementReason}>{arrangementReason}</MenuItem>)}
-                </Select>
-              </FormControl>
+              <InputLabel id="arrangement-reason">Reason for Request</InputLabel>
+              <Select
+                labelId="arrangement-reason-label" id="arrangement-reason"
+                value={editor.value || ""}
+                onChange={e => editor.setValue(e.target.value)}>
+                <MenuItem key="placeholder" value="" disabled>
+                  Select a reason
+                </MenuItem>
+                {arrangementReasons.map(arrangementReason =>
+                  <MenuItem key={arrangementReason} value={arrangementReason}>{arrangementReason}</MenuItem>)}
+              </Select>
+            </FormControl>
             : (savedValue && savedValue.length > 0)
-            ? savedValue
-            : "(reason unknown)"}
+              ? savedValue
+              : "(reason unknown)"}
           {permissions(Permission.EditArrangement) &&
             <>
               {editor.editButton}
               {editor.cancelButton}
               {editor.saveButton}
             </>}
-          </>
+        </>
         : <></>}
     </>
   );

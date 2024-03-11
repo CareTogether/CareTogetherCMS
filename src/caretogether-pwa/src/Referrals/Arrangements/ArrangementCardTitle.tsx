@@ -41,15 +41,15 @@ export function ArrangementCardTitle({ summaryOnly, partneringFamilyId, referral
         {arrangement.arrangementType}
       </span>
       {summaryOnly &&
-        <span style={{marginLeft: 40, float: "right"}}>
+        <span style={{ marginLeft: 40, float: "right" }}>
           {arrangement.phase === ArrangementPhase.Cancelled ? `Cancelled ${formatRelative(arrangement.cancelledAtUtc!, now)}`
             : arrangement.phase === ArrangementPhase.SettingUp ? "Setting up"
-            : arrangement.phase === ArrangementPhase.ReadyToStart ? "Ready to start"
-            : arrangement.phase === ArrangementPhase.Started ? `Started ${formatRelative(arrangement.startedAtUtc!, now)}`
-            : `Ended ${formatRelative(arrangement.endedAtUtc!, now)}`}
+              : arrangement.phase === ArrangementPhase.ReadyToStart ? "Ready to start"
+                : arrangement.phase === ArrangementPhase.Started ? `Started ${formatRelative(arrangement.startedAtUtc!, now)}`
+                  : `Ended ${formatRelative(arrangement.endedAtUtc!, now)}`}
         </span>}
       {!summaryOnly &&
-        <span style={{marginLeft: 0, float: "right"}}>
+        <span style={{ marginLeft: 0, float: "right" }}>
           {arrangement.phase === ArrangementPhase.Cancelled ?
             `Cancelled ${formatRelative(arrangement.cancelledAtUtc!, now)}`
             : arrangement.phase === ArrangementPhase.SettingUp ?
@@ -57,70 +57,70 @@ export function ArrangementCardTitle({ summaryOnly, partneringFamilyId, referral
                 Setting up
                 {permissions(Permission.EditArrangement) &&
                   <Button variant="outlined" size="small"
-                    style={{marginLeft: 10}}
+                    style={{ marginLeft: 10 }}
                     onClick={() => setShowCancelArrangementDialog(true)}>
                     Cancel
                   </Button>}
               </>
-            : arrangement.phase === ArrangementPhase.ReadyToStart ?
-              permissions(Permission.EditArrangement) &&
-              <>
-                <Button variant="outlined" size="small"
-                  style={{marginLeft: 10}}
-                  onClick={() => setShowCancelArrangementDialog(true)}>
-                  Cancel
-                </Button>
-                <Button variant="contained" size="small"
-                  style={{marginLeft: 10}}
-                  onClick={() => setShowStartArrangementDialog(true)}>
-                  Start
-                </Button>
-              </>
-            : arrangement.phase === ArrangementPhase.Started ?
-              <>
-                {permissions(Permission.EditArrangement)
-                  ? <>
-                      {startedAtEditor.editing
-                        ? <>
+              : arrangement.phase === ArrangementPhase.ReadyToStart ?
+                permissions(Permission.EditArrangement) &&
+                <>
+                  <Button variant="outlined" size="small"
+                    style={{ marginLeft: 10 }}
+                    onClick={() => setShowCancelArrangementDialog(true)}>
+                    Cancel
+                  </Button>
+                  <Button variant="contained" size="small"
+                    style={{ marginLeft: 10 }}
+                    onClick={() => setShowStartArrangementDialog(true)}>
+                    Start
+                  </Button>
+                </>
+                : arrangement.phase === ArrangementPhase.Started ?
+                  <>
+                    {permissions(Permission.EditArrangement)
+                      ? <>
+                        {startedAtEditor.editing
+                          ? <>
                             <DateTimePicker
                               label="When was this arrangement started?"
                               value={startedAtEditor.value}
                               disableFuture format="M/d/yyyy h:mm a"
-                              onChange={(date: any) => date && startedAtEditor.setValue(date)}
-                              slotProps={{ textField: { fullWidth: true, required: true, sx: {marginTop: 1}}}} />
+                              onChange={(date: Date | null) => date && startedAtEditor.setValue(date)}
+                              slotProps={{ textField: { fullWidth: true, required: true, sx: { marginTop: 1 } } }} />
                             {startedAtEditor.cancelButton}
                             {startedAtEditor.saveButton}
                           </>
-                        : <>
+                          : <>
                             <span>Started {formatRelative(arrangement.startedAtUtc!, now)}</span>
                             {startedAtEditor.editButton}
                           </>}
+                        <Button variant="outlined" size="small"
+                          style={{ marginLeft: 10 }}
+                          onClick={() => setShowEndArrangementDialog(true)}>
+                          End
+                        </Button>
+                      </>
+                      : <span>Started {formatRelative(arrangement.startedAtUtc!, now)}</span>}
+                  </>
+                  : <>
+                    <span>Ended {formatRelative(arrangement.endedAtUtc!, now)}</span>
+                    {permissions(Permission.EditArrangement) &&
                       <Button variant="outlined" size="small"
-                        style={{marginLeft: 10}}
-                        onClick={() => setShowEndArrangementDialog(true)}>
-                        End
-                      </Button>
-                    </>
-                  : <span>Started {formatRelative(arrangement.startedAtUtc!, now)}</span>}
-              </>
-            : <>
-                <span>Ended {formatRelative(arrangement.endedAtUtc!, now)}</span>
-                {permissions(Permission.EditArrangement) &&
-                  <Button variant="outlined" size="small"
-                    style={{marginLeft: 10}}
-                    onClick={() => setShowReopenArrangementDialog(true)}>
-                    Reopen
-                  </Button>}
-              </>}
-        {permissions(Permission.DeleteArrangement) &&
-        <>
-          <Button variant="outlined" size="small" color="warning"
-            style={{marginLeft: 10}}
-            onClick={() => setShowDeleteArrangementDialog(true)}>
-            Delete
-          </Button>
-        </>}
-      </span>}
+                        style={{ marginLeft: 10 }}
+                        onClick={() => setShowReopenArrangementDialog(true)}>
+                        Reopen
+                      </Button>}
+                  </>}
+          {permissions(Permission.DeleteArrangement) &&
+            <>
+              <Button variant="outlined" size="small" color="warning"
+                style={{ marginLeft: 10 }}
+                onClick={() => setShowDeleteArrangementDialog(true)}>
+                Delete
+              </Button>
+            </>}
+        </span>}
       {(showStartArrangementDialog && <StartArrangementDialog referralId={referralId} arrangement={arrangement}
         onClose={() => setShowStartArrangementDialog(false)} />) || null}
       {(showEndArrangementDialog && <EndArrangementDialog referralId={referralId} arrangement={arrangement}

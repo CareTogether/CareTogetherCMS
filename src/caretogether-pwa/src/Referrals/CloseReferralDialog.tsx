@@ -11,7 +11,7 @@ interface CloseReferralDialogProps {
   onClose: () => void
 }
 
-export function CloseReferralDialog({partneringFamilyId, referralId, onClose}: CloseReferralDialogProps) {
+export function CloseReferralDialog({ partneringFamilyId, referralId, onClose }: CloseReferralDialogProps) {
   const referralsModel = useReferralsModel();
   const [fields, setFields] = useState({
     reason: null as ReferralCloseReason | null,
@@ -34,7 +34,7 @@ export function CloseReferralDialog({partneringFamilyId, referralId, onClose}: C
               <FormLabel component="legend">Reason for Closing:</FormLabel>
               <RadioGroup aria-label="reason" name="reason"
                 value={reason == null ? '' : ReferralCloseReason[reason]}
-                onChange={e => setFields({...fields, reason: ReferralCloseReason[e.target.value as keyof typeof ReferralCloseReason]})}>
+                onChange={e => setFields({ ...fields, reason: ReferralCloseReason[e.target.value as keyof typeof ReferralCloseReason] })}>
                 <FormControlLabel value={ReferralCloseReason[ReferralCloseReason.NotAppropriate]} control={<Radio size="small" />} label="Not Appropriate" />
                 <FormControlLabel value={ReferralCloseReason[ReferralCloseReason.NoCapacity]} control={<Radio size="small" />} label="No Capacity" />
                 <FormControlLabel value={ReferralCloseReason[ReferralCloseReason.NoLongerNeeded]} control={<Radio size="small" />} label="No Longer Needed" />
@@ -48,7 +48,7 @@ export function CloseReferralDialog({partneringFamilyId, referralId, onClose}: C
               label="When was this referral closed?"
               value={closedAtLocal}
               disableFuture format="MM/dd/yyyy"
-              onChange={(date: any) => date && setFields({ ...fields, closedAtLocal: date })} />
+              onChange={(date: Date | null) => date && setFields({ ...fields, closedAtLocal: date })} />
           </Grid>
         </Grid>
       </form>

@@ -37,14 +37,14 @@ function ChildLocationTimeline({ partneringFamily, referralId, arrangement, reco
   const personLookup = usePersonLookup();
   const referralsModel = useReferralsModel();
   const withBackdrop = useBackdrop();
-  
+
   async function deleteChildLocationEntry(historyEntry: ChildLocationHistoryEntry) {
     await withBackdrop(async () => {
       await referralsModel.deleteChildLocationEntry(partneringFamily.family?.id as string, referralId, arrangement.id!,
         historyEntry.childLocationFamilyId!, historyEntry.childLocationReceivingAdultId!, historyEntry.timestampUtc!, null);
     });
   }
-  
+
   async function deleteChildLocationPlan(planEntry: ChildLocationHistoryEntry) {
     await withBackdrop(async () => {
       await referralsModel.deleteChildLocationPlan(partneringFamily.family?.id as string, referralId, arrangement.id!,
@@ -55,15 +55,15 @@ function ChildLocationTimeline({ partneringFamily, referralId, arrangement, reco
   // Planned entries will have null noteId values; actual history entries will have non-null noteId values.
   const allEntries = (arrangement.childLocationHistory || []).concat(arrangement.childLocationPlan || []).sort((a, b) =>
     a.timestampUtc! < b.timestampUtc! ? 1 : a.timestampUtc! > b.timestampUtc! ? -1 : 0);
-  
+
   // If there are no entries, or only planned entries, the current location entry will be undefined.
   const currentLocationEntryIndex = allEntries.findIndex(entry => entry.noteId);
   const currentLocationEntry = currentLocationEntryIndex !== -1 ? allEntries[currentLocationEntryIndex] : undefined;
   const nextPlannedChange = allEntries.slice(0, currentLocationEntryIndex).reverse().find(entry =>
     !entry.noteId && entry.childLocationFamilyId !== currentLocationEntry?.childLocationFamilyId);
-  
+
   const now = new Date();
-  
+
   return (
     <Timeline position="right">
       {allEntries.map((entry, i) =>
@@ -119,13 +119,13 @@ interface TrackChildLocationDialogProps {
   onClose: () => void
 }
 
-export function TrackChildLocationDialog({partneringFamily, referralId, arrangement, onClose}: TrackChildLocationDialogProps) {
+export function TrackChildLocationDialog({ partneringFamily, referralId, arrangement, onClose }: TrackChildLocationDialogProps) {
   const policy = useRecoilValue(policyData);
   const arrangementPolicy = policy.referralPolicy!.arrangementPolicies!.find(x => x.arrangementType === arrangement.arrangementType);
 
   const familyLookup = useFamilyLookup();
   const personLookup = usePersonLookup();
-  
+
   const child = personLookup(partneringFamily.family!.id, arrangement.partneringFamilyPersonId);
 
   const arrangementHasNotStartedYet =
@@ -146,7 +146,7 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
     setPlan(entry.plan!);
   }
 
-  function candidateItem(candidate: {familyId: string, adult: Person}) {
+  function candidateItem(candidate: { familyId: string, adult: Person }) {
     return {
       familyId: candidate.familyId,
       personId: candidate.adult.id!,
@@ -154,7 +154,7 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
       displayName: `${candidate.adult.firstName} ${candidate.adult.lastName}`
     };
   }
-  
+
   const candidatePartneringFamilyAssignees = (partneringFamily.family?.adults?.map(adultInfo => ({ familyId: partneringFamily.family!.id!, adult: adultInfo.item1! })) || [])
     .map(candidateItem);
   const candidateFamilyAssignees = arrangement.familyVolunteerAssignments?.flatMap(familyAssignment =>
@@ -165,7 +165,7 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
     .map(candidateItem);
   const deduplicatedCandidateVolunteerAssignees = allCandidateVolunteerAssignees.filter((candidateItem, i) =>
     allCandidateVolunteerAssignees.filter((x, j) => x.key === candidateItem.key && j < i).length === 0);
-  
+
   function updateAssignee(assigneeKey: string) {
     setSelectedAssigneeKey(assigneeKey);
     const assigneeIsFromPartneringFamily = candidatePartneringFamilyAssignees.some(ca => ca.key === assigneeKey);
@@ -183,7 +183,7 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
 
   const referralsModel = useReferralsModel();
   const directoryModel = useDirectoryModel();
-  
+
   const withBackdrop = useBackdrop();
 
   function canSave() {
@@ -198,7 +198,7 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
         changeAtLocal != null;
     }
   }
-  
+
   async function onSave() {
     if (tabValue === 0) {
       return trackChildLocation();
@@ -278,14 +278,14 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
                         labelId="assignee-label" id="assignee"
                         value={selectedAssigneeKey}
                         onChange={e => updateAssignee(e.target.value as string)}>
-                          <MenuItem key="placeholder" value="" disabled>
-                            Select the adult who received the child
-                          </MenuItem>
-                          {candidatePartneringFamilyAssignees.map(candidate =>
-                            <MenuItem key={candidate.key} value={candidate.key}>{candidate.displayName}</MenuItem>)}
-                          <Divider />
-                          {deduplicatedCandidateVolunteerAssignees.map(candidate =>
-                            <MenuItem key={candidate.key} value={candidate.key}>{candidate.displayName}</MenuItem>)}
+                        <MenuItem key="placeholder" value="" disabled>
+                          Select the adult who received the child
+                        </MenuItem>
+                        {candidatePartneringFamilyAssignees.map(candidate =>
+                          <MenuItem key={candidate.key} value={candidate.key}>{candidate.displayName}</MenuItem>)}
+                        <Divider />
+                        {deduplicatedCandidateVolunteerAssignees.map(candidate =>
+                          <MenuItem key={candidate.key} value={candidate.key}>{candidate.displayName}</MenuItem>)}
                       </Select>
                     </FormControl>
                   </Grid>
@@ -309,8 +309,8 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
                       label="What time did this person receive the child?"
                       value={changeAtLocal}
                       disableFuture format="M/d/yyyy h:mm a"
-                      onChange={(date: any) => date && setChangeAtLocal(date)}
-                      slotProps={{ textField: { fullWidth: true, required: true }}} />
+                      onChange={(date: Date | null) => date && setChangeAtLocal(date)}
+                      slotProps={{ textField: { fullWidth: true, required: true } }} />
                   </Grid>
                   <Grid item xs={12}>
                     <TextField
@@ -331,14 +331,14 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
                         labelId="assignee-label" id="assignee"
                         value={selectedAssigneeKey}
                         onChange={e => updateAssignee(e.target.value as string)}>
-                          <MenuItem key="placeholder" value="" disabled>
-                            Select the adult who will receive the child
-                          </MenuItem>
-                          {candidatePartneringFamilyAssignees.map(candidate =>
-                            <MenuItem key={candidate.key} value={candidate.key}>{candidate.displayName}</MenuItem>)}
-                          <Divider />
-                          {deduplicatedCandidateVolunteerAssignees.map(candidate =>
-                            <MenuItem key={candidate.key} value={candidate.key}>{candidate.displayName}</MenuItem>)}
+                        <MenuItem key="placeholder" value="" disabled>
+                          Select the adult who will receive the child
+                        </MenuItem>
+                        {candidatePartneringFamilyAssignees.map(candidate =>
+                          <MenuItem key={candidate.key} value={candidate.key}>{candidate.displayName}</MenuItem>)}
+                        <Divider />
+                        {deduplicatedCandidateVolunteerAssignees.map(candidate =>
+                          <MenuItem key={candidate.key} value={candidate.key}>{candidate.displayName}</MenuItem>)}
                       </Select>
                     </FormControl>
                   </Grid>
@@ -362,8 +362,8 @@ export function TrackChildLocationDialog({partneringFamily, referralId, arrangem
                       label="What time will this person receive the child?"
                       value={changeAtLocal}
                       format="M/d/yyyy h:mm a"
-                      onChange={(date: any) => date && setChangeAtLocal(date)}
-                      slotProps={{ textField: { fullWidth: true, required: true}}} />
+                      onChange={(date: Date | null) => date && setChangeAtLocal(date)}
+                      slotProps={{ textField: { fullWidth: true, required: true } }} />
                   </Grid>
                 </Grid>
               </TabPanel>

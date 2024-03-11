@@ -30,53 +30,53 @@ export function CommunitiesList() {
 
   return (!dataLoaded
     ? <ProgressBackdrop>
-        <p>Loading communities...</p>
-      </ProgressBackdrop>
+      <p>Loading communities...</p>
+    </ProgressBackdrop>
     : <>
-        <TableContainer>
-          <Table aria-label="sticky table">
-            <TableHead>
-              <TableRow>
-                <TableCell align='left' sx={{ minWidth: 200 }}>
-                  Name
-                </TableCell>
-                <TableCell align='left' sx={{ minWidth: 400 }}>
-                  Description
-                </TableCell>
-                <TableCell align='right' sx={{ minWidth: 50 }}>
-                  Member Families
-                </TableCell>
-                <TableCell align='right' sx={{ minWidth: 50 }}>
-                  Role Assigments
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {communities.map(community => <TableRow key={community.id}
-                hover role='listitem' tabIndex={-1}
-                sx={{ cursor: 'pointer' }}
-                onClick={() => openCommunity(community)}>
-                <TableCell align='left' sx={{ minWidth: 200 }}>
-                  {community.name}
-                </TableCell>
-                <TableCell align='left' sx={{ minWidth: 400 }}>
-                  {community.description}
-                </TableCell>
-                <TableCell align='right' sx={{ minWidth: 50 }}>
-                  {community.memberFamilies?.length}
-                </TableCell>
-                <TableCell align='right' sx={{ minWidth: 50 }}>
-                  {community.communityRoleAssignments?.length}
-                </TableCell>
-              </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        {permissions(Permission.CreateCommunity) &&
-          <>
-            <Fab color="primary" aria-label="add"
-            sx={{position: 'fixed', right: '30px', bottom: '70px'}}
+      <TableContainer>
+        <Table aria-label="sticky table">
+          <TableHead>
+            <TableRow>
+              <TableCell align='left' sx={{ minWidth: 200 }}>
+                Name
+              </TableCell>
+              <TableCell align='left' sx={{ minWidth: 400 }}>
+                Description
+              </TableCell>
+              <TableCell align='right' sx={{ minWidth: 50 }}>
+                Member Families
+              </TableCell>
+              <TableCell align='right' sx={{ minWidth: 50 }}>
+                Role Assigments
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {communities.map(community => <TableRow key={community.id}
+              hover role='listitem' tabIndex={-1}
+              sx={{ cursor: 'pointer' }}
+              onClick={() => openCommunity(community)}>
+              <TableCell align='left' sx={{ minWidth: 200 }}>
+                {community.name}
+              </TableCell>
+              <TableCell align='left' sx={{ minWidth: 400 }}>
+                {community.description}
+              </TableCell>
+              <TableCell align='right' sx={{ minWidth: 50 }}>
+                {community.memberFamilies?.length}
+              </TableCell>
+              <TableCell align='right' sx={{ minWidth: 50 }}>
+                {community.communityRoleAssignments?.length}
+              </TableCell>
+            </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      {permissions(Permission.CreateCommunity) &&
+        <>
+          <Fab color="primary" aria-label="add"
+            sx={{ position: 'fixed', right: '30px', bottom: '70px' }}
             onClick={() => setAddDrawerOpen(true)}>
             <AddIcon />
           </Fab>
@@ -84,9 +84,9 @@ export function CommunitiesList() {
             anchor='right'
             open={addDrawerOpen}
             onClose={() => setAddDrawerOpen(false)}
-            sx={{ '.MuiDrawer-paper': { padding: 2, paddingTop: { xs: 7, sm: 8, md: 6 }}}}>
+            sx={{ '.MuiDrawer-paper': { padding: 2, paddingTop: { xs: 7, sm: 8, md: 6 } } }}>
             <AddEditCommunity onClose={() => setAddDrawerOpen(false)} />
           </Drawer>
-          </>}
-      </>);
+        </>}
+    </>);
 }

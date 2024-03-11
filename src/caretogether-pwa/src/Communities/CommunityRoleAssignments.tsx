@@ -45,14 +45,14 @@ export function CommunityRoleAssignments({ communityInfo }: CommunityRoleAssignm
   }
 
   return <List sx={{ '& .MuiListItemIcon-root': { minWidth: 36 } }}>
-    {assignments.map(assignment => 
+    {assignments.map(assignment =>
       <ListItem key={`${assignment.personId}-${assignment.communityRole}`} disablePadding
         secondaryAction={permissions(Permission.EditCommunityRoleAssignments)
           ? <IconButton edge="end" aria-label="delete"
-              color='primary'
-              onClick={() => remove(assignment)}>
-              <DeleteIcon />
-            </IconButton>
+            color='primary'
+            onClick={() => remove(assignment)}>
+            <DeleteIcon />
+          </IconButton>
           : null}>
         <ListItemText
           primary={assignment.personDisplayName}

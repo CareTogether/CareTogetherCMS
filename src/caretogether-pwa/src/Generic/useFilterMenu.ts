@@ -11,7 +11,7 @@ export function useFilterMenu(options: string[], initialSelections: string[]) {
       }
     }));
 
-  const handleFilterChange = (event: ChangeEvent<HTMLInputElement>, _checked: boolean) => {
+  const handleFilterChange = (event: ChangeEvent<HTMLInputElement>) => {
     setSelectedOptions(filterOptions.map(o => {
       if (o.text === event.target.name) {
         o.selected = !o.selected;

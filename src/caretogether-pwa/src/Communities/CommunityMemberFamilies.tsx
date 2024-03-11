@@ -22,12 +22,12 @@ export function CommunityMemberFamilies({ communityInfo }: CommunityMemberFamili
 
   const memberFamilies = (community?.memberFamilies || []).map(familyId =>
     visibleFamilies.find(family => family.family?.id === familyId)).filter(family =>
-    family).sort((a, b) => {
-      const aName = familyLastName(a!);
-      const bName = familyLastName(b!);
-      return aName?.localeCompare(bName, undefined, { sensitivity: 'base' });
-    }) as CombinedFamilyInfo[];
-  
+      family).sort((a, b) => {
+        const aName = familyLastName(a!);
+        const bName = familyLastName(b!);
+        return aName?.localeCompare(bName, undefined, { sensitivity: 'base' });
+      }) as CombinedFamilyInfo[];
+
   const removeMemberFamily = useCommunityCommand((communityId, familyId: string) => {
     const command = new RemoveCommunityMemberFamily();
     command.communityId = communityId;
@@ -49,14 +49,14 @@ export function CommunityMemberFamilies({ communityInfo }: CommunityMemberFamili
   const appNavigate = useAppNavigate();
 
   return <List sx={{ '& .MuiListItemIcon-root': { minWidth: 36 } }}>
-    {memberFamilies.map(family => 
+    {memberFamilies.map(family =>
       <ListItem key={family.family!.id!} disablePadding
         secondaryAction={permissions(Permission.EditCommunityMemberFamilies)
           ? <IconButton edge="end" aria-label="delete"
-              color='primary'
-              onClick={() => remove(family)}>
-              <GroupRemoveIcon />
-            </IconButton>
+            color='primary'
+            onClick={() => remove(family)}>
+            <GroupRemoveIcon />
+          </IconButton>
           : null}>
         <ListItemButton disableGutters sx={{ paddingTop: 0, paddingBottom: 0 }}
           onClick={() => appNavigate.family(family.family!.id!)}>

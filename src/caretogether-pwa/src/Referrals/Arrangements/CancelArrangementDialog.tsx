@@ -13,13 +13,13 @@ interface CancelArrangementDialogProps {
   onClose: () => void
 }
 
-export function CancelArrangementDialog({referralId, arrangement, onClose}: CancelArrangementDialogProps) {
+export function CancelArrangementDialog({ referralId, arrangement, onClose }: CancelArrangementDialogProps) {
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
-  
+
   const referralsModel = useReferralsModel();
   const personLookup = usePersonLookup();
-  
+
   const person = personLookup(familyId, arrangement.partneringFamilyPersonId) as Person;
 
   const [fields, setFields] = useState({
@@ -40,8 +40,8 @@ export function CancelArrangementDialog({referralId, arrangement, onClose}: Canc
             label="When was this arrangement cancelled?"
             value={cancelledAtLocal}
             disableFuture format="M/d/yyyy h:mm a"
-            onChange={(date: any) => date && setFields({ ...fields, cancelledAtLocal: date })}
-            slotProps={{ textField: { fullWidth: true, required: true, sx: {marginTop: 1}}}} />
+            onChange={(date: Date | null) => date && setFields({ ...fields, cancelledAtLocal: date })}
+            slotProps={{ textField: { fullWidth: true, required: true, sx: { marginTop: 1 } } }} />
         </Grid>
       </Grid>
     </UpdateDialog>

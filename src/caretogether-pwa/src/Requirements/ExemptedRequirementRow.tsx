@@ -21,13 +21,13 @@ export function ExemptedRequirementRow({ requirement, context }: ExemptedRequire
   const userLookup = useUserLookup();
   const permissions = useFamilyIdPermissions(
     context.kind === 'Referral' ||
-    context.kind === 'Arrangement' ||
-    context.kind === 'Family Volunteer Assignment' ||
-    context.kind === 'Individual Volunteer Assignment'
-    ? context.partneringFamilyId
-    : context.volunteerFamilyId
+      context.kind === 'Arrangement' ||
+      context.kind === 'Family Volunteer Assignment' ||
+      context.kind === 'Individual Volunteer Assignment'
+      ? context.partneringFamilyId
+      : context.volunteerFamilyId
   );
-  
+
   const dialogHandle = useDialogHandle();
 
   const canExempt = context.kind === 'Referral'
@@ -35,8 +35,8 @@ export function ExemptedRequirementRow({ requirement, context }: ExemptedRequire
     : context.kind === 'Arrangement' ||
       context.kind === 'Family Volunteer Assignment' ||
       context.kind === 'Individual Volunteer Assignment'
-    ? permissions(Permission.EditArrangementRequirementExemption)
-    : permissions(Permission.EditApprovalRequirementExemption);
+      ? permissions(Permission.EditArrangementRequirementExemption)
+      : permissions(Permission.EditApprovalRequirementExemption);
 
   const familyLookup = useFamilyLookup();
   const personLookup = usePersonLookup();
@@ -47,8 +47,8 @@ export function ExemptedRequirementRow({ requirement, context }: ExemptedRequire
     (context.kind === 'Arrangement' ||
       context.kind === 'Family Volunteer Assignment' ||
       context.kind === 'Individual Volunteer Assignment')
-    ? [context.partneringFamilyId, context.referralId, context.arrangementId]
-    : [undefined, undefined, undefined];
+      ? [context.partneringFamilyId, context.referralId, context.arrangementId]
+      : [undefined, undefined, undefined];
   const partneringFamilyInfo = familyLookup(partneringFamilyId)?.partneringFamilyInfo;
   const referral = partneringFamilyInfo?.closedReferrals?.concat(
     partneringFamilyInfo.openReferral || []).find(r => r.id === referralId);
@@ -67,7 +67,7 @@ export function ExemptedRequirementRow({ requirement, context }: ExemptedRequire
           <>
             <span>
               {isArrangementMonitoringRequirement && !requirement.dueDate &&
-                <span style={{fontWeight:'bold'}}>All&nbsp;</span>}
+                <span style={{ fontWeight: 'bold' }}>All&nbsp;</span>}
               {requirement.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               {requirement.exemptionExpiresAtUtc &&
                 <span style={{ float: 'right' }}>
@@ -75,11 +75,11 @@ export function ExemptedRequirementRow({ requirement, context }: ExemptedRequire
                 </span>}
             </span>
             {context.kind === 'Family Volunteer Assignment' &&
-              <><br/><span style={{ paddingLeft: '30px' }}>
+              <><br /><span style={{ paddingLeft: '30px' }}>
                 <FamilyName family={familyLookup(context.assignment.familyId)} />
               </span></>}
             {context.kind === 'Individual Volunteer Assignment' &&
-              <><br/><span style={{ paddingLeft: '30px' }}>
+              <><br /><span style={{ paddingLeft: '30px' }}>
                 <PersonName person={personLookup(context.assignment.familyId, context.assignment.personId)} />
               </span></>}
             <br />

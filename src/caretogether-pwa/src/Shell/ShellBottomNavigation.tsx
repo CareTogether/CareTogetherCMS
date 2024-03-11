@@ -19,7 +19,7 @@ import { Stack } from '@mui/system';
 
 export function ShellBottomNavigation() {
   const theme = useTheme();
-  
+
   const location = useLocation();
 
   const context = useLoadable(selectedLocationContextState);
@@ -34,7 +34,7 @@ export function ShellBottomNavigation() {
   ];
   const selectedLink = Math.max(links.findIndex(link => location.pathname.match(link) != null), 0);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  
+
   const flags = useFeatureFlags();
   const permissions = useGlobalPermissions();
 
@@ -42,7 +42,7 @@ export function ShellBottomNavigation() {
     <Paper elevation={3} sx={{
       position: 'fixed',
       bottom: 0, left: 0, right: 0,
-	  zIndex: 9999
+      zIndex: 9999
     }}>
       <BottomNavigation
         showLabels
@@ -73,16 +73,17 @@ export function ShellBottomNavigation() {
           '& .MuiDrawer-paper': {
             padding: 2,
             width: 200
-          }}}
+          }
+        }}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
       >
         <Stack padding={1} spacing={1}>
           <ShellContextSwitcher />
-          {flags && <List aria-label="secondary navigation" sx={{position: 'relative', top: 100, zIndex: theme.zIndex.drawer + 3}}>
+          {flags && <List aria-label="secondary navigation" sx={{ position: 'relative', top: 100, zIndex: theme.zIndex.drawer + 3 }}>
             {permissions(Permission.AccessSettingsScreen) &&
               <>
-                <Divider  />
+                <Divider />
                 <ListItemLink darkColor to={`${locationPrefix}/settings`} primary="Settings" icon={<SettingsIcon />} />
                 <ListItemLink darkColor to="http://support.caretogether.io" newTab primary="Support" icon={<SupportIcon />} />
               </>}

@@ -20,7 +20,7 @@ const phonePattern = /^\(?([0-9]{3})\)?[\u{00ad}\-.\s]?([0-9]{3})[\u{00ad}\-.\s]
 export function BulkSmsSideSheet({ selectedFamilies, onClose }: BulkSmsSideSheetProps) {
   const { organizationId, locationId } = useRecoilValue(selectedLocationContextState);
   const organizationConfiguration = useRecoilValue(organizationConfigurationQuery);
-  
+
   const familiesSelectedForSms = selectedFamilies.map(family => {
     const primaryAdult = family.family!.adults!.find(adult => adult.item1!.id === family.family!.primaryFamilyContactPersonId);
     const preferredPhone = primaryAdult?.item1?.phoneNumbers?.find(phone => phone.id === primaryAdult?.item1?.preferredPhoneNumberId);
@@ -34,7 +34,7 @@ export function BulkSmsSideSheet({ selectedFamilies, onClose }: BulkSmsSideSheet
 
   const smsSourcePhoneNumbers = organizationConfiguration?.locations?.find(loc =>
     loc.id === locationId)?.smsSourcePhoneNumbers;
-  
+
   const [selectedSourceNumber, setSelectedSourceNumber] = useState("");
 
   const [smsMessage, setSmsMessage] = useState("");
@@ -44,7 +44,7 @@ export function BulkSmsSideSheet({ selectedFamilies, onClose }: BulkSmsSideSheet
   async function sendSmsToVisibleFamilies() {
     await withBackdrop(async () => {
       const familyIds = familiesSelectedForSms.map(family => family.family!.family!.id!);
-  
+
       try {
         const sendSmsResults = await api.communications.sendSmsToFamilyPrimaryContacts(organizationId!, locationId,
           new SendSmsToFamilyPrimaryContactsRequest({
@@ -52,7 +52,7 @@ export function BulkSmsSideSheet({ selectedFamilies, onClose }: BulkSmsSideSheet
             sourceNumber: selectedSourceNumber,
             message: smsMessage
           }));
-        
+
         setSmsResults(sendSmsResults);
       } catch (error) {
         alert("An error occurred while sending those texts:\n" + JSON.stringify(error));
@@ -62,7 +62,7 @@ export function BulkSmsSideSheet({ selectedFamilies, onClose }: BulkSmsSideSheet
   }
 
   const familyLookup = useFamilyLookup();
-  
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -82,19 +82,19 @@ export function BulkSmsSideSheet({ selectedFamilies, onClose }: BulkSmsSideSheet
           labelId="sourcenumber-label" id="sourcenumber"
           value={selectedSourceNumber}
           onChange={e => setSelectedSourceNumber(e.target.value as string)}>
-            <MenuItem key="placeholder" value="" disabled>
-              Select a source number
-            </MenuItem>
-            {smsSourcePhoneNumbers?.map(smsSourcePhoneNumber =>
-              <MenuItem key={smsSourcePhoneNumber.sourcePhoneNumber} value={smsSourcePhoneNumber.sourcePhoneNumber}>
-                {smsSourcePhoneNumber.sourcePhoneNumber} - {smsSourcePhoneNumber.description}
-              </MenuItem>)}
+          <MenuItem key="placeholder" value="" disabled>
+            Select a source number
+          </MenuItem>
+          {smsSourcePhoneNumbers?.map(smsSourcePhoneNumber =>
+            <MenuItem key={smsSourcePhoneNumber.sourcePhoneNumber} value={smsSourcePhoneNumber.sourcePhoneNumber}>
+              {smsSourcePhoneNumber.sourcePhoneNumber} - {smsSourcePhoneNumber.description}
+            </MenuItem>)}
         </Select>
       </FormControl>
       <br />
       <TextField multiline maxRows={8} placeholder="Enter the SMS message to send. Remember to keep it short!"
         value={smsMessage} onChange={(event) => setSmsMessage(event.target.value)} />
-      <Button onClick={() => { setSmsMessage(""); setSmsResults(null); onClose(); } } color="secondary">
+      <Button onClick={() => { setSmsMessage(""); setSmsResults(null); onClose(); }} color="secondary">
         Cancel
       </Button>
       <Button onClick={sendSmsToVisibleFamilies} variant="contained" color="primary"

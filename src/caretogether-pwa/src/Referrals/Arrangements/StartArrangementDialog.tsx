@@ -13,13 +13,13 @@ interface StartArrangementDialogProps {
   onClose: () => void
 }
 
-export function StartArrangementDialog({referralId, arrangement, onClose}: StartArrangementDialogProps) {
+export function StartArrangementDialog({ referralId, arrangement, onClose }: StartArrangementDialogProps) {
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
-  
+
   const referralsModel = useReferralsModel();
   const personLookup = usePersonLookup();
-  
+
   const person = personLookup(familyId, arrangement.partneringFamilyPersonId) as Person;
 
   const [startedAtLocal, setStartedAtLocal] = useState(null as Date | null);
@@ -38,8 +38,8 @@ export function StartArrangementDialog({referralId, arrangement, onClose}: Start
             label="When was this arrangement started?"
             value={startedAtLocal}
             disableFuture format="M/d/yyyy h:mm a"
-            onChange={(date: any) => date && setStartedAtLocal(date)}
-            slotProps={{ textField: { fullWidth: true, required: true, sx: {marginTop: 1}}}} />
+            onChange={(date: Date | null) => date && setStartedAtLocal(date)}
+            slotProps={{ textField: { fullWidth: true, required: true, sx: { marginTop: 1 } } }} />
         </Grid>
       </Grid>
     </UpdateDialog>

@@ -9,7 +9,7 @@ interface OpenNewReferralDialogProps {
   onClose: () => void
 }
 
-export function OpenNewReferralDialog({partneringFamilyId, onClose}: OpenNewReferralDialogProps) {
+export function OpenNewReferralDialog({ partneringFamilyId, onClose }: OpenNewReferralDialogProps) {
   const referralsModel = useReferralsModel();
   const [fields, setFields] = useState({
     openedAtLocal: new Date()
@@ -31,8 +31,8 @@ export function OpenNewReferralDialog({partneringFamilyId, onClose}: OpenNewRefe
               label="When was this referral opened?"
               value={openedAtLocal}
               disableFuture format="MM/dd/yyyy"
-              onChange={(date: any) => date && setFields({...fields, openedAtLocal: date})}
-              slotProps={{ textField: { fullWidth: true, required: true, sx: {marginTop: 1}}}} />
+              onChange={(date: Date | null) => date && setFields({ ...fields, openedAtLocal: date })}
+              slotProps={{ textField: { fullWidth: true, required: true, sx: { marginTop: 1 } } }} />
           </Grid>
         </Grid>
       </form>

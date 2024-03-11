@@ -2,8 +2,8 @@ import { ApplicationInsights, ITelemetryItem } from '@microsoft/applicationinsig
 import { ReactPlugin } from '@microsoft/applicationinsights-react-js';
 import { globalMsalInstance } from './Authentication/Auth';
 
-var aiReactPlugin = new ReactPlugin();
-var appInsights = new ApplicationInsights({
+const aiReactPlugin = new ReactPlugin();
+const appInsights = new ApplicationInsights({
   config: {
     connectionString: import.meta.env.VITE_APP_APPINSIGHTS_CONNECTIONSTRING,
     enableAutoRouteTracking: true,

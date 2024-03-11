@@ -23,6 +23,7 @@ export function TabPanel(props: TabPanelProps) {
     </div>
   );
 }
+// eslint-disable-next-line react-refresh/only-export-components
 export function a11yProps(index: number) {
   return {
     id: `full-width-tab-${index}`,

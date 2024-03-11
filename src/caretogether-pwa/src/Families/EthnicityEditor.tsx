@@ -17,29 +17,29 @@ export function EthnicityEditor({ familyId, person }: PersonEditorProps) {
     <Grid container spacing={2}>
       {editor.editing
         ? <>
-            <Grid item xs={12}>
-              <FormControl required fullWidth size="small">
-                <InputLabel id="ethnicity-label">Ethnicity</InputLabel>
-                <Select
-                  labelId="ethnicity-label" id="ethnicity"
-                  value={editor.value || ''}
-                  onChange={e => editor.setValue(e.target.value as string)}>
-                    <MenuItem key="placeholder" value="" disabled>
-                      Select an ethnicity
-                    </MenuItem>
-                    {ethnicities.map(ethnicity =>
-                      <MenuItem key={ethnicity} value={ethnicity}>{ethnicity}</MenuItem>)}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12}>
-              {editor.cancelButton}
-              {editor.saveButton}
-            </Grid>
-          </>
+          <Grid item xs={12}>
+            <FormControl required fullWidth size="small">
+              <InputLabel id="ethnicity-label">Ethnicity</InputLabel>
+              <Select
+                labelId="ethnicity-label" id="ethnicity"
+                value={editor.value || ''}
+                onChange={e => editor.setValue(e.target.value as string)}>
+                <MenuItem key="placeholder" value="" disabled>
+                  Select an ethnicity
+                </MenuItem>
+                {ethnicities.map(ethnicity =>
+                  <MenuItem key={ethnicity} value={ethnicity}>{ethnicity}</MenuItem>)}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12}>
+            {editor.cancelButton}
+            {editor.saveButton}
+          </Grid>
+        </>
         : <Grid item xs={12}>
-            Ethnicity: {person.ethnicity}
-            {editor.editButton}
+          Ethnicity: {person.ethnicity}
+          {editor.editButton}
         </Grid>}
     </Grid>
   );

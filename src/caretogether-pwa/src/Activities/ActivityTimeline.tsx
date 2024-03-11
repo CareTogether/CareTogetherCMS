@@ -18,7 +18,7 @@ export function ActivityTimeline({ family }: ActivityTimelineProps) {
 
   const activities = (family.partneringFamilyInfo?.history?.slice() || []).concat(
     family.volunteerFamilyInfo?.history?.slice() || []);
-  
+
   const unmatchedNotesAsActivities = family.notes?.filter(note =>
     activities?.every(a => a.noteId !== note.id))?.map(note =>
     ({
@@ -64,41 +64,41 @@ export function ActivityTimeline({ family }: ActivityTimelineProps) {
       sx={{ padding: 0 }}>
       {allActivitiesSorted?.map((activity, i) =>
         <TimelineItem key={i}>
-          <TimelineOppositeContent sx={{display: "none"}} />
+          <TimelineOppositeContent sx={{ display: "none" }} />
           <TimelineSeparator>
-            <TimelineDot sx={{width:36, height:36, textAlign:'center', display:'block'}}>
+            <TimelineDot sx={{ width: 36, height: 36, textAlign: 'center', display: 'block' }}>
               {activity instanceof ReferralRequirementCompleted || activity instanceof ArrangementRequirementCompleted
                 ? "✔"
                 : activity instanceof ChildLocationChanged
-                ? <PersonPinCircleIcon fontSize="medium" />
-                : <EditIcon fontSize="small" />}
+                  ? <PersonPinCircleIcon fontSize="medium" />
+                  : <EditIcon fontSize="small" />}
             </TimelineDot>
             {i < allActivitiesSorted.length - 1 && <TimelineConnector />}
           </TimelineSeparator>
-          <TimelineContent style={{width:200,wordWrap:'break-word',whiteSpace:'pre-wrap'}}>
-            <Box sx={{color: 'text.disabled', margin: 0, padding: 0}}>
-              <span style={{marginRight: 16}}>{format(activity.activityTimestampUtc!, "M/d/yy h:mm a")}</span>
+          <TimelineContent style={{ width: 200, wordWrap: 'break-word', whiteSpace: 'pre-wrap' }}>
+            <Box sx={{ color: 'text.disabled', margin: 0, padding: 0 }}>
+              <span style={{ marginRight: 16 }}>{format(activity.activityTimestampUtc!, "M/d/yy h:mm a")}</span>
               <PersonName person={userLookup(activity.userId)} />
             </Box>
             {activity instanceof ReferralRequirementCompleted || activity instanceof ArrangementRequirementCompleted
               ? activity.requirementName
               : activity instanceof ChildLocationChanged
-              ? <>
+                ? <>
                   <PersonName person={arrangementPartneringPerson(activity.arrangementId)} />
                   <span> &rarr; </span><PersonName
                     person={personLookup(activity.childLocationFamilyId, activity.childLocationReceivingAdultId)} />
                   <span> </span>({activity.plan === ChildLocationPlan.DaytimeChildCare
                     ? "daytime"
                     : activity.plan === ChildLocationPlan.OvernightHousing
-                    ? "overnight"
-                    : "parent"})
-                  
+                      ? "overnight"
+                      : "parent"})
+
                 </>
-              : activity instanceof ReferralOpened
-              ? "Referral opened"
-              : null}
+                : activity instanceof ReferralOpened
+                  ? "Referral opened"
+                  : null}
             {activity.uploadedDocumentId &&
-              <Box sx={{margin: 0, padding: 0}}>
+              <Box sx={{ margin: 0, padding: 0 }}>
                 📃 {documentLookup(activity.uploadedDocumentId)?.uploadedFileName}
               </Box>}
             {activity.noteId && <NoteCard familyId={family.family!.id!} note={noteLookup(activity.noteId)!} />}

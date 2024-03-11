@@ -32,7 +32,7 @@ export function EditChildDialog({ handle, child, familyAdults, custodialRelation
   const deleteDialogHandle = useDialogHandle();
 
   const permissions = useFamilyIdPermissions(familyId!);
-  
+
   return (
     <Dialog open={handle.open} onClose={(event: object | undefined, reason: string) => isBackdropClick(reason) ? handle.closeDialog : ({})}
       fullWidth scroll='body' aria-labelledby="edit-child-title">
@@ -48,7 +48,7 @@ export function EditChildDialog({ handle, child, familyAdults, custodialRelation
         {familyAdults.map(adult =>
           <ChildCustodyRelationshipEditor key={adult.id!}
             adult={adult} relationship={custodialRelationships?.find(r => r.personId === adult.id)}
-            {...personEditorProps } />)}
+            {...personEditorProps} />)}
         {permissions(Permission.ViewPersonNotes) && <NotesEditor {...personEditorProps} />}
         {permissions(Permission.ViewPersonConcerns) && <ConcernsEditor {...personEditorProps} />}
       </DialogContent>

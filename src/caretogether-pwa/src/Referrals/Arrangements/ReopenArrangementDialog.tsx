@@ -12,16 +12,16 @@ interface ReopenArrangementDialogProps {
   onClose: () => void
 }
 
-export function ReopenArrangementDialog({referralId, arrangement, onClose}: ReopenArrangementDialogProps) {
+export function ReopenArrangementDialog({ referralId, arrangement, onClose }: ReopenArrangementDialogProps) {
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
-  
+
   const referralsModel = useReferralsModel();
   const directoryModel = useDirectoryModel();
   const personLookup = usePersonLookup();
-  
+
   const person = personLookup(familyId, arrangement.partneringFamilyPersonId) as Person;
-  
+
   const [notes, setNotes] = useState("");
 
   async function save() {

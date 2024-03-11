@@ -15,7 +15,7 @@ export function ContactDisplay({ person }: ContactDisplayProps) {
       {preferredPhoneNumber && <IconRow icon='📞'>{preferredPhoneNumber.number}</IconRow>}
       {preferredEmailAddress && <IconRow icon='📧'>{preferredEmailAddress.address}</IconRow>}
       {currentAddress && <IconRow icon='🏠'>
-        <p style={{display: 'inline-block', margin: 0}}>
+        <p style={{ display: 'inline-block', margin: 0 }}>
           {currentAddress.line1}<br />
           {currentAddress.line2 && <>{currentAddress.line2}<br /></>}
           {currentAddress.city},&nbsp;{currentAddress.state}&nbsp;{currentAddress.postalCode}

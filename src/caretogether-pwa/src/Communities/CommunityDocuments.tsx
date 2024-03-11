@@ -17,7 +17,7 @@ interface CommunityDocumentsProps {
 export function CommunityDocuments({ communityInfo }: CommunityDocumentsProps) {
   const permissions = useCommunityPermissions(communityInfo);
   const community = communityInfo.community!;
-  
+
   const { organizationId, locationId } = useRecoilValue(selectedLocationContextState);
 
   const userLookup = useUserLookup();
@@ -52,35 +52,35 @@ export function CommunityDocuments({ communityInfo }: CommunityDocumentsProps) {
   const theme = useTheme();
 
   return <List sx={{ '& .MuiListItemIcon-root': { minWidth: 36 } }}>
-    {documents.map(doc => 
+    {documents.map(doc =>
       <ListItem key={doc.document.uploadedDocumentId} disablePadding
         secondaryAction={permissions(Permission.DeleteCommunityDocuments)
           ? <IconButton edge="end" aria-label="delete"
-              color='primary'
-              onClick={() => deleteDocument(doc.document)}>
-              <DeleteIcon />
-            </IconButton>
+            color='primary'
+            onClick={() => deleteDocument(doc.document)}>
+            <DeleteIcon />
+          </IconButton>
           : null}>
         {permissions(Permission.ReadCommunityDocuments)
           ? <ListItemButton disableGutters sx={{ paddingTop: 0, paddingBottom: 0 }}
-              onClick={() => downloadDocument(doc.document)}>
-              <ListItemIcon>
-                <InsertDriveFileOutlinedIcon color='primary' />
-              </ListItemIcon>
-              <ListItemText
-                primary={doc.document.uploadedFileName} primaryTypographyProps={{ color: theme.palette.primary.main }}
-                secondary={`${format(doc.document.timestampUtc!, "PPp")} — ${personNameString(doc.uploader)}`}>
-              </ListItemText>
-            </ListItemButton>
+            onClick={() => downloadDocument(doc.document)}>
+            <ListItemIcon>
+              <InsertDriveFileOutlinedIcon color='primary' />
+            </ListItemIcon>
+            <ListItemText
+              primary={doc.document.uploadedFileName} primaryTypographyProps={{ color: theme.palette.primary.main }}
+              secondary={`${format(doc.document.timestampUtc!, "PPp")} — ${personNameString(doc.uploader)}`}>
+            </ListItemText>
+          </ListItemButton>
           : <>
-              <ListItemIcon>
-                <InsertDriveFileOutlinedIcon />
-              </ListItemIcon>
-              <ListItemText
-                primary={doc.document.uploadedFileName}
-                secondary={`${format(doc.document.timestampUtc!, "PPp")} — ${personNameString(doc.uploader)}`}>
-              </ListItemText>
-            </>}
+            <ListItemIcon>
+              <InsertDriveFileOutlinedIcon />
+            </ListItemIcon>
+            <ListItemText
+              primary={doc.document.uploadedFileName}
+              secondary={`${format(doc.document.timestampUtc!, "PPp")} — ${personNameString(doc.uploader)}`}>
+            </ListItemText>
+          </>}
       </ListItem>)}
   </List>;
 }

@@ -66,23 +66,23 @@ export function ManageUserDrawer({ onClose, adult, user }: ManageUserDrawerProps
 
   const currentSorted = user?.locationRoles?.slice().sort() || [];
   const rolesChanged = selectedRoles.length !== currentSorted.length ||
-    selectedRoles.slice().sort().some(function(value, index) {
+    selectedRoles.slice().sort().some(function (value, index) {
       return value !== currentSorted[index];
     });
 
   const unsavedChanges = rolesChanged;
 
-  const savePersonRoles = useRecoilCallback(({snapshot, set}) => {
+  const savePersonRoles = useRecoilCallback(({ set }) => {
     const asyncCallback = async () => {
       const updatedAggregate = await api.users.changePersonRoles(
         organizationId, locationId, adult.id, selectedRoles);
 
-      set(visibleAggregatesState, current => 
+      set(visibleAggregatesState, current =>
         current.some(currentEntry => currentEntry.id === updatedAggregate.id && currentEntry.constructor === updatedAggregate.constructor)
-        ? current.map(currentEntry => currentEntry.id === updatedAggregate.id && currentEntry.constructor === updatedAggregate.constructor
-          ? updatedAggregate
-          : currentEntry)
-        : current.concat(updatedAggregate));
+          ? current.map(currentEntry => currentEntry.id === updatedAggregate.id && currentEntry.constructor === updatedAggregate.constructor
+            ? updatedAggregate
+            : currentEntry)
+          : current.concat(updatedAggregate));
     };
     return asyncCallback;
   });
@@ -112,24 +112,24 @@ export function ManageUserDrawer({ onClose, adult, user }: ManageUserDrawerProps
         <h3>Manage User: {personNameString(adult)}</h3>
       </Grid>
       <Grid item xs={12}>
-        { user?.userId
-          ? <p style={{color: theme.palette.info.main}}>
-              <Icon color='info' sx={{verticalAlign: 'sub', marginRight: 1}}>
-                <AccountCircle />
-              </Icon>
-              User account activated
-            </p>
-          : <p style={{color: theme.palette.grey[500]}}>
-              <Icon color='disabled' sx={{verticalAlign: 'sub', marginRight: 1}}>
-                <NoAccounts />
-              </Icon>
-              Account not yet created
-              <Button variant='contained' color='primary' endIcon={<PersonAdd />}
-                onClick={invitePersonUser}
-                sx={{marginLeft: 2}}>
-                Invite
-              </Button>
-            </p>}
+        {user?.userId
+          ? <p style={{ color: theme.palette.info.main }}>
+            <Icon color='info' sx={{ verticalAlign: 'sub', marginRight: 1 }}>
+              <AccountCircle />
+            </Icon>
+            User account activated
+          </p>
+          : <p style={{ color: theme.palette.grey[500] }}>
+            <Icon color='disabled' sx={{ verticalAlign: 'sub', marginRight: 1 }}>
+              <NoAccounts />
+            </Icon>
+            Account not yet created
+            <Button variant='contained' color='primary' endIcon={<PersonAdd />}
+              onClick={invitePersonUser}
+              sx={{ marginLeft: 2 }}>
+              Invite
+            </Button>
+          </p>}
         <Divider />
       </Grid>
       <Grid item xs={12}>

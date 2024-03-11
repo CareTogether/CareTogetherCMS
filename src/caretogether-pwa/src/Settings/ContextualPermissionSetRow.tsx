@@ -7,7 +7,7 @@ import { PermissionContextCell } from "./PermissionContextCell";
 
 function spacesBeforeCapitalLetters(value: string) {
   let result = "";
-  for (let c of value) {
+  for (const c of value) {
     result += (result.length > 0 && c.toUpperCase() === c)
       ? " " + c
       : c;
@@ -46,7 +46,7 @@ export function ContextualPermissionSetRow({
       permissions: permissionSet.permissions
     });
   }
-  
+
   function removePermission(permission: Permission) {
     onUpdate({
       context: permissionSet.context,
@@ -88,7 +88,7 @@ export function ContextualPermissionSetRow({
                 <ListItemText>{spacesBeforeCapitalLetters(Permission[permission])}</ListItemText>
               </ListItem>);
             // Group similar permission items
-            return i > 0 && Math.floor((all[i-1] as number)/100) < Math.floor((permission as number)/100)
+            return i > 0 && Math.floor((all[i - 1] as number) / 100) < Math.floor((permission as number) / 100)
               ? [<Divider key={i} />, permissionListItem]
               : permissionListItem;
           })}
@@ -112,7 +112,7 @@ export function ContextualPermissionSetRow({
                   {spacesBeforeCapitalLetters(permission[0])}
                 </MenuItem>);
               // Group similar permission items
-              return i > 0 && Math.floor((all[i-1][1] as number)/100) < Math.floor((permission[1] as number)/100)
+              return i > 0 && Math.floor((all[i - 1][1] as number) / 100) < Math.floor((permission[1] as number) / 100)
                 ? [<Divider />, permissionMenuItem]
                 : permissionMenuItem;
             })}

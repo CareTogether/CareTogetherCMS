@@ -9,7 +9,7 @@ interface DeletePersonDialogProps {
   handle: DialogHandle
 }
 
-export function DeletePersonDialog({familyId, person, handle}: DeletePersonDialogProps) {
+export function DeletePersonDialog({ familyId, person, handle }: DeletePersonDialogProps) {
   const directoryModel = useDirectoryModel();
 
   async function save() {
