@@ -41,7 +41,15 @@ const volunteerFamilyRoleFiltersState = atom({
         ((policy.volunteerPolicy?.volunteerFamilyRoles &&
           Object.entries(policy.volunteerPolicy?.volunteerFamilyRoles)) || []).map(([key]) => ({
             roleName: key,
-            selected: [RoleApprovalStatus.Prospective, RoleApprovalStatus.Approved, RoleApprovalStatus.Onboarded, RoleApprovalStatus.Expired, null]
+            selected: [
+              RoleApprovalStatus.Prospective,
+              RoleApprovalStatus.Approved,
+              RoleApprovalStatus.Onboarded,
+              RoleApprovalStatus.Expired,
+              RoleApprovalStatus.Inactive,
+              RoleApprovalStatus.Denied,
+              null
+            ]
           }));
       return roleFilters;
     }
@@ -58,7 +66,15 @@ const volunteerRoleFiltersState = atom({
         ((policy.volunteerPolicy?.volunteerRoles &&
           Object.entries(policy.volunteerPolicy?.volunteerRoles)) || []).map(([key]) => ({
             roleName: key,
-            selected: [RoleApprovalStatus.Prospective, RoleApprovalStatus.Approved, RoleApprovalStatus.Onboarded, RoleApprovalStatus.Expired, null]
+            selected: [
+              RoleApprovalStatus.Prospective,
+              RoleApprovalStatus.Approved,
+              RoleApprovalStatus.Onboarded,
+              RoleApprovalStatus.Expired,
+              RoleApprovalStatus.Inactive,
+              RoleApprovalStatus.Denied,
+              null
+            ]
           }));
       return roleFilters;
     }
@@ -209,10 +225,11 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   const [filterText, setFilterText] = useState("");
 
   // Filter volunteer families by name and by applicable roles.
-  const filteredVolunteerFamilies = volunteerFamilies.filter(family => (
+  const filteredVolunteerFamilies = volunteerFamilies.filter(family => /* Filter by name */(
     filterText.length === 0 ||
     family.family?.adults?.some(adult => simplify(`${adult.item1?.firstName} ${adult.item1?.lastName}`).includes(filterText.toLowerCase())) ||
-    family.family?.children?.some(child => simplify(`${child?.firstName} ${child?.lastName}`).includes(filterText.toLowerCase()))) && (
+    family.family?.children?.some(child => simplify(`${child?.firstName} ${child?.lastName}`).includes(filterText.toLowerCase()))) &&
+    /* Filter by roles & approval status */ (
       volunteerFamilyRoleFilters.every(roleFilter => roleFilter.selected.indexOf(null) > -1 ||
         roleFilter.selected.indexOf(
           family.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.roleName]?.currentStatus || null) > -1) &&
