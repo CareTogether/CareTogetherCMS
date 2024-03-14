@@ -8,6 +8,7 @@ import { DialogHandle } from '../../Hooks/useDialogHandle';
 import { useReferralsModel } from '../../Model/ReferralsModel';
 import { usePersonAndFamilyLookup } from '../../Model/DirectoryModel';
 import { visibleFamiliesQuery } from '../../Model/Data';
+import { isBackdropClick } from '../../Utilities/handleBackdropClick';
 
 interface AssignArrangementFunctionDialogProps {
   handle: DialogHandle
@@ -129,9 +130,9 @@ export function AssignArrangementFunctionDialog({
   }
 
   return (
-    <Dialog maxWidth={"xs"} fullWidth={true} open={handle.open} onClose={handle.closeDialog} key={handle.key}
-      aria-labelledby="assign-volunteer-title" sx={{ '& .MuiDialog-paperFullWidth': { overflowY: 'visible' } }} >
-      <DialogTitle id="assign-volunteer-title" sx={{ paddingBottom: "20px" }}>
+    <Dialog maxWidth={"xs"} fullWidth={true} open={handle.open} onClose={(event: object | undefined, reason: string) => isBackdropClick(reason) ? handle.closeDialog : ({})} key={handle.key}
+      aria-labelledby="assign-volunteer-title" sx={{'& .MuiDialog-paperFullWidth': {overflowY: 'visible'}}} >
+      <DialogTitle id="assign-volunteer-title" sx={{paddingBottom:"20px"}}>
         Assign {arrangementFunction.functionName}
       </DialogTitle>
       <DialogContent sx={{ '& .MuiDialogContent-root': { overflowY: 'visible' } }}>

@@ -38,6 +38,7 @@ import { VolunteerRoleApprovalStatusChip } from '../Volunteers/VolunteerRoleAppr
 import { FamilyCustomField } from './FamilyCustomField';
 import { useFilterMenu } from '../Generic/useFilterMenu';
 import { FilterMenu } from '../Generic/FilterMenu';
+import { isBackdropClick } from '../Utilities/handleBackdropClick';
 
 const sortArrangementsByStartDateDescThenCreateDateDesc = (a: Arrangement, b: Arrangement) => {
   return ((b.startedAtUtc ?? new Date()).getTime() - (a.startedAtUtc ?? new Date()).getTime()) ||
@@ -210,8 +211,13 @@ export function FamilyScreen() {
         </Menu>
         {uploadDocumentDialogOpen && <UploadFamilyDocumentsDialog family={family}
           onClose={() => setUploadDocumentDialogOpen(false)} />}
-        {addAdultDialogOpen && <AddAdultDialog onClose={() => setAddAdultDialogOpen(false)} />}
-        {addChildDialogOpen && <AddChildDialog onClose={() => setAddChildDialogOpen(false)} />}
+		{addAdultDialogOpen && <AddAdultDialog
+			onClose={(event: object | undefined, reason: string) => !isBackdropClick(reason) ? setAddAdultDialogOpen(false) : ({})}
+		></AddAdultDialog>
+		}
+        {addChildDialogOpen && <AddChildDialog 
+			onClose={(event: object | undefined, reason: string) => !isBackdropClick(reason) ? setAddChildDialogOpen(false) : ({})}
+		/>}
         {addNoteDialogOpen && <AddEditNoteDialog familyId={family.family!.id!} onClose={() => setAddNoteDialogOpen(false)} />}
         {(removeRoleParameter && <RemoveFamilyRoleDialog volunteerFamilyId={familyId} role={removeRoleParameter.role}
           onClose={() => setRemoveRoleParameter(null)} />) || null}

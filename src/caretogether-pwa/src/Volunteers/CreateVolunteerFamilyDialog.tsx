@@ -9,6 +9,7 @@ import { adultFamilyRelationshipsData, ethnicitiesData } from '../Model/Configur
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { subYears } from 'date-fns';
 import { AddressFormFields } from '../Families/AddressEditor';
+import { isBackdropClick } from '../Utilities/handleBackdropClick';
 
 interface CreateVolunteerFamilyDialogProps {
   onClose: (volunteerFamilyId?: string) => void
@@ -72,7 +73,7 @@ export function CreateVolunteerFamilyDialog({ onClose }: CreateVolunteerFamilyDi
   }
 
   return (
-    <Dialog open={true} onClose={() => onClose()} scroll='body' aria-labelledby="create-family-title">
+    <Dialog open={true} onClose={(event: object | undefined, reason: string) => isBackdropClick(reason) ? onClose() : ({})} scroll='body' aria-labelledby="create-family-title">
       <DialogTitle id="create-family-title">
         Create Volunteer Family - First Adult
       </DialogTitle>
