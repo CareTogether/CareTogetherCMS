@@ -5576,12 +5576,12 @@ export interface IDateRangeOfRoleApprovalStatus {
 }
 
 export enum RoleApprovalStatus {
-    Prospective = 0,
-    Expired = 1,
-    Approved = 2,
-    Onboarded = 3,
-    Inactive = 4,
-    Denied = 5,
+    Prospective = 1,
+    Expired = 2,
+    Approved = 3,
+    Onboarded = 4,
+    Inactive = 5,
+    Denied = 6,
 }
 
 export class FamilyRoleVersionApprovalStatus implements IFamilyRoleVersionApprovalStatus {
