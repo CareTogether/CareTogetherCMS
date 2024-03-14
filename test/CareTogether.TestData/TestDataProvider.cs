@@ -36,7 +36,7 @@ namespace CareTogether.TestData
         static DateTime ApprovalsMonth(int day, int hour, int minute, int second) => DateOf(-2, day, hour, minute, second);
         static DateTime SetupMonth(int day) => DateOf(-3, day);
         static DateTime SetupMonth(int day, int hour, int minute, int second) => DateOf(-3, day, hour, minute, second);
-        static Age YearsOld(int years) => new ExactAge(DateTime.UtcNow.AddYears(years));
+        static Age YearsOld(int years) => new ExactAge(DateTime.UtcNow.AddYears(-1 * years));
 
 
         /* Families
