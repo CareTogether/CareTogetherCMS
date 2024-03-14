@@ -41,7 +41,15 @@ const volunteerFamilyRoleFiltersState = atom({
         ((policy.volunteerPolicy?.volunteerFamilyRoles &&
           Object.entries(policy.volunteerPolicy?.volunteerFamilyRoles)) || []).map(([key]) => ({
             roleName: key,
-            selected: [RoleApprovalStatus.Prospective, RoleApprovalStatus.Approved, RoleApprovalStatus.Onboarded, null]
+            selected: [
+              RoleApprovalStatus.Prospective,
+              RoleApprovalStatus.Approved,
+              RoleApprovalStatus.Onboarded,
+              RoleApprovalStatus.Expired,
+              RoleApprovalStatus.Inactive,
+              RoleApprovalStatus.Denied,
+              null
+            ]
           }));
       return roleFilters;
     }
@@ -58,7 +66,15 @@ const volunteerRoleFiltersState = atom({
         ((policy.volunteerPolicy?.volunteerRoles &&
           Object.entries(policy.volunteerPolicy?.volunteerRoles)) || []).map(([key]) => ({
             roleName: key,
-            selected: [RoleApprovalStatus.Prospective, RoleApprovalStatus.Approved, RoleApprovalStatus.Onboarded, null]
+            selected: [
+              RoleApprovalStatus.Prospective,
+              RoleApprovalStatus.Approved,
+              RoleApprovalStatus.Onboarded,
+              RoleApprovalStatus.Expired,
+              RoleApprovalStatus.Inactive,
+              RoleApprovalStatus.Denied,
+              null
+            ]
           }));
       return roleFilters;
     }
@@ -75,7 +91,10 @@ function RoleHeaderCell({ roleFilter, setSelected }: RoleHeaderCellProps) {
     { key: "Not Applied", value: null },
     { key: RoleApprovalStatus[RoleApprovalStatus.Prospective], value: RoleApprovalStatus.Prospective },
     { key: RoleApprovalStatus[RoleApprovalStatus.Approved], value: RoleApprovalStatus.Approved },
-    { key: RoleApprovalStatus[RoleApprovalStatus.Onboarded], value: RoleApprovalStatus.Onboarded }
+    { key: RoleApprovalStatus[RoleApprovalStatus.Onboarded], value: RoleApprovalStatus.Onboarded },
+    { key: RoleApprovalStatus[RoleApprovalStatus.Expired], value: RoleApprovalStatus.Expired },
+    { key: RoleApprovalStatus[RoleApprovalStatus.Inactive], value: RoleApprovalStatus.Inactive },
+    { key: RoleApprovalStatus[RoleApprovalStatus.Denied], value: RoleApprovalStatus.Denied }
   ];
 
   const handleChange = (event: SelectChangeEvent<string[]>) => {
@@ -111,7 +130,7 @@ function RoleHeaderCell({ roleFilter, setSelected }: RoleHeaderCellProps) {
 }
 
 interface CombinedApprovalStatusProps {
-  summary: { Prospective: number, Approved: number, Onboarded: number }
+  summary: { Prospective: number, Approved: number, Onboarded: number, Expired: number, Inactive: number, Denied: number }
 }
 function CombinedApprovalStatus(props: CombinedApprovalStatusProps) {
   const { summary } = props;
@@ -119,6 +138,9 @@ function CombinedApprovalStatus(props: CombinedApprovalStatusProps) {
   summary.Onboarded && outputs.push(`${summary.Onboarded} onboarded`);
   summary.Approved && outputs.push(`${summary.Approved} approved`);
   summary.Prospective && outputs.push(`${summary.Prospective} prospective`);
+  summary.Expired && outputs.push(`${summary.Expired} expired`);
+  summary.Inactive && outputs.push(`${summary.Inactive} inactive`);
+  summary.Denied && outputs.push(`${summary.Denied} denied`);
   return (
     <span>{outputs.join(", ")}</span>
   );
@@ -169,14 +191,14 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 
   const [volunteerFamilyRoleFilters, setVolunteerFamilyRoleFilters] = useRecoilState(volunteerFamilyRoleFiltersState);
   const [volunteerRoleFilters, setVolunteerRoleFilters] = useRecoilState(volunteerRoleFiltersState);
-  function toValue(selection: 'Not Applied' | 'Prospective' | 'Approved' | 'Onboarded') {
+  function toValue(selection: 'Not Applied' | 'Prospective' | 'Approved' | 'Onboarded' | 'Expired' | 'Inactive' | 'Denied') {
     return selection === 'Not Applied' ? null : RoleApprovalStatus[selection];
   }
   function changeVolunteerFamilyRoleFilterSelection(roleFilter: RoleFilter, selected: string | string[]) {
     setUncheckedFamilies([]);
     const selectedValues = typeof selected === 'string'
-      ? [toValue(selected as 'Not Applied' | 'Prospective' | 'Approved' | 'Onboarded')]
-      : selected.map(x => toValue(x as 'Not Applied' | 'Prospective' | 'Approved' | 'Onboarded'));
+      ? [toValue(selected as 'Not Applied' | 'Prospective' | 'Approved' | 'Onboarded' | 'Expired' | 'Inactive' | 'Denied')]
+      : selected.map(x => toValue(x as 'Not Applied' | 'Prospective' | 'Approved' | 'Onboarded' | 'Expired' | 'Inactive' | 'Denied'));
     const updatedFilters = volunteerFamilyRoleFilters.map(value =>
       value.roleName === roleFilter.roleName
         ? { roleName: value.roleName, selected: selectedValues }
@@ -186,8 +208,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   function changeVolunteerRoleFilterSelection(roleFilter: RoleFilter, selected: string | string[]) {
     setUncheckedFamilies([]);
     const selectedValues = typeof selected === 'string'
-      ? [toValue(selected as 'Not Applied' | 'Prospective' | 'Approved' | 'Onboarded')]
-      : selected.map(x => toValue(x as 'Not Applied' | 'Prospective' | 'Approved' | 'Onboarded'));
+      ? [toValue(selected as 'Not Applied' | 'Prospective' | 'Approved' | 'Onboarded' | 'Expired' | 'Inactive' | 'Denied')]
+      : selected.map(x => toValue(x as 'Not Applied' | 'Prospective' | 'Approved' | 'Onboarded' | 'Expired' | 'Inactive' | 'Denied'));
     const updatedFilters = volunteerRoleFilters.map(value =>
       value.roleName === roleFilter.roleName
         ? { roleName: value.roleName, selected: selectedValues }
@@ -203,10 +225,11 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   const [filterText, setFilterText] = useState("");
 
   // Filter volunteer families by name and by applicable roles.
-  const filteredVolunteerFamilies = volunteerFamilies.filter(family => (
+  const filteredVolunteerFamilies = volunteerFamilies.filter(family => /* Filter by name */(
     filterText.length === 0 ||
     family.family?.adults?.some(adult => simplify(`${adult.item1?.firstName} ${adult.item1?.lastName}`).includes(filterText.toLowerCase())) ||
-    family.family?.children?.some(child => simplify(`${child?.firstName} ${child?.lastName}`).includes(filterText.toLowerCase()))) && (
+    family.family?.children?.some(child => simplify(`${child?.firstName} ${child?.lastName}`).includes(filterText.toLowerCase()))) &&
+    /* Filter by roles & approval status */ (
       volunteerFamilyRoleFilters.every(roleFilter => roleFilter.selected.indexOf(null) > -1 ||
         roleFilter.selected.indexOf(
           family.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.roleName]?.currentStatus || null) > -1) &&
@@ -365,24 +388,30 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                               Object.entries(volunteerFamily.volunteerFamilyInfo?.individualVolunteers).map(x => x[1]).flatMap(x =>
                                 (x.approvalStatusByRole && Object.entries(x.approvalStatusByRole).map(([role, approvals]) =>
                                   (roleFilter.roleName !== role ||
-                                    typeof approvals.currentStatus === 'undefined' ||
-                                    approvals.currentStatus === RoleApprovalStatus.Denied ||
-                                    approvals.currentStatus === RoleApprovalStatus.Expired ||
-                                    approvals.currentStatus === RoleApprovalStatus.Inactive)
-                                    ? { Prospective: 0, Approved: 0, Onboarded: 0 }
-                                    : approvals.currentStatus === RoleApprovalStatus.Onboarded
-                                      ? { Prospective: 0, Approved: 0, Onboarded: 1 }
-                                      : approvals.currentStatus === RoleApprovalStatus.Approved
-                                        ? { Prospective: 0, Approved: 1, Onboarded: 0 }
-                                        : approvals.currentStatus === RoleApprovalStatus.Prospective
-                                          ? { Prospective: 1, Approved: 0, Onboarded: 0 }
-                                          : { Prospective: 0, Approved: 0, Onboarded: 0 })) || [])) || []).reduce((sum, x) =>
-                                          ({
-                                            Prospective: sum!.Prospective + x!.Prospective,
-                                            Approved: sum!.Approved + x!.Approved,
-                                            Onboarded: sum!.Onboarded + x!.Onboarded
-                                          }),
-                                            { Prospective: 0, Approved: 0, Onboarded: 0 })} />
+                                    typeof approvals.currentStatus === 'undefined')
+                                    ? { Prospective: 0, Approved: 0, Onboarded: 0, Expired: 0, Inactive: 0, Denied: 0 }
+                                    : approvals.currentStatus === RoleApprovalStatus.Denied
+                                      ? { Prospective: 0, Approved: 0, Onboarded: 0, Expired: 0, Inactive: 0, Denied: 1 }
+                                      : approvals.currentStatus === RoleApprovalStatus.Inactive
+                                        ? { Prospective: 0, Approved: 0, Onboarded: 0, Expired: 0, Inactive: 1, Denied: 0 }
+                                        : approvals.currentStatus === RoleApprovalStatus.Expired
+                                          ? { Prospective: 0, Approved: 0, Onboarded: 0, Expired: 1, Inactive: 0, Denied: 0 }
+                                          : approvals.currentStatus === RoleApprovalStatus.Onboarded
+                                            ? { Prospective: 0, Approved: 0, Onboarded: 1, Expired: 0, Inactive: 0, Denied: 0 }
+                                            : approvals.currentStatus === RoleApprovalStatus.Approved
+                                              ? { Prospective: 0, Approved: 1, Onboarded: 0, Expired: 0, Inactive: 0, Denied: 0 }
+                                              : approvals.currentStatus === RoleApprovalStatus.Prospective
+                                                ? { Prospective: 1, Approved: 0, Onboarded: 0, Expired: 0, Inactive: 0, Denied: 0 }
+                                                : { Prospective: 0, Approved: 0, Onboarded: 0, Expired: 0, Inactive: 0, Denied: 0 })) || [])) || []).reduce((sum, x) =>
+                                                ({
+                                                  Prospective: sum!.Prospective + x!.Prospective,
+                                                  Approved: sum!.Approved + x!.Approved,
+                                                  Onboarded: sum!.Onboarded + x!.Onboarded,
+                                                  Expired: sum!.Expired + x!.Expired,
+                                                  Inactive: sum!.Inactive + x!.Inactive,
+                                                  Denied: sum!.Denied + x!.Denied
+                                                }),
+                                                  { Prospective: 0, Approved: 0, Onboarded: 0, Expired: 0, Inactive: 0, Denied: 0 })} />
                         </TableCell>))}
                     </TableRow>
                     {expandedView && volunteerFamily.family?.adults?.map(adult => adult.item1 && adult.item1.active && (

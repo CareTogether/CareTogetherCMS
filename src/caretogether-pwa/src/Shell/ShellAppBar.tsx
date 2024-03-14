@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { AppBar, Box, IconButton, Skeleton, Toolbar, Typography, useMediaQuery, useTheme } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { ShellContextSwitcher } from './ShellContextSwitcher';
 import { screenTitleState } from './ShellScreenTitle';
 import { useRecoilValue } from 'recoil';
+import { MenuOpen } from '@mui/icons-material';
 
 interface ShellAppBarProps {
   menuDrawerOpen: boolean
@@ -37,7 +37,7 @@ export function ShellAppBar({ menuDrawerOpen, setMenuDrawerOpen, drawerWidth }: 
               sx={{ float: 'right' }}
               onClick={() => setMenuDrawerOpen(!menuDrawerOpen)}
             >
-              <ChevronLeftIcon />
+              <MenuOpen />
             </IconButton>
           </Box>
           : <IconButton
