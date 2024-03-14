@@ -1,5 +1,6 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { useBackdrop } from '../Hooks/useBackdrop';
+import { handleBackdropClick } from '../Utilities/handleBackdropClick';
 
 type UpdateDialogProps = {
   title: string
@@ -33,8 +34,9 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
       onClose();
     });
   }
+
   return (
-    <Dialog fullWidth open={isOpen} onClose={onClose} scroll='body' aria-labelledby="update-dialog-title">
+    <Dialog fullWidth open={isOpen} onClose={(event, reason) => handleBackdropClick(onClose, event, reason)} scroll='body' aria-labelledby="update-dialog-title">
       <DialogTitle id="update-dialog-title">
         {title}
       </DialogTitle>

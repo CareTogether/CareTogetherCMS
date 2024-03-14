@@ -13,7 +13,7 @@ import { visibleFamiliesQuery } from '../Model/Data';
 import { AddressFormFields } from './AddressEditor';
 
 interface AddAdultDialogProps {
-  onClose: () => void
+  onClose: (event: object | undefined, reason: string) => void
 }
 
 function optional(arg: string) {
@@ -70,8 +70,8 @@ export function AddAdultDialog({ onClose }: AddAdultDialogProps) {
           address == null ? null : new Address({ ...address, id: crypto.randomUUID() }),
           optional(phoneNumber), phoneType, optional(emailAddress), emailType,
           (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
-        //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
-        onClose();
+          //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
+        onClose({}, ``);
       }
     });
   }

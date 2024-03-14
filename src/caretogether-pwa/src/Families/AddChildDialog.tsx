@@ -12,7 +12,7 @@ import { subYears } from 'date-fns';
 import { visibleFamiliesQuery } from '../Model/Data';
 
 interface AddChildDialogProps {
-  onClose: () => void
+  onClose: (event: object | undefined, reason: string) => void
 }
 
 export function AddChildDialog({ onClose }: AddChildDialogProps) {
@@ -59,7 +59,7 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
           }),
           (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
         //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
-        onClose();
+        onClose({},``);
       }
     });
   }

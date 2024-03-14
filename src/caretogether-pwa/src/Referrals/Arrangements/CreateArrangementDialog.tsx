@@ -8,6 +8,7 @@ import { useBackdrop } from '../../Hooks/useBackdrop';
 import { useReferralsModel } from '../../Model/ReferralsModel';
 import { visibleFamiliesQuery } from '../../Model/Data';
 import { locationConfigurationQuery } from '../../Model/ConfigurationModel';
+import { isBackdropClick } from '../../Utilities/handleBackdropClick';
 
 interface CreateArrangementDialogProps {
   referralId: string,
@@ -57,7 +58,7 @@ export function CreateArrangementDialog({ referralId, arrangementPolicy, onClose
   }
 
   return (
-    <Dialog open={true} onClose={onClose} scroll='body' aria-labelledby="create-arrangement-title">
+    <Dialog open={true} onClose={(event: object | undefined, reason: string) => isBackdropClick(reason) ? onClose : ({})} scroll='body' aria-labelledby="create-arrangement-title">
       <DialogTitle id="create-arrangement-title">
         Create {arrangementPolicy.arrangementType}
       </DialogTitle>

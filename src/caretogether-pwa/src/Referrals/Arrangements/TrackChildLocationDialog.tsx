@@ -25,6 +25,7 @@ import { useRecoilValue } from 'recoil';
 import { policyData } from '../../Model/ConfigurationModel';
 import { format } from 'date-fns';
 import { a11yProps, TabPanel } from '../../Generic/TabPanel';
+import { isBackdropClick } from '../../Utilities/handleBackdropClick';
 
 interface ChildLocationTimelineProps {
   partneringFamily: CombinedFamilyInfo,
@@ -250,7 +251,7 @@ export function TrackChildLocationDialog({ partneringFamily, referralId, arrange
   }
 
   return (
-    <Dialog open={true} onClose={onClose} fullWidth maxWidth="md" aria-labelledby="track-child-location-title">
+    <Dialog open={true} onClose={(event: object | undefined, reason: string) => isBackdropClick(reason) ? onClose : ({})} fullWidth maxWidth="md" aria-labelledby="track-child-location-title">
       <DialogTitle id="track-child-location-title">Location History for <PersonName person={child} /></DialogTitle>
       <DialogContent>
         <Grid container spacing={2}>
