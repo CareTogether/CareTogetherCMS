@@ -47,7 +47,7 @@ export function UnassignArrangementFunctionDialog({
   }
 
   return (
-    <Dialog open={handle.open} onClose={(event: object | undefined, reason: string) => isBackdropClick(reason) ? handle.closeDialog : ({})} key={handle.key}
+    <Dialog open={handle.open} onClose={(event: object | undefined, reason: string) => !isBackdropClick(reason) ? handle.closeDialog : ({})} key={handle.key}
       scroll='body' aria-labelledby="assign-volunteer-title">
       <DialogTitle id="assign-volunteer-title">
         Unassign {arrangementFunction.functionName}

@@ -36,7 +36,7 @@ export function UploadFamilyDocumentsDialog({ family, onClose }: UploadFamilyDoc
   }
 
   return (
-    <Dialog open={true} onClose={(event: object | undefined, reason: string) => isBackdropClick(reason) ? onClose : ({})} aria-labelledby="upload-family-documents-title">
+    <Dialog open={true} onClose={(event: object | undefined, reason: string) => !isBackdropClick(reason) ? onClose : ({})} aria-labelledby="upload-family-documents-title">
       <DialogTitle id="upload-family-documents-title">Upload Family Documents</DialogTitle>
       <DialogContent>
         <DialogContentText>Select one or more documents to upload for this family.</DialogContentText>
