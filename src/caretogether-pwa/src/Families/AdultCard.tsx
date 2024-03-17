@@ -30,13 +30,12 @@ import { MissingRequirementRow } from "../Requirements/MissingRequirementRow";
 import { ExemptedRequirementRow } from "../Requirements/ExemptedRequirementRow";
 import { CompletedRequirementRow } from "../Requirements/CompletedRequirementRow";
 import { IndividualVolunteerContext } from "../Requirements/RequirementContext";
-import { useDialogHandle } from "../Hooks/useDialogHandle";
-import { EditAdultDialog } from "./EditAdultDialog";
 import { useCollapsed } from "../Hooks/useCollapsed";
 import { useFamilyLookup } from "../Model/DirectoryModel";
 import { useFeatureFlags } from "../Model/ConfigurationModel";
 import { useDrawer } from "../Generic/ShellDrawer";
 import { ManageUserDrawer } from "./ManageUserDrawer";
+import { EditAdultDrawer } from "./EditAdultDrawer";
 
 type AdultCardProps = {
   familyId: string,
@@ -48,12 +47,11 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
   const family = familyLookup(familyId)!;
 
   const adult = family.family?.adults?.find(x => x.item1?.id === personId);
+  const editAdultDrawer = useDrawer();
 
   const adultUser = family.users?.find(x => x.personId === personId);
 
   const permissions = useFamilyPermissions(family);
-
-  const editDialogHandle = useDialogHandle();
 
   const featureFlags = useFeatureFlags();
 
@@ -97,7 +95,7 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
         action={
           <>
             {permissions(Permission.EditFamilyInfo) && <IconButton
-              onClick={editDialogHandle.openDialog}
+              onClick={() => editAdultDrawer.openDrawer()}
               size="medium">
               <EditIcon color="primary" />
             </IconButton>}
@@ -230,8 +228,10 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
       {(resetRoleParameter && <ResetIndividualRoleDialog volunteerFamilyId={familyId} person={resetRoleParameter.person} role={resetRoleParameter.role}
         removalReason={resetRoleParameter.removalReason} removalAdditionalComments={resetRoleParameter.removalAdditionalComments}
         onClose={() => setResetRoleParameter(null)} />) || null}
-      {editDialogHandle.open && <EditAdultDialog handle={editDialogHandle} key={editDialogHandle.key}
-        adult={adult} />}
+      {editAdultDrawer.drawerFor(
+        <EditAdultDrawer adult={adult}
+          onClose={editAdultDrawer.closeDrawer} />
+      )}
       {manageUserDrawer.drawerFor(
         <ManageUserDrawer adult={adult.item1} user={adultUser}
           onClose={manageUserDrawer.closeDrawer} />
