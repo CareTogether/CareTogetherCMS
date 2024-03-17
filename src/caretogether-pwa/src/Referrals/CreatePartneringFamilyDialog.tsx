@@ -76,7 +76,7 @@ export function CreatePartneringFamilyDialog({ onClose }: CreatePartneringFamily
   }
 
   return (
-    <Dialog open={true} onClose={(event: object | undefined, reason: string) => isBackdropClick(reason) ? onClose() : ({})} scroll='body' aria-labelledby="create-family-title">
+    <Dialog open={true} onClose={(event: object | undefined, reason: string) => !isBackdropClick(reason) ? onClose() : ({})} scroll='body' aria-labelledby="create-family-title">
       <DialogTitle id="create-family-title">
         Create Partnering Family - First Adult
       </DialogTitle>

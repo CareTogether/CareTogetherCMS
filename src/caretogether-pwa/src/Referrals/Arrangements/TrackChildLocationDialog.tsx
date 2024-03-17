@@ -251,7 +251,7 @@ export function TrackChildLocationDialog({ partneringFamily, referralId, arrange
   }
 
   return (
-    <Dialog open={true} onClose={(event: object | undefined, reason: string) => isBackdropClick(reason) ? onClose : ({})} fullWidth maxWidth="md" aria-labelledby="track-child-location-title">
+    <Dialog open={true} onClose={(event: object | undefined, reason: string) => !isBackdropClick(reason) ? onClose : ({})} fullWidth maxWidth="md" aria-labelledby="track-child-location-title">
       <DialogTitle id="track-child-location-title">Location History for <PersonName person={child} /></DialogTitle>
       <DialogContent>
         <Grid container spacing={2}>
