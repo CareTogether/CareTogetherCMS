@@ -1,4 +1,4 @@
-export function isBackdropClick(reason: string): boolean {	
+export function isBackdropClick(reason: string): boolean {
 	return reason === `backdropClick`;
 }
 
