@@ -6,10 +6,12 @@ import PeopleIcon from '@mui/icons-material/People';
 import GroupRemoveIcon from '@mui/icons-material/GroupRemove';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useRecoilValue } from 'recoil';
-import { familyNameString } from '../Families/FamilyName';
+import { FamilyName, familyNameString } from '../Families/FamilyName';
 import { familyLastName } from '../Families/FamilyUtils';
 import { visibleFamiliesQuery } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
+import { VolunteerRoleApprovalStatusChip } from '../Volunteers/VolunteerRoleApprovalStatusChip';
+import { PersonName } from '../Families/PersonName';
 
 interface CommunityMemberFamiliesProps {
   communityInfo: CommunityInfo;
@@ -50,7 +52,7 @@ export function CommunityMemberFamilies({ communityInfo }: CommunityMemberFamili
 
   return <List sx={{ '& .MuiListItemIcon-root': { minWidth: 36 } }}>
     {memberFamilies.map(family =>
-      <ListItem key={family.family!.id!} disablePadding
+      <ListItem key={family.family!.id!} disablePadding sx={{ '.MuiListItemSecondaryAction-root': { top: 20 } }}
         secondaryAction={permissions(Permission.EditCommunityMemberFamilies)
           ? <IconButton edge="end" aria-label="delete"
             color='primary'
@@ -60,11 +62,28 @@ export function CommunityMemberFamilies({ communityInfo }: CommunityMemberFamili
           : null}>
         <ListItemButton disableGutters sx={{ paddingTop: 0, paddingBottom: 0 }}
           onClick={() => appNavigate.family(family.family!.id!)}>
-          <ListItemIcon>
-            <PeopleIcon color='primary' />
+          <ListItemIcon sx={{ alignSelf: 'baseline' }}>
+            <PeopleIcon color='primary' sx={{ position: 'relative', top: 6, left: 2 }} />
           </ListItemIcon>
-          <ListItemText
-            primary={familyNameString(family)} primaryTypographyProps={{ color: theme.palette.primary.main }}>
+          <ListItemText sx={{ alignSelf: 'baseline' }}
+            primary={
+              <>
+                <FamilyName family={family} />{' '}
+                {Object.entries(family.volunteerFamilyInfo?.familyRoleApprovals || {}).flatMap(([role, roleApprovalStatus]) =>
+                  <VolunteerRoleApprovalStatusChip key={role} roleName={role} status={roleApprovalStatus.effectiveRoleApprovalStatus} />)}
+              </>} primaryTypographyProps={{ color: theme.palette.primary.main }}
+            secondary={
+              <List dense>
+                {family.family?.adults?.map(adult => (
+                  <ListItem key={adult.item1!.id} disablePadding>
+                    <ListItemText primary={
+                      <>
+                        <PersonName person={adult.item1!} />{' '}
+                        {Object.entries(family.volunteerFamilyInfo?.individualVolunteers?.[adult.item1!.id!].approvalStatusByRole || {}).map(([role, roleApprovalStatus]) =>
+                          <VolunteerRoleApprovalStatusChip key={role} roleName={role} status={roleApprovalStatus.effectiveRoleApprovalStatus} />)}
+                      </>} />
+                  </ListItem>))}
+              </List>}>
           </ListItemText>
         </ListItemButton>
       </ListItem>)}
