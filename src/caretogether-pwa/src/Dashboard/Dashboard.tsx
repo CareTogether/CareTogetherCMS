@@ -1,4 +1,4 @@
-import { Box, Container, Grid, Stack, Tab, Tabs, Typography } from '@mui/material';
+import { Badge, Box, Container, Grid, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Stack, Tab, Tabs, Typography } from '@mui/material';
 import { useRecoilValueLoadable } from 'recoil';
 import { locationConfigurationQuery, organizationConfigurationQuery } from '../Model/ConfigurationModel';
 import useScreenTitle from '../Shell/ShellScreenTitle';
@@ -7,19 +7,21 @@ import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import listPlugin from '@fullcalendar/list';
-import { format } from 'date-fns';
+import { differenceInYears, format } from 'date-fns';
 import { EventInput, EventSourceInput } from '@fullcalendar/core/index.js';
 import { partneringFamiliesData } from '../Model/ReferralsModel';
+import { visibleFamiliesQuery } from '../Model/Data';
 import { useLoadable } from '../Hooks/useLoadable';
-import { ChildLocationPlan, CombinedFamilyInfo } from '../GeneratedClient';
-import { personNameString } from '../Families/PersonName';
-import { useFamilyLookup } from '../Model/DirectoryModel';
-import { familyNameString } from '../Families/FamilyName';
+import { ChildLocationPlan, CombinedFamilyInfo, ExactAge } from '../GeneratedClient';
+import { PersonName, personNameString } from '../Families/PersonName';
+import { useFamilyLookup, usePersonLookup } from '../Model/DirectoryModel';
+import { FamilyName, familyNameString } from '../Families/FamilyName';
 import { useFilterMenu } from '../Generic/useFilterMenu';
 import { FilterMenu } from '../Generic/FilterMenu';
-import { CalendarMonth, EmojiPeople, Inbox } from '@mui/icons-material';
+import { CalendarMonth, EmojiPeople, Inbox, People } from '@mui/icons-material';
 import { useState } from 'react';
 import { TabPanel, a11yProps } from '../Generic/TabPanel';
+import { useAppNavigate } from '../Hooks/useAppNavigate';
 
 // function renderEventContent(eventInfo: any) {
 //   return (
@@ -39,12 +41,18 @@ function Dashboard() {
   const organizationConfiguration = useRecoilValueLoadable(organizationConfigurationQuery);
   const locationConfiguration = useRecoilValueLoadable(locationConfigurationQuery);
   const partneringFamilies = useLoadable(partneringFamiliesData);
+  const visibleFamilies = useLoadable(visibleFamiliesQuery);
 
   const dataLoaded = useDataLoaded();
 
   const familyLookup = useFamilyLookup();
+  const appNavigate = useAppNavigate();
 
   useScreenTitle("Dashboard");
+
+  const childrenOver18 = visibleFamilies?.flatMap(family =>
+    family.family?.children?.map(child => ({ family, child })) || []).filter(childEntry =>
+      childEntry.child.age && differenceInYears(new Date(), (childEntry.child.age as ExactAge).dateOfBirth!) > 18);
 
   const allArrangements = (partneringFamilies || []).flatMap(family =>
     (family.partneringFamilyInfo?.closedReferrals || []).concat(family.partneringFamilyInfo?.openReferral || []).flatMap(referral =>
@@ -164,7 +172,7 @@ function Dashboard() {
             aria-label="dashboard tabs"
           >
             <Tab icon={<CalendarMonth />} iconPosition="start" label="Calendar" {...a11yProps(0)} />
-            <Tab icon={<Inbox />} iconPosition="start" label="My Queue" {...a11yProps(1)} />
+            <Tab icon={<Badge badgeContent={childrenOver18?.length} color="primary"><Inbox /></Badge>} iconPosition="start" label="My Queue" {...a11yProps(1)} />
           </Tabs>
           <Typography variant='h5' sx={{ marginTop: 3 }}>
             <strong>{locationConfiguration.contents?.name}</strong> ({organizationConfiguration.contents?.organizationName})
@@ -202,7 +210,21 @@ function Dashboard() {
           <Typography variant='h6'>
             <EmojiPeople sx={{ position: "relative", top: 2 }} /> Children over 18
           </Typography>
-
+          <List>
+            {childrenOver18?.map(childEntry => (
+              <ListItem key={childEntry.child.id}>
+                <ListItemButton disableGutters sx={{ paddingTop: 0, paddingBottom: 0 }}
+                  onClick={() => appNavigate.family(childEntry.family.family!.id!)}>
+                  <ListItemIcon sx={{ alignSelf: 'baseline' }}>
+                    <People color='primary' sx={{ position: 'relative', top: 6, left: 2 }} />
+                  </ListItemIcon>
+                  <ListItemText sx={{ alignSelf: 'baseline' }}
+                    primary={<PersonName person={childEntry.child} />}
+                    secondary={<FamilyName family={childEntry.family} />} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
         </TabPanel>
       </Stack>
     </Container>
