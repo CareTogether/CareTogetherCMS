@@ -7,21 +7,21 @@ import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import listPlugin from '@fullcalendar/list';
-import { differenceInYears, format } from 'date-fns';
+import { format } from 'date-fns';
 import { EventInput, EventSourceInput } from '@fullcalendar/core/index.js';
 import { partneringFamiliesData } from '../Model/ReferralsModel';
-import { visibleFamiliesQuery } from '../Model/Data';
 import { useLoadable } from '../Hooks/useLoadable';
-import { ChildLocationPlan, CombinedFamilyInfo, ExactAge } from '../GeneratedClient';
+import { ChildLocationPlan, CombinedFamilyInfo } from '../GeneratedClient';
 import { PersonName, personNameString } from '../Families/PersonName';
-import { useFamilyLookup, usePersonLookup } from '../Model/DirectoryModel';
+import { useFamilyLookup } from '../Model/DirectoryModel';
 import { FamilyName, familyNameString } from '../Families/FamilyName';
 import { useFilterMenu } from '../Generic/useFilterMenu';
 import { FilterMenu } from '../Generic/FilterMenu';
-import { CalendarMonth, EmojiPeople, Inbox, People } from '@mui/icons-material';
+import { CalendarMonth, EmojiPeople, Inbox } from '@mui/icons-material';
 import { useState } from 'react';
 import { TabPanel, a11yProps } from '../Generic/TabPanel';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
+import { queueItemsCountQuery, queueItemsQuery } from '../Model/QueueModel';
 
 // function renderEventContent(eventInfo: any) {
 //   return (
@@ -37,22 +37,44 @@ function familyPerson(family: CombinedFamilyInfo, personId: string) {
   return familyPeople.find(person => person.id === personId)!;
 }
 
+function MyQueue() {
+  const appNavigate = useAppNavigate();
+  const queueItems = useLoadable(queueItemsQuery);
+
+  return (
+    <List>
+      {queueItems?.map((queueItem, i) => (
+        <ListItem key={i}>
+          <ListItemButton disableGutters sx={{ paddingTop: 0, paddingBottom: 0 }}
+            onClick={() => appNavigate.family(queueItem.family.family!.id!)} >
+            <ListItemIcon sx={{ minWidth: 34 }}>
+              <EmojiPeople color='error' />
+            </ListItemIcon>
+            <ListItemText
+              primary={
+                <>
+                  <Typography variant='body1' sx={{ display: 'inline', fontWeight: 'bold' }}>Child over 18: </Typography>
+                  <PersonName person={queueItem.child} />
+                </>}
+              secondary={<FamilyName family={queueItem.family} />} />
+          </ListItemButton>
+        </ListItem>
+      ))}
+    </List>
+  );
+}
+
 function Dashboard() {
   const organizationConfiguration = useRecoilValueLoadable(organizationConfigurationQuery);
   const locationConfiguration = useRecoilValueLoadable(locationConfigurationQuery);
   const partneringFamilies = useLoadable(partneringFamiliesData);
-  const visibleFamilies = useLoadable(visibleFamiliesQuery);
+  const queueItemsCount = useLoadable(queueItemsCountQuery);
 
   const dataLoaded = useDataLoaded();
 
   const familyLookup = useFamilyLookup();
-  const appNavigate = useAppNavigate();
 
   useScreenTitle("Dashboard");
-
-  const childrenOver18 = visibleFamilies?.flatMap(family =>
-    family.family?.children?.map(child => ({ family, child })) || []).filter(childEntry =>
-      childEntry.child.age && differenceInYears(new Date(), (childEntry.child.age as ExactAge).dateOfBirth!) > 18);
 
   const allArrangements = (partneringFamilies || []).flatMap(family =>
     (family.partneringFamilyInfo?.closedReferrals || []).concat(family.partneringFamilyInfo?.openReferral || []).flatMap(referral =>
@@ -167,12 +189,12 @@ function Dashboard() {
         <Stack direction='row' justifyContent='space-between'>
           <Tabs
             value={currentTab}
-            onChange={(event: React.SyntheticEvent, newValue: number) => setCurrentTab(newValue)}
+            onChange={(_event, newValue: number) => setCurrentTab(newValue)}
             indicatorColor='secondary'
             aria-label="dashboard tabs"
           >
             <Tab icon={<CalendarMonth />} iconPosition="start" label="Calendar" {...a11yProps(0)} />
-            <Tab icon={<Badge badgeContent={childrenOver18?.length} color="primary"><Inbox /></Badge>} iconPosition="start" label="My Queue" {...a11yProps(1)} />
+            <Tab icon={<Badge badgeContent={queueItemsCount} color="primary"><Inbox /></Badge>} iconPosition="start" label="My Queue" {...a11yProps(1)} />
           </Tabs>
           <Typography variant='h5' sx={{ marginTop: 3 }}>
             <strong>{locationConfiguration.contents?.name}</strong> ({organizationConfiguration.contents?.organizationName})
@@ -206,25 +228,8 @@ function Dashboard() {
             </Grid>
           </Grid>
         </TabPanel>
-        <TabPanel value={currentTab} index={1} padding={2}>
-          <Typography variant='h6'>
-            <EmojiPeople sx={{ position: "relative", top: 2 }} /> Children over 18
-          </Typography>
-          <List>
-            {childrenOver18?.map(childEntry => (
-              <ListItem key={childEntry.child.id}>
-                <ListItemButton disableGutters sx={{ paddingTop: 0, paddingBottom: 0 }}
-                  onClick={() => appNavigate.family(childEntry.family.family!.id!)}>
-                  <ListItemIcon sx={{ alignSelf: 'baseline' }}>
-                    <People color='primary' sx={{ position: 'relative', top: 6, left: 2 }} />
-                  </ListItemIcon>
-                  <ListItemText sx={{ alignSelf: 'baseline' }}
-                    primary={<PersonName person={childEntry.child} />}
-                    secondary={<FamilyName family={childEntry.family} />} />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
+        <TabPanel value={currentTab} index={1} padding={0}>
+          <MyQueue />
         </TabPanel>
       </Stack>
     </Container>
