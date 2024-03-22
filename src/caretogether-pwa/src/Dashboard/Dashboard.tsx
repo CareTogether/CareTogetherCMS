@@ -1,4 +1,4 @@
-import { Badge, Box, Container, Grid, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Stack, Tab, Tabs, Typography } from '@mui/material';
+import { Badge, Container, Grid, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Stack, Tab, Tabs, Typography } from '@mui/material';
 import { useRecoilValueLoadable } from 'recoil';
 import { locationConfigurationQuery, organizationConfigurationQuery } from '../Model/ConfigurationModel';
 import useScreenTitle from '../Shell/ShellScreenTitle';
@@ -64,17 +64,9 @@ function MyQueue() {
   );
 }
 
-function Dashboard() {
-  const organizationConfiguration = useRecoilValueLoadable(organizationConfigurationQuery);
-  const locationConfiguration = useRecoilValueLoadable(locationConfigurationQuery);
-  const partneringFamilies = useLoadable(partneringFamiliesData);
-  const queueItemsCount = useLoadable(queueItemsCountQuery);
-
-  const dataLoaded = useDataLoaded();
-
+function DashboardCalendar() {
   const familyLookup = useFamilyLookup();
-
-  useScreenTitle("Dashboard");
+  const partneringFamilies = useLoadable(partneringFamiliesData);
 
   const allArrangements = (partneringFamilies || []).flatMap(family =>
     (family.partneringFamilyInfo?.closedReferrals || []).concat(family.partneringFamilyInfo?.openReferral || []).flatMap(referral =>
@@ -178,6 +170,46 @@ function Dashboard() {
     isSelected(CalendarFilters.ArrangementActualChildcare) ? arrangementActualChildcare : [],
     isSelected(CalendarFilters.ArrangementPlannedChildcare) ? arrangementPlannedChildcare : []);
 
+  return (
+    <Grid container>
+      <Grid item xs={12} sx={{ textAlign: 'right', marginBottom: 1 }}>
+        <Typography variant='body1' sx={{ display: 'inline' }}>Filter events: </Typography>
+        <FilterMenu
+          singularLabel={`Event`}
+          pluralLabel={`Events`}
+          filterOptions={filterOptions}
+          handleFilterChange={handleFilterChange}
+        />
+      </Grid>
+      <Grid item xs={12}>
+        <FullCalendar /* https://fullcalendar.io/docs/react */
+          plugins={[dayGridPlugin, listPlugin]}
+          initialView='dayGridMonth'
+          headerToolbar={{
+            left: 'prevYear,prev,today,next,nextYear',
+            center: 'title',
+            right: 'dayGridMonth,listWeek'
+          }}
+          weekends={true}
+          //expandRows={true}
+          events={filteredEvents}
+          //eventContent={renderEventContent}
+          eventClassNames={'wrap-event'}
+        />
+      </Grid>
+    </Grid>
+  );
+}
+
+function Dashboard() {
+  const organizationConfiguration = useRecoilValueLoadable(organizationConfigurationQuery);
+  const locationConfiguration = useRecoilValueLoadable(locationConfigurationQuery);
+  const queueItemsCount = useLoadable(queueItemsCountQuery);
+
+  const dataLoaded = useDataLoaded();
+
+  useScreenTitle("Dashboard");
+
   const [currentTab, setCurrentTab] = useState(0);
 
   return ((!dataLoaded || locationConfiguration.state !== 'hasValue' && organizationConfiguration.state !== 'hasValue')
@@ -199,34 +231,9 @@ function Dashboard() {
           <Typography variant='h5' sx={{ marginTop: 3 }}>
             <strong>{locationConfiguration.contents?.name}</strong> ({organizationConfiguration.contents?.organizationName})
           </Typography>
-          <Box sx={{ marginTop: 3 }}>
-            <FilterMenu
-              singularLabel={`Event`}
-              pluralLabel={`Events`}
-              filterOptions={filterOptions}
-              handleFilterChange={handleFilterChange}
-            />
-          </Box>
         </Stack>
         <TabPanel value={currentTab} index={0} padding={2}>
-          <Grid container>
-            <Grid item xs={12}>
-              <FullCalendar /* https://fullcalendar.io/docs/react */
-                plugins={[dayGridPlugin, listPlugin]}
-                initialView='dayGridMonth'
-                headerToolbar={{
-                  left: 'prevYear,prev,today,next,nextYear',
-                  center: 'title',
-                  right: 'dayGridMonth,listWeek'
-                }}
-                weekends={true}
-                //expandRows={true}
-                events={filteredEvents}
-                //eventContent={renderEventContent}
-                eventClassNames={'wrap-event'}
-              />
-            </Grid>
-          </Grid>
+          <DashboardCalendar />
         </TabPanel>
         <TabPanel value={currentTab} index={1} padding={0}>
           <MyQueue />
