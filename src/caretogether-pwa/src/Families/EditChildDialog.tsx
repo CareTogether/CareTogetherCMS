@@ -1,5 +1,5 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
-import { CustodialRelationship, Permission, Person } from '../GeneratedClient';
+import { Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { CustodialRelationship, ExactAge, FamilyAdultRelationshipInfo, Permission, Person } from '../GeneratedClient';
 import { useParams } from 'react-router-dom';
 import { DialogHandle, useDialogHandle } from '../Hooks/useDialogHandle';
 import { NameEditor } from './NameEditor';
@@ -14,6 +14,11 @@ import { EthnicityEditor } from './EthnicityEditor';
 import { ChildCustodyRelationshipEditor } from './ChildCustodyRelationshipEditor';
 import { useFamilyIdPermissions } from '../Model/SessionModel';
 import { isBackdropClick } from '../Utilities/handleBackdropClick';
+import { differenceInYears } from 'date-fns';
+import { EmojiPeople } from '@mui/icons-material';
+import { useDirectoryModel } from '../Model/DirectoryModel';
+import { personNameString } from './PersonName';
+import { useBackdrop } from '../Hooks/useBackdrop';
 
 interface EditChildDialogProps {
   handle: DialogHandle
@@ -27,11 +32,31 @@ export function EditChildDialog({ handle, child, familyAdults, custodialRelation
 
   const person = child;
 
+  const isAdult = child?.age &&
+    differenceInYears(new Date(), (child.age as ExactAge).dateOfBirth!) >= 18;
+
   const personEditorProps = { familyId, person } as PersonEditorProps;
 
   const deleteDialogHandle = useDialogHandle();
 
   const permissions = useFamilyIdPermissions(familyId!);
+
+  const directoryModel = useDirectoryModel();
+  const withBackdrop = useBackdrop();
+
+  const handleConvertToAdult = async () => {
+    const confirmConversion = window.confirm(
+      `Are you sure you want to convert ${personNameString(child)} to an adult?`);
+    if (confirmConversion) {
+      await withBackdrop(async () => {
+        handle.closeDialog();
+        const newFamilyAdultRelationshipInfo = new FamilyAdultRelationshipInfo();
+        newFamilyAdultRelationshipInfo.isInHousehold = true;
+        newFamilyAdultRelationshipInfo.relationshipToFamily = "Adult Child";
+        await directoryModel.convertChildToAdult(familyId!, child.id!, newFamilyAdultRelationshipInfo);
+      });
+    }
+  };
 
   return (
     <Dialog open={handle.open} onClose={(event: object | undefined, reason: string) => !isBackdropClick(reason) ? handle.closeDialog : ({})}
@@ -43,6 +68,15 @@ export function EditChildDialog({ handle, child, familyAdults, custodialRelation
         <NameEditor {...personEditorProps} />
         <GenderEditor {...personEditorProps} />
         <AgeEditor {...personEditorProps} />
+        {isAdult && (
+          <>
+            <Chip size="medium" label={"No longer under 18!"} color="error" />
+            <Button onClick={handleConvertToAdult}
+              variant="contained" color="primary" size="medium" sx={{ marginLeft: 2 }}
+              startIcon={<EmojiPeople />}>
+              Convert to Adult
+            </Button>
+          </>)}
         <EthnicityEditor {...personEditorProps} />
         <h4 style={{ marginBottom: 0 }}>Custodial Relationships:</h4>
         {familyAdults.map(adult =>
