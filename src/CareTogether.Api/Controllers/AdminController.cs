@@ -27,10 +27,10 @@ namespace CareTogether.Api.Controllers
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<RecordsAggregate>>> ImpersonatedListAllAggregatesAsync(
-            Guid organizationId, Guid locationId, Guid personId, string[] roles)
+            Guid organizationId, Guid locationId, [FromQuery] Guid personId, [FromQuery] string role)
         {
             //TODO: Authorization! -- DO NOT MERGE, obviously.
-            var impersonationPrincipal = CreateImpersonationPrincipalFor(organizationId, locationId, personId, roles);
+            var impersonationPrincipal = CreateImpersonationPrincipalFor(organizationId, locationId, personId, [role]);
             var results = await recordsManager.ListVisibleAggregatesAsync(impersonationPrincipal, organizationId, locationId);
             return Ok(results);
         }
