@@ -1,4 +1,4 @@
-import { Box, Container, Grid, Stack, Typography } from '@mui/material';
+import { Box, Container, Grid, Stack, Tab, Tabs, Typography } from '@mui/material';
 import { useRecoilValueLoadable } from 'recoil';
 import { locationConfigurationQuery, organizationConfigurationQuery } from '../Model/ConfigurationModel';
 import useScreenTitle from '../Shell/ShellScreenTitle';
@@ -17,6 +17,9 @@ import { useFamilyLookup } from '../Model/DirectoryModel';
 import { familyNameString } from '../Families/FamilyName';
 import { useFilterMenu } from '../Generic/useFilterMenu';
 import { FilterMenu } from '../Generic/FilterMenu';
+import { CalendarMonth, EmojiPeople, Inbox } from '@mui/icons-material';
+import { useState } from 'react';
+import { TabPanel, a11yProps } from '../Generic/TabPanel';
 
 // function renderEventContent(eventInfo: any) {
 //   return (
@@ -145,6 +148,8 @@ function Dashboard() {
     isSelected(CalendarFilters.ArrangementActualChildcare) ? arrangementActualChildcare : [],
     isSelected(CalendarFilters.ArrangementPlannedChildcare) ? arrangementPlannedChildcare : []);
 
+  const [currentTab, setCurrentTab] = useState(0);
+
   return ((!dataLoaded || locationConfiguration.state !== 'hasValue' && organizationConfiguration.state !== 'hasValue')
     ? <ProgressBackdrop>
       <p>Loading dashboard...</p>
@@ -152,6 +157,15 @@ function Dashboard() {
     : <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>
       <Stack direction='column'>
         <Stack direction='row' justifyContent='space-between'>
+          <Tabs
+            value={currentTab}
+            onChange={(event: React.SyntheticEvent, newValue: number) => setCurrentTab(newValue)}
+            indicatorColor='secondary'
+            aria-label="dashboard tabs"
+          >
+            <Tab icon={<CalendarMonth />} iconPosition="start" label="Calendar" {...a11yProps(0)} />
+            <Tab icon={<Inbox />} iconPosition="start" label="My Queue" {...a11yProps(1)} />
+          </Tabs>
           <Typography variant='h5' sx={{ marginTop: 3 }}>
             <strong>{locationConfiguration.contents?.name}</strong> ({organizationConfiguration.contents?.organizationName})
           </Typography>
@@ -164,25 +178,32 @@ function Dashboard() {
             />
           </Box>
         </Stack>
-        <br />
-        <Grid container>
-          <Grid item xs={12}>
-            <FullCalendar /* https://fullcalendar.io/docs/react */
-              plugins={[dayGridPlugin, listPlugin]}
-              initialView='dayGridMonth'
-              headerToolbar={{
-                left: 'prevYear,prev,today,next,nextYear',
-                center: 'title',
-                right: 'dayGridMonth,listWeek'
-              }}
-              weekends={true}
-              //expandRows={true}
-              events={filteredEvents}
-              //eventContent={renderEventContent}
-              eventClassNames={'wrap-event'}
-            />
+        <TabPanel value={currentTab} index={0} padding={2}>
+          <Grid container>
+            <Grid item xs={12}>
+              <FullCalendar /* https://fullcalendar.io/docs/react */
+                plugins={[dayGridPlugin, listPlugin]}
+                initialView='dayGridMonth'
+                headerToolbar={{
+                  left: 'prevYear,prev,today,next,nextYear',
+                  center: 'title',
+                  right: 'dayGridMonth,listWeek'
+                }}
+                weekends={true}
+                //expandRows={true}
+                events={filteredEvents}
+                //eventContent={renderEventContent}
+                eventClassNames={'wrap-event'}
+              />
+            </Grid>
           </Grid>
-        </Grid>
+        </TabPanel>
+        <TabPanel value={currentTab} index={1} padding={2}>
+          <Typography variant='h6'>
+            <EmojiPeople sx={{ position: "relative", top: 2 }} /> Children over 18
+          </Typography>
+
+        </TabPanel>
       </Stack>
     </Container>
   );
