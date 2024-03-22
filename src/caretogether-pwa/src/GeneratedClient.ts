@@ -8884,6 +8884,11 @@ export abstract class FamilyCommand implements IFamilyCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "ConvertChildToAdult") {
+            let result = new ConvertChildToAdult();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "CreateFamily") {
             let result = new CreateFamily();
             result.init(data);
@@ -9084,6 +9089,44 @@ export class ChangePrimaryFamilyContact extends FamilyCommand implements IChange
 
 export interface IChangePrimaryFamilyContact extends IFamilyCommand {
     adultId?: string;
+}
+
+export class ConvertChildToAdult extends FamilyCommand implements IConvertChildToAdult {
+    personId?: string;
+    newRelationshipToFamily?: FamilyAdultRelationshipInfo;
+
+    constructor(data?: IConvertChildToAdult) {
+        super(data);
+        this._discriminator = "ConvertChildToAdult";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.personId = _data["personId"];
+            this.newRelationshipToFamily = _data["newRelationshipToFamily"] ? FamilyAdultRelationshipInfo.fromJS(_data["newRelationshipToFamily"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ConvertChildToAdult {
+        data = typeof data === 'object' ? data : {};
+        let result = new ConvertChildToAdult();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["personId"] = this.personId;
+        data["newRelationshipToFamily"] = this.newRelationshipToFamily ? this.newRelationshipToFamily.toJSON() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IConvertChildToAdult extends IFamilyCommand {
+    personId?: string;
+    newRelationshipToFamily?: FamilyAdultRelationshipInfo;
 }
 
 export class CreateFamily extends FamilyCommand implements ICreateFamily {

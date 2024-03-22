@@ -214,6 +214,7 @@ namespace CareTogether.Engines.Authorization
                 CreateFamily => Permission.EditFamilyInfo,
                 AddAdultToFamily => Permission.EditFamilyInfo,
                 AddChildToFamily => Permission.EditFamilyInfo,
+                ConvertChildToAdult => Permission.EditFamilyInfo,
                 UpdateAdultRelationshipToFamily => Permission.EditFamilyInfo,
                 AddCustodialRelationship => Permission.EditFamilyInfo,
                 UpdateCustodialRelationshipType => Permission.EditFamilyInfo,

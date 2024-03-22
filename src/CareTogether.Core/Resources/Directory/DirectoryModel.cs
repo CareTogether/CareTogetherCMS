@@ -102,6 +102,12 @@ namespace CareTogether.Resources.Directory
                             CustodialRelationships = familyEntry.CustodialRelationships.AddRange(c.CustodialRelationships.Select(cr =>
                                 new KeyValuePair<(Guid ChildId, Guid AdultId), CustodialRelationshipType>((cr.ChildId, cr.PersonId), cr.Type)))
                         },
+                        //TODO: Error if child is not found?
+                        ConvertChildToAdult c => familyEntry with
+                        {
+                            Children = familyEntry.Children.Remove(c.PersonId),
+                            AdultRelationships = familyEntry.AdultRelationships.Add(c.PersonId, c.NewRelationshipToFamily)
+                        },
                         //TODO: Error if key is not found
                         UpdateAdultRelationshipToFamily c => familyEntry with
                         {
@@ -160,7 +166,8 @@ namespace CareTogether.Resources.Directory
                 {
                     LastKnownSequenceNumber++;
                     families = families.SetItem(familyEntryToUpsert.Id, familyEntryToUpsert);
-                });
+                }
+            );
         }
 
         public (PersonCommandExecuted Event, long SequenceNumber, Person Person, Action OnCommit)
@@ -228,7 +235,8 @@ namespace CareTogether.Resources.Directory
                 {
                     LastKnownSequenceNumber++;
                     people = people.SetItem(personEntryToUpsert.Id, personEntryToUpsert);
-                });
+                }
+            );
         }
 
         public ImmutableList<Family> FindFamilies(Func<Family, bool> predicate) =>
