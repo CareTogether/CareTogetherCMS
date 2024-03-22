@@ -59,7 +59,7 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
           }),
           (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
         //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
-        onClose({},``);
+        onClose({}, ``);
       }
     });
   }
@@ -134,7 +134,7 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
             <Grid item xs={12} sm={6}>
               <DatePicker
                 label="Date of birth"
-                value={dateOfBirth} maxDate={subYears(new Date(), 18)} openTo="year"
+                value={dateOfBirth} minDate={subYears(new Date(), 18)} openTo="year"
                 format="MM/dd/yyyy"
                 onChange={(date: Date | null) => date && setFields({ ...fields, dateOfBirth: date })}
                 slotProps={{ textField: { size: "small", fullWidth: true } }} />
