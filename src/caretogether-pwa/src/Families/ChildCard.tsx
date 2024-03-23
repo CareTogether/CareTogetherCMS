@@ -8,10 +8,10 @@ import {
 import { CustodialRelationshipType, Gender, Permission } from "../GeneratedClient";
 import { AgeText } from "./AgeText";
 import EditIcon from '@mui/icons-material/Edit';
-import { useDialogHandle } from "../Hooks/useDialogHandle";
-import { EditChildDialog } from "./EditChildDialog";
 import { useFamilyPermissions } from "../Model/SessionModel";
 import { useFamilyLookup } from "../Model/DirectoryModel";
+import { useDrawer } from "../Generic/ShellDrawer";
+import { EditChildDrawer } from "./EditChildDrawer";
 
 type ChildCardProps = {
   familyId: string,
@@ -23,8 +23,7 @@ export function ChildCard({ familyId, personId }: ChildCardProps) {
   const family = familyLookup(familyId)!;
 
   const child = family.family?.children?.find(x => x.id === personId);
-
-  const editDialogHandle = useDialogHandle();
+  const editChildDrawer = useDrawer();
 
   const permissions = useFamilyPermissions(family);
 
@@ -37,7 +36,7 @@ export function ChildCard({ familyId, personId }: ChildCardProps) {
         </>}
         action={permissions(Permission.EditFamilyInfo) &&
           <IconButton
-            onClick={editDialogHandle.openDialog}
+            onClick={() => editChildDrawer.openDrawer()}
             size="medium">
             <EditIcon color="primary" />
           </IconButton>} />
@@ -64,8 +63,10 @@ export function ChildCard({ familyId, personId }: ChildCardProps) {
           </ul>
         </Typography>
       </CardContent>
-      {editDialogHandle.open && <EditChildDialog handle={editDialogHandle} key={editDialogHandle.key}
-        child={child} familyAdults={family.family!.adults!.map(a => a.item1!)}
-        custodialRelationships={family.family!.custodialRelationships} />}
+      {editChildDrawer.drawerFor(
+        <EditChildDrawer child={child} familyAdults={family.family!.adults!.map(a => a.item1!)}
+        custodialRelationships={family.family!.custodialRelationships}
+		onClose={editChildDrawer.closeDrawer} />
+      )}
     </Card>}</>;
 }
