@@ -1,6 +1,5 @@
-import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, useMediaQuery, useTheme, Button, ButtonGroup, MenuItem, Select, ListItemText, Checkbox, FormControl, InputBase, SelectChangeEvent, IconButton, Snackbar, Stack, ToggleButton, ToggleButtonGroup } from '@mui/material';
-import { Gender, ExactAge, AgeInYears, CombinedFamilyInfo, EmailAddress, Permission } from '../GeneratedClient';
-import { differenceInYears } from 'date-fns';
+import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, useMediaQuery, useTheme, Button, ButtonGroup, MenuItem, Select, ListItemText, Checkbox, FormControl, InputBase, SelectChangeEvent, IconButton, Snackbar, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import { CombinedFamilyInfo, EmailAddress, Permission } from '../GeneratedClient';
 import { atom, selector, useRecoilState, useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../Model/VolunteersModel';
 import { organizationConfigurationQuery, policyData } from '../Model/ConfigurationModel';
@@ -347,11 +346,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                   </TableCell>}
                   {expandedView
                     ? <>
-                      <TableCell>First Name</TableCell>
-                      <TableCell>Last Name</TableCell>
-                      <TableCell>Gender</TableCell>
-                      <TableCell>Age</TableCell>
-                    </>
+                        <TableCell>Last Name, First Name</TableCell>
+                      </>
                     : <TableCell>Family</TableCell>}
                   {volunteerFamilyRoleFilters.map(roleFilter =>
                   (<RoleHeaderCell key={roleFilter.roleName} roleFilter={roleFilter}
@@ -373,8 +369,9 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                             : setUncheckedFamilies(uncheckedFamilies.concat(volunteerFamily.family!.id!))}
                           onClick={e => e.stopPropagation()} />
                       </TableCell>}
-                      <TableCell key="1" colSpan={expandedView ? 4 : 1}>{familyLastName(volunteerFamily) + " Family"
-                      }</TableCell>
+                      <TableCell key="1" colSpan={expandedView ? 4 : 1}>
+						<Typography sx={{ fontWeight: 600 }}>{familyLastName(volunteerFamily) + " Family"}</Typography>
+                      </TableCell>
                       {volunteerFamilyRoleFilters.map(roleFilter =>
                       (<TableCell key={roleFilter.roleName}>{
                         approvalStatus(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.roleName]?.currentStatus)
@@ -418,16 +415,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                       <TableRow key={volunteerFamily.family?.id + ":" + adult.item1.id}
                         onClick={() => openFamily(volunteerFamily.family!.id!)}>
                         {smsMode && <TableCell />}
-                        <TableCell sx={{ paddingLeft: 3 }}>{adult.item1.firstName}</TableCell>
-                        <TableCell>{adult.item1.lastName}</TableCell>
-                        <TableCell>{typeof (adult.item1.gender) === 'undefined' ? "" : Gender[adult.item1.gender]}</TableCell>
-                        <TableCell align="right">
-                          {adult.item1.age instanceof ExactAge
-                            ? adult.item1.age.dateOfBirth && differenceInYears(new Date(), adult.item1.age.dateOfBirth)
-                            : adult.item1.age instanceof AgeInYears
-                              ? adult.item1.age.years && adult.item1?.age.asOf && (adult.item1.age.years + differenceInYears(new Date(), adult.item1.age.asOf))
-                              : "⚠"}
-                        </TableCell>
+                        <TableCell>{adult.item1.lastName}, {adult.item1.firstName}</TableCell>                       
                         <TableCell colSpan={volunteerFamilyRoleFilters.length} />
                         {volunteerRoleFilters.map(roleFilter =>
                         (<TableCell key={roleFilter.roleName}>{
@@ -440,16 +428,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                         onClick={() => openFamily(volunteerFamily.family!.id!)}
                         sx={{ color: 'ddd', fontStyle: 'italic' }}>
                         {smsMode && <TableCell />}
-                        <TableCell sx={{ paddingLeft: 3 }}>{child.firstName}</TableCell>
-                        <TableCell>{child.lastName}</TableCell>
-                        <TableCell>{typeof (child.gender) === 'undefined' ? "" : Gender[child.gender]}</TableCell>
-                        <TableCell align="right">
-                          {child.age instanceof ExactAge
-                            ? child.age.dateOfBirth && differenceInYears(new Date(), child.age.dateOfBirth)
-                            : child.age instanceof AgeInYears
-                              ? child.age.years && child.age.asOf && (child.age.years + differenceInYears(new Date(), child.age.asOf))
-                              : "⚠"}
-                        </TableCell>
+                        <TableCell>{child.lastName}, {child.firstName}</TableCell>                      
                         <TableCell colSpan={
                           volunteerFamilyRoleFilters.length +
                           volunteerRoleFilters.length} />
