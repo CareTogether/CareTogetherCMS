@@ -56,6 +56,9 @@ namespace CareTogether.Resources.Directory
     public sealed record AddChildToFamily(Guid FamilyId, Guid ChildPersonId,
         ImmutableList<CustodialRelationship> CustodialRelationships)
         : FamilyCommand(FamilyId);
+    public sealed record ConvertChildToAdult(Guid FamilyId, Guid PersonId,
+        FamilyAdultRelationshipInfo NewRelationshipToFamily)
+        : FamilyCommand(FamilyId);
     public sealed record UpdateAdultRelationshipToFamily(Guid FamilyId, Guid AdultPersonId,
         FamilyAdultRelationshipInfo RelationshipToFamily)
         : FamilyCommand(FamilyId);
