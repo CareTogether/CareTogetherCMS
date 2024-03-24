@@ -369,7 +369,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                             : setUncheckedFamilies(uncheckedFamilies.concat(volunteerFamily.family!.id!))}
                           onClick={e => e.stopPropagation()} />
                       </TableCell>}
-                      <TableCell key="1" colSpan={expandedView ? 4 : 1}>
+                      <TableCell key="1" colSpan={expandedView ? 1 : 1}>
 						<Typography sx={{ fontWeight: 600 }}>{familyLastName(volunteerFamily) + " Family"}</Typography>
                       </TableCell>
                       {volunteerFamilyRoleFilters.map(roleFilter =>
