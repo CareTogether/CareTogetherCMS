@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BottomNavigation, BottomNavigationAction, Divider, Drawer, List, Paper, useTheme } from '@mui/material';
+import { Badge, BottomNavigation, BottomNavigationAction, Divider, Drawer, List, Paper, useTheme } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
 import Diversity3Icon from '@mui/icons-material/Diversity3';
@@ -16,6 +16,8 @@ import { useFeatureFlags } from '../Model/ConfigurationModel';
 import { useGlobalPermissions } from '../Model/SessionModel';
 import { Permission } from '../GeneratedClient';
 import { Stack } from '@mui/system';
+import { queueItemsCountQuery } from '../Model/QueueModel';
+import { Inbox } from '@mui/icons-material';
 
 export function ShellBottomNavigation() {
   const theme = useTheme();
@@ -37,6 +39,8 @@ export function ShellBottomNavigation() {
 
   const flags = useFeatureFlags();
   const permissions = useGlobalPermissions();
+
+  const queueItemsCount = useLoadable(queueItemsCountQuery);
 
   return (
     <Paper elevation={3} sx={{
@@ -62,10 +66,10 @@ export function ShellBottomNavigation() {
         }}
       >
         <BottomNavigationAction icon={<MenuIcon />} onClick={() => setDrawerOpen(true)} />
-        <BottomNavigationAction component={Link} to={`${locationPrefix}`} label="Dashboard" icon={<DashboardIcon />} />
+        <BottomNavigationAction component={Link} to={`${locationPrefix}/inbox`} label="Inbox"
+          icon={<Badge badgeContent={queueItemsCount} color="secondary"><Inbox /></Badge>} />
         <BottomNavigationAction component={Link} to={`${locationPrefix}/referrals`} label="Referrals" icon={<PermPhoneMsgIcon />} />
         <BottomNavigationAction component={Link} to={`${locationPrefix}/volunteers`} label="Volunteers" icon={<PeopleIcon />} />
-        <BottomNavigationAction component={Link} to={`${locationPrefix}/communities`} label="Communities" icon={<Diversity3Icon />} />
       </BottomNavigation>
       <Drawer
         sx={{
@@ -81,12 +85,15 @@ export function ShellBottomNavigation() {
         <Stack padding={1} spacing={1}>
           <ShellContextSwitcher />
           {flags && <List aria-label="secondary navigation" sx={{ position: 'relative', top: 100, zIndex: theme.zIndex.drawer + 3 }}>
-            {permissions(Permission.AccessSettingsScreen) &&
-              <>
-                <Divider />
-                <ListItemLink darkColor to={`${locationPrefix}/settings`} primary="Settings" icon={<SettingsIcon />} />
-                <ListItemLink darkColor to="http://support.caretogether.io" newTab primary="Support" icon={<SupportIcon />} />
-              </>}
+            <>
+              <Divider />
+              <ListItemLink darkColor to={`${locationPrefix}`} primary="Dashboard" icon={<DashboardIcon />} />
+              {permissions(Permission.AccessCommunitiesScreen) &&
+                <ListItemLink darkColor to={`${locationPrefix}/communities`} primary="Communities" icon={<Diversity3Icon />} />}
+              {permissions(Permission.AccessSettingsScreen) &&
+                <ListItemLink darkColor to={`${locationPrefix}/settings`} primary="Settings" icon={<SettingsIcon />} />}
+              <ListItemLink darkColor to="http://support.caretogether.io" newTab primary="Support" icon={<SupportIcon />} />
+            </>
           </List>}
           {/* <div style={{ overflowX: 'hidden', position: 'fixed', bottom: 0, marginLeft: 4}}>
             <Copyright />

@@ -1,5 +1,5 @@
 import { useRecoilCallback, useRecoilValue } from "recoil";
-import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, CompositeRecordsCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, UpdatePersonGender, UpdatePersonAge, UpdatePersonEthnicity, UpdateAdultRelationshipToFamily, CustodialRelationshipType, UpdateCustodialRelationshipType, RemoveCustodialRelationship, ChangePrimaryFamilyContact, FamilyRecordsCommand, PersonRecordsCommand, NoteRecordsCommand, AtomicRecordsCommand, CustomField, UpdateCustomFamilyField, CommunityCommand, CommunityRecordsCommand } from "../GeneratedClient";
+import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, CompositeRecordsCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, UpdatePersonGender, UpdatePersonAge, UpdatePersonEthnicity, UpdateAdultRelationshipToFamily, CustodialRelationshipType, UpdateCustodialRelationshipType, RemoveCustodialRelationship, ChangePrimaryFamilyContact, FamilyRecordsCommand, PersonRecordsCommand, NoteRecordsCommand, AtomicRecordsCommand, CustomField, UpdateCustomFamilyField, CommunityCommand, CommunityRecordsCommand, ConvertChildToAdult } from "../GeneratedClient";
 import { api } from "../Api/Api";
 import { selectedLocationContextState, visibleAggregatesState, visibleCommunitiesQuery, visibleFamiliesQuery } from "./Data";
 
@@ -156,6 +156,15 @@ export function useDirectoryModel() {
         familyId: familyId
       });
       command.uploadedDocumentId = uploadedDocumentId;
+      return command;
+    });
+  const convertChildToAdult = useFamilyCommandCallback(
+    async (familyId, personId: string, newRelationship: FamilyAdultRelationshipInfo) => {
+      const command = new ConvertChildToAdult({
+        familyId: familyId
+      });
+      command.personId = personId;
+      command.newRelationshipToFamily = newRelationship;
       return command;
     });
   const updateAdultRelationshipToFamily = useFamilyCommandCallback(
@@ -486,6 +495,7 @@ export function useDirectoryModel() {
   return {
     uploadFamilyDocument,
     deleteUploadedFamilyDocument,
+    convertChildToAdult,
     updateAdultRelationshipToFamily,
     upsertCustodialRelationship,
     removeCustodialRelationship,

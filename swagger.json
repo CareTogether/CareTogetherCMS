@@ -5027,6 +5027,7 @@
             "AddChildToFamily": "#/components/schemas/AddChildToFamily",
             "AddCustodialRelationship": "#/components/schemas/AddCustodialRelationship",
             "ChangePrimaryFamilyContact": "#/components/schemas/ChangePrimaryFamilyContact",
+            "ConvertChildToAdult": "#/components/schemas/ConvertChildToAdult",
             "CreateFamily": "#/components/schemas/CreateFamily",
             "DeleteUploadedFamilyDocument": "#/components/schemas/DeleteUploadedFamilyDocument",
             "RemoveCustodialRelationship": "#/components/schemas/RemoveCustodialRelationship",
@@ -5122,6 +5123,26 @@
               "adultId": {
                 "type": "string",
                 "format": "guid"
+              }
+            }
+          }
+        ]
+      },
+      "ConvertChildToAdult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/FamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "newRelationshipToFamily": {
+                "$ref": "#/components/schemas/FamilyAdultRelationshipInfo"
               }
             }
           }
