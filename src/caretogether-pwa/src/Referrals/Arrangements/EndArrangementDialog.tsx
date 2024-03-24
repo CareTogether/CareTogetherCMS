@@ -22,6 +22,10 @@ export function EndArrangementDialog({ referralId, arrangement, onClose }: EndAr
 
   const person = personLookup(familyId, arrangement.partneringFamilyPersonId) as Person;
 
+  const latestChildLocationChange = arrangement.childLocationHistory?.slice().sort((a, b) =>
+    a.timestampUtc! < b.timestampUtc! ? 1 : a.timestampUtc! > b.timestampUtc! ? -1 : 0)[0];
+  const earliestAllowedEndDate = latestChildLocationChange?.timestampUtc ?? arrangement.startedAtUtc;
+
   const [endedAtLocal, setEndedAtLocal] = useState(null as Date | null);
 
   async function save() {
@@ -37,7 +41,7 @@ export function EndArrangementDialog({ referralId, arrangement, onClose }: EndAr
           <DateTimePicker
             label="When was this arrangement ended?"
             value={endedAtLocal}
-            minDate={arrangement.startedAtUtc}
+            minDate={earliestAllowedEndDate}
             disableFuture format="M/d/yyyy h:mm a"
             onChange={(date: Date | null) => date && setEndedAtLocal(date)}
             slotProps={{ textField: { fullWidth: true, required: true, sx: { marginTop: 1 } } }} />
