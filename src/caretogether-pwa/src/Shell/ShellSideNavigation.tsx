@@ -31,7 +31,10 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
     //  <List aria-label="main navigation">
     //    <ListItemLink to="/dashboard" primary="Dashboard" icon={<DashboardIcon sx={{color: '#fff'}} />} />
     //  </List>
-    <List aria-label="secondary navigation">
+    <List aria-label="secondary navigation" sx={{
+      "& .MuiListItem-root.Mui-selected": { color: '#ffff' },
+      "& .MuiListItem-root.Mui-selected svg": { color: '#ffff' }
+    }}>
       {flags === null
         ? <>
           <Stack padding={1} spacing={1}>
