@@ -8,7 +8,7 @@ import { useLoadable } from '../Hooks/useLoadable';
 import { PersonName } from '../Families/PersonName';
 import { FamilyName } from '../Families/FamilyName';
 import { EmojiPeople } from '@mui/icons-material';
-import { useAppNavigate } from '../Hooks/useAppNavigate';
+import { AppNavigate, useAppNavigate } from '../Hooks/useAppNavigate';
 import { QueueItem, queueItemsQuery } from '../Model/QueueModel';
 
 interface InboxMessageProps {
@@ -18,9 +18,7 @@ interface InboxMessageProps {
   secondaryContent?: JSX.Element;
 }
 
-//TODO: Make appNavigate type explicit!
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getMessageProps(item: QueueItem, appNavigate: any): InboxMessageProps {
+function getMessageProps(item: QueueItem, appNavigate: AppNavigate): InboxMessageProps {
   switch (item.type) {
     case 'ChildOver18':
       return {
@@ -59,7 +57,7 @@ function MessageList() {
   return (
     <List>
       {messages?.map((message, i) => (
-        <ListItem key={i}>
+        <ListItem key={i} disableGutters>
           <InboxMessage {...message} />
         </ListItem>
       ))}

@@ -1,4 +1,4 @@
-import { Divider, Drawer, List, Skeleton, Stack, useTheme } from '@mui/material';
+import { Badge, Divider, Drawer, List, Skeleton, Stack, useTheme } from '@mui/material';
 import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
 import PeopleIcon from '@mui/icons-material/People';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -12,6 +12,8 @@ import { useGlobalPermissions } from '../Model/SessionModel';
 import { Permission } from '../GeneratedClient';
 import { selectedLocationContextState } from '../Model/Data';
 import { useLoadable } from '../Hooks/useLoadable';
+import { Inbox } from '@mui/icons-material';
+import { queueItemsCountQuery } from '../Model/QueueModel';
 
 interface SideNavigationMenuProps {
   open: boolean;
@@ -22,6 +24,8 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
 
   const context = useLoadable(selectedLocationContextState);
   const locationPrefix = `/org/${context?.organizationId}/${context?.locationId}`;
+
+  const queueItemsCount = useLoadable(queueItemsCountQuery);
 
   return (
     //  <List aria-label="main navigation">
@@ -45,6 +49,8 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
         </>
         : <>
           <ListItemLink to={`${locationPrefix}`} primary="Dashboard" icon={<DashboardIcon sx={{ color: '#fff8' }} />} />
+          <ListItemLink to={`${locationPrefix}/inbox`} primary="Inbox"
+            icon={<Badge badgeContent={queueItemsCount} color="secondary"><Inbox sx={{ color: '#fff8' }} /></Badge>} />
           {permissions(Permission.AccessPartneringFamiliesScreen) &&
             <ListItemLink to={`${locationPrefix}/referrals`} primary="Referrals" icon={<PermPhoneMsgIcon sx={{ color: '#fff8' }} />} />}
           {permissions(Permission.AccessVolunteersScreen) &&
