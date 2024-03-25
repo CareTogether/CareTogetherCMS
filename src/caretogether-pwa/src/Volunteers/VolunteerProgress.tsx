@@ -1,4 +1,4 @@
-import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, Button, ButtonGroup, useMediaQuery, useTheme, Stack, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, Button, ButtonGroup, useMediaQuery, useTheme, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import { volunteerFamiliesData } from '../Model/VolunteersModel';
 import { allApprovalAndOnboardingRequirementsData } from '../Model/ConfigurationModel';
 import React, { useEffect, useState } from 'react';
@@ -83,8 +83,7 @@ function VolunteerProgress(props: { onOpen: () => void }) {
               <TableRow>
                 {expandedView
                   ? <>
-                    <TableCell>First Name</TableCell>
-                    <TableCell>Last Name</TableCell>
+                    <TableCell>Last Name, First Name</TableCell>
                   </>
                   : <TableCell>Family</TableCell>}
                 {allApprovalAndOnboardingRequirements.map(actionName =>
@@ -95,8 +94,9 @@ function VolunteerProgress(props: { onOpen: () => void }) {
               {filteredVolunteerFamilies.map(volunteerFamily => (
                 <React.Fragment key={volunteerFamily.family!.id!}>
                   <TableRow sx={{ backgroundColor: '#eef' }} onClick={() => openFamily(volunteerFamily.family!.id!)}>
-                    <TableCell key="1" colSpan={expandedView ? 2 : 1}>{familyLastName(volunteerFamily) + " Family"
-                    }</TableCell>
+                    <TableCell key="1" colSpan={expandedView ? 2 : 1}>
+						<Typography sx={{ fontWeight: 600 }}>{familyLastName(volunteerFamily) + " Family"}</Typography>
+                    </TableCell>
                     {allApprovalAndOnboardingRequirements.map(actionName =>
                     (<TableCell key={actionName}>{
                       expandedView
@@ -122,8 +122,7 @@ function VolunteerProgress(props: { onOpen: () => void }) {
                   {expandedView && volunteerFamily.family!.adults!.map(adult => adult.item1 && adult.item1.active && (
                     <TableRow key={adult.item1.id}
                       onClick={() => openFamily(volunteerFamily.family!.id!)}>
-                      <TableCell>{adult.item1.firstName}</TableCell>
-                      <TableCell>{adult.item1.lastName}</TableCell>
+                      <TableCell>{adult.item1.lastName}, {adult.item1.firstName}</TableCell>
                       {allApprovalAndOnboardingRequirements.map(actionName =>
                       (<TableCell key={actionName}>{
                         volunteerFamily.volunteerFamilyInfo?.individualVolunteers![adult.item1!.id!]!.missingRequirements?.some(x => x === actionName)
