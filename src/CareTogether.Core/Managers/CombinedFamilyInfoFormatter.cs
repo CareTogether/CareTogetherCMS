@@ -43,7 +43,7 @@ namespace CareTogether.Managers
         }
 
 
-        public async Task<CombinedFamilyInfo> RenderCombinedFamilyInfoAsync(Guid organizationId, Guid locationId,
+        public async Task<CombinedFamilyInfo?> RenderCombinedFamilyInfoAsync(Guid organizationId, Guid locationId,
             Guid familyId, ClaimsPrincipal user)
         {
             var locationPolicy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
@@ -51,6 +51,18 @@ namespace CareTogether.Managers
             var family = await directoryResource.FindFamilyAsync(organizationId, locationId, familyId);
             if (family == null)
                 throw new InvalidOperationException("The specified family ID was not found.");
+
+            // Exclude soft-deleted families and individuals (i.e., those marked as 'inactive').
+            // Note that this is different from the 'inactive' role removal reason.
+            // A potential 'undelete' feature could be implemented that involves checking for a
+            // special "View Deleted" permission to bypass this step.
+            if (!family.Active)
+                return null;
+            family = family with
+            {
+                Adults = family.Adults.Where(adult => adult.Item1.Active).ToImmutableList(),
+                Children = family.Children.Where(child => child.Active).ToImmutableList()
+            };
 
             var missingCustomFamilyFields = locationPolicy.CustomFamilyFields
                 .Where(customField => !family.CompletedCustomFields.Any(completed => completed.CustomFieldName == customField.Name))
