@@ -5,6 +5,7 @@ using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Referrals;
 using Nito.AsyncEx;
+using Nito.Disposables.Internals;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -63,14 +64,18 @@ namespace CareTogether.Managers.Records
                 .Select(x => x.family)
                 .ToImmutableList();
 
-            var renderedFamilies = await visibleFamilies
+            var renderedFamilies = (await visibleFamilies
                 .Select(async family =>
                 {
                     var renderedFamily = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
                         organizationId, locationId, family.Id, user);
+                    if (renderedFamily == null)
+                        return null;
                     return new FamilyRecordsAggregate(renderedFamily);
                 })
-                .WhenAll();
+                .WhenAll())
+                .WhereNotNull()
+                .ToImmutableList();
 
             var communities = await communitiesResource.ListLocationCommunitiesAsync(organizationId, locationId);
 
@@ -116,7 +121,7 @@ namespace CareTogether.Managers.Records
             var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
                 organizationId, locationId, command.FamilyId, user);
 
-            return new FamilyRecordsAggregate(familyResult);
+            return new FamilyRecordsAggregate(familyResult!);
         }
 
         public async Task<RecordsAggregate> ExecuteAtomicRecordsCommandAsync(Guid organizationId, Guid locationId,
@@ -141,7 +146,7 @@ namespace CareTogether.Managers.Records
 
             var valetUrl = await directoryResource.GetFamilyDocumentReadValetUrl(organizationId, locationId,
                 familyId, documentId);
-            
+
             return valetUrl;
         }
 
@@ -348,7 +353,7 @@ namespace CareTogether.Managers.Records
                 var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
                     organizationId, locationId, familyId, user);
 
-                return new FamilyRecordsAggregate(familyResult);
+                return new FamilyRecordsAggregate(familyResult!);
             }
         }
 
