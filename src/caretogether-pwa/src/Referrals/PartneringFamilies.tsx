@@ -38,15 +38,22 @@ function allArrangements(partneringFamilyInfo: PartneringFamilyInfo) {
   return results;
 }
 
-function matchingArrangements(partneringFamilyInfo: PartneringFamilyInfo, viewActiveOnly: boolean) {
+function matchingArrangements(partneringFamilyInfo: PartneringFamilyInfo, arrangementsFilter: 'All' | 'Active' | 'Setup' | 'Active + Setup') {
   const results = [] as { referralId: string, arrangement: Arrangement }[];
-  if (viewActiveOnly) {
-    partneringFamilyInfo.openReferral?.arrangements?.filter(arrangement =>
-      arrangement.phase === ArrangementPhase.Started).forEach(x =>
-        results.push({ referralId: partneringFamilyInfo.openReferral!.id!, arrangement: x }));
-  } else {
+  if (arrangementsFilter === 'All') {
     partneringFamilyInfo.closedReferrals?.forEach(x => x.arrangements?.forEach(y => results.push({ referralId: x.id!, arrangement: y })));
     partneringFamilyInfo.openReferral?.arrangements?.forEach(x => results.push({ referralId: partneringFamilyInfo.openReferral!.id!, arrangement: x }));
+  } else {
+    if (arrangementsFilter === 'Active' || arrangementsFilter === 'Active + Setup') {
+      partneringFamilyInfo.openReferral?.arrangements?.filter(arrangement =>
+        arrangement.phase === ArrangementPhase.Started).forEach(x =>
+          results.push({ referralId: partneringFamilyInfo.openReferral!.id!, arrangement: x }));
+    }
+    if (arrangementsFilter === 'Setup' || arrangementsFilter === 'Active + Setup') {
+      partneringFamilyInfo.openReferral?.arrangements?.filter(arrangement =>
+        arrangement.phase === ArrangementPhase.SettingUp || arrangement.phase === ArrangementPhase.ReadyToStart).forEach(x =>
+          results.push({ referralId: partneringFamilyInfo.openReferral!.id!, arrangement: x }));
+    }
   }
   return results;
 }
@@ -143,11 +150,19 @@ function PartneringFamilies() {
     }
   };
 
-  const [viewActiveOnly, setViewActiveOnly] = useLocalStorage('partnering-families-viewActiveOnly', false);
-  const filteredPartneringFamiliesWithActiveOrAllFilter = filteredPartneringFamilies.filter(family => viewActiveOnly
-    ? family.partneringFamilyInfo?.openReferral?.arrangements?.some(arrangement =>
-      arrangement.phase === ArrangementPhase.Started)
-    : true);
+  const [arrangementsFilter, setArrangementsFilter] = useLocalStorage<'All' | 'Active' | 'Setup' | 'Active + Setup'>('partnering-families-arrangementsFilter', 'All');
+  const filteredPartneringFamiliesWithActiveOrAllFilter = filteredPartneringFamilies.filter(family =>
+    arrangementsFilter === 'All'
+      ? true
+      : arrangementsFilter === 'Active'
+        ? family.partneringFamilyInfo?.openReferral?.arrangements?.some(arrangement =>
+          arrangement.phase === ArrangementPhase.Started)
+        : arrangementsFilter === 'Setup'
+          ? family.partneringFamilyInfo?.openReferral?.arrangements?.some(arrangement =>
+            arrangement.phase === ArrangementPhase.SettingUp || arrangement.phase === ArrangementPhase.ReadyToStart)
+          : family.partneringFamilyInfo?.openReferral?.arrangements?.some(arrangement =>
+            arrangement.phase === ArrangementPhase.Started ||
+            arrangement.phase === ArrangementPhase.SettingUp || arrangement.phase === ArrangementPhase.ReadyToStart));
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -170,10 +185,12 @@ function PartneringFamilies() {
             <ToggleButton value={false} aria-label="collapsed"><UnfoldLessIcon /></ToggleButton>
           </ToggleButtonGroup>
           <SearchBar value={filterText} onChange={setFilterText} />
-          <ToggleButtonGroup value={viewActiveOnly} exclusive onChange={(_, value) => setViewActiveOnly(value)}
+          <ToggleButtonGroup value={arrangementsFilter} exclusive onChange={(_, value) => setArrangementsFilter(value)}
             size={isMobile ? 'medium' : 'small'} aria-label="row expansion">
-            <ToggleButton value={false} aria-label="expanded">All</ToggleButton>
-            <ToggleButton value={true} aria-label="collapsed">Active</ToggleButton>
+            <ToggleButton value={'All'} aria-label="expanded">All</ToggleButton>
+            <ToggleButton value={'Active'} aria-label="collapsed">Active</ToggleButton>
+            <ToggleButton value={'Setup'} aria-label="collapsed">Setup</ToggleButton>
+            <ToggleButton value={'Active + Setup'} aria-label="collapsed">Active + Setup</ToggleButton>
           </ToggleButtonGroup>
         </Stack>
       </Grid>
@@ -229,7 +246,7 @@ function PartneringFamilies() {
                       </TableCell>
                       <TableCell>
                         <Grid container spacing={2}>
-                          {matchingArrangements(partneringFamily.partneringFamilyInfo!, viewActiveOnly).map(arrangementEntry => (
+                          {matchingArrangements(partneringFamily.partneringFamilyInfo!, arrangementsFilter).map(arrangementEntry => (
                             <Grid item key={arrangementEntry.arrangement.id}>
                               <ArrangementCard summaryOnly
                                 partneringFamily={partneringFamily} referralId={arrangementEntry.referralId} arrangement={arrangementEntry.arrangement} />
