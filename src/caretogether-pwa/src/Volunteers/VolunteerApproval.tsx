@@ -24,6 +24,7 @@ import { useLoadable } from '../Hooks/useLoadable';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { selectedLocationContextState } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
+import { VolunteerRoleApprovalStatusChip } from './VolunteerRoleApprovalStatusChip';
 
 type RoleFilter = {
   roleName: string
@@ -345,13 +346,15 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                         : setUncheckedFamilies(filteredVolunteerFamilies.map(f => f.family!.id!))} />
                   </TableCell>}
                   {expandedView
-                    ? <>
-                        <TableCell>Last Name, First Name</TableCell>
-                      </>
+                    ? <TableCell>Last Name, First Name</TableCell>
                     : <TableCell>Family</TableCell>}
+                  <TableCell>Roles</TableCell>
+				{/* TODO: Remove the Volunteer Family Roles column below */}
                   {volunteerFamilyRoleFilters.map(roleFilter =>
                   (<RoleHeaderCell key={roleFilter.roleName} roleFilter={roleFilter}
                     setSelected={selected => changeVolunteerFamilyRoleFilterSelection(roleFilter, selected)} />))}
+
+				{/* TODO: Remove the Individual Volunteer Roles column below */}
                   {volunteerRoleFilters.map(roleFilter =>
                   (<RoleHeaderCell key={roleFilter.roleName} roleFilter={roleFilter}
                     setSelected={selected => changeVolunteerRoleFilterSelection(roleFilter, selected)} />))}
@@ -372,10 +375,23 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                       <TableCell key="1" colSpan={expandedView ? 1 : 1}>
 						<Typography sx={{ fontWeight: 600 }}>{familyLastName(volunteerFamily) + " Family"}</Typography>
                       </TableCell>
+                      <TableCell>
+                        {volunteerFamilyRoleFilters.map((roleFilter, index) =>
+                          <VolunteerRoleApprovalStatusChip 
+                            key={index} 
+                            roleName={roleFilter.roleName} 
+							status={volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.roleName]?.effectiveRoleApprovalStatus} 
+                          />
+						)}
+                      </TableCell>
+
+                      {/* TODO: Remove the Volunteer Family Roles column below */}
                       {volunteerFamilyRoleFilters.map(roleFilter =>
                       (<TableCell key={roleFilter.roleName}>{
                         approvalStatus(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.roleName]?.currentStatus)
                       }</TableCell>))}
+
+                      {/* TODO: Remove the Individual Volunteer Roles column below */}
                       {expandedView
                         ? <TableCell colSpan={volunteerRoleFilters.length} />
                         : volunteerRoleFilters.map(roleFilter =>
@@ -415,7 +431,12 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                       <TableRow key={volunteerFamily.family?.id + ":" + adult.item1.id}
                         onClick={() => openFamily(volunteerFamily.family!.id!)}>
                         {smsMode && <TableCell />}
-                        <TableCell>{adult.item1.lastName}, {adult.item1.firstName}</TableCell>                       
+                        <TableCell>{adult.item1.lastName}, {adult.item1.firstName}</TableCell> 
+                      <TableCell>
+                        {Object.entries(volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1!.id!].approvalStatusByRole || {}).map(([role, roleApprovalStatus]) =>
+                          <VolunteerRoleApprovalStatusChip key={role} roleName={role} status={roleApprovalStatus.effectiveRoleApprovalStatus} />)}                      
+                      </TableCell>    
+                      {/* TODO: Remove the Individual Volunteer Roles column below */}                  
                         <TableCell colSpan={volunteerFamilyRoleFilters.length} />
                         {volunteerRoleFilters.map(roleFilter =>
                         (<TableCell key={roleFilter.roleName}>{
@@ -428,7 +449,9 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                         onClick={() => openFamily(volunteerFamily.family!.id!)}
                         sx={{ color: 'ddd', fontStyle: 'italic' }}>
                         {smsMode && <TableCell />}
-                        <TableCell>{child.lastName}, {child.firstName}</TableCell>                      
+                        <TableCell>{child.lastName}, {child.firstName}</TableCell> 
+                      <TableCell />
+                      {/* TODO: Remove the Individual Volunteer Roles column below */}                  
                         <TableCell colSpan={
                           volunteerFamilyRoleFilters.length +
                           volunteerRoleFilters.length} />
