@@ -1,6 +1,4 @@
-import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, useMediaQuery, useTheme, Button, ButtonGroup, MenuItem, Select, ListItemText, Checkbox, FormControl, InputBase, SelectChangeEvent, IconButton, Snackbar, Stack, ToggleButton, ToggleButtonGroup, Typography, 
-	InputLabel 
-} from '@mui/material';
+import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, useMediaQuery, useTheme, Button, ButtonGroup, MenuItem, Select, ListItemText, Checkbox, FormControl, InputBase, SelectChangeEvent, IconButton, Snackbar, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import { CombinedFamilyInfo, EmailAddress, Permission } from '../GeneratedClient';
 import { atom, selector, useRecoilState, useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../Model/VolunteersModel';
@@ -28,7 +26,7 @@ import { selectedLocationContextState } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { VolunteerRoleApprovalStatusChip } from './VolunteerRoleApprovalStatusChip';
 
-//#region Old Filter Code
+//#region Old Role/Status Selection code
 type RoleFilter = {
   roleName: string
   selected: (RoleApprovalStatus | null)[]
@@ -149,10 +147,15 @@ function CombinedApprovalStatus(props: CombinedApprovalStatusProps) {
   );
 }
 //#endregion
-
+//#region new Role/Status Selection code
+enum filterType {
+	Family = 1,
+	Individual = 2
+}
 type filterOption = {
 	key: string;
-	value: string | null;
+	value: string | undefined;
+	type?: filterType | undefined;
 	selected: boolean;
 }
 const roleFiltersState = atom({
@@ -161,15 +164,24 @@ const roleFiltersState = atom({
 		key: 'newRoleFiltersState/Default',
 		get: ({ get }) => {
 			const policy = get(policyData);
-			const roleNames = [
-				...Object.keys(policy.volunteerPolicy?.volunteerFamilyRoles || {}), 
-				...Object.keys(policy.volunteerPolicy?.volunteerRoles || {})
-			];			
-			const roleFilters: filterOption[] = roleNames.map((value, index) => ({
-				key: value,
-				value: index.toString(),
-				selected: false
-			}));
+			const roleFilters: filterOption[] = [{ 
+				key: "Not Applied", 
+				value: undefined,
+				selected: false				
+			}];
+			const familyRoles = [...Object.keys(policy.volunteerPolicy?.volunteerFamilyRoles || {})];
+			const individualRoles = [...Object.keys(policy.volunteerPolicy?.volunteerRoles || {})];
+			const combinedRoles = [...familyRoles, ...individualRoles];
+			for (let i = 0; i < combinedRoles.length; i++) {
+				const isIndividualRole = i >= familyRoles.length;
+				const roleType = isIndividualRole ? filterType.Individual : filterType.Family;
+				roleFilters.push({
+					key: combinedRoles[i],
+					value: i.toString(),
+					selected: false,
+					type: roleType
+				});
+			}
 			return roleFilters;
 		}
 	})
@@ -180,7 +192,7 @@ const statusFiltersState = atom({
 		key: 'statusFiltersState/Default',
 		get: () => {
 			const options = [
-				{ key: "Not Applied", value: null },
+				{ key: "Not Applied", value: undefined },
 				{ key: RoleApprovalStatus[RoleApprovalStatus.Prospective], value: RoleApprovalStatus.Prospective },
 				{ key: RoleApprovalStatus[RoleApprovalStatus.Approved], value: RoleApprovalStatus.Approved },
 				{ key: RoleApprovalStatus[RoleApprovalStatus.Onboarded], value: RoleApprovalStatus.Onboarded },
@@ -190,7 +202,7 @@ const statusFiltersState = atom({
 			];
 			const statusFilters: filterOption[] = options.map((option) => ({
 				key: option.key,
-				value: option.value ? option.value.toString() : null,
+				value: option.value ? option.value.toString() : undefined,
 				selected: false
 			}));
 			return statusFilters;
@@ -224,7 +236,7 @@ function VolunteerFilter({ label, options, setSelected }: VolunteerFilterProps) 
 				IconComponent={FilterListIcon}
 				renderValue={() => {
 					const selectedOptions = options.filter(o => o.selected);
-					return selectedOptions.length === options.length ? `${label}: all` : `${label}: ${selectedOptions.length} of ${options.length}`
+					return (selectedOptions.length === options.length) ? `${label}: all` : `${label}: ${selectedOptions.length} of ${options.length}`
 				}}
 			>
 				{options.map((option) =>
@@ -237,7 +249,7 @@ function VolunteerFilter({ label, options, setSelected }: VolunteerFilterProps) 
 		</FormControl>
 	)
 }
-
+//#endregion
 function approvalStatus(currentApprovalStatus?: RoleApprovalStatus | null) {
 	if (typeof currentApprovalStatus === 'undefined' ||
 		currentApprovalStatus == null) return "-";
@@ -259,7 +271,6 @@ function approvalStatus(currentApprovalStatus?: RoleApprovalStatus | null) {
 			return "??";
 	}
 }
-
 function familyLastName(family: CombinedFamilyInfo) {
 	return family.family!.adults?.filter(adult =>
 		family.family!.primaryFamilyContactPersonId === adult.item1?.id)[0]?.item1?.lastName || "";
@@ -279,7 +290,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 	const appNavigate = useAppNavigate();
 	const [uncheckedFamilies, setUncheckedFamilies] = useState<string[]>([]);
 
-	//#region Old Filter Code
+	//#region Old Role/Status Selection Code
 	const [volunteerFamilyRoleFilters, setVolunteerFamilyRoleFilters] = useRecoilState(volunteerFamilyRoleFiltersState);
 	const [volunteerRoleFilters, setVolunteerRoleFilters] = useRecoilState(volunteerRoleFiltersState);
 	function toValue(selection: 'Not Applied' | 'Prospective' | 'Approved' | 'Onboarded' | 'Expired' | 'Inactive' | 'Denied') {
@@ -307,37 +318,13 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 			: value);
 		setVolunteerRoleFilters(updatedFilters);
 	}
-
-	// The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
-	const volunteerFamiliesLoadable = useLoadable(volunteerFamiliesData);
-	const volunteerFamilies = (volunteerFamiliesLoadable || []).map(x => x).sort((a, b) =>
-		familyLastName(a) < familyLastName(b) ? -1 : familyLastName(a) > familyLastName(b) ? 1 : 0);
-
-	const [filterText, setFilterText] = useState("");
-
-	// Filter volunteer families by name and by applicable roles.
-	const filteredVolunteerFamilies = volunteerFamilies.filter(family => /* Filter by name */(
-		filterText.length === 0 ||
-		family.family?.adults?.some(adult => simplify(`${adult.item1?.firstName} ${adult.item1?.lastName}`).includes(filterText.toLowerCase())) ||
-		family.family?.children?.some(child => simplify(`${child?.firstName} ${child?.lastName}`).includes(filterText.toLowerCase()))) &&
-		/* Filter by roles & approval status */ (
-		volunteerFamilyRoleFilters.every(roleFilter => roleFilter.selected.indexOf(null) > -1 ||
-			roleFilter.selected.indexOf(
-			family.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.roleName]?.currentStatus || null) > -1) &&
-		volunteerRoleFilters.every(roleFilter =>
-			((family.volunteerFamilyInfo?.individualVolunteers && Object.entries(family.volunteerFamilyInfo?.individualVolunteers)) || []).some(([, volunteer]) =>
-			roleFilter.selected.indexOf(null) > -1 ||
-			roleFilter.selected.indexOf(volunteer.approvalStatusByRole?.[roleFilter.roleName]?.currentStatus || null) > -1))
-		));
-
-	const selectedFamilies = filteredVolunteerFamilies.filter(family =>
-		!uncheckedFamilies.some(f => f === family.family!.id!));
 	//#endregion
-	
-	//#region new Filter Code	
+	//#region new Role/Status Selection Code		
+	const [roleFilters, setRoleFilters] = useRecoilState(roleFiltersState);
+	const [statusFilters, setStatusFilters] = useRecoilState(statusFiltersState);
 	function getOptionValueFromSelection(allOptionKeysPlusSelectedOptionValue: string | string[]) {
 		const optionValue = [...allOptionKeysPlusSelectedOptionValue].filter((s: string) => !isNaN(Number(s)))[0];
-		return optionValue ? optionValue : null;
+		return optionValue ? optionValue : undefined;
 	}
 	function getUpdatedFilters(filters: filterOption[], optionToUpdate: filterOption) {
 		return filters.map(filter => 
@@ -345,22 +332,155 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 			? { ...filter, selected: !filter.selected }
 			: filter);	
 	}
-	const [roleFilters, setRoleFilters] = useRecoilState(roleFiltersState);
-	const [statusFilters, setStatusFilters] = useRecoilState(statusFiltersState);
 	function changeRoleFilterSelection(selection: string | string[]) {
 		setUncheckedFamilies([]);
 		const filterOptionToUpdate = roleFilters.find(filter => 
 			filter.value === getOptionValueFromSelection(selection));
+			console.warn(`changing ${filterOptionToUpdate?.key} to ${!filterOptionToUpdate?.selected}`);
 		setRoleFilters(getUpdatedFilters(roleFilters, filterOptionToUpdate!));
 	}
 	function changeStatusFilterSelection(selection: string | string[]) {
 		setUncheckedFamilies([]);
 		const filterOptionToUpdate = statusFilters.find(filter => 
 			filter.value === getOptionValueFromSelection(selection));
+			console.warn(`changing ${filterOptionToUpdate?.key} to ${!filterOptionToUpdate?.selected}`);
 		setStatusFilters(getUpdatedFilters(statusFilters, filterOptionToUpdate!));
 	}
-
 	//#endregion
+	
+	// The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
+	const volunteerFamiliesLoadable = useLoadable(volunteerFamiliesData);
+	const volunteerFamilies = (volunteerFamiliesLoadable || []).map(x => x).sort((a, b) =>
+		familyLastName(a) < familyLastName(b) ? -1 : familyLastName(a) > familyLastName(b) ? 1 : 0);
+
+	const [filterText, setFilterText] = useState("");
+
+	//#region Old Family/Individual Filtering Code
+	// function familyMeetsOldFilterCriteria(family: CombinedFamilyInfo) {
+	// 	return volunteerFamilyRoleFilters.every(roleFilter => roleFilter.selected.indexOf(null) > -1 ||
+	// 		roleFilter.selected.indexOf(
+	// 		family.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.roleName]?.currentStatus || null) > -1)
+	// }
+	// function familyMembersMeetOldFilterCriteria(family: CombinedFamilyInfo) {
+	// 	return volunteerRoleFilters.every(roleFilter =>
+	// 		((family.volunteerFamilyInfo?.individualVolunteers && Object.entries(family.volunteerFamilyInfo?.individualVolunteers)) || []).some(([, volunteer]) =>
+	// 		roleFilter.selected.indexOf(null) > -1 ||
+	// 		roleFilter.selected.indexOf(volunteer.approvalStatusByRole?.[roleFilter.roleName]?.currentStatus || null) > -1))
+	// }
+	//#endregion
+	//#region New Family/Individual Filtering Code
+	const selectedFamilyRoleKeys = roleFilters.filter(filterOption => (filterOption.selected && filterOption.type === filterType.Family)).map(filterOption => filterOption.key);
+	const selectedIndividualRoleKeys = roleFilters.filter(filterOption => (filterOption.selected && filterOption.type === filterType.Individual)).map(filterOption => filterOption.key);
+	const selectedStatusKeys = statusFilters.filter(filterOption => filterOption.selected).map(filterOption => filterOption.value);
+
+	function familyMeetsNewFilterCriteria(family: CombinedFamilyInfo) {
+		console.group(`filtering ${familyLastName(family)} family`);
+		console.log(JSON.stringify(selectedFamilyRoleKeys));
+		if (selectedFamilyRoleKeys.length === 0) {
+			console.groupEnd();
+			return true;
+		} 
+		const result = selectedFamilyRoleKeys.some(roleName => {
+			console.group(roleName);
+			const familyHasRole = (roleName !== "Not Applied") 
+				? (family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName] !== undefined) 
+				: family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName] === undefined;
+			console.log(`familyHasRole: ${familyHasRole}`);
+			if (!familyHasRole) {
+				console.groupEnd();
+				return false;
+			}
+			if (selectedStatusKeys.length === 0) {
+				const validStatuses = statusFilters.filter(filterOption => filterOption.value !== undefined);
+				const currentFamilyStatus = family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName]?.currentStatus;
+				const hasRoleInValidStatus = validStatuses.some(status => Number(status.value) === currentFamilyStatus);
+				console.log(`validStatuses: ${JSON.stringify(validStatuses)}`);
+				console.log(`currentFamilyStatus: ${currentFamilyStatus}`);
+				console.log(`hasRoleInValidStatus: ${hasRoleInValidStatus}`);
+				console.groupEnd();
+				return hasRoleInValidStatus;
+			}
+			const familyHasRoleInSelectedStatus = selectedStatusKeys.some(status => Number(status) === family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName]?.currentStatus);
+			console.log(`familyHasRoleInSelectedStatus: ${familyHasRoleInSelectedStatus}`);
+			console.groupEnd();
+			return familyHasRoleInSelectedStatus;
+		});
+		console.log(result);
+		console.groupEnd();
+		return result;
+	}
+	function familyMembersMeetNewFilterCriteria(family: CombinedFamilyInfo) {
+		console.group(`filtering ${familyLastName(family)} family`);
+		console.log(JSON.stringify(selectedIndividualRoleKeys));
+		if (selectedIndividualRoleKeys.length === 0) {
+			console.groupEnd();
+			return true;
+		} 
+		const result = selectedIndividualRoleKeys.some(roleName => {
+			console.group(roleName);
+			const familyMembers = ((family.volunteerFamilyInfo?.individualVolunteers && Object.entries(family.volunteerFamilyInfo?.individualVolunteers)) || []);
+			console.log(JSON.stringify(familyMembers));
+			return familyMembers.some(([, volunteer]) => {
+				const volunteerHasRole = (roleName !== "Not Applied") 
+					? (volunteer.approvalStatusByRole?.[roleName] !== undefined)
+					: volunteer.approvalStatusByRole?.[roleName] === undefined;
+				console.log(`volunteerHasRole: ${volunteerHasRole}`);
+				if (!volunteerHasRole) {
+					console.groupEnd();
+					return false;
+				}
+				console.log(JSON.stringify(selectedStatusKeys));
+				if (selectedStatusKeys.length === 0) {
+					const validStatuses = statusFilters.filter(filterOption => filterOption.value !== undefined);
+					const currentFamilyMemberStatus = volunteer.approvalStatusByRole?.[roleName]?.currentStatus;
+					const hasRoleInValidStatus = validStatuses.some(status => Number(status.value) === currentFamilyMemberStatus);
+					console.log(`validStatuses: ${JSON.stringify(validStatuses)}`);
+					console.log(`currentFamilyStatus: ${currentFamilyMemberStatus}`);
+					console.log(`hasRoleInValidStatus: ${hasRoleInValidStatus}`);
+					console.groupEnd();
+					return hasRoleInValidStatus;
+				}
+				const matchingStatus = selectedStatusKeys.some(status => Number(status) === volunteer.approvalStatusByRole?.[roleName]?.currentStatus);
+				console.log(`matchingStatus: ${matchingStatus}`);
+				console.groupEnd();
+				return matchingStatus;
+			});
+		});
+		console.log(result);
+		console.groupEnd();
+		return result;
+	}
+	function familyMeetsFilterCriteria(family: CombinedFamilyInfo) {
+		//const familyMeetsRoleCriteria = familyMeetsOldFilterCriteria(family);
+		//const familyMembersMeetRoleCriteria = familyMembersMeetOldFilterCriteria(family);
+		const familyMeetsRoleCriteria = familyMeetsNewFilterCriteria(family);
+		const familyMembersMeetRoleCriteria = familyMembersMeetNewFilterCriteria(family);
+		const familyRolesSelected = selectedFamilyRoleKeys.length > 0;
+		const individualRolesSelected = selectedIndividualRoleKeys.length > 0;
+		if (familyRolesSelected && individualRolesSelected) {
+			return familyMeetsRoleCriteria || familyMembersMeetRoleCriteria;
+		} else if (familyRolesSelected) {
+			return familyMeetsRoleCriteria;
+		} else if (individualRolesSelected) {
+			return familyMembersMeetRoleCriteria;
+		}
+		return true;
+	}
+	//#endregion
+
+	// Filter volunteer families by name and by applicable roles.
+	const filteredVolunteerFamilies = volunteerFamilies.filter(family => /* Filter by name */(
+		filterText.length === 0 ||
+		family.family?.adults?.some(adult => simplify(`${adult.item1?.firstName} ${adult.item1?.lastName}`).includes(filterText.toLowerCase())) ||
+		family.family?.children?.some(child => simplify(`${child?.firstName} ${child?.lastName}`).includes(filterText.toLowerCase()))) &&
+		/* Filter by roles & approval status */ (
+		familyMeetsFilterCriteria(family)
+	));
+
+	const selectedFamilies = filteredVolunteerFamilies.filter(family =>
+		!uncheckedFamilies.some(f => f === family.family!.id!));
+	
+	
 	useScrollMemory();
 
 	function openFamily(familyId: string) {
