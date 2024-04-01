@@ -2,6 +2,7 @@ import { useDirectoryModel, useFamilyLookup } from '../Model/DirectoryModel';
 import { DialogHandle } from '../Hooks/useDialogHandle';
 import { UpdateDialog } from '../Generic/UpdateDialog';
 import { familyNameString } from './FamilyName';
+import waldoUrl from '../Engagement/waldo.png';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 
 interface DeleteFamilyDialogProps {
@@ -24,6 +25,9 @@ export function DeleteFamilyDialog({ familyId, handle }: DeleteFamilyDialogProps
   return (
     <UpdateDialog title={`Are you sure you want to delete the ${familyNameString(family)}?`}
       onClose={handle.closeDialog} onSave={save}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <img src={waldoUrl} alt="Waldo" style={{ width: '15%', position: 'absolute', bottom: 0, left: '25%' }} />
+      </div>
     </UpdateDialog>
   );
 }
