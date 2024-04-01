@@ -39,6 +39,8 @@ import { FamilyCustomField } from './FamilyCustomField';
 import { useFilterMenu } from '../Generic/useFilterMenu';
 import { FilterMenu } from '../Generic/FilterMenu';
 import { isBackdropClick } from '../Utilities/handleBackdropClick';
+import { DeleteFamilyDialog } from './DeleteFamilyDialog';
+import { useDialogHandle } from '../Hooks/useDialogHandle';
 
 const sortArrangementsByStartDateDescThenCreateDateDesc = (a: Arrangement, b: Arrangement) => {
   return ((b.startedAtUtc ?? new Date()).getTime() - (a.startedAtUtc ?? new Date()).getTime()) ||
@@ -68,6 +70,8 @@ export function FamilyScreen() {
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
   const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
   const [addNoteDialogOpen, setAddNoteDialogOpen] = useState(false);
+
+  const deleteFamilyDialogHandle = useDialogHandle();
 
   const [familyMoreMenuAnchor, setFamilyMoreMenuAnchor] = useState<Element | null>(null);
 
@@ -179,10 +183,11 @@ export function FamilyScreen() {
           startIcon={<AddCircleIcon />}>
           Note
         </Button>}
-        {permissions(Permission.EditVolunteerRoleParticipation) &&
+        {((permissions(Permission.EditVolunteerRoleParticipation) &&
           (participatingFamilyRoles.length > 0 ||
             (family.volunteerFamilyInfo?.roleRemovals &&
-              family.volunteerFamilyInfo.roleRemovals.length > 0)) &&
+              family.volunteerFamilyInfo.roleRemovals.length > 0))) || (
+            permissions(Permission.EditFamilyInfo))) &&
           <IconButton
             onClick={(event) => setFamilyMoreMenuAnchor(event.currentTarget)}
             size="large">
@@ -207,23 +212,29 @@ export function FamilyScreen() {
                   <ListItemText primary={`Reset ${removedRole.roleName} participation`} />
                 </MenuItem>
               ))}
+            {permissions(Permission.EditFamilyInfo) &&
+              <MenuItem onClick={deleteFamilyDialogHandle.openDialog}>
+                <ListItemText primary="Delete family" />
+              </MenuItem>}
           </MenuList>
         </Menu>
         {uploadDocumentDialogOpen && <UploadFamilyDocumentsDialog family={family}
           onClose={() => setUploadDocumentDialogOpen(false)} />}
-		{addAdultDialogOpen && <AddAdultDialog
-			onClose={(event: object | undefined, reason: string) => !isBackdropClick(reason) ? setAddAdultDialogOpen(false) : ({})}
-		></AddAdultDialog>
-		}
-        {addChildDialogOpen && <AddChildDialog 
-			onClose={(event: object | undefined, reason: string) => !isBackdropClick(reason) ? setAddChildDialogOpen(false) : ({})}
-		/>}
+        {addAdultDialogOpen && <AddAdultDialog
+          onClose={(event: object | undefined, reason: string) => !isBackdropClick(reason) ? setAddAdultDialogOpen(false) : ({})}
+        ></AddAdultDialog>
+        }
+        {addChildDialogOpen && <AddChildDialog
+          onClose={(event: object | undefined, reason: string) => !isBackdropClick(reason) ? setAddChildDialogOpen(false) : ({})}
+        />}
         {addNoteDialogOpen && <AddEditNoteDialog familyId={family.family!.id!} onClose={() => setAddNoteDialogOpen(false)} />}
         {(removeRoleParameter && <RemoveFamilyRoleDialog volunteerFamilyId={familyId} role={removeRoleParameter.role}
           onClose={() => setRemoveRoleParameter(null)} />) || null}
         {(resetRoleParameter && <ResetFamilyRoleDialog volunteerFamilyId={familyId} role={resetRoleParameter.role}
           removalReason={resetRoleParameter.removalReason} removalAdditionalComments={resetRoleParameter.removalAdditionalComments}
           onClose={() => setResetRoleParameter(null)} />) || null}
+        {deleteFamilyDialogHandle.open && <DeleteFamilyDialog key={deleteFamilyDialogHandle.key}
+          handle={deleteFamilyDialogHandle} familyId={familyId} />}
       </Toolbar>
       <Grid container spacing={0}>
         <Grid item container xs={12} md={4} spacing={0}>
