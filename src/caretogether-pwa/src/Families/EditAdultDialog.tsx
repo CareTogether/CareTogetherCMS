@@ -35,7 +35,7 @@ export function EditAdultDialog({ handle, adult }: EditAdultDialogProps) {
   const permissions = useFamilyIdPermissions(familyId!);
 
   return (
-    <Dialog open={handle.open} onClose={(event: object | undefined, reason: string) => !isBackdropClick(reason) ? handle.closeDialog : ({})}
+    <Dialog open={handle.open} onClose={(_event: object | undefined, reason: string) => !isBackdropClick(reason) ? handle.closeDialog : ({})}
       fullWidth scroll='body' aria-labelledby="edit-adult-title">
       <DialogTitle id="edit-adult-title">
         Edit Adult

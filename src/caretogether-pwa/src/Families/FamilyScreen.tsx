@@ -221,11 +221,11 @@ export function FamilyScreen() {
         {uploadDocumentDialogOpen && <UploadFamilyDocumentsDialog family={family}
           onClose={() => setUploadDocumentDialogOpen(false)} />}
         {addAdultDialogOpen && <AddAdultDialog
-          onClose={(event: object | undefined, reason: string) => !isBackdropClick(reason) ? setAddAdultDialogOpen(false) : ({})}
+          onClose={(_event: object | undefined, reason: string) => !isBackdropClick(reason) ? setAddAdultDialogOpen(false) : ({})}
         ></AddAdultDialog>
         }
         {addChildDialogOpen && <AddChildDialog
-          onClose={(event: object | undefined, reason: string) => !isBackdropClick(reason) ? setAddChildDialogOpen(false) : ({})}
+          onClose={(_event: object | undefined, reason: string) => !isBackdropClick(reason) ? setAddChildDialogOpen(false) : ({})}
         />}
         {addNoteDialogOpen && <AddEditNoteDialog familyId={family.family!.id!} onClose={() => setAddNoteDialogOpen(false)} />}
         {(removeRoleParameter && <RemoveFamilyRoleDialog volunteerFamilyId={familyId} role={removeRoleParameter.role}
