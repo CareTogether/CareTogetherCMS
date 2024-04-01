@@ -18,8 +18,8 @@ export function DeleteFamilyDialog({ familyId, handle }: DeleteFamilyDialogProps
   const family = familyLookup(familyId);
 
   async function save() {
-    await directoryModel.undoCreateFamily(familyId);
     appNavigate.dashboard();
+    await directoryModel.undoCreateFamily(familyId);
   }
 
   return (
