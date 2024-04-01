@@ -3523,6 +3523,7 @@ export interface ICombinedFamilyInfo {
 
 export class Family implements IFamily {
     id?: string;
+    active?: boolean;
     primaryFamilyContactPersonId?: string;
     adults?: ValueTupleOfPersonAndFamilyAdultRelationshipInfo[];
     children?: Person[];
@@ -3544,6 +3545,7 @@ export class Family implements IFamily {
     init(_data?: any) {
         if (_data) {
             this.id = _data["id"];
+            this.active = _data["active"];
             this.primaryFamilyContactPersonId = _data["primaryFamilyContactPersonId"];
             if (Array.isArray(_data["adults"])) {
                 this.adults = [] as any;
@@ -3593,6 +3595,7 @@ export class Family implements IFamily {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
+        data["active"] = this.active;
         data["primaryFamilyContactPersonId"] = this.primaryFamilyContactPersonId;
         if (Array.isArray(this.adults)) {
             data["adults"] = [];
@@ -3635,6 +3638,7 @@ export class Family implements IFamily {
 
 export interface IFamily {
     id?: string;
+    active?: boolean;
     primaryFamilyContactPersonId?: string;
     adults?: ValueTupleOfPersonAndFamilyAdultRelationshipInfo[];
     children?: Person[];
@@ -8904,6 +8908,11 @@ export abstract class FamilyCommand implements IFamilyCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "UndoCreateFamily") {
+            let result = new UndoCreateFamily();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "UpdateAdultRelationshipToFamily") {
             let result = new UpdateAdultRelationshipToFamily();
             result.init(data);
@@ -9309,6 +9318,34 @@ export class RemoveCustodialRelationship extends FamilyCommand implements IRemov
 export interface IRemoveCustodialRelationship extends IFamilyCommand {
     childPersonId?: string;
     adultPersonId?: string;
+}
+
+export class UndoCreateFamily extends FamilyCommand implements IUndoCreateFamily {
+
+    constructor(data?: IUndoCreateFamily) {
+        super(data);
+        this._discriminator = "UndoCreateFamily";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+    }
+
+    static fromJS(data: any): UndoCreateFamily {
+        data = typeof data === 'object' ? data : {};
+        let result = new UndoCreateFamily();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUndoCreateFamily extends IFamilyCommand {
 }
 
 export class UpdateAdultRelationshipToFamily extends FamilyCommand implements IUpdateAdultRelationshipToFamily {
