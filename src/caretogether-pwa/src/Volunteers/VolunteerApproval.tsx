@@ -1,5 +1,5 @@
-import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, useMediaQuery, useTheme, Button, ButtonGroup, MenuItem, Select, ListItemText, Checkbox, FormControl, InputBase, SelectChangeEvent, IconButton, Snackbar, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
-import { CombinedFamilyInfo, EmailAddress, Permission } from '../GeneratedClient';
+import { Grid, Table, TableContainer, TableBody, TableCell, TableHead, TableRow, Fab, useMediaQuery, useTheme, Button, ButtonGroup, MenuItem, Select, ListItemText, Checkbox, FormControl, InputBase, SelectChangeEvent, IconButton, Snackbar, Stack, ToggleButton, ToggleButtonGroup, Typography, Box } from '@mui/material';
+import { CombinedFamilyInfo, EmailAddress, Permission, VolunteerInfo } from '../GeneratedClient';
 import { atom, selector, useRecoilState, useRecoilValue } from 'recoil';
 import { volunteerFamiliesData } from '../Model/VolunteersModel';
 import { organizationConfigurationQuery, policyData } from '../Model/ConfigurationModel';
@@ -26,128 +26,7 @@ import { selectedLocationContextState } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { VolunteerRoleApprovalStatusChip } from './VolunteerRoleApprovalStatusChip';
 
-//#region Old Role/Status Selection code
-type RoleFilter = {
-  roleName: string
-  selected: (RoleApprovalStatus | null)[]
-}
-
-const volunteerFamilyRoleFiltersState = atom({
-  key: 'volunteerFamilyRoleFiltersState',
-  default: selector({
-    key: 'volunteerFamilyRoleFiltersState/Default',
-    get: ({ get }) => {
-      const policy = get(policyData);
-      const roleFilters =
-        ((policy.volunteerPolicy?.volunteerFamilyRoles &&
-          Object.entries(policy.volunteerPolicy?.volunteerFamilyRoles)) || []).map(([key]) => ({
-            roleName: key,
-            selected: [
-              RoleApprovalStatus.Prospective,
-              RoleApprovalStatus.Approved,
-              RoleApprovalStatus.Onboarded,
-              RoleApprovalStatus.Expired,
-              RoleApprovalStatus.Inactive,
-              RoleApprovalStatus.Denied,
-              null
-            ]
-          }));
-      return roleFilters;
-    }
-  })
-});
-
-const volunteerRoleFiltersState = atom({
-  key: 'volunteerRoleFiltersState',
-  default: selector({
-    key: 'volunteerRoleFiltersState/Default',
-    get: ({ get }) => {
-      const policy = get(policyData);
-      const roleFilters =
-        ((policy.volunteerPolicy?.volunteerRoles &&
-          Object.entries(policy.volunteerPolicy?.volunteerRoles)) || []).map(([key]) => ({
-            roleName: key,
-            selected: [
-              RoleApprovalStatus.Prospective,
-              RoleApprovalStatus.Approved,
-              RoleApprovalStatus.Onboarded,
-              RoleApprovalStatus.Expired,
-              RoleApprovalStatus.Inactive,
-              RoleApprovalStatus.Denied,
-              null
-            ]
-          }));
-      return roleFilters;
-    }
-  })
-});
-
-type RoleHeaderCellProps = {
-  roleFilter: RoleFilter
-  setSelected: (selected: string | string[]) => void
-}
-
-function RoleHeaderCell({ roleFilter, setSelected }: RoleHeaderCellProps) {
-  const choices = [
-    { key: "Not Applied", value: null },
-    { key: RoleApprovalStatus[RoleApprovalStatus.Prospective], value: RoleApprovalStatus.Prospective },
-    { key: RoleApprovalStatus[RoleApprovalStatus.Approved], value: RoleApprovalStatus.Approved },
-    { key: RoleApprovalStatus[RoleApprovalStatus.Onboarded], value: RoleApprovalStatus.Onboarded },
-    { key: RoleApprovalStatus[RoleApprovalStatus.Expired], value: RoleApprovalStatus.Expired },
-    { key: RoleApprovalStatus[RoleApprovalStatus.Inactive], value: RoleApprovalStatus.Inactive },
-    { key: RoleApprovalStatus[RoleApprovalStatus.Denied], value: RoleApprovalStatus.Denied }
-  ];
-
-  const handleChange = (event: SelectChangeEvent<string[]>) => {
-    setSelected(event.target.value);
-  };
-
-  return (
-    <TableCell sx={{ position: 'relative' }}>
-      {roleFilter.roleName}
-      <FormControl sx={{ position: 'absolute', right: 0 }} size="small">
-        <Select
-          sx={{
-            color: roleFilter.selected.length === choices.length ? '#bdbdbd' : null,
-            '& .MuiSelect-iconOpen': { transform: 'none' }
-          }}
-          multiple value={roleFilter.selected.map(x => x === null ? "Not Applied" : RoleApprovalStatus[x])}
-          variant="standard" label="Filters"
-          onChange={handleChange}
-          input={<InputBase />}
-          IconComponent={FilterListIcon}
-          renderValue={(selected) => selected.length === choices.length ? 'all' : `${selected.length} of ${choices.length}`}
-        >
-          {choices.map(choice =>
-            <MenuItem key={choice.key} value={choice.key}>
-              <Checkbox checked={roleFilter.selected.indexOf(choice.value) > -1} />
-              <ListItemText primary={choice.key} />
-            </MenuItem>
-          )}
-        </Select>
-      </FormControl>
-    </TableCell>
-  );
-}
-
-interface CombinedApprovalStatusProps {
-  summary: { Prospective: number, Approved: number, Onboarded: number, Expired: number, Inactive: number, Denied: number }
-}
-function CombinedApprovalStatus(props: CombinedApprovalStatusProps) {
-  const { summary } = props;
-  const outputs = [];
-  summary.Onboarded && outputs.push(`${summary.Onboarded} onboarded`);
-  summary.Approved && outputs.push(`${summary.Approved} approved`);
-  summary.Prospective && outputs.push(`${summary.Prospective} prospective`);
-  summary.Expired && outputs.push(`${summary.Expired} expired`);
-  summary.Inactive && outputs.push(`${summary.Inactive} inactive`);
-  summary.Denied && outputs.push(`${summary.Denied} denied`);
-  return (
-    <span>{outputs.join(", ")}</span>
-  );
-}
-//#endregion
-//#region new Role/Status Selection code
+//#region Role/Status Selection code
 enum filterType {
 	Family = 1,
 	Individual = 2
@@ -164,17 +43,14 @@ const roleFiltersState = atom({
 		key: 'newRoleFiltersState/Default',
 		get: ({ get }) => {
 			const policy = get(policyData);
-			const roleFilters: filterOption[] = [{ 
-				key: "Not Applied", 
-				value: undefined,
-				selected: false				
-			}];
 			const familyRoles = [...Object.keys(policy.volunteerPolicy?.volunteerFamilyRoles || {})];
 			const individualRoles = [...Object.keys(policy.volunteerPolicy?.volunteerRoles || {})];
-			const combinedRoles = [...familyRoles, ...individualRoles];
+			const combinedRoles = ["Not Applied",...familyRoles, ...individualRoles];
+			const roleFilters: filterOption[] = [];
 			for (let i = 0; i < combinedRoles.length; i++) {
-				const isIndividualRole = i >= familyRoles.length;
-				const roleType = isIndividualRole ? filterType.Individual : filterType.Family;
+				const isIndividualRole = i >= (familyRoles.length + 1);
+				const roleType = isIndividualRole ? filterType.Individual : 
+					combinedRoles[i] === "Not Applied" ? undefined : filterType.Family;				
 				roleFilters.push({
 					key: combinedRoles[i],
 					value: i.toString(),
@@ -192,7 +68,7 @@ const statusFiltersState = atom({
 		key: 'statusFiltersState/Default',
 		get: () => {
 			const options = [
-				{ key: "Not Applied", value: undefined },
+				{ key: "Not Applied", value: 0 },
 				{ key: RoleApprovalStatus[RoleApprovalStatus.Prospective], value: RoleApprovalStatus.Prospective },
 				{ key: RoleApprovalStatus[RoleApprovalStatus.Approved], value: RoleApprovalStatus.Approved },
 				{ key: RoleApprovalStatus[RoleApprovalStatus.Onboarded], value: RoleApprovalStatus.Onboarded },
@@ -202,7 +78,7 @@ const statusFiltersState = atom({
 			];
 			const statusFilters: filterOption[] = options.map((option) => ({
 				key: option.key,
-				value: option.value ? option.value.toString() : undefined,
+				value: option.value.toString(),
 				selected: false
 			}));
 			return statusFilters;
@@ -250,26 +126,52 @@ function VolunteerFilter({ label, options, setSelected }: VolunteerFilterProps) 
 	)
 }
 //#endregion
-function approvalStatus(currentApprovalStatus?: RoleApprovalStatus | null) {
-	if (typeof currentApprovalStatus === 'undefined' ||
-		currentApprovalStatus == null) return "-";
-	switch (currentApprovalStatus) {
+function getStatusComparisonValue(s?: string | number | RoleApprovalStatus | null | undefined): number {
+	// TODO: Why doesn't this work consistently?
+	if (!s) return 0;
+	switch (s) {
+		case "Prospective":
+		case "prospective":
+		case "1":
+		case 1:
 		case RoleApprovalStatus.Prospective:
-			return "Prospective";
+			return 1;
+		case "Approved":
+		case "approved":
+		case "2":
+		case 2:
 		case RoleApprovalStatus.Approved:
-			return "Approved";
+			return 2;
+		case "Onboarded":
+		case "onboarded":
+		case "3":
+		case 3:
 		case RoleApprovalStatus.Onboarded:
-			return "Onboarded";
+			return 3;
+		case "Expired":
+		case "expired":
+		case "4":
+		case 4:
 		case RoleApprovalStatus.Expired:
-			return "Expired";
+			return 4;
+		case "Inactive":
+		case "inactive":
+		case "5":
+		case 5:
 		case RoleApprovalStatus.Inactive:
-			return "Inactive";
+			return 5;
+		case "Denied":
+		case "denied":
+		case "6":
+		case 6:
 		case RoleApprovalStatus.Denied:
-			return "Denied";
+			return 6;
 		default:
-			console.warn("Unknown approval status", currentApprovalStatus);
-			return "??";
+			return 0;
 	}
+}
+function checkStatusEquivalence(a?: string | RoleApprovalStatus | null | undefined, b?: string | RoleApprovalStatus | null | undefined): boolean {
+	return getStatusComparisonValue(a) == getStatusComparisonValue(b);
 }
 function familyLastName(family: CombinedFamilyInfo) {
 	return family.family!.adults?.filter(adult =>
@@ -290,36 +192,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 	const appNavigate = useAppNavigate();
 	const [uncheckedFamilies, setUncheckedFamilies] = useState<string[]>([]);
 
-	//#region Old Role/Status Selection Code
-	const [volunteerFamilyRoleFilters, setVolunteerFamilyRoleFilters] = useRecoilState(volunteerFamilyRoleFiltersState);
-	const [volunteerRoleFilters, setVolunteerRoleFilters] = useRecoilState(volunteerRoleFiltersState);
-	function toValue(selection: 'Not Applied' | 'Prospective' | 'Approved' | 'Onboarded' | 'Expired' | 'Inactive' | 'Denied') {
-		return selection === 'Not Applied' ? null : RoleApprovalStatus[selection];
-	}
-	function changeVolunteerFamilyRoleFilterSelection(roleFilter: RoleFilter, selected: string | string[]) {
-		setUncheckedFamilies([]);
-		const selectedValues = typeof selected === 'string'
-		? [toValue(selected as 'Not Applied' | 'Prospective' | 'Approved' | 'Onboarded' | 'Expired' | 'Inactive' | 'Denied')]
-		: selected.map(x => toValue(x as 'Not Applied' | 'Prospective' | 'Approved' | 'Onboarded' | 'Expired' | 'Inactive' | 'Denied'));
-		const updatedFilters = volunteerFamilyRoleFilters.map(value =>
-		value.roleName === roleFilter.roleName
-			? { roleName: value.roleName, selected: selectedValues }
-			: value);
-		setVolunteerFamilyRoleFilters(updatedFilters);
-	}
-	function changeVolunteerRoleFilterSelection(roleFilter: RoleFilter, selected: string | string[]) {
-		setUncheckedFamilies([]);
-		const selectedValues = typeof selected === 'string'
-		? [toValue(selected as 'Not Applied' | 'Prospective' | 'Approved' | 'Onboarded' | 'Expired' | 'Inactive' | 'Denied')]
-		: selected.map(x => toValue(x as 'Not Applied' | 'Prospective' | 'Approved' | 'Onboarded' | 'Expired' | 'Inactive' | 'Denied'));
-		const updatedFilters = volunteerRoleFilters.map(value =>
-		value.roleName === roleFilter.roleName
-			? { roleName: value.roleName, selected: selectedValues }
-			: value);
-		setVolunteerRoleFilters(updatedFilters);
-	}
-	//#endregion
-	//#region new Role/Status Selection Code		
+	//#region Role/Status Selection Code		
 	const [roleFilters, setRoleFilters] = useRecoilState(roleFiltersState);
 	const [statusFilters, setStatusFilters] = useRecoilState(statusFiltersState);
 	function getOptionValueFromSelection(allOptionKeysPlusSelectedOptionValue: string | string[]) {
@@ -355,106 +228,139 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 
 	const [filterText, setFilterText] = useState("");
 
-	//#region Old Family/Individual Filtering Code
-	// function familyMeetsOldFilterCriteria(family: CombinedFamilyInfo) {
-	// 	return volunteerFamilyRoleFilters.every(roleFilter => roleFilter.selected.indexOf(null) > -1 ||
-	// 		roleFilter.selected.indexOf(
-	// 		family.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.roleName]?.currentStatus || null) > -1)
-	// }
-	// function familyMembersMeetOldFilterCriteria(family: CombinedFamilyInfo) {
-	// 	return volunteerRoleFilters.every(roleFilter =>
-	// 		((family.volunteerFamilyInfo?.individualVolunteers && Object.entries(family.volunteerFamilyInfo?.individualVolunteers)) || []).some(([, volunteer]) =>
-	// 		roleFilter.selected.indexOf(null) > -1 ||
-	// 		roleFilter.selected.indexOf(volunteer.approvalStatusByRole?.[roleFilter.roleName]?.currentStatus || null) > -1))
-	// }
-	//#endregion
-	//#region New Family/Individual Filtering Code
-	const selectedFamilyRoleKeys = roleFilters.filter(filterOption => (filterOption.selected && filterOption.type === filterType.Family)).map(filterOption => filterOption.key);
-	const selectedIndividualRoleKeys = roleFilters.filter(filterOption => (filterOption.selected && filterOption.type === filterType.Individual)).map(filterOption => filterOption.key);
+	//#region Family/Individual Filtering Code
+	const selectedFamilyRoleKeys = roleFilters.filter(filterOption => (filterOption.selected && filterOption.type !== filterType.Individual)).map(filterOption => filterOption.key);
+	const selectedIndividualRoleKeys = roleFilters.filter(filterOption => (filterOption.selected && filterOption.type !== filterType.Family)).map(filterOption => filterOption.key);
 	const selectedStatusKeys = statusFilters.filter(filterOption => filterOption.selected).map(filterOption => filterOption.value);
 
-	function familyMeetsNewFilterCriteria(family: CombinedFamilyInfo) {
-		console.group(`filtering ${familyLastName(family)} family`);
-		console.log(JSON.stringify(selectedFamilyRoleKeys));
+	function familyHasRoleInValidStatus(family: CombinedFamilyInfo, roleName: string) {
+		const validStatuses = statusFilters.filter(filterOption => filterOption.key !== `Not Applied`);
+		const currentFamilyStatus = family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName]?.currentStatus;
+		const result = validStatuses.some(status => checkStatusEquivalence(status.value, currentFamilyStatus));
+		return result;
+	}
+
+	function familyMemberHasRoleInValidStatus(volunteer: VolunteerInfo, roleName: string) {
+		const validStatuses = statusFilters.filter(filterOption => filterOption.key !== `Not Applied`);
+		const currentFamilyMemberStatus = volunteer.approvalStatusByRole?.[roleName]?.currentStatus;
+		const result = validStatuses.some(status => checkStatusEquivalence(status.value, currentFamilyMemberStatus));
+		return result;	
+	}
+
+	function familyHasNoValidRoles(family: CombinedFamilyInfo) {
+		const familyHasNoValidRoles = roleFilters.every(filterOption => {
+			return !familyHasRoleInValidStatus(family, filterOption.key);
+		});
+		const familyMembers = ((family.volunteerFamilyInfo?.individualVolunteers && Object.entries(family.volunteerFamilyInfo?.individualVolunteers)) || []);
+		const familyMembersWithNoValidRoles = familyMembers.filter(([, volunteer]) => roleFilters.every(filterOption => {
+			return !familyMemberHasRoleInValidStatus(volunteer, filterOption.key);
+		}));
+		return familyHasNoValidRoles || (familyMembersWithNoValidRoles.length > 0);
+	}
+
+	function familyHasNoValidStatuses(family: CombinedFamilyInfo) {
+		const familyHasNoValidStatuses = statusFilters.every(filterOption => family.volunteerFamilyInfo?.familyRoleApprovals?.[filterOption.key] === undefined);
+		const familyMembers = ((family.volunteerFamilyInfo?.individualVolunteers && Object.entries(family.volunteerFamilyInfo?.individualVolunteers)) || []);
+		const familyMembersWithNoValidStatuses = familyMembers.filter(([, volunteer]) => statusFilters.every(filterOption => volunteer.approvalStatusByRole?.[filterOption.key] === undefined));
+		return familyHasNoValidStatuses || familyMembersWithNoValidStatuses.length > 0;
+	}
+
+	function familyMeetsFilterCriteria(family: CombinedFamilyInfo) {
+		console.group(`${familyLastName(family)} familyMeetsFilterCriteria`);
+		console.log(JSON.stringify(selectedStatusKeys));
 		if (selectedFamilyRoleKeys.length === 0) {
+			if (selectedStatusKeys.length === 0) {
+				console.groupEnd();
+				return true;
+			}
+			const familyHasARoleInASelectedStatus = selectedStatusKeys.some(status => {
+				if (status === "Not Applied") {
+					console.groupEnd();
+					return familyHasNoValidStatuses(family);
+				}
+				else {
+					const familyHasRoleInASelectedStatus = roleFilters.some(roleFilter => {
+						console.group(roleFilter.key);						
+						console.log(status?.toString());
+						console.log(family.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.key]?.currentStatus?.toString());
+						console.groupEnd();
+						return status?.toString() === family.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.key]?.currentStatus?.toString(); 
+						// TODO: Given that "3" === "3"... why isn't this working (for filtering down to Riker family when "Approved" is selected without a corresponding "Roles" selection)?
+						// Note: Similar behavior DOES work when both "Host Family" role & "Approved" status are selected.
+					});
+					console.groupEnd();
+					return familyHasRoleInASelectedStatus;
+				}
+			});
 			console.groupEnd();
-			return true;
+			return familyHasARoleInASelectedStatus; 
 		} 
 		const result = selectedFamilyRoleKeys.some(roleName => {
 			console.group(roleName);
+			const noValidRoles = familyHasNoValidRoles(family);
 			const familyHasRole = (roleName !== "Not Applied") 
 				? (family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName] !== undefined) 
-				: family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName] === undefined;
-			console.log(`familyHasRole: ${familyHasRole}`);
-			if (!familyHasRole) {
+				: noValidRoles;
+			if (!familyHasRole || (roleName === "Not Applied" && noValidRoles)) {
 				console.groupEnd();
-				return false;
+				return familyHasRole;
 			}
 			if (selectedStatusKeys.length === 0) {
-				const validStatuses = statusFilters.filter(filterOption => filterOption.value !== undefined);
-				const currentFamilyStatus = family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName]?.currentStatus;
-				const hasRoleInValidStatus = validStatuses.some(status => Number(status.value) === currentFamilyStatus);
-				console.log(`validStatuses: ${JSON.stringify(validStatuses)}`);
-				console.log(`currentFamilyStatus: ${currentFamilyStatus}`);
-				console.log(`hasRoleInValidStatus: ${hasRoleInValidStatus}`);
+				const hasRoleInValidStatus = familyHasRoleInValidStatus(family, roleName);
 				console.groupEnd();
-				return hasRoleInValidStatus;
+				return hasRoleInValidStatus || (roleName === "Not Applied" && familyHasRole);
 			}
-			const familyHasRoleInSelectedStatus = selectedStatusKeys.some(status => Number(status) === family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName]?.currentStatus);
-			console.log(`familyHasRoleInSelectedStatus: ${familyHasRoleInSelectedStatus}`);
-			console.groupEnd();
+			const familyHasRoleInSelectedStatus = selectedStatusKeys.some(status => {
+				console.group(status);
+				console.log(family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName]?.currentStatus);
+				const hasStatus = checkStatusEquivalence(status, family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName]?.currentStatus);
+				console.log(hasStatus);
+				console.log(Number(status) === family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName]?.currentStatus);
+				console.groupEnd();
+				return Number(status) === family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName]?.currentStatus;
+			});
 			return familyHasRoleInSelectedStatus;
 		});
 		console.log(result);
 		console.groupEnd();
 		return result;
 	}
-	function familyMembersMeetNewFilterCriteria(family: CombinedFamilyInfo) {
-		console.group(`filtering ${familyLastName(family)} family`);
-		console.log(JSON.stringify(selectedIndividualRoleKeys));
+	
+	function familyMembersMeetFilterCriteria(family: CombinedFamilyInfo) {
 		if (selectedIndividualRoleKeys.length === 0) {
-			console.groupEnd();
-			return true;
+			if (selectedStatusKeys.length === 0) {
+				return true;
+			}
+			// TODO: Still need to add logic for scenarios where statuses are selected, but no roles, & we need to check individual family members for any roles that may match the selected status
+			return true; 
 		} 
 		const result = selectedIndividualRoleKeys.some(roleName => {
-			console.group(roleName);
 			const familyMembers = ((family.volunteerFamilyInfo?.individualVolunteers && Object.entries(family.volunteerFamilyInfo?.individualVolunteers)) || []);
-			console.log(JSON.stringify(familyMembers));
 			return familyMembers.some(([, volunteer]) => {
+				// TODO: Need to test "Not Applied" role scenario for individuals & update as appropriate
 				const volunteerHasRole = (roleName !== "Not Applied") 
 					? (volunteer.approvalStatusByRole?.[roleName] !== undefined)
 					: volunteer.approvalStatusByRole?.[roleName] === undefined;
-				console.log(`volunteerHasRole: ${volunteerHasRole}`);
 				if (!volunteerHasRole) {
-					console.groupEnd();
 					return false;
 				}
-				console.log(JSON.stringify(selectedStatusKeys));
 				if (selectedStatusKeys.length === 0) {
-					const validStatuses = statusFilters.filter(filterOption => filterOption.value !== undefined);
+					const validStatuses = statusFilters.filter(filterOption => filterOption.key !== `Not Applied`);
 					const currentFamilyMemberStatus = volunteer.approvalStatusByRole?.[roleName]?.currentStatus;
-					const hasRoleInValidStatus = validStatuses.some(status => Number(status.value) === currentFamilyMemberStatus);
-					console.log(`validStatuses: ${JSON.stringify(validStatuses)}`);
-					console.log(`currentFamilyStatus: ${currentFamilyMemberStatus}`);
-					console.log(`hasRoleInValidStatus: ${hasRoleInValidStatus}`);
-					console.groupEnd();
+					const hasRoleInValidStatus = validStatuses.some(status => checkStatusEquivalence(status.value, currentFamilyMemberStatus));
 					return hasRoleInValidStatus;
+					// TODO: Need to test "Not Applied" role scenario for individuals & update as appropriate
 				}
 				const matchingStatus = selectedStatusKeys.some(status => Number(status) === volunteer.approvalStatusByRole?.[roleName]?.currentStatus);
-				console.log(`matchingStatus: ${matchingStatus}`);
-				console.groupEnd();
+				// TODO: Need to test individual status filtering when used in combination with roles
 				return matchingStatus;
 			});
 		});
-		console.log(result);
-		console.groupEnd();
 		return result;
 	}
-	function familyMeetsFilterCriteria(family: CombinedFamilyInfo) {
-		//const familyMeetsRoleCriteria = familyMeetsOldFilterCriteria(family);
-		//const familyMembersMeetRoleCriteria = familyMembersMeetOldFilterCriteria(family);
-		const familyMeetsRoleCriteria = familyMeetsNewFilterCriteria(family);
-		const familyMembersMeetRoleCriteria = familyMembersMeetNewFilterCriteria(family);
+	function familyOrFamilyMembersMeetFilterCriteria(family: CombinedFamilyInfo) {
+		const familyMeetsRoleCriteria = familyMeetsFilterCriteria(family);
+		const familyMembersMeetRoleCriteria = familyMembersMeetFilterCriteria(family);
 		const familyRolesSelected = selectedFamilyRoleKeys.length > 0;
 		const individualRolesSelected = selectedIndividualRoleKeys.length > 0;
 		if (familyRolesSelected && individualRolesSelected) {
@@ -474,7 +380,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 		family.family?.adults?.some(adult => simplify(`${adult.item1?.firstName} ${adult.item1?.lastName}`).includes(filterText.toLowerCase())) ||
 		family.family?.children?.some(child => simplify(`${child?.firstName} ${child?.lastName}`).includes(filterText.toLowerCase()))) &&
 		/* Filter by roles & approval status */ (
-		familyMeetsFilterCriteria(family)
+		familyOrFamilyMembersMeetFilterCriteria(family)
 	));
 
 	const selectedFamilies = filteredVolunteerFamilies.filter(family =>
@@ -567,15 +473,14 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 				autoHideDuration={5000} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
 				onClose={() => setNoticeOpen(false)}
 				message={`Found and copied ${getSelectedFamiliesContactEmails().length} email addresses for ${selectedFamilies.length} selected families to clipboard`} />
-				{/* TODO: Test These */}
-				<>
-					<VolunteerFilter label="Statuses" options={statusFilters} setSelected={changeStatusFilterSelection} />
+				<Box sx={{ display: 'flex', flexDirection: 'row', gap: '.75rem', marginRight: '.75rem', alignItems: 'center'}}>
 					<VolunteerFilter label="Roles" options={roleFilters} setSelected={changeRoleFilterSelection} />
-					<ButtonGroup variant="text" color="inherit" aria-label="text inherit button group" style={{ flexGrow: 1 }}>
-						<Button color={location.pathname.endsWith("/volunteers/approval") ? 'secondary' : 'inherit'} component={Link} to={"../approval"}>Approvals</Button>
-						<Button color={location.pathname.endsWith("/volunteers/progress") ? 'secondary' : 'inherit'} component={Link} to={"../progress"}>Progress</Button>
-					</ButtonGroup>
-				</>
+					<VolunteerFilter label="Statuses" options={statusFilters} setSelected={changeStatusFilterSelection} />
+				</Box>
+				<ButtonGroup variant="text" color="inherit" aria-label="text inherit button group" style={{ flexGrow: 1 }}>
+					<Button color={location.pathname.endsWith("/volunteers/approval") ? 'secondary' : 'inherit'} component={Link} to={"../approval"}>Approvals</Button>
+					<Button color={location.pathname.endsWith("/volunteers/progress") ? 'secondary' : 'inherit'} component={Link} to={"../progress"}>Progress</Button>
+				</ButtonGroup>				
 			</Stack>
 			</Grid>
 			<Grid item xs={12}>
@@ -583,124 +488,55 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 				<Table sx={{ minWidth: '700px' }} size="small">
 				<TableHead>
 					<TableRow sx={{ height: '40px' }}>
-					{smsMode && <TableCell sx={{ padding: 0, width: '36px' }}>
-						<Checkbox size='small' checked={uncheckedFamilies.length === 0}
-						onChange={e => e.target.checked
-							? setUncheckedFamilies([])
-							: setUncheckedFamilies(filteredVolunteerFamilies.map(f => f.family!.id!))} />
-					</TableCell>}
-					{expandedView
-						? <TableCell>Last Name, First Name</TableCell>
-						: <TableCell>Family</TableCell>}
-					<TableCell>Roles</TableCell>
-					{/* TODO: Remove the Volunteer Family Roles column below */}
-					{volunteerFamilyRoleFilters.map(roleFilter =>
-					(<RoleHeaderCell key={roleFilter.roleName} roleFilter={roleFilter}
-						setSelected={selected => changeVolunteerFamilyRoleFilterSelection(roleFilter, selected)} />))}
-
-					{/* TODO: Remove the Individual Volunteer Roles column below */}
-					{volunteerRoleFilters.map(roleFilter =>
-					(<RoleHeaderCell key={roleFilter.roleName} roleFilter={roleFilter}
-						setSelected={selected => changeVolunteerRoleFilterSelection(roleFilter, selected)} />))}
+					{smsMode && 
+						<TableCell sx={{ padding: 0, width: '36px' }}>
+							<Checkbox size='small' checked={uncheckedFamilies.length === 0}
+							onChange={e => e.target.checked
+								? setUncheckedFamilies([])
+								: setUncheckedFamilies(filteredVolunteerFamilies.map(f => f.family!.id!))} />
+						</TableCell>}
+						{expandedView ? 
+							<TableCell>Last Name, First Name</TableCell>
+						:	<TableCell>Family</TableCell>}
+						<TableCell>Roles</TableCell>
 					</TableRow>
 				</TableHead>
 				<TableBody>
 					{filteredVolunteerFamilies.map((volunteerFamily) => (
 					<React.Fragment key={volunteerFamily.family?.id}>
-						<TableRow sx={{ backgroundColor: '#eef', height: '39px' }}
-						onClick={() => openFamily(volunteerFamily.family!.id!)}>
-						{smsMode && <TableCell key="-" sx={{ padding: 0, width: '36px' }}>
-							<Checkbox size='small' checked={!uncheckedFamilies.some(x => x === volunteerFamily.family!.id!)}
-							onChange={e => e.target.checked
-								? setUncheckedFamilies(uncheckedFamilies.filter(x => x !== volunteerFamily.family!.id!))
-								: setUncheckedFamilies(uncheckedFamilies.concat(volunteerFamily.family!.id!))}
-							onClick={e => e.stopPropagation()} />
-						</TableCell>}
-						<TableCell key="1" colSpan={expandedView ? 1 : 1}>
-							<Typography sx={{ fontWeight: 600 }}>{familyLastName(volunteerFamily) + " Family"}</Typography>
-						</TableCell>
-						<TableCell>
-							{volunteerFamilyRoleFilters.map((roleFilter, index) =>
-							<VolunteerRoleApprovalStatusChip 
-								key={index} 
-								roleName={roleFilter.roleName} 
-								status={volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.roleName]?.effectiveRoleApprovalStatus} 
-							/>
-							)}
-						</TableCell>
-
-						{/* TODO: Remove the Volunteer Family Roles column below */}
-						{volunteerFamilyRoleFilters.map(roleFilter =>
-						(<TableCell key={roleFilter.roleName}>{
-							approvalStatus(volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.roleName]?.currentStatus)
-						}</TableCell>))}
-
-						{/* TODO: Remove the Individual Volunteer Roles column below */}
-						{expandedView
-							? <TableCell colSpan={volunteerRoleFilters.length} />
-							: volunteerRoleFilters.map(roleFilter =>
-							(<TableCell key={roleFilter.roleName}>
-							<CombinedApprovalStatus summary={
-								((volunteerFamily.volunteerFamilyInfo?.individualVolunteers &&
-								Object.entries(volunteerFamily.volunteerFamilyInfo?.individualVolunteers).map(x => x[1]).flatMap(x =>
-									(x.approvalStatusByRole && Object.entries(x.approvalStatusByRole).map(([role, approvals]) =>
-									(roleFilter.roleName !== role ||
-										typeof approvals.currentStatus === 'undefined')
-										? { Prospective: 0, Approved: 0, Onboarded: 0, Expired: 0, Inactive: 0, Denied: 0 }
-										: approvals.currentStatus === RoleApprovalStatus.Denied
-										? { Prospective: 0, Approved: 0, Onboarded: 0, Expired: 0, Inactive: 0, Denied: 1 }
-										: approvals.currentStatus === RoleApprovalStatus.Inactive
-											? { Prospective: 0, Approved: 0, Onboarded: 0, Expired: 0, Inactive: 1, Denied: 0 }
-											: approvals.currentStatus === RoleApprovalStatus.Expired
-											? { Prospective: 0, Approved: 0, Onboarded: 0, Expired: 1, Inactive: 0, Denied: 0 }
-											: approvals.currentStatus === RoleApprovalStatus.Onboarded
-												? { Prospective: 0, Approved: 0, Onboarded: 1, Expired: 0, Inactive: 0, Denied: 0 }
-												: approvals.currentStatus === RoleApprovalStatus.Approved
-												? { Prospective: 0, Approved: 1, Onboarded: 0, Expired: 0, Inactive: 0, Denied: 0 }
-												: approvals.currentStatus === RoleApprovalStatus.Prospective
-													? { Prospective: 1, Approved: 0, Onboarded: 0, Expired: 0, Inactive: 0, Denied: 0 }
-													: { Prospective: 0, Approved: 0, Onboarded: 0, Expired: 0, Inactive: 0, Denied: 0 })) || [])) || []).reduce((sum, x) =>
-													({
-													Prospective: sum!.Prospective + x!.Prospective,
-													Approved: sum!.Approved + x!.Approved,
-													Onboarded: sum!.Onboarded + x!.Onboarded,
-													Expired: sum!.Expired + x!.Expired,
-													Inactive: sum!.Inactive + x!.Inactive,
-													Denied: sum!.Denied + x!.Denied
-													}),
-													{ Prospective: 0, Approved: 0, Onboarded: 0, Expired: 0, Inactive: 0, Denied: 0 })} />
-							</TableCell>))}
+						<TableRow sx={{ backgroundColor: '#eef', height: '39px' }} onClick={() => openFamily(volunteerFamily.family!.id!)}>
+							{smsMode && 
+							<TableCell key="-" sx={{ padding: 0, width: '36px' }}>
+								<Checkbox size='small' checked={!uncheckedFamilies.some(x => x === volunteerFamily.family!.id!)}
+								onChange={e => e.target.checked
+									? setUncheckedFamilies(uncheckedFamilies.filter(x => x !== volunteerFamily.family!.id!))
+									: setUncheckedFamilies(uncheckedFamilies.concat(volunteerFamily.family!.id!))}
+								onClick={e => e.stopPropagation()} />
+							</TableCell>}
+							<TableCell key="1" colSpan={expandedView ? 1 : 1}>
+								<Typography sx={{ fontWeight: 600 }}>{familyLastName(volunteerFamily) + " Family"}</Typography>
+							</TableCell>
+							<TableCell>
+								{roleFilters.map((roleFilter, index) =>
+									<VolunteerRoleApprovalStatusChip 
+										key={index} 
+										sx={{ margin: '.125rem .25rem .125rem 0' }}
+										roleName={roleFilter.key} 
+										status={volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.key]?.effectiveRoleApprovalStatus} 
+									/>
+								)}
+							</TableCell>
 						</TableRow>
 						{expandedView && volunteerFamily.family?.adults?.map(adult => adult.item1 && adult.item1.active && (
 						<TableRow key={volunteerFamily.family?.id + ":" + adult.item1.id}
 							onClick={() => openFamily(volunteerFamily.family!.id!)}>
 							{smsMode && <TableCell />}
 							<TableCell>{adult.item1.lastName}, {adult.item1.firstName}</TableCell> 
-						<TableCell>
-							{Object.entries(volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1!.id!].approvalStatusByRole || {}).map(([role, roleApprovalStatus]) =>
-							<VolunteerRoleApprovalStatusChip key={role} roleName={role} status={roleApprovalStatus.effectiveRoleApprovalStatus} />)}                      
-						</TableCell>    
-						{/* TODO: Remove the Individual Volunteer Roles column below */}                  
-							<TableCell colSpan={volunteerFamilyRoleFilters.length} />
-							{volunteerRoleFilters.map(roleFilter =>
-							(<TableCell key={roleFilter.roleName}>{
-							approvalStatus(volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1?.id || '']?.approvalStatusByRole?.[roleFilter.roleName]?.currentStatus)
-							}</TableCell>))}
-						</TableRow>
-						))}
-						{expandedView && volunteerFamily.family?.children?.map(child => child.active && (
-						<TableRow key={volunteerFamily.family?.id + ":" + child.id}
-							onClick={() => openFamily(volunteerFamily.family!.id!)}
-							sx={{ color: 'ddd', fontStyle: 'italic' }}>
-							{smsMode && <TableCell />}
-							<TableCell>{child.lastName}, {child.firstName}</TableCell> 
-						<TableCell />
-						{/* TODO: Remove the Individual Volunteer Roles column below */}                  
-							<TableCell colSpan={
-							volunteerFamilyRoleFilters.length +
-							volunteerRoleFilters.length} />
-						</TableRow>
-						))}
+							<TableCell>
+								{Object.entries(volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1!.id!].approvalStatusByRole || {}).map(([role, roleApprovalStatus]) =>
+								<VolunteerRoleApprovalStatusChip key={role} roleName={role} status={roleApprovalStatus.effectiveRoleApprovalStatus} sx={{ margin: '.125rem .25rem .125rem 0' }} />)}                      
+							</TableCell>    						
+						</TableRow>))}						
 					</React.Fragment>
 					))}
 				</TableBody>
