@@ -233,6 +233,17 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 	const selectedIndividualRoleKeys = roleFilters.filter(filterOption => (filterOption.selected && filterOption.type !== filterType.Family)).map(filterOption => filterOption.key);
 	const selectedStatusKeys = statusFilters.filter(filterOption => filterOption.selected).map(filterOption => filterOption.value);
 
+	function familyHasNoValidRoles(family: CombinedFamilyInfo) {
+		const familyHasNoValidRoles = roleFilters.every(filterOption => {
+			return !familyHasRoleInValidStatus(family, filterOption.key);
+		});
+		const familyMembers = ((family.volunteerFamilyInfo?.individualVolunteers && Object.entries(family.volunteerFamilyInfo?.individualVolunteers)) || []);
+		const familyMembersWithNoValidRoles = familyMembers.filter(([, volunteer]) => roleFilters.every(filterOption => {
+			return !familyMemberHasRoleInValidStatus(volunteer, filterOption.key);
+		}));
+		return familyHasNoValidRoles || (familyMembersWithNoValidRoles.length > 0);
+	}	
+
 	function familyHasRoleInValidStatus(family: CombinedFamilyInfo, roleName: string) {
 		const validStatuses = statusFilters.filter(filterOption => filterOption.key !== `Not Applied`);
 		const currentFamilyStatus = family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName]?.currentStatus;
@@ -247,15 +258,26 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 		return result;	
 	}
 
-	function familyHasNoValidRoles(family: CombinedFamilyInfo) {
-		const familyHasNoValidRoles = roleFilters.every(filterOption => {
-			return !familyHasRoleInValidStatus(family, filterOption.key);
+	function familyMemberHasNoValidStatuses(volunteer: VolunteerInfo) {
+		const noValidStatuses = statusFilters.every(filterOption => {
+			return checkStatusEquivalence(volunteer.approvalStatusByRole?.[filterOption.key].currentStatus, null);
 		});
-		const familyMembers = ((family.volunteerFamilyInfo?.individualVolunteers && Object.entries(family.volunteerFamilyInfo?.individualVolunteers)) || []);
-		const familyMembersWithNoValidRoles = familyMembers.filter(([, volunteer]) => roleFilters.every(filterOption => {
-			return !familyMemberHasRoleInValidStatus(volunteer, filterOption.key);
-		}));
-		return familyHasNoValidRoles || (familyMembersWithNoValidRoles.length > 0);
+		return noValidStatuses;
+	}
+
+	function familyMemberHasRoleInSelectedStatus(volunteer: VolunteerInfo, status: string) {
+		let result = false;
+		if (status === "Not Applied") {
+			const noValidStatuses = familyMemberHasNoValidStatuses(volunteer);
+			result = noValidStatuses;
+		}
+		else {
+			const familyMemberHasRoleInSelectedStatus = roleFilters.some(roleFilter => {
+				return checkStatusEquivalence(volunteer.approvalStatusByRole?.[roleFilter.key]?.currentStatus, status);
+			});
+			result = familyMemberHasRoleInSelectedStatus;
+		}
+		console.log(`${volunteer} HasRoleInSelectedStatus: ${result}`);
 	}
 
 	function familyHasNoValidStatuses(family: CombinedFamilyInfo) {
@@ -266,32 +288,34 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 	}
 
 	function familyMeetsFilterCriteria(family: CombinedFamilyInfo) {
-		console.group(`${familyLastName(family)} familyMeetsFilterCriteria`);
+		console.group(`${familyLastName(family)} Family`);
+		console.log(JSON.stringify(selectedFamilyRoleKeys));
+		console.log(JSON.stringify(selectedIndividualRoleKeys));
 		console.log(JSON.stringify(selectedStatusKeys));
 		if (selectedFamilyRoleKeys.length === 0) {
 			if (selectedStatusKeys.length === 0) {
+				console.log(true);
 				console.groupEnd();
 				return true;
 			}
 			const familyHasARoleInASelectedStatus = selectedStatusKeys.some(status => {
 				if (status === "Not Applied") {
-					console.groupEnd();
-					return familyHasNoValidStatuses(family);
+					const noValidStatuses = familyHasNoValidStatuses(family);
+					return noValidStatuses;
 				}
-				else {
+				else 
+				{
 					const familyHasRoleInASelectedStatus = roleFilters.some(roleFilter => {
 						console.group(roleFilter.key);						
 						console.log(status?.toString());
 						console.log(family.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.key]?.currentStatus?.toString());
 						console.groupEnd();
-						return status?.toString() === family.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.key]?.currentStatus?.toString(); 
-						// TODO: Given that "3" === "3"... why isn't this working (for filtering down to Riker family when "Approved" is selected without a corresponding "Roles" selection)?
-						// Note: Similar behavior DOES work when both "Host Family" role & "Approved" status are selected.
+						return status?.toString() === family.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.key]?.currentStatus?.toString(); 						
 					});
-					console.groupEnd();
 					return familyHasRoleInASelectedStatus;
 				}
 			});
+			console.log(familyHasARoleInASelectedStatus);
 			console.groupEnd();
 			return familyHasARoleInASelectedStatus; 
 		} 
@@ -319,6 +343,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 				console.groupEnd();
 				return Number(status) === family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName]?.currentStatus;
 			});
+			console.groupEnd();
 			return familyHasRoleInSelectedStatus;
 		});
 		console.log(result);
@@ -327,21 +352,35 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 	}
 	
 	function familyMembersMeetFilterCriteria(family: CombinedFamilyInfo) {
+		console.group(`${familyLastName(family)} Family Members`);
+		console.log(JSON.stringify(selectedFamilyRoleKeys));
+		console.log(JSON.stringify(selectedIndividualRoleKeys));
+		console.log(JSON.stringify(selectedStatusKeys));
+		const familyMembers = ((family.volunteerFamilyInfo?.individualVolunteers && Object.entries(family.volunteerFamilyInfo?.individualVolunteers)) || []);
 		if (selectedIndividualRoleKeys.length === 0) {
 			if (selectedStatusKeys.length === 0) {
+				console.log(true);
+				console.groupEnd();
 				return true;
 			}
-			// TODO: Still need to add logic for scenarios where statuses are selected, but no roles, & we need to check individual family members for any roles that may match the selected status
-			return true; 
+			const familyMemberHasARoleInASelectedStatus = selectedStatusKeys.some(status => {				
+				const familyMembersWithRoleInSelectedStatus = familyMembers.filter(([, volunteer]) => {					
+					return familyMemberHasRoleInSelectedStatus(volunteer, status ? status : "Not Applied");
+				});
+				return familyMembersWithRoleInSelectedStatus.length > 0;
+			});
+			console.log(familyMemberHasARoleInASelectedStatus);
+			console.groupEnd();
+			return familyMemberHasARoleInASelectedStatus; 
 		} 
 		const result = selectedIndividualRoleKeys.some(roleName => {
-			const familyMembers = ((family.volunteerFamilyInfo?.individualVolunteers && Object.entries(family.volunteerFamilyInfo?.individualVolunteers)) || []);
 			return familyMembers.some(([, volunteer]) => {
 				// TODO: Need to test "Not Applied" role scenario for individuals & update as appropriate
 				const volunteerHasRole = (roleName !== "Not Applied") 
 					? (volunteer.approvalStatusByRole?.[roleName] !== undefined)
 					: volunteer.approvalStatusByRole?.[roleName] === undefined;
 				if (!volunteerHasRole) {
+					console.log(false);
 					return false;
 				}
 				if (selectedStatusKeys.length === 0) {
@@ -352,12 +391,15 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 					// TODO: Need to test "Not Applied" role scenario for individuals & update as appropriate
 				}
 				const matchingStatus = selectedStatusKeys.some(status => Number(status) === volunteer.approvalStatusByRole?.[roleName]?.currentStatus);
-				// TODO: Need to test individual status filtering when used in combination with roles
+				// TODO: Need to test individual status filtering when used in combination with roles				
 				return matchingStatus;
 			});
 		});
+		console.log(result);
+		console.groupEnd();
 		return result;
 	}
+
 	function familyOrFamilyMembersMeetFilterCriteria(family: CombinedFamilyInfo) {
 		const familyMeetsRoleCriteria = familyMeetsFilterCriteria(family);
 		const familyMembersMeetRoleCriteria = familyMembersMeetFilterCriteria(family);
